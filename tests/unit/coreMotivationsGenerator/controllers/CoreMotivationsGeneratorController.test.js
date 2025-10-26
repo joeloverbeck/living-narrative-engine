@@ -428,6 +428,23 @@ describe('CoreMotivationsGeneratorController', () => {
     });
   });
 
+  describe('Motivation Generation Guard', () => {
+    beforeEach(async () => {
+      testBed.setupSuccessfulDirectionLoad();
+      await testBed.controller.initialize();
+    });
+
+    it('should not attempt generation when no direction is selected', async () => {
+      const generateBtn = document.getElementById('generate-btn');
+      generateBtn.disabled = false;
+
+      generateBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      expect(testBed.mockCoreMotivationsGenerator.generate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Motivation Management', () => {
     beforeEach(async () => {
       testBed.setupSuccessfulDirectionLoad();
@@ -467,6 +484,62 @@ describe('CoreMotivationsGeneratorController', () => {
       ).toHaveBeenCalledTimes(2);
     });
 
+    it('should dispatch retrieval event when motivations load successfully', async () => {
+      const mockMotivations = [
+        {
+          id: 'motivation-a',
+          text: 'Courage to explore',
+          createdAt: new Date('2024-02-01'),
+        },
+        {
+          id: 'motivation-b',
+          text: 'Protect the realm',
+          createdAt: new Date('2024-02-02'),
+        },
+      ];
+
+      testBed.clearDispatchedEvents();
+      testBed.mockDisplayEnhancer.createMotivationBlock.mockClear();
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValueOnce(
+        mockMotivations
+      );
+
+      await testBed.selectDirection('test-direction-1');
+
+      const retrievalEvent = testBed.getLastEventOfType(
+        'core:core_motivations_retrieved'
+      );
+      expect(retrievalEvent).toBeDefined();
+      expect(retrievalEvent.payload.directionId).toBe('test-direction-1');
+      expect(retrievalEvent.payload.count).toBe(mockMotivations.length);
+
+      const container = document.getElementById('motivations-container');
+      expect(container.querySelectorAll('.motivation-block').length).toBe(
+        mockMotivations.length
+      );
+    });
+
+    it('should handle errors when loading motivations fails', async () => {
+      const error = new Error('Load failure');
+      testBed.clearDispatchedEvents();
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockRejectedValueOnce(
+        error
+      );
+
+      await testBed.selectDirection('test-direction-1');
+
+      expect(testBed.logger.error).toHaveBeenCalledWith(
+        'Failed to load existing motivations:',
+        error
+      );
+      const retrievalEvent = testBed.getLastEventOfType(
+        'core:core_motivations_retrieved'
+      );
+      expect(retrievalEvent).toBeUndefined();
+      const container = document.getElementById('motivations-container');
+      expect(container.children.length).toBe(0);
+    });
+
     it('should delete specific motivation', async () => {
       // Arrange
       testBed.mockCharacterBuilderService.removeCoreMotivationItem.mockResolvedValue(
@@ -487,6 +560,38 @@ describe('CoreMotivationsGeneratorController', () => {
       ).toHaveBeenCalledWith('test-direction-1', 'motivation-1');
     });
 
+    it('should report an error when motivation deletion fails', async () => {
+      // Arrange
+      const error = new Error('Deletion failed');
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValueOnce(
+        [
+          { id: 'motivation-1', text: 'Stubborn resolve', createdAt: new Date() },
+        ]
+      );
+      await testBed.selectDirection('test-direction-1');
+
+      testBed.mockCharacterBuilderService.removeCoreMotivationItem.mockRejectedValue(
+        error
+      );
+
+      const deleteBtn = testBed.createMockDeleteButton('motivation-1');
+
+      // Act
+      deleteBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      // Assert
+      expect(testBed.logger.error).toHaveBeenCalledWith(
+        'Failed to delete motivation:',
+        error
+      );
+      expect(testBed.controller.showError).toHaveBeenCalledWith(
+        'Failed to delete motivation'
+      );
+
+      deleteBtn.remove();
+    });
+
     it('should clear all motivations with confirmation', async () => {
       // Arrange
       // First ensure we have motivations to clear
@@ -504,6 +609,7 @@ describe('CoreMotivationsGeneratorController', () => {
         1
       );
       testBed.setupConfirmationModal();
+      testBed.controller.showSuccess.mockClear();
 
       // Act
       const clearBtn = document.getElementById('clear-all-btn');
@@ -522,6 +628,72 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(
         testBed.mockCharacterBuilderService.clearCoreMotivationsForDirection
       ).toHaveBeenCalledWith('test-direction-1');
+      expect(testBed.controller.showSuccess).toHaveBeenCalledWith(
+        'Cleared 1 motivations'
+      );
+    });
+
+    it('should surface an error when clearing motivations fails', async () => {
+      // Arrange
+      const mockMotivations = [
+        { id: 'motivation-1', text: 'Another motivation', createdAt: new Date() },
+      ];
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
+      await testBed.selectDirection('test-direction-1');
+
+      testBed.setupConfirmationModal();
+
+      const clearError = new Error('Clear failed');
+      testBed.mockCharacterBuilderService.clearCoreMotivationsForDirection.mockRejectedValue(
+        clearError
+      );
+
+      const clearBtn = document.getElementById('clear-all-btn');
+      clearBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      const confirmBtn = document.getElementById('confirm-clear');
+      confirmBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      expect(testBed.logger.error).toHaveBeenCalledWith(
+        'Failed to clear motivations:',
+        clearError
+      );
+      expect(testBed.controller.showError).toHaveBeenCalledWith(
+        'Failed to clear motivations'
+      );
+    });
+
+    it('should close the modal when clear all is cancelled', async () => {
+      // Arrange
+      const mockMotivations = [
+        { id: 'motivation-1', text: 'Keep me', createdAt: new Date() },
+      ];
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
+      await testBed.selectDirection('test-direction-1');
+
+      testBed.setupConfirmationModal();
+
+      const clearBtn = document.getElementById('clear-all-btn');
+      clearBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      const modal = document.getElementById('confirmation-modal');
+      expect(modal.style.display).toBe('flex');
+
+      const cancelBtn = document.getElementById('cancel-clear');
+      cancelBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      expect(modal.style.display).toBe('none');
+      expect(testBed.controller.showError).not.toHaveBeenCalledWith(
+        'Failed to clear motivations'
+      );
     });
   });
 
@@ -559,6 +731,7 @@ describe('CoreMotivationsGeneratorController', () => {
       );
 
       // Mock clipboard API
+      const originalClipboard = navigator.clipboard;
       Object.assign(navigator, {
         clipboard: {
           writeText: jest.fn().mockResolvedValue(),
@@ -604,6 +777,11 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(mockAnchor.click).toHaveBeenCalled();
       expect(mockAnchor.download).toMatch(/^core-motivations_.*\.txt$/);
       expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+      const downloadLog = testBed.logger.info.mock.calls.find(([message]) =>
+        message.startsWith('Downloaded motivations to file:')
+      );
+      expect(downloadLog).toBeDefined();
+      expect(downloadLog[0]).toContain(mockAnchor.download);
 
       // Check clipboard was also used
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
@@ -614,6 +792,7 @@ describe('CoreMotivationsGeneratorController', () => {
       document.createElement = originalCreateElement;
       document.body.appendChild = originalAppendChild;
       document.body.removeChild = originalRemoveChild;
+      navigator.clipboard = originalClipboard;
     });
 
     it('should generate appropriate filename with timestamp and direction', async () => {
@@ -632,6 +811,7 @@ describe('CoreMotivationsGeneratorController', () => {
       );
 
       // Mock clipboard API
+      const originalClipboard = navigator.clipboard;
       Object.assign(navigator, {
         clipboard: {
           writeText: jest.fn().mockResolvedValue(),
@@ -700,6 +880,7 @@ describe('CoreMotivationsGeneratorController', () => {
       );
 
       // Mock clipboard API
+      const originalClipboard = navigator.clipboard;
       Object.assign(navigator, {
         clipboard: {
           writeText: jest.fn().mockResolvedValue(),
@@ -707,6 +888,7 @@ describe('CoreMotivationsGeneratorController', () => {
       });
 
       // Make Blob constructor throw an error to simulate download failure
+      const originalBlob = global.Blob;
       global.Blob = jest.fn(() => {
         throw new Error('Blob creation failed');
       });
@@ -714,18 +896,140 @@ describe('CoreMotivationsGeneratorController', () => {
       // Mock showWarning
       testBed.controller.showWarning = jest.fn();
 
-      // Act
-      const exportBtn = document.getElementById('export-btn');
-      exportBtn.click();
-      await testBed.waitForAsyncOperations();
+      try {
+        // Act
+        const exportBtn = document.getElementById('export-btn');
+        exportBtn.click();
+        await testBed.waitForAsyncOperations();
 
-      // Assert
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        // Assert
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+          'Exported text'
+        );
+        expect(testBed.controller.showWarning).toHaveBeenCalledWith(
+          'Download failed, but copied to clipboard'
+        );
+        expect(testBed.logger.error).toHaveBeenCalledWith(
+          'Failed to export motivations:',
+          expect.any(Error)
+        );
+        expect(testBed.logger.error).toHaveBeenCalledWith(
+          'Failed to download file:',
+          expect.any(Error)
+        );
+      } finally {
+        global.Blob = originalBlob;
+        navigator.clipboard = originalClipboard;
+      }
+    });
+
+    it('should log warning when clipboard copy fails after download', async () => {
+      // Arrange
+      const mockMotivations = [
+        { id: 'motivation-1', text: 'Seek adventure', createdAt: new Date() },
+      ];
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
+      await testBed.selectDirection('test-direction-1');
+
+      testBed.mockDisplayEnhancer.formatMotivationsForExport.mockReturnValue(
         'Exported text'
       );
-      expect(testBed.controller.showWarning).toHaveBeenCalledWith(
-        'Download failed, but copied to clipboard'
+
+      const originalClipboard = navigator.clipboard;
+      const clipboardError = new Error('Clipboard blocked');
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: jest.fn().mockRejectedValue(clipboardError),
+        },
+      });
+
+      const mockAnchor = { href: '', download: '', style: {}, click: jest.fn() };
+      const originalCreateElement = document.createElement;
+      document.createElement = jest.fn((tagName) => {
+        if (tagName === 'a') {
+          return mockAnchor;
+        }
+        return originalCreateElement.call(document, tagName);
+      });
+
+      try {
+        // Act
+        const exportBtn = document.getElementById('export-btn');
+        exportBtn.click();
+        await testBed.waitForAsyncOperations();
+
+        // Assert
+        expect(testBed.logger.warn).toHaveBeenCalledWith(
+          'Failed to copy to clipboard:',
+          clipboardError
+        );
+        expect(testBed.controller.showSuccess).toHaveBeenCalledWith(
+          'Motivations downloaded to file'
+        );
+
+        const exportEvent = testBed.dispatchedEvents.find(
+          (event) => event.type === 'core:core_motivations_exported'
+        );
+        expect(exportEvent.payload.method).toBe('file_only');
+      } finally {
+        document.createElement = originalCreateElement;
+        navigator.clipboard = originalClipboard;
+      }
+    });
+
+    it('should show error when both file download and clipboard fail', async () => {
+      // Arrange
+      const mockMotivations = [
+        { id: 'motivation-1', text: 'Seek adventure', createdAt: new Date() },
+      ];
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
       );
+      await testBed.selectDirection('test-direction-1');
+
+      testBed.mockDisplayEnhancer.formatMotivationsForExport.mockReturnValue(
+        'Exported text'
+      );
+
+      global.Blob = jest.fn(() => {
+        throw new Error('Blob creation failed');
+      });
+
+      const originalClipboard = navigator.clipboard;
+      const clipboardError = new Error('Clipboard unavailable');
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: jest.fn().mockRejectedValue(clipboardError),
+        },
+      });
+
+      testBed.controller.showWarning = jest.fn();
+
+      try {
+        // Act
+        const exportBtn = document.getElementById('export-btn');
+        exportBtn.click();
+        await testBed.waitForAsyncOperations();
+
+        // Assert
+        expect(testBed.logger.error).toHaveBeenCalledWith(
+          'Failed to export motivations:',
+          expect.any(Error)
+        );
+        expect(testBed.logger.error).toHaveBeenCalledWith(
+          'Both export methods failed:',
+          clipboardError
+        );
+        const errorCalls = testBed.controller.showError.mock.calls.filter(
+          (call) => call[0] === 'Failed to export motivations'
+        );
+        expect(errorCalls.length).toBeGreaterThanOrEqual(1);
+      } finally {
+        navigator.clipboard = originalClipboard;
+        global.Blob = originalBlob;
+      }
     });
 
     it('should show warning when no motivations to export', async () => {
@@ -928,6 +1232,29 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert
       expect(testBed.mockCoreMotivationsGenerator.generate).toHaveBeenCalled();
+    });
+
+    it('should close the confirmation modal when Escape is pressed', async () => {
+      const modal = document.getElementById('confirmation-modal');
+      modal.style.display = 'flex';
+      const clearBtn = document.getElementById('clear-all-btn');
+      clearBtn.disabled = false;
+      clearBtn.focus();
+
+      const event = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+      });
+      const preventSpy = jest.spyOn(event, 'preventDefault');
+
+      document.dispatchEvent(event);
+      await testBed.waitForAsyncOperations();
+
+      expect(preventSpy).toHaveBeenCalled();
+      expect(modal.style.display).toBe('none');
+      expect(document.activeElement).toBe(clearBtn);
+      const announcer = document.getElementById('sr-announcements');
+      expect(announcer.textContent).toBe('Modal closed');
     });
   });
 
@@ -1306,6 +1633,43 @@ describe('CoreMotivationsGeneratorController', () => {
       const sortSelect = document.getElementById('motivation-sort');
       expect(sortSelect.value).toBe('oldest');
     });
+
+    it('should warn when saving sort preference fails', async () => {
+      // Arrange
+      await testBed.controller.initialize();
+      const error = new Error('Storage quota exceeded');
+      window.localStorage.setItem.mockImplementationOnce(() => {
+        throw error;
+      });
+
+      // Act
+      const sortSelect = document.getElementById('motivation-sort');
+      sortSelect.value = 'alphabetical';
+      sortSelect.dispatchEvent(new Event('change'));
+
+      // Assert
+      expect(testBed.logger.warn).toHaveBeenCalledWith(
+        'Failed to save sort preference:',
+        error
+      );
+    });
+
+    it('should warn when loading user preferences fails', async () => {
+      // Arrange
+      const error = new Error('Storage unavailable');
+      window.localStorage.getItem.mockImplementationOnce(() => {
+        throw error;
+      });
+
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert
+      expect(testBed.logger.warn).toHaveBeenCalledWith(
+        'Failed to load user preferences:',
+        error
+      );
+    });
   });
 
   describe('Search Functionality', () => {
@@ -1452,6 +1816,34 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(searchEvents.length).toBe(1);
       expect(searchEvents[0][1].query).toBe('tes');
     });
+
+    it('should safely skip updating search count when elements are missing', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Explore the unknown',
+          createdAt: new Date('2024-03-01'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+
+      const resultsCount = document.getElementById('search-results-count');
+      resultsCount.remove();
+      const searchCount = document.getElementById('search-count');
+      searchCount?.remove();
+
+      // Act & Assert - loading motivations should not throw even without the elements
+      await expect(
+        testBed.loadDirectionWithMotivations('dir-1', motivations)
+      ).resolves.toBeUndefined();
+
+      expect(document.getElementById('search-results-count')).toBeNull();
+      expect(document.getElementById('search-count')).toBeNull();
+      expect(testBed.logger.error).not.toHaveBeenCalled();
+    });
   });
 
   describe('Class Properties and State Management', () => {
@@ -1538,40 +1930,6 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(testBed.controller.selectedDirectionId).toBeNull();
       expect(testBed.controller.currentDirection).toBeNull();
       expect(testBed.controller.currentConcept).toBeNull();
-    });
-
-    it('should detect stale cache correctly', async () => {
-      // Arrange
-      await testBed.controller.initialize();
-
-      // Mock Date.now to simulate time passing
-      const initialTime = 1000000;
-      Date.now.mockReturnValue(initialTime);
-
-      // Load directions - this should set cache timestamp
-      const mockDirectionsWithConcepts = [
-        {
-          direction: { id: 'dir1', title: 'Direction 1' },
-          concept: { id: 'concept1', text: 'Concept 1' },
-        },
-      ];
-      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
-        mockDirectionsWithConcepts
-      );
-      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
-        true
-      );
-
-      await testBed.controller.initialize();
-
-      // Test cache is fresh (2 minutes later)
-      Date.now.mockReturnValue(initialTime + 2 * 60 * 1000);
-      // We need to expose #isCacheStale for testing or test indirectly
-      // Since it's private, we'll test through behavior instead
-
-      // Test cache is stale (10 minutes later)
-      Date.now.mockReturnValue(initialTime + 10 * 60 * 1000);
-      // Testing would require exposing the method or testing through #refreshIfNeeded
     });
 
     it('should return correct total directions count', async () => {
@@ -1718,6 +2076,54 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Restore original
       document.createDocumentFragment = originalCreateDocumentFragment;
+    });
+
+    it('should load remaining motivations and disconnect observer when trigger is intersecting', async () => {
+      // Arrange
+      const motivations = Array.from({ length: 60 }, (_, i) => ({
+        id: `mot-${i}`,
+        coreDesire: `Desire ${i}`,
+        createdAt: new Date(`2024-02-${String((i % 28) + 1).padStart(2, '0')}`),
+      }));
+
+      const originalObserver = global.IntersectionObserver;
+      let observerInstance;
+      global.IntersectionObserver = jest.fn((callback) => {
+        observerInstance = {
+          observe: jest.fn(),
+          disconnect: jest.fn(),
+          trigger(entries) {
+            callback(entries);
+          },
+        };
+        return observerInstance;
+      });
+
+      try {
+        testBed.setupMotivationsDisplay(motivations);
+        await testBed.controller.initialize();
+
+        // Act - load initial motivations with lazy loading enabled
+        await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+        const container = document.getElementById('motivations-container');
+        let trigger = container.querySelector('.load-more-trigger');
+        expect(trigger).toBeTruthy();
+
+        // Simulate two intersections to load the remaining motivations
+        observerInstance.trigger([{ isIntersecting: true }]);
+        observerInstance.trigger([{ isIntersecting: true }]);
+
+        // Assert - all motivations are displayed and observer cleaned up
+        const blocks = container.querySelectorAll('.motivation-block');
+        expect(blocks.length).toBe(60);
+        expect(observerInstance.disconnect).toHaveBeenCalled();
+        trigger = container.querySelector('.load-more-trigger');
+        expect(trigger).toBeNull();
+      } finally {
+        // Restore observer
+        global.IntersectionObserver = originalObserver;
+      }
     });
   });
 
@@ -1948,10 +2354,13 @@ describe('CoreMotivationsGeneratorController', () => {
         );
       });
 
-      it('should handle missing direction selector element gracefully', () => {
-        // Arrange
-        const originalSelector = document.getElementById('direction-selector');
-        originalSelector.remove();
+      it('should log an error when direction selector element is missing', () => {
+        // Arrange - remove any existing selector elements created by the test bed
+        let selector = document.getElementById('direction-selector');
+        while (selector) {
+          selector.remove();
+          selector = document.getElementById('direction-selector');
+        }
 
         const mockDirections = [
           {
@@ -1963,14 +2372,13 @@ describe('CoreMotivationsGeneratorController', () => {
 
         testBed.controller.eligibleDirections = mockDirections;
 
-        // Act & Assert - should not throw
-        expect(() =>
-          testBed.controller.populateDirectionSelector()
-        ).not.toThrow();
+        // Act
+        testBed.controller.populateDirectionSelector();
 
-        // The method should handle the missing element gracefully
-        // We've verified it doesn't throw, which is the main requirement
-        expect(true).toBe(true);
+        // Assert
+        expect(testBed.logger.error).toHaveBeenCalledWith(
+          'Direction selector element not found'
+        );
       });
 
       it('should handle directions with missing concept data', () => {
@@ -3387,6 +3795,7 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(document.getElementById('confirmation-modal').style.display).toBe(
         'none'
       );
+      expect(mutationObserverInstances.length).toBe(0);
     });
 
     it('should manage modal focus trap and escape interactions', async () => {
