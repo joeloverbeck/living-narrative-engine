@@ -798,6 +798,60 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     document.createElement.mockRestore();
   });
 
+  it('uses a generic fallback filename when generated patterns omit character name', async () => {
+    const { dependencies, mocks } = createDependencies();
+
+    mocks.speechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
+      speechPatterns: [
+        {
+          pattern: 'Speaks softly when uncertain',
+          example: '"Perhaps we should gather more information."',
+          circumstances: 'When the situation is ambiguous',
+        },
+      ],
+      generatedAt: new Date('2024-01-02T03:04:05Z').toISOString(),
+    });
+
+    const controller = createControllerInstance(dependencies);
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.9 },
+    });
+
+    await waitForValidationAndGeneration({
+      characterData: createValidCharacterData({ text: 'Nameless Hero' }),
+      validatorInstance,
+      mocks,
+    });
+
+    const appendSpy = jest.spyOn(document.body, 'appendChild');
+
+    try {
+      document
+        .getElementById('export-btn')
+        .dispatchEvent(new Event('click', { bubbles: true }));
+
+      expect(global.Blob).toHaveBeenCalled();
+      const linkCall = appendSpy.mock.calls.find(
+        ([element]) => element?.tagName === 'A'
+      );
+      expect(linkCall).toBeDefined();
+      expect(linkCall[0].download).toMatch(/^speech_patterns_character_/);
+      expect(mocks.logger.error).not.toHaveBeenCalledWith(
+        'Export failed:',
+        expect.anything()
+      );
+    } finally {
+      appendSpy.mockRestore();
+    }
+  });
+
   it('handles generation errors and supports retrying the workflow', async () => {
     const { dependencies, mocks } = createDependencies({
       withDisplayEnhancer: true,
