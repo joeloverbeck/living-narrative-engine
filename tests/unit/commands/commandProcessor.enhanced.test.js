@@ -273,6 +273,121 @@ describe('CommandProcessor - Enhanced Multi-Target Support', () => {
       );
       expect(safeDispatchError).toHaveBeenCalled();
     });
+
+    it('should fall back when actor ID becomes unavailable during payload validation', async () => {
+      const flakyActor = {};
+      let actorIdCalls = 0;
+      Object.defineProperty(flakyActor, 'id', {
+        enumerable: true,
+        configurable: true,
+        get() {
+          actorIdCalls += 1;
+          if (actorIdCalls === 3) {
+            return undefined;
+          }
+          return 'actor_123';
+        },
+      });
+
+      const turnAction = {
+        actionDefinitionId: 'test:flaky-actor',
+        commandString: 'perform flaky actor action',
+        resolvedParameters: { targetId: 'target_42' },
+      };
+
+      const result = await commandProcessor.dispatchAction(
+        flakyActor,
+        turnAction
+      );
+
+      expect(result.success).toBe(true);
+
+      expect(
+        eventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledWith(
+        ATTEMPT_ACTION_ID,
+        expect.any(Object),
+        expect.any(String)
+      );
+
+      expect(
+        eventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledTimes(1);
+
+      const fallbackPayload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
+      expect(fallbackPayload).toMatchObject({
+        actorId: 'actor_123',
+        actionId: 'test:flaky-actor',
+        targetId: 'target_42',
+      });
+      expect(fallbackPayload.targets).toBeUndefined();
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Enhanced payload creation failed, using fallback',
+        expect.objectContaining({
+          actorId: 'actor_123',
+          actionId: 'test:flaky-actor',
+        })
+      );
+    });
+
+    it('should fall back when action definition disappears during payload validation', async () => {
+      const flakyTurnAction = {
+        commandString: 'perform flaky action',
+        resolvedParameters: { targetId: 'target_007' },
+      };
+
+      let actionIdCalls = 0;
+      Object.defineProperty(flakyTurnAction, 'actionDefinitionId', {
+        enumerable: true,
+        configurable: true,
+        get() {
+          actionIdCalls += 1;
+          if (actionIdCalls === 3) {
+            return undefined;
+          }
+          return 'test:flaky-action';
+        },
+      });
+
+      const result = await commandProcessor.dispatchAction(
+        mockActor,
+        flakyTurnAction
+      );
+
+      expect(result.success).toBe(true);
+
+      expect(
+        eventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledWith(
+        ATTEMPT_ACTION_ID,
+        expect.any(Object),
+        expect.any(String)
+      );
+
+      expect(
+        eventDispatchService.dispatchWithErrorHandling
+      ).toHaveBeenCalledTimes(1);
+
+      const payload =
+        eventDispatchService.dispatchWithErrorHandling.mock.calls[0][1];
+
+      expect(payload).toMatchObject({
+        actorId: 'actor_123',
+        actionId: 'test:flaky-action',
+        targetId: 'target_007',
+      });
+      expect(payload.targets).toBeUndefined();
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Enhanced payload creation failed, using fallback',
+        expect.objectContaining({
+          actionId: 'test:flaky-action',
+        })
+      );
+    });
   });
 
   describe('Performance and Metrics', () => {
