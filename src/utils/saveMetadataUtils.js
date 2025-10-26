@@ -22,7 +22,8 @@ export function validateSaveMetadataFields(metadata, fileName, logger) {
     typeof timestamp !== 'string' ||
     !timestamp ||
     typeof playtimeSeconds !== 'number' ||
-    Number.isNaN(playtimeSeconds)
+    Number.isNaN(playtimeSeconds) ||
+    !Number.isFinite(playtimeSeconds)
   ) {
     logger.warn(
       `Essential metadata missing or malformed in ${identifier}. Contents: ${JSON.stringify(
