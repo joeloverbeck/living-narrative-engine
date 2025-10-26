@@ -381,4 +381,19 @@ describe('WorldContext (Stateless)', () => {
       );
     });
   });
+
+  describe('getCurrentISOTimestamp', () => {
+    it('should return the current time in ISO 8601 format', () => {
+      const fixedDate = new Date('2035-03-09T11:22:33.444Z');
+      jest.useFakeTimers();
+      jest.setSystemTime(fixedDate);
+
+      try {
+        const timestamp = worldContext.getCurrentISOTimestamp();
+        expect(timestamp).toBe(fixedDate.toISOString());
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+  });
 });
