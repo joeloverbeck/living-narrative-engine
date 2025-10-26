@@ -73,4 +73,50 @@ describe('SafeErrorLogger.withGameLoadingMode cleanup', () => {
     expect(safeErrorLogger.isGameLoadingActive()).toBe(false);
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
+
+  it('logs cleanup failure but preserves the original error when disabling batch mode fails', async () => {
+    const operationError = new Error('operation failed');
+    const disableFailure = new Error('disable failed');
+
+    mockDispatcher.setBatchMode.mockImplementation((enable) => {
+      if (!enable) {
+        throw disableFailure;
+      }
+    });
+
+    await expect(
+      safeErrorLogger.withGameLoadingMode(
+        async () => {
+          throw operationError;
+        },
+        { context: 'failing-operation', timeoutMs: 0 }
+      )
+    ).rejects.toBe(operationError);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'SafeErrorLogger: Failed to disable game loading mode during cleanup.',
+      disableFailure
+    );
+  });
+
+  it('rethrows cleanup failures when no prior error occurred', async () => {
+    const disableFailure = new Error('disable failed');
+    mockDispatcher.setBatchMode.mockImplementation((enable) => {
+      if (!enable) {
+        throw disableFailure;
+      }
+    });
+
+    await expect(
+      safeErrorLogger.withGameLoadingMode(
+        async () => {},
+        { context: 'success-operation', timeoutMs: 0 }
+      )
+    ).rejects.toBe(disableFailure);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'SafeErrorLogger: Failed to disable game loading mode during cleanup.',
+      disableFailure
+    );
+  });
 });

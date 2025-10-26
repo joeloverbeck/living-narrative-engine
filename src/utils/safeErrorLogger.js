@@ -230,10 +230,27 @@ export function createSafeErrorLogger({
     const previousDepth = loadingContextStack.length;
     enableGameLoadingMode(options);
 
+    /** @type {unknown} */
+    let operationError = null;
+    /** @type {Error | null} */
+    let disableError = null;
+
     try {
       return await fn();
+    } catch (error) {
+      operationError = error;
+      throw error;
     } finally {
-      disableGameLoadingMode();
+      try {
+        disableGameLoadingMode();
+      } catch (error) {
+        disableError =
+          error instanceof Error ? error : new Error(String(error));
+        safeLogger.error(
+          'SafeErrorLogger: Failed to disable game loading mode during cleanup.',
+          disableError
+        );
+      }
 
       const expectedDepth = previousDepth;
       if (loadingContextStack.length > expectedDepth) {
@@ -241,7 +258,22 @@ export function createSafeErrorLogger({
           'SafeErrorLogger: Game loading mode still active after scope exit. Forcing batch mode disable to prevent leaks.',
           { context: options.context }
         );
-        disableGameLoadingMode({ force: true, reason: 'scope-exit' });
+        try {
+          disableGameLoadingMode({ force: true, reason: 'scope-exit' });
+        } catch (forceError) {
+          const normalizedForceError =
+            forceError instanceof Error
+              ? forceError
+              : new Error(String(forceError));
+          safeLogger.error(
+            'SafeErrorLogger: Forced disable of game loading mode failed during cleanup.',
+            normalizedForceError
+          );
+        }
+      }
+
+      if (!operationError && disableError) {
+        throw disableError;
       }
     }
   }
