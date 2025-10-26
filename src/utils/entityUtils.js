@@ -56,6 +56,20 @@ export function getEntityDisplayName(
     ) {
       return nameComponent.text;
     }
+
+    if (
+      typeof nameComponent.value === 'string' &&
+      isNonBlankString(nameComponent.value)
+    ) {
+      const entityId =
+        typeof validEntity.id === 'string' && validEntity.id
+          ? validEntity.id
+          : 'unknown';
+      logger?.debug(
+        `getEntityDisplayName: Using legacy 'value' property from '${NAME_COMPONENT_ID}' component for entity '${entityId}'.`
+      );
+      return nameComponent.value;
+    }
   }
 
   // Entity class doesn't have a 'name' property - skip directly to ID check
