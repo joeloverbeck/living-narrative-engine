@@ -90,7 +90,7 @@ class ActivityDescriptionService {
         this.#logger.debug(
           `No visible activities available after filtering for entity: ${entityId}`
         );
-        return '';
+        return this.#formatActivityDescription([], entity);
       }
 
       const prioritizedActivities = this.#sortByPriority(conditionedActivities);
