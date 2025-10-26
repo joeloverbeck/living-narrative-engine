@@ -199,6 +199,46 @@ describe('environmentUtils', () => {
 
       globalThis.window = originalWindow;
     });
+
+    it('should not treat falsy values as missing in browser or global env', () => {
+      globalThis.process = undefined;
+      const originalWindow = globalThis.window;
+      const originalDocument = globalThis.document;
+      const workingWindow = originalWindow || {};
+      const originalWindowEnv = workingWindow.env;
+      workingWindow.env = { ZERO_PORT: 0, DISABLED: false };
+      globalThis.window = workingWindow;
+      globalThis.document = originalDocument || {};
+
+      expect(getEnvironmentVariable('ZERO_PORT', 'fallback')).toBe('0');
+      expect(getEnvironmentVariable('DISABLED', 'fallback')).toBe('false');
+
+      if (originalWindow === undefined) {
+        delete globalThis.window;
+      } else {
+        workingWindow.env = originalWindowEnv;
+        globalThis.window = originalWindow;
+      }
+      if (originalDocument === undefined) {
+        delete globalThis.document;
+      } else {
+        globalThis.document = originalDocument;
+      }
+
+      const originalGlobalEnv = globalThis.env;
+      globalThis.env = { ZERO_FLAG: 0, DISABLED_FLAG: false };
+
+      expect(getEnvironmentVariable('ZERO_FLAG', 'fallback')).toBe('0');
+      expect(getEnvironmentVariable('DISABLED_FLAG', 'fallback')).toBe(
+        'false',
+      );
+
+      if (originalGlobalEnv === undefined) {
+        delete globalThis.env;
+      } else {
+        globalThis.env = originalGlobalEnv;
+      }
+    });
   });
 
   describe('getEnvironmentMode', () => {

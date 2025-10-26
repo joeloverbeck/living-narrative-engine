@@ -88,13 +88,27 @@ export function getEnvironmentVariable(key, defaultValue = '') {
   }
 
   // Try browser window environment variables (if available)
-  if (isBrowserEnvironment() && typeof window !== 'undefined' && window.env) {
-    return window.env[key] || defaultValue;
+  if (isBrowserEnvironment() && typeof window !== 'undefined') {
+    const envSource = window && window.env;
+    if (
+      envSource &&
+      Object.prototype.hasOwnProperty.call(envSource, key)
+    ) {
+      const value = envSource[key];
+      return value === undefined || value === null
+        ? defaultValue
+        : String(value);
+    }
   }
 
   // Try global environment object
   if (typeof globalThis.env === 'object' && globalThis.env) {
-    return globalThis.env[key] || defaultValue;
+    if (Object.prototype.hasOwnProperty.call(globalThis.env, key)) {
+      const value = globalThis.env[key];
+      return value === undefined || value === null
+        ? defaultValue
+        : String(value);
+    }
   }
 
   return defaultValue;
