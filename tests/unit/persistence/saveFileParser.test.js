@@ -1,9 +1,6 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import SaveFileParser from '../../../src/persistence/saveFileParser.js';
-import {
-  manualSavePath,
-  getManualSavePath,
-} from '../../../src/utils/savePathUtils.js';
+import { manualSavePath } from '../../../src/utils/savePathUtils.js';
 import { createMockLogger } from '../testUtils.js';
 import * as readUtils from '../../../src/utils/saveFileReadUtils.js';
 
@@ -72,7 +69,7 @@ describe('SaveFileParser', () => {
         storageProvider,
         serializer,
         expect.any(Object),
-        getManualSavePath('Name')
+        manualSavePath('manual_save_Name.sav')
       );
       expect(result).toEqual({ metadata, isCorrupted: false });
       expect(logger.debug).toHaveBeenCalled();
@@ -132,6 +129,29 @@ describe('SaveFileParser', () => {
         isCorrupted: true,
       });
       expect(logger.warn).toHaveBeenCalled();
+    });
+
+    it('preserves the original file name casing when constructing the path', async () => {
+      const metadata = {
+        identifier: manualSavePath('MANUAL_SAVE_SPECIAL.SAV'),
+        saveName: 'SPECIAL',
+        timestamp: 'now',
+        playtimeSeconds: 42,
+      };
+      readUtils.readAndDeserialize.mockResolvedValue({
+        success: true,
+        data: { metadata },
+      });
+
+      const fileName = 'MANUAL_SAVE_SPECIAL.SAV';
+      await parser.parseManualSaveFile(fileName);
+
+      expect(readUtils.readAndDeserialize).toHaveBeenCalledWith(
+        storageProvider,
+        serializer,
+        expect.any(Object),
+        manualSavePath(fileName)
+      );
     });
   });
 });
