@@ -333,6 +333,159 @@ describe('EquipmentOrchestrator - Edge Cases', () => {
     });
   });
 
+  describe('Additional branch coverage scenarios', () => {
+    beforeEach(() => {
+      entityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+    });
+
+    it('returns an error when a wearable item lacks a primary equipment slot', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ wearable: true })
+        .mockReturnValueOnce({
+          layer: 'base',
+          equipmentSlots: {},
+        });
+
+      const result = await orchestrator.orchestrateEquipment({
+        entityId: 'entity-1',
+        clothingItemId: 'vest-1',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain(
+        "Item 'vest-1' has invalid equipment slot configuration"
+      );
+      expect(eventDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('surfaces layer requirement conflicts with helpful messaging', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ wearable: true })
+        .mockReturnValueOnce({
+          layer: 'base',
+          equipmentSlots: { primary: 'torso' },
+        });
+      layerCompatibilityService.checkLayerConflicts.mockResolvedValue({
+        hasConflicts: true,
+        conflicts: [
+          {
+            type: 'layer_requirement',
+            requiredLayer: 'inner',
+            details: 'Requires inner layer support',
+          },
+        ],
+      });
+
+      const result = await orchestrator.orchestrateEquipment({
+        entityId: 'entity-2',
+        clothingItemId: 'coat-1',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.conflicts).toHaveLength(1);
+      expect(result.errors).toContain(
+        'Cannot equip item: Requires inner layer support'
+      );
+    });
+
+    it('reports conflicts that omit the conflicting item identifier', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ wearable: true })
+        .mockReturnValueOnce({
+          layer: 'base',
+          equipmentSlots: { primary: 'torso' },
+        });
+      layerCompatibilityService.checkLayerConflicts.mockResolvedValue({
+        hasConflicts: true,
+        conflicts: [
+          {
+            type: 'slot_overlap',
+          },
+        ],
+      });
+
+      const result = await orchestrator.orchestrateEquipment({
+        entityId: 'entity-3',
+        clothingItemId: 'cloak-1',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain(
+        'Cannot resolve conflict: No item specified for slot_overlap conflict'
+      );
+    });
+
+    it('captures unexpected errors while removing conflicts', async () => {
+      let firstAccess = true;
+      const conflict = {
+        type: 'slot_overlap',
+        get conflictingItemId() {
+          if (firstAccess) {
+            firstAccess = false;
+            throw new Error('Transient datastore failure');
+          }
+          return 'belt-1';
+        },
+      };
+
+      entityManager.getComponentData
+        .mockReturnValueOnce({ wearable: true })
+        .mockReturnValueOnce({
+          layer: 'base',
+          equipmentSlots: { primary: 'waist' },
+        });
+      layerCompatibilityService.checkLayerConflicts.mockResolvedValue({
+        hasConflicts: true,
+        conflicts: [conflict],
+      });
+
+      const result = await orchestrator.orchestrateEquipment({
+        entityId: 'entity-4',
+        clothingItemId: 'belt-2',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain(
+        "Error removing conflicting item 'belt-1': Transient datastore failure"
+      );
+    });
+
+    it('notes when a conflicting item cannot be found during removal', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ wearable: true })
+        .mockReturnValueOnce({
+          layer: 'base',
+          equipmentSlots: { primary: 'torso' },
+        })
+        .mockReturnValueOnce({
+          equipped: {
+            torso: {
+              base: 'different-item',
+            },
+          },
+        });
+      layerCompatibilityService.checkLayerConflicts.mockResolvedValue({
+        hasConflicts: true,
+        conflicts: [
+          {
+            type: 'slot_overlap',
+            conflictingItemId: 'missing-item',
+          },
+        ],
+      });
+
+      const result = await orchestrator.orchestrateEquipment({
+        entityId: 'entity-5',
+        clothingItemId: 'vest-2',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain(
+        "Failed to remove conflicting item 'missing-item'"
+      );
+    });
+  });
+
   describe('Conflict Resolution Edge Cases', () => {
     it('should handle multiple conflicts in auto_remove with mixed success', async () => {
       entityManager.getEntityInstance.mockReturnValue({ id: 'entity1' });
