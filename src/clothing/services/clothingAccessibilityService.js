@@ -55,8 +55,16 @@ export class ClothingAccessibilityService {
    * @param {ILogger} deps.logger - Logger instance for debugging and error reporting
    * @param {IEntityManager} deps.entityManager - Entity manager for accessing entity data
    * @param {IEntitiesGateway} [deps.entitiesGateway] - Optional entities gateway for coverage analysis
+   * @param {Function} [deps.coverageAnalyzerFactory] - Optional factory used to create the coverage analyzer
+   * @param {object} [deps.priorityConfig] - Optional priority configuration overrides
    */
-  constructor({ logger, entityManager, entitiesGateway }) {
+  constructor({
+    logger,
+    entityManager,
+    entitiesGateway,
+    coverageAnalyzerFactory = createCoverageAnalyzer,
+    priorityConfig = PRIORITY_CONFIG
+  }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error', 'info']
     });
@@ -69,9 +77,9 @@ export class ClothingAccessibilityService {
     this.#cache = new Map();
     
     // Initialize priority cache if caching enabled
-    if (PRIORITY_CONFIG.enableCaching) {
+    if (priorityConfig.enableCaching) {
       this.#priorityCache = new Map();
-      this.#maxPriorityCacheSize = PRIORITY_CONFIG.maxCacheSize || 1000;
+      this.#maxPriorityCacheSize = priorityConfig.maxCacheSize || 1000;
     } else {
       this.#priorityCache = null;
       this.#maxPriorityCacheSize = 0;
@@ -82,9 +90,9 @@ export class ClothingAccessibilityService {
       try {
         // Create enhanced gateway that can fallback to entity definitions
         const enhancedGateway = this.#createEnhancedGateway(entitiesGateway);
-        this.#coverageAnalyzer = createCoverageAnalyzer({ 
-          entitiesGateway: enhancedGateway, 
-          errorHandler: null 
+        this.#coverageAnalyzer = coverageAnalyzerFactory({
+          entitiesGateway: enhancedGateway,
+          errorHandler: null
         });
         this.#logger.debug('ClothingAccessibilityService: Coverage analyzer initialized');
       } catch (error) {
