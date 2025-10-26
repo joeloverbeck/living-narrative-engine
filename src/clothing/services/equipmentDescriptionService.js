@@ -450,10 +450,6 @@ class EquipmentDescriptionService {
    * @private
    */
   #formatEquipmentDescription(itemDescriptions, exposureNotes = []) {
-    if (itemDescriptions.length === 0 && exposureNotes.length === 0) {
-      return '';
-    }
-
     // Get equipment integration configuration
     const config =
       this.#anatomyFormattingService.getEquipmentIntegrationConfig();

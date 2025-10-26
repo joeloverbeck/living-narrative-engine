@@ -425,6 +425,66 @@ describe('EquipmentDescriptionService', () => {
       );
     });
 
+    it('should log and recover when item description formatting throws', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {
+          torso_clothing: {
+            base: 'shirt_1',
+          },
+        },
+      });
+
+      const formattingError = new Error('formatting failure');
+      mockEntityManager.getEntityInstance.mockResolvedValue({
+        id: 'shirt_1',
+        components: {
+          'core:name': { text: 'shirt' },
+        },
+      });
+      mockDescriptorFormatter.formatDescriptors.mockImplementation(() => {
+        throw formattingError;
+      });
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to format item description for entity shirt_1',
+        formattingError
+      );
+    });
+
+    it('should log an error when entity retrieval fails during generation', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      const retrievalError = new Error('entity lookup failed');
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {
+          torso_clothing: {
+            base: 'shirt_1',
+          },
+        },
+      });
+
+      mockEntityManager.getEntityInstance.mockRejectedValue(retrievalError);
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to generate equipment description for entity character_1',
+        retrievalError
+      );
+    });
+
     it('should format three or more items correctly', async () => {
       // Arrange
       const entityId = 'character_1';
@@ -648,6 +708,46 @@ describe('EquipmentDescriptionService', () => {
           expect.objectContaining({
             componentId: 'descriptors:style',
             value: 'formal',
+          }),
+        ]),
+        { separator: ', ' }
+      );
+    });
+
+    it('should fall back to string values when descriptor keys are missing', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      const equippedData = {
+        torso_clothing: {
+          base: 'shirt_1',
+        },
+      };
+
+      const mockShirtEntity = {
+        id: 'shirt_1',
+        components: {
+          'descriptors:color_basic': { unexpected: 'amber' },
+          'core:name': { text: 'shirt' },
+        },
+      };
+
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: equippedData,
+      });
+      mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
+      mockDescriptorFormatter.formatDescriptors.mockReturnValue('amber');
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('Wearing: amber shirt.');
+      expect(mockDescriptorFormatter.formatDescriptors).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            componentId: 'descriptors:color_basic',
+            value: 'amber',
           }),
         ]),
         { separator: ', ' }
@@ -905,6 +1005,207 @@ describe('EquipmentDescriptionService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'No components found for equipment entity: shirt_1'
       );
+    });
+
+    it('should omit exposure notes when torso slot is occupied', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {
+          torso_upper: {
+            base: 'shirt_1',
+          },
+        },
+      });
+
+      mockEntityManager.getEntityInstance.mockResolvedValue({
+        id: 'shirt_1',
+        components: {
+          'core:name': { text: 'shirt' },
+        },
+      });
+
+      mockEntityManager.getComponentData.mockImplementation((requestedId, componentId) => {
+        if (requestedId === entityId && componentId === 'clothing:slot_metadata') {
+          return {
+            slotMappings: {
+              torso_upper: {
+                coveredSockets: ['left_breast', 'right_breast'],
+              },
+            },
+          };
+        }
+
+        if (requestedId === entityId && componentId === 'anatomy:body') {
+          return {
+            body: {
+              parts: ['torso', 'left_breast', 'right_breast'],
+            },
+          };
+        }
+
+        if (componentId === 'anatomy:part' && requestedId.includes('breast')) {
+          return { subType: 'breast' };
+        }
+
+        return null;
+      });
+
+      mockDescriptorFormatter.formatDescriptors.mockReturnValue('');
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('Wearing: shirt.');
+    });
+
+    it('should calculate exposure when equipped data is unavailable', async () => {
+      // Arrange
+      const entityId = 'character_1';
+      const leftBreastPartId = 'character_1_left_breast';
+      const rightBreastPartId = 'character_1_right_breast';
+      const retrievalError = new Error('service failure');
+
+      mockClothingManagementService.getEquippedItems.mockRejectedValue(
+        retrievalError
+      );
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (requestedEntityId === entityId) {
+            if (componentId === 'clothing:slot_metadata') {
+              return {
+                slotMappings: {
+                  torso_upper: {
+                    coveredSockets: ['left_breast', 'right_breast'],
+                  },
+                },
+              };
+            }
+
+            if (componentId === 'anatomy:body') {
+              return {
+                body: {
+                  parts: {
+                    left: leftBreastPartId,
+                    placeholder: null,
+                    right: rightBreastPartId,
+                  },
+                },
+              };
+            }
+          }
+
+          if (
+            componentId === 'anatomy:part' &&
+            (requestedEntityId === leftBreastPartId ||
+              requestedEntityId === rightBreastPartId)
+          ) {
+            return { subType: 'breast' };
+          }
+
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('Wearing: Torso is fully exposed. The breasts are exposed.');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to get equipped items for entity character_1',
+        retrievalError
+      );
+    });
+
+    it('should avoid breast exposure notes when anatomy body is missing', async () => {
+      // Arrange
+      const entityId = 'character_1';
+
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {},
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (requestedEntityId === entityId) {
+            if (componentId === 'clothing:slot_metadata') {
+              return {
+                slotMappings: {
+                  torso_upper: {
+                    coveredSockets: ['left_breast', 'right_breast'],
+                  },
+                },
+              };
+            }
+
+            if (componentId === 'anatomy:body') {
+              return null;
+            }
+          }
+
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('Wearing: Torso is fully exposed.');
+    });
+
+    it('should ignore invalid anatomy part identifiers when checking for breasts', async () => {
+      // Arrange
+      const entityId = 'character_1';
+
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {},
+      });
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (requestedEntityId === entityId) {
+            if (componentId === 'clothing:slot_metadata') {
+              return {
+                slotMappings: {
+                  torso_upper: {
+                    coveredSockets: ['left_breast', 'right_breast'],
+                  },
+                },
+              };
+            }
+
+            if (componentId === 'anatomy:body') {
+              return {
+                body: {
+                  parts: [null, 'torso_core'],
+                },
+              };
+            }
+          }
+
+          if (
+            componentId === 'anatomy:part' &&
+            requestedEntityId === 'torso_core'
+          ) {
+            return { subType: 'torso' };
+          }
+
+          return null;
+        }
+      );
+
+      // Act
+      const result = await service.generateEquipmentDescription(entityId);
+
+      // Assert
+      expect(result).toBe('Wearing: Torso is fully exposed.');
     });
   });
 
