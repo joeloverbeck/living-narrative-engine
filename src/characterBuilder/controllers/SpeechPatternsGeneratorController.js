@@ -15,6 +15,39 @@ import { tokens } from '../../dependencyInjection/tokens.js';
 import { EnhancedSpeechPatternsValidator } from '../validators/EnhancedSpeechPatternsValidator.js';
 
 /**
+ * @description Format a time estimate into a human readable string for display in the UI.
+ * @param {{ remaining: number, confidence: number }} timeEstimate - Time estimate data
+ * @returns {string} Formatted time string
+ */
+export function formatTimeEstimateText(timeEstimate) {
+  if (!timeEstimate || timeEstimate.remaining < 1000) {
+    return '';
+  }
+
+  const seconds = Math.ceil(timeEstimate.remaining / 1000);
+  const confidence = timeEstimate.confidence || 0.5;
+
+  if (seconds < 60) {
+    const range = Math.round(seconds * 0.2);
+    const low = Math.max(1, seconds - range);
+    const high = seconds + range;
+
+    if (confidence > 0.8) {
+      return `About ${seconds} seconds remaining`;
+    }
+
+    return `${low}-${high} seconds remaining`;
+  }
+
+  const minutes = Math.ceil(seconds / 60);
+  if (confidence > 0.8) {
+    return `About ${minutes} minute${minutes > 1 ? 's' : ''} remaining`;
+  }
+
+  return `${minutes}-${minutes + 1} minutes remaining`;
+}
+
+/**
  * Controller for speech patterns generator interface
  * Handles character input validation, generation workflow, and results display
  */
@@ -731,31 +764,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @returns {string} Formatted time string
    */
   #formatTimeEstimate(timeEstimate) {
-    if (!timeEstimate || timeEstimate.remaining < 1000) {
-      return ''; // Don't show very short estimates
-    }
-
-    const seconds = Math.ceil(timeEstimate.remaining / 1000);
-    const confidence = timeEstimate.confidence || 0.5;
-
-    if (seconds < 60) {
-      const range = Math.round(seconds * 0.2); // 20% variance
-      const low = Math.max(1, seconds - range);
-      const high = seconds + range;
-
-      if (confidence > 0.8) {
-        return `About ${seconds} seconds remaining`;
-      } else {
-        return `${low}-${high} seconds remaining`;
-      }
-    } else {
-      const minutes = Math.ceil(seconds / 60);
-      if (confidence > 0.8) {
-        return `About ${minutes} minute${minutes > 1 ? 's' : ''} remaining`;
-      } else {
-        return `${minutes}-${minutes + 1} minutes remaining`;
-      }
-    }
+    return formatTimeEstimateText(timeEstimate);
   }
 
   /**

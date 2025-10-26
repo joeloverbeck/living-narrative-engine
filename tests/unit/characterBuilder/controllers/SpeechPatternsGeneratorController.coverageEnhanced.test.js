@@ -12,6 +12,7 @@ import {
 } from '@jest/globals';
 import {
   SpeechPatternsGeneratorController,
+  formatTimeEstimateText,
 } from '../../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 
 globalThis.__validatorInstances = [];
@@ -969,6 +970,16 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
 
     await flushMicrotasks();
     await flushMicrotasks();
+  });
+
+  it('formats high-confidence short estimates with an "about" message', () => {
+    expect(
+      formatTimeEstimateText({ remaining: 4500, confidence: 0.9 })
+    ).toBe('About 5 seconds remaining');
+
+    expect(
+      formatTimeEstimateText({ remaining: 4500, confidence: 0.7 })
+    ).toBe('4-6 seconds remaining');
   });
 
   it('announces cancellation when generation is aborted', async () => {
