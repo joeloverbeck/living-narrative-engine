@@ -195,6 +195,31 @@ class PersistenceCoordinator {
   }
 
   /**
+   * Generates a user-facing failure message without duplicating prefixes.
+   *
+   * @private
+   * @param {string} rawMessage - Normalized error message from the persistence layer.
+   * @returns {string} Message safe for direct presentation to the player.
+   */
+  #buildFailureMessage(rawMessage) {
+    const basePrefix = 'Failed to save game';
+    const trimmedMessage = typeof rawMessage === 'string' ? rawMessage.trim() : '';
+
+    if (!trimmedMessage) {
+      return `${basePrefix}: Unknown error.`;
+    }
+
+    const lowerTrimmed = trimmedMessage.toLowerCase();
+    const lowerPrefix = basePrefix.toLowerCase();
+
+    if (lowerTrimmed.startsWith(lowerPrefix)) {
+      return trimmedMessage;
+    }
+
+    return `${basePrefix}: ${trimmedMessage}`;
+  }
+
+  /**
    * Dispatches UI events corresponding to the save result and final ready state.
    *
    * @private
@@ -239,6 +264,7 @@ class PersistenceCoordinator {
       }
     } else {
       const formattedError = this.#formatSaveError(saveResult.error);
+      const failureMessage = this.#buildFailureMessage(formattedError);
       this.#logger.error(
         `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${formattedError}`
       );
@@ -250,7 +276,7 @@ class PersistenceCoordinator {
         failureDispatched = await this.#dispatcher.dispatch(
           ENGINE_OPERATION_FAILED_UI,
           {
-            errorMessage: `Failed to save game: ${formattedError}`,
+            errorMessage: failureMessage,
             errorTitle: 'Save Failed',
           }
         );
