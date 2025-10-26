@@ -123,6 +123,7 @@ export default class MonitoringCoordinator {
     });
     this.#circuitBreakers = new Map();
     this.#alerts = [];
+    this.#intervalHandle = null;
 
     // Initialize memory monitoring if dependencies provided
     this.#memoryMonitor = memoryMonitor || null;
@@ -290,7 +291,10 @@ export default class MonitoringCoordinator {
    * @param {object} errorInfo - Error information
    */
   #trackErrorMetric(errorInfo) {
-    if (!this.#performanceMonitor) {
+    if (
+      !this.#performanceMonitor ||
+      typeof this.#performanceMonitor.recordMetric !== 'function'
+    ) {
       return;
     }
 
@@ -587,9 +591,7 @@ export default class MonitoringCoordinator {
       this.#performanceMonitor.checkMemoryUsage();
 
       // Check memory monitoring if available
-      if (this.#memoryMonitor) {
-        this.#checkMemoryHealth();
-      }
+      this.#checkMemoryHealth();
 
       // Check circuit breaker states
       this.#checkCircuitBreakerHealth();
@@ -720,10 +722,6 @@ export default class MonitoringCoordinator {
    * @returns {string} Monitoring report
    */
   getMonitoringReport() {
-    if (!this.#enabled) {
-      return 'Monitoring is disabled';
-    }
-
     const stats = this.getStats();
     const report = [];
 
@@ -734,6 +732,11 @@ export default class MonitoringCoordinator {
       `Health Checks: ${stats.healthChecksActive ? 'Active' : 'Inactive'}`
     );
     report.push('');
+
+    if (!this.#enabled) {
+      report.push('Monitoring is disabled');
+      return report.join('\n');
+    }
 
     // Performance section
     report.push('Performance Metrics:');
