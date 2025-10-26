@@ -32,6 +32,15 @@ describe('getEntityDisplayName', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
+  it("falls back to legacy 'value' property when text is unavailable", () => {
+    const e = new MockEntity('legacy-1', { value: 'Legacy Hero' });
+    expect(getEntityDisplayName(e, undefined, logger)).toBe('Legacy Hero');
+    expect(logger.debug).toHaveBeenCalledWith(
+      `getEntityDisplayName: Using legacy 'value' property from '${NAME_COMPONENT_ID}' component for entity 'legacy-1'.`
+    );
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
   it('falls back to entity.id when name component is empty', () => {
     const e = new MockEntity('e3', { text: '' });
     expect(getEntityDisplayName(e, undefined, logger)).toBe('e3');
