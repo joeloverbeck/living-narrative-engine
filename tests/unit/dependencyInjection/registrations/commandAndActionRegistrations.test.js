@@ -21,6 +21,7 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { registerCommandAndAction } from '../../../../src/dependencyInjection/registrations/commandAndActionRegistrations.js';
 import { INITIALIZABLE } from '../../../../src/dependencyInjection/tags.js';
 import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
+import { actionTracingTokens } from '../../../../src/dependencyInjection/tokens/actionTracingTokens.js';
 
 // --- Concrete Class Imports for `instanceof` checks ---
 import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryService.js';
@@ -355,6 +356,37 @@ describe('registerCommandAndAction', () => {
         }
       );
     });
+
+    test('should handle IActionTraceOutputService resolution error', () => {
+      // Arrange - Register IActionTraceOutputService that throws during resolution
+      const throwingActionTraceOutputService = jest.fn(() => {
+        throw new Error('ActionTraceOutputService resolution failed');
+      });
+      container.register(
+        actionTracingTokens.IActionTraceOutputService,
+        throwingActionTraceOutputService
+      );
+
+      // Act
+      registerCommandAndAction(container);
+
+      // Assert - ActionDiscoveryService should be created and log the failure gracefully
+      const actionDiscovery = container.resolve(tokens.IActionDiscoveryService);
+      expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
+      expect(throwingActionTraceOutputService).toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ActionTraceOutputService not available',
+        expect.any(Error)
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActionDiscoveryService: Action tracing not available, output not available',
+        {
+          hasActionAwareTraceFactory: false,
+          hasActionTraceFilter: false,
+          hasActionTraceOutputService: false,
+        }
+      );
+    });
   });
 
   describe('Factory Function Coverage', () => {
@@ -504,6 +536,48 @@ describe('registerCommandAndAction', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Command and Action Registration: Completed.'
+      );
+    });
+  });
+
+  describe('Command Processor optional dependencies', () => {
+    test('should handle optional tracing dependencies throwing errors', () => {
+      // Arrange - Register optional tracing dependencies that throw when resolved
+      const throwingActionTraceFilter = jest.fn(() => {
+        throw new Error('Command trace filter resolution failed');
+      });
+      const throwingActionExecutionTraceFactory = jest.fn(() => {
+        throw new Error('Command execution trace factory resolution failed');
+      });
+      const throwingActionTraceOutputService = jest.fn(() => {
+        throw new Error('Command trace output service resolution failed');
+      });
+
+      container.register(
+        actionTracingTokens.IActionTraceFilter,
+        throwingActionTraceFilter
+      );
+      container.register(
+        actionTracingTokens.IActionExecutionTraceFactory,
+        throwingActionExecutionTraceFactory
+      );
+      container.register(
+        actionTracingTokens.IActionTraceOutputService,
+        throwingActionTraceOutputService
+      );
+
+      // Act
+      registerCommandAndAction(container);
+
+      // Assert - CommandProcessor should resolve successfully and log tracing as disabled
+      const commandProcessor = container.resolve(tokens.ICommandProcessor);
+      expect(commandProcessor).toBeInstanceOf(CommandProcessor);
+
+      expect(throwingActionTraceFilter).toHaveBeenCalled();
+      expect(throwingActionExecutionTraceFactory).toHaveBeenCalled();
+      expect(throwingActionTraceOutputService).toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'CommandProcessor: Action execution tracing disabled'
       );
     });
   });
