@@ -5,7 +5,10 @@
  * @see src/shared/facades/BaseFacade.js
  */
 
-import { validateDependency, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -72,7 +75,9 @@ class FacadeRegistry {
       this.#validateMetadata(metadata);
 
       if (this.#registry.has(metadata.name)) {
-        throw new InvalidArgumentError(`Facade ${metadata.name} is already registered`);
+        throw new InvalidArgumentError(
+          `Facade ${metadata.name} is already registered`
+        );
       }
 
       // Register with factory first
@@ -103,10 +108,14 @@ class FacadeRegistry {
         timestamp: Date.now(),
       });
 
-      this.#logger.debug(`Registered facade: ${metadata.name} v${metadata.version}`);
-
+      this.#logger.debug(
+        `Registered facade: ${metadata.name} v${metadata.version}`
+      );
     } catch (error) {
-      this.#logger.error(`Failed to register facade: ${metadata?.name || 'unknown'}`, error);
+      this.#logger.error(
+        `Failed to register facade: ${metadata?.name || 'unknown'}`,
+        error
+      );
       throw error;
     }
   }
@@ -120,11 +129,18 @@ class FacadeRegistry {
    */
   getFacade(facadeName, options = {}) {
     try {
-      assertNonBlankString(facadeName, 'Facade name', 'getFacade', this.#logger);
+      assertNonBlankString(
+        facadeName,
+        'Facade name',
+        'getFacade',
+        this.#logger
+      );
 
       const metadata = this.#registry.get(facadeName);
       if (!metadata) {
-        throw new InvalidArgumentError(`Facade ${facadeName} is not registered`);
+        throw new InvalidArgumentError(
+          `Facade ${facadeName} is not registered`
+        );
       }
 
       // Merge config options with provided options
@@ -135,22 +151,33 @@ class FacadeRegistry {
 
       // Check if singleton is disabled in options
       const useSingleton = options.singleton !== false;
-      
+
       // Remove singleton flag from options before passing to factory
       const { singleton: _, ...factoryOptions } = mergedOptions;
 
       if (useSingleton) {
-        return this.#facadeFactory.getSingletonFacade(facadeName, factoryOptions);
+        const facade = this.#facadeFactory.getSingletonFacade(
+          facadeName,
+          factoryOptions
+        );
+
+        this.#singletonInstances.set(facadeName, facade);
+
+        return facade;
       } else {
         return this.#facadeFactory.createFacade(facadeName, factoryOptions);
       }
-
     } catch (error) {
-      if (error instanceof InvalidArgumentError && error.message.includes('is not registered')) {
+      if (
+        error instanceof InvalidArgumentError &&
+        error.message.includes('is not registered')
+      ) {
         throw error; // Re-throw unregistered facade error as-is
       }
       this.#logger.error(`Failed to get facade: ${facadeName}`, error);
-      throw new InvalidArgumentError(`Failed to get facade ${facadeName}: ${error.message}`);
+      throw new InvalidArgumentError(
+        `Failed to get facade ${facadeName}: ${error.message}`
+      );
     }
   }
 
@@ -196,8 +223,8 @@ class FacadeRegistry {
   getFacadesByCategory(category) {
     const facadeNames = this.#categories.get(category) || [];
     return facadeNames
-      .map(name => this.#registry.get(name))
-      .filter(metadata => metadata !== undefined);
+      .map((name) => this.#registry.get(name))
+      .filter((metadata) => metadata !== undefined);
   }
 
   /**
@@ -211,20 +238,20 @@ class FacadeRegistry {
     if (typeof tags === 'string') {
       tags = [tags];
     }
-    
+
     if (!Array.isArray(tags) || tags.length === 0) {
       return [];
     }
 
-    return Array.from(this.#registry.values()).filter(metadata => {
+    return Array.from(this.#registry.values()).filter((metadata) => {
       if (!metadata.tags || !Array.isArray(metadata.tags)) {
         return false;
       }
 
       if (matchAll) {
-        return tags.every(tag => metadata.tags.includes(tag));
+        return tags.every((tag) => metadata.tags.includes(tag));
       } else {
-        return tags.some(tag => metadata.tags.includes(tag));
+        return tags.some((tag) => metadata.tags.includes(tag));
       }
     });
   }
@@ -267,7 +294,7 @@ class FacadeRegistry {
     if (!metadata) {
       return null;
     }
-    
+
     // Return only the expected fields for facade info
     return {
       name: metadata.name,
@@ -290,17 +317,20 @@ class FacadeRegistry {
       requiredCapabilities = [requiredCapabilities];
     }
 
-    if (!Array.isArray(requiredCapabilities) || requiredCapabilities.length === 0) {
+    if (
+      !Array.isArray(requiredCapabilities) ||
+      requiredCapabilities.length === 0
+    ) {
       return Array.from(this.#registry.values());
     }
 
-    return Array.from(this.#registry.values()).filter(metadata => {
+    return Array.from(this.#registry.values()).filter((metadata) => {
       if (!metadata.capabilities || !Array.isArray(metadata.capabilities)) {
         return false;
       }
 
       // Check if facade has all required capabilities
-      return requiredCapabilities.every(capability => 
+      return requiredCapabilities.every((capability) =>
         metadata.capabilities.includes(capability)
       );
     });
@@ -330,9 +360,9 @@ class FacadeRegistry {
   clearAllSingletons() {
     const count = this.#singletonInstances.size;
     const names = Array.from(this.#singletonInstances.keys());
-    
+
     this.#singletonInstances.clear();
-    
+
     this.#logger.info(`Cleared ${count} singleton facade instances`);
 
     // Dispatch event
@@ -349,11 +379,18 @@ class FacadeRegistry {
    */
   unregister(facadeName) {
     try {
-      assertNonBlankString(facadeName, 'Facade name', 'unregister', this.#logger);
+      assertNonBlankString(
+        facadeName,
+        'Facade name',
+        'unregister',
+        this.#logger
+      );
 
       const metadata = this.#registry.get(facadeName);
       if (!metadata) {
-        this.#logger.warn(`Attempted to unregister unknown facade: ${facadeName}`);
+        this.#logger.warn(
+          `Attempted to unregister unknown facade: ${facadeName}`
+        );
         return;
       }
 
@@ -379,7 +416,6 @@ class FacadeRegistry {
       this.#logger.info(`Unregistered facade: ${facadeName}`, {
         category: metadata.category,
       });
-
     } catch (error) {
       this.#logger.error(`Failed to unregister facade: ${facadeName}`, error);
       throw error;
@@ -455,13 +491,21 @@ class FacadeRegistry {
       throw new InvalidArgumentError('Facade metadata must be an object');
     }
 
-    if (!metadata.name || typeof metadata.name !== 'string' || metadata.name.trim() === '') {
+    if (
+      !metadata.name ||
+      typeof metadata.name !== 'string' ||
+      metadata.name.trim() === ''
+    ) {
       throw new InvalidArgumentError('Facade name is required');
     }
-    if (!metadata.version || typeof metadata.version !== 'string' || metadata.version.trim() === '') {
+    if (
+      !metadata.version ||
+      typeof metadata.version !== 'string' ||
+      metadata.version.trim() === ''
+    ) {
       throw new InvalidArgumentError('Facade version is required');
     }
-    
+
     // Category and description are optional to match test expectations
     if (metadata.category && typeof metadata.category !== 'string') {
       throw new InvalidArgumentError('Facade category must be a string');
@@ -478,7 +522,10 @@ class FacadeRegistry {
       throw new InvalidArgumentError('Facade capabilities must be an array');
     }
 
-    if (metadata.singleton !== undefined && typeof metadata.singleton !== 'boolean') {
+    if (
+      metadata.singleton !== undefined &&
+      typeof metadata.singleton !== 'boolean'
+    ) {
       throw new InvalidArgumentError('Facade singleton flag must be boolean');
     }
   }
