@@ -7,12 +7,57 @@ import { createTestBed } from '../../common/testBed.js';
 import ErrorReporter from '../../../src/errors/ErrorReporter.js';
 import BaseError from '../../../src/errors/baseError.js';
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
+import * as errorConfigModule from '../../../src/config/errorHandling.config.js';
+import * as environmentUtils from '../../../src/utils/environmentUtils.js';
 
 describe('ErrorReporter - Error Reporting Service', () => {
   let testBed;
   let mockLogger;
   let mockEventBus;
   let errorReporter;
+  let configSpy;
+  const realMathRandom = Math.random;
+
+  const baseConfig = errorConfigModule.getErrorConfig();
+
+  const deepMerge = (target, source) => {
+    for (const [key, value] of Object.entries(source)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const existing = target[key] ?? {};
+        target[key] = deepMerge({ ...existing }, value);
+      } else {
+        target[key] = value;
+      }
+    }
+    return target;
+  };
+
+  const buildTestConfig = (overrides = {}) => {
+    const cloned = structuredClone(baseConfig);
+    cloned.reporting.enabled = true;
+    cloned.reporting.endpoint = 'http://example.com/errors';
+    cloned.reporting.batchSize = 500;
+    cloned.reporting.flushInterval = 1000;
+    cloned.reporting.includeStackTrace = true;
+    cloned.reporting.sampling.enabled = false;
+    cloned.reporting.sampling.rate = 1;
+    cloned.reporting.sampling.alwaysReport = [];
+    cloned.reporting.alerts = {
+      ...cloned.reporting.alerts,
+      criticalErrors: 9999,
+      errorRate: 9999,
+      specificError: 9999,
+      failureRate: 1
+    };
+
+    return deepMerge(cloned, overrides);
+  };
+
+  const mockConfig = (overrides = {}) => {
+    const config = buildTestConfig(overrides);
+    configSpy = jest.spyOn(errorConfigModule, 'getErrorConfig').mockImplementation(() => config);
+    return config;
+  };
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -26,6 +71,11 @@ describe('ErrorReporter - Error Reporting Service', () => {
     if (errorReporter) {
       errorReporter.destroy();
     }
+    if (configSpy) {
+      configSpy.mockRestore();
+      configSpy = null;
+    }
+    Math.random = realMathRandom;
     jest.clearAllTimers();
     jest.useRealTimers();
     testBed.cleanup();
@@ -597,6 +647,461 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
       const topErrors = errorReporter.getTopErrors(10);
       expect(topErrors).toHaveLength(1);
+    });
+  });
+
+  describe('Advanced analytics coverage', () => {
+    it('should respect sampling configuration and skip reports when filtered out', () => {
+      mockConfig({
+        reporting: {
+          sampling: {
+            enabled: true,
+            rate: 0,
+            alwaysReport: []
+          }
+        }
+      });
+
+      jest.spyOn(Math, 'random').mockReturnValue(0.9);
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        enabled: true
+      });
+
+      const sampledError = new Error('Sampled out error');
+      errorReporter.report(sampledError, { action: 'ignored' });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith('Error sampled out', {
+        errorType: sampledError.constructor.name,
+        severity: sampledError.severity
+      });
+      expect(errorReporter.getAnalytics().totalReported).toBe(0);
+    });
+
+    it('should expose analytics snapshot through getAnalytics', () => {
+      mockConfig();
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      const firstError = new Error('First failure');
+      firstError.severity = 'warning';
+      const secondError = new Error('Second failure');
+      secondError.severity = 'critical';
+
+      errorReporter.report(firstError);
+      errorReporter.report(secondError);
+
+      const analytics = errorReporter.getAnalytics();
+
+      expect(analytics.totalReported).toBe(2);
+      expect(analytics.errorsBySeverity).toEqual({
+        warning: 1,
+        critical: 1
+      });
+      expect(analytics.topErrors[0]).toMatchObject({ type: 'Error', count: 2 });
+    });
+
+    it('should honor sampling whitelist when reporting critical errors', () => {
+      mockConfig({
+        reporting: {
+          sampling: {
+            enabled: true,
+            rate: 0,
+            alwaysReport: ['critical']
+          }
+        }
+      });
+
+      jest.spyOn(Math, 'random').mockReturnValue(0.95);
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        enabled: true
+      });
+
+      const criticalError = new Error('Critical failure');
+      criticalError.severity = 'critical';
+
+      errorReporter.report(criticalError);
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+    });
+
+    it('should log batch sending when endpoint is missing', async () => {
+      mockConfig();
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: '',
+        enabled: true
+      });
+
+      errorReporter.report(new Error('Offline report'));
+      await errorReporter.flush();
+
+      expect(mockLogger.info).toHaveBeenCalledWith('Would send 1 errors to reporting service');
+    });
+
+    it('should keep a rolling window of the last 100 trend entries', () => {
+      mockConfig();
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        batchSize: 1000
+      });
+
+      const baseTime = new Date('2024-01-01T00:00:00Z').getTime();
+      const timestamps = [];
+
+      for (let i = 0; i < 105; i++) {
+        const timestamp = baseTime + i * 60000;
+        timestamps.push(timestamp);
+        jest.setSystemTime(timestamp);
+        const error = new Error(`Window error ${i}`);
+        error.severity = 'warning';
+        errorReporter.report(error);
+      }
+
+      const analytics = errorReporter.getAnalytics();
+
+      expect(analytics.trends).toHaveLength(100);
+      expect(analytics.trends[0].timestamp).toBe(timestamps[5]);
+    });
+
+    it('should expose filtered trend data and top errors through public accessors', () => {
+      mockConfig();
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        batchSize: 1000
+      });
+
+      const now = new Date('2024-08-01T12:00:00Z').getTime();
+
+      jest.setSystemTime(now - 3 * 60 * 60 * 1000);
+      errorReporter.report(new Error('Old trend'));
+
+      jest.setSystemTime(now - 30 * 60 * 1000);
+      errorReporter.report(new Error('Recent trend'));
+
+      jest.setSystemTime(now);
+
+      const recentTrends = errorReporter.getErrorTrends(1);
+      expect(recentTrends).toHaveLength(1);
+      expect(recentTrends[0].timestamp).toBeGreaterThan(now - 60 * 60 * 1000);
+
+      const fullTrends = errorReporter.getErrorTrends();
+      expect(fullTrends).toHaveLength(2);
+
+      const topErrors = errorReporter.getTopErrors(5);
+      expect(topErrors[0]).toMatchObject({ type: 'Error', count: 2 });
+
+      const defaultTopErrors = errorReporter.getTopErrors();
+      expect(defaultTopErrors[0]).toMatchObject({ type: 'Error', count: 2 });
+    });
+
+    it('should classify trends as increasing and provide targeted recommendations', () => {
+      mockConfig();
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        batchSize: 1000
+      });
+
+      const baseTime = new Date('2024-05-01T00:00:00Z').getTime();
+
+      for (let i = 0; i < 60; i++) {
+        jest.setSystemTime(baseTime + i * 60000);
+        const error = new Error('Recurring failure');
+        error.severity = i < 50 ? 'warning' : 'critical';
+        errorReporter.report(error);
+      }
+
+      const report = errorReporter.generateErrorReport();
+
+      expect(report.trends).toEqual(expect.objectContaining({ status: 'increasing' }));
+      expect(report.recommendations).toEqual(
+        expect.arrayContaining([
+          { priority: 'high', message: expect.stringContaining('critical errors') },
+          {
+            priority: 'medium',
+            message: expect.stringContaining('Investigate root cause of Error')
+          },
+          {
+            priority: 'medium',
+            message: expect.stringContaining('Error rate increasing')
+          }
+        ])
+      );
+    });
+
+    it('should classify trends as decreasing when recent severity drops', () => {
+      mockConfig();
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        batchSize: 1000
+      });
+
+      const baseTime = new Date('2024-06-01T00:00:00Z').getTime();
+
+      for (let i = 0; i < 20; i++) {
+        jest.setSystemTime(baseTime + i * 60000);
+        const error = new Error('Fluctuating failure');
+        error.severity = i < 10 ? 'critical' : 'info';
+        errorReporter.report(error);
+      }
+
+      const report = errorReporter.generateErrorReport();
+
+      expect(report.trends).toEqual(expect.objectContaining({ status: 'decreasing' }));
+    });
+
+    it('should capture server context when browser globals are unavailable', () => {
+      mockConfig();
+
+      const originalNavigator = global.navigator;
+      const originalWindow = global.window;
+      global.navigator = undefined;
+      global.window = undefined;
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        batchSize: 1000
+      });
+
+      errorReporter.report(new Error('Server-side failure'), { origin: 'server-test' });
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+
+      global.navigator = originalNavigator;
+      global.window = originalWindow;
+    });
+
+    it('should process system error events through registered listener', () => {
+      mockConfig();
+
+      const subscriptions = [];
+      mockEventBus.subscribe.mockImplementation((event, handler) => {
+        subscriptions.push({ event, handler });
+      });
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      const systemHandler = subscriptions.find(({ event }) => event === 'SYSTEM_ERROR_OCCURRED').handler;
+      systemHandler({ payload: { error: new Error('Subsystem failure'), context: { scope: 'system' } } });
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+    });
+
+    it('should process system error events with direct payload values', () => {
+      mockConfig();
+
+      const subscriptions = [];
+      mockEventBus.subscribe.mockImplementation((event, handler) => {
+        subscriptions.push({ event, handler });
+      });
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      const systemHandler = subscriptions.find(({ event }) => event === 'SYSTEM_ERROR_OCCURRED').handler;
+      systemHandler({ payload: new Error('Direct system payload') });
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+    });
+
+    it('should handle scenarios where older trend severity cannot be calculated', () => {
+      mockConfig();
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors',
+        batchSize: 1000
+      });
+
+      const baseTime = new Date('2024-07-01T00:00:00Z').getTime();
+
+      for (let i = 0; i < 20; i++) {
+        jest.setSystemTime(baseTime + i * 60000);
+        const error = new Error('Sparse failure');
+        error.severity = i < 10 ? 'debug' : 'warning';
+        errorReporter.report(error);
+      }
+
+      const report = errorReporter.generateErrorReport();
+
+      expect(report.trends).toEqual(expect.objectContaining({ status: 'insufficient_data' }));
+    });
+
+    it('should avoid repeated error alerts when threshold not met', () => {
+      mockConfig({
+        reporting: {
+          alerts: {
+            criticalErrors: 9999,
+            errorRate: 9999,
+            specificError: 5,
+            failureRate: 1
+          }
+        }
+      });
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      const occasionalError = new Error('Occasional issue');
+      for (let i = 0; i < 4; i++) {
+        jest.setSystemTime(Date.now() + i * 1000);
+        errorReporter.report(occasionalError);
+      }
+
+      expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            message: expect.stringContaining('Repeated error')
+          })
+        })
+      );
+    });
+
+    it('should respect stack trace configuration when disabled', () => {
+      mockConfig({
+        reporting: {
+          includeStackTrace: false
+        }
+      });
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      errorReporter.report(new Error('Stack disabled test'));
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+    });
+
+    it('should capture browser context when environment mode is not test', () => {
+      mockConfig();
+
+      const envSpy = jest.spyOn(environmentUtils, 'getEnvironmentMode').mockReturnValue('development');
+      const originalWindow = global.window;
+      const originalNavigator = global.navigator;
+
+      global.window = { location: { href: 'https://example.com/app' } };
+      global.navigator = { userAgent: 'BrowserAgent/1.0' };
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      errorReporter.report(new Error('Browser mode error'));
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+
+      global.window = originalWindow;
+      global.navigator = originalNavigator;
+      envSpy.mockRestore();
+    });
+
+    it('should fall back to server url when browser location is unavailable', () => {
+      mockConfig();
+
+      const envSpy = jest.spyOn(environmentUtils, 'getEnvironmentMode').mockReturnValue('development');
+      const originalWindow = global.window;
+
+      global.window = { location: {} };
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      errorReporter.report(new Error('Missing href'));
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+
+      global.window = originalWindow;
+      envSpy.mockRestore();
+    });
+
+    it('should fall back to server identifiers when browser context is absent', () => {
+      mockConfig();
+
+      const envSpy = jest.spyOn(environmentUtils, 'getEnvironmentMode').mockReturnValue('development');
+      const urlSpy = jest.spyOn(ErrorReporter, 'resolveCurrentUrl').mockReturnValue(undefined);
+      const originalNavigator = global.navigator;
+      global.navigator = undefined;
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endpoint: 'http://example.com/errors'
+      });
+
+      errorReporter.report(new Error('Missing browser context'));
+
+      expect(errorReporter.getAnalytics().totalReported).toBe(1);
+
+      global.navigator = originalNavigator;
+      urlSpy.mockRestore();
+      envSpy.mockRestore();
+    });
+
+    it('should expose URL resolution helper for direct evaluation', () => {
+      expect(
+        ErrorReporter.resolveCurrentUrl({ window: { location: { href: 'https://app.example' } } })
+      ).toBe('https://app.example');
+
+      expect(
+        ErrorReporter.resolveCurrentUrl({ location: { href: 'https://fallback.example' } })
+      ).toBe('https://fallback.example');
+
+      expect(ErrorReporter.resolveCurrentUrl({ window: { location: {} }, location: {} })).toBeUndefined();
+    });
+
+    it('should expose user agent resolution helper for direct evaluation', () => {
+      expect(
+        ErrorReporter.resolveUserAgent({ navigator: { userAgent: 'BrowserAgent/2.0' } })
+      ).toBe('BrowserAgent/2.0');
+
+      expect(ErrorReporter.resolveUserAgent({ navigator: { userAgent: '' } })).toBe('server');
+      expect(ErrorReporter.resolveUserAgent({})).toBe('server');
     });
   });
 });
