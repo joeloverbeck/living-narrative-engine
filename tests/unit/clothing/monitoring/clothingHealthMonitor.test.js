@@ -194,6 +194,64 @@ describe('ClothingHealthMonitor', () => {
     expect(overall.services.unhealthy).toContain('ClothingPriorityManager');
   });
 
+  it('handles failures in optional clothing services', async () => {
+    const logger = createLogger();
+    const services = {
+      coverageAnalyzer: {
+        analyzeCoverageBlocking: jest.fn(() => {
+          throw new Error('coverage issue');
+        }),
+      },
+      errorHandler: {
+        getErrorMetrics: jest.fn(() => {
+          throw new Error('metrics unavailable');
+        }),
+      },
+    };
+
+    const monitor = new ClothingHealthMonitor(services, logger);
+    const results = await monitor.performHealthCheck();
+
+    expect(results.get('CoverageAnalyzer')).toMatchObject({
+      healthy: false,
+      error: 'coverage issue',
+    });
+    expect(results.get('ClothingErrorHandler')).toMatchObject({
+      healthy: false,
+      error: 'metrics unavailable',
+    });
+
+    const serviceHealth = monitor.getServiceHealth('ClothingErrorHandler');
+    expect(serviceHealth.healthy).toBe(false);
+    expect(logger.debug).toHaveBeenCalledTimes(2);
+  });
+
+  it('supports custom health checks and reports thrown errors', async () => {
+    const logger = createLogger();
+    const monitor = new ClothingHealthMonitor({}, logger);
+
+    expect(() => monitor.registerHealthCheck('', () => ({}))).toThrow(
+      'serviceName must be a non-empty string',
+    );
+    expect(() => monitor.registerHealthCheck('Custom', null)).toThrow(
+      'healthCheck must be a function',
+    );
+
+    monitor.registerHealthCheck('ExplosiveService', () => {
+      throw new Error('boom');
+    });
+
+    const results = await monitor.performHealthCheck();
+    const failure = results.get('ExplosiveService');
+
+    expect(failure.healthy).toBe(false);
+    expect(failure.error).toBe('boom');
+    expect(logger.warn).toHaveBeenCalledWith('Health check failed', {
+      service: 'ExplosiveService',
+      error: 'boom',
+    });
+  });
+
   it('manages monitoring intervals and disposal', async () => {
     jest.useFakeTimers();
     const logger = createLogger();
