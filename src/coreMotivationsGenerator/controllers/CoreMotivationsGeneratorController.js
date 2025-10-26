@@ -467,41 +467,6 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   }
 
   /**
-   * Check if cached data is stale (older than 5 minutes)
-   *
-   * @returns {boolean}
-   */
-  #isCacheStale() {
-    if (!this.#cacheTimestamp) return true;
-
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-    return Date.now() - this.#cacheTimestamp > CACHE_DURATION;
-  }
-
-  /**
-   * Refresh data if cache is stale
-   */
-  async #refreshIfNeeded() {
-    if (this.#isCacheStale()) {
-      this.logger.info('Cache is stale, refreshing directions...');
-      await this.#loadEligibleDirections();
-      this.#cacheTimestamp = Date.now();
-    }
-  }
-
-  /**
-   * Enhanced clear selection with optional properties
-   */
-  #clearSelectionState() {
-    this.#selectedDirectionId = null;
-    this.#currentDirection = null;
-    this.#currentConcept = null;
-
-    // Use existing #clearDirection() method for UI updates
-    this.#clearDirection();
-  }
-
-  /**
    * Load existing motivations for a direction
    *
    * @param directionId
