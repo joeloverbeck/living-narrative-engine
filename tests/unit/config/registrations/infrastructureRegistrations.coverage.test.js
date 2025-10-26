@@ -269,6 +269,9 @@ describe('registerInfrastructure extended coverage', () => {
     const facadeFactory = container.resolve(tokens.IFacadeFactory);
     const facadeRegistry = container.resolve(tokens.IFacadeRegistry);
 
+    expect(container.resolve(tokens.FacadeFactory)).toBe(facadeFactory);
+    expect(container.resolve(tokens.FacadeRegistry)).toBe(facadeRegistry);
+
     container.executeCallbacks();
 
     expect(facadeFactory.registerFacade).toHaveBeenCalledWith(
