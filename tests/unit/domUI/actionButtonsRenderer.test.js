@@ -3023,4 +3023,372 @@ describe('ActionButtonsRenderer', () => {
       expect(document.activeElement).toBe(buttons[buttons.length - 1]);
     });
   });
+
+  describe('edge-case coverage scenarios', () => {
+    it('logs a critical error when a clicked action cannot be matched', () => {
+      const renderer = createRenderer();
+      const missingAction = createTestComposite(
+        1,
+        'core:test',
+        'Test Action',
+        'Test action description',
+        {}
+      );
+
+      renderer.availableActions = [];
+      const button = renderer._renderListItem(missingAction);
+      expect(button).not.toBeNull();
+
+      const clickHandlers = button?._listeners?.click ?? [];
+      expect(clickHandlers.length).toBeGreaterThan(0);
+
+      clickHandlers[0]();
+
+      const loggedCriticalError = mockLogger.error.mock.calls.some(
+        ([message, details]) =>
+          typeof message === 'string' &&
+          message.includes('Critical: Clicked action button') &&
+          details?.clickedActionIndex === missingAction.index
+      );
+
+      expect(loggedCriticalError).toBe(true);
+    });
+
+    it('renders grouped section headers without counts when disabled', async () => {
+      const renderer = createRenderer();
+      const defaultFormat = (namespace) => namespace?.toUpperCase() || 'UNKNOWN';
+      const defaultShouldShowCounts = () =>
+        mockActionCategorizationService.shouldUseGrouping();
+
+      mockActionCategorizationService.shouldUseGrouping.mockImplementation(
+        () => true
+      );
+      mockActionCategorizationService.shouldShowCounts.mockImplementation(
+        () => false
+      );
+      mockActionCategorizationService.groupActionsByNamespace.mockImplementation(
+        () =>
+          new Map([
+            [
+              'core',
+              [
+                createTestComposite(
+                  1,
+                  'core:test',
+                  'Test Command',
+                  'Test action description'
+                ),
+              ],
+            ],
+          ])
+      );
+      mockActionCategorizationService.formatNamespaceDisplayName.mockImplementation(
+        () => 'Core Namespace'
+      );
+
+      try {
+        renderer.availableActions = [
+          createTestComposite(
+            1,
+            'core:test',
+            'Test Command',
+            'Test action description'
+          ),
+        ];
+
+        await renderer.renderList();
+
+        const header = actionButtonsContainerElement.querySelector(
+          '.action-section-header'
+        );
+        expect(header?.textContent).toBe('Core Namespace');
+      } finally {
+        mockActionCategorizationService.shouldUseGrouping.mockImplementation(
+          () => false
+        );
+        mockActionCategorizationService.shouldShowCounts.mockImplementation(
+          defaultShouldShowCounts
+        );
+        mockActionCategorizationService.groupActionsByNamespace.mockImplementation(
+          () => new Map()
+        );
+        mockActionCategorizationService.formatNamespaceDisplayName.mockImplementation(
+          defaultFormat
+        );
+      }
+    });
+
+    it('warns and marks the button when contrast is insufficient', () => {
+      const renderer = createRenderer();
+      renderer.documentContext.window = dom.window;
+      renderer.documentContext.body = document.body;
+
+      const button = createMockElement(document, 'button', '', ['action-button']);
+      renderer._applyVisualStylesWithValidation(
+        button,
+        {
+          backgroundColor: '#000000',
+          textColor: '#000000',
+        },
+        'core:test'
+      );
+
+      expect(
+        mockLogger.warn.mock.calls.some(
+          ([message]) =>
+            typeof message === 'string' &&
+            message.includes('may have insufficient contrast')
+        )
+      ).toBe(true);
+      expect(button.classList.add).toHaveBeenCalledWith('contrast-warning');
+    });
+
+    it('returns early in _applyVisualStyles when given invalid inputs', () => {
+      const renderer = createRenderer();
+      const button = createMockElement(document, 'button');
+
+      renderer._applyVisualStyles(null, { backgroundColor: '#ffffff' }, 'core:test');
+      renderer._applyVisualStyles(button, null, 'core:test');
+
+      expect(button.classList.add).not.toHaveBeenCalledWith(
+        'action-button-custom-visual'
+      );
+    });
+
+    it('logs a warning if _applyVisualStyles encounters an internal error', () => {
+      const renderer = createRenderer();
+      const button = createMockElement(document, 'button');
+      const failure = new Error('visual failure');
+
+      jest
+        .spyOn(renderer.buttonVisualMap, 'set')
+        .mockImplementation(() => {
+          throw failure;
+        });
+
+      renderer._applyVisualStyles(
+        button,
+        { backgroundColor: '#123456', textColor: '#ffffff' },
+        'core:test'
+      );
+
+      const loggedWarning = mockLogger.warn.mock.calls.some(
+        ([message, error]) =>
+          typeof message === 'string' &&
+          message.includes('Failed to apply visual styles for action core:test') &&
+          error === failure
+      );
+
+      expect(loggedWarning).toBe(true);
+    });
+
+    it('calculates contrast ratios using parsed colors', () => {
+      const renderer = createRenderer();
+      const parseSpy = jest
+        .spyOn(renderer, '_parseColor')
+        .mockImplementationOnce(() => ({ r: 0, g: 0, b: 0 }))
+        .mockImplementationOnce(() => ({ r: 255, g: 255, b: 255 }))
+        .mockImplementationOnce(() => ({ r: 200, g: 200, b: 200 }))
+        .mockImplementationOnce(() => ({ r: 210, g: 210, b: 210 }));
+
+      expect(renderer._validateContrast('#000000', '#ffffff')).toBe(true);
+      expect(renderer._validateContrast('#cccccc', '#d6d6d6')).toBe(false);
+      expect(parseSpy).toHaveBeenCalledTimes(4);
+    });
+
+    it('reuses cached color results before parsing new values', () => {
+      const renderer = createRenderer();
+      renderer.documentContext.window = dom.window;
+      renderer.documentContext.body = document.body;
+      renderer.colorParseCache.set('cached-color', { r: 1, g: 2, b: 3 });
+
+      const createSpy = jest.spyOn(renderer.documentContext, 'create');
+      const result = renderer._parseColor('cached-color');
+
+      expect(result).toEqual({ r: 1, g: 2, b: 3 });
+      expect(createSpy).not.toHaveBeenCalled();
+    });
+
+    it('parses uncached colors and stores the computed value', () => {
+      const renderer = createRenderer();
+      renderer.documentContext.window = dom.window;
+      renderer.documentContext.body = document.body;
+
+      const color = '#123456';
+      const result = renderer._parseColor(color);
+
+      expect(result).not.toBeNull();
+      expect(renderer.colorParseCache.get(color)).toEqual(result);
+    });
+
+    it('skips hover delegation setup when the container is missing', () => {
+      const renderer = createRenderer();
+      const listenerSpy = jest.spyOn(renderer, '_addDomListener');
+
+      renderer.elements.listContainerElement = null;
+      renderer._setupHoverEventDelegation();
+
+      expect(listenerSpy).not.toHaveBeenCalled();
+    });
+
+    it('clears pending hover timeouts and logs when hover enter handling fails', () => {
+      const renderer = createRenderer();
+      const button = createMockElement(document, 'button');
+      const timeoutId = 1234;
+      renderer.hoverTimeouts.set(button, timeoutId);
+
+      const clearSpy = jest.spyOn(global, 'clearTimeout');
+      jest.spyOn(renderer, '_applyHoverState').mockImplementation(() => {
+        throw new Error('apply hover failed');
+      });
+
+      renderer._handleHoverEnter({ target: button });
+
+      expect(clearSpy).toHaveBeenCalledWith(timeoutId);
+      expect(renderer.hoverTimeouts.has(button)).toBe(false);
+      expect(
+        mockLogger.warn.mock.calls.some(
+          ([message]) =>
+            typeof message === 'string' &&
+            message.includes('Error applying hover state:')
+        )
+      ).toBe(true);
+    });
+
+    it('logs and recovers when hover leave cleanup encounters an error', () => {
+      jest.useFakeTimers();
+      const renderer = createRenderer();
+      const button = createMockElement(document, 'button');
+
+      jest.spyOn(renderer, '_applyHoverState').mockImplementation(() => {
+        throw new Error('remove hover failed');
+      });
+
+      renderer._handleHoverLeave({ target: button });
+      expect(renderer.hoverTimeouts.has(button)).toBe(true);
+
+      jest.runAllTimers();
+
+      expect(
+        mockLogger.warn.mock.calls.some(
+          ([message]) =>
+            typeof message === 'string' &&
+            message.includes('Error removing hover state:')
+        )
+      ).toBe(true);
+      expect(renderer.hoverTimeouts.has(button)).toBe(false);
+      jest.useRealTimers();
+    });
+
+    it('reapplies the custom background for selected buttons on hover exit', () => {
+      const renderer = createRenderer();
+      const button = createMockElement(document, 'button');
+      button.dataset.originalBg = '#111111';
+      button.dataset.originalText = '#eeeeee';
+      button.dataset.customBg = '#222222';
+      button.classList.add('selected');
+
+      renderer._applyHoverState(button, false);
+
+      expect(button.style.backgroundColor).toBe('rgb(34, 34, 34)');
+    });
+
+    it('logs an error when send action is triggered without the send button reference', async () => {
+      const renderer = createRenderer();
+      const originalSendButton = renderer.elements.sendButtonElement;
+      renderer.elements.sendButtonElement = null;
+
+      mockLogger.error.mockClear();
+
+      await originalSendButton.click();
+
+      expect(
+        mockLogger.error.mock.calls.some(
+          ([message]) =>
+            typeof message === 'string' &&
+            message.includes(
+              '#handleSendAction called, but sendButtonElement is null.'
+            )
+        )
+      ).toBe(true);
+    });
+
+    it('warns if updateButtonVisual fails during processing', () => {
+      const renderer = createRenderer();
+      const button = createMockElement(document, 'button');
+      renderer.buttonVisualMap.set('core:test', { button });
+      const failure = new Error('update failure');
+
+      jest.spyOn(renderer, '_removeHoverListeners').mockImplementation(() => {
+        throw failure;
+      });
+
+      renderer.updateButtonVisual('core:test', { backgroundColor: '#000000' });
+
+      const loggedWarning = mockLogger.warn.mock.calls.some(
+        ([message, error]) =>
+          typeof message === 'string' &&
+          message.includes('Failed to update visual styles for action core:test') &&
+          error === failure
+      );
+
+      expect(loggedWarning).toBe(true);
+    });
+
+    it('clears all tracked hover timeouts during dispose', () => {
+      const renderer = createRenderer();
+      const timeoutId = setTimeout(() => {}, 0);
+      renderer.hoverTimeouts.set({}, timeoutId);
+
+      const clearSpy = jest.spyOn(global, 'clearTimeout');
+
+      renderer.dispose();
+
+      expect(clearSpy).toHaveBeenCalledWith(timeoutId);
+      expect(renderer.hoverTimeouts.size).toBe(0);
+    });
+
+    it('cleans the list container after the fade-out animation when actions clear', async () => {
+      const renderer = createRenderer();
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        ([eventName]) => eventName === UPDATE_ACTIONS_EVENT_TYPE
+      )?.[1];
+      if (!updateHandler) {
+        throw new Error('Expected update actions handler to be captured.');
+      }
+
+      const action = createTestComposite(
+        1,
+        'core:test',
+        'Test Command',
+        'Test action description'
+      );
+
+      await updateHandler({
+        type: UPDATE_ACTIONS_EVENT_TYPE,
+        payload: { actorId: 'actor-123', actions: [action] },
+      });
+
+      const container = actionButtonsContainerElement;
+      const button = container.querySelector('button.action-button');
+      await button.click();
+
+      await renderer.elements.sendButtonElement.click();
+
+      expect(
+        container.classList.contains(ActionButtonsRenderer.FADE_OUT_CLASS)
+      ).toBe(true);
+
+      const animationEndEvent = new dom.window.Event('animationend');
+      container.dispatchEvent(animationEndEvent);
+
+      expect(
+        container.classList.contains(ActionButtonsRenderer.FADE_OUT_CLASS)
+      ).toBe(false);
+      expect(
+        container.classList.contains(ActionButtonsRenderer.DISABLED_CLASS)
+      ).toBe(true);
+      expect(container.children.length).toBe(0);
+    });
+  });
 });
