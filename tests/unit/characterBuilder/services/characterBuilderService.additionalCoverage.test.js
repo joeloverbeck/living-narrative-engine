@@ -13,6 +13,7 @@ import {
 import {
   CharacterBuilderService,
   CHARACTER_BUILDER_EVENTS,
+  CharacterBuilderError,
 } from '../../../../src/characterBuilder/services/characterBuilderService.js';
 import { CacheKeys } from '../../../../src/characterBuilder/cache/cacheHelpers.js';
 
@@ -89,6 +90,20 @@ describe('CharacterBuilderService additional coverage', () => {
       initialMotivation[0],
       initialMotivation[1].data,
       'motivations'
+    );
+  });
+
+  it('ignores non-iterable cache seeds without throwing', async () => {
+    const service = createService({
+      initialClicheCache: { legacy: true },
+      initialMotivationCache: Object.create(null),
+    });
+
+    const result = await service.getClichesByDirectionId('direction-legacy');
+
+    expect(result).toBeNull();
+    expect(baseDeps.logger.warn).toHaveBeenCalledWith(
+      'Database not available for cliché operations'
     );
   });
 
@@ -217,6 +232,44 @@ describe('CharacterBuilderService additional coverage', () => {
     ).rejects.toThrow(
       'No clichés found for direction: direction-1'
     );
+  });
+
+  it('surfaces cache updates errors when no database is configured', async () => {
+    const directionId = 'direction-1';
+    const updatedCliche = {
+      id: 'cliche-1',
+      conceptId: 'concept-1',
+      directionId,
+      getTotalCount: jest.fn().mockReturnValue(3),
+      toJSON: jest.fn().mockReturnValue({ id: 'cliche-1' }),
+    };
+    const cachedCliche = {
+      conceptId: 'concept-1',
+      directionId,
+      createWithItemRemoved: jest.fn().mockReturnValue(updatedCliche),
+    };
+
+    const service = createService({
+      initialClicheCache: new Map([
+        [directionId, { data: cachedCliche, timestamp: Date.now() }],
+      ]),
+    });
+
+    const removalPromise = service
+      .removeClicheItem(directionId, 'names', 'Item text')
+      .catch((error) => {
+        expect(error).toBeInstanceOf(CharacterBuilderError);
+        throw error;
+      });
+
+    await expect(removalPromise).rejects.toThrow(
+      'Database not available for cliché update'
+    );
+    expect(cachedCliche.createWithItemRemoved).toHaveBeenCalledWith(
+      'names',
+      'Item text'
+    );
+    expect(baseDeps.eventBus.dispatch).not.toHaveBeenCalled();
   });
 
   it('removes a cliché item and refreshes cache', async () => {
