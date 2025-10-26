@@ -76,6 +76,38 @@ describe('PlaytimeTracker additional branches', () => {
     );
   });
 
+  test('setAccumulatedPlaytime logs warning when dispatcher resolves false', async () => {
+    mockDispatcher.dispatch.mockResolvedValue(false);
+
+    expect(() => tracker.setAccumulatedPlaytime('bad')).toThrow(TypeError);
+
+    await Promise.resolve();
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'PlaytimeTracker: SafeEventDispatcher reported failure when reporting invalid playtime input.',
+      expect.objectContaining({
+        message: expect.stringContaining('expects a number'),
+        details: expect.objectContaining({ receivedType: 'string' }),
+      })
+    );
+  });
+
+  test('setAccumulatedPlaytime logs warning when dispatcher returns false synchronously', async () => {
+    mockDispatcher.dispatch.mockReturnValue(false);
+
+    expect(() => tracker.setAccumulatedPlaytime(-5)).toThrow(RangeError);
+
+    await Promise.resolve();
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'PlaytimeTracker: SafeEventDispatcher reported failure when reporting invalid playtime input.',
+      expect.objectContaining({
+        message: expect.stringContaining('non-negative number'),
+        details: expect.objectContaining({ seconds: -5 }),
+      })
+    );
+  });
+
   test('setAccumulatedPlaytime still throws validation error when dispatcher throws', () => {
     const dispatchError = new Error('dispatch failure');
     mockDispatcher.dispatch.mockImplementation(() => {
