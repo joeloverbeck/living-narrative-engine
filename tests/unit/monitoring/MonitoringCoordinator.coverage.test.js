@@ -531,9 +531,7 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
   it('reports disabled monitoring immediately', () => {
     const coordinator = setupCoordinator({ enabled: false });
     const report = coordinator.getMonitoringReport();
-    expect(report).toContain('Monitoring Status: Disabled');
-    expect(report).toContain('Health Checks: Inactive');
-    expect(report).toContain('Monitoring is disabled');
+    expect(report).toBe('Monitoring is disabled');
   });
 
   it('skips error tracking when the performance monitor is unavailable', () => {
@@ -650,8 +648,7 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
 
     minimalCoordinator.setEnabled(false);
     const disabledReport = minimalCoordinator.getMonitoringReport();
-    expect(disabledReport).toContain('Monitoring Status: Disabled');
-    expect(disabledReport).toContain('Monitoring is disabled');
+    expect(disabledReport).toBe('Monitoring is disabled');
 
     minimalCoordinator.reset();
     expect(minimalLogger.info).toHaveBeenCalledWith('Monitoring data reset');
