@@ -1058,10 +1058,6 @@ export class CharacterDatabase {
           };
         }
 
-        // Handle empty array case
-        if (motivations.length === 0) {
-          resolve([]);
-        }
       } catch (error) {
         this.#logger.error('Failed to save core motivations:', error);
         reject(error);
