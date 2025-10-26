@@ -70,6 +70,31 @@ describeInitializedEngineSuite(
         );
       });
 
+      it('should surface save UI information when allowance check throws', async () => {
+        const allowanceError = new Error('allowance failure');
+        context.bed
+          .getGamePersistenceService()
+          .isSavingAllowed.mockImplementation(() => {
+            throw allowanceError;
+          });
+
+        await expect(context.engine.showSaveGameUI()).resolves.toBeUndefined();
+
+        expect(
+          context.bed.getGamePersistenceService().isSavingAllowed
+        ).toHaveBeenCalledWith(true);
+        expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: GamePersistenceService threw when checking if saving is allowed.',
+          allowanceError
+        );
+        expect(
+          context.bed.getSafeEventDispatcher().dispatch
+        ).toHaveBeenCalledWith(CANNOT_SAVE_GAME_INFO);
+        expect(context.bed.getLogger().warn).not.toHaveBeenCalledWith(
+          'GameEngine.showSaveGameUI: Saving is not currently allowed.'
+        );
+      });
+
       it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', async () => {
         context.bed
           .getGamePersistenceService()
