@@ -1916,6 +1916,29 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     return await this.#handleGenerateCliches();
   }
 
+  /**
+   * @description Test helper to validate state transitions
+   * @param {string} transition - Transition identifier
+   * @param {object} context - Transition context
+   * @returns {boolean} Result of {@link #validateStateTransition}
+   * @private
+   */
+  _testValidateStateTransition(transition, context) {
+    return this.#validateStateTransition(transition, context);
+  }
+
+  /**
+   * @description Test helper to invoke the legacy error handler
+   * @param {Error} error - Error instance
+   * @param {string} userMessage - Friendly message
+   * @param {Function} [recoveryAction] - Optional recovery callback
+   * @returns {void}
+   * @private
+   */
+  _testInvokeHandleError(error, userMessage, recoveryAction) {
+    this.#handleError(error, userMessage, recoveryAction);
+  }
+
   // ============= Enhanced Error Handling =============
 
   /**
@@ -2442,12 +2465,16 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    * @param {object} state.currentConcept - Current concept
    * @param {object} state.currentDirection - Current direction
    * @param {string} state.selectedDirectionId - Selected direction ID
+   * @param {object} [state.currentCliches] - Current clichés data
+   * @param {boolean} [state.isGenerating] - Generation in progress flag
    * @private
    */
   _testSetCurrentState({
     currentConcept,
     currentDirection,
     selectedDirectionId,
+    currentCliches,
+    isGenerating,
   }) {
     if (currentConcept !== undefined) {
       this.#currentConcept = currentConcept;
@@ -2457,6 +2484,12 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     }
     if (selectedDirectionId !== undefined) {
       this.#selectedDirectionId = selectedDirectionId;
+    }
+    if (currentCliches !== undefined) {
+      this.#currentCliches = currentCliches;
+    }
+    if (isGenerating !== undefined) {
+      this.#isGenerating = isGenerating;
     }
   }
 
