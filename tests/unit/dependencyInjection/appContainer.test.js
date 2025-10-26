@@ -119,39 +119,24 @@ describe('AppContainer', () => {
         expect(instance1.id).toBe('singleton-factory');
       });
 
+      it('should default lifecycle to singleton when undefined', () => {
+        let created = 0;
+        const factory = jest.fn(() => ({ id: ++created }));
+
+        container.register('defaultLifecycle', factory, { lifecycle: undefined });
+
+        const first = container.resolve('defaultLifecycle');
+        const second = container.resolve('defaultLifecycle');
+
+        expect(first).toBe(second);
+        expect(first.id).toBe(1);
+        expect(factory).toHaveBeenCalledTimes(1);
+      });
+
       it('should throw error for unknown lifecycle', () => {
-        // Test unknown lifecycle by creating a custom registration scenario
-        const testContainer = new AppContainer();
+        container.register('testKey', 'value', { lifecycle: 'unknown' });
 
-        // Mock the resolve method to test the unknown lifecycle branch
-        const originalResolve = testContainer.resolve;
-        testContainer.resolve = function (key) {
-          const registrationKey = String(key);
-          if (registrationKey === 'testKey') {
-            // Force unknown lifecycle path
-            const registration = {
-              registration: 'value',
-              options: { lifecycle: 'unknown' },
-            };
-            const { registration: factoryOrValueOrClass, options } =
-              registration;
-            const lifecycle = options.lifecycle || 'singleton';
-
-            if (
-              lifecycle !== 'singleton' &&
-              lifecycle !== 'singletonFactory' &&
-              lifecycle !== 'transient'
-            ) {
-              throw new Error(
-                `AppContainer: Unknown lifecycle "${lifecycle}" for key "${registrationKey}".`
-              );
-            }
-            return 'value';
-          }
-          return originalResolve.call(this, key);
-        };
-
-        expect(() => testContainer.resolve('testKey')).toThrow(
+        expect(() => container.resolve('testKey')).toThrow(
           'AppContainer: Unknown lifecycle "unknown" for key "testKey".'
         );
       });
@@ -461,6 +446,57 @@ describe('AppContainer', () => {
         // But registration is gone
         expect(container.isRegistered('service')).toBe(false);
       });
+    });
+
+    describe('cleanup()', () => {
+      it('should dispose singletons, clear overrides, and log actions', () => {
+        let instanceCounter = 0;
+        const factory = jest.fn(() => ({ id: ++instanceCounter }));
+
+        container.register('service', factory); // defaults to singleton lifecycle
+        const initialInstance = container.resolve('service');
+        expect(initialInstance.id).toBe(1);
+
+        container.setOverride('service', 'override-value');
+        expect(container.resolve('service')).toBe('override-value');
+
+        container.cleanup();
+
+        expect(consoleLogSpy).toHaveBeenCalledWith(
+          'AppContainer: Cleaning up container for tests...'
+        );
+        expect(consoleLogSpy).toHaveBeenCalledWith(
+          'AppContainer: Disposing singleton instances...'
+        );
+
+        const newInstance = container.resolve('service');
+        expect(newInstance.id).toBe(2);
+        expect(factory).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+  describe('Callback Handling', () => {
+    it('should throw when registering a non-function callback', () => {
+      expect(() => container.registerCallback('not-a-function')).toThrow(
+        'AppContainer: Callback must be a function'
+      );
+    });
+
+    it('should log and rethrow errors thrown by callbacks', () => {
+      const erroringCallback = jest.fn(() => {
+        throw new Error('Callback failed');
+      });
+
+      container.registerCallback(() => {});
+      container.registerCallback(erroringCallback);
+
+      expect(() => container.executeCallbacks()).toThrow('Callback failed');
+      expect(erroringCallback).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'AppContainer: Error executing callback:',
+        expect.any(Error)
+      );
     });
   });
 
