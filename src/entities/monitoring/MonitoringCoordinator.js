@@ -722,6 +722,10 @@ export default class MonitoringCoordinator {
    * @returns {string} Monitoring report
    */
   getMonitoringReport() {
+    if (!this.#enabled) {
+      return 'Monitoring is disabled';
+    }
+
     const stats = this.getStats();
     const report = [];
 
@@ -732,11 +736,6 @@ export default class MonitoringCoordinator {
       `Health Checks: ${stats.healthChecksActive ? 'Active' : 'Inactive'}`
     );
     report.push('');
-
-    if (!this.#enabled) {
-      report.push('Monitoring is disabled');
-      return report.join('\n');
-    }
 
     // Performance section
     report.push('Performance Metrics:');
