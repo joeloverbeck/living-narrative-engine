@@ -93,6 +93,8 @@ export class CharacterBuilderService {
    * @param {TraitsGenerator} [dependencies.traitsGenerator] - Traits generator service
    * @param {object} [dependencies.container] - DI container for resolving dependencies
    * @param {import('../cache/CoreMotivationsCacheManager.js').default} [dependencies.cacheManager] - Cache manager for Core Motivations
+   * @param {Iterable<[string, any]>|Map<string, any>} [dependencies.initialClicheCache] - Preloaded cliché cache entries
+   * @param {Iterable<[string, any]>|Map<string, any>} [dependencies.initialMotivationCache] - Preloaded motivation cache entries
    */
   constructor({
     logger,
@@ -105,6 +107,8 @@ export class CharacterBuilderService {
     traitsGenerator = null,
     container = null,
     cacheManager = null,
+    initialClicheCache = null,
+    initialMotivationCache = null,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -143,10 +147,41 @@ export class CharacterBuilderService {
     this.#container = container;
     this.#cacheManager = cacheManager;
 
+    this.#seedCache(this.#clicheCache, initialClicheCache);
+    this.#seedCache(this.#motivationCache, initialMotivationCache);
+
     // Initialize cache with existing Maps as fallback
     if (this.#cacheManager) {
       this.#enhanceCacheIntegration();
       // Note: CACHE_INITIALIZED event is already dispatched by the cache manager itself
+    }
+  }
+
+  /**
+   * Seed cache entries when migrating to the enhanced cache manager
+   *
+   * @param {Map<string, any>} targetCache - Cache instance to seed
+   * @param {Iterable<[string, any]>|Map<string, any>|null} initialData - Initial cache entries
+   * @private
+   */
+  #seedCache(targetCache, initialData) {
+    if (!initialData) {
+      return;
+    }
+
+    const entries =
+      initialData instanceof Map
+        ? initialData.entries()
+        : typeof initialData[Symbol.iterator] === 'function'
+        ? initialData
+        : null;
+
+    if (!entries) {
+      return;
+    }
+
+    for (const [key, value] of entries) {
+      targetCache.set(key, value);
     }
   }
 

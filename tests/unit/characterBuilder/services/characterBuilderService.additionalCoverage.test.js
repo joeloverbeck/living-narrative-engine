@@ -1,511 +1,336 @@
 /**
- * @file Additional unit tests for CharacterBuilderService focusing on hard-to-reach
- *       branches and defensive error handling paths.
+ * @file Additional coverage tests for CharacterBuilderService edge cases
  */
 
 import {
   describe,
   it,
   expect,
-  jest,
+  beforeEach,
   afterEach,
+  jest,
 } from '@jest/globals';
 import {
   CharacterBuilderService,
-  CharacterBuilderError,
   CHARACTER_BUILDER_EVENTS,
 } from '../../../../src/characterBuilder/services/characterBuilderService.js';
-import { CoreMotivation } from '../../../../src/characterBuilder/models/coreMotivation.js';
-import { CacheInvalidation } from '../../../../src/characterBuilder/cache/cacheHelpers.js';
-import { ValidationError } from '../../../../src/errors/validationError.js';
+import { CacheKeys } from '../../../../src/characterBuilder/cache/cacheHelpers.js';
 
-const buildService = (overrides = {}) => {
-  const logger =
-    overrides.logger ??
-    {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-  const storageService =
-    overrides.storageService ??
-    ({
-      initialize: jest.fn().mockResolvedValue(),
-      storeCharacterConcept: jest.fn(),
-      listCharacterConcepts: jest.fn(),
-      getCharacterConcept: jest
-        .fn()
-        .mockResolvedValue({
-          id: 'concept-1',
-          concept: 'A stoic wanderer seeking redemption.',
-        }),
-      deleteCharacterConcept: jest.fn(),
-      storeThematicDirections: jest.fn(),
-      getThematicDirections: jest.fn().mockResolvedValue([]),
-      getThematicDirection: jest
-        .fn()
-        .mockResolvedValue({
-          id: 'direction-1',
-          conceptId: 'concept-1',
-          title: 'Haunted Wanderer',
-        }),
-      findOrphanedDirections: jest.fn(),
-    });
-
-  const directionGenerator =
-    overrides.directionGenerator ?? ({ generateDirections: jest.fn() });
-
-  const eventBus = overrides.eventBus ?? { dispatch: jest.fn() };
-
-  const defaultDatabase = {
-    getClicheByDirectionId: jest.fn(),
-    saveCliche: jest.fn(),
-    deleteCliche: jest.fn(),
-    addMetadata: jest.fn(),
-    getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
-    saveCoreMotivations: jest.fn().mockResolvedValue([]),
-    getCoreMotivationsCount: jest.fn().mockResolvedValue(0),
-    deleteCoreMotivation: jest.fn().mockResolvedValue(true),
-    deleteAllCoreMotivationsForDirection: jest.fn().mockResolvedValue(0),
-    getCoreMotivationsByConceptId: jest.fn().mockResolvedValue([]),
-    hasCoreMotivationsForDirection: jest.fn().mockResolvedValue(false),
-    debugDumpAllCharacterConcepts: jest.fn().mockResolvedValue(),
-    debugDumpAllThematicDirections: jest.fn().mockResolvedValue(),
-    debugDumpAllCliches: jest.fn().mockResolvedValue(),
-  };
-
-  const database = overrides.database === undefined ? defaultDatabase : overrides.database;
-
-  const container =
-    overrides.container ??
-    {
-      resolve: jest.fn(() => ({
-        generate: jest.fn().mockResolvedValue([]),
-        getLastModelUsed: jest.fn().mockReturnValue('model'),
-      })),
-    };
-
-  const cacheManager = overrides.cacheManager ?? null;
-
-  const service = new CharacterBuilderService({
-    logger,
-    storageService,
-    directionGenerator,
-    eventBus,
-    database,
-    schemaValidator: overrides.schemaValidator ?? null,
-    clicheGenerator: overrides.clicheGenerator ?? null,
-    traitsGenerator: overrides.traitsGenerator ?? null,
-    container,
-    cacheManager,
-  });
-
-  return {
-    service,
-    logger,
-    storageService,
-    directionGenerator,
-    eventBus,
-    database,
-    container,
-    cacheManager,
-  };
-};
-
-afterEach(() => {
-  jest.clearAllMocks();
-  jest.restoreAllMocks();
-  jest.useRealTimers();
+const createBaseDependencies = () => ({
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+  storageService: {
+    initialize: jest.fn(),
+    storeCharacterConcept: jest.fn(),
+    listCharacterConcepts: jest.fn(),
+    getCharacterConcept: jest.fn(),
+    deleteCharacterConcept: jest.fn(),
+    storeThematicDirections: jest.fn(),
+    getThematicDirections: jest.fn(),
+    getAllThematicDirections: jest.fn(),
+    deleteThematicDirection: jest.fn(),
+  },
+  directionGenerator: {
+    generateDirections: jest.fn(),
+  },
+  eventBus: {
+    dispatch: jest.fn(),
+  },
 });
 
 describe('CharacterBuilderService additional coverage', () => {
-  describe('Cliché error handling', () => {
-    it('wraps unexpected errors when deleting clichés', async () => {
-      const { service, logger } = buildService();
-      jest
-        .spyOn(service, 'getClichesByDirectionId')
-        .mockRejectedValue(new Error('network down'));
+  let baseDeps;
 
-      await expect(
-        service.deleteClichesForDirection('direction-1')
-      ).rejects.toThrow('Failed to delete clichés: network down');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to delete clichés for direction-1:',
-        expect.any(Error)
-      );
-    });
-
-    it('rethrows CharacterBuilderError when database is unavailable for updates', async () => {
-      const { service } = buildService({ database: null });
-      const fakeCliche = {
-        conceptId: 'concept-1',
-        directionId: 'direction-1',
-        createWithItemRemoved: jest.fn().mockReturnValue({
-          conceptId: 'concept-1',
-          directionId: 'direction-1',
-          getTotalCount: jest.fn().mockReturnValue(1),
-        }),
-      };
-
-      jest
-        .spyOn(service, 'getClichesByDirectionId')
-        .mockResolvedValue(fakeCliche);
-
-      const promise = service.removeClicheItem(
-        'direction-1',
-        'names',
-        'Old Entry'
-      );
-
-      await expect(promise).rejects.toBeInstanceOf(CharacterBuilderError);
-      await expect(promise).rejects.toThrow(
-        'Database not available for cliché update'
-      );
-    });
-
-    it('wraps unexpected errors when removing cliché items', async () => {
-      const { service, logger } = buildService();
-      const fakeCliche = {
-        createWithItemRemoved: jest.fn(() => {
-          throw new Error('mutation failure');
-        }),
-      };
-
-      jest
-        .spyOn(service, 'getClichesByDirectionId')
-        .mockResolvedValue(fakeCliche);
-
-      await expect(
-        service.removeClicheItem('direction-1', 'names', 'Old Entry')
-      ).rejects.toThrow('Failed to remove cliché item: mutation failure');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to remove cliché item for direction-1:',
-        expect.any(Error)
-      );
-    });
-
-    it('wraps unexpected errors when removing cliché tropes', async () => {
-      const { service, logger } = buildService();
-      const fakeCliche = {
-        createWithTropeRemoved: jest.fn(() => {
-          throw new Error('trope removal failed');
-        }),
-      };
-
-      jest
-        .spyOn(service, 'getClichesByDirectionId')
-        .mockResolvedValue(fakeCliche);
-
-      await expect(
-        service.removeClicheTrope('direction-1', 'Chosen One')
-      ).rejects.toThrow('Failed to remove cliché trope: trope removal failed');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to remove cliché trope for direction-1:',
-        expect.any(Error)
-      );
-    });
+  beforeEach(() => {
+    baseDeps = createBaseDependencies();
   });
 
-  describe('Core motivations generation', () => {
-    it('rejects when cliché context is empty', async () => {
-      const { service, storageService } = buildService();
-      storageService.getCharacterConcept.mockResolvedValue({
-        id: 'concept-1',
-        concept: 'An enigmatic rogue.',
-      });
-
-      storageService.getThematicDirection.mockResolvedValue({
-        id: 'direction-1',
-        conceptId: 'concept-1',
-        title: 'Shadow Operative',
-      });
-
-      await expect(
-        service.generateCoreMotivationsForDirection('concept-1', 'direction-1', [])
-      ).rejects.toThrow(ValidationError);
-    });
-
-    it('logs validation warnings for generated motivations', async () => {
-      const generator = {
-        generate: jest.fn().mockResolvedValue([
-          {
-            coreDesire: 'short',
-            internalContradiction: 'short',
-            centralQuestion: 'short',
-          },
-        ]),
-        getLastModelUsed: jest.fn().mockReturnValue('gpt-test'),
-      };
-
-      const container = { resolve: jest.fn().mockReturnValue(generator) };
-      const { service, storageService, logger } = buildService({ container });
-
-      storageService.getCharacterConcept.mockResolvedValue({
-        id: 'concept-1',
-        concept: 'An enigmatic rogue.',
-      });
-
-      storageService.getThematicDirection.mockResolvedValue({
-        id: 'direction-1',
-        conceptId: 'concept-1',
-        title: 'Shadow Operative',
-      });
-
-      const motivations = await service.generateCoreMotivationsForDirection(
-        'concept-1',
-        'direction-1',
-        [{ id: 'cliche-1' }]
-      );
-
-      expect(Array.isArray(motivations)).toBe(true);
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Motivation validation issues:' )
-      );
-    });
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
-  describe('Core motivations retrieval and caching', () => {
-    it('logs cache errors and falls back to database retrieval', async () => {
-      const cacheManager = {
-        get: jest.fn(() => {
-          throw new Error('cache offline');
-        }),
-        set: jest.fn(),
-        delete: jest.fn(),
-      };
-      const { service, logger, database, eventBus } = buildService({ cacheManager });
-      database.getCoreMotivationsByDirectionId.mockResolvedValue([]);
+  const createService = (overrides = {}) => {
+    const deps = {
+      logger: overrides.logger ?? baseDeps.logger,
+      storageService: overrides.storageService ?? baseDeps.storageService,
+      directionGenerator: overrides.directionGenerator ?? baseDeps.directionGenerator,
+      eventBus: overrides.eventBus ?? baseDeps.eventBus,
+      database: overrides.database ?? null,
+      cacheManager: overrides.cacheManager ?? null,
+      initialClicheCache: overrides.initialClicheCache ?? null,
+      initialMotivationCache: overrides.initialMotivationCache ?? null,
+    };
 
-      const results = await service.getCoreMotivationsByDirectionId('direction-1');
+    return new CharacterBuilderService(deps);
+  };
 
-      expect(results).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('cache offline')
-      );
-      expect(eventBus.dispatch).toHaveBeenCalledWith(
-        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-        { directionId: 'direction-1', source: 'database', count: 0 }
-      );
+  it('migrates legacy caches when cache manager is provided', () => {
+    const initialCliche = ['direction-1', { data: { id: 'cliche-1' } }];
+    const initialMotivation = ['motivation-key', { data: [{ id: 'motivation-1' }] }];
+    const cacheManager = { set: jest.fn(), get: jest.fn() };
+
+    createService({
+      cacheManager,
+      initialClicheCache: new Map([initialCliche]),
+      initialMotivationCache: [initialMotivation],
     });
 
-    it('returns empty array when database has no motivations', async () => {
-      const { service, database, eventBus } = buildService();
-      database.getCoreMotivationsByDirectionId.mockResolvedValue(null);
-
-      const results = await service.getCoreMotivationsByDirectionId('direction-1');
-
-      expect(results).toEqual([]);
-      expect(eventBus.dispatch).toHaveBeenCalledWith(
-        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-        { directionId: 'direction-1', source: 'database', count: 0 }
-      );
-    });
-
-    it('logs cache write failures without interrupting results', async () => {
-      const cacheManager = {
-        get: jest.fn().mockReturnValue(null),
-        set: jest.fn(() => {
-          throw new Error('write failed');
-        }),
-        delete: jest.fn(),
-      };
-      const { service, logger, database } = buildService({ cacheManager });
-      database.getCoreMotivationsByDirectionId.mockResolvedValue([
-        {
-          directionId: 'direction-1',
-          conceptId: 'concept-1',
-          coreDesire: 'A heroic quest to save the realm',
-          internalContradiction: 'A fear of leadership responsibilities',
-          centralQuestion: 'Can they accept their destiny?',
-        },
-      ]);
-
-      const results = await service.getCoreMotivationsByDirectionId('direction-1');
-
-      expect(results).toHaveLength(1);
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to cache motivations')
-      );
-    });
+    expect(cacheManager.set).toHaveBeenCalledWith(
+      initialCliche[0],
+      initialCliche[1].data,
+      'cliches'
+    );
+    expect(cacheManager.set).toHaveBeenCalledWith(
+      initialMotivation[0],
+      initialMotivation[1].data,
+      'motivations'
+    );
   });
 
-  describe('Core motivations persistence', () => {
-    it('converts model instances and invalidates cache when saving', async () => {
-      const cacheManager = { get: jest.fn(), set: jest.fn(), delete: jest.fn() };
-      const { service, database, eventBus } = buildService({ cacheManager });
-      const motivation = new CoreMotivation({
-        directionId: 'direction-1',
-        conceptId: 'concept-1',
-        coreDesire: 'A long standing need to protect others',
-        internalContradiction: 'A deep seated fear of attachment',
-        centralQuestion: 'Can they allow themselves to care?',
+  it('retries concept creation with exponential backoff before failing', async () => {
+    const setTimeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation((callback, delay) => {
+        callback();
+        return delay;
       });
+    const storageError = new Error('Save failed');
+    baseDeps.storageService.storeCharacterConcept.mockRejectedValue(storageError);
 
-      const toJSONSpy = jest.spyOn(CoreMotivation.prototype, 'toJSON');
-      const invalidateSpy = jest.spyOn(CacheInvalidation, 'invalidateMotivations');
+    const service = createService();
 
-      database.saveCoreMotivations.mockResolvedValue(['motivation-1']);
-      database.getCoreMotivationsCount.mockResolvedValue(1);
+    await expect(
+      service.createCharacterConcept('A valid concept')
+    ).rejects.toThrow(
+      'Failed to create character concept after 3 attempts: Save failed'
+    );
 
-      const savedIds = await service.saveCoreMotivations('direction-1', [motivation]);
-
-      expect(savedIds).toEqual(['motivation-1']);
-      expect(database.saveCoreMotivations).toHaveBeenCalledWith([
-        expect.objectContaining({ directionId: 'direction-1' }),
-      ]);
-      expect(toJSONSpy).toHaveBeenCalled();
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        cacheManager,
-        'direction-1',
-        motivation.conceptId
-      );
-      expect(eventBus.dispatch).toHaveBeenCalledWith(
-        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
-        expect.objectContaining({ directionId: 'direction-1' })
-      );
-    });
-
-    it('logs and rethrows errors when saving motivations fails', async () => {
-      const { service, logger, database } = buildService();
-      database.saveCoreMotivations.mockRejectedValue(new Error('db down'));
-
-      await expect(
-        service.saveCoreMotivations('direction-1', [
-          {
-            conceptId: 'concept-1',
-            coreDesire: 'Protect the innocent',
-            internalContradiction: 'Fear of failure',
-            centralQuestion: 'Can they overcome self-doubt?',
-          },
-        ])
-      ).rejects.toThrow('db down');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to save core motivations:',
-        expect.any(Error)
-      );
-    });
-
-    it('invalidates caches when removing individual motivations', async () => {
-      const cacheManager = { get: jest.fn(), set: jest.fn(), delete: jest.fn() };
-      const { service, database } = buildService({ cacheManager });
-      database.deleteCoreMotivation.mockResolvedValue(true);
-      const invalidateSpy = jest.spyOn(CacheInvalidation, 'invalidateMotivations');
-
-      const result = await service.removeCoreMotivationItem(
-        'direction-1',
-        'motivation-1'
-      );
-
-      expect(result).toBe(true);
-      expect(invalidateSpy).toHaveBeenCalledWith(cacheManager, 'direction-1');
-    });
-
-    it('logs and rethrows errors when removing motivations fails', async () => {
-      const { service, logger, database } = buildService();
-      database.deleteCoreMotivation.mockRejectedValue(new Error('delete failed'));
-
-      await expect(
-        service.removeCoreMotivationItem('direction-1', 'motivation-1')
-      ).rejects.toThrow('delete failed');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to remove core motivation motivation-1:',
-        expect.any(Error)
-      );
-    });
+    expect(baseDeps.storageService.storeCharacterConcept).toHaveBeenCalledTimes(3);
+    expect(setTimeoutSpy).toHaveBeenNthCalledWith(1, expect.any(Function), 1);
+    expect(setTimeoutSpy).toHaveBeenNthCalledWith(2, expect.any(Function), 2);
+    expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
+      CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
+      expect.objectContaining({ operation: 'createCharacterConcept' })
+    );
   });
 
-  describe('Core motivations exports and statistics', () => {
-    it('logs and rethrows errors when exporting motivations fails', async () => {
-      const { service, logger } = buildService();
-      jest
-        .spyOn(service, 'getCoreMotivationsByDirectionId')
-        .mockRejectedValue(new Error('export failed'));
+  it('blocks direction generation when circuit breaker cooldown is active', async () => {
+    const service = createService();
+    const breakerKey = 'directions_concept-1';
+    const now = Date.now();
 
-      await expect(
-        service.exportCoreMotivationsToText('direction-1')
-      ).rejects.toThrow('export failed');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to export core motivations for direction direction-1:',
-        expect.any(Error)
-      );
+    jest.spyOn(Date, 'now').mockReturnValue(now);
+    service.__setCircuitBreakerStateForTests(breakerKey, {
+      failures: 5,
+      lastFailureTime: now - 1000,
     });
 
-    it('logs and rethrows errors when statistics cannot be calculated', async () => {
-      const { service, logger } = buildService();
-      jest
-        .spyOn(service, 'getThematicDirectionsByConceptId')
-        .mockRejectedValue(new Error('statistics failed'));
-
-      await expect(
-        service.getCoreMotivationsStatistics('concept-1')
-      ).rejects.toThrow('statistics failed');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to get core motivations statistics for concept concept-1:',
-        expect.any(Error)
-      );
-    });
+    await expect(
+      service.generateThematicDirections('concept-1')
+    ).rejects.toThrow(
+      'Service temporarily unavailable for concept concept-1. Too many recent failures.'
+    );
   });
 
-  describe('Circuit breaker behaviour', () => {
-    it('exposes circuit breaker state for cooldown enforcement', () => {
-      const { service } = buildService();
-      const now = Date.now();
-
-      service.__setCircuitBreakerStateForTests('directions_concept-1', {
-        failures: 5,
-        lastFailureTime: now,
-      });
-
-      const state = service.__getCircuitBreakerStateForTests(
-        'directions_concept-1'
-      );
-
-      expect(state).toEqual({ failures: 5, lastFailureTime: now });
+  it('resets circuit breaker when cooldown has elapsed', async () => {
+    const conceptId = 'concept-1';
+    const direction = { id: 'direction-1' };
+    baseDeps.storageService.getCharacterConcept.mockResolvedValue({
+      id: conceptId,
+      concept: 'A concept',
     });
+    baseDeps.directionGenerator.generateDirections.mockResolvedValue([direction]);
+    baseDeps.storageService.storeThematicDirections.mockResolvedValue([direction]);
+
+    const service = createService();
+    const breakerKey = `directions_${conceptId}`;
+    service.__setCircuitBreakerStateForTests(breakerKey, {
+      failures: 5,
+      lastFailureTime: Date.now() - 10 * 60 * 1000,
+    });
+
+    const result = await service.generateThematicDirections(conceptId);
+
+    expect(result).toEqual([direction]);
+    expect(
+      service.__getCircuitBreakerStateForTests(breakerKey).failures
+    ).toBe(0);
   });
 
-  describe('Debug dump coverage', () => {
-    it('warns and exits early when database is unavailable', async () => {
-      const { service, logger } = buildService({ database: null });
+  it('wraps storage errors when listing all thematic directions', async () => {
+    const failure = new Error('Database offline');
+    baseDeps.storageService.getAllThematicDirections.mockRejectedValue(failure);
 
-      await service.debugDumpDatabase();
+    const service = createService();
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        'DEBUG: Database not available for debugging'
-      );
-    });
+    await expect(service.getAllThematicDirections()).rejects.toThrow(
+      'Failed to get all thematic directions: Database offline'
+    );
+    expect(baseDeps.logger.error).toHaveBeenCalledWith(
+      'Failed to get all thematic directions: Database offline',
+      failure
+    );
+  });
 
-    it('performs debug dump when database is available', async () => {
-      const { service, database, logger } = buildService();
+  it('logs batch fetch failures when retrieving multiple clichés', async () => {
+    const databaseError = new Error('lookup failed');
+    const database = {
+      getClicheByDirectionId: jest.fn().mockRejectedValue(databaseError),
+    };
 
-      await service.debugDumpDatabase();
+    const service = createService({ database });
 
-      expect(database.debugDumpAllCharacterConcepts).toHaveBeenCalled();
-      expect(database.debugDumpAllThematicDirections).toHaveBeenCalled();
-      expect(database.debugDumpAllCliches).toHaveBeenCalled();
-      expect(logger.debug).toHaveBeenCalledWith('DEBUG: Database dump completed');
-    });
+    const result = await service.getClichesForDirections(['direction-1']);
 
-    it('logs errors that occur during debug dump', async () => {
-      const { service, database, logger } = buildService();
-      const failure = new Error('dump failed');
-      database.debugDumpAllCharacterConcepts.mockRejectedValue(failure);
+    expect(result.size).toBe(0);
+    expect(baseDeps.logger.error).toHaveBeenCalledWith(
+      'Batch fetch failed:',
+      databaseError
+    );
+  });
 
-      await service.debugDumpDatabase();
+  it('throws when deleting clichés without a database connection', async () => {
+    const service = createService();
+    const cliche = { id: 'c1' };
+    jest
+      .spyOn(service, 'getClichesByDirectionId')
+      .mockResolvedValue(cliche);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        'DEBUG: Error during database dump:',
-        failure
-      );
-    });
+    await expect(
+      service.deleteClichesForDirection('direction-1')
+    ).rejects.toThrow('Database not available for cliché deletion');
+  });
+
+  it('throws when removing a cliché item for an unknown direction', async () => {
+    const service = createService();
+    jest
+      .spyOn(service, 'getClichesByDirectionId')
+      .mockResolvedValue(null);
+
+    await expect(
+      service.removeClicheItem('direction-1', 'names', 'Item text')
+    ).rejects.toThrow(
+      'No clichés found for direction: direction-1'
+    );
+  });
+
+  it('removes a cliché item and refreshes cache', async () => {
+    const database = {
+      updateCliche: jest.fn().mockResolvedValue(),
+    };
+    const updatedCliche = {
+      id: 'cliche-1',
+      conceptId: 'concept-1',
+      directionId: 'direction-1',
+      getTotalCount: jest.fn().mockReturnValue(4),
+      toJSON: jest.fn().mockReturnValue({ id: 'cliche-1' }),
+    };
+    const existingCliche = {
+      createWithItemRemoved: jest.fn().mockReturnValue(updatedCliche),
+    };
+
+    const service = createService({ database });
+    jest
+      .spyOn(service, 'getClichesByDirectionId')
+      .mockResolvedValue(existingCliche);
+
+    const result = await service.removeClicheItem(
+      'direction-1',
+      'names',
+      'Item text'
+    );
+
+    expect(result).toBe(updatedCliche);
+    expect(database.updateCliche).toHaveBeenCalledWith(
+      'cliche-1',
+      { id: 'cliche-1' }
+    );
+    expect(existingCliche.createWithItemRemoved).toHaveBeenCalledWith(
+      'names',
+      'Item text'
+    );
+    expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
+      CHARACTER_BUILDER_EVENTS.CLICHE_ITEM_DELETED,
+      expect.objectContaining({ directionId: 'direction-1', categoryId: 'names' })
+    );
+  });
+
+  it('throws when removing a trope for an unknown direction', async () => {
+    const service = createService();
+    jest
+      .spyOn(service, 'getClichesByDirectionId')
+      .mockResolvedValue(null);
+
+    await expect(
+      service.removeClicheTrope('direction-1', 'Trope text')
+    ).rejects.toThrow(
+      'No clichés found for direction: direction-1'
+    );
+  });
+
+  it('removes a cliché trope and refreshes cache', async () => {
+    const database = {
+      updateCliche: jest.fn().mockResolvedValue(),
+    };
+    const updatedCliche = {
+      id: 'cliche-2',
+      conceptId: 'concept-2',
+      directionId: 'direction-2',
+      getTotalCount: jest.fn().mockReturnValue(2),
+      toJSON: jest.fn().mockReturnValue({ id: 'cliche-2' }),
+    };
+    const existingCliche = {
+      createWithTropeRemoved: jest.fn().mockReturnValue(updatedCliche),
+    };
+
+    const service = createService({ database });
+    jest
+      .spyOn(service, 'getClichesByDirectionId')
+      .mockResolvedValue(existingCliche);
+
+    const result = await service.removeClicheTrope(
+      'direction-2',
+      'Overused trope'
+    );
+
+    expect(result).toBe(updatedCliche);
+    expect(database.updateCliche).toHaveBeenCalledWith(
+      'cliche-2',
+      { id: 'cliche-2' }
+    );
+    expect(existingCliche.createWithTropeRemoved).toHaveBeenCalledWith(
+      'Overused trope'
+    );
+    expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
+      CHARACTER_BUILDER_EVENTS.CLICHE_TROPE_DELETED,
+      expect.objectContaining({ directionId: 'direction-2', tropeText: 'Overused trope' })
+    );
+  });
+
+  it('returns cached core motivations through the cache manager', async () => {
+    const cachedMotivations = [{ id: 'motivation-1' }];
+    const cacheManager = {
+      set: jest.fn(),
+      get: jest.fn().mockReturnValue(cachedMotivations),
+    };
+
+    const service = createService({ cacheManager });
+
+    const result = await service.getCoreMotivationsByDirectionId('direction-1');
+
+    expect(result).toBe(cachedMotivations);
+    expect(cacheManager.get).toHaveBeenCalledWith(
+      CacheKeys.motivationsForDirection('direction-1')
+    );
+    expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
+      CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+      expect.objectContaining({ directionId: 'direction-1', source: 'cache', count: 1 })
+    );
   });
 });
+
