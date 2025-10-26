@@ -142,6 +142,12 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
 
     this.mockAnatomyFormattingService = {
       formatDescription: (desc) => desc,
+      getActivityIntegrationConfig: () => ({
+        prefix: 'Activity: ',
+        suffix: '',
+        separator: '. ',
+        maxActivities: 10,
+      }),
     };
 
     this.mockPartDescriptionGenerator = {

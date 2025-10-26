@@ -27,6 +27,7 @@ import {
   validateActionExecution,
   ActionValidationError,
 } from './actionExecutionValidator.js';
+import { ScopeResolverHelpers } from './scopeResolverHelpers.js';
 
 const localRequire = createRequire(import.meta.url);
 
@@ -112,11 +113,41 @@ export class ModTestFixture {
    * @param {string} actionId - The action identifier (e.g., 'kiss_cheek', 'kneel_before')
    * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
    * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
-   * @param {object} [options] - Additional configuration options
+   * @param {object} [options] - Configuration options
+   * @param {boolean} [options.autoRegisterScopes=false] - Auto-register dependency mod scopes
+   * @param {string[]} [options.scopeCategories=['positioning']] - Which scope categories to register (positioning, inventory, items, anatomy)
    * @param {Array<string>} [options.supportingActions] - Additional action IDs whose rules
    *   and conditions should be loaded into the environment for multi-action workflows
    * @returns {Promise<ModActionTestFixture>} Configured test fixture for the action
    * @throws {Error} If auto-loading fails when files are not provided
+   *
+   * @example
+   * // Manual scope registration (backward compatible)
+   * const fixture = await ModTestFixture.forAction('violence', 'violence:grab_neck');
+   * ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
+   *
+   * @example
+   * // Auto-register positioning scopes (auto-loading rule/condition files)
+   * const fixture = await ModTestFixture.forAction(
+   *   'violence',
+   *   'violence:grab_neck',
+   *   null,
+   *   null,
+   *   { autoRegisterScopes: true }
+   * );
+   *
+   * @example
+   * // Auto-register multiple scope categories
+   * const fixture = await ModTestFixture.forAction(
+   *   'intimacy',
+   *   'intimacy:caress_face',
+   *   null,
+   *   null,
+   *   {
+   *     autoRegisterScopes: true,
+   *     scopeCategories: ['positioning', 'anatomy']
+   *   }
+   * );
    */
   static async forAction(
     modId,
@@ -126,6 +157,15 @@ export class ModTestFixture {
     options = {}
   ) {
     try {
+      // Validate options
+      this._validateForActionOptions(options);
+
+      const {
+        autoRegisterScopes = false,
+        scopeCategories = ['positioning'],
+        ...otherOptions
+      } = options;
+
       let finalRuleFile = ruleFile;
       let finalConditionFile = conditionFile;
 
@@ -182,11 +222,16 @@ export class ModTestFixture {
         actionId,
         finalRuleFile,
         finalConditionFile,
-        options
+        otherOptions
       );
 
       // Setup environment must be called after construction since it's async
       await fixture.initialize();
+
+      // Auto-register scopes if requested (NEW)
+      if (autoRegisterScopes) {
+        this._registerScopeCategories(fixture.testEnv, scopeCategories);
+      }
 
       return fixture;
     } catch (error) {
@@ -575,6 +620,74 @@ export class ModTestFixture {
     }
 
     return { ruleFile, conditionFile };
+  }
+
+  /**
+   * Validate forAction options
+   *
+   * @private
+   * @param {object} options - Options to validate
+   * @throws {Error} If options are invalid
+   */
+  static _validateForActionOptions(options) {
+    if (typeof options !== 'object' || options === null) {
+      throw new Error('Options must be an object');
+    }
+
+    const { autoRegisterScopes, scopeCategories } = options;
+
+    if (autoRegisterScopes !== undefined && typeof autoRegisterScopes !== 'boolean') {
+      throw new Error('autoRegisterScopes must be a boolean');
+    }
+
+    if (scopeCategories !== undefined) {
+      if (!Array.isArray(scopeCategories)) {
+        throw new Error('scopeCategories must be an array');
+      }
+
+      const validCategories = ['positioning', 'inventory', 'items', 'anatomy'];
+      const invalidCategories = scopeCategories.filter(
+        (cat) => !validCategories.includes(cat)
+      );
+
+      if (invalidCategories.length > 0) {
+        throw new Error(
+          `Invalid scope categories: ${invalidCategories.join(', ')}. ` +
+            `Valid categories: ${validCategories.join(', ')}`
+        );
+      }
+    }
+  }
+
+  /**
+   * Register scope categories based on configuration
+   *
+   * @private
+   * @param {object} testEnv - Test environment
+   * @param {string[]} categories - Scope categories to register
+   */
+  static _registerScopeCategories(testEnv, categories) {
+    for (const category of categories) {
+      switch (category) {
+        case 'positioning':
+          ScopeResolverHelpers.registerPositioningScopes(testEnv);
+          break;
+
+        case 'inventory':
+        case 'items':
+          ScopeResolverHelpers.registerInventoryScopes(testEnv);
+          break;
+
+        case 'anatomy':
+          ScopeResolverHelpers.registerAnatomyScopes(testEnv);
+          break;
+
+        default:
+          console.warn(
+            `Unknown scope category "${category}". Valid categories: positioning, inventory, anatomy`
+          );
+      }
+    }
   }
 
   /**

@@ -382,8 +382,12 @@ class ActivityDescriptionService {
     const actorId = entity?.id;
     const actorName = this.#resolveEntityName(actorId);
 
-    // ENHANCEMENT: Generate descriptions for ALL activities (not just first)
-    const descriptions = activities.map(activity =>
+    // Respect maxActivities limit
+    const maxActivities = config.maxActivities ?? 10;
+    const limitedActivities = activities.slice(0, maxActivities);
+
+    // ENHANCEMENT: Generate descriptions for activities (limited by maxActivities)
+    const descriptions = limitedActivities.map(activity =>
       this.#generateActivityPhrase(actorName, activity)
     ).filter(phrase => phrase && phrase.trim());
 
@@ -475,8 +479,10 @@ class ActivityDescriptionService {
 
     try {
       const entity = this.#entityManager.getEntityInstance(entityId);
-      const resolvedName =
-        entity?.displayName ?? entity?.name ?? entity?.id ?? entityId;
+      
+      // Entities use core:name component for their names
+      const nameComponent = entity.getComponentData?.('core:name');
+      const resolvedName = nameComponent?.text ?? entity?.id ?? entityId;
 
       this.#entityNameCache.set(entityId, resolvedName);
       return resolvedName;

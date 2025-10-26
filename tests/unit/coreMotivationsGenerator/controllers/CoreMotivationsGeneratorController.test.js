@@ -966,13 +966,16 @@ describe('CoreMotivationsGeneratorController', () => {
 
       const originalClipboard = navigator.clipboard;
       const clipboardError = new Error('Clipboard blocked');
+      const writeTextMock = jest.fn(() => Promise.reject(clipboardError));
       Object.assign(navigator, {
         clipboard: {
-          writeText: jest.fn().mockRejectedValue(clipboardError),
+          writeText: writeTextMock,
         },
       });
 
-      const mockAnchor = { href: '', download: '', style: {}, click: jest.fn() };
+      // Create a real anchor element instead of a plain object mock
+      const mockAnchor = document.createElement('a');
+      mockAnchor.click = jest.fn();
       const originalCreateElement = document.createElement;
       document.createElement = jest.fn((tagName) => {
         if (tagName === 'a') {
@@ -981,11 +984,23 @@ describe('CoreMotivationsGeneratorController', () => {
         return originalCreateElement.call(document, tagName);
       });
 
+      // Mock URL.createObjectURL and URL.revokeObjectURL
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+      URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+      URL.revokeObjectURL = jest.fn();
+
       try {
         // Act
         const exportBtn = document.getElementById('export-btn');
         exportBtn.click();
+
+        // Wait for the download to complete
         await testBed.waitForAsyncOperations();
+
+        // Wait multiple ticks to ensure the clipboard promise chain completes
+        // The clipboard writeText().catch() needs to fully resolve
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Assert
         expect(testBed.logger.warn).toHaveBeenCalledWith(
@@ -1003,6 +1018,8 @@ describe('CoreMotivationsGeneratorController', () => {
       } finally {
         document.createElement = originalCreateElement;
         navigator.clipboard = originalClipboard;
+        URL.createObjectURL = originalCreateObjectURL;
+        URL.revokeObjectURL = originalRevokeObjectURL;
       }
     });
 
@@ -1020,6 +1037,7 @@ describe('CoreMotivationsGeneratorController', () => {
         'Exported text'
       );
 
+      const originalBlob = global.Blob;
       global.Blob = jest.fn(() => {
         throw new Error('Blob creation failed');
       });
@@ -1038,7 +1056,13 @@ describe('CoreMotivationsGeneratorController', () => {
         // Act
         const exportBtn = document.getElementById('export-btn');
         exportBtn.click();
+
+        // Wait for the initial operation
         await testBed.waitForAsyncOperations();
+
+        // Wait multiple ticks to ensure all promise chains complete
+        // Both the main try-catch and the clipboard fallback need to resolve
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Assert
         expect(testBed.logger.error).toHaveBeenCalledWith(

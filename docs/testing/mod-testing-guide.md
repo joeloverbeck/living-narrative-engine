@@ -9,6 +9,7 @@ This guide is the canonical reference for writing and maintaining **mod action t
 - The validation proxy (`createActionValidationProxy`) for catching schema drift before the engine executes.
 - Discovery tooling (`fixture.enableDiagnostics()`, `fixture.discoverWithDiagnostics()`, and the Action Discovery Bed helpers) for resolver introspection.
 - Domain matchers from [`tests/common/mods/domainMatchers.js`](../../tests/common/mods/domainMatchers.js) and [`tests/common/actionMatchers.js`](../../tests/common/actionMatchers.js) for readable assertions.
+- Scope registry from [`ScopeResolverHelpers` Registry](./scope-resolver-registry.md) for discovering available scopes and factory methods.
 
 The companion [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) now focuses on migration checklists and upgrade strategy while pointing back to the API summaries captured here.
 
@@ -191,6 +192,69 @@ describe('positioning:sit_down', () => {
 
 > 💡 **Tip**: If your action uses scopes from dependency mods (positioning, items, anatomy), you'll need to register scope resolvers. See [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes) for details.
 
+### Zero-Config Testing (Recommended)
+
+For most actions, you can enable auto-registration to eliminate scope configuration boilerplate:
+
+```javascript
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
+import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import '../../common/mods/domainMatchers.js';
+
+describe('violence:grab_neck - Action Discovery', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    // Auto-register positioning scopes (auto-loads rule/condition files)
+    testFixture = await ModTestFixture.forAction(
+      'violence',
+      'violence:grab_neck',
+      null,
+      null,
+      { autoRegisterScopes: true }
+    );
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  it('should discover action when actor and target are close', async () => {
+    const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+    const availableActions = testFixture.discoverActions(scenario.actor.id);
+
+    expect(availableActions.map((a) => a.id)).toContain('violence:grab_neck');
+  });
+});
+```
+
+**Multiple Scope Categories**:
+
+```javascript
+testFixture = await ModTestFixture.forAction(
+  'intimacy',
+  'intimacy:caress_face',
+  null,
+  null,
+  {
+    autoRegisterScopes: true,
+    scopeCategories: ['positioning', 'anatomy']
+  }
+);
+```
+
+**Backward Compatible** - Manual registration still works:
+
+```javascript
+testFixture = await ModTestFixture.forAction('violence', 'violence:grab_neck');
+ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+```
+
+**Valid Scope Categories**:
+- `'positioning'` - Sitting, standing, closeness, facing scopes (default)
+- `'inventory'` or `'items'` - Item, container, inventory scopes
+- `'anatomy'` - Body part, anatomy interaction scopes
+
 ## Core Infrastructure
 
 ### Fixture API Essentials
@@ -215,7 +279,7 @@ new ModEntityBuilder(); // Missing ID and validation
 | Method | Description | Key parameters | Returns |
 | --- | --- | --- | --- |
 | `forActionAutoLoad(modId, fullActionId, options?)` | Loads rule and condition JSON automatically. | `modId`, fully-qualified action ID, optional config overrides. | `ModActionTestFixture` |
-| `forAction(modId, fullActionId, ruleFile?, conditionFile?)` | Creates an action fixture with explicit overrides. | `modId`, action ID, optional rule/condition JSON. | `ModActionTestFixture` |
+| `forAction(modId, fullActionId, ruleFile?, conditionFile?, options?)` | Creates an action fixture with explicit overrides. | `modId`, action ID, optional rule/condition JSON, `options.autoRegisterScopes` (boolean), `options.scopeCategories` (string[]). | `ModActionTestFixture` |
 | `forRule(modId, fullActionId, ruleFile?, conditionFile?)` | Targets resolver rules without executing the whole action. | `modId`, action ID, optional rule/condition JSON. | `ModActionTestFixture` |
 | `forCategory(modId, options?)` | Builds a category-level harness for discovery-style assertions. | `modId`, optional configuration. | `ModCategoryTestFixture` |
 

@@ -48,6 +48,8 @@ function resolveContextEntity(context, contextSource, entityManager) {
  * Provides factory methods for creating scope resolvers following common patterns,
  * and registration methods that bundle multiple related scope resolvers together.
  *
+ * @see {@link file://docs/testing/scope-resolver-registry.md} Complete scope registry documentation
+ *
  * @example
  * // In test setup:
  * beforeEach(async () => {
