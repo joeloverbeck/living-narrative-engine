@@ -128,7 +128,8 @@ class ConsoleLogger {
     let changed = false;
 
     if (typeof logLevelInput === 'string') {
-      const upperCaseLevel = logLevelInput.toUpperCase();
+      const normalizedInput = logLevelInput.trim();
+      const upperCaseLevel = normalizedInput.toUpperCase();
       if (upperCaseLevel in LOG_LEVEL_MAP) {
         newLevel = LOG_LEVEL_MAP[upperCaseLevel];
         changed = true;

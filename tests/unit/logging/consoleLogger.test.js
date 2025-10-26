@@ -60,6 +60,26 @@ describe('ConsoleLogger', () => {
     expect(consoleSpies.warn).toHaveBeenCalledWith('warn message');
   });
 
+  it('normalizes whitespace when parsing string log levels', () => {
+    const logger = instantiate('  debug  ');
+
+    logger.debug('visible');
+    expect(consoleSpies.debug).toHaveBeenCalledWith('visible');
+
+    jest.clearAllMocks();
+
+    logger.setLogLevel('   ');
+
+    expect(consoleSpies.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Invalid log level string: '   '")
+    );
+
+    jest.clearAllMocks();
+
+    logger.debug('still debug');
+    expect(consoleSpies.debug).toHaveBeenCalledWith('still debug');
+  });
+
   it('logs a warning when provided with an invalid level string', () => {
     const logger = instantiate(LogLevel.INFO);
 
