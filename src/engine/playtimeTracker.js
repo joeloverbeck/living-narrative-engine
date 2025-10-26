@@ -64,6 +64,22 @@ class PlaytimeTracker extends IPlaytimeTracker {
    * @returns {void}
    */
   #reportValidationError(message, details) {
+    const logDispatchFailure = () => {
+      this.#logger.warn(
+        'PlaytimeTracker: SafeEventDispatcher reported failure when reporting invalid playtime input.',
+        { message, details }
+      );
+    };
+
+    const logDispatchRejection = (error) => {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'PlaytimeTracker: SafeEventDispatcher rejected while reporting invalid playtime input.',
+        normalizedError
+      );
+    };
+
     let dispatchResult;
     try {
       dispatchResult = this.#safeEventDispatcher.dispatch(
@@ -80,18 +96,31 @@ class PlaytimeTracker extends IPlaytimeTracker {
       return;
     }
 
-    if (
+    const isPromiseLike =
       dispatchResult &&
-      typeof dispatchResult.catch === 'function'
-    ) {
-      dispatchResult.catch((error) => {
-        const normalizedError =
-          error instanceof Error ? error : new Error(String(error));
-        this.#logger.error(
-          'PlaytimeTracker: SafeEventDispatcher rejected while reporting invalid playtime input.',
-          normalizedError
-        );
-      });
+      (typeof dispatchResult.then === 'function' ||
+        typeof dispatchResult.catch === 'function');
+
+    if (isPromiseLike) {
+      (async () => {
+        try {
+          const result =
+            typeof dispatchResult.then === 'function'
+              ? await dispatchResult
+              : await Promise.resolve(dispatchResult);
+
+          if (result === false) {
+            logDispatchFailure();
+          }
+        } catch (error) {
+          logDispatchRejection(error);
+        }
+      })();
+      return;
+    }
+
+    if (dispatchResult === false) {
+      logDispatchFailure();
     }
   }
 
