@@ -161,8 +161,11 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
 
   /**
    * Create DOM structure for testing
-   */
+  */
   createDOMStructure() {
+    // Ensure previous test DOM does not leak into the current run
+    document.body.innerHTML = '';
+
     // Skip link for keyboard navigation
     const skipLink = document.createElement('a');
     skipLink.className = 'skip-link';
@@ -555,14 +558,16 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     }
   }
 
-  cleanup() {
-    super.cleanup();
-
-    if (this.controller && this.controller.cleanup) {
-      this.controller.cleanup();
+  async cleanup() {
+    try {
+      if (this.controller?.cleanup) {
+        await this.controller.cleanup();
+      }
+    } finally {
+      this.dispatchedEvents = [];
+      this.eventCallbacks.clear();
+      document.body.innerHTML = '';
+      await super.cleanup();
     }
-
-    this.dispatchedEvents = [];
-    this.eventCallbacks.clear();
   }
 }
