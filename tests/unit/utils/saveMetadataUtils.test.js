@@ -125,4 +125,31 @@ describe('validateSaveMetadataFields', () => {
       isCorrupted: true,
     });
   });
+
+  test('flags infinite playtime as corrupted metadata', () => {
+    const metadata = {
+      identifier: 'save-5',
+      saveName: 'Endless Adventure',
+      timestamp: '2024-04-04T00:00:00Z',
+      playtimeSeconds: Number.POSITIVE_INFINITY,
+    };
+
+    const result = validateSaveMetadataFields(
+      metadata,
+      'manual_save_save-5.sav',
+      logger
+    );
+
+    expect(extractSaveName).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('save-5')
+    );
+    expect(result).toEqual({
+      identifier: 'save-5',
+      saveName: 'Endless Adventure',
+      timestamp: '2024-04-04T00:00:00Z',
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+  });
 });
