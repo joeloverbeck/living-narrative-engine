@@ -27,7 +27,7 @@ const spec = {
     error: /validatedEventDispatcher/,
     methods: ['dispatch', 'subscribe', 'unsubscribe'],
   },
-  logger: { error: /logger dependency/, methods: ['error', 'debug'] },
+  logger: { error: /logger dependency/, methods: ['error', 'warn', 'debug'] },
 };
 
 describe('SafeEventDispatcher', () => {

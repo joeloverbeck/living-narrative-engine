@@ -96,10 +96,11 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
     if (
       !logger ||
       typeof logger.error !== 'function' ||
+      typeof logger.warn !== 'function' ||
       typeof logger.debug !== 'function'
     ) {
       throw new Error(
-        'SafeEventDispatcher: Invalid or missing logger dependency (requires error, debug, info methods).'
+        'SafeEventDispatcher: Invalid or missing logger dependency (requires error, warn, debug methods).'
       );
     }
     this.#logger = logger;

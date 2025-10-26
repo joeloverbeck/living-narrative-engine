@@ -37,7 +37,7 @@ describe('SafeEventDispatcher', () => {
           logger: null,
         })
     ).toThrow(
-      'SafeEventDispatcher: Invalid or missing logger dependency (requires error, debug, info methods).'
+      'SafeEventDispatcher: Invalid or missing logger dependency (requires error, warn, debug methods).'
     );
     expect(
       () =>
@@ -46,7 +46,24 @@ describe('SafeEventDispatcher', () => {
           logger: {},
         })
     ).toThrow(
-      'SafeEventDispatcher: Invalid or missing logger dependency (requires error, debug, info methods).'
+      'SafeEventDispatcher: Invalid or missing logger dependency (requires error, warn, debug methods).'
+    );
+  });
+
+  it('should reject loggers missing required warn method', () => {
+    const incompleteLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    expect(() =>
+      new SafeEventDispatcher({
+        validatedEventDispatcher: mockVed,
+        logger: incompleteLogger,
+      })
+    ).toThrow(
+      'SafeEventDispatcher: Invalid or missing logger dependency (requires error, warn, debug methods).'
     );
   });
 
