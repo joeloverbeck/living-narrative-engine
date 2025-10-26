@@ -183,6 +183,21 @@ describe('TraceConfigLoader', () => {
       expect(result.message).toContain('must be one of');
     });
 
+    it('should validate performance monitoring object structure', async () => {
+      const invalidConfig = {
+        traceAnalysisEnabled: true,
+        performanceMonitoring: 'enabled',
+      };
+
+      fetchWithRetry.mockResolvedValueOnce(invalidConfig);
+
+      const result = await loader.loadConfig();
+
+      expect(result.error).toBe(true);
+      expect(result.message).toContain('must be an object');
+      expect(result.stage).toBe('validation');
+    });
+
     it('should handle fetch errors', async () => {
       const fetchError = new Error('Network error');
       fetchWithRetry.mockRejectedValueOnce(fetchError);
@@ -224,6 +239,71 @@ describe('TraceConfigLoader', () => {
         expect.any(Object),
         expect.any(Object)
       );
+    });
+  });
+
+  describe('isAnyTracingEnabled', () => {
+    beforeEach(() => {
+      loader = new TraceConfigLoader({
+        logger,
+        safeEventDispatcher: dispatcherMock,
+      });
+    });
+
+    it('returns false when loadConfig resolves to an error result', async () => {
+      fetchWithRetry.mockResolvedValueOnce({ error: true, message: 'failed' });
+
+      const result = await loader.isAnyTracingEnabled();
+
+      expect(result).toBe(false);
+    });
+
+    it('returns true when any tracing feature is enabled', async () => {
+      const config = {
+        traceAnalysisEnabled: false,
+        performanceMonitoring: { enabled: false },
+        visualization: { enabled: false },
+        analysis: { enabled: false },
+        actionTracing: { enabled: true },
+      };
+
+      fetchWithRetry.mockResolvedValueOnce(config);
+
+      const result = await loader.isAnyTracingEnabled();
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('getActionTracingConfig', () => {
+    beforeEach(() => {
+      loader = new TraceConfigLoader({
+        logger,
+        safeEventDispatcher: dispatcherMock,
+      });
+    });
+
+    it('returns null when config load fails', async () => {
+      fetchWithRetry.mockResolvedValueOnce({ error: true, message: 'failed' });
+
+      const result = await loader.getActionTracingConfig();
+
+      expect(result).toBeNull();
+    });
+
+    it('returns action tracing configuration when available', async () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['action-1'],
+        },
+      };
+
+      fetchWithRetry.mockResolvedValueOnce(config);
+
+      const result = await loader.getActionTracingConfig();
+
+      expect(result).toEqual(config.actionTracing);
     });
   });
 });
