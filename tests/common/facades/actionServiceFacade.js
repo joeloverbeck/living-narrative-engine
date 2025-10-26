@@ -20,6 +20,8 @@
 export class ActionServiceFacade {
   #actionDiscoveryService;
   #actionPipelineOrchestrator;
+  /** @type {boolean} */
+  #supportsPipelineExecution;
   #availableActionsProvider;
   #actionIndex;
   #targetResolutionService;
@@ -62,7 +64,7 @@ export class ActionServiceFacade {
     // Validate action pipeline orchestrator
     if (
       !actionPipelineOrchestrator ||
-      typeof actionPipelineOrchestrator.execute !== 'function'
+      typeof actionPipelineOrchestrator.discoverActions !== 'function'
     ) {
       throw new Error(
         'ActionServiceFacade: Missing or invalid actionPipelineOrchestrator dependency.'
@@ -105,6 +107,8 @@ export class ActionServiceFacade {
 
     this.#actionDiscoveryService = actionDiscoveryService;
     this.#actionPipelineOrchestrator = actionPipelineOrchestrator;
+    this.#supportsPipelineExecution =
+      typeof actionPipelineOrchestrator.execute === 'function';
     this.#availableActionsProvider = availableActionsProvider;
     this.#actionIndex = actionIndex;
     this.#targetResolutionService = targetResolutionService;
@@ -223,6 +227,20 @@ export class ActionServiceFacade {
       }
 
       // Use pipeline orchestrator for full validation
+      if (!this.#supportsPipelineExecution) {
+        const message =
+          'ActionServiceFacade: actionPipelineOrchestrator.execute is unavailable. Provide an orchestrator with execute() to validate actions.';
+        this.#logger.error(message, {
+          actionId: action.actionId,
+          actorId: action.actorId,
+        });
+        return {
+          success: false,
+          error: message,
+          code: 'PIPELINE_UNAVAILABLE',
+        };
+      }
+
       const validationResult = await this.#actionPipelineOrchestrator.execute({
         action: {
           ...action,
@@ -280,6 +298,20 @@ export class ActionServiceFacade {
       }
 
       // Execute through pipeline orchestrator
+      if (!this.#supportsPipelineExecution) {
+        const message =
+          'ActionServiceFacade: actionPipelineOrchestrator.execute is unavailable. Provide an orchestrator with execute() to run actions.';
+        this.#logger.error(message, {
+          actionId: action.actionId,
+          actorId: action.actorId,
+        });
+        return {
+          success: false,
+          error: message,
+          code: 'PIPELINE_UNAVAILABLE',
+        };
+      }
+
       const executionResult = await this.#actionPipelineOrchestrator.execute({
         action,
         actionDefinition,
