@@ -490,6 +490,18 @@ describe('ClicheErrorHandler', () => {
 
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
+
+    it('should safely handle missing operation when recording success', () => {
+      mockLogger.debug.mockClear();
+      mockLogger.info.mockClear();
+
+      errorHandler.recordSuccessfulOperation();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'recordSuccessfulOperation called without a valid operation name'
+      );
+      expect(mockLogger.info).not.toHaveBeenCalled();
+    });
   });
 
   describe('formatUserMessage', () => {
