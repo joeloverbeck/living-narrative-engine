@@ -138,6 +138,15 @@ describe('registerActorAwareStrategy', () => {
       id: 'llm',
       components: { 'core:player_type': { type: 'llm' } },
     };
+    actors.componentApi = {
+      id: 'componentApi',
+      getComponentData: jest.fn((key) => {
+        if (key === 'core:player_type') {
+          return { type: 'llm' };
+        }
+        throw new Error('unexpected key');
+      }),
+    };
     actors.goap = { id: 'goap', aiType: 'GOAP' };
     actors.aiComponent = {
       id: 'aiComponent',
@@ -145,14 +154,38 @@ describe('registerActorAwareStrategy', () => {
     };
     actors.isAi = { id: 'isAi', isAi: true };
     actors.player = { id: 'player', components: { 'core:player': {} } };
+    actors.playerByMethod = {
+      id: 'playerByMethod',
+      hasComponent: jest.fn((name) => name === 'core:player'),
+    };
+    actors.componentNoType = {
+      id: 'componentNoType',
+      getComponentData: jest.fn(() => ({})),
+      components: { 'core:player': {} },
+    };
+    const componentErrorGetComponentData = jest
+      .fn()
+      .mockImplementationOnce(() => ({}))
+      .mockImplementationOnce(() => {
+        throw new Error('component error');
+      });
+    actors.componentError = {
+      id: 'componentError',
+      getComponentData: componentErrorGetComponentData,
+      components: { 'core:player_type': { type: 'human' } },
+    };
     actors.unknown = { id: 'unknown' };
 
     expect(factory.create('human').decisionProvider.name).toBe('human');
     expect(factory.create('llm').decisionProvider.name).toBe('llm');
+    expect(factory.create('componentApi').decisionProvider.name).toBe('llm');
     expect(factory.create('goap').decisionProvider.name).toBe('goap');
     expect(factory.create('aiComponent').decisionProvider.name).toBe('llm');
     expect(factory.create('isAi').decisionProvider.name).toBe('llm');
     expect(factory.create('player').decisionProvider.name).toBe('human');
+    expect(factory.create('playerByMethod').decisionProvider.name).toBe('human');
+    expect(factory.create('componentNoType').decisionProvider.name).toBe('human');
+    expect(factory.create('componentError').decisionProvider.name).toBe('human');
     expect(factory.create('unknown').decisionProvider.name).toBe('human');
   });
 
