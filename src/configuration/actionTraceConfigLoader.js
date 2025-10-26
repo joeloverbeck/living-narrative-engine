@@ -642,21 +642,29 @@ class ActionTraceConfigLoader {
     }
 
     // Check pre-compiled wildcard patterns
-    const wildcardMatch = this.#wildcardPatterns.some((pattern) => {
+    let wildcardMatch = false;
+
+    for (const pattern of this.#wildcardPatterns) {
       if (pattern.type === 'all') {
-        return true;
+        wildcardMatch = true;
+        break;
       }
-      if (pattern.type === 'mod') {
-        return (
-          actionId.startsWith(pattern.prefix) && pattern.regex.test(actionId)
-        );
+
+      if (
+        pattern.type === 'mod' &&
+        actionId.startsWith(pattern.prefix) &&
+        pattern.regex.test(actionId)
+      ) {
+        wildcardMatch = true;
+        break;
       }
-      if (pattern.type === 'general') {
+
+      if (pattern.type === 'general' && pattern.regex.test(actionId)) {
         // NEW: Support for general wildcard patterns
-        return pattern.regex.test(actionId);
+        wildcardMatch = true;
+        break;
       }
-      return false;
-    });
+    }
 
     if (wildcardMatch) {
       this.#lookupStatistics.wildcardMatches++;
@@ -992,33 +1000,6 @@ class ActionTraceConfigLoader {
 
     // Create a stable JSON string for fingerprinting
     return JSON.stringify(criticalProps, Object.keys(criticalProps).sort());
-  }
-
-  /**
-   * Check if configuration has changed based on fingerprint
-   *
-   * @private
-   * @param {object} newConfig - New configuration to check
-   * @returns {boolean} True if configuration has changed
-   */
-  #hasConfigurationChanged(newConfig) {
-    if (!this.#cachedConfig.fingerprint) {
-      return true;
-    }
-
-    const newFingerprint = this.#generateConfigFingerprint(newConfig);
-    const hasChanged = this.#cachedConfig.fingerprint !== newFingerprint;
-
-    if (hasChanged) {
-      this.#cacheStatistics.fingerprintChanges++;
-      this.#logger.debug('Configuration fingerprint changed', {
-        oldFingerprint:
-          this.#cachedConfig.fingerprint?.substring(0, 20) + '...',
-        newFingerprint: newFingerprint.substring(0, 20) + '...',
-      });
-    }
-
-    return hasChanged;
   }
 
   /**

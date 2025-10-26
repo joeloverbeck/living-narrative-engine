@@ -864,6 +864,46 @@ describe('ActionTraceConfigLoader', () => {
       expect(stats.wildcardPatternsCount).toBe(1); // 'custom:*'
     });
 
+    it('should log a milestone message after enough cache hits', async () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['*'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      await loader.loadConfig();
+
+      mockLogger.debug.mockClear();
+
+      const nowSpy = jest.spyOn(performance, 'now');
+      let tick = 0;
+      nowSpy.mockImplementation(() => {
+        tick += 0.1;
+        return tick;
+      });
+
+      try {
+        for (let index = 0; index < 100; index += 1) {
+          await loader.loadConfig();
+        }
+      } finally {
+        nowSpy.mockRestore();
+      }
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Operation cache-hit milestone',
+        expect.objectContaining({
+          count: 100,
+        })
+      );
+    });
+
     it('should filter data by verbosity level', async () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
         actionTracing: {
@@ -953,6 +993,45 @@ describe('ActionTraceConfigLoader', () => {
         'Error\n  at function1()\n  at function2()'
       );
       expect(filtered.systemState).toEqual({ memory: '1GB', cpu: '50%' });
+    });
+
+    it('should warn when lookup duration exceeds the slow threshold', async () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['movement:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
+      mockValidator.validate.mockResolvedValue({ isValid: true });
+
+      await loader.loadConfig();
+      mockLogger.warn.mockClear();
+
+      const nowSpy = jest.spyOn(performance, 'now');
+      const times = [100, 110, 111, 112];
+      nowSpy.mockImplementation(() => {
+        const next = times.shift();
+        return next ?? 112;
+      });
+
+      try {
+        await loader.shouldTraceAction('movement:go');
+      } finally {
+        nowSpy.mockRestore();
+      }
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Slow action lookup detected',
+        expect.objectContaining({
+          duration: expect.stringContaining('ms'),
+          totalLookups: expect.any(Number),
+          slowLookupRate: expect.stringContaining('%'),
+        })
+      );
     });
 
     it('should filter data by minimal level excluding optional fields', async () => {
