@@ -162,11 +162,11 @@ export class ClothingHealthMonitor {
   getHealthReport() {
     const overall = this.getOverallHealth();
     const services = {};
-    
+
     for (const [serviceName, health] of this.#lastChecks) {
       services[serviceName] = health;
     }
-    
+
     return {
       overall,
       services,
@@ -174,6 +174,24 @@ export class ClothingHealthMonitor {
       checkInterval: this.#checkInterval,
       reportGeneratedAt: new Date().toISOString()
     };
+  }
+
+  /**
+   * @description Register a custom health check
+   * @param {string} serviceName - Identifier for the service
+   * @param {Function} healthCheck - Async function returning health status
+   * @returns {void}
+   */
+  registerHealthCheck(serviceName, healthCheck) {
+    if (typeof serviceName !== 'string' || serviceName.trim() === '') {
+      throw new TypeError('serviceName must be a non-empty string');
+    }
+
+    if (typeof healthCheck !== 'function') {
+      throw new TypeError('healthCheck must be a function');
+    }
+
+    this.#healthChecks.set(serviceName, async () => healthCheck());
   }
 
   /**
