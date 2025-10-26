@@ -462,6 +462,65 @@ describeEngineSuite('GameEngine', (context) => {
       );
       expect(result).toBe(mockResult);
     });
+
+    it('should enable batch mode on the SafeEventDispatcher while loading and restore it afterwards', async () => {
+      const loadResult = { success: true, data: { restored: true } };
+      const mockPersistenceCoordinator = {
+        loadGame: jest.fn().mockResolvedValue(loadResult),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      const dispatcher = context.bed.getSafeEventDispatcher();
+
+      const result = await engine.loadGame(DEFAULT_SAVE_ID);
+
+      expect(mockPersistenceCoordinator.loadGame).toHaveBeenCalledWith(
+        DEFAULT_SAVE_ID
+      );
+      expect(dispatcher.setBatchMode).toHaveBeenCalledTimes(2);
+      expect(dispatcher.setBatchMode).toHaveBeenNthCalledWith(
+        1,
+        true,
+        expect.objectContaining({
+          context: 'game-load',
+          timeoutMs: 60000,
+          maxRecursionDepth: 25,
+          maxGlobalRecursion: 200,
+        })
+      );
+      expect(dispatcher.setBatchMode).toHaveBeenLastCalledWith(false);
+      expect(result).toEqual(loadResult);
+    });
+
+    it('should disable batch mode even when the load operation rejects', async () => {
+      const loadError = new Error('load failed');
+      const mockPersistenceCoordinator = {
+        loadGame: jest.fn().mockRejectedValue(loadError),
+      };
+
+      const engine = new GameEngine({
+        container: context.bed.env.mockContainer,
+        logger: context.bed.getLogger(),
+        persistenceCoordinator: mockPersistenceCoordinator,
+      });
+
+      const dispatcher = context.bed.getSafeEventDispatcher();
+
+      await expect(engine.loadGame(DEFAULT_SAVE_ID)).rejects.toThrow(loadError);
+
+      expect(dispatcher.setBatchMode).toHaveBeenCalledTimes(2);
+      expect(dispatcher.setBatchMode).toHaveBeenNthCalledWith(
+        1,
+        true,
+        expect.objectContaining({ context: 'game-load' })
+      );
+      expect(dispatcher.setBatchMode).toHaveBeenLastCalledWith(false);
+    });
   });
 
   describe('triggerManualSave', () => {
