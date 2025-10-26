@@ -6,85 +6,25 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import tearOutThroatAction from '../../../../data/mods/violence/actions/tear_out_throat.action.json';
-import { clearEntityCache } from '../../../../src/scopeDsl/core/entityHelpers.js';
 
 const ACTION_ID = 'violence:tear_out_throat';
 
 describe('violence:tear_out_throat action discovery', () => {
   let testFixture;
-  let configureActionDiscovery;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('violence', ACTION_ID);
 
-    configureActionDiscovery = () => {
-      const { testEnv } = testFixture;
-      if (!testEnv) {
-        return;
-      }
+    // Build action index for discovery
+    testFixture.testEnv.actionIndex.buildIndex([tearOutThroatAction]);
 
-      testEnv.actionIndex.buildIndex([tearOutThroatAction]);
-
-      const scopeResolver = testEnv.unifiedScopeResolver;
-      const originalResolve =
-        scopeResolver.__tearOutThroatOriginalResolve ||
-        scopeResolver.resolveSync.bind(scopeResolver);
-
-      scopeResolver.__tearOutThroatOriginalResolve = originalResolve;
-      scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'positioning:actor_being_bitten_by_me') {
-          const actorId = context?.actor?.id;
-          if (!actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          const { entityManager } = testEnv;
-          const actorEntity = entityManager.getEntityInstance(actorId);
-          if (!actorEntity) {
-            return { success: true, value: new Set() };
-          }
-
-          // Check if actor has positioning:biting_neck component
-          const actorBitingNeck =
-            actorEntity.components?.['positioning:biting_neck'];
-          if (!actorBitingNeck) {
-            return { success: true, value: new Set() };
-          }
-
-          const bitten_entity_id = actorBitingNeck.bitten_entity_id;
-          if (!bitten_entity_id) {
-            return { success: true, value: new Set() };
-          }
-
-          // Get the target entity
-          const targetEntity = entityManager.getEntityInstance(bitten_entity_id);
-          if (!targetEntity) {
-            return { success: true, value: new Set() };
-          }
-
-          // Check reciprocal positioning:being_bitten_in_neck component
-          const targetBeingBitten =
-            targetEntity.components?.['positioning:being_bitten_in_neck'];
-          if (!targetBeingBitten) {
-            return { success: true, value: new Set() };
-          }
-
-          // Verify reciprocal relationship
-          if (targetBeingBitten.biting_entity_id !== actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          return { success: true, value: new Set([bitten_entity_id]) };
-        }
-
-        return originalResolve(scopeName, context);
-      };
-    };
+    // Register positioning scopes (replaces 45+ lines of manual implementation)
+    ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
   });
 
   afterEach(() => {
-    clearEntityCache();
     testFixture.cleanup();
   });
 
@@ -129,7 +69,6 @@ describe('violence:tear_out_throat action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -158,7 +97,6 @@ describe('violence:tear_out_throat action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -176,7 +114,6 @@ describe('violence:tear_out_throat action discovery', () => {
       // No biting components
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -197,7 +134,6 @@ describe('violence:tear_out_throat action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -224,7 +160,6 @@ describe('violence:tear_out_throat action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -246,7 +181,6 @@ describe('violence:tear_out_throat action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -278,7 +212,6 @@ describe('violence:tear_out_throat action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -324,7 +257,6 @@ describe('violence:tear_out_throat action discovery', () => {
       // Target2 has no biting relationship
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target, target2]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id

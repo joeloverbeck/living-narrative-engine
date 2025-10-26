@@ -247,7 +247,25 @@ describe('GameEngineSaveAdapter real integration', () => {
       error: 'Game engine is not initialized. Cannot save game.',
     });
     expect(env.persistenceService.saveCalls).toEqual([]);
-    expect(env.safeEventDispatcher.events).toEqual([]);
+    expect(env.safeEventDispatcher.events).toEqual([
+      {
+        eventId: 'core:ui_operation_failed',
+        payload: {
+          errorMessage:
+            'Failed to save game: Game engine is not initialized. Cannot save game.',
+          errorTitle: 'Save Failed',
+        },
+        options: undefined,
+      },
+      {
+        eventId: ENGINE_READY_UI,
+        payload: {
+          activeWorld: null,
+          message: 'Save operation finished. Ready.',
+        },
+        options: undefined,
+      },
+    ]);
   });
 
   it('propagates manual save failures from the persistence layer', async () => {

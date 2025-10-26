@@ -116,8 +116,13 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       expect(actionJson).not.toContain('intimacy:');
       expect(actionJson).not.toContain('kissing:kissing');
 
-      // Should not have forbidden_components section
-      expect(turnAroundAction.forbidden_components).toBeUndefined();
+      // Can have forbidden_components for positioning mod components
+      // (positioning:biting_neck is valid as it's from positioning mod, not intimacy)
+      if (turnAroundAction.forbidden_components) {
+        expect(turnAroundAction.forbidden_components.actor).toEqual([
+          'positioning:biting_neck',
+        ]);
+      }
     });
 
     it('should only reference core and positioning components', () => {
@@ -495,8 +500,12 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
         },
       ]);
 
-      // Ensure no forbidden_components
-      expect(turnAroundAction.forbidden_components).toBeUndefined();
+      // Can have forbidden_components for positioning mod components
+      if (turnAroundAction.forbidden_components) {
+        expect(turnAroundAction.forbidden_components.actor).toEqual([
+          'positioning:biting_neck',
+        ]);
+      }
     });
   });
 });

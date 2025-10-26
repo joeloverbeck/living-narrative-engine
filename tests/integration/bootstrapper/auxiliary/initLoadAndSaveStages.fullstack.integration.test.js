@@ -97,12 +97,23 @@ class SimpleInitializationService {
 class RecordingSafeEventDispatcher {
   constructor() {
     this.events = [];
+    this.batchModes = [];
   }
 
   async dispatch(eventId, payload, options) {
     this.events.push({ eventId, payload, options });
     return true;
   }
+
+  setBatchMode(enabled, options = {}) {
+    this.batchModes.push({ enabled, options });
+  }
+
+  subscribe() {
+    return () => {};
+  }
+
+  unsubscribe() {}
 }
 
 class ConfigurableGamePersistenceService {

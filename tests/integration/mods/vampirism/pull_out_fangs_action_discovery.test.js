@@ -4,213 +4,151 @@
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
-import { createActionDiscoveryBed } from '../../../common/actions/actionDiscoveryServiceTestBed.js';
-import '../../../common/actionMatchers.js';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import pullOutFangsAction from '../../../../data/mods/vampirism/actions/pull_out_fangs.action.json';
-import { ActionResult } from '../../../../src/actions/core/actionResult.js';
-import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 
 const ACTION_ID = 'vampirism:pull_out_fangs';
 
 describe('vampirism:pull_out_fangs - Action Discovery', () => {
-  let testBed;
+  let testFixture;
 
-  beforeEach(() => {
-    testBed = createActionDiscoveryBed();
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction('vampirism', ACTION_ID);
 
-    const simpleEntityManager = new SimpleEntityManager();
-    testBed.mocks.entityManager = simpleEntityManager;
-    testBed.entityManager = simpleEntityManager;
-    if (testBed.service) {
-      testBed.service.entityManager = simpleEntityManager;
-    }
+    // Build action index for discovery
+    testFixture.testEnv.actionIndex.buildIndex([pullOutFangsAction]);
 
-    testBed.mocks.actionIndex.getCandidateActions.mockImplementation(() => [
-      pullOutFangsAction,
-    ]);
-
-    testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(
-      (_scopeName, actorEntity) => {
-        const actorRequired = pullOutFangsAction.required_components?.actor ?? [];
-        for (const comp of actorRequired) {
-          if (!actorEntity.components?.[comp]) {
-            return ActionResult.success([]);
-          }
-        }
-
-        const actorForbidden = pullOutFangsAction.forbidden_components?.actor ?? [];
-        for (const comp of actorForbidden) {
-          if (actorEntity.components?.[comp]) {
-            return ActionResult.success([]);
-          }
-        }
-
-        const closeness =
-          actorEntity.components?.['positioning:closeness']?.partners ?? [];
-        if (!Array.isArray(closeness) || closeness.length === 0) {
-          return ActionResult.success([]);
-        }
-
-        const entityManager = testBed.mocks.entityManager;
-        const getEntity = entityManager.getEntityInstance
-          ? entityManager.getEntityInstance.bind(entityManager)
-          : entityManager.getEntity.bind(entityManager);
-
-        const actorBitingNeck =
-          actorEntity.components?.['positioning:biting_neck'];
-        if (!actorBitingNeck) {
-          return ActionResult.success([]);
-        }
-
-        const validTargets = closeness.reduce((acc, partnerId) => {
-          const partner = getEntity(partnerId);
-          if (!partner) {
-            return acc;
-          }
-
-          const partnerBeingBitten =
-            partner.components?.['positioning:being_bitten_in_neck'];
-          if (!partnerBeingBitten) {
-            return acc;
-          }
-
-          const actorBitesPartner =
-            actorBitingNeck.bitten_entity_id === partnerId;
-          const partnerBittenByActor =
-            partnerBeingBitten.biting_entity_id === actorEntity.id;
-
-          if (actorBitesPartner && partnerBittenByActor) {
-            acc.add(partnerId);
-          }
-
-          return acc;
-        }, new Set());
-
-        return ActionResult.success(Array.from(validTargets));
-      }
-    );
+    // Register positioning scopes
+    ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
   });
 
   afterEach(() => {
-    testBed.cleanup();
+    testFixture.cleanup();
   });
 
   describe('Positive Discovery Cases', () => {
-    it('discovers action when vampire withdraws fangs from bitten target', async () => {
-      const { actor, target } = testBed.createActorTargetScenario({
-        closeProximity: true,
-      });
+    it('discovers action when vampire withdraws fangs from bitten target', () => {
+      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
 
-      await testBed.mocks.entityManager.addComponent(
-        actor.id,
-        'positioning:biting_neck',
-        { bitten_entity_id: target.id, initiated: true }
-      );
-      await testBed.mocks.entityManager.addComponent(
-        target.id,
-        'positioning:being_bitten_in_neck',
-        { biting_entity_id: actor.id }
-      );
+      scenario.actor.components['positioning:biting_neck'] = {
+        bitten_entity_id: scenario.target.id,
+        initiated: true,
+      };
+      scenario.target.components['positioning:being_bitten_in_neck'] = {
+        biting_entity_id: scenario.actor.id,
+      };
 
-      const result = await testBed.discoverActionsWithDiagnostics(actor);
-      expect(result).toHaveAction(ACTION_ID);
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).toContain(ACTION_ID);
     });
   });
 
   describe('Negative Discovery Cases', () => {
-    it('does NOT discover when actor lacks positioning:biting_neck component', async () => {
-      const { actor, target } = testBed.createActorTargetScenario({
-        closeProximity: true,
-      });
+    it('does NOT discover when actor lacks positioning:biting_neck component', () => {
+      const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
-      await testBed.mocks.entityManager.addComponent(
-        target.id,
-        'positioning:being_bitten_in_neck',
-        { biting_entity_id: actor.id }
-      );
+      scenario.target.components['positioning:being_bitten_in_neck'] = {
+        biting_entity_id: scenario.actor.id,
+      };
 
-      const result = await testBed.discoverActionsWithDiagnostics(actor);
-      expect(result).not.toHaveAction(ACTION_ID);
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when target lacks positioning:being_bitten_in_neck component', async () => {
-      const { actor, target } = testBed.createActorTargetScenario({
-        closeProximity: true,
-      });
+    it('does NOT discover when target lacks positioning:being_bitten_in_neck component', () => {
+      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Target']);
 
-      await testBed.mocks.entityManager.addComponent(
-        actor.id,
-        'positioning:biting_neck',
-        { bitten_entity_id: target.id, initiated: true }
-      );
+      scenario.actor.components['positioning:biting_neck'] = {
+        bitten_entity_id: scenario.target.id,
+        initiated: true,
+      };
 
-      const result = await testBed.discoverActionsWithDiagnostics(actor);
-      expect(result).not.toHaveAction(ACTION_ID);
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when component IDs do not match reciprocally', async () => {
-      const { actor, target } = testBed.createActorTargetScenario({
-        closeProximity: true,
-      });
+    it('does NOT discover when component IDs do not match reciprocally', () => {
+      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
 
-      await testBed.mocks.entityManager.addComponent(
-        actor.id,
-        'positioning:biting_neck',
-        { bitten_entity_id: 'someone-else', initiated: true }
-      );
-      await testBed.mocks.entityManager.addComponent(
-        target.id,
-        'positioning:being_bitten_in_neck',
-        { biting_entity_id: actor.id }
-      );
+      scenario.actor.components['positioning:biting_neck'] = {
+        bitten_entity_id: 'someone-else',
+        initiated: true,
+      };
+      scenario.target.components['positioning:being_bitten_in_neck'] = {
+        biting_entity_id: scenario.actor.id,
+      };
 
-      const result = await testBed.discoverActionsWithDiagnostics(actor);
-      expect(result).not.toHaveAction(ACTION_ID);
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when actor has positioning:being_bitten_in_neck (forbidden)', async () => {
-      const { actor, target } = testBed.createActorTargetScenario({
-        closeProximity: true,
-      });
+    it('does NOT discover when actor has positioning:being_bitten_in_neck (forbidden)', () => {
+      const scenario = testFixture.createStandardActorTarget(['Victim', 'Vampire']);
 
-      await testBed.mocks.entityManager.addComponent(
-        actor.id,
-        'positioning:biting_neck',
-        { bitten_entity_id: target.id, initiated: true }
-      );
-      await testBed.mocks.entityManager.addComponent(
-        actor.id,
-        'positioning:being_bitten_in_neck',
-        { biting_entity_id: target.id }
-      );
-      await testBed.mocks.entityManager.addComponent(
-        target.id,
-        'positioning:being_bitten_in_neck',
-        { biting_entity_id: actor.id }
-      );
+      scenario.actor.components['positioning:biting_neck'] = {
+        bitten_entity_id: scenario.target.id,
+        initiated: true,
+      };
+      scenario.actor.components['positioning:being_bitten_in_neck'] = {
+        biting_entity_id: scenario.target.id,
+      };
+      scenario.target.components['positioning:being_bitten_in_neck'] = {
+        biting_entity_id: scenario.actor.id,
+      };
 
-      const result = await testBed.discoverActionsWithDiagnostics(actor);
-      expect(result).not.toHaveAction(ACTION_ID);
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('does NOT discover when actors lack closeness', async () => {
-      const { actor, target } = testBed.createActorTargetScenario({
-        closeProximity: false,
-      });
+    it('does NOT discover when actors lack closeness', () => {
+      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
 
-      await testBed.mocks.entityManager.addComponent(
-        actor.id,
-        'positioning:biting_neck',
-        { bitten_entity_id: target.id, initiated: true }
-      );
-      await testBed.mocks.entityManager.addComponent(
-        target.id,
-        'positioning:being_bitten_in_neck',
-        { biting_entity_id: actor.id }
-      );
+      // Remove closeness
+      delete scenario.actor.components['positioning:closeness'];
+      delete scenario.target.components['positioning:closeness'];
 
-      const result = await testBed.discoverActionsWithDiagnostics(actor);
-      expect(result).not.toHaveAction(ACTION_ID);
+      scenario.actor.components['positioning:biting_neck'] = {
+        bitten_entity_id: scenario.target.id,
+        initiated: true,
+      };
+      scenario.target.components['positioning:being_bitten_in_neck'] = {
+        biting_entity_id: scenario.actor.id,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
     });
   });
 });

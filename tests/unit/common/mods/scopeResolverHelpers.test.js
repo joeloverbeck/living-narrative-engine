@@ -490,8 +490,9 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
     const result = mockTestEnv.unifiedScopeResolver.resolveSync('unknown:scope', {});
 
     expect(result).toEqual({ success: true, value: new Set(['original_result']) });
-    // The original resolver is stored but wrapped, so we verify the result instead
-    expect(mockTestEnv._originalResolveSync).toBe(originalResolver);
+    // The original resolver is stored and bound for proper context, so verify it exists and is callable
+    expect(mockTestEnv._originalResolveSync).toBeDefined();
+    expect(typeof mockTestEnv._originalResolveSync).toBe('function');
   });
 
   it('should use registered resolver instead of original', () => {
@@ -523,5 +524,101 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
     expect(secondResolverCount).toBeGreaterThan(firstResolverCount);
     expect(mockTestEnv._registeredResolvers.has('positioning:sitting_actors')).toBe(true);
     expect(mockTestEnv._registeredResolvers.has('items:portable_items_at_location')).toBe(true);
+  });
+});
+
+describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => {
+  let mockTestEnv;
+  let mockEntityManager;
+
+  beforeEach(() => {
+    mockEntityManager = {
+      getComponentData: jest.fn(),
+      getEntityIds: jest.fn(() => []),
+      getEntityInstance: jest.fn(),
+      hasComponent: jest.fn(() => false),
+    };
+
+    mockTestEnv = {
+      entityManager: mockEntityManager,
+      unifiedScopeResolver: {
+        resolveSync: jest.fn(),
+      },
+    };
+
+    ScopeResolverHelpers.registerPositioningScopes(mockTestEnv);
+  });
+
+  describe('High Priority Scopes', () => {
+    it('should register positioning:close_actors', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
+    });
+
+    it('should register positioning:close_actors_facing_each_other', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:close_actors_facing_each_other')).toBe(true);
+    });
+
+    it('should register positioning:actors_both_sitting_close', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:actors_both_sitting_close')).toBe(true);
+    });
+
+    it('should register positioning:actor_biting_my_neck', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:actor_biting_my_neck')).toBe(true);
+    });
+
+    it('should register positioning:actors_sitting_close', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:actors_sitting_close')).toBe(true);
+    });
+
+    it('should register positioning:close_actors_or_entity_kneeling_before_actor', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:close_actors_or_entity_kneeling_before_actor')).toBe(true);
+    });
+  });
+
+  describe('Medium Priority Scopes', () => {
+    it('should register positioning:actor_im_straddling', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:actor_im_straddling')).toBe(true);
+    });
+
+    it('should register positioning:entity_actor_is_kneeling_before', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:entity_actor_is_kneeling_before')).toBe(true);
+    });
+
+    it('should register positioning:actors_sitting_with_space_to_right', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:actors_sitting_with_space_to_right')).toBe(true);
+    });
+  });
+
+  describe('Lower Priority Scopes', () => {
+    it('should register positioning:available_furniture', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:available_furniture')).toBe(true);
+    });
+
+    it('should register positioning:available_lying_furniture', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:available_lying_furniture')).toBe(true);
+    });
+
+    it('should register positioning:furniture_im_lying_on', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:furniture_im_lying_on')).toBe(true);
+    });
+
+    it('should register positioning:furniture_im_sitting_on', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:furniture_im_sitting_on')).toBe(true);
+    });
+
+    it('should register positioning:surface_im_bending_over', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:surface_im_bending_over')).toBe(true);
+    });
+
+    it('should register positioning:actors_im_facing_away_from', () => {
+      expect(mockTestEnv._registeredResolvers.has('positioning:actors_im_facing_away_from')).toBe(true);
+    });
+  });
+
+  it('should have 20+ total positioning scopes registered', () => {
+    const positioningScopes = Array.from(mockTestEnv._registeredResolvers.keys()).filter(
+      (key) => key.startsWith('positioning:')
+    );
+    expect(positioningScopes.length).toBeGreaterThanOrEqual(20);
   });
 });

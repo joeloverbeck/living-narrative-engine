@@ -6,91 +6,26 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import grabNeckAction from '../../../../data/mods/violence/actions/grab_neck.action.json';
-import { clearEntityCache } from '../../../../src/scopeDsl/core/entityHelpers.js';
 
 const ACTION_ID = 'violence:grab_neck';
 
 describe('violence:grab_neck action discovery', () => {
   let testFixture;
-  let configureActionDiscovery;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('violence', ACTION_ID);
 
-    configureActionDiscovery = () => {
-      const { testEnv } = testFixture;
-      if (!testEnv) {
-        return;
-      }
+    // Build action index for discovery
+    testFixture.testEnv.actionIndex.buildIndex([grabNeckAction]);
 
-      testEnv.actionIndex.buildIndex([grabNeckAction]);
-
-      const scopeResolver = testEnv.unifiedScopeResolver;
-      const originalResolve =
-        scopeResolver.__grabNeckOriginalResolve ||
-        scopeResolver.resolveSync.bind(scopeResolver);
-
-      scopeResolver.__grabNeckOriginalResolve = originalResolve;
-      scopeResolver.resolveSync = (scopeName, context) => {
-        if (
-          scopeName ===
-          'positioning:close_actors_facing_each_other_or_behind_target'
-        ) {
-          const actorId = context?.actor?.id;
-          if (!actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          const { entityManager } = testEnv;
-          const actorEntity = entityManager.getEntityInstance(actorId);
-          if (!actorEntity) {
-            return { success: true, value: new Set() };
-          }
-
-          const closeness =
-            actorEntity.components?.['positioning:closeness']?.partners;
-          if (!Array.isArray(closeness) || closeness.length === 0) {
-            return { success: true, value: new Set() };
-          }
-
-          const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']
-              ?.facing_away_from || [];
-
-          const validTargets = closeness.reduce((acc, partnerId) => {
-            const partner = entityManager.getEntityInstance(partnerId);
-            if (!partner) {
-              return acc;
-            }
-
-            const partnerFacingAway =
-              partner.components?.['positioning:facing_away']
-                ?.facing_away_from || [];
-            const facingEachOther =
-              !actorFacingAway.includes(partnerId) &&
-              !partnerFacingAway.includes(actorId);
-            const actorBehind = partnerFacingAway.includes(actorId);
-
-            if (facingEachOther || actorBehind) {
-              acc.add(partnerId);
-            }
-
-            return acc;
-          }, new Set());
-
-          return { success: true, value: validTargets };
-        }
-
-        return originalResolve(scopeName, context);
-      };
-    };
+    // Register positioning scopes (replaces 40+ lines of manual implementation)
+    ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
   });
 
   afterEach(() => {
-    if (testFixture) {
-      testFixture.cleanup();
-    }
+    testFixture.cleanup();
   });
 
   describe('Action structure validation', () => {
@@ -119,7 +54,6 @@ describe('violence:grab_neck action discovery', () => {
   describe('Action discovery scenarios', () => {
     it('is available for close actors facing each other', () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -137,7 +71,6 @@ describe('violence:grab_neck action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -154,7 +87,6 @@ describe('violence:grab_neck action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -173,7 +105,6 @@ describe('violence:grab_neck action discovery', () => {
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
-      configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id

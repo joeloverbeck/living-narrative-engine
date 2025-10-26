@@ -360,11 +360,52 @@ beforeEach(async () => {
 
 **Available Registration Methods**:
 
-| Method | Coverage | Use When |
-|--------|----------|----------|
-| `registerPositioningScopes(testEnv)` | Sitting, standing, closeness, kneeling, facing | Action uses positioning mod scopes |
-| `registerInventoryScopes(testEnv)` | Items, containers, inventory, equipped items | Action uses items mod scopes |
-| `registerAnatomyScopes(testEnv)` | Body parts, anatomy interactions | Action uses anatomy mod scopes |
+| Method | Coverage | Scopes Registered | Use When |
+|--------|----------|-------------------|----------|
+| `registerPositioningScopes(testEnv)` | **26 scopes (90%+ coverage)**: Sitting, standing, closeness, kneeling, facing, straddling, lying, bending, furniture discovery, and specialized positioning patterns | 26 | Action uses positioning mod scopes |
+| `registerInventoryScopes(testEnv)` | Items, containers, inventory, equipped items | 5 | Action uses items mod scopes |
+| `registerAnatomyScopes(testEnv)` | Body parts, anatomy interactions | 2 | Action uses anatomy mod scopes |
+
+**Positioning Scopes Coverage** (TEAOUTTHR-006 - 90%+ coverage):
+
+<details>
+<summary>Expand to see all 26 registered positioning scopes</summary>
+
+**High Priority - Closeness & Facing (6 scopes)**:
+- `positioning:close_actors` - Close actors excluding kneeling relationships
+- `positioning:close_actors_facing_each_other` - Close actors facing each other (no kneeling)
+- `positioning:actors_both_sitting_close` - Close actors both sitting
+- `positioning:actor_biting_my_neck` - Entity biting actor's neck (reciprocal validation)
+- `positioning:actors_sitting_close` - Close actors where actor is sitting
+- `positioning:close_actors_or_entity_kneeling_before_actor` - Close actors plus those kneeling before actor
+
+**Medium Priority - Straddling & Seating (3 scopes)**:
+- `positioning:actor_im_straddling` - Entity actor is straddling
+- `positioning:entity_actor_is_kneeling_before` - Entity actor is kneeling before
+- `positioning:actors_sitting_with_space_to_right` - Sitting actors with 2+ empty spots to right
+
+**Lower Priority - Furniture & Specialized (6 scopes)**:
+- `positioning:available_furniture` - Furniture with empty sitting spots at location
+- `positioning:available_lying_furniture` - Furniture with empty lying spots at location
+- `positioning:furniture_im_lying_on` - Furniture actor is lying on
+- `positioning:furniture_im_sitting_on` - Furniture actor is sitting on
+- `positioning:surface_im_bending_over` - Surface actor is bending over
+- `positioning:actors_im_facing_away_from` - Actors that actor is facing away from
+
+**Previously Registered (11 scopes)**:
+- `positioning:furniture_actor_sitting_on` - Furniture entity lookup
+- `positioning:actors_sitting_on_same_furniture` - Actors sharing furniture
+- `positioning:closest_leftmost_occupant` - Leftmost sitting actor
+- `positioning:closest_rightmost_occupant` - Rightmost sitting actor
+- `positioning:furniture_allowing_sitting_at_location` - Available seating
+- `positioning:standing_actors_at_location` - Standing actors in room
+- `positioning:sitting_actors` - All sitting actors
+- `positioning:kneeling_actors` - All kneeling actors
+- `positioning:furniture_actor_behind` - Furniture actor is standing behind
+- `positioning:actor_being_bitten_by_me` - Entity actor is biting (reciprocal)
+- `positioning:close_actors_facing_each_other_or_behind_target` - Complex facing/behind logic
+
+</details>
 
 #### Combining Multiple Scope Categories
 
