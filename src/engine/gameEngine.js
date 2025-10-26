@@ -204,9 +204,7 @@ class GameEngine {
     );
 
     const reportedSuccess =
-      initResult &&
-      typeof initResult === 'object' &&
-      'success' in initResult
+      initResult && typeof initResult === 'object' && 'success' in initResult
         ? /** @type {{ success: unknown }} */ (initResult).success
         : 'unknown';
     this.#logger.debug(
@@ -227,7 +225,7 @@ class GameEngine {
     if (
       !initResult ||
       typeof initResult !== 'object' ||
-      typeof /** @type {{ success?: unknown }} */ (initResult).success !==
+      typeof (/** @type {{ success?: unknown }} */ (initResult).success) !==
         'boolean'
     ) {
       const receivedType = initResult === null ? 'null' : typeof initResult;
@@ -276,8 +274,44 @@ class GameEngine {
     returnResult = false
   ) {
     const resetState = () => {
-      this.#resetCoreGameState();
-      this.#resetEngineState();
+      /** @type {unknown} */
+      let coreResetError;
+      try {
+        this.#resetCoreGameState();
+      } catch (error) {
+        coreResetError = error;
+      }
+
+      /** @type {unknown} */
+      let engineResetError;
+      try {
+        this.#resetEngineState();
+      } catch (error) {
+        engineResetError = error;
+      }
+
+      if (coreResetError) {
+        if (
+          engineResetError &&
+          coreResetError instanceof Error &&
+          !('engineResetError' in coreResetError)
+        ) {
+          try {
+            if (!('cause' in coreResetError) || !coreResetError.cause) {
+              coreResetError.cause = engineResetError;
+            } else {
+              coreResetError.engineResetError = engineResetError;
+            }
+          } catch {
+            coreResetError.engineResetError = engineResetError;
+          }
+        }
+        throw coreResetError;
+      }
+
+      if (engineResetError) {
+        throw engineResetError;
+      }
     };
     return processOperationFailure(
       this.#logger,
