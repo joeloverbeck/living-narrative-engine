@@ -9,6 +9,7 @@
   },
   "forbidden_components": {
     "actor": [
+      "positioning:biting_neck",
       "positioning:straddling_waist",
       "positioning:hugging",
       "positioning:being_hugged"

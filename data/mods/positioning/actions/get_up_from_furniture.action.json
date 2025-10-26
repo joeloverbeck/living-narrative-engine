@@ -8,7 +8,7 @@
     "actor": ["positioning:sitting_on"]
   },
   "forbidden_components": {
-    "actor": ["positioning:giving_blowjob"]
+    "actor": ["positioning:biting_neck", "positioning:giving_blowjob"]
   },
   "template": "get up from {target}",
   "prerequisites": [],

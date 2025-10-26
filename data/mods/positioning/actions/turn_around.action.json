@@ -13,6 +13,9 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:biting_neck"]
+  },
   "template": "turn {target} around",
   "prerequisites": [
     {

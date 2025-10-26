@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:night_park_stone_bench",
+  "description": "A heavy stone bench under a streetlight in a gothic park setting",
+  "components": {
+    "core:name": {
+      "text": "stone park bench"
+    },
+    "core:description": {
+      "text": "This bench sits in a pool of amber streetlight, carved from a single continuous block of dark stone. The seat and backrest flow together in one unbroken piece, supported by thick stone pillars at each end that anchor it firmly to the wet cobblestones below. The surface bears the subtle scars of time—small chips along the edges, corners worn smooth by countless hands and bodies, the faint traces of weather etched into the grain. The stone absorbs the warm glow from the streetlight above, its mass creating deep shadows beneath while the top surface gleams faintly with moisture from recent rain. Beyond the circle of light, darkness presses in from all sides, but here the bench offers a solid, enduring refuge under the unwavering amber glow."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/night_park_stone_bench.png",
+      "altText": "A solid stone bench illuminated by amber streetlight, showing weathered surface and heavy construction"
+    },
+    "positioning:allows_sitting": {
+      "spots": [null, null, null]
+    }
+  }
+}
