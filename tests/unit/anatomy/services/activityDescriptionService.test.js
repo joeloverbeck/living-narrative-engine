@@ -538,6 +538,66 @@ describe('ActivityDescriptionService', () => {
       );
     });
 
+    it('should trim whitespace in descriptions and formatting config output', async () => {
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+        enabled: true,
+        prefix: '  Activity: ',
+        suffix: '.   ',
+      });
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          description: '  keeps watch  ',
+          targetId: 'entity_2',
+          priority: 7,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: id === 'entity_2' ? 'Perimeter Guard' : `Entity ${id}`,
+      }));
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe(
+        'Activity: Entity entity_1 keeps watch Perimeter Guard.'
+      );
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'entity_2'
+      );
+
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+        enabled: true,
+        prefix: 'Activity: ',
+        suffix: '.',
+      });
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+        id,
+        name: `Entity ${id}`,
+      }));
+    });
+
+    it('should treat whitespace-only descriptions as empty output', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'entity_1',
+          description: '   ',
+          priority: 3,
+        },
+      ]);
+
+      const result = await service.generateActivityDescription('entity_1');
+
+      expect(result).toBe('');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'No formatted activity description produced for entity: entity_1'
+        )
+      );
+    });
+
     it('should fall back to raw entity id when name metadata is absent', async () => {
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([
         {
