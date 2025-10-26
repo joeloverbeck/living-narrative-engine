@@ -2,7 +2,7 @@
  * @file Unit tests for IClothingSystemFacade interface
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import IClothingSystemFacade from '../../../../src/clothing/facades/IClothingSystemFacade.js';
 
@@ -45,14 +45,44 @@ class TestClothingSystemFacade extends IClothingSystemFacade {
 describe('IClothingSystemFacade', () => {
   let testBed;
   let facade;
+  let loggerMock;
+  let eventBusMock;
+  let cacheMock;
+
+  const createFacadeInstance = (overrides = {}) =>
+    new TestClothingSystemFacade({
+      logger: loggerMock,
+      eventBus: eventBusMock,
+      unifiedCache: cacheMock,
+      circuitBreaker: null,
+      ...overrides,
+    });
 
   beforeEach(() => {
     testBed = createTestBed();
-    facade = new TestClothingSystemFacade();
+    loggerMock = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+    };
+    eventBusMock = {
+      dispatch: jest.fn(),
+      subscribe: jest.fn(),
+    };
+    cacheMock = {
+      get: jest.fn().mockResolvedValue(undefined),
+      set: jest.fn().mockResolvedValue(undefined),
+      invalidate: jest.fn().mockResolvedValue(undefined),
+      invalidateByPattern: jest.fn().mockResolvedValue(undefined),
+    };
+
+    facade = createFacadeInstance();
   });
 
   afterEach(() => {
     testBed.cleanup();
+    jest.restoreAllMocks();
   });
 
   describe('constructor', () => {
@@ -442,7 +472,7 @@ describe('IClothingSystemFacade', () => {
   describe('response format consistency', () => {
     it('should return standard query response format', async () => {
       const response = await facade.getAccessibleItems('actor1');
-      
+
       expect(response).toHaveProperty('success');
       expect(response).toHaveProperty('data');
       expect(response).toHaveProperty('pagination');
@@ -475,6 +505,363 @@ describe('IClothingSystemFacade', () => {
       expect(typeof response.success).toBe('boolean');
       expect(typeof response.data.valid).toBe('boolean');
       expect(Array.isArray(response.data.errors)).toBe(true);
+    });
+  });
+
+  describe('resilience fallbacks', () => {
+    it('should use fallback values when accessible item retrieval fails', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const failingService = {
+        getAccessibleItems: jest.fn().mockRejectedValue(new Error('service down')),
+        getEquippedItems: jest.fn(),
+        getItemsInSlot: jest.fn(),
+      };
+
+      const fallbackFacade = createFacadeInstance({
+        eventBus: localEventBus,
+        clothingManagementService: failingService,
+      });
+
+      const response = await fallbackFacade.getAccessibleItems('actor1');
+
+      expect(response.data).toEqual([]);
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'FACADE_OPERATION_ERROR' })
+      );
+      expect(failingService.getAccessibleItems).toHaveBeenCalledWith(
+        'actor1',
+        expect.objectContaining({ cache: true })
+      );
+    });
+
+    it('should fall back to empty equipped items on error', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const failingService = {
+        getAccessibleItems: jest.fn(),
+        getEquippedItems: jest.fn().mockRejectedValue(new Error('boom')),
+        getItemsInSlot: jest.fn(),
+      };
+
+      const fallbackFacade = createFacadeInstance({
+        eventBus: localEventBus,
+        clothingManagementService: failingService,
+      });
+
+      const response = await fallbackFacade.getEquippedItems('actor1');
+
+      expect(response.data).toEqual([]);
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'FACADE_OPERATION_ERROR' })
+      );
+      expect(failingService.getEquippedItems).toHaveBeenCalledWith(
+        'actor1',
+        expect.objectContaining({ cache: true })
+      );
+    });
+
+    it('should fall back to null when slot lookup fails', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const failingService = {
+        getAccessibleItems: jest.fn(),
+        getEquippedItems: jest.fn(),
+        getItemsInSlot: jest.fn().mockRejectedValue(new Error('slot missing')),
+      };
+
+      const fallbackFacade = createFacadeInstance({
+        eventBus: localEventBus,
+        clothingManagementService: failingService,
+      });
+
+      const response = await fallbackFacade.getItemsInSlot('actor1', 'weapon');
+
+      expect(response.data).toBeNull();
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'FACADE_OPERATION_ERROR' })
+      );
+    });
+
+    it('should provide default compatibility data when compatibility checks fail', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const failingLayerService = {
+        checkCompatibility: jest.fn().mockRejectedValue(new Error('no service')),
+        getConflicts: jest.fn(),
+        getBlockedSlots: jest.fn(),
+        getLayerConflicts: jest.fn(),
+      };
+
+      const fallbackFacade = createFacadeInstance({
+        eventBus: localEventBus,
+        layerCompatibilityService: failingLayerService,
+      });
+
+      const response = await fallbackFacade.checkItemCompatibility('actor1', 'item1', 'slot1');
+
+      expect(response.data).toEqual({ compatible: false, reason: 'Compatibility check failed' });
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'FACADE_OPERATION_ERROR' })
+      );
+    });
+
+    it('should fall back to validation error when validator is unavailable', async () => {
+      const validator = {
+        validateEntityEquipment: jest.fn().mockRejectedValue(new Error('offline')),
+      };
+
+      const fallbackFacade = createFacadeInstance({
+        clothingSlotValidator: validator,
+      });
+
+      const response = await fallbackFacade.validateEquipment('actor1');
+
+      expect(response.data).toEqual({ valid: false, errors: [{ message: 'Validation service unavailable' }] });
+    });
+
+    it('should return empty blocked slots when compatibility service fails', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const failingLayerService = {
+        checkCompatibility: jest.fn(),
+        getConflicts: jest.fn(),
+        getBlockedSlots: jest.fn().mockRejectedValue(new Error('no data')),
+        getLayerConflicts: jest.fn(),
+      };
+
+      const fallbackFacade = createFacadeInstance({
+        eventBus: localEventBus,
+        layerCompatibilityService: failingLayerService,
+      });
+
+      const response = await fallbackFacade.getBlockedSlots('actor1');
+
+      expect(response.data).toEqual([]);
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'FACADE_OPERATION_ERROR' })
+      );
+    });
+
+    it('should return empty layer conflicts when retrieval fails', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const failingLayerService = {
+        checkCompatibility: jest.fn(),
+        getConflicts: jest.fn(),
+        getBlockedSlots: jest.fn(),
+        getLayerConflicts: jest.fn().mockRejectedValue(new Error('timeout')),
+      };
+
+      const fallbackFacade = createFacadeInstance({
+        eventBus: localEventBus,
+        layerCompatibilityService: failingLayerService,
+      });
+
+      const response = await fallbackFacade.getLayerConflicts('actor1');
+
+      expect(response.data).toEqual([]);
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'FACADE_OPERATION_ERROR' })
+      );
+    });
+  });
+
+  describe('modification safeguards', () => {
+    it('should throw when attempting to equip incompatible items', async () => {
+      jest
+        .spyOn(facade, 'checkItemCompatibility')
+        .mockResolvedValue({ data: { compatible: false, reason: 'blocked' } });
+
+      const response = await facade.equipItem('actor1', 'item1', 'slot1', {
+        validate: true,
+        force: false,
+      });
+
+      expect(response.success).toBe(false);
+      expect(response.error).toMatchObject({
+        type: 'InvalidArgumentError',
+        code: 'INVALID_ARGUMENT_ERROR',
+      });
+      expect(response.error.message).toContain('Item item1 is not compatible with slot slot1');
+      expect(response.metadata.operationType).toBe('equipItem');
+    });
+  });
+
+  describe('bulk operation edge cases', () => {
+    it('should reject equipMultiple when items is not an array', async () => {
+      const response = await facade.equipMultiple('actor1', 'invalid');
+
+      expect(response.success).toBe(false);
+      expect(response.error).toMatchObject({
+        type: 'InvalidArgumentError',
+        code: 'INVALID_ARGUMENT_ERROR',
+      });
+    });
+
+    it('should handle mixed results during equipMultiple operations', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const progressCallback = jest.fn();
+      const bulkFacade = createFacadeInstance({ eventBus: localEventBus });
+
+      jest
+        .spyOn(bulkFacade, 'equipItem')
+        .mockImplementation(async (_entityId, itemId) => {
+          if (itemId === 'bad') {
+            throw new Error('equip failure');
+          }
+          return { success: true, itemId };
+        });
+
+      const response = await bulkFacade.equipMultiple(
+        'actor1',
+        [
+          { itemId: 'good', slot: 'slotA' },
+          { itemId: 'bad', slot: 'slotB' },
+        ],
+        {
+          returnResults: true,
+          stopOnError: false,
+          parallel: true,
+          batchSize: 2,
+          onProgress: progressCallback,
+        }
+      );
+
+      expect(progressCallback).toHaveBeenCalledWith(
+        expect.objectContaining({ processed: 2, successful: 1, failed: 1 })
+      );
+      expect(response.data).toMatchObject({ processed: 2, successful: 1, failed: 1 });
+      expect(response.data.results).toEqual([
+        { item: { itemId: 'good', slot: 'slotA' }, result: { success: true, itemId: 'good' }, success: true },
+        { item: { itemId: 'bad', slot: 'slotB' }, error: 'equip failure', success: false },
+      ]);
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'CLOTHING_BULK_EQUIP_COMPLETED' })
+      );
+    });
+
+    it('should stop equipMultiple processing when stopOnError is true', async () => {
+      const bulkFacade = createFacadeInstance();
+
+      const equipSpy = jest
+        .spyOn(bulkFacade, 'equipItem')
+        .mockImplementation(async () => {
+          throw new Error('hard failure');
+        });
+
+      const response = await bulkFacade.equipMultiple('actor1', [{ itemId: 'bad', slot: 'slotA' }]);
+
+      expect(response.success).toBe(false);
+      expect(response.error.message).toBe('hard failure');
+      expect(equipSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reject unequipMultiple when itemIds is not an array', async () => {
+      const response = await facade.unequipMultiple('actor1', 'invalid');
+
+      expect(response.success).toBe(false);
+      expect(response.error).toMatchObject({
+        type: 'InvalidArgumentError',
+        code: 'INVALID_ARGUMENT_ERROR',
+      });
+    });
+
+    it('should handle mixed results during unequipMultiple operations', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const progressCallback = jest.fn();
+      const bulkFacade = createFacadeInstance({ eventBus: localEventBus });
+
+      jest
+        .spyOn(bulkFacade, 'unequipItem')
+        .mockImplementation(async (_entityId, itemId) => {
+          if (itemId === 'bad') {
+            throw new Error('unequip failure');
+          }
+          return { success: true, itemId };
+        });
+
+      const response = await bulkFacade.unequipMultiple(
+        'actor1',
+        ['good', 'bad'],
+        {
+          returnResults: true,
+          stopOnError: false,
+          parallel: true,
+          batchSize: 2,
+          onProgress: progressCallback,
+        }
+      );
+
+      expect(progressCallback).toHaveBeenCalledWith(
+        expect.objectContaining({ processed: 2, successful: 1, failed: 1 })
+      );
+      expect(response.data).toMatchObject({ processed: 2, successful: 1, failed: 1 });
+      expect(response.data.results).toEqual([
+        { itemId: 'good', result: { success: true, itemId: 'good' }, success: true },
+        { itemId: 'bad', error: 'unequip failure', success: false },
+      ]);
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'CLOTHING_BULK_UNEQUIP_COMPLETED' })
+      );
+    });
+
+    it('should stop unequipMultiple processing when stopOnError is true', async () => {
+      const bulkFacade = createFacadeInstance();
+
+      const unequipSpy = jest
+        .spyOn(bulkFacade, 'unequipItem')
+        .mockImplementation(async () => {
+          throw new Error('critical failure');
+        });
+
+      const response = await bulkFacade.unequipMultiple('actor1', ['bad']);
+
+      expect(response.success).toBe(false);
+      expect(response.error.message).toBe('critical failure');
+      expect(unequipSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('transfer operations edge cases', () => {
+    it('should track incompatible and failed transfers', async () => {
+      const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
+      const transferFacade = createFacadeInstance({ eventBus: localEventBus });
+
+      jest.spyOn(transferFacade, 'getEquippedItems').mockResolvedValue({
+        data: [
+          { itemId: 'blocked', slot: 'head' },
+          { itemId: 'error', slot: 'chest' },
+          { itemId: 'success', slot: 'legs' },
+        ],
+      });
+
+      jest.spyOn(transferFacade, 'checkItemCompatibility').mockImplementation(async (_entity, itemId) => {
+        if (itemId === 'blocked') {
+          return { data: { compatible: false, reason: 'Layer or slot conflicts detected' } };
+        }
+        return { data: { compatible: true, reason: null } };
+      });
+
+      const unequipSpy = jest
+        .spyOn(transferFacade, 'unequipItem')
+        .mockResolvedValue({ success: true });
+
+      const equipSpy = jest.spyOn(transferFacade, 'equipItem').mockImplementation(async (_entity, itemId) => {
+        if (itemId === 'error') {
+          throw new Error('equip failed');
+        }
+        return { success: true };
+      });
+
+      const response = await transferFacade.transferEquipment('from', 'to');
+
+      expect(unequipSpy).toHaveBeenCalledWith('from', 'error', { notifyOnChange: false });
+      expect(equipSpy).toHaveBeenCalledWith('to', 'success', 'legs', { notifyOnChange: false });
+      expect(response.data.transferred).toEqual([{ itemId: 'success', slot: 'legs' }]);
+      expect(response.data.failed).toEqual([
+        { itemId: 'blocked', reason: 'Layer or slot conflicts detected' },
+        { itemId: 'error', error: 'equip failed' },
+      ]);
+      expect(cacheMock.invalidate).toHaveBeenCalledWith('clothing:equipped:from');
+      expect(cacheMock.invalidate).toHaveBeenCalledWith('clothing:equipped:to');
+      expect(localEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'CLOTHING_EQUIPMENT_TRANSFERRED' })
+      );
     });
   });
 });
