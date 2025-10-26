@@ -23,7 +23,8 @@ export function validateSaveMetadataFields(metadata, fileName, logger) {
     !timestamp ||
     typeof playtimeSeconds !== 'number' ||
     Number.isNaN(playtimeSeconds) ||
-    !Number.isFinite(playtimeSeconds)
+    !Number.isFinite(playtimeSeconds) ||
+    playtimeSeconds < 0
   ) {
     logger.warn(
       `Essential metadata missing or malformed in ${identifier}. Contents: ${JSON.stringify(
@@ -35,7 +36,9 @@ export function validateSaveMetadataFields(metadata, fileName, logger) {
       saveName: saveName || `${extractSaveName(fileName)} (Bad Metadata)`,
       timestamp: timestamp || 'N/A',
       playtimeSeconds:
-        typeof playtimeSeconds === 'number' && Number.isFinite(playtimeSeconds)
+        typeof playtimeSeconds === 'number' &&
+        Number.isFinite(playtimeSeconds) &&
+        playtimeSeconds >= 0
           ? playtimeSeconds
           : 0,
       isCorrupted: true,

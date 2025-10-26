@@ -152,4 +152,31 @@ describe('validateSaveMetadataFields', () => {
       isCorrupted: true,
     });
   });
+
+  test('normalizes negative playtime values and flags metadata as corrupted', () => {
+    const metadata = {
+      identifier: 'save-6',
+      saveName: 'Broken Clock',
+      timestamp: '2024-05-05T00:00:00Z',
+      playtimeSeconds: -120,
+    };
+
+    const result = validateSaveMetadataFields(
+      metadata,
+      'manual_save_save-6.sav',
+      logger
+    );
+
+    expect(extractSaveName).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('save-6')
+    );
+    expect(result).toEqual({
+      identifier: 'save-6',
+      saveName: 'Broken Clock',
+      timestamp: '2024-05-05T00:00:00Z',
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+  });
 });

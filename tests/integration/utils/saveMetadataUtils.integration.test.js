@@ -73,4 +73,27 @@ describe('validateSaveMetadataFields integration', () => {
     expect(result).toBe(metadata);
     expect(logger.warn).not.toHaveBeenCalled();
   });
+
+  it('marks metadata with negative playtime as corrupted while preserving naming data', () => {
+    const logger = createLogger();
+    const fileName = buildManualFileName('After Midnight');
+    const metadata = {
+      identifier: 'manual-save/2025-03-21T00:30:00.000Z',
+      saveName: 'After Midnight',
+      timestamp: '2025-03-21T00:30:00.000Z',
+      playtimeSeconds: -30,
+    };
+
+    const result = validateSaveMetadataFields(metadata, fileName, logger);
+
+    expect(result).toEqual({
+      identifier: metadata.identifier,
+      saveName: metadata.saveName,
+      timestamp: metadata.timestamp,
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn.mock.calls[0][0]).toContain(metadata.identifier);
+  });
 });
