@@ -340,7 +340,8 @@ describe('MonitoringCoordinator', () => {
       coordinator = new MonitoringCoordinator({ logger, enabled: false });
       const report = coordinator.getMonitoringReport();
 
-      expect(report).toBe('Monitoring is disabled');
+      expect(report).toContain('Monitoring is disabled');
+      expect(report).toContain('Monitoring Status: Disabled');
     });
   });
 
