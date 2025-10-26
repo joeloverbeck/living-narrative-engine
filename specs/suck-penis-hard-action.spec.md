@@ -9,7 +9,7 @@ Implement an action/rule combo in the `sex-penile-oral` mod that allows an actor
 - **Blowjob continuation baseline** – Follow the schema layout, visual palette, and structural patterns from `sex-penile-oral:suck_penis_slowly`, which also operates during an active blowjob.【F:data/mods/sex-penile-oral/actions/suck_penis_slowly.action.json†L1-L25】
 - **Similar action precedent** – Reference `sex-penile-oral:pull_penis_out_of_mouth` for ongoing blowjob action structure.【F:data/mods/sex-penile-oral/actions/pull_penis_out_of_mouth.action.json†L1-L25】
 - **Rule execution patterns** – Use `handle_suck_penis_slowly` as the template for rule structure, variable naming, and macro usage.【F:data/mods/sex-penile-oral/rules/handle_suck_penis_slowly.rule.json†L1-L63】
-- **Testing methodology** – Build suites using the modern fixtures, discovery beds, and matcher guidance captured in the Mod Testing Guide.【F:docs/testing/mod-testing-guide.md†L1-L347】【F:docs/testing/action-discovery-testing-toolkit.md†L1-L64】
+- **Testing methodology** – Build suites using the modern fixtures, discovery beds, and matcher guidance captured in the Mod Testing Guide.【F:docs/testing/mod-testing-guide.md†L1-L347】【F:docs/testing/mod-testing-guide.md#action-discovery-harness†L1-L64】
 - **Discovery test patterns** – Follow the comprehensive scenario building and scope override patterns from `suck_penis_slowly_action_discovery.test.js`.【F:tests/integration/mods/sex-penile-oral/suck_penis_slowly_action_discovery.test.js†L1-L100】
 - **Rule behavior test patterns** – Follow the execution testing approach from `suck_penis_slowly_action.test.js`.【F:tests/integration/mods/sex-penile-oral/suck_penis_slowly_action.test.js†L1-L100】
 
@@ -393,7 +393,7 @@ Create entities:
 ## Related Documentation
 
 - **Mod Testing Guide**: `docs/testing/mod-testing-guide.md` - Complete guide to fixture API, matchers, and testing patterns
-- **Action Discovery Toolkit**: `docs/testing/action-discovery-testing-toolkit.md` - Specialized guidance for action discovery testing
+- **Action Discovery Toolkit**: `docs/testing/mod-testing-guide.md#action-discovery-harness` - Specialized guidance for action discovery testing
 - **Reference Action (Slow)**: `data/mods/sex-penile-oral/actions/suck_penis_slowly.action.json` - Structural template for similar action
 - **Reference Action (Pull)**: `data/mods/sex-penile-oral/actions/pull_penis_out_of_mouth.action.json` - Structural template for ongoing blowjob actions
 - **Reference Rule (Slow)**: `data/mods/sex-penile-oral/rules/handle_suck_penis_slowly.rule.json` - Rule pattern for blowjob actions

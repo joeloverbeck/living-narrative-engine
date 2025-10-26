@@ -1,5 +1,5 @@
 /**
- * @file Handler that merges two intimacy circles and locks movement of all participants.
+ * @file Handler that merges two closeness circles.
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -11,7 +11,6 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
-import { updateMovementLock } from '../../utils/movementUtils.js';
 
 /**
  * @class MergeClosenessCircleHandler
@@ -148,30 +147,9 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
     return mergedMemberIds;
   }
 
-  /**
-   * Lock movement for a list of entities.
-   *
-   * @param {string[]} mergedMemberIds
-   * @returns {void}
-   * @private
-   */
-  async #lockMovement(mergedMemberIds) {
-    for (const id of mergedMemberIds) {
-      try {
-        await updateMovementLock(this.#entityManager, id, true);
-      } catch (err) {
-        safeDispatchError(
-          this.#dispatcher,
-          'MERGE_CLOSENESS_CIRCLE: failed locking movement',
-          { id, error: err.message, stack: err.stack },
-          this.logger
-        );
-      }
-    }
-  }
 
   /**
-   * Merge the actor and target circles and lock movement for all members.
+   * Merge the actor and target circles.
    *
    * @param {{ actor_id:string, target_id:string, result_variable?:string }} params - Operation parameters.
    * @param {ExecutionContext} executionContext - Execution context.
@@ -182,7 +160,6 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
     const { actorId, targetId, resultVar, logger } = validated;
 
     const mergedMemberIds = await this.#updatePartners(actorId, targetId);
-    await this.#lockMovement(mergedMemberIds);
 
     if (resultVar) {
       if (

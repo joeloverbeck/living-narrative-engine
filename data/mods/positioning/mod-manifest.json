@@ -100,6 +100,7 @@
     ],
     "rules": [
       "bend_over.rule.json",
+      "closeness_auto_move.rule.json",
       "dismount_from_straddling.rule.json",
       "get_close.rule.json",
       "handle_crawl_to.rule.json",
