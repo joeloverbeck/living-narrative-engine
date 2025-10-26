@@ -198,15 +198,6 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
   }
 
   #selectInitialActiveConfig() {
-    if (!this.#allConfigsMap || typeof this.#allConfigsMap !== 'object') {
-      this.#logger.warn(
-        'LLMConfigurationManager: Cannot select active config - configurations not loaded.'
-      );
-      this.#currentActiveConfigId = null;
-      this.#currentActiveConfig = null;
-      return;
-    }
-
     let configSelected = false;
 
     // Priority 1: initialLlmId from constructor
@@ -304,12 +295,6 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
     }
     await this.#initPromise;
 
-    if (!this.#isInitialized) {
-      const msg =
-        'LLMConfigurationManager: Initialization promise resolved but not marked as initialized.';
-      this.#logger.error(msg);
-      throw new Error(msg);
-    }
     if (!this.#isOperational) {
       const msg = 'LLMConfigurationManager: Initialized but not operational.';
       this.#logger.error(msg);
@@ -330,13 +315,6 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
       'LLMConfigurationManager.loadConfiguration',
       this.#logger
     );
-
-    if (!this.#allConfigsMap) {
-      this.#logger.error(
-        'LLMConfigurationManager: Configurations map not available.'
-      );
-      return null;
-    }
 
     const config = this.#allConfigsMap[configId];
     if (config) {
@@ -375,13 +353,6 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
    */
   async setActiveConfiguration(configId) {
     await this.#ensureInitialized();
-
-    if (!this.#allConfigsMap) {
-      this.#logger.error(
-        'LLMConfigurationManager: Configurations map not available.'
-      );
-      return false;
-    }
 
     if (typeof configId !== 'string' || configId.trim() === '') {
       this.#logger.error(
@@ -519,13 +490,6 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
     } catch (error) {
       this.#logger.warn(
         `LLMConfigurationManager: Not operational. Cannot retrieve options. Error: ${error.message}`
-      );
-      return [];
-    }
-
-    if (!this.#isOperational || !this.#allConfigsMap) {
-      this.#logger.warn(
-        'LLMConfigurationManager: Not operational or configurations not loaded.'
       );
       return [];
     }

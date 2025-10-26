@@ -5,6 +5,7 @@
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { LLMConfigurationManager } from '../../../../src/llms/services/llmConfigurationManager.js';
+import { LLMSelectionPersistence } from '../../../../src/llms/services/llmSelectionPersistence.js';
 
 describe('LLMConfigurationManager', () => {
   let configManager;
@@ -180,6 +181,38 @@ describe('LLMConfigurationManager', () => {
         'LLMConfigurationManager: Already initialized and operational.'
       );
       expect(mockConfigLoader.loadConfigs).toHaveBeenCalledTimes(1); // Only called once
+    });
+
+    it('should reuse in-flight initialization promise when called concurrently', async () => {
+      let resolveConfigs;
+      mockConfigLoader.loadConfigs.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveConfigs = resolve;
+          })
+      );
+
+      const firstInitPromise = configManager.init({
+        llmConfigLoader: mockConfigLoader,
+      });
+
+      const secondInitPromise = configManager.init({
+        llmConfigLoader: mockConfigLoader,
+      });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'LLMConfigurationManager: Initialization already in progress.'
+      );
+
+      resolveConfigs(mockConfig);
+      await expect(
+        Promise.all([firstInitPromise, secondInitPromise])
+      ).resolves.toEqual([undefined, undefined]);
+
+      expect(mockConfigLoader.loadConfigs).toHaveBeenCalledTimes(1);
+
+      expect(configManager.isInitialized()).toBe(true);
+      expect(configManager.isOperational()).toBe(true);
     });
 
     it('should handle exception during configuration loading', async () => {
@@ -382,6 +415,22 @@ describe('LLMConfigurationManager', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'LLMConfigurationManager: No default configuration set.'
       );
+    });
+
+    it('should warn when persisting a new active configuration fails', async () => {
+      const saveSpy = jest
+        .spyOn(LLMSelectionPersistence, 'save')
+        .mockReturnValueOnce(false);
+
+      const result = await configManager.setActiveConfiguration('claude');
+
+      expect(result).toBe(true);
+      expect(saveSpy).toHaveBeenCalledWith('claude');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "LLMConfigurationManager: Failed to persist LLM selection 'claude' to localStorage."
+      );
+
+      saveSpy.mockRestore();
     });
 
     it('should migrate old Claude Sonnet 4 ID to Claude Sonnet 4.5 from localStorage', async () => {
