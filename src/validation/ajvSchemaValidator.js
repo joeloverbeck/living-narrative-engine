@@ -65,6 +65,95 @@ class AjvSchemaValidator {
    * @returns {Function} AJV-compatible loadSchema function
    */
   #createSchemaLoader() {
+    const decodePointerSegment = (segment) =>
+      segment.replace(/~1/g, '/').replace(/~0/g, '~');
+
+    const resolveFragment = (schemaObject, fragment) => {
+      if (!fragment || fragment === '#') {
+        return schemaObject;
+      }
+
+      const pointer = fragment.startsWith('#') ? fragment.slice(1) : fragment;
+      if (!pointer) {
+        return schemaObject;
+      }
+
+      const parts = pointer
+        .split('/')
+        .filter((part) => part.length > 0)
+        .map(decodePointerSegment);
+
+      let current = schemaObject;
+      for (const part of parts) {
+        if (
+          current &&
+          typeof current === 'object' &&
+          Object.prototype.hasOwnProperty.call(current, part)
+        ) {
+          current = current[part];
+        } else {
+          return null;
+        }
+      }
+
+      return current;
+    };
+
+    const splitPathAndFragment = (target) => {
+      const hashIndex = target.indexOf('#');
+      if (hashIndex === -1) {
+        return { basePath: target, fragment: '' };
+      }
+
+      return {
+        basePath: target.slice(0, hashIndex),
+        fragment: target.slice(hashIndex),
+      };
+    };
+
+    const normaliseRelativeReference = (reference) => {
+      let result = reference;
+      while (result.startsWith('./')) {
+        result = result.slice(2);
+      }
+      while (result.startsWith('../')) {
+        result = result.slice(3);
+      }
+      return result;
+    };
+
+    const tryResolveFromId = (baseId, fragment) => {
+      if (!baseId) {
+        return null;
+      }
+
+      const candidates = fragment
+        ? [`${baseId}${fragment}`, baseId]
+        : [baseId];
+
+      for (const candidateId of candidates) {
+        try {
+          const schemaEnv = this.#ajv.getSchema(candidateId);
+          if (schemaEnv) {
+            if (fragment && candidateId === baseId) {
+              const fragmentSchema = resolveFragment(schemaEnv.schema, fragment);
+              if (fragmentSchema) {
+                return fragmentSchema;
+              }
+            } else {
+              return schemaEnv.schema;
+            }
+          }
+        } catch (error) {
+          this.#logger.debug(
+            `AjvSchemaValidator: Error resolving schema '${candidateId}': ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+
+      return null;
+    };
+
     return async (uri) => {
       this.#logger.debug(
         `AjvSchemaValidator: Attempting to load schema from URI: ${uri}`
@@ -72,56 +161,62 @@ class AjvSchemaValidator {
 
       // Handle relative schema references by converting to absolute IDs
       if (uri.startsWith('./') || uri.startsWith('../')) {
-        let relativePath;
+        const normalisedReference = normaliseRelativeReference(uri);
+        const { basePath: relativeBasePath, fragment } =
+          splitPathAndFragment(normalisedReference);
+        const absoluteBaseId = relativeBasePath
+          ? `schema://living-narrative-engine/${relativeBasePath}`
+          : '';
 
-        if (uri.startsWith('./')) {
-          relativePath = uri.substring(2); // Remove './'
-        } else if (uri.startsWith('../')) {
-          relativePath = uri.substring(3); // Remove '../'
-        }
-
-        const absoluteId = `schema://living-narrative-engine/${relativePath}`;
-
-        this.#logger.debug(
-          `AjvSchemaValidator: Converting relative URI '${uri}' to absolute ID '${absoluteId}'`
-        );
-
-        // Check if the schema is already loaded with the absolute ID
-        const existingSchema = this.#ajv.getSchema(absoluteId);
-        if (existingSchema) {
+        if (absoluteBaseId) {
           this.#logger.debug(
-            `AjvSchemaValidator: Found existing schema for '${absoluteId}'`
+            `AjvSchemaValidator: Converting relative URI '${uri}' to absolute ID '${absoluteBaseId}${fragment}'`
           );
-          return existingSchema.schema;
-        }
 
-        // If not found, try to find it by searching through all loaded schemas
-        const loadedIds = this.getLoadedSchemaIds();
-        const matchingId = loadedIds.find((id) => id.endsWith(relativePath));
-
-        if (matchingId) {
-          const matchingSchema = this.#ajv.getSchema(matchingId);
-          if (matchingSchema) {
+          const absoluteSchema = tryResolveFromId(absoluteBaseId, fragment);
+          if (absoluteSchema) {
             this.#logger.debug(
-              `AjvSchemaValidator: Found schema '${matchingId}' matching relative path '${relativePath}'`
+              `AjvSchemaValidator: Found existing schema for '${absoluteBaseId}${fragment}'`
             );
-            return matchingSchema.schema;
+            return absoluteSchema;
           }
         }
 
+        // If not found, try to find it by searching through all loaded schemas
+        if (relativeBasePath) {
+          const loadedIds = this.getLoadedSchemaIds();
+          const matchingId = loadedIds.find((id) =>
+            id.endsWith(relativeBasePath)
+          );
+
+          if (matchingId) {
+            const matchingSchema = tryResolveFromId(matchingId, fragment);
+            if (matchingSchema) {
+              this.#logger.debug(
+                `AjvSchemaValidator: Found schema '${matchingId}' matching relative path '${relativeBasePath}${fragment}'`
+              );
+              return matchingSchema;
+            }
+          }
+        }
+
+        const absoluteForLog = absoluteBaseId
+          ? `${absoluteBaseId}${fragment}`
+          : '(unresolved base path)';
         this.#logger.warn(
-          `AjvSchemaValidator: Could not resolve schema reference '${uri}' (absolute: '${absoluteId}')`
+          `AjvSchemaValidator: Could not resolve schema reference '${uri}' (absolute: '${absoluteForLog}')`
         );
         throw new Error(`Cannot resolve schema reference: ${uri}`);
       }
 
       // For absolute URIs, try to load directly
-      const existingSchema = this.#ajv.getSchema(uri);
+      const { basePath, fragment } = splitPathAndFragment(uri);
+      const existingSchema = tryResolveFromId(basePath, fragment);
       if (existingSchema) {
         this.#logger.debug(
           `AjvSchemaValidator: Found existing schema for '${uri}'`
         );
-        return existingSchema.schema;
+        return existingSchema;
       }
 
       this.#logger.warn(

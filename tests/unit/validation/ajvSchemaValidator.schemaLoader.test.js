@@ -155,6 +155,56 @@ describe('AjvSchemaValidator - Schema Loader Coverage', () => {
       expect(ids).toContain(referencingSchema.$id);
     });
 
+    it('should resolve relative references with fragments against non-standard IDs', async () => {
+      const validator = new AjvSchemaValidator({
+        logger: mockLogger,
+      });
+
+      const commonSchema = {
+        $id: 'custom://namespace/types/common.json',
+        $defs: {
+          Item: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', minLength: 1 },
+            },
+            required: ['name'],
+          },
+        },
+      };
+
+      await validator.addSchema(commonSchema, commonSchema.$id);
+
+      const consumerSchema = {
+        $id: 'custom://namespace/entities/player.json',
+        type: 'object',
+        properties: {
+          inventory: {
+            type: 'array',
+            items: {
+              $ref: '../types/common.json#/$defs/Item',
+            },
+          },
+        },
+      };
+
+      await validator.addSchema(consumerSchema, consumerSchema.$id);
+
+      const validatorFn = validator.getValidator(consumerSchema.$id);
+      expect(validatorFn).toBeDefined();
+
+      const validResult = validatorFn({
+        inventory: [{ name: 'Mystic Sword' }],
+      });
+      expect(validResult.isValid).toBe(true);
+
+      const invalidResult = validatorFn({
+        inventory: [{ name: '' }],
+      });
+      expect(invalidResult.isValid).toBe(false);
+      expect(invalidResult.errors).toBeTruthy();
+    });
+
     it('should handle unresolved schema references without throwing', async () => {
       const validator = new AjvSchemaValidator({
         logger: mockLogger,
