@@ -299,6 +299,13 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         const handler = jest.fn();
         bus.subscribe('core:component_added', handler);
 
+        const dateSpy = jest.spyOn(Date, 'now');
+        let currentTime = 0;
+        dateSpy.mockImplementation(() => {
+          currentTime += 20;
+          return currentTime;
+        });
+
         // Enable batch mode
         bus.setBatchMode(true, {
           context: 'game-initialization',
@@ -350,11 +357,20 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         // Should succeed without recursion errors
         expect(consoleErrorSpy).not.toHaveBeenCalled();
         expect(normalHandler).toHaveBeenCalledTimes(1);
+
+        dateSpy.mockRestore();
       });
 
       it('should allow re-entering batch mode after reset', async () => {
         const handler = jest.fn();
         bus.subscribe('core:component_added', handler);
+
+        const dateSpy = jest.spyOn(Date, 'now');
+        let currentTime = 0;
+        dateSpy.mockImplementation(() => {
+          currentTime += 20;
+          return currentTime;
+        });
 
         // First batch mode cycle
         bus.setBatchMode(true, {
@@ -390,6 +406,8 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
         // Should not have any recursion errors
         expect(consoleErrorSpy).not.toHaveBeenCalled();
         expect(handler).toHaveBeenCalledTimes(40);
+
+        dateSpy.mockRestore();
       });
     });
   });
