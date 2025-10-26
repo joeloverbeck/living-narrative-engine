@@ -535,7 +535,7 @@ describe('GameSessionManager', () => {
       expect(startEngineFn).toHaveBeenCalledWith('Trimmed World');
     });
 
-    it('should handle save data without metadata', async () => {
+    it('should fall back to the save identifier when metadata is missing', async () => {
       const saveData = {
         entities: [],
         gameState: {},
@@ -546,8 +546,8 @@ describe('GameSessionManager', () => {
         'quicksave'
       );
 
-      expect(engineState.activeWorld).toBe('Restored Game');
-      expect(startEngineFn).toHaveBeenCalledWith('Restored Game');
+      expect(engineState.activeWorld).toBe('quicksave');
+      expect(startEngineFn).toHaveBeenCalledWith('quicksave');
       expect(result).toEqual({
         success: true,
         data: saveData,
@@ -565,8 +565,8 @@ describe('GameSessionManager', () => {
         'autosave'
       );
 
-      expect(engineState.activeWorld).toBe('Restored Game');
-      expect(startEngineFn).toHaveBeenCalledWith('Restored Game');
+      expect(engineState.activeWorld).toBe('autosave');
+      expect(startEngineFn).toHaveBeenCalledWith('autosave');
       expect(result.success).toBe(true);
     });
 
@@ -579,6 +579,22 @@ describe('GameSessionManager', () => {
       const result = await gameSessionManager.finalizeLoadSuccess(
         saveData,
         'whitespace'
+      );
+
+      expect(engineState.activeWorld).toBe('whitespace');
+      expect(startEngineFn).toHaveBeenCalledWith('whitespace');
+      expect(result.success).toBe(true);
+    });
+
+    it('should fall back to a generic label when the identifier is unusable', async () => {
+      const saveData = {
+        metadata: {},
+        entities: [],
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        '../..'
       );
 
       expect(engineState.activeWorld).toBe('Restored Game');

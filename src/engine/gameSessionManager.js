@@ -320,12 +320,13 @@ class GameSessionManager {
    * @private
    * @description Trims whitespace and falls back to a default label when the
    * metadata does not provide a usable world name. Prefers the user-visible
-   * save name when available so legacy saves without titles still surface
+   * save identifier when available so legacy saves without titles still surface
    * meaningful labels.
    * @param {SaveGameStructure} loadedSaveData - Restored save data.
+   * @param {string} saveIdentifier - Identifier used to locate the save file.
    * @returns {string} Sanitized world name ready for engine state updates.
    */
-  #resolveWorldNameFromSave(loadedSaveData) {
+  #resolveWorldNameFromSave(loadedSaveData, saveIdentifier) {
     const metadata = loadedSaveData?.metadata ?? {};
 
     const rawTitle =
@@ -344,6 +345,13 @@ class GameSessionManager {
       typeof metadata.saveName === 'string' ? metadata.saveName.trim() : '';
     if (rawSaveName.length > 0) {
       return rawSaveName;
+    }
+
+    if (typeof saveIdentifier === 'string' && saveIdentifier.trim().length > 0) {
+      const fallbackName = this.#getDisplayNameForSave(saveIdentifier);
+      if (fallbackName && fallbackName !== 'Saved Game') {
+        return fallbackName;
+      }
     }
 
     return 'Restored Game';
@@ -381,7 +389,10 @@ class GameSessionManager {
       `GameSessionManager.finalizeLoadSuccess: Game state restored successfully from ${saveIdentifier}. Finalizing load setup.`
     );
 
-    const resolvedWorldName = this.#resolveWorldNameFromSave(loadedSaveData);
+    const resolvedWorldName = this.#resolveWorldNameFromSave(
+      loadedSaveData,
+      saveIdentifier
+    );
     this.#state.setActiveWorld(resolvedWorldName);
     await this.#finalizeGameStart(resolvedWorldName);
     this.#logger.debug(
