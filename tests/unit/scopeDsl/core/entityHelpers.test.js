@@ -4,12 +4,42 @@ import {
   createEvaluationContext,
   clearEntityCache,
   preprocessActorForEvaluation,
+  invalidateEntityCache,
 } from '../../../../src/scopeDsl/core/entityHelpers.js';
 
 describe('entityHelpers', () => {
   beforeEach(() => {
     // Clear entity cache before each test to ensure test isolation
     clearEntityCache();
+  });
+
+  describe('invalidateEntityCache', () => {
+    it('removes cached entity entries so subsequent lookups fetch fresh data', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => ({ id: 'entity1' })),
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      // First resolution caches the entity
+      createEvaluationContext('entity1', actor, gateway, locationProvider);
+      expect(gateway.getEntityInstance).toHaveBeenCalledTimes(1);
+
+      // Cache hit should avoid gateway access
+      gateway.getEntityInstance.mockClear();
+      gateway.getEntityInstance.mockImplementation(() => {
+        throw new Error('cache entry should have been reused');
+      });
+      createEvaluationContext('entity1', actor, gateway, locationProvider);
+      expect(gateway.getEntityInstance).not.toHaveBeenCalled();
+
+      // After invalidation the cache entry should be removed
+      invalidateEntityCache('entity1');
+
+      gateway.getEntityInstance.mockImplementation(() => ({ id: 'entity1' }));
+      createEvaluationContext('entity1', actor, gateway, locationProvider);
+      expect(gateway.getEntityInstance).toHaveBeenCalledTimes(1);
+    });
   });
   describe('getOrBuildComponents', () => {
     it('returns null when entity is not found', () => {
@@ -212,6 +242,98 @@ describe('entityHelpers', () => {
         locationProvider
       );
       expect(result).toBeNull();
+    });
+
+    it('normalizes inventory references that provide itemId and resolves trimmed identifiers', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => null),
+        getItemComponents: jest.fn(() => ({
+          'core:item': { name: 'Health Potion' },
+        })),
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const itemReference = { itemId: '  item1  ', quantity: 2 };
+      const result = createEvaluationContext(
+        itemReference,
+        actor,
+        gateway,
+        locationProvider
+      );
+
+      expect(gateway.getEntityInstance).toHaveBeenCalledWith('item1');
+      expect(gateway.getItemComponents).toHaveBeenCalledWith('item1');
+      expect(result.entity).toEqual({
+        id: 'item1',
+        components: { 'core:item': { name: 'Health Potion' } },
+      });
+      expect(result.id).toBe('item1');
+    });
+
+    it('reuses cached entities when resolving objects that already include an id', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => ({ id: 'item1' })),
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const itemObject = { id: 'item1', label: 'cached object' };
+
+      createEvaluationContext(itemObject, actor, gateway, locationProvider);
+      expect(gateway.getEntityInstance).toHaveBeenCalledTimes(1);
+
+      gateway.getEntityInstance.mockClear();
+      gateway.getEntityInstance.mockImplementation(() => {
+        throw new Error('cache should have satisfied the lookup');
+      });
+
+      createEvaluationContext(itemObject, actor, gateway, locationProvider);
+      expect(gateway.getEntityInstance).not.toHaveBeenCalled();
+    });
+
+    it('evicts cached entries when resolving objects pushes the cache past its limit', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+      const gateway = {
+        getEntityInstance: jest.fn((entityId) => {
+          if (entityId === 'object-target') {
+            return null;
+          }
+          return { id: entityId };
+        }),
+        getItemComponents: jest.fn((entityId) => {
+          if (entityId === 'object-target') {
+            return { 'core:item': { rarity: 'rare' } };
+          }
+          return null;
+        }),
+      };
+
+      // Populate the cache to the configured limit using string identifiers
+      for (let index = 0; index < 10000; index++) {
+        createEvaluationContext(
+          `seed-${index}`,
+          actor,
+          gateway,
+          locationProvider
+        );
+      }
+
+      const objectWithId = { id: 'object-target', description: 'forces eviction path' };
+      const context = createEvaluationContext(
+        objectWithId,
+        actor,
+        gateway,
+        locationProvider
+      );
+
+      expect(gateway.getEntityInstance).toHaveBeenCalledWith('object-target');
+      expect(gateway.getItemComponents).toHaveBeenCalledWith('object-target');
+      expect(context.entity).toEqual({
+        id: 'object-target',
+        components: { 'core:item': { rarity: 'rare' } },
+      });
     });
 
     it('converts Map-based components to plain object for plain entity', () => {
