@@ -28,6 +28,62 @@ describe('EntitySummaryProvider', () => {
     };
   });
 
+  describe('_getComponentText', () => {
+    it('returns the default value when the entity is null', () => {
+      expect(
+        provider._getComponentText(null, NAME_COMPONENT_ID, 'fallback-value')
+      ).toBe('fallback-value');
+    });
+
+    it('returns the default value when getComponentData is not a function', () => {
+      const invalidEntity = { id: 'broken-entity', getComponentData: null };
+
+      expect(
+        provider._getComponentText(
+          invalidEntity,
+          DESCRIPTION_COMPONENT_ID,
+          DEFAULT_COMPONENT_VALUE_NA
+        )
+      ).toBe(DEFAULT_COMPONENT_VALUE_NA);
+    });
+
+    it('supports alternate property paths when retrieving text', () => {
+      const entity = {
+        getComponentData: jest.fn().mockReturnValue({ displayName: '  Ada  ' }),
+      };
+
+      expect(
+        provider._getComponentText(
+          entity,
+          NAME_COMPONENT_ID,
+          DEFAULT_COMPONENT_VALUE_NA,
+          'displayName'
+        )
+      ).toBe('Ada');
+      expect(entity.getComponentData).toHaveBeenCalledWith(NAME_COMPONENT_ID);
+    });
+
+    it('returns the default value when the retrieved text is blank', () => {
+      const entity = {
+        getComponentData: jest.fn().mockReturnValue({ text: '   ' }),
+      };
+
+      expect(
+        provider._getComponentText(entity, NAME_COMPONENT_ID, 'no-value')
+      ).toBe('no-value');
+    });
+
+    it('uses the provider default when no explicit default is supplied', () => {
+      const entity = {
+        getComponentData: jest.fn().mockReturnValue(undefined),
+      };
+
+      expect(provider._getComponentText(entity, NAME_COMPONENT_ID)).toBe(
+        DEFAULT_COMPONENT_VALUE_NA
+      );
+    });
+  });
+
   describe('getSummary', () => {
     it('should return entity summary with name and description', () => {
       // Arrange
