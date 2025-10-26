@@ -718,6 +718,34 @@ describeEngineSuite('GameEngine', (context) => {
       ).toHaveBeenCalledWith(CANNOT_SAVE_GAME_INFO);
     });
 
+    it('should treat non-boolean isSavingAllowed responses as a failure', async () => {
+      context.bed
+        .getGamePersistenceService()
+        .isSavingAllowed.mockReturnValue('false');
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockResolvedValue(true);
+
+      await context.engine.showSaveGameUI();
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: GamePersistenceService.isSavingAllowed returned invalid result.',
+        {
+          receivedType: 'string',
+          receivedValue: 'false',
+        }
+      );
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine.showSaveGameUI: Saving is not currently allowed.'
+      );
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(CANNOT_SAVE_GAME_INFO);
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).not.toHaveBeenCalledWith(REQUEST_SHOW_SAVE_GAME_UI, expect.anything());
+    });
+
     it('should warn when CANNOT_SAVE_GAME_INFO dispatch fails', async () => {
       context.bed
         .getGamePersistenceService()
