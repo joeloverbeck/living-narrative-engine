@@ -94,8 +94,8 @@ describe('GameSessionManager', () => {
       expect(env.dispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_OPERATION_IN_PROGRESS_UI,
         {
-          titleMessage: 'Loading MySave.sav...',
-          inputDisabledMessage: 'Loading game from MySave.sav...',
+          titleMessage: 'Loading MySave...',
+          inputDisabledMessage: 'Loading game from MySave...',
         }
       );
     });
