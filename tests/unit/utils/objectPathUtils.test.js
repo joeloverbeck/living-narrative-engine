@@ -16,6 +16,12 @@ describe('setByPath', () => {
     expect(obj).toEqual({ a: { b: 1 } });
   });
 
+  test('returns false when root is not an object', () => {
+    expect(setByPath(null, 'a.b', 1)).toBe(false);
+    expect(setByPath(undefined, 'a.b', 1)).toBe(false);
+    expect(setByPath(42, 'a.b', 1)).toBe(false);
+  });
+
   test('throws on unsafe property names', () => {
     expect(() => setByPath({}, '__proto__.x', 1)).toThrow(
       'Unsafe property name'
