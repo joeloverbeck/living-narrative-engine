@@ -478,7 +478,7 @@ Potential extensions (not in current scope):
   - `docs/scopeDsl/README.md` - Scope DSL syntax reference
   - `docs/scopeDsl/quick-reference.md` - Scope operator quick reference
   - `docs/testing/mod-testing-guide.md` - Test suite patterns
-  - `docs/testing/action-discovery-testing-toolkit.md` - Discovery test patterns
+  - `docs/testing/mod-testing-guide.md#action-discovery-harness` - Discovery test patterns
 
 - **Test Examples**:
   - `tests/integration/mods/vampirism/bite_neck_carefully_action_discovery.test.js`

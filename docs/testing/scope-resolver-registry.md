@@ -1583,8 +1583,7 @@ ScopeResolverHelpers._registerResolvers(
 
 ## Related Documentation
 
-- [Mod Testing Guide](./mod-testing-guide.md) - Main testing guide with ModTestFixture patterns
-- [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) - Discovery diagnostics and migration guide
+- [Mod Testing Guide](./mod-testing-guide.md) - Complete unified guide with fixtures, discovery diagnostics, and migration patterns
 - [ModTestFixture API](../../tests/common/mods/ModTestFixture.js) - Complete fixture API reference
 - [ScopeResolverHelpers Implementation](../../tests/common/mods/scopeResolverHelpers.js) - Source code
 

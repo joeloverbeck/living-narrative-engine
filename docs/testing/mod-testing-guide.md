@@ -1,5 +1,7 @@
 # Mod Testing Guide
 
+> **Documentation Update (2025-10-26)**: This guide consolidates all mod testing guidance into a single source of truth. The following files have been removed as redundant: `TEAOUTTHR-008-auto-registration-migration.md`, `action-discovery-testing-toolkit.md`, and `MODTESTROB-009-migration-guide.md`. All unique content from these files has been preserved in this guide.
+
 ## Overview
 
 This guide is the canonical reference for writing and maintaining **mod action tests** in the Living Narrative Engine. It unifies the fixture, scenario, discovery, and matcher guidance so authors have a single source of truth when building or modernizing suites. Every contemporary mod test relies on the following building blocks:
@@ -10,8 +12,6 @@ This guide is the canonical reference for writing and maintaining **mod action t
 - Discovery tooling (`fixture.enableDiagnostics()`, `fixture.discoverWithDiagnostics()`, and the Action Discovery Bed helpers) for resolver introspection.
 - Domain matchers from [`tests/common/mods/domainMatchers.js`](../../tests/common/mods/domainMatchers.js) and [`tests/common/actionMatchers.js`](../../tests/common/actionMatchers.js) for readable assertions.
 - Scope registry from [`ScopeResolverHelpers` Registry](./scope-resolver-registry.md) for discovering available scopes and factory methods.
-
-The companion [Action Discovery Testing Toolkit](./action-discovery-testing-toolkit.md) now focuses on migration checklists and upgrade strategy while pointing back to the API summaries captured here.
 
 ## Mod File Naming Conventions
 
@@ -748,6 +748,26 @@ If action discovery still fails after this checklist:
 
 4. **Review diagnostic logs**: Look for specific error messages or failed conditions
 
+### Self-Documenting Error Hints
+
+ModTestFixture provides automatic hints when action discovery fails due to missing scope registration:
+
+```javascript
+const availableActions = await testFixture.discoverActions(scenario.actor.id);
+// ⚠️ Console Warning:
+//    Action discovery found 0 actions
+//    The action uses scope 'positioning:close_actors' which is not registered
+//    Solution: Enable auto-registration or call registerPositioningScopes()
+```
+
+**Suppressing Hints** (for tests expecting empty results):
+```javascript
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('violence', 'grab_neck');
+  testFixture.suppressHints(); // Don't warn for this test
+});
+```
+
 ## Best Practices
 
 ### Fixture Lifecycle
@@ -782,6 +802,90 @@ If action discovery still fails after this checklist:
   # Check for naming violations
   npm run validate:mod:{modId}
   ```
+
+## Migration from Legacy Patterns
+
+This section helps maintainers convert legacy mod tests to modern fixtures and helpers.
+
+### Migration Baseline Tracking
+
+Use the following table to capture the state of legacy helper usage before each migration batch begins. Tracking the counts for manual builders, assertion helpers, and domain matcher adoption makes it easy to measure progress as suites are modernised.
+
+| Batch | Captured On | Suites using `ModEntityBuilder` | Suites using `ModAssertionHelpers` | Suites importing `domainMatchers.js` | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Batch 1 (MODTESTROB-010-01) | 2025-10-22 | 127 | 29 | 0 | Baseline established prior to migrating priority integration suites. |
+
+### Quick Pattern Reference
+
+| Legacy Pattern | Replace With | Notes |
+| --- | --- | --- |
+| Manual `ModEntityBuilder` graphs constructed inline | Fixture scenario helpers such as `fixture.createSittingPair(options)`, `fixture.createInventoryTransfer(options)`, or `fixture.createOpenContainerScenario(options)` | Scenario helpers automatically register the same component graphs the builders created by hand. They are backed by `ModEntityScenarios` inside `tests/common/mods/ModTestFixture.js`. |
+| `testFixture.reset([...entities])` calls before every assertion | Scenario helper return values combined with the fixture lifecycle methods (`beforeEach`, `afterEach`, `fixture.cleanup()`) | The helpers provision entities and register them with the fixture for you. Use the returned ids through `fixture.entityManager`. |
+| `expect(...).toBe(true)` or raw array inspection on `testFixture.events` | `expect(testFixture.events).toHaveActionSuccess(...)`, `expect(entity).toHaveComponent(...)`, `expect(entity).toHaveComponentData(...)` | Import `../../common/mods/domainMatchers.js` at the top of each suite once. |
+| Inline `testFixture.registerScopeResolver(...)` implementations | `ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv)` (or the relevant helper) | Centralising scope logic prevents drift and keeps diagnostics consistent. |
+| Passing JSON definitions directly to `ModTestFixture.forAction(...)` | `createActionValidationProxy(json, 'label')` prior to invocation | Validation proxies surface schema drift immediately and are already described in the testing guide. |
+
+### Example: Sitting Action Migration
+
+**Legacy pattern:** manual builders, raw events, inline resolvers.
+
+```javascript
+const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
+const furniture = new ModEntityBuilder('furniture1')
+  .withComponent('positioning:allows_sitting', { spots: ['occupant1', null, 'actor1'] })
+  .build();
+const actor = new ModEntityBuilder('actor1')
+  .asActor()
+  .withComponent('positioning:sitting_on', { furniture_id: 'furniture1', spot_index: 2 })
+  .build();
+
+testFixture.reset([room, furniture, actor]);
+await testFixture.executeAction('actor1', 'furniture1', {
+  additionalPayload: { secondaryId: 'occupant1' },
+});
+expect(testFixture.events.some((evt) => evt.type === 'action/success')).toBe(true);
+```
+
+**Modern pattern:** fixture helpers, domain matchers, shared scopes.
+
+```javascript
+import '../../common/mods/domainMatchers.js';
+import { ScopeResolverHelpers } from '../../common/mods/scopeResolverHelpers.js';
+
+let fixture;
+
+beforeEach(async () => {
+  fixture = await ModTestFixture.forAction('positioning', 'positioning:scoot_closer');
+  ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
+});
+
+afterEach(() => {
+  fixture.cleanup();
+});
+
+it('moves the actor closer to their partner', async () => {
+  const scenario = fixture.createSittingPair({
+    furnitureId: 'sofa1',
+    seatedActors: [
+      { id: 'actor1', name: 'Mover', spotIndex: 2 },
+      { id: 'actor2', name: 'Partner', spotIndex: 0 },
+    ],
+  });
+
+  await fixture.executeAction('actor1', scenario.furniture.id, {
+    additionalPayload: { secondaryId: 'actor2' },
+  });
+
+  expect(fixture.events).toHaveActionSuccess('Mover scoots closer to Partner');
+  const actor = fixture.entityManager.getEntityInstance('actor1');
+  expect(actor).toHaveComponentData('positioning:sitting_on', {
+    furniture_id: scenario.furniture.id,
+    spot_index: 1,
+  });
+});
+```
+
+**For complete migration workflow**: See [Fixture Lifecycle](#fixture-lifecycle) and [Scenario Composition](#scenario-composition) sections above.
 
 ## Tool Selection Guide
 

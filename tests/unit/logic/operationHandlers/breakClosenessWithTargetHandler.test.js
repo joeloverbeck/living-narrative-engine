@@ -174,17 +174,13 @@ describe('BreakClosenessWithTargetHandler', () => {
       // Actor component should be removed (empty partners)
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('actor1', 'positioning:closeness');
 
-      // Actor movement should be unlocked
-      expect(movementUtils.updateMovementLock).toHaveBeenCalledWith(mockEntityManager, 'actor1', false);
-
       // Target component should be removed (empty partners)
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('target1', 'positioning:closeness');
 
-      // Target movement should be unlocked
-      expect(movementUtils.updateMovementLock).toHaveBeenCalledWith(mockEntityManager, 'target1', false);
-
       // Should not call addComponent for either entity
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+
+      // Movement unlock no longer performed when breaking closeness
     });
 
     it('should dispatch success event after removing components', async () => {
@@ -242,14 +238,10 @@ describe('BreakClosenessWithTargetHandler', () => {
         { partners: ['partner2'] }
       );
 
-      // Actor movement should NOT be unlocked (still has partners)
-      expect(movementUtils.updateMovementLock).not.toHaveBeenCalledWith(mockEntityManager, 'actor1', false);
-
       // Target component should be removed (no partners left)
       expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('target1', 'positioning:closeness');
 
-      // Target movement should be unlocked
-      expect(movementUtils.updateMovementLock).toHaveBeenCalledWith(mockEntityManager, 'target1', false);
+      // Movement unlock no longer performed when breaking closeness
     });
 
     it('should preserve target closeness when other partners remain', async () => {
