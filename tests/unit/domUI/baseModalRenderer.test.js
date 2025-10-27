@@ -400,6 +400,22 @@ describe('BaseModalRenderer', () => {
       expect(getInitialFocusElementSpy).toHaveBeenCalled();
     });
 
+    it('should log an error if _onShow throws and continue execution', () => {
+      const expectedPrefix = `${getExpectedLogPrefix(baseModalInstance)} Error in _onShow lifecycle hook.`;
+      onShowSpy.mockImplementation(() => {
+        throw new Error('boom');
+      });
+      mockLogger.error.mockClear();
+
+      expect(() => baseModalInstance.show()).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expectedPrefix,
+        expect.any(Error)
+      );
+      expect(baseModalInstance.isVisible).toBe(true);
+    });
+
     it('should focus element from _getInitialFocusElement', () => {
       const mockFocusTarget = { focus: jest.fn(), offsetParent: {} };
       getInitialFocusElementSpy.mockReturnValue(mockFocusTarget);
@@ -417,6 +433,13 @@ describe('BaseModalRenderer', () => {
       expect(mockCloseButton.focus).toHaveBeenCalled();
     });
 
+    it('should fallback to focus modalElement when no initial element is provided but modal is focusable', () => {
+      mockModalElement.hasAttribute.mockReturnValue(true);
+      mockModalElement.focus = jest.fn();
+      baseModalInstance.show();
+      expect(mockModalElement.focus).toHaveBeenCalled();
+    });
+
     it('should fallback to focus modalElement if _getInitialFocusElement and closeButton fail/absent and modal has tabindex and is focusable', () => {
       getInitialFocusElementSpy.mockReturnValue(null);
       if (getInitialFocusElementSpy.mockRestore)
@@ -427,6 +450,17 @@ describe('BaseModalRenderer', () => {
       mockModalElement.focus = jest.fn();
       baseModalInstance.show();
       expect(mockModalElement.focus).toHaveBeenCalled();
+    });
+
+    it('should log a warning when no focusable fallback elements are available', () => {
+      const expectedPrefix = `${getExpectedLogPrefix(baseModalInstance)} Could not find any element to focus in the modal.`;
+      baseModalInstance.elements.closeButton = null;
+      mockModalElement.hasAttribute.mockReturnValue(false);
+      mockLogger.warn.mockClear();
+
+      baseModalInstance.show();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(expectedPrefix);
     });
 
     it('should store document.activeElement as _previouslyFocusedElement', () => {
@@ -495,6 +529,22 @@ describe('BaseModalRenderer', () => {
       baseModalInstance.hide();
       expect(onHideSpy).toHaveBeenCalled();
       expect(getReturnFocusElementSpy).toHaveBeenCalled();
+    });
+
+    it('should log an error if _onHide throws and continue cleanup', () => {
+      const expectedPrefix = `${getExpectedLogPrefix(baseModalInstance)} Error in _onHide lifecycle hook.`;
+      onHideSpy.mockImplementation(() => {
+        throw new Error('hide fail');
+      });
+      mockLogger.error.mockClear();
+
+      expect(() => baseModalInstance.hide()).not.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expectedPrefix,
+        expect.any(Error)
+      );
+      expect(baseModalInstance.isVisible).toBe(false);
     });
 
     it('should return focus to element from _getReturnFocusElement if provided and focusable', () => {
