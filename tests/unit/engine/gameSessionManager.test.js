@@ -834,6 +834,32 @@ describe('GameSessionManager', () => {
       expect(startEngineFn).toHaveBeenCalledWith('Galactic Quest');
     });
 
+    it('should normalize metadata titles that contain manual save filenames', async () => {
+      const saveData = {
+        metadata: { gameTitle: 'manual_save_Sky_Citadel.sav' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'sky-slot');
+
+      expect(engineState.activeWorld).toBe('Sky Citadel');
+      expect(startEngineFn).toHaveBeenCalledWith('Sky Citadel');
+    });
+
+    it('should strip .sav extensions from metadata titles without manual prefixes', async () => {
+      const saveData = {
+        metadata: { gameTitle: 'cosmic_frontier.sav' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'cosmic-slot');
+
+      expect(engineState.activeWorld).toBe('cosmic frontier');
+      expect(startEngineFn).toHaveBeenCalledWith('cosmic frontier');
+    });
+
     it('should decode and clean metadata worldName values that use encoded formatting', async () => {
       const saveData = {
         metadata: { gameTitle: '', worldName: 'Outer%20Rim_Outpost' },

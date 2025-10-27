@@ -7,6 +7,7 @@ import {
 import {
   BASE_SAVE_DIRECTORY,
   MANUAL_SAVES_SUBDIRECTORY,
+  MANUAL_SAVE_PATTERN,
   extractSaveName,
 } from '../utils/savePathUtils.js';
 
@@ -477,6 +478,18 @@ class GameSessionManager {
 
     if (decodedValue.includes('/') || decodedValue.includes('\\')) {
       return this.#normalizeSaveName(decodedValue);
+    }
+
+    const lowerValue = decodedValue.toLowerCase();
+    if (
+      MANUAL_SAVE_PATTERN.test(decodedValue) ||
+      lowerValue.startsWith('manual_save_') ||
+      lowerValue.endsWith('.sav')
+    ) {
+      const normalizedFileLabel = this.#normalizeSaveName(decodedValue);
+      if (normalizedFileLabel) {
+        return normalizedFileLabel;
+      }
     }
 
     const withSpaces = decodedValue.replace(/[_]+/g, ' ').trim();
