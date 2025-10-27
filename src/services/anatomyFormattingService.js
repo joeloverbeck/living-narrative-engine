@@ -342,6 +342,7 @@ export class AnatomyFormattingService {
         prefix: 'Activity: ',
         suffix: '',
         separator: '. ',
+        enableContextAwareness: true,
 
         // Name resolution (Phase 2) - ACTDESC-014 Implementation
         nameResolution: {

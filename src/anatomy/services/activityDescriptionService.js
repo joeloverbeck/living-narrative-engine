@@ -43,6 +43,8 @@ class ActivityDescriptionService {
 
   #entityNameCache = new Map();
 
+  #closenessCache = new Map();
+
   #activityIndex = null; // Phase 3: ACTDESC-020
 
   #simultaneousPriorityThreshold = 10;
@@ -94,6 +96,8 @@ class ActivityDescriptionService {
       'ActivityDescriptionService.generateActivityDescription',
       this.#logger
     );
+
+    this.#closenessCache.clear();
 
     try {
       this.#logger.debug(`Generating activity description for entity: ${entityId}`);
@@ -414,7 +418,18 @@ class ActivityDescriptionService {
     const maxActivities = config.maxActivities ?? 10;
     const limitedActivities = activities.slice(0, maxActivities);
 
-    const groupedActivities = this.#groupActivities(limitedActivities);
+    const enableContextAwareness = config.enableContextAwareness !== false;
+
+    const contextAwareActivities = enableContextAwareness
+      ? limitedActivities.map((activity) =>
+          this.#applyContextualTone(
+            activity,
+            this.#buildActivityContext(actorId, activity)
+          )
+        )
+      : limitedActivities;
+
+    const groupedActivities = this.#groupActivities(contextAwareActivities);
 
     const descriptions = [];
 
@@ -482,6 +497,180 @@ class ActivityDescriptionService {
 
     const activityText = descriptions.join(separator);
     return `${prefix}${activityText}${suffix}`.trim();
+  }
+
+  /**
+   * @description Build lightweight context for an activity based on available component data.
+   * @param {string} actorId - Actor entity ID.
+   * @param {object} activity - Activity metadata collected by the service.
+   * @returns {object} Normalised context payload.
+   * @private
+   */
+  #buildActivityContext(actorId, activity) {
+    const targetId = activity?.targetEntityId ?? activity?.targetId ?? null;
+
+    const context = {
+      targetId,
+      intensity: this.#determineActivityIntensity(activity?.priority),
+      relationshipTone: 'neutral',
+      targetGender: null,
+    };
+
+    if (!targetId) {
+      return context;
+    }
+
+    let cachedPartners = this.#closenessCache.get(actorId);
+
+    if (!cachedPartners) {
+      try {
+        const actorEntity = this.#entityManager.getEntityInstance(actorId);
+        const closenessData = actorEntity?.getComponentData?.(
+          'positioning:closeness'
+        );
+        cachedPartners = Array.isArray(closenessData?.partners)
+          ? [...closenessData.partners]
+          : [];
+      } catch (error) {
+        this.#logger.warn(
+          `Failed to retrieve closeness data for ${actorId}`,
+          error
+        );
+        cachedPartners = [];
+      }
+
+      this.#closenessCache.set(actorId, cachedPartners);
+    }
+
+    context.targetGender = this.#detectEntityGender(targetId);
+
+    if (Array.isArray(cachedPartners) && cachedPartners.includes(targetId)) {
+      context.relationshipTone = 'closeness_partner';
+    }
+
+    return context;
+  }
+
+  /**
+   * @description Map activity priority onto an intensity bucket.
+   * @param {number} [priority=0] - Activity priority score.
+   * @returns {string} Intensity level identifier.
+   * @private
+   */
+  #determineActivityIntensity(priority = 0) {
+    if (priority >= 90) {
+      return 'intense';
+    }
+
+    if (priority >= 70) {
+      return 'elevated';
+    }
+
+    return 'casual';
+  }
+
+  /**
+   * @description Apply contextual tone adjustments to an activity payload before rendering.
+   * @param {object} activity - Original activity metadata.
+   * @param {object} context - Context payload from #buildActivityContext.
+   * @returns {object} Activity metadata with contextual overrides.
+   * @private
+   */
+  #applyContextualTone(activity, context) {
+    const adjusted = { ...activity };
+
+    if (!context || !context.targetId) {
+      return adjusted;
+    }
+
+    if (context.relationshipTone === 'closeness_partner') {
+      adjusted.contextualTone = 'intimate';
+
+      if (typeof adjusted.adverb === 'string') {
+        adjusted.adverb = this.#mergeAdverb(adjusted.adverb, 'tenderly');
+      } else if (adjusted.type === 'dedicated') {
+        adjusted.adverb = 'tenderly';
+      }
+
+      if (typeof adjusted.template === 'string') {
+        adjusted.template = this.#injectSoftener(adjusted.template, 'tenderly');
+      }
+
+      return adjusted;
+    }
+
+    if (context.intensity === 'intense') {
+      adjusted.contextualTone = 'intense';
+
+      if (typeof adjusted.adverb === 'string') {
+        adjusted.adverb = this.#mergeAdverb(adjusted.adverb, 'fiercely');
+      } else if (adjusted.type === 'dedicated') {
+        adjusted.adverb = 'fiercely';
+      }
+
+      if (typeof adjusted.template === 'string') {
+        adjusted.template = this.#injectSoftener(adjusted.template, 'fiercely');
+      }
+    }
+
+    return adjusted;
+  }
+
+  /**
+   * @description Merge contextual adverbs without duplicating descriptors.
+   * @param {string} currentAdverb - Existing adverb string.
+   * @param {string} injected - Contextual adverb to merge.
+   * @returns {string} Merged adverb string.
+   * @private
+   */
+  #mergeAdverb(currentAdverb, injected) {
+    const normalizedInjected = typeof injected === 'string' ? injected.trim() : '';
+    const normalizedCurrent =
+      typeof currentAdverb === 'string' ? currentAdverb.trim() : '';
+
+    if (!normalizedInjected) {
+      return normalizedCurrent;
+    }
+
+    if (!normalizedCurrent) {
+      return normalizedInjected;
+    }
+
+    const lowerCurrent = normalizedCurrent.toLowerCase();
+    if (lowerCurrent.includes(normalizedInjected.toLowerCase())) {
+      return normalizedCurrent;
+    }
+
+    return `${normalizedCurrent} ${normalizedInjected}`.trim();
+  }
+
+  /**
+   * @description Inject contextual descriptors into templates that reference {target}.
+   * @param {string} template - Activity template string.
+   * @param {string} descriptor - Descriptor to inject (e.g. 'tenderly').
+   * @returns {string} Updated template string.
+   * @private
+   */
+  #injectSoftener(template, descriptor) {
+    if (!descriptor || typeof template !== 'string') {
+      return template;
+    }
+
+    const trimmedDescriptor = descriptor.trim();
+    if (!trimmedDescriptor) {
+      return template;
+    }
+
+    if (!template.includes('{target}')) {
+      return template;
+    }
+
+    const existingDescriptor = `${trimmedDescriptor} {target}`.toLowerCase();
+    if (template.toLowerCase().includes(existingDescriptor)) {
+      return template;
+    }
+
+    return template.replace('{target}', `${trimmedDescriptor} {target}`);
   }
 
   /**

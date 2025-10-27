@@ -472,8 +472,10 @@ describe('ActivityDescriptionService', () => {
       // First call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (name) + entity_1 (gender) = 4
       // Second call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (cached name) + entity_1 (gender) = 4
       // Total for entity_1: 4 + 4 = 8, but first name resolution + 1 cached = 9
-      expect(actorCalls.length).toBe(9); // ACTDESC-014: Additional gender detection calls
-      expect(targetCalls.length).toBe(1); // Only one call needed, then cached
+      // Context-aware tone evaluation adds closeness lookups per call, resulting in 11 actor fetches
+      expect(actorCalls.length).toBe(11);
+      // Context-aware tone evaluation performs gender checks per call (no caching yet)
+      expect(targetCalls.length).toBe(3);
     });
 
     it('should use description text when provided without a target', async () => {
@@ -1855,7 +1857,7 @@ describe('ActivityDescriptionService', () => {
       });
 
       const result = await service.generateActivityDescription('jon');
-      expect(result).toBe('Activity: Jon Ureña is kissing Alicia Western');
+      expect(result).toBe('Activity: Jon Ureña is kissing Alicia Western fiercely');
     });
 
     it('should include adverb in dedicated activity', async () => {
@@ -2944,6 +2946,208 @@ describe('ActivityDescriptionService', () => {
 
         expect(description).not.toMatch(/and is holding/);
         expect(description).toContain('and holding');
+      });
+    });
+
+    describe('Context Awareness (ACTDESC-016)', () => {
+      const buildEntity = (id, { name, gender, closeness } = {}) => ({
+        id,
+        componentTypeIds: [],
+        hasComponent: jest.fn(() => false),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'core:name') {
+            return { text: name ?? id };
+          }
+          if (componentId === 'core:gender' && gender) {
+            return { value: gender };
+          }
+          if (componentId === 'positioning:closeness') {
+            return closeness ?? null;
+          }
+          return undefined;
+        }),
+      });
+
+      beforeEach(() => {
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '.',
+          separator: '. ',
+          enableContextAwareness: true,
+          nameResolution: { usePronounsWhenAvailable: false },
+        });
+      });
+
+      it('uses closeness partners to soften phrasing', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} is holding hands with {target}',
+            targetEntityId: 'alicia',
+            priority: 80,
+          },
+        ]);
+
+        const jonEntity = buildEntity('jon', {
+          name: 'Jon',
+          closeness: { partners: ['alicia'] },
+        });
+        const aliciaEntity = buildEntity('alicia', { name: 'Alicia Western' });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return jonEntity;
+          if (id === 'alicia') return aliciaEntity;
+          return buildEntity(id);
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toMatch(/tenderly/);
+      });
+
+      it('falls back to neutral tone when no context exists', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} is waving at {target}',
+            targetEntityId: 'stranger',
+            priority: 60,
+          },
+        ]);
+
+        const jonEntity = buildEntity('jon', { name: 'Jon' });
+        const strangerEntity = buildEntity('stranger', { name: 'Stranger' });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return jonEntity;
+          if (id === 'stranger') return strangerEntity;
+          return buildEntity(id);
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).not.toMatch(/tenderly|fiercely/);
+      });
+
+      it('intensifies language for high-priority activities', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} is embracing {target}',
+            targetEntityId: 'alicia',
+            priority: 95,
+          },
+        ]);
+
+        const jonEntity = buildEntity('jon', {
+          name: 'Jon',
+          closeness: { partners: [] },
+        });
+        const aliciaEntity = buildEntity('alicia', { name: 'Alicia Western' });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return jonEntity;
+          if (id === 'alicia') return aliciaEntity;
+          return buildEntity(id);
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toMatch(/fiercely/);
+      });
+
+      it('avoids duplicating descriptors when contextual adverbs match', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'dedicated',
+            verb: 'whispering to',
+            targetEntityId: 'alicia',
+            priority: 80,
+            adverb: 'tenderly',
+          },
+        ]);
+
+        const jonEntity = buildEntity('jon', {
+          name: 'Jon',
+          closeness: { partners: ['alicia'] },
+        });
+        const aliciaEntity = buildEntity('alicia', { name: 'Alicia Western' });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return jonEntity;
+          if (id === 'alicia') return aliciaEntity;
+          return buildEntity(id);
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        const tenderlyMatches = description.match(/tenderly/g) || [];
+        expect(tenderlyMatches.length).toBe(1);
+      });
+
+      it('maintains contextual tone across grouped activities', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} is embracing {target}',
+            targetEntityId: 'alicia',
+            priority: 80,
+          },
+          {
+            type: 'inline',
+            template: '{actor} is whispering to {target}',
+            targetEntityId: 'alicia',
+            priority: 78,
+          },
+        ]);
+
+        const jonEntity = buildEntity('jon', {
+          name: 'Jon',
+          closeness: { partners: ['alicia'] },
+        });
+        const aliciaEntity = buildEntity('alicia', { name: 'Alicia Western' });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return jonEntity;
+          if (id === 'alicia') return aliciaEntity;
+          return buildEntity(id);
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        const tenderlyMatches = description.match(/tenderly/g) || [];
+        expect(tenderlyMatches.length).toBeGreaterThanOrEqual(2);
+      });
+
+      it('can disable context awareness via configuration', async () => {
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '.',
+          separator: '. ',
+          enableContextAwareness: false,
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} is embracing {target}',
+            targetEntityId: 'alicia',
+            priority: 95,
+          },
+        ]);
+
+        const jonEntity = buildEntity('jon', { name: 'Jon' });
+        const aliciaEntity = buildEntity('alicia', { name: 'Alicia Western' });
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') return jonEntity;
+          if (id === 'alicia') return aliciaEntity;
+          return buildEntity(id);
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).not.toMatch(/fiercely/);
       });
     });
 
