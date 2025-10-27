@@ -665,6 +665,38 @@ describe('PortraitModalRenderer - Accessibility Features (Simple)', () => {
         'fade-in'
       );
     });
+
+    it('should react to reduced motion preference changes at runtime', () => {
+      let changeHandler;
+      const mockMediaQuery = {
+        matches: false,
+        addEventListener: jest.fn((event, handler) => {
+          if (event === 'change') {
+            changeHandler = handler;
+          }
+        }),
+        removeEventListener: jest.fn(),
+      };
+
+      window.matchMedia = jest.fn().mockReturnValue(mockMediaQuery);
+
+      new PortraitModalRenderer({
+        documentContext: mockDocumentContext,
+        domElementFactory: mockDomElementFactory,
+        logger: mockLogger,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+      });
+
+      expect(changeHandler).toBeDefined();
+
+      mockLogger.debug.mockClear();
+
+      changeHandler({ matches: true });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[PortraitModalRenderer] Reduced motion preference changed to: true'
+      );
+    });
   });
 
   describe('Touch Accessibility', () => {
