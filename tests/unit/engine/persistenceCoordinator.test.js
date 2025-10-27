@@ -417,6 +417,33 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('triggerManualSave extracts nested error detail from structured failure objects', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+    const structuredError = {
+      error: 'Disk quota exceeded',
+      details: 'Not enough storage available.',
+    };
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: structuredError,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({ success: false, error: 'Disk quota exceeded' });
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildFailedSaveDispatches(DEFAULT_SAVE_NAME, 'Disk quota exceeded')
+    );
+
+    const errorLogCall = logger.error.mock.calls.find(([message]) =>
+      message.includes('Reported error:')
+    );
+    expect(errorLogCall).toBeDefined();
+    expect(errorLogCall[0]).toContain('Reported error: Disk quota exceeded');
+  });
+
   it('triggerManualSave surfaces persistence message when error detail is missing', async () => {
     const { coordinator, dispatcher, persistenceService, logger } =
       createCoordinator();

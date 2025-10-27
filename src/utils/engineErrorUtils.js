@@ -12,7 +12,7 @@ import { ENGINE_OPERATION_FAILED_UI } from '../constants/eventIds.js';
  * @param {unknown} error - Value describing the failure.
  * @returns {string} Human-friendly error message.
  */
-function getReadableErrorMessage(error) {
+export function getReadableErrorMessage(error) {
   if (error instanceof Error) {
     return error.message || 'Unknown error.';
   }

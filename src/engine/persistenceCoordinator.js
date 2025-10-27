@@ -6,6 +6,7 @@ import {
   ENGINE_READY_UI,
   ENGINE_OPERATION_FAILED_UI,
 } from '../constants/eventIds.js';
+import { getReadableErrorMessage } from '../utils/engineErrorUtils.js';
 
 /**
  * @typedef {import('./engineState.js').default} EngineState
@@ -158,26 +159,13 @@ class PersistenceCoordinator {
    * @returns {string} Readable description of the error.
    */
   #formatSaveError(error) {
-    if (error instanceof Error) {
-      return error.message || 'Unknown error.';
-    }
+    const readableMessage = getReadableErrorMessage(error);
 
-    if (typeof error === 'string') {
-      const trimmed = error.trim();
-      return trimmed || 'Unknown error.';
-    }
-
-    if (typeof error === 'number' || typeof error === 'boolean') {
-      return String(error);
+    if (readableMessage !== 'Unknown error.') {
+      return readableMessage;
     }
 
     if (error && typeof error === 'object') {
-      const message =
-        typeof error.message === 'string' ? error.message.trim() : '';
-      if (message) {
-        return message;
-      }
-
       try {
         const serialized = JSON.stringify(error);
         if (serialized && serialized !== '{}' && serialized !== '[]') {
@@ -191,7 +179,7 @@ class PersistenceCoordinator {
       }
     }
 
-    return 'Unknown error.';
+    return readableMessage;
   }
 
   /**
