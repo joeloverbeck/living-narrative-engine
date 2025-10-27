@@ -379,22 +379,15 @@ export class TurnOrderService extends ITurnOrderService {
       );
       const removedEntity = this.#currentQueue.remove(entityId); // Call the queue's remove method
 
-      // --- CORRECTED LOGIC ---
-      // Log success info if the entity was directly removed (non-null return)
-      // OR if it's the initiative strategy (where null signifies processing for lazy removal).
-      if (removedEntity !== null || this.#currentStrategy === 'initiative') {
+      if (removedEntity != null) {
         this.#logger.debug(
           `TurnOrderService: Entity "${entityId}" processed for removal (actual removal may be lazy depending on queue type).`
         );
-      }
-      // Log a warning only if the entity was truly not found (remove returned null AND it wasn't initiative strategy)
-      else {
-        // Implicitly: removedEntity === null && this.#currentStrategy !== 'initiative'
+      } else {
         this.#logger.warn(
           `TurnOrderService.removeEntity: Entity "${entityId}" not found in the current turn order queue.`
         );
       }
-      // --- END CORRECTED LOGIC ---
     } catch (error) {
       this.#logger.error(
         `TurnOrderService.removeEntity: Error while trying to remove entity "${entityId}": ${error.message}`,

@@ -159,12 +159,12 @@ describe('TurnOrderService', () => {
     });
 
     // Test Case: Initiative - Found (Lazy Removal)
-    it('Test Case 11.11.3: should call remove on the Initiative queue and log success (despite null return) due to lazy removal', () => {
+    it('Test Case 11.11.3: should call remove on the Initiative queue and log success when the entity is flagged for lazy removal', () => {
       // Arrange
       service.startNewRound(entitiesInit, 'initiative', initiativeData);
       const entityIdToRemove = 'initA';
-      // InitiativeQueue's remove returns null for lazy strategy
-      mockInitiativeQueueInstance.remove.mockReturnValue(null);
+      const removedEntity = { id: entityIdToRemove };
+      mockInitiativeQueueInstance.remove.mockReturnValue(removedEntity);
       mockLogger.info.mockClear(); // Clear logs after setup
       mockLogger.warn.mockClear();
       mockLogger.debug.mockClear();
@@ -191,10 +191,35 @@ describe('TurnOrderService', () => {
         `TurnOrderService: Entity "${entityIdToRemove}" processed for removal (actual removal may be lazy depending on queue type).`
       );
       // Warn log for "not found" is NOT expected, because null IS expected from initiative queue remove
-      expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('not found in the current turn order queue')
-      );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
       // The two debug logs already asserted above
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+
+    it('Test Case 11.11.3b: should log a warning when the initiative queue reports no matching entity', () => {
+      // Arrange
+      service.startNewRound(entitiesInit, 'initiative', initiativeData);
+      const entityIdToRemove = 'missingInit';
+      mockInitiativeQueueInstance.remove.mockReturnValue(null);
+      mockLogger.info.mockClear();
+      mockLogger.warn.mockClear();
+      mockLogger.debug.mockClear();
+
+      // Act
+      service.removeEntity(entityIdToRemove);
+
+      // Assert
+      expect(mockInitiativeQueueInstance.remove).toHaveBeenCalledWith(
+        entityIdToRemove
+      );
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
+      );
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `TurnOrderService.removeEntity: Entity "${entityIdToRemove}" not found in the current turn order queue.`
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
