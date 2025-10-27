@@ -839,3 +839,533 @@ describe('AnatomyStructureTemplateLoader - Constructor', () => {
     expect(loader._dataRegistry).toBe(dataRegistry);
   });
 });
+
+describe('AnatomyStructureTemplateLoader - Architecture Integration', () => {
+  let loader;
+  let dataRegistry;
+  let logger;
+
+  beforeEach(() => {
+    const config = createMockConfiguration();
+    const pathResolver = createMockPathResolver();
+    const dataFetcher = createMockDataFetcher();
+    const schemaValidator = createMockSchemaValidator();
+    dataRegistry = createSimpleMockDataRegistry();
+    logger = createMockLogger();
+
+    loader = new AnatomyStructureTemplateLoader(
+      config,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger
+    );
+
+    jest.clearAllMocks();
+  });
+
+  describe('SimpleItemLoader Extension', () => {
+    it('extends SimpleItemLoader correctly', () => {
+      // Verify inheritance chain
+      expect(loader).toBeInstanceOf(AnatomyStructureTemplateLoader);
+      // Verify protected properties from base class are accessible
+      expect(loader._logger).toBeDefined();
+      expect(loader._dataRegistry).toBeDefined();
+    });
+
+    it('uses anatomyStructureTemplates as registry key', async () => {
+      const data = {
+        id: 'anatomy:test_template',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      await loader._processFetchedItem(
+        'anatomy',
+        'test.structure.json',
+        '/tmp/test.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      // Verify processAndStoreItem was called with correct category
+      expect(processAndStoreItem).toHaveBeenCalledWith(
+        loader,
+        expect.objectContaining({
+          category: 'anatomyStructureTemplates',
+        })
+      );
+    });
+
+    it('verifies registry key is passed to processAndStoreItem', async () => {
+      const data = {
+        id: 'anatomy:test_template',
+        topology: {
+          rootType: 'torso',
+        },
+      };
+
+      // Verify that the correct registry key is passed through
+      await loader._processFetchedItem(
+        'anatomy',
+        'test.json',
+        '/tmp/test.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      // The registry key validation happens in processAndStoreItem
+      // We verify it was called with the correct category
+      expect(processAndStoreItem).toHaveBeenCalledWith(
+        loader,
+        expect.objectContaining({
+          category: 'anatomyStructureTemplates',
+        })
+      );
+    });
+  });
+
+  describe('Qualified ID Generation and Mod Namespacing', () => {
+    it('generates qualified ID with mod namespace', async () => {
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'anatomy:structure_humanoid',
+        didOverride: false,
+      });
+
+      const data = {
+        id: 'anatomy:structure_humanoid',
+        topology: { rootType: 'torso' },
+      };
+
+      const result = await loader._processFetchedItem(
+        'anatomy',
+        'humanoid.structure.json',
+        '/tmp/humanoid.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result.qualifiedId).toBe('anatomy:structure_humanoid');
+      expect(result.qualifiedId).toMatch(/^[a-z0-9_]+:[a-z0-9_]+$/);
+    });
+
+    it('handles qualified ID format validation', async () => {
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'custom_mod:dragon_template',
+        didOverride: false,
+      });
+
+      const data = {
+        id: 'custom_mod:dragon_template',
+        topology: { rootType: 'torso' },
+      };
+
+      const result = await loader._processFetchedItem(
+        'custom_mod',
+        'dragon.structure.json',
+        '/tmp/dragon.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      // Verify qualified ID format: modId:identifier
+      expect(result.qualifiedId).toBe('custom_mod:dragon_template');
+      expect(result.qualifiedId.split(':')).toHaveLength(2);
+      expect(result.qualifiedId.split(':')[0]).toBe('custom_mod');
+    });
+
+    it('preserves mod namespace across processing pipeline', async () => {
+      const modId = 'spider_mod';
+      const templateId = 'structure_spider';
+
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: `${modId}:${templateId}`,
+        didOverride: false,
+      });
+
+      const data = {
+        id: `${modId}:${templateId}`,
+        topology: {
+          rootType: 'cephalothorax',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 8,
+              socketPattern: {
+                idTemplate: 'leg_{{index}}',
+                allowedTypes: ['spider_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const result = await loader._processFetchedItem(
+        modId,
+        'spider.structure.json',
+        '/tmp/spider.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result.qualifiedId).toContain(modId);
+      expect(result.qualifiedId).toContain(templateId);
+    });
+  });
+
+  describe('Override Detection for Mod Precedence', () => {
+    it('detects when template overrides existing template', async () => {
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'anatomy:structure_humanoid',
+        didOverride: true,
+      });
+
+      const data = {
+        id: 'anatomy:structure_humanoid',
+        topology: { rootType: 'torso' },
+      };
+
+      const result = await loader._processFetchedItem(
+        'anatomy',
+        'humanoid.structure.json',
+        '/tmp/humanoid.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result.didOverride).toBe(true);
+    });
+
+    it('indicates no override for new template', async () => {
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'anatomy:structure_dragon',
+        didOverride: false,
+      });
+
+      const data = {
+        id: 'anatomy:structure_dragon',
+        topology: { rootType: 'torso' },
+      };
+
+      const result = await loader._processFetchedItem(
+        'anatomy',
+        'dragon.structure.json',
+        '/tmp/dragon.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result.didOverride).toBe(false);
+    });
+
+    it('handles mod precedence through override detection', async () => {
+      // First mod loads template
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'base:structure_creature',
+        didOverride: false,
+      });
+
+      const baseData = {
+        id: 'base:structure_creature',
+        topology: { rootType: 'body' },
+      };
+
+      const baseResult = await loader._processFetchedItem(
+        'base',
+        'creature.structure.json',
+        '/tmp/base/creature.structure.json',
+        baseData,
+        'anatomyStructureTemplates'
+      );
+
+      expect(baseResult.didOverride).toBe(false);
+
+      // Second mod overrides with same qualified ID
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'base:structure_creature',
+        didOverride: true,
+      });
+
+      const overrideData = {
+        id: 'base:structure_creature',
+        topology: { rootType: 'enhanced_body' },
+      };
+
+      const overrideResult = await loader._processFetchedItem(
+        'enhanced_mod',
+        'creature.structure.json',
+        '/tmp/enhanced/creature.structure.json',
+        overrideData,
+        'anatomyStructureTemplates'
+      );
+
+      expect(overrideResult.didOverride).toBe(true);
+      expect(overrideResult.qualifiedId).toBe(baseResult.qualifiedId);
+    });
+  });
+
+  describe('Schema Integration with AJV', () => {
+    it('delegates schema validation to schemaValidator dependency', async () => {
+      // schemaValidator is already mocked in createMockSchemaValidator
+      // This test verifies integration behavior exists
+
+      const data = {
+        id: 'anatomy:test',
+        topology: { rootType: 'torso' },
+      };
+
+      await loader._processFetchedItem(
+        'anatomy',
+        'test.json',
+        '/tmp/test.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      // If schemaValidator threw, test would fail
+      // This verifies the integration flow works
+      expect(processAndStoreItem).toHaveBeenCalled();
+    });
+
+    it('performs custom validation beyond schema', async () => {
+      // Custom validation for limb set count constraints
+      const data = {
+        id: 'anatomy:test',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 101, // Exceeds maximum
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      // Custom validation should catch this before schema validation
+      await expect(
+        loader._processFetchedItem(
+          'anatomy',
+          'test.json',
+          '/tmp/test.json',
+          data,
+          'anatomyStructureTemplates'
+        )
+      ).rejects.toThrow(ValidationError);
+      await expect(
+        loader._processFetchedItem(
+          'anatomy',
+          'test.json',
+          '/tmp/test.json',
+          data,
+          'anatomyStructureTemplates'
+        )
+      ).rejects.toThrow('count must be between 1 and 100');
+    });
+
+    it('validates template variables in idTemplate', async () => {
+      const data = {
+        id: 'anatomy:test',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm-index', // Missing template variables
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      await expect(
+        loader._processFetchedItem(
+          'anatomy',
+          'test.json',
+          '/tmp/test.json',
+          data,
+          'anatomyStructureTemplates'
+        )
+      ).rejects.toThrow(ValidationError);
+      await expect(
+        loader._processFetchedItem(
+          'anatomy',
+          'test.json',
+          '/tmp/test.json',
+          data,
+          'anatomyStructureTemplates'
+        )
+      ).rejects.toThrow('Must contain template variables');
+    });
+
+    it('validates static templates without variables', async () => {
+      const data = {
+        id: 'anatomy:test',
+        topology: {
+          rootType: 'torso',
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              attachment: 'anterior',
+              socketPattern: {
+                idTemplate: 'head_socket', // Static template is valid
+                allowedTypes: ['head'],
+              },
+            },
+          ],
+        },
+      };
+
+      await expect(
+        loader._processFetchedItem(
+          'anatomy',
+          'test.json',
+          '/tmp/test.json',
+          data,
+          'anatomyStructureTemplates'
+        )
+      ).resolves.toBeDefined();
+    });
+  });
+
+  describe('Mod Loading Pipeline Integration', () => {
+    it('integrates with processAndStoreItem helper', async () => {
+      const data = {
+        id: 'anatomy:complex_creature',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'tail',
+              count: 1,
+              attachment: 'posterior',
+              socketPattern: {
+                idTemplate: 'tail_socket',
+                allowedTypes: ['tail'],
+              },
+            },
+          ],
+        },
+      };
+
+      await loader._processFetchedItem(
+        'anatomy',
+        'complex.structure.json',
+        '/tmp/complex.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      expect(processAndStoreItem).toHaveBeenCalledWith(
+        loader,
+        expect.objectContaining({
+          data,
+          idProp: 'id',
+          category: 'anatomyStructureTemplates',
+          modId: 'anatomy',
+          filename: 'complex.structure.json',
+        })
+      );
+    });
+
+    it('handles complete template processing workflow', async () => {
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'creatures:dragon_structure',
+        didOverride: false,
+      });
+
+      const data = {
+        id: 'creatures:dragon_structure',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['dragon_leg'],
+              },
+            },
+            {
+              type: 'wing',
+              count: 2,
+              arrangement: 'bilateral',
+              socketPattern: {
+                idTemplate: 'wing_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['dragon_wing'],
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              attachment: 'anterior',
+              socketPattern: {
+                idTemplate: 'head_socket',
+                allowedTypes: ['dragon_head'],
+              },
+            },
+            {
+              type: 'tail',
+              count: 1,
+              attachment: 'posterior',
+              socketPattern: {
+                idTemplate: 'tail_socket',
+                allowedTypes: ['dragon_tail'],
+              },
+            },
+          ],
+        },
+      };
+
+      const result = await loader._processFetchedItem(
+        'creatures',
+        'dragon.structure.json',
+        '/tmp/dragon.structure.json',
+        data,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result.qualifiedId).toBe('creatures:dragon_structure');
+      expect(result.didOverride).toBe(false);
+      expect(processAndStoreItem).toHaveBeenCalledTimes(1);
+    });
+  });
+});

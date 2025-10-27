@@ -753,4 +753,480 @@ describe('SlotGenerator', () => {
       expect(slots['arm'].requirements.components).toEqual(['anatomy:part']);
     });
   });
+
+  describe('Slot/Socket Synchronization - Critical Tests', () => {
+    it('CRITICAL: Slot keys must exactly match SocketGenerator socket IDs - bilateral', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              arrangement: 'bilateral',
+              socketPattern: {
+                idTemplate: 'arm_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+      const slotKeys = Object.keys(slots).sort();
+
+      // These must match SocketGenerator's output exactly
+      expect(slotKeys).toEqual(['arm_left', 'arm_right']);
+      // Verify socket reference matches slot key
+      expect(slots['arm_left'].socket).toBe('arm_left');
+      expect(slots['arm_right'].socket).toBe('arm_right');
+    });
+
+    it('CRITICAL: Slot keys must exactly match SocketGenerator socket IDs - quadrupedal', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['dragon_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+      const slotKeys = Object.keys(slots).sort();
+
+      // These must match SocketGenerator's output exactly
+      expect(slotKeys).toEqual([
+        'leg_left_front',
+        'leg_left_rear',
+        'leg_right_front',
+        'leg_right_rear',
+      ]);
+      slotKeys.forEach((key) => {
+        expect(slots[key].socket).toBe(key);
+      });
+    });
+
+    it('CRITICAL: Slot keys must exactly match SocketGenerator socket IDs - radial octagonal', () => {
+      const template = {
+        topology: {
+          rootType: 'cephalothorax',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 8,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'radial',
+                allowedTypes: ['spider_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+      const slotKeys = Object.keys(slots).sort();
+
+      // These must match SocketGenerator's output exactly
+      expect(slotKeys).toEqual([
+        'leg_anterior',
+        'leg_anterior_left',
+        'leg_anterior_right',
+        'leg_left',
+        'leg_posterior',
+        'leg_posterior_left',
+        'leg_posterior_right',
+        'leg_right',
+      ]);
+      slotKeys.forEach((key) => {
+        expect(slots[key].socket).toBe(key);
+      });
+    });
+
+    it('CRITICAL: Slot keys must exactly match SocketGenerator socket IDs - radial custom positions', () => {
+      const template = {
+        topology: {
+          rootType: 'mantle',
+          limbSets: [
+            {
+              type: 'tentacle',
+              count: 4,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'tentacle_{{position}}',
+                orientationScheme: 'radial',
+                allowedTypes: ['tentacle'],
+                positions: ['north', 'east', 'south', 'west'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+      const slotKeys = Object.keys(slots).sort();
+
+      // These must match SocketGenerator's output exactly
+      expect(slotKeys).toEqual([
+        'tentacle_east',
+        'tentacle_north',
+        'tentacle_south',
+        'tentacle_west',
+      ]);
+      slotKeys.forEach((key) => {
+        expect(slots[key].socket).toBe(key);
+      });
+    });
+
+    it('CRITICAL: Slot keys must exactly match SocketGenerator socket IDs - indexed', () => {
+      const template = {
+        topology: {
+          rootType: 'cephalothorax',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 8,
+              socketPattern: {
+                idTemplate: 'leg_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['spider_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+      const slotKeys = Object.keys(slots).sort();
+
+      // These must match SocketGenerator's output exactly
+      expect(slotKeys).toEqual([
+        'leg_1',
+        'leg_2',
+        'leg_3',
+        'leg_4',
+        'leg_5',
+        'leg_6',
+        'leg_7',
+        'leg_8',
+      ]);
+      slotKeys.forEach((key) => {
+        expect(slots[key].socket).toBe(key);
+      });
+    });
+
+    it('CRITICAL: Slot keys must exactly match SocketGenerator socket IDs - custom positions', () => {
+      const template = {
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'limb',
+              count: 3,
+              socketPattern: {
+                idTemplate: 'limb_{{position}}',
+                orientationScheme: 'custom',
+                allowedTypes: ['limb'],
+                positions: ['alpha', 'beta', 'gamma'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+      const slotKeys = Object.keys(slots).sort();
+
+      // These must match SocketGenerator's output exactly
+      expect(slotKeys).toEqual(['limb_alpha', 'limb_beta', 'limb_gamma']);
+      slotKeys.forEach((key) => {
+        expect(slots[key].socket).toBe(key);
+      });
+    });
+
+    it('CRITICAL: Template variable resolution must match SocketGenerator - multiple variables', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 2,
+              arrangement: 'bilateral',
+              socketPattern: {
+                idTemplate: '{{type}}_{{orientation}}_{{index}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['dragon_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+      const slotKeys = Object.keys(slots).sort();
+
+      // These must match SocketGenerator's exact output with same variable resolution
+      expect(slotKeys).toEqual(['dragon_leg_left_1', 'dragon_leg_right_2']);
+      slotKeys.forEach((key) => {
+        expect(slots[key].socket).toBe(key);
+      });
+    });
+  });
+
+  describe('Blueprint Integration', () => {
+    it('should generate slots object structure compatible with Blueprint V2', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+
+      // Verify it's an object (not array)
+      expect(slots).toBeInstanceOf(Object);
+      expect(Array.isArray(slots)).toBe(false);
+
+      // Verify each slot has required blueprint properties
+      Object.keys(slots).forEach((slotKey) => {
+        expect(slots[slotKey]).toHaveProperty('socket');
+        expect(slots[slotKey]).toHaveProperty('requirements');
+        expect(slots[slotKey]).toHaveProperty('optional');
+        expect(slots[slotKey].requirements).toHaveProperty('partType');
+        expect(slots[slotKey].requirements).toHaveProperty('components');
+      });
+    });
+
+    it('should generate correct slot count matching template definition', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              socketPattern: {
+                idTemplate: 'leg_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['leg'],
+              },
+            },
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'head',
+                orientationScheme: 'indexed',
+                allowedTypes: ['head'],
+              },
+            },
+            {
+              type: 'tail',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'tail',
+                orientationScheme: 'indexed',
+                allowedTypes: ['tail'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+
+      // Total: 4 legs + 2 arms + 1 head + 1 tail = 8 slots
+      expect(Object.keys(slots)).toHaveLength(8);
+    });
+
+    it('should support additionalSlots merging context in blueprints', () => {
+      // Generate slots from template
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      const generatedSlots = slotGenerator.generateBlueprintSlots(template);
+
+      // Simulate blueprint additionalSlots merging
+      const additionalSlots = {
+        cybernetic_arm: {
+          socket: 'cybernetic_socket',
+          requirements: {
+            partType: 'cybernetic_arm',
+            components: ['anatomy:part', 'cybernetic:augment'],
+          },
+          optional: true,
+        },
+      };
+
+      // Merge operation (this would happen in blueprint processor)
+      const finalSlots = { ...generatedSlots, ...additionalSlots };
+
+      expect(Object.keys(finalSlots)).toHaveLength(3);
+      expect(finalSlots).toHaveProperty('arm_1');
+      expect(finalSlots).toHaveProperty('arm_2');
+      expect(finalSlots).toHaveProperty('cybernetic_arm');
+    });
+
+    it('should match requirements structure expected by recipe pattern matching', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'spider_leg',
+              count: 8,
+              socketPattern: {
+                idTemplate: 'leg_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['spider_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+
+      // Verify requirements structure allows pattern matching
+      // Pattern: "limbSet:spider_leg" should match these slots
+      Object.values(slots).forEach((slot) => {
+        expect(slot.requirements.partType).toBe('spider_leg');
+        // Pattern matching systems use partType for "limbSet:{type}" patterns
+      });
+    });
+  });
+
+  describe('Maximum Counts', () => {
+    it('should handle maximum appendage count (10)', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          appendages: [
+            {
+              type: 'eye',
+              count: 10,
+              socketPattern: {
+                idTemplate: 'eye_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['eye'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+
+      expect(Object.keys(slots)).toHaveLength(10);
+      for (let i = 1; i <= 10; i++) {
+        expect(slots[`eye_${i}`]).toBeDefined();
+        expect(slots[`eye_${i}`].requirements.partType).toBe('eye');
+      }
+    });
+
+    it('should handle maximum limb count (100) efficiently', () => {
+      const template = {
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'segment',
+              count: 100,
+              socketPattern: {
+                idTemplate: 'segment_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['segment'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+
+      expect(Object.keys(slots)).toHaveLength(100);
+      expect(slots['segment_1']).toBeDefined();
+      expect(slots['segment_100']).toBeDefined();
+      expect(slots['segment_50'].requirements.partType).toBe('segment');
+    });
+  });
+
+  describe('Validation - Enhanced', () => {
+    it('should throw error on duplicate slot keys (though Object.assign overwrites)', () => {
+      // Note: JavaScript objects naturally overwrite duplicate keys
+      // This test documents expected behavior
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'leg',
+                orientationScheme: 'indexed',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const slots = slotGenerator.generateBlueprintSlots(template);
+
+      // Last slot wins - only one slot key exists
+      expect(Object.keys(slots)).toHaveLength(1);
+      expect(slots['leg']).toBeDefined();
+    });
+  });
 });

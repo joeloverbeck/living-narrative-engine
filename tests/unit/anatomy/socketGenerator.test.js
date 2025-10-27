@@ -876,5 +876,328 @@ describe('SocketGenerator', () => {
       expect(sockets[0].id).toBe('segment_1');
       expect(sockets[99].id).toBe('segment_100');
     });
+
+    it('should handle multiple limb sets with different orientation schemes', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['leg'],
+              },
+            },
+            {
+              type: 'tentacle',
+              count: 8,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'tentacle_{{orientation}}',
+                orientationScheme: 'radial',
+                allowedTypes: ['tentacle'],
+              },
+            },
+            {
+              type: 'sensor',
+              count: 3,
+              socketPattern: {
+                idTemplate: 'sensor_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['sensor'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(15);
+      // Verify bilateral sockets
+      expect(sockets.slice(0, 4).map((s) => s.id)).toEqual([
+        'leg_left_front',
+        'leg_right_front',
+        'leg_left_rear',
+        'leg_right_rear',
+      ]);
+      // Verify radial sockets
+      expect(sockets.slice(4, 12).every((s) => s.id.startsWith('tentacle_'))).toBe(
+        true
+      );
+      // Verify indexed sockets
+      expect(sockets.slice(12, 15).map((s) => s.id)).toEqual([
+        'sensor_1',
+        'sensor_2',
+        'sensor_3',
+      ]);
+    });
+
+    it('should handle maximum appendage count (10)', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          appendages: [
+            {
+              type: 'eye',
+              count: 10,
+              socketPattern: {
+                idTemplate: 'eye_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['eye'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(10);
+      expect(sockets[0].id).toBe('eye_1');
+      expect(sockets[9].id).toBe('eye_10');
+    });
+  });
+
+  describe('Validation - Comprehensive', () => {
+    it('should detect duplicate socket IDs across limbSets and appendages', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'limb_socket',
+                orientationScheme: 'indexed',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'tail',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'limb_socket',
+                orientationScheme: 'indexed',
+                allowedTypes: ['tail'],
+              },
+            },
+          ],
+        },
+      };
+
+      expect(() => {
+        socketGenerator.generateSockets(template);
+      }).toThrow('Duplicate socket IDs');
+      expect(() => {
+        socketGenerator.generateSockets(template);
+      }).toThrow('limb_socket');
+    });
+
+    it('should detect duplicate socket IDs within same limbSet', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 3,
+              socketPattern: {
+                idTemplate: 'leg',
+                orientationScheme: 'indexed',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      expect(() => {
+        socketGenerator.generateSockets(template);
+      }).toThrow('Duplicate socket IDs');
+    });
+
+    it('should handle empty allowedTypes array gracefully', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'generic',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'socket_{{type}}',
+                orientationScheme: 'indexed',
+                allowedTypes: [],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(1);
+      expect(sockets[0].id).toBe('socket_part');
+      expect(sockets[0].allowedTypes).toEqual([]);
+    });
+  });
+
+  describe('Socket/Slot Synchronization Verification', () => {
+    it('should generate socket IDs compatible with SlotGenerator keys - bilateral', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              arrangement: 'bilateral',
+              socketPattern: {
+                idTemplate: 'arm_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      // These IDs must match SlotGenerator's slot keys exactly
+      expect(sockets.map((s) => s.id)).toEqual(['arm_left', 'arm_right']);
+    });
+
+    it('should generate socket IDs compatible with SlotGenerator keys - radial octagonal', () => {
+      const template = {
+        topology: {
+          rootType: 'cephalothorax',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 8,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'radial',
+                allowedTypes: ['spider_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      // These IDs must match SlotGenerator's slot keys exactly
+      expect(sockets.map((s) => s.id)).toEqual([
+        'leg_anterior',
+        'leg_anterior_right',
+        'leg_right',
+        'leg_posterior_right',
+        'leg_posterior',
+        'leg_posterior_left',
+        'leg_left',
+        'leg_anterior_left',
+      ]);
+    });
+
+    it('should generate socket IDs compatible with SlotGenerator keys - custom positions', () => {
+      const template = {
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'wing',
+              count: 3,
+              socketPattern: {
+                idTemplate: 'wing_{{position}}',
+                orientationScheme: 'custom',
+                allowedTypes: ['wing'],
+                positions: ['dorsal', 'lateral_left', 'lateral_right'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      // These IDs must match SlotGenerator's slot keys exactly
+      expect(sockets.map((s) => s.id)).toEqual([
+        'wing_dorsal',
+        'wing_lateral_left',
+        'wing_lateral_right',
+      ]);
+    });
+
+    it('should generate socket IDs compatible with SlotGenerator keys - indexed', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 6,
+              socketPattern: {
+                idTemplate: 'leg_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      // These IDs must match SlotGenerator's slot keys exactly
+      expect(sockets.map((s) => s.id)).toEqual([
+        'leg_1',
+        'leg_2',
+        'leg_3',
+        'leg_4',
+        'leg_5',
+        'leg_6',
+      ]);
+    });
+
+    it('should generate socket IDs compatible with SlotGenerator keys - quadrupedal', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['dragon_leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      // These IDs must match SlotGenerator's slot keys exactly
+      expect(sockets.map((s) => s.id)).toEqual([
+        'leg_left_front',
+        'leg_right_front',
+        'leg_left_rear',
+        'leg_right_rear',
+      ]);
+    });
   });
 });
