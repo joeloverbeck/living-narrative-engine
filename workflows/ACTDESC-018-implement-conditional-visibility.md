@@ -17,116 +17,139 @@ Some activities should only appear under specific conditions (e.g., "kneeling" o
 ## Technical Specification
 
 ### Condition Evaluation Method
+
+Extend `ActivityDescriptionService`'s constructor to accept an injected `jsonLogicEvaluationService` (the existing `JsonLogicEvaluationService` from `src/logic/jsonLogicEvaluationService.js`). Store it in a new private field with validation similar to other dependencies. This keeps JSON Logic handling consistent with the rest of the codebase.
+
 ```javascript
 /**
- * Evaluate whether activity should be visible.
+ * Filter activities based on visibility rules.
  *
- * @param {object} activity - Activity object with metadata
- * @param {object} entity - Entity instance
- * @returns {boolean} Should be visible
+ * @param {Array<object>} activities - Raw activity entries from collectors.
+ * @param {object} entity - Entity instance requesting the description.
+ * @returns {Array<object>} Only the activities that should remain visible.
  * @private
  */
-#evaluateActivityVisibility(activity, entity) {
-  const metadata = activity.metadata || activity.activityMetadata;
-  if (!metadata) {
-    return true; // No metadata = always visible
-  }
-
-  // Check shouldDescribeInActivity flag
-  if (metadata.shouldDescribeInActivity === false) {
-    return false;
-  }
-
-  // Evaluate conditions if present
-  if (metadata.conditions) {
-    return this.#evaluateConditions(metadata.conditions, activity, entity);
-  }
-
-  return true; // Default to visible
+#filterByConditions(activities, entity) {
+  return activities.filter((activity) =>
+    this.#evaluateActivityVisibility(activity, entity)
+  );
 }
 
 /**
- * Evaluate condition object using JSON Logic.
+ * Determine whether a single activity should remain visible.
  *
- * @param {object} conditions - Condition configuration
- * @param {object} activity - Activity object
- * @param {object} entity - Entity instance
- * @returns {boolean} Condition result
+ * @param {object} activity - Activity record produced by the collectors.
+ * @param {object} entity - Entity instance requesting the description.
+ * @returns {boolean} True when the activity should remain visible.
  * @private
  */
-#evaluateConditions(conditions, activity, entity) {
-  // showOnlyIfProperty condition
-  if (conditions.showOnlyIfProperty) {
-    const { property, equals } = conditions.showOnlyIfProperty;
-    const sourceData = activity.sourceData || {};
+#evaluateActivityVisibility(activity, entity) {
+  if (!activity || activity.visible === false) {
+    return false;
+  }
 
-    if (sourceData[property] !== equals) {
+  if (typeof activity.condition === 'function') {
+    try {
+      return activity.condition(entity);
+    } catch (error) {
+      this.#logger.warn(
+        'Condition evaluation failed for activity description entry',
+        error
+      );
       return false;
     }
   }
 
-  // requiredComponents condition
-  if (conditions.requiredComponents) {
-    for (const requiredComp of conditions.requiredComponents) {
-      if (!entity.hasComponent(requiredComp)) {
-        return false;
-      }
-    }
+  const metadata = activity.metadata ?? activity.activityMetadata ?? {};
+  const conditions = activity.conditions ?? metadata.conditions;
+
+  if (!conditions || this.#isEmptyConditionsObject(conditions)) {
+    return metadata.shouldDescribeInActivity !== false;
   }
 
-  // forbiddenComponents condition
-  if (conditions.forbiddenComponents) {
-    for (const forbiddenComp of conditions.forbiddenComponents) {
-      if (entity.hasComponent(forbiddenComp)) {
-        return false;
-      }
-    }
+  if (metadata.shouldDescribeInActivity === false) {
+    return false;
   }
 
-  // customLogic condition (JSON Logic)
+  if (
+    conditions.showOnlyIfProperty &&
+    !this.#matchesPropertyCondition(activity, conditions.showOnlyIfProperty)
+  ) {
+    return false;
+  }
+
+  if (
+    conditions.requiredComponents &&
+    !this.#hasRequiredComponents(entity, conditions.requiredComponents)
+  ) {
+    return false;
+  }
+
+  if (
+    conditions.forbiddenComponents &&
+    this.#hasForbiddenComponents(entity, conditions.forbiddenComponents)
+  ) {
+    return false;
+  }
+
   if (conditions.customLogic) {
-    const logicData = {
-      entity: this.#createEntityDataForLogic(entity),
-      activity: activity.sourceData || {},
-      target: activity.targetEntityId
-        ? this.#createEntityDataForLogic(
-            this.#entityManager.getEntityInstance(activity.targetEntityId)
-          )
-        : null,
-    };
+    const context = this.#buildLogicContext(activity, entity);
 
     try {
-      const result = jsonLogic.apply(conditions.customLogic, logicData);
+      const result = this.#jsonLogicEvaluationService.evaluate(
+        conditions.customLogic,
+        context
+      );
+
       if (!result) {
         return false;
       }
-    } catch (err) {
-      this.#logger.warn('Failed to evaluate custom logic', err);
-      return true; // Fail open for custom logic
+    } catch (error) {
+      this.#logger.warn('Failed to evaluate custom logic', error);
+      return true; // Fail open for custom logic errors
     }
   }
 
-  return true; // All conditions passed
+  return true;
 }
 
 /**
- * Create entity data object for JSON Logic evaluation.
+ * Construct the data payload used for JSON Logic evaluation.
  *
- * @param {object} entity - Entity instance
- * @returns {object} Entity data for logic
+ * @param {object} activity - Activity record.
+ * @param {object} entity - Entity instance requesting the description.
+ * @returns {object} Data for JSON Logic rules.
  * @private
  */
-#createEntityDataForLogic(entity) {
+#buildLogicContext(activity, entity) {
+  const targetEntity = activity.targetEntityId
+    ? this.#entityManager.getEntityInstance(activity.targetEntityId)
+    : null;
+
+  return {
+    entity: this.#extractEntityData(entity),
+    activity: activity.sourceData ?? {},
+    target: targetEntity ? this.#extractEntityData(targetEntity) : null,
+  };
+}
+
+/**
+ * Extract relevant component information for JSON Logic.
+ *
+ * @param {object|null} entity - Entity instance.
+ * @returns {object|null} Simplified entity representation.
+ * @private
+ */
+#extractEntityData(entity) {
   if (!entity) {
     return null;
   }
 
-  // Extract relevant component data
+  const componentIds = entity.componentTypeIds ?? [];
   const components = {};
-  const allComponents = entity.getAllComponents?.() || [];
 
-  for (const [compId, compData] of Object.entries(allComponents)) {
-    components[compId] = compData;
+  for (const componentId of componentIds) {
+    components[componentId] = entity.getComponentData(componentId);
   }
 
   return {
@@ -134,32 +157,106 @@ Some activities should only appear under specific conditions (e.g., "kneeling" o
     components,
   };
 }
+
+/**
+ * Determine if the provided conditions object has no actionable rules.
+ *
+ * @param {object} conditions - Condition configuration from metadata.
+ * @returns {boolean} True when the object contains no keys.
+ * @private
+ */
+#isEmptyConditionsObject(conditions) {
+  return !conditions || Object.keys(conditions).length === 0;
+}
+
+/**
+ * Verify a `showOnlyIfProperty` rule against the activity source data.
+ *
+ * @param {object} activity - Activity record.
+ * @param {object} rule - Rule with `property` and `equals` keys.
+ * @returns {boolean} True when the activity satisfies the rule.
+ * @private
+ */
+#matchesPropertyCondition(activity, rule) {
+  if (!rule?.property) {
+    return true;
+  }
+
+  const sourceData = activity.sourceData ?? {};
+  return sourceData[rule.property] === rule.equals;
+}
+
+/**
+ * Verify that the entity has all components listed in `requiredComponents`.
+ *
+ * @param {object} entity - Entity instance.
+ * @param {Array<string>} required - Component identifiers.
+ * @returns {boolean} True when every component exists.
+ * @private
+ */
+#hasRequiredComponents(entity, required) {
+  return required.every((componentId) => entity.hasComponent(componentId));
+}
+
+/**
+ * Verify that the entity does **not** contain any forbidden components.
+ *
+ * @param {object} entity - Entity instance.
+ * @param {Array<string>} forbidden - Component identifiers.
+ * @returns {boolean} True when no forbidden component is present.
+ * @private
+ */
+#hasForbiddenComponents(entity, forbidden) {
+  return !forbidden.some((componentId) => entity.hasComponent(componentId));
+}
 ```
+
+Update `#parseInlineMetadata` so that the returned activity includes the raw
+`activityMetadata` reference and a `conditions` field:
+
+- `activityMetadata: metadata`
+- `conditions: metadata.conditions ?? null`
+
+Dedicated metadata parsing already exposes `metadata` and `conditions`; ensure
+that structure is preserved so the visibility filter receives the data without
+needing additional lookups.
 
 ### Updated Collection Methods
 ```javascript
 /**
- * Collect inline metadata with visibility filtering.
+ * Collect inline metadata and attach visibility-aware payloads.
  *
  * @param {object} entity - Entity instance
- * @returns {Array<object>} Visible inline activities
+ * @returns {Array<object>} Inline activities (visibility handled later)
  * @private
  */
 #collectInlineMetadata(entity) {
   const activities = [];
+  const componentIds = entity.componentTypeIds ?? [];
 
-  const allComponents = entity.getAllComponents?.() || {};
-  for (const [componentId, componentData] of Object.entries(allComponents)) {
-    const metadata = componentData.activityMetadata;
+  for (const componentId of componentIds) {
+    if (componentId === 'activity:description_metadata') {
+      continue; // Dedicated metadata handled separately
+    }
 
-    if (metadata && metadata.shouldDescribeInActivity) {
+    const componentData = entity.getComponentData(componentId);
+    const metadata = componentData?.activityMetadata;
+
+    if (metadata?.shouldDescribeInActivity) {
       try {
-        const activity = this.#parseInlineMetadata(componentId, componentData, entity);
-        if (activity && this.#evaluateActivityVisibility(activity, entity)) {
+        const activity = this.#parseInlineMetadata(
+          componentId,
+          componentData,
+          metadata
+        );
+        if (activity) {
           activities.push(activity);
         }
       } catch (error) {
-        this.#logger.error(`Failed to parse inline metadata for ${componentId}`, error);
+        this.#logger.error(
+          `Failed to parse inline metadata for ${componentId}`,
+          error
+        );
       }
     }
   }
@@ -168,10 +265,10 @@ Some activities should only appear under specific conditions (e.g., "kneeling" o
 }
 
 /**
- * Collect dedicated metadata with visibility filtering.
+ * Collect dedicated metadata component (single instance per entity).
  *
  * @param {object} entity - Entity instance
- * @returns {Array<object>} Visible dedicated activities
+ * @returns {Array<object>} Dedicated activities (visibility handled later)
  * @private
  */
 #collectDedicatedMetadata(entity) {
@@ -181,17 +278,19 @@ Some activities should only appear under specific conditions (e.g., "kneeling" o
     return activities;
   }
 
-  const metadataComponents = entity.getAllComponentsOfType?.('activity:description_metadata') || [];
+  const metadata = entity.getComponentData('activity:description_metadata');
 
-  for (const metadata of metadataComponents) {
-    try {
-      const activity = this.#parseDedicatedMetadata(metadata, entity);
-      if (activity && this.#evaluateActivityVisibility(activity, entity)) {
-        activities.push(activity);
-      }
-    } catch (error) {
-      this.#logger.error('Failed to parse dedicated metadata', error);
+  if (!metadata) {
+    return activities;
+  }
+
+  try {
+    const activity = this.#parseDedicatedMetadata(metadata, entity);
+    if (activity) {
+      activities.push(activity);
     }
+  } catch (error) {
+    this.#logger.error('Failed to parse dedicated metadata', error);
   }
 
   return activities;
@@ -399,8 +498,9 @@ describe('ActivityDescriptionService - Conditional Visibility', () => {
 1. **Fail Open**: If condition evaluation errors, activity still appears
 2. **Performance**: Condition evaluation should be fast (<1ms per activity)
 3. **Caching**: Consider caching component existence checks
-4. **JSON Logic Safety**: Wrap in try-catch to prevent crashes
-5. **Documentation**: Document all supported condition types
+4. **Dependency Wiring**: Update `worldAndEntityRegistrations` to supply the `JsonLogicEvaluationService` when constructing the activity description service.
+5. **JSON Logic Safety**: Wrap in try-catch to prevent crashes and reuse `JsonLogicEvaluationService` safeguards
+6. **Documentation**: Document all supported condition types
 
 ## Reference Files
 - Service: `src/anatomy/services/activityDescriptionService.js`
