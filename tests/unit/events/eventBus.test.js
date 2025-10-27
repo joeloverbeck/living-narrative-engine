@@ -116,5 +116,31 @@ describe('EventBus', () => {
       expect(bus.isBatchModeEnabled()).toBe(false);
       expect(bus.getBatchModeOptions()).toBeNull();
     });
+
+    it('refreshes timeout when enabling batch mode with identical options', () => {
+      const options = {
+        context: 'loader',
+        timeoutMs: 1000,
+        maxGlobalRecursion: 75,
+      };
+
+      bus.setBatchMode(true, options);
+
+      // Advance close to the timeout without reaching it
+      jest.advanceTimersByTime(900);
+      expect(bus.isBatchModeEnabled()).toBe(true);
+
+      // Re-apply the same configuration to refresh the timeout window
+      bus.setBatchMode(true, options);
+
+      // Exceed the original timeout window; batch mode should still be active
+      jest.advanceTimersByTime(200);
+      expect(bus.isBatchModeEnabled()).toBe(true);
+
+      // Once the refreshed timeout elapses, batch mode should auto-disable
+      jest.advanceTimersByTime(801);
+      expect(bus.isBatchModeEnabled()).toBe(false);
+      expect(bus.getBatchModeOptions()).toBeNull();
+    });
   });
 });

@@ -63,57 +63,40 @@ class EventBus extends IEventBus {
       const mergedOptions = { ...defaultOptions, ...options };
 
       if (this.#batchMode) {
-        if (
-          !this.#haveBatchOptionsChanged(
-            this.#batchModeOptions,
-            mergedOptions
-          )
-        ) {
-          return; // No-op when nothing changed
-        }
+        const optionsChanged = this.#haveBatchOptionsChanged(
+          this.#batchModeOptions,
+          mergedOptions
+        );
 
         // Update configuration while remaining in batch mode (nested contexts)
         this.#batchModeOptions = mergedOptions;
 
-        if (this.#batchModeTimeoutId) {
-          clearTimeout(this.#batchModeTimeoutId);
-          this.#batchModeTimeoutId = null;
-        }
-
-        if (
-          Number.isFinite(mergedOptions.timeoutMs) &&
-          mergedOptions.timeoutMs > 0
-        ) {
-          this.#batchModeTimeoutId = setTimeout(() => {
-            this.#logger.debug(
-              `EventBus: Auto-disabling batch mode after ${mergedOptions.timeoutMs}ms timeout for context: ${mergedOptions.context}`
-            );
-            this.setBatchMode(false);
-          }, mergedOptions.timeoutMs);
-        }
-
-        this.#logger.debug(
-          `EventBus: Batch mode configuration updated for context: ${mergedOptions.context}, ` +
-            `maxRecursionDepth: ${mergedOptions.maxRecursionDepth}, ` +
-            `maxGlobalRecursion: ${mergedOptions.maxGlobalRecursion}`
+        this.#scheduleBatchModeTimeout(
+          mergedOptions.timeoutMs,
+          mergedOptions.context
         );
+
+        if (optionsChanged) {
+          this.#logger.debug(
+            `EventBus: Batch mode configuration updated for context: ${mergedOptions.context}, ` +
+              `maxRecursionDepth: ${mergedOptions.maxRecursionDepth}, ` +
+              `maxGlobalRecursion: ${mergedOptions.maxGlobalRecursion}`
+          );
+        } else {
+          this.#logger.debug(
+            `EventBus: Batch mode timeout refreshed for context: ${mergedOptions.context}`
+          );
+        }
         return;
       }
 
       this.#batchModeOptions = mergedOptions;
       this.#batchMode = true;
 
-      if (
-        Number.isFinite(mergedOptions.timeoutMs) &&
-        mergedOptions.timeoutMs > 0
-      ) {
-        this.#batchModeTimeoutId = setTimeout(() => {
-          this.#logger.debug(
-            `EventBus: Auto-disabling batch mode after ${mergedOptions.timeoutMs}ms timeout for context: ${mergedOptions.context}`
-          );
-          this.setBatchMode(false);
-        }, mergedOptions.timeoutMs);
-      }
+      this.#scheduleBatchModeTimeout(
+        mergedOptions.timeoutMs,
+        mergedOptions.context
+      );
 
       this.#logger.debug(
         `EventBus: Batch mode enabled for context: ${mergedOptions.context}, ` +
@@ -130,10 +113,7 @@ class EventBus extends IEventBus {
     // Disable batch mode
     this.#batchMode = false;
 
-    if (this.#batchModeTimeoutId) {
-      clearTimeout(this.#batchModeTimeoutId);
-      this.#batchModeTimeoutId = null;
-    }
+    this.#clearBatchModeTimeout();
 
     // Reset recursion depth counters when exiting batch mode
     // This prevents accumulated depth from batch operations affecting normal gameplay
@@ -146,6 +126,38 @@ class EventBus extends IEventBus {
     this.#logger.debug(
       `EventBus: Batch mode disabled for context: ${context}. Recursion depth counters reset.`
     );
+  }
+
+  /**
+   * Clears any scheduled batch mode auto-disable timer.
+   *
+   * @returns {void}
+   */
+  #clearBatchModeTimeout() {
+    if (this.#batchModeTimeoutId) {
+      clearTimeout(this.#batchModeTimeoutId);
+      this.#batchModeTimeoutId = null;
+    }
+  }
+
+  /**
+   * Schedules the batch mode auto-disable timer with the provided configuration.
+   *
+   * @param {number} timeoutMs - Timeout in milliseconds before auto-disable.
+   * @param {string} context - Context label for logging.
+   * @returns {void}
+   */
+  #scheduleBatchModeTimeout(timeoutMs, context) {
+    this.#clearBatchModeTimeout();
+
+    if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+      this.#batchModeTimeoutId = setTimeout(() => {
+        this.#logger.debug(
+          `EventBus: Auto-disabling batch mode after ${timeoutMs}ms timeout for context: ${context}`
+        );
+        this.setBatchMode(false);
+      }, timeoutMs);
+    }
   }
 
   /**
