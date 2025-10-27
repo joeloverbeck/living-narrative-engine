@@ -46,7 +46,8 @@ describe('RoundManager', () => {
       // Assert
       expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
         [mockActor1, mockActor2],
-        'round-robin'
+        'round-robin',
+        undefined
       );
       expect(roundManager.inProgress).toBe(true);
       expect(roundManager.hadSuccess).toBe(false);
@@ -117,21 +118,58 @@ describe('RoundManager', () => {
       expect(roundManager.hadSuccess).toBe(true);
     });
 
-    it('should use custom strategy when provided', async () => {
+    it('should use initiative strategy when provided with initiative data', async () => {
       // Arrange
       const mockActor = {
         id: 'actor1',
         hasComponent: jest.fn().mockReturnValue(true),
       };
       mockEntityManager.entities = [mockActor];
+      const initiativeData = new Map([[mockActor.id, 5]]);
 
       // Act
-      await roundManager.startRound('initiative');
+      await roundManager.startRound('initiative', initiativeData);
 
       // Assert
       expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
         [mockActor],
-        'initiative'
+        'initiative',
+        initiativeData
+      );
+    });
+
+    it('should accept options object for initiative configuration', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeData = new Map([[mockActor.id, 10]]);
+
+      await roundManager.startRound({
+        strategy: 'initiative',
+        initiativeData,
+      });
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
+        [mockActor],
+        'initiative',
+        initiativeData
+      );
+    });
+
+    it('should throw when initiative strategy lacks initiative data', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      await expect(roundManager.startRound('initiative')).rejects.toThrow(
+        'Cannot start an initiative round: initiativeData Map is required.'
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Cannot start an initiative round: initiativeData Map is required.'
       );
     });
 
@@ -153,7 +191,8 @@ describe('RoundManager', () => {
       // Assert
       expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
         [mockActor],
-        'round-robin'
+        'round-robin',
+        undefined
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Found 1 actors to start the round: actor1'
