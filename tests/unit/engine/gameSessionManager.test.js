@@ -335,6 +335,20 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should treat manual saves comprised only of underscores as generic saves', async () => {
+      const manualIdentifier = 'saves/manual_saves/manual_save___.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(manualIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Saved Game...',
+          inputDisabledMessage: 'Loading game from Saved Game...',
+        }
+      );
+    });
+
     it('should decode percent-encoded save identifiers for UI messaging', async () => {
       const encodedIdentifier =
         'saves/manual_saves/manual_save_My%20Adventure%20Slot%201.sav';
@@ -829,6 +843,23 @@ describe('GameSessionManager', () => {
 
       expect(engineState.activeWorld).toBe('Galactic Quest');
       expect(startEngineFn).toHaveBeenCalledWith('Galactic Quest');
+    });
+
+    it('should ignore manual save metadata lacking meaningful characters', async () => {
+      const saveData = {
+        metadata: { gameTitle: 'manual_save___.sav' },
+        entities: [],
+        gameState: {},
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'saves/manual_saves/manual_save___.sav'
+      );
+
+      expect(engineState.activeWorld).toBe('Restored Game');
+      expect(startEngineFn).toHaveBeenCalledWith('Restored Game');
+      expect(result.success).toBe(true);
     });
 
     it('should normalize metadata titles that contain manual save filenames', async () => {
