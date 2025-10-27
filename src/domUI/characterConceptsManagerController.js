@@ -179,6 +179,13 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
           self.#searchStateRestored = value;
         },
 
+        get pendingUIState() {
+          return self.#pendingUIState;
+        },
+        set pendingUIState(value) {
+          self.#pendingUIState = value;
+        },
+
         get editingConceptId() {
           return self.#editingConceptId;
         },
