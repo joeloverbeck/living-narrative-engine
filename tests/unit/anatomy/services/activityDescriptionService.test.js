@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import ActivityDescriptionService from '../../../../src/anatomy/services/activityDescriptionService.js';
+import EventBus from '../../../../src/events/eventBus.js';
+import {
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
+  ENTITY_REMOVED_ID,
+} from '../../../../src/constants/eventIds.js';
+import { NAME_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 
 describe('ActivityDescriptionService', () => {
   let service;
@@ -49,8 +56,25 @@ describe('ActivityDescriptionService', () => {
       evaluate: jest.fn().mockReturnValue(true),
     };
 
+    const subscribedListeners = new Map();
+
     mockEventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn((eventId, handler) => {
+        if (!subscribedListeners.has(eventId)) {
+          subscribedListeners.set(eventId, new Set());
+        }
+        subscribedListeners.get(eventId).add(handler);
+        return () => {
+          subscribedListeners.get(eventId)?.delete(handler);
+        };
+      }),
+      unsubscribe: jest.fn((eventId, handler) => {
+        subscribedListeners.get(eventId)?.delete(handler);
+      }),
+      listenerCount: jest.fn((eventId) =>
+        subscribedListeners.get(eventId)?.size ?? 0
+      ),
     };
 
     // Create service instance
@@ -162,6 +186,7 @@ describe('ActivityDescriptionService', () => {
           })
       ).toThrow(/JsonLogicEvaluationService/);
     });
+
   });
 
   describe('generateActivityDescription', () => {
@@ -4504,21 +4529,261 @@ describe('ActivityDescriptionService', () => {
         );
       });
 
-      it('returns empty string on cascading failures without throwing', async () => {
-        mockEntityManager.getEntityInstance.mockImplementation(() => {
-          throw new Error('Entity error');
-        });
-
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
-          () => {
-            throw new Error('Config error');
-          }
-        );
-
-        const description = await service.generateActivityDescription('jon');
-
-        expect(description).toBe('');
+    it('returns empty string on cascading failures without throwing', async () => {
+      mockEntityManager.getEntityInstance.mockImplementation(() => {
+        throw new Error('Entity error');
       });
+
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
+        () => {
+          throw new Error('Config error');
+        }
+      );
+
+      const description = await service.generateActivityDescription('jon');
+
+      expect(description).toBe('');
     });
   });
+
+  describe('cache invalidation', () => {
+    let eventBus;
+    let serviceWithEventBus;
+    let hooks;
+    let entityName;
+    let entity;
+
+    beforeEach(() => {
+      eventBus = new EventBus({ logger: mockLogger });
+      entityName = 'Jon Ureña';
+      entity = {
+        id: 'jon',
+        componentTypeIds: [
+          NAME_COMPONENT_ID,
+          'activity:description_metadata',
+          'activity:metadata_source',
+        ],
+        hasComponent: jest.fn(
+          (componentId) => componentId === 'activity:description_metadata'
+        ),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === NAME_COMPONENT_ID) {
+            return { text: entityName };
+          }
+          if (componentId === 'core:gender') {
+            return { value: 'male' };
+          }
+          if (componentId === 'activity:description_metadata') {
+            return {
+              sourceComponent: 'activity:metadata_source',
+              template: '{actor} trains',
+              verb: 'trains',
+              descriptionType: 'training',
+              grouping: { groupKey: 'training' },
+            };
+          }
+          if (componentId === 'activity:metadata_source') {
+            return { entityId: 'jon' };
+          }
+          return null;
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') {
+          return entity;
+        }
+        return {
+          id,
+          componentTypeIds: [NAME_COMPONENT_ID],
+          hasComponent: jest.fn(() => false),
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === NAME_COMPONENT_ID) {
+              return { text: id };
+            }
+            if (componentId === 'core:gender') {
+              return { value: 'neutral' };
+            }
+            return null;
+          }),
+        };
+      });
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          actorId: 'jon',
+          template: '{actor} trains hard',
+          description: 'trains hard',
+          priority: 100,
+          type: 'inline',
+        },
+      ]);
+
+      serviceWithEventBus = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+        activityIndex: mockActivityIndex,
+        eventBus,
+      });
+
+      hooks = serviceWithEventBus.getTestHooks();
+    });
+
+    afterEach(() => {
+      serviceWithEventBus.destroy();
+    });
+
+    it('invalidates name cache when a name component is updated', async () => {
+      hooks.setEntityNameCacheEntry('jon', 'Jon Ureña');
+
+      await eventBus.dispatch(COMPONENT_ADDED_ID, {
+        entity: { id: 'jon' },
+        componentTypeId: NAME_COMPONENT_ID,
+      });
+
+      expect(hooks.getCacheSnapshot().entityName.has('jon')).toBe(false);
+    });
+
+    it('invalidates gender cache when the gender component changes', async () => {
+      hooks.setGenderCacheEntry('jon', 'male');
+
+      await eventBus.dispatch(COMPONENT_ADDED_ID, {
+        entity: { id: 'jon' },
+        componentTypeId: 'core:gender',
+      });
+
+      expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
+    });
+
+    it('invalidates activity cache when metadata updates', async () => {
+      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
+
+      await eventBus.dispatch(COMPONENT_ADDED_ID, {
+        entity: { id: 'jon' },
+        componentTypeId: 'activity:description_metadata',
+      });
+
+      expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
+    });
+
+    it('invalidates caches when monitored components are removed', async () => {
+      hooks.setEntityNameCacheEntry('jon', 'Jon');
+      hooks.setGenderCacheEntry('jon', 'male');
+      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
+
+      await eventBus.dispatch(COMPONENT_REMOVED_ID, {
+        entity: { id: 'jon' },
+        componentTypeId: NAME_COMPONENT_ID,
+      });
+
+      expect(hooks.getCacheSnapshot().entityName.has('jon')).toBe(false);
+
+      hooks.setGenderCacheEntry('jon', 'male');
+      await eventBus.dispatch(COMPONENT_REMOVED_ID, {
+        entity: { id: 'jon' },
+        componentTypeId: 'core:gender',
+      });
+
+      expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
+
+      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
+      await eventBus.dispatch(COMPONENT_REMOVED_ID, {
+        entity: { id: 'jon' },
+        componentTypeId: 'activity:description_metadata',
+      });
+
+      expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
+    });
+
+    it('invalidates all caches when an entity is removed', async () => {
+      hooks.setEntityNameCacheEntry('jon', 'Jon');
+      hooks.setGenderCacheEntry('jon', 'male');
+      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
+
+      await eventBus.dispatch(ENTITY_REMOVED_ID, {
+        entity: { id: 'jon' },
+      });
+
+      const snapshot = hooks.getCacheSnapshot();
+      expect(snapshot.entityName.has('jon')).toBe(false);
+      expect(snapshot.gender.has('jon')).toBe(false);
+      expect(snapshot.activityIndex.has('jon')).toBe(false);
+    });
+
+    it('supports batch invalidation helpers', () => {
+      hooks.setEntityNameCacheEntry('jon', 'Jon');
+      hooks.setEntityNameCacheEntry('alicia', 'Alicia');
+      hooks.setEntityNameCacheEntry('bobby', 'Bobby');
+
+      serviceWithEventBus.invalidateEntities(['jon', 'alicia']);
+
+      const snapshot = hooks.getCacheSnapshot().entityName;
+      expect(snapshot.has('jon')).toBe(false);
+      expect(snapshot.has('alicia')).toBe(false);
+      expect(snapshot.has('bobby')).toBe(true);
+    });
+
+    it('supports selective cache invalidation', () => {
+      hooks.setEntityNameCacheEntry('jon', 'Jon');
+      hooks.setGenderCacheEntry('jon', 'male');
+      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
+
+      serviceWithEventBus.invalidateCache('jon', 'name');
+
+      const snapshot = hooks.getCacheSnapshot();
+      expect(snapshot.entityName.has('jon')).toBe(false);
+      expect(snapshot.gender.has('jon')).toBe(true);
+      expect(snapshot.activityIndex.has('jon')).toBe(true);
+    });
+
+    it('unsubscribes from cache invalidation events on destroy', () => {
+      const before = eventBus.listenerCount(COMPONENT_ADDED_ID);
+
+      serviceWithEventBus.destroy();
+
+      const after = eventBus.listenerCount(COMPONENT_ADDED_ID);
+      expect(after).toBeLessThan(before);
+    });
+
+    it('refreshes caches after invalidation when generating descriptions', async () => {
+      await serviceWithEventBus.generateActivityDescription('jon');
+      expect(
+        hooks.getCacheSnapshot().entityName.get('jon')?.value
+      ).toBe('Jon Ureña');
+
+      entityName = 'Jon "Red" Ureña';
+
+      await eventBus.dispatch(COMPONENT_ADDED_ID, {
+        entity: { id: 'jon' },
+        componentTypeId: NAME_COMPONENT_ID,
+      });
+
+      await serviceWithEventBus.generateActivityDescription('jon');
+
+      expect(
+        hooks.getCacheSnapshot().entityName.get('jon')?.value
+      ).toBe('Jon "Red" Ureña');
+    });
+
+    it('does not leak listeners when services are created and destroyed repeatedly', () => {
+      serviceWithEventBus.destroy();
+
+      for (let i = 0; i < 50; i++) {
+        const tempService = new ActivityDescriptionService({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyFormattingService: mockAnatomyFormattingService,
+          jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+          activityIndex: mockActivityIndex,
+          eventBus,
+        });
+        tempService.destroy();
+      }
+
+      expect(eventBus.listenerCount(COMPONENT_ADDED_ID)).toBeLessThan(10);
+    });
+  });
+});
 });
