@@ -4,7 +4,11 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { SpeechBubbleRenderer } from '../../../src/domUI/speechBubbleRenderer.js';
-import { DISPLAY_THOUGHT_ID } from '../../../src/constants/eventIds.js';
+import {
+  DISPLAY_THOUGHT_ID,
+  PORTRAIT_CLICKED,
+} from '../../../src/constants/eventIds.js';
+import { PLAYER_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 // Mock the dependencies
 const mockLogger = {
@@ -73,6 +77,7 @@ function createMockElement(tag) {
     removeEventListener: jest.fn(),
     textContent: '',
     innerHTML: '',
+    click: jest.fn(),
   };
 }
 
@@ -364,6 +369,110 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
           'Cannot render thought: effectiveSpeechContainer, domElementFactory, or entityManager missing'
         )
       );
+    });
+
+    it('should log error and exit when required DOM nodes cannot be created', () => {
+      const payload = {
+        entityId: 'test-entity',
+        thoughts: 'Unlucky thought.',
+      };
+
+      mockDomElementFactory.create
+        .mockImplementationOnce(() => null)
+        .mockImplementation((tag) => createMockElement(tag));
+
+      renderer.renderThought(payload);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to create thought entry or bubble div.')
+      );
+      expect(mockMessageList.appendChild).not.toHaveBeenCalled();
+    });
+
+    it('should mark legacy player entities as player thoughts', () => {
+      const mockLegacyPlayerEntity = {
+        hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID),
+        getComponentData: jest.fn(),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockLegacyPlayerEntity);
+
+      const mockThoughtEntry = createMockElement('div');
+      mockDomElementFactory.create.mockImplementation((tag, options) => {
+        if (options?.cls === 'thought-entry') {
+          return mockThoughtEntry;
+        }
+        return createMockElement(tag);
+      });
+
+      renderer.renderThought({
+        entityId: 'legacy-player',
+        thoughts: 'Legacy players count too.',
+      });
+
+      expect(mockThoughtEntry.classList.add).toHaveBeenCalledWith('player-thought');
+    });
+
+    it('should scroll when no portrait element can be created', () => {
+      const payload = {
+        entityId: 'scroll-entity',
+        thoughts: 'We have no portrait today.',
+      };
+
+      mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+        '/missing/portrait.png'
+      );
+      mockDomElementFactory.img.mockReturnValue(null);
+
+      renderer.renderThought(payload);
+
+      expect(renderer.scrollToBottom).toHaveBeenCalled();
+    });
+
+    it('should log an error when portrait fallback dispatch fails', () => {
+      const payload = {
+        entityId: 'portrait-entity',
+        thoughts: 'Portrait troubles abound.',
+      };
+
+      const portraitElement = createMockElement('img');
+      mockDomElementFactory.img.mockReturnValue(portraitElement);
+      mockPortraitModalRenderer.showModal.mockImplementation(() => {
+        throw new Error('modal failure');
+      });
+      const dispatchError = new Error('dispatch failure');
+      mockValidatedEventDispatcher.dispatch.mockImplementation(() => {
+        throw dispatchError;
+      });
+
+      const addListenerSpy = jest.spyOn(renderer, '_addDomListener');
+
+      renderer.renderThought(payload);
+
+      const clickListenerCall = addListenerSpy.mock.calls.find(
+        ([, eventType]) => eventType === 'click'
+      );
+      expect(clickListenerCall).toBeDefined();
+
+      const clickHandler = clickListenerCall[2];
+      clickHandler();
+
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: PORTRAIT_CLICKED,
+          payload: expect.objectContaining({
+            portraitPath: '/path/to/portrait.jpg',
+            speakerName: 'Test Character',
+            originalElement: portraitElement,
+          }),
+        })
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to dispatch PORTRAIT_CLICKED event'),
+        dispatchError
+      );
+
+      addListenerSpy.mockRestore();
     });
   });
 });
