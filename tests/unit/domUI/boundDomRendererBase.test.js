@@ -76,6 +76,10 @@ describe('BoundDomRendererBase', () => {
       constructor(params) {
         super(params);
       }
+
+      triggerScroll(scrollKey, contentKey) {
+        this._scrollToPanelBottom(scrollKey, contentKey);
+      }
     };
   });
 
@@ -341,5 +345,63 @@ describe('BoundDomRendererBase', () => {
     );
 
     superDisposeSpy.mockRestore();
+  });
+
+  it('should use fallback scrolling when primary container cannot scroll', () => {
+    const fallbackChild = {
+      scrollIntoView: jest.fn(),
+    };
+    const contentContainer = {
+      lastElementChild: fallbackChild,
+    };
+    const primaryContainer = {};
+
+    mockDocumentContext.query.mockImplementation((selector) => {
+      if (selector === '#scroll-container') {
+        return primaryContainer;
+      }
+      if (selector === '#content-container') {
+        return contentContainer;
+      }
+      return null;
+    });
+
+    const renderer = new ConcreteBoundRenderer({
+      logger: mockLogger,
+      documentContext: mockDocumentContext,
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      elementsConfig: {
+        scrollContainer: '#scroll-container',
+        contentContainer: '#content-container',
+      },
+    });
+
+    renderer.triggerScroll('scrollContainer', 'contentContainer');
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      "[ConcreteBoundRenderer] Could not scroll primary container 'scrollContainer'. Attempting fallback on 'contentContainer'."
+    );
+    expect(fallbackChild.scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'auto',
+      block: 'end',
+    });
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      "[ConcreteBoundRenderer] Fallback: Scrolled last element in 'contentContainer' into view."
+    );
+  });
+
+  it('should warn when scrollToBottom is called without valid keys', () => {
+    const renderer = new ConcreteBoundRenderer({
+      logger: mockLogger,
+      documentContext: mockDocumentContext,
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      elementsConfig: {},
+    });
+
+    renderer.scrollToBottom(null, null);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      '[ConcreteBoundRenderer] scrollToBottom called without valid keys.'
+    );
   });
 });
