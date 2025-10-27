@@ -71,6 +71,7 @@ import SlotResolver from '../../anatomy/integration/SlotResolver.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
 import SocketGenerator from '../../anatomy/socketGenerator.js';
 import SlotGenerator from '../../anatomy/slotGenerator.js';
+import RecipePatternResolver from '../../anatomy/recipePatternResolver.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -347,6 +348,19 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  registrar.singletonFactory(tokens.IRecipePatternResolver, (c) => {
+    return new RecipePatternResolver({
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      slotGenerator: c.resolve(tokens.ISlotGenerator),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.IRecipePatternResolver
+    )}.`
+  );
+
   registrar.singletonFactory(tokens.BodyBlueprintFactory, (c) => {
     return new BodyBlueprintFactory({
       entityManager: c.resolve(tokens.IEntityManager),
@@ -362,6 +376,7 @@ export function registerWorldAndEntity(container) {
       validator: c.resolve(tokens.GraphIntegrityValidator),
       socketGenerator: c.resolve(tokens.ISocketGenerator),
       slotGenerator: c.resolve(tokens.ISlotGenerator),
+      recipePatternResolver: c.resolve(tokens.IRecipePatternResolver),
     });
   });
   logger.debug(
