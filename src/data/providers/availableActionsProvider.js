@@ -249,22 +249,60 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    */
   #setupEventSubscriptions() {
     // Subscribe to single component added events
+    const componentChangeListener = this.#handleComponentChange.bind(this);
     const componentAddedSubscription = this.#eventBus.subscribe(
       COMPONENT_ADDED_ID,
-      this.#handleComponentChange.bind(this)
+      componentChangeListener
     );
-    this.#eventSubscriptions.push(componentAddedSubscription);
+    this.#storeSubscription({
+      unsubscribe: componentAddedSubscription,
+      eventName: COMPONENT_ADDED_ID,
+      listener: componentChangeListener,
+    });
 
     // Subscribe to batch component added events
+    const batchChangeListener = this.#handleComponentsBatchChange.bind(this);
     const batchAddedSubscription = this.#eventBus.subscribe(
       COMPONENTS_BATCH_ADDED_ID,
-      this.#handleComponentsBatchChange.bind(this)
+      batchChangeListener
     );
-    this.#eventSubscriptions.push(batchAddedSubscription);
+    this.#storeSubscription({
+      unsubscribe: batchAddedSubscription,
+      eventName: COMPONENTS_BATCH_ADDED_ID,
+      listener: batchChangeListener,
+    });
 
     this.#logger.debug(
       'AvailableActionsProvider: Subscribed to component change events for cache invalidation'
     );
+  }
+
+  /**
+   * Safely persist subscription metadata so we can always unsubscribe.
+   *
+   * @private
+   * @param {{
+   *   unsubscribe: (() => boolean) | null,
+   *   eventName: string,
+   *   listener: (event: object) => void,
+   * }} subscription
+   * @returns {void}
+   */
+  #storeSubscription(subscription) {
+    if (!subscription) {
+      return;
+    }
+
+    const { unsubscribe, eventName, listener } = subscription;
+    if (typeof unsubscribe === 'function') {
+      this.#eventSubscriptions.push({ unsubscribe });
+      return;
+    }
+
+    // Fallback: remember event name and listener so destroy() can call the bus directly
+    if (typeof eventName === 'string' && typeof listener === 'function') {
+      this.#eventSubscriptions.push({ eventName, listener });
+    }
   }
 
   /**
@@ -332,7 +370,28 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
   destroy() {
     // Unsubscribe from all events
     for (const subscription of this.#eventSubscriptions) {
-      this.#eventBus.unsubscribe(subscription);
+      try {
+        if (subscription && typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
+        } else if (
+          subscription &&
+          typeof subscription.eventName === 'string' &&
+          typeof subscription.listener === 'function'
+        ) {
+          this.#eventBus.unsubscribe(
+            subscription.eventName,
+            subscription.listener
+          );
+        }
+      } catch (error) {
+        this.#logger.warn(
+          'AvailableActionsProvider: Failed to unsubscribe from event during destroy()',
+          {
+            eventName: subscription?.eventName,
+            error: error?.message,
+          }
+        );
+      }
     }
     this.#eventSubscriptions = [];
 

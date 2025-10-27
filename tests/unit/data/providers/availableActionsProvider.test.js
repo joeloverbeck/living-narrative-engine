@@ -12,6 +12,12 @@ import {
   afterEach,
 } from '@jest/globals';
 import { AvailableActionsProvider } from '../../../../src/data/providers/availableActionsProvider.js';
+
+jest.mock(
+  '../../../../src/anatomy/slotGenerator.js',
+  () => ({ default: class SlotGenerator {} }),
+  { virtual: true }
+);
 import { POSITION_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../../../src/constants/core.js';
 // We import these to have handles to the mocked functions.
@@ -50,7 +56,7 @@ const mockJsonLogicService = () => ({
 });
 
 const mockEventBus = () => ({
-  subscribe: jest.fn().mockReturnValue({ eventType: 'test', handler: jest.fn() }),
+  subscribe: jest.fn().mockImplementation(() => jest.fn()),
   unsubscribe: jest.fn(),
 });
 
@@ -399,6 +405,47 @@ describe('AvailableActionsProvider', () => {
 
       // Assert
       expect(logger.warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('destroy', () => {
+    test('calls unsubscribe functions returned by the event bus', () => {
+      // Ensure the constructor subscribed twice
+      expect(eventBus.subscribe).toHaveBeenCalledTimes(2);
+
+      const unsubscribeFns = eventBus.subscribe.mock.results
+        .map((result) => result.value)
+        .filter((fn) => typeof fn === 'function');
+
+      provider.destroy();
+
+      unsubscribeFns.forEach((fn) => {
+        expect(fn).toHaveBeenCalledTimes(1);
+      });
+      expect(eventBus.unsubscribe).not.toHaveBeenCalled();
+    });
+
+    test('falls back to eventBus.unsubscribe when subscribe returns null', () => {
+      const fallbackBus = mockEventBus();
+      fallbackBus.subscribe
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(jest.fn());
+
+      provider = new AvailableActionsProvider({
+        actionDiscoveryService,
+        actionIndexingService: actionIndexer,
+        entityManager,
+        eventBus: fallbackBus,
+        logger,
+        serviceSetup,
+      });
+
+      provider.destroy();
+
+      expect(fallbackBus.unsubscribe).toHaveBeenCalledTimes(1);
+      const [eventName, listener] = fallbackBus.unsubscribe.mock.calls[0];
+      expect(typeof eventName).toBe('string');
+      expect(typeof listener).toBe('function');
     });
   });
 });
