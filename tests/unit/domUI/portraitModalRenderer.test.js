@@ -737,6 +737,33 @@ describe('PortraitModalRenderer', () => {
       expect(mockImageElement.style.height).toBe('756px');
       expect(mockImageElement.style.width).toBe('auto');
     });
+
+    it('should clamp extremely wide images to available width', () => {
+      mockImageInstance.naturalWidth = 5000;
+      mockImageInstance.naturalHeight = 500;
+
+      Object.defineProperty(window, 'innerWidth', {
+        value: 1920,
+        writable: true,
+      });
+      Object.defineProperty(window, 'innerHeight', {
+        value: 1080,
+        writable: true,
+      });
+
+      renderer.showModal(
+        '/path/to/portrait.jpg',
+        'Speaker Name',
+        mockOriginalElement
+      );
+
+      if (mockImageInstance.onload) {
+        mockImageInstance.onload();
+      }
+
+      expect(mockImageElement.style.width).toBe('1728px');
+      expect(mockImageElement.style.height).toBe('auto');
+    });
   });
 
   describe('hideModal', () => {
@@ -1002,6 +1029,42 @@ describe('PortraitModalRenderer', () => {
         rendererNoEvents.hide();
       }).not.toThrow();
     });
+
+    it('should log an error when open event dispatch fails', () => {
+      const dispatchError = new Error('dispatch failed');
+      mockValidatedEventDispatcher.dispatch.mockImplementation(() => {
+        throw dispatchError;
+      });
+
+      mockLogger.error.mockClear();
+
+      renderer.showModal('/path.jpg', 'Speaker', mockOriginalElement);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to dispatch core:portrait_modal_opened event'),
+        dispatchError
+      );
+    });
+
+    it('should log an error when close event dispatch fails', () => {
+      const closeError = new Error('close failed');
+      mockValidatedEventDispatcher.dispatch
+        .mockImplementationOnce(() => undefined)
+        .mockImplementationOnce(() => {
+          throw closeError;
+        });
+
+      renderer.showModal('/path.jpg', 'Speaker', mockOriginalElement);
+
+      mockLogger.error.mockClear();
+
+      renderer.hide();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to dispatch core:portrait_modal_closed event'),
+        closeError
+      );
+    });
   });
 
   describe('Additional Test Scenarios', () => {
@@ -1101,6 +1164,41 @@ describe('PortraitModalRenderer', () => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Failed to load portrait image')
         );
+      });
+    });
+
+    describe('Error announcements', () => {
+      it('should remove temporary error announcement nodes after delay', () => {
+        jest.useFakeTimers();
+
+        const appendedNodes = [];
+        const body = mockDocumentContext.document.body;
+        body.removeChild = jest.fn();
+        body.appendChild.mockImplementation((node) => {
+          node.parentNode = body;
+          appendedNodes.push(node);
+        });
+
+        renderer.showModal(
+          '/path/to/portrait.jpg',
+          'Speaker Name',
+          mockOriginalElement
+        );
+
+        mockLogger.error.mockClear();
+
+        if (mockImageInstance.onerror) {
+          mockImageInstance.onerror();
+        }
+
+        const errorAnnouncement = appendedNodes[appendedNodes.length - 1];
+        expect(errorAnnouncement).toBeDefined();
+
+        jest.advanceTimersByTime(3000);
+
+        expect(body.removeChild).toHaveBeenCalledWith(errorAnnouncement);
+
+        jest.useRealTimers();
       });
     });
 
