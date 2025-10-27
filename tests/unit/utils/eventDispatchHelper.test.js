@@ -80,6 +80,30 @@ describe('dispatchWithErrorHandling', () => {
     expect(createErrorDetails).not.toHaveBeenCalled();
   });
 
+  it('safely stringifies circular payloads when dispatcher returns false', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(false) };
+    const logger = createMockLogger();
+    loggerUtils.ensureValidLogger.mockReturnValue(logger);
+
+    const payload = {};
+    payload.self = payload;
+
+    const result = await dispatchWithErrorHandling(
+      dispatcher,
+      'evt',
+      payload,
+      logger,
+      'ctx'
+    );
+
+    expect(result).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('[Circular]')
+    );
+    expect(safeDispatchError).not.toHaveBeenCalled();
+    expect(createErrorDetails).not.toHaveBeenCalled();
+  });
+
   it('handles exception by logging and dispatching system error', async () => {
     const error = new Error('boom');
     const dispatcher = { dispatch: jest.fn().mockRejectedValue(error) };

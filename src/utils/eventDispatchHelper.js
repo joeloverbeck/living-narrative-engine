@@ -12,6 +12,7 @@
 import { ensureValidLogger } from './loggerUtils.js';
 import { safeDispatchError } from './staticErrorDispatcher.js';
 import { createErrorDetails } from './errorDetails.js';
+import { safeStringify } from './safeStringify.js';
 
 /**
  * Dispatches an event using the provided dispatcher and logs the outcome.
@@ -46,10 +47,9 @@ export async function dispatchWithErrorHandling(
         `dispatchWithErrorHandling: Dispatch successful for ${context}.`
       );
     } else {
+      const serializedPayload = safeStringify(payload);
       log.warn(
-        `dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${context} (likely VED validation failure). Payload: ${JSON.stringify(
-          payload
-        )}`
+        `dispatchWithErrorHandling: SafeEventDispatcher reported failure for ${context} (likely VED validation failure). Payload: ${serializedPayload}`
       );
     }
     return success;
