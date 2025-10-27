@@ -1269,6 +1269,30 @@ describe('LocationRenderer', () => {
       renderer = new LocationRenderer(rendererDeps);
     });
 
+    it('should invoke _renderListHeader for list types beyond exits and characters', () => {
+      const headerSpy = jest.spyOn(renderer, '_renderListHeader');
+      const targetElement = document.createElement('div');
+
+      renderer._renderList(
+        [{
+          title: 'Codex of Places',
+        }],
+        targetElement,
+        'Lore Entries',
+        'title',
+        '(No lore entries)',
+        'lore-item'
+      );
+
+      expect(headerSpy).toHaveBeenCalledWith('Lore Entries', targetElement);
+      const heading = targetElement.querySelector('h4');
+      expect(heading).not.toBeNull();
+      expect(heading.textContent).toBe('Lore Entries:');
+      const listItems = targetElement.querySelectorAll('ul li');
+      expect(listItems).toHaveLength(1);
+      expect(listItems[0].textContent).toBe('Codex of Places');
+    });
+
     it('should create text node when domElementFactory.h4 is not available', () => {
       // Mock domElementFactory.h4 to be undefined
       const originalH4 = mockDomElementFactory.h4;
