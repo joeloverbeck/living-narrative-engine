@@ -241,13 +241,33 @@ class GamePersistenceService extends BaseService {
     const restoreResult = await this.restoreGameState(gameDataToRestore);
 
     if (!restoreResult.success) {
-      this.#logger.error(
-        `GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${restoreResult.error}`
-      );
+      const rawError = restoreResult.error;
+      const readableError =
+        rawError instanceof Error
+          ? rawError.message || 'Unknown error.'
+          : typeof rawError === 'string'
+            ? rawError.trim() || 'Unknown error.'
+            : rawError !== undefined && rawError !== null
+              ? String(rawError)
+              : 'Unknown error.';
+
+      if (
+        rawError instanceof Error ||
+        (rawError && typeof rawError === 'object')
+      ) {
+        this.#logger.error(
+          `GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${readableError}`,
+          rawError
+        );
+      } else {
+        this.#logger.error(
+          `GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${readableError}`
+        );
+      }
       return normalizePersistenceFailure(
         restoreResult,
         PersistenceErrorCodes.UNEXPECTED_ERROR,
-        restoreResult.error || 'Failed to restore game state.'
+        readableError || 'Failed to restore game state.'
       );
     }
 

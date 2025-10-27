@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
+import {
+  PersistenceErrorCodes,
+  PersistenceError,
+} from '../../../src/persistence/persistenceErrors.js';
 import { createMockEntityManager } from '../../common/mockFactories.js';
 
 // Helpers to create minimal mocks
@@ -211,6 +214,29 @@ describe('GamePersistenceService additional coverage', () => {
       const res = await service.loadAndRestoreGame('slot1');
       expect(gameStateRestorer.restoreGameState).toHaveBeenCalledWith(data);
       expect(res).toEqual({ success: true, data });
+    });
+
+    it('logs readable errors when restoration fails', async () => {
+      const data = { gameState: {}, metadata: {} };
+      const failure = new PersistenceError(
+        PersistenceErrorCodes.INVALID_GAME_STATE,
+        'State corrupted'
+      );
+      saveLoadService.loadGameData.mockResolvedValue({ success: true, data });
+      gameStateRestorer.restoreGameState.mockResolvedValue({
+        success: false,
+        error: failure,
+      });
+
+      const result = await service.loadAndRestoreGame('slot2');
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'GamePersistenceService.loadAndRestoreGame: Failed to restore game state for slot2. Error: State corrupted'
+        ),
+        failure
+      );
+      expect(result).toEqual({ success: false, error: failure, data: null });
     });
 
     // This test is now covered by the dependency injection in beforeEach
