@@ -16,333 +16,54 @@ Production systems must handle errors gracefully. This ticket ensures the activi
 
 ## Technical Specification
 
-### Error Recovery Wrapper
-```javascript
-/**
- * Generate activity description with comprehensive error recovery.
- *
- * @param {string} entityId - Entity ID
- * @returns {Promise<string>} Description or empty string on failure
- */
-async generateActivityDescription(entityId) {
-  try {
-    // Validate input
-    assertNonBlankString(entityId, 'Entity ID', 'generateActivityDescription', this.#logger);
+### Entry Point: `generateActivityDescription`
 
-    // Get entity with error handling
-    const entity = this.#entityManager.getEntityInstance(entityId);
-    if (!entity) {
-      this.#logger.warn(`Entity not found: ${entityId}`);
-      return '';
-    }
+`ActivityDescriptionService.generateActivityDescription` already asserts that `entityId` is a non-blank string and wraps the rest of the method in a `try`/`catch`. Error-recovery work for this ticket should build on that reality:
 
-    // Collect activities with individual error recovery
-    const inlineActivities = this.#collectInlineMetadataSafe(entity);
-    const dedicatedActivities = this.#collectDedicatedMetadataSafe(entity);
-    const allActivities = [...inlineActivities, ...dedicatedActivities];
+- Short-circuit when `getEntityInstance` returns a falsey value or throws. Log a warning and return `''` before trying to collect metadata.
+- Keep `this.#closenessCache.clear()` and the existing debug logs, but ensure any additional logging fits the service's current message patterns (``Failed to …`` or ``No …``).
+- Continue returning an empty string on failure. Any new telemetry that should happen on fatal errors must be triggered inside the `catch` block that already exists.
+- If emitting error events is still desired, note that the class currently does **not** accept an `eventBus` dependency. You must extend the constructor signature, update dependency validation, and add a private field before dispatching anything.
 
-    if (allActivities.length === 0) {
-      return '';
-    }
+### Metadata Collection (`#collectActivityMetadata`, `#collectInlineMetadata`, `#collectDedicatedMetadata`)
 
-    // Sort and filter with error handling
-    const sortedActivities = this.#sortActivitiesSafe(allActivities);
-    const filteredActivities = this.#filterActivitiesSafe(sortedActivities, entity);
+The service already consolidates metadata through `#collectActivityMetadata`, which calls `#collectInlineMetadata` and `#collectDedicatedMetadata` after optionally hitting an external index. For resilience:
 
-    if (filteredActivities.length === 0) {
-      return '';
-    }
+- Harden `#collectActivityMetadata` so a failure in any source logs the issue and continues gathering remaining data. It currently wraps each source in a `try`/`catch`; extend those paths to handle missing entities (when `getEntityInstance` returns `null`/`undefined`).
+- `#collectInlineMetadata` iterates `entity.componentTypeIds` and directly pushes whatever `#parseInlineMetadata` returns. Add validation so malformed activities are skipped with a warning instead of propagating `null`/incomplete objects further downstream.
+- `#collectDedicatedMetadata` assumes a single `activity:description_metadata` component. Guard all entity interactions—`hasComponent`, `getComponentData`, `entity.getComponentData(sourceComponent)`—because they can throw when the entity proxy is corrupted. Log context-rich errors (component ID, entity ID) before continuing.
+- If additional helpers (for example `#isValidActivity`) are useful, add them with private `#` prefixes to match existing style. No “Safe” suffix methods currently exist, so either retrofit the existing ones with additional guards or introduce helpers that they call internally.
 
-    // Format with error recovery
-    return this.#formatActivityDescriptionSafe(filteredActivities, entity);
-  } catch (err) {
-    this.#logger.error('Failed to generate activity description', err);
+### Filtering and Formatting (`#filterByConditions`, `#formatActivityDescription`, grouping helpers)
 
-    // Dispatch error event
-    if (this.#eventBus) {
-      this.#eventBus.dispatch({
-        type: 'ACTIVITY_DESCRIPTION_ERROR',
-        payload: {
-          entityId,
-          error: err.message,
-          timestamp: Date.now(),
-        },
-      });
-    }
+Formatting already happens through `#formatActivityDescription`, which reads configuration, resolves names/pronouns, groups activities, and generates phrases.
 
-    return ''; // Fail gracefully
-  }
-}
-```
+- Wrap accesses to `this.#anatomyFormattingService.getActivityIntegrationConfig?.()` so configuration failures fall back to sane defaults without throwing. There is no `#getConfigSafe` helper today, so either inline the `try`/`catch` or introduce a new helper that the formatter calls.
+- `#formatActivityDescription` loops through grouped activities without guarding `#groupActivities`, `#generateActivityPhrase`, or `#buildRelatedActivityFragment`. Add targeted `try`/`catch` blocks around these calls so one malformed activity does not block the rest.
+- Keep the current return contract (`''` when nothing useful can be produced). Ensure separators/prefixes/suffixes are read from either the real config or your default object so the existing pronoun logic continues to work.
+- `#filterByConditions` and the helpers it uses (`#evaluateActivityVisibility`, JSON-logic evaluation, etc.) already fail open in some branches. Audit these paths for thrown errors (e.g., when the JSON logic service throws, when a target entity lookup fails) and ensure they log and return booleans that allow processing to continue.
 
-### Safe Collection Methods
-```javascript
-/**
- * Collect inline metadata with individual error recovery.
- *
- * @param {object} entity - Entity instance
- * @returns {Array<object>} Activities (partial results on errors)
- * @private
- */
-#collectInlineMetadataSafe(entity) {
-  const activities = [];
+### Name and Pronoun Resolution (`#resolveEntityName`, `#detectEntityGender`)
 
-  try {
-    const allComponents = entity.getAllComponents?.() || {};
+Name resolution currently happens through `#resolveEntityName`, which caches values and catches lookup errors. The method warns (not errors) and returns the original `entityId` on failure. Keep that contract, but verify it handles `null` IDs gracefully and does not attempt to access properties on undefined entities. Pronoun detection (`#detectEntityGender`) should similarly degrade to `'unknown'` without throwing. If new tests need to call these helpers directly, extend `getTestHooks()` to expose bound wrappers (e.g., `resolveEntityName: (...args) => this.#resolveEntityName(...args)`).
 
-    for (const [componentId, componentData] of Object.entries(allComponents)) {
-      try {
-        const metadata = componentData.activityMetadata;
+### Optional Error Event Dispatching
 
-        if (metadata && metadata.shouldDescribeInActivity) {
-          const activity = this.#parseInlineMetadata(componentId, componentData, entity);
+If telemetry events are required, add an optional `eventBus` dependency:
 
-          if (activity) {
-            // Validate activity structure
-            if (this.#isValidActivity(activity)) {
-              activities.push(activity);
-            } else {
-              this.#logger.warn(`Invalid activity structure from ${componentId}`, activity);
-            }
-          }
-        }
-      } catch (err) {
-        // Log but continue processing other components
-        this.#logger.error(`Failed to parse inline metadata for ${componentId}`, err);
-      }
-    }
-  } catch (err) {
-    this.#logger.error('Failed to collect inline metadata', err);
-  }
-
-  return activities;
-}
-
-/**
- * Collect dedicated metadata with individual error recovery.
- *
- * @param {object} entity - Entity instance
- * @returns {Array<object>} Activities (partial results on errors)
- * @private
- */
-#collectDedicatedMetadataSafe(entity) {
-  const activities = [];
-
-  try {
-    if (!entity.hasComponent('activity:description_metadata')) {
-      return activities;
-    }
-
-    const metadataComponents = entity.getAllComponentsOfType?.('activity:description_metadata') || [];
-
-    for (const metadata of metadataComponents) {
-      try {
-        const activity = this.#parseDedicatedMetadata(metadata, entity);
-
-        if (activity && this.#isValidActivity(activity)) {
-          activities.push(activity);
-        }
-      } catch (err) {
-        this.#logger.error('Failed to parse dedicated metadata', err);
-      }
-    }
-  } catch (err) {
-    this.#logger.error('Failed to collect dedicated metadata', err);
-  }
-
-  return activities;
-}
-
-/**
- * Validate activity structure.
- *
- * @param {object} activity - Activity object
- * @returns {boolean} Is valid
- * @private
- */
-#isValidActivity(activity) {
-  if (!activity || typeof activity !== 'object') {
-    return false;
-  }
-
-  // Must have type
-  if (!activity.type || !['inline', 'dedicated'].includes(activity.type)) {
-    return false;
-  }
-
-  // Must have source component
-  if (!activity.sourceComponent || typeof activity.sourceComponent !== 'string') {
-    return false;
-  }
-
-  // Inline must have template
-  if (activity.type === 'inline' && !activity.template) {
-    return false;
-  }
-
-  // Dedicated must have verb or template
-  if (activity.type === 'dedicated' && !activity.verb && !activity.template) {
-    return false;
-  }
-
-  return true;
-}
-```
-
-### Safe Formatting Methods
-```javascript
-/**
- * Format description with error recovery.
- *
- * @param {Array<object>} activities - Activities
- * @param {object} entity - Entity
- * @returns {string} Description
- * @private
- */
-#formatActivityDescriptionSafe(activities, entity) {
-  try {
-    const config = this.#getConfigSafe();
-    const actorName = this.#resolveEntityNameSafe(entity.id);
-    const actorGender = this.#detectEntityGenderSafe(entity.id);
-    const actorPronouns = this.#getPronounSet(actorGender);
-
-    // Group activities with error recovery
-    const groups = this.#groupActivitiesSafe(activities);
-
-    // Format each group with error recovery
-    const descriptions = [];
-    for (let i = 0; i < groups.length; i++) {
-      try {
-        const actorRef = i === 0 ? actorName : (
-          config.nameResolution?.usePronounsWhenAvailable
-            ? actorPronouns.subject
-            : actorName
-        );
-
-        const groupDesc = this.#formatGroupSafe(actorRef, groups[i], entity);
-        if (groupDesc) {
-          descriptions.push(groupDesc);
-        }
-      } catch (err) {
-        this.#logger.error(`Failed to format activity group ${i}`, err);
-        // Continue with other groups
-      }
-    }
-
-    if (descriptions.length === 0) {
-      return '';
-    }
-
-    const prefix = config.prefix || '';
-    const suffix = config.suffix || '';
-    const separator = config.separator || '. ';
-
-    return `${prefix}${descriptions.join(separator)}${suffix}`;
-  } catch (err) {
-    this.#logger.error('Failed to format activity description', err);
-    return '';
-  }
-}
-
-/**
- * Resolve entity name safely.
- *
- * @param {string} entityId - Entity ID
- * @returns {string} Name or fallback
- * @private
- */
-#resolveEntityNameSafe(entityId) {
-  try {
-    // Check cache first
-    if (this.#entityNameCache.has(entityId)) {
-      return this.#entityNameCache.get(entityId);
-    }
-
-    const entity = this.#entityManager.getEntityInstance(entityId);
-    if (!entity) {
-      this.#entityNameCache.set(entityId, entityId);
-      return entityId;
-    }
-
-    const nameComponent = entity.getComponentData('core:name');
-    const name = nameComponent?.text || entityId;
-
-    this.#entityNameCache.set(entityId, name);
-    return name;
-  } catch (err) {
-    this.#logger.error(`Failed to resolve name for ${entityId}`, err);
-    return entityId; // Fallback to ID
-  }
-}
-
-/**
- * Get configuration safely.
- *
- * @returns {object} Config with fallbacks
- * @private
- */
-#getConfigSafe() {
-  try {
-    return this.#anatomyFormattingService.getActivityIntegrationConfig();
-  } catch (err) {
-    this.#logger.warn('Failed to get config, using defaults', err);
-
-    // Return default config
-    return {
-      prefix: 'Activity: ',
-      suffix: '',
-      separator: '. ',
-      maxActivities: 10,
-      nameResolution: {
-        usePronounsWhenAvailable: false,
-        fallbackToNames: true,
-      },
-    };
-  }
-}
-```
-
-### Error Event Dispatching
-```javascript
-/**
- * Dispatch error event with context.
- *
- * @param {string} errorType - Error type
- * @param {object} context - Error context
- * @private
- */
-#dispatchError(errorType, context) {
-  if (!this.#eventBus) {
-    return;
-  }
-
-  try {
-    this.#eventBus.dispatch({
-      type: 'ACTIVITY_DESCRIPTION_ERROR',
-      payload: {
-        errorType,
-        ...context,
-        timestamp: Date.now(),
-      },
-    });
-  } catch (err) {
-    // Even error dispatching can fail - just log
-    this.#logger.error('Failed to dispatch error event', err);
-  }
-}
-```
+- Update the constructor to accept `{ eventBus = null }`, validate it (e.g., by checking for a `dispatch` function), and store it in a new private field.
+- Implement a private `#dispatchError(errorType, context)` helper that wraps calls to `eventBus.dispatch` in `try`/`catch`. Use it inside the main `catch` block of `generateActivityDescription` and anywhere else it makes sense.
+- Because this is a new capability, update `getTestHooks()` only if you need to expose the dispatcher to tests; otherwise rely on injecting a mock bus.
 
 ## Acceptance Criteria
-- [ ] Main method has comprehensive error handling
-- [ ] Collection methods recover from individual failures
-- [ ] Formatting methods handle partial failures
-- [ ] Invalid activity structures detected and skipped
-- [ ] Entity name resolution fallbacks to ID
-- [ ] Configuration fallbacks to defaults
-- [ ] Error events dispatched
-- [ ] Graceful degradation (partial results on errors)
-- [ ] No crashes on malformed data
-- [ ] Tests verify error scenarios
+- [ ] `generateActivityDescription` logs and returns `''` when the entity lookup fails or any fatal error occurs.
+- [ ] `#collectActivityMetadata`, `#collectInlineMetadata`, and `#collectDedicatedMetadata` continue processing when individual components throw.
+- [ ] Malformed activity records are filtered out before reaching `#formatActivityDescription`.
+- [ ] Configuration lookup failures fall back to a documented default object.
+- [ ] Grouping/formatting errors are isolated so other groups still render.
+- [ ] Name and pronoun resolution gracefully handle missing data and continue using caches.
+- [ ] Optional: error events are dispatched when an `eventBus` dependency is provided (constructor updated accordingly).
+- [ ] Unit tests cover missing-entity, malformed metadata, configuration failure, and optional event dispatch scenarios.
 
 ## Dependencies
 - **Requires**: All Phase 5 features
@@ -352,90 +73,121 @@ async generateActivityDescription(entityId) {
 ## Testing Requirements
 
 ```javascript
-describe('ActivityDescriptionService - Error Recovery', () => {
-  it('should return empty string for missing entity', async () => {
+describe('ActivityDescriptionService – Error Recovery', () => {
+  beforeEach(() => {
+    mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    mockEntityManager = { getEntityInstance: jest.fn() };
+    mockFormattingService = {
+      getActivityIntegrationConfig: jest.fn().mockReturnValue({
+        prefix: 'Activity: ',
+        suffix: '.',
+        separator: '. ',
+      }),
+    };
+    mockJsonLogic = { evaluate: jest.fn().mockReturnValue(true) };
+    mockActivityIndex = { findActivitiesForEntity: jest.fn().mockReturnValue([]) };
+    mockEventBus = { dispatch: jest.fn() };
+
+    service = new ActivityDescriptionService({
+      logger: mockLogger,
+      entityManager: mockEntityManager,
+      anatomyFormattingService: mockFormattingService,
+      jsonLogicEvaluationService: mockJsonLogic,
+      activityIndex: mockActivityIndex,
+      eventBus: mockEventBus, // optional – inject only in tests that need it
+    });
+  });
+
+  it('returns empty string and logs when entity lookup fails', async () => {
     mockEntityManager.getEntityInstance.mockReturnValue(null);
 
-    const description = await service.generateActivityDescription('missing_entity');
+    const description = await service.generateActivityDescription('missing');
 
     expect(description).toBe('');
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Entity not found')
+      expect.stringContaining('missing')
     );
   });
 
-  it('should continue processing on individual activity parse error', async () => {
-    const jon = createEntity('jon', 'male');
-    addComponent(jon, 'comp1', {
-      activityMetadata: {
-        shouldDescribeInActivity: true,
-        // Invalid: missing template
-      },
-    });
-    addComponent(jon, 'comp2', {
-      activityMetadata: {
-        shouldDescribeInActivity: true,
-        template: '{actor} is valid',
-        priority: 75,
-      },
-    });
+  it('continues processing when inline metadata parsing throws', async () => {
+    const entity = {
+      id: 'jon',
+      componentTypeIds: ['comp1', 'comp2'],
+      getComponentData: jest.fn((componentId) => {
+        if (componentId === 'comp1') {
+          return {
+            activityMetadata: { shouldDescribeInActivity: true, template: null },
+          };
+        }
+        if (componentId === 'comp2') {
+          return {
+            activityMetadata: {
+              shouldDescribeInActivity: true,
+              template: '{actor} is valid',
+              priority: 75,
+            },
+          };
+        }
+        return null;
+      }),
+      hasComponent: jest.fn().mockReturnValue(false),
+    };
+
+    mockEntityManager.getEntityInstance.mockReturnValue(entity);
+    mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
 
     const description = await service.generateActivityDescription('jon');
 
-    // Should include valid activity despite invalid one
     expect(description).toContain('valid');
-    expect(mockLogger.error).toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('comp1'),
+      expect.any(Error)
+    );
   });
 
-  it('should validate activity structure', () => {
-    expect(service['#isValidActivity'](null)).toBe(false);
-    expect(service['#isValidActivity']({})).toBe(false);
-    expect(service['#isValidActivity']({ type: 'invalid' })).toBe(false);
-    expect(service['#isValidActivity']({ type: 'inline' })).toBe(false); // Missing template
-
-    expect(service['#isValidActivity']({
-      type: 'inline',
-      sourceComponent: 'comp',
-      template: '{actor} waves',
-    })).toBe(true);
-  });
-
-  it('should fallback to default config on error', async () => {
+  it('uses default formatting config when service throws', async () => {
     mockFormattingService.getActivityIntegrationConfig.mockImplementation(() => {
       throw new Error('Config error');
     });
-
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} waves', null, 75);
+    mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+      {
+        actorId: 'jon',
+        description: 'performs a valid action',
+        priority: 50,
+      },
+    ]);
+    mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+      id,
+      getComponentData: jest.fn(() => ({ text: id })),
+    }));
 
     const description = await service.generateActivityDescription('jon');
 
-    // Should use default prefix
     expect(description).toMatch(/^Activity:/);
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to get config')
+      expect.stringContaining('Failed to get activity integration config'),
+      expect.any(Error)
     );
   });
 
-  it('should fallback to entityId on name resolution error', () => {
+  it('falls back to entityId when name resolution fails', () => {
     mockEntityManager.getEntityInstance.mockImplementation(() => {
       throw new Error('Entity manager error');
     });
 
-    const name = service['#resolveEntityNameSafe']('entity_id');
+    const hooks = service.getTestHooks();
+    expect(hooks.resolveEntityName).toBeDefined();
+
+    const name = hooks.resolveEntityName('entity_id');
 
     expect(name).toBe('entity_id');
-    expect(mockLogger.error).toHaveBeenCalled();
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('entity_id'),
+      expect.any(Error)
+    );
   });
 
-  it('should dispatch error events', async () => {
-    const mockEventBus = createMockEventBus();
-    service = new ActivityDescriptionService({
-      entityManager: mockEntityManager,
-      anatomyFormattingService: mockFormattingService,
-      eventBus: mockEventBus,
-    });
-
+  it('dispatches error events when eventBus is provided', async () => {
     mockEntityManager.getEntityInstance.mockImplementation(() => {
       throw new Error('Critical error');
     });
@@ -445,16 +197,12 @@ describe('ActivityDescriptionService - Error Recovery', () => {
     expect(mockEventBus.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'ACTIVITY_DESCRIPTION_ERROR',
-        payload: expect.objectContaining({
-          entityId: 'jon',
-          error: expect.any(String),
-        }),
+        payload: expect.objectContaining({ entityId: 'jon' }),
       })
     );
   });
 
-  it('should not crash on deeply nested errors', async () => {
-    // Mock everything to throw errors
+  it('returns empty string on cascading failures without throwing', async () => {
     mockEntityManager.getEntityInstance.mockImplementation(() => {
       throw new Error('Entity error');
     });
@@ -464,7 +212,6 @@ describe('ActivityDescriptionService - Error Recovery', () => {
 
     const description = await service.generateActivityDescription('jon');
 
-    // Should return empty string without crashing
     expect(description).toBe('');
   });
 });
