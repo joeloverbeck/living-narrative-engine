@@ -13,7 +13,10 @@
  */
 
 import { createErrorDetails } from './errorDetails.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import {
+  ATTEMPT_ACTION_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../constants/eventIds.js';
 import { ensureValidLogger } from './loggerUtils.js';
 import { assertPresent } from './dependencyUtils.js';
 
@@ -334,7 +337,7 @@ export class EventDispatchService {
     }
 
     // For action events, check action ID
-    if (eventName === 'ATTEMPT_ACTION_ID' && payload?.action?.definitionId) {
+    if (eventName === ATTEMPT_ACTION_ID && payload?.action?.definitionId) {
       return this.#actionTraceFilter.shouldTrace(payload.action.definitionId);
     }
 
