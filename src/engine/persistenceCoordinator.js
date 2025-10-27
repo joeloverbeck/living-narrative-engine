@@ -263,7 +263,9 @@ class PersistenceCoordinator {
         );
       }
     } else {
-      const formattedError = this.#formatSaveError(saveResult.error);
+      const failureDetail =
+        saveResult.error != null ? saveResult.error : saveResult.message;
+      const formattedError = this.#formatSaveError(failureDetail);
       const failureMessage = this.#buildFailureMessage(formattedError);
       this.#logger.error(
         `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${formattedError}`
@@ -361,11 +363,16 @@ class PersistenceCoordinator {
 
     await this.#dispatchSaveResult(saveResultWithName);
 
-    const { saveName: _ignored, error: rawError, ...resultWithoutError } =
-      saveResultWithName;
+    const {
+      saveName: _ignored,
+      error: rawError,
+      ...resultWithoutError
+    } = saveResultWithName;
 
     if (!resultWithoutError.success) {
-      const normalizedError = this.#formatSaveError(rawError);
+      const failureDetail =
+        rawError != null ? rawError : resultWithoutError.message;
+      const normalizedError = this.#formatSaveError(failureDetail);
       const failureResult = {
         ...resultWithoutError,
         error: normalizedError,
