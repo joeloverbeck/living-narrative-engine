@@ -181,9 +181,11 @@ class PlaytimeTracker extends IPlaytimeTracker {
    */
   endSessionAndAccumulate() {
     if (this.#sessionStartTime > 0) {
-      const currentSessionDuration = Math.floor(
-        (Date.now() - this.#sessionStartTime) / 1000
-      );
+      const elapsedMilliseconds = Date.now() - this.#sessionStartTime;
+      const currentSessionDuration =
+        elapsedMilliseconds <= 0
+          ? 0
+          : Math.floor(elapsedMilliseconds / 1000);
       this.#accumulatedPlaytimeSeconds += currentSessionDuration;
       this.#logger.debug(
         `PlaytimeTracker: Session ended. Duration: ${currentSessionDuration}s. Accumulated playtime: ${this.#accumulatedPlaytimeSeconds}s.`
@@ -205,9 +207,11 @@ class PlaytimeTracker extends IPlaytimeTracker {
   getTotalPlaytime() {
     let currentSessionDurationInSeconds = 0;
     if (this.#sessionStartTime > 0) {
-      currentSessionDurationInSeconds = Math.floor(
-        (Date.now() - this.#sessionStartTime) / 1000
-      );
+      const elapsedMilliseconds = Date.now() - this.#sessionStartTime;
+      currentSessionDurationInSeconds =
+        elapsedMilliseconds <= 0
+          ? 0
+          : Math.floor(elapsedMilliseconds / 1000);
     }
     return this.#accumulatedPlaytimeSeconds + currentSessionDurationInSeconds;
   }

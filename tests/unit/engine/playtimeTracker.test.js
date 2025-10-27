@@ -106,6 +106,23 @@ describe('PlaytimeTracker', () => {
     expect(tracker.getTotalPlaytime()).toBe(5);
   });
 
+  test('endSessionAndAccumulate guards against clock rewinds', () => {
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+    tracker.startSession();
+
+    // Simulate the system clock moving backwards (e.g., via NTP adjustment).
+    jest.setSystemTime(BASE_TIME - 2000);
+    tracker.endSessionAndAccumulate();
+
+    expect(tracker.getTotalPlaytime()).toBe(0);
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'PlaytimeTracker: Session ended. Duration: 0s. Accumulated playtime: 0s.'
+    );
+  });
+
   test('endSessionAndAccumulate with no session logs debug', () => {
     const tracker = new PlaytimeTracker({
       logger: mockLogger,
@@ -126,6 +143,18 @@ describe('PlaytimeTracker', () => {
     tracker.startSession();
     jest.setSystemTime(BASE_TIME + 3000);
     expect(tracker.getTotalPlaytime()).toBe(13);
+  });
+
+  test('getTotalPlaytime never reports negative time when clock rewinds', () => {
+    const tracker = new PlaytimeTracker({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+    tracker.startSession();
+
+    jest.setSystemTime(BASE_TIME - 1500);
+
+    expect(tracker.getTotalPlaytime()).toBe(0);
   });
 
   test('setAccumulatedPlaytime validates input', () => {
