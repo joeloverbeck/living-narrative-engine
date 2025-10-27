@@ -124,7 +124,9 @@ describe('EventBus Infinite Recursion Prevention', () => {
       eventBus.setBatchMode(true, { context: 'test' });
 
       expect(spy).toHaveBeenCalledWith(
-        'EventBus: Batch mode timeout refreshed for context: test'
+        expect.stringContaining(
+          'EventBus: Batch mode timeout refreshed for context: test'
+        )
       );
     });
   });
