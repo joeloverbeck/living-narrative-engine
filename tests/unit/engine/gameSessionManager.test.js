@@ -292,6 +292,20 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should treat manual saves with empty filenames as generic saved games', async () => {
+      const manualIdentifier = 'saves/manual_saves/manual_save_.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(manualIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Saved Game...',
+          inputDisabledMessage: 'Loading game from Saved Game...',
+        }
+      );
+    });
+
     it('should decode percent-encoded save identifiers for UI messaging', async () => {
       const encodedIdentifier =
         'saves/manual_saves/manual_save_My%20Adventure%20Slot%201.sav';
