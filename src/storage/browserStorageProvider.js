@@ -151,10 +151,6 @@ export class BrowserStorageProvider extends IStorageProvider {
         );
       }
     }
-    // If promptIfMissing is false and we reach here, it means #rootHandle was null or became null, and we are not allowed to prompt.
-    throw new Error(
-      'Root directory handle not available and prompting is disabled.'
-    );
   }
 
   async #getRelativeDirectoryHandle(
@@ -162,10 +158,6 @@ export class BrowserStorageProvider extends IStorageProvider {
     options = { create: false }
   ) {
     const root = await this.#getRootDirectoryHandle(true);
-
-    if (!root) {
-      throw new Error('Root directory handle is not available.');
-    }
     // Normalize internal path before splitting
     const normalizedDirectoryPath = this.#normalizeRelativePath(directoryPath);
     if (!normalizedDirectoryPath || normalizedDirectoryPath === '.') {
@@ -236,9 +228,6 @@ export class BrowserStorageProvider extends IStorageProvider {
 
   async #getRelativeFileHandle(filePath, options = { create: false }) {
     const root = await this.#getRootDirectoryHandle(true);
-    if (!root) {
-      throw new Error('Root directory handle is not available.');
-    }
 
     // Normalize internal path before splitting
     const normalizedFilePath = this.#normalizeRelativePath(filePath);
@@ -252,10 +241,6 @@ export class BrowserStorageProvider extends IStorageProvider {
     const pathParts = normalizedFilePath.split('/');
 
     const fileName = pathParts.pop();
-    if (!fileName)
-      throw new Error(
-        `Could not extract file name from path (normalized): "${filePath}" -> "${normalizedFilePath}"`
-      );
 
     const trimmedFileName = fileName.trim();
     if (!trimmedFileName) {
@@ -537,10 +522,6 @@ export class BrowserStorageProvider extends IStorageProvider {
       const normalizedFilePath = this.#normalizeRelativePath(filePath);
       const pathParts = normalizedFilePath.split('/');
       const fileName = pathParts.pop();
-      if (!fileName)
-        throw new Error(
-          `Could not extract file name for deletion from path: "${filePath}"`
-        );
 
       let directoryHandle;
       if (pathParts.length > 0) {

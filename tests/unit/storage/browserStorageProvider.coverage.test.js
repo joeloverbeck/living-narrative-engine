@@ -518,6 +518,36 @@ describe('BrowserStorageProvider additional coverage', () => {
       expectDispatch(/Error reading file/);
     });
 
+    it('dispatches a detailed error when the resolved file name is empty', async () => {
+      const rootHandle = createRootHandle();
+      global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
+
+      const provider = new BrowserStorageProvider({
+        logger,
+        safeEventDispatcher: dispatcher,
+      });
+
+      await expect(provider.readFile('folder/   ')).rejects.toThrow(
+        /Could not extract file name from path/
+      );
+      expectDispatch(/Invalid file path supplied/);
+    });
+
+    it('guards against file traversal attempts in the file name segment', async () => {
+      const rootHandle = createRootHandle();
+      global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
+
+      const provider = new BrowserStorageProvider({
+        logger,
+        safeEventDispatcher: dispatcher,
+      });
+
+      await expect(provider.readFile('folder/..')).rejects.toMatchObject({
+        name: 'SecurityError',
+      });
+      expectDispatch(/Refused file path traversal attempt/);
+    });
+
     it('propagates root handle selection issues as descriptive errors', async () => {
       global.window.showDirectoryPicker.mockRejectedValueOnce(
         new Error('blocked')
