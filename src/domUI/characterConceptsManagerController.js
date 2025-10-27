@@ -179,6 +179,48 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
           self.#searchStateRestored = value;
         },
 
+        get editingConceptId() {
+          return self.#editingConceptId;
+        },
+        set editingConceptId(value) {
+          self.#editingConceptId = value;
+        },
+
+        get originalConceptText() {
+          return self.#originalConceptText;
+        },
+        set originalConceptText(value) {
+          self.#originalConceptText = value;
+        },
+
+        get hasUnsavedChanges() {
+          return self.#hasUnsavedChanges;
+        },
+        set hasUnsavedChanges(value) {
+          self.#hasUnsavedChanges = value;
+        },
+
+        get lastEdit() {
+          return self.#lastEdit;
+        },
+        set lastEdit(value) {
+          self.#lastEdit = value;
+        },
+
+        get isLeaderTab() {
+          return self.#isLeaderTab;
+        },
+        set isLeaderTab(value) {
+          self.#isLeaderTab = value;
+        },
+
+        get broadcastChannel() {
+          return self.#broadcastChannel;
+        },
+        set broadcastChannel(value) {
+          self.#broadcastChannel = value;
+        },
+
         // Methods (bound to maintain correct 'this' context)
         showDeleteConfirmation: this._showDeleteConfirmation.bind(this),
         setupDeleteHandler: this._setupDeleteHandler.bind(this),
