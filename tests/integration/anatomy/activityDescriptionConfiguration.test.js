@@ -62,10 +62,15 @@ describe('Activity Description - Configuration Integration', () => {
       }),
     };
 
+    const jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
+
     const customService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
 
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
@@ -96,10 +101,15 @@ describe('Activity Description - Configuration Integration', () => {
       }),
     };
 
+    const jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
+
     const customService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
 
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
@@ -139,10 +149,15 @@ describe('Activity Description - Configuration Integration', () => {
       }),
     };
 
+    const jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
+
     const customService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
 
     const jonEntity = await entityManager.createEntityInstance('core:actor', {

@@ -3,7 +3,7 @@
  * @description Tests complete activity description generation workflow with inline and dedicated metadata
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 
@@ -11,6 +11,7 @@ describe('Activity Description System - Complete Workflow', () => {
   let testBed;
   let entityManager;
   let activityDescriptionService;
+  let jsonLogicEvaluationService;
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
@@ -39,10 +40,14 @@ describe('Activity Description System - Complete Workflow', () => {
     entityManager = testBed.entityManager;
 
     // Direct service instantiation with proper dependencies
+    jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
     activityDescriptionService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager: testBed.entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
   });
 

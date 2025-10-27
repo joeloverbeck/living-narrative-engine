@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 import {
@@ -12,6 +12,7 @@ describe('Activity Description - Grouping Edge Cases', () => {
   let testBed;
   let entityManager;
   let service;
+  let jsonLogicEvaluationService;
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
@@ -19,10 +20,14 @@ describe('Activity Description - Grouping Edge Cases', () => {
     registerActivityComponents(testBed);
 
     entityManager = testBed.entityManager;
+    jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
     service = new ActivityDescriptionService({
       logger: testBed.logger,
       entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
 
     configureActivityFormatting(testBed.mockAnatomyFormattingService);

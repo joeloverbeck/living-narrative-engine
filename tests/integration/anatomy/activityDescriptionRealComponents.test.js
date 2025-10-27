@@ -3,7 +3,7 @@
  * @description Tests activity description system with real mod data using ModTestFixture
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 
@@ -11,6 +11,7 @@ describe('Activity Description - Real Mod Components', () => {
   let testBed;
   let activityDescriptionService;
   let entityManager;
+  let jsonLogicEvaluationService;
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
@@ -31,10 +32,14 @@ describe('Activity Description - Real Mod Components', () => {
     entityManager = testBed.entityManager;
 
     // Initialize ActivityDescriptionService with proper dependencies
+    jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
     activityDescriptionService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager: testBed.entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
   });
 

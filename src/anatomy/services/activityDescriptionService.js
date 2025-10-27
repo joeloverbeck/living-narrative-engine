@@ -41,6 +41,8 @@ class ActivityDescriptionService {
 
   #anatomyFormattingService;
 
+  #jsonLogicEvaluationService;
+
   #entityNameCache = new Map();
 
   #closenessCache = new Map();
@@ -56,12 +58,14 @@ class ActivityDescriptionService {
    * @param {object} dependencies.logger - Logger service
    * @param {object} dependencies.entityManager - Entity manager for component access
    * @param {object} dependencies.anatomyFormattingService - Configuration service
+   * @param {object} dependencies.jsonLogicEvaluationService - JSON Logic evaluation service
    * @param {object} [dependencies.activityIndex] - Optional index for performance (Phase 3)
    */
   constructor({
     logger,
     entityManager,
     anatomyFormattingService,
+    jsonLogicEvaluationService,
     activityIndex = null,
   }) {
     this.#logger = ensureValidLogger(logger, 'ActivityDescriptionService');
@@ -75,8 +79,16 @@ class ActivityDescriptionService {
       this.#logger
     );
 
+    validateDependency(
+      jsonLogicEvaluationService,
+      'JsonLogicEvaluationService',
+      this.#logger,
+      { requiredMethods: ['evaluate'] }
+    );
+
     this.#entityManager = entityManager;
     this.#anatomyFormattingService = anatomyFormattingService;
+    this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#activityIndex = activityIndex;
   }
 
@@ -276,6 +288,8 @@ class ActivityDescriptionService {
       type: 'inline',
       sourceComponent: componentId,
       sourceData: componentData,
+      activityMetadata,
+      conditions: activityMetadata?.conditions ?? null,
       targetEntityId,
       targetId: targetEntityId, // Alias for compatibility with formatter
       priority,
@@ -364,27 +378,226 @@ class ActivityDescriptionService {
   }
 
 
-  #filterByConditions(activities, _entity) {
-    // ACTDESC-018 (Phase 3)
-    return activities.filter((activity) => {
-      if (!activity || activity.visible === false) {
+  /**
+   * Filter activities based on visibility-oriented condition metadata.
+   *
+   * @param {Array<object>} activities - Raw activity entries from collectors.
+   * @param {object} entity - Entity instance requesting the description.
+   * @returns {Array<object>} Activities that should remain visible.
+   * @private
+   */
+  #filterByConditions(activities, entity) {
+    if (!Array.isArray(activities) || activities.length === 0) {
+      return [];
+    }
+
+    return activities.filter((activity) =>
+      this.#evaluateActivityVisibility(activity, entity)
+    );
+  }
+
+  /**
+   * Determine whether a single activity should remain visible.
+   *
+   * @param {object} activity - Activity record produced by the collectors.
+   * @param {object} entity - Entity instance requesting the description.
+   * @returns {boolean} True when the activity should remain visible.
+   * @private
+   */
+  #evaluateActivityVisibility(activity, entity) {
+    if (!activity || activity.visible === false) {
+      return false;
+    }
+
+    if (typeof activity.condition === 'function') {
+      try {
+        return activity.condition(entity);
+      } catch (error) {
+        this.#logger.warn(
+          'Condition evaluation failed for activity description entry',
+          error
+        );
         return false;
       }
+    }
 
-      if (typeof activity.condition === 'function') {
-        try {
-          return activity.condition(_entity);
-        } catch (error) {
-          this.#logger.warn(
-            'Condition evaluation failed for activity description entry',
-            error
-          );
+    const metadata = activity.metadata ?? activity.activityMetadata ?? {};
+    const conditions = activity.conditions ?? metadata.conditions;
+
+    if (!conditions || this.#isEmptyConditionsObject(conditions)) {
+      return metadata.shouldDescribeInActivity !== false;
+    }
+
+    if (metadata.shouldDescribeInActivity === false) {
+      return false;
+    }
+
+    if (
+      conditions.showOnlyIfProperty &&
+      !this.#matchesPropertyCondition(activity, conditions.showOnlyIfProperty)
+    ) {
+      return false;
+    }
+
+    if (
+      Array.isArray(conditions.requiredComponents) &&
+      conditions.requiredComponents.length > 0 &&
+      !this.#hasRequiredComponents(entity, conditions.requiredComponents)
+    ) {
+      return false;
+    }
+
+    if (
+      Array.isArray(conditions.forbiddenComponents) &&
+      conditions.forbiddenComponents.length > 0 &&
+      this.#hasForbiddenComponents(entity, conditions.forbiddenComponents)
+    ) {
+      return false;
+    }
+
+    if (conditions.customLogic) {
+      const context = this.#buildLogicContext(activity, entity);
+
+      try {
+        const result = this.#jsonLogicEvaluationService.evaluate(
+          conditions.customLogic,
+          context
+        );
+
+        if (!result) {
           return false;
         }
+      } catch (error) {
+        this.#logger.warn('Failed to evaluate custom logic', error);
+        return true; // Fail open on JSON logic errors
       }
+    }
 
+    return true;
+  }
+
+  /**
+   * Construct the data payload used for JSON Logic evaluation.
+   *
+   * @param {object} activity - Activity record.
+   * @param {object} entity - Entity instance requesting the description.
+   * @returns {object} Data for JSON Logic rules.
+   * @private
+   */
+  #buildLogicContext(activity, entity) {
+    let targetEntity = null;
+
+    if (activity?.targetEntityId) {
+      try {
+        targetEntity = this.#entityManager.getEntityInstance(
+          activity.targetEntityId
+        );
+      } catch (error) {
+        this.#logger.warn(
+          `Failed to resolve target entity '${activity.targetEntityId}' for activity conditions`,
+          error
+        );
+      }
+    }
+
+    return {
+      entity: this.#extractEntityData(entity),
+      activity: activity?.sourceData ?? {},
+      target: targetEntity ? this.#extractEntityData(targetEntity) : null,
+    };
+  }
+
+  /**
+   * Extract relevant component information for JSON Logic.
+   *
+   * @param {object|null} entity - Entity instance.
+   * @returns {object|null} Simplified entity representation.
+   * @private
+   */
+  #extractEntityData(entity) {
+    if (!entity) {
+      return null;
+    }
+
+    const componentIds = entity.componentTypeIds ?? [];
+    const components = {};
+
+    if (Array.isArray(componentIds)) {
+      for (const componentId of componentIds) {
+        if (typeof entity.getComponentData === 'function') {
+          components[componentId] = entity.getComponentData(componentId);
+        }
+      }
+    }
+
+    return {
+      id: entity.id,
+      components,
+    };
+  }
+
+  /**
+   * Determine if the provided conditions object has no actionable rules.
+   *
+   * @param {object} conditions - Condition configuration from metadata.
+   * @returns {boolean} True when the object contains no keys.
+   * @private
+   */
+  #isEmptyConditionsObject(conditions) {
+    if (!conditions) {
       return true;
-    });
+    }
+
+    return Object.keys(conditions).length === 0;
+  }
+
+  /**
+   * Verify a `showOnlyIfProperty` rule against the activity source data.
+   *
+   * @param {object} activity - Activity record.
+   * @param {object} rule - Rule with `property` and `equals` keys.
+   * @returns {boolean} True when the activity satisfies the rule.
+   * @private
+   */
+  #matchesPropertyCondition(activity, rule) {
+    if (!rule || !rule.property) {
+      return true;
+    }
+
+    const sourceData = activity?.sourceData ?? {};
+    return sourceData[rule.property] === rule.equals;
+  }
+
+  /**
+   * Verify that the entity has all components listed in `requiredComponents`.
+   *
+   * @param {object} entity - Entity instance.
+   * @param {Array<string>} required - Component identifiers.
+   * @returns {boolean} True when every component exists.
+   * @private
+   */
+  #hasRequiredComponents(entity, required) {
+    if (!entity || typeof entity.hasComponent !== 'function') {
+      return false;
+    }
+
+    return required.every((componentId) => entity.hasComponent(componentId));
+  }
+
+  /**
+   * Verify that the entity contains any forbidden components.
+   *
+   * @param {object} entity - Entity instance.
+   * @param {Array<string>} forbidden - Component identifiers.
+   * @returns {boolean} True when a forbidden component is present.
+   * @private
+   */
+  #hasForbiddenComponents(entity, forbidden) {
+    if (!entity || typeof entity.hasComponent !== 'function') {
+      return false;
+    }
+
+    return forbidden.some((componentId) => entity.hasComponent(componentId));
   }
 
    

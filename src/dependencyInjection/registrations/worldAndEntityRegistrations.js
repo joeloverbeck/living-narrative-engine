@@ -418,6 +418,9 @@ export function registerWorldAndEntity(container) {
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
       anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
+      jsonLogicEvaluationService: c.resolve(
+        tokens.JsonLogicEvaluationService
+      ),
       // activityIndex will be added in Phase 3 (ACTDESC-020)
     });
   });

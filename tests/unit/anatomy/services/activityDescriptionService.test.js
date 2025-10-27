@@ -7,6 +7,7 @@ describe('ActivityDescriptionService', () => {
   let mockEntityManager;
   let mockAnatomyFormattingService;
   let mockActivityIndex;
+  let mockJsonLogicEvaluationService;
 
   beforeEach(() => {
     // Create mocks
@@ -43,11 +44,16 @@ describe('ActivityDescriptionService', () => {
       findActivitiesForEntity: jest.fn().mockReturnValue([]),
     };
 
+    mockJsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
+
     // Create service instance
     service = new ActivityDescriptionService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
+      jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       activityIndex: mockActivityIndex,
     });
   });
@@ -58,6 +64,7 @@ describe('ActivityDescriptionService', () => {
         logger: null,
         entityManager: mockEntityManager,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       })).not.toThrow(); // ensureValidLogger provides fallback
     });
 
@@ -66,6 +73,7 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: null,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       })).toThrow(/Missing required dependency.*IEntityManager/);
     });
 
@@ -74,6 +82,7 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: mockEntityManager,
         anatomyFormattingService: null,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       })).toThrow(/Missing required dependency.*AnatomyFormattingService/);
     });
 
@@ -87,6 +96,7 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: invalidEntityManager,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       })).toThrow(/Invalid or missing method.*getEntityInstance/);
     });
 
@@ -99,6 +109,7 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: mockEntityManager,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
         activityIndex: mockActivityIndex,
       });
 
@@ -110,9 +121,22 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: mockEntityManager,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       });
 
       expect(serviceWithoutIndex).toBeDefined();
+    });
+
+    it('should validate jsonLogicEvaluationService dependency', () => {
+      expect(
+        () =>
+          new ActivityDescriptionService({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            jsonLogicEvaluationService: null,
+          })
+      ).toThrow(/JsonLogicEvaluationService/);
     });
   });
 
@@ -603,6 +627,7 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: mockEntityManager,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       });
 
       const result = await serviceWithoutIndex.generateActivityDescription(
@@ -620,6 +645,7 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: mockEntityManager,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
         activityIndex: { findActivitiesForEntity: null },
       });
 
@@ -645,6 +671,7 @@ describe('ActivityDescriptionService', () => {
         logger: throwingLogger,
         entityManager: mockEntityManager,
         anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
         activityIndex: mockActivityIndex,
       });
 
@@ -1018,6 +1045,7 @@ describe('ActivityDescriptionService', () => {
         logger: mockLogger,
         entityManager: mockEntityManager,
         anatomyFormattingService: minimalFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
         activityIndex: lightweightIndex,
       });
 
@@ -1551,12 +1579,18 @@ describe('ActivityDescriptionService', () => {
       it('should include all metadata properties in formatted output', async () => {
         const mockEntity = {
           id: 'jon',
-          componentTypeIds: ['positioning:hugging', 'activity:description_metadata', 'core:name'],
+          componentTypeIds: [
+            'positioning:hugging',
+            'positioning:standing',
+            'activity:description_metadata',
+            'core:name',
+          ],
           components: {
             'positioning:hugging': {
               embraced_entity_id: 'alicia',
               initiated: true,
             },
+            'positioning:standing': {},
             'activity:description_metadata': {
               sourceComponent: 'positioning:hugging',
               descriptionType: 'verb',
@@ -1571,7 +1605,11 @@ describe('ActivityDescriptionService', () => {
               text: 'Jon Ureña',
             },
           },
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          hasComponent: jest.fn(
+            (compId) =>
+              compId === 'activity:description_metadata' ||
+              compId === 'positioning:standing'
+          ),
           getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
         };
 
@@ -2946,6 +2984,248 @@ describe('ActivityDescriptionService', () => {
 
         expect(description).not.toMatch(/and is holding/);
         expect(description).toContain('and holding');
+      });
+    });
+
+    describe('Conditional visibility (ACTDESC-018)', () => {
+      let entityStore;
+
+      const registerEntity = (entity) => {
+        entityStore.set(entity.id, entity);
+        return entity;
+      };
+
+      const createEntity = (id, name = id, gender = 'neutral') => {
+        const components = {
+          'core:name': { text: name },
+          'core:gender': { value: gender },
+        };
+        const componentTypeIds = ['core:name', 'core:gender'];
+
+        return {
+          id,
+          componentTypeIds,
+          components,
+          hasComponent(componentId) {
+            return Object.prototype.hasOwnProperty.call(components, componentId);
+          },
+          getComponentData(componentId) {
+            return components[componentId] ?? null;
+          },
+        };
+      };
+
+      const addComponent = (entity, componentId, data) => {
+        entity.components[componentId] = data;
+        if (!entity.componentTypeIds.includes(componentId)) {
+          entity.componentTypeIds.push(componentId);
+        }
+      };
+
+      const addInlineActivity = (
+        entity,
+        {
+          template,
+          targetId = null,
+          priority = 50,
+          conditions = null,
+          componentId = `test:activity_${entity.componentTypeIds.length}`,
+          sourceData = {},
+        }
+      ) => {
+        const metadata = {
+          shouldDescribeInActivity: true,
+          template,
+          priority,
+        };
+
+        if (targetId) {
+          metadata.targetRole = 'targetId';
+        }
+
+        if (conditions) {
+          metadata.conditions = conditions;
+        }
+
+        const componentData = {
+          ...sourceData,
+          targetId,
+          activityMetadata: metadata,
+        };
+
+        addComponent(entity, componentId, componentData);
+
+        return componentId;
+      };
+
+      beforeEach(() => {
+        entityStore = new Map();
+        mockJsonLogicEvaluationService.evaluate.mockClear();
+        mockJsonLogicEvaluationService.evaluate.mockImplementation(() => true);
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (entityStore.has(id)) {
+            return entityStore.get(id);
+          }
+
+          return {
+            id,
+            componentTypeIds: [],
+            hasComponent: () => false,
+            getComponentData: () => null,
+          };
+        });
+      });
+
+      it('should enforce showOnlyIfProperty rules', async () => {
+        const actor = registerEntity(
+          createEntity('jon', 'Jon Ureña', 'male')
+        );
+        const target = registerEntity(
+          createEntity('alicia', 'Alicia Western', 'female')
+        );
+
+        const componentId = addInlineActivity(actor, {
+          template: '{actor} is kissing {target}',
+          targetId: target.id,
+          priority: 85,
+          conditions: {
+            showOnlyIfProperty: {
+              property: 'initiator',
+              equals: true,
+            },
+          },
+          componentId: 'intimacy:kissing',
+          sourceData: { initiator: false },
+        });
+
+        let description = await service.generateActivityDescription(actor.id);
+        expect(description).not.toContain('kissing');
+
+        actor.components[componentId].initiator = true;
+
+        description = await service.generateActivityDescription(actor.id);
+        expect(description).toContain('kissing');
+      });
+
+      it('should require components for visibility', async () => {
+        const actor = registerEntity(createEntity('jon', 'Jon Ureña', 'male'));
+
+        addInlineActivity(actor, {
+          template: '{actor} is kneeling',
+          priority: 70,
+          conditions: {
+            requiredComponents: ['positioning:kneeling_before'],
+          },
+          componentId: 'positioning:kneeling_before_meta',
+        });
+
+        let description = await service.generateActivityDescription(actor.id);
+        expect(description).not.toContain('kneeling');
+
+        addComponent(actor, 'positioning:kneeling_before', { entityId: 'alicia' });
+
+        description = await service.generateActivityDescription(actor.id);
+        expect(description).toContain('kneeling');
+      });
+
+      it('should forbid components for visibility', async () => {
+        const actor = registerEntity(createEntity('jon', 'Jon Ureña', 'male'));
+
+        addInlineActivity(actor, {
+          template: '{actor} is meditating',
+          priority: 60,
+          conditions: {
+            forbiddenComponents: ['positioning:standing'],
+          },
+          componentId: 'mindfulness:meditation',
+        });
+
+        let description = await service.generateActivityDescription(actor.id);
+        expect(description).toContain('meditating');
+
+        addComponent(actor, 'positioning:standing', {});
+
+        description = await service.generateActivityDescription(actor.id);
+        expect(description).not.toContain('meditating');
+      });
+
+      it('should evaluate custom JSON Logic', async () => {
+        const actor = registerEntity(createEntity('jon', 'Jon Ureña', 'male'));
+        const target = registerEntity(
+          createEntity('alicia', 'Alicia Western', 'female')
+        );
+
+        addComponent(actor, 'relationships:partner', { entityId: target.id });
+
+        const customLogic = {
+          in: ['alicia', { var: 'entity.components.relationships:partner.entityId' }],
+        };
+
+        addInlineActivity(actor, {
+          template: '{actor} is embracing {target}',
+          targetId: target.id,
+          priority: 85,
+          conditions: {
+            customLogic,
+          },
+          componentId: 'intimacy:embrace',
+        });
+
+        mockJsonLogicEvaluationService.evaluate.mockImplementation(
+          (logic, context) => {
+            expect(logic).toBe(customLogic);
+            expect(context.entity.components['relationships:partner'].entityId).toBe(
+              target.id
+            );
+            expect(context.target?.id).toBe(target.id);
+            return true;
+          }
+        );
+
+        const description = await service.generateActivityDescription(actor.id);
+
+        expect(description).toContain('embracing');
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalled();
+      });
+
+      it('should handle missing conditions gracefully', async () => {
+        const actor = registerEntity(createEntity('jon', 'Jon Ureña', 'male'));
+
+        addInlineActivity(actor, {
+          template: '{actor} is waving',
+          priority: 50,
+          componentId: 'social:waving',
+        });
+
+        const description = await service.generateActivityDescription(actor.id);
+
+        expect(description).toContain('waving');
+      });
+
+      it('should fail open on JSON Logic errors', async () => {
+        const actor = registerEntity(createEntity('jon', 'Jon Ureña', 'male'));
+
+        addInlineActivity(actor, {
+          template: '{actor} is waving',
+          priority: 50,
+          conditions: {
+            customLogic: { invalid: 'logic' },
+          },
+          componentId: 'social:waving_invalid',
+        });
+
+        mockJsonLogicEvaluationService.evaluate.mockImplementation(() => {
+          throw new Error('bad logic');
+        });
+
+        const description = await service.generateActivityDescription(actor.id);
+
+        expect(description).toContain('waving');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Failed to evaluate custom logic',
+          expect.any(Error)
+        );
       });
     });
 
