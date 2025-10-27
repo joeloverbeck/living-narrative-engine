@@ -1,13 +1,11 @@
 // llm-proxy-server/src/core/server.js
 
-// Import necessary modules
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import { pathToFileURL } from 'node:url';
 
 import { getAppConfigService } from '../config/appConfig.js';
-
-// Import security middleware
 import { createSecurityMiddleware } from '../middleware/security.js';
 import {
   createApiRateLimiter,
@@ -28,10 +26,8 @@ import {
   createLlmMetricsMiddleware,
 } from '../middleware/metrics.js';
 import { createRequestTrackingMiddleware } from '../middleware/requestTracking.js';
-
 import { NodeFileSystemReader } from '../nodeFileSystemReader.js';
 import { ConsoleLogger } from '../consoleLogger.js';
-
 import { LlmConfigService } from '../config/llmConfigService.js';
 import { ApiKeyService } from '../services/apiKeyService.js';
 import { LlmRequestService } from '../services/llmRequestService.js';
@@ -42,7 +38,6 @@ import { RetryManager } from '../utils/proxyApiUtils.js';
 import ResponseSalvageService from '../services/responseSalvageService.js';
 import SalvageRequestController from '../handlers/salvageRequestController.js';
 import createSalvageRoutes from '../routes/salvageRoutes.js';
-// Import sendProxyError utility
 import { sendProxyError } from '../utils/responseUtils.js';
 import {
   HTTP_HEADER_CONTENT_TYPE,
@@ -51,103 +46,123 @@ import {
   LOG_LLM_ID_UNHANDLED_ERROR,
   LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
 } from '../config/constants.js';
-
-// Import trace routes
 import traceRoutes from '../routes/traceRoutes.js';
-
-// Import debug routes
-
-// Import health routes
 import createHealthRoutes from '../routes/healthRoutes.js';
 
-// Import log storage and maintenance scheduler services
+const shutdownSignals = ['SIGTERM', 'SIGINT', 'SIGHUP'];
 
-// Initialize Logger
-const proxyLogger = new ConsoleLogger();
+/**
+ * @typedef {object} ProxyServerOptions
+ * @description Configuration options for creating a proxy server instance.
+ * @property {import('../consoleLogger.js').ConsoleLogger} [logger] - Optional custom logger instance.
+ * @property {boolean} [metricsEnabled] - Forces metrics collection on/off regardless of environment variables.
+ * @property {boolean} [collectDefaultMetrics] - Forces collection of default Node metrics on/off.
+ * @property {boolean} [rateLimitingEnabled] - Forces rate limiting middleware on/off.
+ */
 
-// Initialize AppConfigService
-// This will log AppConfigService's own initialization messages.
-const appConfigService = getAppConfigService(proxyLogger);
+/**
+ * @typedef {object} ProxyServerController
+ * @description Controller object returned by {@link createProxyServer}.
+ * @property {import('express').Express} app - Express application instance.
+ * @property {() => Promise<void>} start - Starts the HTTP server.
+ * @property {() => Promise<void>} stop - Stops the HTTP server and cleans up resources.
+ * @property {number} port - Port number configured for the proxy.
+ * @property {ConsoleLogger} logger - Logger instance used by the server.
+ */
 
-// Initialize MetricsService for observability
-const metricsService = new MetricsService({
-  logger: proxyLogger,
-  enabled: process.env.METRICS_ENABLED !== 'false', // Enabled by default
-  collectDefaultMetrics: true,
-});
+/**
+ * Creates a configurable proxy server instance for use in production or tests.
+ * @param {ProxyServerOptions} [options] - Optional configuration overrides.
+ * @returns {ProxyServerController} Proxy server controller with lifecycle helpers.
+ */
+export function createProxyServer(options = {}) {
+  const {
+    logger: providedLogger,
+    metricsEnabled,
+    collectDefaultMetrics,
+    rateLimitingEnabled,
+  } = options;
 
-// Initialize the Express application
-const app = express();
+  const proxyLogger = providedLogger ?? new ConsoleLogger();
+  const appConfigService = getAppConfigService(proxyLogger);
 
-// Apply security middleware
-app.use(createSecurityMiddleware());
+  const resolvedMetricsEnabled =
+    metricsEnabled ?? process.env.METRICS_ENABLED !== 'false';
+  const resolvedCollectDefaultMetrics =
+    collectDefaultMetrics ?? process.env.METRICS_COLLECT_DEFAULT !== 'false';
+  const resolvedRateLimitingEnabled =
+    rateLimitingEnabled ?? process.env.RATE_LIMITING_ENABLED !== 'false';
 
-// Apply request tracking middleware (must be early for correlation IDs)
-app.use(createRequestTrackingMiddleware({ logger: proxyLogger }));
-
-// Apply metrics middleware for HTTP request tracking
-app.use(
-  createMetricsMiddleware({
-    metricsService,
+  const metricsService = new MetricsService({
     logger: proxyLogger,
-    enabled: metricsService.isEnabled(),
-  })
-);
+    enabled: resolvedMetricsEnabled,
+    collectDefaultMetrics: resolvedCollectDefaultMetrics,
+  });
 
-// Apply compression middleware
-app.use(compression());
+  const app = express();
 
-// Apply general rate limiting
-app.use(createApiRateLimiter());
+  app.use(createSecurityMiddleware());
+  app.use(createRequestTrackingMiddleware({ logger: proxyLogger }));
 
-// Apply request timeout (30 seconds default for most routes)
-// Note: LLM requests will have a longer timeout applied directly to their route
-app.use((req, res, next) => {
-  // Skip timeout middleware for LLM request route
-  if (req.path === '/api/llm-request' || req.path.startsWith('/api/llm-request/salvage')) {
-    return next();
-  }
-  // Apply 30 second timeout for all other routes with logging
-  return createTimeoutMiddleware(30000, { logger: proxyLogger })(req, res, next);
-});
-
-// CORS Configuration
-const allowedOriginsArray = appConfigService.getAllowedOriginsArray();
-
-const resolvedNodeEnv = (() => {
-  const envFromService =
-    typeof appConfigService.getNodeEnv === 'function'
-      ? appConfigService.getNodeEnv()
-      : process.env.NODE_ENV;
-  if (typeof envFromService !== 'string') {
-    return 'production';
-  }
-  const trimmed = envFromService.trim().toLowerCase();
-  return trimmed === '' ? 'production' : trimmed;
-})();
-
-const isDevelopmentLikeEnv =
-  resolvedNodeEnv === 'development' || resolvedNodeEnv === 'test';
-
-if (allowedOriginsArray.length > 0) {
-  // Log CORS configuration immediately for debugging
-  proxyLogger.info(
-    `LLM Proxy Server: Configuring CORS for ${allowedOriginsArray.length} origin(s)`
+  app.use(
+    createMetricsMiddleware({
+      metricsService,
+      logger: proxyLogger,
+      enabled: metricsService.isEnabled(),
+    })
   );
-  proxyLogger.debug('CORS allowed origins:', { origins: allowedOriginsArray });
 
-  const corsOptions = {
-    origin: allowedOriginsArray,
-    methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
-    allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
-  };
-  app.use(cors(corsOptions));
+  app.use(compression());
 
-  // Log successful CORS middleware application
-  proxyLogger.debug('CORS middleware applied successfully');
-} else {
-  // Check if in development mode and provide helpful warning
-  if (isDevelopmentLikeEnv) {
+  if (resolvedRateLimitingEnabled) {
+    app.use(createApiRateLimiter());
+  }
+
+  app.use((req, res, next) => {
+    if (
+      req.path === '/api/llm-request' ||
+      req.path.startsWith('/api/llm-request/salvage')
+    ) {
+      return next();
+    }
+    return createTimeoutMiddleware(30000, { logger: proxyLogger })(
+      req,
+      res,
+      next
+    );
+  });
+
+  const allowedOriginsArray = appConfigService.getAllowedOriginsArray();
+
+  const resolvedNodeEnv = (() => {
+    const envFromService =
+      typeof appConfigService.getNodeEnv === 'function'
+        ? appConfigService.getNodeEnv()
+        : process.env.NODE_ENV;
+    if (typeof envFromService !== 'string') {
+      return 'production';
+    }
+    const trimmed = envFromService.trim().toLowerCase();
+    return trimmed === '' ? 'production' : trimmed;
+  })();
+
+  const isDevelopmentLikeEnv =
+    resolvedNodeEnv === 'development' || resolvedNodeEnv === 'test';
+
+  if (allowedOriginsArray.length > 0) {
+    proxyLogger.info(
+      `LLM Proxy Server: Configuring CORS for ${allowedOriginsArray.length} origin(s)`
+    );
+    proxyLogger.debug('CORS allowed origins:', { origins: allowedOriginsArray });
+
+    const corsOptions = {
+      origin: allowedOriginsArray,
+      methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
+      allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
+    };
+    app.use(cors(corsOptions));
+    proxyLogger.debug('CORS middleware applied successfully');
+  } else if (isDevelopmentLikeEnv) {
     proxyLogger.warn(
       `LLM Proxy Server: CORS not configured in development mode (current environment: ${resolvedNodeEnv}). ` +
         'To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. ' +
@@ -159,424 +174,449 @@ if (allowedOriginsArray.length > 0) {
         'CORS will not be configured. This may cause issues with browser-based clients.'
     );
   }
-}
 
-// Middleware to parse JSON bodies with size limits
-const sizeLimits = createSizeLimitConfig();
-app.use(express.json(sizeLimits.json));
+  const sizeLimits = createSizeLimitConfig();
+  app.use(express.json(sizeLimits.json));
 
-// Define the port for the server using AppConfigService
-const PORT = appConfigService.getProxyPort();
+  const PORT = appConfigService.getProxyPort();
 
-const fileSystemReader = new NodeFileSystemReader();
-
-// Initialize LlmConfigService
-// LlmConfigService's initialize() method will log its own progress.
-const llmConfigService = new LlmConfigService(
-  fileSystemReader,
-  proxyLogger,
-  appConfigService
-);
-
-// Initialize CacheService (if caching is enabled)
-const cacheConfig = appConfigService.getCacheConfig();
-const cacheService = new CacheService(proxyLogger, {
-  maxSize: cacheConfig.maxSize,
-  defaultTtl: cacheConfig.defaultTtl,
-});
-
-// Initialize HttpAgentService (if HTTP agent pooling is enabled)
-const httpAgentConfig = appConfigService.getHttpAgentConfig();
-const httpAgentService = new HttpAgentService(proxyLogger, httpAgentConfig);
-
-// Initialize ApiKeyService with caching support
-const apiKeyService = new ApiKeyService(
-  proxyLogger,
-  fileSystemReader,
-  appConfigService,
-  cacheService
-);
-
-// Initialize LlmRequestService with HTTP agent pooling support and RetryManager
-const llmRequestService = new LlmRequestService(
-  proxyLogger,
-  httpAgentService,
-  appConfigService,
-  RetryManager
-);
-
-// Initialize ResponseSalvageService for recovering failed LLM responses
-const salvageConfig = appConfigService.getSalvageConfig();
-const salvageService = new ResponseSalvageService(proxyLogger, salvageConfig);
-
-// PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES logging - Removed initial log, will be in summary
-// const PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = appConfigService.getProxyProjectRootPathForApiKeyFiles();
-// if (PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES) {
-//     proxyLogger.info(`LLM Proxy Server: Using PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES: '${PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES}'. This will be used by ApiKeyService for API key file retrieval.`);
-// } else {
-//     proxyLogger.warn('LLM Proxy Server: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is not set. API key retrieval from files will not be possible if configured for any LLM (ApiKeyService will handle errors if attempted).');
-// }
-
-// Instantiate LlmRequestController with salvage service
-const llmRequestController = new LlmRequestController(
-  proxyLogger,
-  llmConfigService,
-  apiKeyService,
-  llmRequestService,
-  salvageService
-);
-
-// Instantiate SalvageRequestController
-const salvageController = new SalvageRequestController(proxyLogger, salvageService);
-
-// Metrics endpoint for Prometheus scraping
-app.get('/metrics', async (req, res) => {
-  try {
-    const metrics = await metricsService.getMetrics();
-    res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
-    res.status(200).send(metrics);
-  } catch (error) {
-    proxyLogger.error('Error serving metrics endpoint', error);
-    res.status(500).send('Error retrieving metrics');
-  }
-});
-
-// Legacy root endpoint (deprecated - use /health instead)
-app.get('/', (req, res) => {
-  proxyLogger.warn(
-    'Deprecated root endpoint accessed. Use /health or /health/ready instead.'
+  const fileSystemReader = new NodeFileSystemReader();
+  const llmConfigService = new LlmConfigService(
+    fileSystemReader,
+    proxyLogger,
+    appConfigService
   );
-  if (!llmConfigService.isOperational()) {
-    const initErrorDetails = llmConfigService.getInitializationErrorDetails();
-    if (initErrorDetails) {
-      sendProxyError(
-        res,
-        503,
-        initErrorDetails.stage || 'initialization_failure',
-        `LLM Proxy Server is NOT OPERATIONAL. Failed to initialize LLM configurations. Error stage: ${initErrorDetails.stage}. Message: ${initErrorDetails.message}. Path attempted: ${initErrorDetails.pathAttempted}`,
-        initErrorDetails,
-        LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
-        proxyLogger
-      );
-    } else {
-      sendProxyError(
-        res,
-        503,
-        'initialization_failure_unknown',
-        'LLM Proxy Server is NOT OPERATIONAL due to unknown configuration issues.',
-        {},
-        LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
-        proxyLogger
-      );
-    }
-    return;
-  }
-  res
-    .status(200)
-    .send(
-      'LLM Proxy Server is running and operational! Use /health or /health/ready for detailed health checks.'
-    );
-});
 
-// Updated route to use LlmRequestController's handleLlmRequest method with validation and rate limiting
-app.post(
-  '/api/llm-request',
-  createTimeoutMiddleware(120000, { logger: proxyLogger, gracePeriod: 10000 }), // 120s timeout with 10s grace period (increased to handle slow LLM responses)
-  createLlmRateLimiter(), // Stricter rate limiting for LLM requests
-  createLlmMetricsMiddleware({ metricsService, logger: proxyLogger }), // LLM-specific metrics
-  validateRequestHeaders(), // Validate headers
-  validateLlmRequest(), // Validate request body
-  handleValidationErrors, // Handle validation errors
-  (req, res) => llmRequestController.handleLlmRequest(req, res)
-);
+  const cacheConfig = appConfigService.getCacheConfig();
+  const cacheService = new CacheService(proxyLogger, {
+    maxSize: cacheConfig.maxSize,
+    defaultTtl: cacheConfig.defaultTtl,
+  });
 
-// Salvage recovery routes
-app.use('/api/llm-request', createSalvageRoutes(salvageController));
+  const httpAgentConfig = appConfigService.getHttpAgentConfig();
+  const httpAgentService = new HttpAgentService(proxyLogger, httpAgentConfig);
 
-// Register trace routes for action tracing system
-app.use('/api/traces', traceRoutes);
+  const apiKeyService = new ApiKeyService(
+    proxyLogger,
+    fileSystemReader,
+    appConfigService,
+    cacheService
+  );
 
-// Register health check routes
-app.use(
-  '/health',
-  createHealthRoutes({
-    logger: proxyLogger,
-    llmConfigService,
-    cacheService,
+  const llmRequestService = new LlmRequestService(
+    proxyLogger,
     httpAgentService,
     appConfigService,
-  })
-);
-
-// Store server instance for graceful shutdown
-let server;
-
-// Graceful shutdown handler
-const gracefulShutdown = (signal) => {
-  proxyLogger.info(
-    `LLM Proxy Server: Received ${signal}, starting graceful shutdown...`
+    RetryManager
   );
 
-  if (server) {
-    server.close(async () => {
-      proxyLogger.info('LLM Proxy Server: HTTP server closed');
+  const salvageConfig = appConfigService.getSalvageConfig();
+  const salvageService = new ResponseSalvageService(proxyLogger, salvageConfig);
 
-      // Clean up services
+  const llmRequestController = new LlmRequestController(
+    proxyLogger,
+    llmConfigService,
+    apiKeyService,
+    llmRequestService,
+    salvageService
+  );
 
-      if (salvageService && salvageService.cleanup) {
-        salvageService.cleanup();
-        proxyLogger.info('LLM Proxy Server: Response salvage service cleaned up');
+  const salvageController = new SalvageRequestController(
+    proxyLogger,
+    salvageService
+  );
+
+  app.get('/metrics', async (req, res) => {
+    try {
+      const metrics = await metricsService.getMetrics();
+      res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+      res.status(200).send(metrics);
+    } catch (error) {
+      proxyLogger.error('Error serving metrics endpoint', error);
+      res.status(500).send('Error retrieving metrics');
+    }
+  });
+
+  app.get('/', (req, res) => {
+    proxyLogger.warn(
+      'Deprecated root endpoint accessed. Use /health or /health/ready instead.'
+    );
+    if (!llmConfigService.isOperational()) {
+      const initErrorDetails = llmConfigService.getInitializationErrorDetails();
+      if (initErrorDetails) {
+        sendProxyError(
+          res,
+          503,
+          initErrorDetails.stage || 'initialization_failure',
+          `LLM Proxy Server is NOT OPERATIONAL. Failed to initialize LLM configurations. Error stage: ${initErrorDetails.stage}. Message: ${initErrorDetails.message}. Path attempted: ${initErrorDetails.pathAttempted}`,
+          initErrorDetails,
+          LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
+          proxyLogger
+        );
+      } else {
+        sendProxyError(
+          res,
+          503,
+          'initialization_failure_unknown',
+          'LLM Proxy Server is NOT OPERATIONAL due to unknown configuration issues.',
+          {},
+          LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
+          proxyLogger
+        );
       }
+      return;
+    }
+    res
+      .status(200)
+      .send(
+        'LLM Proxy Server is running and operational! Use /health or /health/ready for detailed health checks.'
+      );
+  });
 
-      if (httpAgentService && httpAgentService.cleanup) {
-        httpAgentService.cleanup();
-        proxyLogger.info('LLM Proxy Server: HTTP agent service cleaned up');
-      }
+  app.post(
+    '/api/llm-request',
+    createTimeoutMiddleware(120000, { logger: proxyLogger, gracePeriod: 10000 }),
+    resolvedRateLimitingEnabled ? createLlmRateLimiter() : (_req, _res, next) => next(),
+    createLlmMetricsMiddleware({ metricsService, logger: proxyLogger }),
+    validateRequestHeaders(),
+    validateLlmRequest(),
+    handleValidationErrors,
+    (req, res) => llmRequestController.handleLlmRequest(req, res)
+  );
 
-      // Clean up metrics service
-      if (metricsService && metricsService.clear) {
-        metricsService.clear();
-        proxyLogger.info('LLM Proxy Server: Metrics service cleaned up');
-      }
+  app.use('/api/llm-request', createSalvageRoutes(salvageController));
+  app.use('/api/traces', traceRoutes);
+  app.use(
+    '/health',
+    createHealthRoutes({
+      logger: proxyLogger,
+      llmConfigService,
+      cacheService,
+      httpAgentService,
+      appConfigService,
+    })
+  );
 
+  let server = null;
+  let isShuttingDown = false;
+  const registeredSignalHandlers = new Map();
+  let beforeExitHandler = null;
+
+  const cleanupServices = () => {
+    if (salvageService && typeof salvageService.cleanup === 'function') {
+      salvageService.cleanup();
+      proxyLogger.info('LLM Proxy Server: Response salvage service cleaned up');
+    }
+
+    if (httpAgentService && typeof httpAgentService.cleanup === 'function') {
+      httpAgentService.cleanup();
+      proxyLogger.info('LLM Proxy Server: HTTP agent service cleaned up');
+    }
+
+    if (cacheService && typeof cacheService.cleanup === 'function') {
+      cacheService.cleanup();
+      proxyLogger.info('LLM Proxy Server: Cache service cleaned up');
+    }
+
+    if (metricsService && typeof metricsService.clear === 'function') {
+      metricsService.clear();
+      proxyLogger.info('LLM Proxy Server: Metrics service cleaned up');
+    }
+  };
+
+  const removeShutdownHandlers = () => {
+    for (const [signal, handler] of registeredSignalHandlers.entries()) {
+      process.off(signal, handler);
+    }
+    registeredSignalHandlers.clear();
+
+    if (beforeExitHandler) {
+      process.off('beforeExit', beforeExitHandler);
+      beforeExitHandler = null;
+    }
+  };
+
+  const stop = async () => {
+    if (!server) {
+      return;
+    }
+
+    await new Promise((resolve, reject) => {
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+
+    cleanupServices();
+    removeShutdownHandlers();
+    server = null;
+    isShuttingDown = false;
+  };
+
+  const gracefulShutdown = async (signal) => {
+    if (isShuttingDown) {
+      return;
+    }
+
+    isShuttingDown = true;
+    proxyLogger.info(
+      `LLM Proxy Server: Received ${signal}, starting graceful shutdown...`
+    );
+
+    try {
+      await stop();
       proxyLogger.info('LLM Proxy Server: Graceful shutdown complete');
       if (process.env.NODE_ENV !== 'test') {
         process.exit(0);
       }
-    });
-
-    // Force shutdown after timeout (shorter in test environment)
-    const shutdownTimeout = process.env.NODE_ENV === 'test' ? 100 : 10000;
-    setTimeout(() => {
-      proxyLogger.error('LLM Proxy Server: Forced shutdown after timeout');
+    } catch (error) {
+      proxyLogger.error('LLM Proxy Server: Error during shutdown', error);
       if (process.env.NODE_ENV !== 'test') {
         process.exit(1);
       }
-    }, shutdownTimeout);
-  } else {
+    }
+  };
+
+  const registerShutdownHandlers = () => {
+    for (const signal of shutdownSignals) {
+      const handler = () => {
+        void gracefulShutdown(signal);
+      };
+      registeredSignalHandlers.set(signal, handler);
+      process.on(signal, handler);
+    }
+
+    beforeExitHandler = () => {
+      proxyLogger.debug(
+        'LLM Proxy Server: Graceful beforeExit handler completed'
+      );
+    };
+    process.on('beforeExit', beforeExitHandler);
+  };
+
+  const start = async () => {
+    if (server) {
+      return;
+    }
+
+    await llmConfigService.initialize();
+
+    await new Promise((resolve, reject) => {
+      server = app
+        .listen(PORT, '0.0.0.0', () => {
+          proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
+          proxyLogger.info(`LLM Proxy Server listening on port ${PORT}`);
+          proxyLogger.info(
+            `LLM Proxy Server: Binding to 0.0.0.0:${PORT} (accessible via localhost:${PORT} and 127.0.0.1:${PORT})`
+          );
+
+          if (appConfigService.isProxyPortDefaulted()) {
+            proxyLogger.info(
+              `(Note: PROXY_PORT environment variable was not set or invalid, using default.)`
+            );
+          }
+
+          const resolvedLlmConfigPath =
+            llmConfigService.getResolvedConfigPath();
+          if (resolvedLlmConfigPath) {
+            proxyLogger.info(
+              `LLM configurations loaded from: ${resolvedLlmConfigPath}`
+            );
+          } else {
+            proxyLogger.warn(
+              `LLM configurations path could not be determined.`
+            );
+          }
+
+          if (llmConfigService.isOperational()) {
+            const llmConfigs = llmConfigService.getLlmConfigs();
+            let numLlmConfigs = 0;
+            if (llmConfigs && llmConfigs.configs) {
+              numLlmConfigs = Object.keys(llmConfigs.configs).length;
+            }
+            proxyLogger.info(
+              `LLM Proxy Server: Successfully loaded ${numLlmConfigs} LLM configurations. Proxy is OPERATIONAL.`
+            );
+          } else {
+            const errorDetails =
+              llmConfigService.getInitializationErrorDetails();
+            proxyLogger.error(
+              `LLM Proxy Server: CRITICAL - Failed to initialize LLM configurations. Proxy is NOT OPERATIONAL.`
+            );
+            if (errorDetails && errorDetails.message) {
+              proxyLogger.error(`   Reason: ${errorDetails.message}`);
+            } else {
+              proxyLogger.error(`   Reason: Unknown initialization error.`);
+            }
+          }
+
+          const proxyAllowedOrigin = appConfigService.getProxyAllowedOrigin();
+          if (proxyAllowedOrigin && proxyAllowedOrigin.trim() !== '') {
+            proxyLogger.info(
+              `LLM Proxy Server: CORS enabled for origin(s): ${proxyAllowedOrigin}`
+            );
+          } else {
+            proxyLogger.info(
+              `LLM Proxy Server: PROXY_ALLOWED_ORIGIN not set, CORS is not specifically configured (default browser policies apply).`
+            );
+          }
+
+          const apiKeyFileRootPath =
+            appConfigService.getProxyProjectRootPathForApiKeyFiles();
+          if (apiKeyFileRootPath && apiKeyFileRootPath.trim() !== '') {
+            proxyLogger.info(
+              `LLM Proxy Server: API Key file root path set to: '${apiKeyFileRootPath}'.`
+            );
+          } else if (
+            llmConfigService.isOperational() &&
+            llmConfigService.hasFileBasedApiKeys()
+          ) {
+            proxyLogger.warn(
+              `LLM Proxy Server: WARNING - PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is NOT SET. File-based API key retrieval WILL FAIL for configured LLMs that use apiKeyFileName.`
+            );
+          } else {
+            proxyLogger.info(
+              `LLM Proxy Server: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is not set (this may be fine if no LLMs use file-based API keys or if config failed to load).`
+            );
+          }
+
+          if (appConfigService.isCacheEnabled()) {
+            const cacheConfiguration = appConfigService.getCacheConfig();
+            proxyLogger.info(
+              `LLM Proxy Server: Cache ENABLED - TTL: ${cacheConfiguration.defaultTtl}ms, Max Size: ${cacheConfiguration.maxSize} entries, API Key TTL: ${cacheConfiguration.apiKeyCacheTtl}ms`
+            );
+          } else {
+            proxyLogger.info(
+              `LLM Proxy Server: Cache DISABLED - API keys will be read from source on every request`
+            );
+          }
+
+          const salvageSummary = appConfigService.getSalvageConfig();
+          proxyLogger.info(
+            `LLM Proxy Server: Response Salvage ENABLED - TTL: ${salvageSummary.defaultTtl}ms, Max Entries: ${salvageSummary.maxEntries}`
+          );
+
+          if (appConfigService.isHttpAgentEnabled()) {
+            const httpAgentSummary = appConfigService.getHttpAgentConfig();
+            proxyLogger.info(
+              `LLM Proxy Server: HTTP Agent Pooling ENABLED - Keep-Alive: ${httpAgentSummary.keepAlive}, Max Sockets: ${httpAgentSummary.maxSockets}, Timeout: ${httpAgentSummary.timeout}ms`
+            );
+          } else {
+            proxyLogger.info(
+              `LLM Proxy Server: HTTP Agent Pooling DISABLED - New connections will be created for each request`
+            );
+          }
+
+          if (metricsService.isEnabled()) {
+            const metricsStats = metricsService.getStats();
+            proxyLogger.info(
+              `LLM Proxy Server: Metrics Collection ENABLED - Total metrics: ${metricsStats.totalMetrics}, Custom metrics: ${metricsStats.customMetrics}, Default metrics: ${metricsStats.defaultMetrics}. Prometheus endpoint available at /metrics`
+            );
+          } else {
+            proxyLogger.info(
+              `LLM Proxy Server: Metrics Collection DISABLED - Set METRICS_ENABLED=true to enable observability metrics`
+            );
+          }
+
+          const reason =
+            process.env.NODE_ENV === 'test'
+              ? 'test environment'
+              : 'debug logging disabled';
+          proxyLogger.info(
+            `LLM Proxy Server: Log Maintenance Scheduler NOT INITIALIZED (${reason})`
+          );
+
+          proxyLogger.info('--- End of Startup Summary ---');
+          resolve();
+        })
+        .on('error', (error) => {
+          proxyLogger.error(
+            'LLM Proxy Server: A critical error occurred during asynchronous server startup sequence PRIOR to app.listen.',
+            error
+          );
+          proxyLogger.error(
+            'LLM Proxy Server: CRITICAL - Proxy will NOT be operational due to a severe error during startup initialization steps.'
+          );
+          reject(error);
+        });
+    });
+
+    registerShutdownHandlers();
+  };
+
+  app.use((err, req, res, next) => {
+    proxyLogger.error('Global Error Handler: Unhandled error caught!', {
+      errorMessage: err.message,
+      errorStack: err.stack,
+      requestOriginalUrl: req.originalUrl,
+      requestMethod: req.method,
+      caughtErrorObject: err,
+    });
+
+    if (res.headersSent) {
+      proxyLogger.warn(
+        "Global Error Handler: Headers already sent for this request. Delegating to Express's default error handler.",
+        {
+          originalErrorMessage: err.message,
+          requestOriginalUrl: req.originalUrl,
+          requestMethod: req.method,
+        }
+      );
+      return next(err);
+    }
+
+    let httpStatusCodeToSend = 500;
+    const errorDefinedStatusCode = err.status || err.statusCode;
+
+    if (
+      errorDefinedStatusCode &&
+      Number.isInteger(errorDefinedStatusCode) &&
+      errorDefinedStatusCode >= 400 &&
+      errorDefinedStatusCode < 600
+    ) {
+      httpStatusCodeToSend = errorDefinedStatusCode;
+    }
+
+    sendProxyError(
+      res,
+      httpStatusCodeToSend,
+      'internal_proxy_unhandled_error',
+      'An unexpected internal server error occurred in the proxy.',
+      { originalErrorMessage: err.message },
+      LOG_LLM_ID_UNHANDLED_ERROR,
+      proxyLogger
+    );
+  });
+
+  return {
+    app,
+    start,
+    stop,
+    port: PORT,
+    logger: proxyLogger,
+  };
+}
+
+export default createProxyServer;
+
+const isMainModule =
+  process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
+
+if (isMainModule) {
+  const run = async () => {
+    const serverController = createProxyServer();
+    await serverController.start();
+  };
+
+  run().catch((error) => {
+    // eslint-disable-next-line no-console
+    console.error('LLM Proxy Server failed to start', error);
     if (process.env.NODE_ENV !== 'test') {
-      process.exit(0);
+      process.exit(1);
     }
-  }
-};
-
-// Register shutdown handlers
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-// Windows-specific handlers for better terminal compatibility
-process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));
-
-// Handle beforeExit - log storage functionality removed
-process.on('beforeExit', async (_code) => {
-  // Log storage service was removed - no cleanup needed
-  proxyLogger.debug('LLM Proxy Server: Graceful beforeExit handler completed');
-});
-
-// Asynchronous IIFE for server startup
-(async () => {
-  // LlmConfigService.initialize() is called here.
-  // It will produce its own logs regarding loading llm-configs.json (path, success/failure, counts, default ID etc.)
-  // as per AC3.
-  // proxyLogger.info('LLM Proxy Server: Initializing LlmConfigService...'); // This is redundant as LlmConfigService logs its own start.
-  await llmConfigService.initialize();
-
-  server = app.listen(PORT, '0.0.0.0', () => {
-    proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
-    // AC 4.a: Message: LLM Proxy Server listening on port [PORT]
-    proxyLogger.info(`LLM Proxy Server listening on port ${PORT}`);
-    proxyLogger.info(
-      `LLM Proxy Server: Binding to 0.0.0.0:${PORT} (accessible via localhost:${PORT} and 127.0.0.1:${PORT})`
-    );
-
-    // AC 4.a: Default Port Usage Note
-    // Using appConfigService.isProxyPortDefaulted() which was added in appConfig.js
-    if (appConfigService.isProxyPortDefaulted()) {
-      proxyLogger.info(
-        `(Note: PROXY_PORT environment variable was not set or invalid, using default.)`
-      );
-    }
-
-    // AC 4.b: Message: LLM configurations loaded from: [resolved_path_to_llm-configs.json]
-    const resolvedLlmConfigPath = llmConfigService.getResolvedConfigPath();
-    if (resolvedLlmConfigPath) {
-      proxyLogger.info(
-        `LLM configurations loaded from: ${resolvedLlmConfigPath}`
-      );
-    } else {
-      proxyLogger.warn(`LLM configurations path could not be determined.`); // Should not happen if initialize was called
-    }
-
-    // AC 4.c: Operational Status
-    if (llmConfigService.isOperational()) {
-      const llmConfigs = llmConfigService.getLlmConfigs(); // llmConfigs will not be null if operational
-      let numLlmConfigs = 0;
-      if (llmConfigs && llmConfigs.configs) {
-        numLlmConfigs = Object.keys(llmConfigs.configs).length;
-      }
-      proxyLogger.info(
-        `LLM Proxy Server: Successfully loaded ${numLlmConfigs} LLM configurations. Proxy is OPERATIONAL.`
-      );
-      // Note: LlmConfigService itself logs the default LLM ID as per AC 3.b, so not repeated here to avoid redundancy.
-    } else {
-      const errorDetails = llmConfigService.getInitializationErrorDetails();
-      proxyLogger.error(
-        `LLM Proxy Server: CRITICAL - Failed to initialize LLM configurations. Proxy is NOT OPERATIONAL.`
-      );
-      if (errorDetails && errorDetails.message) {
-        proxyLogger.error(`   Reason: ${errorDetails.message}`);
-      } else {
-        proxyLogger.error(`   Reason: Unknown initialization error.`);
-      }
-      // Further details (stage, path) are logged by LlmConfigService itself.
-    }
-
-    // AC 4.d: CORS Configuration
-    const proxyAllowedOrigin = appConfigService.getProxyAllowedOrigin(); // Get the raw env value
-    if (proxyAllowedOrigin && proxyAllowedOrigin.trim() !== '') {
-      proxyLogger.info(
-        `LLM Proxy Server: CORS enabled for origin(s): ${proxyAllowedOrigin}`
-      );
-    } else {
-      proxyLogger.info(
-        `LLM Proxy Server: PROXY_ALLOWED_ORIGIN not set, CORS is not specifically configured (default browser policies apply).`
-      );
-    }
-
-    // AC 4.e: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES Status
-    const apiKeyFileRootPath =
-      appConfigService.getProxyProjectRootPathForApiKeyFiles();
-    if (apiKeyFileRootPath && apiKeyFileRootPath.trim() !== '') {
-      proxyLogger.info(
-        `LLM Proxy Server: API Key file root path set to: '${apiKeyFileRootPath}'.`
-      );
-    } else {
-      if (
-        llmConfigService.isOperational() &&
-        llmConfigService.hasFileBasedApiKeys()
-      ) {
-        proxyLogger.warn(
-          `LLM Proxy Server: WARNING - PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is NOT SET. File-based API key retrieval WILL FAIL for configured LLMs that use apiKeyFileName.`
-        );
-      } else {
-        proxyLogger.info(
-          `LLM Proxy Server: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is not set (this may be fine if no LLMs use file-based API keys or if config failed to load).`
-        );
-      }
-    }
-
-    // Cache Configuration Status
-    if (appConfigService.isCacheEnabled()) {
-      const cacheConfig = appConfigService.getCacheConfig();
-      proxyLogger.info(
-        `LLM Proxy Server: Cache ENABLED - TTL: ${cacheConfig.defaultTtl}ms, Max Size: ${cacheConfig.maxSize} entries, API Key TTL: ${cacheConfig.apiKeyCacheTtl}ms`
-      );
-    } else {
-      proxyLogger.info(
-        `LLM Proxy Server: Cache DISABLED - API keys will be read from source on every request`
-      );
-    }
-
-    const salvageSummary = appConfigService.getSalvageConfig();
-    proxyLogger.info(
-      `LLM Proxy Server: Response Salvage ENABLED - TTL: ${salvageSummary.defaultTtl}ms, Max Entries: ${salvageSummary.maxEntries}`
-    );
-
-    // HTTP Agent Configuration Status
-    if (appConfigService.isHttpAgentEnabled()) {
-      const httpAgentConfig = appConfigService.getHttpAgentConfig();
-      proxyLogger.info(
-        `LLM Proxy Server: HTTP Agent Pooling ENABLED - Keep-Alive: ${httpAgentConfig.keepAlive}, Max Sockets: ${httpAgentConfig.maxSockets}, Timeout: ${httpAgentConfig.timeout}ms`
-      );
-    } else {
-      proxyLogger.info(
-        `LLM Proxy Server: HTTP Agent Pooling DISABLED - New connections will be created for each request`
-      );
-    }
-
-    // Metrics Service Configuration Status
-    if (metricsService.isEnabled()) {
-      const metricsStats = metricsService.getStats();
-      proxyLogger.info(
-        `LLM Proxy Server: Metrics Collection ENABLED - Total metrics: ${metricsStats.totalMetrics}, Custom metrics: ${metricsStats.customMetrics}, Default metrics: ${metricsStats.defaultMetrics}. Prometheus endpoint available at /metrics`
-      );
-    } else {
-      proxyLogger.info(
-        `LLM Proxy Server: Metrics Collection DISABLED - Set METRICS_ENABLED=true to enable observability metrics`
-      );
-    }
-
-    // Log Maintenance Scheduler Status (debug logging functionality removed)
-    const reason =
-      process.env.NODE_ENV === 'test'
-        ? 'test environment'
-        : 'debug logging disabled';
-    proxyLogger.info(
-      `LLM Proxy Server: Log Maintenance Scheduler NOT INITIALIZED (${reason})`
-    );
-
-    proxyLogger.info('--- End of Startup Summary ---');
   });
-})().catch((error) => {
-  // This catch is for errors during the async IIFE itself (e.g. if llmConfigService.initialize() throws an unhandled error before app.listen)
-  // LlmConfigService's initialize method is designed to catch its own errors and set operational status,
-  // so a throw here would be unexpected unless there's a flaw in its error handling or some other async setup issue.
-  proxyLogger.error(
-    'LLM Proxy Server: A critical error occurred during asynchronous server startup sequence PRIOR to app.listen.',
-    error
-  );
-  // AppConfigService and LlmConfigService should have logged their states.
-  // The listen callback summary will not run if we get here.
-  // We might want a minimal "Proxy NOT OPERATIONAL due to pre-listen critical failure" log here.
-  proxyLogger.error(
-    'LLM Proxy Server: CRITICAL - Proxy will NOT be operational due to a severe error during startup initialization steps.'
-  );
-  if (process.env.NODE_ENV !== 'test') {
-    process.exit(1); // Ensure process exits on critical startup failure
-  }
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  proxyLogger.error('Global Error Handler: Unhandled error caught!', {
-    errorMessage: err.message,
-    errorStack: err.stack,
-    requestOriginalUrl: req.originalUrl,
-    requestMethod: req.method,
-    caughtErrorObject: err, // Be cautious logging the whole object in production
-  });
-
-  if (res.headersSent) {
-    proxyLogger.warn(
-      "Global Error Handler: Headers already sent for this request. Delegating to Express's default error handler.",
-      {
-        originalErrorMessage: err.message,
-        requestOriginalUrl: req.originalUrl,
-        requestMethod: req.method,
-      }
-    );
-    return next(err);
-  }
-
-  let httpStatusCodeToSend = 500;
-  const errorDefinedStatusCode = err.status || err.statusCode;
-
-  if (
-    errorDefinedStatusCode &&
-    Number.isInteger(errorDefinedStatusCode) &&
-    errorDefinedStatusCode >= 400 &&
-    errorDefinedStatusCode < 600
-  ) {
-    httpStatusCodeToSend = errorDefinedStatusCode;
-  }
-
-  sendProxyError(
-    res,
-    httpStatusCodeToSend,
-    'internal_proxy_unhandled_error',
-    'An unexpected internal server error occurred in the proxy.',
-    { originalErrorMessage: err.message }, // Avoid sending full err object to client
-    LOG_LLM_ID_UNHANDLED_ERROR,
-    proxyLogger
-  );
-});
+}

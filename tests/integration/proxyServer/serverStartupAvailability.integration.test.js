@@ -5,96 +5,85 @@
  */
 
 const { describe, it, expect, beforeAll, afterAll } = require('@jest/globals');
-const { spawn } = require('child_process');
-const path = require('path');
+/**
+ * Waits for a server readiness endpoint to respond without connection errors.
+ * @param {string} url - Endpoint to poll for readiness.
+ * @param {object} options - Polling configuration.
+ * @param {number} options.timeoutMs - Total time to wait before failing.
+ * @param {number} [options.intervalMs=100] - Delay between polls in milliseconds.
+ */
+async function waitForReadiness(url, { timeoutMs, intervalMs = 100 }) {
+  const deadline = Date.now() + timeoutMs;
+  /** @type {Error | null} */
+  let lastError = null;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (Date.now() >= deadline) {
+      const message =
+        lastError && lastError.message
+          ? `: ${lastError.message}`
+          : '';
+      throw new Error(`Timed out waiting for readiness${message}`);
+    }
+
+    try {
+      const response = await fetch(url);
+      if (response.ok || response.status === 503) {
+        return;
+      }
+      lastError = new Error(
+        `Unexpected status code while waiting for readiness: ${response.status}`
+      );
+    } catch (error) {
+      lastError = error;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
 
 describe('LLM Proxy Server Startup and Availability - Integration', () => {
-  let serverProcess = null;
+  /** @type {{ stop: () => Promise<void>; start: () => Promise<void> } | null} */
+  let proxyController = null;
   const SERVER_PORT = 3002; // Use different port to avoid conflicts
   const SERVER_STARTUP_TIMEOUT = 30000;
   const CONNECTION_TEST_TIMEOUT = 10000;
 
   beforeAll(async () => {
-    // Start the proxy server for testing
-    const serverPath = path.join(
-      __dirname,
-      '../../../llm-proxy-server/src/core/server.js'
-    );
-
     // Set test environment variables
     process.env.PROXY_PORT = SERVER_PORT.toString();
     process.env.PROXY_ALLOWED_ORIGIN =
       'http://localhost:8080,http://127.0.0.1:8080';
     process.env.NODE_ENV = 'test';
     process.env.LLM_CONFIG_PATH = '../config/llm-configs.json';
+    process.env.METRICS_ENABLED = 'false';
+    process.env.METRICS_COLLECT_DEFAULT = 'false';
+    process.env.RATE_LIMITING_ENABLED = 'false';
 
-    serverProcess = spawn('node', [serverPath], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env },
-      cwd: path.join(__dirname, '../../../llm-proxy-server'),
+    const { createProxyServer } = await import(
+      '../../../llm-proxy-server/src/core/server.js'
+    );
+
+    proxyController = createProxyServer({
+      metricsEnabled: false,
+      collectDefaultMetrics: false,
+      rateLimitingEnabled: false,
     });
 
-    // Wait for server to start
-    await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(
-          new Error(`Server failed to start within ${SERVER_STARTUP_TIMEOUT}ms`)
-        );
-      }, SERVER_STARTUP_TIMEOUT);
-
-      let output = '';
-
-      serverProcess.stdout.on('data', (data) => {
-        output += data.toString();
-        // Check for the actual log message from the server
-        if (
-          output.includes(
-            `LLM Proxy Server listening on port ${SERVER_PORT}`
-          ) ||
-          output.includes(`listening on port ${SERVER_PORT}`)
-        ) {
-          clearTimeout(timeout);
-          resolve();
-        }
-      });
-
-      serverProcess.stderr.on('data', (data) => {
-        console.error('Server stderr:', data.toString());
-      });
-
-      serverProcess.on('error', (error) => {
-        clearTimeout(timeout);
-        reject(new Error(`Server process error: ${error.message}`));
-      });
-
-      serverProcess.on('exit', (code) => {
-        if (code !== 0) {
-          clearTimeout(timeout);
-          reject(new Error(`Server exited with code ${code}`));
-        }
-      });
-    });
-
-    // Give server additional time to fully initialize
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await proxyController.start();
+    await waitForReadiness(
+      `http://127.0.0.1:${SERVER_PORT}/health/ready`,
+      {
+        timeoutMs: SERVER_STARTUP_TIMEOUT,
+        intervalMs: 100,
+      }
+    );
   }, SERVER_STARTUP_TIMEOUT + 5000);
 
   afterAll(async () => {
-    if (serverProcess) {
-      serverProcess.kill('SIGTERM');
-
-      // Wait for graceful shutdown
-      await new Promise((resolve) => {
-        const timeout = setTimeout(() => {
-          serverProcess.kill('SIGKILL');
-          resolve();
-        }, 5000);
-
-        serverProcess.on('exit', () => {
-          clearTimeout(timeout);
-          resolve();
-        });
-      });
+    if (proxyController) {
+      await proxyController.stop();
     }
   });
 
@@ -117,41 +106,32 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
         `http://127.0.0.1:${SERVER_PORT}`,
       ];
 
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(`${endpoint}/health`, {
-            method: 'GET',
-            timeout: CONNECTION_TEST_TIMEOUT,
-          });
-
-          // We expect either success or 404, not connection refused
-          expect([200, 404]).toContain(response.status);
-        } catch (error) {
-          // If health endpoint doesn't exist, try a basic request to root
-          if (error.code === 'ECONNREFUSED') {
-            throw new Error(
-              `Server not accessible at ${endpoint}: ${error.message}`
-            );
-          }
-
-          // Try the root endpoint instead
+      await Promise.all(
+        endpoints.map(async (endpoint) => {
           try {
+            const response = await fetch(`${endpoint}/health`, {
+              method: 'GET',
+              timeout: CONNECTION_TEST_TIMEOUT,
+            });
+
+            // We expect either success or 404, not connection refused
+            expect([200, 404]).toContain(response.status);
+          } catch (error) {
+            if (error.code === 'ECONNREFUSED') {
+              throw new Error(
+                `Server not accessible at ${endpoint}: ${error.message}`
+              );
+            }
+
             const rootResponse = await fetch(`${endpoint}/`, {
               method: 'GET',
               timeout: CONNECTION_TEST_TIMEOUT,
             });
 
-            // Should get some response, even if it's an error
             expect(rootResponse.status).toBeDefined();
-          } catch (rootError) {
-            if (rootError.code === 'ECONNREFUSED') {
-              throw new Error(
-                `Server not accessible at ${endpoint}: ${rootError.message}`
-              );
-            }
           }
-        }
-      }
+        })
+      );
     });
   });
 
@@ -162,16 +142,18 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
         `http://127.0.0.1:${SERVER_PORT}/health`,
       ];
 
-      for (const endpoint of testEndpoints) {
-        const response = await fetch(endpoint, {
-          method: 'GET',
-          timeout: CONNECTION_TEST_TIMEOUT,
-        });
+      await Promise.all(
+        testEndpoints.map(async (endpoint) => {
+          const response = await fetch(endpoint, {
+            method: 'GET',
+            timeout: CONNECTION_TEST_TIMEOUT,
+          });
 
-        // Should get a successful response from health endpoint
-        expect(response).toBeDefined();
-        expect(response.status).toBe(200);
-      }
+          // Should get a successful response from health endpoint
+          expect(response).toBeDefined();
+          expect(response.status).toBe(200);
+        })
+      );
     });
 
     it('should have readiness endpoint available', async () => {
@@ -279,19 +261,24 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
       // Test CORS configuration with health endpoint (simpler than LLM requests)
       const testOrigins = ['http://localhost:8080', 'http://127.0.0.1:8080'];
 
-      for (const origin of testOrigins) {
-        const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/health`, {
-          method: 'GET',
-          headers: {
-            Origin: origin,
-          },
-          timeout: 5000,
-        });
+      await Promise.all(
+        testOrigins.map(async (origin) => {
+          const response = await fetch(
+            `http://127.0.0.1:${SERVER_PORT}/health`,
+            {
+              method: 'GET',
+              headers: {
+                Origin: origin,
+              },
+              timeout: 5000,
+            }
+          );
 
-        // Should not get CORS errors for allowed origins
-        expect(response.status).not.toBe(403);
-        expect(response.status).toBe(200);
-      }
+          // Should not get CORS errors for allowed origins
+          expect(response.status).not.toBe(403);
+          expect(response.status).toBe(200);
+        })
+      );
     });
   });
 });
