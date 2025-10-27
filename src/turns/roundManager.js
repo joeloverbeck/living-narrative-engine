@@ -24,6 +24,11 @@ export default class RoundManager {
   async startRound(strategyOrOptions = 'round-robin', initiativeDataParam) {
     this.#logger.debug('RoundManager.startRound() initiating...');
 
+    // A new round is not considered active until we successfully hand control to
+    // the turn order service. Reset the flag eagerly so callers never observe a
+    // stale "in progress" state when this method throws before completion.
+    this.#inProgress = false;
+
     let strategy;
     let initiativeData;
 

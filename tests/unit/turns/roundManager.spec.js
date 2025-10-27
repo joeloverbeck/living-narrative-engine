@@ -118,6 +118,25 @@ describe('RoundManager', () => {
       expect(roundManager.hadSuccess).toBe(true);
     });
 
+    it('should clear inProgress flag if a new round fails to start', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      await roundManager.startRound();
+      expect(roundManager.inProgress).toBe(true);
+
+      mockEntityManager.entities = [];
+
+      await expect(roundManager.startRound()).rejects.toThrow(
+        'Cannot start a new round: No active entities with an Actor component found.'
+      );
+
+      expect(roundManager.inProgress).toBe(false);
+    });
+
     it('should use initiative strategy when provided with initiative data', async () => {
       // Arrange
       const mockActor = {
