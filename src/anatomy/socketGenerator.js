@@ -196,26 +196,27 @@ class SocketGenerator {
    * @returns {string} Resolved orientation string
    * @private
    */
-  #resolveOrientation(
-    scheme = 'indexed',
-    index,
-    totalCount,
-    positions = null,
-    arrangement = null
-  ) {
+  #resolveOrientation(scheme = 'indexed', index, totalCount, positions, arrangement) {
+    const effectivePositions = positions ?? null;
+    const effectiveArrangement = arrangement ?? null;
+
     switch (scheme) {
       case 'bilateral':
         return this.#resolveBilateralOrientation(
           index,
           totalCount,
-          arrangement
+          effectiveArrangement
         );
 
       case 'radial':
-        return this.#resolveRadialOrientation(index, totalCount, positions);
+        return this.#resolveRadialOrientation(
+          index,
+          totalCount,
+          effectivePositions
+        );
 
       case 'custom':
-        return this.#resolveCustomOrientation(index, positions);
+        return this.#resolveCustomOrientation(index, effectivePositions);
 
       case 'indexed':
       default:
@@ -233,11 +234,13 @@ class SocketGenerator {
    * @returns {string} Bilateral orientation
    * @private
    */
-  #resolveBilateralOrientation(index, totalCount, arrangement = null) {
+  #resolveBilateralOrientation(index, totalCount, arrangement) {
+    const arrangementType = arrangement ?? null;
+
     // For quadrupedal arrangement (4 legs)
-    if (arrangement === 'quadrupedal' && totalCount === 4) {
+    if (arrangementType === 'quadrupedal' && totalCount === 4) {
       const positions = ['left_front', 'right_front', 'left_rear', 'right_rear'];
-      return positions[index - 1] || 'mid';
+      return positions[index - 1];
     }
 
     // Standard bilateral: alternate left/right
@@ -264,10 +267,12 @@ class SocketGenerator {
    * @returns {string} Radial position name
    * @private
    */
-  #resolveRadialOrientation(index, totalCount, positions = null) {
-    if (positions && positions.length > 0) {
+  #resolveRadialOrientation(index, totalCount, positions) {
+    const effectivePositions = positions ?? null;
+
+    if (effectivePositions && effectivePositions.length > 0) {
       // Use explicit positions array (0-based indexing)
-      return positions[index - 1] || `position_${index}`;
+      return effectivePositions[index - 1] || `position_${index}`;
     }
 
     // Generate default radial positions based on count
@@ -283,7 +288,7 @@ class SocketGenerator {
         'left',
         'anterior_left',
       ];
-      return octagonalPositions[index - 1] || `position_${index}`;
+      return octagonalPositions[index - 1];
     }
 
     // Default: use generic position naming
@@ -298,15 +303,17 @@ class SocketGenerator {
    * @returns {string} Position name from array
    * @private
    */
-  #resolveCustomOrientation(index, positions = null) {
-    if (!positions || positions.length === 0) {
+  #resolveCustomOrientation(index, positions) {
+    const effectivePositions = positions ?? null;
+
+    if (!effectivePositions || effectivePositions.length === 0) {
       this.#logger.warn(
         `SocketGenerator: Custom orientation scheme used without positions array, falling back to index ${index}`
       );
       return `position_${index}`;
     }
 
-    return positions[index - 1] || `position_${index}`;
+    return effectivePositions[index - 1] || `position_${index}`;
   }
 
   /**
