@@ -70,15 +70,35 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
     }
 
     // Ensure 'success' is a boolean, as required by the schema.
-    // Default to true if it's not explicitly provided or is not a boolean,
-    // though the calling code in TurnEndingState should provide a valid boolean.
-    const hasBooleanSuccess = typeof success === 'boolean';
-    const isTurnSuccessful = hasBooleanSuccess ? success : true;
-    if (!hasBooleanSuccess) {
-      this.#log.warn(
-        `EventBusTurnEndAdapter: 'success' parameter was not a boolean (received: ${success}). Defaulting to 'true'. EntityId: ${entityId}`
-      );
+    // Treat non-boolean values as an error so we do not misreport failed turns
+    // as successes.
+    if (typeof success !== 'boolean') {
+      const errMsg =
+        `EventBusTurnEndAdapter: 'success' parameter must be a boolean for entity ${entityId}. Received: ${success}`;
+
+      this.#log.error(errMsg);
+
+      try {
+        await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: errMsg,
+          details: {
+            entityId,
+            receivedType: typeof success,
+            receivedValue: success,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (dispatchErr) {
+        this.#log.error(
+          `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} after invalid success value for ${entityId}.`,
+          dispatchErr
+        );
+      }
+
+      throw new TypeError(errMsg);
     }
+
+    const isTurnSuccessful = success;
 
     this.#log.debug(
       `EventBusTurnEndAdapter: Received notifyTurnEnded for ${entityId} with success=${isTurnSuccessful}. Dispatching ${TURN_ENDED_ID} with entityId and success status.`
