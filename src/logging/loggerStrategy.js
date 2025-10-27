@@ -170,15 +170,27 @@ class LoggerStrategy {
     // eslint-disable-next-line no-undef
     if (typeof process !== 'undefined' && process.env?.DEBUG_LOG_MODE) {
       // eslint-disable-next-line no-undef
-      const envMode = process.env.DEBUG_LOG_MODE.toLowerCase();
-      if (Object.values(LoggerMode).includes(envMode)) {
+      const rawEnvMode = process.env.DEBUG_LOG_MODE;
+      const envMode =
+        typeof rawEnvMode === 'string' ? rawEnvMode.trim().toLowerCase() : '';
+      if (envMode && Object.values(LoggerMode).includes(envMode)) {
         return envMode;
       }
     }
 
     // Priority 3: Config file mode
-    if (config.mode && Object.values(LoggerMode).includes(config.mode)) {
-      return config.mode;
+    if (config.mode) {
+      const normalizedConfigMode =
+        typeof config.mode === 'string'
+          ? config.mode.trim().toLowerCase()
+          : config.mode;
+      if (typeof normalizedConfigMode === 'string') {
+        if (Object.values(LoggerMode).includes(normalizedConfigMode)) {
+          return normalizedConfigMode;
+        }
+      } else if (Object.values(LoggerMode).includes(config.mode)) {
+        return config.mode;
+      }
     }
 
     // Priority 4: NODE_ENV mapping or JEST_WORKER_ID detection
