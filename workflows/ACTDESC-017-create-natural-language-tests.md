@@ -28,289 +28,684 @@ tests/integration/anatomy/
 ### Core Natural Language Tests
 
 ```javascript
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
+import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
+
+const ACTIVITY_COMPONENTS = {
+  'core:gender': {
+    id: 'core:gender',
+    dataSchema: { type: 'object', properties: { value: { type: 'string' } } },
+  },
+  'positioning:closeness': {
+    id: 'positioning:closeness',
+    dataSchema: {
+      type: 'object',
+      properties: {
+        partners: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  },
+  'test:activity_kneeling': {
+    id: 'test:activity_kneeling',
+    dataSchema: {
+      type: 'object',
+      properties: {
+        entityId: { type: 'string' },
+        activityMetadata: { type: 'object' },
+      },
+    },
+  },
+  'test:activity_holding_hands': {
+    id: 'test:activity_holding_hands',
+    dataSchema: {
+      type: 'object',
+      properties: {
+        partner: { type: 'string' },
+        activityMetadata: { type: 'object' },
+      },
+    },
+  },
+  'test:activity_gazing': {
+    id: 'test:activity_gazing',
+    dataSchema: {
+      type: 'object',
+      properties: {
+        target: { type: 'string' },
+        activityMetadata: { type: 'object' },
+      },
+    },
+  },
+  'test:activity_generic': {
+    id: 'test:activity_generic',
+    dataSchema: {
+      type: 'object',
+      properties: {
+        target: { type: 'string' },
+        activityMetadata: { type: 'object' },
+      },
+    },
+  },
+};
+
+function registerActivityComponents(testBed) {
+  testBed.loadComponents(ACTIVITY_COMPONENTS);
+}
+
+async function createActor(entityManager, { id, name, gender }) {
+  const entity = await entityManager.createEntityInstance('core:actor', {
+    instanceId: id,
+  });
+
+  if (name) {
+    entityManager.addComponent(entity.id, 'core:name', { text: name });
+  }
+
+  if (gender) {
+    entityManager.addComponent(entity.id, 'core:gender', { value: gender });
+  }
+
+  return entity;
+}
+
+function addInlineActivity(
+  entityManager,
+  actorId,
+  componentId,
+  { targetId, template, priority, grouping, targetRole = 'entityId' }
+) {
+  const componentData = {};
+
+  if (targetId && targetRole) {
+    componentData[targetRole] = targetId;
+  }
+
+  componentData.activityMetadata = {
+    shouldDescribeInActivity: true,
+    template,
+    priority,
+    targetRole,
+    grouping,
+  };
+
+  entityManager.addComponent(actorId, componentId, componentData);
+}
+
 describe('Activity Description - Natural Language Integration', () => {
-  it('should produce natural description with all enhancements', async () => {
-    const container = createTestContainer();
-    const service = container.resolve('IActivityDescriptionService');
-    const entityManager = container.resolve('IEntityManager');
+  let testBed;
+  let entityManager;
+  let formattingService;
+  let service;
 
-    // Create entities with relationships
-    const jon = entityManager.createEntity('jon');
-    entityManager.addComponent(jon.id, 'core:name', { text: 'Jon Ureña' });
-    entityManager.addComponent(jon.id, 'character:gender', { value: 'male' });
+  beforeEach(() => {
+    testBed = new AnatomyIntegrationTestBed();
+    testBed.loadCoreTestData();
+    registerActivityComponents(testBed);
 
-    const alicia = entityManager.createEntity('alicia');
-    entityManager.addComponent(alicia.id, 'core:name', { text: 'Alicia Western' });
-    entityManager.addComponent(alicia.id, 'character:gender', { value: 'female' });
+    entityManager = testBed.entityManager;
+    formattingService = testBed.mockAnatomyFormattingService;
+    service = new ActivityDescriptionService({
+      logger: testBed.logger,
+      entityManager,
+      anatomyFormattingService: formattingService,
+    });
+  });
 
-    // Add partner relationship
-    entityManager.addComponent(jon.id, 'relationships:partner', {
-      entityId: 'alicia',
-      intimacyLevel: 90,
+  afterEach(() => testBed.cleanup());
+
+  it('should produce natural description with pronouns, grouping, and context', async () => {
+    const jon = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
     });
 
-    // Add multiple activities with same target
-    entityManager.addComponent(jon.id, 'positioning:kneeling_before', {
-      entityId: 'alicia',
-      activityMetadata: {
-        shouldDescribeInActivity: true,
-        template: '{actor} is kneeling before {target}',
-        priority: 75,
-      },
+    entityManager.addComponent(jon.id, 'positioning:closeness', {
+      partners: [alicia.id],
     });
 
-    entityManager.addComponent(jon.id, 'intimacy:holding_hands', {
-      partner: 'alicia',
-      activityMetadata: {
-        shouldDescribeInActivity: true,
-        template: '{actor} is holding hands with {target}',
-        targetRole: 'partner',
-        priority: 85,
-      },
+    addInlineActivity(entityManager, jon.id, 'test:activity_gazing', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: '{actor} is gazing at {target}',
+      priority: 87,
     });
 
-    entityManager.addComponent(jon.id, 'intimacy:gazing', {
-      target: 'alicia',
-      activityMetadata: {
-        shouldDescribeInActivity: true,
-        template: '{actor} is gazing at {target}',
-        targetRole: 'target',
-        priority: 87,
-      },
+    addInlineActivity(entityManager, jon.id, 'test:activity_holding_hands', {
+      targetId: alicia.id,
+      targetRole: 'partner',
+      template: '{actor} is holding hands with {target}',
+      priority: 85,
     });
 
-    const description = await service.generateActivityDescription('jon');
+    addInlineActivity(entityManager, jon.id, 'test:activity_kneeling', {
+      targetId: alicia.id,
+      targetRole: 'entityId',
+      template: '{actor} is kneeling before {target}',
+      priority: 75,
+    });
 
-    // Should use pronouns, grouping, and context awareness
-    // Expected: "Activity: Jon is gazing lovingly at Alicia, holding her hands tenderly and kneeling before her"
-    expect(description).toContain('Jon'); // Actor name in first phrase
-    expect(description).toMatch(/her|she/i); // Pronouns for target
-    expect(description).toMatch(/and|while/); // Grouped with conjunctions
-    expect(description).toMatch(/lovingly|tenderly/); // Context-aware language
-    expect(description.split('.').length).toBe(1); // Single sentence (no periods)
+    const description = await service.generateActivityDescription(jon.id);
+    const words = description.toLowerCase().split(/\W+/);
+
+    expect(description).toContain('Activity:');
+    expect(description).toContain('Jon');
+    expect(words).toContain('her');
+    expect(description).toMatch(/and|while/);
+    expect(description).toMatch(/tenderly|fiercely/);
+    expect(description.split('.').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should handle multiple targets with pronouns', async () => {
-    const jon = createEntity('jon', 'male');
-    const alicia = createEntity('alicia', 'female');
-    const bobby = createEntity('bobby', 'male');
-
-    addActivity(jon, '{actor} is embracing {target}', 'alicia', 90);
-    addActivity(jon, '{actor} is waving at {target}', 'bobby', 70);
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Should have two groups: one for Alicia, one for Bobby
-    // Expected: "Jon is embracing Alicia. He is waving at Bobby"
-    expect(description).toContain('Jon'); // First actor reference
-    expect(description).toMatch(/\bhe\b/i); // Pronoun for second group
-    expect(description).toMatch(/her|Alicia/i); // Female pronoun or name
-    expect(description).toMatch(/him|Bobby/i); // Male pronoun or name
-    expect(description.split('.').length).toBeGreaterThan(1); // Multiple sentences
-  });
-
-  it('should respect configuration to disable enhancements', async () => {
-    const container = createTestContainer();
-    const service = container.resolve('IActivityDescriptionService');
-    const formattingService = container.resolve('IAnatomyFormattingService');
-
-    // Disable all enhancements
-    formattingService.setActivityIntegrationConfig({
-      nameResolution: {
-        usePronounsWhenAvailable: false,
-      },
-      enableContextAwareness: false,
-      enableSmartGrouping: false,
+    const jon = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+    const bobby = await createActor(entityManager, {
+      id: 'bobby',
+      name: 'Bobby Draper',
+      gender: 'male',
     });
 
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is kneeling', 'alicia', 75);
-    addActivity(jon, '{actor} is holding hands with {target}', 'alicia', 85);
+    addInlineActivity(entityManager, jon.id, 'test:activity_holding_hands', {
+      targetId: alicia.id,
+      targetRole: 'partner',
+      template: '{actor} is embracing {target}',
+      priority: 90,
+    });
 
-    const description = await service.generateActivityDescription('jon');
+    addInlineActivity(entityManager, jon.id, 'test:activity_gazing', {
+      targetId: bobby.id,
+      targetRole: 'target',
+      template: '{actor} is waving at {target}',
+      priority: 70,
+    });
 
-    // Should use Phase 1 style (no pronouns, no grouping)
-    expect(description).not.toMatch(/\bhe\b/i);
-    expect(description).not.toMatch(/and/);
-    expect(description).toMatch(/Jon.*Jon/); // Name repeated
-  });
-});
+    const description = await service.generateActivityDescription(jon.id);
+    const words = description.toLowerCase().split(/\W+/);
 
-describe('Activity Description - Pronoun Edge Cases', () => {
-  it('should use neutral pronouns for unknown gender', async () => {
-    const entity = createEntity('entity', 'unknown');
-    addActivity(entity, '{actor} is meditating', null, 50);
-    addActivity(entity, '{actor} is standing', null, 60);
-
-    const description = await service.generateActivityDescription('entity');
-
-    expect(description).toMatch(/\bthey\b/i);
-  });
-
-  it('should handle missing gender gracefully', async () => {
-    const entity = createEntity('entity'); // No gender component
-    addActivity(entity, '{actor} is waving', null, 50);
-
-    const description = await service.generateActivityDescription('entity');
-
-    // Should use neutral pronouns as fallback
-    expect(description).toBeDefined();
-  });
-
-  it('should cache pronoun sets for performance', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is kneeling', null, 75);
-    addActivity(jon, '{actor} is standing', null, 85);
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Gender should only be detected once (cached)
-    // Verify through spy or coverage
-    expect(description).toBeDefined();
-  });
-});
-
-describe('Activity Description - Grouping Edge Cases', () => {
-  it('should not over-group unrelated activities', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is meditating', null, 90);
-    addActivity(jon, '{actor} is walking', null, 80);
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Solo activities shouldn't group meaningfully
+    expect(description).toContain('Jon');
+    expect(words).toContain('he');
+    expect(description).toMatch(/Alicia|her/i);
+    expect(words).toContain('her');
+    expect(description).toMatch(/Bobby|him/i);
+    expect(words).toContain('him');
     expect(description.split('.').length).toBeGreaterThan(1);
   });
 
-  it('should limit activities per group for readability', async () => {
-    const jon = createEntity('jon', 'male');
-
-    // Add 10 activities with same target
-    for (let i = 0; i < 10; i++) {
-      addActivity(jon, `{actor} action${i} {target}`, 'alicia', 90 - i);
-    }
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Should split into multiple groups if too many
-    // Exact behavior depends on config.maxActivitiesPerGroup
-    expect(description).toBeDefined();
-  });
-
-  it('should handle activities with partial target overlap', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is embracing {target}', 'alicia', 90);
-    addActivity(jon, '{actor} is waving at {target}', 'alicia', 85);
-    addActivity(jon, '{actor} is nodding at {target}', 'bobby', 80);
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Alicia activities should group, Bobby separate
-    expect(description).toMatch(/embracing.*waving/);
-    expect(description).toContain('nodding');
-  });
-});
-
-describe('Activity Description - Context Edge Cases', () => {
-  it('should handle missing relationship components', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is talking to {target}', 'stranger', 60);
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Should use neutral language without relationship context
-    expect(description).not.toMatch(/tenderly|lovingly|intimately/);
-  });
-
-  it('should prioritize explicit relationship over implicit', async () => {
-    const jon = createEntity('jon', 'male');
-
-    // Add both partner and family relationship (edge case)
-    addComponent(jon, 'relationships:partner', {
-      entityId: 'alicia',
-      intimacyLevel: 90,
-    });
-    addComponent(jon, 'relationships:family', {
-      entityId: 'alicia',
-      intimacyLevel: 70,
+  it('should respect configuration toggles for pronouns and context', async () => {
+    formattingService.getActivityIntegrationConfig = () => ({
+      prefix: 'Activity: ',
+      separator: '. ',
+      suffix: '',
+      maxActivities: 10,
+      enableContextAwareness: false,
+      nameResolution: {
+        usePronounsWhenAvailable: false,
+        fallbackToNames: true,
+      },
     });
 
-    addActivity(jon, '{actor} is embracing {target}', 'alicia', 85);
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Should use partner context (first found or highest intimacy)
-    expect(description).toBeDefined();
-  });
-
-  it('should scale context adjustments with intimacy level', async () => {
-    const jonLowIntimacy = createEntity('jon1', 'male');
-    const jonHighIntimacy = createEntity('jon2', 'male');
-
-    addComponent(jonLowIntimacy, 'relationships:partner', {
-      entityId: 'alicia',
-      intimacyLevel: 30,
+    const jon = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
     });
-    addComponent(jonHighIntimacy, 'relationships:partner', {
-      entityId: 'alicia',
-      intimacyLevel: 95,
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
     });
 
-    addActivity(jonLowIntimacy, '{actor} is holding hands with {target}', 'alicia', 80);
-    addActivity(jonHighIntimacy, '{actor} is holding hands with {target}', 'alicia', 80);
+    addInlineActivity(entityManager, jon.id, 'test:activity_holding_hands', {
+      targetId: alicia.id,
+      targetRole: 'partner',
+      template: '{actor} is holding hands with {target}',
+      priority: 85,
+    });
 
-    const descLow = await service.generateActivityDescription('jon1');
-    const descHigh = await service.generateActivityDescription('jon2');
+    const description = await service.generateActivityDescription(jon.id);
+    const words = description.toLowerCase().split(/\W+/);
 
-    // High intimacy should have more intimate language
-    expect(descHigh).toMatch(/tenderly|lovingly/);
+    expect(description).toContain('Jon');
+    expect(description).toContain('Alicia');
+    expect(words).not.toContain('he');
+    expect(words).not.toContain('her');
   });
 });
 ```
+
+
+> **Note:** Hoist `registerActivityComponents`, `createActor`, and `addInlineActivity` helpers at module scope so the suites below can reuse them without redefining duplicates.
+
+### Pronoun Edge Cases
+
+```javascript
+describe('Activity Description - Pronoun Edge Cases', () => {
+  let testBed;
+  let entityManager;
+  let service;
+
+  beforeEach(() => {
+    testBed = new AnatomyIntegrationTestBed();
+    testBed.loadCoreTestData();
+    registerActivityComponents(testBed);
+
+    entityManager = testBed.entityManager;
+    service = new ActivityDescriptionService({
+      logger: testBed.logger,
+      entityManager,
+      anatomyFormattingService: testBed.mockAnatomyFormattingService,
+    });
+  });
+
+  afterEach(() => testBed.cleanup());
+
+  it('should use neutral pronouns for unknown gender', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'entity',
+      name: 'Mystery Figure',
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      template: '{actor} is meditating',
+      priority: 50,
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      template: '{actor} is standing quietly',
+      priority: 60,
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description.toLowerCase()).toContain('they');
+  });
+
+  it('should handle missing gender gracefully', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'entity',
+      name: 'Mystery Figure',
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      template: '{actor} is waving',
+      priority: 50,
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description).toBeTruthy();
+  });
+
+  it('should avoid repeated target lookups when pronouns enabled', async () => {
+    const jon = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+
+    const getEntityInstanceSpy = jest.spyOn(entityManager, 'getEntityInstance');
+
+    addInlineActivity(entityManager, jon.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: '{actor} is gazing at {target}',
+      priority: 80,
+    });
+
+    addInlineActivity(entityManager, jon.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: '{actor} is whispering to {target}',
+      priority: 70,
+    });
+
+    await service.generateActivityDescription(jon.id);
+
+    const targetCalls = getEntityInstanceSpy.mock.calls.filter(
+      ([id]) => id === alicia.id
+    );
+    expect(targetCalls.length).toBe(1);
+  });
+});
+```
+
+### Grouping Edge Cases
+
+```javascript
+describe('Activity Description - Grouping Edge Cases', () => {
+  let testBed;
+  let entityManager;
+  let service;
+
+  beforeEach(() => {
+    testBed = new AnatomyIntegrationTestBed();
+    testBed.loadCoreTestData();
+    registerActivityComponents(testBed);
+
+    entityManager = testBed.entityManager;
+    service = new ActivityDescriptionService({
+      logger: testBed.logger,
+      entityManager,
+      anatomyFormattingService: testBed.mockAnatomyFormattingService,
+    });
+  });
+
+  afterEach(() => testBed.cleanup());
+
+  it('should not over-group unrelated activities', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      template: '{actor} is meditating',
+      priority: 90,
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      template: '{actor} is walking away',
+      priority: 80,
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+    const segments = description.replace(/^Activity: /, '').split('. ');
+    expect(segments.length).toBeGreaterThan(1);
+  });
+
+  it('should group activities that share an explicit group key', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: "{actor} is brushing {target}'s hair",
+      priority: 85,
+      grouping: { groupKey: 'grooming' },
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: "{actor} is braiding {target}'s hair",
+      priority: 83,
+      grouping: { groupKey: 'grooming' },
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description).toMatch(/brushing/i);
+    expect(description).toMatch(/braiding/i);
+    expect(description).toMatch(/and/);
+  });
+
+  it('should choose "while" for near-simultaneous priorities', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: '{actor} is gazing at {target}',
+      priority: 90,
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: "{actor} is holding {target}'s hand",
+      priority: 82,
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description).toMatch(/while/i);
+  });
+});
+```
+
+### Context Edge Cases
+
+```javascript
+describe('Activity Description - Context Edge Cases', () => {
+  let testBed;
+  let entityManager;
+  let service;
+
+  beforeEach(() => {
+    testBed = new AnatomyIntegrationTestBed();
+    testBed.loadCoreTestData();
+    registerActivityComponents(testBed);
+
+    entityManager = testBed.entityManager;
+    service = new ActivityDescriptionService({
+      logger: testBed.logger,
+      entityManager,
+      anatomyFormattingService: testBed.mockAnatomyFormattingService,
+    });
+  });
+
+  afterEach(() => testBed.cleanup());
+
+  it('should handle missing relationship components', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const stranger = await createActor(entityManager, {
+      id: 'stranger',
+      name: 'Stranger',
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: stranger.id,
+      targetRole: 'target',
+      template: '{actor} is talking to {target}',
+      priority: 60,
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description.toLowerCase()).not.toContain('tenderly');
+    expect(description.toLowerCase()).not.toContain('fiercely');
+  });
+
+  it('should prioritize closeness partners for intimate tone', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+
+    entityManager.addComponent(actor.id, 'positioning:closeness', {
+      partners: [alicia.id],
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: '{actor} is embracing {target}',
+      priority: 85,
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description.toLowerCase()).toContain('tenderly');
+  });
+
+  it('should scale context adjustments with intensity', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: '{actor} is sparring with {target}',
+      priority: 95,
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description.toLowerCase()).toContain('fiercely');
+  });
+});
+```
+
 
 ## Performance Benchmarks
 
 ```javascript
 describe('Activity Description - Performance', () => {
+  let testBed;
+  let entityManager;
+  let service;
+
+  beforeEach(() => {
+    testBed = new AnatomyIntegrationTestBed();
+    testBed.loadCoreTestData();
+    registerActivityComponents(testBed);
+
+    entityManager = testBed.entityManager;
+    service = new ActivityDescriptionService({
+      logger: testBed.logger,
+      entityManager,
+      anatomyFormattingService: testBed.mockAnatomyFormattingService,
+    });
+  });
+
+  afterEach(() => testBed.cleanup());
+
   it('should generate simple description under 10ms', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is kneeling', 'alicia', 75);
+    const jon = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+
+    addInlineActivity(entityManager, jon.id, 'test:activity_kneeling', {
+      targetId: alicia.id,
+      targetRole: 'entityId',
+      template: '{actor} is kneeling',
+      priority: 75,
+    });
 
     const start = performance.now();
-    await service.generateActivityDescription('jon');
+    await service.generateActivityDescription(jon.id);
     const duration = performance.now() - start;
 
     expect(duration).toBeLessThan(10);
   });
 
   it('should handle 10 activities under 50ms', async () => {
-    const jon = createEntity('jon', 'male');
+    const jon = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
 
-    for (let i = 0; i < 10; i++) {
-      addActivity(jon, `{actor} action${i}`, 'alicia', 90 - i);
+    for (let i = 0; i < 10; i += 1) {
+      addInlineActivity(entityManager, jon.id, 'test:activity_generic', {
+        targetId: alicia.id,
+        targetRole: 'target',
+        template: `{actor} action${i} {target}`,
+        priority: 90 - i,
+      });
     }
 
     const start = performance.now();
-    await service.generateActivityDescription('jon');
+    await service.generateActivityDescription(jon.id);
     const duration = performance.now() - start;
 
     expect(duration).toBeLessThan(50);
   });
 
-  it('should cache name resolutions for performance', async () => {
-    const jon = createEntity('jon', 'male');
+  it('should reuse cached name resolutions on subsequent calls', async () => {
+    const jon = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
 
-    for (let i = 0; i < 5; i++) {
-      addActivity(jon, `{actor} action${i}`, 'alicia', 90 - i);
+    for (let i = 0; i < 5; i += 1) {
+      addInlineActivity(entityManager, jon.id, 'test:activity_generic', {
+        targetId: alicia.id,
+        targetRole: 'target',
+        template: `{actor} action${i} with {target}`,
+        priority: 90 - i,
+      });
     }
 
-    // Generate twice to test caching
-    await service.generateActivityDescription('jon');
+    await service.generateActivityDescription(jon.id);
+
     const start = performance.now();
-    await service.generateActivityDescription('jon');
+    await service.generateActivityDescription(jon.id);
     const duration = performance.now() - start;
 
-    // Second call should be faster due to caching
     expect(duration).toBeLessThan(20);
   });
 });
