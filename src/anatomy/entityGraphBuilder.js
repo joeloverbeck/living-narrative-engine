@@ -290,8 +290,19 @@ export class EntityGraphBuilder {
    * @param {Array<object>} sockets - Socket definitions to add
    */
   async addSocketsToEntity(entityId, sockets) {
+    const existingSocketsComponent = this.#entityManager.getComponentData(
+      entityId,
+      'anatomy:sockets'
+    );
+
+    const mergedSockets = [
+      ...(existingSocketsComponent?.sockets || []),
+      ...sockets,
+    ];
+
     await this.#entityManager.addComponent(entityId, 'anatomy:sockets', {
-      sockets,
+      ...(existingSocketsComponent || {}),
+      sockets: mergedSockets,
     });
 
     this.#logger.debug(
