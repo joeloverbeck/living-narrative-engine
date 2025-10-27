@@ -240,6 +240,30 @@ describe('ActionIndexingService', () => {
     );
   });
 
+  it('safely logs duplicate parameters that include BigInt values', () => {
+    const rawActions = [
+      {
+        id: 'big',
+        params: { value: 1n },
+        command: 'cmd',
+        description: 'first',
+      },
+      {
+        id: 'big',
+        params: { value: 1n },
+        command: 'cmd',
+        description: 'duplicate',
+      },
+    ];
+
+    const result = service.indexActions('actorBigInt', rawActions);
+
+    expect(result).toHaveLength(1);
+    expect(logger.info).toHaveBeenCalledWith(
+      'ActionIndexingService: actor "actorBigInt" suppressed 1 duplicate actions: big (cmd, params: {"value":1n}) x2'
+    );
+  });
+
   it('does not log info when there are no duplicates', () => {
     const rawActions = [
       {
