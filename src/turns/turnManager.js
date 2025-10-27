@@ -608,12 +608,19 @@ class TurnManager extends ITurnManager {
       );
     };
 
-    Promise.resolve(
-      this.#dispatcher.dispatch(TURN_PROCESSING_ENDED, {
-        entityId: endedActorId,
-        actorType,
-      })
-    )
+    let processingDispatchPromise;
+    try {
+      processingDispatchPromise = Promise.resolve(
+        this.#dispatcher.dispatch(TURN_PROCESSING_ENDED, {
+          entityId: endedActorId,
+          actorType,
+        })
+      );
+    } catch (dispatchError) {
+      processingDispatchPromise = Promise.reject(dispatchError);
+    }
+
+    processingDispatchPromise
       .then((dispatchResult) => {
         if (dispatchResult === false) {
           this.#logger.warn(
@@ -632,8 +639,8 @@ class TurnManager extends ITurnManager {
       })
       .catch((dispatchError) =>
         reportProcessingEndedFailure({
-          error: dispatchError.message,
-          stack: dispatchError.stack,
+          error: dispatchError?.message || 'Unknown dispatcher error',
+          stack: dispatchError?.stack,
         })
       );
 

@@ -2,7 +2,11 @@
 // --- FILE START ---
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  TURN_ENDED_ID,
+  TURN_PROCESSING_ENDED,
+} from '../../../src/constants/eventIds.js';
 import {
   expectSystemErrorDispatch,
   expectTurnStartedEvents,
@@ -197,6 +201,60 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
 
     // Verify stop was called due to the error
     expect(stopSpy).toHaveBeenCalled();
+  });
+
+  test('should report synchronous dispatcher failures when finishing a turn', async () => {
+    const dispatchError = new Error('Dispatcher refused to emit');
+
+    ({ ai1 } = testBed.addDefaultActors());
+
+    testBed.mocks.turnOrderService.isEmpty
+      .mockResolvedValueOnce(false)
+      .mockResolvedValue(true);
+    testBed.mocks.turnOrderService.getNextEntity
+      .mockResolvedValueOnce(ai1)
+      .mockResolvedValue(null);
+
+    testBed.setupHandlerForActor(ai1, {
+      includeSignalTermination: true,
+    });
+
+    testBed.mocks.dispatcher.dispatch.mockImplementation((eventType) => {
+      if (eventType === TURN_PROCESSING_ENDED) {
+        throw dispatchError;
+      }
+      return Promise.resolve(true);
+    });
+
+    await testBed.turnManager.start();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    testBed.mocks.dispatcher._triggerEvent(TURN_ENDED_ID, {
+      entityId: ai1.id,
+      success: true,
+    });
+
+    await Promise.resolve();
+    jest.runOnlyPendingTimers();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(
+      testBed.mocks.dispatcher.dispatch
+    ).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${ai1.id}`,
+        details: expect.objectContaining({
+          entityId: ai1.id,
+          actorType: 'ai',
+          error: dispatchError.message,
+        }),
+      })
+    );
+
+    expect(testBed.turnManager.stop).not.toHaveBeenCalled();
   });
 });
 
