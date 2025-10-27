@@ -12,6 +12,15 @@ import {
   ensureValidLogger,
   assertNonBlankString,
 } from '../../utils/index.js';
+import {
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
+  ENTITY_REMOVED_ID,
+} from '../../constants/eventIds.js';
+import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
+
+const GENDER_COMPONENT_ID = 'core:gender';
+const ACTIVITY_METADATA_COMPONENT_ID = 'activity:description_metadata';
 
 const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
   enabled: true,
@@ -103,6 +112,8 @@ class ActivityDescriptionService {
 
   #eventBus = null;
 
+  #eventUnsubscribers = [];
+
   #activityIndex = null; // Phase 3: ACTDESC-020
 
   #cacheConfig = {
@@ -158,9 +169,10 @@ class ActivityDescriptionService {
     this.#activityIndex = activityIndex;
     if (eventBus !== null && eventBus !== undefined) {
       validateDependency(eventBus, 'EventBus', this.#logger, {
-        requiredMethods: ['dispatch'],
+        requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
       });
       this.#eventBus = eventBus;
+      this.#subscribeToInvalidationEvents();
     }
 
     this.#setupCacheCleanup();
@@ -1876,6 +1888,88 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Subscribe to events that require cache invalidation.
+   *
+   * @description Subscribe to entity lifecycle events and register cache invalidation handlers.
+   * @returns {void}
+   * @private
+   */
+  #subscribeToInvalidationEvents() {
+    if (!this.#eventBus) {
+      return;
+    }
+
+    const subscribe = (eventId, handler) => {
+      try {
+        const unsubscribe = this.#eventBus.subscribe(eventId, handler);
+        if (typeof unsubscribe === 'function') {
+          this.#eventUnsubscribers.push(unsubscribe);
+        }
+      } catch (error) {
+        this.#logger.warn(
+          `Failed to subscribe to cache invalidation event: ${eventId}`,
+          error
+        );
+      }
+    };
+
+    const getEntityId = (event) =>
+      event?.payload?.entity?.id ??
+      event?.payload?.entity?.instanceId ??
+      event?.payload?.entityId ??
+      null;
+
+    subscribe(COMPONENT_ADDED_ID, (event) => {
+      const componentId = event?.payload?.componentTypeId;
+      const entityId = getEntityId(event);
+
+      if (!entityId || !componentId) {
+        return;
+      }
+
+      if (componentId === NAME_COMPONENT_ID) {
+        this.#invalidateNameCache(entityId);
+      }
+
+      if (componentId === GENDER_COMPONENT_ID) {
+        this.#invalidateGenderCache(entityId);
+      }
+
+      if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
+        this.#invalidateActivityCache(entityId);
+      }
+    });
+
+    subscribe(COMPONENT_REMOVED_ID, (event) => {
+      const componentId = event?.payload?.componentTypeId;
+      const entityId = getEntityId(event);
+
+      if (!entityId || !componentId) {
+        return;
+      }
+
+      if (componentId === NAME_COMPONENT_ID) {
+        this.#invalidateNameCache(entityId);
+      }
+
+      if (componentId === GENDER_COMPONENT_ID) {
+        this.#invalidateGenderCache(entityId);
+      }
+
+      if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
+        this.#invalidateActivityCache(entityId);
+      }
+    });
+
+    subscribe(ENTITY_REMOVED_ID, (event) => {
+      const entityId = getEntityId(event);
+      if (entityId) {
+        this.#invalidateAllCachesForEntity(entityId);
+      }
+    });
+  }
+
+  /**
    * Build a cached index of activities for quick lookups.
    *
    * @description Build activity index for fast lookups.
@@ -2116,20 +2210,163 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Invalidate name cache for entity.
+   *
+   * @param {string} entityId - Entity ID associated with the cache entry.
+   * @returns {void}
+   * @description Remove cached name for the supplied entity when state changes.
+   * @private
+   */
+  #invalidateNameCache(entityId) {
+    if (this.#entityNameCache.delete(entityId)) {
+      this.#logger.debug(
+        `ActivityDescriptionService: Invalidated name cache for ${entityId}`
+      );
+    }
+  }
+
+  /**
+   * Invalidate gender cache for entity.
+   *
+   * @param {string} entityId - Entity ID associated with the cache entry.
+   * @returns {void}
+   * @description Remove cached gender information for the supplied entity.
+   * @private
+   */
+  #invalidateGenderCache(entityId) {
+    if (this.#genderCache.delete(entityId)) {
+      this.#logger.debug(
+        `ActivityDescriptionService: Invalidated gender cache for ${entityId}`
+      );
+    }
+  }
+
+  /**
+   * Invalidate activity cache for entity.
+   *
+   * @param {string} entityId - Entity ID associated with the cache entry.
+   * @returns {void}
+   * @description Remove cached activity index entries for the supplied entity.
+   * @private
+   */
+  #invalidateActivityCache(entityId) {
+    if (this.#activityIndexCache.delete(entityId)) {
+      this.#logger.debug(
+        `ActivityDescriptionService: Invalidated activity cache for ${entityId}`
+      );
+    }
+  }
+
+  /**
+   * Invalidate all caches for a single entity.
+   *
+   * @param {string} entityId - Entity ID whose cache entries should be removed.
+   * @returns {void}
+   * @description Remove name, gender, and activity caches for the supplied entity identifier.
+   * @private
+   */
+  #invalidateAllCachesForEntity(entityId) {
+    this.#invalidateNameCache(entityId);
+    this.#invalidateGenderCache(entityId);
+    this.#invalidateActivityCache(entityId);
+  }
+
+  /**
+   * Invalidate caches for multiple entities efficiently.
+   *
+   * @param {Array<string>} entityIds - Entity IDs to invalidate.
+   * @returns {void}
+   * @description Invalidate all cache categories for each entity in the provided collection.
+   */
+  invalidateEntities(entityIds) {
+    if (!Array.isArray(entityIds)) {
+      this.#logger.warn(
+        'ActivityDescriptionService: invalidateEntities called with non-array'
+      );
+      return;
+    }
+
+    for (const entityId of entityIds) {
+      if (typeof entityId === 'string' && entityId.trim() !== '') {
+        this.#invalidateAllCachesForEntity(entityId);
+      }
+    }
+
+    this.#logger.debug(
+      `ActivityDescriptionService: Invalidated caches for ${entityIds.length} entities`
+    );
+  }
+
+  /**
+   * Invalidate specific cache type for entity.
+   *
+   * @param {string} entityId - Entity ID to invalidate.
+   * @param {string} [cacheType='all'] - Cache type to invalidate.
+   * @returns {void}
+   * @description Remove cached data for a specific cache segment or all caches for an entity.
+   */
+  invalidateCache(entityId, cacheType = 'all') {
+    switch (cacheType) {
+      case 'name':
+        this.#invalidateNameCache(entityId);
+        break;
+      case 'gender':
+        this.#invalidateGenderCache(entityId);
+        break;
+      case 'activity':
+        this.#invalidateActivityCache(entityId);
+        break;
+      case 'all':
+        this.#invalidateAllCachesForEntity(entityId);
+        break;
+      default:
+        this.#logger.warn(
+          `ActivityDescriptionService: Unknown cache type: ${cacheType}`
+        );
+    }
+  }
+
+  /**
+   * Clear all caches completely.
+   *
+   * @returns {void}
+   * @description Remove every cached entry for entity names, genders, activity indexes, and closeness calculations.
+   */
+  clearAllCaches() {
+    this.#entityNameCache.clear();
+    this.#genderCache.clear();
+    this.#activityIndexCache.clear();
+    this.#closenessCache.clear();
+    this.#logger.info('ActivityDescriptionService: Cleared all caches');
+  }
+
+  /**
    * Destroy service resources and clear cache state.
    *
    * @description Destroy service resources and clear cache state.
+   * @returns {void}
    */
   destroy() {
+    while (this.#eventUnsubscribers.length > 0) {
+      const unsubscribe = this.#eventUnsubscribers.pop();
+      try {
+        unsubscribe?.();
+      } catch (error) {
+        this.#logger.warn(
+          'ActivityDescriptionService: Failed to unsubscribe cache invalidation handler',
+          error
+        );
+      }
+    }
+
     if (this.#cleanupInterval) {
       clearInterval(this.#cleanupInterval);
       this.#cleanupInterval = null;
     }
 
-    this.#entityNameCache.clear();
-    this.#genderCache.clear();
-    this.#activityIndexCache.clear();
-    this.#closenessCache.clear();
+    this.clearAllCaches();
+
+    this.#logger.info('ActivityDescriptionService: Service destroyed');
   }
 }
 
