@@ -2116,6 +2116,11 @@ class ActivityDescriptionService {
       buildRelatedActivityFragment: (...args) =>
         this.#buildRelatedActivityFragment(...args),
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
+      subscribeToInvalidationEvents: () =>
+        this.#subscribeToInvalidationEvents(),
+      setEventBus: (eventBus) => {
+        this.#eventBus = eventBus;
+      },
       deduplicateActivitiesBySignature: (...args) =>
         this.#deduplicateActivitiesBySignature(...args),
       truncateDescription: (...args) => this.#truncateDescription(...args),
