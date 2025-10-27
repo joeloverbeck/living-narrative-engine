@@ -427,20 +427,19 @@ class GameSessionManager {
       extracted !== trimmedName || trimmedName.toLowerCase().endsWith('.sav');
     const candidate = isManualPattern ? extracted : trimmedName;
     const decodedCandidate = this.#decodePercentEncodedSegment(candidate);
-    const plusNormalized = decodedCandidate.replace(/[+]+/g, ' ');
-    const withSpaces = plusNormalized.replace(/[_]+/g, ' ').trim();
+    const withSpaces = decodedCandidate.replace(/[_]+/g, ' ').trim();
 
     if (withSpaces.length > 0) {
       return withSpaces;
     }
 
-    const trimmedDecoded = plusNormalized.trim();
+    const trimmedDecoded = decodedCandidate.trim();
     if (trimmedDecoded.length > 0) {
       return trimmedDecoded;
     }
 
     const fallback = this.#decodePercentEncodedSegment(candidate.trim())
-      .replace(/[+]+/g, ' ')
+      .replace(/[_]+/g, ' ')
       .trim();
     if (fallback.length > 0) {
       return fallback;
