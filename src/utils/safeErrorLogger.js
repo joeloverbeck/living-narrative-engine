@@ -54,6 +54,34 @@ export function createSafeErrorLogger({
   const loadingContextStack = [];
 
   /**
+   * Normalizes timeout values to finite numbers when possible.
+   *
+   * @param {unknown} rawTimeout - Timeout value to normalize.
+   * @returns {number | undefined} Finite timeout in milliseconds or `undefined` when invalid.
+   */
+  const normalizeTimeoutMsValue = (rawTimeout) => {
+    if (rawTimeout === null || rawTimeout === undefined) {
+      return undefined;
+    }
+
+    if (typeof rawTimeout === 'number') {
+      return Number.isFinite(rawTimeout) ? rawTimeout : undefined;
+    }
+
+    if (typeof rawTimeout === 'string') {
+      const trimmedValue = rawTimeout.trim();
+      if (trimmedValue === '') {
+        return undefined;
+      }
+
+      const parsedValue = Number(trimmedValue);
+      return Number.isFinite(parsedValue) ? parsedValue : undefined;
+    }
+
+    return undefined;
+  };
+
+  /**
    * Normalizes loading options to a configuration object.
    *
    * @description Converts shorthand string arguments and unexpected input
@@ -67,7 +95,18 @@ export function createSafeErrorLogger({
     }
 
     if (options && typeof options === 'object' && !Array.isArray(options)) {
-      return options;
+      const normalizedOptions = { ...options };
+
+      if (Object.prototype.hasOwnProperty.call(normalizedOptions, 'timeoutMs')) {
+        const coercedTimeout = normalizeTimeoutMsValue(normalizedOptions.timeoutMs);
+        if (coercedTimeout !== undefined) {
+          normalizedOptions.timeoutMs = coercedTimeout;
+        } else {
+          delete normalizedOptions.timeoutMs;
+        }
+      }
+
+      return normalizedOptions;
     }
 
     return {};
@@ -83,16 +122,17 @@ export function createSafeErrorLogger({
   const scheduleAutoDisable = (timeoutMs, contextLabel) => {
     clearExistingTimeout();
 
-    if (!(Number.isFinite(timeoutMs) && timeoutMs > 0)) {
+    const normalizedTimeout = normalizeTimeoutMsValue(timeoutMs);
+    if (!(typeof normalizedTimeout === 'number' && normalizedTimeout > 0)) {
       return;
     }
 
     loadingTimeoutId = setTimeout(() => {
       safeLogger.debug(
-        `SafeErrorLogger: Auto-disabling game loading mode after ${timeoutMs}ms timeout (context: ${contextLabel})`
+        `SafeErrorLogger: Auto-disabling game loading mode after ${normalizedTimeout}ms timeout (context: ${contextLabel})`
       );
       disableGameLoadingMode({ force: true, reason: 'timeout' });
-    }, timeoutMs);
+    }, normalizedTimeout);
   };
 
   const restorePreviousContext = () => {

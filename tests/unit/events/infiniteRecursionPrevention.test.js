@@ -504,6 +504,24 @@ describe('EventBus Infinite Recursion Prevention', () => {
       expect(safeErrorLogger.isGameLoadingActive()).toBe(false);
       expect(eventBus.isBatchModeEnabled()).toBe(false);
     });
+
+    it('normalizes string timeout values for auto-disable scheduling', () => {
+      safeErrorLogger.enableGameLoadingMode({
+        context: 'string-timeout',
+        timeoutMs: '2500',
+      });
+
+      expect(safeErrorLogger.isGameLoadingActive()).toBe(true);
+      expect(eventBus.isBatchModeEnabled()).toBe(true);
+
+      jest.advanceTimersByTime(2500);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'SafeErrorLogger: Auto-disabling game loading mode after 2500ms timeout (context: string-timeout)'
+      );
+      expect(safeErrorLogger.isGameLoadingActive()).toBe(false);
+      expect(eventBus.isBatchModeEnabled()).toBe(false);
+    });
   });
 
   describe('Error Handling During Recursion', () => {
