@@ -64,6 +64,23 @@ describe('TurnActionFactory', () => {
     }).toThrow(TypeError);
   });
 
+  test('omits speech when trimmed speech is empty', () => {
+    const composite = {
+      actionId: 'action3',
+      params: {},
+      commandString: 'wait',
+    };
+
+    const action = factory.create(composite, '    ');
+
+    expect(action).toEqual({
+      actionDefinitionId: 'action3',
+      resolvedParameters: {},
+      commandString: 'wait',
+    });
+    expect(action.speech).toBeUndefined();
+  });
+
   describe('Visual Properties Preservation', () => {
     test('preserves visual properties from composite', () => {
       const composite = createActionComposite(

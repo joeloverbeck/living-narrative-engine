@@ -20,12 +20,15 @@ export class TurnActionFactory extends ITurnActionFactory {
    * @returns {import('../interfaces/IActorTurnStrategy.js').ITurnAction} The frozen turn action object.
    */
   create(composite, speech = null) {
+    const trimmedSpeech =
+      typeof speech === 'string' ? speech.trim() : speech ?? null;
+
     const obj = {
       actionDefinitionId: composite.actionId,
       resolvedParameters: composite.params,
       commandString: composite.commandString,
       ...(composite.visual ? { visual: composite.visual } : {}),
-      ...(speech ? { speech: speech.trim() } : {}),
+      ...(trimmedSpeech ? { speech: trimmedSpeech } : {}),
     };
     return freeze(obj);
   }
