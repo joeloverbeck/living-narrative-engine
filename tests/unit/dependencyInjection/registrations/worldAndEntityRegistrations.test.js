@@ -57,6 +57,7 @@ import SlotResolver from '../../../../src/anatomy/integration/SlotResolver.js';
 import { ClothingManagementService } from '../../../../src/clothing/services/clothingManagementService.js';
 import EquipmentDescriptionService from '../../../../src/clothing/services/equipmentDescriptionService.js';
 import { ClothingInstantiationService } from '../../../../src/clothing/services/clothingInstantiationService.js';
+import { ClothingAccessibilityService } from '../../../../src/clothing/services/clothingAccessibilityService.js';
 import { AnatomyInitializationService } from '../../../../src/anatomy/anatomyInitializationService.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
 import { ServiceSetup } from '../../../../src/utils/serviceInitializerUtils.js';
@@ -170,6 +171,7 @@ describe('registerWorldAndEntity', () => {
       tokens.AnatomyClothingCache,
       tokens.SlotResolver,
       tokens.ClothingManagementService,
+      tokens.ClothingAccessibilityService,
       tokens.EquipmentDescriptionService,
       tokens.ClothingInstantiationService,
       tokens.ClothingInstantiationServiceV2,
@@ -420,12 +422,18 @@ describe('registerWorldAndEntity', () => {
       lifecycle: 'singletonFactory',
       deps: undefined,
     },
-    {
-      token: tokens.ClothingManagementService,
-      Class: ClothingManagementService,
-      lifecycle: 'singletonFactory',
-      deps: undefined,
-    },
+      {
+        token: tokens.ClothingManagementService,
+        Class: ClothingManagementService,
+        lifecycle: 'singletonFactory',
+        deps: undefined,
+      },
+      {
+        token: tokens.ClothingAccessibilityService,
+        Class: ClothingAccessibilityService,
+        lifecycle: 'singletonFactory',
+        deps: undefined,
+      },
     {
       token: tokens.EquipmentDescriptionService,
       Class: EquipmentDescriptionService,
