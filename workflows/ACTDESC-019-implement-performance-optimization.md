@@ -148,17 +148,11 @@ destroy() {
     return 'unknown';
   }
 
-  // Priority: character:gender > anatomy:body > neutral
-  const genderComponent = entity.getComponentData('character:gender');
+  // Priority: core:gender explicit component > neutral fallback
+  const genderComponent = entity.getComponentData('core:gender');
   if (genderComponent?.value) {
     this.#genderCache.set(entityId, genderComponent.value);
     return genderComponent.value;
-  }
-
-  const bodyComponent = entity.getComponentData('anatomy:body');
-  if (bodyComponent?.sex) {
-    this.#genderCache.set(entityId, bodyComponent.sex);
-    return bodyComponent.sex;
   }
 
   this.#genderCache.set(entityId, 'neutral');
