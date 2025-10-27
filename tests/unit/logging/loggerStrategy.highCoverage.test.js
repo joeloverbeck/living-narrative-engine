@@ -236,6 +236,21 @@ describe('LoggerStrategy near-complete coverage', () => {
     }
   });
 
+  it('trims DEBUG_LOG_MODE environment variable before detecting mode', () => {
+    const previous = process.env.DEBUG_LOG_MODE;
+    process.env.DEBUG_LOG_MODE = '  Development  ';
+
+    const strategy = createStrategy();
+
+    expect(strategy.getMode()).toBe(LoggerMode.DEVELOPMENT);
+
+    if (previous === undefined) {
+      delete process.env.DEBUG_LOG_MODE;
+    } else {
+      process.env.DEBUG_LOG_MODE = previous;
+    }
+  });
+
   it('switches modes via setLogLevel and transfers buffered logs', () => {
     const eventBus = { dispatch: jest.fn() };
     const buffer = [{ level: 'info', message: 'pending', args: ['ctx'] }];
