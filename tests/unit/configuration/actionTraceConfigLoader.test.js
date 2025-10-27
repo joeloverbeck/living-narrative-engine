@@ -414,6 +414,77 @@ describe('ActionTraceConfigLoader', () => {
     });
   });
 
+  describe('performance metrics', () => {
+    it('should record slow operations and warn on performance regression', async () => {
+      const perfLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: mockTraceConfigLoader,
+        logger: mockLogger,
+        validator: mockValidator,
+        cacheTtl: 0,
+      });
+
+      const mockConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['movement:go'],
+          outputDirectory: './traces',
+          verbosity: 'standard',
+        },
+      };
+
+      mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+
+      const perfSequence = [
+        // First load (below threshold)
+        0, 10, 15, 20,
+        // Second load (below threshold)
+        100, 110, 115, 120,
+        // Third load (below threshold)
+        200, 210, 215, 220,
+        // Fourth load (below threshold)
+        300, 310, 315, 320,
+        // Fifth load (exceeds threshold to trigger regression warning)
+        400, 460, 470, 475,
+      ];
+
+      const lastValue = perfSequence[perfSequence.length - 1];
+      const performanceSpy = jest
+        .spyOn(performance, 'now')
+        .mockImplementation(() =>
+          perfSequence.length > 0 ? perfSequence.shift() : lastValue
+        );
+
+      try {
+        for (let i = 0; i < 5; i += 1) {
+          // eslint-disable-next-line no-await-in-loop -- sequential loads required for timing simulation
+          await perfLoader.loadConfig();
+        }
+      } finally {
+        performanceSpy.mockRestore();
+      }
+
+      const stats = perfLoader.getStatistics();
+      const configLoadMetrics = stats.operationMetrics['config-load'];
+      expect(configLoadMetrics).toEqual(
+        expect.objectContaining({
+          count: 5,
+          slowOperations: 1,
+        })
+      );
+
+      const regressionWarnings = mockLogger.warn.mock.calls.filter(([message]) =>
+        message.startsWith('Performance regression detected in config-load')
+      );
+
+      expect(regressionWarnings).toHaveLength(1);
+      expect(regressionWarnings[0][1]).toEqual(
+        expect.objectContaining({
+          threshold: '25ms',
+        })
+      );
+    });
+  });
+
   describe('isEnabled', () => {
     it('should return true when action tracing is enabled', async () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue({
