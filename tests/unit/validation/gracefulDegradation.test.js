@@ -107,6 +107,33 @@ describe('GracefulDegradation', () => {
     });
     expect(logger.debug).toHaveBeenCalledWith('Cache hit for mods/broken.json');
 
+    cache.set('manual-key', { keyed: true });
+    const keyedResult = instance.applyDegradation(new Error('ACCESS: cache key'), {
+      cacheKey: 'manual-key',
+      modId: 'mod-a',
+      componentId: 'component-a',
+      hasCache: true
+    });
+    expect(keyedResult).toMatchObject({
+      strategy: DegradationStrategy.USE_CACHED,
+      data: { keyed: true },
+      success: true,
+      fromCache: true
+    });
+
+    cache.set('mod-a:component-a', { composite: true });
+    const compositeResult = instance.applyDegradation(new Error('ACCESS: composite cache'), {
+      modId: 'mod-a',
+      componentId: 'component-a',
+      hasCache: true
+    });
+    expect(compositeResult).toMatchObject({
+      strategy: DegradationStrategy.USE_CACHED,
+      data: { composite: true },
+      success: true,
+      fromCache: true
+    });
+
     const skipResult = instance.applyDegradation(new Error('ENOENT: file not found'), {
       filePath: 'mods/missing.json',
       modId: 'mod-b'
@@ -180,7 +207,33 @@ describe('GracefulDegradation', () => {
       strategy: DegradationStrategy.BASIC_PARSING,
       data: { partial: true, basicParse: true },
       success: true,
-      partial: true
+      partial: true,
+      basic: true
+    });
+
+    const minimal = instance.applyDegradation(new Error('corruption minimal data'), {
+      filePath: 'mods/minimal.json',
+      modId: 'mod-f',
+      rawData: '{}'
+    });
+    expect(minimal).toEqual({
+      strategy: DegradationStrategy.BASIC_PARSING,
+      data: { partial: true, basicParse: true },
+      success: true,
+      partial: true,
+      basic: true
+    });
+
+    const empty = instance.applyDegradation(new Error('corruption without data'), {
+      filePath: 'mods/empty.json',
+      modId: 'mod-f'
+    });
+    expect(empty).toEqual({
+      strategy: DegradationStrategy.BASIC_PARSING,
+      data: { partial: true, basicParse: true },
+      success: true,
+      partial: true,
+      basic: true
     });
   });
 
@@ -263,6 +316,21 @@ describe('GracefulDegradation', () => {
     });
   });
 
+  it('respects contexts that explicitly forbid degradation attempts', () => {
+    const result = instance.applyDegradation(new Error('no fallback permitted'), {
+      filePath: 'mods/no-degrade.json',
+      modId: 'mod-blocked',
+      forceNoDegradation: true
+    });
+
+    expect(result).toEqual({
+      strategy: DegradationStrategy.NO_DEGRADATION,
+      data: null,
+      success: false,
+      message: 'No degradation available'
+    });
+  });
+
   it('provides meaningful defaults for different contexts', () => {
     expect(instance.getDefaultValue('mod', { id: 'special' })).toEqual({ sentinel: 'mod-default' });
     expect(instance.getDefaultValue('mod', { modId: 'generated' })).toEqual({
@@ -271,8 +339,19 @@ describe('GracefulDegradation', () => {
       errors: [],
       partial: true
     });
+    expect(instance.getDefaultValue('mod', {})).toEqual({
+      id: 'unknown',
+      references: new Map(),
+      errors: [],
+      partial: true
+    });
     expect(instance.getDefaultValue('component', { componentId: 'arm' })).toEqual({
       id: 'arm',
+      data: {},
+      partial: true
+    });
+    expect(instance.getDefaultValue('component', {})).toEqual({
+      id: 'unknown',
       data: {},
       partial: true
     });
@@ -304,6 +383,14 @@ describe('GracefulDegradation', () => {
       modId: 'mod-n'
     });
     expect(unknown.strategy).toBe(DegradationStrategy.USE_DEFAULT);
+
+    const noMessageError = new Error('');
+    noMessageError.message = undefined;
+    const fallbackStrategy = instance.applyDegradation(noMessageError, {
+      filePath: 'mods/no-message.json',
+      modId: 'mod-unknown'
+    });
+    expect(fallbackStrategy.strategy).toBe(DegradationStrategy.USE_DEFAULT);
   });
 
   it('limits degradation history to the 500 most recent entries', () => {
