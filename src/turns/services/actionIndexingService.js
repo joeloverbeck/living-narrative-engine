@@ -2,9 +2,12 @@ import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 import { ActionIndexingError } from './errors/actionIndexingError.js';
 
 /**
- * Remove duplicate actions by id and params.
+ * Remove duplicate actions by id, params, and command string.
  *
- * @description Deduplicate discovered actions by id and params.
+ * @description Deduplicate discovered actions by combining the action ID,
+ * parameter payload, and command string. Including the command string ensures
+ * that distinct user-facing commands (for example multi-target variations)
+ * are preserved even when they share identical parameter payloads.
  * @param {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} discovered - Array of actions discovered for an actor.
  * @returns {{ uniqueArr: { actionId: string, commandString: string, params: any, description: string, visual: any }[], duplicatesSuppressed: number, duplicateDetails: Array<{ actionId: string, commandString: string, params: any, count: number }> }} Object containing the unique actions, the number of suppressed duplicates, and details about the duplicates.
  */
@@ -18,7 +21,7 @@ function deduplicateActions(discovered) {
     const params = raw.params ?? {};
     const description = raw.description ?? '';
     const visual = raw.visual ?? null;
-    const key = createActionKey(actionId, params);
+    const key = createActionKey(actionId, params, commandString);
 
     if (!unique.has(key)) {
       unique.set(key, { actionId, commandString, params, description, visual });
@@ -120,8 +123,10 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
  * @param {*} params - Parameters associated with the action.
  * @returns {string} Deterministic composite key for deduplication.
  */
-function createActionKey(actionId, params) {
-  return `${actionId}:${stableSerializeForKey(params)}`;
+function createActionKey(actionId, params, commandString) {
+  return `${actionId}:${stableSerializeForKey(params)}:${stableSerializeForKey(
+    commandString ?? ''
+  )}`;
 }
 
 /**
