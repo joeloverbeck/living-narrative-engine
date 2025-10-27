@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'; // Use if needed for mocking
 import { TitleRenderer } from '../../../src/domUI'; // Adjust path as necessary
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import * as safeDispatchErrorUtils from '../../../src/utils/safeDispatchErrorUtils.js';
 
 // Mock dependencies
 const mockLogger = {
@@ -35,15 +36,30 @@ const createMockElement = (tagName = 'DIV') => ({
 
 describe('TitleRenderer', () => {
   let mockH1Element;
+  let safeDispatchErrorSpy;
 
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
+    if (safeDispatchErrorSpy) {
+      safeDispatchErrorSpy.mockRestore();
+    }
+    safeDispatchErrorSpy = jest.spyOn(
+      safeDispatchErrorUtils,
+      'safeDispatchError'
+    );
+    mockSafeEventDispatcher.dispatch.mockImplementation(() =>
+      Promise.resolve(true)
+    );
     mockH1Element = createMockElement('H1');
     mockH1Element.textContent = 'Initial Title'; // Give it an initial value
 
     // Reset VED mock to return a new unsubscribe mock for each subscription
     mockSafeEventDispatcher.subscribe.mockImplementation(() => jest.fn());
+  });
+
+  afterAll(() => {
+    safeDispatchErrorSpy?.mockRestore();
   });
 
   // --- Constructor Tests ---
@@ -245,6 +261,47 @@ describe('TitleRenderer', () => {
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       '[TitleRenderer] Title set to: "null"'
+    );
+  });
+
+  it('should report an error if set is called after disposal removes the title element', async () => {
+    const renderer = new TitleRenderer({
+      logger: mockLogger,
+      documentContext: mockDocumentContext,
+      safeEventDispatcher: mockSafeEventDispatcher,
+      titleElement: mockH1Element,
+    });
+
+    renderer.dispose();
+    mockLogger.warn.mockClear();
+    mockLogger.debug.mockClear();
+    mockSafeEventDispatcher.dispatch.mockClear();
+
+    renderer.set('Post-dispose Title');
+
+    expect(mockLogger.warn).not.toHaveBeenCalled();
+    expect(mockLogger.debug).not.toHaveBeenCalledWith(
+      expect.stringContaining('Title set to')
+    );
+    expect(mockH1Element.textContent).not.toBe('Post-dispose Title');
+
+    expect(safeDispatchErrorSpy).toHaveBeenCalled();
+    const safeDispatchCall = safeDispatchErrorSpy.mock.calls.at(-1);
+    expect(safeDispatchCall[0]).toBe(mockSafeEventDispatcher);
+    expect(safeDispatchCall[1]).toContain(
+      'Cannot set title, internal #titleElement reference is lost.'
+    );
+
+    const promise = safeDispatchErrorSpy.mock.results.at(-1)?.value;
+    if (promise && typeof promise.then === 'function') {
+      await promise;
+    }
+
+    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Cannot set title'),
+      })
     );
   });
 
