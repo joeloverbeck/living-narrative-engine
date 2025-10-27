@@ -86,9 +86,10 @@ class FileOperationCircuitBreaker {
   /**
    * Gets circuit breaker statistics
    * @returns {object} Statistics
-   */
+  */
   getStats() {
     const now = Date.now();
+    const timeUntilRetry = this.#getTimeUntilRetry();
     return {
       state: this.#state,
       failureCount: this.#failureCount,
@@ -97,6 +98,7 @@ class FileOperationCircuitBreaker {
       timeSinceLastFailure: this.#lastFailureTime ? now - this.#lastFailureTime : null,
       stateAge: now - this.#lastStateChange,
       recentFailures: this.#getRecentFailureCount(),
+      timeUntilRetry,
       canAttempt: this.#canAttemptOperation()
     };
   }
@@ -159,10 +161,8 @@ class FileOperationCircuitBreaker {
     this.#lastStateChange = Date.now();
     this.#failureTimestamps = [];
     
-    if (this.#halfOpenTimer) {
-      clearTimeout(this.#halfOpenTimer);
-      this.#halfOpenTimer = null;
-    }
+    clearTimeout(this.#halfOpenTimer);
+    this.#halfOpenTimer = null;
     
     this.#logger.info('Circuit breaker manually reset', {
       previousState,
@@ -188,21 +188,10 @@ class FileOperationCircuitBreaker {
     // Update state based on timeouts
     this.#checkStateTransitions();
     
-    switch (this.#state) {
-      case CircuitBreakerState.CLOSED:
-        return true;
-        
-      case CircuitBreakerState.HALF_OPEN:
-        // Allow limited attempts in half-open state
-        return true;
-        
-      case CircuitBreakerState.OPEN:
-        // Check if enough time has passed to retry
-        return false;
-        
-      default:
-        return false;
-    }
+    return (
+      this.#state === CircuitBreakerState.CLOSED ||
+      this.#state === CircuitBreakerState.HALF_OPEN
+    );
   }
   
   /**
@@ -292,9 +281,7 @@ class FileOperationCircuitBreaker {
     this.#successCount = 0;
     
     // Clear any existing timer
-    if (this.#halfOpenTimer) {
-      clearTimeout(this.#halfOpenTimer);
-    }
+    clearTimeout(this.#halfOpenTimer);
     
     // Schedule transition to half-open
     this.#halfOpenTimer = setTimeout(() => {
@@ -328,9 +315,7 @@ class FileOperationCircuitBreaker {
     });
     
     // Set timeout for half-open state
-    if (this.#halfOpenTimer) {
-      clearTimeout(this.#halfOpenTimer);
-    }
+    clearTimeout(this.#halfOpenTimer);
     
     this.#halfOpenTimer = setTimeout(() => {
       // If still in half-open after timeout, reopen
@@ -355,10 +340,8 @@ class FileOperationCircuitBreaker {
     this.#failureTimestamps = [];
     
     // Clear timer
-    if (this.#halfOpenTimer) {
-      clearTimeout(this.#halfOpenTimer);
-      this.#halfOpenTimer = null;
-    }
+    clearTimeout(this.#halfOpenTimer);
+    this.#halfOpenTimer = null;
     
     this.#logger.info('Circuit breaker closed', {
       reason,
