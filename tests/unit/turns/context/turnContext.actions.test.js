@@ -264,11 +264,16 @@ describe('TurnContext Action & State Management', () => {
     });
 
     test('should cancel active prompt', () => {
-      expect(turnContext.getPromptSignal().aborted).toBe(false);
+      const firstSignal = turnContext.getPromptSignal();
+      expect(firstSignal.aborted).toBe(false);
 
       turnContext.cancelActivePrompt();
 
-      expect(turnContext.getPromptSignal().aborted).toBe(true);
+      expect(firstSignal.aborted).toBe(true);
+
+      const secondSignal = turnContext.getPromptSignal();
+      expect(secondSignal).not.toBe(firstSignal);
+      expect(secondSignal.aborted).toBe(false);
     });
 
     test('should not throw when canceling already aborted prompt', () => {
@@ -280,11 +285,13 @@ describe('TurnContext Action & State Management', () => {
 
   describe('Integration with endTurn', () => {
     test('should cancel prompt and call callback on endTurn', async () => {
-      expect(turnContext.getPromptSignal().aborted).toBe(false);
+      const firstSignal = turnContext.getPromptSignal();
+      expect(firstSignal.aborted).toBe(false);
 
       await turnContext.endTurn();
 
-      expect(turnContext.getPromptSignal().aborted).toBe(true);
+      expect(firstSignal.aborted).toBe(true);
+      expect(turnContext.getPromptSignal().aborted).toBe(false);
       expect(mockOnEndTurnCallback).toHaveBeenCalledWith(null);
     });
 

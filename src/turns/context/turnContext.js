@@ -228,12 +228,23 @@ export class TurnContext extends ITurnContext {
   /* ────────────────────────── PROMPT CANCELLATION ─────────────────────── */
 
   getPromptSignal() {
+    if (this.#promptAbortController.signal.aborted) {
+      this.#logger.debug(
+        `TurnContext: prompt signal for actor ${this.#actor.id} was aborted – creating a new AbortController.`
+      );
+      this.#promptAbortController = new AbortController();
+    }
     return this.#promptAbortController.signal;
   }
 
   cancelActivePrompt() {
-    if (!this.#promptAbortController.signal.aborted)
+    if (!this.#promptAbortController.signal.aborted) {
       this.#promptAbortController.abort();
+      return;
+    }
+    this.#logger.debug(
+      `TurnContext: cancelActivePrompt called for actor ${this.#actor.id} but prompt was already aborted.`
+    );
   }
 
   /* ───────────────────── STATE-TRANSITION CONVENIENCE ────────────────────
