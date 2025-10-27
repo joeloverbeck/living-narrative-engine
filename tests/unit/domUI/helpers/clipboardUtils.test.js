@@ -82,6 +82,30 @@ describe('clipboardUtils', () => {
       const result = await copyToClipboard('test');
       expect(result).toBe(false);
     });
+
+    it('should handle errors thrown by fallback copy mechanism', async () => {
+      navigator.clipboard.writeText.mockRejectedValue(new Error('Primary failed'));
+      document.execCommand.mockImplementation(() => {
+        throw new Error('execCommand blew up');
+      });
+
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      const result = await copyToClipboard('resilient text');
+
+      expect(result).toBe(false);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[clipboardUtils] All clipboard methods failed:',
+        expect.any(Error)
+      );
+
+      consoleErrorSpy.mockRestore();
+
+      // Clean up any textarea that may still be attached due to the thrown error
+      document.querySelectorAll('textarea').forEach((el) => el.remove());
+    });
   });
 
   describe('formatThoughtsForClipboard', () => {
@@ -199,6 +223,16 @@ describe('clipboardUtils', () => {
     it('should return empty string for null/undefined', () => {
       expect(formatNotesForClipboard(null)).toBe('');
       expect(formatNotesForClipboard(undefined)).toBe('');
+    });
+
+    it('should return empty string when provided non-object note data', () => {
+      expect(formatNotesForClipboard('not an object')).toBe('');
+      expect(formatNotesForClipboard(42)).toBe('');
+    });
+
+    it('should return empty string when note text is blank', () => {
+      const note = { text: '   ', subject: 'Ignored subject' };
+      expect(formatNotesForClipboard(note)).toBe('');
     });
 
     it('should handle note with all fields populated', () => {
