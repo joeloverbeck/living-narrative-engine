@@ -14,6 +14,8 @@ export default class TurnEventSubscription {
   #scheduler;
   /** @type {(() => void) | null} */
   #unsub = null;
+  /** @type {Set<ReturnType<import('../scheduling').IScheduler['setTimeout']>>} */
+  #pendingTimeouts = new Set();
 
   /**
    * Creates a new TurnEventSubscription instance.
@@ -49,12 +51,29 @@ export default class TurnEventSubscription {
    * @returns {void}
    */
   subscribe(cb) {
+    if (typeof cb !== 'function') {
+      throw new TypeError(
+        'TurnEventSubscription: callback must be a function'
+      );
+    }
     if (this.#unsub) return;
     const wrapped = (ev) => {
       this.#logger.debug(
         `TurnEventSubscription: received ${TURN_ENDED_ID} event`
       );
-      this.#scheduler.setTimeout(() => cb(ev), 0);
+      let timeoutId;
+      let executedSynchronously = false;
+      const invokeCallback = () => {
+        if (timeoutId !== undefined && timeoutId !== null) {
+          this.#pendingTimeouts.delete(timeoutId);
+        }
+        executedSynchronously = true;
+        cb(ev);
+      };
+      timeoutId = this.#scheduler.setTimeout(invokeCallback, 0);
+      if (!executedSynchronously && timeoutId !== undefined && timeoutId !== null) {
+        this.#pendingTimeouts.add(timeoutId);
+      }
     };
     const unsub = this.#bus.subscribe(TURN_ENDED_ID, wrapped);
     if (typeof unsub !== 'function') {
@@ -76,7 +95,18 @@ export default class TurnEventSubscription {
     if (this.#unsub) {
       this.#unsub();
       this.#unsub = null;
+      for (const timeoutId of this.#pendingTimeouts) {
+        this.#scheduler.clearTimeout(timeoutId);
+      }
+      this.#pendingTimeouts.clear();
       this.#logger.debug('TurnEventSubscription: unsubscribed');
+      return;
+    }
+    if (this.#pendingTimeouts.size > 0) {
+      for (const timeoutId of this.#pendingTimeouts) {
+        this.#scheduler.clearTimeout(timeoutId);
+      }
+      this.#pendingTimeouts.clear();
     }
   }
 }
