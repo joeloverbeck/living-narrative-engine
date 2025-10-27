@@ -569,6 +569,154 @@ describe('RadialLayoutStrategy', () => {
       expect(space.width).toBeGreaterThan(200);
       expect(space.height).toBeGreaterThan(200);
     });
+
+    it('should reuse cached leaf counts for shared subtrees', () => {
+      const nodes = new Map();
+
+      const rootA = new AnatomyNode('rootA', { type: 'group', name: 'Root A' });
+      rootA.depth = 0;
+      const rootB = new AnatomyNode('rootB', { type: 'group', name: 'Root B' });
+      rootB.depth = 0;
+      const sharedBranch = new AnatomyNode('shared', {
+        type: 'group',
+        name: 'Shared Branch',
+      });
+      sharedBranch.depth = 1;
+      const sharedLeaf = new AnatomyNode('sharedLeaf', {
+        type: 'item',
+        name: 'Shared Leaf',
+      });
+      sharedLeaf.depth = 2;
+
+      nodes.set('rootA', rootA);
+      nodes.set('rootB', rootB);
+      nodes.set('shared', sharedBranch);
+      nodes.set('sharedLeaf', sharedLeaf);
+
+      let sharedLeafCountSetCalls = 0;
+      let storedSharedLeafCount = 0;
+      Object.defineProperty(sharedBranch, 'leafCount', {
+        configurable: true,
+        get() {
+          return storedSharedLeafCount;
+        },
+        set(value) {
+          sharedLeafCountSetCalls += 1;
+          if (sharedLeafCountSetCalls > 1) {
+            throw new Error('Shared branch leaf count should be calculated once');
+          }
+          storedSharedLeafCount = value;
+        },
+      });
+
+      const edges = [
+        new AnatomyEdge('rootA', 'shared', 'contains'),
+        new AnatomyEdge('rootB', 'shared', 'contains'),
+        new AnatomyEdge('shared', 'sharedLeaf', 'contains'),
+      ];
+
+      strategy.calculate(nodes, edges, renderContext);
+
+      // Shared subtree should only contribute its leaf count once
+      expect(sharedBranch.leafCount).toBe(1);
+      expect(sharedLeafCountSetCalls).toBe(1);
+      expect(rootA.leafCount).toBe(1);
+      expect(rootB.leafCount).toBe(1);
+    });
+
+    it('should avoid repositioning nodes when cycles exist', () => {
+      const nodes = new Map();
+
+      const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
+      root.depth = 0;
+      const child = new AnatomyNode('child', { type: 'group', name: 'Child' });
+      child.depth = 1;
+
+      // Track how often the child is repositioned to ensure cycles are skipped
+      const originalSetPosition = child.setPosition.bind(child);
+      child.setPosition = jest.fn(originalSetPosition);
+
+      nodes.set('root', root);
+      nodes.set('child', child);
+
+      const edges = [
+        new AnatomyEdge('root', 'child', 'contains'),
+        new AnatomyEdge('child', 'root', 'contains'),
+      ];
+
+      strategy.calculate(nodes, edges, renderContext);
+
+      expect(child.setPosition).toHaveBeenCalledTimes(1);
+      expect(renderContext.updateViewport).toHaveBeenCalled();
+    });
+
+    it('should default total leaves when parent leaf count becomes invalid', () => {
+      const nodes = new Map();
+
+      const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
+      root.depth = 0;
+      const childA = new AnatomyNode('childA', {
+        type: 'group',
+        name: 'Child A',
+      });
+      childA.depth = 1;
+      const childB = new AnatomyNode('childB', {
+        type: 'group',
+        name: 'Child B',
+      });
+      childB.depth = 1;
+
+      nodes.set('root', root);
+      nodes.set('childA', childA);
+      nodes.set('childB', childB);
+
+      const edges = [
+        new AnatomyEdge('root', 'childA', 'contains'),
+        new AnatomyEdge('root', 'childB', 'contains'),
+      ];
+
+      const originalRootSetPosition = root.setPosition.bind(root);
+      root.setPosition = jest.fn((x, y) => {
+        root.leafCount = undefined;
+        originalRootSetPosition(x, y);
+      });
+
+      strategy.calculate(nodes, edges, renderContext);
+
+      expect(childA.angleEnd - childA.angleStart).toBeGreaterThan(0);
+      expect(childB.angleEnd - childB.angleStart).toBeGreaterThan(0);
+    });
+
+    it('should skip viewport update when node collection reports empty', () => {
+      const backingMap = new Map();
+
+      const root = new AnatomyNode('root', { type: 'group', name: 'Root' });
+      root.depth = 0;
+
+      backingMap.set('root', root);
+
+      const nodesProxy = new Proxy(backingMap, {
+        get(target, prop, receiver) {
+          if (prop === 'size') {
+            const stack = new Error().stack || '';
+            if (stack.includes('RadialLayoutStrategy.size')) {
+              return 0;
+            }
+            return target.size;
+          }
+
+          const value = Reflect.get(target, prop, receiver);
+          if (typeof value === 'function') {
+            return value.bind(target);
+          }
+          return value;
+        },
+      });
+
+      strategy.calculate(nodesProxy, [], renderContext);
+
+      expect(renderContext.updateViewport).not.toHaveBeenCalled();
+    });
   });
 
   describe('edge cases', () => {
