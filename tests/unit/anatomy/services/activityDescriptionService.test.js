@@ -72,8 +72,8 @@ describe('ActivityDescriptionService', () => {
       unsubscribe: jest.fn((eventId, handler) => {
         subscribedListeners.get(eventId)?.delete(handler);
       }),
-      listenerCount: jest.fn((eventId) =>
-        subscribedListeners.get(eventId)?.size ?? 0
+      listenerCount: jest.fn(
+        (eventId) => subscribedListeners.get(eventId)?.size ?? 0
       ),
     };
 
@@ -186,7 +186,6 @@ describe('ActivityDescriptionService', () => {
           })
       ).toThrow(/JsonLogicEvaluationService/);
     });
-
   });
 
   describe('generateActivityDescription', () => {
@@ -600,7 +599,7 @@ describe('ActivityDescriptionService', () => {
       const result = await service.generateActivityDescription('entity_1');
 
       expect(result).toBe('Activity: entity_1 observes missing_entity.');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'Failed to resolve entity name for missing_entity',
         expect.any(Error)
       );
@@ -1140,7 +1139,8 @@ describe('ActivityDescriptionService', () => {
         throw new Error('lookup failed');
       });
 
-      const result = await serviceWithEventBus.generateActivityDescription('entity_1');
+      const result =
+        await serviceWithEventBus.generateActivityDescription('entity_1');
 
       expect(result).toBe('');
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -4407,7 +4407,9 @@ describe('ActivityDescriptionService', () => {
         const snapshot = hooks.getCacheSnapshot();
         expect(snapshot.entityName.get('actor').value).toBe('Jon');
         expect(snapshot.gender.get('actor').value).toBe('neutral');
-        expect(snapshot.activityIndex.get('cache-key').value.signature).toBe('sig');
+        expect(snapshot.activityIndex.get('cache-key').value.signature).toBe(
+          'sig'
+        );
       });
 
       it('removes expired cache entries during scheduled cleanup', () => {
@@ -4424,7 +4426,10 @@ describe('ActivityDescriptionService', () => {
         });
 
         const hooks = cleanupService.getTestHooks();
-        hooks.setEntityNameCacheRawEntry('stale', { value: 'old', expiresAt: -1 });
+        hooks.setEntityNameCacheRawEntry('stale', {
+          value: 'old',
+          expiresAt: -1,
+        });
         expect(hooks.getCacheSnapshot().entityName.has('stale')).toBe(true);
 
         expect(intervalSpy).toHaveBeenCalled();
@@ -4446,14 +4451,12 @@ describe('ActivityDescriptionService', () => {
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => ({
           id,
-          getComponentData: jest
-            .fn()
-            .mockImplementation((componentId) => {
-              if (componentId === 'core:name') {
-                return { text: `Name ${id}` };
-              }
-              return undefined;
-            }),
+          getComponentData: jest.fn().mockImplementation((componentId) => {
+            if (componentId === 'core:name') {
+              return { text: `Name ${id}` };
+            }
+            return undefined;
+          }),
         }));
 
         hooks.setEntityNameCacheRawEntry('ghost', undefined);
@@ -4612,7 +4615,7 @@ describe('ActivityDescriptionService', () => {
         const name = hooks.resolveEntityName('entity_id');
 
         expect(name).toBe('entity_id');
-        expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining('entity_id'),
           expect.any(Error)
         );
@@ -4642,249 +4645,231 @@ describe('ActivityDescriptionService', () => {
         );
       });
 
-    it('returns empty string on cascading failures without throwing', async () => {
-      mockEntityManager.getEntityInstance.mockImplementation(() => {
-        throw new Error('Entity error');
+      it('returns empty string on cascading failures without throwing', async () => {
+        mockEntityManager.getEntityInstance.mockImplementation(() => {
+          throw new Error('Entity error');
+        });
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
+          () => {
+            throw new Error('Config error');
+          }
+        );
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toBe('');
+      });
+    });
+
+    describe('edge case handling (ACTDESC-022)', () => {
+      it('returns an empty string when no activities exist', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValueOnce([]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toBe('');
       });
 
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
-        () => {
-          throw new Error('Config error');
-        }
-      );
+      it('deduplicates duplicate metadata before formatting', () => {
+        const hooks = service.getTestHooks();
+        const activities = [
+          { template: '{actor} waves', targetEntityId: 'alicia', priority: 70 },
+          { template: '{actor} waves', targetEntityId: 'alicia', priority: 80 },
+        ];
 
-      const description = await service.generateActivityDescription('jon');
+        const deduplicated = hooks.deduplicateActivitiesBySignature(activities);
 
-      expect(description).toBe('');
-    });
-  });
+        expect(deduplicated).toHaveLength(1);
+        expect(deduplicated[0].priority).toBe(80);
+      });
 
-  describe('cache invalidation', () => {
-    let eventBus;
-    let serviceWithEventBus;
-    let hooks;
-    let entityName;
-    let entity;
+      it('truncates extremely long descriptions', () => {
+        const hooks = service.getTestHooks();
+        const longDescription =
+          'Activity: ' + 'Jon is doing something. '.repeat(50);
 
-    beforeEach(() => {
-      eventBus = new EventBus({ logger: mockLogger });
-      entityName = 'Jon Ureña';
-      entity = {
-        id: 'jon',
-        componentTypeIds: [
-          NAME_COMPONENT_ID,
-          'activity:description_metadata',
-          'activity:metadata_source',
-        ],
-        hasComponent: jest.fn(
-          (componentId) => componentId === 'activity:description_metadata'
-        ),
-        getComponentData: jest.fn((componentId) => {
-          if (componentId === NAME_COMPONENT_ID) {
-            return { text: entityName };
-          }
-          if (componentId === 'core:gender') {
-            return { value: 'male' };
-          }
-          if (componentId === 'activity:description_metadata') {
+        const truncated = hooks.truncateDescription(longDescription, 500);
+
+        expect(truncated.length).toBeLessThanOrEqual(500);
+        expect(truncated.endsWith('.') || truncated.endsWith('...')).toBe(true);
+      });
+
+      it('sanitises entity names with special characters', () => {
+        const hooks = service.getTestHooks();
+
+        const sanitized = hooks.sanitizeEntityName('  Jon\x00Ureña  ');
+
+        expect(sanitized).toBe('JonUreña');
+      });
+
+      it('uses reflexive pronouns for self-targeting activities', async () => {
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
+          () => ({
+            enabled: true,
+            prefix: 'Activity: ',
+            suffix: '.',
+            separator: '. ',
+            maxActivities: 10,
+            enableContextAwareness: false,
+            maxDescriptionLength: 500,
+            deduplicateActivities: true,
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+              preferReflexivePronouns: true,
+            },
+          })
+        );
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValueOnce([
+          {
+            type: 'inline',
+            template: '{actor} admires {target}',
+            targetEntityId: 'jon',
+            priority: 50,
+          },
+        ]);
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') {
             return {
-              sourceComponent: 'activity:metadata_source',
-              template: '{actor} trains',
-              verb: 'trains',
-              descriptionType: 'training',
-              grouping: { groupKey: 'training' },
+              id: 'jon',
+              componentTypeIds: [],
+              hasComponent: jest.fn().mockReturnValue(false),
+              getComponentData: jest.fn((componentId) => {
+                if (componentId === 'core:name') {
+                  return { text: 'Jon Ureña' };
+                }
+                if (componentId === 'core:gender') {
+                  return { value: 'male' };
+                }
+                return null;
+              }),
             };
           }
-          if (componentId === 'activity:metadata_source') {
-            return { entityId: 'jon' };
-          }
-          return null;
-        }),
-      };
 
-      mockEntityManager.getEntityInstance.mockImplementation((id) => {
-        if (id === 'jon') {
-          return entity;
-        }
-        return {
-          id,
-          componentTypeIds: [NAME_COMPONENT_ID],
-          hasComponent: jest.fn(() => false),
+          return null;
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description.startsWith('Activity: Jon Ureña')).toBe(true);
+        expect(description).toContain('admires');
+        expect(description).toContain('himself');
+        expect(description.trim().endsWith('.')).toBe(true);
+      });
+
+      it('falls back gracefully when a target entity is missing', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValueOnce([
+          {
+            type: 'inline',
+            template: '{actor} greets {target}',
+            targetEntityId: 'missing-entity',
+            priority: 40,
+          },
+        ]);
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') {
+            return {
+              id: 'jon',
+              componentTypeIds: [],
+              hasComponent: jest.fn().mockReturnValue(false),
+              getComponentData: jest.fn((componentId) => {
+                if (componentId === 'core:name') {
+                  return { text: 'Jon Ureña' };
+                }
+                return null;
+              }),
+            };
+          }
+
+          return null;
+        });
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description.startsWith('Activity: Jon Ureña')).toBe(true);
+        expect(description).toContain('greets');
+        expect(description).toContain('missing-entity');
+        expect(description.trim().endsWith('.')).toBe(true);
+      });
+    });
+
+    describe('cache invalidation', () => {
+      let eventBus;
+      let serviceWithEventBus;
+      let hooks;
+      let entityName;
+      let entity;
+
+      beforeEach(() => {
+        eventBus = new EventBus({ logger: mockLogger });
+        entityName = 'Jon Ureña';
+        entity = {
+          id: 'jon',
+          componentTypeIds: [
+            NAME_COMPONENT_ID,
+            'activity:description_metadata',
+            'activity:metadata_source',
+          ],
+          hasComponent: jest.fn(
+            (componentId) => componentId === 'activity:description_metadata'
+          ),
           getComponentData: jest.fn((componentId) => {
             if (componentId === NAME_COMPONENT_ID) {
-              return { text: id };
+              return { text: entityName };
             }
             if (componentId === 'core:gender') {
-              return { value: 'neutral' };
+              return { value: 'male' };
+            }
+            if (componentId === 'activity:description_metadata') {
+              return {
+                sourceComponent: 'activity:metadata_source',
+                template: '{actor} trains',
+                verb: 'trains',
+                descriptionType: 'training',
+                grouping: { groupKey: 'training' },
+              };
+            }
+            if (componentId === 'activity:metadata_source') {
+              return { entityId: 'jon' };
             }
             return null;
           }),
         };
-      });
 
-      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
-        {
-          actorId: 'jon',
-          template: '{actor} trains hard',
-          description: 'trains hard',
-          priority: 100,
-          type: 'inline',
-        },
-      ]);
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') {
+            return entity;
+          }
+          return {
+            id,
+            componentTypeIds: [NAME_COMPONENT_ID],
+            hasComponent: jest.fn(() => false),
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === NAME_COMPONENT_ID) {
+                return { text: id };
+              }
+              if (componentId === 'core:gender') {
+                return { value: 'neutral' };
+              }
+              return null;
+            }),
+          };
+        });
 
-      serviceWithEventBus = new ActivityDescriptionService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        anatomyFormattingService: mockAnatomyFormattingService,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-        activityIndex: mockActivityIndex,
-        eventBus,
-      });
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            actorId: 'jon',
+            template: '{actor} trains hard',
+            description: 'trains hard',
+            priority: 100,
+            type: 'inline',
+          },
+        ]);
 
-      hooks = serviceWithEventBus.getTestHooks();
-    });
-
-    afterEach(() => {
-      serviceWithEventBus.destroy();
-    });
-
-    it('invalidates name cache when a name component is updated', async () => {
-      hooks.setEntityNameCacheEntry('jon', 'Jon Ureña');
-
-      await eventBus.dispatch(COMPONENT_ADDED_ID, {
-        entity: { id: 'jon' },
-        componentTypeId: NAME_COMPONENT_ID,
-      });
-
-      expect(hooks.getCacheSnapshot().entityName.has('jon')).toBe(false);
-    });
-
-    it('invalidates gender cache when the gender component changes', async () => {
-      hooks.setGenderCacheEntry('jon', 'male');
-
-      await eventBus.dispatch(COMPONENT_ADDED_ID, {
-        entity: { id: 'jon' },
-        componentTypeId: 'core:gender',
-      });
-
-      expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
-    });
-
-    it('invalidates activity cache when metadata updates', async () => {
-      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
-
-      await eventBus.dispatch(COMPONENT_ADDED_ID, {
-        entity: { id: 'jon' },
-        componentTypeId: 'activity:description_metadata',
-      });
-
-      expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
-    });
-
-    it('invalidates caches when monitored components are removed', async () => {
-      hooks.setEntityNameCacheEntry('jon', 'Jon');
-      hooks.setGenderCacheEntry('jon', 'male');
-      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
-
-      await eventBus.dispatch(COMPONENT_REMOVED_ID, {
-        entity: { id: 'jon' },
-        componentTypeId: NAME_COMPONENT_ID,
-      });
-
-      expect(hooks.getCacheSnapshot().entityName.has('jon')).toBe(false);
-
-      hooks.setGenderCacheEntry('jon', 'male');
-      await eventBus.dispatch(COMPONENT_REMOVED_ID, {
-        entity: { id: 'jon' },
-        componentTypeId: 'core:gender',
-      });
-
-      expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
-
-      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
-      await eventBus.dispatch(COMPONENT_REMOVED_ID, {
-        entity: { id: 'jon' },
-        componentTypeId: 'activity:description_metadata',
-      });
-
-      expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
-    });
-
-    it('invalidates all caches when an entity is removed', async () => {
-      hooks.setEntityNameCacheEntry('jon', 'Jon');
-      hooks.setGenderCacheEntry('jon', 'male');
-      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
-
-      await eventBus.dispatch(ENTITY_REMOVED_ID, {
-        entity: { id: 'jon' },
-      });
-
-      const snapshot = hooks.getCacheSnapshot();
-      expect(snapshot.entityName.has('jon')).toBe(false);
-      expect(snapshot.gender.has('jon')).toBe(false);
-      expect(snapshot.activityIndex.has('jon')).toBe(false);
-    });
-
-    it('supports batch invalidation helpers', () => {
-      hooks.setEntityNameCacheEntry('jon', 'Jon');
-      hooks.setEntityNameCacheEntry('alicia', 'Alicia');
-      hooks.setEntityNameCacheEntry('bobby', 'Bobby');
-
-      serviceWithEventBus.invalidateEntities(['jon', 'alicia']);
-
-      const snapshot = hooks.getCacheSnapshot().entityName;
-      expect(snapshot.has('jon')).toBe(false);
-      expect(snapshot.has('alicia')).toBe(false);
-      expect(snapshot.has('bobby')).toBe(true);
-    });
-
-    it('supports selective cache invalidation', () => {
-      hooks.setEntityNameCacheEntry('jon', 'Jon');
-      hooks.setGenderCacheEntry('jon', 'male');
-      hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
-
-      serviceWithEventBus.invalidateCache('jon', 'name');
-
-      const snapshot = hooks.getCacheSnapshot();
-      expect(snapshot.entityName.has('jon')).toBe(false);
-      expect(snapshot.gender.has('jon')).toBe(true);
-      expect(snapshot.activityIndex.has('jon')).toBe(true);
-    });
-
-    it('unsubscribes from cache invalidation events on destroy', () => {
-      const before = eventBus.listenerCount(COMPONENT_ADDED_ID);
-
-      serviceWithEventBus.destroy();
-
-      const after = eventBus.listenerCount(COMPONENT_ADDED_ID);
-      expect(after).toBeLessThan(before);
-    });
-
-    it('refreshes caches after invalidation when generating descriptions', async () => {
-      await serviceWithEventBus.generateActivityDescription('jon');
-      expect(
-        hooks.getCacheSnapshot().entityName.get('jon')?.value
-      ).toBe('Jon Ureña');
-
-      entityName = 'Jon "Red" Ureña';
-
-      await eventBus.dispatch(COMPONENT_ADDED_ID, {
-        entity: { id: 'jon' },
-        componentTypeId: NAME_COMPONENT_ID,
-      });
-
-      await serviceWithEventBus.generateActivityDescription('jon');
-
-      expect(
-        hooks.getCacheSnapshot().entityName.get('jon')?.value
-      ).toBe('Jon "Red" Ureña');
-    });
-
-    it('does not leak listeners when services are created and destroyed repeatedly', () => {
-      serviceWithEventBus.destroy();
-
-      for (let i = 0; i < 50; i++) {
-        const tempService = new ActivityDescriptionService({
+        serviceWithEventBus = new ActivityDescriptionService({
           logger: mockLogger,
           entityManager: mockEntityManager,
           anatomyFormattingService: mockAnatomyFormattingService,
@@ -4892,11 +4877,178 @@ describe('ActivityDescriptionService', () => {
           activityIndex: mockActivityIndex,
           eventBus,
         });
-        tempService.destroy();
-      }
 
-      expect(eventBus.listenerCount(COMPONENT_ADDED_ID)).toBeLessThan(10);
+        hooks = serviceWithEventBus.getTestHooks();
+      });
+
+      afterEach(() => {
+        serviceWithEventBus.destroy();
+      });
+
+      it('invalidates name cache when a name component is updated', async () => {
+        hooks.setEntityNameCacheEntry('jon', 'Jon Ureña');
+
+        await eventBus.dispatch(COMPONENT_ADDED_ID, {
+          entity: { id: 'jon' },
+          componentTypeId: NAME_COMPONENT_ID,
+        });
+
+        expect(hooks.getCacheSnapshot().entityName.has('jon')).toBe(false);
+      });
+
+      it('invalidates gender cache when the gender component changes', async () => {
+        hooks.setGenderCacheEntry('jon', 'male');
+
+        await eventBus.dispatch(COMPONENT_ADDED_ID, {
+          entity: { id: 'jon' },
+          componentTypeId: 'core:gender',
+        });
+
+        expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
+      });
+
+      it('invalidates activity cache when metadata updates', async () => {
+        hooks.setActivityIndexCacheEntry('jon', {
+          signature: 'abc',
+          index: {},
+        });
+
+        await eventBus.dispatch(COMPONENT_ADDED_ID, {
+          entity: { id: 'jon' },
+          componentTypeId: 'activity:description_metadata',
+        });
+
+        expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
+      });
+
+      it('invalidates caches when monitored components are removed', async () => {
+        hooks.setEntityNameCacheEntry('jon', 'Jon');
+        hooks.setGenderCacheEntry('jon', 'male');
+        hooks.setActivityIndexCacheEntry('jon', {
+          signature: 'abc',
+          index: {},
+        });
+
+        await eventBus.dispatch(COMPONENT_REMOVED_ID, {
+          entity: { id: 'jon' },
+          componentTypeId: NAME_COMPONENT_ID,
+        });
+
+        expect(hooks.getCacheSnapshot().entityName.has('jon')).toBe(false);
+
+        hooks.setGenderCacheEntry('jon', 'male');
+        await eventBus.dispatch(COMPONENT_REMOVED_ID, {
+          entity: { id: 'jon' },
+          componentTypeId: 'core:gender',
+        });
+
+        expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
+
+        hooks.setActivityIndexCacheEntry('jon', {
+          signature: 'abc',
+          index: {},
+        });
+        await eventBus.dispatch(COMPONENT_REMOVED_ID, {
+          entity: { id: 'jon' },
+          componentTypeId: 'activity:description_metadata',
+        });
+
+        expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
+      });
+
+      it('invalidates all caches when an entity is removed', async () => {
+        hooks.setEntityNameCacheEntry('jon', 'Jon');
+        hooks.setGenderCacheEntry('jon', 'male');
+        hooks.setActivityIndexCacheEntry('jon', {
+          signature: 'abc',
+          index: {},
+        });
+
+        await eventBus.dispatch(ENTITY_REMOVED_ID, {
+          entity: { id: 'jon' },
+        });
+
+        const snapshot = hooks.getCacheSnapshot();
+        expect(snapshot.entityName.has('jon')).toBe(false);
+        expect(snapshot.gender.has('jon')).toBe(false);
+        expect(snapshot.activityIndex.has('jon')).toBe(false);
+      });
+
+      it('supports batch invalidation helpers', () => {
+        hooks.setEntityNameCacheEntry('jon', 'Jon');
+        hooks.setEntityNameCacheEntry('alicia', 'Alicia');
+        hooks.setEntityNameCacheEntry('bobby', 'Bobby');
+
+        serviceWithEventBus.invalidateEntities(['jon', 'alicia']);
+
+        const snapshot = hooks.getCacheSnapshot().entityName;
+        expect(snapshot.has('jon')).toBe(false);
+        expect(snapshot.has('alicia')).toBe(false);
+        expect(snapshot.has('bobby')).toBe(true);
+      });
+
+      it('supports selective cache invalidation', () => {
+        hooks.setEntityNameCacheEntry('jon', 'Jon');
+        hooks.setGenderCacheEntry('jon', 'male');
+        hooks.setActivityIndexCacheEntry('jon', {
+          signature: 'abc',
+          index: {},
+        });
+
+        serviceWithEventBus.invalidateCache('jon', 'name');
+
+        const snapshot = hooks.getCacheSnapshot();
+        expect(snapshot.entityName.has('jon')).toBe(false);
+        expect(snapshot.gender.has('jon')).toBe(true);
+        expect(snapshot.activityIndex.has('jon')).toBe(true);
+      });
+
+      it('unsubscribes from cache invalidation events on destroy', () => {
+        const before = eventBus.listenerCount(COMPONENT_ADDED_ID);
+
+        serviceWithEventBus.destroy();
+
+        const after = eventBus.listenerCount(COMPONENT_ADDED_ID);
+        expect(after).toBeLessThan(before);
+      });
+
+      it('refreshes caches after invalidation when generating descriptions', async () => {
+        await serviceWithEventBus.generateActivityDescription('jon');
+        expect(hooks.getCacheSnapshot().entityName.get('jon')?.value).toBe(
+          'Jon Ureña'
+        );
+
+        entityName = 'Jon "Red" Ureña';
+
+        await eventBus.dispatch(COMPONENT_ADDED_ID, {
+          entity: { id: 'jon' },
+          componentTypeId: NAME_COMPONENT_ID,
+        });
+
+        await serviceWithEventBus.generateActivityDescription('jon');
+
+        expect(hooks.getCacheSnapshot().entityName.get('jon')?.value).toBe(
+          'Jon "Red" Ureña'
+        );
+      });
+
+      it('does not leak listeners when services are created and destroyed repeatedly', () => {
+        serviceWithEventBus.destroy();
+
+        for (let i = 0; i < 50; i++) {
+          const tempService = new ActivityDescriptionService({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            activityIndex: mockActivityIndex,
+            eventBus,
+          });
+          tempService.destroy();
+        }
+
+        expect(eventBus.listenerCount(COMPONENT_ADDED_ID)).toBeLessThan(10);
+      });
     });
   });
-});
 });
