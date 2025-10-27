@@ -189,6 +189,31 @@ describe('SocketGenerator', () => {
       expect(sockets[2].orientation).toBe('3');
       expect(sockets[3].orientation).toBe('4');
     });
+
+    it('should default to indexed scheme when orientation is unknown', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'fin',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'fin_{{orientation}}',
+                orientationScheme: 'mystery',
+                allowedTypes: ['fin'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(2);
+      expect(sockets[0].orientation).toBe('1');
+      expect(sockets[1].orientation).toBe('2');
+    });
   });
 
   describe('Orientation Schemes - bilateral', () => {
@@ -360,6 +385,34 @@ describe('SocketGenerator', () => {
       expect(sockets[0].orientation).toBe('position_1');
       expect(sockets[4].orientation).toBe('position_5');
     });
+
+    it('should generate fallback positions when explicit list is shorter than count', () => {
+      const template = {
+        topology: {
+          rootType: 'orb',
+          limbSets: [
+            {
+              type: 'tendril',
+              count: 3,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'tendril_{{position}}',
+                orientationScheme: 'radial',
+                allowedTypes: ['tendril'],
+                positions: ['north', 'east'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(3);
+      expect(sockets[0].orientation).toBe('north');
+      expect(sockets[1].orientation).toBe('east');
+      expect(sockets[2].orientation).toBe('position_3');
+    });
   });
 
   describe('Orientation Schemes - custom', () => {
@@ -413,6 +466,40 @@ describe('SocketGenerator', () => {
       expect(sockets).toHaveLength(2);
       expect(sockets[0].id).toBe('limb_position_1');
       expect(sockets[1].id).toBe('limb_position_2');
+      expect(testBed.mockLogger.warn).toHaveBeenCalled();
+      for (const [message] of testBed.mockLogger.warn.mock.calls) {
+        expect(message).toContain(
+          'Custom orientation scheme used without positions array'
+        );
+      }
+    });
+
+    it('should use fallback positions when custom array is shorter than count', () => {
+      const template = {
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'limb',
+              count: 3,
+              socketPattern: {
+                idTemplate: 'limb_{{position}}',
+                orientationScheme: 'custom',
+                allowedTypes: ['limb'],
+                positions: ['alpha'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(3);
+      expect(sockets[0].id).toBe('limb_alpha');
+      expect(sockets[1].id).toBe('limb_position_2');
+      expect(sockets[2].id).toBe('limb_position_3');
+      expect(testBed.mockLogger.warn).not.toHaveBeenCalled();
     });
   });
 
@@ -512,6 +599,31 @@ describe('SocketGenerator', () => {
       const sockets = socketGenerator.generateSockets(template);
 
       expect(sockets[0].id).toBe('human_arm_socket');
+    });
+
+    it('should default {{type}} to "part" when allowedTypes array is empty', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'attachment',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'attachment_{{type}}',
+                orientationScheme: 'indexed',
+                allowedTypes: [],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(1);
+      expect(sockets[0].id).toBe('attachment_part');
+      expect(sockets[0].allowedTypes).toEqual([]);
     });
 
     it('should handle multiple variables in one template', () => {
