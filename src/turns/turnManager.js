@@ -369,9 +369,24 @@ class TurnManager extends ITurnManager {
 
           if (actorId !== 'unknown') {
             if (skippedNonActorIds.has(actorId)) {
-              this.#logger.error(
-                `Entity ${actorId} reappeared without an actor component while advancing turns. Aborting turn advancement to avoid infinite loop.`
+              const repeatedEntityMessage =
+                `Entity ${actorId} reappeared without an actor component while advancing turns. Stopping turn manager to avoid infinite loop.`;
+
+              this.#logger.error(repeatedEntityMessage);
+
+              safeDispatchError(
+                this.#dispatcher,
+                'TurnManager encountered a non-actor entity twice while advancing turns. Stopping turn processing to avoid an infinite loop.',
+                { entityId: actorId },
+                this.#logger
               );
+
+              await this.#dispatchSystemError(
+                'System Error: Invalid turn queue entity encountered. Stopping game.',
+                repeatedEntityMessage
+              );
+
+              await this.stop();
               return;
             }
             skippedNonActorIds.add(actorId);
