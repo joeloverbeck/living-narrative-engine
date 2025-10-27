@@ -564,6 +564,9 @@ describe('environmentUtils', () => {
           heapTotal: 512,
           external: 128,
         })),
+        binding: jest.fn(() => ({
+          getHeapStatistics: () => ({ heap_size_limit: 1024 }),
+        })),
       };
 
       const usage = getMemoryUsage();
@@ -572,10 +575,11 @@ describe('environmentUtils', () => {
       expect(usage).toEqual({
         heapUsed: 256,
         heapTotal: 512,
-        heapLimit: 512,
+        heapLimit: 1024,
         external: 128,
       });
-      expect(getMemoryUsagePercent()).toBeCloseTo(0.5);
+      expect(getMemoryUsagePercent()).toBeCloseTo(0.25);
+      expect(globalThis.process.binding).toHaveBeenCalledWith('v8');
     });
 
     it('returns null when memory usage cannot be determined', () => {
@@ -592,6 +596,7 @@ describe('environmentUtils', () => {
       globalThis.process = {
         versions: { node: '16.0.0' },
         memoryUsage: () => ({ heapUsed: 123, heapTotal: 0, external: 0 }),
+        binding: undefined,
       };
 
       expect(getMemoryUsagePercent()).toBe(0);
