@@ -19,6 +19,32 @@ function createSchedulerMock() {
 }
 
 /**
+ * Creates a scheduler mock that defers execution until manually triggered.
+ *
+ * @returns {{ setTimeout: jest.Mock, clearTimeout: jest.Mock }} Scheduler mock
+ */
+function createDeferredSchedulerMock() {
+  let nextId = 1;
+  const pending = new Map();
+  return {
+    setTimeout: jest.fn((fn) => {
+      const id = nextId++;
+      pending.set(id, fn);
+      return id;
+    }),
+    clearTimeout: jest.fn((id) => {
+      pending.delete(id);
+    }),
+    /**
+     * Helper exposed for assertions in tests.
+     *
+     * @returns {number} Count of pending callbacks.
+     */
+    getPendingCount: () => pending.size,
+  };
+}
+
+/**
  * Creates a basic logger stub with a debuggable interface.
  *
  * @returns {{ debug: jest.Mock }}
@@ -169,5 +195,27 @@ describe('TurnEventSubscription - coverage', () => {
 
     expect(unsubSpy).toHaveBeenCalledTimes(1);
     expect(logger.debug).not.toHaveBeenCalled();
+  });
+
+  it('clears pending scheduled callbacks when unsubscribing before they execute', async () => {
+    const bus = createEventBus();
+    const logger = createLoggerMock();
+    const scheduler = createDeferredSchedulerMock();
+    const subscription = new TurnEventSubscription(bus, logger, scheduler);
+    const cb = jest.fn();
+
+    subscription.subscribe(cb);
+    await bus.dispatch(TURN_ENDED_ID, { reason: 'test' });
+
+    expect(cb).not.toHaveBeenCalled();
+    expect(scheduler.setTimeout).toHaveBeenCalledTimes(1);
+    const scheduledId = scheduler.setTimeout.mock.results[0].value;
+    expect(scheduler.getPendingCount()).toBe(1);
+
+    subscription.unsubscribe();
+
+    expect(scheduler.clearTimeout).toHaveBeenCalledWith(scheduledId);
+    expect(scheduler.getPendingCount()).toBe(0);
+    expect(cb).not.toHaveBeenCalled();
   });
 });
