@@ -13,6 +13,18 @@ import {
   assertNonBlankString,
 } from '../../utils/index.js';
 
+const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
+  enabled: true,
+  prefix: 'Activity: ',
+  suffix: '.',
+  separator: '. ',
+  maxActivities: 10,
+  enableContextAwareness: true,
+  nameResolution: Object.freeze({
+    usePronounsWhenAvailable: false,
+  }),
+});
+
 /**
  * @typedef {object} ActivityGroup
  * @description Represents a grouped collection of related activities.
@@ -89,6 +101,8 @@ class ActivityDescriptionService {
 
   #closenessCache = new Map();
 
+  #eventBus = null;
+
   #activityIndex = null; // Phase 3: ACTDESC-020
 
   #cacheConfig = {
@@ -110,6 +124,7 @@ class ActivityDescriptionService {
    * @param {object} dependencies.anatomyFormattingService - Configuration service
    * @param {object} dependencies.jsonLogicEvaluationService - JSON Logic evaluation service
    * @param {object} [dependencies.activityIndex] - Optional index for performance (Phase 3)
+   * @param {object} [dependencies.eventBus] - Optional event bus for error telemetry
    */
   constructor({
     logger,
@@ -117,6 +132,7 @@ class ActivityDescriptionService {
     anatomyFormattingService,
     jsonLogicEvaluationService,
     activityIndex = null,
+    eventBus = null,
   }) {
     this.#logger = ensureValidLogger(logger, 'ActivityDescriptionService');
 
@@ -140,6 +156,12 @@ class ActivityDescriptionService {
     this.#anatomyFormattingService = anatomyFormattingService;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#activityIndex = activityIndex;
+    if (eventBus !== null && eventBus !== undefined) {
+      validateDependency(eventBus, 'EventBus', this.#logger, {
+        requiredMethods: ['dispatch'],
+      });
+      this.#eventBus = eventBus;
+    }
 
     this.#setupCacheCleanup();
   }
@@ -164,18 +186,47 @@ class ActivityDescriptionService {
     this.#closenessCache.clear();
 
     try {
-      this.#logger.debug(`Generating activity description for entity: ${entityId}`);
+      this.#logger.debug(
+        `Generating activity description for entity: ${entityId}`
+      );
 
-      const entity = this.#entityManager.getEntityInstance(entityId);
+      let entity;
+      try {
+        entity = this.#entityManager.getEntityInstance(entityId);
+      } catch (lookupError) {
+        this.#logger.warn(
+          `Failed to retrieve entity instance for ${entityId}`,
+          lookupError
+        );
+        this.#dispatchError('ENTITY_LOOKUP_FAILED', {
+          entityId,
+          reason: lookupError?.message ?? 'Entity lookup threw an error',
+        });
+        return '';
+      }
 
-      const activities = this.#collectActivityMetadata(entityId);
+      if (!entity) {
+        this.#logger.warn(
+          `No entity found for activity description: ${entityId}`
+        );
+        this.#dispatchError('ENTITY_NOT_FOUND', {
+          entityId,
+          reason: 'Entity manager returned no instance',
+        });
+        return '';
+      }
+
+      const activities = this.#collectActivityMetadata(entityId, entity);
 
       if (activities.length === 0) {
         this.#logger.debug(`No activities found for entity: ${entityId}`);
         return '';
       }
 
-      const conditionedActivities = this.#filterByConditions(activities, entity);
+      const conditionedActivities = this.#filterByConditions(
+        activities,
+        entity
+      );
 
       if (conditionedActivities.length === 0) {
         this.#logger.debug(
@@ -202,19 +253,22 @@ class ActivityDescriptionService {
       }
 
       return description;
-
     } catch (error) {
       this.#logger.error(
         `Failed to generate activity description for entity ${entityId}`,
         error
       );
+      this.#dispatchError('ACTIVITY_DESCRIPTION_ERROR', {
+        entityId,
+        reason: error?.message ?? 'Unknown error',
+      });
       return ''; // Fail gracefully
     }
   }
 
   // Stub methods - to be implemented in subsequent tickets
-   
-  #collectActivityMetadata(entityId) {
+
+  #collectActivityMetadata(entityId, entity = null) {
     // ACTDESC-006, ACTDESC-007
     const activities = [];
 
@@ -243,30 +297,53 @@ class ActivityDescriptionService {
     }
 
     // Collect inline metadata (ACTDESC-006)
-    try {
-      const entity = this.#entityManager.getEntityInstance(entityId);
-      const inlineActivities = this.#collectInlineMetadata(entity);
-      activities.push(...inlineActivities);
-    } catch (error) {
-      this.#logger.error(
-        `Failed to collect inline metadata for entity ${entityId}`,
-        error
+    let resolvedEntity = entity;
+    if (!resolvedEntity) {
+      try {
+        resolvedEntity = this.#entityManager.getEntityInstance(entityId);
+      } catch (error) {
+        this.#logger.warn(
+          `Failed to resolve entity for metadata collection: ${entityId}`,
+          error
+        );
+      }
+    }
+
+    if (resolvedEntity) {
+      try {
+        const inlineActivities = this.#collectInlineMetadata(resolvedEntity);
+        activities.push(...inlineActivities);
+      } catch (error) {
+        this.#logger.error(
+          `Failed to collect inline metadata for entity ${entityId}`,
+          error
+        );
+      }
+    } else {
+      this.#logger.warn(
+        `No entity available for inline metadata collection: ${entityId}`
       );
     }
 
     // Collect dedicated metadata (ACTDESC-007)
-    try {
-      const entity = this.#entityManager.getEntityInstance(entityId);
-      const dedicatedActivities = this.#collectDedicatedMetadata(entity);
-      activities.push(...dedicatedActivities);
-    } catch (error) {
-      this.#logger.error(
-        `Failed to collect dedicated metadata for entity ${entityId}`,
-        error
+    if (resolvedEntity) {
+      try {
+        const dedicatedActivities =
+          this.#collectDedicatedMetadata(resolvedEntity);
+        activities.push(...dedicatedActivities);
+      } catch (error) {
+        this.#logger.error(
+          `Failed to collect dedicated metadata for entity ${entityId}`,
+          error
+        );
+      }
+    } else {
+      this.#logger.warn(
+        `No entity available for dedicated metadata collection: ${entityId}`
       );
     }
 
-    return activities;
+    return activities.filter(Boolean);
   }
 
   /**
@@ -276,10 +353,19 @@ class ActivityDescriptionService {
    * @returns {Array<object>} Inline metadata activities
    * @private
    */
-   
+
   #collectInlineMetadata(entity) {
     const activities = [];
-    const componentIds = entity.componentTypeIds ?? [];
+    if (!entity || typeof entity !== 'object') {
+      this.#logger.warn(
+        'Cannot collect inline metadata without a valid entity'
+      );
+      return activities;
+    }
+
+    const componentIds = Array.isArray(entity.componentTypeIds)
+      ? entity.componentTypeIds
+      : [];
 
     for (const componentId of componentIds) {
       // Skip dedicated metadata components (already processed)
@@ -287,8 +373,39 @@ class ActivityDescriptionService {
         continue;
       }
 
-      const componentData = entity.getComponentData(componentId);
+      if (typeof entity.getComponentData !== 'function') {
+        this.#logger.warn(
+          `Entity ${entity?.id ?? 'unknown'} is missing getComponentData; skipping ${componentId}`
+        );
+        continue;
+      }
+
+      let componentData;
+      try {
+        componentData = entity.getComponentData(componentId);
+      } catch (error) {
+        this.#logger.error(
+          `Failed to retrieve component data for ${componentId}`,
+          error
+        );
+        continue;
+      }
+
+      if (!componentData || typeof componentData !== 'object') {
+        this.#logger.warn(
+          `Component ${componentId} returned invalid data; skipping inline metadata`
+        );
+        continue;
+      }
+
       const activityMetadata = componentData?.activityMetadata;
+
+      if (activityMetadata && typeof activityMetadata !== 'object') {
+        this.#logger.warn(
+          `Activity metadata for ${componentId} is malformed; skipping`
+        );
+        continue;
+      }
 
       if (activityMetadata?.shouldDescribeInActivity) {
         try {
@@ -321,9 +438,13 @@ class ActivityDescriptionService {
    * @returns {object|null} Activity object or null if invalid
    * @private
    */
-   
+
   #parseInlineMetadata(componentId, componentData, activityMetadata) {
-    const { template, targetRole = 'entityId', priority = 50 } = activityMetadata;
+    const {
+      template,
+      targetRole = 'entityId',
+      priority = 50,
+    } = activityMetadata;
 
     if (!template) {
       this.#logger.warn(`Inline metadata missing template for ${componentId}`);
@@ -365,16 +486,62 @@ class ActivityDescriptionService {
   #collectDedicatedMetadata(entity) {
     const activities = [];
 
+    if (!entity || typeof entity !== 'object') {
+      this.#logger.warn(
+        'Cannot collect dedicated metadata without a valid entity'
+      );
+      return activities;
+    }
+
+    if (typeof entity.hasComponent !== 'function') {
+      this.#logger.warn(
+        `Entity ${entity?.id ?? 'unknown'} is missing hasComponent; skipping dedicated metadata`
+      );
+      return activities;
+    }
+
+    let hasMetadataComponent = false;
+    try {
+      hasMetadataComponent = entity.hasComponent(
+        'activity:description_metadata'
+      );
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to verify dedicated metadata component for ${entity?.id ?? 'unknown'}`,
+        error
+      );
+      return activities;
+    }
+
     // Check if entity has dedicated metadata component type
     // Note: Entity can only have ONE instance of each component type
-    if (!entity.hasComponent('activity:description_metadata')) {
+    if (!hasMetadataComponent) {
       return activities;
     }
 
     // Get the single metadata component
-    const metadata = entity.getComponentData('activity:description_metadata');
+    if (typeof entity.getComponentData !== 'function') {
+      this.#logger.warn(
+        `Entity ${entity?.id ?? 'unknown'} is missing getComponentData; skipping dedicated metadata`
+      );
+      return activities;
+    }
 
-    if (!metadata) {
+    let metadata;
+    try {
+      metadata = entity.getComponentData('activity:description_metadata');
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to read dedicated metadata for ${entity?.id ?? 'unknown'}`,
+        error
+      );
+      return activities;
+    }
+
+    if (!metadata || typeof metadata !== 'object') {
+      this.#logger.warn(
+        `Dedicated metadata for ${entity?.id ?? 'unknown'} is invalid; skipping`
+      );
       return activities;
     }
 
@@ -400,7 +567,24 @@ class ActivityDescriptionService {
    */
 
   #parseDedicatedMetadata(metadata, entity) {
-    const { sourceComponent, descriptionType, targetRole, priority = 50 } = metadata;
+    if (!metadata || typeof metadata !== 'object') {
+      this.#logger.warn('Dedicated metadata payload is invalid; skipping');
+      return null;
+    }
+
+    if (!entity || typeof entity.getComponentData !== 'function') {
+      this.#logger.warn(
+        `Cannot parse dedicated metadata without component access for ${entity?.id ?? 'unknown'}`
+      );
+      return null;
+    }
+
+    const {
+      sourceComponent,
+      descriptionType,
+      targetRole,
+      priority = 50,
+    } = metadata;
 
     if (!sourceComponent) {
       this.#logger.warn('Dedicated metadata missing sourceComponent');
@@ -408,14 +592,34 @@ class ActivityDescriptionService {
     }
 
     // Get source component data
-    const sourceData = entity.getComponentData(sourceComponent);
+    let sourceData;
+    try {
+      sourceData = entity.getComponentData(sourceComponent);
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to retrieve source component ${sourceComponent} for dedicated metadata`,
+        error
+      );
+      return null;
+    }
     if (!sourceData) {
       this.#logger.warn(`Source component not found: ${sourceComponent}`);
       return null;
     }
 
     // Resolve target entity ID
-    const targetEntityId = sourceData[targetRole || 'entityId'];
+    const roleKey = targetRole || 'entityId';
+    let targetEntityId = null;
+
+    try {
+      targetEntityId = sourceData?.[roleKey] ?? null;
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to resolve target entity for dedicated metadata ${sourceComponent}`,
+        error
+      );
+      targetEntityId = null;
+    }
 
     return {
       type: 'dedicated',
@@ -433,7 +637,6 @@ class ActivityDescriptionService {
     };
   }
 
-
   /**
    * Filter activities based on visibility-oriented condition metadata.
    *
@@ -447,9 +650,17 @@ class ActivityDescriptionService {
       return [];
     }
 
-    return activities.filter((activity) =>
-      this.#evaluateActivityVisibility(activity, entity)
-    );
+    return activities.filter((activity) => {
+      try {
+        return this.#evaluateActivityVisibility(activity, entity);
+      } catch (error) {
+        this.#logger.warn(
+          'Failed to evaluate activity visibility for activity metadata',
+          error
+        );
+        return false;
+      }
+    });
   }
 
   /**
@@ -637,7 +848,25 @@ class ActivityDescriptionService {
       return false;
     }
 
-    return required.every((componentId) => entity.hasComponent(componentId));
+    try {
+      return required.every((componentId) => {
+        try {
+          return entity.hasComponent(componentId);
+        } catch (error) {
+          this.#logger.warn(
+            `Failed to verify required component ${componentId} for ${entity?.id ?? 'unknown'}`,
+            error
+          );
+          return false;
+        }
+      });
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to evaluate required components for ${entity?.id ?? 'unknown'}`,
+        error
+      );
+      return false;
+    }
   }
 
   /**
@@ -653,29 +882,44 @@ class ActivityDescriptionService {
       return false;
     }
 
-    return forbidden.some((componentId) => entity.hasComponent(componentId));
+    try {
+      return forbidden.some((componentId) => {
+        try {
+          return entity.hasComponent(componentId);
+        } catch (error) {
+          this.#logger.warn(
+            `Failed to verify forbidden component ${componentId} for ${entity?.id ?? 'unknown'}`,
+            error
+          );
+          return false;
+        }
+      });
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to evaluate forbidden components for ${entity?.id ?? 'unknown'}`,
+        error
+      );
+      return false;
+    }
   }
 
-   
   #sortByPriority(activities, cacheKey = null) {
     // ACTDESC-016 (Phase 2)
     const index = this.#getActivityIndex(activities, cacheKey);
     return index.byPriority;
   }
 
-
   #formatActivityDescription(activities, entity, cacheKey = null) {
     // ACTDESC-008 (Phase 2 - Enhanced with Pronoun Resolution)
     // ACTDESC-014: Pronoun resolution implementation
-    const config =
-      this.#anatomyFormattingService.getActivityIntegrationConfig?.() ?? {};
+    const config = this.#getActivityIntegrationConfig();
 
-    if (activities.length === 0) {
+    if (!Array.isArray(activities) || activities.length === 0) {
       return '';
     }
 
     // Get actor name and gender for pronoun resolution
-    const actorId = entity?.id;
+    const actorId = entity?.id ?? null;
     const actorName = this.#resolveEntityName(actorId);
     const actorGender = this.#detectEntityGender(actorId);
     const actorPronouns = this.#getPronounSet(actorGender);
@@ -689,38 +933,79 @@ class ActivityDescriptionService {
     const enableContextAwareness = config.enableContextAwareness !== false;
 
     const contextAwareActivities = enableContextAwareness
-      ? limitedActivities.map((activity) =>
-          this.#applyContextualTone(
-            activity,
-            this.#buildActivityContext(actorId, activity)
-          )
-        )
+      ? limitedActivities.map((activity) => {
+          try {
+            const contextualised = this.#applyContextualTone(
+              activity,
+              this.#buildActivityContext(actorId, activity)
+            );
+            return contextualised ?? activity;
+          } catch (error) {
+            this.#logger.warn(
+              'Failed to apply contextual tone to activity',
+              error
+            );
+            return activity;
+          }
+        })
       : limitedActivities;
 
-    const groupedActivities = this.#groupActivities(
-      contextAwareActivities,
-      cacheKey
-    );
+    let groupedActivities = [];
+    try {
+      const result = this.#groupActivities(contextAwareActivities, cacheKey);
+      if (Array.isArray(result)) {
+        groupedActivities = result;
+      } else if (result && typeof result.forEach === 'function') {
+        // Support legacy iterable responses
+        result.forEach((group) => groupedActivities.push(group));
+      } else if (result) {
+        this.#logger.warn(
+          'Grouping activities returned unexpected data; ignoring result'
+        );
+      }
+    } catch (error) {
+      this.#logger.error('Failed to group activities for formatting', error);
+      this.#dispatchError('GROUP_ACTIVITIES_FAILED', {
+        entityId: actorId ?? 'unknown',
+        reason: error?.message ?? 'Grouping error',
+      });
+      groupedActivities = [];
+    }
 
     const descriptions = [];
 
     groupedActivities.forEach((group, index) => {
+      if (!group) {
+        return;
+      }
+
       const isFirstGroup = index === 0;
       const useActorPronounForPrimary = !isFirstGroup && pronounsEnabled;
       const actorReference = useActorPronounForPrimary
         ? actorPronouns.subject
         : actorName;
 
-      const primaryPhraseResult = this.#generateActivityPhrase(
-        actorReference,
-        group.primaryActivity,
-        useActorPronounForPrimary
-      );
+      let primaryPhraseResult;
+      try {
+        primaryPhraseResult = this.#generateActivityPhrase(
+          actorReference,
+          group.primaryActivity,
+          useActorPronounForPrimary
+        );
+      } catch (error) {
+        this.#logger.error('Failed to generate primary activity phrase', error);
+        this.#dispatchError('PRIMARY_ACTIVITY_FORMATTING_FAILED', {
+          entityId: actorId ?? 'unknown',
+          sourceComponent: group?.primaryActivity?.sourceComponent ?? null,
+          reason: error?.message ?? 'Primary phrase error',
+        });
+        return;
+      }
 
       const primaryPhrase =
         typeof primaryPhraseResult === 'string'
           ? primaryPhraseResult
-          : primaryPhraseResult?.fullPhrase ?? '';
+          : (primaryPhraseResult?.fullPhrase ?? '');
 
       if (!primaryPhrase || !primaryPhrase.trim()) {
         return;
@@ -728,24 +1013,60 @@ class ActivityDescriptionService {
 
       let groupDescription = primaryPhrase.trim();
 
-      for (const related of group.relatedActivities) {
-        const phraseComponents = this.#generateActivityPhrase(
-          actorReference,
-          related.activity,
-          pronounsEnabled,
-          { omitActor: true }
-        );
+      const relatedActivities = Array.isArray(group.relatedActivities)
+        ? group.relatedActivities
+        : [];
 
-        const fragment = this.#buildRelatedActivityFragment(
-          related.conjunction,
-          phraseComponents,
-          {
-            actorName,
+      for (const related of relatedActivities) {
+        if (!related) {
+          continue;
+        }
+
+        let phraseComponents;
+        try {
+          phraseComponents = this.#generateActivityPhrase(
             actorReference,
-            actorPronouns,
+            related.activity,
             pronounsEnabled,
-          }
-        );
+            { omitActor: true }
+          );
+        } catch (error) {
+          this.#logger.error(
+            'Failed to generate related activity phrase',
+            error
+          );
+          this.#dispatchError('RELATED_ACTIVITY_FORMATTING_FAILED', {
+            entityId: actorId ?? 'unknown',
+            sourceComponent: related?.activity?.sourceComponent ?? null,
+            reason: error?.message ?? 'Related phrase error',
+          });
+          continue;
+        }
+
+        let fragment;
+        try {
+          fragment = this.#buildRelatedActivityFragment(
+            related.conjunction,
+            phraseComponents,
+            {
+              actorName,
+              actorReference,
+              actorPronouns,
+              pronounsEnabled,
+            }
+          );
+        } catch (error) {
+          this.#logger.error(
+            'Failed to build related activity fragment',
+            error
+          );
+          this.#dispatchError('RELATED_ACTIVITY_FRAGMENT_FAILED', {
+            entityId: actorId ?? 'unknown',
+            sourceComponent: related?.activity?.sourceComponent ?? null,
+            reason: error?.message ?? 'Fragment error',
+          });
+          fragment = '';
+        }
 
         if (fragment) {
           groupDescription = `${groupDescription} ${fragment}`.trim();
@@ -770,6 +1091,49 @@ class ActivityDescriptionService {
     return `${prefix}${activityText}${suffix}`.trim();
   }
 
+  #getActivityIntegrationConfig() {
+    const defaultConfig = {
+      ...DEFAULT_ACTIVITY_FORMATTING_CONFIG,
+      nameResolution: {
+        ...DEFAULT_ACTIVITY_FORMATTING_CONFIG.nameResolution,
+      },
+    };
+
+    const configGetter =
+      this.#anatomyFormattingService?.getActivityIntegrationConfig;
+
+    if (typeof configGetter !== 'function') {
+      return defaultConfig;
+    }
+
+    try {
+      const config = configGetter.call(this.#anatomyFormattingService);
+
+      if (!config || typeof config !== 'object') {
+        this.#logger.warn(
+          'Activity integration config missing or invalid; using defaults'
+        );
+        return defaultConfig;
+      }
+
+      const mergedConfig = {
+        ...defaultConfig,
+        ...config,
+        nameResolution: {
+          ...defaultConfig.nameResolution,
+          ...(config.nameResolution && typeof config.nameResolution === 'object'
+            ? config.nameResolution
+            : {}),
+        },
+      };
+
+      return mergedConfig;
+    } catch (error) {
+      this.#logger.warn('Failed to get activity integration config', error);
+      return defaultConfig;
+    }
+  }
+
   /**
    * Build the contextual payload for an activity.
    *
@@ -789,7 +1153,7 @@ class ActivityDescriptionService {
       targetGender: null,
     };
 
-    if (!targetId) {
+    if (!targetId || !actorId) {
       return context;
     }
 
@@ -903,7 +1267,8 @@ class ActivityDescriptionService {
    * @private
    */
   #mergeAdverb(currentAdverb, injected) {
-    const normalizedInjected = typeof injected === 'string' ? injected.trim() : '';
+    const normalizedInjected =
+      typeof injected === 'string' ? injected.trim() : '';
     const normalizedCurrent =
       typeof currentAdverb === 'string' ? currentAdverb.trim() : '';
 
@@ -1158,7 +1523,8 @@ class ActivityDescriptionService {
     }
 
     const index = this.#getActivityIndex(activities, cacheKey);
-    const prioritized = index.byPriority.length > 0 ? index.byPriority : activities;
+    const prioritized =
+      index.byPriority.length > 0 ? index.byPriority : activities;
     const visited = new Set();
 
     const candidateCache = new Map();
@@ -1316,7 +1682,6 @@ class ActivityDescriptionService {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-
   #resolveEntityName(entityId) {
     // ACTDESC-009
     if (!entityId) {
@@ -1331,17 +1696,21 @@ class ActivityDescriptionService {
     try {
       const entity = this.#entityManager.getEntityInstance(entityId);
 
+      if (!entity) {
+        this.#logger.warn(
+          `Failed to resolve entity name for ${entityId}: entity not found`
+        );
+        return entityId;
+      }
+
       // Entities use core:name component for their names
-      const nameComponent = entity.getComponentData?.('core:name');
+      const nameComponent = entity?.getComponentData?.('core:name');
       const resolvedName = nameComponent?.text ?? entity?.id ?? entityId;
 
       this.#setCacheValue(this.#entityNameCache, entityId, resolvedName);
       return resolvedName;
     } catch (error) {
-      this.#logger.warn(
-        `Failed to resolve entity name for ${entityId}`,
-        error
-      );
+      this.#logger.warn(`Failed to resolve entity name for ${entityId}`, error);
       return entityId;
     }
   }
@@ -1462,7 +1831,8 @@ class ActivityDescriptionService {
       buildLogicContext: (...args) => this.#buildLogicContext(...args),
       buildActivityContext: (...args) => this.#buildActivityContext(...args),
       applyContextualTone: (...args) => this.#applyContextualTone(...args),
-      generateActivityPhrase: (...args) => this.#generateActivityPhrase(...args),
+      generateActivityPhrase: (...args) =>
+        this.#generateActivityPhrase(...args),
       filterByConditions: (...args) => this.#filterByConditions(...args),
       determineActivityIntensity: (...args) =>
         this.#determineActivityIntensity(...args),
@@ -1470,8 +1840,7 @@ class ActivityDescriptionService {
         this.#isEmptyConditionsObject(...args),
       matchesPropertyCondition: (...args) =>
         this.#matchesPropertyCondition(...args),
-      hasRequiredComponents: (...args) =>
-        this.#hasRequiredComponents(...args),
+      hasRequiredComponents: (...args) => this.#hasRequiredComponents(...args),
       hasForbiddenComponents: (...args) =>
         this.#hasForbiddenComponents(...args),
       extractEntityData: (...args) => this.#extractEntityData(...args),
@@ -1479,6 +1848,7 @@ class ActivityDescriptionService {
       activitiesOccurSimultaneously: (...args) =>
         this.#activitiesOccurSimultaneously(...args),
       getPronounSet: (...args) => this.#getPronounSet(...args),
+      resolveEntityName: (...args) => this.#resolveEntityName(...args),
     };
   }
 
@@ -1523,6 +1893,30 @@ class ActivityDescriptionService {
     );
 
     return index;
+  }
+
+  #dispatchError(errorType, context = {}) {
+    if (!this.#eventBus || typeof this.#eventBus.dispatch !== 'function') {
+      return;
+    }
+
+    const payload = {
+      errorType,
+      ...context,
+      timestamp: Date.now(),
+    };
+
+    try {
+      this.#eventBus.dispatch({
+        type: 'ACTIVITY_DESCRIPTION_ERROR',
+        payload,
+      });
+    } catch (error) {
+      this.#logger.error(
+        'Failed to dispatch activity description error event',
+        error
+      );
+    }
   }
 
   /**
@@ -1627,7 +2021,8 @@ class ActivityDescriptionService {
   #buildActivitySignature(activities) {
     return activities
       .map((activity) => {
-        const source = activity?.sourceComponent ?? activity?.descriptionType ?? 'unknown';
+        const source =
+          activity?.sourceComponent ?? activity?.descriptionType ?? 'unknown';
         const target = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
         const priority = activity?.priority ?? 50;
         const type = activity?.type ?? 'generic';
