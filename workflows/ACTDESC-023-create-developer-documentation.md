@@ -48,13 +48,15 @@ The Activity Description System generates natural language descriptions of chara
 ### 1. Enable in Configuration
 
 ```javascript
-// data/anatomy/configuration/descriptionConfiguration.js
+// src/anatomy/configuration/descriptionConfiguration.js
 export const defaultDescriptionOrder = [
   'anatomy',
   'equipment',
-  'activity',  // ← Add this
+  'activity',
 ];
 ```
+
+Ensure your overrides keep the `activity` entry in the body description order. The default configuration already includes it, but custom mods or formatting services should preserve the slot so activity text is rendered.
 
 ### 2. Add Inline Metadata
 
@@ -70,6 +72,8 @@ export const defaultDescriptionOrder = [
   }
 }
 ```
+
+Inline metadata lives inside the component definition (for example, `data/mods/positioning/components/kneeling_before.component.json`).
 
 ### 3. Generate Description
 
@@ -187,18 +191,15 @@ See [examples/](./examples/) for detailed code examples.
 ### Dependency Injection
 
 ```javascript
-container.register(
-  tokens.IActivityDescriptionService,
-  ActivityDescriptionService,
-  {
-    singleton: true,
-    dependencies: [
-      tokens.IEntityManager,
-      tokens.IAnatomyFormattingService,
-      tokens.ILogger,
-    ],
-  }
-);
+registrar.singletonFactory(tokens.ActivityDescriptionService, (c) => {
+  return new ActivityDescriptionService({
+    logger: c.resolve(tokens.ILogger),
+    entityManager: c.resolve(tokens.IEntityManager),
+    anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
+    jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
+    // activityIndex provided in ACTDESC-020
+  });
+});
 ```
 
 ### Caching Strategy
@@ -376,14 +377,23 @@ container.register(
 ### Constructor
 
 ```javascript
-constructor({ entityManager, anatomyFormattingService, eventBus = null, logger = null })
+constructor({
+  logger,
+  entityManager,
+  anatomyFormattingService,
+  jsonLogicEvaluationService,
+  activityIndex = null,
+  eventBus = null,
+})
 ```
 
 **Parameters**:
+- `logger` (ILogger, required): Logging interface
 - `entityManager` (IEntityManager, required): Entity management interface
-- `anatomyFormattingService` (IAnatomyFormattingService, required): Configuration provider
-- `eventBus` (IEventBus, optional): Event system for cache invalidation
-- `logger` (ILogger, optional): Logging interface
+- `anatomyFormattingService` (AnatomyFormattingService, required): Configuration provider
+- `jsonLogicEvaluationService` (JsonLogicEvaluationService, required): JSON Logic evaluator used for conditional visibility
+- `activityIndex` (ActivityIndex, optional): Precomputed index hook (Phase 3 enhancement)
+- `eventBus` (EventBus, optional): Event system for cache invalidation and telemetry
 
 **Throws**: `InvalidArgumentError` if required dependencies missing
 
@@ -491,23 +501,16 @@ getActivityIntegrationConfig()
   prefix: 'Activity: ',
   suffix: '',
   separator: '. ',
+  enableContextAwareness: true,
   maxActivities: 10,
+  respectPriorityTiers: true,
+  enableCaching: false,
+  cacheTimeout: 5000,
   nameResolution: {
     usePronounsWhenAvailable: true,
     fallbackToNames: true,
-    pronounThreshold: 2
+    respectGenderComponents: true,
   },
-  naturalLanguage: {
-    enableSmartGrouping: true,
-    groupConjunction: 'and',
-    simultaneousConjunction: 'while',
-    enablePronounResolution: true
-  },
-  performance: {
-    enableCaching: true,
-    cacheSize: 1000,
-    cacheTTL: 60000
-  }
 }
 ```
 
@@ -515,24 +518,26 @@ getActivityIntegrationConfig()
 
 ### Input Events (Listened)
 
-**COMPONENT_ADDED** / **COMPONENT_UPDATED** / **COMPONENT_REMOVED**
+**COMPONENT_ADDED** / **COMPONENT_REMOVED**
 ```javascript
 {
-  type: 'COMPONENT_ADDED',
+  type: 'COMPONENT_ADDED', // COMPONENT_REMOVED uses the same payload shape
   payload: {
-    entityId: string,
-    componentId: string
+    componentTypeId: string,
+    entity: { id?: string; instanceId?: string } | null,
+    entityId?: string
   }
 }
 ```
 Triggers cache invalidation for relevant components.
 
-**ENTITY_DESTROYED**
+**ENTITY_REMOVED**
 ```javascript
 {
-  type: 'ENTITY_DESTROYED',
+  type: 'ENTITY_REMOVED',
   payload: {
-    entityId: string
+    entity: { id?: string; instanceId?: string } | null,
+    entityId?: string
   }
 }
 ```
@@ -545,8 +550,8 @@ Clears all caches for destroyed entity.
 {
   type: 'ACTIVITY_DESCRIPTION_ERROR',
   payload: {
+    errorType: string,
     entityId: string,
-    error: string,
     timestamp: number
   }
 }
