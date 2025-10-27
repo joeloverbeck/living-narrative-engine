@@ -71,6 +71,77 @@ describe('fetchWithRetry', () => {
     expect(fetch).toHaveBeenCalledWith(url, {});
   });
 
+  test('treats 204 responses as null without attempting JSON parsing', async () => {
+    const noContentResponse = mockResponse(204, '', true);
+    noContentResponse.json.mockImplementation(() => {
+      throw new Error('json should not be called for 204 responses');
+    });
+    fetch.mockResolvedValueOnce(noContentResponse);
+
+    const result = await fetchWithRetry(
+      url,
+      opts,
+      1,
+      1,
+      1,
+      dispatcher,
+      undefined,
+      fetch
+    );
+
+    expect(result).toBeNull();
+    expect(noContentResponse.json).not.toHaveBeenCalled();
+  });
+
+  test('treats Content-Length: 0 responses as null without parsing', async () => {
+    const zeroLengthResponse = mockResponse(200, '', true, {
+      'Content-Length': '0',
+    });
+    zeroLengthResponse.json.mockImplementation(() => {
+      throw new Error('json should not be called when body length is zero');
+    });
+    fetch.mockResolvedValueOnce(zeroLengthResponse);
+
+    const result = await fetchWithRetry(
+      url,
+      opts,
+      1,
+      1,
+      1,
+      dispatcher,
+      undefined,
+      fetch
+    );
+
+    expect(result).toBeNull();
+    expect(zeroLengthResponse.json).not.toHaveBeenCalled();
+  });
+
+  test('returns null when JSON parsing fails due to empty body', async () => {
+    const emptyBodyClone = jest.fn().mockResolvedValue('   ');
+    const emptyBodyResponse = mockResponse(200, '', true, {}, true);
+    emptyBodyResponse.json.mockRejectedValue(
+      new SyntaxError('Unexpected end of JSON input')
+    );
+    emptyBodyResponse.clone.mockReturnValue({ text: emptyBodyClone });
+    fetch.mockResolvedValueOnce(emptyBodyResponse);
+
+    const result = await fetchWithRetry(
+      url,
+      opts,
+      1,
+      1,
+      1,
+      dispatcher,
+      undefined,
+      fetch
+    );
+
+    expect(result).toBeNull();
+    expect(emptyBodyResponse.json).toHaveBeenCalledTimes(1);
+    expect(emptyBodyClone).toHaveBeenCalledTimes(1);
+  });
+
   test('parses JSON body for HTTP errors', async () => {
     const body = { error: 'bad' };
     const resp = mockResponse(400, body, false, {}, true);
