@@ -52,4 +52,46 @@ describe('loadSlotUtils', () => {
 
     expect(result[0].slotItemMeta).toEqual(formatSaveFileMetadata(save));
   });
+
+  it('unwraps persistence results returned by the save load service', async () => {
+    const newest = {
+      identifier: 'new',
+      saveName: 'New',
+      timestamp: '2024-02-01T00:00:00Z',
+      playtimeSeconds: 10,
+      isCorrupted: false,
+    };
+    const oldest = {
+      identifier: 'old',
+      saveName: 'Old',
+      timestamp: '2024-01-01T00:00:00Z',
+      playtimeSeconds: 5,
+      isCorrupted: false,
+    };
+    const payload = [oldest, newest];
+    const service = {
+      listManualSaveSlots: jest
+        .fn()
+        .mockResolvedValue({ success: true, data: payload }),
+    };
+
+    const result = await fetchAndFormatLoadSlots(service);
+
+    expect(service.listManualSaveSlots).toHaveBeenCalledTimes(1);
+    expect(result.map((slot) => slot.identifier)).toEqual(['new', 'old']);
+    expect(payload).toEqual([oldest, newest]);
+  });
+
+  it('throws an error when the persistence result indicates failure', async () => {
+    const service = {
+      listManualSaveSlots: jest.fn().mockResolvedValue({
+        success: false,
+        userFriendlyError: 'Could not read directory',
+      }),
+    };
+
+    await expect(fetchAndFormatLoadSlots(service)).rejects.toThrow(
+      'Could not read directory'
+    );
+  });
 });
