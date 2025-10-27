@@ -825,9 +825,13 @@ class LoggerStrategy {
     switch (command) {
       case 'reload': {
         // Reload configuration from defaults
+        const baseDefaults = deepClone(DEFAULT_CONFIG);
+        const dependencyConfig = this.#dependencies.config
+          ? deepClone(this.#dependencies.config)
+          : {};
         const reloadedConfig = this.#mergeConfig(
-          DEFAULT_CONFIG,
-          this.#dependencies.config || {}
+          baseDefaults,
+          dependencyConfig
         );
         this.#config = reloadedConfig;
         // Don't call applyConfiguration as it may change the logger
@@ -840,9 +844,9 @@ class LoggerStrategy {
 
       case 'reset':
         // Reset to default configuration
-        this.#config = { ...DEFAULT_CONFIG };
-        this.#mode = this.#detectMode(null);
-        this.#currentLevel = 'INFO';
+        this.#config = deepClone(DEFAULT_CONFIG);
+        this.#mode = this.#detectMode(null, this.#config);
+        this.#currentLevel = this.#config.logLevel || 'INFO';
         this.#logger = this.#createLogger(
           this.#mode,
           this.#config,

@@ -197,6 +197,30 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(defaultConfig.categories).toEqual(originalCategories);
   });
 
+  it('does not mutate DEFAULT_CONFIG when reset command is used', () => {
+    const strategy = createStrategy();
+    const snapshot = JSON.parse(JSON.stringify(defaultConfig));
+
+    strategy.setLogLevel('reset');
+    strategy.setLogLevel({
+      categories: { general: { level: 'debug' } },
+    });
+
+    expect(defaultConfig).toEqual(snapshot);
+  });
+
+  it('does not mutate DEFAULT_CONFIG when reload command is used', () => {
+    const strategy = createStrategy();
+    const snapshot = JSON.parse(JSON.stringify(defaultConfig));
+
+    strategy.setLogLevel('reload');
+    strategy.setLogLevel({
+      categories: { general: { level: 'error' } },
+    });
+
+    expect(defaultConfig).toEqual(snapshot);
+  });
+
   it('detects mode from DEBUG_LOG_MODE environment variable when explicit mode missing', () => {
     const previous = process.env.DEBUG_LOG_MODE;
     process.env.DEBUG_LOG_MODE = 'production';
