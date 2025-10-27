@@ -23,6 +23,14 @@ const DEFAULT_OPERATION_THRESHOLDS = {
 };
 
 /**
+ * Minimum number of observations required before emitting performance alerts.
+ * This prevents noisy warnings during initialization where no baseline exists.
+ *
+ * @type {number}
+ */
+const MIN_OPERATION_SAMPLES_FOR_ALERT = 5;
+
+/**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator
  */
@@ -861,12 +869,19 @@ class ActionTraceConfigLoader {
     opStats.maxTime = Math.max(opStats.maxTime, duration);
 
     // Detect performance regression (2x average or above threshold)
-    const isSlowOperation =
-      duration > opStats.performanceThreshold ||
-      (opStats.count > 10 && duration > opStats.avgTime * 2);
+    const exceededThreshold = duration > opStats.performanceThreshold;
+    const hasEnoughSamples = opStats.count >= MIN_OPERATION_SAMPLES_FOR_ALERT;
+    const significantRegression =
+      hasEnoughSamples &&
+      (exceededThreshold ||
+        (opStats.count > MIN_OPERATION_SAMPLES_FOR_ALERT &&
+          duration > opStats.avgTime * 2));
 
-    if (isSlowOperation) {
+    if (exceededThreshold) {
       opStats.slowOperations++;
+    }
+
+    if (significantRegression) {
       this.#logger.warn(`Performance regression detected in ${operationType}`, {
         duration: `${duration.toFixed(3)}ms`,
         average: `${opStats.avgTime.toFixed(3)}ms`,
