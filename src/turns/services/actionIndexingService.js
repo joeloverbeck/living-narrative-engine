@@ -71,8 +71,14 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
   if (valueType === 'undefined') {
     return 'undefined';
   }
-  if (valueType === 'number' || valueType === 'boolean') {
-    return JSON.stringify(value);
+  if (valueType === 'number') {
+    if (Object.is(value, -0)) {
+      return '-0';
+    }
+    return String(value);
+  }
+  if (valueType === 'boolean') {
+    return value ? 'true' : 'false';
   }
   if (valueType === 'string') {
     return JSON.stringify(value);
