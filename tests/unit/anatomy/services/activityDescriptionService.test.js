@@ -3151,6 +3151,113 @@ describe('ActivityDescriptionService', () => {
       });
     });
 
+    describe('Test hooks', () => {
+      it('merges adverbs across edge cases', () => {
+        const hooks = service.getTestHooks();
+
+        expect(hooks.mergeAdverb('calmly', '   ')).toBe('calmly');
+        expect(hooks.mergeAdverb('   ', 'tenderly')).toBe('tenderly');
+        expect(hooks.mergeAdverb('Softly', 'tenderly')).toBe('Softly tenderly');
+        expect(hooks.mergeAdverb('Tenderly', 'tenderly')).toBe('Tenderly');
+      });
+
+      it('injects contextual softeners appropriately', () => {
+        const hooks = service.getTestHooks();
+        const templateObj = { value: 'raw' };
+
+        expect(hooks.injectSoftener(templateObj, 'tenderly')).toBe(templateObj);
+        expect(hooks.injectSoftener('{actor} signals', 'tenderly')).toBe(
+          '{actor} signals'
+        );
+        expect(
+          hooks.injectSoftener('{actor} greets tenderly {target}', 'tenderly')
+        ).toBe('{actor} greets tenderly {target}');
+        expect(hooks.injectSoftener('{actor} meets {target}', 'tenderly')).toBe(
+          '{actor} meets tenderly {target}'
+        );
+        expect(hooks.injectSoftener('{actor} meets {target}', '   ')).toBe(
+          '{actor} meets {target}'
+        );
+      });
+
+      it('sanitizes verb phrases for grouping logic', () => {
+        const hooks = service.getTestHooks();
+
+        expect(hooks.sanitizeVerbPhrase(null)).toBe('');
+        expect(hooks.sanitizeVerbPhrase('   ')).toBe('');
+        expect(hooks.sanitizeVerbPhrase('is watching closely')).toBe(
+          'watching closely'
+        );
+      });
+
+      it('builds related activity fragments across conjunction scenarios', () => {
+        const hooks = service.getTestHooks();
+        const baseContext = {
+          actorName: 'Jon',
+          actorReference: 'Jon',
+          actorPronouns: { subject: 'he' },
+          pronounsEnabled: false,
+        };
+
+        expect(hooks.buildRelatedActivityFragment('and', null, baseContext)).toBe(
+          ''
+        );
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'and',
+            { verbPhrase: '', fullPhrase: '' },
+            baseContext
+          )
+        ).toBe('');
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'while',
+            { verbPhrase: 'is watching them', fullPhrase: 'Jon is watching them' },
+            baseContext
+          )
+        ).toBe('while watching them');
+
+        const pronounContext = {
+          actorName: 'Jon',
+          actorReference: 'Jon',
+          actorPronouns: { subject: 'they' },
+          pronounsEnabled: true,
+        };
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'while',
+            {
+              verbPhrase: 'guarding the door',
+              fullPhrase: 'Jon is guarding the door',
+            },
+            pronounContext
+          )
+        ).toBe('while they guarding the door');
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'while',
+            { verbPhrase: '   ', fullPhrase: ' Jon stands guard ' },
+            baseContext
+          )
+        ).toBe('while Jon stands guard');
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'and',
+            {
+              verbPhrase: 'patrolling the hall',
+              fullPhrase: 'Jon is patrolling the hall',
+            },
+            baseContext
+          )
+        ).toBe('and patrolling the hall');
+      });
+    });
+
     describe('Error Handling', () => {
       it('should handle gender detection errors gracefully', async () => {
         const mockEntity = {

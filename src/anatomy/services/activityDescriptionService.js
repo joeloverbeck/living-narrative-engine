@@ -853,10 +853,6 @@ class ActivityDescriptionService {
 
     const phraseBody = sanitizedVerbPhrase || fallbackPhrase;
 
-    if (!phraseBody) {
-      return '';
-    }
-
     return `${safeConjunction} ${phraseBody}`;
   }
 
@@ -1078,6 +1074,25 @@ class ActivityDescriptionService {
     };
 
     return pronounSets[gender] || pronounSets.neutral;
+  }
+
+  /**
+   * @description Provide controlled access to private helpers for white-box unit testing.
+   * @returns {{
+   *   mergeAdverb: Function,
+   *   injectSoftener: Function,
+   *   sanitizeVerbPhrase: Function,
+   *   buildRelatedActivityFragment: Function
+   * }} Selected helper functions bound to the current service instance.
+   */
+  getTestHooks() {
+    return {
+      mergeAdverb: (...args) => this.#mergeAdverb(...args),
+      injectSoftener: (...args) => this.#injectSoftener(...args),
+      sanitizeVerbPhrase: (...args) => this.#sanitizeVerbPhrase(...args),
+      buildRelatedActivityFragment: (...args) =>
+        this.#buildRelatedActivityFragment(...args),
+    };
   }
 }
 
