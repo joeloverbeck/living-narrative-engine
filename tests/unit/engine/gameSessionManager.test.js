@@ -198,7 +198,7 @@ describe('GameSessionManager', () => {
         }
       );
     });
-    it('should convert plus characters to spaces for display names', async () => {
+    it('should preserve literal plus characters in save identifiers', async () => {
       const saveIdentifier =
         'saves/manual_saves/manual_save_Hero+One+Adventures.sav';
 
@@ -207,8 +207,23 @@ describe('GameSessionManager', () => {
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_OPERATION_IN_PROGRESS_UI,
         {
-          titleMessage: 'Loading Hero One Adventures...',
-          inputDisabledMessage: 'Loading game from Hero One Adventures...',
+          titleMessage: 'Loading Hero+One+Adventures...',
+          inputDisabledMessage: 'Loading game from Hero+One+Adventures...',
+        }
+      );
+    });
+
+    it('should preserve plus signs when decoding percent-encoded save names', async () => {
+      const saveIdentifier =
+        'saves/manual_saves/manual_save_C%2B%2B_Strategy.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(saveIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading C++ Strategy...',
+          inputDisabledMessage: 'Loading game from C++ Strategy...',
         }
       );
     });
