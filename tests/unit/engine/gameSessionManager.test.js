@@ -814,6 +814,38 @@ describe('GameSessionManager', () => {
       expect(startEngineFn).toHaveBeenCalledWith('Slot 3');
       expect(result.success).toBe(true);
     });
+
+    it('should normalize metadata saveName values that contain manual save filenames', async () => {
+      const saveData = {
+        metadata: {
+          gameTitle: '',
+          saveName: 'manual_save_Galactic_Quest.sav',
+        },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'manual-slot'
+      );
+
+      expect(engineState.activeWorld).toBe('Galactic Quest');
+      expect(startEngineFn).toHaveBeenCalledWith('Galactic Quest');
+    });
+
+    it('should decode and clean metadata worldName values that use encoded formatting', async () => {
+      const saveData = {
+        metadata: { gameTitle: '', worldName: 'Outer%20Rim_Outpost' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'outer-rim');
+
+      expect(engineState.activeWorld).toBe('Outer Rim Outpost');
+      expect(startEngineFn).toHaveBeenCalledWith('Outer Rim Outpost');
+    });
   });
 
   describe('private method coverage via public methods', () => {

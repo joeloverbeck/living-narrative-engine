@@ -449,6 +449,45 @@ class GameSessionManager {
   }
 
   /**
+   * Normalizes metadata-provided labels for display.
+   *
+   * @private
+   * @description Decodes percent-encoded sequences and converts common file
+   * style separators into spaces. Falls back to {@link #normalizeSaveName}
+   * when the value resembles a file path.
+   * @param {unknown} rawValue - Metadata value to normalize.
+   * @param {{ treatAsFileName?: boolean }} [options] - Normalization options.
+   * @returns {string} A cleaned label or an empty string when the value is unusable.
+   */
+  #normalizeMetadataLabel(rawValue, { treatAsFileName = false } = {}) {
+    if (typeof rawValue !== 'string') {
+      return '';
+    }
+
+    const trimmedValue = rawValue.trim();
+    if (!trimmedValue) {
+      return '';
+    }
+
+    if (treatAsFileName) {
+      return this.#normalizeSaveName(trimmedValue);
+    }
+
+    const decodedValue = this.#decodePercentEncodedSegment(trimmedValue);
+
+    if (decodedValue.includes('/') || decodedValue.includes('\\')) {
+      return this.#normalizeSaveName(decodedValue);
+    }
+
+    const withSpaces = decodedValue.replace(/[_]+/g, ' ').trim();
+    if (withSpaces.length > 0) {
+      return withSpaces;
+    }
+
+    return decodedValue.trim();
+  }
+
+  /**
    * Normalizes the world name recovered from save metadata.
    *
    * @private
@@ -463,22 +502,24 @@ class GameSessionManager {
   #resolveWorldNameFromSave(loadedSaveData, saveIdentifier) {
     const metadata = loadedSaveData?.metadata ?? {};
 
-    const rawTitle =
-      typeof metadata.gameTitle === 'string' ? metadata.gameTitle.trim() : '';
-    if (rawTitle.length > 0) {
-      return rawTitle;
+    const normalizedTitle = this.#normalizeMetadataLabel(metadata.gameTitle);
+    if (normalizedTitle) {
+      return normalizedTitle;
     }
 
-    const rawWorldName =
-      typeof metadata.worldName === 'string' ? metadata.worldName.trim() : '';
-    if (rawWorldName.length > 0) {
-      return rawWorldName;
+    const normalizedWorldName = this.#normalizeMetadataLabel(
+      metadata.worldName
+    );
+    if (normalizedWorldName) {
+      return normalizedWorldName;
     }
 
-    const rawSaveName =
-      typeof metadata.saveName === 'string' ? metadata.saveName.trim() : '';
-    if (rawSaveName.length > 0) {
-      return rawSaveName;
+    const normalizedSaveName = this.#normalizeMetadataLabel(
+      metadata.saveName,
+      { treatAsFileName: true }
+    );
+    if (normalizedSaveName) {
+      return normalizedSaveName;
     }
 
     if (
