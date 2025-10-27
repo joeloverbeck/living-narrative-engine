@@ -8,7 +8,10 @@ import {
   InvalidDispatcherError,
 } from '../../../src/utils/eventDispatchService.js';
 import { createErrorDetails } from '../../../src/utils/errorDetails.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  ATTEMPT_ACTION_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../../../src/constants/eventIds.js';
 
 // Mock the dependencies
 jest.mock('../../../src/utils/errorDetails.js');
@@ -714,7 +717,7 @@ describe('EventDispatchService', () => {
         mockActionTraceFilter.shouldTrace.mockReturnValue(true);
         mockSafeEventDispatcher.dispatch.mockResolvedValue(true);
 
-        const eventName = 'ATTEMPT_ACTION_ID';
+        const eventName = ATTEMPT_ACTION_ID;
         const payload = {
           action: { definitionId: 'test:action' },
           data: 'test',
