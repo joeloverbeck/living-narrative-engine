@@ -34,7 +34,7 @@ export default class TurnCycle {
         this.#logger.debug('TurnCycle.nextActor(): queue empty');
         return null;
       }
-      const entity = this.#service.getNextEntity();
+      const entity = await this.#service.getNextEntity();
       this.#logger.debug(
         `TurnCycle.nextActor(): returning entity ${entity?.id ?? 'unknown'}`
       );
