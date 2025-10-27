@@ -17,6 +17,7 @@ import {
 
 import ValidateInventoryCapacityHandler from '../../../../src/logic/operationHandlers/validateInventoryCapacityHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import * as contextVariableUtils from '../../../../src/utils/contextVariableUtils.js';
 
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
@@ -367,6 +368,32 @@ describe('ValidateInventoryCapacityHandler', () => {
         SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Object)
       );
+    });
+
+    test('does not attempt to write context variable when result_variable is blank', async () => {
+      const spy = jest.spyOn(
+        contextVariableUtils,
+        'tryWriteContextVariable'
+      );
+
+      const executionContext = { evaluationContext: { context: {} } };
+
+      try {
+        await handler.execute(
+          {
+            targetEntity: 'actor1',
+            itemEntity: 'item1',
+            result_variable: '   ',
+          },
+          executionContext
+        );
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
+        expect(executionContext.evaluationContext.context).toEqual({});
+      } finally {
+        spy.mockRestore();
+      }
     });
 
     test('fails when params is null', async () => {

@@ -109,9 +109,13 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
     const validated = this.#validateParams(params, log);
     if (!validated) {
       const failureResult = { valid: false, reason: 'validation_failed' };
-      if (params?.result_variable) {
+      const rawResultVariable =
+        typeof params?.result_variable === 'string'
+          ? params.result_variable.trim()
+          : '';
+      if (rawResultVariable) {
         tryWriteContextVariable(
-          params.result_variable,
+          rawResultVariable,
           failureResult,
           executionContext,
           this.#dispatcher,
