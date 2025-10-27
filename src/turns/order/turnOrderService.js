@@ -40,10 +40,10 @@ export class TurnOrderService extends ITurnOrderService {
   #currentStrategy = null;
 
   /**
-   * The logger service instance.
+   * The logger service instance with safe fallbacks for optional methods.
    *
    * @private
-   * @type {ILogger}
+   * @type {Pick<ILogger, 'debug' | 'info' | 'warn' | 'error'>}
    */
   #logger;
 
@@ -64,12 +64,28 @@ export class TurnOrderService extends ITurnOrderService {
       typeof logger.error !== 'function' ||
       typeof logger.warn !== 'function'
     ) {
-      // Added warn check for robustness
       throw new Error(
-        'TurnOrderService requires a valid ILogger instance (info, error, warn methods).'
+        'TurnOrderService requires a valid ILogger instance (error and warn methods).'
       );
     }
-    this.#logger = logger;
+
+    const noop = /** @type {(...args: any[]) => void} */ (() => {});
+    /**
+     * @param {'debug' | 'info' | 'warn' | 'error'} methodName
+     * @param {(...args: any[]) => void} fallback
+     * @returns {(...args: any[]) => void}
+     */
+    const bindOr = (methodName, fallback) => {
+      const method = logger[methodName];
+      return typeof method === 'function' ? method.bind(logger) : fallback;
+    };
+
+    this.#logger = {
+      debug: bindOr('debug', noop),
+      info: bindOr('info', noop),
+      warn: bindOr('warn', noop),
+      error: bindOr('error', noop),
+    };
 
     // Initialize state
     this.#currentQueue = null;
