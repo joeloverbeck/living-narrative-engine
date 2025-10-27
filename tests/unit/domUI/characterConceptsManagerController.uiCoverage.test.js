@@ -12,8 +12,10 @@ import {
   FormValidationHelper,
   ValidationPatterns,
 } from '../../../src/shared/characterBuilder/formValidationHelper.js';
+import { UI_STATES } from '../../../src/shared/characterBuilder/uiStateManager.js';
 
 const ORIGINAL_ENV = process.env.NODE_ENV;
+const ORIGINAL_CONFIRM = global.confirm;
 
 const createDependencySet = () => {
   const logger = {
@@ -161,6 +163,7 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     jest.clearAllMocks();
     sessionStorage.clear();
     process.env.NODE_ENV = ORIGINAL_ENV;
+    global.confirm = ORIGINAL_CONFIRM;
     await testBase.cleanup();
   });
 
@@ -1232,5 +1235,246 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     removeSpy.mockRestore();
     deletedFeedbackSpy.mockRestore();
     process.env.NODE_ENV = originalEnv;
+  });
+
+  it('dispatches analytics event when showing the create modal', () => {
+    const modal = controller._getElement('conceptModal');
+    const animation = {
+      playState: 'finished',
+      cancel: jest.fn(),
+      addEventListener: jest.fn(),
+    };
+    modal.animate = jest.fn(() => animation);
+
+    const focusSource = document.createElement('button');
+    focusSource.focus = jest.fn();
+    document.body.appendChild(focusSource);
+    document.activeElement = focusSource;
+
+    const conceptText = controller._getElement('conceptText');
+    if (!conceptText.parentNode) {
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(conceptText);
+      document.body.appendChild(wrapper);
+      controller._cacheElements();
+    }
+
+    const originalDispatch = controller.eventBus.dispatch;
+    controller.eventBus.dispatch = jest.fn();
+
+    controller.logger.error.mockClear();
+
+    controller._showCreateModal();
+
+    expect(controller.logger.error).not.toHaveBeenCalled();
+
+    expect(controller.eventBus.dispatch).toHaveBeenCalledWith(
+      'core:ui_modal_opened',
+      { modalType: 'create-concept' }
+    );
+
+    controller.eventBus.dispatch = originalDispatch;
+    modal.animate = undefined;
+  });
+
+  it('cancels an in-flight entrance animation during destruction', () => {
+    const modal = controller._getElement('conceptModal');
+    const animation = {
+      playState: 'running',
+      cancel: jest.fn(),
+      addEventListener: jest.fn(),
+    };
+    modal.animate = jest.fn(() => animation);
+
+    controller._animateModalEntrance(modal);
+    controller.destroy();
+
+    expect(animation.cancel).toHaveBeenCalled();
+  });
+
+  it('restores focus when closing the concept modal successfully', () => {
+    const modal = controller._getElement('conceptModal');
+    modal.style.display = 'flex';
+    modal.animate = jest.fn(() => ({
+      playState: 'finished',
+      cancel: jest.fn(),
+      addEventListener: jest.fn(),
+    }));
+
+    const focusTarget = document.createElement('button');
+    focusTarget.focus = jest.fn();
+    document.body.appendChild(focusTarget);
+    document.activeElement = focusTarget;
+
+    const conceptText = controller._getElement('conceptText');
+    if (!conceptText.parentNode) {
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(conceptText);
+      document.body.appendChild(wrapper);
+      controller._cacheElements();
+    }
+
+    controller._showCreateModal();
+    focusTarget.focus.mockClear();
+
+    const originalDispatch = controller.eventBus.dispatch;
+    controller.eventBus.dispatch = jest.fn();
+
+    controller._testExports.hasUnsavedChanges = false;
+    controller._closeConceptModal();
+
+    expect(focusTarget.focus).toHaveBeenCalled();
+    expect(controller.eventBus.dispatch).toHaveBeenCalledWith(
+      'core:ui_modal_closed',
+      { modalType: 'concept' }
+    );
+
+    controller.eventBus.dispatch = originalDispatch;
+  });
+
+  it('aborts modal closing when the user cancels the confirmation prompt', () => {
+    const modal = controller._getElement('conceptModal');
+    modal.style.display = 'flex';
+    controller._testExports.hasUnsavedChanges = true;
+    controller._testExports.editingConceptId = 'concept-123';
+    const animateExitSpy = jest
+      .spyOn(controller, '_animateModalExit')
+      .mockImplementation(() => {});
+    global.confirm = jest.fn(() => false);
+
+    controller._closeConceptModal();
+
+    expect(global.confirm).toHaveBeenCalled();
+    expect(animateExitSpy).not.toHaveBeenCalled();
+
+    animateExitSpy.mockRestore();
+  });
+
+  it('falls back to simple hide if close animation throws an error', () => {
+    const modal = controller._getElement('conceptModal');
+    modal.style.display = 'flex';
+    const error = new Error('close failed');
+    jest
+      .spyOn(controller, '_animateModalExit')
+      .mockImplementation(() => {
+        throw error;
+      });
+
+    controller._closeConceptModal();
+
+    expect(controller.logger.error).toHaveBeenCalledWith(
+      'Error closing modal',
+      error
+    );
+    expect(modal.style.display).toBe('none');
+  });
+
+  it('shows the results state immediately when UI state is available', () => {
+    const showStateSpy = jest
+      .spyOn(controller, '_showState')
+      .mockImplementation(() => {});
+    const stateSpy = jest
+      .spyOn(controller, 'currentState', 'get')
+      .mockReturnValue(UI_STATES.EMPTY);
+
+    const concept = testBase.createTestConcept({
+      id: 'display-1',
+      concept: 'Display concept',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    controller._displayConcepts([{ concept, directionCount: 1 }]);
+
+    expect(showStateSpy).toHaveBeenCalledWith('results');
+
+    showStateSpy.mockRestore();
+    stateSpy.mockRestore();
+  });
+
+  it('safely filters concepts that lack textual content', () => {
+    controller._testExports.searchFilter = 'mystic';
+
+    const result = controller._filterConcepts([
+      { concept: { id: 'no-text', concept: null }, directionCount: 0 },
+    ]);
+
+    expect(result).toHaveLength(0);
+  });
+
+  it('updates advanced statistics values with temporary highlight', () => {
+    const statElement = document.createElement('span');
+    statElement.textContent = 'old';
+    const addSpy = jest.spyOn(statElement.classList, 'add');
+    const removeSpy = jest.spyOn(statElement.classList, 'remove');
+    const getElementSpy = jest
+      .spyOn(document, 'getElementById')
+      .mockReturnValue(statElement);
+
+    controller._updateAdvancedStatValue('avg-directions', '5.0');
+
+    expect(statElement.textContent).toBe('5.0');
+    expect(addSpy).toHaveBeenCalledWith('stat-updated');
+
+    jest.advanceTimersByTime(300);
+
+    expect(removeSpy).toHaveBeenCalledWith('stat-updated');
+
+    getElementSpy.mockRestore();
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+  });
+
+  it('updates completion progress styling for each threshold', () => {
+    const progressFill = document.createElement('div');
+    const addSpy = jest.spyOn(progressFill.classList, 'add');
+    const removeSpy = jest.spyOn(progressFill.classList, 'remove');
+    const conceptsComplete = document.createElement('span');
+    const conceptsTotal = document.createElement('span');
+    const querySpy = jest
+      .spyOn(document, 'querySelector')
+      .mockImplementation((selector) => {
+        switch (selector) {
+          case '.progress-fill':
+            return progressFill;
+          case '.concepts-complete':
+            return conceptsComplete;
+          case '.concepts-total':
+            return conceptsTotal;
+          default:
+            return null;
+        }
+      });
+
+    controller._testExports.conceptsData = [
+      { concept: { id: 'a', concept: 'A' }, directionCount: 2 },
+      { concept: { id: 'b', concept: 'B' }, directionCount: 0 },
+    ];
+
+    controller._updateCompletionProgress(100);
+    expect(addSpy).toHaveBeenCalledWith('complete');
+
+    controller._updateCompletionProgress(80);
+    expect(addSpy).toHaveBeenCalledWith('good');
+
+    controller._updateCompletionProgress(55);
+    expect(addSpy).toHaveBeenCalledWith('moderate');
+
+    controller._updateCompletionProgress(20);
+    expect(addSpy).toHaveBeenCalledWith('low');
+
+    expect(conceptsComplete.textContent).toBe('1');
+    expect(conceptsTotal.textContent).toBe('2');
+
+    expect(removeSpy).toHaveBeenCalledWith(
+      'complete',
+      'good',
+      'moderate',
+      'low'
+    );
+
+    querySpy.mockRestore();
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
   });
 });
