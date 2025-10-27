@@ -211,6 +211,10 @@ describe('registerLoaders additional coverage', () => {
       [actualTokens.AnatomyBlueprintLoader, { id: 'blueprint' }],
       [actualTokens.AnatomyRecipeLoader, { id: 'recipe' }],
       [actualTokens.AnatomyFormattingLoader, { id: 'formatting' }],
+      [
+        actualTokens.AnatomyStructureTemplateLoader,
+        { id: 'structureTemplate' },
+      ],
       [actualTokens.IValidatedEventDispatcher, { dispatch: jest.fn() }],
       [actualTokens.ILogger, logger],
     ]);
@@ -291,5 +295,114 @@ describe('registerLoaders additional coverage', () => {
       expect.stringContaining('ModsLoader: Failed to resolve ContentPhase'),
       expect.objectContaining({ message: 'phase resolver missing' })
     );
+  });
+
+  it('wires scope, prompt, and mod manifest services with the expected dependencies', async () => {
+    jest.resetModules();
+    global.window = {};
+    process.env.NODE_ENV = 'production';
+
+    jest.doMock('../../../../src/loaders/scopeLoader.js', () => ({
+      __esModule: true,
+      default: class MockScopeLoader {
+        constructor(configuration, pathResolver, textDataFetcher, schemaValidator, dataRegistry, logger) {
+          this.configuration = configuration;
+          this.pathResolver = pathResolver;
+          this.textDataFetcher = textDataFetcher;
+          this.schemaValidator = schemaValidator;
+          this.dataRegistry = dataRegistry;
+          this.logger = logger;
+        }
+      },
+    }));
+
+    jest.doMock('../../../../src/loaders/promptTextLoader.js', () => ({
+      __esModule: true,
+      default: class MockPromptTextLoader {
+        constructor(config) {
+          this.config = config;
+        }
+      },
+    }));
+
+    jest.doMock('../../../../src/loaders/ModManifestProcessor.js', () => ({
+      __esModule: true,
+      default: class MockModManifestProcessor {
+        constructor(deps) {
+          this.deps = deps;
+        }
+      },
+    }));
+
+    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const { default: ActualModDependencyValidator } = require('../../../../src/modding/modDependencyValidator.js');
+
+    const logger = createLogger();
+    const container = new RecordingContainer(logger);
+
+    await registerLoaders(container);
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Skipped mod cross-reference validation services (browser environment)'
+      )
+    );
+
+    const scopeRegistration = container.registrations.get(actualTokens.ScopeLoader);
+    const promptRegistration = container.registrations.get(actualTokens.PromptTextLoader);
+    const modManifestRegistration = container.registrations.get(
+      actualTokens.ModManifestProcessor
+    );
+
+    expect(scopeRegistration).toBeDefined();
+    expect(promptRegistration).toBeDefined();
+    expect(modManifestRegistration).toBeDefined();
+
+    const sharedDependencies = new Map([
+      [actualTokens.IConfiguration, { id: 'config' }],
+      [actualTokens.IPathResolver, { id: 'resolver' }],
+      [actualTokens.ITextDataFetcher, { id: 'textFetcher' }],
+      [actualTokens.ISchemaValidator, { id: 'validator' }],
+      [actualTokens.IDataRegistry, { id: 'registry' }],
+      [actualTokens.ILogger, logger],
+      [actualTokens.IDataFetcher, { id: 'dataFetcher' }],
+      [actualTokens.IPathConfiguration, { base: '/scope' }],
+      [actualTokens.ModManifestLoader, { id: 'modManifestLoader' }],
+      [actualTokens.IValidatedEventDispatcher, { dispatch: jest.fn() }],
+      [actualTokens.ModLoadOrderResolver, { resolve: jest.fn() }],
+    ]);
+
+    const scopeContainer = new RecordingContainer(logger, sharedDependencies);
+    const scopeInstance = scopeRegistration.factoryOrValue(scopeContainer);
+
+    expect(scopeContainer.resolve).toHaveBeenCalledWith(actualTokens.ITextDataFetcher);
+    expect(scopeInstance.textDataFetcher).toBe(
+      sharedDependencies.get(actualTokens.ITextDataFetcher)
+    );
+
+    const promptContainer = new RecordingContainer(logger, sharedDependencies);
+    const promptInstance = promptRegistration.factoryOrValue(promptContainer);
+
+    expect(promptInstance.config.dataFetcher).toBe(
+      sharedDependencies.get(actualTokens.IDataFetcher)
+    );
+    expect(promptInstance.config.pathConfiguration).toBe(
+      sharedDependencies.get(actualTokens.IPathConfiguration)
+    );
+
+    const manifestDependencies = new Map(sharedDependencies);
+    manifestDependencies.set(actualTokens.IModValidationOrchestrator, () => {
+      throw new Error('mod validation orchestrator unavailable');
+    });
+
+    const manifestContainer = new RecordingContainer(logger, manifestDependencies);
+    const manifestProcessor = modManifestRegistration.factoryOrValue(manifestContainer);
+
+    expect(manifestContainer.resolve).toHaveBeenCalledWith(actualTokens.ModLoadOrderResolver);
+    expect(manifestContainer.resolve).toHaveBeenCalledWith(
+      actualTokens.IModValidationOrchestrator
+    );
+    expect(manifestProcessor.deps.modDependencyValidator).toBe(ActualModDependencyValidator);
+    expect(manifestProcessor.deps.modValidationOrchestrator).toBeNull();
   });
 });
