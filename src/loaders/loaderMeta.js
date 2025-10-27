@@ -102,6 +102,12 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'anatomyFormatting',
   },
+  anatomyStructureTemplates: {
+    contentKey: 'structureTemplates',
+    diskFolder: 'structure-templates',
+    phase: 'definitions',
+    registryKey: 'anatomyStructureTemplates',
+  },
 };
 
 export default meta;
