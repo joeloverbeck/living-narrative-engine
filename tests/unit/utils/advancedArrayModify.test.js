@@ -20,10 +20,16 @@ describe('advancedArrayModify', () => {
   it('push_unique with object only adds when not present', () => {
     const obj = { a: 1 };
     const arr = [{ a: 1 }];
-    const { nextArray } = advancedArrayModify('push_unique', arr, obj, logger);
-    expect(nextArray).toEqual(arr);
-    expect(nextArray).not.toBe(arr); // returned array should be new
+    const { nextArray, result, modified } = advancedArrayModify(
+      'push_unique',
+      arr,
+      obj,
+      logger
+    );
+    expect(nextArray).toBe(arr);
     expect(arr).toEqual([{ a: 1 }]);
+    expect(result).toBe(arr);
+    expect(modified).toBe(false);
 
     const { nextArray: newArr } = advancedArrayModify(
       'push_unique',
@@ -45,17 +51,23 @@ describe('advancedArrayModify', () => {
     );
 
     expect(nextArray).toEqual([{ a: 1, b: 2 }]);
-    expect(nextArray).not.toBe(arr);
+    expect(nextArray).toBe(arr);
     expect(modified).toBe(false);
   });
 
   it('pop returns popped item', () => {
     const arr = [1, 2];
-    const { nextArray, result } = advancedArrayModify('pop', arr, null, logger);
+    const { nextArray, result, modified } = advancedArrayModify(
+      'pop',
+      arr,
+      null,
+      logger
+    );
     expect(nextArray).toEqual([1]);
     expect(result).toBe(2);
     expect(arr).toEqual([1, 2]);
     expect(nextArray).not.toBe(arr);
+    expect(modified).toBe(true);
   });
 
   it('pop on empty array returns undefined result without modification', () => {
@@ -67,7 +79,7 @@ describe('advancedArrayModify', () => {
       logger
     );
     expect(nextArray).toEqual([]);
-    expect(nextArray).not.toBe(arr);
+    expect(nextArray).toBe(arr);
     expect(result).toBeUndefined();
     expect(modified).toBe(false);
   });
@@ -117,15 +129,17 @@ describe('advancedArrayModify', () => {
 
   it('remove_by_value returns new array when value not found', () => {
     const arr = [1, 2];
-    const { nextArray } = advancedArrayModify(
+    const { nextArray, result, modified } = advancedArrayModify(
       'remove_by_value',
       arr,
       3,
       logger
     );
     expect(nextArray).toEqual([1, 2]);
-    expect(nextArray).not.toBe(arr);
+    expect(nextArray).toBe(arr);
     expect(arr).toEqual([1, 2]);
+    expect(result).toBe(arr);
+    expect(modified).toBe(false);
   });
 
   it('push_unique with primitive handles duplicates and additions', () => {
@@ -137,7 +151,7 @@ describe('advancedArrayModify', () => {
       logger
     );
     expect(nextArray).toEqual([1, 2]);
-    expect(nextArray).not.toBe(arr);
+    expect(nextArray).toBe(arr);
     expect(modified).toBe(false);
     expect(arr).toEqual([1, 2]);
 
@@ -170,7 +184,7 @@ describe('advancedArrayModify', () => {
       logger
     );
     expect(nextArray).toEqual([1, 2]);
-    expect(nextArray).not.toBe(arr);
+    expect(nextArray).toBe(arr);
     expect(result).toBeUndefined();
     expect(modified).toBe(false);
     expect(logger.error).toHaveBeenCalledWith('Unknown mode: invalid');
