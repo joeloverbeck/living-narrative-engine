@@ -4470,6 +4470,137 @@ describe('ActivityDescriptionService', () => {
         expect(hooks.resolveEntityName('expired')).toBe('Name expired');
         nowSpy.mockRestore();
       });
+
+      it('provides pronoun and component helper access', () => {
+        const hooks = service.getTestHooks();
+
+        expect(hooks.getPronounSet('female')).toEqual(
+          expect.objectContaining({ subject: 'she', object: 'her' })
+        );
+        expect(hooks.getPronounSet('unknown').subject).toBe('they');
+
+        mockEntityManager.getEntityInstance.mockReturnValueOnce({
+          id: 'entity-1',
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'core:gender') {
+              return { value: 'male' };
+            }
+            return null;
+          }),
+        });
+
+        expect(hooks.detectEntityGender('entity-1')).toBe('male');
+        expect(hooks.detectEntityGender(null)).toBe('unknown');
+
+        expect(hooks.isEmptyConditionsObject(null)).toBe(true);
+        expect(hooks.isEmptyConditionsObject({ active: true })).toBe(false);
+
+        expect(
+          hooks.matchesPropertyCondition(
+            { sourceData: { status: 'ready' } },
+            { property: 'status', equals: 'ready' }
+          )
+        ).toBe(true);
+        expect(
+          hooks.matchesPropertyCondition(
+            { sourceData: { status: 'ready' } },
+            { property: 'status', equals: 'idle' }
+          )
+        ).toBe(false);
+        expect(hooks.matchesPropertyCondition({}, null)).toBe(true);
+
+        const componentEntity = {
+          id: 'component-entity',
+          hasComponent: jest.fn((componentId) => componentId === 'core:trait'),
+        };
+
+        expect(
+          hooks.hasRequiredComponents(componentEntity, ['core:trait'])
+        ).toBe(true);
+        expect(
+          hooks.hasForbiddenComponents(componentEntity, ['core:trait'])
+        ).toBe(true);
+        expect(
+          hooks.hasRequiredComponents({ hasComponent: null }, ['core:trait'])
+        ).toBe(false);
+        expect(
+          hooks.hasForbiddenComponents({ hasComponent: null }, ['core:trait'])
+        ).toBe(false);
+
+        const extractionEntity = {
+          id: 'extract-me',
+          componentTypeIds: ['core:name'],
+          getComponentData: jest.fn(() => ({ text: 'Extract' })),
+        };
+
+        expect(hooks.extractEntityData(extractionEntity)).toEqual({
+          id: 'extract-me',
+          components: { 'core:name': { text: 'Extract' } },
+        });
+        expect(hooks.extractEntityData(null)).toBeNull();
+      });
+
+      it('exposes subscription helpers for cache invalidation', () => {
+        const hooks = service.getTestHooks();
+
+        expect(() => hooks.subscribeToInvalidationEvents()).not.toThrow();
+
+        mockLogger.warn.mockClear();
+        const failingBus = {
+          subscribe: jest.fn(() => {
+            throw new Error('subscribe failed');
+          }),
+          dispatch: jest.fn(),
+          unsubscribe: jest.fn(),
+        };
+
+        hooks.setEventBus(failingBus);
+        hooks.subscribeToInvalidationEvents();
+
+        expect(failingBus.subscribe).toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Failed to subscribe to cache invalidation event'
+          ),
+          expect.any(Error)
+        );
+
+        const handlers = {};
+        const unsubscribe = jest.fn();
+        const capturingBus = {
+          subscribe: jest.fn((eventId, handler) => {
+            handlers[eventId] = handler;
+            return unsubscribe;
+          }),
+          dispatch: jest.fn(),
+          unsubscribe: jest.fn(),
+        };
+
+        mockLogger.warn.mockClear();
+        hooks.setEventBus(capturingBus);
+        hooks.subscribeToInvalidationEvents();
+
+        hooks.setEntityNameCacheEntry('entity-2', 'Name');
+        expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(true);
+
+        handlers[COMPONENT_ADDED_ID]({ payload: {} });
+        expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(true);
+
+        handlers[COMPONENT_REMOVED_ID]({ payload: {} });
+        expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(true);
+
+        hooks.setEntityNameCacheEntry('entity-2', 'Name');
+        handlers[COMPONENT_ADDED_ID]({
+          payload: {
+            componentTypeId: NAME_COMPONENT_ID,
+            entity: { id: 'entity-2' },
+          },
+        });
+
+        expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(false);
+
+        hooks.setEventBus(null);
+      });
     });
 
     describe('Error Handling', () => {
@@ -4838,6 +4969,16 @@ describe('ActivityDescriptionService', () => {
       expect(snapshot.has('bobby')).toBe(true);
     });
 
+    it('warns when invalidateEntities receives non-array input', () => {
+      mockLogger.warn.mockClear();
+
+      serviceWithEventBus.invalidateEntities('jon');
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'ActivityDescriptionService: invalidateEntities called with non-array'
+      );
+    });
+
     it('supports selective cache invalidation', () => {
       hooks.setEntityNameCacheEntry('jon', 'Jon');
       hooks.setGenderCacheEntry('jon', 'male');
@@ -4849,6 +4990,78 @@ describe('ActivityDescriptionService', () => {
       expect(snapshot.entityName.has('jon')).toBe(false);
       expect(snapshot.gender.has('jon')).toBe(true);
       expect(snapshot.activityIndex.has('jon')).toBe(true);
+    });
+
+    it('invalidates gender and activity caches and warns on unknown types', () => {
+      mockLogger.warn.mockClear();
+
+      hooks.setGenderCacheEntry('jon', 'male');
+      serviceWithEventBus.invalidateCache('jon', 'gender');
+      expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
+
+      hooks.setActivityIndexCacheEntry('jon', {
+        signature: 'sig',
+        index: {
+          byTarget: new Map(),
+          byPriority: [],
+          byGroupKey: new Map(),
+          all: [],
+        },
+      });
+      serviceWithEventBus.invalidateCache('jon', 'activity');
+      expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
+
+      hooks.setEntityNameCacheEntry('jon', 'Jon');
+      hooks.setGenderCacheEntry('jon', 'male');
+      hooks.setActivityIndexCacheEntry('jon', {
+        signature: 'sig',
+        index: {
+          byTarget: new Map(),
+          byPriority: [],
+          byGroupKey: new Map(),
+          all: [],
+        },
+      });
+      serviceWithEventBus.invalidateCache('jon', 'all');
+
+      const snapshot = hooks.getCacheSnapshot();
+      expect(snapshot.entityName.has('jon')).toBe(false);
+      expect(snapshot.gender.has('jon')).toBe(false);
+      expect(snapshot.activityIndex.has('jon')).toBe(false);
+
+      serviceWithEventBus.invalidateCache('jon', 'unknown');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'ActivityDescriptionService: Unknown cache type: unknown'
+      );
+    });
+
+    it('logs a warning if unsubscribe handlers throw during destroy', () => {
+      const unsubscribe = jest.fn(() => {
+        throw new Error('unsubscribe failed');
+      });
+
+      const throwingBus = {
+        subscribe: jest.fn(() => unsubscribe),
+        dispatch: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+
+      const localService = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+        activityIndex: mockActivityIndex,
+        eventBus: throwingBus,
+      });
+
+      mockLogger.warn.mockClear();
+      localService.destroy();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'ActivityDescriptionService: Failed to unsubscribe cache invalidation handler',
+        expect.any(Error)
+      );
     });
 
     it('unsubscribes from cache invalidation events on destroy', () => {

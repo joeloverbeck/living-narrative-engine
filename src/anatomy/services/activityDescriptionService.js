@@ -1826,6 +1826,11 @@ class ActivityDescriptionService {
       buildRelatedActivityFragment: (...args) =>
         this.#buildRelatedActivityFragment(...args),
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
+      subscribeToInvalidationEvents: () =>
+        this.#subscribeToInvalidationEvents(),
+      setEventBus: (eventBus) => {
+        this.#eventBus = eventBus;
+      },
       groupActivities: (...args) => this.#groupActivities(...args),
       getActivityIndex: (...args) => this.#getActivityIndex(...args),
       evaluateActivityVisibility: (...args) =>
