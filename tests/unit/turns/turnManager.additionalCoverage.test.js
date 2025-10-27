@@ -108,6 +108,79 @@ describeTurnManagerSuite(
       }
     );
 
+    test(
+      'dispatches TURN_PROCESSING_ENDED with player actorType when core:player_type is human',
+      async () => {
+        const bed = getBed();
+        const { turnOrderService, turnHandlerResolver, dispatcher } =
+          bed.mocks;
+
+        await bed.startRunning();
+
+        const humanActor = {
+          id: 'player-human',
+          hasComponent: jest.fn((componentId) => {
+            if (componentId === ACTOR_COMPONENT_ID) return true;
+            if (componentId === PLAYER_TYPE_COMPONENT_ID) return true;
+            return false;
+          }),
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === PLAYER_TYPE_COMPONENT_ID) {
+              return { type: 'human' };
+            }
+            return null;
+          }),
+        };
+
+        turnOrderService.isEmpty
+          .mockResolvedValueOnce(false)
+          .mockResolvedValue(true);
+        turnOrderService.getNextEntity
+          .mockReturnValueOnce(humanActor)
+          .mockReturnValue(null);
+
+        const handler = {
+          startTurn: jest.fn().mockResolvedValue(),
+          destroy: jest.fn().mockResolvedValue(),
+        };
+        turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
+
+        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+        const advanceSpy = jest
+          .spyOn(bed.turnManager, 'advanceTurn')
+          .mockImplementationOnce(realAdvance)
+          .mockResolvedValue(undefined);
+
+        await bed.turnManager.advanceTurn();
+
+        dispatcher.dispatch.mockClear();
+
+        dispatcher._triggerEvent(TURN_ENDED_ID, {
+          entityId: humanActor.id,
+          success: true,
+        });
+        await drainTimersAndMicrotasks(4);
+
+        const processingEndedCall = dispatcher.dispatch.mock.calls.find(
+          ([eventId]) => eventId === TURN_PROCESSING_ENDED
+        );
+
+        expect(processingEndedCall).toBeDefined();
+        expect(processingEndedCall[1]).toMatchObject({
+          entityId: humanActor.id,
+          actorType: 'player',
+        });
+        expect(humanActor.getComponentData).toHaveBeenCalledWith(
+          PLAYER_TYPE_COMPONENT_ID
+        );
+        expect(humanActor.hasComponent).toHaveBeenCalledWith(
+          PLAYER_TYPE_COMPONENT_ID
+        );
+
+        advanceSpy.mockRestore();
+      }
+    );
+
     test('ignores turn ended events when manager is stopped', async () => {
       const bed = getBed();
       const { dispatcher, logger } = bed.mocks;

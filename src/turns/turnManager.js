@@ -565,9 +565,16 @@ class TurnManager extends ITurnManager {
     }
 
     const currentActor = this.#currentActor;
-    const endedIsPlayer = currentActor?.hasComponent(PLAYER_COMPONENT_ID);
 
-    const actorType = endedIsPlayer ? 'player' : 'ai';
+    let actorType = 'ai';
+    if (currentActor?.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
+      const playerTypeData = currentActor.getComponentData(
+        PLAYER_TYPE_COMPONENT_ID
+      );
+      actorType = playerTypeData?.type === 'human' ? 'player' : 'ai';
+    } else if (currentActor?.hasComponent(PLAYER_COMPONENT_ID)) {
+      actorType = 'player';
+    }
     this.#dispatcher
       .dispatch(TURN_PROCESSING_ENDED, {
         entityId: endedActorId,
