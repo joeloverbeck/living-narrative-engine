@@ -14,7 +14,7 @@ module.exports = {
 
   // ES Module support configuration for dynamic imports
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^(\\.{1,2}/.*)\\.js$': '$1.js',
   },
   transform: {
     '^.+\\.js$': ['babel-jest', { configFile: './babel.config.js' }],

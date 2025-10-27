@@ -75,9 +75,9 @@ describe('AvailableActionsProvider additional branches', () => {
     subscriptions = [];
     eventBus = {
       subscribe: jest.fn((eventId, handler) => {
-        const token = { eventId, handler };
-        subscriptions.push(token);
-        return token;
+        const unsubscribeFn = jest.fn();
+        subscriptions.push({ eventId, handler, unsubscribe: unsubscribeFn });
+        return unsubscribeFn;
       }),
       unsubscribe: jest.fn(),
     };
@@ -163,9 +163,10 @@ describe('AvailableActionsProvider additional branches', () => {
 
     provider.destroy();
 
-    expect(eventBus.unsubscribe).toHaveBeenCalledTimes(2);
-    expect(eventBus.unsubscribe).toHaveBeenCalledWith(subscriptions[0]);
-    expect(eventBus.unsubscribe).toHaveBeenCalledWith(subscriptions[1]);
+    // The eventBus.subscribe returns unsubscribe functions
+    // The destroy() method should call each unsubscribe function
+    expect(subscriptions[0].unsubscribe).toHaveBeenCalledTimes(1);
+    expect(subscriptions[1].unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to the default ServiceSetup when none is provided', () => {

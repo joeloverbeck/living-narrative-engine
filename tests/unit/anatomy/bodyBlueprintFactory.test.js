@@ -98,6 +98,9 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       validator: mockValidator,
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
+      recipePatternResolver: {
+        resolveRecipePatterns: jest.fn(recipe => recipe),
+      },
     });
   });
 

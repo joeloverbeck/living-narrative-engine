@@ -95,6 +95,9 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
       validator: mockValidator,
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
+      recipePatternResolver: {
+        resolveRecipePatterns: jest.fn(recipe => recipe),
+      },
     });
   });
 

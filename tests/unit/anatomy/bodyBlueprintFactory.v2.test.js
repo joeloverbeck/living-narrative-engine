@@ -65,6 +65,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       setEntityName: jest.fn(),
       getPartType: jest.fn().mockReturnValue('test_part_type'),
       cleanupEntities: jest.fn().mockResolvedValue(undefined),
+      addSocketsToEntity: jest.fn().mockResolvedValue(undefined),
     };
 
     mockConstraintEvaluator = {
@@ -103,6 +104,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       validator: mockValidator,
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
+      recipePatternResolver: {
+        resolveRecipePatterns: jest.fn(recipe => recipe),
+      },
     });
   });
 

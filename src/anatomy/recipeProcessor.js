@@ -128,6 +128,11 @@ export class RecipeProcessor {
 
     const merged = { ...(blueprintRequirements || {}) };
 
+    // Recipe can override part type
+    if (recipeSlot.partType) {
+      merged.partType = recipeSlot.partType;
+    }
+
     // Recipe can add additional required components
     if (recipeSlot.tags) {
       merged.components = [...(merged.components || []), ...recipeSlot.tags];
@@ -177,7 +182,15 @@ export class RecipeProcessor {
   #expandPatternsIntoSlots(recipe) {
     // Process each pattern
     for (const pattern of recipe.patterns) {
-      // For each slot key that matches this pattern
+      // Skip V2 patterns - they will be handled by RecipePatternResolver
+      if (!pattern.matches) {
+        this.#logger.debug(
+          `RecipeProcessor: Skipping V2 pattern (will be resolved by RecipePatternResolver)`
+        );
+        continue;
+      }
+
+      // For each slot key that matches this pattern (V1 pattern)
       for (const slotKey of pattern.matches) {
         // Only apply pattern if slot not already explicitly defined
         if (!recipe.slots[slotKey]) {

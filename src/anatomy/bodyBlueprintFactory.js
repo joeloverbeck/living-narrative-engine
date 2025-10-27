@@ -8,6 +8,7 @@ import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { ValidationError } from '../errors/index.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { AnatomyGraphContext } from './anatomyGraphContext.js';
+import { assertNonBlankString } from '../utils/dependencyUtils.js';
 
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -146,29 +147,30 @@ export class BodyBlueprintFactory {
    * @returns {Promise<{rootId: string, entities: string[]}>} Root entity ID and all created entity IDs
    */
   async createAnatomyGraph(blueprintId, recipeId, options = {}) {
-    let context = null;
+    assertNonBlankString(blueprintId, 'Blueprint ID', 'createAnatomyGraph');
+    assertNonBlankString(recipeId, 'Recipe ID', 'createAnatomyGraph');
 
     try {
-      this.#logger.debug(
-        `BodyBlueprintFactory: Creating anatomy graph from blueprint '${blueprintId}' and recipe '${recipeId}'`
-      );
-
-      // Load blueprint and recipe
+      // Load and validate blueprint
       const blueprint = this.#loadBlueprint(blueprintId);
-      const recipe = this.#recipeProcessor.loadRecipe(recipeId);
-      const processedRecipe = this.#recipeProcessor.processRecipe(recipe);
 
-      // Resolve V2 patterns against blueprint slots
-      const resolvedRecipe = this.#recipePatternResolver.resolveRecipePatterns(
-        processedRecipe,
-        blueprint
-      );
+      // Load and process recipe
+      const recipe = this.#recipeProcessor.loadRecipe(recipeId);
+      let resolvedRecipe = this.#recipeProcessor.processRecipe(recipe);
+
+      // Resolve V2 patterns if blueprint uses V2 schema
+      if (blueprint.schemaVersion === '2.0') {
+        resolvedRecipe = this.#recipePatternResolver.resolveRecipePatterns(
+          resolvedRecipe,
+          blueprint
+        );
+      }
 
       // Validate recipe slots against blueprint
       this.#validateRecipeSlots(resolvedRecipe, blueprint);
 
-      // Initialize context
-      context = new AnatomyGraphContext(options.seed);
+      // Initialize creation context
+      const context = new AnatomyGraphContext(options.seed);
 
       // Phase 1: Create root entity
       const rootId = await this.#entityGraphBuilder.createRootEntity(
@@ -178,14 +180,23 @@ export class BodyBlueprintFactory {
       );
       context.setRootId(rootId);
 
+      // Phase 1.5: Add generated sockets to root entity (V2 blueprints)
+      if (blueprint._generatedSockets && blueprint._generatedSockets.length > 0) {
+        this.#logger.debug(
+          `BodyBlueprintFactory: Adding ${blueprint._generatedSockets.length} generated sockets to root entity`
+        );
+        await this.#entityGraphBuilder.addSocketsToEntity(
+          rootId,
+          blueprint._generatedSockets
+        );
+      }
+
       // Phase 2: Process blueprint slots if defined
       if (blueprint.slots) {
-        await this.#processBlueprintSlots(
-          blueprint,
-          resolvedRecipe,
-          context,
-          options.ownerId
+        this.#logger.debug(
+          `BodyBlueprintFactory: Processing ${Object.keys(blueprint.slots).length} blueprint slots`
         );
+        await this.#processBlueprintSlots(blueprint, resolvedRecipe, context, options.ownerId);
       }
 
       // Phase 3: Validate constraints
@@ -195,15 +206,18 @@ export class BodyBlueprintFactory {
       );
 
       if (!constraintResult.valid) {
+        this.#logger.warn(
+          `BodyBlueprintFactory: Constraint validation failed for blueprint '${blueprintId}': ${constraintResult.errors.join(', ')}`
+        );
         await this.#entityGraphBuilder.cleanupEntities(
           context.getCreatedEntities()
         );
         throw new ValidationError(
-          `Recipe constraints failed: ${constraintResult.errors.join(', ')}`
+          `Constraint validation failed: ${constraintResult.errors.join(', ')}`
         );
       }
 
-      // Phase 4: Validate graph integrity
+      // Phase 4: Final validation
       const validationResult = await this.#validator.validateGraph(
         context.getCreatedEntities(),
         resolvedRecipe,
@@ -211,43 +225,46 @@ export class BodyBlueprintFactory {
       );
 
       if (!validationResult.valid) {
+        this.#logger.warn(
+          `BodyBlueprintFactory: Graph validation failed for blueprint '${blueprintId}': ${validationResult.errors.join(', ')}`
+        );
         await this.#entityGraphBuilder.cleanupEntities(
           context.getCreatedEntities()
         );
         throw new ValidationError(
-          `Anatomy graph validation failed: ${validationResult.errors.join(', ')}`
+          `Graph validation failed: ${validationResult.errors.join(', ')}`
+        );
+      }
+
+      // Log warnings if any
+      if (validationResult.warnings && validationResult.warnings.length > 0) {
+        this.#logger.warn(
+          `BodyBlueprintFactory: Graph validation warnings for blueprint '${blueprintId}': ${validationResult.warnings.join(', ')}`
         );
       }
 
       this.#logger.info(
-        `BodyBlueprintFactory: Successfully created anatomy graph with ${context.getCreatedEntities().length} entities`
+        `BodyBlueprintFactory: Successfully created anatomy graph for blueprint '${blueprintId}' with ${context.getCreatedEntities().length} entities`
       );
 
       return {
-        rootId: context.getRootId(),
+        rootId,
         entities: context.getCreatedEntities(),
       };
-    } catch (error) {
+    } catch (err) {
       this.#logger.error(
-        `BodyBlueprintFactory: Failed to create anatomy graph`,
-        { error }
+        `BodyBlueprintFactory: Failed to create anatomy graph for blueprint '${blueprintId}': ${err.message}`,
+        err
       );
 
-      // Clean up any created entities on error
-      if (context) {
-        await this.#entityGraphBuilder.cleanupEntities(
-          context.getCreatedEntities()
-        );
-      }
-
-      this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: error.message,
+      await this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: err.message,
         details: {
           raw: 'BodyBlueprintFactory.createAnatomyGraph',
         },
       });
 
-      throw error;
+      throw err;
     }
   }
 

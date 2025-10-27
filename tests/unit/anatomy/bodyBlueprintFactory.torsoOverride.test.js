@@ -91,6 +91,10 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       generateBlueprintSlots: jest.fn().mockReturnValue({}),
     };
 
+    const mockRecipePatternResolver = {
+      resolveRecipePatterns: jest.fn(recipe => recipe),
+    };
+
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
@@ -105,6 +109,7 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       validator: mockValidator,
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
+      recipePatternResolver: mockRecipePatternResolver,
     });
   });
 

@@ -70,9 +70,10 @@ describe('ActionIndexerAdapter', () => {
       expect(viaAdapter).toEqual(direct);
 
       // And ensure idempotence: subsequent calls in the same turn with an
-      // empty array should return the *same* cached array instance.
+      // empty array should return an array with the same values (not necessarily the same instance,
+      // as the service returns defensive copies via .slice() to prevent cache mutation).
       const secondViaAdapter = adapter.index([], actorId);
-      expect(secondViaAdapter).toBe(viaAdapter);
+      expect(secondViaAdapter).toStrictEqual(viaAdapter);
     });
   });
 

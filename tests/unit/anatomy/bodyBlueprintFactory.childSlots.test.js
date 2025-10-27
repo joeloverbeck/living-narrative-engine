@@ -106,6 +106,9 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       validator: mockValidator,
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
+      recipePatternResolver: {
+        resolveRecipePatterns: jest.fn(recipe => recipe),
+      },
     });
   });
 

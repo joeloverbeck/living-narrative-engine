@@ -15,6 +15,35 @@
       "facing_away": {
         "type": "boolean",
         "description": "Whether the straddling actor is facing away from the target (true) or facing them (false)"
+      },
+      "activityMetadata": {
+        "type": "object",
+        "description": "Inline metadata for activity description generation. Allows this component to define how it should be described in activity summaries without requiring a separate metadata component.",
+        "additionalProperties": false,
+        "properties": {
+          "shouldDescribeInActivity": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this component should be included in activity descriptions. Set to false to hide from activity summaries."
+          },
+          "template": {
+            "type": "string",
+            "default": "{actor} is straddling {target}'s waist",
+            "description": "Template string with placeholders: {actor} for the entity with this component, {target} for the entity referenced by targetRole property"
+          },
+          "targetRole": {
+            "type": "string",
+            "default": "target_id",
+            "description": "Property name in this component's data containing the target entity ID. Defaults to 'target_id' for the entity being straddled."
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 82,
+            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100. Very high priority (82) for highly intimate and visually prominent position."
+          }
+        }
       }
     }
   }

@@ -284,6 +284,22 @@ export class EntityGraphBuilder {
   }
 
   /**
+   * Adds generated sockets to an entity
+   *
+   * @param {string} entityId - Entity to add sockets to
+   * @param {Array<object>} sockets - Socket definitions to add
+   */
+  async addSocketsToEntity(entityId, sockets) {
+    await this.#entityManager.addComponent(entityId, 'anatomy:sockets', {
+      sockets,
+    });
+
+    this.#logger.debug(
+      `EntityGraphBuilder: Added ${sockets.length} sockets to entity '${entityId}'`
+    );
+  }
+
+  /**
    * Gets the part type from an entity
    *
    * @param {string} entityId - Entity ID
