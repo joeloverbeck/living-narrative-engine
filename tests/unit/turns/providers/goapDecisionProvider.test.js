@@ -17,10 +17,17 @@ describe('GoapDecisionProvider', () => {
       safeEventDispatcher: mockDispatcher,
     });
 
-    const decision = await provider.decide({ id: 'a1' }, {}, ['a', 'b']);
+    const decision = await provider.decide(
+      { id: 'a1' },
+      {},
+      [
+        { index: 2, actionId: 'core:test', commandString: 'do x', params: {}, description: 'test', visual: null },
+        { index: 1, actionId: 'core:other', commandString: 'do y', params: {}, description: 'other', visual: null },
+      ]
+    );
 
     expect(decision).toEqual({
-      chosenIndex: 1,
+      chosenIndex: 2,
       speech: null,
       thoughts: null,
       notes: null,

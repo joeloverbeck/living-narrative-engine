@@ -24,8 +24,14 @@ export class GoapDecisionProvider extends DelegatingDecisionProvider {
    * @returns {void}
    */
   constructor({ logger, safeEventDispatcher }) {
-    const delegate = async (_actor, _context, _actions) => {
-      return { index: 1 };
+    const delegate = async (_actor, _context, actions) => {
+      const firstAction = Array.isArray(actions) ? actions[0] ?? null : null;
+      const resolvedIndex =
+        firstAction && Number.isInteger(firstAction.index)
+          ? firstAction.index
+          : 1;
+
+      return { index: resolvedIndex };
     };
     super({ delegate, logger, safeEventDispatcher });
   }
