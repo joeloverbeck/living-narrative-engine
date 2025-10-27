@@ -60,8 +60,8 @@ describe('InitiativePriorityQueue', () => {
       expect(result.length).toBe(1);
     });
 
-    // Test Case 16.3 (toArray on Multiple Items - Order Not Guaranteed)
-    it('Test Case 16.3: should return an array containing all added entities (order not guaranteed)', () => {
+    // Test Case 16.3 (toArray on Multiple Items - Highest priority first)
+    it('Test Case 16.3: should return active entities sorted by priority descending', () => {
       // Arrange
       queue.add(entityA, 5);
       queue.add(entityB, 15);
@@ -73,14 +73,7 @@ describe('InitiativePriorityQueue', () => {
 
       // Assert
       expect(result.length).toBe(3);
-      // Use expect.arrayContaining to check for presence regardless of order
-      expect(result).toEqual(
-        expect.arrayContaining([entityA, entityB, entityC])
-      );
-      // Ensure no duplicates or extra items
-      expect(result.sort((x, y) => x.id.localeCompare(y.id))).toEqual(
-        [entityA, entityB, entityC].sort((x, y) => x.id.localeCompare(y.id))
-      );
+      expect(result).toEqual([entityB, entityC, entityA]);
     });
 
     // Test Case 16.4 (toArray Excludes Removed Items)
@@ -153,6 +146,25 @@ describe('InitiativePriorityQueue', () => {
 
       // Ensure the two copies are different references
       expect(arrayCopy1).not.toBe(arrayCopy2); // Check they are different array instances
+    });
+
+    // Test Case 16.7 (toArray Mirrors Turn Order)
+    it('Test Case 16.7: should match the sequence produced by successive getNext() calls without mutating the queue', () => {
+      // Arrange
+      queue.add(entityA, 12);
+      queue.add(entityB, 20);
+      queue.add(entityC, 5);
+
+      // Act
+      const orderedSnapshot = queue.toArray();
+
+      const first = queue.getNext();
+      const second = queue.getNext();
+      const third = queue.getNext();
+
+      // Assert
+      expect(orderedSnapshot).toEqual([first, second, third]);
+      expect(queue.isEmpty()).toBe(true);
     });
   }); // End describe('toArray() Method Functionality')
 }); // End describe('InitiativePriorityQueue')

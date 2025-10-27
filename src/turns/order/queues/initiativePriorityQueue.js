@@ -300,8 +300,8 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
   /**
    * Returns an array containing all *active* entities currently in the queue.
    * Entities marked for lazy removal are excluded.
-   * The order of entities in the returned array is based on the internal heap
-   * structure of the priority queue and is **not** guaranteed to be sorted by priority.
+   * The returned array matches the sequence that {@link getNext} would produce,
+   * delivering active entities in descending priority without mutating the queue.
    *
    * @override
    * @returns {Array<Entity>} An array of the active entities. Returns an empty array `[]`
@@ -311,17 +311,52 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
     console.debug(
       `[DEBUG] toArray: --- Called ---. queue.length: ${this.#queue.length}, activeSize: ${this.#activeSize}`
     ); // LOGGING
-    const internalData = this.#queue.data || [];
-    const result = internalData
-      .filter((item) => {
-        const isValid = item && item.entity && !item.removed;
-        // console.debug(`[DEBUG] toArray: Filtering item ${item?.entity?.id}, isValid: ${isValid}`); // Optional finer logging
-        return isValid;
-      })
-      .map((item) => item.entity);
+
+    if (this.#activeSize === 0 || this.#queue.length === 0) {
+      console.debug('[DEBUG] toArray: No active entities. Returning empty array.');
+      return [];
+    }
+
+    const snapshot = new TinyQueue([], this.#queue.compare);
+    snapshot.data = this.#queue.data.map((item) =>
+      item ? { ...item } : item
+    );
+    snapshot.length = snapshot.data.length;
+
+    /** @type {Entity[]} */
+    const orderedEntities = [];
+
+    while (snapshot.length > 0) {
+      const nextItem = snapshot.pop();
+      if (!nextItem) {
+        console.debug(
+          '[DEBUG] toArray: Snapshot pop returned null/undefined, continuing.'
+        );
+        continue;
+      }
+
+      if (nextItem.removed) {
+        console.debug(
+          `[DEBUG] toArray: Skipping lazily removed entity ${
+            nextItem.entity?.id ?? 'unknown'
+          }.`
+        );
+        continue;
+      }
+
+      if (!nextItem.entity) {
+        console.debug(
+          '[DEBUG] toArray: Encountered item without entity reference, skipping.'
+        );
+        continue;
+      }
+
+      orderedEntities.push(nextItem.entity);
+    }
+
     console.debug(
-      `[DEBUG] toArray: Filtered ${internalData.length} items down to ${result.length} active entities.`
-    ); // LOGGING
-    return result;
+      `[DEBUG] toArray: Returning ordered list of ${orderedEntities.length} active entities.`
+    );
+    return orderedEntities;
   }
 }
