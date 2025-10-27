@@ -16,6 +16,7 @@ describe('ActivityDescriptionService', () => {
   let mockActivityIndex;
   let mockJsonLogicEvaluationService;
   let mockEventBus;
+  let defaultGetEntityInstanceImplementation;
 
   beforeEach(() => {
     // Create mocks
@@ -27,16 +28,29 @@ describe('ActivityDescriptionService', () => {
       log: jest.fn(),
     };
 
+    defaultGetEntityInstanceImplementation = (id) => ({
+      id,
+      componentTypeIds: [],
+      getComponentData: jest.fn((componentId) => {
+        if (componentId === 'core:name') {
+          return { text: id };
+        }
+
+        if (componentId === 'positioning:closeness') {
+          return null;
+        }
+
+        if (componentId === 'core:gender') {
+          return null;
+        }
+
+        return undefined;
+      }),
+      hasComponent: jest.fn().mockReturnValue(false),
+    });
+
     mockEntityManager = {
-      getEntityInstance: jest.fn((id) => ({
-        id,
-        getComponentData: jest.fn((componentId) => {
-          if (componentId === 'core:name') {
-            return { text: id };
-          }
-          return undefined;
-        }),
-      })),
+      getEntityInstance: jest.fn(defaultGetEntityInstanceImplementation),
       getComponentData: jest.fn(),
     };
 
@@ -5262,6 +5276,221 @@ describe('ActivityDescriptionService', () => {
 
         expect(eventBus.listenerCount(COMPONENT_ADDED_ID)).toBeLessThan(10);
       });
+    });
+  });
+
+  describe('test hooks utility coverage', () => {
+    let hooks;
+
+    beforeEach(() => {
+      hooks = service.getTestHooks();
+    });
+
+    describe('#truncateDescription', () => {
+      it('returns empty string for whitespace-only input', () => {
+        expect(hooks.truncateDescription('   ', 100)).toBe('');
+      });
+
+      it('returns trimmed text when max length is not finite', () => {
+        expect(hooks.truncateDescription(' Activity summary ', 0)).toBe(
+          'Activity summary'
+        );
+      });
+
+      it('preserves the final full sentence when within the limit', () => {
+        const description =
+          'First sentence. Second sentence continues for a bit longer.';
+        expect(hooks.truncateDescription(description, 25)).toBe(
+          'First sentence.'
+        );
+      });
+
+      it('appends an ellipsis when truncating without a sentence boundary', () => {
+        expect(
+          hooks.truncateDescription('No periods in this description', 10)
+        ).toBe('No peri...');
+      });
+    });
+
+    describe('#sanitizeEntityName', () => {
+      it('returns a fallback when provided a non-string input', () => {
+        expect(hooks.sanitizeEntityName(null)).toBe('Unknown entity');
+      });
+
+      it('removes control and zero-width characters before collapsing whitespace', () => {
+        expect(hooks.sanitizeEntityName(' ​‌ ')).toBe(
+          'Unknown entity'
+        );
+      });
+    });
+
+    describe('#getReflexivePronoun', () => {
+      it.each([
+        ['himself', 'he'],
+        ['herself', 'she'],
+        ['itself', 'it'],
+        ['myself', 'I'],
+        ['yourself', 'You'],
+        ['ourselves', 'we'],
+        ['themselves', 'they'],
+      ])('returns %s for subject %s', (expected, subject) => {
+        expect(hooks.getReflexivePronoun({ subject })).toBe(expected);
+      });
+    });
+
+    it('exposes advanced helpers through test hooks', () => {
+      const originalImplementation =
+        mockEntityManager.getEntityInstance.getMockImplementation();
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-with-partner') {
+          return {
+            id,
+            componentTypeIds: ['positioning:closeness'],
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'positioning:closeness') {
+                return { partners: ['target-entity'] };
+              }
+              if (componentId === 'core:name') {
+                return { text: 'Actor With Partner' };
+              }
+              if (componentId === 'core:gender') {
+                return { value: 'male' };
+              }
+              return undefined;
+            }),
+            hasComponent: jest.fn(
+              (componentId) => componentId === 'required:present'
+            ),
+          };
+        }
+
+        if (id === 'target-entity') {
+          return {
+            id,
+            componentTypeIds: ['core:gender'],
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Target Entity' };
+              }
+              if (componentId === 'core:gender') {
+                return { value: 'female' };
+              }
+              return undefined;
+            }),
+            hasComponent: jest.fn().mockReturnValue(false),
+          };
+        }
+
+        return defaultGetEntityInstanceImplementation(id);
+      });
+
+      const actorEntity = {
+        id: 'actor-entity',
+        componentTypeIds: ['component:a'],
+        getComponentData: jest.fn((componentId) =>
+          componentId === 'component:a' ? { active: true } : null
+        ),
+        hasComponent: jest.fn(
+          (componentId) => componentId === 'required:present'
+        ),
+      };
+
+      const forbiddenEntity = {
+        id: 'forbidden',
+        hasComponent: jest.fn(
+          (componentId) => componentId === 'forbidden:present'
+        ),
+      };
+
+      const activity = {
+        visible: true,
+        metadata: {},
+        priority: 95,
+        type: 'inline',
+        template: '{actor} reassures {target}',
+        targetEntityId: 'target-entity',
+        sourceData: { property: 'match' },
+      };
+
+      expect(hooks.evaluateActivityVisibility(activity, actorEntity)).toBe(
+        true
+      );
+
+      const logicContext = hooks.buildLogicContext(activity, actorEntity);
+      expect(logicContext).toMatchObject({
+        entity: { id: 'actor-entity' },
+        target: { id: 'target-entity' },
+      });
+
+      const builtContext = hooks.buildActivityContext(
+        'actor-with-partner',
+        activity
+      );
+      expect(builtContext).toMatchObject({
+        targetId: 'target-entity',
+        relationshipTone: 'closeness_partner',
+        targetGender: 'female',
+      });
+
+      const tonedActivity = hooks.applyContextualTone(
+        { ...activity, type: 'dedicated' },
+        builtContext
+      );
+      expect(tonedActivity.adverb).toBe('tenderly');
+
+      const phrase = hooks.generateActivityPhrase('Alex', activity, false, {
+        actorId: 'actor-with-partner',
+        actorName: 'Alex',
+        actorPronouns: { subject: 'he', object: 'him' },
+      });
+      expect(phrase).toBe('Alex reassures Target Entity');
+
+      expect(hooks.filterByConditions([activity], actorEntity)).toHaveLength(1);
+      expect(hooks.determineActivityIntensity(activity.priority)).toBe(
+        'intense'
+      );
+      expect(
+        hooks.determineConjunction({ priority: 50 }, { priority: 55 })
+      ).toBe('while');
+      expect(hooks.activitiesOccurSimultaneously(10, 15)).toBe(true);
+      expect(hooks.getPronounSet('female').subject).toBe('she');
+      expect(hooks.detectEntityGender('target-entity')).toBe('female');
+      expect(hooks.isEmptyConditionsObject({})).toBe(true);
+      expect(
+        hooks.matchesPropertyCondition(activity, {
+          property: 'property',
+          equals: 'match',
+        })
+      ).toBe(true);
+      expect(
+        hooks.hasRequiredComponents(actorEntity, ['required:present'])
+      ).toBe(true);
+      expect(
+        hooks.hasForbiddenComponents(forbiddenEntity, [
+          'forbidden:missing',
+          'forbidden:present',
+        ])
+      ).toBe(true);
+
+      const extracted = hooks.extractEntityData({
+        id: 'extracted',
+        componentTypeIds: ['alpha', 'beta'],
+        getComponentData: jest.fn((componentId) => ({
+          id: componentId,
+        })),
+      });
+      expect(extracted).toEqual({
+        id: 'extracted',
+        components: {
+          alpha: { id: 'alpha' },
+          beta: { id: 'beta' },
+        },
+      });
+
+      mockEntityManager.getEntityInstance.mockImplementation(
+        originalImplementation ?? defaultGetEntityInstanceImplementation
+      );
     });
   });
 });
