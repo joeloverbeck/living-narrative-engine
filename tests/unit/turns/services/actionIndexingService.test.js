@@ -215,6 +215,31 @@ describe('ActionIndexingService', () => {
     );
   });
 
+  it('treats actions with differently ordered params as duplicates', () => {
+    const rawActions = [
+      {
+        id: 'dup',
+        params: { alpha: 1, beta: 2 },
+        command: 'cmdDup',
+        description: 'original',
+      },
+      {
+        id: 'dup',
+        params: { beta: 2, alpha: 1 },
+        command: 'cmdDup',
+        description: 'order changed',
+      },
+    ];
+
+    const result = service.indexActions('actorKeyOrder', rawActions);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].actionId).toBe('dup');
+    expect(logger.info).toHaveBeenCalledWith(
+      'ActionIndexingService: actor "actorKeyOrder" suppressed 1 duplicate actions: dup (cmdDup, params: {"alpha":1,"beta":2}) x2'
+    );
+  });
+
   it('does not log info when there are no duplicates', () => {
     const rawActions = [
       {

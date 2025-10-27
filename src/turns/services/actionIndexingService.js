@@ -18,7 +18,7 @@ function deduplicateActions(discovered) {
     const params = raw.params ?? {};
     const description = raw.description ?? '';
     const visual = raw.visual ?? null;
-    const key = `${actionId}:${JSON.stringify(params)}`;
+    const key = createActionKey(actionId, params);
 
     if (!unique.has(key)) {
       unique.set(key, { actionId, commandString, params, description, visual });
@@ -53,6 +53,77 @@ function deduplicateActions(discovered) {
  * @param {{ actionId: string, commandString: string, params: any, description: string, visual: any }[]} uniqueArr - Unique actions after deduplication.
  * @returns {{ truncatedArr: { actionId: string, commandString: string, params: any, description: string, visual: any }[], truncatedCount: number }} Object containing the possibly truncated array and count of removed actions.
  */
+/**
+ * @description Produce a deterministic string representation for composite key generation.
+ * @param {*} value - The value to serialize in a stable manner.
+ * @param {WeakSet<object>} [seen=new WeakSet()] - Tracks objects already visited to prevent cycles.
+ * @returns {string} Stable string representation suitable for map keys.
+ */
+function stableSerializeForKey(value, seen = new WeakSet()) {
+  if (value === null) {
+    return 'null';
+  }
+
+  const valueType = typeof value;
+  if (valueType === 'undefined') {
+    return 'undefined';
+  }
+  if (valueType === 'number' || valueType === 'boolean') {
+    return JSON.stringify(value);
+  }
+  if (valueType === 'string') {
+    return JSON.stringify(value);
+  }
+  if (valueType === 'bigint') {
+    return `${value.toString()}n`;
+  }
+  if (valueType === 'symbol') {
+    return value.toString();
+  }
+  if (valueType === 'function') {
+    return `[Function:${value.name || 'anonymous'}]`;
+  }
+
+  if (Array.isArray(value)) {
+    if (seen.has(value)) {
+      return '[Circular]';
+    }
+    seen.add(value);
+    const serialized = `[${value
+      .map((item) => stableSerializeForKey(item, seen))
+      .join(',')}]`;
+    seen.delete(value);
+    return serialized;
+  }
+
+  if (valueType === 'object') {
+    if (seen.has(value)) {
+      return '[Circular]';
+    }
+    seen.add(value);
+    const keys = Object.keys(value).sort();
+    const serialized = `{${keys
+      .map((key) =>
+        `${JSON.stringify(key)}:${stableSerializeForKey(value[key], seen)}`
+      )
+      .join(',')}}`;
+    seen.delete(value);
+    return serialized;
+  }
+
+  return JSON.stringify(value);
+}
+
+/**
+ * @description Build a unique key for an action using its identifier and parameters.
+ * @param {string} actionId - The action definition identifier.
+ * @param {*} params - Parameters associated with the action.
+ * @returns {string} Deterministic composite key for deduplication.
+ */
+function createActionKey(actionId, params) {
+  return `${actionId}:${stableSerializeForKey(params)}`;
+}
+
 function truncateActions(uniqueArr) {
   if (uniqueArr.length > MAX_AVAILABLE_ACTIONS_PER_TURN) {
     const truncatedCount = uniqueArr.length - MAX_AVAILABLE_ACTIONS_PER_TURN;
