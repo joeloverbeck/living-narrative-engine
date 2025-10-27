@@ -7,7 +7,7 @@
 **Phase 6: Advanced Features** (Week 4)
 
 ## Description
-Implement event-driven cache invalidation system to automatically invalidate cached entity names, genders, and activity indexes when relevant component changes occur, ensuring descriptions always reflect current game state.
+Implement event-driven cache invalidation system to automatically invalidate cached entity names, genders, and activity indexes when relevant component changes occur, ensuring descriptions always reflect current game state. Align the plan with the existing `EventBus` API (`subscribe`/`unsubscribe`) and the canonical `core:*` event identifiers already used across the codebase.
 
 ## Background
 Caches improve performance but must stay synchronized with game state. Event-driven invalidation ensures caches never show stale data without manual clearing.
@@ -18,83 +18,96 @@ Caches improve performance but must stay synchronized with game state. Event-dri
 
 ### Event Subscriptions Setup
 ```javascript
-constructor({ entityManager, anatomyFormattingService, eventBus = null, logger = null }) {
-  // ... existing validation and initialization
+import {
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
+  ENTITY_REMOVED_ID,
+} from '../../constants/eventIds.js';
+import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
 
-  this.#eventBus = eventBus;
-  this.#entityNameCache = new Map();
-  this.#genderCache = new Map();
-  this.#activityIndexCache = new Map();
+const GENDER_COMPONENT_ID = 'core:gender';
+const ACTIVITY_METADATA_COMPONENT_ID = 'activity:description_metadata';
 
-  // Subscribe to cache-invalidating events
-  if (this.#eventBus) {
-    this.#subscribeToInvalidationEvents();
+class ActivityDescriptionService {
+  #eventBus = null;
+  #eventUnsubscribers = [];
+
+  constructor({ entityManager, anatomyFormattingService, eventBus = null, logger = null }) {
+    // ... existing validation and initialization
+
+    if (eventBus) {
+      validateDependency(eventBus, 'EventBus', this.#logger, {
+        requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
+      });
+      this.#eventBus = eventBus;
+      this.#subscribeToInvalidationEvents();
+    }
   }
-}
 
-/**
- * Subscribe to events that require cache invalidation.
- * @private
- */
-#subscribeToInvalidationEvents() {
-  // Name component changes
-  this.#eventBus.on('COMPONENT_ADDED', (event) => {
-    if (event.payload.componentId === 'core:name') {
-      this.#invalidateNameCache(event.payload.entityId);
-    }
-  });
+  /**
+   * Subscribe to events that require cache invalidation.
+   * @private
+   */
+  #subscribeToInvalidationEvents() {
+    const subscribe = (eventId, handler) => {
+      const unsubscribe = this.#eventBus.subscribe(eventId, handler);
+      if (typeof unsubscribe === 'function') {
+        this.#eventUnsubscribers.push(unsubscribe);
+      }
+    };
 
-  this.#eventBus.on('COMPONENT_UPDATED', (event) => {
-    if (event.payload.componentId === 'core:name') {
-      this.#invalidateNameCache(event.payload.entityId);
-    }
-  });
+    const getEntityId = (event) =>
+      event?.payload?.entity?.id ?? event?.payload?.entity?.instanceId ?? null;
 
-  this.#eventBus.on('COMPONENT_REMOVED', (event) => {
-    if (event.payload.componentId === 'core:name') {
-      this.#invalidateNameCache(event.payload.entityId);
-    }
-  });
+    subscribe(COMPONENT_ADDED_ID, (event) => {
+      const componentId = event?.payload?.componentTypeId;
+      const entityId = getEntityId(event);
 
-  // Gender component changes
-  this.#eventBus.on('COMPONENT_ADDED', (event) => {
-    if (event.payload.componentId === 'character:gender' || event.payload.componentId === 'anatomy:body') {
-      this.#invalidateGenderCache(event.payload.entityId);
-    }
-  });
+      if (!entityId || !componentId) {
+        return;
+      }
 
-  this.#eventBus.on('COMPONENT_UPDATED', (event) => {
-    if (event.payload.componentId === 'character:gender' || event.payload.componentId === 'anatomy:body') {
-      this.#invalidateGenderCache(event.payload.entityId);
-    }
-  });
+      if (componentId === NAME_COMPONENT_ID) {
+        this.#invalidateNameCache(entityId);
+      }
 
-  // Activity metadata changes
-  this.#eventBus.on('COMPONENT_ADDED', (event) => {
-    if (event.payload.componentId.includes('activityMetadata') ||
-        event.payload.componentId === 'activity:description_metadata') {
-      this.#invalidateActivityCache(event.payload.entityId);
-    }
-  });
+      if (componentId === GENDER_COMPONENT_ID) {
+        this.#invalidateGenderCache(entityId);
+      }
 
-  this.#eventBus.on('COMPONENT_UPDATED', (event) => {
-    if (event.payload.componentId.includes('activityMetadata') ||
-        event.payload.componentId === 'activity:description_metadata') {
-      this.#invalidateActivityCache(event.payload.entityId);
-    }
-  });
+      if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
+        this.#invalidateActivityCache(entityId);
+      }
+    });
 
-  this.#eventBus.on('COMPONENT_REMOVED', (event) => {
-    if (event.payload.componentId.includes('activityMetadata') ||
-        event.payload.componentId === 'activity:description_metadata') {
-      this.#invalidateActivityCache(event.payload.entityId);
-    }
-  });
+    subscribe(COMPONENT_REMOVED_ID, (event) => {
+      const componentId = event?.payload?.componentTypeId;
+      const entityId = getEntityId(event);
 
-  // Entity deletion
-  this.#eventBus.on('ENTITY_DESTROYED', (event) => {
-    this.#invalidateAllCachesForEntity(event.payload.entityId);
-  });
+      if (!entityId || !componentId) {
+        return;
+      }
+
+      if (componentId === NAME_COMPONENT_ID) {
+        this.#invalidateNameCache(entityId);
+      }
+
+      if (componentId === GENDER_COMPONENT_ID) {
+        this.#invalidateGenderCache(entityId);
+      }
+
+      if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
+        this.#invalidateActivityCache(entityId);
+      }
+    });
+
+    subscribe(ENTITY_REMOVED_ID, (event) => {
+      const entityId = getEntityId(event);
+      if (entityId) {
+        this.#invalidateAllCachesForEntity(entityId);
+      }
+    });
+  }
 }
 ```
 
@@ -107,8 +120,7 @@ constructor({ entityManager, anatomyFormattingService, eventBus = null, logger =
  * @private
  */
 #invalidateNameCache(entityId) {
-  if (this.#entityNameCache.has(entityId)) {
-    this.#entityNameCache.delete(entityId);
+  if (this.#entityNameCache.delete(entityId)) {
     this.#logger.debug(`Invalidated name cache for ${entityId}`);
   }
 }
@@ -120,8 +132,7 @@ constructor({ entityManager, anatomyFormattingService, eventBus = null, logger =
  * @private
  */
 #invalidateGenderCache(entityId) {
-  if (this.#genderCache.has(entityId)) {
-    this.#genderCache.delete(entityId);
+  if (this.#genderCache.delete(entityId)) {
     this.#logger.debug(`Invalidated gender cache for ${entityId}`);
   }
 }
@@ -133,8 +144,7 @@ constructor({ entityManager, anatomyFormattingService, eventBus = null, logger =
  * @private
  */
 #invalidateActivityCache(entityId) {
-  if (this.#activityIndexCache.has(entityId)) {
-    this.#activityIndexCache.delete(entityId);
+  if (this.#activityIndexCache.delete(entityId)) {
     this.#logger.debug(`Invalidated activity cache for ${entityId}`);
   }
 }
@@ -217,21 +227,20 @@ invalidateCache(entityId, cacheType = 'all') {
  * Destroy service and cleanup resources.
  */
 destroy() {
-  // Unsubscribe from events
-  if (this.#eventBus) {
-    this.#eventBus.off('COMPONENT_ADDED', this.#handleComponentAdded);
-    this.#eventBus.off('COMPONENT_UPDATED', this.#handleComponentUpdated);
-    this.#eventBus.off('COMPONENT_REMOVED', this.#handleComponentRemoved);
-    this.#eventBus.off('ENTITY_DESTROYED', this.#handleEntityDestroyed);
+  while (this.#eventUnsubscribers.length > 0) {
+    const unsubscribe = this.#eventUnsubscribers.pop();
+    try {
+      unsubscribe?.();
+    } catch (error) {
+      this.#logger.warn('Failed to unsubscribe cache invalidation handler', error);
+    }
   }
 
-  // Stop cleanup interval
   if (this.#cleanupInterval) {
     clearInterval(this.#cleanupInterval);
     this.#cleanupInterval = null;
   }
 
-  // Clear all caches
   this.clearAllCaches();
 
   this.#logger.info('ActivityDescriptionService destroyed');
@@ -247,8 +256,8 @@ Component Change → Event Dispatched → Service Listens → Cache Invalidated 
 ### Example Flow
 ```
 1. Player changes character name
-2. EntityManager dispatches COMPONENT_UPDATED event
-3. ActivityDescriptionService receives event
+2. EntityManager dispatches `core:component_added` with the updated `core:name` payload
+3. ActivityDescriptionService subscriber receives the event object
 4. Name cache invalidated for that entity
 5. Next description generation fetches fresh name
 ```
@@ -256,9 +265,9 @@ Component Change → Event Dispatched → Service Listens → Cache Invalidated 
 ## Acceptance Criteria
 - [ ] Event subscriptions established in constructor
 - [ ] Name cache invalidated on `core:name` changes
-- [ ] Gender cache invalidated on `character:gender` or `anatomy:body` changes
-- [ ] Activity cache invalidated on metadata changes
-- [ ] All caches invalidated on entity destruction
+- [ ] Gender cache invalidated on `core:gender` changes
+- [ ] Activity cache invalidated on `activity:description_metadata` changes
+- [ ] All caches invalidated on `core:entity_removed`
 - [ ] Batch invalidation supported
 - [ ] Selective invalidation API available
 - [ ] Event unsubscription on destroy
@@ -276,155 +285,136 @@ Component Change → Event Dispatched → Service Listens → Cache Invalidated 
 describe('ActivityDescriptionService - Cache Invalidation', () => {
   let eventBus;
   let service;
+  let hooks;
 
   beforeEach(() => {
-    eventBus = new EventBus();
+    eventBus = new EventBus({ logger: mockLogger });
     service = new ActivityDescriptionService({
       entityManager: mockEntityManager,
       anatomyFormattingService: mockFormattingService,
+      jsonLogicEvaluationService: mockJsonLogicService,
       eventBus,
     });
+    hooks = service.getTestHooks();
   });
 
   afterEach(() => {
     service.destroy();
   });
 
-  it('should invalidate name cache on COMPONENT_UPDATED', () => {
-    // Cache a name
-    service['#entityNameCache'].set('jon', 'Jon Ureña');
+  it('invalidates name cache when a name component is updated', async () => {
+    hooks.setEntityNameCacheEntry('jon', 'Jon Ureña');
 
-    // Dispatch name component update
-    eventBus.dispatch({
-      type: 'COMPONENT_UPDATED',
-      payload: {
-        entityId: 'jon',
-        componentId: 'core:name',
-      },
+    await eventBus.dispatch(COMPONENT_ADDED_ID, {
+      entity: { id: 'jon' },
+      componentTypeId: NAME_COMPONENT_ID,
     });
 
-    // Cache should be invalidated
-    expect(service['#entityNameCache'].has('jon')).toBe(false);
+    expect(hooks.getCacheSnapshot().entityName.has('jon')).toBe(false);
   });
 
-  it('should invalidate gender cache on gender component change', () => {
-    service['#genderCache'].set('jon', 'male');
+  it('invalidates gender cache when the gender component changes', async () => {
+    hooks.setGenderCacheEntry('jon', 'male');
 
-    eventBus.dispatch({
-      type: 'COMPONENT_UPDATED',
-      payload: {
-        entityId: 'jon',
-        componentId: 'character:gender',
-      },
+    await eventBus.dispatch(COMPONENT_ADDED_ID, {
+      entity: { id: 'jon' },
+      componentTypeId: 'core:gender',
     });
 
-    expect(service['#genderCache'].has('jon')).toBe(false);
+    expect(hooks.getCacheSnapshot().gender.has('jon')).toBe(false);
   });
 
-  it('should invalidate activity cache on metadata change', () => {
-    service['#activityIndexCache'].set('jon', { /* index */ });
+  it('invalidates activity cache when metadata updates', async () => {
+    hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
 
-    eventBus.dispatch({
-      type: 'COMPONENT_ADDED',
-      payload: {
-        entityId: 'jon',
-        componentId: 'activity:description_metadata',
-      },
+    await eventBus.dispatch(COMPONENT_ADDED_ID, {
+      entity: { id: 'jon' },
+      componentTypeId: 'activity:description_metadata',
     });
 
-    expect(service['#activityIndexCache'].has('jon')).toBe(false);
+    expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
   });
 
-  it('should invalidate all caches on entity destruction', () => {
-    service['#entityNameCache'].set('jon', 'Jon');
-    service['#genderCache'].set('jon', 'male');
-    service['#activityIndexCache'].set('jon', {});
+  it('invalidates all caches when an entity is removed', async () => {
+    hooks.setEntityNameCacheEntry('jon', 'Jon');
+    hooks.setGenderCacheEntry('jon', 'male');
+    hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
 
-    eventBus.dispatch({
-      type: 'ENTITY_DESTROYED',
-      payload: {
-        entityId: 'jon',
-      },
+    await eventBus.dispatch(ENTITY_REMOVED_ID, {
+      entity: { id: 'jon' },
     });
 
-    expect(service['#entityNameCache'].has('jon')).toBe(false);
-    expect(service['#genderCache'].has('jon')).toBe(false);
-    expect(service['#activityIndexCache'].has('jon')).toBe(false);
+    const snapshot = hooks.getCacheSnapshot();
+    expect(snapshot.entityName.has('jon')).toBe(false);
+    expect(snapshot.gender.has('jon')).toBe(false);
+    expect(snapshot.activityIndex.has('jon')).toBe(false);
   });
 
-  it('should support batch invalidation', () => {
-    service['#entityNameCache'].set('jon', 'Jon');
-    service['#entityNameCache'].set('alicia', 'Alicia');
-    service['#entityNameCache'].set('bobby', 'Bobby');
+  it('supports batch invalidation helpers', () => {
+    hooks.setEntityNameCacheEntry('jon', 'Jon');
+    hooks.setEntityNameCacheEntry('alicia', 'Alicia');
+    hooks.setEntityNameCacheEntry('bobby', 'Bobby');
 
     service.invalidateEntities(['jon', 'alicia']);
 
-    expect(service['#entityNameCache'].has('jon')).toBe(false);
-    expect(service['#entityNameCache'].has('alicia')).toBe(false);
-    expect(service['#entityNameCache'].has('bobby')).toBe(true);
+    const snapshot = hooks.getCacheSnapshot().entityName;
+    expect(snapshot.has('jon')).toBe(false);
+    expect(snapshot.has('alicia')).toBe(false);
+    expect(snapshot.has('bobby')).toBe(true);
   });
 
-  it('should support selective cache invalidation', () => {
-    service['#entityNameCache'].set('jon', 'Jon');
-    service['#genderCache'].set('jon', 'male');
-    service['#activityIndexCache'].set('jon', {});
+  it('supports selective cache invalidation', () => {
+    hooks.setEntityNameCacheEntry('jon', 'Jon');
+    hooks.setGenderCacheEntry('jon', 'male');
+    hooks.setActivityIndexCacheEntry('jon', { signature: 'abc', index: {} });
 
     service.invalidateCache('jon', 'name');
 
-    expect(service['#entityNameCache'].has('jon')).toBe(false);
-    expect(service['#genderCache'].has('jon')).toBe(true); // Not invalidated
-    expect(service['#activityIndexCache'].has('jon')).toBe(true); // Not invalidated
+    const snapshot = hooks.getCacheSnapshot();
+    expect(snapshot.entityName.has('jon')).toBe(false);
+    expect(snapshot.gender.has('jon')).toBe(true);
+    expect(snapshot.activityIndex.has('jon')).toBe(true);
   });
 
-  it('should unsubscribe from events on destroy', () => {
-    const listenerCountBefore = eventBus.listenerCount('COMPONENT_UPDATED');
+  it('unsubscribes from cache invalidation events on destroy', () => {
+    const before = eventBus.listenerCount(COMPONENT_ADDED_ID);
 
     service.destroy();
 
-    const listenerCountAfter = eventBus.listenerCount('COMPONENT_UPDATED');
-
-    expect(listenerCountAfter).toBeLessThan(listenerCountBefore);
+    const after = eventBus.listenerCount(COMPONENT_ADDED_ID);
+    expect(after).toBeLessThan(before);
   });
 
-  it('should refresh cache on next access after invalidation', async () => {
+  it('refreshes caches after invalidation when generating descriptions', async () => {
     const jon = createEntity('jon', 'male');
-    addComponent(jon, 'core:name', { text: 'Jon Ureña' });
+    addComponent(jon, NAME_COMPONENT_ID, { text: 'Jon Ureña' });
 
-    // First generation (caches name)
     await service.generateActivityDescription('jon');
-    expect(service['#entityNameCache'].get('jon')).toBe('Jon Ureña');
+    expect(hooks.getCacheSnapshot().entityName.get('jon')?.value).toBe('Jon Ureña');
 
-    // Update name
-    updateComponent(jon, 'core:name', { text: 'Jon "Red" Ureña' });
+    updateComponent(jon, NAME_COMPONENT_ID, { text: 'Jon "Red" Ureña' });
 
-    // Dispatch event to invalidate
-    eventBus.dispatch({
-      type: 'COMPONENT_UPDATED',
-      payload: {
-        entityId: 'jon',
-        componentId: 'core:name',
-      },
+    await eventBus.dispatch(COMPONENT_ADDED_ID, {
+      entity: jon,
+      componentTypeId: NAME_COMPONENT_ID,
     });
 
-    // Second generation (refreshes cache)
     await service.generateActivityDescription('jon');
-    expect(service['#entityNameCache'].get('jon')).toBe('Jon "Red" Ureña');
+    expect(hooks.getCacheSnapshot().entityName.get('jon')?.value).toBe('Jon "Red" Ureña');
   });
 
-  it('should not leak memory from event subscriptions', () => {
-    // Create and destroy multiple services
-    for (let i = 0; i < 100; i++) {
+  it('does not leak listeners when services are created and destroyed repeatedly', () => {
+    for (let i = 0; i < 50; i++) {
       const tempService = new ActivityDescriptionService({
         entityManager: mockEntityManager,
         anatomyFormattingService: mockFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicService,
         eventBus,
       });
       tempService.destroy();
     }
 
-    // Event bus listener count should not grow unboundedly
-    const listenerCount = eventBus.listenerCount('COMPONENT_UPDATED');
-    expect(listenerCount).toBeLessThan(10); // Reasonable limit
+    expect(eventBus.listenerCount(COMPONENT_ADDED_ID)).toBeLessThan(10);
   });
 });
 ```
