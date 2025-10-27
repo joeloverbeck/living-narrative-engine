@@ -68,11 +68,31 @@ export function compareLoadSlots(a, b) {
  * @returns {Promise<LoadSlotDisplayData[]>} Sorted and formatted slot data.
  */
 export async function fetchAndFormatLoadSlots(saveLoadService) {
-  const manualSaves = await saveLoadService.listManualSaveSlots();
+  const rawResult = await saveLoadService.listManualSaveSlots();
 
-  manualSaves.sort(compareLoadSlots);
+  let manualSaves;
 
-  return manualSaves.map((slot) => ({
+  if (Array.isArray(rawResult)) {
+    manualSaves = rawResult;
+  } else if (rawResult && typeof rawResult === 'object') {
+    if (rawResult.success === false) {
+      const message =
+        rawResult.userFriendlyError ||
+        rawResult.error?.message ||
+        rawResult.error ||
+        'Failed to list manual save slots.';
+      throw new Error(String(message));
+    }
+
+    manualSaves = Array.isArray(rawResult.data) ? rawResult.data : [];
+  } else {
+    manualSaves = [];
+  }
+
+  const sortedSaves = [...manualSaves];
+  sortedSaves.sort(compareLoadSlots);
+
+  return sortedSaves.map((slot) => ({
     ...slot,
     slotItemMeta: formatSaveFileMetadata(slot),
   }));
