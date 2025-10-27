@@ -1987,7 +1987,7 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('jon');
       expect(result).toBe(
-        'Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is holding hands with Alicia Western'
+        'Activity: Jon Ureña is kneeling before Alicia Western and holding hands with Alicia Western'
       );
     });
 
@@ -2162,7 +2162,7 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('jon');
       expect(result).toBe(
-        'Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is holding hands with Alicia Western. Jon Ureña is following Bob Smith'
+        'Activity: Jon Ureña is kneeling before Alicia Western and holding hands with Alicia Western. Jon Ureña is following Bob Smith'
       );
     });
 
@@ -2579,7 +2579,9 @@ describe('ActivityDescriptionService', () => {
         });
 
         const result = await service.generateActivityDescription('alicia');
-        expect(result).toBe('Activity: Alicia Western waves at Jon Ureña. she talks to him');
+        expect(result).toBe(
+          'Activity: Alicia Western waves at Jon Ureña while she talks to him'
+        );
       });
 
       it('should use "her" for female targets when pronouns enabled', async () => {
@@ -2617,7 +2619,9 @@ describe('ActivityDescriptionService', () => {
         });
 
         const result = await service.generateActivityDescription('jon');
-        expect(result).toBe('Activity: Jon Ureña approaches Alicia Western. he greets her');
+        expect(result).toBe(
+          'Activity: Jon Ureña approaches Alicia Western while he greets her'
+        );
       });
 
       it('should use "them" for neutral targets when pronouns enabled', async () => {
@@ -2655,7 +2659,9 @@ describe('ActivityDescriptionService', () => {
         });
 
         const result = await service.generateActivityDescription('jon');
-        expect(result).toBe('Activity: Jon Ureña notices Alex Smith. he waves to them');
+        expect(result).toBe(
+          'Activity: Jon Ureña notices Alex Smith while he waves to them'
+        );
       });
     });
 
@@ -2757,7 +2763,9 @@ describe('ActivityDescriptionService', () => {
         });
 
         const result = await service.generateActivityDescription('jon');
-        expect(result).toBe('Activity: Jon Ureña kneels before Alicia Western. he holds hands with her. he smiles');
+        expect(result).toBe(
+          'Activity: Jon Ureña kneels before Alicia Western while he holds hands with her. he smiles'
+        );
       });
 
       it('should handle dedicated activity type with pronouns', async () => {
@@ -2795,7 +2803,147 @@ describe('ActivityDescriptionService', () => {
         });
 
         const result = await service.generateActivityDescription('alicia');
-        expect(result).toBe('Activity: Alicia Western is standing beside Jon Ureña. she is talking to him');
+        expect(result).toBe(
+          'Activity: Alicia Western is standing beside Jon Ureña while talking to him'
+        );
+      });
+    });
+
+    describe('Smart Activity Grouping (ACTDESC-015)', () => {
+      const createEntityWithGender = (id, name, gender) => ({
+        id,
+        componentTypeIds: ['core:name', 'core:gender'],
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'core:name') {
+            return { text: name };
+          }
+          if (componentId === 'core:gender') {
+            return { value: gender };
+          }
+          return undefined;
+        }),
+      });
+
+      const createInlineActivity = (template, targetId, priority, overrides = {}) => ({
+        type: 'inline',
+        template,
+        priority,
+        targetEntityId: targetId,
+        ...overrides,
+      });
+
+      const createDedicatedActivity = (
+        verb,
+        targetId,
+        priority,
+        groupKey = null,
+        overrides = {}
+      ) => ({
+        type: 'dedicated',
+        verb,
+        priority,
+        targetEntityId: targetId,
+        grouping: groupKey ? { groupKey } : undefined,
+        ...overrides,
+      });
+
+      beforeEach(() => {
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+          nameResolution: { usePronounsWhenAvailable: true },
+          maxActivities: 5,
+        });
+
+        const nameMap = {
+          jon: 'Jon Name',
+          alicia: 'Alicia Name',
+          bobby: 'Bobby Name',
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) =>
+          createEntityWithGender(
+            id,
+            nameMap[id] ?? `${id} Name`,
+            id === 'jon' ? 'male' : 'female'
+          )
+        );
+      });
+
+      it('groups activities with the same target using "and"', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          createInlineActivity(
+            '{actor} is kneeling before {target}',
+            'alicia',
+            80
+          ),
+          createInlineActivity(
+            '{actor} is holding hands with {target}',
+            'alicia',
+            50
+          ),
+        ]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toBe(
+          'Activity: Jon Name is kneeling before Alicia Name and holding hands with her'
+        );
+      });
+
+      it('uses "while" when priorities are within the simultaneous threshold', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          createInlineActivity('{actor} is kneeling', 'alicia', 80),
+          createInlineActivity('{actor} is looking at {target}', 'alicia', 75),
+        ]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toContain('while');
+      });
+
+      it('keeps separate sentences when targets differ and no grouping metadata matches', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          createInlineActivity('{actor} is embracing {target}', 'alicia', 80),
+          createInlineActivity('{actor} is waving at {target}', 'bobby', 70),
+        ]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description.split('. ').length).toBeGreaterThan(1);
+      });
+
+      it('allows grouping via explicit grouping metadata even when targets differ', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          createDedicatedActivity('hugging', 'alicia', 80, 'intimate_contact'),
+          createDedicatedActivity('kissing', 'bobby', 40, 'intimate_contact'),
+        ]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toContain('and kissing');
+        expect(description.split('. ').length).toBe(1);
+      });
+
+      it('omits duplicate "is" in grouped verb phrases', async () => {
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          createInlineActivity(
+            '{actor} is kneeling before {target}',
+            'alicia',
+            80
+          ),
+          createInlineActivity(
+            '{actor} is holding hands with {target}',
+            'alicia',
+            50
+          ),
+        ]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).not.toMatch(/and is holding/);
+        expect(description).toContain('and holding');
       });
     });
 

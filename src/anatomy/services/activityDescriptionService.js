@@ -13,16 +13,39 @@ import {
   assertNonBlankString,
 } from '../../utils/index.js';
 
+/**
+ * @typedef {object} ActivityGroup
+ * @description Represents a grouped collection of related activities.
+ * @property {object} primaryActivity - The leading activity for the group.
+ * @property {Array<ActivityGroupRelatedActivity>} relatedActivities - Additional grouped activities with their conjunctions.
+ */
+
+/**
+ * @typedef {object} ActivityGroupRelatedActivity
+ * @description Describes a related activity and how it should be connected to the primary activity.
+ * @property {object} activity - The related activity metadata.
+ * @property {string} conjunction - Conjunction used to join with the primary activity.
+ */
+
+/**
+ * @typedef {object} ActivityPhraseComponents
+ * @description Represents the decomposed pieces of a generated activity phrase.
+ * @property {string} fullPhrase - The full phrase including the actor reference.
+ * @property {string} verbPhrase - The phrase without the actor/copula for conjunction usage.
+ */
+
 class ActivityDescriptionService {
   #logger;
-   
+
   #entityManager;
-   
+
   #anatomyFormattingService;
-   
+
   #entityNameCache = new Map();
-   
+
   #activityIndex = null; // Phase 3: ACTDESC-020
+
+  #simultaneousPriorityThreshold = 10;
 
   /**
    * Creates an ActivityDescriptionService instance.
@@ -384,38 +407,69 @@ class ActivityDescriptionService {
     const actorName = this.#resolveEntityName(actorId);
     const actorGender = this.#detectEntityGender(actorId);
     const actorPronouns = this.#getPronounSet(actorGender);
+    const pronounsEnabled =
+      config.nameResolution?.usePronounsWhenAvailable === true;
 
     // Respect maxActivities limit
     const maxActivities = config.maxActivities ?? 10;
     const limitedActivities = activities.slice(0, maxActivities);
 
-    // ENHANCEMENT: Generate descriptions with pronoun support
-    // First activity uses full name, subsequent use pronouns if enabled
+    const groupedActivities = this.#groupActivities(limitedActivities);
+
     const descriptions = [];
-    let usedActorName = false;
 
-    for (const activity of limitedActivities) {
-      let phrase;
-      if (!usedActorName) {
-        // First activity: use full name
-        phrase = this.#generateActivityPhrase(actorName, activity, false);
-        usedActorName = true;
-      } else if (config.nameResolution?.usePronounsWhenAvailable) {
-        // Subsequent activities: use pronouns if enabled
-        phrase = this.#generateActivityPhrase(
-          actorPronouns.subject,
-          activity,
-          true
+    groupedActivities.forEach((group, index) => {
+      const isFirstGroup = index === 0;
+      const useActorPronounForPrimary = !isFirstGroup && pronounsEnabled;
+      const actorReference = useActorPronounForPrimary
+        ? actorPronouns.subject
+        : actorName;
+
+      const primaryPhraseResult = this.#generateActivityPhrase(
+        actorReference,
+        group.primaryActivity,
+        useActorPronounForPrimary
+      );
+
+      const primaryPhrase =
+        typeof primaryPhraseResult === 'string'
+          ? primaryPhraseResult
+          : primaryPhraseResult?.fullPhrase ?? '';
+
+      if (!primaryPhrase || !primaryPhrase.trim()) {
+        return;
+      }
+
+      let groupDescription = primaryPhrase.trim();
+
+      for (const related of group.relatedActivities) {
+        const phraseComponents = this.#generateActivityPhrase(
+          actorReference,
+          related.activity,
+          pronounsEnabled,
+          { omitActor: true }
         );
-      } else {
-        // Fall back to names if pronouns disabled
-        phrase = this.#generateActivityPhrase(actorName, activity, false);
+
+        const fragment = this.#buildRelatedActivityFragment(
+          related.conjunction,
+          phraseComponents,
+          {
+            actorName,
+            actorReference,
+            actorPronouns,
+            pronounsEnabled,
+          }
+        );
+
+        if (fragment) {
+          groupDescription = `${groupDescription} ${fragment}`.trim();
+        }
       }
 
-      if (phrase && phrase.trim()) {
-        descriptions.push(phrase);
+      if (groupDescription) {
+        descriptions.push(groupDescription);
       }
-    }
+    });
 
     if (descriptions.length === 0) {
       return '';
@@ -437,11 +491,18 @@ class ActivityDescriptionService {
    * @param {string} actorRef - Actor name or pronoun
    * @param {object} activity - Activity object
    * @param {boolean} usePronounsForTarget - Whether to use pronouns for target (default: false)
-   * @returns {string} Activity phrase
+   * @param {object} [options] - Additional generation options
+   * @param {boolean} [options.omitActor=false] - When true, return decomposed phrases for grouping
+   * @returns {string|ActivityPhraseComponents} Activity phrase or decomposed components when omitActor is true
    * @private
    */
 
-  #generateActivityPhrase(actorRef, activity, usePronounsForTarget = false) {
+  #generateActivityPhrase(
+    actorRef,
+    activity,
+    usePronounsForTarget = false,
+    options = {}
+  ) {
     const targetEntityId = activity.targetEntityId || activity.targetId;
 
     // Resolve target reference (name or pronoun)
@@ -456,20 +517,21 @@ class ActivityDescriptionService {
       }
     }
 
+    let rawPhrase = '';
+
     if (activity.type === 'inline') {
       // Use template replacement
       if (activity.template) {
-        return activity.template
+        rawPhrase = activity.template
           .replace(/\{actor\}/g, actorRef)
           .replace(/\{target\}/g, targetRef);
-      }
-      // Fallback to description field for backward compatibility
-      if (activity.description) {
+      } else if (activity.description) {
         const normalizedDesc = activity.description.trim();
-        if (!normalizedDesc) return '';
-        return targetRef
-          ? `${actorRef} ${normalizedDesc} ${targetRef}`.trim()
-          : `${actorRef} ${normalizedDesc}`.trim();
+        if (normalizedDesc) {
+          rawPhrase = targetRef
+            ? `${actorRef} ${normalizedDesc} ${targetRef}`
+            : `${actorRef} ${normalizedDesc}`;
+        }
       }
     } else if (activity.type === 'dedicated') {
       // Dedicated metadata: construct from verb/adverb
@@ -477,30 +539,252 @@ class ActivityDescriptionService {
       const adverb = activity.adverb ? ` ${activity.adverb.trim()}` : '';
 
       if (targetRef) {
-        return `${actorRef} is ${verb} ${targetRef}${adverb}`;
+        rawPhrase = `${actorRef} is ${verb} ${targetRef}${adverb}`;
       } else {
-        return `${actorRef} is ${verb}${adverb}`;
+        rawPhrase = `${actorRef} is ${verb}${adverb}`;
+      }
+    } else if (activity.description) {
+      const normalizedDesc = activity.description.trim();
+      if (normalizedDesc) {
+        rawPhrase = targetRef
+          ? `${actorRef} ${normalizedDesc} ${targetRef}`
+          : `${actorRef} ${normalizedDesc}`;
+      }
+    } else if (activity.verb) {
+      const normalizedVerb = activity.verb.trim();
+      if (normalizedVerb) {
+        rawPhrase = targetRef
+          ? `${actorRef} ${normalizedVerb} ${targetRef}`
+          : `${actorRef} ${normalizedVerb}`;
       }
     }
 
-    // Fallback for legacy activities without type
-    if (activity.description) {
-      const normalizedDesc = activity.description.trim();
-      if (!normalizedDesc) return '';
-      return targetRef
-        ? `${actorRef} ${normalizedDesc} ${targetRef}`.trim()
-        : `${actorRef} ${normalizedDesc}`.trim();
+    const normalizedPhrase = rawPhrase.trim();
+    const omitActor = options?.omitActor === true;
+
+    if (!omitActor) {
+      return normalizedPhrase;
     }
 
-    if (activity.verb) {
-      const normalizedVerb = activity.verb.trim();
-      if (!normalizedVerb) return '';
-      return targetRef
-        ? `${actorRef} ${normalizedVerb} ${targetRef}`
-        : `${actorRef} ${normalizedVerb}`;
+    if (!normalizedPhrase) {
+      return { fullPhrase: '', verbPhrase: '' };
     }
 
-    return '';
+    const actorToken = (actorRef ?? '').trim();
+    let verbPhrase = normalizedPhrase;
+
+    if (actorToken) {
+      const actorPattern = new RegExp(
+        `^${this.#escapeRegExp(actorToken)}\\s+`,
+        'i'
+      );
+      verbPhrase = verbPhrase.replace(actorPattern, '').trim();
+    }
+
+    return {
+      fullPhrase: normalizedPhrase,
+      verbPhrase,
+    };
+  }
+
+  /**
+   * @description Sanitize verb phrases to prevent duplicate copulas when grouping activities.
+   * @param {string} phrase - Raw verb phrase with potential leading copula.
+   * @returns {string} Cleaned phrase suitable for conjunction usage.
+   * @private
+   */
+  #sanitizeVerbPhrase(phrase) {
+    if (!phrase) {
+      return '';
+    }
+
+    const trimmed = phrase.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    return trimmed.replace(/^(?:is|are|was|were|am)\s+/i, '').trim();
+  }
+
+  /**
+   * @description Build the fragment used to connect related activities to the primary activity.
+   * @param {string} conjunction - Conjunction used to join the phrase ("and" or "while").
+   * @param {ActivityPhraseComponents} phraseComponents - Generated phrase components for the related activity.
+   * @param {object} context - Actor context for pronoun and naming logic.
+   * @param {string} context.actorName - Resolved actor name.
+   * @param {string} context.actorReference - Reference used for the primary activity (name or pronoun).
+   * @param {object} context.actorPronouns - Pronoun set for the actor.
+   * @param {boolean} context.pronounsEnabled - Whether pronouns are enabled in configuration.
+   * @returns {string} Fragment to append to the primary phrase.
+   * @private
+   */
+  #buildRelatedActivityFragment(
+    conjunction,
+    phraseComponents,
+    { actorName, actorReference, actorPronouns, pronounsEnabled }
+  ) {
+    if (!phraseComponents) {
+      return '';
+    }
+
+    const rawVerbPhrase = phraseComponents.verbPhrase?.trim() ?? '';
+    const sanitizedVerbPhrase = this.#sanitizeVerbPhrase(rawVerbPhrase);
+    const removedCopula =
+      sanitizedVerbPhrase && rawVerbPhrase !== sanitizedVerbPhrase;
+    const fallbackPhrase = phraseComponents.fullPhrase?.trim() ?? '';
+    const safeConjunction = conjunction || 'and';
+
+    if (!sanitizedVerbPhrase && !fallbackPhrase) {
+      return '';
+    }
+
+    if (safeConjunction === 'while') {
+      if (sanitizedVerbPhrase) {
+        if (removedCopula) {
+          return `while ${sanitizedVerbPhrase}`;
+        }
+
+        const subjectRef = pronounsEnabled
+          ? actorPronouns.subject
+          : actorReference || actorName;
+
+        if (subjectRef) {
+          return `while ${subjectRef} ${sanitizedVerbPhrase}`;
+        }
+
+        return `while ${sanitizedVerbPhrase}`;
+      }
+
+      if (fallbackPhrase) {
+        return `while ${fallbackPhrase}`;
+      }
+
+      return '';
+    }
+
+    const phraseBody = sanitizedVerbPhrase || fallbackPhrase;
+
+    if (!phraseBody) {
+      return '';
+    }
+
+    return `${safeConjunction} ${phraseBody}`;
+  }
+
+  /**
+   * @description Group activities intelligently for natural composition.
+   * @param {Array<object>} activities - Activities sorted by priority.
+   * @returns {Array<ActivityGroup>} Grouped activities ready for rendering.
+   * @private
+   */
+  #groupActivities(activities) {
+    const groups = [];
+    let currentGroup = null;
+
+    for (const activity of activities) {
+      if (!currentGroup) {
+        currentGroup = this.#startActivityGroup(activity);
+        continue;
+      }
+
+      if (this.#shouldGroupActivities(currentGroup.primaryActivity, activity)) {
+        currentGroup.relatedActivities.push({
+          activity,
+          conjunction: this.#determineConjunction(
+            currentGroup.primaryActivity,
+            activity
+          ),
+        });
+        continue;
+      }
+
+      groups.push(currentGroup);
+      currentGroup = this.#startActivityGroup(activity);
+    }
+
+    if (currentGroup) {
+      groups.push(currentGroup);
+    }
+
+    return groups;
+  }
+
+  /**
+   * @description Initialise a new activity group.
+   * @param {object} activity - Activity that becomes the group's primary entry.
+   * @returns {ActivityGroup} Fresh activity group container.
+   * @private
+   */
+  #startActivityGroup(activity) {
+    return {
+      primaryActivity: activity,
+      relatedActivities: [],
+    };
+  }
+
+  /**
+   * @description Determine if two activities should be grouped together.
+   * @param {object} first - Primary activity in the current group.
+   * @param {object} second - Candidate activity being evaluated.
+   * @returns {boolean} True when activities belong in the same group.
+   * @private
+   */
+  #shouldGroupActivities(first, second) {
+    const firstGroupKey = first?.grouping?.groupKey;
+    const secondGroupKey = second?.grouping?.groupKey;
+
+    if (firstGroupKey && firstGroupKey === secondGroupKey) {
+      return true;
+    }
+
+    const firstTarget = first?.targetEntityId ?? first?.targetId;
+    const secondTarget = second?.targetEntityId ?? second?.targetId;
+
+    if (firstTarget && firstTarget === secondTarget) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * @description Determine the conjunction connecting two activities.
+   * @param {object} first - Primary activity.
+   * @param {object} second - Related activity.
+   * @returns {string} Conjunction keyword.
+   * @private
+   */
+  #determineConjunction(first, second) {
+    const firstPriority = first?.priority ?? 0;
+    const secondPriority = second?.priority ?? 0;
+
+    return this.#activitiesOccurSimultaneously(firstPriority, secondPriority)
+      ? 'while'
+      : 'and';
+  }
+
+  /**
+   * @description Determine whether activities should be considered simultaneous.
+   * @param {number} firstPriority - Priority of the first activity.
+   * @param {number} secondPriority - Priority of the second activity.
+   * @returns {boolean} True when priorities are within the simultaneous threshold.
+   * @private
+   */
+  #activitiesOccurSimultaneously(firstPriority, secondPriority) {
+    return (
+      Math.abs((firstPriority ?? 0) - (secondPriority ?? 0)) <=
+      this.#simultaneousPriorityThreshold
+    );
+  }
+
+  /**
+   * @description Escape special characters within a string for safe RegExp usage.
+   * @param {string} value - Raw string to escape.
+   * @returns {string} Escaped string.
+   * @private
+   */
+  #escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
 
