@@ -1814,6 +1814,7 @@ class ActivityDescriptionService {
       buildRelatedActivityFragment: (...args) =>
         this.#buildRelatedActivityFragment(...args),
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
+      groupActivities: (...args) => this.#groupActivities(...args),
       getActivityIndex: (...args) => this.#getActivityIndex(...args),
       evaluateActivityVisibility: (...args) =>
         this.#evaluateActivityVisibility(...args),
@@ -1828,6 +1829,7 @@ class ActivityDescriptionService {
       activitiesOccurSimultaneously: (...args) =>
         this.#activitiesOccurSimultaneously(...args),
       getPronounSet: (...args) => this.#getPronounSet(...args),
+      detectEntityGender: (...args) => this.#detectEntityGender(...args),
       isEmptyConditionsObject: (...args) =>
         this.#isEmptyConditionsObject(...args),
       matchesPropertyCondition: (...args) =>
@@ -1844,6 +1846,8 @@ class ActivityDescriptionService {
         this.#setCacheValue(this.#genderCache, key, value),
       setActivityIndexCacheEntry: (key, value) =>
         this.#setCacheValue(this.#activityIndexCache, key, value),
+      setEntityNameCacheRawEntry: (key, entry) =>
+        this.#entityNameCache.set(key, entry),
       getCacheSnapshot: () => ({
         entityName: new Map(this.#entityNameCache),
         gender: new Map(this.#genderCache),

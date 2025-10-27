@@ -4334,6 +4334,117 @@ describe('ActivityDescriptionService', () => {
       });
     });
 
+    describe('Test hook utilities', () => {
+      it('builds related fragments and groups activities for edge cases', () => {
+        const hooks = service.getTestHooks();
+        const result = hooks.buildRelatedActivityFragment(
+          'while',
+          { fullPhrase: '   ', verbPhrase: '   ' },
+          {
+            actorName: 'Jon',
+            actorReference: 'Jon',
+            actorPronouns: { subject: 'he' },
+            pronounsEnabled: true,
+          }
+        );
+
+        expect(result).toBe('');
+        expect(hooks.groupActivities(null)).toEqual([]);
+      });
+
+      it('resolves entity names and detects gender when data is missing', () => {
+        const hooks = service.getTestHooks();
+
+        expect(hooks.resolveEntityName(null)).toBe('Unknown entity');
+
+        mockEntityManager.getEntityInstance
+          .mockImplementationOnce(() => null)
+          .mockImplementationOnce(() => ({
+            getComponentData: jest.fn().mockReturnValue({ value: 'female' }),
+          }));
+
+        expect(hooks.resolveEntityName('ghost')).toBe('ghost');
+        expect(hooks.detectEntityGender('')).toBe('unknown');
+        expect(hooks.detectEntityGender('alice')).toBe('female');
+      });
+
+      it('exposes cache utilities for inspection and maintenance', () => {
+        const hooks = service.getTestHooks();
+        hooks.setEntityNameCacheEntry('actor', 'Jon');
+        hooks.setGenderCacheEntry('actor', 'neutral');
+        hooks.setActivityIndexCacheEntry('cache-key', {
+          signature: 'sig',
+          index: { all: [] },
+        });
+
+        const snapshot = hooks.getCacheSnapshot();
+        expect(snapshot.entityName.get('actor').value).toBe('Jon');
+        expect(snapshot.gender.get('actor').value).toBe('neutral');
+        expect(snapshot.activityIndex.get('cache-key').value.signature).toBe('sig');
+      });
+
+      it('removes expired cache entries during scheduled cleanup', () => {
+        const intervalSpy = jest
+          .spyOn(globalThis, 'setInterval')
+          .mockImplementation((fn) => ({ unref: jest.fn() }));
+
+        const cleanupService = new ActivityDescriptionService({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyFormattingService: mockAnatomyFormattingService,
+          jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+          activityIndex: mockActivityIndex,
+        });
+
+        const hooks = cleanupService.getTestHooks();
+        hooks.setEntityNameCacheRawEntry('stale', { value: 'old', expiresAt: -1 });
+        expect(hooks.getCacheSnapshot().entityName.has('stale')).toBe(true);
+
+        expect(intervalSpy).toHaveBeenCalled();
+        const scheduled = intervalSpy.mock.calls[0][0];
+        expect(typeof scheduled).toBe('function');
+
+        const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(10_000);
+        scheduled();
+        dateSpy.mockRestore();
+
+        expect(hooks.getCacheSnapshot().entityName.has('stale')).toBe(false);
+
+        cleanupService.destroy();
+        intervalSpy.mockRestore();
+      });
+
+      it('drops invalid cache entries before resolving entity names', () => {
+        const hooks = service.getTestHooks();
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+          id,
+          getComponentData: jest
+            .fn()
+            .mockImplementation((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: `Name ${id}` };
+              }
+              return undefined;
+            }),
+        }));
+
+        hooks.setEntityNameCacheRawEntry('ghost', undefined);
+        expect(hooks.resolveEntityName('ghost')).toBe('Name ghost');
+
+        const nowSpy = jest.spyOn(Date, 'now');
+        nowSpy.mockReturnValue(1000);
+        hooks.setEntityNameCacheRawEntry('expired', {
+          value: 'Stale',
+          expiresAt: 500,
+        });
+        nowSpy.mockReturnValue(1500);
+
+        expect(hooks.resolveEntityName('expired')).toBe('Name expired');
+        nowSpy.mockRestore();
+      });
+    });
+
     describe('Error Handling', () => {
       it('should handle gender detection errors gracefully', async () => {
         const mockEntity = {
