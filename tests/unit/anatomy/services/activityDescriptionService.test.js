@@ -1124,6 +1124,8 @@ describe('ActivityDescriptionService', () => {
         dispatch: jest.fn(() => {
           throw new Error('dispatch failure');
         }),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
       };
 
       const serviceWithEventBus = new ActivityDescriptionService({

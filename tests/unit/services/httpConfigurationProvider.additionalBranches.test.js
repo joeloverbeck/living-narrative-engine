@@ -59,6 +59,7 @@ describe('HttpConfigurationProvider additional branches', () => {
           statusCode: 503,
           statusText: 'HTTP status 503',
           url: url,
+          originalUrl: url,
           scopeName: 'HttpConfigurationProvider.fetchData',
         },
       })
@@ -82,7 +83,7 @@ describe('HttpConfigurationProvider additional branches', () => {
 
     const url = 'http://example.com/invalid.json';
     await expect(provider.fetchData(url)).rejects.toThrow(
-      `Failed to parse configuration data from ${url} as JSON: undefined`
+      `Failed to parse configuration data from ${url} as JSON: boom`
     );
 
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -93,6 +94,7 @@ describe('HttpConfigurationProvider additional branches', () => {
           error: 'boom',
           stack: undefined,
           url: url,
+          originalUrl: url,
           scopeName: 'HttpConfigurationProvider.fetchData',
         },
       })
@@ -120,6 +122,7 @@ describe('HttpConfigurationProvider additional branches', () => {
           error: 'broken',
           stack: undefined,
           url: url,
+          originalUrl: url,
           scopeName: 'HttpConfigurationProvider.fetchData',
         },
       })
