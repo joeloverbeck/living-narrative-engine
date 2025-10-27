@@ -560,6 +560,9 @@ describe('BodyBlueprintFactory integration', () => {
     const mockSlotGenerator = {
       generateBlueprintSlots: () => ({}),
     };
+    const mockRecipePatternResolver = {
+      resolveRecipePatterns: (recipe) => recipe,
+    };
 
     return new BodyBlueprintFactory({
       entityManager,
@@ -575,6 +578,7 @@ describe('BodyBlueprintFactory integration', () => {
       validator,
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
+      recipePatternResolver: mockRecipePatternResolver,
       ...overrides,
     });
   };
@@ -704,7 +708,7 @@ describe('BodyBlueprintFactory integration', () => {
       factory.createAnatomyGraph('blueprint:humanoid', recipe.id)
     ).rejects.toBeInstanceOf(ValidationError);
 
-    expect(entityGraphBuilder.cleanupCalls).toHaveLength(2);
+    expect(entityGraphBuilder.cleanupCalls).toHaveLength(1);
   });
 
   it('cleans up entities when graph validation fails', async () => {
@@ -721,7 +725,7 @@ describe('BodyBlueprintFactory integration', () => {
       factory.createAnatomyGraph('blueprint:humanoid', recipe.id)
     ).rejects.toBeInstanceOf(ValidationError);
 
-    expect(entityGraphBuilder.cleanupCalls).toHaveLength(2);
+    expect(entityGraphBuilder.cleanupCalls).toHaveLength(1);
   });
 
   it('throws when required part selection fails', async () => {

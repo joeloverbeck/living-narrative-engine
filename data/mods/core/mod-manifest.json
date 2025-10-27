@@ -18,6 +18,7 @@
       "dilemmas.component.json",
       "dislikes.component.json",
       "fears.component.json",
+      "gender.component.json",
       "goals.component.json",
       "internal_tensions.component.json",
       "likes.component.json",

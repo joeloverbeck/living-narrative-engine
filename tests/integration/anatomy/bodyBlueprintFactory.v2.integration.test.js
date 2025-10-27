@@ -67,6 +67,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
     mockEntityGraphBuilder = {
       createRootEntity: jest.fn(),
       createAndAttachPart: jest.fn().mockResolvedValue('child-entity-1'),
+      addSocketsToEntity: jest.fn().mockResolvedValue(undefined),
       setEntityName: jest.fn(),
       getPartType: jest.fn().mockReturnValue('test_part_type'),
       cleanupEntities: jest.fn().mockResolvedValue(undefined),
@@ -84,6 +85,10 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
         .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
+    const mockRecipePatternResolver = {
+      resolveRecipePatterns: jest.fn((recipe) => recipe),
+    };
+
     // Create factory with real generators
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
@@ -99,6 +104,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       validator: mockValidator,
       socketGenerator,
       slotGenerator,
+      recipePatternResolver: mockRecipePatternResolver,
     });
   });
 

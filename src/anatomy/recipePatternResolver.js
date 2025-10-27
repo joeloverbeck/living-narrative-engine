@@ -41,8 +41,8 @@ class RecipePatternResolver {
     });
     validateDependency(slotGenerator, 'ISlotGenerator', logger, {
       requiredMethods: [
-        'generateSlotsFromLimbSet',
-        'generateSlotsFromAppendage',
+        'extractSlotKeysFromLimbSet',
+        'extractSlotKeysFromAppendage',
       ],
     });
     validateDependency(logger, 'ILogger', logger, {
@@ -267,7 +267,7 @@ class RecipePatternResolver {
     assertPresent(limbSet, 'Limb set is required');
 
     // Leverage existing SlotGenerator logic
-    return this.#slotGenerator.generateSlotsFromLimbSet(limbSet);
+    return this.#slotGenerator.extractSlotKeysFromLimbSet(limbSet);
   }
 
   /**
@@ -281,7 +281,7 @@ class RecipePatternResolver {
     assertPresent(appendage, 'Appendage is required');
 
     // Leverage existing SlotGenerator logic
-    return this.#slotGenerator.generateSlotsFromAppendage(appendage);
+    return this.#slotGenerator.extractSlotKeysFromAppendage(appendage);
   }
 
   /**

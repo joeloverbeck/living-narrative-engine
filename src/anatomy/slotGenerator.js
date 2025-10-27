@@ -92,6 +92,7 @@ class SlotGenerator {
 
   /**
    * Extracts slot keys from a limb set (for pattern resolution)
+   *
    * @param {object} limbSet - Limb set definition
    * @returns {string[]} Array of slot keys
    */
@@ -114,6 +115,7 @@ class SlotGenerator {
 
   /**
    * Extracts slot keys from an appendage (for pattern resolution)
+   *
    * @param {object} appendage - Appendage definition
    * @returns {string[]} Array of slot keys
    */
@@ -141,7 +143,7 @@ class SlotGenerator {
    * @returns {object} Object mapping slot keys to slot definitions
    * @private
    */
-  generateSlotsFromLimbSet(limbSet) {
+  #generateSlotsFromLimbSet(limbSet) {
     const slots = {};
     const { type, count, socketPattern, optional = false, arrangement } = limbSet;
 
@@ -173,7 +175,7 @@ class SlotGenerator {
    * @returns {object} Object mapping slot keys to slot definitions
    * @private
    */
-  generateSlotsFromAppendage(appendage) {
+  #generateSlotsFromAppendage(appendage) {
     const slots = {};
     const { type, count, socketPattern, optional = false } = appendage;
 

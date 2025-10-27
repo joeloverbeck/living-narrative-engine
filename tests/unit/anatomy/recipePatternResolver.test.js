@@ -23,8 +23,8 @@ describe('RecipePatternResolver', () => {
 
     // Mock SlotGenerator
     mockSlotGenerator = {
-      generateSlotsFromLimbSet: jest.fn(),
-      generateSlotsFromAppendage: jest.fn(),
+      extractSlotKeysFromLimbSet: jest.fn(),
+      extractSlotKeysFromAppendage: jest.fn(),
     };
 
     // Mock DataRegistry
@@ -132,7 +132,7 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.generateSlotsFromLimbSet
+      mockSlotGenerator.extractSlotKeysFromLimbSet
         .mockReturnValueOnce(['leg_fl_upper', 'leg_fl_lower'])
         .mockReturnValueOnce(['leg_fr_upper', 'leg_fr_lower']);
 
@@ -158,7 +158,7 @@ describe('RecipePatternResolver', () => {
         leg_fr_upper: { partType: 'leg_segment' },
         leg_fr_lower: { partType: 'leg_segment' },
       });
-      expect(mockSlotGenerator.generateSlotsFromLimbSet).toHaveBeenCalledTimes(
+      expect(mockSlotGenerator.extractSlotKeysFromLimbSet).toHaveBeenCalledTimes(
         2
       );
     });
@@ -171,7 +171,7 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.generateSlotsFromAppendage.mockReturnValue([
+      mockSlotGenerator.extractSlotKeysFromAppendage.mockReturnValue([
         'tail_base',
         'tail_mid',
         'tail_tip',
@@ -213,7 +213,7 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.generateSlotsFromLimbSet
+      mockSlotGenerator.extractSlotKeysFromLimbSet
         .mockReturnValueOnce(['leg_left'])
         .mockReturnValueOnce(['leg_right'])
         .mockReturnValueOnce(['leg_mid']);
@@ -605,7 +605,7 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.generateSlotsFromLimbSet
+      mockSlotGenerator.extractSlotKeysFromLimbSet
         .mockReturnValueOnce(['leg_fl', 'leg_fr']) // all legs
         .mockReturnValueOnce(['leg_fl', 'leg_fr']) // all legs again for pattern
         .mockReturnValueOnce(['leg_bl', 'leg_br']) // all legs third time
@@ -676,7 +676,7 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.generateSlotsFromLimbSet
+      mockSlotGenerator.extractSlotKeysFromLimbSet
         .mockReturnValueOnce(['arm_left', 'arm_right']) // pattern match
         .mockReturnValueOnce(['arm_left']); // exclusion
 

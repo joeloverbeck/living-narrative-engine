@@ -1,6 +1,7 @@
 {
   "mods": [
     "core",
+    "activity",
     "movement",
     "companionship",
     "positioning",
