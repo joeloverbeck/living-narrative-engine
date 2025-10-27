@@ -25,4 +25,22 @@ describe('formatTimestamp', () => {
     };
     expect(formatTimestamp(throwingInput, 'bad')).toBe('bad');
   });
+
+  it('returns fallback for nullish or blank input', () => {
+    expect(formatTimestamp(undefined, 'missing')).toBe('missing');
+    expect(formatTimestamp(null, 'missing')).toBe('missing');
+    expect(formatTimestamp('   ', 'missing')).toBe('missing');
+  });
+
+  it('returns fallback for non-finite numeric timestamps', () => {
+    expect(formatTimestamp(Number.POSITIVE_INFINITY, 'bad-number')).toBe(
+      'bad-number'
+    );
+    expect(formatTimestamp(Number.NaN, 'bad-number')).toBe('bad-number');
+  });
+
+  it('supports Date instances as input', () => {
+    const date = new Date('2023-05-15T08:30:00Z');
+    expect(formatTimestamp(date)).toBe(date.toLocaleString());
+  });
 });

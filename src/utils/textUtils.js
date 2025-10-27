@@ -102,14 +102,63 @@ export function formatPlaytime(totalSeconds) {
  * @returns {string} Formatted timestamp or fallback on error.
  */
 export function formatTimestamp(timestamp, fallback = 'Invalid Date') {
+  const safeFallback = typeof fallback === 'string' ? fallback : 'Invalid Date';
+
+  if (timestamp === null || typeof timestamp === 'undefined') {
+    return safeFallback;
+  }
+
+  const isDateInstance = timestamp instanceof Date;
+  const isStringInput = typeof timestamp === 'string';
+  const isNumberInput = typeof timestamp === 'number';
+
+  if (isStringInput) {
+    const trimmed = timestamp.trim();
+    if (!trimmed) {
+      return safeFallback;
+    }
+    try {
+      const date = new Date(trimmed);
+      if (Number.isNaN(date.getTime())) {
+        return safeFallback;
+      }
+      return date.toLocaleString();
+    } catch {
+      return safeFallback;
+    }
+  }
+
+  if (isDateInstance) {
+    const timeValue = timestamp.getTime();
+    if (!Number.isFinite(timeValue)) {
+      return safeFallback;
+    }
+    return new Date(timeValue).toLocaleString();
+  }
+
+  if (isNumberInput) {
+    if (!Number.isFinite(timestamp)) {
+      return safeFallback;
+    }
+    try {
+      const date = new Date(timestamp);
+      if (Number.isNaN(date.getTime())) {
+        return safeFallback;
+      }
+      return date.toLocaleString();
+    } catch {
+      return safeFallback;
+    }
+  }
+
   try {
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) {
-      return fallback;
+      return safeFallback;
     }
     return date.toLocaleString();
   } catch {
-    return fallback;
+    return safeFallback;
   }
 }
 
