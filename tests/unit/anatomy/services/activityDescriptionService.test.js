@@ -63,6 +63,13 @@ describe('ActivityDescriptionService', () => {
     });
   });
 
+  afterEach(() => {
+    if (service) {
+      service.destroy();
+    }
+    jest.restoreAllMocks();
+  });
+
   describe('Constructor', () => {
     it('should validate logger dependency', () => {
       expect(
@@ -1083,6 +1090,202 @@ describe('ActivityDescriptionService', () => {
       expect(lightweightIndex.findActivitiesForEntity).toHaveBeenCalledWith(
         'entity_1'
       );
+    });
+  });
+
+  describe('event dispatch error handling', () => {
+    it('logs error when event bus dispatch fails', async () => {
+      const failingEventBus = {
+        dispatch: jest.fn(() => {
+          throw new Error('dispatch failure');
+        }),
+      };
+
+      const serviceWithEventBus = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+        eventBus: failingEventBus,
+      });
+
+      mockEntityManager.getEntityInstance.mockImplementation(() => {
+        throw new Error('lookup failed');
+      });
+
+      const result = await serviceWithEventBus.generateActivityDescription('entity_1');
+
+      expect(result).toBe('');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to dispatch activity description error event',
+        expect.any(Error)
+      );
+
+      serviceWithEventBus.destroy();
+    });
+  });
+
+  describe('cache lifecycle management', () => {
+    const createSetIntervalSpy = () => {
+      const unrefMock = jest.fn();
+      const setIntervalSpy = jest
+        .spyOn(global, 'setInterval')
+        .mockImplementation((handler) => {
+          // Immediately register the handler without scheduling execution.
+          return { unref: unrefMock };
+        });
+      return { setIntervalSpy, unrefMock };
+    };
+
+    it('calls unref on the cleanup interval when available', () => {
+      const { setIntervalSpy, unrefMock } = createSetIntervalSpy();
+      const clearIntervalSpy = jest
+        .spyOn(global, 'clearInterval')
+        .mockImplementation(() => {});
+
+      const localService = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+      });
+
+      expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 30000);
+      expect(unrefMock).toHaveBeenCalled();
+
+      localService.destroy();
+      expect(clearIntervalSpy).toHaveBeenCalled();
+
+      setIntervalSpy.mockRestore();
+      clearIntervalSpy.mockRestore();
+    });
+
+    const captureCacheReference = (action) => {
+      const originalSet = Map.prototype.set;
+      let capturedMap = null;
+      const mapSpy = jest
+        .spyOn(Map.prototype, 'set')
+        .mockImplementation(function (key, value) {
+          capturedMap = this;
+          return originalSet.call(this, key, value);
+        });
+
+      action();
+
+      mapSpy.mockRestore();
+
+      if (!capturedMap) {
+        throw new Error('Failed to capture cache reference');
+      }
+
+      return capturedMap;
+    };
+
+    it('cleans up expired and invalid cache entries and enforces capacity limits', () => {
+      const { setIntervalSpy } = createSetIntervalSpy();
+
+      const localService = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+      });
+
+      const hooks = localService.getTestHooks();
+
+      const entityNameCache = captureCacheReference(() =>
+        hooks.setEntityNameCacheEntry('keep', 'value')
+      );
+
+      entityNameCache.set('ghost', undefined);
+      entityNameCache.set('stale', {
+        value: 'old',
+        expiresAt: Date.now() - 1000,
+      });
+      entityNameCache.set('keep', {
+        value: 'fresh',
+        expiresAt: Date.now() + 1000,
+      });
+
+      const activityIndexCache = captureCacheReference(() =>
+        hooks.setActivityIndexCacheEntry('seed', {
+          signature: 'sig',
+          index: hooks.buildActivityIndex([]),
+        })
+      );
+
+      for (let i = 0; i < 101; i += 1) {
+        activityIndexCache.set(`extra-${i}`, {
+          value: i,
+          expiresAt: Date.now() + 1000,
+        });
+      }
+
+      hooks.cleanupCaches();
+
+      expect(entityNameCache.has('ghost')).toBe(false);
+      expect(entityNameCache.has('stale')).toBe(false);
+      expect(entityNameCache.has('keep')).toBe(true);
+      expect(activityIndexCache.size).toBe(0);
+
+      localService.destroy();
+      setIntervalSpy.mockRestore();
+    });
+
+    it('exposes activity index caching helpers for deterministic reuse', () => {
+      const { setIntervalSpy } = createSetIntervalSpy();
+
+      const localService = new ActivityDescriptionService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+      });
+
+      const hooks = localService.getTestHooks();
+
+      const emptyIndex = hooks.getActivityIndex([], 'cache-key');
+      expect(emptyIndex.byPriority).toEqual([]);
+      expect(emptyIndex.byTarget instanceof Map).toBe(true);
+
+      const activities = [
+        {
+          type: 'inline',
+          sourceComponent: 'core:pose',
+          targetEntityId: 'target-1',
+          priority: 80,
+        },
+        {
+          type: 'dedicated',
+          descriptionType: 'custom',
+          targetId: 'target-2',
+          priority: 40,
+        },
+      ];
+
+      const uncachedIndex = hooks.getActivityIndex(activities);
+      expect(uncachedIndex.byPriority[0]).toBe(activities[0]);
+
+      const cacheKey = 'priority:test-entity';
+      const firstIndex = hooks.getActivityIndex(activities, cacheKey);
+      expect(firstIndex.byPriority[0]).toBe(activities[0]);
+
+      const snapshotAfterFirst = hooks.getCacheSnapshot();
+      expect(snapshotAfterFirst.activityIndex.has(cacheKey)).toBe(true);
+
+      const cachedIndex = hooks.getActivityIndex(activities, cacheKey);
+      expect(cachedIndex).toBe(firstIndex);
+
+      const updatedActivities = [
+        { ...activities[0] },
+        { ...activities[1], targetEntityId: 'target-3' },
+      ];
+
+      const rebuiltIndex = hooks.getActivityIndex(updatedActivities, cacheKey);
+      expect(rebuiltIndex).not.toBe(firstIndex);
+
+      localService.destroy();
+      setIntervalSpy.mockRestore();
     });
   });
 

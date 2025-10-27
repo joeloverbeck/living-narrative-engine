@@ -1814,6 +1814,7 @@ class ActivityDescriptionService {
       buildRelatedActivityFragment: (...args) =>
         this.#buildRelatedActivityFragment(...args),
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
+      getActivityIndex: (...args) => this.#getActivityIndex(...args),
       evaluateActivityVisibility: (...args) =>
         this.#evaluateActivityVisibility(...args),
       buildLogicContext: (...args) => this.#buildLogicContext(...args),
