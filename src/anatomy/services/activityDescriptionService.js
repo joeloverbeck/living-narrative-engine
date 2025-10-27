@@ -29,8 +29,11 @@ const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
   separator: '. ',
   maxActivities: 10,
   enableContextAwareness: true,
+  maxDescriptionLength: 500,
+  deduplicateActivities: true,
   nameResolution: Object.freeze({
     usePronounsWhenAvailable: false,
+    preferReflexivePronouns: true,
   }),
 });
 
@@ -86,6 +89,10 @@ const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
  * @property {(phrase: string) => string} sanitizeVerbPhrase - Remove redundant copulas from phrases.
  * @property {(conjunction: string, components: ActivityPhraseComponents, context: object) => string} buildRelatedActivityFragment - Build related activity fragments.
  * @property {(activities: Array<object>) => ActivityIndex} buildActivityIndex - Build an activity index for the supplied activities.
+ * @property {(activities: Array<object>) => Array<object>} deduplicateActivitiesBySignature - Deduplicate activities by semantic signature.
+ * @property {(description: string, maxLength: number) => string} truncateDescription - Truncate composed descriptions to configured length.
+ * @property {(name: string) => string} sanitizeEntityName - Sanitize entity names for display.
+ * @property {(object: object) => string} getReflexivePronoun - Resolve reflexive pronouns for self-targeting logic.
  * @property {() => void} cleanupCaches - Trigger cache cleanup routine.
  * @property {(key: string, value: unknown) => void} setEntityNameCacheEntry - Prime the entity name cache.
  * @property {(key: string, value: unknown) => void} setGenderCacheEntry - Prime the gender cache.
@@ -245,11 +252,35 @@ class ActivityDescriptionService {
         this.#logger.debug(
           `No visible activities available after filtering for entity: ${entityId}`
         );
-        return this.#formatActivityDescription([], entity);
+        return '';
+      }
+
+      const formattingConfig = this.#getActivityIntegrationConfig();
+      let processedActivities = conditionedActivities;
+
+      if (formattingConfig.deduplicateActivities !== false) {
+        processedActivities = this.#deduplicateActivitiesBySignature(
+          conditionedActivities
+        );
+
+        if (processedActivities.length < conditionedActivities.length) {
+          this.#logger.debug(
+            `Deduplicated ${
+              conditionedActivities.length - processedActivities.length
+            } duplicate activities for entity: ${entityId}`
+          );
+        }
+      }
+
+      if (processedActivities.length === 0) {
+        this.#logger.debug(
+          `No activities remaining after deduplication for entity: ${entityId}`
+        );
+        return '';
       }
 
       const prioritizedActivities = this.#sortByPriority(
-        conditionedActivities,
+        processedActivities,
         this.#buildActivityIndexCacheKey('priority', entity?.id ?? entityId)
       );
       const description = this.#formatActivityDescription(
@@ -922,6 +953,99 @@ class ActivityDescriptionService {
     return index.byPriority;
   }
 
+  /**
+   * Remove duplicate activities that share the same descriptive signature.
+   *
+   * @description Collapse duplicate activities based on shared descriptive properties while preserving insertion order.
+   * @param {Array<object>} activities - Activities to deduplicate.
+   * @returns {Array<object>} Deduplicated activities preserving insertion order.
+   * @private
+   */
+  #deduplicateActivitiesBySignature(activities) {
+    if (!Array.isArray(activities) || activities.length === 0) {
+      return Array.isArray(activities) ? [...activities] : [];
+    }
+
+    const entriesBySignature = new Map();
+
+    for (const activity of activities) {
+      if (!activity || typeof activity !== 'object') {
+        continue;
+      }
+
+      const signature = this.#buildActivityDeduplicationKey(activity);
+      const existing = entriesBySignature.get(signature);
+
+      if (!existing) {
+        entriesBySignature.set(signature, activity);
+        continue;
+      }
+
+      const existingPriority = existing?.priority ?? 0;
+      const candidatePriority = activity?.priority ?? 0;
+
+      if (candidatePriority >= existingPriority) {
+        entriesBySignature.set(signature, activity);
+      }
+    }
+
+    return Array.from(entriesBySignature.values());
+  }
+
+  /**
+   * Build deterministic signature used for deduplicating activities.
+   *
+   * @description Build a reproducible signature for activity metadata so deduplication can compare semantic content rather than object identity.
+   * @param {object} activity - Activity metadata entry.
+   * @returns {string} Signature describing the activity interaction.
+   * @private
+   */
+  #buildActivityDeduplicationKey(activity) {
+    if (!activity || typeof activity !== 'object') {
+      return 'invalid';
+    }
+
+    const type = activity.type ?? 'generic';
+    const target = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
+    const groupKey = activity?.grouping?.groupKey ?? 'none';
+    const template =
+      typeof activity.template === 'string'
+        ? activity.template.trim().toLowerCase()
+        : '';
+    const sourceComponent =
+      typeof activity.sourceComponent === 'string'
+        ? activity.sourceComponent.trim().toLowerCase()
+        : '';
+    const description =
+      typeof activity.description === 'string'
+        ? activity.description.trim().toLowerCase()
+        : '';
+    const verb =
+      typeof activity.verb === 'string'
+        ? activity.verb.trim().toLowerCase()
+        : '';
+    const adverb =
+      typeof activity.adverb === 'string'
+        ? activity.adverb.trim().toLowerCase()
+        : '';
+
+    let signatureCore = '';
+
+    if (template) {
+      signatureCore = `template:${template}`;
+    } else if (sourceComponent) {
+      signatureCore = `source:${sourceComponent}`;
+    } else if (description) {
+      signatureCore = `description:${description}`;
+    } else if (verb) {
+      signatureCore = `verb:${verb}:${adverb}`;
+    } else {
+      signatureCore = 'activity:generic';
+    }
+
+    return `${type}|${signatureCore}|target:${target}|group:${groupKey}`;
+  }
+
   #formatActivityDescription(activities, entity, cacheKey = null) {
     // ACTDESC-008 (Phase 2 - Enhanced with Pronoun Resolution)
     // ACTDESC-014: Pronoun resolution implementation
@@ -938,6 +1062,8 @@ class ActivityDescriptionService {
     const actorPronouns = this.#getPronounSet(actorGender);
     const pronounsEnabled =
       config.nameResolution?.usePronounsWhenAvailable === true;
+    const preferReflexivePronouns =
+      config.nameResolution?.preferReflexivePronouns !== false;
 
     // Respect maxActivities limit
     const maxActivities = config.maxActivities ?? 10;
@@ -1003,7 +1129,14 @@ class ActivityDescriptionService {
         primaryPhraseResult = this.#generateActivityPhrase(
           actorReference,
           group.primaryActivity,
-          useActorPronounForPrimary
+          useActorPronounForPrimary,
+          {
+            actorName,
+            actorId,
+            actorPronouns,
+            preferReflexivePronouns,
+            forceReflexivePronoun: pronounsEnabled && preferReflexivePronouns,
+          }
         );
       } catch (error) {
         this.#logger.error('Failed to generate primary activity phrase', error);
@@ -1041,7 +1174,14 @@ class ActivityDescriptionService {
             actorReference,
             related.activity,
             pronounsEnabled,
-            { omitActor: true }
+            {
+              omitActor: true,
+              actorName,
+              actorId,
+              actorPronouns,
+              preferReflexivePronouns,
+              forceReflexivePronoun: pronounsEnabled && preferReflexivePronouns,
+            }
           );
         } catch (error) {
           this.#logger.error(
@@ -1101,7 +1241,12 @@ class ActivityDescriptionService {
     const separator = config.separator ?? '. ';
 
     const activityText = descriptions.join(separator);
-    return `${prefix}${activityText}${suffix}`.trim();
+    const composedDescription = `${prefix}${activityText}${suffix}`.trim();
+    const maxDescriptionLength = Number.isFinite(config.maxDescriptionLength)
+      ? config.maxDescriptionLength
+      : DEFAULT_ACTIVITY_FORMATTING_CONFIG.maxDescriptionLength;
+
+    return this.#truncateDescription(composedDescription, maxDescriptionLength);
   }
 
   #getActivityIntegrationConfig() {
@@ -1342,6 +1487,11 @@ class ActivityDescriptionService {
    * @param {boolean} usePronounsForTarget - Whether to use pronouns for target (default: false)
    * @param {object} [options] - Additional generation options
    * @param {boolean} [options.omitActor=false] - When true, return decomposed phrases for grouping
+   * @param {string} [options.actorId] - Actor entity identifier for self-target detection.
+   * @param {string} [options.actorName] - Actor display name for fallback references.
+   * @param {object} [options.actorPronouns] - Pre-resolved pronoun set for the actor.
+   * @param {boolean} [options.preferReflexivePronouns=true] - Whether self-targets should use reflexive pronouns.
+   * @param {boolean} [options.forceReflexivePronoun=false] - Force reflexive pronoun usage for self-targeting activities.
    * @returns {string|ActivityPhraseComponents} Activity phrase or decomposed components when omitActor is true
    * @private
    */
@@ -1353,11 +1503,36 @@ class ActivityDescriptionService {
     options = {}
   ) {
     const targetEntityId = activity.targetEntityId || activity.targetId;
+    const actorId = options?.actorId ?? null;
+    const actorName = options?.actorName ?? null;
+    const actorPronouns = options?.actorPronouns ?? null;
+    const preferReflexivePronouns = options?.preferReflexivePronouns !== false;
+    const forceReflexivePronoun = options?.forceReflexivePronoun === true;
 
     // Resolve target reference (name or pronoun)
     let targetRef = '';
     if (targetEntityId) {
-      if (usePronounsForTarget) {
+      const isSelfTarget = actorId && targetEntityId === actorId;
+
+      if (isSelfTarget) {
+        const pronounSource =
+          actorPronouns ??
+          this.#getPronounSet(this.#detectEntityGender(actorId));
+
+        if (
+          (usePronounsForTarget || forceReflexivePronoun) &&
+          preferReflexivePronouns
+        ) {
+          targetRef = this.#getReflexivePronoun(pronounSource);
+        } else if (usePronounsForTarget) {
+          targetRef = pronounSource.object;
+        } else {
+          targetRef =
+            actorName && typeof actorName === 'string'
+              ? actorName
+              : this.#resolveEntityName(actorId);
+        }
+      } else if (usePronounsForTarget) {
         const targetGender = this.#detectEntityGender(targetEntityId);
         const targetPronouns = this.#getPronounSet(targetGender);
         targetRef = targetPronouns.object; // 'him', 'her', 'them'
@@ -1518,6 +1693,47 @@ class ActivityDescriptionService {
     const phraseBody = sanitizedVerbPhrase || fallbackPhrase;
 
     return `${safeConjunction} ${phraseBody}`;
+  }
+
+  /**
+   * Truncate a composed activity description to avoid UI overflow.
+   *
+   * @description Trim the supplied description and enforce a configurable maximum length, preferring natural sentence boundaries.
+   * @param {string} description - Full activity description to truncate.
+   * @param {number} maxLength - Maximum allowed character length.
+   * @returns {string} Truncated description respecting the configured limit.
+   * @private
+   */
+  #truncateDescription(description, maxLength = 500) {
+    if (typeof description !== 'string') {
+      return '';
+    }
+
+    const trimmed = description.trim();
+
+    if (!trimmed) {
+      return '';
+    }
+
+    if (!Number.isFinite(maxLength) || maxLength <= 0) {
+      return trimmed;
+    }
+
+    if (trimmed.length <= maxLength) {
+      return trimmed;
+    }
+
+    const lastPeriodIndex = trimmed.lastIndexOf('.', maxLength);
+
+    if (lastPeriodIndex > 0) {
+      const sentence = trimmed.slice(0, lastPeriodIndex + 1).trim();
+      if (sentence) {
+        return sentence;
+      }
+    }
+
+    const sliceLength = Math.max(0, maxLength - 3);
+    return `${trimmed.slice(0, sliceLength).trimEnd()}...`;
   }
 
   /**
@@ -1695,6 +1911,33 @@ class ActivityDescriptionService {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  /**
+   * Normalise entity names to remove control characters and redundant whitespace.
+   *
+   * @description Sanitise a potentially untrusted entity name before exposing it to user interfaces.
+   * @param {string} name - Raw entity name value.
+   * @returns {string} Sanitised entity name with graceful fallback.
+   * @private
+   */
+  #sanitizeEntityName(name) {
+    if (typeof name !== 'string') {
+      return 'Unknown entity';
+    }
+
+    const withoutControl = name.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+    const withoutZeroWidth = withoutControl.replace(
+      /[\u200B-\u200D\uFEFF]/g,
+      ''
+    );
+    const collapsedWhitespace = withoutZeroWidth.replace(/\s+/g, ' ').trim();
+
+    if (!collapsedWhitespace) {
+      return 'Unknown entity';
+    }
+
+    return collapsedWhitespace;
+  }
+
   #resolveEntityName(entityId) {
     // ACTDESC-009
     if (!entityId) {
@@ -1710,21 +1953,39 @@ class ActivityDescriptionService {
       const entity = this.#entityManager.getEntityInstance(entityId);
 
       if (!entity) {
-        this.#logger.warn(
+        this.#logger.debug(
           `Failed to resolve entity name for ${entityId}: entity not found`
         );
-        return entityId;
+        const fallbackName = this.#sanitizeEntityName(entityId);
+        this.#setCacheValue(this.#entityNameCache, entityId, fallbackName);
+        return fallbackName;
       }
 
       // Entities use core:name component for their names
-      const nameComponent = entity?.getComponentData?.('core:name');
-      const resolvedName = nameComponent?.text ?? entity?.id ?? entityId;
+      let resolvedName;
+      try {
+        const nameComponent = entity?.getComponentData?.('core:name');
+        resolvedName = nameComponent?.text ?? entity?.id ?? entityId;
+      } catch (error) {
+        this.#logger.debug(
+          `Failed to access name component for entity ${entityId}`,
+          error
+        );
+        resolvedName = entity?.id ?? entityId;
+      }
 
-      this.#setCacheValue(this.#entityNameCache, entityId, resolvedName);
-      return resolvedName;
+      const sanitisedName = this.#sanitizeEntityName(resolvedName);
+
+      this.#setCacheValue(this.#entityNameCache, entityId, sanitisedName);
+      return sanitisedName;
     } catch (error) {
-      this.#logger.warn(`Failed to resolve entity name for ${entityId}`, error);
-      return entityId;
+      this.#logger.debug(
+        `Failed to resolve entity name for ${entityId}`,
+        error
+      );
+      const fallbackName = this.#sanitizeEntityName(entityId);
+      this.#setCacheValue(this.#entityNameCache, entityId, fallbackName);
+      return fallbackName;
     }
   }
 
@@ -1771,6 +2032,35 @@ class ActivityDescriptionService {
 
     this.#setCacheValue(this.#genderCache, entityId, resolvedGender);
     return resolvedGender;
+  }
+
+  /**
+   * Resolve the reflexive pronoun for a given pronoun set.
+   *
+   * @description Map subject pronouns to their reflexive equivalents for self-targeting activities.
+   * @param {object} pronouns - Pronoun set containing subject/object forms.
+   * @returns {string} Reflexive pronoun suitable for self-references.
+   * @private
+   */
+  #getReflexivePronoun(pronouns) {
+    const subject = pronouns?.subject?.toLowerCase?.() ?? '';
+
+    switch (subject) {
+      case 'he':
+        return 'himself';
+      case 'she':
+        return 'herself';
+      case 'it':
+        return 'itself';
+      case 'i':
+        return 'myself';
+      case 'you':
+        return 'yourself';
+      case 'we':
+        return 'ourselves';
+      default:
+        return 'themselves';
+    }
   }
 
   /**
@@ -1831,6 +2121,10 @@ class ActivityDescriptionService {
       setEventBus: (eventBus) => {
         this.#eventBus = eventBus;
       },
+      deduplicateActivitiesBySignature: (...args) =>
+        this.#deduplicateActivitiesBySignature(...args),
+      truncateDescription: (...args) => this.#truncateDescription(...args),
+      sanitizeEntityName: (...args) => this.#sanitizeEntityName(...args),
       groupActivities: (...args) => this.#groupActivities(...args),
       getActivityIndex: (...args) => this.#getActivityIndex(...args),
       evaluateActivityVisibility: (...args) =>
@@ -1838,21 +2132,22 @@ class ActivityDescriptionService {
       buildLogicContext: (...args) => this.#buildLogicContext(...args),
       buildActivityContext: (...args) => this.#buildActivityContext(...args),
       applyContextualTone: (...args) => this.#applyContextualTone(...args),
-      generateActivityPhrase: (...args) => this.#generateActivityPhrase(...args),
+      generateActivityPhrase: (...args) =>
+        this.#generateActivityPhrase(...args),
       filterByConditions: (...args) => this.#filterByConditions(...args),
       determineActivityIntensity: (...args) =>
         this.#determineActivityIntensity(...args),
       determineConjunction: (...args) => this.#determineConjunction(...args),
       activitiesOccurSimultaneously: (...args) =>
         this.#activitiesOccurSimultaneously(...args),
+      getReflexivePronoun: (...args) => this.#getReflexivePronoun(...args),
       getPronounSet: (...args) => this.#getPronounSet(...args),
       detectEntityGender: (...args) => this.#detectEntityGender(...args),
       isEmptyConditionsObject: (...args) =>
         this.#isEmptyConditionsObject(...args),
       matchesPropertyCondition: (...args) =>
         this.#matchesPropertyCondition(...args),
-      hasRequiredComponents: (...args) =>
-        this.#hasRequiredComponents(...args),
+      hasRequiredComponents: (...args) => this.#hasRequiredComponents(...args),
       hasForbiddenComponents: (...args) =>
         this.#hasForbiddenComponents(...args),
       extractEntityData: (...args) => this.#extractEntityData(...args),

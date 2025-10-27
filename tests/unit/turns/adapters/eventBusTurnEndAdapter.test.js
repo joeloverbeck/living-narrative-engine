@@ -134,22 +134,40 @@ describe('EventBusTurnEndAdapter', () => {
     );
   });
 
-  it('should default success to true when an invalid value is provided', async () => {
+  it('should reject non-boolean success values and emit a system error', async () => {
     const adapter = new EventBusTurnEndAdapter({
       safeEventDispatcher: mockSafeDispatcher,
       logger: mockLogger,
     });
-    const entityId = 'npc-default-success';
+    const entityId = 'npc-invalid-success';
 
-    await adapter.notifyTurnEnded(entityId, undefined);
-
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Defaulting to 'true'. EntityId")
+    await expect(
+      adapter.notifyTurnEnded(entityId, undefined)
+    ).rejects.toThrow(
+      /success' parameter must be a boolean/
     );
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining("'success' parameter must be a boolean")
+    );
+
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
-      TURN_ENDED_ID,
-      { entityId, success: true }
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          "'success' parameter must be a boolean"
+        ),
+        details: expect.objectContaining({
+          entityId,
+          receivedType: 'undefined',
+          receivedValue: undefined,
+        }),
+      })
     );
+
+    expect(
+      mockSafeDispatcher.dispatch
+    ).not.toHaveBeenCalledWith(TURN_ENDED_ID, expect.anything());
   });
 
   it('should reject if dispatch throws an error', async () => {

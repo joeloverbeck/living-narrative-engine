@@ -161,7 +161,7 @@ class RadialLayoutStrategy {
 
       // If already calculated, return the stored value
       if (visited.has(nodeId)) {
-        return node.leafCount || 0;
+        return node.leafCount;
       }
 
       // If currently visiting this node, we have a cycle
@@ -233,10 +233,7 @@ class RadialLayoutStrategy {
    * @param {Set<string>} [positioned] - Set of already positioned nodes to prevent cycles
    */
   #positionChildrenRadially(parent, nodes, edges, positioned = new Set()) {
-    // Prevent infinite recursion by tracking positioned nodes
-    if (positioned.has(parent.id)) {
-      return;
-    }
+    // Track positioned nodes to prevent cycles from causing infinite recursion
     positioned.add(parent.id);
 
     const children = this.#getDirectChildren(parent.id, nodes, edges);
@@ -250,7 +247,7 @@ class RadialLayoutStrategy {
 
     // Calculate angle range for each child based on leaf count
     const parentAngleRange = parent.angleEnd - parent.angleStart;
-    const totalLeaves = parent.leafCount || 1;
+    const totalLeaves = Math.max(parent.leafCount ?? 0, 1);
 
     let currentAngle = parent.angleStart;
 
@@ -377,23 +374,22 @@ class RadialLayoutStrategy {
       maxY = Math.max(maxY, node.y + nodeRadius);
     }
 
-    if (nodes.size > 0) {
-      // Calculate dimensions
-      const width = maxX - minX + padding * 2;
-      const height = maxY - minY + padding * 2;
+    // Calculate dimensions. Caller guarantees there is at least one node to
+    // process so width/height will be finite after the loop above.
+    const width = maxX - minX + padding * 2;
+    const height = maxY - minY + padding * 2;
 
-      // For radial layouts, ensure viewBox is roughly square
-      const maxDimension = Math.max(width, height);
-      const centerX = (minX + maxX) / 2;
-      const centerY = (minY + maxY) / 2;
+    // For radial layouts, ensure viewBox is roughly square
+    const maxDimension = Math.max(width, height);
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
 
-      renderContext.updateViewport({
-        x: centerX - maxDimension / 2,
-        y: centerY - maxDimension / 2,
-        width: maxDimension,
-        height: maxDimension,
-      });
-    }
+    renderContext.updateViewport({
+      x: centerX - maxDimension / 2,
+      y: centerY - maxDimension / 2,
+      width: maxDimension,
+      height: maxDimension,
+    });
   }
 }
 

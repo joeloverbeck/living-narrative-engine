@@ -13,8 +13,44 @@ export default class RoundManager {
     this.#logger = logger;
   }
 
-  async startRound(strategy = 'round-robin') {
+  /**
+   * Starts a new round using the provided strategy and optional initiative data.
+   *
+   * @param {('round-robin' | 'initiative' | {strategy?: 'round-robin' | 'initiative'; initiativeData?: Map<string, number>})} [strategyOrOptions]
+   *  Either the turn order strategy string or an options object.
+   * @param {Map<string, number>} [initiativeDataParam] - Initiative data when the first parameter is a strategy string.
+   * @returns {Promise<void>}
+   */
+  async startRound(strategyOrOptions = 'round-robin', initiativeDataParam) {
     this.#logger.debug('RoundManager.startRound() initiating...');
+
+    let strategy;
+    let initiativeData;
+
+    const isOptionsObject =
+      strategyOrOptions &&
+      typeof strategyOrOptions === 'object' &&
+      !(strategyOrOptions instanceof String) &&
+      !(strategyOrOptions instanceof Map);
+
+    if (isOptionsObject) {
+      strategy = strategyOrOptions.strategy ?? 'round-robin';
+      initiativeData = strategyOrOptions.initiativeData;
+    } else {
+      strategy = strategyOrOptions ?? 'round-robin';
+      initiativeData = initiativeDataParam;
+    }
+
+    if (strategy === 'initiative') {
+      if (!(initiativeData instanceof Map) || initiativeData.size === 0) {
+        const errorMsg =
+          'Cannot start an initiative round: initiativeData Map is required.';
+        this.#logger.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+    } else {
+      initiativeData = undefined;
+    }
 
     // Get all active entities and filter for actors
     const allEntities = Array.from(this.#entityManager.entities ?? []);
@@ -38,7 +74,11 @@ export default class RoundManager {
     );
 
     // Start the new round in the service
-    await this.#turnOrderService.startNewRound(actors, strategy);
+    await this.#turnOrderService.startNewRound(
+      actors,
+      strategy,
+      initiativeData
+    );
 
     // Reset success flag only after the round starts successfully
     this.#hadSuccess = false;

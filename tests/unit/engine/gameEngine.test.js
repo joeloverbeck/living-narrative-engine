@@ -138,6 +138,40 @@ describeEngineSuite('GameEngine', (context) => {
       ).rejects.toThrow('Unknown failure from InitializationService.');
     });
 
+    it('should surface readable message for plain object initialization failures', async () => {
+      const failureDetail = {
+        message: 'Mods loader failed schema validation.',
+        code: 'INIT-42',
+      };
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: false,
+          error: failureDetail,
+        });
+
+      /** @type {unknown} */
+      let thrownError;
+      try {
+        await context.engine.startNewGame(DEFAULT_TEST_WORLD);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      expect(thrownError).toBeInstanceOf(Error);
+      const normalizedError = /** @type {Error & { cause?: unknown; originalError?: unknown }} */ (
+        thrownError
+      );
+      expect(normalizedError.message).toBe(
+        'Mods loader failed schema validation.'
+      );
+      if ('cause' in normalizedError) {
+        expect(normalizedError.cause).toBe(failureDetail);
+      } else if ('originalError' in normalizedError) {
+        expect(normalizedError.originalError).toBe(failureDetail);
+      }
+    });
+
     it('should reset engine state even when core reset throws during failure handling', async () => {
       const initError = new Error('Initialization failed');
       context.bed

@@ -311,11 +311,13 @@ export class TitleRenderer extends RendererBase {
 
   /**
    * Dispose method for cleanup. Unsubscribes from all VED events
-   * by calling super.dispose().
+   * by calling super.dispose(). Also releases the managed title element
+   * reference so it can be garbage collected safely.
    */
   dispose() {
     // The #subscriptions array and its manual clearing are removed.
     // All VED unsubscriptions are handled by super.dispose().
+    this.#titleElement = null;
     super.dispose(); // This will call the logger.debug messages from RendererBase
   }
 }
