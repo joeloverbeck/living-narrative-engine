@@ -3439,6 +3439,8 @@ describe('ActivityDescriptionService', () => {
         expect(hooks.mergeAdverb('   ', 'tenderly')).toBe('tenderly');
         expect(hooks.mergeAdverb('Softly', 'tenderly')).toBe('Softly tenderly');
         expect(hooks.mergeAdverb('Tenderly', 'tenderly')).toBe('Tenderly');
+        expect(hooks.mergeAdverb(null, 'tenderly')).toBe('tenderly');
+        expect(hooks.mergeAdverb('calmly', null)).toBe('calmly');
       });
 
       it('injects contextual softeners appropriately', () => {
@@ -3527,6 +3529,14 @@ describe('ActivityDescriptionService', () => {
 
         expect(
           hooks.buildRelatedActivityFragment(
+            undefined,
+            { verbPhrase: '   ' },
+            baseContext
+          )
+        ).toBe('');
+
+        expect(
+          hooks.buildRelatedActivityFragment(
             'and',
             {
               verbPhrase: 'patrolling the hall',
@@ -3535,6 +3545,391 @@ describe('ActivityDescriptionService', () => {
             baseContext
           )
         ).toBe('and patrolling the hall');
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'while',
+            { verbPhrase: 'staring ahead', fullPhrase: 'Staring ahead' },
+            {
+              actorName: '',
+              actorReference: '',
+              actorPronouns: { subject: '' },
+              pronounsEnabled: false,
+            }
+          )
+        ).toBe('while staring ahead');
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'while',
+            { verbPhrase: '', fullPhrase: '   ' },
+            baseContext
+          )
+        ).toBe('');
+
+        expect(
+          hooks.buildRelatedActivityFragment(
+            'and',
+            { verbPhrase: null, fullPhrase: '  Keeps watch  ' },
+            baseContext
+          )
+        ).toBe('and Keeps watch');
+      });
+
+      it('evaluates visibility and condition helpers through hooks', () => {
+        const hooks = service.getTestHooks();
+        const activity = {
+          sourceData: {},
+          conditions: {
+            customLogic: { some: 'rule' },
+            requiredComponents: ['pose:stance'],
+            forbiddenComponents: ['pose:resting'],
+            showOnlyIfProperty: { equals: 'ready' },
+          },
+        };
+
+        mockJsonLogicEvaluationService.evaluate.mockReturnValue(false);
+
+        const entity = {
+          hasComponent: jest
+            .fn()
+            .mockImplementation((componentId) => componentId === 'pose:stance'),
+        };
+
+        const visible = hooks.evaluateActivityVisibility(activity, entity);
+
+        expect(visible).toBe(false);
+        expect(mockJsonLogicEvaluationService.evaluate).toHaveBeenCalledWith(
+          activity.conditions.customLogic,
+          expect.objectContaining({ entity: expect.any(Object) })
+        );
+        expect(hooks.isEmptyConditionsObject(null)).toBe(true);
+        expect(
+          hooks.matchesPropertyCondition(activity, {
+            equals: 'ready',
+          })
+        ).toBe(true);
+        expect(
+          hooks.hasRequiredComponents(null, activity.conditions.requiredComponents)
+        ).toBe(false);
+        expect(
+          hooks.hasForbiddenComponents(null, activity.conditions.forbiddenComponents)
+        ).toBe(false);
+        expect(
+          hooks.evaluateActivityVisibility(
+            {
+              metadata: { shouldDescribeInActivity: false },
+              conditions: { requiredComponents: ['pose:stance'] },
+            },
+            entity
+          )
+        ).toBe(false);
+        expect(
+          hooks.matchesPropertyCondition(
+            { sourceData: { stance: 'ready' } },
+            { property: 'stance', equals: 'ready' }
+          )
+        ).toBe(true);
+        expect(
+          hooks.matchesPropertyCondition(
+            { sourceData: { stance: 'idle' } },
+            { property: 'stance', equals: 'ready' }
+          )
+        ).toBe(false);
+        expect(
+          hooks.hasRequiredComponents(
+            { hasComponent: (id) => id === 'pose:stance' },
+            activity.conditions.requiredComponents
+          )
+        ).toBe(true);
+        expect(
+          hooks.hasForbiddenComponents(
+            { hasComponent: (id) => id === 'pose:resting' },
+            activity.conditions.forbiddenComponents
+          )
+        ).toBe(true);
+      });
+
+      it('builds logic context while tolerating missing targets', () => {
+        const hooks = service.getTestHooks();
+        const entity = {
+          id: 'actor-1',
+          componentTypeIds: ['core:name'],
+          getComponentData: jest.fn(() => ({ text: 'Actor' })),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'target-1') {
+            throw new Error('missing target');
+          }
+          return entity;
+        });
+
+        const context = hooks.buildLogicContext(
+          {
+            sourceData: { verb: 'watching' },
+            targetEntityId: 'target-1',
+          },
+          entity
+        );
+
+        expect(context.activity).toEqual({ verb: 'watching' });
+        expect(context.target).toBeNull();
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          "Failed to resolve target entity 'target-1' for activity conditions",
+          expect.any(Error)
+        );
+        expect(hooks.extractEntityData(null)).toBeNull();
+
+        const contextWithoutSource = hooks.buildLogicContext({}, entity);
+        expect(contextWithoutSource.activity).toEqual({});
+      });
+
+      it('builds activity context with caching and warning recovery', () => {
+        const hooks = service.getTestHooks();
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'actor-1') {
+            throw new Error('no closeness');
+          }
+          if (id === 'target-1') {
+            return {
+              id: 'target-1',
+              componentTypeIds: ['core:gender'],
+              getComponentData: jest.fn((componentId) => {
+                if (componentId === 'core:gender') {
+                  return { value: 'female' };
+                }
+                return undefined;
+              }),
+            };
+          }
+          return { id, componentTypeIds: [], getComponentData: jest.fn() };
+        });
+
+        const firstContext = hooks.buildActivityContext('actor-1', {
+          targetEntityId: 'target-1',
+          priority: 95,
+        });
+
+        expect(firstContext.intensity).toBe('intense');
+        expect(firstContext.targetGender).toBe('female');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Failed to retrieve closeness data for actor-1',
+          expect.any(Error)
+        );
+
+        mockLogger.warn.mockClear();
+
+        const secondContext = hooks.buildActivityContext('actor-1', {
+          targetEntityId: 'target-1',
+          priority: 10,
+        });
+
+        expect(secondContext.intensity).toBe('casual');
+        expect(mockLogger.warn).not.toHaveBeenCalled();
+      });
+
+      it('applies contextual tone overrides for dedicated activities', () => {
+        const hooks = service.getTestHooks();
+
+        const intimate = hooks.applyContextualTone(
+          { type: 'dedicated', template: '{actor} embraces {target}' },
+          { targetId: 'target-1', relationshipTone: 'closeness_partner' }
+        );
+
+        expect(intimate.adverb).toBe('tenderly');
+        expect(intimate.template).toContain('tenderly {target}');
+
+        const intense = hooks.applyContextualTone(
+          {
+            type: 'dedicated',
+            adverb: 'quietly',
+            template: '{actor} studies {target}',
+          },
+          { targetId: 'target-1', intensity: 'intense' }
+        );
+
+        expect(intense.adverb).toBe('quietly fiercely');
+        expect(intense.template).toContain('fiercely {target}');
+      });
+
+      it('generates empty fragments when phrases cannot be constructed', () => {
+        const hooks = service.getTestHooks();
+
+        const fragments = hooks.generateActivityPhrase(
+          'Jon',
+          {
+            type: 'inline',
+            description: '   ',
+            activityMetadata: {},
+          },
+          false,
+          { omitActor: true }
+        );
+
+        expect(fragments).toEqual({ fullPhrase: '', verbPhrase: '' });
+
+        const fragmentsWithoutActor = hooks.generateActivityPhrase(
+          '   ',
+          {
+            type: 'inline',
+            template: '{actor} observes {target}',
+            targetId: 'someone',
+          },
+          false,
+          { omitActor: true }
+        );
+
+        expect(fragmentsWithoutActor.verbPhrase).toBe('observes someone');
+
+        const actorFragments = hooks.generateActivityPhrase(
+          'Jon',
+          {
+            type: 'inline',
+            template: '{actor} reassures {target}',
+            targetId: 'friend',
+          },
+          false,
+          { omitActor: true }
+        );
+
+        expect(actorFragments.verbPhrase).toBe('reassures friend');
+
+        const defaultPronounInvocation = hooks.generateActivityPhrase(
+          'Jon',
+          { type: 'inline', template: '{actor} lingers' }
+        );
+
+        expect(defaultPronounInvocation).toBe('Jon lingers');
+
+        const nullActorFragments = hooks.generateActivityPhrase(
+          null,
+          {
+            type: 'inline',
+            template: '{actor} signals {target}',
+            targetId: 'partner',
+          },
+          false,
+          { omitActor: true }
+        );
+
+        expect(nullActorFragments.fullPhrase).toBe('null signals partner');
+      });
+
+      it('resolves unnamed entities by their identifier when caching lookups', async () => {
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+          prefix: '',
+          suffix: '',
+          separator: '. ',
+          enableContextAwareness: false,
+          nameResolution: { usePronounsWhenAvailable: false },
+        });
+
+        const actorEntity = {
+          id: 'jon',
+          componentTypeIds: ['core:name'],
+          hasComponent: jest.fn(() => false),
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'core:name') {
+              return { text: 'Jon' };
+            }
+            if (componentId === 'core:gender') {
+              return { value: 'male' };
+            }
+            return null;
+          }),
+        };
+
+        const unnamedTarget = {
+          id: 'mysterious-target',
+          componentTypeIds: [],
+          hasComponent: jest.fn(() => false),
+          getComponentData: jest.fn(() => null),
+        };
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'jon') {
+            return actorEntity;
+          }
+          if (id === 'target-entity') {
+            return unnamedTarget;
+          }
+
+          return {
+            id,
+            componentTypeIds: [],
+            hasComponent: jest.fn(() => false),
+            getComponentData: jest.fn(() => null),
+          };
+        });
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            type: 'inline',
+            template: '{actor} observes {target}',
+            targetEntityId: 'target-entity',
+            priority: 90,
+          },
+        ]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toBe('Jon observes mysterious-target');
+        expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+          'target-entity'
+        );
+        expect(unnamedTarget.getComponentData).toHaveBeenCalledWith('core:name');
+
+        mockEntityManager.getEntityInstance.mockClear();
+
+        const hooks = service.getTestHooks();
+        const cachedPhrase = hooks.generateActivityPhrase(
+          'Jon',
+          {
+            type: 'inline',
+            template: '{actor} greets {target}',
+            targetId: 'target-entity',
+          },
+          false
+        );
+
+        expect(cachedPhrase).toBe('Jon greets mysterious-target');
+        expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
+      });
+
+      it('filters collections and resolves pronoun/intensity helpers', () => {
+        const hooks = service.getTestHooks();
+
+        expect(hooks.filterByConditions(null, {})).toEqual([]);
+        expect(hooks.filterByConditions([], {})).toEqual([]);
+
+        expect(hooks.determineActivityIntensity(95)).toBe('intense');
+        expect(hooks.determineActivityIntensity(75)).toBe('elevated');
+        expect(hooks.determineActivityIntensity(10)).toBe('casual');
+
+        expect(hooks.determineConjunction({ priority: 10 }, { priority: 8 })).toBe(
+          'while'
+        );
+        expect(
+          hooks.determineConjunction({ priority: 10 }, { priority: 40 })
+        ).toBe('and');
+        expect(hooks.activitiesOccurSimultaneously(10, 19)).toBe(true);
+        expect(hooks.activitiesOccurSimultaneously(10, 50)).toBe(false);
+        expect(hooks.determineConjunction({}, {})).toBe('while');
+        expect(hooks.determineConjunction({}, { priority: 100 })).toBe('and');
+        expect(hooks.activitiesOccurSimultaneously()).toBe(true);
+
+        expect(hooks.getPronounSet('unknown').subject).toBe('they');
+        expect(hooks.getPronounSet('custom').object).toBe('them');
+        expect(hooks.getPronounSet().possessivePronoun).toBe('theirs');
+
+        expect(
+          hooks.matchesPropertyCondition(null, {
+            property: 'stance',
+            equals: 'ready',
+          })
+        ).toBe(false);
       });
     });
 
