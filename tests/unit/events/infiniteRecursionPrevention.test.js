@@ -114,13 +114,13 @@ describe('EventBus Infinite Recursion Prevention', () => {
       );
     });
 
-    it('should not change state when setting same batch mode twice', () => {
+    it('should refresh timeout when setting same batch mode twice', () => {
       const spy = jest.spyOn(mockLogger, 'debug');
 
       eventBus.setBatchMode(true, { context: 'test' });
       spy.mockClear();
 
-      // Setting to same state should be no-op
+      // Setting to same state should refresh timeout and log it
       eventBus.setBatchMode(true, { context: 'test' });
 
       expect(spy).toHaveBeenCalledWith(

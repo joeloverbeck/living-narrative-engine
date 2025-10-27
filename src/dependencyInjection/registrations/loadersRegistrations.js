@@ -82,6 +82,7 @@ import AnatomyBlueprintLoader from '../../loaders/anatomyBlueprintLoader.js';
 import AnatomyBlueprintPartLoader from '../../loaders/anatomyBlueprintPartLoader.js';
 import AnatomySlotLibraryLoader from '../../loaders/anatomySlotLibraryLoader.js';
 import AnatomyFormattingLoader from '../../loaders/anatomyFormattingLoader.js';
+import AnatomyStructureTemplateLoader from '../../loaders/anatomyStructureTemplateLoader.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 // --- Modding Service Imports ---
@@ -249,6 +250,10 @@ export async function registerLoaders(container) {
   registerLoader(tokens.AnatomyBlueprintPartLoader, AnatomyBlueprintPartLoader);
   registerLoader(tokens.AnatomySlotLibraryLoader, AnatomySlotLibraryLoader);
   registerLoader(tokens.AnatomyFormattingLoader, AnatomyFormattingLoader);
+  registerLoader(
+    tokens.AnatomyStructureTemplateLoader,
+    AnatomyStructureTemplateLoader
+  );
 
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
   registrar.singletonFactory(
@@ -347,6 +352,9 @@ export async function registerLoaders(container) {
           anatomyBlueprintLoader: c.resolve(tokens.AnatomyBlueprintLoader),
           anatomyRecipeLoader: c.resolve(tokens.AnatomyRecipeLoader),
           anatomyFormattingLoader: c.resolve(tokens.AnatomyFormattingLoader),
+          anatomyStructureTemplateLoader: c.resolve(
+            tokens.AnatomyStructureTemplateLoader
+          ),
         }),
         aggregatorFactory: (counts) => new LoadResultAggregator(counts),
       })

@@ -35,7 +35,18 @@ Below is a brief overview of the purpose for each schema file.
 
 ## Mod metadata
 
-- **`mod-manifest.schema.json`** – required manifest describing each mod’s contents.
+- **`mod-manifest.schema.json`** – required manifest describing each mod's contents.
+
+## Anatomy system
+
+- **`anatomy.structure-template.schema.json`** – parameterized body structure definitions for non-human creatures. See [docs/anatomy/structure-templates.md](../../docs/anatomy/structure-templates.md) for usage guide.
+- **`anatomy.blueprint.schema.json`** – defines the structural graph of body parts and sockets. Supports V1 (manual) and V2 (template-based) formats. See [docs/anatomy/blueprints-v2.md](../../docs/anatomy/blueprints-v2.md) for V2 documentation.
+- **`anatomy.recipe.schema.json`** – defines what parts a creature should have with advanced pattern matching. See [docs/anatomy/recipe-patterns.md](../../docs/anatomy/recipe-patterns.md) for pattern documentation.
+- **`anatomy.blueprint-part.schema.json`** – reusable blueprint fragments for composition.
+- **`anatomy.slot-library.schema.json`** – shared slot definitions for humanoid anatomies.
+- **`anatomy-formatting.schema.json`** – body description generation configuration. See [docs/mods/anatomy-formatting.md](../../docs/mods/anatomy-formatting.md).
+
+For a complete tutorial on creating non-human creatures, see [docs/anatomy/non-human-quickstart.md](../../docs/anatomy/non-human-quickstart.md).
 
 ## Referencing schemas
 
