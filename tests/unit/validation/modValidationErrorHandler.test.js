@@ -2,7 +2,7 @@ import { describe, it, expect, jest } from '@jest/globals';
 import {
   ModValidationErrorHandler,
   ErrorType,
-  RecoveryStrategy
+  RecoveryStrategy,
 } from '../../../src/validation/modValidationErrorHandler.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ModAccessError } from '../../../src/errors/modAccessError.js';
@@ -10,11 +10,11 @@ import { ModCorruptionError } from '../../../src/errors/modCorruptionError.js';
 import { ModValidationError } from '../../../src/errors/modValidationError.js';
 import {
   ModSecurityError,
-  SecurityLevel
+  SecurityLevel,
 } from '../../../src/errors/modSecurityError.js';
 import {
   createMockLogger,
-  createMockValidatedEventDispatcher
+  createMockValidatedEventDispatcher,
 } from '../../common/mockFactories/index.js';
 
 const createHandler = (options = {}) => {
@@ -27,10 +27,10 @@ const createHandler = (options = {}) => {
     handler: new ModValidationErrorHandler({
       logger,
       eventBus,
-      config: options.config
+      config: options.config,
     }),
     logger,
-    eventBus
+    eventBus,
   };
 };
 
@@ -49,7 +49,7 @@ describe('ModValidationErrorHandler', () => {
         new ModValidationErrorHandler({
           logger,
           // Missing dispatch method
-          eventBus: /** @type {any} */ ({})
+          eventBus: /** @type {any} */ ({}),
         })
     ).toThrow(InvalidArgumentError);
   });
@@ -62,7 +62,7 @@ describe('ModValidationErrorHandler', () => {
     const context = {
       filePath: 'mods/test/mod.json',
       hasDefault: true,
-      defaultValue: { id: 'default-mod' }
+      defaultValue: { id: 'default-mod' },
     };
 
     const result = handler.handleExtractionError(error, context);
@@ -76,7 +76,7 @@ describe('ModValidationErrorHandler', () => {
       expect.objectContaining({
         errorType: ErrorType.ACCESS,
         strategy: RecoveryStrategy.USE_DEFAULT,
-        context
+        context,
       })
     );
     expect(eventBus.dispatch).toHaveBeenCalledWith({
@@ -85,8 +85,8 @@ describe('ModValidationErrorHandler', () => {
         error: error.message,
         errorType: ErrorType.ACCESS,
         context,
-        strategy: RecoveryStrategy.USE_DEFAULT
-      }
+        strategy: RecoveryStrategy.USE_DEFAULT,
+      },
     });
 
     const stats = handler.getErrorStatistics();
@@ -104,7 +104,7 @@ describe('ModValidationErrorHandler', () => {
     );
 
     const result = handler.handleExtractionError(accessError, {
-      filePath: 'mods/missing.json'
+      filePath: 'mods/missing.json',
     });
 
     expect(result.strategy).toBe(RecoveryStrategy.SKIP);
@@ -117,7 +117,7 @@ describe('ModValidationErrorHandler', () => {
     const { handler } = createHandler({ logger, config: { maxRetries: 1 } });
     const context = {
       filePath: 'mods/sample/timeout.json',
-      partialData: { fallback: true }
+      partialData: { fallback: true },
     };
 
     const retryResult = handler.handleExtractionError(
@@ -146,11 +146,11 @@ describe('ModValidationErrorHandler', () => {
   it('returns partial results when corruption errors allow recovery', () => {
     const { handler } = createHandler();
     const error = new ModCorruptionError('Malformed JSON', 'mods/bad.json', {
-      partialData: { kept: true }
+      partialData: { kept: true },
     });
     const context = {
       filePath: 'mods/bad.json',
-      partialData: { kept: true }
+      partialData: { kept: true },
     };
 
     const result = handler.handleExtractionError(error, context);
@@ -185,7 +185,7 @@ describe('ModValidationErrorHandler', () => {
       expect.stringContaining('Handling extraction error'),
       expect.objectContaining({
         errorType: ErrorType.SECURITY,
-        strategy: RecoveryStrategy.QUARANTINE
+        strategy: RecoveryStrategy.QUARANTINE,
       })
     );
   });
@@ -209,7 +209,7 @@ describe('ModValidationErrorHandler', () => {
     );
     const context = {
       filePath: 'mods/validation.json',
-      partialData: { recovered: true }
+      partialData: { recovered: true },
     };
     const extractionSpy = jest.spyOn(handler, 'handleExtractionError');
 
@@ -236,7 +236,7 @@ describe('ModValidationErrorHandler', () => {
       expect.stringContaining('Critical validation error'),
       expect.objectContaining({
         errorType: ErrorType.SECURITY,
-        context: { module: 'bad' }
+        context: { module: 'bad' },
       })
     );
   });
@@ -244,16 +244,20 @@ describe('ModValidationErrorHandler', () => {
   it('creates enriched security errors for violations', () => {
     const logger = createMockLogger();
     const { handler } = createHandler({ logger });
-    const violation = { message: 'Unauthorized access', level: SecurityLevel.MEDIUM };
+    const violation = {
+      message: 'Unauthorized access',
+      level: SecurityLevel.MEDIUM,
+    };
 
-    expect(() => handler.handleSecurityViolation(violation, { file: 'mods/bad' }))
-      .toThrow(ModSecurityError);
+    expect(() =>
+      handler.handleSecurityViolation(violation, { file: 'mods/bad' })
+    ).toThrow(ModSecurityError);
     expect(logger.error).toHaveBeenCalledWith(
       'Security violation detected',
       expect.objectContaining({
         violation,
         context: { file: 'mods/bad' },
-        incidentReport: expect.any(Object)
+        incidentReport: expect.any(Object),
       })
     );
   });
@@ -263,7 +267,7 @@ describe('ModValidationErrorHandler', () => {
 
     for (let i = 0; i < 1001; i += 1) {
       handler.handleExtractionError(new Error(`issue ${i}`), {
-        filePath: `mods/file-${i}.json`
+        filePath: `mods/file-${i}.json`,
       });
     }
 
@@ -273,12 +277,48 @@ describe('ModValidationErrorHandler', () => {
     expect(stats.recentErrors).toHaveLength(10);
   });
 
+  it('calculates recovery success rate across attempted recoveries', () => {
+    const { handler } = createHandler({ config: { maxRetries: 1 } });
+
+    handler.handleExtractionError(new Error('ENOENT: missing mod'), {
+      filePath: 'mods/default.json',
+      hasDefault: true,
+      defaultValue: { id: 'fallback-mod' },
+    });
+
+    handler.handleExtractionError(new Error('timeout while loading'), {
+      filePath: 'mods/retry.json',
+      partialData: { safe: true },
+    });
+
+    expect(() =>
+      handler.handleExtractionError(new Error('Unexpected token in JSON'), {
+        filePath: 'mods/broken.json',
+      })
+    ).toThrow('Unexpected token in JSON');
+
+    const stats = handler.getErrorStatistics();
+    expect(stats.totalErrors).toBe(3);
+    expect(stats.recoverySuccessRate).toBeCloseTo(33.33, 1);
+  });
+
+  it('supports overriding recovery strategy and guards unknown overrides', () => {
+    const { handler } = createHandler();
+
+    expect(() =>
+      handler.handleExtractionError(new Error('mystery failure'), {
+        filePath: 'mods/custom.json',
+        overrideStrategy: 'CUSTOM',
+      })
+    ).toThrow('mystery failure');
+  });
+
   it('resets history and retry tracking', () => {
     const logger = createMockLogger();
     const { handler } = createHandler({ logger, config: { maxRetries: 1 } });
 
     handler.handleExtractionError(new Error('timeout during load'), {
-      filePath: 'mods/reset.json'
+      filePath: 'mods/reset.json',
     });
 
     handler.reset();
