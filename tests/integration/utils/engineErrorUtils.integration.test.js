@@ -170,6 +170,40 @@ describe('engineErrorUtils integration', () => {
     expect(env.getResetCount()).toBe(1);
   });
 
+  it('avoids duplicating failure prefixes when error message already includes the prefix', async () => {
+    const env = createIntegrationEnvironment();
+    const prefixedMessage = 'Failed to load game: Save slot corrupt';
+
+    const result = await processOperationFailure(
+      env.logger,
+      env.dispatcher,
+      'loadGame',
+      prefixedMessage,
+      'Load Error',
+      'Failed to load game',
+      env.resetEngineState,
+      true
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: prefixedMessage,
+      data: null,
+    });
+
+    expect(env.recordedEvents).toHaveLength(1);
+    const [event] = env.recordedEvents;
+    expect(event.payload).toEqual({
+      errorMessage: prefixedMessage,
+      errorTitle: 'Load Error',
+    });
+
+    expect(env.logger.errorLogs[0].message).toBe(
+      `GameEngine.loadGame: ${prefixedMessage}`
+    );
+    expect(env.callSequence).toEqual(['event', 'reset']);
+  });
+
   it('propagates engine Error objects without wrapping and resolves with undefined by default', async () => {
     const env = createIntegrationEnvironment();
     const underlyingError = new Error('validation failed');
