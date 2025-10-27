@@ -263,8 +263,13 @@ class PersistenceCoordinator {
         );
       }
     } else {
+      const rawFailureDetail = saveResult.error;
       const failureDetail =
-        saveResult.error != null ? saveResult.error : saveResult.message;
+        rawFailureDetail == null ||
+        (typeof rawFailureDetail === 'string' &&
+          rawFailureDetail.trim().length === 0)
+          ? saveResult.message
+          : rawFailureDetail;
       const userFriendlyMessage =
         typeof saveResult.userFriendlyError === 'string'
           ? saveResult.userFriendlyError.trim()
@@ -377,7 +382,10 @@ class PersistenceCoordinator {
 
     if (!resultWithoutError.success) {
       const failureDetail =
-        rawError != null ? rawError : resultWithoutError.message;
+        rawError == null ||
+        (typeof rawError === 'string' && rawError.trim().length === 0)
+          ? resultWithoutError.message
+          : rawError;
       const normalizedError = this.#formatSaveError(failureDetail);
       const failureResult = {
         ...resultWithoutError,

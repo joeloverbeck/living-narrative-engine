@@ -448,6 +448,30 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('triggerManualSave uses persistence message when error string is blank', async () => {
+    const { coordinator, dispatcher, persistenceService } =
+      createCoordinator();
+    const blankError = '   ';
+    const fallbackMessage = 'Persistence layer rejected the save request.';
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: blankError,
+      message: fallbackMessage,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({
+      success: false,
+      message: fallbackMessage,
+      error: fallbackMessage,
+    });
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildFailedSaveDispatches(DEFAULT_SAVE_NAME, fallbackMessage)
+    );
+  });
+
   it('triggerManualSave prefers userFriendlyError for UI messaging while retaining detailed logs', async () => {
     const { coordinator, dispatcher, persistenceService, logger } =
       createCoordinator();
