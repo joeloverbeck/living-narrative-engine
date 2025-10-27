@@ -10,24 +10,27 @@
 Implement intelligent activity grouping to combine related activities with conjunctions ("and", "while") instead of separate sentences, creating more fluent natural language.
 
 ## Background
-Phase 1 creates separate sentences for each activity. Smart grouping produces more natural descriptions like "Jon is kneeling before Alicia and holding her hands" instead of "Jon is kneeling before Alicia. Jon is holding hands with Alicia."
+Phase 1 creates separate sentences for each activity. In the current implementation (`src/anatomy/services/activityDescriptionService.js`) the private `#formatActivityDescription` method simply iterates over the limited activities, calls `#generateActivityPhrase` for each one, and joins the resulting sentences using the configured separator from `AnatomyFormattingService.getActivityIntegrationConfig()` (default `. `).
+
+This produces grammatically correct but repetitive text such as "Activity: Jon is kneeling before Alicia. He is holding her hands" when pronoun support is enabled. Smart grouping should build on that implementation to merge related activities into a single fluent sentence (for example, "Activity: Jon is kneeling before Alicia and holding her hands") without regressing the existing configuration and pronoun handling.
 
 **Reference**: Design document lines 1808-1875 (Smart Activity Composition Algorithm)
 
 ## Technical Specification
 
 ### Grouping Strategy
+`ActivityDescriptionService` does not currently expose any grouping helpers, so this enhancement needs to introduce new private utilities that operate on the prioritised `activities` array passed into `#formatActivityDescription`.
+
 ```javascript
 /**
  * Group activities intelligently for natural composition.
  *
- * Grouping Rules:
- * 1. Same target → group with "and"
- * 2. Sequential actions → group with "while"
- * 3. Related activities (metadata.grouping.groupKey) → group together
- * 4. Different targets → separate sentences
+ * Grouping rules (in priority order):
+ * 1. Explicit grouping metadata (matching `grouping.groupKey`) keeps activities together even if the targets differ.
+ * 2. Same resolved target entity (`targetEntityId` or legacy `targetId`) groups the activities.
+ * 3. Otherwise, start a new sentence.
  *
- * @param {Array<object>} activities - Sorted activities
+ * @param {Array<object>} activities - Activities sorted by priority
  * @returns {Array<ActivityGroup>} Grouped activities
  * @private
  */
@@ -37,30 +40,25 @@ Phase 1 creates separate sentences for each activity. Smart grouping produces mo
 
   for (const activity of activities) {
     if (!currentGroup) {
-      // Start first group
-      currentGroup = {
-        primaryActivity: activity,
-        relatedActivities: [],
-        conjunction: null,
-      };
-    } else if (this.#shouldGroupWith(currentGroup.primaryActivity, activity)) {
-      // Add to current group
+      currentGroup = this.#startActivityGroup(activity);
+      continue;
+    }
+
+    if (this.#shouldGroupActivities(currentGroup.primaryActivity, activity)) {
       currentGroup.relatedActivities.push({
         activity,
-        conjunction: this.#determineConjunction(currentGroup.primaryActivity, activity),
+        conjunction: this.#determineConjunction(
+          currentGroup.primaryActivity,
+          activity
+        ),
       });
-    } else {
-      // Finish current group, start new one
-      groups.push(currentGroup);
-      currentGroup = {
-        primaryActivity: activity,
-        relatedActivities: [],
-        conjunction: null,
-      };
+      continue;
     }
+
+    groups.push(currentGroup);
+    currentGroup = this.#startActivityGroup(activity);
   }
 
-  // Add final group
   if (currentGroup) {
     groups.push(currentGroup);
   }
@@ -68,89 +66,107 @@ Phase 1 creates separate sentences for each activity. Smart grouping produces mo
   return groups;
 }
 
+#startActivityGroup(activity) {
+  return {
+    primaryActivity: activity,
+    relatedActivities: [],
+  };
+}
+
 /**
- * Determine if activity should group with another.
+ * Determine if two activities should live in the same group.
  *
- * @param {object} first - First activity
- * @param {object} second - Second activity
- * @returns {boolean} Should group
+ * @param {object} first - Primary activity in the current group
+ * @param {object} second - Candidate activity
+ * @returns {boolean}
  * @private
  */
-#shouldGroupWith(first, second) {
-  // Same target entities
-  if (first.targetEntityId && first.targetEntityId === second.targetEntityId) {
+#shouldGroupActivities(first, second) {
+  const firstGroupKey = first.grouping?.groupKey;
+  const secondGroupKey = second.grouping?.groupKey;
+
+  if (firstGroupKey && firstGroupKey === secondGroupKey) {
     return true;
   }
 
-  // Explicit grouping metadata
-  if (first.grouping?.groupKey && first.grouping.groupKey === second.grouping?.groupKey) {
+  const firstTarget = first.targetEntityId ?? first.targetId;
+  const secondTarget = second.targetEntityId ?? second.targetId;
+
+  if (firstTarget && firstTarget === secondTarget) {
     return true;
   }
 
-  // No target for either (solo activities can't group meaningfully)
   return false;
 }
 
 /**
- * Determine appropriate conjunction for grouped activities.
+ * Determine the conjunction connecting two activities.
  *
- * @param {object} first - First activity
- * @param {object} second - Second activity
- * @returns {string} Conjunction ("and", "while")
+ * @param {object} first - Primary activity
+ * @param {object} second - Related activity
+ * @returns {string}
  * @private
  */
 #determineConjunction(first, second) {
-  // Simultaneous activities (both have high priority)
-  if (Math.abs(first.priority - second.priority) <= 10) {
-    return 'while';
-  }
+  const firstPriority = first.priority ?? 0;
+  const secondPriority = second.priority ?? 0;
 
-  // Sequential activities
-  return 'and';
+  return Math.abs(firstPriority - secondPriority) <= 10 ? 'while' : 'and';
 }
 ```
 
 ### Enhanced Formatting with Groups
+`#formatActivityDescription` already resolves the actor name, gender, and pronoun set, enforces the `maxActivities` limit from configuration, and then formats each activity individually. Introduce grouping *after* the slice to `maxActivities` but *before* the existing formatting loop so the surrounding logic stays intact.
+
 ```javascript
 /**
  * Format activity groups into natural language.
  *
  * @param {Array<ActivityGroup>} groups - Activity groups
- * @param {string} actorName - Actor name
- * @param {object} actorPronouns - Actor pronouns
+ * @param {string} actorName - Actor name resolved via #resolveEntityName
+ * @param {object} actorPronouns - Pronoun set returned by #getPronounSet
+ * @param {object} config - Activity integration config
  * @returns {Array<string>} Formatted group descriptions
  * @private
  */
-#formatActivityGroups(groups, actorName, actorPronouns) {
-  const config = this.#anatomyFormattingService.getActivityIntegrationConfig();
+#formatActivityGroups(groups, actorName, actorPronouns, config) {
   const usePronoun = config.nameResolution?.usePronounsWhenAvailable;
 
-  return groups.map((group, index) => {
-    const actorRef = index === 0 ? actorName : (usePronoun ? actorPronouns.subject : actorName);
+  return groups
+    .map((group, index) => {
+      const useActorPronoun = index > 0 && usePronoun;
+      const actorRef = useActorPronoun ? actorPronouns.subject : actorName;
 
-    // Format primary activity
-    let description = this.#generateActivityPhrase(
-      actorRef,
-      group.primaryActivity,
-      index > 0 && usePronoun
-    );
-
-    // Add related activities with conjunctions
-    for (const related of group.relatedActivities) {
-      const conjunction = related.conjunction;
-      const relatedPhrase = this.#generateActivityPhrase(
-        '', // No actor for grouped activities
-        related.activity,
-        usePronoun
+      const { fullPhrase: primaryPhrase } = this.#generateActivityPhrase(
+        actorRef,
+        group.primaryActivity,
+        useActorPronoun
       );
 
-      // Extract just the verb phrase (remove "is" from beginning)
-      const verbPhrase = relatedPhrase.replace(/^(he|she|they|it) is /, '');
-      description += ` ${conjunction} ${verbPhrase}`;
-    }
+      if (!primaryPhrase) {
+        return '';
+      }
 
-    return description;
-  });
+      let description = primaryPhrase;
+
+      for (const related of group.relatedActivities) {
+        const { verbPhrase } = this.#generateActivityPhrase(
+          actorPronouns.subject,
+          related.activity,
+          usePronoun,
+          { omitActor: true }
+        );
+
+        if (!verbPhrase) {
+          continue;
+        }
+
+        description += ` ${related.conjunction} ${verbPhrase}`;
+      }
+
+      return description;
+    })
+    .filter(Boolean);
 }
 ```
 
@@ -166,27 +182,39 @@ Phase 1 creates separate sentences for each activity. Smart grouping produces mo
  * @private
  */
 #formatActivityDescription(activities, entity) {
+  const config =
+    this.#anatomyFormattingService.getActivityIntegrationConfig?.() ?? {};
+
   if (activities.length === 0) {
     return '';
   }
 
-  const config = this.#anatomyFormattingService.getActivityIntegrationConfig();
-  const actorName = this.#resolveEntityName(entity.id);
-  const actorGender = this.#detectEntityGender(entity.id);
+  const actorId = entity?.id;
+  const actorName = this.#resolveEntityName(actorId);
+  const actorGender = this.#detectEntityGender(actorId);
   const actorPronouns = this.#getPronounSet(actorGender);
 
-  // Group activities intelligently
-  const groups = this.#groupActivities(activities);
+  const maxActivities = config.maxActivities ?? 10;
+  const limitedActivities = activities.slice(0, maxActivities);
 
-  // Format each group
-  const descriptions = this.#formatActivityGroups(groups, actorName, actorPronouns);
+  const groups = this.#groupActivities(limitedActivities);
+  const descriptions = this.#formatActivityGroups(
+    groups,
+    actorName,
+    actorPronouns,
+    config
+  );
 
-  const prefix = config.prefix || 'Activity: ';
-  const suffix = config.suffix || '';
-  const separator = config.separator || '. ';
+  if (descriptions.length === 0) {
+    return '';
+  }
+
+  const prefix = config.prefix ?? '';
+  const suffix = config.suffix ?? '';
+  const separator = config.separator ?? '. ';
 
   const activityText = descriptions.join(separator);
-  return `${prefix}${activityText}${suffix}`;
+  return `${prefix}${activityText}${suffix}`.trim();
 }
 ```
 
@@ -215,15 +243,15 @@ Phase 2: "Jon is kneeling before Alicia while looking at her"
 ```
 
 ## Acceptance Criteria
-- [ ] Activities with same target grouped together
-- [ ] Related activities (metadata.grouping) grouped
-- [ ] Appropriate conjunctions used ("and" vs "while")
-- [ ] Different targets create separate groups
-- [ ] Pronouns work correctly in grouped phrases
-- [ ] Verb phrases extracted correctly for secondary activities
-- [ ] Configuration respected
-- [ ] Tests verify grouping logic
-- [ ] Natural-sounding output
+- [ ] Activities that share a resolved target (`targetEntityId` / `targetId`) group into a single sentence using "and" by default
+- [ ] Explicit grouping metadata (`grouping.groupKey`) groups activities even when targets differ
+- [ ] Conjunction choice honours the ±10 priority threshold ("while" for simultaneous, otherwise "and")
+- [ ] Activities without grouping alignment stay in separate sentences
+- [ ] Pronoun configuration continues to apply for subsequent sentences and grouped verb phrases
+- [ ] Secondary phrases drop duplicate actor/pronoun text (no "and is holding" artifacts)
+- [ ] Config-driven limits (`maxActivities`, prefix/suffix/separator) still respected
+- [ ] Unit tests cover grouping, conjunction selection, metadata overrides, and fallbacks
+- [ ] Output remains natural and backwards-compatible when grouping is not possible
 
 ## Dependencies
 - **Requires**: ACTDESC-014 (Pronoun resolution)
@@ -234,85 +262,127 @@ Phase 2: "Jon is kneeling before Alicia while looking at her"
 
 ```javascript
 describe('ActivityDescriptionService - Smart Grouping', () => {
-  it('should group activities with same target using "and"', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is kneeling before {target}', 'alicia', 75);
-    addActivity(jon, '{actor} is holding hands with {target}', 'alicia', 80);
-
-    const description = await service.generateActivityDescription('jon');
-
-    expect(description).toMatch(/kneeling before.*and holding/);
-    expect(description).not.toMatch(/\./); // Single sentence
+  const createEntityWithGender = (id, name, gender) => ({
+    id,
+    componentTypeIds: ['core:name', 'core:gender'],
+    getComponentData: jest.fn((componentId) => {
+      if (componentId === 'core:name') {
+        return { text: name };
+      }
+      if (componentId === 'core:gender') {
+        return { value: gender };
+      }
+      return undefined;
+    }),
   });
 
-  it('should use "while" for simultaneous activities', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is kneeling', 'alicia', 75);
-    addActivity(jon, '{actor} is looking at {target}', 'alicia', 78); // Close priority
-
-    const description = await service.generateActivityDescription('jon');
-
-    expect(description).toMatch(/while/);
+  const createInlineActivity = (
+    template,
+    targetId,
+    priority,
+    overrides = {}
+  ) => ({
+    type: 'inline',
+    template,
+    priority,
+    targetEntityId: targetId,
+    ...overrides,
   });
 
-  it('should separate activities with different targets', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is embracing {target}', 'alicia', 80);
-    addActivity(jon, '{actor} is waving at {target}', 'bobby', 70);
-
-    const description = await service.generateActivityDescription('jon');
-
-    expect(description).toMatch(/\./); // Two sentences
-    expect(description).toMatch(/embracing.*bobby/i);
+  const createDedicatedActivity = (
+    verb,
+    targetId,
+    priority,
+    groupKey = null,
+    overrides = {}
+  ) => ({
+    type: 'dedicated',
+    verb,
+    priority,
+    targetEntityId: targetId,
+    grouping: groupKey ? { groupKey } : undefined,
+    ...overrides,
   });
 
-  it('should group by explicit grouping metadata', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is hugging {target}', 'alicia', 80, {
-      grouping: { groupKey: 'intimate_contact' },
+  beforeEach(() => {
+    mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+      prefix: 'Activity: ',
+      suffix: '',
+      separator: '. ',
+      nameResolution: { usePronounsWhenAvailable: true },
+      maxActivities: 5,
     });
-    addActivity(jon, '{actor} is kissing {target}', 'bobby', 75, {
-      grouping: { groupKey: 'intimate_contact' },
-    });
 
-    const description = await service.generateActivityDescription('jon');
-
-    // Should group even with different targets because of groupKey
-    expect(description).toMatch(/and/);
+    mockEntityManager.getEntityInstance.mockImplementation((id) =>
+      createEntityWithGender(id, `${id} Name`, id === 'jon' ? 'male' : 'female')
+    );
   });
 
-  it('should extract verb phrases correctly for grouped activities', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is kneeling before {target}', 'alicia', 75);
-    addActivity(jon, '{actor} is holding hands with {target}', 'alicia', 80);
+  it('groups activities with the same target using "and"', async () => {
+    mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+      createInlineActivity('{actor} is kneeling before {target}', 'alicia', 80),
+      createInlineActivity('{actor} is holding hands with {target}', 'alicia', 70),
+    ]);
 
     const description = await service.generateActivityDescription('jon');
 
-    // Should be "kneeling before Alicia and holding her hands"
-    // NOT "kneeling before Alicia and is holding her hands"
+    expect(description).toBe('Activity: Jon Name is kneeling before Alicia Name and holding her hands');
+  });
+
+  it('uses "while" when priorities are within the simultaneous threshold', async () => {
+    mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+      createInlineActivity('{actor} is kneeling', 'alicia', 80),
+      createInlineActivity('{actor} is looking at {target}', 'alicia', 75),
+    ]);
+
+    const description = await service.generateActivityDescription('jon');
+
+    expect(description).toContain('while');
+  });
+
+  it('keeps separate sentences when targets differ and no grouping metadata matches', async () => {
+    mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+      createInlineActivity('{actor} is embracing {target}', 'alicia', 80),
+      createInlineActivity('{actor} is waving at {target}', 'bobby', 70),
+    ]);
+
+    const description = await service.generateActivityDescription('jon');
+
+    expect(description.split('. ').length).toBeGreaterThan(1);
+  });
+
+  it('allows grouping via explicit grouping metadata even when targets differ', async () => {
+    mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+      createDedicatedActivity('hugging', 'alicia', 80, 'intimate_contact'),
+      createDedicatedActivity('kissing', 'bobby', 75, 'intimate_contact'),
+    ]);
+
+    const description = await service.generateActivityDescription('jon');
+
+    expect(description).toContain('and');
+    expect(description.split('. ').length).toBe(1);
+  });
+
+  it('omits duplicate "is" in grouped verb phrases', async () => {
+    mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+      createInlineActivity('{actor} is kneeling before {target}', 'alicia', 80),
+      createInlineActivity('{actor} is holding hands with {target}', 'alicia', 70),
+    ]);
+
+    const description = await service.generateActivityDescription('jon');
+
     expect(description).not.toMatch(/and is holding/);
-    expect(description).toMatch(/and holding/);
-  });
-
-  it('should handle three grouped activities', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is kneeling', 'alicia', 75);
-    addActivity(jon, '{actor} is holding hands with {target}', 'alicia', 80);
-    addActivity(jon, '{actor} is gazing at {target}', 'alicia', 82);
-
-    const description = await service.generateActivityDescription('jon');
-
-    expect(description).toMatch(/and.*and/); // Two "and" conjunctions
+    expect(description).toContain('and holding');
   });
 });
 ```
 
 ## Implementation Notes
-1. **Verb Extraction**: Remove actor pronoun and "is" from secondary phrases
-2. **Conjunction Logic**: "while" for simultaneous (Δpriority ≤ 10), "and" otherwise
-3. **Grouping Limits**: Consider max 3-4 activities per group for readability
-4. **Configuration**: Add `maxActivitiesPerGroup` to config if needed
-5. **Fallback**: If grouping fails, revert to separate sentences
+1. **Verb Extraction**: Extend `#generateActivityPhrase` so it can return both a `fullPhrase` (current behaviour) and a `verbPhrase` without the actor/copula when `omitActor` is requested. Keep existing call sites working without changes.
+2. **Conjunction Logic**: Use a shared helper for the ±10 priority threshold so tests can cover both "and" and "while" paths.
+3. **Grouping Limits**: Honour existing `maxActivities` trimming before grouping; consider introducing an optional `maxActivitiesPerGroup` config value if readability becomes an issue, but default to unlimited grouping for now.
+4. **Configuration**: Respect prefix/suffix/separator from `AnatomyFormattingService.getActivityIntegrationConfig()` and reuse the optional chaining already present in the service.
+5. **Fallback**: If grouping yields no phrases (for example, all related phrases were empty), fall back to the pre-grouping behaviour by returning an empty string so upstream code continues gracefully.
 
 ## Reference Files
 - Service: `src/anatomy/services/activityDescriptionService.js`
