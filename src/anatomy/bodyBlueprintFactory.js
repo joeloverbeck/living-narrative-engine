@@ -57,22 +57,27 @@ export class BodyBlueprintFactory {
   #socketGenerator;
   /** @type {SlotGenerator} */
   #slotGenerator;
+  /** @type {import('./recipePatternResolver.js').default} */
+  #recipePatternResolver;
 
   /**
-   * @param {object} deps
-   * @param {IEntityManager} deps.entityManager
-   * @param {IDataRegistry} deps.dataRegistry
-   * @param {ILogger} deps.logger
-   * @param {ISafeEventDispatcher} deps.eventDispatcher
-   * @param {EventDispatchService} deps.eventDispatchService
-   * @param {RecipeProcessor} deps.recipeProcessor
-   * @param {PartSelectionService} deps.partSelectionService
-   * @param {SocketManager} deps.socketManager
-   * @param {EntityGraphBuilder} deps.entityGraphBuilder
-   * @param {RecipeConstraintEvaluator} deps.constraintEvaluator
-   * @param {GraphIntegrityValidator} deps.validator
-   * @param {SocketGenerator} deps.socketGenerator
-   * @param {SlotGenerator} deps.slotGenerator
+   * Creates a new BodyBlueprintFactory instance
+   *
+   * @param {object} deps - Dependency injection container
+   * @param {IEntityManager} deps.entityManager - Entity manager
+   * @param {IDataRegistry} deps.dataRegistry - Data registry
+   * @param {ILogger} deps.logger - Logger
+   * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher
+   * @param {EventDispatchService} deps.eventDispatchService - Event dispatch service
+   * @param {RecipeProcessor} deps.recipeProcessor - Recipe processor
+   * @param {PartSelectionService} deps.partSelectionService - Part selection service
+   * @param {SocketManager} deps.socketManager - Socket manager
+   * @param {EntityGraphBuilder} deps.entityGraphBuilder - Entity graph builder
+   * @param {RecipeConstraintEvaluator} deps.constraintEvaluator - Constraint evaluator
+   * @param {GraphIntegrityValidator} deps.validator - Graph integrity validator
+   * @param {SocketGenerator} deps.socketGenerator - Socket generator
+   * @param {SlotGenerator} deps.slotGenerator - Slot generator
+   * @param {import('./recipePatternResolver.js').default} deps.recipePatternResolver - Recipe pattern resolver
    */
   constructor({
     entityManager,
@@ -88,6 +93,7 @@ export class BodyBlueprintFactory {
     validator,
     socketGenerator,
     slotGenerator,
+    recipePatternResolver,
   }) {
     if (!dataRegistry)
       throw new InvalidArgumentError('dataRegistry is required');
@@ -111,6 +117,8 @@ export class BodyBlueprintFactory {
       throw new InvalidArgumentError('socketGenerator is required');
     if (!slotGenerator)
       throw new InvalidArgumentError('slotGenerator is required');
+    if (!recipePatternResolver)
+      throw new InvalidArgumentError('recipePatternResolver is required');
 
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
@@ -124,6 +132,7 @@ export class BodyBlueprintFactory {
     this.#validator = validator;
     this.#socketGenerator = socketGenerator;
     this.#slotGenerator = slotGenerator;
+    this.#recipePatternResolver = recipePatternResolver;
   }
 
   /**
@@ -149,8 +158,14 @@ export class BodyBlueprintFactory {
       const recipe = this.#recipeProcessor.loadRecipe(recipeId);
       const processedRecipe = this.#recipeProcessor.processRecipe(recipe);
 
+      // Resolve V2 patterns against blueprint slots
+      const resolvedRecipe = this.#recipePatternResolver.resolveRecipePatterns(
+        processedRecipe,
+        blueprint
+      );
+
       // Validate recipe slots against blueprint
-      this.#validateRecipeSlots(processedRecipe, blueprint);
+      this.#validateRecipeSlots(resolvedRecipe, blueprint);
 
       // Initialize context
       context = new AnatomyGraphContext(options.seed);
@@ -158,7 +173,7 @@ export class BodyBlueprintFactory {
       // Phase 1: Create root entity
       const rootId = await this.#entityGraphBuilder.createRootEntity(
         blueprint.root,
-        processedRecipe,
+        resolvedRecipe,
         options.ownerId
       );
       context.setRootId(rootId);
@@ -167,7 +182,7 @@ export class BodyBlueprintFactory {
       if (blueprint.slots) {
         await this.#processBlueprintSlots(
           blueprint,
-          processedRecipe,
+          resolvedRecipe,
           context,
           options.ownerId
         );
@@ -176,7 +191,7 @@ export class BodyBlueprintFactory {
       // Phase 3: Validate constraints
       const constraintResult = this.#constraintEvaluator.evaluateConstraints(
         context.getCreatedEntities(),
-        processedRecipe
+        resolvedRecipe
       );
 
       if (!constraintResult.valid) {
@@ -191,7 +206,7 @@ export class BodyBlueprintFactory {
       // Phase 4: Validate graph integrity
       const validationResult = await this.#validator.validateGraph(
         context.getCreatedEntities(),
-        processedRecipe,
+        resolvedRecipe,
         context.getSocketOccupancy()
       );
 
