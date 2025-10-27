@@ -90,11 +90,51 @@ async function _handleResponse(
     logger.debug(
       `fetchWithRetry: Attempt ${currentAttempt}/${maxRetries} for ${url} - Request successful (status ${response.status}). Parsing JSON response.`
     );
-    const responseData = await response.json();
-    logger.debug(
-      `fetchWithRetry: Successfully fetched and parsed JSON from ${url} after ${currentAttempt} attempt(s).`
-    );
-    return { retry: false, data: responseData };
+    if (response.status === 204 || response.status === 205) {
+      logger.debug(
+        `fetchWithRetry: ${url} returned ${response.status} (No Content). Treating response body as null.`
+      );
+      return { retry: false, data: null };
+    }
+
+    const contentLengthHeader = response.headers?.get?.('Content-Length');
+    const hasExplicitZeroLength =
+      typeof contentLengthHeader === 'string' &&
+      Number.parseInt(contentLengthHeader, 10) === 0;
+
+    if (hasExplicitZeroLength) {
+      logger.debug(
+        `fetchWithRetry: ${url} response included Content-Length: 0. Treating response body as null.`
+      );
+      return { retry: false, data: null };
+    }
+
+    const responseClone =
+      typeof response.clone === 'function' ? response.clone() : null;
+
+    try {
+      const responseData = await response.json();
+      logger.debug(
+        `fetchWithRetry: Successfully fetched and parsed JSON from ${url} after ${currentAttempt} attempt(s).`
+      );
+      return { retry: false, data: responseData };
+    } catch (parseError) {
+      if (responseClone) {
+        try {
+          const rawBody = await responseClone.text();
+          if (rawBody.trim() === '') {
+            logger.debug(
+              `fetchWithRetry: ${url} returned an empty body. Treating response body as null.`
+            );
+            return { retry: false, data: null };
+          }
+        } catch {
+          // Ignore clone read errors and rethrow the original parse error below.
+        }
+      }
+
+      throw parseError;
+    }
   }
 
   const { parsedBody, bodyText } = await _parseErrorResponse(response);
