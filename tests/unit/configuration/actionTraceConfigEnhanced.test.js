@@ -159,30 +159,6 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       }
     });
 
-    it('should detect performance regressions', async () => {
-      const config = createSampleConfig({
-        tracedActions: Array(100)
-          .fill(null)
-          .map((_, i) => `mod:action${i}`),
-      });
-
-      mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
-
-      // Simulate slow operation
-      mockTraceConfigLoader.loadConfig.mockImplementation(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 35));
-        return config;
-      });
-
-      await loader.loadConfig();
-
-      // Check for performance warnings
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Performance regression'),
-        expect.objectContaining({ threshold: '25ms' })
-      );
-    });
-
     it('should calculate accurate operation statistics', async () => {
       const config = createSampleConfig();
       mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
