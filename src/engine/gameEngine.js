@@ -8,7 +8,10 @@ import {
   REQUEST_SHOW_LOAD_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
 } from '../constants/eventIds.js';
-import { processOperationFailure } from '../utils/engineErrorUtils.js';
+import {
+  processOperationFailure,
+  getReadableErrorMessage,
+} from '../utils/engineErrorUtils.js';
 import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
 import PersistenceCoordinator from './persistenceCoordinator.js';
@@ -439,12 +442,25 @@ class GameEngine {
           }
 
           const rawInitError = initResult.error;
-          initError =
-            rawInitError instanceof Error
-              ? rawInitError
-              : rawInitError
-                ? new Error(String(rawInitError))
-                : new Error('Unknown failure from InitializationService.');
+          if (rawInitError instanceof Error) {
+            initError = rawInitError;
+          } else {
+            const readableMessage = getReadableErrorMessage(rawInitError);
+            const normalizedMessage =
+              readableMessage === 'Unknown error.'
+                ? 'Unknown failure from InitializationService.'
+                : readableMessage;
+
+            initError = new Error(normalizedMessage);
+
+            if (rawInitError !== undefined) {
+              try {
+                initError.cause = rawInitError;
+              } catch {
+                initError.originalError = rawInitError;
+              }
+            }
+          }
           this.#logger.warn(
             `GameEngine: InitializationService reported failure for "${normalizedWorldName}".`
           );
