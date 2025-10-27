@@ -70,12 +70,13 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
     }
 
     // Ensure 'success' is a boolean, as required by the schema.
-    // Default to false if it's not explicitly provided or is not a boolean,
+    // Default to true if it's not explicitly provided or is not a boolean,
     // though the calling code in TurnEndingState should provide a valid boolean.
-    const isTurnSuccessful = typeof success === 'boolean' ? success : false;
-    if (typeof success !== 'boolean') {
+    const hasBooleanSuccess = typeof success === 'boolean';
+    const isTurnSuccessful = hasBooleanSuccess ? success : true;
+    if (!hasBooleanSuccess) {
       this.#log.warn(
-        `EventBusTurnEndAdapter: 'success' parameter was not a boolean (received: ${success}). Defaulting to 'false'. EntityId: ${entityId}`
+        `EventBusTurnEndAdapter: 'success' parameter was not a boolean (received: ${success}). Defaulting to 'true'. EntityId: ${entityId}`
       );
     }
 

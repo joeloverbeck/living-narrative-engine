@@ -134,6 +134,24 @@ describe('EventBusTurnEndAdapter', () => {
     );
   });
 
+  it('should default success to true when an invalid value is provided', async () => {
+    const adapter = new EventBusTurnEndAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+      logger: mockLogger,
+    });
+    const entityId = 'npc-default-success';
+
+    await adapter.notifyTurnEnded(entityId, undefined);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Defaulting to 'true'. EntityId")
+    );
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
+      TURN_ENDED_ID,
+      { entityId, success: true }
+    );
+  });
+
   it('should reject if dispatch throws an error', async () => {
     const dispatchError = new Error('VED failed for turn end');
     mockSafeDispatcher.dispatch.mockRejectedValueOnce(dispatchError);
