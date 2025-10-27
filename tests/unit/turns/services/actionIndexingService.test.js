@@ -264,6 +264,40 @@ describe('ActionIndexingService', () => {
     );
   });
 
+  it('does not merge NaN, Infinity, or null parameter values together', () => {
+    const rawActions = [
+      {
+        id: 'numeric',
+        params: { value: NaN },
+        command: 'cmd',
+        description: 'NaN value',
+      },
+      {
+        id: 'numeric',
+        params: { value: null },
+        command: 'cmd',
+        description: 'null value',
+      },
+      {
+        id: 'numeric',
+        params: { value: Infinity },
+        command: 'cmd',
+        description: 'Infinity value',
+      },
+      {
+        id: 'numeric',
+        params: { value: -Infinity },
+        command: 'cmd',
+        description: '-Infinity value',
+      },
+    ];
+
+    const result = service.indexActions('actorNumeric', rawActions);
+
+    expect(result).toHaveLength(4);
+    expect(logger.info).not.toHaveBeenCalled();
+  });
+
   it('does not log info when there are no duplicates', () => {
     const rawActions = [
       {
