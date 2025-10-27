@@ -168,6 +168,25 @@ describe('EngineUIManager', () => {
     });
   });
 
+  describe('dispose()', () => {
+    let manager;
+
+    beforeEach(() => {
+      manager = new EngineUIManager({
+        eventDispatcher: mockEventDispatcher,
+        domUiFacade: mockDomUiFacade,
+        logger: mockLogger,
+      });
+    });
+
+    it('should log the disposal debug message', () => {
+      manager.dispose();
+      expect(mockLogger.debug).toHaveBeenLastCalledWith(
+        'EngineUIManager: Disposing. (No explicit unsubscriptions needed with current ISafeEventDispatcher behavior).'
+      );
+    });
+  });
+
   describe('Event Handlers', () => {
     let manager;
 
