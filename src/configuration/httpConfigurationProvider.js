@@ -67,11 +67,10 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
    * @override
    */
   async fetchData(sourceUrl) {
-    if (
-      !sourceUrl ||
-      typeof sourceUrl !== 'string' ||
-      sourceUrl.trim() === ''
-    ) {
+    const isString = typeof sourceUrl === 'string';
+    const normalizedUrl = isString ? sourceUrl.trim() : '';
+
+    if (!isString || normalizedUrl === '') {
       const errorMessage =
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.';
       await dispatchSystemErrorEvent(
@@ -79,7 +78,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
         errorMessage,
         {
           scopeName: 'HttpConfigurationProvider.fetchData',
-          url: sourceUrl,
+          url: isString ? sourceUrl : undefined,
         },
         this.#logger
       );
@@ -87,28 +86,29 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
     }
 
     this.#logger.debug(
-      `HttpConfigurationProvider: Attempting to load configurations from ${sourceUrl}`
+      `HttpConfigurationProvider: Attempting to load configurations from ${normalizedUrl}`
     );
 
     try {
-      const response = await fetch(sourceUrl);
+      const response = await fetch(normalizedUrl);
 
       if (!response.ok) {
         const errorStatusText =
           response.statusText || `HTTP status ${response.status}`;
         await dispatchSystemErrorEvent(
           this.#dispatcher,
-          `HttpConfigurationProvider: Failed to fetch configuration from ${sourceUrl}. Status: ${response.status} ${errorStatusText}`,
+          `HttpConfigurationProvider: Failed to fetch configuration from ${normalizedUrl}. Status: ${response.status} ${errorStatusText}`,
           {
             statusCode: response.status,
             statusText: errorStatusText,
-            url: sourceUrl,
+            url: normalizedUrl,
+            originalUrl: sourceUrl,
             scopeName: 'HttpConfigurationProvider.fetchData',
           },
           this.#logger
         );
         throw new Error(
-          `Failed to fetch configuration file from ${sourceUrl}: ${errorStatusText}`
+          `Failed to fetch configuration file from ${normalizedUrl}: ${errorStatusText}`
         );
       }
 
@@ -119,26 +119,30 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       } catch (parseError) {
         await dispatchSystemErrorEvent(
           this.#dispatcher,
-          `HttpConfigurationProvider: Failed to parse JSON response from ${sourceUrl}.`,
+          `HttpConfigurationProvider: Failed to parse JSON response from ${normalizedUrl}.`,
           {
             error:
               parseError instanceof Error
                 ? parseError.message
                 : String(parseError),
             stack: parseError instanceof Error ? parseError.stack : undefined,
-            url: sourceUrl,
+            url: normalizedUrl,
+            originalUrl: sourceUrl,
             scopeName: 'HttpConfigurationProvider.fetchData',
           },
           this.#logger
         );
-        // @ts-ignore
         throw new Error(
-          `Failed to parse configuration data from ${sourceUrl} as JSON: ${parseError.message}`
+          `Failed to parse configuration data from ${normalizedUrl} as JSON: ${
+            parseError instanceof Error
+              ? parseError.message
+              : String(parseError)
+          }`
         );
       }
 
       this.#logger.debug(
-        `HttpConfigurationProvider: Successfully fetched and parsed configuration from ${sourceUrl}.`
+        `HttpConfigurationProvider: Successfully fetched and parsed configuration from ${normalizedUrl}.`
       );
       return jsonData;
     } catch (error) {
@@ -158,17 +162,18 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
         error instanceof Error ? error.message : String(error);
       await dispatchSystemErrorEvent(
         this.#dispatcher,
-        `HttpConfigurationProvider: Error loading or parsing configuration from ${sourceUrl}. Detail: ${errorMessage}`,
+        `HttpConfigurationProvider: Error loading or parsing configuration from ${normalizedUrl}. Detail: ${errorMessage}`,
         {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
-          url: sourceUrl,
+          url: normalizedUrl,
+          originalUrl: sourceUrl,
           scopeName: 'HttpConfigurationProvider.fetchData',
         },
         this.#logger
       );
       throw new Error(
-        `Could not load configuration from ${sourceUrl}: ${errorMessage}`
+        `Could not load configuration from ${normalizedUrl}: ${errorMessage}`
       );
     }
   }

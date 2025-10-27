@@ -82,6 +82,37 @@ describe('HttpConfigurationProvider', () => {
       expectNoDispatch(mockDispatcher.dispatch);
     });
 
+    it('trims surrounding whitespace from the URL before fetching', async () => {
+      const mockData = { ok: true };
+      const rawUrl = '  http://example.com/config.json  ';
+      const trimmedUrl = 'http://example.com/config.json';
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockData),
+          status: 200,
+          statusText: 'OK',
+        })
+      );
+
+      const provider = new HttpConfigurationProvider({
+        logger: mockLogger,
+        safeEventDispatcher: mockDispatcher,
+      });
+
+      const result = await provider.fetchData(rawUrl);
+
+      expect(result).toEqual(mockData);
+      expect(global.fetch).toHaveBeenCalledWith(trimmedUrl);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `HttpConfigurationProvider: Attempting to load configurations from ${trimmedUrl}`
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `HttpConfigurationProvider: Successfully fetched and parsed configuration from ${trimmedUrl}.`
+      );
+      expectNoDispatch(mockDispatcher.dispatch);
+    });
+
     it('should throw an error and log if sourceUrl is invalid (empty string)', async () => {
       // global.fetch is already jest.fn() from beforeEach
       const provider = new HttpConfigurationProvider({
