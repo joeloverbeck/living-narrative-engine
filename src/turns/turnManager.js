@@ -575,17 +575,51 @@ class TurnManager extends ITurnManager {
     } else if (currentActor?.hasComponent(PLAYER_COMPONENT_ID)) {
       actorType = 'player';
     }
-    this.#dispatcher
-      .dispatch(TURN_PROCESSING_ENDED, {
+    const reportProcessingEndedFailure = (details) => {
+      safeDispatchError(
+        this.#dispatcher,
+        `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${endedActorId}`,
+        {
+          entityId: endedActorId,
+          actorType,
+          ...details,
+        }
+      ).catch((error) =>
+        logError(
+          this.#logger,
+          `Failed to dispatch system error after ${TURN_PROCESSING_ENDED} failure for ${endedActorId}`,
+          error
+        )
+      );
+    };
+
+    Promise.resolve(
+      this.#dispatcher.dispatch(TURN_PROCESSING_ENDED, {
         entityId: endedActorId,
         actorType,
       })
+    )
+      .then((dispatchResult) => {
+        if (dispatchResult === false) {
+          this.#logger.warn(
+            `${TURN_PROCESSING_ENDED} dispatch was rejected by dispatcher for ${endedActorId}.`,
+            { actorType }
+          );
+          reportProcessingEndedFailure({
+            error: 'Dispatcher rejected event',
+          });
+        } else if (dispatchResult !== true && dispatchResult !== undefined) {
+          this.#logger.warn(
+            `${TURN_PROCESSING_ENDED} dispatch returned unexpected result: ${dispatchResult}`,
+            { entityId: endedActorId, actorType }
+          );
+        }
+      })
       .catch((dispatchError) =>
-        safeDispatchError(
-          this.#dispatcher,
-          `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${endedActorId}`,
-          { error: dispatchError.message }
-        )
+        reportProcessingEndedFailure({
+          error: dispatchError.message,
+          stack: dispatchError.stack,
+        })
       );
 
     this.#logger.debug(
