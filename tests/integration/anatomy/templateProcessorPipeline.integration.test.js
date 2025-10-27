@@ -21,6 +21,13 @@ describe('Template Processor Pipeline Integration', () => {
     slotGenerator = new SlotGenerator({ logger });
   });
 
+  afterEach(() => {
+    // Cleanup for pattern consistency
+    socketGenerator = null;
+    slotGenerator = null;
+    logger = null;
+  });
+
   describe('Complete Pipeline Flow - Humanoid Template', () => {
     it('processes humanoid structure template through complete pipeline', () => {
       // Arrange: Structure template (as loaded by AnatomyStructureTemplateLoader)
@@ -160,6 +167,77 @@ describe('Template Processor Pipeline Integration', () => {
       expect(sockets.map((s) => s.id).sort()).toEqual(
         Object.keys(slots).sort()
       );
+    });
+  });
+
+  describe('Complete Pipeline Flow - Octopoid Template', () => {
+    it('processes octopoid structure template with indexed tentacles', () => {
+      // Arrange: 8-tentacle octopoid with indexed orientation
+      const structureTemplate = {
+        id: 'creatures:structure_octopoid',
+        topology: {
+          rootType: 'mantle',
+          limbSets: [
+            {
+              type: 'tentacle',
+              count: 8,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'tentacle_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['octopus_tentacle'],
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              attachment: 'anterior',
+              socketPattern: {
+                idTemplate: 'head_socket',
+                allowedTypes: ['octopus_head'],
+              },
+            },
+          ],
+        },
+      };
+
+      // Act
+      const sockets = socketGenerator.generateSockets(structureTemplate);
+      const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
+
+      // Assert: 8 tentacles + 1 head
+      expect(sockets).toHaveLength(9);
+
+      // Verify indexed tentacle IDs
+      const tentacleSockets = sockets.filter((s) =>
+        s.id.startsWith('tentacle_')
+      );
+      expect(tentacleSockets).toHaveLength(8);
+      expect(tentacleSockets.map((s) => s.id)).toEqual([
+        'tentacle_1',
+        'tentacle_2',
+        'tentacle_3',
+        'tentacle_4',
+        'tentacle_5',
+        'tentacle_6',
+        'tentacle_7',
+        'tentacle_8',
+      ]);
+
+      // CRITICAL: Socket/slot synchronization with indexed scheme
+      expect(Object.keys(slots)).toHaveLength(9);
+      expect(sockets.map((s) => s.id).sort()).toEqual(
+        Object.keys(slots).sort()
+      );
+
+      // Verify each tentacle slot matches its socket
+      tentacleSockets.forEach((socket) => {
+        expect(slots[socket.id]).toBeDefined();
+        expect(slots[socket.id].socket).toBe(socket.id);
+        expect(slots[socket.id].requirements.partType).toBe('tentacle');
+      });
     });
   });
 
@@ -638,6 +716,145 @@ describe('Template Processor Pipeline Integration', () => {
 
       expect(sockets.map((s) => s.id)).toEqual(expectedIds);
       expect(Object.keys(slots)).toEqual(expectedIds);
+    });
+  });
+
+  describe('Edge Cases and Input Validation', () => {
+    it('rejects template with zero limb count', () => {
+      const invalidTemplate = {
+        id: 'test:zero_count',
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 0, // Invalid: zero count
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      // SocketGenerator should handle gracefully (produce empty array)
+      const sockets = socketGenerator.generateSockets(invalidTemplate);
+      const slots = slotGenerator.generateBlueprintSlots(invalidTemplate);
+
+      expect(sockets).toEqual([]);
+      expect(slots).toEqual({});
+    });
+
+    it('handles template with negative limb count gracefully', () => {
+      const invalidTemplate = {
+        id: 'test:negative_count',
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'leg',
+              count: -2, // Invalid: negative count
+              socketPattern: {
+                idTemplate: 'leg_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      // Current implementation handles gracefully (produces empty array)
+      const sockets = socketGenerator.generateSockets(invalidTemplate);
+      const slots = slotGenerator.generateBlueprintSlots(invalidTemplate);
+
+      expect(sockets).toEqual([]);
+      expect(slots).toEqual({});
+    });
+
+    it('handles template with malformed idTemplate gracefully', () => {
+      const malformedTemplate = {
+        id: 'test:malformed_template',
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_socket', // Missing variable placeholder
+                orientationScheme: 'bilateral',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      // Should detect duplicate IDs or handle appropriately
+      expect(() =>
+        socketGenerator.generateSockets(malformedTemplate)
+      ).toThrow('Duplicate socket IDs detected');
+    });
+
+    it('handles count/orientationScheme mismatch with duplicate detection', () => {
+      const inconsistentTemplate = {
+        id: 'test:inconsistent_scheme',
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'tentacle',
+              count: 5,
+              socketPattern: {
+                idTemplate: 'tentacle_{{orientation}}',
+                orientationScheme: 'bilateral', // Inconsistent: bilateral only provides 2 orientations
+                allowedTypes: ['tentacle'],
+              },
+            },
+          ],
+        },
+      };
+
+      // Bilateral scheme cycles through left/right, creating duplicates with count=5
+      // SocketGenerator should detect duplicate IDs and throw
+      expect(() => socketGenerator.generateSockets(inconsistentTemplate)).toThrow(
+        'Duplicate socket IDs detected'
+      );
+    });
+
+    it('handles count exceeding positions array with fallback indices', () => {
+      const mismatchedTemplate = {
+        id: 'test:mismatched_positions',
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              socketPattern: {
+                idTemplate: 'leg_{{position}}',
+                orientationScheme: 'custom',
+                positions: ['front', 'back'], // Mismatch: count=4 but only 2 positions
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      // Current behavior: generates sockets for count=4, using positions for first 2
+      // then falling back to indexed positions for remaining limbs
+      const sockets = socketGenerator.generateSockets(mismatchedTemplate);
+      expect(sockets).toHaveLength(4);
+
+      // First 2 use provided positions, remaining use fallback pattern
+      expect(sockets[0].id).toBe('leg_front');
+      expect(sockets[1].id).toBe('leg_back');
+      expect(sockets[2].id).toMatch(/^leg_position_\d+$/);
+      expect(sockets[3].id).toMatch(/^leg_position_\d+$/);
     });
   });
 });
