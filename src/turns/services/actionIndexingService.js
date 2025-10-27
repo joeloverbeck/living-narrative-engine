@@ -239,7 +239,9 @@ export class ActionIndexingService {
     // Idempotent shortcut (same turn)
     if (discovered.length === 0 && this.#actorCache.has(actorId)) {
       const cachedList = this.#actorCache.get(actorId);
-      if (cachedList) return cachedList; // Type guard
+      if (cachedList) {
+        return cachedList.slice(); // Protect internal cache from external mutation
+      }
     }
 
     /* ── deduplicate by (id + params) ─────────────────────────────────── */
@@ -289,7 +291,7 @@ export class ActionIndexingService {
     this.#log.debug(
       `ActionIndexingService: indexed ${composites.length} actions for ${actorId}`
     );
-    return composites;
+    return composites.slice(); // Return copy to prevent accidental cache mutation
   }
 
   /* ─────────────────────────────────────────────────────────────────────── */
