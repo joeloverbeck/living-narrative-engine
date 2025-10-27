@@ -183,9 +183,8 @@ class ActivityDescriptionService {
       this.#logger
     );
 
-    this.#closenessCache.clear();
-    // Gender components may change between invocations; clear cached pronouns so fresh data is used.
-    this.#genderCache.clear();
+    // Gender components may change between invocations; refresh actor pronouns while retaining cached targets.
+    this.#genderCache.delete(entityId);
 
     try {
       this.#logger.debug(
@@ -1159,7 +1158,7 @@ class ActivityDescriptionService {
       return context;
     }
 
-    let cachedPartners = this.#closenessCache.get(actorId);
+    let cachedPartners = this.#getCacheValue(this.#closenessCache, actorId);
 
     if (!cachedPartners) {
       try {
@@ -1178,7 +1177,7 @@ class ActivityDescriptionService {
         cachedPartners = [];
       }
 
-      this.#closenessCache.set(actorId, cachedPartners);
+      this.#setCacheValue(this.#closenessCache, actorId, cachedPartners);
     }
 
     context.targetGender = this.#detectEntityGender(targetId);
@@ -1977,6 +1976,7 @@ class ActivityDescriptionService {
     this.#pruneCache(this.#entityNameCache, this.#cacheConfig.maxSize, now);
     this.#pruneCache(this.#genderCache, this.#cacheConfig.maxSize, now);
     this.#pruneCache(this.#activityIndexCache, 100, now);
+    this.#pruneCache(this.#closenessCache, this.#cacheConfig.maxSize, now);
   }
 
   /**
