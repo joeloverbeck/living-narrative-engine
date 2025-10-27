@@ -162,6 +162,8 @@ class ActivityDescriptionService {
     );
 
     this.#closenessCache.clear();
+    // Gender components may change between invocations; clear cached pronouns so fresh data is used.
+    this.#genderCache.clear();
 
     try {
       this.#logger.debug(`Generating activity description for entity: ${entityId}`);
@@ -1444,6 +1446,28 @@ class ActivityDescriptionService {
       buildRelatedActivityFragment: (...args) =>
         this.#buildRelatedActivityFragment(...args),
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
+      evaluateActivityVisibility: (...args) =>
+        this.#evaluateActivityVisibility(...args),
+      buildLogicContext: (...args) => this.#buildLogicContext(...args),
+      buildActivityContext: (...args) => this.#buildActivityContext(...args),
+      applyContextualTone: (...args) => this.#applyContextualTone(...args),
+      generateActivityPhrase: (...args) => this.#generateActivityPhrase(...args),
+      filterByConditions: (...args) => this.#filterByConditions(...args),
+      determineActivityIntensity: (...args) =>
+        this.#determineActivityIntensity(...args),
+      determineConjunction: (...args) => this.#determineConjunction(...args),
+      activitiesOccurSimultaneously: (...args) =>
+        this.#activitiesOccurSimultaneously(...args),
+      getPronounSet: (...args) => this.#getPronounSet(...args),
+      isEmptyConditionsObject: (...args) =>
+        this.#isEmptyConditionsObject(...args),
+      matchesPropertyCondition: (...args) =>
+        this.#matchesPropertyCondition(...args),
+      hasRequiredComponents: (...args) =>
+        this.#hasRequiredComponents(...args),
+      hasForbiddenComponents: (...args) =>
+        this.#hasForbiddenComponents(...args),
+      extractEntityData: (...args) => this.#extractEntityData(...args),
       cleanupCaches: () => this.#cleanupCaches(),
       setEntityNameCacheEntry: (key, value) =>
         this.#setCacheValue(this.#entityNameCache, key, value),
@@ -1495,9 +1519,14 @@ class ActivityDescriptionService {
       }
     }
 
-    index.byPriority = [...activities].sort(
-      (a, b) => (b?.priority ?? 50) - (a?.priority ?? 50)
-    );
+    index.byPriority = [...activities].sort((a, b) => {
+      const fallbackPriority = Number.NEGATIVE_INFINITY;
+      const aPriority =
+        typeof a?.priority === 'number' ? a.priority : fallbackPriority;
+      const bPriority =
+        typeof b?.priority === 'number' ? b.priority : fallbackPriority;
+      return bPriority - aPriority;
+    });
 
     return index;
   }
