@@ -22,10 +22,7 @@ describe('Multi-target action duplication bug', () => {
     formatter = new MultiTargetActionFormatter(baseFormatter, mockLogger);
   });
 
-  it('should NOT deduplicate actions with different individual targets', () => {
-    // This test reproduces the bug where actions targeting different entities
-    // are incorrectly considered duplicates
-
+  it('preserves unique commands for multi-target variations', () => {
     // Simulate the discovered actions that would come from the formatter
     // Currently these all have the SAME params with ALL targets
     const discovered = [
@@ -62,12 +59,11 @@ describe('Multi-target action duplication bug', () => {
     // Index the actions
     const indexed = indexingService.indexActions('test_actor', discovered);
 
-    // Bug: Currently this will return only 1 action due to deduplication
-    // It SHOULD return 2 actions
-    expect(indexed).toHaveLength(1); // This demonstrates the bug
-
-    // What we actually want:
-    // expect(indexed).toHaveLength(2);
+    expect(indexed).toHaveLength(2);
+    expect(indexed.map((item) => item.commandString)).toEqual([
+      'get close to Amaia Castillo',
+      'get close to Jon Ureña',
+    ]);
   });
 
   it('should generate separate actions with unique params for each target', () => {
