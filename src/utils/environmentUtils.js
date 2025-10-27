@@ -90,10 +90,7 @@ export function getEnvironmentVariable(key, defaultValue = '') {
   // Try browser window environment variables (if available)
   if (isBrowserEnvironment() && typeof window !== 'undefined') {
     const envSource = window && window.env;
-    if (
-      envSource &&
-      Object.prototype.hasOwnProperty.call(envSource, key)
-    ) {
+    if (envSource && Object.prototype.hasOwnProperty.call(envSource, key)) {
       const value = envSource[key];
       return value === undefined || value === null
         ? defaultValue
@@ -233,8 +230,35 @@ export function getEnvironmentConfig() {
  */
 export function hasEnvironmentVariable(key) {
   try {
-    const value = getEnvironmentVariable(key);
-    return value !== '' && value !== 'false' && value !== '0';
+    const rawValue = getEnvironmentVariable(key, undefined);
+
+    if (rawValue === undefined || rawValue === null) {
+      return false;
+    }
+
+    const normalizedValue =
+      typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
+
+    if (normalizedValue.length === 0) {
+      return false;
+    }
+
+    const lowerValue = normalizedValue.toLowerCase();
+
+    if (FALSY_ENV_VALUES.has(lowerValue)) {
+      return false;
+    }
+
+    if (TRUTHY_ENV_VALUES.has(lowerValue)) {
+      return true;
+    }
+
+    // For non-boolean string values (e.g., "production"), consider the
+    // variable present as long as it is non-empty. For non-string values fall
+    // back to boolean coercion which handles numeric values consistently.
+    return typeof rawValue === 'string'
+      ? normalizedValue.length > 0
+      : Boolean(rawValue);
   } catch (error) {
     return false;
   }
@@ -277,8 +301,7 @@ export function createProcessEnvShim() {
  */
 export function isGarbageCollectionAvailable() {
   // eslint-disable-next-line no-undef
-  return typeof global !== 'undefined' &&
-         typeof global.gc === 'function';
+  return typeof global !== 'undefined' && typeof global.gc === 'function';
 }
 
 /**
@@ -313,10 +336,7 @@ function resolveNodeHeapLimit(defaultLimit) {
 
   try {
     const v8Binding = process.binding('v8');
-    if (
-      v8Binding &&
-      typeof v8Binding.getHeapStatistics === 'function'
-    ) {
+    if (v8Binding && typeof v8Binding.getHeapStatistics === 'function') {
       const stats = v8Binding.getHeapStatistics();
       const heapLimitCandidate = stats?.heap_size_limit;
       if (
@@ -350,7 +370,11 @@ export function getMemoryUsage() {
   }
 
   // Node.js environment
-  if (isNodeEnvironment() && typeof process !== 'undefined' && process.memoryUsage) {
+  if (
+    isNodeEnvironment() &&
+    typeof process !== 'undefined' &&
+    process.memoryUsage
+  ) {
     const mem = process.memoryUsage();
     const heapUsed = Number.isFinite(mem?.heapUsed) ? mem.heapUsed : 0;
     const heapTotal = Number.isFinite(mem?.heapTotal) ? mem.heapTotal : 0;
