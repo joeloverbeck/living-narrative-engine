@@ -2,7 +2,12 @@
   "id": "sex-penile-oral",
   "version": "1.0.0",
   "name": "sex-penile-oral",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
   "content": {
     "actions": [
       "breathe_teasingly_on_penis.action.json",
