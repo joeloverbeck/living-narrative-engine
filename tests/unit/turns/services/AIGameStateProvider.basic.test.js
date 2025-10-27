@@ -2,6 +2,90 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { AIGameStateProvider } from '../../../../src/turns/services/AIGameStateProvider.js';
 
+describe('AIGameStateProvider constructor validation', () => {
+  const createDependencies = () => ({
+    actorStateProvider: { build: jest.fn() },
+    actorDataExtractor: { extractPromptData: jest.fn() },
+    locationSummaryProvider: { build: jest.fn() },
+    perceptionLogProvider: { get: jest.fn() },
+    safeEventDispatcher: { dispatch: jest.fn() },
+  });
+
+  it.each([
+    [
+      'actorStateProvider',
+      undefined,
+      'Missing required dependency: actorStateProvider.',
+    ],
+    [
+      'actorDataExtractor',
+      undefined,
+      'Missing required dependency: actorDataExtractor.',
+    ],
+    [
+      'locationSummaryProvider',
+      undefined,
+      'Missing required dependency: locationSummaryProvider.',
+    ],
+    [
+      'perceptionLogProvider',
+      undefined,
+      'Missing required dependency: perceptionLogProvider.',
+    ],
+    [
+      'safeEventDispatcher',
+      undefined,
+      'Missing required dependency: safeEventDispatcher.',
+    ],
+  ])('throws when %s is missing', (dependencyName, value, expectedMessage) => {
+    const dependencies = createDependencies();
+    dependencies[dependencyName] = value;
+    expect(() => new AIGameStateProvider(dependencies)).toThrow(
+      expectedMessage
+    );
+  });
+
+  it('throws when actorStateProvider lacks build()', () => {
+    const dependencies = createDependencies();
+    dependencies.actorStateProvider = {};
+    expect(() => new AIGameStateProvider(dependencies)).toThrow(
+      "Invalid or missing method 'build' on dependency 'actorStateProvider'."
+    );
+  });
+
+  it('throws when actorDataExtractor lacks extractPromptData()', () => {
+    const dependencies = createDependencies();
+    dependencies.actorDataExtractor = {};
+    expect(() => new AIGameStateProvider(dependencies)).toThrow(
+      "Invalid or missing method 'extractPromptData' on dependency 'actorDataExtractor'."
+    );
+  });
+
+  it('throws when locationSummaryProvider lacks build()', () => {
+    const dependencies = createDependencies();
+    dependencies.locationSummaryProvider = {};
+    expect(() => new AIGameStateProvider(dependencies)).toThrow(
+      "Invalid or missing method 'build' on dependency 'locationSummaryProvider'."
+    );
+  });
+
+  it('throws when perceptionLogProvider lacks get()', () => {
+    const dependencies = createDependencies();
+    dependencies.perceptionLogProvider = {};
+    expect(() => new AIGameStateProvider(dependencies)).toThrow(
+      "Invalid or missing method 'get' on dependency 'perceptionLogProvider'."
+    );
+  });
+
+  it('throws when safeEventDispatcher lacks dispatch()', () => {
+    const dependencies = createDependencies();
+    dependencies.safeEventDispatcher = {};
+    expect(() => new AIGameStateProvider(dependencies)).toThrow(
+      "Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'."
+    );
+  });
+});
+
 describe('AIGameStateProvider', () => {
   let mockActorStateProvider;
   let mockActorDataExtractor;

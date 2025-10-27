@@ -12,6 +12,7 @@
 /** @typedef {import('../../interfaces/IPerceptionLogProvider.js').IPerceptionLogProvider} IPerceptionLogProvider */
 
 import { IAIGameStateProvider } from '../interfaces/IAIGameStateProvider.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * @class AIGameStateProvider
@@ -42,6 +43,26 @@ export class AIGameStateProvider extends IAIGameStateProvider {
     safeEventDispatcher,
   }) {
     super();
+    validateDependency(actorStateProvider, 'actorStateProvider', console, {
+      requiredMethods: ['build'],
+    });
+    validateDependency(actorDataExtractor, 'actorDataExtractor', console, {
+      requiredMethods: ['extractPromptData'],
+    });
+    validateDependency(
+      locationSummaryProvider,
+      'locationSummaryProvider',
+      console,
+      {
+        requiredMethods: ['build'],
+      }
+    );
+    validateDependency(perceptionLogProvider, 'perceptionLogProvider', console, {
+      requiredMethods: ['get'],
+    });
+    validateDependency(safeEventDispatcher, 'safeEventDispatcher', console, {
+      requiredMethods: ['dispatch'],
+    });
     this.#actorStateProvider = actorStateProvider;
     this.#actorDataExtractor = actorDataExtractor;
     this.#locationSummaryProvider = locationSummaryProvider;
