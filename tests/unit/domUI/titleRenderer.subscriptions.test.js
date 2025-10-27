@@ -70,6 +70,9 @@ describe('TitleRenderer', () => {
     unsubscribeSpies = [];
     mockH1Element = createMockElement('H1');
     mockH1Element.textContent = 'Initial Title';
+    mockSafeEventDispatcher.dispatch.mockImplementation(() =>
+      Promise.resolve(true)
+    );
 
     // Ensure mock subscribe returns the correct structure for RendererBase
     mockSafeEventDispatcher.subscribe.mockImplementation(
@@ -427,6 +430,11 @@ describe('TitleRenderer', () => {
       );
     });
 
+    it('should handle "initialization:world_loader:started" without world name', () => {
+      simulateEvent('initialization:world_loader:started');
+      expect(renderer.set).toHaveBeenCalledWith('Loading world data...');
+    });
+
     it('should handle "initialization:system_initializer:started" step event', () => {
       simulateEvent('initialization:system_initializer:started', {
         tag: 'gfx',
@@ -436,10 +444,47 @@ describe('TitleRenderer', () => {
       );
     });
 
+    it('should handle "initialization:system_initializer:started" without tag', () => {
+      simulateEvent('initialization:system_initializer:started');
+      expect(renderer.set).toHaveBeenCalledWith('Initializing core systems...');
+    });
+
+    it('should provide a generic status for unknown initialization steps', () => {
+      const handler = capturedSubscriptions['initialization:world_loader:started'];
+      handler({}, 'initialization:mysterious_service:started');
+      expect(renderer.set).toHaveBeenCalledWith(
+        'Initializing mysterious service...'
+      );
+    });
+
+    it('should keep default status when initialization event has insufficient segments', () => {
+      const handler = capturedSubscriptions['initialization:world_loader:started'];
+      handler({}, 'initialization:partial');
+      expect(renderer.set).toHaveBeenCalledWith('Initializing...');
+    });
+
+    it('should keep default status when initialization event type is missing', () => {
+      const handler = capturedSubscriptions['initialization:world_loader:started'];
+      handler({}, undefined);
+      expect(renderer.set).toHaveBeenCalledWith('Initializing...');
+    });
+
     it('should handle "initialization:game_state_initializer:started" step event', () => {
       simulateEvent('initialization:game_state_initializer:started');
       expect(renderer.set).toHaveBeenCalledWith(
         'Setting up initial game state...'
+      );
+    });
+
+    it('should handle "initialization:world_initializer:started" step event', () => {
+      simulateEvent('initialization:world_initializer:started');
+      expect(renderer.set).toHaveBeenCalledWith('Creating world entities...');
+    });
+
+    it('should handle "initialization:input_setup_service:started" step event', () => {
+      simulateEvent('initialization:input_setup_service:started');
+      expect(renderer.set).toHaveBeenCalledWith(
+        'Configuring input handler...'
       );
     });
 
@@ -467,6 +512,31 @@ describe('TitleRenderer', () => {
           message: expect.stringContaining(
             'input setup service Failed. Error: Keybindings conflict'
           ),
+        })
+      );
+    });
+
+    it('should default failed step title when event type segments are incomplete', () => {
+      const handler = capturedSubscriptions['initialization:world_loader:failed'];
+      const payload = { error: 'Boom' };
+      handler(payload, 'initialization:partial');
+      expect(renderer.set).toHaveBeenCalledWith('Initialization step Failed');
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Initialization step Failed. Error: Boom'),
+        })
+      );
+    });
+
+    it('should default failed step title when event type is missing', () => {
+      const handler = capturedSubscriptions['initialization:world_loader:failed'];
+      handler({}, undefined);
+      expect(renderer.set).toHaveBeenCalledWith('Initialization step Failed');
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Initialization step Failed. Error: Unknown error occurred'),
         })
       );
     });
