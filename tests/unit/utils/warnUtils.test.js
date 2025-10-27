@@ -34,4 +34,12 @@ describe('warnNoActiveTurn', () => {
       'TurnIdleState: processCommandResult called (for actor-1) but no turn is active.'
     );
   });
+
+  test('adds separator when method name lacks trailing whitespace', () => {
+    const logger = makeLogger();
+    warnNoActiveTurn(logger, 'TurnIdleState', 'handleDirective', 'actor-1');
+    expect(logger.warn).toHaveBeenCalledWith(
+      'TurnIdleState: handleDirective actor-1 but no turn is active.'
+    );
+  });
 });

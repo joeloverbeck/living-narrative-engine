@@ -23,11 +23,29 @@
  * @returns {void}
  */
 export function warnNoActiveTurn(logger, stateName, methodName, actorId) {
-  const needsIdleNote =
-    methodName.startsWith('Command') ||
-    methodName.startsWith('handleTurnEndedEvent');
+  const stateLabel =
+    typeof stateName === 'string' && stateName.trim().length > 0
+      ? stateName.trim()
+      : 'UnknownState';
+  const methodLabel =
+    typeof methodName === 'string' && methodName.length > 0
+      ? methodName
+      : 'Unknown method';
+  const actorLabel =
+    typeof actorId === 'string' && actorId.length > 0
+      ? actorId
+      : 'unknown actor';
 
-  const message = `${stateName}: ${methodName}${actorId} but no turn is active${
+  const needsIdleNote =
+    methodLabel.startsWith('Command') ||
+    methodLabel.startsWith('handleTurnEndedEvent');
+
+  const requiresSeparator = !/[\s(]$/.test(methodLabel);
+  const formattedMethod = requiresSeparator
+    ? `${methodLabel} `
+    : methodLabel;
+
+  const message = `${stateLabel}: ${formattedMethod}${actorLabel} but no turn is active${
     needsIdleNote ? ' (handler is Idle).' : '.'
   }`;
   logger.warn(message);
