@@ -53,6 +53,26 @@ export function createSafeErrorLogger({
    * @type {Array<{options: {context: string, timeoutMs: number}, config: {maxRecursionDepth: number, maxGlobalRecursion: number, timeoutMs: number, context: string}}>} */
   const loadingContextStack = [];
 
+  /**
+   * Normalizes loading options to a configuration object.
+   *
+   * @description Converts shorthand string arguments and unexpected input
+   * types into a consistent options object for downstream consumers.
+   * @param {object | string | undefined | null} options - Provided loading options or shorthand context string.
+   * @returns {{context?: string, timeoutMs?: number}} Normalized loading options object.
+   */
+  const normalizeLoadingOptions = (options) => {
+    if (typeof options === 'string') {
+      return { context: options };
+    }
+
+    if (options && typeof options === 'object' && !Array.isArray(options)) {
+      return options;
+    }
+
+    return {};
+  };
+
   const clearExistingTimeout = () => {
     if (loadingTimeoutId) {
       clearTimeout(loadingTimeoutId);
@@ -101,7 +121,8 @@ export function createSafeErrorLogger({
       timeoutMs: 60000, // 1 minute timeout for safety
     };
 
-    const loadingOptions = { ...defaultOptions, ...options };
+    const normalizedOptions = normalizeLoadingOptions(options);
+    const loadingOptions = { ...defaultOptions, ...normalizedOptions };
 
     const isHighVolumeContext = HIGH_VOLUME_CONTEXTS.has(
       loadingOptions.context
@@ -227,8 +248,9 @@ export function createSafeErrorLogger({
    * @returns {Promise<any>} Result of the function execution
    */
   async function withGameLoadingMode(fn, options = {}) {
+    const normalizedOptions = normalizeLoadingOptions(options);
     const previousDepth = loadingContextStack.length;
-    enableGameLoadingMode(options);
+    enableGameLoadingMode(normalizedOptions);
 
     /** @type {unknown} */
     let operationError = null;
@@ -256,7 +278,7 @@ export function createSafeErrorLogger({
       if (loadingContextStack.length > expectedDepth) {
         safeLogger.warn(
           'SafeErrorLogger: Game loading mode still active after scope exit. Forcing batch mode disable to prevent leaks.',
-          { context: options.context }
+          { context: normalizedOptions.context }
         );
         try {
           disableGameLoadingMode({ force: true, reason: 'scope-exit' });

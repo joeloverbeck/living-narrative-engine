@@ -49,6 +49,17 @@ describe('SafeErrorLogger.withGameLoadingMode cleanup', () => {
     );
   });
 
+  it('supports legacy string context arguments', async () => {
+    await safeErrorLogger.withGameLoadingMode(async () => {}, 'legacy-context');
+
+    const setBatchModeCalls = mockDispatcher.setBatchMode.mock.calls;
+    expect(setBatchModeCalls[0][0]).toBe(true);
+    expect(setBatchModeCalls[0][1]).toEqual(
+      expect.objectContaining({ context: 'legacy-context' })
+    );
+    expect(setBatchModeCalls[setBatchModeCalls.length - 1][0]).toBe(false);
+  });
+
   it('preserves outer loading context when nested mode exits cleanly', async () => {
     await safeErrorLogger.withGameLoadingMode(
       async () => {
