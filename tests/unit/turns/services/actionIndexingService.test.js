@@ -324,7 +324,8 @@ describe('ActionIndexingService', () => {
     const first = service.indexActions('actor42', raw);
     const second = service.indexActions('actor42', []);
 
-    expect(second).toBe(first);
+    expect(second).not.toBe(first);
+    expect(second).toEqual(first);
   });
 
   describe('beginTurn', () => {
@@ -434,6 +435,29 @@ describe('ActionIndexingService', () => {
     firstList.pop();
     const secondList = service.getIndexedList('actorY');
     expect(secondList).toHaveLength(2);
+  });
+
+  it('indexActions returns a defensive copy for fresh indexing results', () => {
+    const raw = [
+      { id: 'a', params: {}, command: 'c', description: 'd' },
+      { id: 'b', params: {}, command: 'c2', description: 'd2' },
+    ];
+    const indexed = service.indexActions('actorCopy', raw);
+    indexed.pop();
+    const cachedList = service.getIndexedList('actorCopy');
+    expect(cachedList).toHaveLength(2);
+  });
+
+  it('indexActions returns a defensive copy when reusing cached results', () => {
+    const raw = [
+      { id: 'a', params: {}, command: 'c', description: 'd' },
+      { id: 'b', params: {}, command: 'c2', description: 'd2' },
+    ];
+    service.indexActions('actorReuse', raw);
+    const reused = service.indexActions('actorReuse', []);
+    reused.pop();
+    const cachedList = service.getIndexedList('actorReuse');
+    expect(cachedList).toHaveLength(2);
   });
 
   it('resolve throws if called before indexActions', () => {
