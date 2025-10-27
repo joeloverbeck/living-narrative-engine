@@ -179,4 +179,54 @@ describe('validateSaveMetadataFields', () => {
       isCorrupted: true,
     });
   });
+
+  test('gracefully handles null metadata objects', () => {
+    extractSaveName.mockReturnValue('Null Metadata Save');
+
+    const result = validateSaveMetadataFields(
+      null,
+      'manual_save_null.sav',
+      logger
+    );
+
+    expect(extractSaveName).toHaveBeenCalledWith('manual_save_null.sav');
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('manual_save_null.sav')
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Contents: null')
+    );
+    expect(result).toEqual({
+      identifier: 'manual_save_null.sav',
+      saveName: 'Null Metadata Save (Bad Metadata)',
+      timestamp: 'N/A',
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+  });
+
+  test('treats non-object metadata as corrupted without throwing', () => {
+    extractSaveName.mockReturnValue('Primitive Metadata Save');
+
+    const result = validateSaveMetadataFields(
+      'corrupted',
+      'manual_save_string.sav',
+      logger
+    );
+
+    expect(extractSaveName).toHaveBeenCalledWith('manual_save_string.sav');
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('manual_save_string.sav')
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Contents: "corrupted"')
+    );
+    expect(result).toEqual({
+      identifier: 'manual_save_string.sav',
+      saveName: 'Primitive Metadata Save (Bad Metadata)',
+      timestamp: 'N/A',
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+  });
 });
