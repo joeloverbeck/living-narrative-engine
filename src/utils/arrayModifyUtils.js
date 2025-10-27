@@ -157,34 +157,37 @@ export function advancedArrayModify(mode, array, value, logger) {
       } else {
         exists = array.some((item) => areDeeplyEqual(item, value));
       }
-      const next = exists ? [...array] : [...array, value];
-      return { nextArray: next, result: next, modified: !exists };
+      if (exists) {
+        return { nextArray: array, result: array, modified: false };
+      }
+      const next = [...array, value];
+      return { nextArray: next, result: next, modified: true };
     }
     case 'pop': {
-      const popped = array.length > 0 ? array[array.length - 1] : undefined;
+      if (array.length === 0) {
+        return { nextArray: array, result: undefined, modified: false };
+      }
+      const popped = array[array.length - 1];
       const next = array.slice(0, -1);
-      return { nextArray: next, result: popped, modified: array.length > 0 };
+      return { nextArray: next, result: popped, modified: true };
     }
     case 'remove_by_value': {
-      let next = [...array];
-      let modified = false;
+      let index = -1;
       if (typeof value !== 'object' || value === null) {
-        const index = array.indexOf(value);
-        if (index > -1) {
-          next = [...array.slice(0, index), ...array.slice(index + 1)];
-          modified = true;
-        }
+        index = array.indexOf(value);
       } else {
-        const index = array.findIndex((item) => areDeeplyEqual(item, value));
-        if (index > -1) {
-          next = [...array.slice(0, index), ...array.slice(index + 1)];
-          modified = true;
-        }
+        index = array.findIndex((item) => areDeeplyEqual(item, value));
       }
-      return { nextArray: next, result: next, modified };
+
+      if (index === -1) {
+        return { nextArray: array, result: array, modified: false };
+      }
+
+      const next = [...array.slice(0, index), ...array.slice(index + 1)];
+      return { nextArray: next, result: next, modified: true };
     }
     default:
       logger?.error(`Unknown mode: ${mode}`);
-      return { nextArray: [...array], result: undefined, modified: false };
+      return { nextArray: array, result: undefined, modified: false };
   }
 }
