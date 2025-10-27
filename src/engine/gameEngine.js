@@ -146,16 +146,67 @@ class GameEngine {
   }
 
   #resetCoreGameState() {
-    if (this.#entityManager) this.#entityManager.clearAll();
-    else
+    /** @type {Error | null} */
+    let entityResetError = null;
+    /** @type {Error | null} */
+    let playtimeResetError = null;
+
+    if (this.#entityManager) {
+      try {
+        this.#entityManager.clearAll();
+      } catch (error) {
+        entityResetError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          'GameEngine._resetCoreGameState: Failed to clear EntityManager.',
+          entityResetError
+        );
+      }
+    } else {
       this.#logger.warn(
         'GameEngine._resetCoreGameState: EntityManager not available.'
       );
-    if (this.#playtimeTracker) this.#playtimeTracker.reset();
-    else
+    }
+
+    if (this.#playtimeTracker) {
+      try {
+        this.#playtimeTracker.reset();
+      } catch (error) {
+        playtimeResetError =
+          error instanceof Error ? error : new Error(String(error));
+        this.#logger.error(
+          'GameEngine._resetCoreGameState: Failed to reset PlaytimeTracker.',
+          playtimeResetError
+        );
+      }
+    } else {
       this.#logger.warn(
         'GameEngine._resetCoreGameState: PlaytimeTracker not available.'
       );
+    }
+
+    if (entityResetError || playtimeResetError) {
+      if (
+        entityResetError &&
+        playtimeResetError &&
+        entityResetError !== playtimeResetError
+      ) {
+        try {
+          if (!('cause' in entityResetError) || !entityResetError.cause) {
+            entityResetError.cause = playtimeResetError;
+          } else if (Array.isArray(entityResetError.resetErrors)) {
+            entityResetError.resetErrors.push(playtimeResetError);
+          } else {
+            entityResetError.resetErrors = [playtimeResetError];
+          }
+        } catch {
+          entityResetError.resetErrors = [playtimeResetError];
+        }
+      }
+
+      throw entityResetError || playtimeResetError;
+    }
+
     this.#logger.debug(
       'GameEngine: Core game state (EntityManager, PlaytimeTracker) cleared/reset.'
     );

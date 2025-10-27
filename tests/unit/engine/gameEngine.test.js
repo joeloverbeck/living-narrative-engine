@@ -1010,5 +1010,72 @@ describeEngineSuite('GameEngine', (context) => {
         'GameEngine._resetCoreGameState: PlaytimeTracker not available.'
       );
     });
+
+    it('should continue resetting playtime tracker when entity reset fails', async () => {
+      const testBed = context.bed;
+      const clearError = new Error('entity reset failed');
+      testBed.getEntityManager().clearAll.mockImplementation(() => {
+        throw clearError;
+      });
+      const playtimeTracker = testBed.getPlaytimeTracker();
+
+      testBed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).rejects.toThrow(clearError);
+
+      expect(playtimeTracker.reset).toHaveBeenCalled();
+      expect(testBed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine._resetCoreGameState: Failed to clear EntityManager.',
+        clearError
+      );
+    });
+
+    it('should surface both reset failures when entity and playtime reset throw', async () => {
+      const testBed = context.bed;
+      const clearError = new Error('clear failure');
+      const playtimeError = new Error('playtime failure');
+
+      testBed.getEntityManager().clearAll.mockImplementation(() => {
+        throw clearError;
+      });
+      testBed.getPlaytimeTracker().reset.mockImplementation(() => {
+        throw playtimeError;
+      });
+
+      testBed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+
+      let caughtError;
+      try {
+        await context.engine.startNewGame(DEFAULT_TEST_WORLD);
+      } catch (error) {
+        caughtError = error;
+      }
+
+      expect(caughtError).toBe(clearError);
+      expect(testBed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine._resetCoreGameState: Failed to clear EntityManager.',
+        clearError
+      );
+      expect(testBed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine._resetCoreGameState: Failed to reset PlaytimeTracker.',
+        playtimeError
+      );
+      expect(Array.isArray(caughtError.resetErrors) || caughtError.cause).toBe(true);
+      if (Array.isArray(caughtError.resetErrors)) {
+        expect(caughtError.resetErrors).toContain(playtimeError);
+      } else {
+        expect(caughtError.cause).toBe(playtimeError);
+      }
+    });
   });
 });
