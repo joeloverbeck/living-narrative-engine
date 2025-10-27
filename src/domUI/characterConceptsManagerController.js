@@ -4,7 +4,6 @@
  */
 
 import { BaseCharacterBuilderController } from '../characterBuilder/controllers/BaseCharacterBuilderController.js';
-import { validateDependency } from '../utils/dependencyUtils.js';
 import {
   FormValidationHelper,
   ValidationPatterns,
