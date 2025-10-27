@@ -106,6 +106,42 @@ describe('BrowserStorageProvider listFiles and helpers', () => {
     );
   });
 
+  it('normalizes Windows-style separators when resolving directories', async () => {
+    const manualDirHandle = createMockDirHandle({
+      'slot1.sav': 'file',
+      'note.txt': 'file',
+    });
+
+    const savesDirHandle = createMockDirHandle({ manual_saves: 'directory' });
+    savesDirHandle.getDirectoryHandle = jest.fn(async (name) => {
+      if (name === 'manual_saves') {
+        return manualDirHandle;
+      }
+      const err = new Error('NotFound');
+      err.name = 'NotFoundError';
+      throw err;
+    });
+
+    rootHandle.getDirectoryHandle.mockImplementation(async (name) => {
+      if (name === 'saves') {
+        return savesDirHandle;
+      }
+      const err = new Error('NotFound');
+      err.name = 'NotFoundError';
+      throw err;
+    });
+
+    const results = await provider.listFiles('saves\\manual_saves', '\\.(sav)$');
+    expect(results).toEqual(['slot1.sav']);
+    expect(rootHandle.getDirectoryHandle).toHaveBeenCalledWith('saves', {
+      create: false,
+    });
+    expect(savesDirHandle.getDirectoryHandle).toHaveBeenCalledWith(
+      'manual_saves',
+      { create: false }
+    );
+  });
+
   it('deleteFile reports not-found as success with message', async () => {
     rootHandle.getFileHandle = jest.fn(async () => {
       const err = new Error('nf');

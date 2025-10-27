@@ -43,6 +43,29 @@ export class BrowserStorageProvider extends IStorageProvider {
   }
 
   /**
+   * Normalizes relative storage paths to use forward slashes.
+   *
+   * @private
+   * @description Converts Windows-style separators to forward slashes, collapses
+   * repeated separators, and trims any leading or trailing slashes so downstream
+   * logic can safely split the path into segments.
+   * @param {string | null | undefined} pathInput - Path value provided by callers.
+   * @returns {string} Sanitized relative path that only uses forward slashes.
+   */
+  #normalizeRelativePath(pathInput) {
+    const rawValue =
+      typeof pathInput === 'string' ? pathInput : String(pathInput ?? '');
+
+    if (!rawValue) {
+      return '';
+    }
+
+    const withForwardSlashes = rawValue.replace(/[\\]+/g, '/');
+    const collapsedSeparators = withForwardSlashes.replace(/\/{2,}/g, '/');
+    return collapsedSeparators.replace(/^\/+|\/+$/g, '');
+  }
+
+  /**
    * Lazily initializes and returns the root directory handle.
    * Prompts the user for directory selection if the handle is not already available or permissions are lost.
    *
@@ -144,7 +167,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       throw new Error('Root directory handle is not available.');
     }
     // Normalize internal path before splitting
-    const normalizedDirectoryPath = directoryPath.replace(/^\/+|\/+$/g, '');
+    const normalizedDirectoryPath = this.#normalizeRelativePath(directoryPath);
     if (!normalizedDirectoryPath || normalizedDirectoryPath === '.') {
       // Root or current dir effectively
       return root;
@@ -218,14 +241,16 @@ export class BrowserStorageProvider extends IStorageProvider {
     }
 
     // Normalize internal path before splitting
-    const normalizedFilePath = filePath.replace(/^\/+|\/+$/g, '');
-    const pathParts = normalizedFilePath.split('/');
+    const normalizedFilePath = this.#normalizeRelativePath(filePath);
 
-    if (pathParts.length === 0 || (pathParts.length === 1 && !pathParts[0])) {
+    if (!normalizedFilePath) {
       throw new Error(
         `Invalid file path provided (normalized to empty or root): "${filePath}" -> "${normalizedFilePath}"`
       );
     }
+
+    const pathParts = normalizedFilePath.split('/');
+
     const fileName = pathParts.pop();
     if (!fileName)
       throw new Error(
@@ -295,7 +320,7 @@ export class BrowserStorageProvider extends IStorageProvider {
 
   async writeFileAtomically(filePath, data) {
     // --- MODIFICATION START: Normalize filePath before using it to construct tempFilePath ---
-    const normalizedFilePath = filePath.replace(/^\/+|\/+$/g, '');
+    const normalizedFilePath = this.#normalizeRelativePath(filePath);
     this.#logger.debug(
       `BrowserStorageProvider: Beginning atomic write for ${normalizedFilePath}.`
     );
@@ -509,7 +534,7 @@ export class BrowserStorageProvider extends IStorageProvider {
       }); // Ensure we get handle to delete
 
       // To delete a file, we need its parent directory handle and the file's name.
-      const normalizedFilePath = filePath.replace(/^\/+|\/+$/g, '');
+      const normalizedFilePath = this.#normalizeRelativePath(filePath);
       const pathParts = normalizedFilePath.split('/');
       const fileName = pathParts.pop();
       if (!fileName)
