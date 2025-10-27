@@ -52,7 +52,40 @@ export function buildManualFileName(saveName) {
  * @returns {string} Extracted save name.
  */
 export function extractSaveName(fileName) {
-  return fileName.replace(/^manual_save_/i, '').replace(/\.sav$/i, '');
+  const stringValue =
+    typeof fileName === 'string' ? fileName : String(fileName ?? '');
+  const trimmedValue = stringValue.trim();
+
+  if (!trimmedValue) {
+    return '';
+  }
+
+  const segments = trimmedValue.split(/[/\\]+/).filter(Boolean);
+
+  if (segments.length === 0) {
+    return '';
+  }
+
+  for (let i = segments.length - 1; i >= 0; i -= 1) {
+    const segment = segments[i].trim();
+    if (!segment) {
+      continue;
+    }
+
+    const withoutPrefix = segment.replace(/^manual_save_/i, '');
+    const withoutExtension = withoutPrefix.replace(/\.sav$/i, '');
+    const candidate = withoutExtension.trim();
+
+    if (!candidate) {
+      continue;
+    }
+
+    if (candidate !== segment || segments.length === 1) {
+      return candidate;
+    }
+  }
+
+  return '';
 }
 
 /**
