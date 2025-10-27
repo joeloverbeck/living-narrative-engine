@@ -23,11 +23,17 @@ describe('savePathUtils', () => {
     });
 
     it('should provide a regex that matches manual save files only', () => {
-      expect(MANUAL_SAVE_PATTERN.test('manual_save_adventure_01.sav')).toBe(true);
+      expect(MANUAL_SAVE_PATTERN.test('manual_save_adventure_01.sav')).toBe(
+        true
+      );
       expect(MANUAL_SAVE_PATTERN.test('manual_save_test-file.sav')).toBe(true);
       expect(MANUAL_SAVE_PATTERN.test('MANUAL_SAVE_EPIC_FINAL.SAV')).toBe(true);
-      expect(MANUAL_SAVE_PATTERN.test('auto_save_adventure_01.sav')).toBe(false);
-      expect(MANUAL_SAVE_PATTERN.test('manual_save_incomplete.txt')).toBe(false);
+      expect(MANUAL_SAVE_PATTERN.test('auto_save_adventure_01.sav')).toBe(
+        false
+      );
+      expect(MANUAL_SAVE_PATTERN.test('manual_save_incomplete.txt')).toBe(
+        false
+      );
     });
   });
 
@@ -67,6 +73,26 @@ describe('savePathUtils', () => {
       expect(extractSaveName('MANUAL_SAVE_Final_Mission.SAV')).toBe(
         'Final_Mission'
       );
+    });
+
+    it('should strip directory segments from provided paths', () => {
+      expect(
+        extractSaveName('saves/manual_saves/manual_save_Adventure.sav')
+      ).toBe('Adventure');
+      expect(extractSaveName('C:/Games/Saves/manual_save_Epic_Final.sav')).toBe(
+        'Epic_Final'
+      );
+      expect(
+        extractSaveName('C:\\games\\manual_saves\\manual_save_Quest.sav')
+      ).toBe('Quest');
+    });
+
+    it('should handle trailing separators and whitespace gracefully', () => {
+      expect(extractSaveName('  manual_saves/manual_save_Name.sav  ')).toBe(
+        'Name'
+      );
+      expect(extractSaveName('saves/manual_saves/')).toBe('');
+      expect(extractSaveName('')).toBe('');
     });
   });
 
