@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 import { LlmSelectionModal } from '../../../src/domUI';
+import * as createSelectableItemModule from '../../../src/domUI/helpers/createSelectableItem.js';
 import {
   afterEach,
   beforeEach,
@@ -254,6 +255,90 @@ describe('LlmSelectionModal', () => {
     delete global.requestAnimationFrame;
     delete global.cancelAnimationFrame;
     delete global.HTMLElement;
+  });
+
+  describe('constructor dependency validation', () => {
+    it('throws an error when the logger dependency is missing', () => {
+      expect(
+        () =>
+          new LlmSelectionModal({
+            logger: undefined,
+            documentContext: documentContextMock,
+            domElementFactory: domElementFactoryMock,
+            llmAdapter: llmAdapterMock,
+            validatedEventDispatcher: validatedEventDispatcherMock,
+          })
+      ).toThrow('LlmSelectionModal: Logger dependency is required.');
+    });
+
+    it('throws an error when the documentContext dependency is missing', () => {
+      expect(
+        () =>
+          new LlmSelectionModal({
+            logger: loggerMock,
+            documentContext: undefined,
+            domElementFactory: domElementFactoryMock,
+            llmAdapter: llmAdapterMock,
+            validatedEventDispatcher: validatedEventDispatcherMock,
+          })
+      ).toThrow('LlmSelectionModal: DocumentContext dependency is required.');
+    });
+
+    it('throws an error when the llmAdapter dependency is missing', () => {
+      expect(
+        () =>
+          new LlmSelectionModal({
+            logger: loggerMock,
+            documentContext: documentContextMock,
+            domElementFactory: domElementFactoryMock,
+            llmAdapter: undefined,
+            validatedEventDispatcher: validatedEventDispatcherMock,
+          })
+      ).toThrow('LlmSelectionModal: LLMAdapter dependency is required.');
+    });
+
+    it('throws an error when the validatedEventDispatcher dependency is missing', () => {
+      expect(
+        () =>
+          new LlmSelectionModal({
+            logger: loggerMock,
+            documentContext: documentContextMock,
+            domElementFactory: domElementFactoryMock,
+            llmAdapter: llmAdapterMock,
+            validatedEventDispatcher: undefined,
+          })
+      ).toThrow(
+        'LlmSelectionModal: ValidatedEventDispatcher dependency is required for BaseModalRenderer.'
+      );
+    });
+  });
+
+  describe('_renderListItem', () => {
+    it('logs an error and returns null when the list item cannot be created', () => {
+      const createSelectableItemSpy = jest
+        .spyOn(createSelectableItemModule, 'createSelectableItem')
+        .mockReturnValueOnce(null);
+
+      const result = llmSelectionModal._renderListItem(
+        { configId: 'test-llm', displayName: 'Test LLM' },
+        3
+      );
+
+      expect(result).toBeNull();
+      expect(createSelectableItemSpy).toHaveBeenCalledWith(
+        domElementFactoryMock,
+        'li',
+        'llmId',
+        'test-llm',
+        'Test LLM',
+        false,
+        false,
+        'llm-item'
+      );
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        '[LlmSelectionModal] Failed to create <li> element for LLM option: Test LLM'
+      );
+    });
   });
 
   describe('show() method', () => {
