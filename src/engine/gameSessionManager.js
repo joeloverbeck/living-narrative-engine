@@ -4,7 +4,11 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_READY_UI,
 } from '../constants/eventIds.js';
-import { extractSaveName } from '../utils/savePathUtils.js';
+import {
+  BASE_SAVE_DIRECTORY,
+  MANUAL_SAVES_SUBDIRECTORY,
+  extractSaveName,
+} from '../utils/savePathUtils.js';
 
 /**
  * @typedef {import('./engineState.js').default} EngineState
@@ -339,11 +343,47 @@ class GameSessionManager {
       (segment) => !/^[.]+$/.test(segment)
     );
 
+    const manualSavesDirLower = MANUAL_SAVES_SUBDIRECTORY.toLowerCase();
+    const baseSaveDirLower = BASE_SAVE_DIRECTORY.toLowerCase();
+    const manualSavePrefix = 'manual_save';
+
+    let manualDirectoryDetected = false;
+
     for (let i = meaningfulSegments.length - 1; i >= 0; i -= 1) {
-      const formatted = this.#normalizeSaveName(meaningfulSegments[i]);
+      const segment = meaningfulSegments[i];
+      const normalizedSegment = segment.trim().toLowerCase();
+
+      if (normalizedSegment === manualSavesDirLower) {
+        manualDirectoryDetected = true;
+        continue;
+      }
+
+      const formatted = this.#normalizeSaveName(segment);
+
+      if (normalizedSegment === baseSaveDirLower) {
+        if (manualDirectoryDetected) {
+          continue;
+        }
+        if (formatted) {
+          return formatted;
+        }
+        continue;
+      }
+
+      if (normalizedSegment.startsWith(manualSavePrefix)) {
+        if (formatted) {
+          return formatted;
+        }
+        continue;
+      }
+
       if (formatted) {
         return formatted;
       }
+    }
+
+    if (manualDirectoryDetected) {
+      return 'Saved Game';
     }
 
     const identifierWithoutSeparators = normalizedIdentifier.replace(
