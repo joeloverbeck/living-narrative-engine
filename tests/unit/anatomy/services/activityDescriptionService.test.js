@@ -8,6 +8,7 @@ describe('ActivityDescriptionService', () => {
   let mockAnatomyFormattingService;
   let mockActivityIndex;
   let mockJsonLogicEvaluationService;
+  let mockEventBus;
 
   beforeEach(() => {
     // Create mocks
@@ -48,6 +49,10 @@ describe('ActivityDescriptionService', () => {
       evaluate: jest.fn().mockReturnValue(true),
     };
 
+    mockEventBus = {
+      dispatch: jest.fn(),
+    };
+
     // Create service instance
     service = new ActivityDescriptionService({
       logger: mockLogger,
@@ -60,30 +65,39 @@ describe('ActivityDescriptionService', () => {
 
   describe('Constructor', () => {
     it('should validate logger dependency', () => {
-      expect(() => new ActivityDescriptionService({
-        logger: null,
-        entityManager: mockEntityManager,
-        anatomyFormattingService: mockAnatomyFormattingService,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-      })).not.toThrow(); // ensureValidLogger provides fallback
+      expect(
+        () =>
+          new ActivityDescriptionService({
+            logger: null,
+            entityManager: mockEntityManager,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+          })
+      ).not.toThrow(); // ensureValidLogger provides fallback
     });
 
     it('should validate entityManager dependency', () => {
-      expect(() => new ActivityDescriptionService({
-        logger: mockLogger,
-        entityManager: null,
-        anatomyFormattingService: mockAnatomyFormattingService,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-      })).toThrow(/Missing required dependency.*IEntityManager/);
+      expect(
+        () =>
+          new ActivityDescriptionService({
+            logger: mockLogger,
+            entityManager: null,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+          })
+      ).toThrow(/Missing required dependency.*IEntityManager/);
     });
 
     it('should validate anatomyFormattingService dependency', () => {
-      expect(() => new ActivityDescriptionService({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        anatomyFormattingService: null,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-      })).toThrow(/Missing required dependency.*AnatomyFormattingService/);
+      expect(
+        () =>
+          new ActivityDescriptionService({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            anatomyFormattingService: null,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+          })
+      ).toThrow(/Missing required dependency.*AnatomyFormattingService/);
     });
 
     it('should validate entityManager has required methods', () => {
@@ -92,12 +106,15 @@ describe('ActivityDescriptionService', () => {
         someOtherMethod: jest.fn(),
       };
 
-      expect(() => new ActivityDescriptionService({
-        logger: mockLogger,
-        entityManager: invalidEntityManager,
-        anatomyFormattingService: mockAnatomyFormattingService,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-      })).toThrow(/Invalid or missing method.*getEntityInstance/);
+      expect(
+        () =>
+          new ActivityDescriptionService({
+            logger: mockLogger,
+            entityManager: invalidEntityManager,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+          })
+      ).toThrow(/Invalid or missing method.*getEntityInstance/);
     });
 
     it('should accept optional activityIndex parameter', () => {
@@ -142,21 +159,21 @@ describe('ActivityDescriptionService', () => {
 
   describe('generateActivityDescription', () => {
     it('should validate entityId parameter', async () => {
-      await expect(
-        service.generateActivityDescription('')
-      ).rejects.toThrow(/Invalid entityId/);
+      await expect(service.generateActivityDescription('')).rejects.toThrow(
+        /Invalid entityId/
+      );
 
-      await expect(
-        service.generateActivityDescription(null)
-      ).rejects.toThrow(/Invalid entityId/);
+      await expect(service.generateActivityDescription(null)).rejects.toThrow(
+        /Invalid entityId/
+      );
 
       await expect(
         service.generateActivityDescription(undefined)
       ).rejects.toThrow(/Invalid entityId/);
 
-      await expect(
-        service.generateActivityDescription('   ')
-      ).rejects.toThrow(/Invalid entityId/);
+      await expect(service.generateActivityDescription('   ')).rejects.toThrow(
+        /Invalid entityId/
+      );
     });
 
     it('should return empty string when no activities found', async () => {
@@ -170,7 +187,9 @@ describe('ActivityDescriptionService', () => {
     it('should log debug information at start', async () => {
       await service.generateActivityDescription('entity_1');
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Generating activity description for entity: entity_1')
+        expect.stringContaining(
+          'Generating activity description for entity: entity_1'
+        )
       );
     });
 
@@ -197,9 +216,9 @@ describe('ActivityDescriptionService', () => {
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         const nameMap = {
-          'entity_1': 'Jon Ureña',
-          'entity_2': 'Alicia Western',
-          'entity_3': 'Dylan',
+          entity_1: 'Jon Ureña',
+          entity_2: 'Alicia Western',
+          entity_3: 'Dylan',
         };
         return {
           id,
@@ -215,11 +234,15 @@ describe('ActivityDescriptionService', () => {
       const result = await service.generateActivityDescription('entity_1');
 
       // Phase 2: Now processes ALL visible activities, not just highest priority
-      expect(result).toBe('Activity: Jon Ureña stands near Dylan. Jon Ureña kneels before Alicia Western.');
+      expect(result).toBe(
+        'Activity: Jon Ureña stands near Dylan. Jon Ureña kneels before Alicia Western.'
+      );
       expect(mockActivityIndex.findActivitiesForEntity).toHaveBeenCalledWith(
         'entity_1'
       );
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('entity_3');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'entity_3'
+      );
     });
 
     it('should return empty string when filtering removes all activities', async () => {
@@ -273,13 +296,17 @@ describe('ActivityDescriptionService', () => {
     });
 
     it('should handle non-array metadata from index gracefully', async () => {
-      mockActivityIndex.findActivitiesForEntity.mockReturnValue({ invalid: true });
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue({
+        invalid: true,
+      });
 
       const result = await service.generateActivityDescription('entity_1');
 
       expect(result).toBe('');
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Activity index returned invalid data for entity entity_1')
+        expect.stringContaining(
+          'Activity index returned invalid data for entity entity_1'
+        )
       );
     });
 
@@ -302,14 +329,12 @@ describe('ActivityDescriptionService', () => {
         id: 'entity_1',
         componentTypeIds: [],
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest
-          .fn()
-          .mockImplementation((componentId) => {
-            if (componentId === 'activity:description_metadata') {
-              return null;
-            }
-            return undefined;
-          }),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === 'activity:description_metadata') {
+            return null;
+          }
+          return undefined;
+        }),
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(dedicatedEntity);
@@ -332,22 +357,20 @@ describe('ActivityDescriptionService', () => {
         id: 'entity_1',
         componentTypeIds: [],
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest
-          .fn()
-          .mockImplementation((componentId) => {
-            if (componentId === 'activity:description_metadata') {
-              return {
-                sourceComponent: 'pose:stance',
-                targetRole: 'entityId',
-              };
-            }
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === 'activity:description_metadata') {
+            return {
+              sourceComponent: 'pose:stance',
+              targetRole: 'entityId',
+            };
+          }
 
-            if (componentId === 'pose:stance') {
-              throw new Error('component failure');
-            }
+          if (componentId === 'pose:stance') {
+            throw new Error('component failure');
+          }
 
-            return undefined;
-          }),
+          return undefined;
+        }),
       };
 
       mockEntityManager.getEntityInstance.mockReturnValue(dedicatedEntity);
@@ -356,8 +379,8 @@ describe('ActivityDescriptionService', () => {
       const result = await service.generateActivityDescription('entity_1');
 
       expect(result).toBe('');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to parse dedicated metadata',
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('pose:stance'),
         expect.any(Error)
       );
     });
@@ -365,15 +388,16 @@ describe('ActivityDescriptionService', () => {
     it('should log an error when inline metadata collection fails', async () => {
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
 
-      mockEntityManager.getEntityInstance
-        .mockImplementationOnce(() => ({
-          id: 'entity_1',
-          componentTypeIds: ['core:name'],
-          getComponentData: jest.fn(),
-        }))
-        .mockImplementationOnce(() => {
+      const problematicEntity = {
+        id: 'entity_1',
+        get componentTypeIds() {
           throw new Error('Inline failure');
-        });
+        },
+        getComponentData: jest.fn(),
+        hasComponent: jest.fn().mockReturnValue(false),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(problematicEntity);
 
       const result = await service.generateActivityDescription('entity_1');
 
@@ -426,7 +450,9 @@ describe('ActivityDescriptionService', () => {
       const result = await service.generateActivityDescription('entity_1');
 
       // Phase 2: Processes all activities, highest priority first
-      expect(result).toBe('Activity: entity_1 takes center stage. entity_1 considers the options. entity_1 waits patiently.');
+      expect(result).toBe(
+        'Activity: entity_1 takes center stage. entity_1 considers the options. entity_1 waits patiently.'
+      );
     });
 
     it('should treat missing priority as the lowest weight during sorting', async () => {
@@ -450,7 +476,9 @@ describe('ActivityDescriptionService', () => {
       const result = await service.generateActivityDescription('entity_1');
 
       // Phase 2: Processes all activities, with missing priority treated as 0 (lowest)
-      expect(result).toBe('Activity: entity_1 leads the charge. entity_1 assesses the options. entity_1 lingers near the exit.');
+      expect(result).toBe(
+        'Activity: entity_1 leads the charge. entity_1 assesses the options. entity_1 lingers near the exit.'
+      );
     });
 
     it('should reuse cached entity names across calls', async () => {
@@ -465,8 +493,8 @@ describe('ActivityDescriptionService', () => {
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         const nameMap = {
-          'entity_1': 'Jon',
-          'entity_2': 'Alicia',
+          entity_1: 'Jon',
+          entity_2: 'Alicia',
         };
         return {
           id,
@@ -491,13 +519,10 @@ describe('ActivityDescriptionService', () => {
         ([id]) => id === 'entity_2'
       );
 
-      // After ACTDESC-006 & ACTDESC-007 & ACTDESC-014:
-      // Per generateActivityDescription: 3 calls for metadata collection + name resolution + gender detection
-      // First call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (name) + entity_1 (gender) = 4
-      // Second call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (cached name) + entity_1 (gender) = 4
-      // Total for entity_1: 4 + 4 = 8, but first name resolution + 1 cached = 9
-      // Context-aware tone evaluation adds closeness lookups, resulting in 10 actor fetches (optimized)
-      expect(actorCalls.length).toBe(10);
+      // Entity reuse and caching reduce lookups across repeated calls.
+      // First invocation performs four lookups (metadata, name, gender, closeness),
+      // the second relies on caches for name/closeness, resulting in two additional lookups.
+      expect(actorCalls.length).toBe(6);
       // Context-aware tone evaluation performs gender checks per call (optimized to 2 calls)
       expect(targetCalls.length).toBe(2);
     });
@@ -513,9 +538,7 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe(
-        'Activity: entity_1 leaps across the chasm.'
-      );
+      expect(result).toBe('Activity: entity_1 leaps across the chasm.');
     });
 
     it('should fall back to entity id when name resolution fails', async () => {
@@ -602,7 +625,9 @@ describe('ActivityDescriptionService', () => {
       const result = await service.generateActivityDescription('entity_1');
 
       // Phase 2: Processes all activities, with missing priority coming last
-      expect(result).toBe('Activity: Observer whispers to Subject. Observer glances at.');
+      expect(result).toBe(
+        'Activity: Observer whispers to Subject. Observer glances at.'
+      );
     });
 
     it('should use Unknown entity label when actor id is missing', async () => {
@@ -617,8 +642,9 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe(
-        'Activity: Unknown entity performs an unknown action.'
+      expect(result).toBe('');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('entity_1')
       );
     });
 
@@ -630,9 +656,8 @@ describe('ActivityDescriptionService', () => {
         jsonLogicEvaluationService: mockJsonLogicEvaluationService,
       });
 
-      const result = await serviceWithoutIndex.generateActivityDescription(
-        'entity_1'
-      );
+      const result =
+        await serviceWithoutIndex.generateActivityDescription('entity_1');
 
       expect(result).toBe('');
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -649,9 +674,8 @@ describe('ActivityDescriptionService', () => {
         activityIndex: { findActivitiesForEntity: null },
       });
 
-      const result = await serviceWithInvalidIndex.generateActivityDescription(
-        'entity_1'
-      );
+      const result =
+        await serviceWithInvalidIndex.generateActivityDescription('entity_1');
 
       expect(result).toBe('');
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -675,23 +699,26 @@ describe('ActivityDescriptionService', () => {
         activityIndex: mockActivityIndex,
       });
 
-      const result = await serviceWithThrowingLogger.generateActivityDescription(
-        'entity_1'
-      );
+      const result =
+        await serviceWithThrowingLogger.generateActivityDescription('entity_1');
 
       expect(result).toBe('');
       expect(throwingLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to generate activity description for entity entity_1'),
+        expect.stringContaining(
+          'Failed to generate activity description for entity entity_1'
+        ),
         expect.any(Error)
       );
     });
 
     it('should trim whitespace in descriptions and formatting config output', async () => {
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: true,
-        prefix: '  Activity: ',
-        suffix: '.   ',
-      });
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: true,
+          prefix: '  Activity: ',
+          suffix: '.   ',
+        }
+      );
 
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([
         {
@@ -714,18 +741,18 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe(
-        'Activity: entity_1 keeps watch Perimeter Guard.'
-      );
+      expect(result).toBe('Activity: entity_1 keeps watch Perimeter Guard.');
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
         'entity_2'
       );
 
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: true,
-        prefix: 'Activity: ',
-        suffix: '.',
-      });
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: true,
+          prefix: 'Activity: ',
+          suffix: '.',
+        }
+      );
       mockEntityManager.getEntityInstance.mockImplementation((id) => ({
         id,
         getComponentData: jest.fn((componentId) => {
@@ -862,9 +889,7 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe(
-        'Activity: entity_1 acknowledges missing_target.'
-      );
+      expect(result).toBe('Activity: entity_1 acknowledges missing_target.');
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => ({
         id,
@@ -957,9 +982,11 @@ describe('ActivityDescriptionService', () => {
     });
 
     it('should honor formatting defaults when config omits prefix and suffix', async () => {
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: true,
-      });
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: true,
+        }
+      );
 
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([
         {
@@ -970,13 +997,15 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe('entity_1 gestures');
+      expect(result).toBe('Activity: entity_1 gestures.');
 
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: true,
-        prefix: 'Activity: ',
-        suffix: '.',
-      });
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: true,
+          prefix: 'Activity: ',
+          suffix: '.',
+        }
+      );
     });
 
     it('should use inline description fallback when target name is available', async () => {
@@ -1001,9 +1030,7 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('entity_1');
 
-      expect(result).toBe(
-        'Activity: entity_1 greets warmly entity_2.'
-      );
+      expect(result).toBe('Activity: entity_1 greets warmly entity_2.');
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => ({
         id,
@@ -1049,11 +1076,10 @@ describe('ActivityDescriptionService', () => {
         activityIndex: lightweightIndex,
       });
 
-      const result = await serviceWithoutGetter.generateActivityDescription(
-        'entity_1'
-      );
+      const result =
+        await serviceWithoutGetter.generateActivityDescription('entity_1');
 
-      expect(result).toBe('entity_1 observes');
+      expect(result).toBe('Activity: entity_1 observes.');
       expect(lightweightIndex.findActivitiesForEntity).toHaveBeenCalledWith(
         'entity_1'
       );
@@ -1133,7 +1159,10 @@ describe('ActivityDescriptionService', () => {
         componentTypeIds: ['core:name', 'anatomy:body'],
         getComponentData: jest.fn((id) => {
           if (id === 'core:name') return { text: 'Jon' };
-          if (id === 'anatomy:body') return { /* body data */ };
+          if (id === 'anatomy:body')
+            return {
+              /* body data */
+            };
           return null;
         }),
       };
@@ -1154,7 +1183,9 @@ describe('ActivityDescriptionService', () => {
         componentTypeIds: ['activity:description_metadata'],
         getComponentData: jest.fn((id) => {
           if (id === 'activity:description_metadata')
-            return { /* metadata */ };
+            return {
+              /* metadata */
+            };
           return null;
         }),
       };
@@ -1357,7 +1388,11 @@ describe('ActivityDescriptionService', () => {
       it('should collect and format dedicated metadata component', async () => {
         const mockEntity = {
           id: 'jon',
-          componentTypeIds: ['kissing:kissing', 'activity:description_metadata', 'core:name'],
+          componentTypeIds: [
+            'kissing:kissing',
+            'activity:description_metadata',
+            'core:name',
+          ],
           components: {
             'kissing:kissing': {
               partner: 'alicia',
@@ -1374,22 +1409,26 @@ describe('ActivityDescriptionService', () => {
               text: 'Jon Ureña',
             },
           },
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
-          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+          hasComponent: jest.fn(
+            (compId) => compId === 'activity:description_metadata'
+          ),
+          getComponentData: jest.fn(
+            (compId) => mockEntity.components[compId] || null
+          ),
         };
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockEntity;
           if (id === 'alicia') return { id, displayName: 'Alicia Western' };
           return {
-          id,
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === 'core:name') {
-              return { text: id };
-            }
-            return undefined;
-          }),
-        };
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: id };
+              }
+              return undefined;
+            }),
+          };
         });
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
@@ -1404,23 +1443,25 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('should handle errors when collecting dedicated metadata gracefully', async () => {
-        mockEntityManager.getEntityInstance
-          .mockImplementationOnce((id) => ({
-            id,
-            componentTypeIds: [],
-            getComponentData: jest.fn(),
-          }))
-          .mockImplementationOnce(() => {
+        const problematicEntity = {
+          id: 'entity_1',
+          componentTypeIds: ['activity:description_metadata'],
+          hasComponent: jest.fn(() => {
             throw new Error('Dedicated metadata failure');
-          });
+          }),
+          getComponentData: jest.fn(),
+        };
 
+        mockEntityManager.getEntityInstance.mockReturnValue(problematicEntity);
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
 
         const result = await service.generateActivityDescription('entity_1');
 
         expect(result).toBe('');
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          'Failed to collect dedicated metadata for entity entity_1',
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Failed to verify dedicated metadata component'
+          ),
           expect.any(Error)
         );
       });
@@ -1464,21 +1505,23 @@ describe('ActivityDescriptionService', () => {
               compId === 'positioning:kneeling_before'
             );
           }),
-          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+          getComponentData: jest.fn(
+            (compId) => mockEntity.components[compId] || null
+          ),
         };
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockEntity;
           if (id === 'alicia') return { id, displayName: 'Alicia Western' };
           return {
-          id,
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === 'core:name') {
-              return { text: id };
-            }
-            return undefined;
-          }),
-        };
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: id };
+              }
+              return undefined;
+            }),
+          };
         });
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
@@ -1487,7 +1530,9 @@ describe('ActivityDescriptionService', () => {
 
         // Should prioritize dedicated metadata (priority 90) over inline (priority 70)
         expect(result).toBeTruthy();
-        expect(mockEntity.getComponentData).toHaveBeenCalledWith('kissing:kissing');
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+          'kissing:kissing'
+        );
         expect(mockEntity.getComponentData).toHaveBeenCalledWith(
           'activity:description_metadata'
         );
@@ -1502,7 +1547,9 @@ describe('ActivityDescriptionService', () => {
             'core:name': { text: 'Jon Ureña' },
           },
           hasComponent: jest.fn(() => false),
-          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+          getComponentData: jest.fn(
+            (compId) => mockEntity.components[compId] || null
+          ),
         };
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
@@ -1518,7 +1565,9 @@ describe('ActivityDescriptionService', () => {
         const mockEntity = {
           id: 'jon',
           componentTypeIds: ['core:name'],
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          hasComponent: jest.fn(
+            (compId) => compId === 'activity:description_metadata'
+          ),
           getComponentData: jest.fn((compId) => {
             if (compId === 'core:name') {
               return { text: 'Jon Ureña' };
@@ -1549,7 +1598,9 @@ describe('ActivityDescriptionService', () => {
         const mockEntity = {
           id: 'jon',
           componentTypeIds: ['core:name'],
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          hasComponent: jest.fn(
+            (compId) => compId === 'activity:description_metadata'
+          ),
           getComponentData: jest.fn((compId) => {
             if (compId === 'core:name') {
               return { text: 'Jon Ureña' };
@@ -1610,21 +1661,23 @@ describe('ActivityDescriptionService', () => {
               compId === 'activity:description_metadata' ||
               compId === 'positioning:standing'
           ),
-          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+          getComponentData: jest.fn(
+            (compId) => mockEntity.components[compId] || null
+          ),
         };
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockEntity;
           if (id === 'alicia') return { id, displayName: 'Alicia Western' };
           return {
-          id,
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === 'core:name') {
-              return { text: id };
-            }
-            return undefined;
-          }),
-        };
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: id };
+              }
+              return undefined;
+            }),
+          };
         });
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
@@ -1632,13 +1685,19 @@ describe('ActivityDescriptionService', () => {
         const result = await service.generateActivityDescription('jon');
 
         expect(result).toBeTruthy();
-        expect(mockEntity.getComponentData).toHaveBeenCalledWith('positioning:hugging');
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+          'positioning:hugging'
+        );
       });
 
       it('should default priority to 50 when not specified', async () => {
         const mockEntity = {
           id: 'jon',
-          componentTypeIds: ['core:action', 'activity:description_metadata', 'core:name'],
+          componentTypeIds: [
+            'core:action',
+            'activity:description_metadata',
+            'core:name',
+          ],
           components: {
             'core:action': { targetId: 'alicia' },
             'activity:description_metadata': {
@@ -1650,22 +1709,26 @@ describe('ActivityDescriptionService', () => {
               text: 'Jon Ureña',
             },
           },
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
-          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+          hasComponent: jest.fn(
+            (compId) => compId === 'activity:description_metadata'
+          ),
+          getComponentData: jest.fn(
+            (compId) => mockEntity.components[compId] || null
+          ),
         };
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockEntity;
           if (id === 'alicia') return { id, displayName: 'Alicia Western' };
           return {
-          id,
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === 'core:name') {
-              return { text: id };
-            }
-            return undefined;
-          }),
-        };
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: id };
+              }
+              return undefined;
+            }),
+          };
         });
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
@@ -1681,7 +1744,9 @@ describe('ActivityDescriptionService', () => {
           id: 'jon',
           name: 'Jon Ureña',
           componentTypeIds: [],
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
+          hasComponent: jest.fn(
+            (compId) => compId === 'activity:description_metadata'
+          ),
           getComponentData: jest.fn(() => {
             throw new Error('Unexpected parsing error');
           }),
@@ -1693,8 +1758,8 @@ describe('ActivityDescriptionService', () => {
         const result = await service.generateActivityDescription('jon');
 
         expect(result).toBe('');
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          'Failed to collect dedicated metadata for entity jon',
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Failed to read dedicated metadata for jon',
           expect.any(Error)
         );
       });
@@ -1702,7 +1767,11 @@ describe('ActivityDescriptionService', () => {
       it('should use targetRole to resolve correct target entity', async () => {
         const mockEntity = {
           id: 'jon',
-          componentTypeIds: ['social:greeting', 'activity:description_metadata', 'core:name'],
+          componentTypeIds: [
+            'social:greeting',
+            'activity:description_metadata',
+            'core:name',
+          ],
           components: {
             'social:greeting': {
               greetedPersonId: 'alicia',
@@ -1718,22 +1787,26 @@ describe('ActivityDescriptionService', () => {
               text: 'Jon Ureña',
             },
           },
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
-          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+          hasComponent: jest.fn(
+            (compId) => compId === 'activity:description_metadata'
+          ),
+          getComponentData: jest.fn(
+            (compId) => mockEntity.components[compId] || null
+          ),
         };
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockEntity;
           if (id === 'alicia') return { id, displayName: 'Alicia Western' };
           return {
-          id,
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === 'core:name') {
-              return { text: id };
-            }
-            return undefined;
-          }),
-        };
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: id };
+              }
+              return undefined;
+            }),
+          };
         });
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
@@ -1741,13 +1814,19 @@ describe('ActivityDescriptionService', () => {
         const result = await service.generateActivityDescription('jon');
 
         expect(result).toBeTruthy();
-        expect(mockEntity.getComponentData).toHaveBeenCalledWith('social:greeting');
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+          'social:greeting'
+        );
       });
 
       it('should default to entityId when targetRole is not specified', async () => {
         const mockEntity = {
           id: 'jon',
-          componentTypeIds: ['core:interaction', 'activity:description_metadata', 'core:name'],
+          componentTypeIds: [
+            'core:interaction',
+            'activity:description_metadata',
+            'core:name',
+          ],
           components: {
             'core:interaction': {
               entityId: 'alicia',
@@ -1762,22 +1841,26 @@ describe('ActivityDescriptionService', () => {
               text: 'Jon Ureña',
             },
           },
-          hasComponent: jest.fn((compId) => compId === 'activity:description_metadata'),
-          getComponentData: jest.fn((compId) => mockEntity.components[compId] || null),
+          hasComponent: jest.fn(
+            (compId) => compId === 'activity:description_metadata'
+          ),
+          getComponentData: jest.fn(
+            (compId) => mockEntity.components[compId] || null
+          ),
         };
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockEntity;
           if (id === 'alicia') return { id, displayName: 'Alicia Western' };
           return {
-          id,
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === 'core:name') {
-              return { text: id };
-            }
-            return undefined;
-          }),
-        };
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: id };
+              }
+              return undefined;
+            }),
+          };
         });
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
@@ -1785,19 +1868,23 @@ describe('ActivityDescriptionService', () => {
         const result = await service.generateActivityDescription('jon');
 
         expect(result).toBeTruthy();
-        expect(mockEntity.getComponentData).toHaveBeenCalledWith('core:interaction');
+        expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+          'core:interaction'
+        );
       });
     });
   });
 
   describe('Template-Based Phrase Generation (Phase 2)', () => {
     beforeEach(() => {
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: true,
-        prefix: 'Activity: ',
-        suffix: '',
-        separator: '. ',
-      });
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: true,
+          prefix: 'Activity: ',
+          suffix: '',
+          separator: '. ',
+        }
+      );
     });
 
     it('should use template replacement for inline activities', async () => {
@@ -1846,7 +1933,9 @@ describe('ActivityDescriptionService', () => {
       });
 
       const result = await service.generateActivityDescription('jon');
-      expect(result).toBe('Activity: Jon Ureña is kneeling before Alicia Western');
+      expect(result).toBe(
+        'Activity: Jon Ureña is kneeling before Alicia Western'
+      );
     });
 
     it('should format dedicated activity with verb', async () => {
@@ -1895,7 +1984,9 @@ describe('ActivityDescriptionService', () => {
       });
 
       const result = await service.generateActivityDescription('jon');
-      expect(result).toBe('Activity: Jon Ureña is kissing Alicia Western fiercely');
+      expect(result).toBe(
+        'Activity: Jon Ureña is kissing Alicia Western fiercely'
+      );
     });
 
     it('should include adverb in dedicated activity', async () => {
@@ -1945,7 +2036,9 @@ describe('ActivityDescriptionService', () => {
       });
 
       const result = await service.generateActivityDescription('jon');
-      expect(result).toBe('Activity: Jon Ureña is hugging Alicia Western tightly');
+      expect(result).toBe(
+        'Activity: Jon Ureña is hugging Alicia Western tightly'
+      );
     });
 
     it('should handle activity without target', async () => {
@@ -2060,11 +2153,13 @@ describe('ActivityDescriptionService', () => {
     });
 
     it('should use config prefix and suffix', async () => {
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        prefix: '>>> ',
-        suffix: ' <<<',
-        separator: ' | ',
-      });
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          prefix: '>>> ',
+          suffix: ' <<<',
+          separator: ' | ',
+        }
+      );
 
       const mockEntity = {
         id: 'jon',
@@ -2078,7 +2173,12 @@ describe('ActivityDescriptionService', () => {
       };
 
       mockActivityIndex.findActivitiesForEntity.mockReturnValue([
-        { type: 'inline', template: '{actor} waves', targetEntityId: null, priority: 50 },
+        {
+          type: 'inline',
+          template: '{actor} waves',
+          targetEntityId: null,
+          priority: 50,
+        },
       ]);
 
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
@@ -2252,7 +2352,9 @@ describe('ActivityDescriptionService', () => {
       });
 
       const result = await service.generateActivityDescription('jon');
-      expect(result).toBe('Activity: Jon Ureña is interacting with Alicia Western');
+      expect(result).toBe(
+        'Activity: Jon Ureña is interacting with Alicia Western'
+      );
     });
 
     it('should maintain backward compatibility with legacy activities', async () => {
@@ -2358,14 +2460,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -2374,7 +2478,11 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('should detect female gender from core:gender component', async () => {
-        const mockEntity = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockEntity = createEntityWithGender(
+          'alicia',
+          'Alicia Western',
+          'female'
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -2384,14 +2492,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -2419,14 +2529,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -2435,7 +2547,11 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('should handle neutral gender explicitly', async () => {
-        const mockEntity = createEntityWithGender('alex', 'Alex Smith', 'neutral');
+        const mockEntity = createEntityWithGender(
+          'alex',
+          'Alex Smith',
+          'neutral'
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -2445,14 +2561,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -2478,14 +2596,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
 
@@ -2494,7 +2614,11 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('should use "she" for female actors in subsequent activities', async () => {
-        const mockActor = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockActor = createEntityWithGender(
+          'alicia',
+          'Alicia Western',
+          'female'
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -2509,14 +2633,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
 
@@ -2525,7 +2651,11 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('should use "they" for neutral actors in subsequent activities', async () => {
-        const mockActor = createEntityWithGender('alex', 'Alex Smith', 'neutral');
+        const mockActor = createEntityWithGender(
+          'alex',
+          'Alex Smith',
+          'neutral'
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -2540,14 +2670,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
 
@@ -2566,14 +2698,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
 
@@ -2585,7 +2719,11 @@ describe('ActivityDescriptionService', () => {
 
     describe('Object Pronoun Usage for Targets', () => {
       it('should use "him" for male targets when pronouns enabled', async () => {
-        const mockActor = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockActor = createEntityWithGender(
+          'alicia',
+          'Alicia Western',
+          'female'
+        );
         const mockTarget = createEntityWithGender('jon', 'Jon Ureña', 'male');
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
@@ -2603,14 +2741,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'alicia') return mockActor;
@@ -2626,7 +2766,11 @@ describe('ActivityDescriptionService', () => {
 
       it('should use "her" for female targets when pronouns enabled', async () => {
         const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
-        const mockTarget = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockTarget = createEntityWithGender(
+          'alicia',
+          'Alicia Western',
+          'female'
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -2643,14 +2787,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockActor;
@@ -2666,7 +2812,11 @@ describe('ActivityDescriptionService', () => {
 
       it('should use "them" for neutral targets when pronouns enabled', async () => {
         const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
-        const mockTarget = createEntityWithGender('alex', 'Alex Smith', 'neutral');
+        const mockTarget = createEntityWithGender(
+          'alex',
+          'Alex Smith',
+          'neutral'
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -2683,14 +2833,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockActor;
@@ -2722,14 +2874,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: false,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: false,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
 
@@ -2749,11 +2903,13 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockActor);
 
@@ -2765,7 +2921,11 @@ describe('ActivityDescriptionService', () => {
     describe('Complex Activity Scenarios', () => {
       it('should handle three activities with mixed pronouns', async () => {
         const mockActor = createEntityWithGender('jon', 'Jon Ureña', 'male');
-        const mockTarget = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockTarget = createEntityWithGender(
+          'alicia',
+          'Alicia Western',
+          'female'
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -2787,14 +2947,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'jon') return mockActor;
@@ -2809,7 +2971,11 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('should handle dedicated activity type with pronouns', async () => {
-        const mockActor = createEntityWithGender('alicia', 'Alicia Western', 'female');
+        const mockActor = createEntityWithGender(
+          'alicia',
+          'Alicia Western',
+          'female'
+        );
         const mockTarget = createEntityWithGender('jon', 'Jon Ureña', 'male');
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
@@ -2827,14 +2993,16 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockImplementation((id) => {
           if (id === 'alicia') return mockActor;
@@ -2864,7 +3032,12 @@ describe('ActivityDescriptionService', () => {
         }),
       });
 
-      const createInlineActivity = (template, targetId, priority, overrides = {}) => ({
+      const createInlineActivity = (
+        template,
+        targetId,
+        priority,
+        overrides = {}
+      ) => ({
         type: 'inline',
         template,
         priority,
@@ -2888,13 +3061,15 @@ describe('ActivityDescriptionService', () => {
       });
 
       beforeEach(() => {
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: { usePronounsWhenAvailable: true },
-          maxActivities: 5,
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: { usePronounsWhenAvailable: true },
+            maxActivities: 5,
+          }
+        );
 
         const nameMap = {
           jon: 'Jon Name',
@@ -3007,7 +3182,10 @@ describe('ActivityDescriptionService', () => {
           componentTypeIds,
           components,
           hasComponent(componentId) {
-            return Object.prototype.hasOwnProperty.call(components, componentId);
+            return Object.prototype.hasOwnProperty.call(
+              components,
+              componentId
+            );
           },
           getComponentData(componentId) {
             return components[componentId] ?? null;
@@ -3078,9 +3256,7 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('should enforce showOnlyIfProperty rules', async () => {
-        const actor = registerEntity(
-          createEntity('jon', 'Jon Ureña', 'male')
-        );
+        const actor = registerEntity(createEntity('jon', 'Jon Ureña', 'male'));
         const target = registerEntity(
           createEntity('alicia', 'Alicia Western', 'female')
         );
@@ -3123,7 +3299,9 @@ describe('ActivityDescriptionService', () => {
         let description = await service.generateActivityDescription(actor.id);
         expect(description).not.toContain('kneeling');
 
-        addComponent(actor, 'positioning:kneeling_before', { entityId: 'alicia' });
+        addComponent(actor, 'positioning:kneeling_before', {
+          entityId: 'alicia',
+        });
 
         description = await service.generateActivityDescription(actor.id);
         expect(description).toContain('kneeling');
@@ -3159,7 +3337,10 @@ describe('ActivityDescriptionService', () => {
         addComponent(actor, 'relationships:partner', { entityId: target.id });
 
         const customLogic = {
-          in: ['alicia', { var: 'entity.components.relationships:partner.entityId' }],
+          in: [
+            'alicia',
+            { var: 'entity.components.relationships:partner.entityId' },
+          ],
         };
 
         addInlineActivity(actor, {
@@ -3175,9 +3356,9 @@ describe('ActivityDescriptionService', () => {
         mockJsonLogicEvaluationService.evaluate.mockImplementation(
           (logic, context) => {
             expect(logic).toBe(customLogic);
-            expect(context.entity.components['relationships:partner'].entityId).toBe(
-              target.id
-            );
+            expect(
+              context.entity.components['relationships:partner'].entityId
+            ).toBe(target.id);
             expect(context.target?.id).toBe(target.id);
             return true;
           }
@@ -3249,13 +3430,15 @@ describe('ActivityDescriptionService', () => {
       });
 
       beforeEach(() => {
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '.',
-          separator: '. ',
-          enableContextAwareness: true,
-          nameResolution: { usePronounsWhenAvailable: false },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '.',
+            separator: '. ',
+            enableContextAwareness: true,
+            nameResolution: { usePronounsWhenAvailable: false },
+          }
+        );
       });
 
       it('uses closeness partners to soften phrasing', async () => {
@@ -3400,12 +3583,14 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('can disable context awareness via configuration', async () => {
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '.',
-          separator: '. ',
-          enableContextAwareness: false,
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '.',
+            separator: '. ',
+            enableContextAwareness: false,
+          }
+        );
 
         mockActivityIndex.findActivitiesForEntity.mockReturnValue([
           {
@@ -3481,9 +3666,9 @@ describe('ActivityDescriptionService', () => {
           pronounsEnabled: false,
         };
 
-        expect(hooks.buildRelatedActivityFragment('and', null, baseContext)).toBe(
-          ''
-        );
+        expect(
+          hooks.buildRelatedActivityFragment('and', null, baseContext)
+        ).toBe('');
 
         expect(
           hooks.buildRelatedActivityFragment(
@@ -3496,7 +3681,10 @@ describe('ActivityDescriptionService', () => {
         expect(
           hooks.buildRelatedActivityFragment(
             'while',
-            { verbPhrase: 'is watching them', fullPhrase: 'Jon is watching them' },
+            {
+              verbPhrase: 'is watching them',
+              fullPhrase: 'Jon is watching them',
+            },
             baseContext
           )
         ).toBe('while watching them');
@@ -3610,10 +3798,16 @@ describe('ActivityDescriptionService', () => {
           })
         ).toBe(true);
         expect(
-          hooks.hasRequiredComponents(null, activity.conditions.requiredComponents)
+          hooks.hasRequiredComponents(
+            null,
+            activity.conditions.requiredComponents
+          )
         ).toBe(false);
         expect(
-          hooks.hasForbiddenComponents(null, activity.conditions.forbiddenComponents)
+          hooks.hasForbiddenComponents(
+            null,
+            activity.conditions.forbiddenComponents
+          )
         ).toBe(false);
         expect(
           hooks.evaluateActivityVisibility(
@@ -3796,10 +3990,10 @@ describe('ActivityDescriptionService', () => {
 
         expect(actorFragments.verbPhrase).toBe('reassures friend');
 
-        const defaultPronounInvocation = hooks.generateActivityPhrase(
-          'Jon',
-          { type: 'inline', template: '{actor} lingers' }
-        );
+        const defaultPronounInvocation = hooks.generateActivityPhrase('Jon', {
+          type: 'inline',
+          template: '{actor} lingers',
+        });
 
         expect(defaultPronounInvocation).toBe('Jon lingers');
 
@@ -3818,13 +4012,15 @@ describe('ActivityDescriptionService', () => {
       });
 
       it('resolves unnamed entities by their identifier when caching lookups', async () => {
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: '',
-          suffix: '',
-          separator: '. ',
-          enableContextAwareness: false,
-          nameResolution: { usePronounsWhenAvailable: false },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: '',
+            suffix: '',
+            separator: '. ',
+            enableContextAwareness: false,
+            nameResolution: { usePronounsWhenAvailable: false },
+          }
+        );
 
         const actorEntity = {
           id: 'jon',
@@ -3879,7 +4075,9 @@ describe('ActivityDescriptionService', () => {
         expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
           'target-entity'
         );
-        expect(unnamedTarget.getComponentData).toHaveBeenCalledWith('core:name');
+        expect(unnamedTarget.getComponentData).toHaveBeenCalledWith(
+          'core:name'
+        );
 
         mockEntityManager.getEntityInstance.mockClear();
 
@@ -3908,9 +4106,9 @@ describe('ActivityDescriptionService', () => {
         expect(hooks.determineActivityIntensity(75)).toBe('elevated');
         expect(hooks.determineActivityIntensity(10)).toBe('casual');
 
-        expect(hooks.determineConjunction({ priority: 10 }, { priority: 8 })).toBe(
-          'while'
-        );
+        expect(
+          hooks.determineConjunction({ priority: 10 }, { priority: 8 })
+        ).toBe('while');
         expect(
           hooks.determineConjunction({ priority: 10 }, { priority: 40 })
         ).toBe('and');
@@ -3951,20 +4149,172 @@ describe('ActivityDescriptionService', () => {
           },
         ]);
 
-        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-          prefix: 'Activity: ',
-          suffix: '',
-          separator: '. ',
-          nameResolution: {
-            usePronounsWhenAvailable: true,
-          },
-        });
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+          {
+            prefix: 'Activity: ',
+            suffix: '',
+            separator: '. ',
+            nameResolution: {
+              usePronounsWhenAvailable: true,
+            },
+          }
+        );
 
         mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
         const result = await service.generateActivityDescription('broken');
         expect(result).toBeTruthy();
         expect(mockLogger.warn).toHaveBeenCalled();
+      });
+
+      it('returns empty string and logs when entity lookup fails', async () => {
+        mockEntityManager.getEntityInstance.mockReturnValueOnce(null);
+
+        const description =
+          await service.generateActivityDescription('missing');
+
+        expect(description).toBe('');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('missing')
+        );
+      });
+
+      it('continues processing when inline metadata parsing throws', async () => {
+        const entity = {
+          id: 'jon',
+          componentTypeIds: ['comp1', 'comp2'],
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'comp1') {
+              return {
+                activityMetadata: {
+                  shouldDescribeInActivity: true,
+                  template: '{actor} is invalid',
+                },
+                get entityId() {
+                  throw new Error('Broken inline metadata');
+                },
+              };
+            }
+
+            if (componentId === 'comp2') {
+              return {
+                entityId: 'valid-target',
+                activityMetadata: {
+                  shouldDescribeInActivity: true,
+                  template: '{actor} is valid',
+                  priority: 75,
+                },
+              };
+            }
+
+            return null;
+          }),
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+
+        mockEntityManager.getEntityInstance.mockReturnValue(entity);
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toContain('valid');
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('comp1'),
+          expect.any(Error)
+        );
+      });
+
+      it('uses default formatting config when service throws', async () => {
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
+          () => {
+            throw new Error('Config error');
+          }
+        );
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+          {
+            actorId: 'jon',
+            description: 'performs a valid action',
+            priority: 50,
+          },
+        ]);
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+          id,
+          componentTypeIds: [],
+          hasComponent: jest.fn().mockReturnValue(false),
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'core:name') {
+              return { text: id };
+            }
+            return null;
+          }),
+        }));
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toMatch(/^Activity:/);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to get activity integration config'),
+          expect.any(Error)
+        );
+      });
+
+      it('falls back to entityId when name resolution fails', () => {
+        mockEntityManager.getEntityInstance.mockImplementation(() => {
+          throw new Error('Entity manager error');
+        });
+
+        const hooks = service.getTestHooks();
+        expect(hooks.resolveEntityName).toBeDefined();
+
+        const name = hooks.resolveEntityName('entity_id');
+
+        expect(name).toBe('entity_id');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('entity_id'),
+          expect.any(Error)
+        );
+      });
+
+      it('dispatches error events when eventBus is provided', async () => {
+        const serviceWithEventBus = new ActivityDescriptionService({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          anatomyFormattingService: mockAnatomyFormattingService,
+          jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+          activityIndex: mockActivityIndex,
+          eventBus: mockEventBus,
+        });
+
+        mockEntityManager.getEntityInstance.mockImplementation(() => {
+          throw new Error('Critical error');
+        });
+
+        await serviceWithEventBus.generateActivityDescription('jon');
+
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'ACTIVITY_DESCRIPTION_ERROR',
+            payload: expect.objectContaining({ entityId: 'jon' }),
+          })
+        );
+      });
+
+      it('returns empty string on cascading failures without throwing', async () => {
+        mockEntityManager.getEntityInstance.mockImplementation(() => {
+          throw new Error('Entity error');
+        });
+
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
+          () => {
+            throw new Error('Config error');
+          }
+        );
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toBe('');
       });
     });
   });
