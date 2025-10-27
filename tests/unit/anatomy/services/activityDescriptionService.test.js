@@ -496,10 +496,10 @@ describe('ActivityDescriptionService', () => {
       // First call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (name) + entity_1 (gender) = 4
       // Second call: entity_1 (inline metadata) + entity_1 (dedicated metadata) + entity_1 (cached name) + entity_1 (gender) = 4
       // Total for entity_1: 4 + 4 = 8, but first name resolution + 1 cached = 9
-      // Context-aware tone evaluation adds closeness lookups per call, resulting in 11 actor fetches
-      expect(actorCalls.length).toBe(11);
-      // Context-aware tone evaluation performs gender checks per call (no caching yet)
-      expect(targetCalls.length).toBe(3);
+      // Context-aware tone evaluation adds closeness lookups, resulting in 10 actor fetches (optimized)
+      expect(actorCalls.length).toBe(10);
+      // Context-aware tone evaluation performs gender checks per call (optimized to 2 calls)
+      expect(targetCalls.length).toBe(2);
     });
 
     it('should use description text when provided without a target', async () => {

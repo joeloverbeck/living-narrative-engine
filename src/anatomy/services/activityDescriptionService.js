@@ -1456,6 +1456,29 @@ class ActivityDescriptionService {
         gender: new Map(this.#genderCache),
         activityIndex: new Map(this.#activityIndexCache),
       }),
+      // Additional test hooks for ACTDESC-014 pronoun resolution tests
+      evaluateActivityVisibility: (...args) =>
+        this.#evaluateActivityVisibility(...args),
+      buildLogicContext: (...args) => this.#buildLogicContext(...args),
+      buildActivityContext: (...args) => this.#buildActivityContext(...args),
+      applyContextualTone: (...args) => this.#applyContextualTone(...args),
+      generateActivityPhrase: (...args) => this.#generateActivityPhrase(...args),
+      filterByConditions: (...args) => this.#filterByConditions(...args),
+      determineActivityIntensity: (...args) =>
+        this.#determineActivityIntensity(...args),
+      isEmptyConditionsObject: (...args) =>
+        this.#isEmptyConditionsObject(...args),
+      matchesPropertyCondition: (...args) =>
+        this.#matchesPropertyCondition(...args),
+      hasRequiredComponents: (...args) =>
+        this.#hasRequiredComponents(...args),
+      hasForbiddenComponents: (...args) =>
+        this.#hasForbiddenComponents(...args),
+      extractEntityData: (...args) => this.#extractEntityData(...args),
+      determineConjunction: (...args) => this.#determineConjunction(...args),
+      activitiesOccurSimultaneously: (...args) =>
+        this.#activitiesOccurSimultaneously(...args),
+      getPronounSet: (...args) => this.#getPronounSet(...args),
     };
   }
 
@@ -1496,7 +1519,7 @@ class ActivityDescriptionService {
     }
 
     index.byPriority = [...activities].sort(
-      (a, b) => (b?.priority ?? 50) - (a?.priority ?? 50)
+      (a, b) => (b?.priority ?? 0) - (a?.priority ?? 0)
     );
 
     return index;
