@@ -43,6 +43,7 @@ describe('Node Resolvers Performance', () => {
   let errorHandler;
   let mockLogger;
   let testDataset;
+  let baseRuntimeContext;
   let runtimeContext;
 
   // Performance metrics tracking
@@ -70,7 +71,7 @@ describe('Node Resolvers Performance', () => {
     // Actor entity will be retrieved as needed in tests
 
     // Create runtime context for scope resolution
-    runtimeContext = {
+    baseRuntimeContext = {
       entityManager,
       jsonLogicEval: jsonLogicEvaluationService,
       componentRegistry: registry,
@@ -91,6 +92,10 @@ describe('Node Resolvers Performance', () => {
     };
 
     errorHandler = new ScopeDslErrorHandler({ logger: mockLogger });
+    runtimeContext = {
+      ...baseRuntimeContext,
+      logger: mockLogger,
+    };
   });
 
   afterEach(() => {
