@@ -83,6 +83,7 @@ import AnatomyBlueprintPartLoader from '../../loaders/anatomyBlueprintPartLoader
 import AnatomySlotLibraryLoader from '../../loaders/anatomySlotLibraryLoader.js';
 import AnatomyFormattingLoader from '../../loaders/anatomyFormattingLoader.js';
 import AnatomyStructureTemplateLoader from '../../loaders/anatomyStructureTemplateLoader.js';
+import SocketGenerator from '../../anatomy/socketGenerator.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 // --- Modding Service Imports ---
@@ -254,6 +255,13 @@ export async function registerLoaders(container) {
     tokens.AnatomyStructureTemplateLoader,
     AnatomyStructureTemplateLoader
   );
+
+  // Register SocketGenerator service
+  registrar.singletonFactory(tokens.ISocketGenerator, (c) => {
+    return new SocketGenerator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
 
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
   registrar.singletonFactory(

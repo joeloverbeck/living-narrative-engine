@@ -211,6 +211,7 @@ describe('registerLoaders additional coverage', () => {
       [actualTokens.AnatomyBlueprintLoader, { id: 'blueprint' }],
       [actualTokens.AnatomyRecipeLoader, { id: 'recipe' }],
       [actualTokens.AnatomyFormattingLoader, { id: 'formatting' }],
+      [actualTokens.AnatomyStructureTemplateLoader, { id: 'structureTemplate' }],
       [actualTokens.IValidatedEventDispatcher, { dispatch: jest.fn() }],
       [actualTokens.ILogger, logger],
     ]);

@@ -562,7 +562,8 @@
       "Bash(exit 1)",
       "Bash(while read f)",
       "Bash(do echo \"=== $f ===\")",
-      "SlashCommand(/sc:pm)"
+      "SlashCommand(/sc:pm)",
+      "mcp__serena__initial_instructions"
     ],
     "deny": [],
     "ask": []

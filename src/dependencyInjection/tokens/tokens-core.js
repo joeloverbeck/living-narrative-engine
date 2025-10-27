@@ -105,6 +105,7 @@ export const coreTokens = freeze({
   RecipeProcessor: 'RecipeProcessor',
   PartSelectionService: 'PartSelectionService',
   SocketManager: 'SocketManager',
+  ISocketGenerator: 'ISocketGenerator',
   EntityGraphBuilder: 'EntityGraphBuilder',
   RecipeConstraintEvaluator: 'RecipeConstraintEvaluator',
   PartDescriptionGenerator: 'PartDescriptionGenerator',
