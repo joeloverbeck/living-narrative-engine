@@ -233,8 +233,15 @@
       "additionalProperties": false
     },
     "patternDefinition": {
+      "description": "Pattern-based slot configuration supporting v1 (explicit matches) and v2 (enhanced matchers)",
+      "oneOf": [
+        { "$ref": "#/definitions/v1PatternDefinition" },
+        { "$ref": "#/definitions/enhancedPatternDefinition" }
+      ]
+    },
+    "v1PatternDefinition": {
       "type": "object",
-      "description": "Pattern-based slot configuration that can match multiple slots",
+      "description": "V1 pattern with explicit slot list (backward compatible)",
       "properties": {
         "matches": {
           "type": "array",
@@ -273,6 +280,94 @@
         }
       },
       "required": ["matches", "partType"],
+      "additionalProperties": false
+    },
+    "enhancedPatternDefinition": {
+      "type": "object",
+      "description": "V2 pattern with enhanced matchers: slot groups, wildcards, property filters",
+      "properties": {
+        "matchesGroup": {
+          "type": "string",
+          "pattern": "^(limbSet|appendage):[a-z0-9_]+$",
+          "description": "Slot group selector: 'limbSet:leg' or 'appendage:tail'"
+        },
+        "matchesPattern": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+\\*?$",
+          "description": "Wildcard pattern: 'leg_*', 'tentacle_*', 'wing_*'"
+        },
+        "matchesAll": {
+          "type": "object",
+          "properties": {
+            "slotType": {
+              "type": "string",
+              "description": "Filter by slot part type"
+            },
+            "orientation": {
+              "type": "string",
+              "description": "Filter by orientation (supports wildcards: 'left_*')"
+            },
+            "socketId": {
+              "type": "string",
+              "description": "Filter by socket ID pattern"
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false,
+          "description": "Property-based slot matching"
+        },
+        "partType": {
+          "type": "string",
+          "description": "Required. The type of part to use for matched slots"
+        },
+        "preferId": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Optional. Exact entity ID to prefer if available"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Component tags that must be present on matching parts",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
+        },
+        "notTags": {
+          "type": "array",
+          "description": "Component tags that must NOT be present on matching parts",
+          "items": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          }
+        },
+        "properties": {
+          "type": "object",
+          "description": "Required property values for components on matching parts",
+          "additionalProperties": true
+        },
+        "exclude": {
+          "type": "object",
+          "properties": {
+            "slotGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Slot groups to exclude from matching"
+            },
+            "properties": {
+              "type": "object",
+              "description": "Property-based exclusion criteria",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false,
+          "description": "Pattern-level exclusion criteria"
+        }
+      },
+      "oneOf": [
+        { "required": ["matchesGroup", "partType"] },
+        { "required": ["matchesPattern", "partType"] },
+        { "required": ["matchesAll", "partType"] }
+      ],
       "additionalProperties": false
     }
   }

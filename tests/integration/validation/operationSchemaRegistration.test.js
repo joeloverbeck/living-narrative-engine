@@ -57,11 +57,62 @@ describe('Operation Schema Registration Validation', () => {
     });
   });
 
+  describe('AUTO_MOVE_CLOSENESS_PARTNERS Registration', () => {
+    it('should validate closeness_auto_move.rule.json without cascade errors', async () => {
+      // Arrange - This is the rule that failed in the bug report
+      const ruleDataContent = await readFile(
+        'data/mods/positioning/rules/closeness_auto_move.rule.json',
+        'utf8'
+      );
+      const ruleData = JSON.parse(ruleDataContent);
+
+      // Act & Assert - Should not throw validation errors
+      expect(() => {
+        schemaValidator.validateAgainstSchema(
+          ruleData,
+          'schema://living-narrative-engine/rule.schema.json'
+        );
+      }).not.toThrow();
+    });
+
+    it('should have AUTO_MOVE_CLOSENESS_PARTNERS schema registered', async () => {
+      // Arrange
+      const fs = await import('fs/promises');
+
+      // Act - Check if schema file exists
+      const schemaExists = await fs.access('data/schemas/operations/autoMoveClosenessPartners.schema.json')
+        .then(() => true)
+        .catch(() => false);
+
+      // Assert
+      expect(schemaExists).toBe(true);
+    });
+
+    it('should validate AUTO_MOVE_CLOSENESS_PARTNERS operation schema', async () => {
+      // Arrange - Test the operation definition directly
+      const operationData = {
+        type: 'AUTO_MOVE_CLOSENESS_PARTNERS',
+        parameters: {
+          actor_id: 'test-actor-1',
+          destination_id: 'test-location-1',
+          previous_location_id: 'test-location-0'
+        }
+      };
+
+      // Act & Assert
+      expect(() => {
+        schemaValidator.validateAgainstSchema(
+          operationData,
+          'schema://living-narrative-engine/operation.schema.json'
+        );
+      }).not.toThrow();
+    });
+  });
+
   describe('Missing Operation Schema Detection', () => {
     it('should detect all operation schemas are registered in operation.schema.json', async () => {
       // Arrange
       const fs = await import('fs/promises');
-      const path = await import('path');
 
       // Get all operation schema files
       const operationsDir = 'data/schemas/operations';

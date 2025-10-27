@@ -656,6 +656,575 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     });
   });
 
+  describe('Enhanced Patterns (V2) - Valid Patterns', () => {
+    test('should validate pattern with matchesGroup slot group selector', () => {
+      const validRecipe = {
+        recipeId: 'creatures:spider',
+        blueprintId: 'anatomy:spider',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:leg',
+            partType: 'leg',
+            tags: ['anatomy:chitinous'],
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate pattern with matchesPattern wildcard', () => {
+      const validRecipe = {
+        recipeId: 'creatures:octopus',
+        blueprintId: 'anatomy:octopus',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: 'tentacle_*',
+            partType: 'tentacle',
+            tags: ['anatomy:suckered'],
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate pattern with matchesAll property filter', () => {
+      const validRecipe = {
+        recipeId: 'creatures:dragon',
+        blueprintId: 'anatomy:dragon',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesAll: {
+              slotType: 'leg',
+              orientation: 'left_*',
+            },
+            partType: 'leg',
+            tags: ['anatomy:clawed'],
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate enhanced pattern with all optional properties', () => {
+      const validRecipe = {
+        recipeId: 'creatures:complex',
+        blueprintId: 'anatomy:complex',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:wing',
+            partType: 'wing',
+            preferId: 'anatomy:dragon_wing',
+            tags: ['anatomy:scaled', 'anatomy:membranous'],
+            notTags: ['anatomy:feathered'],
+            properties: {
+              'descriptors:wingspan': { size: 'massive' },
+            },
+            exclude: {
+              slotGroups: ['limbSet:arm'],
+              properties: {
+                orientation: 'ventral',
+              },
+            },
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate matchesAll with single property', () => {
+      const validRecipe = {
+        recipeId: 'creatures:test',
+        blueprintId: 'anatomy:test',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesAll: {
+              slotType: 'leg',
+            },
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate all valid limbSet slot group formats', () => {
+      const slotGroups = ['limbSet:leg', 'limbSet:arm', 'limbSet:tentacle', 'limbSet:wing_123'];
+
+      slotGroups.forEach((group) => {
+        const validRecipe = {
+          recipeId: 'creatures:test_group',
+          blueprintId: 'anatomy:test',
+          slots: {
+            head: { partType: 'head' },
+          },
+          patterns: [
+            {
+              matchesGroup: group,
+              partType: 'limb',
+            },
+          ],
+        };
+
+        const ok = validate(validRecipe);
+        expect(ok).toBe(true);
+      });
+    });
+
+    test('should validate all valid appendage slot group formats', () => {
+      const slotGroups = ['appendage:tail', 'appendage:head', 'appendage:stinger', 'appendage:abdomen_9'];
+
+      slotGroups.forEach((group) => {
+        const validRecipe = {
+          recipeId: 'creatures:test_appendage',
+          blueprintId: 'anatomy:test',
+          slots: {
+            head: { partType: 'head' },
+          },
+          patterns: [
+            {
+              matchesGroup: group,
+              partType: 'appendage',
+            },
+          ],
+        };
+
+        const ok = validate(validRecipe);
+        expect(ok).toBe(true);
+      });
+    });
+
+    test('should validate wildcard patterns', () => {
+      const patterns = ['leg_*', 'tentacle_*', 'wing_*', 'arm', 'tail_123'];
+
+      patterns.forEach((pattern) => {
+        const validRecipe = {
+          recipeId: 'creatures:test_wildcard',
+          blueprintId: 'anatomy:test',
+          slots: {
+            head: { partType: 'head' },
+          },
+          patterns: [
+            {
+              matchesPattern: pattern,
+              partType: 'limb',
+            },
+          ],
+        };
+
+        const ok = validate(validRecipe);
+        expect(ok).toBe(true);
+      });
+    });
+  });
+
+  describe('Enhanced Patterns (V2) - Invalid Patterns', () => {
+    test('should reject pattern with multiple matchers', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:leg',
+            matchesPattern: 'leg_*',
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+    });
+
+    test('should reject invalid slot group format - missing type prefix', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'leg',
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          keyword: 'pattern',
+          instancePath: '/patterns/0/matchesGroup',
+        })
+      );
+    });
+
+    test('should reject invalid slot group format - missing identifier', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:',
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          keyword: 'pattern',
+          instancePath: '/patterns/0/matchesGroup',
+        })
+      );
+    });
+
+    test('should reject invalid slot group format - wrong type', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limb_set:leg',
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          keyword: 'pattern',
+          instancePath: '/patterns/0/matchesGroup',
+        })
+      );
+    });
+
+    test('should reject invalid wildcard pattern - invalid characters', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: 'leg-*',
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          keyword: 'pattern',
+          instancePath: '/patterns/0/matchesPattern',
+        })
+      );
+    });
+
+    test('should reject empty matchesAll', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesAll: {},
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          keyword: 'minProperties',
+          instancePath: '/patterns/0/matchesAll',
+        })
+      );
+    });
+
+    test('should reject pattern with no matcher at all', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            partType: 'leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+    });
+
+    test('should reject pattern missing required partType', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:leg',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+    });
+  });
+
+  describe('Backward Compatibility - V1 and V2 Patterns', () => {
+    test('should validate existing v1 pattern unchanged', () => {
+      const v1Recipe = {
+        recipeId: 'creatures:legacy',
+        blueprintId: 'anatomy:legacy',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matches: ['leg_1', 'leg_2', 'leg_3', 'leg_4'],
+            partType: 'leg',
+            tags: ['anatomy:muscular'],
+          },
+        ],
+      };
+
+      const ok = validate(v1Recipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate mixed v1 and v2 patterns in same recipe', () => {
+      const mixedRecipe = {
+        recipeId: 'creatures:mixed',
+        blueprintId: 'anatomy:mixed',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matches: ['torso'],
+            partType: 'torso',
+          },
+          {
+            matchesGroup: 'limbSet:leg',
+            partType: 'leg',
+          },
+          {
+            matchesPattern: 'wing_*',
+            partType: 'wing',
+          },
+        ],
+      };
+
+      const ok = validate(mixedRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate v1 pattern with all optional properties', () => {
+      const v1Recipe = {
+        recipeId: 'creatures:v1_complete',
+        blueprintId: 'anatomy:v1',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:muscular_arm',
+            tags: ['anatomy:muscular'],
+            notTags: ['anatomy:weak'],
+            properties: {
+              strength: 'high',
+            },
+          },
+        ],
+      };
+
+      const ok = validate(v1Recipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+  });
+
+  describe('Integration Examples - Real-World Scenarios', () => {
+    test('should validate spider recipe with 8 legs using group selector', () => {
+      const spiderRecipe = {
+        recipeId: 'creatures:giant_spider',
+        blueprintId: 'anatomy:giant_spider',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:leg',
+            partType: 'leg',
+            tags: ['anatomy:chitinous', 'anatomy:hairy'],
+            properties: {
+              'descriptors:length': { size: 'long' },
+            },
+          },
+          {
+            matchesGroup: 'appendage:pedipalp',
+            partType: 'pedipalp',
+            tags: ['anatomy:sensory'],
+          },
+        ],
+      };
+
+      const ok = validate(spiderRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate dragon recipe with mixed patterns', () => {
+      const dragonRecipe = {
+        recipeId: 'creatures:red_dragon',
+        blueprintId: 'anatomy:red_dragon',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: 'front_*',
+            partType: 'leg',
+            tags: ['anatomy:front_leg', 'anatomy:clawed'],
+          },
+          {
+            matchesPattern: 'rear_*',
+            partType: 'leg',
+            tags: ['anatomy:rear_leg', 'anatomy:clawed'],
+          },
+          {
+            matchesGroup: 'limbSet:wing',
+            partType: 'wing',
+            properties: {
+              'descriptors:wingspan': { size: 'massive' },
+            },
+          },
+        ],
+      };
+
+      const ok = validate(dragonRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate centaur recipe with property-based filtering', () => {
+      const centaurRecipe = {
+        recipeId: 'creatures:centaur',
+        blueprintId: 'anatomy:centaur',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesAll: {
+              slotType: 'leg',
+              orientation: 'front_*',
+            },
+            partType: 'leg',
+            tags: ['anatomy:equine', 'anatomy:front'],
+          },
+          {
+            matchesAll: {
+              slotType: 'leg',
+              orientation: 'rear_*',
+            },
+            partType: 'leg',
+            tags: ['anatomy:equine', 'anatomy:rear'],
+          },
+        ],
+      };
+
+      const ok = validate(centaurRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+  });
+
   describe('ClothingEntities validations', () => {
     test('should fail if clothingEntities item missing required entityId', () => {
       const invalidData = {

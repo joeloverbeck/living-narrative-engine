@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/autoMoveClosenessPartners.schema.json",
+  "title": "AUTO_MOVE_CLOSENESS_PARTNERS Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "AUTO_MOVE_CLOSENESS_PARTNERS"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Automatically moves all entities in a closeness circle when one member moves to maintain the circle.",
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ID of the entity that moved and has closeness partners"
+        },
+        "destination_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ID of the location to move closeness partners to"
+        },
+        "previous_location_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ID of the previous location before the move"
+        }
+      },
+      "required": ["actor_id", "destination_id", "previous_location_id"],
+      "additionalProperties": false
+    }
+  }
+}
