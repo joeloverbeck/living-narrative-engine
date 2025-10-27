@@ -57,6 +57,13 @@ describe('savePathUtils', () => {
         'manual_save_custom.sav'
       );
     });
+
+    it('should trim leading and trailing whitespace before sanitizing', () => {
+      expect(buildManualFileName('  Hero  ')).toBe('manual_save_Hero.sav');
+      expect(buildManualFileName('\tChapter One\n')).toBe(
+        'manual_save_Chapter_One.sav'
+      );
+    });
   });
 
   describe('extractSaveName', () => {

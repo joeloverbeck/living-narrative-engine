@@ -37,10 +37,10 @@ export const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/i;
 export function buildManualFileName(saveName) {
   const normalizedName =
     typeof saveName === 'string'
-      ? saveName
+      ? saveName.trim()
       : saveName == null
         ? ''
-        : String(saveName);
+        : String(saveName).trim();
   const sanitized = normalizedName.replace(/[^a-zA-Z0-9_-]/g, '_');
   return `manual_save_${sanitized}.sav`;
 }
