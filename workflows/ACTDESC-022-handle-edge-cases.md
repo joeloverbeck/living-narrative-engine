@@ -7,7 +7,7 @@
 **Phase 7: Production Polish** (Week 4-5)
 
 ## Description
-Implement comprehensive handling for edge cases, corner scenarios, and unusual states that could occur in production: empty activities, circular references, extremely long descriptions, special characters, and unusual entity configurations.
+Implement comprehensive handling for edge cases, corner scenarios, and unusual states that could occur in production: empty activity collections, repeated/circular metadata, extremely long descriptions, special characters, and unusual entity configurations. Align the work with the existing `ActivityDescriptionService` implementation in `src/anatomy/services/activityDescriptionService.js`.
 
 ## Background
 Production systems encounter unexpected scenarios. This ticket ensures the activity description system handles all edge cases gracefully without degrading user experience.
@@ -16,274 +16,93 @@ Production systems encounter unexpected scenarios. This ticket ensures the activ
 
 ## Technical Specification
 
-### Edge Case Categories
+### Edge Case Enhancements
+
+The current service already short-circuits when metadata is missing, but several helper methods need to be hardened. All work happens inside `ActivityDescriptionService` unless explicitly noted.
 
 #### 1. Empty or Missing Data
-```javascript
-/**
- * Handle empty activity scenarios.
- */
-async generateActivityDescription(entityId) {
-  // ... existing validation
+- Keep the existing early returns inside `generateActivityDescription`, but ensure the post-filter path is consistent:
+  ```javascript
+  const activities = this.#collectActivityMetadata(entityId, entity);
 
-  const entity = this.#entityManager.getEntityInstance(entityId);
-  if (!entity) {
-    return ''; // Already handled
-  }
-
-  const allActivities = [...inlineActivities, ...dedicatedActivities];
-
-  // Edge case: No activities
-  if (allActivities.length === 0) {
-    return ''; // Not an error, just no activities
-  }
-
-  // Edge case: All activities filtered out by visibility
-  const filteredActivities = this.#filterActivitiesSafe(sortedActivities, entity);
-  if (filteredActivities.length === 0) {
-    this.#logger.debug(`All activities filtered for ${entityId}`);
+  if (activities.length === 0) {
+    this.#logger.debug(`No activities found for entity: ${entityId}`);
     return '';
   }
 
-  // ... continue processing
-}
-```
+  const conditionedActivities = this.#filterByConditions(activities, entity);
 
-#### 2. Circular References
-```javascript
-/**
- * Detect and prevent circular activity references.
- *
- * @param {Array<object>} activities - Activities to check
- * @returns {Array<object>} Safe activities
- * @private
- */
-#detectCircularReferences(activities) {
-  const seen = new Set();
-  const safe = [];
-
-  for (const activity of activities) {
-    const key = `${activity.sourceComponent}:${activity.targetEntityId || 'solo'}`;
-
-    if (seen.has(key)) {
-      this.#logger.warn(`Circular reference detected: ${key}`);
-      continue;
-    }
-
-    seen.add(key);
-    safe.push(activity);
+  if (conditionedActivities.length === 0) {
+    this.#logger.debug(
+      `No visible activities available after filtering for entity: ${entityId}`
+    );
+    return '';
   }
+  ```
+- After filtering, invoke the new deduplication helper (see below) before sorting and formatting so that empty results from deduplication also return an empty string without throwing.
 
-  return safe;
-}
-```
+#### 2. Duplicate and Circular Activity Metadata
+- Introduce `#deduplicateActivitiesBySignature(activities)` to collapse metadata that describes the same interaction (e.g. same `template` + `targetEntityId`, or same `sourceComponent` + `targetEntityId`).
+- Call the helper right before `#sortByPriority` in `generateActivityDescription`.
+- Emit a debug log when duplicates are removed so telemetry can track noisy metadata.
+- Expose the helper through `getTestHooks()`.
 
 #### 3. Extremely Long Descriptions
-```javascript
-/**
- * Limit description length to prevent UI overflow.
- *
- * @param {string} description - Generated description
- * @param {number} maxLength - Maximum length
- * @returns {string} Truncated description
- * @private
- */
-#limitDescriptionLength(description, maxLength = 500) {
-  if (description.length <= maxLength) {
-    return description;
-  }
+- Extend `DEFAULT_ACTIVITY_FORMATTING_CONFIG` with `maxDescriptionLength: 500`.
+- Update `#getActivityIntegrationConfig()` so downstream overrides can customise the length.
+- Add `#truncateDescription(description, maxLength)` and use it at the end of `#formatActivityDescription` before returning the final string.
+- Prefer truncating on the last period (like the UI example) and fall back to an ellipsis when none exists.
 
-  // Truncate at sentence boundary
-  const truncated = description.substring(0, maxLength);
-  const lastPeriod = truncated.lastIndexOf('.');
+#### 4. Special Characters and Name Sanitisation
+- Add a dedicated `#sanitizeEntityName(name)` helper that strips control characters, collapses whitespace, and falls back to `'Unknown entity'` when the result is empty. Expose it through `getTestHooks()` for white-box tests.
+- Harden `#resolveEntityName(entityId)` so the returned value always passes through `#sanitizeEntityName` before being cached.
+- When the resolved value becomes empty, fall back to `'Unknown entity'` (and cache that value to avoid repeated work).
+- Leave the cache key unchanged so the sanitised value is reused.
 
-  if (lastPeriod > maxLength * 0.7) {
-    // Good sentence boundary found
-    return truncated.substring(0, lastPeriod + 1);
-  }
-
-  // No good boundary, hard truncate with ellipsis
-  return truncated.substring(0, maxLength - 3) + '...';
-}
-```
-
-#### 4. Special Characters
-```javascript
-/**
- * Sanitize entity name for safe display.
- *
- * @param {string} name - Entity name
- * @returns {string} Sanitized name
- * @private
- */
-#sanitizeEntityName(name) {
-  if (!name || typeof name !== 'string') {
-    return 'Unknown';
-  }
-
-  // Remove control characters
-  let sanitized = name.replace(/[\x00-\x1F\x7F]/g, '');
-
-  // Trim whitespace
-  sanitized = sanitized.trim();
-
-  // Fallback if empty after sanitization
-  if (sanitized.length === 0) {
-    return 'Unknown';
-  }
-
-  return sanitized;
-}
-```
-
-#### 5. Self-Targeting Activities
-```javascript
-/**
- * Handle activities where actor targets themselves.
- *
- * @param {string} actorId - Actor ID
- * @param {object} activity - Activity object
- * @returns {string} Phrase
- * @private
- */
-#generateActivityPhrase(actorRef, activity, usePronounsForTarget = false) {
-  let targetRef = '';
-
-  if (activity.targetEntityId) {
-    // Edge case: Self-targeting
-    if (activity.targetEntityId === activity.actorId) {
-      targetRef = usePronounsForTarget
-        ? this.#getReflexivePronoun(this.#detectEntityGender(activity.actorId))
-        : actorRef;
-    } else {
-      targetRef = usePronounsForTarget
-        ? this.#getPronounSet(this.#detectEntityGender(activity.targetEntityId)).object
-        : this.#resolveEntityName(activity.targetEntityId);
-    }
-  }
-
-  // ... continue with template replacement
-}
-
-/**
- * Get reflexive pronoun for gender.
- *
- * @param {string} gender - Gender
- * @returns {string} Reflexive pronoun
- * @private
- */
-#getReflexivePronoun(gender) {
-  const reflexive = {
-    male: 'himself',
-    female: 'herself',
-    neutral: 'themselves',
-    unknown: 'themselves',
-  };
-
-  return reflexive[gender] || 'themselves';
-}
-```
+#### 5. Self-Targeting Activities and Reflexive Pronouns
+- Update `#generateActivityPhrase` to accept the actor entity ID (pass it from the call sites in `#formatActivityDescription`).
+- When `targetEntityId` matches the actor ID, prefer reflexive pronouns via a new `#getReflexivePronoun` helper. Respect the `usePronounsForTarget` flag when selecting between the reflexive pronoun and the actor's display name.
+- Ensure existing calls that omit the actor still work (e.g. related activity fragments should continue to request `omitActor: true`).
 
 #### 6. Missing Target Entities
-```javascript
-/**
- * Handle missing target entities gracefully.
- *
- * @param {string} targetId - Target ID
- * @returns {string} Name or fallback
- * @private
- */
-#resolveEntityNameSafe(entityId) {
-  try {
-    // Check cache first
-    if (this.#entityNameCache.has(entityId)) {
-      return this.#entityNameCache.get(entityId);
-    }
+- When `#resolveEntityName` cannot locate an entity, log at debug level and return the sanitised entity ID instead of the raw ID.
+- Ensure `#generateActivityPhrase` gracefully handles `null` or `undefined` targets without throwing (including the self-targeting branch above).
 
-    const entity = this.#entityManager.getEntityInstance(entityId);
-
-    // Edge case: Missing entity
-    if (!entity) {
-      this.#logger.debug(`Target entity not found: ${entityId}, using ID`);
-      const fallback = this.#sanitizeEntityName(entityId);
-      this.#entityNameCache.set(entityId, fallback);
-      return fallback;
-    }
-
-    const nameComponent = entity.getComponentData('core:name');
-    const name = this.#sanitizeEntityName(nameComponent?.text) || entityId;
-
-    this.#entityNameCache.set(entityId, name);
-    return name;
-  } catch (err) {
-    this.#logger.error(`Failed to resolve name for ${entityId}`, err);
-    return this.#sanitizeEntityName(entityId) || 'Unknown';
-  }
-}
-```
-
-#### 7. Duplicate Activities
-```javascript
-/**
- * Remove duplicate activities based on content.
- *
- * @param {Array<object>} activities - Activities
- * @returns {Array<object>} Deduplicated activities
- * @private
- */
-#deduplicateActivities(activities) {
-  const seen = new Map();
-  const unique = [];
-
-  for (const activity of activities) {
-    // Create content hash
-    const hash = `${activity.template || activity.verb}:${activity.targetEntityId || 'solo'}`;
-
-    if (seen.has(hash)) {
-      // Keep higher priority version
-      const existing = seen.get(hash);
-      if ((activity.priority || 50) > (existing.priority || 50)) {
-        // Replace with higher priority
-        const index = unique.indexOf(existing);
-        unique[index] = activity;
-        seen.set(hash, activity);
-      }
-      continue;
-    }
-
-    seen.set(hash, activity);
-    unique.push(activity);
-  }
-
-  return unique;
-}
-```
+#### 7. Guarding Activity Index Interactions
+- `#groupActivities` already tracks visited nodes, but ensure the new deduplicated list prevents infinite loops caused by repeated references.
+- When `#getActivityIndex` receives an empty array, short-circuit before caching.
 
 ### Configuration Additions
+Extend the default configuration object instead of adding a nested `edgeCases` block:
+
 ```javascript
-getActivityIntegrationConfig() {
-  return {
-    // ... existing config
-    edgeCases: {
-      maxDescriptionLength: 500,
-      handleCircularReferences: true,
-      deduplicateActivities: true,
-      sanitizeNames: true,
-      reflexivePronounsForSelfTarget: true,
-    },
-  };
-}
+const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
+  enabled: true,
+  prefix: 'Activity: ',
+  suffix: '.',
+  separator: '. ',
+  maxActivities: 10,
+  enableContextAwareness: true,
+  maxDescriptionLength: 500,
+  deduplicateActivities: true,
+  nameResolution: Object.freeze({
+    usePronounsWhenAvailable: false,
+    preferReflexivePronouns: true,
+  }),
+});
 ```
+
+`#getActivityIntegrationConfig` should merge the new properties so overrides remain backwards compatible.
 
 ## Acceptance Criteria
 - [ ] Empty activity lists handled gracefully
-- [ ] Circular references detected and prevented
+- [ ] Circular references and duplicate metadata prevented
 - [ ] Extremely long descriptions truncated intelligently
-- [ ] Special characters sanitized
-- [ ] Self-targeting activities use reflexive pronouns
-- [ ] Missing target entities handled with fallbacks
-- [ ] Duplicate activities deduplicated
-- [ ] Configuration controls edge case handling
+- [ ] Special characters sanitised through `#resolveEntityName`
+- [ ] Self-targeting activities use reflexive pronouns when configured
+- [ ] Missing target entities handled with sanitised fallbacks
+- [ ] Duplicate activity metadata deduplicated before formatting
+- [ ] Configuration exposes toggles and limits for edge case handling
 - [ ] Tests verify all edge cases
 - [ ] No crashes on unusual inputs
 
@@ -296,107 +115,49 @@ getActivityIntegrationConfig() {
 
 ```javascript
 describe('ActivityDescriptionService - Edge Cases', () => {
-  it('should return empty string for entity with no activities', async () => {
-    const jon = createEntity('jon', 'male');
-    // No activities added
-
+  it('returns an empty string when no activities exist', async () => {
     const description = await service.generateActivityDescription('jon');
     expect(description).toBe('');
   });
 
-  it('should detect and prevent circular references', () => {
-    const activities = [
-      { sourceComponent: 'comp1', targetEntityId: 'alicia', priority: 75 },
-      { sourceComponent: 'comp1', targetEntityId: 'alicia', priority: 80 }, // Duplicate
-    ];
-
-    const safe = service['#detectCircularReferences'](activities);
-    expect(safe).toHaveLength(1);
-  });
-
-  it('should truncate extremely long descriptions', () => {
-    const longDescription = 'Activity: ' + 'Jon is doing something. '.repeat(50);
-
-    const truncated = service['#limitDescriptionLength'](longDescription, 500);
-
-    expect(truncated.length).toBeLessThanOrEqual(500);
-    expect(truncated).toMatch(/\.$/); // Should end with period
-  });
-
-  it('should sanitize entity names with special characters', () => {
-    const names = [
-      'Jon\x00Ureña',        // Control character
-      '  Jon   ',             // Extra whitespace
-      '',                     // Empty
-      '\t\nJon\r',           // Whitespace chars
-    ];
-
-    const sanitized = names.map(n => service['#sanitizeEntityName'](n));
-
-    expect(sanitized[0]).not.toContain('\x00');
-    expect(sanitized[1]).toBe('Jon');
-    expect(sanitized[2]).toBe('Unknown');
-    expect(sanitized[3]).toBe('Jon');
-  });
-
-  it('should use reflexive pronouns for self-targeting', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is meditating on {target}', 'jon', 75); // Self-target
-
-    const description = await service.generateActivityDescription('jon');
-
-    expect(description).toMatch(/himself|Jon/);
-  });
-
-  it('should handle missing target entities', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} is looking for {target}', 'missing_entity', 75);
-
-    const description = await service.generateActivityDescription('jon');
-
-    // Should use target ID as fallback
-    expect(description).toContain('missing_entity');
-  });
-
-  it('should deduplicate activities intelligently', () => {
+  it('deduplicates duplicate metadata before formatting', () => {
+    const hooks = service.getTestHooks();
     const activities = [
       { template: '{actor} waves', targetEntityId: 'alicia', priority: 70 },
-      { template: '{actor} waves', targetEntityId: 'alicia', priority: 80 }, // Higher priority duplicate
+      { template: '{actor} waves', targetEntityId: 'alicia', priority: 80 },
     ];
 
-    const deduplicated = service['#deduplicateActivities'](activities);
+    const deduplicated = hooks.deduplicateActivitiesBySignature(activities);
 
     expect(deduplicated).toHaveLength(1);
-    expect(deduplicated[0].priority).toBe(80); // Kept higher priority
+    expect(deduplicated[0].priority).toBe(80);
   });
 
-  it('should handle entity with only filtered activities', async () => {
-    const jon = createEntity('jon', 'male');
-    addActivity(jon, '{actor} waves', null, 75, {
-      conditions: {
-        requiredComponents: ['nonexistent:component'],
-      },
-    });
+  it('truncates extremely long descriptions', () => {
+    const hooks = service.getTestHooks();
+    const longDescription = 'Activity: ' + 'Jon is doing something. '.repeat(50);
 
-    const description = await service.generateActivityDescription('jon');
+    const truncated = hooks.truncateDescription(longDescription, 500);
 
-    // All activities filtered, should return empty string
-    expect(description).toBe('');
+    expect(truncated.length).toBeLessThanOrEqual(500);
+    expect(truncated.endsWith('.') || truncated.endsWith('...')).toBe(true);
   });
 
-  it('should handle extremely nested pronoun resolution', async () => {
-    const jon = createEntity('jon', 'male');
+  it('sanitises entity names with special characters', () => {
+    const hooks = service.getTestHooks();
+    const sanitized = hooks.sanitizeEntityName('  Jon\x00Ureña  ');
 
-    // Many activities with same target
-    for (let i = 0; i < 20; i++) {
-      addActivity(jon, `{actor} action${i} {target}`, 'alicia', 90 - i);
-    }
+    expect(sanitized).toBe('JonUreña');
+  });
 
-    const description = await service.generateActivityDescription('jon');
+  it('uses reflexive pronouns for self-targeting activities', async () => {
+    // Arrange entity + activity metadata that targets the actor id
+    // Expect the generated description to use "himself" / "herself" / "themselves"
+  });
 
-    // Should not crash, should use pronouns correctly
-    expect(description).toBeDefined();
-    expect(description.length).toBeGreaterThan(0);
+  it('falls back gracefully when a target entity is missing', async () => {
+    // Configure metadata that references a missing target and ensure no crash occurs
+    // Expect the sanitised target id to appear in the final description
   });
 });
 ```
