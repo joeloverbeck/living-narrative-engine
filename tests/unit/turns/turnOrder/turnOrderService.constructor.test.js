@@ -52,6 +52,23 @@ describe('TurnOrderService', () => {
       expect(validLogger.error).not.toHaveBeenCalled();
     });
 
+    it('should initialize when logger is missing optional debug/info methods', () => {
+      const minimalLogger = {
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
+
+      const service = new TurnOrderService({ logger: minimalLogger });
+
+      expect(() =>
+        service.startNewRound([{ id: 'actor-1' }], 'round-robin')
+      ).not.toThrow();
+
+      expect(service.isEmpty()).toBe(false);
+      expect(minimalLogger.warn).not.toHaveBeenCalled();
+      expect(minimalLogger.error).not.toHaveBeenCalled();
+    });
+
     // Test Case: Missing Logger (undefined)
     it('Test Case 11.1.2: should throw an error if the logger dependency is missing (undefined)', () => {
       // Arrange: No logger provided
@@ -63,7 +80,7 @@ describe('TurnOrderService', () => {
       expect(() => {
         new TurnOrderService({ logger: undefined });
       }).toThrow(
-        'TurnOrderService requires a valid ILogger instance (info, error, warn methods).'
+        'TurnOrderService requires a valid ILogger instance (error and warn methods).'
       );
     });
 
@@ -80,7 +97,7 @@ describe('TurnOrderService', () => {
         // @ts-ignore // Suppress TypeScript error for testing invalid input
         new TurnOrderService({});
       }).toThrow(
-        'TurnOrderService requires a valid ILogger instance (info, error, warn methods).'
+        'TurnOrderService requires a valid ILogger instance (error and warn methods).'
       );
     });
 
@@ -103,7 +120,7 @@ describe('TurnOrderService', () => {
         // @ts-ignore // Suppress TypeScript error for testing invalid input
         new TurnOrderService({ logger: invalidLogger });
       }).toThrow(
-        'TurnOrderService requires a valid ILogger instance (info, error, warn methods).'
+        'TurnOrderService requires a valid ILogger instance (error and warn methods).'
       );
 
       // Ensure the valid methods weren't called if constructor threw early
@@ -130,7 +147,7 @@ describe('TurnOrderService', () => {
         // @ts-ignore // Suppress TypeScript error for testing invalid input
         new TurnOrderService({ logger: invalidLogger });
       }).toThrow(
-        'TurnOrderService requires a valid ILogger instance (info, error, warn methods).'
+        'TurnOrderService requires a valid ILogger instance (error and warn methods).'
       );
 
       // Ensure the valid methods weren't called if constructor threw early
