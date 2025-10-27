@@ -91,11 +91,26 @@ export function createSafeErrorLogger({
    */
   const normalizeLoadingOptions = (options) => {
     if (typeof options === 'string') {
-      return { context: options };
+      const trimmedContext = options.trim();
+      return trimmedContext ? { context: trimmedContext } : {};
     }
 
     if (options && typeof options === 'object' && !Array.isArray(options)) {
       const normalizedOptions = { ...options };
+
+      if (Object.prototype.hasOwnProperty.call(normalizedOptions, 'context')) {
+        const rawContext = normalizedOptions.context;
+        if (typeof rawContext === 'string') {
+          const trimmedContext = rawContext.trim();
+          if (trimmedContext) {
+            normalizedOptions.context = trimmedContext;
+          } else {
+            delete normalizedOptions.context;
+          }
+        } else {
+          delete normalizedOptions.context;
+        }
+      }
 
       if (Object.prototype.hasOwnProperty.call(normalizedOptions, 'timeoutMs')) {
         const coercedTimeout = normalizeTimeoutMsValue(normalizedOptions.timeoutMs);
