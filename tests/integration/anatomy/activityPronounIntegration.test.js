@@ -12,6 +12,7 @@ describe('Activity Description - Pronoun Edge Cases', () => {
   let testBed;
   let entityManager;
   let service;
+  let jsonLogicEvaluationService;
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
@@ -19,10 +20,14 @@ describe('Activity Description - Pronoun Edge Cases', () => {
     registerActivityComponents(testBed);
 
     entityManager = testBed.entityManager;
+    jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
     service = new ActivityDescriptionService({
       logger: testBed.logger,
       entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
 
     configureActivityFormatting(testBed.mockAnatomyFormattingService);

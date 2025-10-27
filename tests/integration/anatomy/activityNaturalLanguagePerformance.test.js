@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { performance } from 'node:perf_hooks';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
@@ -13,6 +13,7 @@ describe('Activity Description - Performance', () => {
   let testBed;
   let entityManager;
   let service;
+  let jsonLogicEvaluationService;
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
@@ -20,10 +21,14 @@ describe('Activity Description - Performance', () => {
     registerActivityComponents(testBed);
 
     entityManager = testBed.entityManager;
+    jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
     service = new ActivityDescriptionService({
       logger: testBed.logger,
       entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
     });
 
     configureActivityFormatting(testBed.mockAnatomyFormattingService);
