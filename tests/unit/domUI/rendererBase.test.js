@@ -274,6 +274,66 @@ describe('RendererBase', () => {
     });
   });
 
+  describe('_addDomListener', () => {
+    /** @type {ConcreteRenderer} */
+    let instance;
+    /** @type {{
+     *  addEventListener: jest.Mock,
+     *  removeEventListener: jest.Mock,
+     *  tagName: string,
+     *  parentElement: null,
+     *  className?: string,
+     *  id?: string
+     * }} */
+    let mockElement;
+
+    beforeEach(() => {
+      instance = new ConcreteRenderer(validDeps);
+      mockElement = {
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        tagName: 'DIV',
+        parentElement: null,
+        className: '',
+      };
+    });
+
+    it('should warn and skip registration when handler is invalid', () => {
+      instance._addDomListener(mockElement, 'click', undefined);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "[ConcreteRenderer] Attempted to add DOM listener with invalid handler for event type 'click'.",
+        { handler: undefined }
+      );
+      expect(mockElement.addEventListener).not.toHaveBeenCalled();
+      expect(instance._managedDomListeners).toHaveLength(0);
+    });
+
+    it('should warn if removing a DOM listener throws during dispose', () => {
+      const removalError = new Error('remove failure');
+      mockElement.removeEventListener.mockImplementation(() => {
+        throw removalError;
+      });
+      const handler = jest.fn();
+
+      instance._addDomListener(mockElement, 'click', handler);
+
+      instance.dispose();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "[ConcreteRenderer] Error removing DOM listener for 'click':",
+        removalError,
+        { elementPath: 'div' }
+      );
+      expect(mockElement.removeEventListener).toHaveBeenCalledWith(
+        'click',
+        handler,
+        undefined
+      );
+      expect(instance._managedDomListeners).toHaveLength(0);
+    });
+  });
+
   // --- Dispose Method Test ---
   describe('dispose', () => {
     it('should log disposal message', () => {
@@ -284,6 +344,22 @@ describe('RendererBase', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         '[ConcreteRenderer] Finished automated cleanup. Base dispose complete.'
       );
+    });
+
+    it('should warn if a managed subscription throws during cleanup', () => {
+      const instance = new ConcreteRenderer(validDeps);
+      const unsubscribeError = new Error('unsubscribe failure');
+      instance._addSubscription(() => {
+        throw unsubscribeError;
+      });
+
+      instance.dispose();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ConcreteRenderer] Error during VED unsubscription:',
+        unsubscribeError
+      );
+      expect(instance._managedVedEventSubscriptions).toHaveLength(0);
     });
 
     // Add more tests here if dispose method gains more functionality
