@@ -198,6 +198,20 @@ describe('GameSessionManager', () => {
         }
       );
     });
+    it('should convert plus characters to spaces for display names', async () => {
+      const saveIdentifier =
+        'saves/manual_saves/manual_save_Hero+One+Adventures.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(saveIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading Hero One Adventures...',
+          inputDisabledMessage: 'Loading game from Hero One Adventures...',
+        }
+      );
+    });
 
     it('should ignore trailing separators when deriving the save name', async () => {
       const saveIdentifier = 'C\\\\Users\\\\Player\\\\Saves\\\\';
