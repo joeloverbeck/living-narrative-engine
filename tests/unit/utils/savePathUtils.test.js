@@ -43,6 +43,14 @@ describe('savePathUtils', () => {
         'manual_save_alpha-123_Beta.sav'
       );
     });
+
+    it('should coerce non-string values without throwing', () => {
+      expect(buildManualFileName(null)).toBe('manual_save_.sav');
+      expect(buildManualFileName(42)).toBe('manual_save_42.sav');
+      expect(buildManualFileName({ toString: () => 'custom' })).toBe(
+        'manual_save_custom.sav'
+      );
+    });
   });
 
   describe('extractSaveName', () => {

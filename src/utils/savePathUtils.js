@@ -35,7 +35,13 @@ export const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/i;
  * @returns {string} Sanitized filename including prefix and extension.
  */
 export function buildManualFileName(saveName) {
-  const sanitized = saveName.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const normalizedName =
+    typeof saveName === 'string'
+      ? saveName
+      : saveName == null
+        ? ''
+        : String(saveName);
+  const sanitized = normalizedName.replace(/[^a-zA-Z0-9_-]/g, '_');
   return `manual_save_${sanitized}.sav`;
 }
 
