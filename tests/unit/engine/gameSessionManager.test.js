@@ -825,10 +825,7 @@ describe('GameSessionManager', () => {
         gameState: {},
       };
 
-      await gameSessionManager.finalizeLoadSuccess(
-        saveData,
-        'manual-slot'
-      );
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'manual-slot');
 
       expect(engineState.activeWorld).toBe('Galactic Quest');
       expect(startEngineFn).toHaveBeenCalledWith('Galactic Quest');
@@ -871,6 +868,32 @@ describe('GameSessionManager', () => {
 
       expect(engineState.activeWorld).toBe('Outer Rim Outpost');
       expect(startEngineFn).toHaveBeenCalledWith('Outer Rim Outpost');
+    });
+
+    it('should coerce numeric metadata values into displayable world names', async () => {
+      const saveData = {
+        metadata: { gameTitle: '', worldName: 42 },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'numeric-world');
+
+      expect(engineState.activeWorld).toBe('42');
+      expect(startEngineFn).toHaveBeenCalledWith('42');
+    });
+
+    it('should coerce boolean metadata values into displayable world names', async () => {
+      const saveData = {
+        metadata: { gameTitle: '', worldName: false },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'boolean-world');
+
+      expect(engineState.activeWorld).toBe('false');
+      expect(startEngineFn).toHaveBeenCalledWith('false');
     });
   });
 
