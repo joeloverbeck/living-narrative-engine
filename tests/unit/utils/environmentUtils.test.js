@@ -172,7 +172,7 @@ describe('environmentUtils', () => {
       globalThis.document = originalDocument || {};
 
       expect(getEnvironmentVariable('BROWSER_ONLY', 'fallback')).toBe(
-        'window-value',
+        'window-value'
       );
 
       if (originalWindow === undefined) {
@@ -194,7 +194,7 @@ describe('environmentUtils', () => {
       globalThis.env = { SHARED_KEY: 'shared-value' };
 
       expect(getEnvironmentVariable('SHARED_KEY', 'fallback')).toBe(
-        'shared-value',
+        'shared-value'
       );
 
       globalThis.window = originalWindow;
@@ -229,9 +229,7 @@ describe('environmentUtils', () => {
       globalThis.env = { ZERO_FLAG: 0, DISABLED_FLAG: false };
 
       expect(getEnvironmentVariable('ZERO_FLAG', 'fallback')).toBe('0');
-      expect(getEnvironmentVariable('DISABLED_FLAG', 'fallback')).toBe(
-        'false',
-      );
+      expect(getEnvironmentVariable('DISABLED_FLAG', 'fallback')).toBe('false');
 
       if (originalGlobalEnv === undefined) {
         delete globalThis.env;
@@ -346,9 +344,7 @@ describe('environmentUtils', () => {
           env: { FEATURE_FLAG: rawValue },
         };
 
-        expect(getBooleanEnvironmentVariable('FEATURE_FLAG', true)).toBe(
-          false
-        );
+        expect(getBooleanEnvironmentVariable('FEATURE_FLAG', true)).toBe(false);
       }
     );
 
@@ -419,6 +415,22 @@ describe('environmentUtils', () => {
       expect(hasEnvironmentVariable('TEST_VAR')).toBe(false);
     });
 
+    it('treats case-insensitive falsy values as absent', () => {
+      globalThis.process = {
+        versions: { node: '16.0.0' },
+        env: { TEST_VAR: ' False ' },
+      };
+      expect(hasEnvironmentVariable('TEST_VAR')).toBe(false);
+    });
+
+    it('treats trimmed truthy values as present', () => {
+      globalThis.process = {
+        versions: { node: '16.0.0' },
+        env: { TEST_VAR: '  On  ' },
+      };
+      expect(hasEnvironmentVariable('TEST_VAR')).toBe(true);
+    });
+
     it('returns false when environment lookup throws', () => {
       jest
         .spyOn(environmentUtilsModule, 'getEnvironmentVariable')
@@ -427,7 +439,7 @@ describe('environmentUtils', () => {
         });
 
       expect(environmentUtilsModule.hasEnvironmentVariable('BROKEN')).toBe(
-        false,
+        false
       );
     });
   });
