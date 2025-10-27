@@ -125,6 +125,38 @@ describe('SlotGenerator', () => {
       });
     });
 
+    it('should throw an error when duplicate slot keys are generated', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['arm'],
+              },
+            },
+            {
+              type: 'leg',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      expect(() => slotGenerator.generateBlueprintSlots(template)).toThrow(
+        'SlotGenerator: Duplicate slot keys detected: arm_1'
+      );
+    });
+
     it('should handle optional flag from limbSets', () => {
       const template = {
         topology: {

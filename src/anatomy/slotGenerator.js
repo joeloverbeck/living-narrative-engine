@@ -53,6 +53,7 @@ class SlotGenerator {
     }
 
     const slots = {};
+    const generatedSlotKeys = [];
     const { limbSets = [], appendages = [] } = structureTemplate.topology;
 
     this.#logger.debug(
@@ -62,17 +63,25 @@ class SlotGenerator {
     // Process each limbSet
     for (const limbSet of limbSets) {
       const limbSlots = this.#generateSlotsFromLimbSet(limbSet);
-      Object.assign(slots, limbSlots);
+
+      for (const [slotKey, slotDefinition] of Object.entries(limbSlots)) {
+        generatedSlotKeys.push(slotKey);
+        slots[slotKey] = slotDefinition;
+      }
     }
 
     // Process each appendage
     for (const appendage of appendages) {
       const appendageSlots = this.#generateSlotsFromAppendage(appendage);
-      Object.assign(slots, appendageSlots);
+
+      for (const [slotKey, slotDefinition] of Object.entries(appendageSlots)) {
+        generatedSlotKeys.push(slotKey);
+        slots[slotKey] = slotDefinition;
+      }
     }
 
     // Validate uniqueness
-    this.#validateSlotUniqueness(slots);
+    this.#validateSlotUniqueness(generatedSlotKeys);
 
     this.#logger.info(
       `SlotGenerator: Generated ${Object.keys(slots).length} slots successfully`
@@ -363,27 +372,23 @@ class SlotGenerator {
   /**
    * Validates that all slot keys are unique
    *
-   * @param {object} slots - Object mapping slot keys to slot definitions
+   * @param {Array<string>} slotKeys - Array of slot keys generated during processing
    * @throws {Error} If duplicate slot keys are found
    * @private
    */
-  #validateSlotUniqueness(slots) {
-    const slotKeys = Object.keys(slots);
-    const uniqueKeys = new Set(slotKeys);
+  #validateSlotUniqueness(slotKeys) {
+    const seen = new Set();
+    const duplicates = [];
 
-    if (slotKeys.length !== uniqueKeys.size) {
-      // Find duplicates
-      const seen = new Set();
-      const duplicates = [];
-
-      for (const key of slotKeys) {
-        if (seen.has(key)) {
-          duplicates.push(key);
-        } else {
-          seen.add(key);
-        }
+    for (const key of slotKeys) {
+      if (seen.has(key)) {
+        duplicates.push(key);
+      } else {
+        seen.add(key);
       }
+    }
 
+    if (duplicates.length > 0) {
       throw new Error(
         `SlotGenerator: Duplicate slot keys detected: ${duplicates.join(', ')}`
       );
