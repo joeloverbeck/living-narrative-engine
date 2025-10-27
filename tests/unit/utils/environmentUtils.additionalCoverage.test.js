@@ -167,18 +167,21 @@ describe('environmentUtils additional coverage', () => {
         heapTotal: 2048,
         external: 64,
       })),
+      binding: jest.fn(() => ({
+        getHeapStatistics: () => ({ heap_size_limit: 4096 }),
+      })),
     };
 
     const nodeUsage = getMemoryUsage();
     expect(nodeUsage).toEqual({
       heapUsed: 1024,
       heapTotal: 2048,
-      heapLimit: 2048,
+      heapLimit: 4096,
       external: 64,
     });
 
     expect(getMemoryUsageBytes()).toBe(1024);
-    expect(getMemoryUsagePercent()).toBeCloseTo(0.5);
+    expect(getMemoryUsagePercent()).toBeCloseTo(0.25);
   });
 
   it('returns zeroed memory metrics when usage data is missing', () => {

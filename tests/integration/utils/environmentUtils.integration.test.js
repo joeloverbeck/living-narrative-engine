@@ -372,23 +372,28 @@ describe('environmentUtils integration behavior', () => {
 
     it('reads memory usage from process when running under Node', () => {
       const originalMemoryUsage = process.memoryUsage;
+      const originalBinding = process.binding;
       process.memoryUsage = () => ({
         heapUsed: 100,
         heapTotal: 400,
         external: 50,
       });
+      process.binding = jest.fn(() => ({
+        getHeapStatistics: () => ({ heap_size_limit: 800 }),
+      }));
 
       const usage = getMemoryUsage();
       expect(usage).toEqual({
         heapUsed: 100,
         heapTotal: 400,
-        heapLimit: 400,
+        heapLimit: 800,
         external: 50,
       });
       expect(getMemoryUsageBytes()).toBe(100);
-      expect(getMemoryUsagePercent()).toBeCloseTo(0.25);
+      expect(getMemoryUsagePercent()).toBeCloseTo(0.125);
 
       process.memoryUsage = originalMemoryUsage;
+      process.binding = originalBinding;
     });
 
     it('returns zeroed metrics when no memory information is available', () => {

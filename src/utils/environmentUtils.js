@@ -295,6 +295,46 @@ export function triggerGarbageCollection() {
 }
 
 /**
+ * Resolves the Node.js heap size limit using V8 statistics when available.
+ *
+ * @param {number} defaultLimit - Fallback heap limit when statistics are unavailable.
+ * @returns {number} The detected heap size limit or the provided fallback.
+ */
+function resolveNodeHeapLimit(defaultLimit) {
+  const fallbackLimit = Number.isFinite(defaultLimit) ? defaultLimit : 0;
+
+  if (
+    typeof process === 'undefined' ||
+    process === null ||
+    typeof process.binding !== 'function'
+  ) {
+    return fallbackLimit;
+  }
+
+  try {
+    const v8Binding = process.binding('v8');
+    if (
+      v8Binding &&
+      typeof v8Binding.getHeapStatistics === 'function'
+    ) {
+      const stats = v8Binding.getHeapStatistics();
+      const heapLimitCandidate = stats?.heap_size_limit;
+      if (
+        typeof heapLimitCandidate === 'number' &&
+        Number.isFinite(heapLimitCandidate) &&
+        heapLimitCandidate > 0
+      ) {
+        return heapLimitCandidate;
+      }
+    }
+  } catch {
+    // Ignore errors from unavailable bindings and fall back to the default limit
+  }
+
+  return fallbackLimit;
+}
+
+/**
  * Get memory usage based on environment
  * @returns {object|null} Memory usage object or null if not available
  */
@@ -312,11 +352,17 @@ export function getMemoryUsage() {
   // Node.js environment
   if (isNodeEnvironment() && typeof process !== 'undefined' && process.memoryUsage) {
     const mem = process.memoryUsage();
+    const heapUsed = Number.isFinite(mem?.heapUsed) ? mem.heapUsed : 0;
+    const heapTotal = Number.isFinite(mem?.heapTotal) ? mem.heapTotal : 0;
+    const external = Number.isFinite(mem?.external) ? mem.external : 0;
+
+    const resolvedLimit = resolveNodeHeapLimit(heapTotal);
+
     return {
-      heapUsed: mem.heapUsed || 0,
-      heapTotal: mem.heapTotal || 0,
-      heapLimit: mem.heapTotal || 0, // Use heapTotal as limit in Node.js
-      external: mem.external || 0,
+      heapUsed,
+      heapTotal,
+      heapLimit: resolvedLimit,
+      external,
     };
   }
 
