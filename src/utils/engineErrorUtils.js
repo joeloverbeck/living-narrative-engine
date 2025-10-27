@@ -84,6 +84,9 @@ export async function dispatchFailureAndReset(
     'engineErrorUtils.dispatchFailureAndReset: Dispatching UI event for operation failed.'
   );
 
+  /** @type {Error | null} */
+  let resetErrorToThrow = null;
+
   try {
     if (dispatcher) {
       const dispatchResult = await dispatcher.dispatch(
@@ -115,7 +118,7 @@ export async function dispatchFailureAndReset(
     );
   } finally {
     try {
-      resetEngineState();
+      await resetEngineState();
     } catch (resetError) {
       const normalizedResetError =
         resetError instanceof Error
@@ -125,7 +128,12 @@ export async function dispatchFailureAndReset(
         'engineErrorUtils.dispatchFailureAndReset: Failed to reset engine state after failure.',
         normalizedResetError
       );
+      resetErrorToThrow = normalizedResetError;
     }
+  }
+
+  if (resetErrorToThrow) {
+    throw resetErrorToThrow;
   }
 }
 

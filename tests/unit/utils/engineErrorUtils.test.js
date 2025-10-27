@@ -154,13 +154,15 @@ describe('engineErrorUtils', () => {
         throw resetError;
       });
 
-      await dispatchFailureAndReset(
-        mockDispatcher,
-        errorMessage,
-        title,
-        mockResetEngineState,
-        mockLogger
-      );
+      await expect(
+        dispatchFailureAndReset(
+          mockDispatcher,
+          errorMessage,
+          title,
+          mockResetEngineState,
+          mockLogger
+        )
+      ).rejects.toBe(resetError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'engineErrorUtils.dispatchFailureAndReset: Failed to reset engine state after failure.',
@@ -352,6 +354,40 @@ describe('engineErrorUtils', () => {
         }
       );
       expect(mockResetEngineState).toHaveBeenCalled();
+    });
+
+    it('should propagate reset errors so callers can react to cleanup failures', async () => {
+      const contextMessage = 'criticalOperation';
+      const operationError = new Error('operation failed');
+      const resetError = new Error('reset exploded');
+
+      mockResetEngineState.mockImplementationOnce(() => {
+        throw resetError;
+      });
+
+      await expect(
+        processOperationFailure(
+          mockLogger,
+          mockDispatcher,
+          contextMessage,
+          operationError,
+          'Critical Failure',
+          'Unable to continue',
+          mockResetEngineState
+        )
+      ).rejects.toBe(resetError);
+
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_FAILED_UI,
+        {
+          errorMessage: 'Unable to continue: operation failed',
+          errorTitle: 'Critical Failure',
+        }
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'engineErrorUtils.dispatchFailureAndReset: Failed to reset engine state after failure.',
+        resetError
+      );
     });
 
     it('should handle null dispatcher gracefully', async () => {
