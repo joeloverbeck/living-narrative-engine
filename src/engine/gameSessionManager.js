@@ -461,11 +461,37 @@ class GameSessionManager {
    * @returns {string} A cleaned label or an empty string when the value is unusable.
    */
   #normalizeMetadataLabel(rawValue, { treatAsFileName = false } = {}) {
-    if (typeof rawValue !== 'string') {
+    if (rawValue === null || rawValue === undefined) {
       return '';
     }
 
-    const trimmedValue = rawValue.trim();
+    /** @type {string} */
+    let candidateValue;
+
+    if (typeof rawValue === 'string') {
+      candidateValue = rawValue;
+    } else if (typeof rawValue === 'number') {
+      if (!Number.isFinite(rawValue)) {
+        return '';
+      }
+      candidateValue = String(rawValue);
+    } else if (typeof rawValue === 'boolean') {
+      candidateValue = rawValue ? 'true' : 'false';
+    } else if (typeof rawValue === 'bigint') {
+      candidateValue = rawValue.toString();
+    } else {
+      try {
+        const coerced = String(rawValue);
+        if (!coerced || coerced === '[object Object]') {
+          return '';
+        }
+        candidateValue = coerced;
+      } catch {
+        return '';
+      }
+    }
+
+    const trimmedValue = candidateValue.trim();
     if (!trimmedValue) {
       return '';
     }
@@ -527,10 +553,9 @@ class GameSessionManager {
       return normalizedWorldName;
     }
 
-    const normalizedSaveName = this.#normalizeMetadataLabel(
-      metadata.saveName,
-      { treatAsFileName: true }
-    );
+    const normalizedSaveName = this.#normalizeMetadataLabel(metadata.saveName, {
+      treatAsFileName: true,
+    });
     if (normalizedSaveName) {
       return normalizedSaveName;
     }
