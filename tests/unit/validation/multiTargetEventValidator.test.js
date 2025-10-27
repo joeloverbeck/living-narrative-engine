@@ -77,6 +77,46 @@ describe('MultiTargetEventValidator', () => {
   });
 
   describe('Target Consistency Validation', () => {
+    it('should require target values to be non-empty strings', () => {
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'actor_123',
+        actionId: 'test:action',
+        targets: {
+          item: '   ',
+          target: 'valid_target',
+        },
+        targetId: 'valid_target',
+        originalInput: 'test action',
+      };
+
+      const result = validator.validateEvent(event);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Target "item" must have a non-empty string value'
+      );
+    });
+
+    it('should warn when a target uses an invalid entity id format', () => {
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'actor_123',
+        actionId: 'test:action',
+        targets: {
+          item: 'invalid id!',
+        },
+        targetId: 'invalid id!',
+        originalInput: 'test action',
+      };
+
+      const result = validator.validateEvent(event);
+
+      expect(result.warnings).toContain(
+        'Target "item" ID "invalid id!" should follow entity ID format (letters, numbers, underscore, colon)'
+      );
+    });
+
     it('should warn when targetId does not match any target', () => {
       const event = {
         eventName: 'core:attempt_action',
@@ -223,6 +263,26 @@ describe('MultiTargetEventValidator', () => {
       );
     });
 
+    it('should warn when primary and target entries refer to the same entity', () => {
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'actor_123',
+        actionId: 'test:action',
+        targets: {
+          primary: 'shared_target',
+          target: 'shared_target',
+        },
+        targetId: 'shared_target',
+        originalInput: 'test action',
+      };
+
+      const result = validator.validateEvent(event);
+
+      expect(result.warnings).toContain(
+        'primary and target refer to the same entity - consider using just one'
+      );
+    });
+
     it('should suggest descriptive target names', () => {
       const event = {
         eventName: 'core:attempt_action',
@@ -246,6 +306,21 @@ describe('MultiTargetEventValidator', () => {
   });
 
   describe('Legacy Compatibility', () => {
+    it('should reject legacy events with non-string targetId values', () => {
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'actor_123',
+        actionId: 'test:action',
+        targetId: 42,
+        originalInput: 'test action',
+      };
+
+      const result = validator.validateEvent(event);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Legacy targetId must be a string or null');
+    });
+
     it('should require targetId when targets object exists', () => {
       const event = {
         eventName: 'core:attempt_action',
@@ -283,6 +358,30 @@ describe('MultiTargetEventValidator', () => {
   });
 
   describe('Performance Monitoring', () => {
+    it('should warn when validation exceeds expected duration threshold', () => {
+      const performanceSpy = jest
+        .spyOn(performance, 'now')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(25);
+
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'actor_123',
+        actionId: 'test:action',
+        targetId: 'target_456',
+        originalInput: 'test action',
+      };
+
+      validator.validateEvent(event);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Multi-target validation took longer than expected',
+        expect.objectContaining({ duration: expect.any(String), target: '< 10ms' })
+      );
+
+      performanceSpy.mockRestore();
+    });
+
     it('should track validation performance metrics', () => {
       const event = {
         eventName: 'core:attempt_action',
