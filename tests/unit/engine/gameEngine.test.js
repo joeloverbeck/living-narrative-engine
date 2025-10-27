@@ -149,18 +149,17 @@ describeEngineSuite('GameEngine', (context) => {
 
       const clearFailure = new Error('clearAll failure');
       const { clearAll } = context.bed.getEntityManager();
-      clearAll.mockImplementationOnce(() => {}); // 1st call
-      clearAll.mockImplementationOnce(() => {}); // 2nd call
-      clearAll.mockImplementationOnce(() => {    // 3rd call
+      clearAll.mockImplementationOnce(() => {}); // 1st call: pre-initialization reset
+      clearAll.mockImplementationOnce(() => {    // 2nd call: failure handling
         throw clearFailure;
       });
-      clearAll.mockImplementationOnce(() => {}); // 4th call
+      clearAll.mockImplementationOnce(() => {}); // 3rd call: recovery attempt
 
       await expect(
         context.engine.startNewGame(DEFAULT_TEST_WORLD)
       ).rejects.toThrow(clearFailure);
 
-      expect(clearAll).toHaveBeenCalledTimes(4);
+      expect(clearAll).toHaveBeenCalledTimes(3);
       expect(context.engine.getEngineStatus()).toEqual({
         isInitialized: false,
         isLoopRunning: false,
