@@ -11,6 +11,7 @@ import {
 } from '../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { createMockEntity } from '../../common/mockFactories';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => {
   const actual = jest.requireActual(
@@ -107,6 +108,67 @@ describeTurnManagerSuite(
         );
       }
     );
+
+    test('stops and dispatches error when a non-actor reappears in the queue', async () => {
+      const bed = getBed();
+      const { turnOrderService, dispatcher, logger } = bed.mocks;
+
+      await bed.startRunning();
+
+      const nonActor = createMockEntity('looping-non-actor', {
+        isActor: false,
+        isPlayer: false,
+      });
+
+      turnOrderService.isEmpty.mockResolvedValue(false);
+      turnOrderService.getNextEntity.mockReturnValue(nonActor);
+      turnOrderService.clearCurrentRound.mockResolvedValue();
+
+      safeDispatchError.mockClear();
+      dispatcher.dispatch.mockClear();
+      logger.warn.mockClear();
+      logger.error.mockClear();
+
+      const stopSpy = jest.spyOn(bed.turnManager, 'stop');
+
+      await bed.turnManager.advanceTurn();
+      await drainTimersAndMicrotasks();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        `Entity ${nonActor.id} is not an actor. Skipping turn advancement for this entity.`
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Entity ${nonActor.id} reappeared without an actor component while advancing turns.`
+        )
+      );
+
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        dispatcher,
+        expect.stringContaining('non-actor entity twice while advancing turns'),
+        expect.objectContaining({ entityId: nonActor.id }),
+        logger
+      );
+
+      const systemErrorCalls = dispatcher.dispatch.mock.calls.filter(
+        ([eventId]) => eventId === SYSTEM_ERROR_OCCURRED_ID
+      );
+      expect(systemErrorCalls.length).toBeGreaterThan(0);
+
+      const criticalSystemError = systemErrorCalls.find(([, payload]) =>
+        payload.message.includes('Invalid turn queue entity encountered')
+      );
+
+      expect(criticalSystemError).toBeDefined();
+      expect(criticalSystemError[1]).toMatchObject({
+        details: expect.objectContaining({
+          error: expect.stringContaining(nonActor.id),
+        }),
+      });
+
+      expect(stopSpy).toHaveBeenCalled();
+      stopSpy.mockRestore();
+    });
 
     test(
       'dispatches TURN_PROCESSING_ENDED with player actorType when core:player_type is human',
