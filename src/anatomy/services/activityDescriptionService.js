@@ -34,6 +34,44 @@ import {
  * @property {string} verbPhrase - The phrase without the actor/copula for conjunction usage.
  */
 
+/**
+ * @typedef {object} ActivityIndex
+ * @description Structured activity index partitions.
+ * @property {Map<string, Array<object>>} byTarget - Activities grouped by target entity ID.
+ * @property {Array<object>} byPriority - Activities sorted by priority (descending).
+ * @property {Map<string, Array<object>>} byGroupKey - Activities grouped by shared group key metadata.
+ * @property {Array<object>} all - Original activities collection reference.
+ */
+
+/**
+ * @typedef {object} TimedCacheEntry
+ * @description Cache entry with value payload and expiration metadata.
+ * @property {unknown} value - Stored cache value.
+ * @property {number} expiresAt - Timestamp when entry becomes stale.
+ */
+
+/**
+ * @typedef {object} ActivityIndexCacheValue
+ * @description Stored payload for indexed activity cache entries.
+ * @property {string} signature - Deterministic signature describing the activities collection.
+ * @property {ActivityIndex} index - Cached activity index payload.
+ */
+
+/**
+ * @typedef {object} ActivityDescriptionTestHooks
+ * @description White-box helper functions exposed for unit testing.
+ * @property {(currentAdverb: string, injected: string) => string} mergeAdverb - Merge adverbs without duplicating descriptors.
+ * @property {(template: string, descriptor: string) => string} injectSoftener - Inject descriptors into activity templates.
+ * @property {(phrase: string) => string} sanitizeVerbPhrase - Remove redundant copulas from phrases.
+ * @property {(conjunction: string, components: ActivityPhraseComponents, context: object) => string} buildRelatedActivityFragment - Build related activity fragments.
+ * @property {(activities: Array<object>) => ActivityIndex} buildActivityIndex - Build an activity index for the supplied activities.
+ * @property {() => void} cleanupCaches - Trigger cache cleanup routine.
+ * @property {(key: string, value: unknown) => void} setEntityNameCacheEntry - Prime the entity name cache.
+ * @property {(key: string, value: unknown) => void} setGenderCacheEntry - Prime the gender cache.
+ * @property {(key: string, value: ActivityIndexCacheValue) => void} setActivityIndexCacheEntry - Prime the activity index cache.
+ * @property {() => { entityName: Map<string, TimedCacheEntry>; gender: Map<string, TimedCacheEntry>; activityIndex: Map<string, TimedCacheEntry>; }} getCacheSnapshot - Retrieve shallow cache snapshots.
+ */
+
 class ActivityDescriptionService {
   #logger;
 
@@ -45,9 +83,21 @@ class ActivityDescriptionService {
 
   #entityNameCache = new Map();
 
+  #genderCache = new Map();
+
+  #activityIndexCache = new Map();
+
   #closenessCache = new Map();
 
   #activityIndex = null; // Phase 3: ACTDESC-020
+
+  #cacheConfig = {
+    maxSize: 1000,
+    ttl: 60000,
+    enableMetrics: false,
+  };
+
+  #cleanupInterval = null;
 
   #simultaneousPriorityThreshold = 10;
 
@@ -90,6 +140,8 @@ class ActivityDescriptionService {
     this.#anatomyFormattingService = anatomyFormattingService;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#activityIndex = activityIndex;
+
+    this.#setupCacheCleanup();
   }
 
   /**
@@ -132,10 +184,14 @@ class ActivityDescriptionService {
         return this.#formatActivityDescription([], entity);
       }
 
-      const prioritizedActivities = this.#sortByPriority(conditionedActivities);
+      const prioritizedActivities = this.#sortByPriority(
+        conditionedActivities,
+        this.#buildActivityIndexCacheKey('priority', entity?.id ?? entityId)
+      );
       const description = this.#formatActivityDescription(
         prioritizedActivities,
-        entity
+        entity,
+        this.#buildActivityIndexCacheKey('group', entity?.id ?? entityId)
       );
 
       if (!description) {
@@ -601,15 +657,14 @@ class ActivityDescriptionService {
   }
 
    
-  #sortByPriority(activities) {
+  #sortByPriority(activities, cacheKey = null) {
     // ACTDESC-016 (Phase 2)
-    return [...activities].sort(
-      (a, b) => (b?.priority ?? 0) - (a?.priority ?? 0)
-    );
+    const index = this.#getActivityIndex(activities, cacheKey);
+    return index.byPriority;
   }
 
 
-  #formatActivityDescription(activities, entity) {
+  #formatActivityDescription(activities, entity, cacheKey = null) {
     // ACTDESC-008 (Phase 2 - Enhanced with Pronoun Resolution)
     // ACTDESC-014: Pronoun resolution implementation
     const config =
@@ -642,7 +697,10 @@ class ActivityDescriptionService {
         )
       : limitedActivities;
 
-    const groupedActivities = this.#groupActivities(contextAwareActivities);
+    const groupedActivities = this.#groupActivities(
+      contextAwareActivities,
+      cacheKey
+    );
 
     const descriptions = [];
 
@@ -713,6 +771,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Build the contextual payload for an activity.
+   *
    * @description Build lightweight context for an activity based on available component data.
    * @param {string} actorId - Actor entity ID.
    * @param {object} activity - Activity metadata collected by the service.
@@ -765,8 +825,10 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Map activity priority onto an intensity bucket.
+   *
    * @description Map activity priority onto an intensity bucket.
-   * @param {number} [priority=0] - Activity priority score.
+   * @param {number} priority - Activity priority score (defaults to 0).
    * @returns {string} Intensity level identifier.
    * @private
    */
@@ -783,6 +845,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Apply contextual tone adjustments to an activity payload before rendering.
+   *
    * @description Apply contextual tone adjustments to an activity payload before rendering.
    * @param {object} activity - Original activity metadata.
    * @param {object} context - Context payload from #buildActivityContext.
@@ -830,6 +894,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Merge contextual adverbs without duplicating descriptors.
+   *
    * @description Merge contextual adverbs without duplicating descriptors.
    * @param {string} currentAdverb - Existing adverb string.
    * @param {string} injected - Contextual adverb to merge.
@@ -858,6 +924,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Inject contextual descriptors into templates referencing targets.
+   *
    * @description Inject contextual descriptors into templates that reference {target}.
    * @param {string} template - Activity template string.
    * @param {string} descriptor - Descriptor to inject (e.g. 'tenderly').
@@ -887,9 +955,10 @@ class ActivityDescriptionService {
   }
 
   /**
-   * Generate a single activity phrase.
+   * Generate a single activity phrase for the actor and optional target.
    * ACTDESC-014: Enhanced with pronoun support for target entities
    *
+   * @description Generate an activity phrase and optionally return decomposed components.
    * @param {string} actorRef - Actor name or pronoun
    * @param {object} activity - Activity object
    * @param {boolean} usePronounsForTarget - Whether to use pronouns for target (default: false)
@@ -990,6 +1059,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Sanitize verb phrases to prevent duplicate copulas when grouping activities.
+   *
    * @description Sanitize verb phrases to prevent duplicate copulas when grouping activities.
    * @param {string} phrase - Raw verb phrase with potential leading copula.
    * @returns {string} Cleaned phrase suitable for conjunction usage.
@@ -1009,6 +1080,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Build the fragment used to connect related activities to the primary activity.
+   *
    * @description Build the fragment used to connect related activities to the primary activity.
    * @param {string} conjunction - Conjunction used to join the phrase ("and" or "while").
    * @param {ActivityPhraseComponents} phraseComponents - Generated phrase components for the related activity.
@@ -1070,44 +1143,94 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Group activities intelligently for natural composition.
+   *
    * @description Group activities intelligently for natural composition.
    * @param {Array<object>} activities - Activities sorted by priority.
+   * @param {string|null} cacheKey - Cache key used to reuse indexed activity structures.
    * @returns {Array<ActivityGroup>} Grouped activities ready for rendering.
    * @private
    */
-  #groupActivities(activities) {
+  #groupActivities(activities, cacheKey = null) {
     const groups = [];
-    let currentGroup = null;
-
-    for (const activity of activities) {
-      if (!currentGroup) {
-        currentGroup = this.#startActivityGroup(activity);
-        continue;
-      }
-
-      if (this.#shouldGroupActivities(currentGroup.primaryActivity, activity)) {
-        currentGroup.relatedActivities.push({
-          activity,
-          conjunction: this.#determineConjunction(
-            currentGroup.primaryActivity,
-            activity
-          ),
-        });
-        continue;
-      }
-
-      groups.push(currentGroup);
-      currentGroup = this.#startActivityGroup(activity);
+    if (!Array.isArray(activities) || activities.length === 0) {
+      return groups;
     }
 
-    if (currentGroup) {
-      groups.push(currentGroup);
+    const index = this.#getActivityIndex(activities, cacheKey);
+    const prioritized = index.byPriority.length > 0 ? index.byPriority : activities;
+    const visited = new Set();
+
+    const candidateCache = new Map();
+
+    for (let i = 0; i < prioritized.length; i += 1) {
+      const activity = prioritized[i];
+
+      if (visited.has(activity)) {
+        continue;
+      }
+
+      const group = this.#startActivityGroup(activity);
+      visited.add(activity);
+
+      const targetId = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
+      const groupKey = activity?.grouping?.groupKey ?? null;
+
+      const candidateKey = `${groupKey ?? 'no-group'}::${targetId}`;
+      if (!candidateCache.has(candidateKey)) {
+        const candidates = new Set();
+
+        if (groupKey && index.byGroupKey?.has(groupKey)) {
+          index.byGroupKey.get(groupKey).forEach((candidate) => {
+            if (candidate !== activity) {
+              candidates.add(candidate);
+            }
+          });
+        }
+
+        if (index.byTarget.has(targetId)) {
+          index.byTarget.get(targetId).forEach((candidate) => {
+            if (candidate !== activity) {
+              candidates.add(candidate);
+            }
+          });
+        }
+
+        candidateCache.set(candidateKey, candidates);
+      }
+
+      const candidates = candidateCache.get(candidateKey);
+
+      for (let j = i + 1; j < prioritized.length; j += 1) {
+        const candidate = prioritized[j];
+
+        if (!candidates.has(candidate) || visited.has(candidate)) {
+          continue;
+        }
+
+        if (!this.#shouldGroupActivities(group.primaryActivity, candidate)) {
+          continue;
+        }
+
+        group.relatedActivities.push({
+          activity: candidate,
+          conjunction: this.#determineConjunction(
+            group.primaryActivity,
+            candidate
+          ),
+        });
+        visited.add(candidate);
+      }
+
+      groups.push(group);
     }
 
     return groups;
   }
 
   /**
+   * Initialise a new activity group container.
+   *
    * @description Initialise a new activity group.
    * @param {object} activity - Activity that becomes the group's primary entry.
    * @returns {ActivityGroup} Fresh activity group container.
@@ -1121,6 +1244,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Determine if two activities should be grouped together.
+   *
    * @description Determine if two activities should be grouped together.
    * @param {object} first - Primary activity in the current group.
    * @param {object} second - Candidate activity being evaluated.
@@ -1146,6 +1271,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Determine the conjunction connecting two activities.
+   *
    * @description Determine the conjunction connecting two activities.
    * @param {object} first - Primary activity.
    * @param {object} second - Related activity.
@@ -1162,6 +1289,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Determine whether activities should be considered simultaneous.
+   *
    * @description Determine whether activities should be considered simultaneous.
    * @param {number} firstPriority - Priority of the first activity.
    * @param {number} secondPriority - Priority of the second activity.
@@ -1176,6 +1305,8 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Escape special characters within a string for safe RegExp usage.
+   *
    * @description Escape special characters within a string for safe RegExp usage.
    * @param {string} value - Raw string to escape.
    * @returns {string} Escaped string.
@@ -1192,8 +1323,9 @@ class ActivityDescriptionService {
       return 'Unknown entity';
     }
 
-    if (this.#entityNameCache.has(entityId)) {
-      return this.#entityNameCache.get(entityId);
+    const cachedName = this.#getCacheValue(this.#entityNameCache, entityId);
+    if (cachedName) {
+      return cachedName;
     }
 
     try {
@@ -1203,7 +1335,7 @@ class ActivityDescriptionService {
       const nameComponent = entity.getComponentData?.('core:name');
       const resolvedName = nameComponent?.text ?? entity?.id ?? entityId;
 
-      this.#entityNameCache.set(entityId, resolvedName);
+      this.#setCacheValue(this.#entityNameCache, entityId, resolvedName);
       return resolvedName;
     } catch (error) {
       this.#logger.warn(
@@ -1227,27 +1359,36 @@ class ActivityDescriptionService {
       return 'unknown';
     }
 
+    const cachedGender = this.#getCacheValue(this.#genderCache, entityId);
+    if (cachedGender) {
+      return cachedGender;
+    }
+
+    let resolvedGender = 'neutral';
+
     try {
       const entity = this.#entityManager.getEntityInstance(entityId);
       if (!entity) {
-        return 'unknown';
+        resolvedGender = 'unknown';
+      } else {
+        // Check for explicit gender component
+        const genderComponent = entity.getComponentData?.('core:gender');
+        if (genderComponent?.value) {
+          resolvedGender = genderComponent.value; // 'male', 'female', 'neutral'
+        } else {
+          resolvedGender = 'neutral';
+        }
       }
-
-      // Check for explicit gender component
-      const genderComponent = entity.getComponentData?.('core:gender');
-      if (genderComponent?.value) {
-        return genderComponent.value; // 'male', 'female', 'neutral'
-      }
-
-      // Default to neutral pronouns if unknown
-      return 'neutral';
     } catch (error) {
       this.#logger.warn(
         `Failed to detect gender for entity ${entityId}`,
         error
       );
-      return 'neutral';
+      resolvedGender = 'neutral';
     }
+
+    this.#setCacheValue(this.#genderCache, entityId, resolvedGender);
+    return resolvedGender;
   }
 
   /**
@@ -1290,13 +1431,10 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Provide controlled access to private helpers for white-box unit testing.
+   *
    * @description Provide controlled access to private helpers for white-box unit testing.
-   * @returns {{
-   *   mergeAdverb: Function,
-   *   injectSoftener: Function,
-   *   sanitizeVerbPhrase: Function,
-   *   buildRelatedActivityFragment: Function
-   * }} Selected helper functions bound to the current service instance.
+   * @returns {ActivityDescriptionTestHooks} Selected helper functions bound to the current service instance.
    */
   getTestHooks() {
     return {
@@ -1305,7 +1443,246 @@ class ActivityDescriptionService {
       sanitizeVerbPhrase: (...args) => this.#sanitizeVerbPhrase(...args),
       buildRelatedActivityFragment: (...args) =>
         this.#buildRelatedActivityFragment(...args),
+      buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
+      cleanupCaches: () => this.#cleanupCaches(),
+      setEntityNameCacheEntry: (key, value) =>
+        this.#setCacheValue(this.#entityNameCache, key, value),
+      setGenderCacheEntry: (key, value) =>
+        this.#setCacheValue(this.#genderCache, key, value),
+      setActivityIndexCacheEntry: (key, value) =>
+        this.#setCacheValue(this.#activityIndexCache, key, value),
+      getCacheSnapshot: () => ({
+        entityName: new Map(this.#entityNameCache),
+        gender: new Map(this.#genderCache),
+        activityIndex: new Map(this.#activityIndexCache),
+      }),
     };
+  }
+
+  /**
+   * Build a cached index of activities for quick lookups.
+   *
+   * @description Build activity index for fast lookups.
+   * @param {Array<object>} activities - All activities collected for the entity.
+   * @returns {ActivityIndex} Indexed activities partitioned by target, priority, and grouping.
+   * @private
+   */
+  #buildActivityIndex(activities) {
+    const index = {
+      byTarget: new Map(),
+      byPriority: [],
+      byGroupKey: new Map(),
+      all: Array.isArray(activities) ? activities : [],
+    };
+
+    if (!Array.isArray(activities) || activities.length === 0) {
+      return index;
+    }
+
+    for (const activity of activities) {
+      const targetId = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
+      if (!index.byTarget.has(targetId)) {
+        index.byTarget.set(targetId, []);
+      }
+      index.byTarget.get(targetId).push(activity);
+
+      const groupKey = activity?.grouping?.groupKey;
+      if (groupKey) {
+        if (!index.byGroupKey.has(groupKey)) {
+          index.byGroupKey.set(groupKey, []);
+        }
+        index.byGroupKey.get(groupKey).push(activity);
+      }
+    }
+
+    index.byPriority = [...activities].sort(
+      (a, b) => (b?.priority ?? 50) - (a?.priority ?? 50)
+    );
+
+    return index;
+  }
+
+  /**
+   * Setup periodic cache cleanup interval.
+   *
+   * @description Setup periodic cache cleanup interval.
+   * @private
+   */
+  #setupCacheCleanup() {
+    if (typeof setInterval !== 'undefined') {
+      this.#cleanupInterval = setInterval(() => {
+        this.#cleanupCaches();
+      }, 30000);
+
+      if (typeof this.#cleanupInterval?.unref === 'function') {
+        this.#cleanupInterval.unref();
+      }
+    }
+  }
+
+  /**
+   * Cleanup cache entries and enforce size limits.
+   *
+   * @description Cleanup cache entries and enforce size limits.
+   * @private
+   */
+  #cleanupCaches() {
+    const now = Date.now();
+    this.#pruneCache(this.#entityNameCache, this.#cacheConfig.maxSize, now);
+    this.#pruneCache(this.#genderCache, this.#cacheConfig.maxSize, now);
+    this.#pruneCache(this.#activityIndexCache, 100, now);
+  }
+
+  /**
+   * Remove expired entries and enforce cache size limits.
+   *
+   * @description Remove expired entries and enforce cache size limits.
+   * @param {Map<string, TimedCacheEntry>} cache - Cache map storing entries with TTL metadata.
+   * @param {number} maxSize - Maximum size before aggressive cleanup.
+   * @param {number} now - Current timestamp for TTL comparison.
+   * @private
+   */
+  #pruneCache(cache, maxSize, now) {
+    for (const [key, entry] of cache.entries()) {
+      if (!entry || (entry.expiresAt && entry.expiresAt <= now)) {
+        cache.delete(key);
+      }
+    }
+
+    if (cache.size > maxSize) {
+      cache.clear();
+    }
+  }
+
+  /**
+   * Retrieve an activity index from cache or rebuild when necessary.
+   *
+   * @description Retrieve an activity index from cache or rebuild when necessary.
+   * @param {Array<object>} activities - Activities requiring indexing.
+   * @param {string|null} cacheKey - Cache key used for reuse between operations.
+   * @returns {ActivityIndex} Activity index payload.
+   * @private
+   */
+  #getActivityIndex(activities, cacheKey = null) {
+    if (!Array.isArray(activities) || activities.length === 0) {
+      return {
+        byTarget: new Map(),
+        byPriority: [],
+        byGroupKey: new Map(),
+        all: Array.isArray(activities) ? activities : [],
+      };
+    }
+
+    if (!cacheKey) {
+      return this.#buildActivityIndex(activities);
+    }
+
+    const signature = this.#buildActivitySignature(activities);
+    const cachedEntry = this.#getCacheValue(this.#activityIndexCache, cacheKey);
+
+    if (cachedEntry && cachedEntry.signature === signature) {
+      return cachedEntry.index;
+    }
+
+    const index = this.#buildActivityIndex(activities);
+    this.#setCacheValue(this.#activityIndexCache, cacheKey, {
+      signature,
+      index,
+    });
+
+    return index;
+  }
+
+  /**
+   * Build deterministic signature for activity collections.
+   *
+   * @description Build deterministic signature for activity collections.
+   * @param {Array<object>} activities - Activities to summarise.
+   * @returns {string} Signature string for cache validation.
+   * @private
+   */
+  #buildActivitySignature(activities) {
+    return activities
+      .map((activity) => {
+        const source = activity?.sourceComponent ?? activity?.descriptionType ?? 'unknown';
+        const target = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
+        const priority = activity?.priority ?? 50;
+        const type = activity?.type ?? 'generic';
+        return `${type}:${source}:${target}:${priority}`;
+      })
+      .join('|');
+  }
+
+  /**
+   * Build a cache key for indexing namespaces.
+   *
+   * @description Build a cache key for indexing namespaces.
+   * @param {string} namespace - Namespace for the cache entry.
+   * @param {string} entityId - Entity identifier used in cache differentiation.
+   * @returns {string} Composite cache key.
+   * @private
+   */
+  #buildActivityIndexCacheKey(namespace, entityId) {
+    return `${namespace}:${entityId ?? 'unknown'}`;
+  }
+
+  /**
+   * Retrieve cached value honouring TTL semantics.
+   *
+   * @description Retrieve cached value honouring TTL semantics.
+   * @param {Map<string, TimedCacheEntry>} cache - Cache map storing entries with expiry metadata.
+   * @param {string} key - Cache key for lookup.
+   * @returns {unknown|null} Cached value when present and fresh.
+   * @private
+   */
+  #getCacheValue(cache, key) {
+    if (!cache.has(key)) {
+      return null;
+    }
+
+    const entry = cache.get(key);
+    if (!entry) {
+      cache.delete(key);
+      return null;
+    }
+
+    if (entry.expiresAt && entry.expiresAt <= Date.now()) {
+      cache.delete(key);
+      return null;
+    }
+
+    return entry.value ?? null;
+  }
+
+  /**
+   * Store a value within a TTL-governed cache.
+   *
+   * @description Store a value within a TTL-governed cache.
+   * @param {Map<string, TimedCacheEntry>} cache - Cache map storing entries with expiry metadata.
+   * @param {string} key - Cache key for storage.
+   * @param {unknown} value - Cached value payload.
+   * @private
+   */
+  #setCacheValue(cache, key, value) {
+    const expiresAt = Date.now() + this.#cacheConfig.ttl;
+    cache.set(key, { value, expiresAt });
+  }
+
+  /**
+   * Destroy service resources and clear cache state.
+   *
+   * @description Destroy service resources and clear cache state.
+   */
+  destroy() {
+    if (this.#cleanupInterval) {
+      clearInterval(this.#cleanupInterval);
+      this.#cleanupInterval = null;
+    }
+
+    this.#entityNameCache.clear();
+    this.#genderCache.clear();
+    this.#activityIndexCache.clear();
+    this.#closenessCache.clear();
   }
 }
 
