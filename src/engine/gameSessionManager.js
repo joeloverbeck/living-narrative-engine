@@ -428,6 +428,12 @@ class GameSessionManager {
       extracted !== trimmedName || trimmedName.toLowerCase().endsWith('.sav');
     const candidate = isManualPattern ? extracted : trimmedName;
     const decodedCandidate = this.#decodePercentEncodedSegment(candidate);
+    const hasMeaningfulCharacters = /[a-z0-9]/i.test(decodedCandidate);
+
+    if (isManualPattern && !hasMeaningfulCharacters) {
+      return '';
+    }
+
     const withSpaces = decodedCandidate.replace(/[_]+/g, ' ').trim();
 
     if (withSpaces.length > 0) {
@@ -446,7 +452,12 @@ class GameSessionManager {
       return fallback;
     }
 
-    return candidate.trim();
+    const trimmedCandidate = candidate.trim();
+    if (!isManualPattern) {
+      return trimmedCandidate;
+    }
+
+    return /[a-z0-9]/i.test(trimmedCandidate) ? trimmedCandidate : '';
   }
 
   /**
@@ -515,6 +526,10 @@ class GameSessionManager {
       const normalizedFileLabel = this.#normalizeSaveName(decodedValue);
       if (normalizedFileLabel) {
         return normalizedFileLabel;
+      }
+      const extractedManualName = extractSaveName(decodedValue);
+      if (!extractedManualName || !/[a-z0-9]/i.test(extractedManualName)) {
+        return '';
       }
     }
 
