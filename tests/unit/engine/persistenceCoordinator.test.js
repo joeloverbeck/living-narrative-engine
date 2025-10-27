@@ -448,6 +448,44 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('triggerManualSave prefers userFriendlyError for UI messaging while retaining detailed logs', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+    const userFriendlyError = 'Not enough disk space available.';
+    const rawErrorMessage = 'EIO: disk write failure';
+    const rawError = new PersistenceError(
+      PersistenceErrorCodes.WRITE_ERROR,
+      rawErrorMessage
+    );
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: rawError,
+      userFriendlyError,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({
+      success: false,
+      error: rawErrorMessage,
+      userFriendlyError,
+      errorCode: PersistenceErrorCodes.WRITE_ERROR,
+    });
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildFailedSaveDispatches(DEFAULT_SAVE_NAME, userFriendlyError)
+    );
+
+    const errorLogCall = logger.error.mock.calls.find(([message]) =>
+      message.includes('Reported error:')
+    );
+
+    expect(errorLogCall).toBeDefined();
+    expect(errorLogCall[0]).toContain(
+      `Reported error: ${rawErrorMessage}`
+    );
+  });
+
   it('triggerManualSave normalizes PersistenceError failures to readable strings', async () => {
     const { coordinator, persistenceService } = createCoordinator();
     const persistenceError = new PersistenceError(
