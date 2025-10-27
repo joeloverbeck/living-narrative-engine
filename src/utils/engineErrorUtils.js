@@ -163,8 +163,9 @@ export async function processOperationFailure(
   returnResult = false
 ) {
   const readableMessage = getReadableErrorMessage(error);
+  const sanitizedMessage = readableMessage.trim();
   const normalizedError =
-    error instanceof Error ? error : new Error(readableMessage);
+    error instanceof Error ? error : new Error(sanitizedMessage);
 
   if (!(error instanceof Error)) {
     try {
@@ -177,19 +178,36 @@ export async function processOperationFailure(
   }
 
   logger.error(
-    `GameEngine.${contextMessage}: ${readableMessage}`,
+    `GameEngine.${contextMessage}: ${sanitizedMessage}`,
     normalizedError
   );
 
+  const trimmedPrefix =
+    typeof userPrefix === 'string' ? userPrefix.trim() : '';
+  let userFacingMessage = sanitizedMessage;
+
+  if (trimmedPrefix) {
+    const normalizedMessageLower = sanitizedMessage.toLowerCase();
+    const normalizedPrefixLower = trimmedPrefix.toLowerCase();
+    const nextChar = sanitizedMessage.charAt(trimmedPrefix.length);
+    const prefixAlreadyPresent =
+      normalizedMessageLower.startsWith(normalizedPrefixLower) &&
+      (!nextChar || /[\s:;,.!?()\[\]\-]/.test(nextChar));
+
+    if (!prefixAlreadyPresent) {
+      userFacingMessage = `${trimmedPrefix}: ${sanitizedMessage}`;
+    }
+  }
+
   await dispatchFailureAndReset(
     dispatcher,
-    `${userPrefix}: ${readableMessage}`,
+    userFacingMessage,
     title,
     resetEngineState,
     logger
   );
 
   if (returnResult) {
-    return { success: false, error: readableMessage, data: null };
+    return { success: false, error: sanitizedMessage, data: null };
   }
 }
