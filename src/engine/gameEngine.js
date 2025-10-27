@@ -185,11 +185,26 @@ class GameEngine {
     this.#logger.debug(
       'GameEngine._executeInitializationSequence: Dispatching UI event for initialization start.'
     );
-    await this.#safeEventDispatcher.dispatch(
-      ENGINE_INITIALIZING_UI,
-      { worldName },
-      { allowSchemaNotFound: true }
-    );
+    try {
+      const dispatched = await this.#safeEventDispatcher.dispatch(
+        ENGINE_INITIALIZING_UI,
+        { worldName },
+        { allowSchemaNotFound: true }
+      );
+
+      if (dispatched === false) {
+        this.#logger.warn(
+          'GameEngine._executeInitializationSequence: SafeEventDispatcher reported failure when dispatching ENGINE_INITIALIZING_UI.'
+        );
+      }
+    } catch (error) {
+      const normalizedError =
+        error instanceof Error ? error : new Error(String(error));
+      this.#logger.error(
+        'GameEngine._executeInitializationSequence: SafeEventDispatcher threw when dispatching ENGINE_INITIALIZING_UI.',
+        normalizedError
+      );
+    }
 
     const initializationService = this.#initializationService;
     this.#logger.debug(

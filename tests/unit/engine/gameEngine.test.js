@@ -199,6 +199,46 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
+    it('should log warning when initialization UI dispatch reports failure but continue initialization', async () => {
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockResolvedValueOnce(false);
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).resolves.toEqual({ success: true });
+
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
+        'GameEngine._executeInitializationSequence: SafeEventDispatcher reported failure when dispatching ENGINE_INITIALIZING_UI.'
+      );
+    });
+
+    it('should log error and continue initialization when initialization UI dispatch throws', async () => {
+      const dispatchError = new Error('Dispatch failure');
+      context.bed
+        .getSafeEventDispatcher()
+        .dispatch.mockRejectedValueOnce(dispatchError);
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
+          success: true,
+        });
+
+      await expect(
+        context.engine.startNewGame(DEFAULT_TEST_WORLD)
+      ).resolves.toEqual({ success: true });
+
+      expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+        'GameEngine._executeInitializationSequence: SafeEventDispatcher threw when dispatching ENGINE_INITIALIZING_UI.',
+        dispatchError
+      );
+    });
+
     it('should treat invalid initialization results as failures with a clear error', async () => {
       context.bed
         .getInitializationService()
