@@ -84,6 +84,7 @@ import AnatomySlotLibraryLoader from '../../loaders/anatomySlotLibraryLoader.js'
 import AnatomyFormattingLoader from '../../loaders/anatomyFormattingLoader.js';
 import AnatomyStructureTemplateLoader from '../../loaders/anatomyStructureTemplateLoader.js';
 import SocketGenerator from '../../anatomy/socketGenerator.js';
+import SlotGenerator from '../../anatomy/slotGenerator.js';
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 // --- Modding Service Imports ---
@@ -259,6 +260,13 @@ export async function registerLoaders(container) {
   // Register SocketGenerator service
   registrar.singletonFactory(tokens.ISocketGenerator, (c) => {
     return new SocketGenerator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
+  // Register SlotGenerator service
+  registrar.singletonFactory(tokens.ISlotGenerator, (c) => {
+    return new SlotGenerator({
       logger: c.resolve(tokens.ILogger),
     });
   });
