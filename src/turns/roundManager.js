@@ -16,13 +16,13 @@ export default class RoundManager {
   async startRound(strategy = 'round-robin') {
     this.#logger.debug('RoundManager.startRound() initiating...');
 
-    // Reset success flag at start of new round
-    this.#hadSuccess = false;
-
     // Get all active entities and filter for actors
-    const allEntities = Array.from(this.#entityManager.entities);
-    const actors = allEntities.filter((e) =>
-      e.hasComponent(ACTOR_COMPONENT_ID)
+    const allEntities = Array.from(this.#entityManager.entities ?? []);
+    const actors = allEntities.filter(
+      (entity) =>
+        entity &&
+        typeof entity.hasComponent === 'function' &&
+        entity.hasComponent(ACTOR_COMPONENT_ID)
     );
 
     if (actors.length === 0) {
@@ -39,6 +39,9 @@ export default class RoundManager {
 
     // Start the new round in the service
     await this.#turnOrderService.startNewRound(actors, strategy);
+
+    // Reset success flag only after the round starts successfully
+    this.#hadSuccess = false;
     this.#inProgress = true;
 
     this.#logger.debug(

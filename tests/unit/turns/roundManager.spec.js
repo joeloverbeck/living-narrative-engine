@@ -94,6 +94,29 @@ describe('RoundManager', () => {
       expect(roundManager.hadSuccess).toBe(false);
     });
 
+    it('should preserve hadSuccess when a new round cannot be started', async () => {
+      // Arrange
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      await roundManager.startRound();
+      roundManager.endTurn(true);
+      expect(roundManager.hadSuccess).toBe(true);
+
+      // Remove all actors to force startRound failure
+      mockEntityManager.entities = [];
+
+      await expect(roundManager.startRound()).rejects.toThrow(
+        'Cannot start a new round: No active entities with an Actor component found.'
+      );
+
+      // hadSuccess should still reflect the previous successful round
+      expect(roundManager.hadSuccess).toBe(true);
+    });
+
     it('should use custom strategy when provided', async () => {
       // Arrange
       const mockActor = {
