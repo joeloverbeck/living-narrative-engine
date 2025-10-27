@@ -56,6 +56,33 @@ describe('FileOperationCircuitBreaker', () => {
       expect.stringContaining('Circuit breaker initialized'),
       expect.objectContaining({ failureThreshold: 5, recoveryTimeout: 60000 })
     );
+
+    const consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+
+    try {
+      const fallbackBreaker = new FileOperationCircuitBreaker({});
+
+      expect(fallbackBreaker.failureThreshold).toBe(5);
+      expect(consoleDebugSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Circuit breaker initialized'),
+        expect.objectContaining({ failureThreshold: 5, recoveryTimeout: 60000 })
+      );
+    } finally {
+      consoleDebugSpy.mockRestore();
+    }
+  });
+
+  it('resets cleanly when invoked without any pending timers', () => {
+    breaker.reset();
+
+    expect(breaker.state).toBe(CircuitBreakerState.CLOSED);
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('Circuit breaker manually reset'),
+      expect.objectContaining({
+        previousState: CircuitBreakerState.CLOSED,
+        newState: CircuitBreakerState.CLOSED,
+      })
+    );
   });
 
   it('executes operations successfully when closed', async () => {
@@ -227,6 +254,15 @@ describe('FileOperationCircuitBreaker', () => {
     });
   });
 
+  it('uses the default reason when manually opened without arguments', () => {
+    breaker.open();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Circuit breaker opened'),
+      expect.objectContaining({ reason: 'Manual open' })
+    );
+  });
+
   it('cleans failures outside monitoring window', async () => {
     const shortWindowBreaker = createBreaker({ monitoringWindow: 100, recoveryTimeout: 500 });
     await expect(
@@ -263,6 +299,81 @@ describe('FileOperationCircuitBreaker', () => {
     expect(halfOpenStats.canAttempt).toBe(true);
   });
 
+  it('returns null retry time once the open interval has fully elapsed', async () => {
+    const failure = async () => {
+      throw new Error('delayed transition');
+    };
+
+    await expect(breaker.executeOperation(failure)).rejects.toThrow('delayed transition');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow('delayed transition');
+
+    const initialStats = breaker.getStats();
+    expect(initialStats.timeUntilRetry).toBeGreaterThan(0);
+
+    const currentTime = Date.now();
+    jest.setSystemTime(new Date(currentTime + breaker.recoveryTimeout + 5));
+
+    const postTimeoutStats = breaker.getStats();
+    expect(postTimeoutStats.timeUntilRetry).toBeNull();
+    expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
+  });
+
+  it('reopens automatically when the half-open evaluation period times out', async () => {
+    const failure = async () => {
+      throw new Error('no response');
+    };
+
+    await expect(breaker.executeOperation(failure)).rejects.toThrow('no response');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow('no response');
+
+    await advanceTimers(breaker.recoveryTimeout);
+    expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
+
+    logger.error.mockClear();
+
+    await advanceTimers(breaker.halfOpenTimeout);
+
+    expect(breaker.state).toBe(CircuitBreakerState.OPEN);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Circuit breaker opened'),
+      expect.objectContaining({ reason: 'Half-open timeout' })
+    );
+  });
+
+  it('ignores stale half-open timers once the breaker has closed again', async () => {
+    const failure = async () => {
+      throw new Error('stale timer');
+    };
+
+    await expect(breaker.executeOperation(failure)).rejects.toThrow('stale timer');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow('stale timer');
+
+    await advanceTimers(breaker.recoveryTimeout);
+    expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
+
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout').mockImplementation(() => {});
+    const success = jest.fn().mockResolvedValue('ok');
+
+    try {
+      await breaker.executeOperation(success);
+      await breaker.executeOperation(success);
+
+      expect(breaker.state).toBe(CircuitBreakerState.CLOSED);
+
+      logger.error.mockClear();
+
+      await advanceTimers(breaker.halfOpenTimeout);
+
+      expect(breaker.state).toBe(CircuitBreakerState.CLOSED);
+      expect(logger.error).not.toHaveBeenCalledWith(
+        expect.stringContaining('Circuit breaker opened'),
+        expect.objectContaining({ reason: 'Half-open timeout' })
+      );
+    } finally {
+      clearTimeoutSpy.mockRestore();
+    }
+  });
+
   it('uses time-based transition checks when timers are not advanced', async () => {
     const failure = async () => {
       throw new Error('transient glitch');
@@ -278,5 +389,12 @@ describe('FileOperationCircuitBreaker', () => {
     const stats = breaker.getStats();
     expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
     expect(stats.canAttempt).toBe(true);
+  });
+
+  it('reports null retry metadata while closed and idle', () => {
+    const stats = breaker.getStats();
+
+    expect(stats.state).toBe(CircuitBreakerState.CLOSED);
+    expect(stats.timeUntilRetry).toBeNull();
   });
 });
