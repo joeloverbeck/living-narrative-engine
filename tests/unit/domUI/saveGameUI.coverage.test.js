@@ -441,6 +441,48 @@ describe('SaveGameUI - Coverage Tests', () => {
         )
       );
     });
+
+    it('should warn when saved slot metadata exists but DOM element is missing', async () => {
+      saveGameUI.selectedSlotData = {
+        slotId: 1,
+        isEmpty: true,
+        isCorrupted: false,
+      };
+
+      jest
+        .spyOn(saveGameUI.saveGameService, 'performSave')
+        .mockResolvedValue({
+          success: true,
+          message: 'Game saved as "TestSave".',
+          returnedIdentifier: 'test-id',
+        });
+
+      jest
+        .spyOn(saveGameUI, '_populateSaveSlotsList')
+        .mockImplementation(async () => {
+          saveGameUI.currentSlotsDisplayData = [
+            {
+              slotId: 1,
+              saveName: 'TestSave',
+              identifier: 'test-id',
+              isEmpty: false,
+              isCorrupted: false,
+            },
+          ];
+        });
+
+      const container = saveGameUI.elements.listContainerElement;
+      expect(container).not.toBeNull();
+      if (container) container.innerHTML = '';
+
+      await saveGameUI._executeAndFinalizeSave('TestSave');
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Could not find DOM element for newly saved slot ID 1 to re-select.'
+        )
+      );
+    });
   });
 
   describe('Save Operation Finalization Edge Cases', () => {
@@ -522,6 +564,35 @@ describe('SaveGameUI - Coverage Tests', () => {
       // Verify no error or success message was shown for empty message
       expect(statusSpy).not.toHaveBeenCalledWith('', 'success');
       expect(statusSpy).not.toHaveBeenCalledWith('', 'error');
+    });
+
+    it('should show fallback error message when save fails without providing one', async () => {
+      const statusSpy = jest.spyOn(saveGameUI, '_displayStatusMessage');
+      const progressSpy = jest.spyOn(saveGameUI, '_setOperationInProgress');
+
+      saveGameUI.selectedSlotData = {
+        slotId: 0,
+        isEmpty: true,
+        isCorrupted: false,
+      };
+
+      jest
+        .spyOn(saveGameUI.saveGameService, 'performSave')
+        .mockResolvedValue({
+          success: false,
+          message: '',
+          returnedIdentifier: null,
+        });
+
+      jest.spyOn(saveGameUI, '_populateSaveSlotsList').mockResolvedValue();
+
+      await saveGameUI._executeAndFinalizeSave('TestSave');
+
+      expect(progressSpy).toHaveBeenCalledWith(false);
+      expect(statusSpy).toHaveBeenCalledWith(
+        'An unspecified error occurred during the save operation.',
+        'error'
+      );
     });
   });
 
