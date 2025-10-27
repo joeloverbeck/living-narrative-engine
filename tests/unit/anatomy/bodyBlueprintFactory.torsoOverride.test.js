@@ -83,6 +83,14 @@ describe('BodyBlueprintFactory - Torso Override', () => {
         .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
+    const mockSocketGenerator = {
+      generateSockets: jest.fn().mockReturnValue([]),
+    };
+
+    const mockSlotGenerator = {
+      generateBlueprintSlots: jest.fn().mockReturnValue({}),
+    };
+
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
@@ -95,6 +103,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       entityGraphBuilder: mockEntityGraphBuilder,
       constraintEvaluator: mockConstraintEvaluator,
       validator: mockValidator,
+      socketGenerator: mockSocketGenerator,
+      slotGenerator: mockSlotGenerator,
     });
   });
 

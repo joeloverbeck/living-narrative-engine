@@ -76,6 +76,14 @@ describe('BodyBlueprintFactory (Refactored)', () => {
     };
 
     // Create factory instance
+    const mockSocketGenerator = {
+      generateSockets: jest.fn().mockReturnValue([]),
+    };
+
+    const mockSlotGenerator = {
+      generateBlueprintSlots: jest.fn().mockReturnValue({}),
+    };
+
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
@@ -88,6 +96,8 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       entityGraphBuilder: mockEntityGraphBuilder,
       constraintEvaluator: mockConstraintEvaluator,
       validator: mockValidator,
+      socketGenerator: mockSocketGenerator,
+      slotGenerator: mockSlotGenerator,
     });
   });
 

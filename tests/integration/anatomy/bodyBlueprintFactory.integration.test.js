@@ -553,8 +553,15 @@ describe('BodyBlueprintFactory integration', () => {
     validator = new ToggleableGraphValidator();
   });
 
-  const createFactory = (overrides = {}) =>
-    new BodyBlueprintFactory({
+  const createFactory = (overrides = {}) => {
+    const mockSocketGenerator = {
+      generateSockets: () => [],
+    };
+    const mockSlotGenerator = {
+      generateBlueprintSlots: () => ({}),
+    };
+
+    return new BodyBlueprintFactory({
       entityManager,
       dataRegistry: registry,
       logger,
@@ -566,8 +573,11 @@ describe('BodyBlueprintFactory integration', () => {
       entityGraphBuilder,
       constraintEvaluator,
       validator,
+      socketGenerator: mockSocketGenerator,
+      slotGenerator: mockSlotGenerator,
       ...overrides,
     });
+  };
 
   const registerBlueprintAndRecipe = () => {
     const blueprint = createBlueprint();

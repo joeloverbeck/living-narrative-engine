@@ -84,6 +84,14 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
         .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
+    const mockSocketGenerator = {
+      generateSockets: jest.fn().mockReturnValue([]),
+    };
+
+    const mockSlotGenerator = {
+      generateBlueprintSlots: jest.fn().mockReturnValue({}),
+    };
+
     factory = new BodyBlueprintFactory({
       entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
@@ -96,6 +104,8 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       entityGraphBuilder: mockEntityGraphBuilder,
       constraintEvaluator: mockConstraintEvaluator,
       validator: mockValidator,
+      socketGenerator: mockSocketGenerator,
+      slotGenerator: mockSlotGenerator,
     });
   });
 
@@ -149,21 +159,6 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       },
     };
 
-    const mockTorsoEntity = {
-      id: 'torso-1',
-      definitionId: 'anatomy:test_torso',
-    };
-
-    const mockHeadEntity = {
-      id: 'head-1',
-      definitionId: 'anatomy:test_head',
-    };
-
-    const mockEyeEntity = {
-      id: 'eye-1',
-      definitionId: 'anatomy:human_eye_blue',
-    };
-
     // Mock recipe processor
     mockRecipeProcessor.loadRecipe.mockReturnValue(mockRecipe);
     mockRecipeProcessor.processRecipe.mockReturnValue(mockRecipe);
@@ -176,7 +171,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
     const createdEntities = new Set(['torso-1']);
 
     mockEntityGraphBuilder.createAndAttachPart.mockImplementation(
-      (parentId, socketId, partDefId, ownerId, orientation) => {
+      (parentId, socketId) => {
         // All parts attach to torso
         if (socketId === 'neck') {
           createdEntities.add('head-1');
@@ -320,7 +315,7 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
 
     // When slots are processed, the context tracks which entity was created for each slot
     mockEntityGraphBuilder.createAndAttachPart.mockImplementation(
-      (parentId, socketId, partDefId, ownerId, orientation) => {
+      (parentId, socketId) => {
         if (socketId === 'neck' && parentId === 'torso-1') {
           createdEntities.push('head-1');
           return 'head-1';

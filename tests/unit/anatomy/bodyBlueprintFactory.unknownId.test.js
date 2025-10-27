@@ -48,6 +48,12 @@ beforeEach(() => {
         .fn()
         .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     },
+    socketGenerator: {
+      generateSockets: jest.fn().mockReturnValue([]),
+    },
+    slotGenerator: {
+      generateBlueprintSlots: jest.fn().mockReturnValue({}),
+    },
   };
 });
 

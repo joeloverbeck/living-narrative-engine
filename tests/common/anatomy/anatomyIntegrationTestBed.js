@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import EntityManager from '../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -10,6 +11,8 @@ import { PartSelectionService } from '../../../src/anatomy/partSelectionService.
 import { SocketManager } from '../../../src/anatomy/socketManager.js';
 import { EntityGraphBuilder } from '../../../src/anatomy/entityGraphBuilder.js';
 import { RecipeConstraintEvaluator } from '../../../src/anatomy/recipeConstraintEvaluator.js';
+import SocketGenerator from '../../../src/anatomy/socketGenerator.js';
+import SlotGenerator from '../../../src/anatomy/slotGenerator.js';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { DescriptionTemplate } from '../../../src/anatomy/templates/descriptionTemplate.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
@@ -103,6 +106,14 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       logger: mocks.logger,
     });
 
+    this.socketGenerator = new SocketGenerator({
+      logger: mocks.logger,
+    });
+
+    this.slotGenerator = new SlotGenerator({
+      logger: mocks.logger,
+    });
+
     // Create body blueprint factory
     this.bodyBlueprintFactory = new BodyBlueprintFactory({
       entityManager: this.entityManager,
@@ -116,6 +127,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       entityGraphBuilder: this.entityGraphBuilder,
       constraintEvaluator: this.constraintEvaluator,
       validator: this.validator,
+      socketGenerator: this.socketGenerator,
+      slotGenerator: this.slotGenerator,
     });
 
     // Create body graph service

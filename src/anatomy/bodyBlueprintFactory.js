@@ -20,6 +20,8 @@ import { AnatomyGraphContext } from './anatomyGraphContext.js';
 /** @typedef {import('./entityGraphBuilder.js').EntityGraphBuilder} EntityGraphBuilder */
 /** @typedef {import('./recipeConstraintEvaluator.js').RecipeConstraintEvaluator} RecipeConstraintEvaluator */
 /** @typedef {import('./graphIntegrityValidator.js').GraphIntegrityValidator} GraphIntegrityValidator */
+/** @typedef {import('./socketGenerator.js').default} SocketGenerator */
+/** @typedef {import('./slotGenerator.js').default} SlotGenerator */
 
 /**
  * @typedef {object} AnatomyBlueprint
@@ -51,6 +53,10 @@ export class BodyBlueprintFactory {
   #constraintEvaluator;
   /** @type {GraphIntegrityValidator} */
   #validator;
+  /** @type {SocketGenerator} */
+  #socketGenerator;
+  /** @type {SlotGenerator} */
+  #slotGenerator;
 
   /**
    * @param {object} deps
@@ -65,6 +71,8 @@ export class BodyBlueprintFactory {
    * @param {EntityGraphBuilder} deps.entityGraphBuilder
    * @param {RecipeConstraintEvaluator} deps.constraintEvaluator
    * @param {GraphIntegrityValidator} deps.validator
+   * @param {SocketGenerator} deps.socketGenerator
+   * @param {SlotGenerator} deps.slotGenerator
    */
   constructor({
     entityManager,
@@ -78,6 +86,8 @@ export class BodyBlueprintFactory {
     entityGraphBuilder,
     constraintEvaluator,
     validator,
+    socketGenerator,
+    slotGenerator,
   }) {
     if (!dataRegistry)
       throw new InvalidArgumentError('dataRegistry is required');
@@ -97,6 +107,10 @@ export class BodyBlueprintFactory {
     if (!constraintEvaluator)
       throw new InvalidArgumentError('constraintEvaluator is required');
     if (!validator) throw new InvalidArgumentError('validator is required');
+    if (!socketGenerator)
+      throw new InvalidArgumentError('socketGenerator is required');
+    if (!slotGenerator)
+      throw new InvalidArgumentError('slotGenerator is required');
 
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
@@ -108,6 +122,8 @@ export class BodyBlueprintFactory {
     this.#entityGraphBuilder = entityGraphBuilder;
     this.#constraintEvaluator = constraintEvaluator;
     this.#validator = validator;
+    this.#socketGenerator = socketGenerator;
+    this.#slotGenerator = slotGenerator;
   }
 
   /**
@@ -285,7 +301,58 @@ export class BodyBlueprintFactory {
         `Blueprint '${blueprintId}' not found in registry`
       );
     }
+
+    // Route v2 blueprints through template processor
+    if (blueprint.schemaVersion === '2.0' && blueprint.structureTemplate) {
+      return this.#processV2Blueprint(blueprint);
+    }
+
+    // V1 blueprints pass through unchanged
     return blueprint;
+  }
+
+  /**
+   * Processes a v2 blueprint by generating slots and sockets from structure template
+   *
+   * @param {AnatomyBlueprint} blueprint - The v2 blueprint with structureTemplate
+   * @private
+   * @returns {AnatomyBlueprint} Blueprint with generated slots merged with additionalSlots
+   * @throws {ValidationError} If structure template not found
+   */
+  #processV2Blueprint(blueprint) {
+    this.#logger.debug(
+      `BodyBlueprintFactory: Processing v2 blueprint with template '${blueprint.structureTemplate}'`
+    );
+
+    // Load structure template from DataRegistry
+    const template = this.#dataRegistry.get(
+      'anatomyStructureTemplates',
+      blueprint.structureTemplate
+    );
+
+    if (!template) {
+      throw new ValidationError(
+        `Structure template not found: ${blueprint.structureTemplate}`
+      );
+    }
+
+    // Generate sockets and slots from template
+    const generatedSockets = this.#socketGenerator.generateSockets(template);
+    const generatedSlots = this.#slotGenerator.generateBlueprintSlots(template);
+
+    this.#logger.info(
+      `BodyBlueprintFactory: Generated ${generatedSockets.length} sockets and ${Object.keys(generatedSlots).length} slots from template`
+    );
+
+    // Merge generated slots with additionalSlots (additionalSlots take precedence)
+    return {
+      ...blueprint,
+      slots: {
+        ...generatedSlots,
+        ...(blueprint.additionalSlots || {}),
+      },
+      _generatedSockets: generatedSockets,
+    };
   }
 
   /**
