@@ -49,6 +49,12 @@ describe('BodyBlueprintFactory uncovered branches', () => {
           .fn()
           .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
       },
+      socketGenerator: {
+        generateSockets: jest.fn().mockReturnValue([]),
+      },
+      slotGenerator: {
+        generateBlueprintSlots: jest.fn().mockReturnValue({}),
+      },
     };
   });
 
@@ -64,6 +70,8 @@ describe('BodyBlueprintFactory uncovered branches', () => {
       'entityGraphBuilder',
       'constraintEvaluator',
       'validator',
+      'socketGenerator',
+      'slotGenerator',
     ];
 
     for (const name of paramNames) {

@@ -69,6 +69,8 @@ import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBluepr
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
+import SocketGenerator from '../../anatomy/socketGenerator.js';
+import SlotGenerator from '../../anatomy/slotGenerator.js';
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -323,6 +325,28 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  registrar.singletonFactory(tokens.ISocketGenerator, (c) => {
+    return new SocketGenerator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ISocketGenerator
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.ISlotGenerator, (c) => {
+    return new SlotGenerator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ISlotGenerator
+    )}.`
+  );
+
   registrar.singletonFactory(tokens.BodyBlueprintFactory, (c) => {
     return new BodyBlueprintFactory({
       entityManager: c.resolve(tokens.IEntityManager),
@@ -336,6 +360,8 @@ export function registerWorldAndEntity(container) {
       entityGraphBuilder: c.resolve(tokens.EntityGraphBuilder),
       constraintEvaluator: c.resolve(tokens.RecipeConstraintEvaluator),
       validator: c.resolve(tokens.GraphIntegrityValidator),
+      socketGenerator: c.resolve(tokens.ISocketGenerator),
+      slotGenerator: c.resolve(tokens.ISlotGenerator),
     });
   });
   logger.debug(

@@ -73,6 +73,14 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
         .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
+    const mockSocketGenerator = {
+      generateSockets: jest.fn().mockReturnValue([]),
+    };
+
+    const mockSlotGenerator = {
+      generateBlueprintSlots: jest.fn().mockReturnValue({}),
+    };
+
     factory = new BodyBlueprintFactory({
       entityManager: undefined,
       dataRegistry: mockDataRegistry,
@@ -85,6 +93,8 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
       entityGraphBuilder: mockEntityGraphBuilder,
       constraintEvaluator: mockConstraintEvaluator,
       validator: mockValidator,
+      socketGenerator: mockSocketGenerator,
+      slotGenerator: mockSlotGenerator,
     });
   });
 
