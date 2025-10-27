@@ -417,6 +417,37 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('triggerManualSave surfaces persistence message when error detail is missing', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+    const failureMessage = 'Disk quota exceeded';
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      message: failureMessage,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({
+      success: false,
+      message: failureMessage,
+      error: failureMessage,
+    });
+    expectDispatchSequence(
+      dispatcher.dispatch,
+      ...buildFailedSaveDispatches(DEFAULT_SAVE_NAME, failureMessage)
+    );
+
+    const errorLogCall = logger.error.mock.calls.find(([message]) =>
+      message.includes('Reported error:')
+    );
+
+    expect(errorLogCall).toBeDefined();
+    expect(errorLogCall[0]).toContain(
+      `Reported error: ${failureMessage}`
+    );
+  });
+
   it('triggerManualSave normalizes PersistenceError failures to readable strings', async () => {
     const { coordinator, persistenceService } = createCoordinator();
     const persistenceError = new PersistenceError(
