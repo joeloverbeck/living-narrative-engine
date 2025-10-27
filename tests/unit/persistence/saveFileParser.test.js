@@ -81,7 +81,7 @@ describe('SaveFileParser', () => {
       expect(result).toEqual({
         metadata: {
           identifier: manualSavePath(''),
-          saveName: ' (Invalid Name)',
+          saveName: 'Unknown Save (Invalid Name)',
           timestamp: 'N/A',
           playtimeSeconds: 0,
         },

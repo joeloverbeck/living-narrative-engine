@@ -103,10 +103,17 @@ export default class SaveFileParser extends BaseService {
    * @private
    */
   #corruptedResult(filePath, fileName, reason) {
+    const extractedName = extractSaveName(fileName);
+    const trimmedName =
+      typeof extractedName === 'string' ? extractedName.trim() : '';
+    const baseName = trimmedName.length > 0 ? trimmedName : 'Unknown Save';
+    const suffix =
+      typeof reason === 'string' && reason.length > 0 ? reason : '';
+
     return {
       metadata: {
         identifier: filePath,
-        saveName: extractSaveName(fileName) + reason,
+        saveName: `${baseName}${suffix}`,
         timestamp: 'N/A',
         playtimeSeconds: 0,
       },
