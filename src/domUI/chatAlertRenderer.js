@@ -77,11 +77,6 @@ export class ChatAlertRenderer extends BoundDomRendererBase {
     });
 
     // --- Dependency Validation ---
-    if (!safeEventDispatcher) {
-      throw new Error(
-        `${this._logPrefix} ISafeEventDispatcher dependency is required.`
-      );
-    }
     if (!alertRouter) {
       throw new Error(`${this._logPrefix} AlertRouter dependency is required.`);
     }

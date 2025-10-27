@@ -48,7 +48,7 @@ const createMockElement = (tagName = 'div') => {
       child.parentNode = this;
     }),
     setAttribute: jest.fn(function (name, value) {
-      this._attributes[name] = value;
+      this._attributes[name] = value != null ? String(value) : value;
     }),
     getAttribute: jest.fn(function (name) {
       return this._attributes[name];
@@ -275,7 +275,7 @@ describe('ChatAlertRenderer', () => {
       );
     });
 
-    it('should throw error when safeEventDispatcher dependency is missing', () => {
+    it('should throw an error when safeEventDispatcher dependency is missing', () => {
       const invalidMocks = {
         logger: createMockLogger(),
         documentContext: createMockDocumentContext(),
@@ -285,7 +285,7 @@ describe('ChatAlertRenderer', () => {
       };
 
       expect(() => new ChatAlertRenderer(invalidMocks)).toThrow(
-        'ValidatedEventDispatcher dependency is missing or invalid'
+        /ValidatedEventDispatcher dependency is missing or invalid/
       );
     });
 
@@ -299,7 +299,7 @@ describe('ChatAlertRenderer', () => {
       };
 
       expect(() => new ChatAlertRenderer(invalidMocks)).toThrow(
-        'AlertRouter dependency is required'
+        /AlertRouter dependency is required\./
       );
     });
   });
@@ -535,6 +535,35 @@ describe('ChatAlertRenderer', () => {
           'Could not find details content for toggle button'
         )
       );
+    });
+
+    it('should toggle developer details visibility state', () => {
+      const payload = {
+        message: 'Server error with details',
+        details: { statusCode: 500, url: '/api/test', raw: 'Internal issue' },
+      };
+
+      mocks.safeEventDispatcher.trigger('core:display_error', payload);
+
+      const bubble = mocks.mockChatPanel.appendChild.mock.calls[0][0];
+      const detailsContainer = bubble.querySelector('.chat-alert-details');
+      const toggleBtn = detailsContainer.querySelector('.chat-alert-toggle');
+      const pre = detailsContainer.querySelector('.chat-alert-details-content');
+
+      toggleBtn.dataset.toggleType = 'details';
+
+      expect(pre.hidden).toBe(true);
+      expect(String(toggleBtn.getAttribute('aria-expanded'))).toBe('false');
+
+      mocks.mockChatPanel._eventListeners.click({ target: toggleBtn });
+
+      expect(pre.hidden).toBe(false);
+      expect(String(toggleBtn.getAttribute('aria-expanded'))).toBe('true');
+
+      mocks.mockChatPanel._eventListeners.click({ target: toggleBtn });
+
+      expect(pre.hidden).toBe(true);
+      expect(String(toggleBtn.getAttribute('aria-expanded'))).toBe('false');
     });
 
     it('should handle unknown toggle type gracefully', () => {
