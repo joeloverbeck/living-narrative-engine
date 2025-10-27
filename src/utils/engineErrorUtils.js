@@ -86,10 +86,19 @@ export async function dispatchFailureAndReset(
 
   try {
     if (dispatcher) {
-      await dispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
-        errorMessage,
-        errorTitle: title,
-      });
+      const dispatchResult = await dispatcher.dispatch(
+        ENGINE_OPERATION_FAILED_UI,
+        {
+          errorMessage,
+          errorTitle: title,
+        }
+      );
+
+      if (dispatchResult === false) {
+        logger.warn(
+          'engineErrorUtils.dispatchFailureAndReset: SafeEventDispatcher reported failure when dispatching ENGINE_OPERATION_FAILED_UI.'
+        );
+      }
     } else {
       logger.error(
         'engineErrorUtils.dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'

@@ -56,6 +56,25 @@ describe('engineErrorUtils', () => {
       expect(mockResetEngineState).toHaveBeenCalled();
     });
 
+    it('should warn when dispatcher reports failure dispatching failure UI event', async () => {
+      const errorMessage = 'Test error message';
+      const title = 'Test Error Title';
+      mockDispatcher.dispatch.mockResolvedValueOnce(false);
+
+      await dispatchFailureAndReset(
+        mockDispatcher,
+        errorMessage,
+        title,
+        mockResetEngineState,
+        mockLogger
+      );
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'engineErrorUtils.dispatchFailureAndReset: SafeEventDispatcher reported failure when dispatching ENGINE_OPERATION_FAILED_UI.'
+      );
+      expect(mockResetEngineState).toHaveBeenCalled();
+    });
+
     it('should log error and reset state when dispatcher is null', async () => {
       // Arrange
       const errorMessage = 'Test error message';
