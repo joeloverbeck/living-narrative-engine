@@ -55,6 +55,20 @@ describe('TurnCycle', () => {
       await expect(turnCycle.nextActor()).rejects.toThrow('Service error');
       expect(mockService.isEmpty).toHaveBeenCalledOnce();
     });
+
+    it('should log and propagate errors from getNextEntity', async () => {
+      const error = new Error('Next entity failure');
+      mockService.isEmpty.mockResolvedValue(false);
+      mockService.getNextEntity.mockRejectedValue(error);
+
+      await expect(turnCycle.nextActor()).rejects.toThrow('Next entity failure');
+      expect(mockService.isEmpty).toHaveBeenCalledOnce();
+      expect(mockService.getNextEntity).toHaveBeenCalledOnce();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'TurnCycle.nextActor(): failed',
+        error
+      );
+    });
   });
 
   describe('clear', () => {
