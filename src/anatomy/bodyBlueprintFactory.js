@@ -150,6 +150,9 @@ export class BodyBlueprintFactory {
     assertNonBlankString(blueprintId, 'Blueprint ID', 'createAnatomyGraph');
     assertNonBlankString(recipeId, 'Recipe ID', 'createAnatomyGraph');
 
+    let context;
+    let cleanupPerformed = false;
+
     try {
       // Load and validate blueprint
       const blueprint = this.#loadBlueprint(blueprintId);
@@ -170,7 +173,7 @@ export class BodyBlueprintFactory {
       this.#validateRecipeSlots(resolvedRecipe, blueprint);
 
       // Initialize creation context
-      const context = new AnatomyGraphContext(options.seed);
+      context = new AnatomyGraphContext(options.seed);
 
       // Phase 1: Create root entity
       const rootId = await this.#entityGraphBuilder.createRootEntity(
@@ -212,6 +215,7 @@ export class BodyBlueprintFactory {
         await this.#entityGraphBuilder.cleanupEntities(
           context.getCreatedEntities()
         );
+        cleanupPerformed = true;
         throw new ValidationError(
           `Constraint validation failed: ${constraintResult.errors.join(', ')}`
         );
@@ -231,6 +235,7 @@ export class BodyBlueprintFactory {
         await this.#entityGraphBuilder.cleanupEntities(
           context.getCreatedEntities()
         );
+        cleanupPerformed = true;
         throw new ValidationError(
           `Graph validation failed: ${validationResult.errors.join(', ')}`
         );
@@ -252,6 +257,19 @@ export class BodyBlueprintFactory {
         entities: context.getCreatedEntities(),
       };
     } catch (err) {
+      if (context && !cleanupPerformed) {
+        try {
+          await this.#entityGraphBuilder.cleanupEntities(
+            context.getCreatedEntities()
+          );
+        } catch (cleanupError) {
+          this.#logger.error(
+            `BodyBlueprintFactory: Failed to cleanup entities after error for blueprint '${blueprintId}': ${cleanupError.message}`,
+            cleanupError
+          );
+        }
+      }
+
       this.#logger.error(
         `BodyBlueprintFactory: Failed to create anatomy graph for blueprint '${blueprintId}': ${err.message}`,
         err
