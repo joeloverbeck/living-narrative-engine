@@ -124,6 +124,19 @@ function createActionKey(actionId, params) {
   return `${actionId}:${stableSerializeForKey(params)}`;
 }
 
+/**
+ * @description Safely format params for logging without risking serialization errors.
+ * @param {*} params - Parameters associated with the action.
+ * @returns {string} String representation safe for log messages.
+ */
+function formatParamsForLog(params) {
+  try {
+    return stableSerializeForKey(params);
+  } catch (error) {
+    return '[Unserializable params]';
+  }
+}
+
 function truncateActions(uniqueArr) {
   if (uniqueArr.length > MAX_AVAILABLE_ACTIONS_PER_TURN) {
     const truncatedCount = uniqueArr.length - MAX_AVAILABLE_ACTIONS_PER_TURN;
@@ -231,8 +244,8 @@ export class ActionIndexingService {
       const duplicateInfo = duplicateDetails
         .map((dup) => {
           const paramsStr =
-            Object.keys(dup.params).length > 0
-              ? `, params: ${JSON.stringify(dup.params)}`
+            dup.params && Object.keys(dup.params).length > 0
+              ? `, params: ${formatParamsForLog(dup.params)}`
               : '';
           return `${dup.actionId} (${dup.commandString}${paramsStr}) x${dup.count}`;
         })
