@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
+  "title": "Anatomy Structure Template",
+  "description": "Parameterized body structure definition for generating anatomy blueprints with declarative limb sets and appendages",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this structure template in namespaced format (e.g., 'anatomy:structure_humanoid')"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Human-readable description of this structure template and its intended use"
+    },
+    "topology": {
+      "$ref": "#/definitions/topologyDefinition",
+      "description": "Defines the body structure topology including root type, limb sets, and appendages"
+    }
+  },
+  "required": ["id", "topology"],
+  "additionalProperties": false,
+  "definitions": {
+    "topologyDefinition": {
+      "type": "object",
+      "description": "Defines the overall body structure topology with root type and optional limb sets and appendages",
+      "properties": {
+        "rootType": {
+          "type": "string",
+          "description": "Expected entity type for the root body part (e.g., 'torso', 'cephalothorax', 'mantle')"
+        },
+        "limbSets": {
+          "type": "array",
+          "description": "Array of limb set definitions (legs, arms, tentacles, wings, etc.)",
+          "items": {
+            "$ref": "#/definitions/limbSetDefinition"
+          }
+        },
+        "appendages": {
+          "type": "array",
+          "description": "Array of appendage definitions (head, tail, abdomen, etc.)",
+          "items": {
+            "$ref": "#/definitions/appendageDefinition"
+          }
+        }
+      },
+      "required": ["rootType"],
+      "additionalProperties": false
+    },
+    "limbSetDefinition": {
+      "type": "object",
+      "description": "Defines a set of limbs with their arrangement and socket generation patterns",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of limb in this set (e.g., 'leg', 'arm', 'tentacle', 'wing')"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Number of limbs in this set (1-100)"
+        },
+        "arrangement": {
+          "type": "string",
+          "enum": ["bilateral", "radial", "quadrupedal", "linear", "custom"],
+          "description": "Spatial arrangement pattern for limbs: bilateral (left/right pairs), radial (circular), quadrupedal (four legs), linear (line), custom (user-defined)"
+        },
+        "socketPattern": {
+          "$ref": "#/definitions/socketPattern",
+          "description": "Pattern for generating socket IDs and configurations for limb attachment"
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether these limbs are optional in the generated blueprint (default: false)"
+        },
+        "arrangementHint": {
+          "type": "string",
+          "description": "Additional arrangement information for custom layouts (e.g., '4_pairs_bilateral', 'hexagonal_radial')"
+        }
+      },
+      "required": ["type", "count", "socketPattern"],
+      "additionalProperties": false
+    },
+    "appendageDefinition": {
+      "type": "object",
+      "description": "Defines an appendage attached to the body with attachment location and socket pattern",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of appendage (e.g., 'head', 'tail', 'abdomen', 'stinger')"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of this appendage type (1-10)"
+        },
+        "attachment": {
+          "type": "string",
+          "enum": ["anterior", "posterior", "dorsal", "ventral", "lateral", "custom"],
+          "description": "Anatomical attachment location: anterior (front), posterior (back), dorsal (top), ventral (bottom), lateral (side), custom (specified in pattern)"
+        },
+        "socketPattern": {
+          "$ref": "#/definitions/socketPattern",
+          "description": "Pattern for generating socket IDs and configurations for appendage attachment"
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this appendage is optional in the generated blueprint (default: false)"
+        }
+      },
+      "required": ["type", "count", "attachment", "socketPattern"],
+      "additionalProperties": false
+    },
+    "socketPattern": {
+      "type": "object",
+      "description": "Pattern for generating socket IDs with template variables and orientation schemes",
+      "properties": {
+        "idTemplate": {
+          "type": "string",
+          "pattern": "^[a-z_]+(\\{\\{[a-z_]+\\}\\}.*)?$",
+          "description": "Template for socket ID generation using variables: {{index}} (numeric index), {{orientation}} (left/right/etc), {{position}} (named position). Can be static (e.g., 'anterior_head') or use template variables (e.g., 'leg_{{index}}')"
+        },
+        "orientationScheme": {
+          "type": "string",
+          "enum": ["bilateral", "radial", "indexed", "custom"],
+          "default": "indexed",
+          "description": "How orientations are computed: bilateral (left/right/mid), radial (angular positions), indexed (numeric), custom (explicit positions)"
+        },
+        "allowedTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Part types allowed to attach to these sockets (at least one required)"
+        },
+        "nameTpl": {
+          "type": "string",
+          "default": "{{type}} {{index}}",
+          "description": "Template for auto-naming attached parts using variables like {{type}}, {{index}}, {{orientation}}"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Explicit position names for custom arrangements (must match count if provided)"
+        }
+      },
+      "required": ["idTemplate", "allowedTypes"],
+      "additionalProperties": false
+    },
+    "orientationSchemes": {
+      "type": "object",
+      "description": "Defines custom orientation schemes for different arrangement types",
+      "properties": {
+        "bilateral": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["left", "right", "mid"],
+          "description": "Orientation labels for bilateral arrangements (default: left, right, mid)"
+        },
+        "radial": {
+          "type": "object",
+          "description": "Configuration for radial (circular) arrangements",
+          "properties": {
+            "positions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Named positions in radial arrangement (e.g., 'anterior', 'posterior', 'left_lateral', 'right_lateral')"
+            },
+            "angleStep": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360,
+              "description": "Angular spacing between positions in degrees (e.g., 45 for octagonal, 60 for hexagonal)"
+            }
+          },
+          "additionalProperties": false
+        },
+        "indexed": {
+          "type": "object",
+          "description": "Configuration for indexed (numeric) arrangements",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "default": "position_{{index}}",
+              "description": "Template for indexed position names using {{index}} variable"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

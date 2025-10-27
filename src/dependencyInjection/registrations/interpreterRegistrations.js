@@ -22,7 +22,7 @@ import { registerOperationHandlers } from './operationHandlerRegistrations.js';
 /**
  * Registers all interpreter-layer services in the DI container.
  *
- * @param {AppContainer} container
+ * @param {AppContainer} container - The dependency injection container
  */
 export function registerInterpreters(container) {
   const registrar = new Registrar(container);
@@ -115,6 +115,10 @@ export function registerInterpreters(container) {
     registry.register(
       'AUTO_MOVE_FOLLOWERS',
       bind(tokens.AutoMoveFollowersHandler)
+    );
+    registry.register(
+      'AUTO_MOVE_CLOSENESS_PARTNERS',
+      bind(tokens.AutoMoveClosenessPartnersHandler)
     );
     registry.register(
       'MERGE_CLOSENESS_CIRCLE',

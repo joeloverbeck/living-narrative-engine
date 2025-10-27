@@ -14,20 +14,41 @@
       "$ref": "./common.schema.json#/definitions/namespacedId",
       "description": "Unique identifier for this anatomy blueprint in namespaced format (e.g., 'anatomy:humanoid_standard')"
     },
+    "schemaVersion": {
+      "type": "string",
+      "enum": ["1.0", "2.0"],
+      "default": "1.0",
+      "description": "Blueprint schema version. Use '2.0' to enable structure template features"
+    },
     "root": {
       "$ref": "./common.schema.json#/definitions/namespacedId",
       "description": "The root entity definition ID that serves as the entry point for the anatomy graph"
     },
+    "structureTemplate": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_:-]+$",
+      "description": "Reference to structure template ID (schemaVersion '2.0' only). Pattern matches Common.schema.json namespacedId definition."
+    },
     "slots": {
       "type": "object",
-      "description": "Complete structural definition of body part slots and their requirements",
+      "description": "Complete structural definition of body part slots and their requirements (v1 only, use additionalSlots in v2)",
       "additionalProperties": {
         "$ref": "#/definitions/blueprintSlot"
       }
     },
+    "additionalSlots": {
+      "type": "object",
+      "description": "Slots added beyond template-generated slots (schemaVersion '2.0' only)",
+      "patternProperties": {
+        "^[a-z0-9_]+$": {
+          "$ref": "#/definitions/blueprintSlot"
+        }
+      },
+      "additionalProperties": false
+    },
     "clothingSlotMappings": {
       "type": "object",
-      "description": "Maps clothing slots to anatomy attachment points via blueprint slots or sockets",
+      "description": "Maps clothing slots to anatomy attachment points via blueprint slots or sockets (both v1 and v2)",
       "patternProperties": {
         "^[a-zA-Z][a-zA-Z0-9_]*$": {
           "$ref": "#/definitions/clothingSlotMapping"
@@ -37,14 +58,14 @@
     },
     "parts": {
       "type": "array",
-      "description": "Simple list of blueprint parts to include (all slots and mappings)",
+      "description": "Simple list of blueprint parts to include (all slots and mappings) (v1 only)",
       "items": {
         "$ref": "./common.schema.json#/definitions/namespacedId"
       }
     },
     "compose": {
       "type": "array",
-      "description": "Advanced composition instructions for including blueprint parts",
+      "description": "Advanced composition instructions for including blueprint parts (v1 only, deprecated in v2)",
       "items": {
         "$ref": "#/definitions/composeInstruction"
       }
@@ -52,6 +73,41 @@
   },
   "required": ["id", "root"],
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": { "const": "2.0" }
+        },
+        "required": ["schemaVersion"]
+      },
+      "then": {
+        "required": ["id", "root", "schemaVersion", "structureTemplate"],
+        "properties": {
+          "structureTemplate": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_:-]+$"
+          }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["slots"] },
+            { "required": ["compose"] },
+            { "required": ["parts"] }
+          ]
+        }
+      },
+      "else": {
+        "required": ["id", "root"],
+        "not": {
+          "anyOf": [
+            { "required": ["structureTemplate"] },
+            { "required": ["additionalSlots"] }
+          ]
+        }
+      }
+    }
+  ],
   "definitions": {
     "blueprintSlot": {
       "type": "object",
