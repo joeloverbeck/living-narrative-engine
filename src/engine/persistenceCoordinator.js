@@ -265,8 +265,14 @@ class PersistenceCoordinator {
     } else {
       const failureDetail =
         saveResult.error != null ? saveResult.error : saveResult.message;
+      const userFriendlyMessage =
+        typeof saveResult.userFriendlyError === 'string'
+          ? saveResult.userFriendlyError.trim()
+          : '';
       const formattedError = this.#formatSaveError(failureDetail);
-      const failureMessage = this.#buildFailureMessage(formattedError);
+      const failureMessage = this.#buildFailureMessage(
+        userFriendlyMessage || formattedError
+      );
       this.#logger.error(
         `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${formattedError}`
       );
