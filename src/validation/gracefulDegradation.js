@@ -228,14 +228,9 @@ class GracefulDegradation {
           partial: true
         };
       }
-      
+
       // Try basic parsing
-      return {
-        strategy: DegradationStrategy.BASIC_PARSING,
-        data: this.#attemptBasicParsing(context),
-        success: true,
-        partial: true
-      };
+      return this.#executeStrategy(DegradationStrategy.BASIC_PARSING, error, context);
     });
     
     // Timeout errors - use reduced validation
@@ -299,6 +294,10 @@ class GracefulDegradation {
    * @returns {string} Selected strategy
    */
   #selectStrategy(errorType, context) {
+    if (context?.forceNoDegradation) {
+      return DegradationStrategy.NO_DEGRADATION;
+    }
+
     // Check if we have a registered strategy for this error type
     if (this.#degradationStrategies.has(errorType)) {
       return errorType;
@@ -394,9 +393,10 @@ class GracefulDegradation {
           strategy,
           data: this.#attemptBasicParsing(context),
           success: true,
-          basic: true
+          basic: true,
+          partial: true
         };
-        
+
       default:
         return {
           strategy: DegradationStrategy.NO_DEGRADATION,
