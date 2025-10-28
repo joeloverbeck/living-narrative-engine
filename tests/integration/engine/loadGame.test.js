@@ -14,7 +14,10 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
 import { DEFAULT_SAVE_ID } from '../../common/constants.js';
-import { GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
+import {
+  GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE,
+  GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE,
+} from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (context) => {
   describe('loadGame', () => {
@@ -149,28 +152,28 @@ describeEngineSuite('GameEngine', (context) => {
           { preInit: true },
         ],
       ],
-      async (bed, engine, expectedMsg) => {
-        const result = await engine.loadGame(SAVE_ID);
+          async (bed, engine, expectedMsg) => {
+            const result = await engine.loadGame(SAVE_ID);
 
-        // After the recent changes, handleLoadFailure is called which dispatches ENGINE_OPERATION_FAILED_UI
-        expectDispatchSequence(
-          bed.getSafeEventDispatcher().dispatch,
-          [
-            ENGINE_OPERATION_FAILED_UI,
-            {
-              errorMessage: `Failed to load game: ${expectedMsg}`,
-              errorTitle: 'Load Failed',
-            },
-          ]
-        );
-        // eslint-disable-next-line jest/no-standalone-expect
-        expect(result).toEqual({
-          success: false,
-          error: expectedMsg,
-          data: null,
-        });
-        return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
-      },
+            // After the recent changes, handleLoadFailure is called which dispatches ENGINE_OPERATION_FAILED_UI
+            expectDispatchSequence(
+              bed.getSafeEventDispatcher().dispatch,
+              [
+                ENGINE_OPERATION_FAILED_UI,
+                {
+                  errorMessage: `Failed to load game: ${GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE}`,
+                  errorTitle: 'Load Failed',
+                },
+              ]
+            );
+            // eslint-disable-next-line jest/no-standalone-expect
+            expect(result).toEqual({
+              success: false,
+              error: GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE,
+              data: null,
+            });
+            return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
+          },
       { extraAssertions: 2, expectNoDispatches: false }
     )(
       'should handle %s unavailability (guard clause) and dispatch UI event directly'
