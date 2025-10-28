@@ -186,6 +186,69 @@ function formatParamsForLog(params) {
 }
 
 /**
+ * @description Separates discovered entries into valid actions and invalid diagnostics.
+ * @param {unknown[]} discovered - Raw entries returned by the action discovery step.
+ * @returns {{
+ *   valid: import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[],
+ *   invalid: Array<{
+ *     index: number;
+ *     reason: string;
+ *     entryType: string;
+ *     actionId?: unknown;
+ *     commandType?: string;
+ *   }>
+ * }} Partitioned discovered entries.
+ */
+function partitionDiscoveredActions(discovered) {
+  /** @type {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+  const valid = [];
+  const invalid = [];
+
+  discovered.forEach((raw, index) => {
+    if (!raw || typeof raw !== 'object') {
+      invalid.push({
+        index,
+        reason: 'not-object',
+        entryType: raw === null ? 'null' : typeof raw,
+      });
+      return;
+    }
+
+    const candidate = /** @type {Record<string, unknown>} */ (raw);
+    const actionId = candidate.id;
+    if (typeof actionId !== 'string' || actionId.trim() === '') {
+      invalid.push({
+        index,
+        reason: 'invalid-id',
+        entryType: Array.isArray(candidate) ? 'array' : typeof candidate,
+        actionId,
+      });
+      return;
+    }
+
+    const command = candidate.command;
+    if (command !== undefined && command !== null && typeof command !== 'string') {
+      invalid.push({
+        index,
+        reason: 'invalid-command',
+        entryType: Array.isArray(candidate) ? 'array' : typeof candidate,
+        actionId,
+        commandType: typeof command,
+      });
+      return;
+    }
+
+    valid.push(
+      /** @type {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} */ (
+        candidate
+      )
+    );
+  });
+
+  return { valid, invalid };
+}
+
+/**
  * @description Clones a Set and returns an immutable proxy that blocks mutation methods.
  * @param {Set<unknown>} set - The Set to clone and freeze.
  * @returns {ReadonlySet<unknown>} Frozen clone of the provided Set.
@@ -348,9 +411,30 @@ export class ActionIndexingService {
       }
     }
 
+    /* ── filter invalid entries before deduplication ─────────────────── */
+    const { valid: validDiscovered, invalid: invalidEntries } =
+      partitionDiscoveredActions(discovered);
+
+    if (invalidEntries.length > 0) {
+      this.#log.warn(
+        `ActionIndexingService: actor "${actorId}" ignored ${invalidEntries.length} invalid action ${
+          invalidEntries.length === 1 ? 'entry' : 'entries'
+        }.`,
+        {
+          examples: invalidEntries.slice(0, 3).map((entry) => ({
+            index: entry.index,
+            reason: entry.reason,
+            entryType: entry.entryType,
+            actionId: entry.actionId,
+            commandType: entry.commandType,
+          })),
+        }
+      );
+    }
+
     /* ── deduplicate by (id + params) ─────────────────────────────────── */
     const { uniqueArr, duplicatesSuppressed, duplicateDetails } =
-      deduplicateActions(discovered);
+      deduplicateActions(validDiscovered);
     if (duplicatesSuppressed > 0) {
       const duplicateInfo = duplicateDetails
         .map((dup) => {
