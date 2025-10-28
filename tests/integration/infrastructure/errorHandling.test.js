@@ -18,6 +18,7 @@ describe('Infrastructure Error Handling - Corrected', () => {
   let mockLogger;
   let mockEntityManager;
   let mockEventBus;
+  let mockGameDataRepository;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -29,6 +30,9 @@ describe('Infrastructure Error Handling - Corrected', () => {
       addComponent: testBed.createMock('addComponent', []),
     };
     mockEventBus = testBed.mockValidatedEventDispatcher;
+    mockGameDataRepository = {
+      getComponentDefinition: jest.fn().mockReturnValue(null),
+    };
   });
 
   afterEach(() => {
@@ -142,7 +146,8 @@ describe('Infrastructure Error Handling - Corrected', () => {
           const handlers = ModTestHandlerFactory.createHandlersWithAddComponent(
             mockEntityManager,
             mockEventBus,
-            mockLogger
+            mockLogger,
+            mockGameDataRepository
           );
           expect(handlers).toBeDefined();
           expect(handlers.ADD_COMPONENT).toBeDefined();
@@ -168,6 +173,7 @@ describe('Infrastructure Error Handling - Corrected', () => {
             mockEntityManager,
             mockEventBus,
             mockLogger,
+            mockGameDataRepository,
             { includeAddComponent: true, includeSetVariable: false }
           );
           expect(handlers).toBeDefined();

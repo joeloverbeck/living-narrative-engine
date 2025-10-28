@@ -57,6 +57,7 @@ describe('positioning:stand_up perceptible event fix', () => {
   let ajv;
   let validatePerceptibleEvent;
   let perceptionTypeEnum = [];
+  let mockGameDataRepository;
 
   beforeEach(async () => {
     // Set up AJV validator for perceptible events
@@ -77,6 +78,10 @@ describe('positioning:stand_up perceptible event fix', () => {
       perceptibleEventSchema.payloadSchema
     );
 
+    mockGameDataRepository = {
+      getComponentDefinition: jest.fn().mockReturnValue(null),
+    };
+
     // Expand macros in stand_up rule
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
     const expandedStandUpRule = {
@@ -92,7 +97,8 @@ describe('positioning:stand_up perceptible event fix', () => {
         ModTestHandlerFactory.createHandlersWithPerceptionLogging(
           entityManager,
           eventBus,
-          logger
+          logger,
+          mockGameDataRepository
         ),
       entities: [],
       rules: [expandedStandUpRule, logPerceptibleEventsRule],
