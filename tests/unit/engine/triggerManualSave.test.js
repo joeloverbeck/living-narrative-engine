@@ -156,6 +156,32 @@ describeEngineSuite('GameEngine', (context) => {
           );
         });
 
+        it('should fall back to user-friendly message when persistence omits error details', async () => {
+          const userFriendlyMessage = 'Please choose a different save slot.';
+          context.bed.getGamePersistenceService().saveGame.mockResolvedValue({
+            success: false,
+            error: undefined,
+            message: '',
+            userFriendlyError: userFriendlyMessage,
+          });
+
+          const result = await context.engine.triggerManualSave(SAVE_NAME);
+
+          expect(result).toMatchObject({
+            success: false,
+            error: userFriendlyMessage,
+          });
+
+          const errorLogCall = context.bed
+            .getLogger()
+            .error.mock.calls.find(([message]) =>
+              message.includes('Reported error:')
+            );
+
+          expect(errorLogCall).toBeDefined();
+          expect(errorLogCall[0]).toContain(userFriendlyMessage);
+        });
+
         it.each([
           [
             'service returns failure',

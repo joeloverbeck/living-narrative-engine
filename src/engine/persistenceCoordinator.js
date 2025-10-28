@@ -266,8 +266,12 @@ class PersistenceCoordinator {
       const failureMessage = this.#buildFailureMessage(
         userFriendlyMessage || formattedError
       );
+      const logErrorDetail =
+        formattedError === 'Unknown error.' && userFriendlyMessage
+          ? userFriendlyMessage
+          : formattedError;
       this.#logger.error(
-        `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${formattedError}`
+        `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${logErrorDetail}`
       );
       this.#logger.debug(
         `GameEngine.triggerManualSave: Save failed. Name: "${saveName}".`
