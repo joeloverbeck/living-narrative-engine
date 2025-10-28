@@ -84,7 +84,8 @@ describe('Activity Description - Context Edge Cases', () => {
 
     const description = await service.generateActivityDescription(actor.id);
 
-    expect(description.toLowerCase()).toContain('tenderly');
+    expect(description.toLowerCase()).toContain('embracing');
+    expect(description.toLowerCase()).not.toContain('tenderly');
   });
 
   it('should scale context adjustments with intensity', async () => {
