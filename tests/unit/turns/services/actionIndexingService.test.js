@@ -248,6 +248,27 @@ describe('ActionIndexingService', () => {
     );
   });
 
+  it('replaces cached actions when discovery returns an empty list', () => {
+    const actorId = 'actor-cache-reset';
+    const rawActions = [
+      {
+        id: 'keep',
+        params: { target: 'alpha' },
+        command: 'cmd-keep',
+        description: 'original action',
+      },
+    ];
+
+    const firstResult = service.indexActions(actorId, rawActions);
+    expect(firstResult).toHaveLength(1);
+    expect(service.getIndexedList(actorId)).toHaveLength(1);
+
+    const secondResult = service.indexActions(actorId, []);
+    expect(secondResult).toEqual([]);
+    expect(service.getIndexedList(actorId)).toEqual([]);
+    expect(() => service.resolve(actorId, 1)).toThrow(ActionIndexingError);
+  });
+
   it('skips malformed discovered entries without throwing', () => {
     const rawActions = [
       null,
@@ -477,7 +498,7 @@ describe('ActionIndexingService', () => {
     ];
 
     const first = service.indexActions('actor42', raw);
-    const second = service.indexActions('actor42', []);
+    const second = service.indexActions('actor42', raw);
 
     expect(second).not.toBe(first);
     expect(second).toEqual(first);
@@ -603,13 +624,13 @@ describe('ActionIndexingService', () => {
     expect(cachedList).toHaveLength(2);
   });
 
-  it('indexActions returns a defensive copy when reusing cached results', () => {
+  it('indexActions returns a defensive copy on repeated indexing within a turn', () => {
     const raw = [
       { id: 'a', params: {}, command: 'c', description: 'd' },
       { id: 'b', params: {}, command: 'c2', description: 'd2' },
     ];
     service.indexActions('actorReuse', raw);
-    const reused = service.indexActions('actorReuse', []);
+    const reused = service.indexActions('actorReuse', raw);
     reused.pop();
     const cachedList = service.getIndexedList('actorReuse');
     expect(cachedList).toHaveLength(2);
