@@ -116,8 +116,12 @@ export function createSafeErrorLogger({
         }
       }
 
-      if (Object.prototype.hasOwnProperty.call(normalizedOptions, 'timeoutMs')) {
-        const coercedTimeout = normalizeTimeoutMsValue(normalizedOptions.timeoutMs);
+      if (
+        Object.prototype.hasOwnProperty.call(normalizedOptions, 'timeoutMs')
+      ) {
+        const coercedTimeout = normalizeTimeoutMsValue(
+          normalizedOptions.timeoutMs
+        );
         if (coercedTimeout !== undefined) {
           normalizedOptions.timeoutMs = coercedTimeout;
         } else {
@@ -199,17 +203,30 @@ export function createSafeErrorLogger({
       config: batchModeConfig,
     };
 
-    if (loadingContextStack.length === 0) {
+    const hadActiveContext = loadingContextStack.length > 0;
+    const previousOutermostStart = outermostStartTime;
+
+    if (!hadActiveContext) {
       outermostStartTime = now;
     }
 
     loadingContextStack.push(contextEntry);
-
     isGameLoading = true;
 
-    // Enable batch mode on EventBus with context-aware limits
-    // EventBus now handles event-specific limits based on context automatically
-    dispatcher.setBatchMode(true, batchModeConfig);
+    try {
+      // Enable batch mode on EventBus with context-aware limits
+      // EventBus now handles event-specific limits based on context automatically
+      dispatcher.setBatchMode(true, batchModeConfig);
+    } catch (error) {
+      loadingContextStack.pop();
+
+      if (!hadActiveContext) {
+        outermostStartTime = previousOutermostStart;
+        isGameLoading = false;
+      }
+
+      throw error;
+    }
 
     safeLogger.debug(
       `SafeErrorLogger: Enabled batch mode for ${loadingOptions.context} (depth: ${loadingContextStack.length}) - ` +

@@ -119,15 +119,49 @@ describe('SafeErrorLogger.withGameLoadingMode cleanup', () => {
     });
 
     await expect(
-      safeErrorLogger.withGameLoadingMode(
-        async () => {},
-        { context: 'success-operation', timeoutMs: 0 }
-      )
+      safeErrorLogger.withGameLoadingMode(async () => {}, {
+        context: 'success-operation',
+        timeoutMs: 0,
+      })
     ).rejects.toBe(disableFailure);
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       'SafeErrorLogger: Failed to disable game loading mode during cleanup.',
       disableFailure
     );
+  });
+
+  it('cleans up state when enabling batch mode throws', async () => {
+    const enableFailure = new Error('enable failed');
+    mockDispatcher.setBatchMode.mockImplementationOnce((enable) => {
+      if (enable) {
+        throw enableFailure;
+      }
+    });
+
+    await expect(
+      safeErrorLogger.withGameLoadingMode(async () => {}, {
+        context: 'failing-enable',
+        timeoutMs: 0,
+      })
+    ).rejects.toBe(enableFailure);
+
+    expect(safeErrorLogger.isGameLoadingActive()).toBe(false);
+    expect(mockDispatcher.setBatchMode).toHaveBeenCalledTimes(1);
+    expect(mockDispatcher.setBatchMode).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({ context: 'failing-enable' })
+    );
+
+    await safeErrorLogger.withGameLoadingMode(async () => {}, {
+      context: 'post-failure',
+      timeoutMs: 0,
+    });
+
+    const finalCall =
+      mockDispatcher.setBatchMode.mock.calls[
+        mockDispatcher.setBatchMode.mock.calls.length - 1
+      ];
+    expect(finalCall[0]).toBe(false);
   });
 });
