@@ -86,6 +86,66 @@ describe('ActorAwareStrategyFactory - Entity API Support', () => {
       );
     });
 
+    it('normalises whitespace and casing when resolving player_type component values', () => {
+      const mockNormalisedEntity = {
+        id: 'normalised-entity',
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'core:player_type') {
+            return { type: ' Human ' };
+          }
+          return undefined;
+        }),
+      };
+
+      lookup = jest.fn(() => mockNormalisedEntity);
+
+      const factory = new ActorAwareStrategyFactory({
+        providers,
+        logger,
+        choicePipeline,
+        turnActionFactory: actionFactory,
+        actorLookup: lookup,
+      });
+
+      const strategy = factory.create('normalised-entity');
+
+      expect(strategy).toBeInstanceOf(GenericTurnStrategy);
+      expect(strategy.decisionProvider).toBe(humanProvider);
+      expect(mockNormalisedEntity.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
+    });
+
+    it('uses provider keys even when player_type is uppercase', () => {
+      const mockUppercaseEntity = {
+        id: 'uppercase-entity',
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'core:player_type') {
+            return { type: 'LLM' };
+          }
+          return undefined;
+        }),
+      };
+
+      lookup = jest.fn(() => mockUppercaseEntity);
+
+      const factory = new ActorAwareStrategyFactory({
+        providers,
+        logger,
+        choicePipeline,
+        turnActionFactory: actionFactory,
+        actorLookup: lookup,
+      });
+
+      const strategy = factory.create('uppercase-entity');
+
+      expect(strategy).toBeInstanceOf(GenericTurnStrategy);
+      expect(strategy.decisionProvider).toBe(llmProvider);
+      expect(mockUppercaseEntity.getComponentData).toHaveBeenCalledWith(
+        'core:player_type'
+      );
+    });
+
     it('should use goap provider for entity with getComponentData returning goap type', () => {
       const mockGoapEntity = {
         id: 'goap-entity',

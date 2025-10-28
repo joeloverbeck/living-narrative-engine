@@ -7,6 +7,21 @@
 import { ITurnStrategyFactory } from '../interfaces/ITurnStrategyFactory.js';
 import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 
+/**
+ * Normalises raw values from the `core:player_type` component.
+ *
+ * @param {unknown} rawType - Raw type value read from component data.
+ * @returns {string} Trimmed, lower-cased type identifier or an empty string when invalid.
+ */
+function normalisePlayerType(rawType) {
+  if (typeof rawType !== 'string') {
+    return '';
+  }
+
+  const trimmed = rawType.trim();
+  return trimmed ? trimmed.toLowerCase() : '';
+}
+
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline */
 /** @typedef {import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionProvider} ITurnDecisionProvider */
@@ -52,8 +67,9 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
       if (actor && typeof actor.getComponentData === 'function') {
         try {
           const playerTypeData = actor.getComponentData('core:player_type');
-          if (playerTypeData?.type) {
-            return playerTypeData.type;
+          const normalisedType = normalisePlayerType(playerTypeData?.type);
+          if (normalisedType) {
+            return normalisedType;
           }
         } catch (error) {
           // If getComponentData throws, fall through to other checks
@@ -62,7 +78,12 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
 
       // Fallback: Check if actor has components property (old style)
       if (actor?.components?.['core:player_type']) {
-        return actor.components['core:player_type'].type;
+        const normalisedType = normalisePlayerType(
+          actor.components['core:player_type'].type
+        );
+        if (normalisedType) {
+          return normalisedType;
+        }
       }
 
       // Check legacy aiType or ai component
