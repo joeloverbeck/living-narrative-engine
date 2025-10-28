@@ -15,10 +15,10 @@ describe('RecipePatternResolver', () => {
   beforeEach(() => {
     // Mock logger
     mockLogger = {
-      info: () => {},
-      warn: () => {},
-      error: () => {},
-      debug: () => {},
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
     };
 
     // Mock SlotGenerator
@@ -807,6 +807,848 @@ describe('RecipePatternResolver', () => {
 
       expect(result.slots.slot1.partType).toBe('type1'); // V1 pattern wins
       expect(result.slots.slot2.partType).toBe('type2'); // V2 pattern
+    });
+  });
+
+  describe('Validation guard rails', () => {
+    it('should throw when pattern defines no matcher', () => {
+      const recipe = {
+        patterns: [{ partType: 'arm_segment' }],
+      };
+
+      const blueprint = { slots: {} };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "has no matcher"
+      );
+    });
+
+    it('should throw when pattern defines multiple matchers', () => {
+      const recipe = {
+        patterns: [
+          {
+            matches: ['slot1'],
+            matchesPattern: 'slot*',
+            partType: 'conflicting',
+          },
+        ],
+      };
+
+      const blueprint = {
+        slots: { slot1: {} },
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'multiple matchers'
+      );
+    });
+
+    it('should throw when structure template is missing from registry', () => {
+      const recipe = {
+        patterns: [
+          { matchesGroup: 'limbSet:leg', partType: 'leg_segment' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'missing:template',
+        slots: {},
+      };
+
+      mockDataRegistry.get.mockReturnValue(null);
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Structure template 'missing:template' not found"
+      );
+    });
+
+    it('should throw when matchesGroup format is invalid for V2 blueprints', () => {
+      const recipe = {
+        patterns: [
+          { matchesGroup: 'invalidformat', partType: 'leg_segment' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'creature:body',
+        slots: {},
+      };
+
+      mockDataRegistry.get.mockReturnValue({ topology: {} });
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Slot group 'invalidformat' format invalid"
+      );
+    });
+
+    it('should throw when matchesGroup type is invalid for V2 blueprints', () => {
+      const recipe = {
+        patterns: [
+          { matchesGroup: 'unknownType:leg', partType: 'leg_segment' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'creature:body',
+        slots: {},
+      };
+
+      mockDataRegistry.get.mockReturnValue({
+        topology: { limbSets: [], appendages: [] },
+      });
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Slot group 'unknownType:leg' format invalid"
+      );
+    });
+
+    it('should list available groups when requested group is missing', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'arm' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+
+      const recipe = {
+        patterns: [
+          { matchesGroup: 'limbSet:wing', partType: 'wing_segment' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'avian:body',
+        slots: {},
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Available groups: 'limbSet:arm'"
+      );
+    });
+
+    it('should throw when matchesPattern is not a non-empty string', () => {
+      const recipe = {
+        patterns: [{ matchesPattern: 123, partType: 'invalid' }],
+      };
+
+      const blueprint = { slots: {} };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'Pattern 1: Pattern must be a non-empty string'
+      );
+    });
+
+    it('should throw when matchesAll has no filter properties', () => {
+      const recipe = {
+        patterns: [{ matchesAll: {}, partType: 'invalid' }],
+      };
+
+      const blueprint = { slots: {} };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'matchesAll must have at least one filter property'
+      );
+    });
+
+    it('should throw when matchesAll uses wildcard slotType', () => {
+      const recipe = {
+        patterns: [
+          {
+            matchesAll: { slotType: 'arm*' },
+            partType: 'invalid',
+          },
+        ],
+      };
+
+      const blueprint = { slots: {} };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "matchesAll wildcard pattern on 'slotType' is not supported"
+      );
+    });
+
+    it('should warn when matchesAll filter yields no slots', () => {
+      const recipe = {
+        patterns: [
+          {
+            matchesAll: { slotType: 'tail' },
+            partType: 'tail_segment',
+          },
+        ],
+      };
+
+      const blueprint = {
+        slots: {
+          arm_slot: {
+            requirements: { partType: 'arm' },
+            orientation: 'left',
+            socket: 'arm_l',
+          },
+        },
+      };
+
+      resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(
+        mockLogger.warn.mock.calls.some(call =>
+          typeof call[0] === 'string' &&
+          call[0].includes('matchesAll filter') &&
+          call[0].includes('matched 0 slots')
+        )
+      ).toBe(true);
+    });
+
+    it('should throw when exclusion slot group is missing in template', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+
+      const recipe = {
+        patterns: [
+          {
+            matchesPattern: 'leg_*',
+            partType: 'leg_segment',
+            exclude: { slotGroups: ['limbSet:wing'] },
+          },
+        ],
+      };
+
+      const blueprint = {
+        structureTemplate: 'golem:body',
+        slots: {},
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Exclusion slot group 'limbSet:wing' not found"
+      );
+    });
+
+    it('should throw when exclusion properties are not an object', () => {
+      const recipe = {
+        patterns: [
+          {
+            matches: ['slot1'],
+            partType: 'component',
+            exclude: { properties: null },
+          },
+        ],
+      };
+
+      const blueprint = {
+        slots: { slot1: {} },
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'Exclusion property filter must be a valid object'
+      );
+    });
+
+    it('should warn when a slot group resolves to zero slots', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([]);
+
+      resolver.resolveRecipePatterns(
+        {
+          patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
+        },
+        {
+          schemaVersion: '2.0',
+          structureTemplate: 'statue:body',
+          slots: {},
+        }
+      );
+
+      expect(
+        mockLogger.warn.mock.calls.some(call =>
+          typeof call[0] === 'string' &&
+          call[0].includes("Slot group 'limbSet:leg' not found in template")
+        )
+      ).toBe(true);
+    });
+
+    it('should describe matchesAll patterns in precedence warnings', () => {
+      const blueprint = {
+        slots: {
+          arm_left: {
+            requirements: { partType: 'arm' },
+            orientation: 'left_forward',
+          },
+          arm_right: {
+            requirements: { partType: 'arm' },
+            orientation: 'right_forward',
+          },
+        },
+      };
+
+      const recipe = {
+        patterns: [
+          {
+            matchesAll: { slotType: 'arm', orientation: 'left*' },
+            partType: 'alpha',
+          },
+          {
+            matchesAll: { slotType: 'arm', orientation: 'left*' },
+            partType: 'beta',
+          },
+        ],
+      };
+
+      resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(
+        mockLogger.warn.mock.calls.some(call =>
+          typeof call[0] === 'string' && call[0].includes('matchesAll:')
+        )
+      ).toBe(true);
+    });
+
+    it('should treat matcherless precedence patterns as specificity zero', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+
+      const fragilePatternA = {
+        partType: 'leg_fragment',
+        matchesGroup: 'limbSet:leg',
+      };
+
+      const fragilePatternB = {
+        partType: 'leg_backup',
+        matchesGroup: 'limbSet:leg',
+      };
+
+      let slotCall = 0;
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(() => {
+        slotCall += 1;
+        if (slotCall === 1) {
+          fragilePatternA.matchesGroup = undefined;
+        } else if (slotCall === 2) {
+          fragilePatternB.matchesGroup = undefined;
+        }
+        return ['leg_front'];
+      });
+
+      const result = resolver.resolveRecipePatterns(
+        {
+          patterns: [fragilePatternA, fragilePatternB],
+        },
+        {
+          schemaVersion: '2.0',
+          structureTemplate: 'colossus:body',
+          slots: { leg_front: {} },
+        }
+      );
+
+      expect(
+        mockLogger.warn.mock.calls.filter(call =>
+          typeof call[0] === 'string' &&
+          call[0].includes('no recognized matcher type')
+        ).length
+      ).toBeGreaterThan(0);
+
+      expect(result.slots).toEqual({});
+    });
+
+  });
+
+  describe('Advanced matcher coverage', () => {
+    it('should support appendage exclusions during validation and resolution', () => {
+      const template = {
+        topology: {
+          appendages: [
+            {
+              type: 'tail',
+              id: 'primaryTail',
+            },
+          ],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromAppendage.mockReturnValue([
+        'tail_base',
+        'tail_tip',
+      ]);
+
+      const recipe = {
+        patterns: [
+          {
+            matchesGroup: 'appendage:tail',
+            partType: 'tail_segment',
+            exclude: {
+              slotGroups: ['appendage:tail'],
+            },
+          },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'dragon:body',
+        slots: {
+          tail_base: {},
+          tail_tip: {},
+        },
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({});
+      expect(
+        mockSlotGenerator.extractSlotKeysFromAppendage
+      ).toHaveBeenCalled();
+    });
+
+    it('should warn when patterns of equal specificity overlap', () => {
+      const template = {
+        topology: {
+          limbSets: [
+            { type: 'leg', id: 'frontLeft' },
+          ],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_fl',
+      ]);
+
+      const recipe = {
+        patterns: [
+          { matchesGroup: 'limbSet:leg', partType: 'primary_leg' },
+          { matchesGroup: 'limbSet:leg', partType: 'secondary_leg' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'arachnid:body',
+        slots: {
+          leg_fl: {},
+        },
+      };
+
+      resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call => typeof call[0] === 'string' && call[0].includes('equal specificity')
+        )
+      ).toBe(true);
+    });
+
+    it('should still resolve patterns when precedence loses matcher context', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      let accessCount = 0;
+      const pattern = { partType: 'leg_segment' };
+      Object.defineProperty(pattern, 'matchesGroup', {
+        get() {
+          accessCount += 1;
+          if (accessCount === 5) {
+            return undefined;
+          }
+          return 'limbSet:leg';
+        },
+      });
+
+      const recipe = {
+        patterns: [
+          pattern,
+          { matches: ['explicit_slot'], partType: 'explicit' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'titan:body',
+        slots: {
+          leg_front: {},
+          explicit_slot: {},
+        },
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots.leg_front).toEqual({ partType: 'leg_segment' });
+      expect(result.slots.explicit_slot).toEqual({ partType: 'explicit' });
+    });
+
+    it('should treat patterns without matcher during precedence as lowest specificity', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      let groupAccess = 0;
+      const groupPattern = { partType: 'leg_primary' };
+      Object.defineProperty(groupPattern, 'matchesGroup', {
+        get() {
+          groupAccess += 1;
+          if (groupAccess === 6) {
+            return undefined;
+          }
+          return 'limbSet:leg';
+        },
+      });
+
+      let wildcardAccess = 0;
+      const wildcardPattern = { partType: 'leg_secondary' };
+      Object.defineProperty(wildcardPattern, 'matchesPattern', {
+        get() {
+          wildcardAccess += 1;
+          if (wildcardAccess === 4) {
+            return undefined;
+          }
+          return 'leg_*';
+        },
+      });
+
+      const result = resolver.resolveRecipePatterns(
+        {
+          patterns: [groupPattern, wildcardPattern],
+        },
+        {
+          schemaVersion: '2.0',
+          structureTemplate: 'leviathan:body',
+          slots: {
+            leg_front: {},
+          },
+        }
+      );
+
+      expect(result.slots.leg_front).toEqual({ partType: 'leg_primary' });
+    });
+
+    it('should continue precedence validation when slot resolution fails temporarily', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get
+        .mockReturnValueOnce(template) // blueprint version validation
+        .mockReturnValueOnce(template) // matchesGroup validation
+        .mockReturnValueOnce(template) // zero-match warning resolution
+        .mockReturnValueOnce(null) // precedence resolution fails
+        .mockReturnValue(template); // resolution phase
+
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      const recipe = {
+        slots: {},
+        patterns: [
+          { matchesGroup: 'limbSet:leg', partType: 'leg_segment' },
+          { matchesPattern: 'leg_*', partType: 'leg_backup' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'beast:body',
+        slots: {
+          leg_front: {},
+        },
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({
+        leg_front: { partType: 'leg_segment' },
+      });
+    });
+
+    it('should warn and skip patterns that lose their matcher after validation', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      let accessCount = 0;
+      const flakyPattern = {
+        partType: 'leg_segment',
+      };
+
+      Object.defineProperty(flakyPattern, 'matchesGroup', {
+        get() {
+          accessCount += 1;
+          if (accessCount >= 7) {
+            return undefined;
+          }
+          return 'limbSet:leg';
+        },
+      });
+
+      const recipe = {
+        patterns: [
+          flakyPattern,
+          { matches: ['explicit_slot'], partType: 'explicit' },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'creature:body',
+        slots: {
+          leg_front: {},
+          explicit_slot: {},
+        },
+      };
+
+      resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes('no recognized matcher type') &&
+            call[1] === flakyPattern
+        )
+      ).toBe(true);
+    });
+
+    it('should warn when blueprint loses structure template before resolution', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      let templateAccess = 0;
+      const blueprint = {
+        schemaVersion: '2.0',
+        slots: {
+          leg_front: {},
+        },
+        get structureTemplate() {
+          templateAccess += 1;
+          if (templateAccess >= 4) {
+            return undefined;
+          }
+          return 'chimera:body';
+        },
+      };
+
+      resolver.resolveRecipePatterns(
+        {
+          patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg' }],
+        },
+        blueprint
+      );
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('blueprint has no structure template')
+      );
+    });
+
+    it('should throw when structure template disappears during resolution', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get
+        .mockReturnValueOnce(template)
+        .mockReturnValueOnce(template)
+        .mockReturnValueOnce(template)
+        .mockReturnValueOnce(null);
+
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'wyvern:body',
+        slots: {
+          leg_front: {},
+        },
+      };
+
+      expect.assertions(2);
+      try {
+        resolver.resolveRecipePatterns(
+          { patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg' }] },
+          blueprint
+        );
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toBe('Structure template not found: wyvern:body');
+      }
+    });
+
+    it('should throw when slot group format becomes invalid during resolution', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      let accessCount = 0;
+      const pattern = { partType: 'leg' };
+      Object.defineProperty(pattern, 'matchesGroup', {
+        get() {
+          accessCount += 1;
+          if (accessCount >= 5) {
+            return 'invalidformat';
+          }
+          return 'limbSet:leg';
+        },
+      });
+
+      expect(() =>
+        resolver.resolveRecipePatterns(
+          {
+            patterns: [pattern],
+          },
+          {
+            schemaVersion: '2.0',
+            structureTemplate: 'gryphon:body',
+            slots: {
+              leg_front: {},
+            },
+          }
+        )
+      ).toThrow("Invalid slot group reference format: 'invalidformat'");
+    });
+
+    it('should throw when slot group type becomes invalid during resolution', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      let accessCount = 0;
+      const pattern = { partType: 'leg' };
+      Object.defineProperty(pattern, 'matchesGroup', {
+        get() {
+          accessCount += 1;
+          if (accessCount >= 5) {
+            return 'unknownType:leg';
+          }
+          return 'limbSet:leg';
+        },
+      });
+
+      expect(() =>
+        resolver.resolveRecipePatterns(
+          {
+            patterns: [pattern],
+          },
+          {
+            schemaVersion: '2.0',
+            structureTemplate: 'golem:body',
+            slots: {
+              leg_front: {},
+            },
+          }
+        )
+      ).toThrow("Invalid slot group type: 'unknownType'. Expected 'limbSet' or 'appendage'");
+    });
+
+    it('should describe patterns as unknown when matcher disappears before override logging', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
+        'leg_front',
+      ]);
+
+      let accessCount = 0;
+      const pattern = { partType: 'leg_segment' };
+      Object.defineProperty(pattern, 'matchesGroup', {
+        get() {
+          accessCount += 1;
+          if (accessCount >= 7) {
+            return undefined;
+          }
+          return 'limbSet:leg';
+        },
+      });
+
+      resolver.resolveRecipePatterns(
+        {
+          slots: {
+            leg_front: { partType: 'existing' },
+          },
+          patterns: [pattern],
+        },
+        {
+          schemaVersion: '2.0',
+          structureTemplate: 'minotaur:body',
+          slots: {
+            leg_front: {},
+          },
+        }
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('unknown pattern')
+      );
     });
   });
 });
