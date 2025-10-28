@@ -21,7 +21,11 @@ import { ensureValidLogger } from './loggerUtils.js';
  * @param {object} [deps.eventBus] - EventBus instance (deprecated - use safeEventDispatcher)
  * @returns {object} Safe error logging utilities
  */
-const HIGH_VOLUME_CONTEXTS = new Set(['game-initialization', 'game-load']);
+const HIGH_VOLUME_CONTEXTS = new Set([
+  'game-initialization',
+  'game-load',
+  'game-loading',
+]);
 
 export function createSafeErrorLogger({
   logger,
@@ -167,12 +171,12 @@ export function createSafeErrorLogger({
    * Enables game loading mode which automatically manages EventBus batch mode.
    *
    * @param {object} [options] - Loading configuration
-   * @param {string} [options.context='game-loading'] - Context description
+   * @param {string} [options.context='game-load'] - Context description
    * @param {number} [options.timeoutMs=60000] - Auto-disable timeout
    */
   function enableGameLoadingMode(options = {}) {
     const defaultOptions = {
-      context: 'game-loading',
+      context: 'game-load',
       timeoutMs: 60000, // 1 minute timeout for safety
     };
 
