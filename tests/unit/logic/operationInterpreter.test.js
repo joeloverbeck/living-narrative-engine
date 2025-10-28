@@ -238,6 +238,29 @@ describe('OperationInterpreter', () => {
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
+  test('execute returns the handler result for synchronous handlers', () => {
+    const handlerResult = { success: true };
+    mockRegistry.getHandler.mockReturnValue(() => handlerResult);
+
+    const result = interpreter.execute(logOperation, mockExecutionContext);
+
+    expect(result).toBe(handlerResult);
+  });
+
+  test('execute resolves promises returned by handlers and propagates the value', async () => {
+    const handlerResult = { success: true };
+    const asyncHandler = jest.fn().mockResolvedValue(handlerResult);
+    mockRegistry.getHandler.mockReturnValue(asyncHandler);
+
+    const resultPromise = interpreter.execute(logOperation, mockExecutionContext);
+
+    await expect(resultPromise).resolves.toBe(handlerResult);
+    expect(asyncHandler).toHaveBeenCalledWith(
+      resolvedLogParameters,
+      mockExecutionContext
+    );
+  });
+
   test('execute resolves custom JSON Logic operations inside parameters', () => {
     const operationWithCustomLogic = {
       type: 'SET_VARIABLE',
@@ -371,16 +394,16 @@ describe('OperationInterpreter', () => {
   /* ────────────────────────────────────────────────────────────────────────
      Re-throw handler errors
      ─────────────────────────────────────────────────────────────────────── */
-  test('execute should re-throw errors originating from the handler function', async () => {
+  test('execute should re-throw errors originating from the handler function', () => {
     const error = new Error('Handler failed!');
     mockHandlerWithError.mockImplementationOnce(() => {
       throw error;
     });
     mockRegistry.getHandler.mockReturnValue(mockHandlerWithError);
 
-    await expect(
+    expect(() =>
       interpreter.execute(errorOperation, mockExecutionContext)
-    ).rejects.toThrow(error);
+    ).toThrow(error);
 
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('ERROR_OP');
     expect(mockHandlerWithError).toHaveBeenCalledTimes(1);
