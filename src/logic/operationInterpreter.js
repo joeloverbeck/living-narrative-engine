@@ -209,7 +209,7 @@ class OperationInterpreter extends BaseService {
    * @param {Operation}      operation
    * @param {ExecutionContext} executionContext
    */
-  async execute(operation, executionContext) {
+  execute(operation, executionContext) {
     const opType = getNormalizedOperationType(
       operation?.type,
       this.#logger,
@@ -271,17 +271,15 @@ class OperationInterpreter extends BaseService {
     // -----------------------------------------------------------------------
     //  Execute the actual handler
     // -----------------------------------------------------------------------
+    this.#logger.debug(`Executing handler for operation type "${opType}"…`);
+    this.#logger.debug(
+      `[DEBUG] OperationInterpreter.execute - Executing handler for operation type "${opType}"`
+    );
+
+    let handlerResult;
     try {
-      this.#logger.debug(`Executing handler for operation type "${opType}"…`);
-      this.#logger.debug(
-        `[DEBUG] OperationInterpreter.execute - Executing handler for operation type "${opType}"`
-      );
-      await handler(paramsForHandler, executionContext);
-      this.#logger.debug(
-        `[DEBUG] OperationInterpreter.execute - Handler for "${opType}" completed successfully`
-      );
+      handlerResult = handler(paramsForHandler, executionContext);
     } catch (handlerErr) {
-      // Bubble up – SystemLogicInterpreter will handle halting the sequence
       this.#logger.debug(
         `Handler for operation "${opType}" threw – re-throwing to caller.`
       );
@@ -291,6 +289,34 @@ class OperationInterpreter extends BaseService {
       );
       throw handlerErr;
     }
+
+    const isPromiseLike =
+      handlerResult && typeof handlerResult.then === 'function';
+
+    if (isPromiseLike) {
+      return handlerResult
+        .then((result) => {
+          this.#logger.debug(
+            `[DEBUG] OperationInterpreter.execute - Handler for "${opType}" completed successfully`
+          );
+          return result;
+        })
+        .catch((handlerErr) => {
+          this.#logger.debug(
+            `Handler for operation "${opType}" threw – re-throwing to caller.`
+          );
+          this.#logger.debug(
+            `[DEBUG] OperationInterpreter.execute - Handler for "${opType}" threw error:`,
+            handlerErr
+          );
+          throw handlerErr;
+        });
+    }
+
+    this.#logger.debug(
+      `[DEBUG] OperationInterpreter.execute - Handler for "${opType}" completed successfully`
+    );
+    return handlerResult;
   }
 }
 
