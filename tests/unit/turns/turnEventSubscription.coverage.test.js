@@ -52,7 +52,24 @@ function createDeferredSchedulerMock() {
 function createLoggerMock() {
   return {
     debug: jest.fn(),
+    error: jest.fn(),
   };
+}
+
+function createCapturingSchedulerMock() {
+  const scheduler = {
+    capturedError: undefined,
+    setTimeout: jest.fn((fn, delay) => {
+      try {
+        fn();
+      } catch (error) {
+        scheduler.capturedError = error;
+      }
+      return delay ?? 0;
+    }),
+    clearTimeout: jest.fn(),
+  };
+  return scheduler;
 }
 
 describe('TurnEventSubscription - coverage', () => {
@@ -217,5 +234,27 @@ describe('TurnEventSubscription - coverage', () => {
     expect(scheduler.clearTimeout).toHaveBeenCalledWith(scheduledId);
     expect(scheduler.getPendingCount()).toBe(0);
     expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('logs and suppresses errors thrown by scheduled callbacks', async () => {
+    const bus = createEventBus();
+    const logger = createLoggerMock();
+    const scheduler = createCapturingSchedulerMock();
+    const subscription = new TurnEventSubscription(bus, logger, scheduler);
+
+    const error = new Error('callback failed');
+    const failingCallback = jest.fn(() => {
+      throw error;
+    });
+
+    subscription.subscribe(failingCallback);
+    await bus.dispatch(TURN_ENDED_ID, { reason: 'boom' });
+
+    expect(failingCallback).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      `TurnEventSubscription: callback threw while handling ${TURN_ENDED_ID}.`,
+      error
+    );
+    expect(scheduler.capturedError).toBeUndefined();
   });
 });

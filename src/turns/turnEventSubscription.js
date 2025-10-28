@@ -28,7 +28,11 @@ export default class TurnEventSubscription {
     if (!bus || typeof bus.subscribe !== 'function') {
       throw new Error('TurnEventSubscription: bus must support subscribe');
     }
-    if (!logger || typeof logger.debug !== 'function') {
+    if (
+      !logger ||
+      typeof logger.debug !== 'function' ||
+      typeof logger.error !== 'function'
+    ) {
       throw new Error('TurnEventSubscription: logger is required');
     }
     if (
@@ -68,7 +72,14 @@ export default class TurnEventSubscription {
           this.#pendingTimeouts.delete(timeoutId);
         }
         executedSynchronously = true;
-        cb(ev);
+        try {
+          cb(ev);
+        } catch (callbackError) {
+          this.#logger.error(
+            `TurnEventSubscription: callback threw while handling ${TURN_ENDED_ID}.`,
+            callbackError
+          );
+        }
       };
       timeoutId = this.#scheduler.setTimeout(invokeCallback, 0);
       if (!executedSynchronously && timeoutId !== undefined && timeoutId !== null) {
