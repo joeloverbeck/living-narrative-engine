@@ -41,8 +41,34 @@ export function buildManualFileName(saveName) {
       : saveName == null
         ? ''
         : String(saveName).trim();
-  const sanitized = normalizedName.replace(/[^a-zA-Z0-9_-]/g, '_');
-  return `manual_save_${sanitized}.sav`;
+  if (normalizedName.length === 0) {
+    return 'manual_save_.sav';
+  }
+
+  const allowedCharPattern = /[\p{L}\p{N}\p{M}\p{S}]/u;
+  const whitespacePattern = /\s/u;
+
+  const sanitized = Array.from(normalizedName)
+    .map((char) => {
+      if (char === '-' || char === '_' || char === '\u200D') {
+        return char;
+      }
+
+      if (allowedCharPattern.test(char)) {
+        return char;
+      }
+
+      if (whitespacePattern.test(char)) {
+        return '_';
+      }
+
+      return '_';
+    })
+    .join('');
+
+  const safeName = sanitized.length > 0 ? sanitized : '_';
+
+  return `manual_save_${safeName}.sav`;
 }
 
 /**
