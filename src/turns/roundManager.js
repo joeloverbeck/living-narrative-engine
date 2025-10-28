@@ -140,7 +140,25 @@ export default class RoundManager {
    */
   #normaliseInitiativeData(rawInitiativeData) {
     if (rawInitiativeData instanceof Map) {
-      return rawInitiativeData;
+      const normalisedFromMap = new Map();
+      for (const [entityId, score] of rawInitiativeData.entries()) {
+        if (typeof entityId !== 'string' || entityId.length === 0) {
+          this.#logger.warn(
+            'RoundManager.startRound(): Ignoring initiative entry with non-string entity id from Map input.',
+            { entityId }
+          );
+          continue;
+        }
+
+        const numericScore = this.#coerceInitiativeScore(score, entityId);
+        if (numericScore === undefined) {
+          continue;
+        }
+
+        normalisedFromMap.set(entityId, numericScore);
+      }
+
+      return normalisedFromMap.size > 0 ? normalisedFromMap : undefined;
     }
 
     if (Array.isArray(rawInitiativeData)) {
@@ -161,7 +179,13 @@ export default class RoundManager {
           );
           continue;
         }
-        normalisedFromArray.set(entityId, score);
+
+        const numericScore = this.#coerceInitiativeScore(score, entityId);
+        if (numericScore === undefined) {
+          continue;
+        }
+
+        normalisedFromArray.set(entityId, numericScore);
       }
       return normalisedFromArray.size > 0 ? normalisedFromArray : undefined;
     }
@@ -184,7 +208,13 @@ export default class RoundManager {
           );
           continue;
         }
-        normalisedFromObject.set(entityId, score);
+
+        const numericScore = this.#coerceInitiativeScore(score, entityId);
+        if (numericScore === undefined) {
+          continue;
+        }
+
+        normalisedFromObject.set(entityId, numericScore);
       }
 
       if (normalisedFromObject.size === 0) {
@@ -197,6 +227,65 @@ export default class RoundManager {
       return normalisedFromObject;
     }
 
+    return undefined;
+  }
+
+  /**
+   * @description Coerces a raw initiative score into a finite number for queue consumption.
+   * @param {unknown} rawScore - The score provided by the caller.
+   * @param {string} entityId - The entity identifier used for logging context.
+   * @returns {number | undefined} A finite numeric score, or `undefined` when coercion fails.
+   */
+  #coerceInitiativeScore(rawScore, entityId) {
+    if (typeof rawScore === 'number' && Number.isFinite(rawScore)) {
+      return rawScore;
+    }
+
+    if (typeof rawScore === 'string') {
+      const trimmed = rawScore.trim();
+      if (trimmed.length === 0) {
+        this.#logger.warn(
+          'RoundManager.startRound(): Ignoring initiative entry with empty string score.',
+          { entityId }
+        );
+        return undefined;
+      }
+      const parsed = Number(trimmed);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+
+      this.#logger.warn(
+        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
+        {
+          entityId,
+          receivedType: 'string',
+          rawScore,
+        }
+      );
+      return undefined;
+    }
+
+    if (rawScore == null) {
+      this.#logger.warn(
+        'RoundManager.startRound(): Ignoring initiative entry with missing score.',
+        { entityId }
+      );
+      return undefined;
+    }
+
+    const parsed = Number(rawScore);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+
+    this.#logger.warn(
+      'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
+      {
+        entityId,
+        receivedType: typeof rawScore,
+      }
+    );
     return undefined;
   }
 }
