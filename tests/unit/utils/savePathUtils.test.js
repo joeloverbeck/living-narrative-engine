@@ -64,6 +64,15 @@ describe('savePathUtils', () => {
         'manual_save_Chapter_One.sav'
       );
     });
+
+    it('should preserve unicode letters and symbols for readability', () => {
+      expect(buildManualFileName('英雄の冒険 2024')).toBe(
+        'manual_save_英雄の冒険_2024.sav'
+      );
+      expect(buildManualFileName('Star ⭐ Keeper')).toBe(
+        'manual_save_Star_⭐_Keeper.sav'
+      );
+    });
   });
 
   describe('extractSaveName', () => {
