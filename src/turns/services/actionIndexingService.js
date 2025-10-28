@@ -105,6 +105,34 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
     return serialized;
   }
 
+  if (value instanceof Map) {
+    if (seen.has(value)) {
+      return '[Circular]';
+    }
+    seen.add(value);
+    const entries = Array.from(value.entries()).map(([key, val]) => {
+      const keyStr = stableSerializeForKey(key, seen);
+      const valueStr = stableSerializeForKey(val, seen);
+      return `${keyStr}=>${valueStr}`;
+    });
+    entries.sort();
+    seen.delete(value);
+    return `Map{${entries.join(',')}}`;
+  }
+
+  if (value instanceof Set) {
+    if (seen.has(value)) {
+      return '[Circular]';
+    }
+    seen.add(value);
+    const values = Array.from(value.values()).map((item) =>
+      stableSerializeForKey(item, seen)
+    );
+    values.sort();
+    seen.delete(value);
+    return `Set{${values.join(',')}}`;
+  }
+
   if (valueType === 'object') {
     if (seen.has(value)) {
       return '[Circular]';
