@@ -12,6 +12,7 @@ import {
   afterEach,
 } from '@jest/globals';
 import { AvailableActionsProvider } from '../../../../src/data/providers/availableActionsProvider.js';
+import { TurnContext } from '../../../../src/turns/context/turnContext.js';
 
 jest.mock(
   '../../../../src/anatomy/slotGenerator.js',
@@ -159,6 +160,37 @@ describe('AvailableActionsProvider', () => {
       expect(passedContext.jsonLogicEval).toBeUndefined();
       expect(passedContext.actingEntity).toBeUndefined();
       expect(passedContext.entityManager).toBeUndefined();
+    });
+
+    test('should read world context from concrete TurnContext instances', async () => {
+      const worldContext = { worldId: 'ctx-from-turn-context' };
+      const handlerStub = {
+        requestIdleStateTransition: jest.fn(),
+        requestAwaitingInputStateTransition: jest.fn(),
+        requestProcessingCommandStateTransition: jest.fn(),
+        requestAwaitingExternalTurnEndStateTransition: jest.fn(),
+      };
+      const concreteContext = new TurnContext({
+        actor: mockActor,
+        logger,
+        services: {
+          game: worldContext,
+          turnEndPort: { notifyTurnEnded: jest.fn() },
+          safeEventDispatcher: { dispatch: jest.fn() },
+          entityManager,
+        },
+        strategy: { decideAction: jest.fn() },
+        onEndTurnCallback: jest.fn(),
+        handlerInstance: handlerStub,
+      });
+
+      await provider.get(mockActor, concreteContext, logger);
+
+      const passedContext =
+        actionDiscoveryService.getValidActions.mock.calls[1]?.[1] ??
+        actionDiscoveryService.getValidActions.mock.calls[0][1];
+
+      expect(passedContext.worldContext).toBe(worldContext);
     });
   });
 
