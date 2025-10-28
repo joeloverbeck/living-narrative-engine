@@ -23,7 +23,11 @@ export function applySchemaDefaults(value, componentDefinition, logger) {
   }
 
   const { properties } = componentDefinition.dataSchema;
-  const result = { ...value };
+  const baseValue =
+    value && typeof value === 'object'
+      ? value
+      : {};
+  const result = { ...baseValue };
 
   // For each property in the schema
   for (const [propName, propSchema] of Object.entries(properties)) {
@@ -84,7 +88,11 @@ function applyNestedDefaults(value, schema, logger) {
     return value;
   }
 
-  const result = { ...value };
+  const baseValue =
+    value && typeof value === 'object'
+      ? value
+      : {};
+  const result = { ...baseValue };
 
   for (const [propName, propSchema] of Object.entries(schema.properties)) {
     if (
