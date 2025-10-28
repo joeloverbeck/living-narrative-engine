@@ -527,12 +527,8 @@ class GameSessionManager {
     }
 
     const decodedValue = this.#decodePercentEncodedSegment(trimmedValue);
-
-    if (decodedValue.includes('/') || decodedValue.includes('\\')) {
-      return this.#normalizeSaveName(decodedValue);
-    }
-
     const lowerValue = decodedValue.toLowerCase();
+
     if (
       MANUAL_SAVE_PATTERN.test(decodedValue) ||
       lowerValue.startsWith('manual_save_') ||
@@ -548,12 +544,49 @@ class GameSessionManager {
       }
     }
 
+    if (this.#looksLikeFilePath(decodedValue)) {
+      return this.#normalizeSaveName(decodedValue);
+    }
+
     const withSpaces = decodedValue.replace(/[_]+/g, ' ').trim();
     if (withSpaces.length > 0) {
       return withSpaces;
     }
 
     return decodedValue.trim();
+  }
+
+  /**
+   * Determines whether a metadata value likely represents a file path.
+   *
+   * @private
+   * @param {string} value - Metadata value to inspect.
+   * @returns {boolean} {@code true} when the value resembles a path string.
+   */
+  #looksLikeFilePath(value) {
+    if (!value) {
+      return false;
+    }
+
+    if (value.includes('\\')) {
+      return true;
+    }
+
+    if (!value.includes('/')) {
+      return false;
+    }
+
+    const trimmedValue = value.trim();
+    if (
+      trimmedValue.startsWith('/') ||
+      trimmedValue.startsWith('./') ||
+      trimmedValue.startsWith('../') ||
+      trimmedValue.endsWith('/')
+    ) {
+      return true;
+    }
+
+    return /\S\/\S/.test(value);
   }
 
   /**
