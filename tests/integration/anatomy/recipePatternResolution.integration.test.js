@@ -87,17 +87,6 @@ describe('Recipe Pattern Resolution Integration', () => {
     });
 
     it('should resolve all leg slots from limbSet:leg pattern', async () => {
-      // Debug: Check if blueprint and recipe are registered
-      const blueprint = dataRegistry.get('anatomyBlueprints', 'test:spider');
-      const recipe = dataRegistry.get('anatomyRecipes', 'test:spider_basic');
-      const template = dataRegistry.get('anatomyStructureTemplates', 'test:spider_body');
-      console.log('DEBUG: blueprint.schemaVersion =', blueprint?.schemaVersion);
-      console.log('DEBUG: blueprint.structureTemplate =', blueprint?.structureTemplate);
-      console.log('DEBUG: blueprint.root =', blueprint?.root);
-      console.log('DEBUG: recipe.patterns.length =', recipe?.patterns?.length);
-      console.log('DEBUG: recipe.patterns[0] =', JSON.stringify(recipe?.patterns?.[0]));
-      console.log('DEBUG: template.topology.limbSets.length =', template?.topology?.limbSets?.length);
-
       const result = await bodyBlueprintFactory.createAnatomyGraph(
         'test:spider',
         'test:spider_basic'
@@ -105,14 +94,6 @@ describe('Recipe Pattern Resolution Integration', () => {
 
       expect(result.rootId).toBeDefined();
       expect(result.entities).toBeDefined();
-
-      // Debug: Log what entities were created
-      console.log('DEBUG: result.entities =', result.entities);
-      console.log('DEBUG: result.rootId =', result.rootId);
-      result.entities.forEach(id => {
-        const partComp = entityManager.getComponentData(id, 'anatomy:body_part');
-        console.log(`DEBUG: Entity ${id} has body_part:`, partComp);
-      });
 
       // Verify all 8 leg segments were created (4 limb sets × 2 segments)
       const legEntities = result.entities.filter(id => {
@@ -351,6 +332,125 @@ describe('Recipe Pattern Resolution Integration', () => {
       });
       // Note: This test is simplified - in real scenario we'd check socket hierarchy
       expect(leftLowerArm).toBeDefined();
+    });
+  });
+
+  describe('Property Filters with Slot Group Exclusions', () => {
+    beforeEach(() => {
+      dataRegistry.store('anatomyStructureTemplates', 'test:gryphon_body', {
+        id: 'test:gryphon_body',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'fore_leg',
+              count: 2,
+              arrangement: 'bilateral',
+              socketPattern: {
+                idTemplate: 'fore_leg_{{orientation}}',
+                allowedTypes: ['fore_leg'],
+                orientationScheme: 'bilateral',
+              },
+            },
+            {
+              type: 'hind_leg',
+              count: 2,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'hind_leg_{{orientation}}',
+                allowedTypes: ['hind_leg'],
+                orientationScheme: 'quadrupedal',
+              },
+            },
+          ],
+        },
+      });
+
+      dataRegistry.store('anatomyBlueprints', 'test:gryphon', {
+        id: 'test:gryphon',
+        schemaVersion: '2.0',
+        structureTemplate: 'test:gryphon_body',
+        root: 'anatomy:torso',
+      });
+
+      dataRegistry.store('anatomyRecipes', 'test:gryphon_legs', {
+        recipeId: 'test:gryphon_legs',
+        blueprintId: 'test:gryphon',
+        patterns: [
+          {
+            matchesGroup: 'limbSet:fore_leg',
+            partType: 'fore_leg',
+          },
+          {
+            matchesGroup: 'limbSet:hind_leg',
+            partType: 'hind_leg',
+          },
+          {
+            matchesAll: {
+              orientation: 'left_*',
+            },
+            partType: 'fore_leg',
+            tags: ['test:left_leg'],
+            exclude: {
+              slotGroups: ['limbSet:hind_leg'],
+            },
+          },
+        ],
+      });
+
+      testBed.loadEntityDefinitions({
+        'anatomy:torso': {
+          id: 'anatomy:torso',
+          components: {
+            'anatomy:body_part': { partType: 'torso', name: 'Torso' },
+            'anatomy:part': { subType: 'torso' },
+          },
+        },
+        'test:fore_leg_left': {
+          id: 'test:fore_leg_left',
+          components: {
+            'anatomy:body_part': {
+              partType: 'fore_leg',
+              name: 'Left Gryphon Fore Leg',
+            },
+            'anatomy:part': { subType: 'fore_leg' },
+            'test:left_leg': {},
+          },
+        },
+        'test:fore_leg_right': {
+          id: 'test:fore_leg_right',
+          components: {
+            'anatomy:body_part': {
+              partType: 'fore_leg',
+              name: 'Right Gryphon Fore Leg',
+            },
+            'anatomy:part': { subType: 'fore_leg' },
+          },
+        },
+        'test:hind_leg': {
+          id: 'test:hind_leg',
+          components: {
+            'anatomy:body_part': {
+              partType: 'hind_leg',
+              name: 'Gryphon Hind Leg',
+            },
+            'anatomy:part': { subType: 'hind_leg' },
+          },
+        },
+      });
+    });
+
+    it('should honor property filters while excluding slot groups', async () => {
+      const result = await bodyBlueprintFactory.createAnatomyGraph(
+        'test:gryphon',
+        'test:gryphon_legs'
+      );
+
+      const leftLegs = result.entities.filter(id =>
+        entityManager.hasComponent(id, 'test:left_leg')
+      );
+
+      expect(leftLegs.length).toBe(1);
     });
   });
 
