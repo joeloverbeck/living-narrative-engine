@@ -47,6 +47,10 @@
       }
     },
     {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
       "type": "IF",
       "comment": "Remove facing_away component if actor was facing away",
       "parameters": {

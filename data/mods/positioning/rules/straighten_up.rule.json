@@ -47,6 +47,16 @@
             }
           },
           {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": { "entityId": "{context.bendingOverInfo.surface_id}" }
+            }
+          },
+          {
             "type": "UNLOCK_MOVEMENT",
             "comment": "Restore movement capability",
             "parameters": {

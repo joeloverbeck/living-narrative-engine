@@ -27,6 +27,14 @@
       }
     },
     {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "target" }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
       "type": "GET_NAME",
       "parameters": {
         "entity_ref": "actor",

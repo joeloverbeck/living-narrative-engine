@@ -60,6 +60,14 @@
       }
     },
     {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "target" }
+    },
+    {
       "type": "DISPATCH_EVENT",
       "comment": "Dispatch event indicating actor has turned their back to target",
       "parameters": {
