@@ -3,7 +3,16 @@
 /**
  * @jest-environment node
  */
-import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  test,
+  jest,
+  beforeEach,
+  beforeAll,
+  afterAll,
+} from '@jest/globals';
+import jsonLogic from 'json-logic-js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
@@ -133,6 +142,14 @@ const mockExecutionContext = {
 describe('OperationInterpreter', () => {
   let interpreter;
 
+  beforeAll(() => {
+    jsonLogic.add_operation('double', (value) => value * 2);
+  });
+
+  afterAll(() => {
+    jsonLogic.rm_operation('double');
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockRegistry.getHandler.mockReset();
@@ -219,6 +236,25 @@ describe('OperationInterpreter', () => {
       mockExecutionContext
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  test('execute resolves custom JSON Logic operations inside parameters', () => {
+    const operationWithCustomLogic = {
+      type: 'SET_VARIABLE',
+      parameters: {
+        variable_name: 'computed',
+        value: { double: [5] },
+      },
+    };
+
+    mockRegistry.getHandler.mockReturnValue(mockSetVariableHandler);
+
+    interpreter.execute(operationWithCustomLogic, mockExecutionContext);
+
+    expect(mockSetVariableHandler).toHaveBeenCalledWith(
+      { variable_name: 'computed', value: 10 },
+      mockExecutionContext
+    );
   });
 
   test('execute should preserve JSON Logic conditions inside with_component_data filters', () => {

@@ -27,6 +27,36 @@ const JSON_LOGIC_SKIP_PATHS = Object.freeze([
   ['filters', '*', 'with_component_data', 'condition'],
 ]);
 
+const JSON_LOGIC_OPERATOR_HINTS = Object.freeze([
+  'var',
+  'cat',
+  'if',
+  '==',
+  '!=',
+  '>',
+  '<',
+  '>=',
+  '<=',
+  'and',
+  'or',
+  'not',
+  '+',
+  '-',
+  '*',
+  '/',
+  '%',
+  'in',
+  'map',
+  'filter',
+  'reduce',
+  'all',
+  'none',
+  'some',
+  'merge',
+  'missing',
+  'missing_some',
+]);
+
 /**
  * Determines if the current traversal path should skip JSON Logic evaluation.
  *
@@ -108,40 +138,12 @@ function evaluateJsonLogicRecursively(
     // Check if this looks like a JSON Logic expression
     // JSON Logic expressions are objects with operator keys like 'var', 'cat', 'if', etc.
     // We detect this by checking if it has known JSON Logic operators or starts with typical operators
-    const jsonLogicOperators = [
-      'var',
-      'cat',
-      'if',
-      '==',
-      '!=',
-      '>',
-      '<',
-      '>=',
-      '<=',
-      'and',
-      'or',
-      'not',
-      '+',
-      '-',
-      '*',
-      '/',
-      '%',
-      'in',
-      'map',
-      'filter',
-      'reduce',
-      'all',
-      'none',
-      'some',
-      'merge',
-      'missing',
-      'missing_some',
-    ];
-    const hasJsonLogicOperator = keys.some((key) =>
-      jsonLogicOperators.includes(key)
-    );
+    const isLikelyJsonLogic =
+      (typeof jsonLogic.is_logic === 'function' &&
+        jsonLogic.is_logic(value)) ||
+      JSON_LOGIC_OPERATOR_HINTS.some((operator) => keys.includes(operator));
 
-    if (hasJsonLogicOperator) {
+    if (isLikelyJsonLogic) {
       try {
         const result = jsonLogic.apply(value, evaluationContext);
         logger.debug(
@@ -149,9 +151,12 @@ function evaluateJsonLogicRecursively(
         );
         return result;
       } catch (error) {
-        logger.warn(
-          `OperationInterpreter: Failed to evaluate JSON Logic expression: ${error.message}. Using original value.`
-        );
+        const message = error instanceof Error ? error.message : String(error);
+        if (!message.startsWith('Unrecognized operation ')) {
+          logger.warn(
+            `OperationInterpreter: Failed to evaluate JSON Logic expression: ${message}. Using original value.`
+          );
+        }
         return value;
       }
     }
