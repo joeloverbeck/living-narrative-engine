@@ -547,5 +547,75 @@ describeTurnManagerSuite(
         await drainTimersAndMicrotasks(2);
       }
     );
+
+    test(
+      'normalises whitespace-surrounded entityId values when handling turn end events',
+      async () => {
+        const bed = getBed();
+        const stopSpy = bed.spyOnStopNoOp();
+
+        const actor = createMockEntity('actor-whitespace', {
+          isActor: true,
+          isPlayer: false,
+        });
+        bed.setActiveEntities(actor);
+
+        bed.mocks.turnOrderService.isEmpty
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValue(true);
+        bed.mocks.turnOrderService.getNextEntity
+          .mockResolvedValueOnce(actor)
+          .mockResolvedValue(null);
+        bed.mocks.turnOrderService.startNewRound.mockResolvedValue();
+
+        const handler = bed.setupHandlerForActor(actor);
+        handler.startTurn.mockResolvedValue();
+
+        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+        const advanceSpy = jest
+          .spyOn(bed.turnManager, 'advanceTurn')
+          .mockImplementationOnce(realAdvance)
+          .mockImplementationOnce(realAdvance)
+          .mockResolvedValue(undefined);
+
+        await bed.turnManager.start();
+        await drainTimersAndMicrotasks(4);
+
+        bed.mocks.logger.warn.mockClear();
+
+        bed.trigger(TURN_ENDED_ID, {
+          entityId: `  ${actor.id}  `,
+          success: true,
+        });
+        await drainTimersAndMicrotasks(6);
+
+        const whitespaceWarning = bed.mocks.logger.warn.mock.calls.find(
+          ([message]) =>
+            message.includes('surrounding whitespace') &&
+            message.includes(actor.id)
+        );
+        expect(whitespaceWarning).toBeDefined();
+
+        const processingEndedCall =
+          bed.mocks.dispatcher.dispatch.mock.calls.find(
+            ([eventId, payload]) =>
+              eventId === TURN_PROCESSING_ENDED && payload.entityId === actor.id
+          );
+        expect(processingEndedCall).toBeDefined();
+
+        expect(
+          bed.mocks.logger.warn.mock.calls.some(([message]) =>
+            message.includes('This event will be IGNORED by TurnManager')
+          )
+        ).toBe(false);
+
+        expect(stopSpy).not.toHaveBeenCalled();
+
+        advanceSpy.mockRestore();
+        await bed.turnManager.stop();
+        await drainTimersAndMicrotasks(2);
+      }
+    );
   }
 );
