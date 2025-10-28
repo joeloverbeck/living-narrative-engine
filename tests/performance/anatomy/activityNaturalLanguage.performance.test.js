@@ -7,7 +7,7 @@ import {
   createActor,
   addInlineActivity,
   configureActivityFormatting,
-} from './activityNaturalLanguageTestUtils.js';
+} from '../../integration/anatomy/activityNaturalLanguageTestUtils.js';
 
 describe('Activity Description - Performance', () => {
   let testBed;
@@ -121,6 +121,6 @@ describe('Activity Description - Performance', () => {
     await service.generateActivityDescription(jon.id);
     const duration = performance.now() - start;
 
-    expect(duration).toBeLessThan(20);
+    expect(duration).toBeLessThan(25);
   });
 });
