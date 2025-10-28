@@ -129,6 +129,27 @@ describe('ActionIndexingService', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
+  it('preserves Date parameters when cloning action payloads', () => {
+    const timestamp = new Date('2024-05-01T12:34:56.000Z');
+    const rawActions = [
+      {
+        id: 'with-date',
+        params: { scheduledAt: timestamp },
+        command: 'cmd-with-date',
+        description: 'action containing a date',
+      },
+    ];
+
+    const [composite] = service.indexActions('actor-date', rawActions);
+
+    expect(composite.params.scheduledAt).toBeInstanceOf(Date);
+    expect(composite.params.scheduledAt.getTime()).toBe(
+      timestamp.getTime()
+    );
+    expect(Object.isFrozen(composite.params.scheduledAt)).toBe(true);
+    expect(composite.params.scheduledAt).not.toBe(timestamp);
+  });
+
   it('preserves visual properties from discovered actions', () => {
     const rawActions = [
       {

@@ -281,6 +281,14 @@ function cloneAndFreezeValue(value) {
   if (value === null || value === undefined) {
     return value;
   }
+  if (value instanceof Date) {
+    const clonedDate = new Date(value.getTime());
+    return Object.freeze(clonedDate);
+  }
+  if (value instanceof RegExp) {
+    const clonedRegExp = new RegExp(value.source, value.flags);
+    return Object.freeze(clonedRegExp);
+  }
   if (value instanceof Map) {
     const cloned = new Map();
     for (const [key, val] of value.entries()) {
