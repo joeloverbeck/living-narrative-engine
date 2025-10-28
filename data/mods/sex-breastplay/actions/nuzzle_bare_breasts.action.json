@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-breastplay:nuzzle_bare_breasts",
+  "name": "Nuzzle Bare Breasts",
+  "description": "Press your face tenderly against the target's uncovered chest.",
+  "targets": {
+    "primary": {
+      "scope": "sex-breastplay:actors_with_breasts_facing_each_other",
+      "placeholder": "target",
+      "description": "Partner whose bare breasts you're nuzzling"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "template": "nuzzle {target}'s breasts",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#7a1d58",
+    "textColor": "#fde6f2",
+    "hoverBackgroundColor": "#8d2465",
+    "hoverTextColor": "#fff2f9"
+  }
+}
