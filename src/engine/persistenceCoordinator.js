@@ -369,12 +369,22 @@ class PersistenceCoordinator {
     } = saveResultWithName;
 
     if (!resultWithoutError.success) {
-      const failureDetail =
+      const rawErrorMissing =
         rawError == null ||
-        (typeof rawError === 'string' && rawError.trim().length === 0)
-          ? resultWithoutError.message
-          : rawError;
-      const normalizedError = this.#formatSaveError(failureDetail);
+        (typeof rawError === 'string' && rawError.trim().length === 0);
+      const failureDetail = rawErrorMissing
+        ? resultWithoutError.message
+        : rawError;
+      const formattedError = this.#formatSaveError(failureDetail);
+      const userFriendlyMessage =
+        typeof resultWithoutError.userFriendlyError === 'string'
+          ? resultWithoutError.userFriendlyError.trim()
+          : '';
+      const normalizedError = !rawErrorMissing
+        ? formattedError
+        : userFriendlyMessage.length > 0
+          ? userFriendlyMessage
+          : formattedError;
       const failureResult = {
         ...resultWithoutError,
         error: normalizedError,
