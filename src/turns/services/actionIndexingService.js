@@ -403,14 +403,6 @@ export class ActionIndexingService {
       );
     }
 
-    // Idempotent shortcut (same turn)
-    if (discovered.length === 0 && this.#actorCache.has(actorId)) {
-      const cachedList = this.#actorCache.get(actorId);
-      if (cachedList) {
-        return cachedList.slice(); // Protect internal cache from external mutation
-      }
-    }
-
     /* ── filter invalid entries before deduplication ─────────────────── */
     const { valid: validDiscovered, invalid: invalidEntries } =
       partitionDiscoveredActions(discovered);
