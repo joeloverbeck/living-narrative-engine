@@ -2,8 +2,8 @@
 
 #app-layout-container {
   display: flex;
-  flex-grow: 1;
-  height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   background-color: var(--primary-bg-color);
 }
