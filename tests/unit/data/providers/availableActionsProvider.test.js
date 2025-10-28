@@ -238,6 +238,25 @@ describe('AvailableActionsProvider', () => {
       );
     });
 
+    test('gracefully handles a non-array actions payload from discovery', async () => {
+      actionDiscoveryService.getValidActions.mockResolvedValueOnce({
+        actions: null,
+        errors: [],
+      });
+
+      const result = await provider.get(mockActor, turnContext1, logger);
+
+      expect(result).toEqual([]);
+      expect(actionIndexer.index).toHaveBeenCalledWith([], mockActor.id);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'AvailableActionsProvider: Discovery service returned a non-array "actions" result. Treating as empty list.',
+        expect.objectContaining({
+          actorId: mockActor.id,
+          receivedType: 'null',
+        })
+      );
+    });
+
     test('AC2: should re-index actions and restart indices in a new turn', async () => {
       // Arrange: Mock services for two separate turns
       const discoveredActions = [

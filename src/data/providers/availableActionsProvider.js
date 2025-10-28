@@ -205,6 +205,21 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         trace: true,
       });
 
+      const normalisedActions = Array.isArray(discoveredActions)
+        ? discoveredActions
+        : [];
+
+      if (!Array.isArray(discoveredActions)) {
+        logger.warn(
+          'AvailableActionsProvider: Discovery service returned a non-array "actions" result. Treating as empty list.',
+          {
+            actorId: actor.id,
+            receivedType:
+              discoveredActions === null ? 'null' : typeof discoveredActions,
+          }
+        );
+      }
+
       this.#logDiscoveryTrace(actor.id, trace, logger);
 
       // --- Log any formatting errors that occurred ---
@@ -221,11 +236,11 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
 
       // Index the discovered actions to create the final, ordered list.
       const indexedActions = this.#actionIndexer.index(
-        discoveredActions,
+        normalisedActions,
         actor.id
       );
 
-      const requestedCount = discoveredActions.length;
+      const requestedCount = normalisedActions.length;
       const cappedCount = indexedActions.length;
 
       this.#handleOverflow(requestedCount, cappedCount, actor.id, logger);
