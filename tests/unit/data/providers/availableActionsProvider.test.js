@@ -192,6 +192,15 @@ describe('AvailableActionsProvider', () => {
 
       expect(passedContext.worldContext).toBe(worldContext);
     });
+
+    test('should default world context to an empty object when game state is missing', async () => {
+      await provider.get(mockActor, undefined, logger);
+
+      const passedContext =
+        actionDiscoveryService.getValidActions.mock.calls.at(-1)[1];
+
+      expect(passedContext.worldContext).toEqual({});
+    });
   });
 
   // --- Feature Tests based on Ticket ---
@@ -253,6 +262,24 @@ describe('AvailableActionsProvider', () => {
         expect.objectContaining({
           actorId: mockActor.id,
           receivedType: 'null',
+        })
+      );
+    });
+
+    test('logs the actual type when discovery returns a non-array value', async () => {
+      actionDiscoveryService.getValidActions.mockResolvedValueOnce({
+        actions: 'invalid-actions',
+        errors: [],
+      });
+
+      await provider.get(mockActor, turnContext1, logger);
+
+      expect(actionIndexer.index).toHaveBeenCalledWith([], mockActor.id);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'AvailableActionsProvider: Discovery service returned a non-array "actions" result. Treating as empty list.',
+        expect.objectContaining({
+          actorId: mockActor.id,
+          receivedType: 'string',
         })
       );
     });
@@ -497,6 +524,41 @@ describe('AvailableActionsProvider', () => {
       const [eventName, listener] = fallbackBus.unsubscribe.mock.calls[0];
       expect(typeof eventName).toBe('string');
       expect(typeof listener).toBe('function');
+    });
+
+    test('logs a warning when unsubscribe throws during destroy', () => {
+      const unsubscribeError = new Error('unsubscribe failed');
+      const throwingUnsubscribe = jest.fn(() => {
+        throw unsubscribeError;
+      });
+
+      const secondaryUnsubscribe = jest.fn();
+      const throwingBus = mockEventBus();
+      throwingBus.subscribe
+        .mockReturnValueOnce(throwingUnsubscribe)
+        .mockReturnValueOnce(secondaryUnsubscribe);
+
+      const throwingLogger = mockLogger();
+
+      provider = new AvailableActionsProvider({
+        actionDiscoveryService,
+        actionIndexingService: actionIndexer,
+        entityManager,
+        eventBus: throwingBus,
+        logger: throwingLogger,
+        serviceSetup,
+      });
+
+      provider.destroy();
+
+      expect(throwingUnsubscribe).toHaveBeenCalledTimes(1);
+      expect(secondaryUnsubscribe).toHaveBeenCalledTimes(1);
+      expect(throwingLogger.warn).toHaveBeenCalledWith(
+        'AvailableActionsProvider: Failed to unsubscribe from event during destroy()',
+        expect.objectContaining({
+          error: unsubscribeError.message,
+        })
+      );
     });
   });
 });

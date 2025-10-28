@@ -140,6 +140,24 @@ describe('AvailableActionsProvider additional branches', () => {
     );
   });
 
+  it('uses "N/A" when formatting error targetId is missing', async () => {
+    const errors = [{ actionId: 'b', error: 'missing target' }];
+    actionDiscoveryService.getValidActions.mockResolvedValue({
+      actions: [],
+      errors,
+    });
+    actionIndexer.index.mockReturnValue([]);
+
+    await provider.get(actor, { game: {} }, logger);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      `Encountered ${errors.length} formatting error(s) during action discovery for actor ${actor.id}. These actions will not be available.`
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      `  - Action '${errors[0].actionId}' (Target: N/A): ${errors[0].error}`
+    );
+  });
+
   it('does not warn when below overflow threshold', async () => {
     const actions = Array.from(
       { length: MAX_AVAILABLE_ACTIONS_PER_TURN - 1 },
@@ -211,6 +229,7 @@ describe('AvailableActionsProvider additional branches', () => {
     actionIndexer.index.mockClear();
 
     componentChangeHandler({ payload: {} });
+    componentChangeHandler({});
 
     await provider.get(actor, turnContext, logger);
 
