@@ -57,6 +57,91 @@ const JSON_LOGIC_OPERATOR_HINTS = Object.freeze([
   'missing_some',
 ]);
 
+const JSON_LOGIC_OPERATORS_EXPECT_ARRAY = new Set([
+  'if',
+  'and',
+  'or',
+  'cat',
+  'map',
+  'filter',
+  'reduce',
+  'all',
+  'none',
+  'some',
+  'merge',
+  'in',
+  '==',
+  '!=',
+  '>',
+  '<',
+  '>=',
+  '<=',
+  '+',
+  '-',
+  '*',
+  '/',
+  '%',
+  'missing',
+  'missing_some',
+]);
+
+/**
+ * Determines whether an object is a JSON Logic expression with a valid operand shape.
+ *
+ * @param {*} candidate - Value to inspect.
+ * @returns {boolean} True when the value should be treated as JSON Logic.
+ */
+function hasValidJsonLogicShape(candidate) {
+  if (
+    !candidate ||
+    typeof candidate !== 'object' ||
+    Array.isArray(candidate)
+  ) {
+    return false;
+  }
+
+  const keys = Object.keys(candidate);
+  if (keys.length !== 1) {
+    return false;
+  }
+
+  const operator = keys[0];
+  const operand = candidate[operator];
+
+  if (JSON_LOGIC_OPERATORS_EXPECT_ARRAY.has(operator)) {
+    if (!Array.isArray(operand)) {
+      return false;
+    }
+    return true;
+  }
+
+  if (operator === 'var') {
+    if (
+      !(
+        typeof operand === 'string' ||
+        (Array.isArray(operand) && operand.length > 0)
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  if (JSON_LOGIC_OPERATOR_HINTS.includes(operator)) {
+    return true;
+  }
+
+  if (typeof jsonLogic.is_logic === 'function' && jsonLogic.is_logic(candidate)) {
+    return !(
+      operand &&
+      typeof operand === 'object' &&
+      !Array.isArray(operand)
+    );
+  }
+
+  return false;
+}
+
 /**
  * Determines if the current traversal path should skip JSON Logic evaluation.
  *
@@ -138,10 +223,7 @@ function evaluateJsonLogicRecursively(
     // Check if this looks like a JSON Logic expression
     // JSON Logic expressions are objects with operator keys like 'var', 'cat', 'if', etc.
     // We detect this by checking if it has known JSON Logic operators or starts with typical operators
-    const isLikelyJsonLogic =
-      (typeof jsonLogic.is_logic === 'function' &&
-        jsonLogic.is_logic(value)) ||
-      JSON_LOGIC_OPERATOR_HINTS.some((operator) => keys.includes(operator));
+    const isLikelyJsonLogic = hasValidJsonLogicShape(value);
 
     if (isLikelyJsonLogic) {
       try {
