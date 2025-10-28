@@ -486,5 +486,66 @@ describeTurnManagerSuite(
       await bed.turnManager.stop();
       await drainTimersAndMicrotasks(2);
     });
+
+    test(
+      'defaults missing entityId to current actor when handling turn end',
+      async () => {
+        const bed = getBed();
+        const stopSpy = bed.spyOnStopNoOp();
+
+        const actor = createMockEntity('actor-missing-id', {
+          isActor: true,
+          isPlayer: false,
+        });
+        bed.setActiveEntities(actor);
+
+        bed.mocks.turnOrderService.isEmpty
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValue(true);
+        bed.mocks.turnOrderService.getNextEntity
+          .mockResolvedValueOnce(actor)
+          .mockResolvedValue(null);
+        bed.mocks.turnOrderService.startNewRound.mockResolvedValue();
+
+        const handler = bed.setupHandlerForActor(actor);
+        handler.startTurn.mockResolvedValue();
+
+        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+        const advanceSpy = jest
+          .spyOn(bed.turnManager, 'advanceTurn')
+          .mockImplementationOnce(realAdvance)
+          .mockImplementationOnce(realAdvance)
+          .mockResolvedValue(undefined);
+
+        await bed.turnManager.start();
+        await drainTimersAndMicrotasks(4);
+
+        expect(bed.turnManager.getCurrentActor()?.id).toBe(actor.id);
+
+        bed.mocks.logger.warn.mockClear();
+        bed.mocks.dispatcher.dispatch.mockClear();
+
+        bed.trigger(TURN_ENDED_ID, { success: true });
+        await drainTimersAndMicrotasks(6);
+
+        const processingEndedCall = bed.mocks.dispatcher.dispatch.mock.calls.find(
+          ([eventId]) => eventId === TURN_PROCESSING_ENDED
+        );
+
+        expect(processingEndedCall).toBeDefined();
+        expect(processingEndedCall[1]).toMatchObject({ entityId: actor.id });
+        expect(
+          bed.mocks.logger.warn.mock.calls.some(([message]) =>
+            message.includes('without an entityId')
+          )
+        ).toBe(true);
+        expect(stopSpy).not.toHaveBeenCalled();
+
+        advanceSpy.mockRestore();
+        await bed.turnManager.stop();
+        await drainTimersAndMicrotasks(2);
+      }
+    );
   }
 );

@@ -568,8 +568,24 @@ class TurnManager extends ITurnManager {
       return;
     }
 
-    const endedActorId = payload.entityId;
     const successStatus = payload.success;
+    let endedActorId = payload.entityId;
+
+    if (!endedActorId) {
+      if (!this.#currentActor) {
+        this.#logger.warn(
+          `Received '${TURN_ENDED_ID}' event without an entityId and no active actor. Ignoring.`,
+          event
+        );
+        return;
+      }
+
+      endedActorId = this.#currentActor.id;
+      this.#logger.warn(
+        `Received '${TURN_ENDED_ID}' event without an entityId. Assuming current actor ${endedActorId} for compatibility.`,
+        event
+      );
+    }
 
     this.#logger.debug(
       `Received '${TURN_ENDED_ID}' event for entity ${endedActorId}. Success: ${successStatus ?? 'N/A'}. Current actor: ${this.#currentActor?.id || 'None'}`
