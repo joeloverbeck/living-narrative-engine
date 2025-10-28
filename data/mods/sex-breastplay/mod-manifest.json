@@ -31,16 +31,19 @@
   "content": {
     "actions": [
       "fondle_breasts.action.json",
+      "nuzzle_bare_breasts.action.json",
       "fondle_breasts_over_clothes.action.json",
       "press_against_back.action.json"
     ],
     "conditions": [
       "event-is-action-fondle-breasts-over-clothes.condition.json",
       "event-is-action-fondle-breasts.condition.json",
+      "event-is-action-nuzzle-bare-breasts.condition.json",
       "event-is-action-press-against-back.condition.json"
     ],
     "rules": [
       "handle_fondle_breasts.rule.json",
+      "handle_nuzzle_bare_breasts.rule.json",
       "handle_fondle_breasts_over_clothes.rule.json",
       "handle_press_against_back.rule.json"
     ],

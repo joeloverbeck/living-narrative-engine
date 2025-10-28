@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-breastplay:event-is-action-nuzzle-bare-breasts",
+  "description": "Checks if the triggering event is for the 'sex-breastplay:nuzzle_bare_breasts' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-breastplay:nuzzle_bare_breasts"
+    ]
+  }
+}
