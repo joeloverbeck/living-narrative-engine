@@ -188,7 +188,7 @@ class SocketGenerator {
   /**
    * Resolves orientation based on orientation scheme
    *
-   * @param {string} scheme - Orientation scheme (bilateral, radial, indexed, custom)
+   * @param {string} scheme - Orientation scheme (bilateral, quadrupedal, radial, indexed, custom)
    * @param {number} index - Current index (1-based)
    * @param {number} totalCount - Total count of items in set
    * @param {Array<string>} [positions] - Explicit positions for custom/radial schemes
@@ -206,6 +206,14 @@ class SocketGenerator {
           index,
           totalCount,
           effectiveArrangement
+        );
+
+      case 'quadrupedal':
+        // Quadrupedal is a specific bilateral arrangement
+        return this.#resolveBilateralOrientation(
+          index,
+          totalCount,
+          'quadrupedal'
         );
 
       case 'radial':

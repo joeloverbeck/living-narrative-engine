@@ -6,6 +6,12 @@ Anatomy recipes define what body parts a creature should have by matching bluepr
 
 **Schema Location**: `data/schemas/anatomy.recipe.schema.json`
 
+**Related Guides**:
+- [Property-Based Filtering Examples](./property-based-filtering-examples.md) - Comprehensive `matchesAll` usage examples
+- [V1 to V2 Pattern Migration](./v1-to-v2-pattern-migration.md) - Upgrade guide from explicit patterns
+- [Pattern Matching Best Practices](./pattern-matching-best-practices.md) - Decision trees and optimization
+- [Common Non-Human Patterns](./common-non-human-patterns.md) - Battle-tested creature patterns
+
 ## Pattern Types
 
 The recipe system supports two pattern definition formats:

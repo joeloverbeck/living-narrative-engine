@@ -6,6 +6,11 @@ Body structure templates define the topology of a creature's body using a parame
 
 **Schema Location**: `data/schemas/anatomy.structure-template.schema.json`
 
+**Related Guides**:
+- [Blueprint V2](./blueprints-v2.md) - How to use structure templates in blueprints
+- [Recipe Patterns](./recipe-patterns.md) - Pattern matching for generated slots
+- [Common Non-Human Patterns](./common-non-human-patterns.md) - Complete examples with structure templates
+
 Structure templates are the foundation for creating Blueprint V2 anatomy definitions for non-human creatures. They provide:
 
 - **Declarative topology**: Define body structure without manually creating every socket

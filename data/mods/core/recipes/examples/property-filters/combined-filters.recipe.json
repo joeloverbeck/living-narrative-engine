@@ -1,0 +1,65 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "core:example_combined_filters",
+  "blueprintId": "core:example_complex_blueprint",
+  "slots": {},
+  "patterns": [
+    {
+      "matchesAll": {
+        "slotType": "leg",
+        "orientation": "*_front",
+        "socketId": "quadruped_*"
+      },
+      "partType": "specialized_front_leg",
+      "tags": ["anatomy:part", "anatomy:clawed"],
+      "properties": {
+        "anatomy:part": {
+          "position": "front",
+          "specialization": "grasping"
+        },
+        "anatomy:clawed": {
+          "clawCount": 4,
+          "clawSharpness": "razor"
+        }
+      }
+    },
+    {
+      "matchesAll": {
+        "slotType": "leg",
+        "orientation": "*_rear"
+      },
+      "partType": "rear_leg",
+      "tags": ["anatomy:part", "anatomy:hooved"],
+      "properties": {
+        "anatomy:part": {
+          "position": "rear",
+          "specialization": "running"
+        },
+        "anatomy:hooved": {
+          "hoofType": "split",
+          "hoofSize": "large"
+        }
+      }
+    },
+    {
+      "matchesAll": {
+        "slotType": "wing",
+        "socketId": "flight_socket_*"
+      },
+      "partType": "flight_wing",
+      "tags": ["anatomy:part", "anatomy:feathered"],
+      "properties": {
+        "anatomy:feathered": {
+          "featherType": "flight",
+          "featherColor": "brown",
+          "featherCount": 200
+        }
+      }
+    }
+  ],
+  "bodyDescriptors": {
+    "build": "athletic",
+    "skinColor": "tan",
+    "height": "large"
+  }
+}

@@ -36,9 +36,10 @@ import { createRuleTestEnvironment } from '../../../../common/engine/systemLogic
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
+ * @param {object} gameDataRepository - Game data repository instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger) {
+function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
     dispatch: jest.fn((eventType, payload) => {
       eventBus.dispatch(eventType, payload);
@@ -77,6 +78,7 @@ function createHandlers(entityManager, eventBus, logger) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+      gameDataRepository,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
   };
@@ -113,6 +115,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
       getAllSystemRules: () => [
         { ...placeYourselfBehindRule, actions: expanded },
       ],
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
 
     testEnv = createRuleTestEnvironment({

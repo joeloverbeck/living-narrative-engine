@@ -419,7 +419,7 @@ describe('PersistenceCoordinator integration', () => {
 
     expect(result).toEqual({
       success: false,
-      error: 'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.',
+      error: 'GamePersistenceService is not available. Cannot load game.',
       data: null,
     });
     expect(environment.engineState.isInitialized).toBe(false);

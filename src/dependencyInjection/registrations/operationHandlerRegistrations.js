@@ -127,6 +127,7 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          gameDataRepository: c.resolve(tokens.IGameDataRepository),
         }),
     ],
     [

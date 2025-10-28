@@ -1,0 +1,63 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "core:example_centaur_hybrid",
+  "blueprintId": "core:example_centaur_blueprint",
+  "slots": {},
+  "patterns": [
+    {
+      "matchesAll": {
+        "slotType": "limb",
+        "orientation": "arm_*"
+      },
+      "partType": "human_arm",
+      "tags": ["anatomy:part", "anatomy:dexterous"],
+      "properties": {
+        "anatomy:dexterous": {
+          "fingerCount": 5,
+          "thumbOpposable": true
+        }
+      }
+    },
+    {
+      "matchesAll": {
+        "slotType": "limb",
+        "orientation": "leg_*"
+      },
+      "partType": "horse_leg",
+      "tags": ["anatomy:part", "anatomy:hooved"],
+      "properties": {
+        "anatomy:hooved": {
+          "hoofType": "solid",
+          "hoofColor": "black"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:head",
+      "partType": "human_head",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "anatomy:part": {
+          "hairColor": "brown",
+          "eyeColor": "hazel"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:tail",
+      "partType": "horse_tail",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "anatomy:part": {
+          "hairColor": "brown",
+          "length": "long"
+        }
+      }
+    }
+  ],
+  "bodyDescriptors": {
+    "build": "athletic",
+    "skinColor": "tan",
+    "height": "tall"
+  }
+}

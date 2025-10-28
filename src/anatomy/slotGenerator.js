@@ -148,16 +148,28 @@ class SlotGenerator {
     const { type, count, socketPattern, optional = false, arrangement } = limbSet;
 
     for (let index = 1; index <= count; index++) {
+      // Generate slot key (also determines orientation)
       const slotKey = this.#generateSlotKey(
         socketPattern,
         index,
         count,
         arrangement
       );
+
+      // Calculate orientation for this slot (same logic as in #generateSlotKey)
+      const orientation = this.#resolveOrientation(
+        socketPattern.orientationScheme,
+        index,
+        count,
+        socketPattern.positions,
+        arrangement
+      );
+
       slots[slotKey] = this.#createSlotDefinition(
         type,
         slotKey,
-        optional
+        optional,
+        orientation
       );
     }
 
@@ -180,11 +192,22 @@ class SlotGenerator {
     const { type, count, socketPattern, optional = false } = appendage;
 
     for (let index = 1; index <= count; index++) {
+      // Generate slot key (also determines orientation)
       const slotKey = this.#generateSlotKey(socketPattern, index, count);
+
+      // Calculate orientation for this slot (same logic as in #generateSlotKey)
+      const orientation = this.#resolveOrientation(
+        socketPattern.orientationScheme,
+        index,
+        count,
+        socketPattern.positions
+      );
+
       slots[slotKey] = this.#createSlotDefinition(
         type,
         slotKey,
-        optional
+        optional,
+        orientation
       );
     }
 
@@ -197,11 +220,12 @@ class SlotGenerator {
    * @param {string} partType - The type of part required for this slot
    * @param {string} slotKey - The slot key (must match socket ID)
    * @param {boolean} optional - Whether this slot is optional
-   * @returns {object} Slot definition with socket, requirements, and optional flag
+   * @param {string|null} [orientation] - The orientation of this slot (for pattern matching), defaults to null
+   * @returns {object} Slot definition with socket, requirements, optional flag, and orientation
    * @private
    */
-  #createSlotDefinition(partType, slotKey, optional) {
-    return {
+  #createSlotDefinition(partType, slotKey, optional, orientation = null) {
+    const slotDef = {
       socket: slotKey, // Slot key must match socket ID from SocketGenerator
       requirements: {
         partType,
@@ -209,6 +233,13 @@ class SlotGenerator {
       },
       optional,
     };
+
+    // Include orientation if provided (for pattern matching)
+    if (orientation !== null) {
+      slotDef.orientation = orientation;
+    }
+
+    return slotDef;
   }
 
   /**
@@ -260,7 +291,7 @@ class SlotGenerator {
    * Resolves orientation based on orientation scheme.
    * MUST match SocketGenerator's orientation resolution logic exactly.
    *
-   * @param {string} scheme - Orientation scheme (bilateral, radial, indexed, custom)
+   * @param {string} scheme - Orientation scheme (bilateral, quadrupedal, radial, indexed, custom)
    * @param {number} index - Current index (1-based)
    * @param {number} totalCount - Total count of items in set
    * @param {Array<string>} [positions] - Explicit positions for custom/radial schemes
@@ -281,6 +312,14 @@ class SlotGenerator {
           index,
           totalCount,
           arrangement
+        );
+
+      case 'quadrupedal':
+        // Quadrupedal is a specific bilateral arrangement
+        return this.#resolveBilateralOrientation(
+          index,
+          totalCount,
+          'quadrupedal'
         );
 
       case 'radial':

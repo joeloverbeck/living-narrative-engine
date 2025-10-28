@@ -127,6 +127,12 @@ export class BodyDescriptionComposer {
     }
 
     // THEN: Process parts in configured order (existing logic continues)
+    this.#logger.info('DIAGNOSTIC: Starting part processing loop', {
+      descriptionOrderLength: descriptionOrder.length,
+      descriptionOrder: descriptionOrder,
+      hasActivityInOrder: descriptionOrder.includes('activity'),
+    });
+
     for (const partType of descriptionOrder) {
       if (processedTypes.has(partType)) {
         continue;
@@ -155,12 +161,33 @@ export class BodyDescriptionComposer {
         continue;
       }
 
+      // DIAGNOSTIC: Check if we reach activity partType
+      if (partType === 'activity') {
+        this.#logger.info('DIAGNOSTIC: Reached activity partType', {
+          partType,
+          hasActivityService: !!this.activityDescriptionService,
+          activityServiceType: typeof this.activityDescriptionService,
+        });
+      }
+
       // Handle activity descriptions
       if (partType === 'activity' && this.activityDescriptionService) {
+        this.#logger.info('Activity description: calling service with entity', {
+          entityId: bodyEntity.id,
+          componentTypeIds: bodyEntity.componentTypeIds || 'not available',
+        });
+
         const activityDescription =
           await this.activityDescriptionService.generateActivityDescription(
             bodyEntity.id
           );
+
+        this.#logger.info('Activity description: service returned', {
+          entityId: bodyEntity.id,
+          hasDescription: !!activityDescription,
+          descriptionLength: activityDescription?.length || 0,
+        });
+
         if (activityDescription) {
           lines.push(activityDescription);
         }

@@ -129,8 +129,9 @@ function setupStraddlingTurnBackScenario() {
  * @param entityManager
  * @param eventBus
  * @param logger
+ * @param gameDataRepository
  */
-function createHandlers(entityManager, eventBus, logger) {
+function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
     dispatch: jest.fn((eventType, payload) => {
       eventBus.dispatch(eventType, payload);
@@ -165,6 +166,7 @@ function createHandlers(entityManager, eventBus, logger) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+      gameDataRepository,
     }),
   };
 }
@@ -187,6 +189,7 @@ describe('positioning:turn_your_back action integration', () => {
           ? eventIsActionTurnYourBack
           : undefined
       ),
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
 
     testEnv = createRuleTestEnvironment({

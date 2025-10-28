@@ -77,9 +77,10 @@ const getUpAction = {
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
+ * @param {object} gameDataRepository - Game data repository instance
  * @returns {object} Handler configuration object
  */
-function createHandlers(entityManager, eventBus, logger) {
+function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
     dispatch: jest.fn((eventType, payload) => {
       eventBus.dispatch(eventType, payload);
@@ -121,6 +122,7 @@ function createHandlers(entityManager, eventBus, logger) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+      gameDataRepository,
     }),
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,

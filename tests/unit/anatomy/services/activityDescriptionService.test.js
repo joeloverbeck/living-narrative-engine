@@ -1571,6 +1571,91 @@ describe('ActivityDescriptionService', () => {
       );
     });
 
+    it('should treat undefined shouldDescribeInActivity as true (schema default)', async () => {
+      // This test verifies the fix for the bug where undefined shouldDescribeInActivity
+      // was treated as falsy, preventing activities from being collected
+      const mockEntity = {
+        id: 'jon',
+        componentTypeIds: ['positioning:hugging'],
+        getComponentData: jest.fn((id) => {
+          if (id === 'positioning:hugging') {
+            return {
+              embraced_entity_id: 'alicia',
+              activityMetadata: {
+                // shouldDescribeInActivity is undefined (omitted) - should default to true
+                template: '{actor} is hugging {target}',
+                targetRole: 'embraced_entity_id',
+                priority: 66,
+              },
+            };
+          }
+          return null;
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'jon') return mockEntity;
+        if (id === 'alicia') {
+          return {
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Alicia Western' };
+              }
+              return undefined;
+            }),
+          };
+        }
+        return {
+          id,
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'core:name') {
+              return { text: id };
+            }
+            return undefined;
+          }),
+        };
+      });
+
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+      const result = await service.generateActivityDescription('jon');
+
+      // Verify activity was collected despite shouldDescribeInActivity being undefined
+      expect(result).toBeTruthy();
+      expect(result).toContain('hugging');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        'positioning:hugging'
+      );
+    });
+
+    it('should skip activities when shouldDescribeInActivity is explicitly false', async () => {
+      const mockEntity = {
+        id: 'jon',
+        componentTypeIds: ['hidden:activity'],
+        getComponentData: jest.fn((id) => {
+          if (id === 'hidden:activity') {
+            return {
+              entityId: 'someone',
+              activityMetadata: {
+                shouldDescribeInActivity: false, // Explicitly hidden
+                template: '{actor} is doing something',
+              },
+            };
+          }
+          return null;
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+      const result = await service.generateActivityDescription('jon');
+
+      // Should return empty string because activity is explicitly hidden
+      expect(result).toBe('');
+    });
+
     it('should resolve targetEntityId from custom targetRole', async () => {
       const mockEntity = {
         id: 'jon',

@@ -82,6 +82,7 @@ describe('SlotGenerator', () => {
           components: ['anatomy:part'],
         },
         optional: false,
+        orientation: '1',
       });
       expect(slots['leg_2']).toEqual({
         socket: 'leg_2',
@@ -90,6 +91,7 @@ describe('SlotGenerator', () => {
           components: ['anatomy:part'],
         },
         optional: false,
+        orientation: '2',
       });
     });
 
@@ -122,6 +124,7 @@ describe('SlotGenerator', () => {
           components: ['anatomy:part'],
         },
         optional: false,
+        orientation: '1',
       });
     });
 

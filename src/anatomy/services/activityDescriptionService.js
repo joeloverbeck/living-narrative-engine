@@ -236,6 +236,16 @@ class ActivityDescriptionService {
         return '';
       }
 
+      this.#logger.info('ActivityDescriptionService: received entity', {
+        entityId,
+        entityExists: true,
+        componentTypeIds: entity.componentTypeIds || 'not available',
+        hasComponentTypeIds: Array.isArray(entity.componentTypeIds),
+        componentCount: Array.isArray(entity.componentTypeIds)
+          ? entity.componentTypeIds.length
+          : 0,
+      });
+
       const activities = this.#collectActivityMetadata(entityId, entity);
 
       if (activities.length === 0) {
@@ -411,6 +421,12 @@ class ActivityDescriptionService {
       ? entity.componentTypeIds
       : [];
 
+    this.#logger.info('Scanning components for inline metadata', {
+      entityId: entity?.id,
+      componentCount: componentIds.length,
+      componentIds: componentIds,
+    });
+
     for (const componentId of componentIds) {
       // Skip dedicated metadata components (already processed)
       if (componentId === 'activity:description_metadata') {
@@ -451,7 +467,16 @@ class ActivityDescriptionService {
         continue;
       }
 
-      if (activityMetadata?.shouldDescribeInActivity) {
+      // Only process components that have activityMetadata and aren't explicitly disabled
+      if (activityMetadata && activityMetadata?.shouldDescribeInActivity !== false) {
+        this.#logger.info('Found activity metadata in component', {
+          componentId,
+          hasTemplate: !!activityMetadata?.template,
+          hasPriority: !!activityMetadata?.priority,
+          hasTargetRole: !!activityMetadata?.targetRole,
+          shouldDescribe: activityMetadata?.shouldDescribeInActivity,
+        });
+
         try {
           const activity = this.#parseInlineMetadata(
             componentId,
@@ -459,7 +484,15 @@ class ActivityDescriptionService {
             activityMetadata
           );
           if (activity) {
+            this.#logger.info('Successfully parsed inline metadata', {
+              componentId,
+              activityPriority: activity.priority,
+            });
             activities.push(activity);
+          } else {
+            this.#logger.info('Inline metadata parsing returned null', {
+              componentId,
+            });
           }
         } catch (error) {
           this.#logger.error(
@@ -469,6 +502,12 @@ class ActivityDescriptionService {
         }
       }
     }
+
+    this.#logger.info('Finished scanning inline metadata', {
+      entityId: entity?.id,
+      activitiesFound: activities.length,
+      activitySources: activities.map((a) => a.source),
+    });
 
     return activities;
   }

@@ -493,11 +493,20 @@ describe('Recipe Pattern Resolution Integration', () => {
             'anatomy:part': { subType: 'torso' },
           },
         },
-        'test:leg_segment': {
-          id: 'test:leg_segment',
+        'test:front_leg_segment': {
+          id: 'test:front_leg_segment',
           components: {
-            'anatomy:body_part': { partType: 'leg_segment', name: 'Leg Segment' },
+            'anatomy:body_part': { partType: 'leg_segment', name: 'Front Leg Segment' },
             'anatomy:part': { subType: 'leg_segment' },
+            'test:front_leg': {},
+          },
+        },
+        'test:back_leg_segment': {
+          id: 'test:back_leg_segment',
+          components: {
+            'anatomy:body_part': { partType: 'leg_segment', name: 'Back Leg Segment' },
+            'anatomy:part': { subType: 'leg_segment' },
+            'test:back_leg': {},
           },
         },
       });

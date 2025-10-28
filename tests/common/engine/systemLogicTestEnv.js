@@ -125,6 +125,7 @@ export function createBaseRuleEnvironment({
           getMacroDefinition: jest.fn().mockImplementation((macroId) => {
             return macros[macroId] || undefined;
           }),
+          getComponentDefinition: jest.fn().mockReturnValue(null),
         });
 
   const bus =
@@ -158,7 +159,7 @@ export function createBaseRuleEnvironment({
   function initializeEnv(entityList) {
     entityManager = new SimpleEntityManager(entityList);
     operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(entityManager, bus, testLogger);
+    const handlers = createHandlers(entityManager, bus, testLogger, testDataRegistry);
     for (const [type, handler] of Object.entries(handlers)) {
       if (!handler || typeof handler.execute !== 'function') {
         throw new Error(
