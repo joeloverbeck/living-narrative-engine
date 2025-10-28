@@ -65,6 +65,22 @@ export default class RoundManager {
       strategy = strategy.trim().toLowerCase();
     }
 
+    const hasInitiativeCandidate = this.#hasCandidateInitiativeData(
+      initiativeData
+    );
+    if (strategy !== 'initiative' && strategy !== 'round-robin') {
+      const fallbackStrategy = hasInitiativeCandidate
+        ? 'initiative'
+        : 'round-robin';
+      const reasonSuffix = hasInitiativeCandidate
+        ? ' because initiative data was provided.'
+        : '.';
+      this.#logger.warn(
+        `RoundManager.startRound(): Unknown strategy '${strategy}'. Falling back to '${fallbackStrategy}'${reasonSuffix}`
+      );
+      strategy = fallbackStrategy;
+    }
+
     if (strategy === 'initiative') {
       initiativeData = this.#normaliseInitiativeData(initiativeData);
       if (!(initiativeData instanceof Map) || initiativeData.size === 0) {
@@ -131,6 +147,31 @@ export default class RoundManager {
   resetFlags() {
     this.#inProgress = false;
     this.#hadSuccess = false;
+  }
+
+  /**
+   * @description Determines whether initiative data input contains any candidate entries.
+   * @param {unknown} rawInitiativeData - Initiative data provided by callers.
+   * @returns {boolean} True when the input contains at least one entry candidate.
+   */
+  #hasCandidateInitiativeData(rawInitiativeData) {
+    if (rawInitiativeData instanceof Map) {
+      return rawInitiativeData.size > 0;
+    }
+
+    if (Array.isArray(rawInitiativeData)) {
+      return rawInitiativeData.length > 0;
+    }
+
+    if (
+      rawInitiativeData &&
+      typeof rawInitiativeData === 'object' &&
+      !Array.isArray(rawInitiativeData)
+    ) {
+      return Object.keys(rawInitiativeData).length > 0;
+    }
+
+    return false;
   }
 
   /**

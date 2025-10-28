@@ -262,6 +262,46 @@ describe('RoundManager', () => {
       expect(normalisedInitiative.get(mockActor.id)).toBe(34);
     });
 
+    it('should fall back to round-robin when unknown strategy provided without initiative data', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      await roundManager.startRound('priority');
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "RoundManager.startRound(): Unknown strategy 'priority'. Falling back to 'round-robin'."
+      );
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
+        [mockActor],
+        'round-robin',
+        undefined
+      );
+    });
+
+    it('should fall back to initiative when unknown strategy provided with initiative data', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeData = new Map([[mockActor.id, 3]]);
+
+      await roundManager.startRound('priority', initiativeData);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "RoundManager.startRound(): Unknown strategy 'priority'. Falling back to 'initiative' because initiative data was provided."
+      );
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledTimes(1);
+      const [, strategy, normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(strategy).toBe('initiative');
+      expect(normalisedInitiative).toBeInstanceOf(Map);
+      expect(normalisedInitiative.get(mockActor.id)).toBe(3);
+    });
+
     it('should drop invalid initiative scores after coercion attempts', async () => {
       const mockActor = {
         id: 'actor1',
