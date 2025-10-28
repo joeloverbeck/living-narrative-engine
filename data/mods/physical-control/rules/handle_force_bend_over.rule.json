@@ -1,0 +1,140 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_force_bend_over",
+  "comment": "Handles the 'physical-control:force_bend_over' action. Forces the primary target to bend over the selected surface, updates facing information, regenerates descriptions, and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "physical-control:event-is-action-force-bend-over"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "surfaceName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "positioning:facing_away",
+        "result_variable": "primaryFacingState",
+        "missing_value": null
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "positioning:bending_over",
+        "value": {
+          "surface_id": "{event.payload.secondaryId}"
+        }
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Ensure the primary target is facing away from the acting actor",
+      "parameters": {
+        "condition": { "var": "context.primaryFacingState" },
+        "then_actions": [
+          {
+            "type": "MODIFY_ARRAY_FIELD",
+            "parameters": {
+              "entity_ref": "primary",
+              "component_type": "positioning:facing_away",
+              "field": "facing_away_from",
+              "mode": "push_unique",
+              "value": "{event.payload.actorId}"
+            }
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "primary",
+              "component_type": "positioning:facing_away",
+              "value": {
+                "facing_away_from": ["{event.payload.actorId}"]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": {
+        "entity_ref": "primary"
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": {
+        "entity_ref": "actor"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} forcefully bends {context.primaryName} over {context.surfaceName}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionEventMessage",
+        "value": "{context.actorName} forcefully bends {context.primaryName} over {context.surfaceName}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

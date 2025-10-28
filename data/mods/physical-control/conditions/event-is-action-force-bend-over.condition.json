@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "physical-control:event-is-action-force-bend-over",
+  "description": "True when the event is an attempt to execute the force_bend_over action",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "physical-control:force_bend_over"
+    ]
+  }
+}
