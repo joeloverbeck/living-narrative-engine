@@ -572,7 +572,12 @@ class TurnManager extends ITurnManager {
       return;
     }
 
-    if (successStatus === true) {
+    const interpretedSuccess = this.#interpretTurnSuccess(
+      successStatus,
+      endedActorId
+    );
+
+    if (interpretedSuccess) {
       this.#logger.debug(
         `Marking round as having had a successful turn (actor: ${endedActorId}).`
       );
@@ -722,6 +727,32 @@ class TurnManager extends ITurnManager {
         );
       }
     }
+  }
+
+  /**
+   * Normalises the {@link TURN_ENDED_ID} payload's success flag for backward compatibility.
+   *
+   * @param {unknown} rawSuccess - The raw success value from the event payload.
+   * @param {string} actorId - The actor id associated with the event for logging context.
+   * @returns {boolean} `true` when the turn should be treated as successful.
+   */
+  #interpretTurnSuccess(rawSuccess, actorId) {
+    if (rawSuccess === true || rawSuccess === false) {
+      return rawSuccess;
+    }
+
+    if (rawSuccess === undefined) {
+      this.#logger.warn(
+        `Received '${TURN_ENDED_ID}' event for ${actorId} without a success flag. Assuming success=true for compatibility with legacy emitters.`
+      );
+      return true;
+    }
+
+    this.#logger.warn(
+      `Received '${TURN_ENDED_ID}' event for ${actorId} with a non-boolean success flag (${rawSuccess}). Coercing value to boolean for compatibility.`,
+      { receivedType: typeof rawSuccess }
+    );
+    return Boolean(rawSuccess);
   }
 
   /**
