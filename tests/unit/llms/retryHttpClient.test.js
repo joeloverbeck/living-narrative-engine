@@ -481,6 +481,7 @@ describe('RetryHttpClient', () => {
         expect.any(Object),
         logger,
         undefined,
+        undefined,
         { includeResponse: true }
       );
     });
@@ -504,6 +505,7 @@ describe('RetryHttpClient', () => {
         10000,
         expect.any(Object),
         logger,
+        undefined,
         undefined,
         { includeResponse: true }
       );
