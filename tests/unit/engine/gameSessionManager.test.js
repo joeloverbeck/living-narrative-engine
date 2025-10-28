@@ -141,6 +141,30 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should attach reset failures to stop errors when both operations fail', async () => {
+      engineState.setStarted('ChainedWorld');
+      const stopError = new Error('Stop failure');
+      const resetError = new Error('Reset failure');
+      stopFn.mockRejectedValue(stopError);
+      resetCoreGameStateFn.mockImplementation(() => {
+        throw resetError;
+      });
+
+      await expect(
+        gameSessionManager.prepareForNewGameSession('ChainedWorld')
+      ).rejects.toBe(stopError);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'GameSessionManager._prepareEngineForOperation: stopFn threw while stopping current session.',
+        stopError
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'GameSessionManager._prepareEngineForOperation: resetCoreGameStateFn threw while clearing core state.',
+        resetError
+      );
+      expect(stopError.cause).toBe(resetError);
+    });
+
     it('should log and rethrow when resetCoreGameStateFn throws without prior failures', async () => {
       const resetErrorMessage = 'Reset failure';
       resetCoreGameStateFn.mockImplementation(() => {
