@@ -428,5 +428,63 @@ describeTurnManagerSuite(
         jest.clearAllTimers();
       }
     );
+
+    test('treats missing success flag as a successful turn', async () => {
+      const bed = getBed();
+      const stopSpy = bed.spyOnStopNoOp();
+
+      const actor = createMockEntity('actor-missing-success', {
+        isActor: true,
+        isPlayer: false,
+      });
+      bed.setActiveEntities(actor);
+
+      bed.mocks.turnOrderService.isEmpty
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      bed.mocks.turnOrderService.getNextEntity
+        .mockResolvedValueOnce(actor)
+        .mockResolvedValue(null);
+      bed.mocks.turnOrderService.startNewRound.mockResolvedValue();
+
+      const handler = bed.setupHandlerForActor(actor);
+      handler.startTurn.mockResolvedValue();
+
+      const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+      const advanceSpy = jest
+        .spyOn(bed.turnManager, 'advanceTurn')
+        .mockImplementationOnce(realAdvance)
+        .mockImplementationOnce(realAdvance)
+        .mockResolvedValue(undefined);
+
+      await bed.turnManager.start();
+      await drainTimersAndMicrotasks(4);
+      const currentActorId = bed.turnManager.getCurrentActor()?.id;
+      expect(currentActorId).toBe(actor.id);
+
+      bed.trigger(TURN_ENDED_ID, { entityId: actor.id });
+      await drainTimersAndMicrotasks(6);
+
+      const systemErrorDispatches = bed.mocks.dispatcher.dispatch.mock.calls.filter(
+        ([eventId]) => eventId === SYSTEM_ERROR_OCCURRED_ID
+      );
+
+      expect(stopSpy).not.toHaveBeenCalled();
+      expect(systemErrorDispatches).toHaveLength(0);
+
+      const warnMessages = bed.mocks.logger.warn.mock.calls.map(
+        ([message]) => message
+      );
+      expect(
+        warnMessages.some((message) =>
+          message.includes('without a success flag')
+        )
+      ).toBe(true);
+
+      advanceSpy.mockRestore();
+      await bed.turnManager.stop();
+      await drainTimersAndMicrotasks(2);
+    });
   }
 );
