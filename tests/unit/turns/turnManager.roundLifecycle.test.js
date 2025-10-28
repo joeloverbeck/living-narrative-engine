@@ -2,7 +2,6 @@
 // --- FILE START ---
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
 import {
   expectSystemErrorDispatch,
   triggerTurnEndedAndFlush,
@@ -10,6 +9,7 @@ import {
 // import removed constant; not needed
 import {
   TURN_ENDED_ID,
+  TURN_PROCESSING_ENDED,
   TURN_STARTED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test } from '@jest/globals';
@@ -89,6 +89,10 @@ describeTurnManagerSuite(
         // Run timers to process async operations
         jest.runAllTimers();
         await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
 
         expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
           'Cannot start a new round: No active entities with an Actor component found.'
@@ -117,6 +121,119 @@ describeTurnManagerSuite(
       expect(true).toBe(true);
     });
   }
+);
+
+class ControlledScheduler {
+  constructor() {
+    this._callbacks = new Map();
+    this._nextId = 1;
+    this.setTimeout = jest.fn((fn, delay) => this._setTimeout(fn, delay));
+    this.clearTimeout = jest.fn((id) => this._clearTimeout(id));
+  }
+
+  _setTimeout(fn, delay) {
+    const id = this._nextId++;
+    this._callbacks.set(id, { fn, delay });
+    return id;
+  }
+
+  _clearTimeout(id) {
+    this._callbacks.delete(id);
+  }
+
+  runNext() {
+    const iterator = this._callbacks.entries().next();
+    if (iterator.done) {
+      return;
+    }
+    const [id, entry] = iterator.value;
+    this._callbacks.delete(id);
+    entry.fn();
+  }
+
+  pendingCount() {
+    return this._callbacks.size;
+  }
+
+  reset() {
+    this._callbacks.clear();
+    this._nextId = 1;
+    this.setTimeout.mockClear();
+    this.clearTimeout.mockClear();
+  }
+}
+
+const sharedScheduler = new ControlledScheduler();
+
+describeTurnManagerSuite(
+  'TurnManager - TURN_PROCESSING_ENDED coordination',
+  (getBed) => {
+    let testBed;
+
+    beforeEach(() => {
+      testBed = getBed();
+      sharedScheduler.reset();
+      if (typeof testBed.resetMocks === 'function') {
+        testBed.resetMocks();
+      }
+    });
+
+    afterEach(() => {
+      sharedScheduler.reset();
+    });
+
+    test(
+      'defers scheduling the next turn until TURN_PROCESSING_ENDED dispatch resolves',
+      async () => {
+        const actor = createAiActor('actor-delay');
+        testBed.setActiveEntities(actor);
+        testBed.mockNextActor(actor);
+        const handler = testBed.setupHandlerForActor(actor);
+        handler.startTurn.mockResolvedValue();
+
+        /** @type {(value: true) => void} */
+        let resolveProcessing;
+        const processingPromise = new Promise((resolve) => {
+          resolveProcessing = resolve;
+        });
+
+        testBed.mocks.dispatcher.dispatch.mockImplementation((eventId) => {
+          if (eventId === TURN_PROCESSING_ENDED) {
+            return processingPromise;
+          }
+          return Promise.resolve(true);
+        });
+
+        await testBed.turnManager.start();
+        expect(handler.startTurn).toHaveBeenCalled();
+
+        testBed.mocks.dispatcher._triggerEvent(TURN_ENDED_ID, {
+          entityId: actor.id,
+          success: true,
+        });
+
+        expect(sharedScheduler.setTimeout).toHaveBeenCalledTimes(1);
+        expect(sharedScheduler.pendingCount()).toBe(1);
+
+        sharedScheduler.runNext();
+
+        expect(sharedScheduler.setTimeout).toHaveBeenCalledTimes(1);
+        expect(sharedScheduler.pendingCount()).toBe(0);
+
+        if (!resolveProcessing) {
+          throw new Error('resolveProcessing not initialized');
+        }
+        resolveProcessing(true);
+        await processingPromise;
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(sharedScheduler.setTimeout).toHaveBeenCalledTimes(2);
+        expect(sharedScheduler.pendingCount()).toBe(1);
+      }
+    );
+  },
+  { turnManagerOptions: { scheduler: sharedScheduler } }
 );
 
 // --- FILE END ---

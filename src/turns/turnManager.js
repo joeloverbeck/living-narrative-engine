@@ -620,7 +620,47 @@ class TurnManager extends ITurnManager {
       processingDispatchPromise = Promise.reject(dispatchError);
     }
 
-    processingDispatchPromise
+    const scheduleAdvanceTurn = () => {
+      if (!this.#isRunning) {
+        this.#logger.debug(
+          `Skipping scheduled turn advancement for ${endedActorId} because the manager stopped before processing completed.`
+        );
+        return;
+      }
+
+      this.#scheduler.setTimeout(() => {
+        this.advanceTurn().catch(async (advanceTurnError) => {
+          safeDispatchError(
+            this.#dispatcher,
+            'Error during scheduled turn advancement',
+            { error: advanceTurnError.message, entityId: endedActorId }
+          );
+          // This is a critical failure in turn advancement, dispatch system error and stop.
+          try {
+            await this.#dispatchSystemError(
+              'Critical error during scheduled turn advancement.',
+              advanceTurnError
+            );
+          } catch (e) {
+            logError(
+              this.#logger,
+              'Failed to dispatch system error for advanceTurn failure',
+              e
+            );
+          }
+
+          try {
+            await this.stop();
+          } catch (e) {
+            this.#logger.error(
+              `Failed to stop manager after advanceTurn failure: ${e.message}`
+            );
+          }
+        });
+      }, 0);
+    };
+
+    processingDispatchPromise = processingDispatchPromise
       .then((dispatchResult) => {
         if (dispatchResult === false) {
           this.#logger.warn(
@@ -642,6 +682,14 @@ class TurnManager extends ITurnManager {
           error: dispatchError?.message || 'Unknown dispatcher error',
           stack: dispatchError?.stack,
         })
+      )
+      .then(
+        () => {
+          scheduleAdvanceTurn();
+        },
+        () => {
+          scheduleAdvanceTurn();
+        }
       );
 
     this.#logger.debug(
@@ -674,39 +722,6 @@ class TurnManager extends ITurnManager {
         );
       }
     }
-
-    // Advance the turn asynchronously via the subscription's scheduler.
-    // Use scheduler to ensure we don't block the current execution
-    this.#scheduler.setTimeout(() => {
-      this.advanceTurn().catch(async (advanceTurnError) => {
-        safeDispatchError(
-          this.#dispatcher,
-          'Error during scheduled turn advancement',
-          { error: advanceTurnError.message, entityId: endedActorId }
-        );
-        // This is a critical failure in turn advancement, dispatch system error and stop.
-        try {
-          await this.#dispatchSystemError(
-            'Critical error during scheduled turn advancement.',
-            advanceTurnError
-          );
-        } catch (e) {
-          logError(
-            this.#logger,
-            'Failed to dispatch system error for advanceTurn failure',
-            e
-          );
-        }
-
-        try {
-          await this.stop();
-        } catch (e) {
-          this.#logger.error(
-            `Failed to stop manager after advanceTurn failure: ${e.message}`
-          );
-        }
-      });
-    }, 0);
   }
 
   /**
