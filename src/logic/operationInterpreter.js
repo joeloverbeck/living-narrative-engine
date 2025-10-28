@@ -197,9 +197,7 @@ function hasValidJsonLogicShape(candidate) {
     typeof operand === 'object' &&
     !Array.isArray(operand)
   ) {
-    if (hasValidJsonLogicShape(operand)) {
-      return true;
-    }
+    return hasValidJsonLogicShape(operand);
   }
 
   return true;
