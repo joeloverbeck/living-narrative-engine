@@ -3,7 +3,42 @@
 This guide explains how to wire the activity description system into game flows, mods, and
 supporting tooling.
 
-## 1. Dependency Registration
+## 1. Preserve the Activity Slot
+
+Activity text is injected when the body description order reaches the `activity` slot.
+If a mod overrides the ordering it must keep that slot in place:
+
+```javascript
+// src/anatomy/configuration/descriptionConfiguration.js
+export const defaultDescriptionOrder = [
+  'height',
+  'build',
+  'body_composition',
+  'body_hair',
+  'skin_color',
+  'hair',
+  'eye',
+  'face',
+  'ear',
+  'nose',
+  'mouth',
+  'neck',
+  'breast',
+  'torso',
+  'arm',
+  'hand',
+  'leg',
+  'foot',
+  'tail',
+  'wing',
+  'activity',
+];
+```
+
+Append new descriptors before or after `activity` rather than removing it. Without the
+slot `BodyDescriptionComposer` has nowhere to insert the generated summary.
+
+## 2. Dependency Registration
 
 `ActivityDescriptionService` is registered alongside other anatomy services inside
 `registerWorldAndEntity`:
@@ -23,7 +58,7 @@ Ensure the world/entity registration bundle is invoked (it is part of
 `configureBaseContainer`). Consumers should always resolve the service from the DI container
 rather than instantiating it manually in production code.
 
-## 2. Formatting Configuration
+## 3. Formatting Configuration
 
 `AnatomyFormattingService` must be initialised before the activity service is used. During
 container bootstrapping call `anatomyFormattingService.initialize()` to merge formatting
@@ -34,7 +69,7 @@ formatting config. Typical properties include `prefix`, `separator`, `maxActivit
 pronoun behaviour. The merged configuration is returned via
 `getActivityIntegrationConfig()` and consumed automatically by the activity service.
 
-## 3. Generating Descriptions
+## 4. Generating Descriptions
 
 Activity descriptions are produced indirectly through `BodyDescriptionComposer`. The
 composer injects activity text when the description order reaches the `activity` slot.
@@ -56,7 +91,7 @@ const activityService = container.resolve(tokens.ActivityDescriptionService);
 const summary = await activityService.generateActivityDescription(bodyEntity.getId());
 ```
 
-## 4. Data Requirements
+## 5. Data Requirements
 
 * **Actor state** – the entity must expose `anatomy:body` (required by the composer) and any
   components that define activity metadata.
@@ -65,7 +100,7 @@ const summary = await activityService.generateActivityDescription(bodyEntity.get
 * **Formatting config** – mods that override description order should keep the `activity`
   slot present. Removing it prevents the composer from rendering activities.
 
-## 5. Event Bus Integration
+## 6. Event Bus Integration
 
 When an event bus is supplied to the service it subscribes to component change events and
 dispatches `ACTIVITY_DESCRIPTION_ERROR` on failures. Ensure your application resolves a
@@ -79,7 +114,7 @@ dispatcher.subscribe('ACTIVITY_DESCRIPTION_ERROR', (event) => {
 });
 ```
 
-## 6. Cache Invalidation Hooks
+## 7. Cache Invalidation Hooks
 
 Most integrations can rely on automatic invalidation (component add/remove events). If you
 mutate entity state outside of the normal component lifecycle, call:
@@ -93,7 +128,7 @@ service.invalidateEntities([actorId, targetId]);
 Use these helpers after batch updates or script-driven world changes to ensure subsequent
 activity requests see fresh data.
 
-## 7. Tooling and Preview Use Cases
+## 8. Tooling and Preview Use Cases
 
 For mod tooling or previews you can instantiate the service with lightweight mocks:
 

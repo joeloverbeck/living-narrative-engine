@@ -9,88 +9,19 @@ inserted alongside torso, limb, and equipment descriptors with consistent format
 
 ## Quick Start
 
-### 1. Preserve the activity slot in the body ordering
-
-```javascript
-// src/anatomy/configuration/descriptionConfiguration.js
-export const defaultDescriptionOrder = [
-  'height',
-  'build',
-  'body_composition',
-  'body_hair',
-  'skin_color',
-  'hair',
-  'eye',
-  'face',
-  'ear',
-  'nose',
-  'mouth',
-  'neck',
-  'breast',
-  'torso',
-  'arm',
-  'hand',
-  'leg',
-  'foot',
-  'tail',
-  'wing',
-  'activity',
-];
-```
-
-Keep the `activity` entry when overriding description order so that
-`BodyDescriptionComposer` knows where to inject generated activities. Mods that
-customise ordering should append additional descriptors without removing the activity
-slot.
-
-### 2. Embed inline metadata where appropriate
-
-```json
-{
-  "id": "positioning:kneeling_before",
-  "dataSchema": {
-    "type": "object",
-    "required": ["entityId"],
-    "properties": {
-      "entityId": { "type": "string" },
-      "activityMetadata": {
-        "type": "object",
-        "properties": {
-          "shouldDescribeInActivity": { "type": "boolean", "default": true },
-          "template": {
-            "type": "string",
-            "default": "{actor} is kneeling before {target}"
-          },
-          "targetRole": { "type": "string", "default": "entityId" },
-          "priority": { "type": "integer", "default": 75 }
-        }
-      }
-    }
-  }
-}
-```
-
-Inline metadata lives next to the component schema. Use this pattern for simple binary
-states or whenever the description follows the component one-to-one.
-
-### 3. Generate descriptions through the service
-
-```javascript
-import ActivityDescriptionService from '../../src/anatomy/services/activityDescriptionService.js';
-
-const service = new ActivityDescriptionService({
-  logger,
-  entityManager,
-  anatomyFormattingService,
-  jsonLogicEvaluationService,
-});
-
-const summary = await service.generateActivityDescription('jon_ureña');
-// => "Activity: Jon Ureña is kneeling before Alicia Western."
-```
-
-Resolve the service through the dependency injection container in production code so it
-receives the configured `AnatomyFormattingService` instance and shared caches.
+1. **Preserve the activity slot** – Keep the `activity` entry when customising
+   description order so `BodyDescriptionComposer` knows where to inject the summary.
+   See the [Integration Guide](./integration-guide.md#1-preserve-the-activity-slot) for
+   the reference snippet and additional context.
+2. **Author metadata** – Attach inline `activityMetadata` blocks for simple cases or use
+   `activity:description_metadata` entities for advanced logic. The
+   [Metadata Authoring Guide](./metadata-patterns.md) covers both patterns with complete
+   schema examples.
+3. **Generate descriptions through the service** – Resolve
+   `ActivityDescriptionService` (usually via the dependency injection container) to obtain
+   summaries or use `BodyDescriptionComposer` for end-to-end body text generation. The
+   [Integration Guide](./integration-guide.md#4-generating-descriptions) walks through the
+   setup.
 
 ## Key Features
 
