@@ -52,9 +52,17 @@ class ConsoleLogger {
    * @returns {boolean} True when the message begins with the `[DEBUG]` tag.
    */
   #isDebugTaggedMessage(message) {
-    return (
-      typeof message === 'string' && message.trimStart().startsWith('[DEBUG]')
-    );
+    if (typeof message !== 'string') {
+      return false;
+    }
+
+    const trimmedMessage = message.trimStart();
+
+    if (trimmedMessage.startsWith('[DEBUG]')) {
+      return true;
+    }
+
+    return /^[^[]*?:\s*\[DEBUG\]/.test(trimmedMessage);
   }
 
   /**
@@ -68,12 +76,19 @@ class ConsoleLogger {
     }
 
     const trimmedStart = message.trimStart();
-    if (!trimmedStart.startsWith('[DEBUG]')) {
-      return message;
+    if (trimmedStart.startsWith('[DEBUG]')) {
+      const withoutTag = trimmedStart.slice('[DEBUG]'.length);
+      return withoutTag.trimStart();
     }
 
-    const withoutTag = trimmedStart.slice('[DEBUG]'.length);
-    return withoutTag.trimStart();
+    const taggedPrefixMatch = trimmedStart.match(/^([^[]*?:\s*)\[DEBUG\]\s*/);
+    if (taggedPrefixMatch) {
+      const [, prefix] = taggedPrefixMatch;
+      const remainder = trimmedStart.slice(taggedPrefixMatch[0].length);
+      return `${prefix}${remainder}`;
+    }
+
+    return message;
   }
 
   /**

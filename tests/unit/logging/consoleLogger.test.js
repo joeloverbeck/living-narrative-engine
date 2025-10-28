@@ -179,6 +179,26 @@ describe('ConsoleLogger', () => {
     );
   });
 
+  it('promotes prefixed [DEBUG] markers to debug output', () => {
+    const infoLogger = new ConsoleLogger(LogLevel.INFO);
+    jest.clearAllMocks();
+
+    infoLogger.info('Resolver: [DEBUG] details suppressed');
+
+    expect(consoleSpies.info).not.toHaveBeenCalled();
+    expect(consoleSpies.debug).not.toHaveBeenCalled();
+
+    const debugLogger = new ConsoleLogger(LogLevel.DEBUG);
+    jest.clearAllMocks();
+
+    debugLogger.info('Resolver: [DEBUG] details surfaced');
+
+    expect(consoleSpies.info).not.toHaveBeenCalled();
+    expect(consoleSpies.debug).toHaveBeenCalledWith(
+      'Resolver: details surfaced'
+    );
+  });
+
   it('only emits group and table calls when debug logging is enabled', () => {
     const logger = new ConsoleLogger(LogLevel.DEBUG);
     jest.clearAllMocks();
