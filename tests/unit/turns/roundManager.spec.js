@@ -267,6 +267,33 @@ describe('RoundManager', () => {
       expect(normalisedInitiative.get(mockActor.id)).toBe(11);
     });
 
+    it('should normalise strategy strings by trimming whitespace and casing', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeData = new Map([[mockActor.id, 15]]);
+
+      await roundManager.startRound(' Initiative ', initiativeData);
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenLastCalledWith(
+        [mockActor],
+        'initiative',
+        initiativeData
+      );
+
+      mockTurnOrderService.startNewRound.mockClear();
+
+      await roundManager.startRound('ROUND-ROBIN');
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
+        [mockActor],
+        'round-robin',
+        undefined
+      );
+    });
+
     it('should filter out non-actor entities', async () => {
       // Arrange
       const mockActor = {
