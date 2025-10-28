@@ -55,6 +55,413 @@ class RecipePatternResolver {
   }
 
   /**
+   * Validates all patterns before resolution.
+   * Ensures patterns meet structural and semantic requirements.
+   *
+   * @param {object[]} patterns - Array of pattern definitions
+   * @param {object} blueprint - Blueprint context for validation
+   * @throws {ValidationError} If any pattern fails validation
+   * @private
+   */
+  #validateAllPatterns(patterns, blueprint) {
+    assertPresent(patterns, 'Patterns array is required');
+    assertPresent(blueprint, 'Blueprint is required');
+
+    for (let i = 0; i < patterns.length; i++) {
+      const pattern = patterns[i];
+      this.#logger.debug(`Validating pattern ${i + 1}/${patterns.length}`);
+
+      // Phase 1: Core validation
+      this.#validatePatternMutualExclusivity(pattern, i);
+      this.#validateBlueprintVersion(pattern, blueprint, i);
+
+      // Phase 2: Pattern-specific validation
+      if (pattern.matchesGroup) {
+        this.#validateMatchesGroup(pattern, blueprint, i);
+      } else if (pattern.matchesPattern !== undefined) {
+        this.#validateMatchesPattern(pattern, Object.keys(blueprint.slots || {}), i);
+      } else if (pattern.matchesAll) {
+        this.#validateMatchesAll(pattern, blueprint.slots || {}, i);
+      }
+
+      // Phase 3: Exclusion validation
+      if (pattern.exclude) {
+        this.#validateExclusions(pattern, blueprint, i);
+      }
+    }
+
+    // Phase 3: Pattern precedence warnings
+    this.#validatePatternPrecedence(patterns, blueprint);
+  }
+
+  /**
+   * Validates that pattern uses exactly one matcher type.
+   * Ensures mutual exclusivity of matches, matchesGroup, matchesPattern, matchesAll.
+   *
+   * @param {object} pattern - Pattern definition to validate
+   * @param {number} patternIndex - Pattern index for error messages
+   * @throws {ValidationError} If pattern has multiple or no matchers
+   * @private
+   */
+  #validatePatternMutualExclusivity(pattern, patternIndex) {
+    const matchers = ['matches', 'matchesGroup', 'matchesPattern', 'matchesAll'];
+    const presentMatchers = matchers.filter(m => pattern[m] !== undefined);
+
+    if (presentMatchers.length === 0) {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1} has no matcher: must specify exactly one of 'matches', 'matchesGroup', 'matchesPattern', or 'matchesAll'.`
+      );
+    }
+
+    if (presentMatchers.length > 1) {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1} has multiple matchers: found ${presentMatchers.map(m => `'${m}'`).join(' and ')}. Only one is allowed per pattern.`
+      );
+    }
+  }
+
+  /**
+   * Validates blueprint version compatibility with pattern type.
+   * V2 patterns require schemaVersion: "2.0" and structureTemplate.
+   *
+   * @param {object} pattern - Pattern definition to validate
+   * @param {object} blueprint - Blueprint to check version
+   * @param {number} patternIndex - Pattern index for error messages
+   * @throws {ValidationError} If version requirements not met
+   * @private
+   */
+  #validateBlueprintVersion(pattern, blueprint, patternIndex) {
+    // Only matchesGroup requires V2 blueprint with structure template
+    // matchesPattern and matchesAll work with any blueprint version
+    if (!pattern.matchesGroup) {
+      return;
+    }
+
+    // matchesGroup requires schemaVersion: "2.0"
+    if (blueprint.schemaVersion !== '2.0') {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1} uses 'matchesGroup' but blueprint '${blueprint.id}' has schemaVersion '${blueprint.schemaVersion || '1.0'}'. matchesGroup requires schemaVersion '2.0'.`
+      );
+    }
+
+    // Check blueprint has structureTemplate
+    if (!blueprint.structureTemplate) {
+      throw new ValidationError(
+        `Blueprint '${blueprint.id}' has schemaVersion '2.0' but no 'structureTemplate' property. matchesGroup requires a structure template.`
+      );
+    }
+
+    // Check structure template exists
+    const template = this.#dataRegistry.get(
+      'anatomyStructureTemplates',
+      blueprint.structureTemplate
+    );
+
+    if (!template) {
+      throw new ValidationError(
+        `Structure template '${blueprint.structureTemplate}' not found. Ensure template exists and is loaded before blueprint.`
+      );
+    }
+  }
+
+  /**
+   * Validates matchesGroup pattern.
+   * Checks group format, existence in template, and match count.
+   *
+   * @param {object} pattern - Pattern with matchesGroup
+   * @param {object} blueprint - Blueprint with structure template
+   * @param {number} patternIndex - Pattern index for error messages
+   * @throws {ValidationError} If group validation fails
+   * @private
+   */
+  #validateMatchesGroup(pattern, blueprint, patternIndex) {
+    const groupRef = pattern.matchesGroup;
+
+    // Validate format
+    const [groupType, groupName] = groupRef.split(':');
+
+    if (!groupType || !groupName) {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1}: Slot group '${groupRef}' format invalid. Expected 'limbSet:{type}' or 'appendage:{type}'.`
+      );
+    }
+
+    if (groupType !== 'limbSet' && groupType !== 'appendage') {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1}: Slot group '${groupRef}' format invalid. Expected 'limbSet:{type}' or 'appendage:{type}'.`
+      );
+    }
+
+    // Load structure template
+    const template = this.#dataRegistry.get(
+      'anatomyStructureTemplates',
+      blueprint.structureTemplate
+    );
+
+    // Check group exists in template
+    let groupExists = false;
+    const availableGroups = [];
+
+    if (groupType === 'limbSet') {
+      const limbSets = template.topology?.limbSets || [];
+      groupExists = limbSets.some(ls => ls.type === groupName);
+      availableGroups.push(
+        ...limbSets.map(ls => `limbSet:${ls.type}`)
+      );
+    } else if (groupType === 'appendage') {
+      const appendages = template.topology?.appendages || [];
+      groupExists = appendages.some(a => a.type === groupName);
+      availableGroups.push(
+        ...appendages.map(a => `appendage:${a.type}`)
+      );
+    }
+
+    if (!groupExists) {
+      const availableStr = availableGroups.length > 0
+        ? ` Available groups: ${availableGroups.map(g => `'${g}'`).join(', ')}`
+        : '';
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1}: Slot group '${groupRef}' not found in structure template '${blueprint.structureTemplate}'.${availableStr}`
+      );
+    }
+
+    // Warning if group matches 0 slots
+    const matchedKeys = this.#resolveSlotGroup(groupRef, blueprint);
+    if (matchedKeys.length === 0) {
+      this.#logger.warn(
+        `Pattern ${patternIndex + 1}: Slot group '${groupRef}' matched 0 slots. Template may not generate any slots of this type.`
+      );
+    }
+  }
+
+  /**
+   * Validates matchesPattern wildcard pattern.
+   * Checks pattern is non-empty and warns if no matches.
+   *
+   * @param {object} pattern - Pattern with matchesPattern
+   * @param {string[]} blueprintSlotKeys - Available slot keys
+   * @param {number} patternIndex - Pattern index for error messages
+   * @throws {ValidationError} If pattern is invalid
+   * @private
+   */
+  #validateMatchesPattern(pattern, blueprintSlotKeys, patternIndex) {
+    const patternStr = pattern.matchesPattern;
+
+    // Check pattern is non-empty string
+    if (typeof patternStr !== 'string' || patternStr.length === 0) {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1}: Pattern must be a non-empty string.`
+      );
+    }
+
+    // Warning if pattern matches 0 slots
+    const matchedKeys = this.#resolveWildcardPattern(patternStr, blueprintSlotKeys);
+    if (matchedKeys.length === 0) {
+      this.#logger.warn(
+        `Pattern ${patternIndex + 1}: Pattern '${patternStr}' matched 0 slots. Check blueprint slot keys and pattern syntax.`
+      );
+    }
+  }
+
+  /**
+   * Validates matchesAll property-based filter.
+   * Checks at least one filter property exists, validates wildcard usage.
+   *
+   * @param {object} pattern - Pattern with matchesAll
+   * @param {object} blueprintSlots - Blueprint slot definitions
+   * @param {number} patternIndex - Pattern index for error messages
+   * @throws {ValidationError} If filter is invalid
+   * @private
+   */
+  #validateMatchesAll(pattern, blueprintSlots, patternIndex) {
+    const filter = pattern.matchesAll;
+
+    // Check at least one filter property
+    const filterProps = ['slotType', 'orientation', 'socketId'];
+    const presentProps = filterProps.filter(p => filter[p] !== undefined);
+
+    if (presentProps.length === 0) {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1}: matchesAll must have at least one filter property: 'slotType', 'orientation', or 'socketId'.`
+      );
+    }
+
+    // Validate wildcard restrictions: slotType doesn't support wildcards
+    if (filter.slotType && typeof filter.slotType === 'string' && filter.slotType.includes('*')) {
+      throw new ValidationError(
+        `Pattern ${patternIndex + 1}: matchesAll wildcard pattern on 'slotType' is not supported. Wildcards only work on 'orientation' and 'socketId'.`
+      );
+    }
+
+    // Warning if filter matches 0 slots
+    const matchedKeys = this.#resolvePropertyFilter(filter, blueprintSlots);
+    if (matchedKeys.length === 0) {
+      const filterDesc = JSON.stringify(filter);
+      this.#logger.warn(
+        `Pattern ${patternIndex + 1}: matchesAll filter ${filterDesc} matched 0 slots.`
+      );
+    }
+  }
+
+  /**
+   * Validates pattern exclusions.
+   * Checks excluded slot groups exist and exclusion properties are valid.
+   *
+   * @param {object} pattern - Pattern with exclude property
+   * @param {object} blueprint - Blueprint for slot group resolution
+   * @param {number} patternIndex - Pattern index for error messages
+   * @throws {ValidationError} If exclusions are invalid
+   * @private
+   */
+  #validateExclusions(pattern, blueprint, patternIndex) {
+    const exclusions = pattern.exclude;
+
+    // Validate excluded slot groups
+    if (exclusions.slotGroups && Array.isArray(exclusions.slotGroups)) {
+      const template = this.#dataRegistry.get(
+        'anatomyStructureTemplates',
+        blueprint.structureTemplate
+      );
+
+      for (const groupRef of exclusions.slotGroups) {
+        const [groupType, groupName] = groupRef.split(':');
+
+        let groupExists = false;
+        if (groupType === 'limbSet') {
+          const limbSets = template?.topology?.limbSets || [];
+          groupExists = limbSets.some(ls => ls.type === groupName);
+        } else if (groupType === 'appendage') {
+          const appendages = template?.topology?.appendages || [];
+          groupExists = appendages.some(a => a.type === groupName);
+        }
+
+        if (!groupExists) {
+          throw new ValidationError(
+            `Pattern ${patternIndex + 1}: Exclusion slot group '${groupRef}' not found in structure template.`
+          );
+        }
+      }
+    }
+
+    // Validate exclusion properties
+    if (exclusions.properties !== undefined) {
+      if (
+        exclusions.properties === null ||
+        typeof exclusions.properties !== 'object' ||
+        Array.isArray(exclusions.properties)
+      ) {
+        throw new ValidationError(
+          `Pattern ${patternIndex + 1}: Exclusion property filter must be a valid object with slot properties.`
+        );
+      }
+    }
+  }
+
+  /**
+   * Validates pattern precedence and warns about potential conflicts.
+   * Detects overlapping patterns with equal specificity.
+   *
+   * @param {object[]} patterns - All patterns to check
+   * @param {object} blueprint - Blueprint for slot resolution
+   * @private
+   */
+  #validatePatternPrecedence(patterns, blueprint) {
+    // Check for overlapping patterns
+    for (let i = 0; i < patterns.length; i++) {
+      for (let j = i + 1; j < patterns.length; j++) {
+        const pattern1 = patterns[i];
+        const pattern2 = patterns[j];
+
+        // Resolve both patterns
+        const keys1 = this.#resolvePatternToKeys(pattern1, blueprint);
+        const keys2 = this.#resolvePatternToKeys(pattern2, blueprint);
+
+        // Check for overlap
+        const overlap = keys1.filter(k => keys2.includes(k));
+
+        if (overlap.length > 0) {
+          const spec1 = this.#getPatternSpecificity(pattern1);
+          const spec2 = this.#getPatternSpecificity(pattern2);
+
+          if (spec1 === spec2) {
+            const desc1 = this.#getPatternDescription(pattern1);
+            const desc2 = this.#getPatternDescription(pattern2);
+
+            this.#logger.warn(
+              `Pattern ${i + 1} (${desc1}) and Pattern ${j + 1} (${desc2}) have equal specificity and may match the same slots (${overlap.length} overlapping). Consider making patterns more specific.`
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Resolves a pattern to its matching slot keys (for precedence validation).
+   *
+   * @param {object} pattern - Pattern to resolve
+   * @param {object} blueprint - Blueprint context
+   * @returns {string[]} Array of slot keys
+   * @private
+   */
+  #resolvePatternToKeys(pattern, blueprint) {
+    try {
+      if (pattern.matches) {
+        return pattern.matches;
+      } else if (pattern.matchesGroup) {
+        return this.#resolveSlotGroup(pattern.matchesGroup, blueprint);
+      } else if (pattern.matchesPattern) {
+        return this.#resolveWildcardPattern(
+          pattern.matchesPattern,
+          Object.keys(blueprint.slots || {})
+        );
+      } else if (pattern.matchesAll) {
+        return this.#resolvePropertyFilter(pattern.matchesAll, blueprint.slots || {});
+      }
+      return [];
+    } catch (error) {
+      // Validation errors already thrown, return empty for precedence check
+      return [];
+    }
+  }
+
+  /**
+   * Gets pattern specificity score for precedence ordering.
+   * Higher score = more specific.
+   *
+   * @param {object} pattern - Pattern to score
+   * @returns {number} Specificity score (1-4)
+   * @private
+   */
+  #getPatternSpecificity(pattern) {
+    if (pattern.matches) return 4; // Explicit list
+    if (pattern.matchesAll) return 3; // Property-based
+    if (pattern.matchesPattern) return 2; // Wildcard pattern
+    if (pattern.matchesGroup) return 1; // Slot group
+    return 0;
+  }
+
+  /**
+   * Gets human-readable pattern description.
+   *
+   * @param {object} pattern - Pattern to describe
+   * @returns {string} Pattern description
+   * @private
+   */
+  #getPatternDescription(pattern) {
+    if (pattern.matches) {
+      return `matches: explicit list`;
+    } else if (pattern.matchesGroup) {
+      return `matchesGroup: '${pattern.matchesGroup}'`;
+    } else if (pattern.matchesPattern) {
+      return `matchesPattern: '${pattern.matchesPattern}'`;
+    } else if (pattern.matchesAll) {
+      return `matchesAll: ${JSON.stringify(pattern.matchesAll)}`;
+    }
+    return 'unknown pattern';
+  }
+
+  /**
    * Resolves V2 recipe patterns against blueprint slots.
    *
    * @param {object} recipe - Recipe with patterns to resolve
@@ -84,6 +491,9 @@ class RecipePatternResolver {
     this.#logger.info(
       `Resolving ${recipe.patterns.length} patterns against ${blueprintSlotKeys.length} blueprint slots`
     );
+
+    // Validate all patterns before resolution
+    this.#validateAllPatterns(recipe.patterns, blueprint);
 
     for (const pattern of recipe.patterns) {
       let matchedSlotKeys;
@@ -143,11 +553,13 @@ class RecipePatternResolver {
       }
 
       // Create slot definitions for matched slots
+      let patternIndex = recipe.patterns.indexOf(pattern) + 1;
       for (const slotKey of matchedSlotKeys) {
         // Skip if explicitly defined in recipe slots (explicit definitions take precedence)
         if (expandedSlots[slotKey]) {
-          this.#logger.debug(
-            `Skipping slot '${slotKey}' - already explicitly defined`
+          const patternDesc = this.#getPatternDescription(pattern);
+          this.#logger.info(
+            `Explicit slot '${slotKey}' overrides Pattern ${patternIndex} (${patternDesc}). This is expected behavior.`
           );
           continue;
         }

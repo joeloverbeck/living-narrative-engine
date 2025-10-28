@@ -19,9 +19,10 @@ const eventIsTurnStarted = { id: 'core:event-is-turn-started' };
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
+ * @param {object} gameDataRepository - Game data repository instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger) {
+function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeEventDispatcher = { dispatch: jest.fn() };
   return {
     SET_VARIABLE: new SetVariableHandler({ logger }),
@@ -30,6 +31,7 @@ function createHandlers(entityManager, eventBus, logger) {
       entityManager,
       logger,
       safeEventDispatcher,
+      gameDataRepository,
     }),
   };
 }
@@ -43,6 +45,7 @@ describe('core_handle_turn_started rule integration', () => {
       getConditionDefinition: jest.fn((id) =>
         id === 'core:event-is-turn-started' ? eventIsTurnStarted : undefined
       ),
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
 
     testEnv = createRuleTestEnvironment({

@@ -13,6 +13,8 @@ describe('ModTestHandlerFactory Performance Tests', () => {
   let logger;
   let performanceResults;
 
+  let gameDataRepository;
+
   beforeEach(() => {
     entityManager = new SimpleEntityManager([
       {
@@ -32,6 +34,10 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),
+    };
+
+    gameDataRepository = {
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
 
     performanceResults = {
@@ -142,7 +148,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       const results = runPerformanceTest(
         'createHandlersWithAddComponent',
         ModTestHandlerFactory.createHandlersWithAddComponent,
-        [entityManager, eventBus, logger],
+        [entityManager, eventBus, logger, gameDataRepository],
         100
       );
 
@@ -206,7 +212,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         const results = runPerformanceTest(
           `createCustomHandlers_${index}`,
           ModTestHandlerFactory.createCustomHandlers,
-          [entityManager, eventBus, logger, options],
+          [entityManager, eventBus, logger, gameDataRepository, options],
           50
         );
 

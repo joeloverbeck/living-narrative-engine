@@ -15,6 +15,11 @@ This guide walks you through creating your first non-human creature using the Bl
 - Familiarity with mod structure (see [mod documentation](../mods/))
 - Text editor with JSON support
 
+**Related Documentation**:
+- [Recipe Patterns](./recipe-patterns.md) - Complete pattern matching reference
+- [Common Non-Human Patterns](./common-non-human-patterns.md) - Tested creature patterns
+- [Property-Based Filtering](./property-based-filtering-examples.md) - Advanced filtering techniques
+
 ## The Workflow
 
 ```

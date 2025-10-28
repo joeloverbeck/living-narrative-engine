@@ -6,6 +6,11 @@ Blueprint V2 introduces `structureTemplate` references for declarative anatomy d
 
 **Schema Location**: `data/schemas/anatomy.blueprint.schema.json`
 
+**Related Guides**:
+- [Recipe Patterns](./recipe-patterns.md) - Pattern matching system for blueprints
+- [Common Non-Human Patterns](./common-non-human-patterns.md) - Complete creature examples using V2
+- [Property-Based Filtering](./property-based-filtering-examples.md) - Advanced filtering for generated slots
+
 ## Version Comparison
 
 ### V1 Anatomy Blueprints (schemaVersion: "1.0" or omitted)

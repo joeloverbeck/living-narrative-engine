@@ -284,17 +284,18 @@
     },
     "enhancedPatternDefinition": {
       "type": "object",
-      "description": "V2 pattern with enhanced matchers: slot groups, wildcards, property filters",
+      "description": "V2 pattern with enhanced matchers: slot groups, wildcards, property filters. NOTE: Each pattern can have ONLY ONE matcher (matchesGroup, matchesPattern, or matchesAll).",
       "properties": {
         "matchesGroup": {
           "type": "string",
           "pattern": "^(limbSet|appendage):[a-z0-9_]+$",
-          "description": "Slot group selector: 'limbSet:leg' or 'appendage:tail'"
+          "description": "Slot group selector from structure template topology: 'limbSet:leg' or 'appendage:tail'. REQUIRES blueprint with schemaVersion '2.0' and structureTemplate property."
         },
         "matchesPattern": {
           "type": "string",
           "pattern": "^[a-z0-9_]+\\*?$",
-          "description": "Wildcard pattern: 'leg_*', 'tentacle_*', 'wing_*'"
+          "minLength": 1,
+          "description": "Wildcard pattern for slot key matching: 'leg_*', 'tentacle_*', 'wing_*'. Pattern must be non-empty string."
         },
         "matchesAll": {
           "type": "object",
@@ -349,18 +350,21 @@
             "slotGroups": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(limbSet|appendage):[a-z0-9_]+$"
               },
-              "description": "Slot groups to exclude from matching"
+              "minItems": 1,
+              "description": "Slot groups to exclude from matching (format: 'limbSet:leg' or 'appendage:tail')"
             },
             "properties": {
               "type": "object",
-              "description": "Property-based exclusion criteria",
-              "additionalProperties": true
+              "description": "Property-based exclusion criteria. Must be a valid object with slot property filters.",
+              "additionalProperties": true,
+              "not": { "type": "null" }
             }
           },
           "additionalProperties": false,
-          "description": "Pattern-level exclusion criteria"
+          "description": "Pattern-level exclusion criteria. Removes specific slots from the pattern's matched set."
         }
       },
       "oneOf": [

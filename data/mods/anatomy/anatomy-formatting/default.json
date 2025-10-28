@@ -27,7 +27,8 @@
     "testicle",
     "tail",
     "wing",
-    "equipment"
+    "equipment",
+    "activity"
   ],
   "pairedParts": [
     "eye",

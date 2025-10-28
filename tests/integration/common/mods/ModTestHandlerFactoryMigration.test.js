@@ -40,6 +40,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
   let entityManager;
   let eventBus;
   let logger;
+  let gameDataRepository;
 
   beforeEach(() => {
     // Use actual SimpleEntityManager and real mocks
@@ -64,6 +65,10 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),
+    };
+
+    gameDataRepository = {
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
   });
 
@@ -128,12 +133,14 @@ describe('ModTestHandlerFactory Migration Validation', () => {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param {object} gameDataRepository - Game data repository instance
    * @returns {object} Manually created handlers object with ADD_COMPONENT
    */
   function createManualHandlersWithAddComponent(
     entityManager,
     eventBus,
-    logger
+    logger,
+    gameDataRepository
   ) {
     const baseHandlers = createManualHandlers(entityManager, eventBus, logger);
     const safeDispatcher = {
@@ -149,6 +156,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+        gameDataRepository,
       }),
     };
   }
@@ -159,12 +167,14 @@ describe('ModTestHandlerFactory Migration Validation', () => {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param {object} gameDataRepository - Game data repository instance
    * @returns {object} Manually created handlers object with perception logging handlers
    */
   function createManualHandlersWithPerceptionLogging(
     entityManager,
     eventBus,
-    logger
+    logger,
+    gameDataRepository
   ) {
     // Ensure entityManager has getEntitiesInLocation for AddPerceptionLogEntryHandler
     if (typeof entityManager.getEntitiesInLocation !== 'function') {
@@ -205,6 +215,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+        gameDataRepository,
       }),
       ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
         entityManager,
@@ -342,12 +353,14 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         ModTestHandlerFactory.createHandlersWithAddComponent(
           entityManager,
           eventBus,
-          logger
+          logger,
+          gameDataRepository
         );
       const manualHandlers = createManualHandlersWithAddComponent(
         entityManager,
         eventBus,
-        logger
+        logger,
+        gameDataRepository
       );
 
       // Compare handler keys
@@ -368,12 +381,14 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         ModTestHandlerFactory.createHandlersWithAddComponent(
           entityManager,
           eventBus,
-          logger
+          logger,
+          gameDataRepository
         );
       const manualHandlers = createManualHandlersWithAddComponent(
         entityManager,
         eventBus,
-        logger
+        logger,
+        gameDataRepository
       );
 
       const factoryAddComponent = factoryHandlers.ADD_COMPONENT;
@@ -448,12 +463,14 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       const factoryHandlers = positioningFactory(
         entityManager,
         eventBus,
-        logger
+        logger,
+        gameDataRepository
       );
       const manualHandlers = createManualHandlersWithPerceptionLogging(
         entityManager,
         eventBus,
-        logger
+        logger,
+        gameDataRepository
       );
 
       const factoryKeys = Object.keys(factoryHandlers).sort();

@@ -132,15 +132,23 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.extractSlotKeysFromLimbSet
-        .mockReturnValueOnce(['leg_fl_upper', 'leg_fl_lower'])
-        .mockReturnValueOnce(['leg_fr_upper', 'leg_fr_lower']);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(
+        (limbSet) => {
+          if (limbSet.id === 'frontLeft') {
+            return ['leg_fl_upper', 'leg_fl_lower'];
+          } else if (limbSet.id === 'frontRight') {
+            return ['leg_fr_upper', 'leg_fr_lower'];
+          }
+          return [];
+        }
+      );
 
       const recipe = {
         patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
       };
 
       const blueprint = {
+        schemaVersion: '2.0',
         structureTemplate: 'spider:body',
         slots: {
           leg_fl_upper: {},
@@ -158,8 +166,9 @@ describe('RecipePatternResolver', () => {
         leg_fr_upper: { partType: 'leg_segment' },
         leg_fr_lower: { partType: 'leg_segment' },
       });
+      // Validation phase + resolution phase = 2 calls per limbSet = 4 total
       expect(mockSlotGenerator.extractSlotKeysFromLimbSet).toHaveBeenCalledTimes(
-        2
+        4
       );
     });
 
@@ -184,6 +193,7 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        schemaVersion: '2.0',
         structureTemplate: 'dragon:body',
         slots: {
           tail_base: {},
@@ -213,16 +223,25 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.extractSlotKeysFromLimbSet
-        .mockReturnValueOnce(['leg_left'])
-        .mockReturnValueOnce(['leg_right'])
-        .mockReturnValueOnce(['leg_mid']);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(
+        (limbSet) => {
+          if (limbSet.id === 'left') {
+            return ['leg_left'];
+          } else if (limbSet.id === 'right') {
+            return ['leg_right'];
+          } else if (limbSet.id === 'mid') {
+            return ['leg_mid'];
+          }
+          return [];
+        }
+      );
 
       const recipe = {
         patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
       };
 
       const blueprint = {
+        schemaVersion: '2.0',
         structureTemplate: 'spider:body',
         slots: {
           leg_left: {},
@@ -236,7 +255,7 @@ describe('RecipePatternResolver', () => {
       expect(Object.keys(result.slots)).toHaveLength(3);
     });
 
-    it('should return empty array with warning for non-existent group', () => {
+    it('should throw ValidationError for non-existent group', () => {
       const template = {
         topology: {
           limbSets: [],
@@ -245,21 +264,19 @@ describe('RecipePatternResolver', () => {
 
       mockDataRegistry.get.mockReturnValue(template);
 
-      const warnSpy = jest.spyOn(mockLogger, 'warn');
-
       const recipe = {
         patterns: [{ matchesGroup: 'limbSet:wing', partType: 'wing_segment' }],
       };
 
       const blueprint = {
+        schemaVersion: '2.0',
         structureTemplate: 'spider:body',
         slots: {},
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
-
-      expect(result.slots).toEqual({});
-      expect(warnSpy).toHaveBeenCalled();
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
+      );
     });
 
     it('should throw ValidationError for missing structure template', () => {
@@ -279,21 +296,19 @@ describe('RecipePatternResolver', () => {
       );
     });
 
-    it('should warn and return empty when blueprint has no structure template', () => {
-      const warnSpy = jest.spyOn(mockLogger, 'warn');
-
+    it('should throw ValidationError when blueprint has no structure template', () => {
       const recipe = {
         patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
       };
 
       const blueprint = {
+        schemaVersion: '2.0',
         slots: {},
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
-
-      expect(result.slots).toEqual({});
-      expect(warnSpy).toHaveBeenCalled();
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
+      );
     });
 
     it('should throw ValidationError for invalid group reference format', () => {
@@ -605,11 +620,16 @@ describe('RecipePatternResolver', () => {
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.extractSlotKeysFromLimbSet
-        .mockReturnValueOnce(['leg_fl', 'leg_fr']) // all legs
-        .mockReturnValueOnce(['leg_fl', 'leg_fr']) // all legs again for pattern
-        .mockReturnValueOnce(['leg_bl', 'leg_br']) // all legs third time
-        .mockReturnValueOnce(['leg_fl', 'leg_fr']); // front legs exclusion
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(
+        (limbSet) => {
+          if (limbSet.id === 'front') {
+            return ['leg_fl', 'leg_fr'];
+          } else if (limbSet.id === 'back') {
+            return ['leg_bl', 'leg_br'];
+          }
+          return [];
+        }
+      );
 
       const recipe = {
         patterns: [
@@ -624,6 +644,7 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        schemaVersion: '2.0',
         structureTemplate: 'spider:body',
         slots: {
           leg_fl: {},

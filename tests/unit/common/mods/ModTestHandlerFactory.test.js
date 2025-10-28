@@ -17,6 +17,7 @@ describe('ModTestHandlerFactory', () => {
   let mockEntityManager;
   let mockEventBus;
   let mockLogger;
+  let mockGameDataRepository;
 
   beforeEach(() => {
     // Create comprehensive mocks with all required methods based on SimpleEntityManager
@@ -44,6 +45,10 @@ describe('ModTestHandlerFactory', () => {
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),
+    };
+
+    mockGameDataRepository = {
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
   });
 
@@ -210,7 +215,8 @@ describe('ModTestHandlerFactory', () => {
       const handlers = ModTestHandlerFactory.createHandlersWithAddComponent(
         mockEntityManager,
         mockEventBus,
-        mockLogger
+        mockLogger,
+        mockGameDataRepository
       );
 
       // Should have all standard handlers plus ADD_COMPONENT
@@ -240,7 +246,8 @@ describe('ModTestHandlerFactory', () => {
       const handlers = ModTestHandlerFactory.createHandlersWithAddComponent(
         mockEntityManager,
         mockEventBus,
-        mockLogger
+        mockLogger,
+        mockGameDataRepository
       );
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
@@ -265,7 +272,8 @@ describe('ModTestHandlerFactory', () => {
       const handlers = ModTestHandlerFactory.createHandlersWithComponentMutations(
         mockEntityManager,
         mockEventBus,
-        mockLogger
+        mockLogger,
+        mockGameDataRepository
       );
 
       const expectedHandlers = [
@@ -294,7 +302,8 @@ describe('ModTestHandlerFactory', () => {
       const handlers = ModTestHandlerFactory.createHandlersWithComponentMutations(
         mockEntityManager,
         mockEventBus,
-        mockLogger
+        mockLogger,
+        mockGameDataRepository
       );
 
       expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
@@ -375,7 +384,8 @@ describe('ModTestHandlerFactory', () => {
         ModTestHandlerFactory.createHandlersWithPerceptionLogging(
           mockEntityManager,
           mockEventBus,
-          mockLogger
+          mockLogger,
+          mockGameDataRepository
         );
 
       // Should have all standard handlers
@@ -424,7 +434,8 @@ describe('ModTestHandlerFactory', () => {
         ModTestHandlerFactory.createHandlersWithPerceptionLogging(
           mockEntityManager,
           mockEventBus,
-          mockLogger
+          mockLogger,
+          mockGameDataRepository
         );
 
       // Verify all handlers have execute functions
@@ -441,7 +452,8 @@ describe('ModTestHandlerFactory', () => {
         ModTestHandlerFactory.createHandlersWithPerceptionLogging(
           entityManagerWithoutMethod,
           mockEventBus,
-          mockLogger
+          mockLogger,
+          mockGameDataRepository
         );
 
       // Should have added the method
@@ -461,7 +473,8 @@ describe('ModTestHandlerFactory', () => {
       ModTestHandlerFactory.createHandlersWithPerceptionLogging(
         entityManagerWithMethod,
         mockEventBus,
-        mockLogger
+        mockLogger,
+        mockGameDataRepository
       );
 
       // Should still be the original method
@@ -519,6 +532,7 @@ describe('ModTestHandlerFactory', () => {
         mockEntityManager,
         mockEventBus,
         mockLogger,
+        mockGameDataRepository,
         options
       );
 
@@ -540,6 +554,7 @@ describe('ModTestHandlerFactory', () => {
         mockEntityManager,
         mockEventBus,
         mockLogger,
+        mockGameDataRepository,
         {}
       );
 
@@ -554,6 +569,7 @@ describe('ModTestHandlerFactory', () => {
         mockEntityManager,
         mockEventBus,
         mockLogger,
+        mockGameDataRepository,
         { includeSetVariable: false }
       );
 
@@ -566,6 +582,7 @@ describe('ModTestHandlerFactory', () => {
         mockEntityManager,
         mockEventBus,
         mockLogger,
+        mockGameDataRepository,
         { includeAddComponent: true }
       );
 
@@ -577,6 +594,7 @@ describe('ModTestHandlerFactory', () => {
         mockEntityManager,
         mockEventBus,
         mockLogger,
+        mockGameDataRepository,
         { includeQueryComponent: false }
       );
 
@@ -603,7 +621,7 @@ describe('ModTestHandlerFactory', () => {
         ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
 
       // Test by calling the factory and checking if it produces the expected result
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
 
       // Verify positioning-specific handlers are present
       expect(handlers.ADD_COMPONENT).toBeDefined();
@@ -624,7 +642,7 @@ describe('ModTestHandlerFactory', () => {
     it('should return createHandlersWithComponentMutations for affection', () => {
       const factory =
         ModTestHandlerFactory.getHandlerFactoryForCategory('affection');
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
@@ -637,7 +655,7 @@ describe('ModTestHandlerFactory', () => {
       categories.forEach((category) => {
         const factory =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
-        const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+        const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
 
         // Standard handlers don't have positioning-specific handlers
         expect(handlers.ADD_COMPONENT).toBeUndefined();
@@ -656,7 +674,7 @@ describe('ModTestHandlerFactory', () => {
     it('should return createHandlersWithComponentMutations for sex', () => {
       const factory =
         ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
@@ -669,7 +687,7 @@ describe('ModTestHandlerFactory', () => {
       unknownCategories.forEach((category) => {
         const factory =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
-        const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+        const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
 
         // Unknown categories get standard handlers without positioning-specific ones
         expect(handlers.ADD_COMPONENT).toBeUndefined();
@@ -683,7 +701,7 @@ describe('ModTestHandlerFactory', () => {
         ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
 
       // Should be able to call the returned factory method
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
+      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
       expect(handlers.ADD_COMPONENT).toBeDefined();
     });
   });
@@ -753,6 +771,7 @@ describe('ModTestHandlerFactory', () => {
         mockEntityManager,
         mockEventBus,
         mockLogger,
+        mockGameDataRepository,
         { includeAddComponent: false }
       );
 

@@ -12,9 +12,11 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../data/gameDataRepository.js').default} IGameDataRepository */
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { applySchemaDefaults } from './helpers/applySchemaDefaults.js';
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.
@@ -31,6 +33,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 class AddComponentHandler extends ComponentOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
+  /** @type {IGameDataRepository} */ #gameDataRepository;
 
   /**
    * Creates an instance of AddComponentHandler.
@@ -39,9 +42,15 @@ class AddComponentHandler extends ComponentOperationHandler {
    * @param {EntityManager} dependencies.entityManager - The entity management service.
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Dispatcher used to emit system error events.
+   * @param {IGameDataRepository} dependencies.gameDataRepository - Repository for accessing component definitions.
    * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ entityManager, logger, safeEventDispatcher }) {
+  constructor({
+    entityManager,
+    logger,
+    safeEventDispatcher,
+    gameDataRepository,
+  }) {
     super('AddComponentHandler', {
       logger: { value: logger },
       entityManager: {
@@ -52,9 +61,14 @@ class AddComponentHandler extends ComponentOperationHandler {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
+      gameDataRepository: {
+        value: gameDataRepository,
+        requiredMethods: ['getComponentDefinition'],
+      },
     });
     this.#dispatcher = safeEventDispatcher;
     this.#entityManager = entityManager;
+    this.#gameDataRepository = gameDataRepository;
   }
 
   /**
@@ -126,6 +140,20 @@ class AddComponentHandler extends ComponentOperationHandler {
     }
     log.debug('ADD_COMPONENT: Value validation successful');
 
+    // 4.5 Apply schema defaults to component value
+    const componentDefinition =
+      this.#gameDataRepository.getComponentDefinition(trimmedComponentType);
+    const valueWithDefaults = applySchemaDefaults(
+      value,
+      componentDefinition,
+      log
+    );
+
+    log.debug('ADD_COMPONENT: Applied schema defaults', {
+      original: value,
+      withDefaults: valueWithDefaults,
+    });
+
     // 5. Execute Add Component
     try {
       log.debug(
@@ -133,7 +161,7 @@ class AddComponentHandler extends ComponentOperationHandler {
         {
           entityId,
           trimmedComponentType,
-          value,
+          value: valueWithDefaults,
         }
       );
 
@@ -141,7 +169,7 @@ class AddComponentHandler extends ComponentOperationHandler {
       const result = await this.#entityManager.addComponent(
         entityId,
         trimmedComponentType,
-        value
+        valueWithDefaults
       );
 
       log.debug('ADD_COMPONENT: entityManager.addComponent returned:', result);

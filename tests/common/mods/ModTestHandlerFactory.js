@@ -155,7 +155,7 @@ export class ModTestHandlerFactory {
    * @returns {object} Extended handlers object including ADD_COMPONENT handler
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithAddComponent(entityManager, eventBus, logger) {
+  static createHandlersWithAddComponent(entityManager, eventBus, logger, gameDataRepository) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -181,6 +181,7 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+        gameDataRepository,
       }),
     };
 
@@ -198,7 +199,7 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers object with component mutation support
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithComponentMutations(entityManager, eventBus, logger) {
+  static createHandlersWithComponentMutations(entityManager, eventBus, logger, gameDataRepository) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -225,6 +226,7 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+        gameDataRepository,
       }),
       REMOVE_COMPONENT: new RemoveComponentHandler({
         entityManager,
@@ -245,7 +247,7 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers object with mouth engagement support
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithMouthEngagement(entityManager, eventBus, logger) {
+  static createHandlersWithMouthEngagement(entityManager, eventBus, logger, gameDataRepository) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -256,7 +258,8 @@ export class ModTestHandlerFactory {
     const baseHandlers = this.createHandlersWithComponentMutations(
       entityManager,
       eventBus,
-      logger
+      logger,
+      gameDataRepository
     );
 
     const safeDispatcher = {
@@ -337,7 +340,7 @@ export class ModTestHandlerFactory {
    * @returns {object} Custom handlers object based on options
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createCustomHandlers(entityManager, eventBus, logger, options = {}) {
+  static createCustomHandlers(entityManager, eventBus, logger, gameDataRepository, options = {}) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -399,6 +402,7 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+        gameDataRepository,
       });
     }
 
@@ -546,7 +550,7 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers with ADD_PERCEPTION_LOG_ENTRY included
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithPerceptionLogging(entityManager, eventBus, logger) {
+  static createHandlersWithPerceptionLogging(entityManager, eventBus, logger, gameDataRepository) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -598,6 +602,7 @@ export class ModTestHandlerFactory {
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
+        gameDataRepository,
       }),
       ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
         entityManager,

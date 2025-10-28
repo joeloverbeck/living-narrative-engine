@@ -50,7 +50,7 @@ import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 /**
  * Creates handlers needed for bending over rules.
  */
-function createHandlers(entityManager, eventBus, logger) {
+function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
     dispatch: jest.fn((eventType, payload) => {
       eventBus.dispatch(eventType, payload);
@@ -97,6 +97,7 @@ function createHandlers(entityManager, eventBus, logger) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+      gameDataRepository,
     }),
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,

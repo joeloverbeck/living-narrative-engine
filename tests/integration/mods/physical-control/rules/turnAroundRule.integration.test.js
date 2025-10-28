@@ -37,9 +37,10 @@ import { createRuleTestEnvironment } from '../../../../common/engine/systemLogic
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
+ * @param {object} gameDataRepository - Game data repository instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger) {
+function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   const safeDispatcher = {
     dispatch: jest.fn((eventType, payload) => {
       eventBus.dispatch(eventType, payload);
@@ -78,6 +79,7 @@ function createHandlers(entityManager, eventBus, logger) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+      gameDataRepository,
     }),
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
@@ -106,6 +108,7 @@ describe('physical_control_handle_turn_around rule integration', () => {
           ? eventIsActionTurnAround
           : undefined
       ),
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
 
     testEnv = createRuleTestEnvironment({

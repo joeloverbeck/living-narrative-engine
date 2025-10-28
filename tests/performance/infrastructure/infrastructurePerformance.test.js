@@ -191,12 +191,18 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
     });
 
     it('should create handlers with ADD_COMPONENT within performance baseline', async () => {
+      // Create a minimal mock dataRegistry for the test
+      const mockDataRegistry = {
+        getComponentDefinition: jest.fn().mockReturnValue(null),
+      };
+
       const stats = await performanceTest(
         () => {
           return ModTestHandlerFactory.createHandlersWithAddComponent(
             entityManager,
             eventBus,
-            logger
+            logger,
+            mockDataRegistry
           );
         },
         {
@@ -222,13 +228,18 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
         'positioning',
       ];
 
+      // Create a minimal mock dataRegistry for the test
+      const mockDataRegistry = {
+        getComponentDefinition: jest.fn().mockReturnValue(null),
+      };
+
       const stats = await performanceTest(
         () => {
           const randomCategory =
             categories[Math.floor(Math.random() * categories.length)];
           const factoryMethod =
             ModTestHandlerFactory.getHandlerFactoryForCategory(randomCategory);
-          return factoryMethod(entityManager, eventBus, logger);
+          return factoryMethod(entityManager, eventBus, logger, mockDataRegistry);
         },
         {
           operation: 'categoryBasedHandlerCreation',

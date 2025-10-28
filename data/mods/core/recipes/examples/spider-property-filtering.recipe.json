@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "core:example_spider_property_filtering",
+  "blueprintId": "core:example_spider_blueprint",
+  "slots": {},
+  "patterns": [
+    {
+      "matchesAll": {
+        "slotType": "spider_leg",
+        "socketId": "leg_*"
+      },
+      "partType": "spider_leg",
+      "tags": ["anatomy:part", "anatomy:segmented"],
+      "properties": {
+        "anatomy:segmented": {
+          "segments": 7,
+          "hairDensity": "moderate"
+        }
+      }
+    },
+    {
+      "matchesAll": {
+        "slotType": "spider_abdomen"
+      },
+      "partType": "spider_abdomen",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "anatomy:part": {
+          "size": "medium",
+          "pattern": "striped"
+        }
+      }
+    }
+  ],
+  "bodyDescriptors": {
+    "build": "slim",
+    "skinColor": "brown",
+    "height": "small"
+  }
+}
