@@ -55,6 +55,14 @@ const JSON_LOGIC_OPERATOR_HINTS = Object.freeze([
   'merge',
   'missing',
   'missing_some',
+  '===',
+  '!==',
+  '!',
+  '!!',
+  'log',
+  'substr',
+  'min',
+  'max',
 ]);
 
 const JSON_LOGIC_OPERATORS_EXPECT_ARRAY = new Set([
@@ -85,12 +93,63 @@ const JSON_LOGIC_OPERATORS_EXPECT_ARRAY = new Set([
   'missing_some',
 ]);
 
+const REGISTERED_JSON_LOGIC_OPERATORS = new Set([
+  ...JSON_LOGIC_OPERATORS_EXPECT_ARRAY,
+  'var',
+  ...JSON_LOGIC_OPERATOR_HINTS,
+]);
+
+if (
+  jsonLogic &&
+  typeof jsonLogic === 'object' &&
+  !jsonLogic.__operationInterpreterPatched
+) {
+  Object.defineProperty(jsonLogic, '__operationInterpreterPatched', {
+    value: true,
+    enumerable: false,
+    configurable: true,
+    writable: false,
+  });
+
+  const originalAddOperation =
+    typeof jsonLogic.add_operation === 'function'
+      ? jsonLogic.add_operation.bind(jsonLogic)
+      : null;
+
+  if (originalAddOperation) {
+    jsonLogic.add_operation = function patchedAddOperation(name, code) {
+      if (typeof name === 'string') {
+        REGISTERED_JSON_LOGIC_OPERATORS.add(name);
+      }
+      return originalAddOperation(name, code);
+    };
+  }
+
+  const originalRemoveOperation =
+    typeof jsonLogic.rm_operation === 'function'
+      ? jsonLogic.rm_operation.bind(jsonLogic)
+      : null;
+
+  if (originalRemoveOperation) {
+    jsonLogic.rm_operation = function patchedRemoveOperation(name) {
+      if (typeof name === 'string') {
+        REGISTERED_JSON_LOGIC_OPERATORS.delete(name);
+      }
+      return originalRemoveOperation(name);
+    };
+  }
+}
+
 /**
  * Determines whether an object is a JSON Logic expression with a valid operand shape.
  *
  * @param {*} candidate - Value to inspect.
  * @returns {boolean} True when the value should be treated as JSON Logic.
  */
+function isKnownJsonLogicOperator(operator) {
+  return REGISTERED_JSON_LOGIC_OPERATORS.has(operator);
+}
+
 function hasValidJsonLogicShape(candidate) {
   if (
     !candidate ||
@@ -127,19 +186,23 @@ function hasValidJsonLogicShape(candidate) {
     return true;
   }
 
-  if (JSON_LOGIC_OPERATOR_HINTS.includes(operator)) {
-    return true;
+  if (!isKnownJsonLogicOperator(operator)) {
+    return false;
   }
 
-  if (typeof jsonLogic.is_logic === 'function' && jsonLogic.is_logic(candidate)) {
-    return !(
-      operand &&
-      typeof operand === 'object' &&
-      !Array.isArray(operand)
-    );
+  if (
+    typeof jsonLogic.is_logic === 'function' &&
+    jsonLogic.is_logic(candidate) &&
+    operand &&
+    typeof operand === 'object' &&
+    !Array.isArray(operand)
+  ) {
+    if (hasValidJsonLogicShape(operand)) {
+      return true;
+    }
   }
 
-  return false;
+  return true;
 }
 
 /**
