@@ -197,6 +197,24 @@ describe('RoundManager', () => {
       );
     });
 
+    it('should treat null initiative data in options as absent and default to round-robin', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      await roundManager.startRound({
+        initiativeData: null,
+      });
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
+        [mockActor],
+        'round-robin',
+        undefined
+      );
+    });
+
     it('should throw when initiative strategy lacks initiative data', async () => {
       const mockActor = {
         id: 'actor1',

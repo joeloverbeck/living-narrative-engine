@@ -44,7 +44,8 @@ export default class RoundManager {
       const rawStrategy = strategyOrOptions.strategy;
       const hasExplicitStrategy =
         typeof rawStrategy === 'string' && rawStrategy.trim() !== '';
-      const hasInitiativeData = initiativeData !== undefined;
+      const hasInitiativeData =
+        initiativeData !== undefined && initiativeData !== null;
 
       if (hasExplicitStrategy) {
         strategy = rawStrategy;
