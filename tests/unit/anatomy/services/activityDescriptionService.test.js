@@ -6,7 +6,10 @@ import {
   COMPONENT_REMOVED_ID,
   ENTITY_REMOVED_ID,
 } from '../../../../src/constants/eventIds.js';
-import { NAME_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
+import {
+  NAME_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
 
 describe('ActivityDescriptionService', () => {
   let service;
@@ -4095,6 +4098,27 @@ describe('ActivityDescriptionService', () => {
         ).toBe('and Keeps watch');
       });
 
+      it('uses the object pronoun for self-targets when reflexives are disabled', () => {
+        const hooks = service.getTestHooks();
+        const phrase = hooks.generateActivityPhrase(
+          'Alex',
+          {
+            type: 'inline',
+            template: '{actor} greets {target}',
+            targetEntityId: 'actor-self',
+          },
+          true,
+          {
+            actorId: 'actor-self',
+            actorName: 'Alex',
+            actorPronouns: { subject: 'he', object: 'him' },
+            preferReflexivePronouns: false,
+          }
+        );
+
+        expect(phrase).toBe('Alex greets him');
+      });
+
       it('evaluates visibility and condition helpers through hooks', () => {
         const hooks = service.getTestHooks();
         const activity = {
@@ -4801,6 +4825,41 @@ describe('ActivityDescriptionService', () => {
         );
       });
 
+      it('warns and falls back when integration config is invalid', async () => {
+        mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValueOnce(
+          null
+        );
+
+        mockActivityIndex.findActivitiesForEntity.mockReturnValueOnce([
+          {
+            actorId: 'jon',
+            description: 'greets everyone warmly',
+            priority: 50,
+            type: 'inline',
+            template: '{actor} greets everyone warmly',
+          },
+        ]);
+
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+          id,
+          componentTypeIds: [],
+          hasComponent: jest.fn().mockReturnValue(false),
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'core:name') {
+              return { text: id };
+            }
+            return null;
+          }),
+        }));
+
+        const description = await service.generateActivityDescription('jon');
+
+        expect(description).toBe('Activity: jon greets everyone warmly.');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Activity integration config missing or invalid; using defaults'
+        );
+      });
+
       it('uses default formatting config when service throws', async () => {
         mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
           () => {
@@ -5375,6 +5434,10 @@ describe('ActivityDescriptionService', () => {
     });
 
     describe('#truncateDescription', () => {
+      it('returns empty string when provided a non-string input', () => {
+        expect(hooks.truncateDescription(123, 50)).toBe('');
+      });
+
       it('returns empty string for whitespace-only input', () => {
         expect(hooks.truncateDescription('   ', 100)).toBe('');
       });
@@ -5423,6 +5486,74 @@ describe('ActivityDescriptionService', () => {
         ['themselves', 'they'],
       ])('returns %s for subject %s', (expected, subject) => {
         expect(hooks.getReflexivePronoun({ subject })).toBe(expected);
+      });
+    });
+
+    describe('#shouldUsePronounForTarget', () => {
+      it('returns false when target identifier is missing', () => {
+        expect(hooks.shouldUsePronounForTarget(null)).toBe(false);
+      });
+
+      it('returns false when the entity manager cannot resolve a target', () => {
+        mockEntityManager.getEntityInstance.mockImplementationOnce(() => null);
+
+        expect(hooks.shouldUsePronounForTarget('missing-target')).toBe(false);
+      });
+
+      it('returns true when the target advertises the actor component', () => {
+        mockEntityManager.getEntityInstance.mockImplementationOnce(() => ({
+          hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID),
+          getComponentData: jest.fn(),
+        }));
+
+        expect(hooks.shouldUsePronounForTarget('actor-target')).toBe(true);
+      });
+
+      it('returns true when actor metadata exists on the entity', () => {
+        mockEntityManager.getEntityInstance.mockImplementationOnce(() => ({
+          hasComponent: jest.fn().mockReturnValue(false),
+          getComponentData: jest.fn((componentId) =>
+            componentId === ACTOR_COMPONENT_ID ? { id: 'actor-target' } : null
+          ),
+        }));
+
+        expect(hooks.shouldUsePronounForTarget('actor-target')).toBe(true);
+      });
+
+      it('logs a debug message and returns false when lookup throws', () => {
+        const error = new Error('lookup failed');
+        mockLogger.debug.mockClear();
+        mockEntityManager.getEntityInstance.mockImplementationOnce(() => {
+          throw error;
+        });
+
+        expect(hooks.shouldUsePronounForTarget('trouble-target')).toBe(false);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('trouble-target'),
+          error
+        );
+      });
+    });
+
+    describe('#detectEntityGender', () => {
+      it('returns unknown when the entity is not present', () => {
+        mockEntityManager.getEntityInstance.mockImplementationOnce(() => null);
+
+        expect(hooks.detectEntityGender('mystery-entity')).toBe('unknown');
+      });
+
+      it('warns and defaults to neutral when lookup throws', () => {
+        const error = new Error('gender lookup failed');
+        mockLogger.warn.mockClear();
+        mockEntityManager.getEntityInstance.mockImplementationOnce(() => {
+          throw error;
+        });
+
+        expect(hooks.detectEntityGender('troubled-entity')).toBe('neutral');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('troubled-entity'),
+          error
+        );
       });
     });
 
