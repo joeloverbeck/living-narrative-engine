@@ -19,12 +19,13 @@ describe('StaticConfiguration - Anatomy System', () => {
       expect(schemaFiles).toContain('anatomy.blueprint.schema.json');
       expect(schemaFiles).toContain('anatomy.blueprint-part.schema.json');
       expect(schemaFiles).toContain('anatomy.slot-library.schema.json');
+      expect(schemaFiles).toContain('anatomy.structure-template.schema.json');
 
       // Verify they're not duplicated
       const anatomySchemas = schemaFiles.filter((file) =>
         file.startsWith('anatomy.')
       );
-      expect(anatomySchemas).toHaveLength(4);
+      expect(anatomySchemas).toHaveLength(5);
     });
 
     it('should maintain proper order with anatomy schemas before operations', () => {
@@ -63,6 +64,10 @@ describe('StaticConfiguration - Anatomy System', () => {
       expect(config.getContentTypeSchemaId('anatomySlotLibraries')).toBe(
         'schema://living-narrative-engine/anatomy.slot-library.schema.json'
       );
+
+      expect(config.getContentTypeSchemaId('anatomyStructureTemplates')).toBe(
+        'schema://living-narrative-engine/anatomy.structure-template.schema.json'
+      );
     });
 
     it('should not affect existing content type schema IDs', () => {
@@ -98,6 +103,10 @@ describe('StaticConfiguration - Anatomy System', () => {
         {
           key: 'anatomySlotLibraries',
           file: 'anatomy.slot-library.schema.json',
+        },
+        {
+          key: 'anatomyStructureTemplates',
+          file: 'anatomy.structure-template.schema.json',
         },
       ];
 

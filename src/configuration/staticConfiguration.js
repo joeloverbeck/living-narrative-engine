@@ -141,6 +141,7 @@ class StaticConfiguration {
       'anatomy.blueprint.schema.json',
       'anatomy.blueprint-part.schema.json',
       'anatomy.slot-library.schema.json',
+      'anatomy.structure-template.schema.json',
       'anatomy-formatting.schema.json',
       'target-context.schema.json',
       'thematic-direction.schema.json', // Character builder thematic direction schema
@@ -185,6 +186,8 @@ class StaticConfiguration {
         'schema://living-narrative-engine/anatomy.slot-library.schema.json',
       anatomyFormatting:
         'schema://living-narrative-engine/anatomy-formatting.schema.json',
+      anatomyStructureTemplates:
+        'schema://living-narrative-engine/anatomy.structure-template.schema.json',
       'thematic-direction':
         'schema://living-narrative-engine/thematic-direction.schema.json',
       // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,
