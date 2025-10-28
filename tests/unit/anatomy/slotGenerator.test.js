@@ -741,6 +741,46 @@ describe('SlotGenerator', () => {
     });
   });
 
+  describe('extractSlotKeys helpers', () => {
+    it('should generate slot keys from limbSet including quadrupedal orientation scheme', () => {
+      const limbSet = {
+        type: 'leg',
+        count: 4,
+        arrangement: 'quadrupedal',
+        socketPattern: {
+          idTemplate: 'leg_{{orientation}}',
+          orientationScheme: 'quadrupedal',
+          allowedTypes: ['leg'],
+        },
+      };
+
+      const keys = slotGenerator.extractSlotKeysFromLimbSet(limbSet);
+
+      expect(keys).toEqual([
+        'leg_left_front',
+        'leg_right_front',
+        'leg_left_rear',
+        'leg_right_rear',
+      ]);
+    });
+
+    it('should generate slot keys from appendage definitions', () => {
+      const appendage = {
+        type: 'horn',
+        count: 2,
+        socketPattern: {
+          idTemplate: 'horn_{{index}}',
+          orientationScheme: 'indexed',
+          allowedTypes: ['horn'],
+        },
+      };
+
+      const keys = slotGenerator.extractSlotKeysFromAppendage(appendage);
+
+      expect(keys).toEqual(['horn_1', 'horn_2']);
+    });
+  });
+
   describe('Requirements Structure', () => {
     it('should include correct partType in requirements', () => {
       const template = {
