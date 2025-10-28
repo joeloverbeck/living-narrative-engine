@@ -25,6 +25,10 @@
       }
     },
     {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
       "type": "UNLOCK_MOVEMENT",
       "comment": "Unlock movement after standing (handles both legacy and anatomy entities)",
       "parameters": {

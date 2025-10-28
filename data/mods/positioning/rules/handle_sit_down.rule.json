@@ -201,6 +201,14 @@
             }
           },
           {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "target" }
+          },
+          {
             "macro": "core:logSuccessAndEndTurn"
           }
         ]
