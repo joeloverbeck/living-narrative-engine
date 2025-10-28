@@ -183,6 +183,39 @@ describe('ActionIndexingService', () => {
     expect(indexed[2].visual).toBeNull();
   });
 
+  it('returns immutable composites and protects cached state from mutation', () => {
+    const rawActions = [
+      {
+        id: 'immutable',
+        params: { count: 1 },
+        command: 'do-something',
+        description: 'an action',
+        visual: {
+          backgroundColor: '#123456',
+          textColor: '#abcdef',
+        },
+      },
+    ];
+
+    const composites = service.indexActions('actor-immutability', rawActions);
+
+    expect(Object.isFrozen(composites[0])).toBe(true);
+    expect(Object.isFrozen(composites[0].params)).toBe(true);
+    expect(Object.isFrozen(composites[0].visual)).toBe(true);
+
+    expect(() => {
+      composites[0].params.count = 99;
+    }).toThrow(TypeError);
+
+    expect(() => {
+      composites[0].visual.backgroundColor = '#ffffff';
+    }).toThrow(TypeError);
+
+    const resolved = service.resolve('actor-immutability', 1);
+    expect(resolved.params.count).toBe(1);
+    expect(resolved.visual.backgroundColor).toBe('#123456');
+  });
+
   it('suppresses duplicate actions and logs info', () => {
     const rawActions = [
       {
@@ -292,8 +325,16 @@ describe('ActionIndexingService', () => {
     const result = service.indexActions('actorMap', rawActions);
 
     expect(result).toHaveLength(2);
-    expect(result[0].params).toBe(actionAParams);
-    expect(result[1].params).toBe(actionBParams);
+    expect(result[0].params).not.toBe(actionAParams);
+    expect(result[1].params).not.toBe(actionBParams);
+    expect(Array.from(result[0].params.entries())).toEqual(
+      Array.from(actionAParams.entries())
+    );
+    expect(Array.from(result[1].params.entries())).toEqual(
+      Array.from(actionBParams.entries())
+    );
+    expect(() => result[0].params.set('new', 'value')).toThrow(TypeError);
+    expect(() => result[1].params.clear()).toThrow(TypeError);
     expect(logger.info).not.toHaveBeenCalled();
   });
 
