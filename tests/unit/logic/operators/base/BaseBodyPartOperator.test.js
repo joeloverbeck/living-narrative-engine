@@ -313,9 +313,9 @@ describe('BaseBodyPartOperator', () => {
       expect(result).toBe(true);
     });
 
-    test('should return false when entity is falsy after ID extraction', () => {
+    test('should return false when entity is NaN after ID extraction', () => {
       resolveEntityPath.mockReturnValue({
-        entity: 0, // Falsy entity (0 is falsy)
+        entity: Number.NaN,
         isValid: true,
       });
 
@@ -325,6 +325,7 @@ describe('BaseBodyPartOperator', () => {
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
         'testBodyPartOperator: Invalid entity at path actor'
       );
+      expect(getBodyComponent).not.toHaveBeenCalled();
     });
 
     test('should return false when entity is false', () => {

@@ -96,7 +96,7 @@ export class BaseBodyPartOperator {
 
       // Extract root ID
       const rootId = extractRootId(bodyComponent);
-      if (!rootId) {
+      if (rootId === undefined || rootId === null) {
         this.logger.debug(
           `${this.operatorName}: Entity ${entityId} has no root in anatomy:body component`
         );
