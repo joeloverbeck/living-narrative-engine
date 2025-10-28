@@ -274,7 +274,21 @@ export default class RoundManager {
       return undefined;
     }
 
-    const parsed = Number(rawScore);
+    let parsed;
+    try {
+      parsed = Number(rawScore);
+    } catch (error) {
+      this.#logger.warn(
+        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
+        {
+          entityId,
+          receivedType: typeof rawScore,
+          error: error instanceof Error ? error.message : error,
+        }
+      );
+      return undefined;
+    }
+
     if (Number.isFinite(parsed)) {
       return parsed;
     }
