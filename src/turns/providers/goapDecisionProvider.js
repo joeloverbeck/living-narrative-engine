@@ -25,11 +25,29 @@ export class GoapDecisionProvider extends DelegatingDecisionProvider {
    */
   constructor({ logger, safeEventDispatcher }) {
     const delegate = async (_actor, _context, actions) => {
-      const firstAction = Array.isArray(actions) ? actions[0] ?? null : null;
-      const resolvedIndex =
-        firstAction && Number.isInteger(firstAction.index)
-          ? firstAction.index
-          : 1;
+      if (!Array.isArray(actions) || actions.length === 0) {
+        const diagnosticDetails = {
+          receivedType: Array.isArray(actions)
+            ? 'array'
+            : actions === null
+            ? 'null'
+            : typeof actions,
+          actionsLength: Array.isArray(actions) ? actions.length : undefined,
+        };
+        const errorMessage =
+          'GoapDecisionProvider: Cannot choose an action because no indexed actions were provided.';
+
+        if (typeof logger?.error === 'function') {
+          logger.error(errorMessage, diagnosticDetails);
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const [firstAction] = actions;
+      const resolvedIndex = Number.isInteger(firstAction?.index)
+        ? firstAction.index
+        : 1;
 
       return { index: resolvedIndex };
     };

@@ -10,7 +10,14 @@ const mockLogger = {
 
 const mockDispatcher = { dispatch: jest.fn() };
 
+const ERROR_MESSAGE =
+  'GoapDecisionProvider: Cannot choose an action because no indexed actions were provided.';
+
 describe('GoapDecisionProvider', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('returns the first action index for a non-empty actions array', async () => {
     const provider = new GoapDecisionProvider({
       logger: mockLogger,
@@ -41,7 +48,27 @@ describe('GoapDecisionProvider', () => {
     });
 
     await expect(provider.decide({ id: 'a1' }, {}, [])).rejects.toThrow(
-      'Player chose an index that does not exist for this turn.'
+      ERROR_MESSAGE
     );
+    expect(mockLogger.error).toHaveBeenCalledWith(ERROR_MESSAGE, {
+      receivedType: 'array',
+      actionsLength: 0,
+    });
+  });
+
+  it('throws an error when actions is not an array', async () => {
+    const provider = new GoapDecisionProvider({
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    await expect(
+      // @ts-expect-error intentionally passing null to simulate runtime failure
+      provider.decide({ id: 'a1' }, {}, null)
+    ).rejects.toThrow(ERROR_MESSAGE);
+    expect(mockLogger.error).toHaveBeenCalledWith(ERROR_MESSAGE, {
+      receivedType: 'null',
+      actionsLength: undefined,
+    });
   });
 });
