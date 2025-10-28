@@ -88,7 +88,7 @@ export class AIGameStateProvider extends IAIGameStateProvider {
     );
 
     // Delegate each part of the state creation to a specialized service
-    const actorState = this.#actorStateProvider.build(actor, logger);
+    const actorState = await this.#actorStateProvider.build(actor, logger);
     const actorPromptData = this.#actorDataExtractor.extractPromptData(
       actorState,
       actor.id

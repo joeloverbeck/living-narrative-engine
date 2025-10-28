@@ -166,6 +166,25 @@ describe('AIGameStateProvider', () => {
     );
   });
 
+  it('awaits the actor state provider before extracting prompt data', async () => {
+    const expectedActorState = { id: 'actor-1', name: 'Resolved Actor' };
+    const expectedPromptData = { name: 'Resolved Actor' };
+
+    mockActorStateProvider.build.mockResolvedValue(expectedActorState);
+    mockActorDataExtractor.extractPromptData.mockReturnValue(
+      expectedPromptData
+    );
+    mockLocationSummaryProvider.build.mockResolvedValue(null);
+    mockPerceptionLogProvider.get.mockResolvedValue([]);
+
+    await provider.buildGameState(mockActor, mockTurnContext, mockLogger);
+
+    expect(mockActorDataExtractor.extractPromptData).toHaveBeenCalledWith(
+      expectedActorState,
+      'actor-1'
+    );
+  });
+
   it('should build a complete AIGameStateDTO with availableActions set to null', async () => {
     // Arrange: Define mock return values
     const expectedActorState = { id: 'actor-1' };
