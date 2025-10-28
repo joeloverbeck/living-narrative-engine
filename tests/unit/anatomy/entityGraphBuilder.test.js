@@ -553,6 +553,24 @@ describe('EntityGraphBuilder', () => {
     expect(mocks.logger.debug).toHaveBeenCalled();
   });
 
+  it('addSocketsToEntity attaches sockets component and logs details', async () => {
+    const sockets = [
+      { id: 'socket-1', position: 'left' },
+      { id: 'socket-2', position: 'right' },
+    ];
+
+    await builder.addSocketsToEntity('entity-42', sockets);
+
+    expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
+      'entity-42',
+      'anatomy:sockets',
+      { sockets }
+    );
+    expect(mocks.logger.debug).toHaveBeenCalledWith(
+      "EntityGraphBuilder: Added 2 sockets to entity 'entity-42'"
+    );
+  });
+
   it('getPartType returns subtype or unknown', () => {
     expect(builder.getPartType('any')).toBe('arm');
     expect(builder.getPartType('missingPart')).toBe('unknown');
