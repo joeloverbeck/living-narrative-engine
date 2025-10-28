@@ -269,8 +269,8 @@ describe('ActionIndexingService', () => {
     );
   });
 
-  it('replaces cached actions when discovery returns an empty list', () => {
-    const actorId = 'actor-cache-reset';
+  it('returns cached actions when discovery returns an empty list', () => {
+    const actorId = 'actor-cache-retain';
     const rawActions = [
       {
         id: 'keep',
@@ -285,9 +285,14 @@ describe('ActionIndexingService', () => {
     expect(service.getIndexedList(actorId)).toHaveLength(1);
 
     const secondResult = service.indexActions(actorId, []);
-    expect(secondResult).toEqual([]);
-    expect(service.getIndexedList(actorId)).toEqual([]);
-    expect(() => service.resolve(actorId, 1)).toThrow(ActionIndexingError);
+    expect(secondResult).toHaveLength(1);
+    expect(secondResult).toEqual(firstResult);
+    expect(secondResult).not.toBe(firstResult);
+
+    const cachedList = service.getIndexedList(actorId);
+    expect(cachedList).toHaveLength(1);
+    expect(cachedList).toEqual(firstResult);
+    expect(service.resolve(actorId, 1)).toEqual(firstResult[0]);
   });
 
   it('skips malformed discovered entries without throwing', () => {
