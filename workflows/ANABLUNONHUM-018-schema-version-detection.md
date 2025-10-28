@@ -7,7 +7,7 @@
 
 ## Overview
 
-Implement feature flag and version detection to safely route blueprints through v1 or v2 processing paths.
+Implement schema version detection to safely route blueprints through v1 or v2 processing paths.
 
 ## Implementation
 
@@ -15,39 +15,45 @@ Implement feature flag and version detection to safely route blueprints through 
 class BodyBlueprintFactory {
   #loadBlueprint(blueprintId) {
     const blueprint = this.#dataRegistry.get('anatomyBlueprints', blueprintId);
-    
-    // Default to v1 if schemaVersion missing
-    const version = blueprint.schemaVersion || '1.0';
-    
-    if (version === '2.0') {
-      if (!blueprint.structureTemplate) {
-        throw new ValidationError('V2 blueprints require structureTemplate');
-      }
-      return this.#processTemplatedBlueprint(blueprint);
-    } else if (version === '1.0') {
-      if (blueprint.structureTemplate) {
-        throw new ValidationError('V1 blueprints cannot use structureTemplate');
-      }
-      return blueprint;  // Existing v1 path
-    } else {
-      throw new ValidationError(`Invalid schemaVersion: ${version}`);
+    if (!blueprint) {
+      throw new InvalidArgumentError(
+        `Blueprint '${blueprintId}' not found in registry`
+      );
     }
+
+    if (blueprint.schemaVersion === '2.0' && blueprint.structureTemplate) {
+      return this.#processV2Blueprint(blueprint);
+    }
+
+    return blueprint; // V1 or schemaVersion omitted fall back to legacy handling
   }
 }
 ```
 
-## Feature Flag
+> **Note**: `#processV2Blueprint` loads the referenced structure template from the
+> `anatomyStructureTemplates` registry, generates sockets/slots, and merges them
+> with any `additionalSlots` defined on the blueprint. See
+> [`docs/anatomy/blueprints-v2.md`](../docs/anatomy/blueprints-v2.md) and
+> [`docs/anatomy/structure-templates.md`](../docs/anatomy/structure-templates.md)
+> for full context on V2 behavior.
 
-Add environment variable: `ENABLE_STRUCTURE_TEMPLATES=true/false`
+## Environment Flags
+
+No feature flag currently gates V2 blueprint processing. The factory routes to
+`#processV2Blueprint` whenever both `schemaVersion === '2.0'` and
+`structureTemplate` are present on the blueprint.
 
 ## Test Cases
 
-- V1 blueprint (no schemaVersion) processes correctly
-- V1 blueprint (explicit 1.0) processes correctly
-- V2 blueprint routes to template processor
-- Invalid version rejected
-- Mixed features rejected
-- Feature flag disables v2 processing
+- Blueprint missing `schemaVersion` continues through the legacy V1 path
+- Blueprint explicitly marked `schemaVersion: '1.0'` loads without template
+  processing
+- Blueprint marked `schemaVersion: '2.0'` **and** providing `structureTemplate`
+  routes through `#processV2Blueprint`
+- `#processV2Blueprint` throws when referenced structure template is absent in
+  the registry
+- Generated slots from the structure template merge with `additionalSlots`
+  (template-derived entries should not overwrite author-specified overrides)
 
 ## References
 
