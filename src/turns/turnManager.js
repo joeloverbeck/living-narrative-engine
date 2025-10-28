@@ -748,11 +748,55 @@ class TurnManager extends ITurnManager {
       return true;
     }
 
+    if (typeof rawSuccess === 'string') {
+      const normalised = rawSuccess.trim().toLowerCase();
+
+      if (normalised === 'true') {
+        this.#logger.warn(
+          `Received '${TURN_ENDED_ID}' event for ${actorId} with a string success flag ("${rawSuccess}"). Interpreting as success=true for compatibility with legacy emitters.`,
+          { receivedType: 'string' }
+        );
+        return true;
+      }
+
+      if (normalised === 'false') {
+        this.#logger.warn(
+          `Received '${TURN_ENDED_ID}' event for ${actorId} with a string success flag ("${rawSuccess}"). Interpreting as success=false for compatibility with legacy emitters.`,
+          { receivedType: 'string' }
+        );
+        return false;
+      }
+
+      this.#logger.warn(
+        `Received '${TURN_ENDED_ID}' event for ${actorId} with an unrecognised string success flag ("${rawSuccess}"). Treating as success=false.`,
+        { receivedType: 'string' }
+      );
+      return false;
+    }
+
+    if (typeof rawSuccess === 'number') {
+      if (rawSuccess === 1) {
+        this.#logger.warn(
+          `Received '${TURN_ENDED_ID}' event for ${actorId} with numeric success flag (1). Interpreting as success=true for compatibility with legacy emitters.`,
+          { receivedType: 'number' }
+        );
+        return true;
+      }
+
+      if (rawSuccess === 0) {
+        this.#logger.warn(
+          `Received '${TURN_ENDED_ID}' event for ${actorId} with numeric success flag (0). Interpreting as success=false for compatibility with legacy emitters.`,
+          { receivedType: 'number' }
+        );
+        return false;
+      }
+    }
+
     this.#logger.warn(
-      `Received '${TURN_ENDED_ID}' event for ${actorId} with a non-boolean success flag (${rawSuccess}). Coercing value to boolean for compatibility.`,
+      `Received '${TURN_ENDED_ID}' event for ${actorId} with an unsupported success flag type (${typeof rawSuccess}). Treating as success=false.`,
       { receivedType: typeof rawSuccess }
     );
-    return Boolean(rawSuccess);
+    return false;
   }
 
   /**
