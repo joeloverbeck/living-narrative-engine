@@ -93,12 +93,14 @@ export async function safeDispatchError(
     eventDetails = details === undefined ? {} : details;
   }
 
+  const normalizedDetails = normalizeDetailsPayload(eventDetails);
+
   try {
     const dispatchResult = await dispatcher.dispatch(
       SYSTEM_ERROR_OCCURRED_ID,
       {
         message,
-        details: eventDetails,
+        details: normalizedDetails,
       }
     );
 
@@ -131,10 +133,57 @@ export async function safeDispatchError(
  * @returns {{ ok: false, error: string, details?: object }} Result object for validation failures.
  */
 export function dispatchValidationError(dispatcher, message, details, logger) {
-  safeDispatchError(dispatcher, message, details, logger);
+  const normalizedDetails = normalizeDetailsPayload(details);
+  safeDispatchError(dispatcher, message, normalizedDetails, logger);
   return details !== undefined
-    ? { ok: false, error: message, details }
+    ? { ok: false, error: message, details: normalizedDetails }
     : { ok: false, error: message };
+}
+
+/**
+ * Normalizes the details payload so it always complies with the
+ * `core:system_error_occurred` schema.
+ *
+ * @param {unknown} rawDetails - Details payload provided by the caller.
+ * @returns {Record<string, unknown>} Schema-compliant details object.
+ */
+function normalizeDetailsPayload(rawDetails) {
+  if (rawDetails === undefined || rawDetails === null) {
+    return {};
+  }
+
+  if (Array.isArray(rawDetails)) {
+    return rawDetails.length > 0 ? { items: rawDetails } : {};
+  }
+
+  const valueType = typeof rawDetails;
+
+  if (valueType === 'object') {
+    return /** @type {Record<string, unknown>} */ (rawDetails);
+  }
+
+  if (valueType === 'string') {
+    const trimmed = rawDetails.trim();
+    return trimmed ? { raw: trimmed } : {};
+  }
+
+  if (valueType === 'number' || valueType === 'boolean' || valueType === 'bigint') {
+    return { raw: String(rawDetails) };
+  }
+
+  if (valueType === 'symbol') {
+    return { raw: rawDetails.description || rawDetails.toString() };
+  }
+
+  if (valueType === 'function') {
+    return { raw: rawDetails.name || rawDetails.toString() };
+  }
+
+  try {
+    return { raw: String(rawDetails) };
+  } catch {
+    return {};
+  }
 }
 
 // --- FILE END ---
