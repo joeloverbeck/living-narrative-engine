@@ -17,7 +17,10 @@ import {
   COMPONENT_REMOVED_ID,
   ENTITY_REMOVED_ID,
 } from '../../constants/eventIds.js';
-import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
+import {
+  NAME_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 
 const GENDER_COMPONENT_ID = 'core:gender';
 const ACTIVITY_METADATA_COMPONENT_ID = 'activity:description_metadata';
@@ -486,7 +489,10 @@ class ActivityDescriptionService {
       }
 
       // Only process components that have activityMetadata and aren't explicitly disabled
-      if (activityMetadata && activityMetadata?.shouldDescribeInActivity !== false) {
+      if (
+        activityMetadata &&
+        activityMetadata?.shouldDescribeInActivity !== false
+      ) {
         this.#logger.info('Found activity metadata in component', {
           componentId,
           hasTemplate: !!activityMetadata?.template,
@@ -1578,10 +1584,16 @@ class ActivityDescriptionService {
               ? actorName
               : this.#resolveEntityName(actorId);
         }
-      } else if (usePronounsForTarget) {
+      } else if (
+        usePronounsForTarget &&
+        this.#shouldUsePronounForTarget(targetEntityId)
+      ) {
         const targetGender = this.#detectEntityGender(targetEntityId);
         const targetPronouns = this.#getPronounSet(targetGender);
-        targetRef = targetPronouns.object; // 'him', 'her', 'them'
+        const pronounCandidate = targetPronouns?.object;
+        targetRef = pronounCandidate
+          ? pronounCandidate
+          : this.#resolveEntityName(targetEntityId);
       } else {
         targetRef = this.#resolveEntityName(targetEntityId);
       }
@@ -2032,6 +2044,62 @@ class ActivityDescriptionService {
       const fallbackName = this.#sanitizeEntityName(entityId);
       this.#setCacheValue(this.#entityNameCache, entityId, fallbackName);
       return fallbackName;
+    }
+  }
+
+  /**
+   * Determine whether pronouns should be used when referencing a target entity.
+   *
+   * @description Restrict pronoun usage to sentient targets such as actors or
+   * entities with explicit gender metadata to avoid misgendering inanimate
+   * objects like furniture.
+   * @param {string} targetEntityId - Identifier of the target entity.
+   * @returns {boolean} True if pronouns should be used for the target entity.
+   * @private
+   */
+  #shouldUsePronounForTarget(targetEntityId) {
+    if (!targetEntityId) {
+      return false;
+    }
+
+    try {
+      const targetEntity =
+        this.#entityManager?.getEntityInstance?.(targetEntityId);
+
+      if (!targetEntity) {
+        return false;
+      }
+
+      if (typeof targetEntity.hasComponent === 'function') {
+        if (targetEntity.hasComponent(ACTOR_COMPONENT_ID)) {
+          return true;
+        }
+
+        if (targetEntity.hasComponent(GENDER_COMPONENT_ID)) {
+          const genderComponent =
+            targetEntity.getComponentData?.(GENDER_COMPONENT_ID);
+          if (genderComponent?.value) {
+            return true;
+          }
+        }
+      }
+
+      const actorComponent =
+        targetEntity.getComponentData?.(ACTOR_COMPONENT_ID);
+      if (actorComponent) {
+        return true;
+      }
+
+      const genderData = targetEntity.getComponentData?.(GENDER_COMPONENT_ID);
+      return Boolean(genderData?.value);
+    } catch (error) {
+      if (this.#logger && typeof this.#logger.debug === 'function') {
+        this.#logger.debug(
+          `Skipping pronoun usage for unresolved target ${targetEntityId}`,
+          error
+        );
+      }
+      return false;
     }
   }
 
