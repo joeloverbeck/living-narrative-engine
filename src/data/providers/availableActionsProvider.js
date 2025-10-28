@@ -304,10 +304,6 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @returns {void}
    */
   #storeSubscription(subscription) {
-    if (!subscription) {
-      return;
-    }
-
     const { unsubscribe, eventName, listener } = subscription;
     if (typeof unsubscribe === 'function') {
       this.#eventSubscriptions.push({ unsubscribe });
@@ -315,9 +311,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
     }
 
     // Fallback: remember event name and listener so destroy() can call the bus directly
-    if (typeof eventName === 'string' && typeof listener === 'function') {
-      this.#eventSubscriptions.push({ eventName, listener });
-    }
+    this.#eventSubscriptions.push({ eventName, listener });
   }
 
   /**
@@ -388,16 +382,13 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
       try {
         if (subscription && typeof subscription.unsubscribe === 'function') {
           subscription.unsubscribe();
-        } else if (
-          subscription &&
-          typeof subscription.eventName === 'string' &&
-          typeof subscription.listener === 'function'
-        ) {
-          this.#eventBus.unsubscribe(
-            subscription.eventName,
-            subscription.listener
-          );
+          continue;
         }
+
+        this.#eventBus.unsubscribe(
+          subscription?.eventName,
+          subscription?.listener
+        );
       } catch (error) {
         this.#logger.warn(
           'AvailableActionsProvider: Failed to unsubscribe from event during destroy()',
