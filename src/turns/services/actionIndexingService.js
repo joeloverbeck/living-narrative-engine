@@ -93,6 +93,14 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
     return `[Function:${value.name || 'anonymous'}]`;
   }
 
+  if (value instanceof Date) {
+    const timeValue = value.getTime();
+    if (Number.isNaN(timeValue)) {
+      return 'Date(Invalid)';
+    }
+    return `Date(${value.toISOString()})`;
+  }
+
   if (Array.isArray(value)) {
     if (seen.has(value)) {
       return '[Circular]';

@@ -297,6 +297,31 @@ describe('ActionIndexingService', () => {
     expect(logger.info).not.toHaveBeenCalled();
   });
 
+  it('treats Date parameters with different timestamps as distinct actions', () => {
+    const morning = new Date('2024-03-15T08:30:00.000Z');
+    const evening = new Date('2024-03-15T20:45:00.000Z');
+
+    const rawActions = [
+      {
+        id: 'time-sensitive',
+        params: { scheduledAt: morning },
+        command: 'cmd-time',
+        description: 'Morning option',
+      },
+      {
+        id: 'time-sensitive',
+        params: { scheduledAt: evening },
+        command: 'cmd-time',
+        description: 'Evening option',
+      },
+    ];
+
+    const result = service.indexActions('actorDate', rawActions);
+
+    expect(result).toHaveLength(2);
+    expect(logger.info).not.toHaveBeenCalled();
+  });
+
   it('does not merge NaN, Infinity, or null parameter values together', () => {
     const rawActions = [
       {
