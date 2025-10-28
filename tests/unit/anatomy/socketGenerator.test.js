@@ -273,6 +273,41 @@ describe('SocketGenerator', () => {
       expect(sockets[3].id).toBe('leg_right_rear');
     });
 
+    it('should support quadrupedal orientation scheme explicitly', () => {
+      const template = {
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              socketPattern: {
+                idTemplate: 'quadruped_leg_{{orientation}}',
+                orientationScheme: 'quadrupedal',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(4);
+      expect(sockets.map((socket) => socket.orientation)).toEqual([
+        'left_front',
+        'right_front',
+        'left_rear',
+        'right_rear',
+      ]);
+      expect(sockets.map((socket) => socket.id)).toEqual([
+        'quadruped_leg_left_front',
+        'quadruped_leg_right_front',
+        'quadruped_leg_left_rear',
+        'quadruped_leg_right_rear',
+      ]);
+    });
+
     it('should alternate left/right for larger sets', () => {
       const template = {
         topology: {
