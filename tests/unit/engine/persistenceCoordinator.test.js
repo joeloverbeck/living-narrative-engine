@@ -400,6 +400,34 @@ describe('PersistenceCoordinator', () => {
     });
   });
 
+  it('triggerManualSave surfaces user-friendly errors when raw error is missing', async () => {
+    const { coordinator, dispatcher, persistenceService } = createCoordinator();
+    const friendlyMessage = 'Storage is nearly full. Delete older saves.';
+
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      userFriendlyError: friendlyMessage,
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toEqual({
+      success: false,
+      userFriendlyError: friendlyMessage,
+      error: friendlyMessage,
+    });
+
+    const failureDispatch = dispatcher.dispatch.mock.calls.find(
+      ([eventId]) => eventId === ENGINE_OPERATION_FAILED_UI
+    );
+
+    expect(failureDispatch).toBeDefined();
+    expect(failureDispatch[1]).toEqual({
+      errorMessage: `Failed to save game: ${friendlyMessage}`,
+      errorTitle: 'Save Failed',
+    });
+  });
+
   it('triggerManualSave handles save failure results', async () => {
     const { coordinator, dispatcher, persistenceService } = createCoordinator();
     const errorMessage = 'Disk full';
