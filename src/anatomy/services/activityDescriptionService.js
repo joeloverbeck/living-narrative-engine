@@ -236,14 +236,32 @@ class ActivityDescriptionService {
         return '';
       }
 
+      let componentTypeIdsLogValue = 'not available';
+      let hasComponentTypeIds = false;
+      let componentCount = 0;
+
+      try {
+        const componentTypeIds = entity.componentTypeIds;
+
+        if (Array.isArray(componentTypeIds)) {
+          componentTypeIdsLogValue = componentTypeIds;
+          hasComponentTypeIds = true;
+          componentCount = componentTypeIds.length;
+        }
+      } catch (componentAccessError) {
+        this.#logger.warn(
+          `Failed to inspect componentTypeIds for entity ${entityId}`,
+          componentAccessError
+        );
+        componentTypeIdsLogValue = 'inspection_failed';
+      }
+
       this.#logger.info('ActivityDescriptionService: received entity', {
         entityId,
         entityExists: true,
-        componentTypeIds: entity.componentTypeIds || 'not available',
-        hasComponentTypeIds: Array.isArray(entity.componentTypeIds),
-        componentCount: Array.isArray(entity.componentTypeIds)
-          ? entity.componentTypeIds.length
-          : 0,
+        componentTypeIds: componentTypeIdsLogValue,
+        hasComponentTypeIds,
+        componentCount,
       });
 
       const activities = this.#collectActivityMetadata(entityId, entity);
