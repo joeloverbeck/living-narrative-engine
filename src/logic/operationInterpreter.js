@@ -132,11 +132,14 @@ function hasValidJsonLogicShape(candidate) {
   }
 
   if (typeof jsonLogic.is_logic === 'function' && jsonLogic.is_logic(candidate)) {
-    return !(
+    if (
       operand &&
       typeof operand === 'object' &&
       !Array.isArray(operand)
-    );
+    ) {
+      return hasValidJsonLogicShape(operand);
+    }
+    return true;
   }
 
   return false;
