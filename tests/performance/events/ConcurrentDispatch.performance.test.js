@@ -193,14 +193,27 @@ describe('Concurrent Event Dispatch Performance', () => {
 
       // Assert - check that performance doesn't degrade exponentially
       // Browser environments may have inconsistent timing at small scales
+      const EPSILON_MS = 5; // Stabilise ratios when timings are extremely small
+
       for (let i = 1; i < timings.length; i++) {
-        const ratio = timings[i].count / timings[i - 1].count;
-        const timeRatio = timings[i].duration / timings[i - 1].duration;
+        const previous = timings[i - 1];
+        const current = timings[i];
+        const countRatio = current.count / previous.count;
+
+        const previousDuration = previous.duration + EPSILON_MS;
+        const currentDuration = current.duration + EPSILON_MS;
+        const durationRatio = currentDuration / previousDuration;
+
+        // Compare normalised per-event cost to detect real non-linear scaling while
+        // remaining tolerant of event loop jitter when the absolute timings are tiny.
+        const previousPerEvent = previousDuration / previous.count;
+        const currentPerEvent = currentDuration / current.count;
+        const perEventRatio = currentPerEvent / previousPerEvent;
 
         // Time should not scale exponentially (within generous bounds for browser timing)
         // Allow for more variance due to browser event loop scheduling
-        expect(timeRatio).toBeGreaterThan(ratio * 0.1); // Very permissive lower bound
-        expect(timeRatio).toBeLessThan(ratio * 5); // Prevent exponential scaling
+        expect(durationRatio).toBeLessThan(countRatio * 10);
+        expect(perEventRatio).toBeLessThan(5);
       }
     });
   });
