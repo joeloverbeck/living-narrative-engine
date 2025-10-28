@@ -648,7 +648,7 @@ describe('PersistenceCoordinator', () => {
     const result = await coordinator.loadGame(DEFAULT_SAVE_ID);
 
     const expectedErrorMsg =
-      'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.';
+      'GamePersistenceService is not available. Cannot load game.';
 
     expect(result).toEqual({
       success: false,
