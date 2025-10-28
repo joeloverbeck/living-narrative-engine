@@ -212,6 +212,23 @@ describe('RecipeProcessor', () => {
       });
     });
 
+    it('should override partType when provided in recipe slot', () => {
+      const blueprintReqs = {
+        partType: 'original_part',
+        components: ['existing'],
+      };
+      const recipeSlot = {
+        partType: 'override_part',
+      };
+
+      const result = processor.mergeSlotRequirements(blueprintReqs, recipeSlot);
+
+      expect(result).toEqual({
+        partType: 'override_part',
+        components: ['existing'],
+      });
+    });
+
     it('should merge recipe tags with blueprint components', () => {
       const blueprintReqs = {
         components: ['comp1'],
@@ -335,6 +352,27 @@ describe('RecipeProcessor', () => {
       );
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('pattern expansion', () => {
+    it('should skip V2 patterns that lack matches', () => {
+      const recipe = {
+        recipeId: 'test:recipe',
+        slots: {},
+        patterns: [
+          {
+            partType: 'arm',
+          },
+        ],
+      };
+
+      const result = processor.processRecipe(recipe);
+
+      expect(result.slots).toEqual({});
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'RecipeProcessor: Skipping V2 pattern (will be resolved by RecipePatternResolver)'
+      );
     });
   });
 });
