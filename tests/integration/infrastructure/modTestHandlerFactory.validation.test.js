@@ -29,6 +29,7 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
   let entityManager;
   let eventBus;
   let logger;
+  let mockGameDataRepository;
 
   beforeEach(() => {
     // Use realistic test entities
@@ -62,6 +63,10 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),
+    };
+
+    mockGameDataRepository = {
+      getComponentDefinition: jest.fn().mockReturnValue(null),
     };
   });
 
@@ -132,7 +137,8 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       const handlers = ModTestHandlerFactory.createHandlersWithAddComponent(
         entityManager,
         eventBus,
-        logger
+        logger,
+        mockGameDataRepository
       );
 
       // Should have all standard handlers plus ADD_COMPONENT
@@ -180,6 +186,7 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
         entityManager,
         eventBus,
         logger,
+        mockGameDataRepository,
         options
       );
 
@@ -216,7 +223,12 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
         expect(typeof factoryMethod).toBe('function');
 
         // Execute the factory method and verify results
-        const handlers = factoryMethod(entityManager, eventBus, logger);
+        const handlers = factoryMethod(
+          entityManager,
+          eventBus,
+          logger,
+          mockGameDataRepository
+        );
         expect(handlers).toBeDefined();
         expect(typeof handlers).toBe('object');
 
@@ -236,7 +248,12 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
     it('should return default factory for unknown categories', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('unknown');
-      const handlers = factoryMethod(entityManager, eventBus, logger);
+      const handlers = factoryMethod(
+        entityManager,
+        eventBus,
+        logger,
+        mockGameDataRepository
+      );
 
       // Should behave like createStandardHandlers
       expect(handlers).toHaveProperty('QUERY_COMPONENT');
@@ -467,7 +484,8 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
       const handlers = ModTestHandlerFactory.createHandlersWithAddComponent(
         entityManager,
         eventBus,
-        logger
+        logger,
+        mockGameDataRepository
       );
 
       // Create proper execution context
