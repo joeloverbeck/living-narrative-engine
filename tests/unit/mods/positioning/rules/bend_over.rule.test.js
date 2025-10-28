@@ -92,7 +92,7 @@ describe('positioning:bend_over rule', () => {
 
     it('should have actions array with expected structure', () => {
       expect(Array.isArray(rule.actions)).toBe(true);
-      expect(rule.actions.length).toBe(10); // 9 actions + 1 macro (includes LOCK_MOVEMENT)
+      expect(rule.actions.length).toBe(12); // 10 actions + 1 macro + 1 actor/target refresh
     });
 
     it('should have correct JSON schema reference', () => {
@@ -147,35 +147,35 @@ describe('positioning:bend_over rule', () => {
     });
 
     it('should set up log message with string template', () => {
-      const logAction = rule.actions[5];
+      const logAction = rule.actions[7];
       expect(logAction.type).toBe('SET_VARIABLE');
       expect(logAction.parameters.variable_name).toBe('logMessage');
       expect(logAction.parameters.value).toBe('{context.actorName} bends over {context.surfaceName}.');
     });
 
     it('should set perception type for action feedback', () => {
-      const perceptionAction = rule.actions[6];
+      const perceptionAction = rule.actions[8];
       expect(perceptionAction.type).toBe('SET_VARIABLE');
       expect(perceptionAction.parameters.variable_name).toBe('perceptionType');
       expect(perceptionAction.parameters.value).toBe('action_self_general');
     });
 
     it('should capture location ID from actor position', () => {
-      const locationAction = rule.actions[7];
+      const locationAction = rule.actions[9];
       expect(locationAction.type).toBe('SET_VARIABLE');
       expect(locationAction.parameters.variable_name).toBe('locationId');
       expect(locationAction.parameters.value).toBe('{context.actorPosition.locationId}');
     });
 
     it('should capture target ID from event payload', () => {
-      const targetAction = rule.actions[8];
+      const targetAction = rule.actions[10];
       expect(targetAction.type).toBe('SET_VARIABLE');
       expect(targetAction.parameters.variable_name).toBe('targetId');
       expect(targetAction.parameters.value).toBe('{event.payload.targetId}');
     });
 
     it('should end with core:logSuccessAndEndTurn macro', () => {
-      const macroAction = rule.actions[9];
+      const macroAction = rule.actions[11];
       expect(macroAction.macro).toBe('core:logSuccessAndEndTurn');
     });
   });
@@ -233,16 +233,16 @@ describe('positioning:bend_over rule', () => {
       const componentAction = rule.actions[3];
       expect(componentAction.parameters.value.surface_id).toBe('{event.payload.targetId}');
 
-      const logAction = rule.actions[5];
+      const logAction = rule.actions[7];
       expect(logAction.parameters.value).toBe('{context.actorName} bends over {context.surfaceName}.');
 
       const lockAction = rule.actions[4];
       expect(lockAction.parameters.actor_id).toBe('{event.payload.actorId}');
 
-      const locationAction = rule.actions[7];
+      const locationAction = rule.actions[9];
       expect(locationAction.parameters.value).toBe('{context.actorPosition.locationId}');
 
-      const targetAction = rule.actions[8];
+      const targetAction = rule.actions[10];
       expect(targetAction.parameters.value).toBe('{event.payload.targetId}');
     });
 
@@ -267,10 +267,10 @@ describe('positioning:bend_over rule', () => {
         action.parameters?.entity_ref === 'actor'
       );
 
-      expect(actorReferences).toHaveLength(3); // GET_NAME, QUERY_COMPONENT, ADD_COMPONENT
+      expect(actorReferences).toHaveLength(4); // GET_NAME, QUERY_COMPONENT, ADD_COMPONENT, REGENERATE_DESCRIPTION
 
       actorReferences.forEach(action => {
-        expect(['GET_NAME', 'QUERY_COMPONENT', 'ADD_COMPONENT']).toContain(action.type);
+        expect(['GET_NAME', 'QUERY_COMPONENT', 'ADD_COMPONENT', 'REGENERATE_DESCRIPTION']).toContain(action.type);
       });
     });
 
@@ -279,9 +279,10 @@ describe('positioning:bend_over rule', () => {
         action.parameters?.entity_ref === 'target'
       );
 
-      expect(targetReferences).toHaveLength(1); // GET_NAME for surface
+      expect(targetReferences).toHaveLength(2); // GET_NAME for surface + REGENERATE_DESCRIPTION refresh
       expect(targetReferences[0].type).toBe('GET_NAME');
       expect(targetReferences[0].parameters.result_variable).toBe('surfaceName');
+      expect(targetReferences[1].type).toBe('REGENERATE_DESCRIPTION');
     });
   });
 
