@@ -91,6 +91,11 @@ export class TurnContext extends ITurnContext {
     this.#actor = actor;
     this.#logger = logger;
     this.#services = services;
+
+    // Expose world context data for consumers that rely on the legacy
+    // `turnContext.game` surface. The AvailableActionsProvider depends on this
+    // property to forward environment details to downstream discovery logic.
+    this.game = services.game ?? null;
     this.#strategy = strategy;
     this.#onEndTurnCallback = onEndTurnCallback;
     this.#handlerInstance = handlerInstance;
