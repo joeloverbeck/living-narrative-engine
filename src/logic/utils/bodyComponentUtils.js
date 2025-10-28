@@ -13,7 +13,11 @@
  * @returns {object | null} The body component or null if not found
  */
 export function getBodyComponent(entityManager, entityId) {
-  if (!entityId) {
+  if (
+    entityId === undefined ||
+    entityId === null ||
+    (typeof entityId === 'string' && entityId.trim() === '')
+  ) {
     return null;
   }
 
