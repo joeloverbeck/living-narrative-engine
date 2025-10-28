@@ -51,7 +51,7 @@ class AddComponentHandler extends ComponentOperationHandler {
     safeEventDispatcher,
     gameDataRepository,
   }) {
-    super('AddComponentHandler', {
+    const dependencySpec = {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
@@ -61,14 +61,19 @@ class AddComponentHandler extends ComponentOperationHandler {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
-      gameDataRepository: {
+    };
+
+    if (gameDataRepository) {
+      dependencySpec.gameDataRepository = {
         value: gameDataRepository,
         requiredMethods: ['getComponentDefinition'],
-      },
-    });
+      };
+    }
+
+    super('AddComponentHandler', dependencySpec);
     this.#dispatcher = safeEventDispatcher;
     this.#entityManager = entityManager;
-    this.#gameDataRepository = gameDataRepository;
+    this.#gameDataRepository = gameDataRepository ?? null;
   }
 
   /**
@@ -141,8 +146,9 @@ class AddComponentHandler extends ComponentOperationHandler {
     log.debug('ADD_COMPONENT: Value validation successful');
 
     // 4.5 Apply schema defaults to component value
-    const componentDefinition =
-      this.#gameDataRepository.getComponentDefinition(trimmedComponentType);
+    const componentDefinition = this.#gameDataRepository
+      ? this.#gameDataRepository.getComponentDefinition(trimmedComponentType)
+      : null;
     const valueWithDefaults = applySchemaDefaults(
       value,
       componentDefinition,
