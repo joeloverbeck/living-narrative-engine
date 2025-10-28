@@ -64,6 +64,8 @@ class TurnManager extends ITurnManager {
   #eventSubscription;
   /** @type {import('../scheduling').IScheduler} */
   #scheduler;
+  /** @type {symbol | null} */
+  #activeRunToken = null;
 
   /**
    * Creates an instance of TurnManager.
@@ -181,6 +183,7 @@ class TurnManager extends ITurnManager {
       );
       return;
     }
+    this.#activeRunToken = Symbol('turn-manager-run');
     this.#isRunning = true;
     this.#roundManager.resetFlags(); // Reset round flags on start
     logStart(this.#logger, 'Turn Manager started.');
@@ -217,6 +220,7 @@ class TurnManager extends ITurnManager {
       return;
     }
     this.#isRunning = false;
+    this.#activeRunToken = null;
     this.#eventSubscription.unsubscribe();
 
     if (
@@ -620,7 +624,15 @@ class TurnManager extends ITurnManager {
       processingDispatchPromise = Promise.reject(dispatchError);
     }
 
+    const runTokenAtDispatch = this.#activeRunToken;
+
     const scheduleAdvanceTurn = () => {
+      if (runTokenAtDispatch !== this.#activeRunToken) {
+        this.#logger.debug(
+          `Skipping scheduled turn advancement for ${endedActorId} because the lifecycle token changed before processing completed.`
+        );
+        return;
+      }
       if (!this.#isRunning) {
         this.#logger.debug(
           `Skipping scheduled turn advancement for ${endedActorId} because the manager stopped before processing completed.`
@@ -629,6 +641,12 @@ class TurnManager extends ITurnManager {
       }
 
       this.#scheduler.setTimeout(() => {
+        if (runTokenAtDispatch !== this.#activeRunToken) {
+          this.#logger.debug(
+            `Skipping scheduled turn advancement for ${endedActorId} because the lifecycle token changed before execution.`
+          );
+          return;
+        }
         this.advanceTurn().catch(async (advanceTurnError) => {
           safeDispatchError(
             this.#dispatcher,
