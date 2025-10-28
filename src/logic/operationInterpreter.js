@@ -197,7 +197,13 @@ function hasValidJsonLogicShape(candidate) {
     typeof operand === 'object' &&
     !Array.isArray(operand)
   ) {
-    return hasValidJsonLogicShape(operand);
+    const operandKeys = Object.keys(operand);
+    if (
+      operandKeys.length === 1 &&
+      isKnownJsonLogicOperator(operandKeys[0])
+    ) {
+      return hasValidJsonLogicShape(operand);
+    }
   }
 
   return true;
