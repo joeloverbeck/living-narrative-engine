@@ -75,13 +75,9 @@ export class BaseFurnitureOperator {
         return false;
       }
 
-      // For special "." path, entity might be the ID directly
-      const entityId = entity?.id || entity;
+      const entityId = this.#resolveEntityId(entity, entityPath);
 
-      if (!entityId || (typeof entityId === 'object' && !entityId.id)) {
-        this.logger.warn(
-          `${this.operatorName}: Invalid entity at path ${entityPath}`
-        );
+      if (entityId === null) {
         return false;
       }
 
@@ -98,13 +94,9 @@ export class BaseFurnitureOperator {
         return false;
       }
 
-      // For special "." path, target might be the ID directly
-      const targetId = target?.id || target;
+      const targetId = this.#resolveEntityId(target, targetPath);
 
-      if (!targetId || (typeof targetId === 'object' && !targetId.id)) {
-        this.logger.warn(
-          `${this.operatorName}: Invalid target at path ${targetPath}`
-        );
+      if (targetId === null) {
         return false;
       }
 
@@ -114,6 +106,47 @@ export class BaseFurnitureOperator {
       this.logger.error(`${this.operatorName}: Error during evaluation`, error);
       return false;
     }
+  }
+
+  /**
+   * Resolves a usable entity identifier from the resolved entity path value.
+   * Logs warnings when the resolved entity is invalid.
+   *
+   * @private
+   * @param {any} entity - The resolved entity value from the context.
+   * @param {string} entityPath - The JSON Logic path used to resolve the entity.
+   * @returns {string|number|null} A valid entity identifier or null when invalid.
+   */
+  #resolveEntityId(entity, entityPath) {
+    let entityId = null;
+
+    if (hasValidEntityId(entity)) {
+      entityId = /** @type {{id: string|number}} */ (entity).id;
+    } else if (
+      typeof entity === 'string' ||
+      typeof entity === 'number'
+    ) {
+      entityId = entity;
+    } else {
+      this.logger.warn(
+        `${this.operatorName}: Invalid entity at path ${entityPath}`
+      );
+      return null;
+    }
+
+    if (
+      entityId === undefined ||
+      entityId === null ||
+      (typeof entityId === 'string' && entityId.trim() === '') ||
+      (typeof entityId === 'number' && Number.isNaN(entityId))
+    ) {
+      this.logger.warn(
+        `${this.operatorName}: Invalid entity at path ${entityPath}`
+      );
+      return null;
+    }
+
+    return entityId;
   }
 
   /**

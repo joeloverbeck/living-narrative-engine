@@ -73,6 +73,14 @@ describe('BaseEquipmentOperator', () => {
       expect(mockContext._currentPath).toBe('actor');
     });
 
+    test('should evaluate successfully when entity ID is zero', () => {
+      mockContext.actor = { id: 0 };
+
+      const result = operator.evaluate(['actor', 'test-value'], mockContext);
+
+      expect(result).toBe(true);
+    });
+
     test('should evaluate successfully with dot path', () => {
       mockContext.entity = { id: 'entity456' };
 
