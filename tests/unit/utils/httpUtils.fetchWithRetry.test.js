@@ -142,6 +142,35 @@ describe('fetchWithRetry', () => {
     expect(emptyBodyClone).toHaveBeenCalledTimes(1);
   });
 
+  test('returns response metadata when includeResponse option is enabled', async () => {
+    const okResponse = mockResponse(
+      200,
+      { ok: true },
+      true,
+      { 'X-Request-ID': 'abc-123' },
+      true
+    );
+    okResponse.json.mockResolvedValue({ ok: true });
+    fetch.mockResolvedValueOnce(okResponse);
+
+    const result = await fetchWithRetry(
+      url,
+      opts,
+      1,
+      1,
+      1,
+      dispatcher,
+      undefined,
+      fetch,
+      undefined,
+      { includeResponse: true }
+    );
+
+    expect(result.data).toEqual({ ok: true });
+    expect(result.response).toBe(okResponse);
+    expect(result.response.headers.get('X-Request-ID')).toBe('abc-123');
+  });
+
   test('parses JSON body for HTTP errors', async () => {
     const body = { error: 'bad' };
     const resp = mockResponse(400, body, false, {}, true);

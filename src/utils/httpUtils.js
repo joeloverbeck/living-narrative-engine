@@ -84,8 +84,12 @@ async function _handleResponse(
   baseDelayMs,
   maxDelayMs,
   safeEventDispatcher,
-  logger
+  logger,
+  { includeResponse = false } = {}
 ) {
+  const buildPayload = (value) =>
+    includeResponse ? { data: value, response } : value;
+
   if (response.ok) {
     logger.debug(
       `fetchWithRetry: Attempt ${currentAttempt}/${maxRetries} for ${url} - Request successful (status ${response.status}). Parsing JSON response.`
@@ -94,7 +98,7 @@ async function _handleResponse(
       logger.debug(
         `fetchWithRetry: ${url} returned ${response.status} (No Content). Treating response body as null.`
       );
-      return { retry: false, data: null };
+      return { retry: false, data: buildPayload(null) };
     }
 
     const contentLengthHeader = response.headers?.get?.('Content-Length');
@@ -106,7 +110,7 @@ async function _handleResponse(
       logger.debug(
         `fetchWithRetry: ${url} response included Content-Length: 0. Treating response body as null.`
       );
-      return { retry: false, data: null };
+      return { retry: false, data: buildPayload(null) };
     }
 
     const responseClone =
@@ -117,7 +121,7 @@ async function _handleResponse(
       logger.debug(
         `fetchWithRetry: Successfully fetched and parsed JSON from ${url} after ${currentAttempt} attempt(s).`
       );
-      return { retry: false, data: responseData };
+      return { retry: false, data: buildPayload(responseData) };
     } catch (parseError) {
       if (responseClone) {
         try {
@@ -126,7 +130,7 @@ async function _handleResponse(
             logger.debug(
               `fetchWithRetry: ${url} returned an empty body. Treating response body as null.`
             );
-            return { retry: false, data: null };
+            return { retry: false, data: buildPayload(null) };
           }
         } catch {
           // Ignore clone read errors and rethrow the original parse error below.
@@ -213,6 +217,7 @@ async function _handleResponse(
  * @param {typeof fetch} [fetchFn] The fetch implementation to use.
  * @param {import('../interfaces/IRetryManager.js').IRetryManager} [retryManager]
  * Optional retry manager implementation.
+ * @param {{ includeResponse?: boolean }} [extendedOptions] Additional fetchWithRetry options.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON response on success.
  * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
  * or another unhandled error arises during fetching.
@@ -226,7 +231,8 @@ export async function fetchWithRetry(
   safeEventDispatcher,
   logger,
   fetchFn = fetch,
-  retryManager
+  retryManager,
+  extendedOptions = {}
 ) {
   const moduleLogger = getModuleLogger('fetchWithRetry', logger);
 
@@ -265,7 +271,8 @@ export async function fetchWithRetry(
       baseDelayMs,
       maxDelayMs,
       safeEventDispatcher,
-      moduleLogger
+      moduleLogger,
+      extendedOptions
     );
 
   try {

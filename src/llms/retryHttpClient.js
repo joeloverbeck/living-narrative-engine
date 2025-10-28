@@ -215,20 +215,22 @@ export class RetryHttpClient extends IHttpClient {
           delete fetchOptions.abortSignal;
         }
 
-        const result = await fetchWithRetry(
+        const { data: resultData, response } = await fetchWithRetry(
           url,
           fetchOptions,
           1,
           this.#defaultBaseDelayMs,
           this.#defaultMaxDelayMs,
           silentDispatcher,
-          this.#logger
+          this.#logger,
+          undefined,
+          { includeResponse: true }
         );
 
         // Store X-Request-ID from response headers for potential salvage recovery
-        this.#lastRequestId = result?.headers?.get?.('X-Request-ID') || null;
+        this.#lastRequestId = response?.headers?.get?.('X-Request-ID') || null;
 
-        return result;
+        return resultData;
       } catch (err) {
         lastError = err;
         const status = err.status;
