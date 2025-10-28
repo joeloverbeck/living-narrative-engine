@@ -33,6 +33,22 @@ import { safeDispatch } from '../utils/eventHelpers.js';
 import { logStart, logEnd, logError } from '../utils/loggerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
+const HUMAN_PLAYER_TYPE = 'human';
+
+/**
+ * Determines whether a player_type component describes a human-controlled actor.
+ *
+ * @param {{ type?: unknown } | null | undefined} playerTypeData - Raw player_type component payload.
+ * @returns {boolean} True when the component denotes a human player.
+ */
+function isHumanPlayerType(playerTypeData) {
+  if (!playerTypeData || typeof playerTypeData.type !== 'string') {
+    return false;
+  }
+
+  return playerTypeData.type.trim().toLowerCase() === HUMAN_PLAYER_TYPE;
+}
+
 /**
  * @class TurnManager
  * @implements {ITurnManager}
@@ -416,7 +432,7 @@ class TurnManager extends ITurnManager {
         const playerTypeData = this.#currentActor.getComponentData(
           PLAYER_TYPE_COMPONENT_ID
         );
-        entityType = playerTypeData?.type === 'human' ? 'player' : 'ai';
+        entityType = isHumanPlayerType(playerTypeData) ? 'player' : 'ai';
       } else if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
         // Fallback to old player component for backward compatibility
         entityType = 'player';
@@ -637,7 +653,7 @@ class TurnManager extends ITurnManager {
       const playerTypeData = currentActor.getComponentData(
         PLAYER_TYPE_COMPONENT_ID
       );
-      actorType = playerTypeData?.type === 'human' ? 'player' : 'ai';
+      actorType = isHumanPlayerType(playerTypeData) ? 'player' : 'ai';
     } else if (currentActor?.hasComponent(PLAYER_COMPONENT_ID)) {
       actorType = 'player';
     }
