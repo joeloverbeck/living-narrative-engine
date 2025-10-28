@@ -164,7 +164,6 @@ export class BaseBodyPartOperator {
       entityId === undefined ||
       entityId === null ||
       (typeof entityId === 'string' && entityId.trim() === '') ||
-      (typeof entity === 'number' && entity === 0) ||
       (typeof entityId === 'number' && Number.isNaN(entityId))
     ) {
       this.logger.warn(
