@@ -39,11 +39,27 @@ export default class RoundManager {
       !(strategyOrOptions instanceof Map);
 
     if (isOptionsObject) {
-      strategy = strategyOrOptions.strategy ?? 'round-robin';
       initiativeData = strategyOrOptions.initiativeData;
+
+      const rawStrategy = strategyOrOptions.strategy;
+      const hasExplicitStrategy =
+        typeof rawStrategy === 'string' && rawStrategy.trim() !== '';
+      const hasInitiativeData = initiativeData !== undefined;
+
+      if (hasExplicitStrategy) {
+        strategy = rawStrategy;
+      } else if (hasInitiativeData) {
+        strategy = 'initiative';
+      } else {
+        strategy = 'round-robin';
+      }
     } else {
       strategy = strategyOrOptions ?? 'round-robin';
       initiativeData = initiativeDataParam;
+    }
+
+    if (typeof strategy !== 'string' || strategy.trim() === '') {
+      strategy = 'round-robin';
     }
 
     if (strategy === 'initiative') {
