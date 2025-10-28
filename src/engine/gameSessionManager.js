@@ -116,8 +116,23 @@ class GameSessionManager {
         'GameSessionManager._prepareEngineForOperation: resetCoreGameStateFn threw while clearing core state.',
         normalizedError
       );
+
       if (!failure) {
         failure = normalizedError;
+      } else if (failure instanceof Error && normalizedError !== failure) {
+        try {
+          if (!('cause' in failure) || !failure.cause) {
+            failure.cause = normalizedError;
+          } else if (Array.isArray(failure.resetErrors)) {
+            failure.resetErrors.push(normalizedError);
+          } else if ('resetErrors' in failure && failure.resetErrors) {
+            failure.resetErrors = [failure.resetErrors, normalizedError];
+          } else {
+            failure.resetErrors = [normalizedError];
+          }
+        } catch {
+          failure.resetErrors = [normalizedError];
+        }
       }
     }
 
