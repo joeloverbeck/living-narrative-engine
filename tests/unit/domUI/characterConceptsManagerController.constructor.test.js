@@ -99,6 +99,73 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
         });
       }).toThrow('Invalid or missing method');
     });
+
+    it('should add missing optional service methods while preserving existing ones', () => {
+      const partialService = {
+        initialize: jest.fn(),
+        getAllCharacterConcepts: jest.fn(),
+        createCharacterConcept: jest.fn(),
+        updateCharacterConcept: jest.fn(),
+        deleteCharacterConcept: jest.fn(),
+        getCharacterConcept: jest.fn(),
+        getThematicDirections: jest.fn(),
+      };
+
+      const controller = new CharacterConceptsManagerController({
+        logger: testBase.mocks.logger,
+        characterBuilderService: partialService,
+        eventBus: testBase.mocks.eventBus,
+        schemaValidator: testBase.mocks.schemaValidator,
+      });
+
+      expect(controller.characterBuilderService).not.toBe(partialService);
+      expect(controller.characterBuilderService.getCharacterConcept).toBe(
+        partialService.getCharacterConcept
+      );
+      expect(
+        controller.characterBuilderService.generateThematicDirections
+      ).toBeInstanceOf(Function);
+
+      return expect(
+        controller.characterBuilderService.generateThematicDirections()
+      ).resolves.toEqual([]);
+    });
+  });
+
+  describe('Backward compatibility error mapping', () => {
+    it('should remap missing CharacterBuilderService errors to legacy format', () => {
+      try {
+        new CharacterConceptsManagerController({
+          logger: testBase.mocks.logger,
+          characterBuilderService: undefined,
+          eventBus: testBase.mocks.eventBus,
+        });
+        throw new Error('Expected constructor to throw due to missing service');
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect(error.name).toBe('Error');
+        expect(error.message).toBe(
+          'Missing required dependency: CharacterBuilderService'
+        );
+      }
+    });
+
+    it('should remap missing event bus errors to legacy format', () => {
+      try {
+        new CharacterConceptsManagerController({
+          logger: testBase.mocks.logger,
+          characterBuilderService: testBase.mocks.characterBuilderService,
+          eventBus: undefined,
+        });
+        throw new Error('Expected constructor to throw due to missing event bus');
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect(error.name).toBe('Error');
+        expect(error.message).toBe(
+          'Missing required dependency: ISafeEventDispatcher'
+        );
+      }
+    });
   });
 
   describe('Base Class Integration', () => {

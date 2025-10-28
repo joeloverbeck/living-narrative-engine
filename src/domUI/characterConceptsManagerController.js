@@ -107,16 +107,25 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       });
     } catch (error) {
       // Re-map base class errors to original format for test compatibility
-      if (error.message.includes("Missing required dependency 'logger'")) {
+      if (
+        error.message.includes("Missing required dependency 'logger'") ||
+        error.message.includes('Missing required dependency: ILogger')
+      ) {
         throw new Error('Missing required dependency: ILogger');
       } else if (
         error.message.includes(
           "Missing required dependency 'characterBuilderService'"
+        ) ||
+        error.message.includes(
+          'Missing required dependency: CharacterBuilderService'
         )
       ) {
         throw new Error('Missing required dependency: CharacterBuilderService');
       } else if (
-        error.message.includes("Missing required dependency 'eventBus'")
+        error.message.includes("Missing required dependency 'eventBus'") ||
+        error.message.includes(
+          'Missing required dependency: ISafeEventDispatcher'
+        )
       ) {
         throw new Error('Missing required dependency: ISafeEventDispatcher');
       } else {
