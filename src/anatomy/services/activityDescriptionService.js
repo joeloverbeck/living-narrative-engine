@@ -1441,17 +1441,6 @@ class ActivityDescriptionService {
 
     if (context.relationshipTone === 'closeness_partner') {
       adjusted.contextualTone = 'intimate';
-
-      if (typeof adjusted.adverb === 'string') {
-        adjusted.adverb = this.#mergeAdverb(adjusted.adverb, 'tenderly');
-      } else if (adjusted.type === 'dedicated') {
-        adjusted.adverb = 'tenderly';
-      }
-
-      if (typeof adjusted.template === 'string') {
-        adjusted.template = this.#injectSoftener(adjusted.template, 'tenderly');
-      }
-
       return adjusted;
     }
 

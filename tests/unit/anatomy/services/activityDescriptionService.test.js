@@ -3794,7 +3794,8 @@ describe('ActivityDescriptionService', () => {
 
         const description = await service.generateActivityDescription('jon');
 
-        expect(description).toMatch(/tenderly/);
+        expect(description).toMatch(/holding hands/i);
+        expect(description).not.toMatch(/tenderly/);
       });
 
       it('falls back to neutral tone when no context exists', async () => {
@@ -3907,8 +3908,9 @@ describe('ActivityDescriptionService', () => {
 
         const description = await service.generateActivityDescription('jon');
 
-        const tenderlyMatches = description.match(/tenderly/g) || [];
-        expect(tenderlyMatches.length).toBeGreaterThanOrEqual(2);
+        expect(description).toMatch(/embracing/i);
+        expect(description).toMatch(/whispering/i);
+        expect(description).not.toMatch(/tenderly/);
       });
 
       it('can disable context awareness via configuration', async () => {
@@ -4261,8 +4263,9 @@ describe('ActivityDescriptionService', () => {
           { targetId: 'target-1', relationshipTone: 'closeness_partner' }
         );
 
-        expect(intimate.adverb).toBe('tenderly');
-        expect(intimate.template).toContain('tenderly {target}');
+        expect(intimate.contextualTone).toBe('intimate');
+        expect(intimate.adverb).toBeUndefined();
+        expect(intimate.template).toBe('{actor} embraces {target}');
 
         const intense = hooks.applyContextualTone(
           {
@@ -5522,7 +5525,8 @@ describe('ActivityDescriptionService', () => {
         { ...activity, type: 'dedicated' },
         builtContext
       );
-      expect(tonedActivity.adverb).toBe('tenderly');
+      expect(tonedActivity.contextualTone).toBe('intimate');
+      expect(tonedActivity.adverb).toBeUndefined();
 
       const phrase = hooks.generateActivityPhrase('Alex', activity, false, {
         actorId: 'actor-with-partner',
