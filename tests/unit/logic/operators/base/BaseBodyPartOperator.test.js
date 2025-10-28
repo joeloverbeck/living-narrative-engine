@@ -61,6 +61,13 @@ describe('BaseBodyPartOperator', () => {
     hasValidEntityId.mockClear();
     getBodyComponent.mockClear();
     extractRootId.mockClear();
+
+    hasValidEntityId.mockImplementation((entity) =>
+      entity !== undefined &&
+      entity !== null &&
+      entity.id !== undefined &&
+      entity.id !== null
+    );
   });
 
   describe('constructor', () => {
@@ -127,6 +134,26 @@ describe('BaseBodyPartOperator', () => {
       );
       expect(extractRootId).toHaveBeenCalledWith(mockBodyComponent);
       expect(mockContext._currentPath).toBe('actor');
+      expect(result).toBe(true);
+    });
+
+    test('should evaluate successfully when entity ID is zero', () => {
+      const mockEntity = { id: 0 };
+      const mockBodyComponent = { root: 'rootZero' };
+
+      resolveEntityPath.mockReturnValue({
+        entity: mockEntity,
+        isValid: true,
+      });
+      getBodyComponent.mockReturnValue(mockBodyComponent);
+      extractRootId.mockReturnValue('rootZero');
+
+      const result = operator.evaluate(['actor', 'test-value'], mockContext);
+
+      expect(getBodyComponent).toHaveBeenCalledWith(
+        mockDependencies.entityManager,
+        0
+      );
       expect(result).toBe(true);
     });
 
