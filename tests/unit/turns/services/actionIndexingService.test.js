@@ -248,6 +248,28 @@ describe('ActionIndexingService', () => {
     );
   });
 
+  it('skips malformed discovered entries without throwing', () => {
+    const rawActions = [
+      null,
+      { id: '', command: 'noop' },
+      { id: 'valid', command: 'cmd-ok', params: { foo: 'bar' } },
+      { id: 'broken', command: 42 },
+    ];
+
+    const result = service.indexActions('actor-invalid', rawActions);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].actionId).toBe('valid');
+    expect(logger.warn).toHaveBeenCalledWith(
+      'ActionIndexingService: actor "actor-invalid" ignored 3 invalid action entries.',
+      expect.objectContaining({
+        examples: expect.arrayContaining([
+          expect.objectContaining({ reason: expect.any(String) }),
+        ]),
+      })
+    );
+  });
+
   it('treats actions with differently ordered params as duplicates', () => {
     const rawActions = [
       {
