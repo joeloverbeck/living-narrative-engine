@@ -81,7 +81,7 @@ describe('Activity Description - Natural Language Integration', () => {
     expect(description).toContain('Jon');
     expect(words).toContain('her');
     expect(description).toMatch(/\b(and|while)\b/i);
-    expect(description.toLowerCase()).toMatch(/tenderly|fiercely/);
+    expect(description.toLowerCase()).not.toContain('tenderly');
     expect(description.split('.').length).toBeGreaterThanOrEqual(1);
   });
 

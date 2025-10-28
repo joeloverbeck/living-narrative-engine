@@ -481,16 +481,14 @@ describe('SystemLogicInterpreter additional integration coverage', () => {
       evaluationData
     );
 
-    expect(result).toBeUndefined();
+    expect(result).toBe(true);
     expect(handler).toHaveBeenCalledWith(
       [evaluationData.bodyContext, evaluationData.targetArgs],
       expect.objectContaining({ evaluationContext: evaluationData })
     );
 
-    // The handler executes and returns `true`, but the operation interpreter
-    // resolves to `undefined` because it does not propagate handler return
-    // values. Verify that the handler itself produced the expected boolean to
-    // capture the complete behavior end-to-end.
+    // The handler executes and returns `true`, and the operation interpreter
+    // propagates that result back to JsonLogic.
     expect(handler).toHaveReturnedWith(true);
 
     addOperationSpy.mockRestore();

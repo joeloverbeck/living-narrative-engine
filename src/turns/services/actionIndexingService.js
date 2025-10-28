@@ -403,6 +403,22 @@ export class ActionIndexingService {
       );
     }
 
+    if (discovered.length === 0) {
+      const cached = this.#actorCache.get(actorId);
+      if (cached) {
+        this.#log.debug(
+          `ActionIndexingService: reused cached actions for ${actorId} (no discoveries provided)`
+        );
+        return cached.slice();
+      }
+
+      this.#actorCache.set(actorId, []);
+      this.#log.debug(
+        `ActionIndexingService: indexed 0 actions for ${actorId} (no discoveries provided)`
+      );
+      return [];
+    }
+
     /* ── filter invalid entries before deduplication ─────────────────── */
     const { valid: validDiscovered, invalid: invalidEntries } =
       partitionDiscoveredActions(discovered);
