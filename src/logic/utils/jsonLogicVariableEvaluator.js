@@ -127,15 +127,33 @@ export function evaluateValue(
       );
       evaluationOccurred = true;
       if (error) {
-        evaluationThrewError = true;
-        logger.error(
-          `SET_VARIABLE: Error evaluating JsonLogic value${varName ? ` for variable "${varName}"` : ''}. Storing 'undefined'. Original value: ${JSON.stringify(value)}`,
-          {
-            errorMessage:
-              error instanceof Error ? error.message : String(error),
-          }
-        );
-        finalValue = undefined;
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        if (
+          typeof errorMessage === 'string' &&
+          errorMessage.includes('Unrecognized operation ')
+        ) {
+          const operatorMatch = /Unrecognized operation\s+(.+)/.exec(
+            errorMessage
+          );
+          const operatorName = operatorMatch?.[1]?.trim();
+          logger.debug(
+            `SET_VARIABLE: Value${varName ? ` for "${varName}"` : ''} contains unrecognized JsonLogic operator${
+              operatorName ? ` "${operatorName}"` : ''
+            }. Treating value as a literal.`
+          );
+          finalValue = value;
+        } else {
+          evaluationThrewError = true;
+          logger.error(
+            `SET_VARIABLE: Error evaluating JsonLogic value${varName ? ` for variable "${varName}"` : ''}. Storing 'undefined'. Original value: ${JSON.stringify(value)}`,
+            {
+              errorMessage: errorMessage,
+            }
+          );
+          finalValue = undefined;
+        }
       } else {
         finalValue = result;
       }

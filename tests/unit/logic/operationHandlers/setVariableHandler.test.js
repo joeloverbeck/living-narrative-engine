@@ -407,6 +407,30 @@ describe('SetVariableHandler', () => {
       mockApply.mockRestore();
     });
 
+    test('treats single-key objects with unknown JsonLogic operators as literals', () => {
+      const literalCondition = { condition_ref: 'core:some_condition' };
+      const params = {
+        variable_name: 'storedCondition',
+        value: literalCondition,
+      };
+      const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+
+      handler.execute(params, execCtx);
+
+      expect(execCtx.evaluationContext.context.storedCondition).toEqual(
+        literalCondition
+      );
+      expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
+        'SET_VARIABLE: Value for "storedCondition" contains unrecognized JsonLogic operator "condition_ref". Treating value as a literal.'
+      );
+      expect(
+        mockLoggerInstance.error.mock.calls.some(([message]) =>
+          typeof message === 'string' &&
+          message.startsWith('SET_VARIABLE: Error evaluating JsonLogic value')
+        )
+      ).toBe(false);
+    });
+
     test('sets literal array value', () => {
       const arrValue = [1, 'two', true, null];
       const params = { variable_name: 'items', value: arrValue };
@@ -489,28 +513,32 @@ describe('SetVariableHandler', () => {
     });
 
     test('logs error and skips assignment if JsonLogic evaluation fails', () => {
-      const invalidJsonLogicRule = { invalidOperator: [1, 2] };
+      const invalidJsonLogicRule = { var: 'context.missing.path' };
       const params = {
         variable_name: 'failedLogicVar',
         value: invalidJsonLogicRule,
       };
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
+      const mockApply = jest.spyOn(jsonLogic, 'apply').mockImplementation(() => {
+        throw new Error('jsonLogic boom');
+      });
+
       handler.execute(params, execCtx);
+
       expect(execCtx.evaluationContext.context).not.toHaveProperty(
         'failedLogicVar'
       );
       expect(mockLoggerInstance.error).toHaveBeenCalledWith(
         `SET_VARIABLE: Error evaluating JsonLogic value for variable "failedLogicVar". Storing 'undefined'. Original value: ${JSON.stringify(invalidJsonLogicRule)}`,
-        // ***** THIS IS THE CORRECTED LINE *****
         expect.objectContaining({
-          errorMessage: expect.stringContaining(
-            'Unrecognized operation invalidOperator'
-          ),
+          errorMessage: 'jsonLogic boom',
         })
       );
       expect(mockLoggerInstance.error).toHaveBeenCalledWith(
         `SET_VARIABLE: JsonLogic evaluation for variable "failedLogicVar" failed with an error (see previous log). Assignment skipped. Original value: ${JSON.stringify(invalidJsonLogicRule)}`
       );
+
+      mockApply.mockRestore();
     });
 
     test('logs warning and skips assignment if JsonLogic evaluates to undefined (without error)', () => {
