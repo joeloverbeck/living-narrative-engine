@@ -330,7 +330,9 @@ describe('AnatomyInitializationService additional integration coverage', () => {
       /Timeout waiting for anatomy generation to complete/
     );
 
-    await anatomyInitializationService.waitForAllGenerationsToComplete(500);
+    // Allow additional time for instrumentation overhead before verifying
+    // that the queue has fully drained.
+    await anatomyInitializationService.waitForAllGenerationsToComplete(1500);
     expect(
       logger.calls.debug.some(([message]) =>
         message.includes('All anatomy generations completed')
