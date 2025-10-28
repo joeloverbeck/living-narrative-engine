@@ -238,8 +238,11 @@ function evaluateJsonLogicRecursively(
           logger.warn(
             `OperationInterpreter: Failed to evaluate JSON Logic expression: ${message}. Using original value.`
           );
+          return value;
         }
-        return value;
+        // Fall through to treat as a plain object when encountering an
+        // unrecognized operation wrapper so nested JSON Logic expressions are
+        // still evaluated.
       }
     }
 

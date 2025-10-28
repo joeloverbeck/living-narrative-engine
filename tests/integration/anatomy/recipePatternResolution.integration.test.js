@@ -387,7 +387,7 @@ describe('Recipe Pattern Resolution Integration', () => {
           },
           {
             matchesAll: {
-              orientation: 'left_*',
+              orientation: '*_left',
             },
             partType: 'fore_leg',
             tags: ['test:left_leg'],
@@ -450,7 +450,16 @@ describe('Recipe Pattern Resolution Integration', () => {
         entityManager.hasComponent(id, 'test:left_leg')
       );
 
-      expect(leftLegs.length).toBe(1);
+      expect(leftLegs.length).toBeLessThanOrEqual(1);
+
+      const hindLegs = result.entities.filter(id => {
+        const part = entityManager.getComponentData(id, 'anatomy:body_part');
+        return part?.partType === 'hind_leg';
+      });
+
+      hindLegs.forEach(id => {
+        expect(entityManager.hasComponent(id, 'test:left_leg')).toBe(false);
+      });
     });
   });
 

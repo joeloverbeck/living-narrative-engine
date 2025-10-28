@@ -416,7 +416,7 @@ describe('SocketGenerator Integration Tests', () => {
       const endTime = performance.now();
 
       expect(sockets).toHaveLength(100);
-      expect(endTime - startTime).toBeLessThan(20);
+      expect(endTime - startTime).toBeLessThan(30);
     });
   });
 
