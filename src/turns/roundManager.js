@@ -60,6 +60,8 @@ export default class RoundManager {
 
     if (typeof strategy !== 'string' || strategy.trim() === '') {
       strategy = 'round-robin';
+    } else {
+      strategy = strategy.trim().toLowerCase();
     }
 
     if (strategy === 'initiative') {
