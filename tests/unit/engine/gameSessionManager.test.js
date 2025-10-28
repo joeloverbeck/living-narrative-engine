@@ -345,6 +345,21 @@ describe('GameSessionManager', () => {
       );
     });
 
+    it('should preserve emoji-based manual save names', async () => {
+      const manualIdentifier =
+        'saves/manual_saves/manual_save_%F0%9F%8D%95.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(manualIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading 🍕...',
+          inputDisabledMessage: 'Loading game from 🍕...',
+        }
+      );
+    });
+
     it('should treat manual saves with empty filenames as generic saved games', async () => {
       const manualIdentifier = 'saves/manual_saves/manual_save_.sav';
 
