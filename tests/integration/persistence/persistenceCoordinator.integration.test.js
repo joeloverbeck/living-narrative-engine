@@ -8,6 +8,7 @@ import {
   ENGINE_OPERATION_FAILED_UI,
   GAME_SAVED_ID,
 } from '../../../src/constants/eventIds.js';
+import { GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 class TestLogger {
   constructor() {
@@ -419,8 +420,7 @@ describe('PersistenceCoordinator integration', () => {
 
     expect(result).toEqual({
       success: false,
-      error:
-        'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.',
+      error: GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE,
       data: null,
     });
     expect(environment.engineState.isInitialized).toBe(false);
