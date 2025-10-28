@@ -363,6 +363,44 @@ describe('RoundManager', () => {
       expect(normalisedInitiative.get(mockActor.id)).toBe(11);
     });
 
+    it('should trim whitespace around entity ids when normalising initiative data', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeDataObject = { ' actor1 ': '21' };
+
+      await roundManager.startRound('initiative', initiativeDataObject);
+
+      const [, , normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(normalisedInitiative.get(mockActor.id)).toBe(21);
+      expect(normalisedInitiative.has(' actor1 ')).toBe(false);
+    });
+
+    it('should log duplicates and keep the latest score when ids collide after trimming', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeDataMap = new Map([
+        ['actor1', 5],
+        [' actor1 ', 7],
+      ]);
+
+      await roundManager.startRound('initiative', initiativeDataMap);
+
+      const [, , normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(normalisedInitiative.get(mockActor.id)).toBe(7);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Duplicate initiative entry for entity id "actor1" after normalisation. Using latest value.',
+        expect.objectContaining({ entityId: ' actor1 ' })
+      );
+    });
+
     it('should normalise strategy strings by trimming whitespace and casing', async () => {
       const mockActor = {
         id: 'actor1',
