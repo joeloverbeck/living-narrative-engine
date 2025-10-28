@@ -177,6 +177,25 @@ describe('RoundManager', () => {
       );
     });
 
+    it('should infer initiative strategy when options provide initiativeData without explicit strategy', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeData = new Map([[mockActor.id, 8]]);
+
+      await roundManager.startRound({
+        initiativeData,
+      });
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
+        [mockActor],
+        'initiative',
+        initiativeData
+      );
+    });
+
     it('should throw when initiative strategy lacks initiative data', async () => {
       const mockActor = {
         id: 'actor1',
@@ -227,6 +246,25 @@ describe('RoundManager', () => {
         mockTurnOrderService.startNewRound.mock.calls[0];
       expect(normalisedInitiative).toBeInstanceOf(Map);
       expect(normalisedInitiative.get(mockActor.id)).toBe(7);
+    });
+
+    it('should normalise initiative data when strategy is inferred from options', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeDataObject = { [mockActor.id]: 11 };
+
+      await roundManager.startRound({
+        initiativeData: initiativeDataObject,
+      });
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledTimes(1);
+      const [, , normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(normalisedInitiative).toBeInstanceOf(Map);
+      expect(normalisedInitiative.get(mockActor.id)).toBe(11);
     });
 
     it('should filter out non-actor entities', async () => {
