@@ -264,6 +264,39 @@ describe('ActionIndexingService', () => {
     );
   });
 
+  it('treats Map parameters with different entries as distinct actions', () => {
+    const actionAParams = new Map([
+      ['targetId', 'alpha'],
+      ['stance', 'aggressive'],
+    ]);
+    const actionBParams = new Map([
+      ['targetId', 'beta'],
+      ['stance', 'defensive'],
+    ]);
+
+    const rawActions = [
+      {
+        id: 'map-action',
+        params: actionAParams,
+        command: 'cmd-map',
+        description: 'First map action',
+      },
+      {
+        id: 'map-action',
+        params: actionBParams,
+        command: 'cmd-map',
+        description: 'Second map action',
+      },
+    ];
+
+    const result = service.indexActions('actorMap', rawActions);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].params).toBe(actionAParams);
+    expect(result[1].params).toBe(actionBParams);
+    expect(logger.info).not.toHaveBeenCalled();
+  });
+
   it('does not merge NaN, Infinity, or null parameter values together', () => {
     const rawActions = [
       {
