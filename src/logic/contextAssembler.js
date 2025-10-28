@@ -50,15 +50,22 @@ export function populateParticipant(
   entityManager,
   logger
 ) {
-  logger.debug(`🔧 [populateParticipant] Populating ${fieldName} with entityId: ${entityId}`);
+  logger.debug(
+    `🔧 [populateParticipant] Populating ${fieldName} with entityId: ${entityId}`
+  );
 
-  if (
-    entityId &&
-    (typeof entityId === 'string' || typeof entityId === 'number')
-  ) {
+  const isStringIdentifier = typeof entityId === 'string';
+  const isNumberIdentifier = typeof entityId === 'number';
+  const hasStringValue = isStringIdentifier && entityId.length > 0;
+  const hasNumberValue = isNumberIdentifier && Number.isFinite(entityId);
+  const shouldAttemptLookup = hasStringValue || hasNumberValue;
+
+  if (shouldAttemptLookup) {
     try {
       const entity = entityManager.getEntityInstance(entityId);
-      logger.debug(`🔧 [populateParticipant] getEntityInstance(${entityId}) returned: ${entity ? 'entity object' : 'null/undefined'}`);
+      logger.debug(
+        `🔧 [populateParticipant] getEntityInstance(${entityId}) returned: ${entity ? 'entity object' : 'null/undefined'}`
+      );
 
       if (entity) {
         logger.debug(
@@ -69,7 +76,9 @@ export function populateParticipant(
           entityManager,
           logger
         );
-        logger.debug(`🔧 [populateParticipant] Context entry created. evaluationContext.${fieldName}.id = ${evaluationContext[fieldName].id}`);
+        logger.debug(
+          `🔧 [populateParticipant] Context entry created. evaluationContext.${fieldName}.id = ${evaluationContext[fieldName].id}`
+        );
       } else {
         logger.warn(
           `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} entity not found for ID [${entityId}]. Setting ${fieldName} context to null.`
@@ -120,8 +129,13 @@ export function createJsonLogicContext(
   }
   // Check if serviceSetup is a trace object (has trace-specific methods)
   // If so, don't use it as ServiceSetup - create a new one instead
-  const isTrace = serviceSetup && typeof serviceSetup === 'object' && 'captureOperationStart' in serviceSetup;
-  const setup = isTrace ? new ServiceSetup() : (serviceSetup ?? new ServiceSetup());
+  const isTrace =
+    serviceSetup &&
+    typeof serviceSetup === 'object' &&
+    'captureOperationStart' in serviceSetup;
+  const setup = isTrace
+    ? new ServiceSetup()
+    : (serviceSetup ?? new ServiceSetup());
   const effectiveLogger = setup.setupService('createJsonLogicContext', logger, {
     entityManager: {
       value: entityManager,
@@ -193,7 +207,9 @@ export function createNestedExecutionContext(
   logger,
   serviceSetup
 ) {
-  logger.debug(`🔧 [createNestedExecutionContext] Starting with actorId: ${actorId}, targetId: ${targetId}`);
+  logger.debug(
+    `🔧 [createNestedExecutionContext] Starting with actorId: ${actorId}, targetId: ${targetId}`
+  );
 
   const ctx = createJsonLogicContext(
     event,
@@ -204,7 +220,9 @@ export function createNestedExecutionContext(
     serviceSetup
   );
 
-  logger.debug(`🔧 [createNestedExecutionContext] JsonLogicContext created. ctx.actor: ${ctx.actor ? ctx.actor.id : 'null'}, ctx.target: ${ctx.target ? ctx.target.id : 'null'}`);
+  logger.debug(
+    `🔧 [createNestedExecutionContext] JsonLogicContext created. ctx.actor: ${ctx.actor ? ctx.actor.id : 'null'}, ctx.target: ${ctx.target ? ctx.target.id : 'null'}`
+  );
 
   const executionContext = {
     event,
@@ -215,12 +233,20 @@ export function createNestedExecutionContext(
   };
 
   logger.debug(`🔧 [createNestedExecutionContext] ExecutionContext assembled:`);
-  logger.debug(`  - executionContext.actor: ${executionContext.actor ? executionContext.actor.id : 'null'}`);
-  logger.debug(`  - executionContext.evaluationContext.actor: ${executionContext.evaluationContext.actor ? executionContext.evaluationContext.actor.id : 'null'}`);
+  logger.debug(
+    `  - executionContext.actor: ${executionContext.actor ? executionContext.actor.id : 'null'}`
+  );
+  logger.debug(
+    `  - executionContext.evaluationContext.actor: ${executionContext.evaluationContext.actor ? executionContext.evaluationContext.actor.id : 'null'}`
+  );
 
   // Add trace if it was passed (trace is passed as serviceSetup parameter)
   // Check if serviceSetup is a trace object (has trace-specific methods)
-  if (serviceSetup && typeof serviceSetup === 'object' && 'captureOperationStart' in serviceSetup) {
+  if (
+    serviceSetup &&
+    typeof serviceSetup === 'object' &&
+    'captureOperationStart' in serviceSetup
+  ) {
     executionContext.trace = serviceSetup;
   }
 
