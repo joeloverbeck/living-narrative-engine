@@ -57,6 +57,11 @@ const createDispatcher = () => ({
 
 const createResponse = (body, init) => new Response(body, init);
 
+const createFetchResult = (data, responseInit = {}) => ({
+  data,
+  response: createResponse('', responseInit),
+});
+
 describe('RetryHttpClient', () => {
   let logger;
   let dispatcher;
@@ -269,7 +274,7 @@ describe('RetryHttpClient', () => {
         fetchWithRetry
           .mockRejectedValueOnce(error)
           .mockRejectedValueOnce(error)
-          .mockResolvedValueOnce({ success: true });
+          .mockResolvedValueOnce(createFetchResult({ success: true }));
 
         // Mock setTimeout to track delay calls
         const originalSetTimeout = global.setTimeout;
@@ -301,7 +306,7 @@ describe('RetryHttpClient', () => {
 
         fetchWithRetry
           .mockRejectedValueOnce(error)
-          .mockResolvedValueOnce({ success: true });
+          .mockResolvedValueOnce(createFetchResult({ success: true }));
 
         await client.request('https://example.com', { method: 'GET' });
 
@@ -324,7 +329,7 @@ describe('RetryHttpClient', () => {
 
         fetchWithRetry
           .mockRejectedValueOnce(error)
-          .mockResolvedValueOnce({ success: true });
+          .mockResolvedValueOnce(createFetchResult({ success: true }));
 
         await client.request('https://example.com', { method: 'GET' });
 
@@ -348,7 +353,7 @@ describe('RetryHttpClient', () => {
 
         fetchWithRetry
           .mockRejectedValueOnce(error)
-          .mockResolvedValueOnce({ success: true });
+          .mockResolvedValueOnce(createFetchResult({ success: true }));
 
         await client.request('https://example.com', { method: 'GET' });
 
@@ -368,7 +373,7 @@ describe('RetryHttpClient', () => {
 
         fetchWithRetry
           .mockRejectedValueOnce(error)
-          .mockResolvedValueOnce({ success: true });
+          .mockResolvedValueOnce(createFetchResult({ success: true }));
 
         await client.request('https://example.com', { method: 'GET' });
 
@@ -450,7 +455,7 @@ describe('RetryHttpClient', () => {
 
     beforeEach(() => {
       client = new RetryHttpClient({ logger, dispatcher });
-      fetchWithRetry.mockResolvedValue({ success: true });
+      fetchWithRetry.mockResolvedValue(createFetchResult({ success: true }));
     });
 
     it('should map abortSignal to signal for native fetch', async () => {
@@ -474,7 +479,9 @@ describe('RetryHttpClient', () => {
         500,
         10000,
         expect.any(Object),
-        logger
+        logger,
+        undefined,
+        { includeResponse: true }
       );
     });
 
@@ -496,7 +503,9 @@ describe('RetryHttpClient', () => {
         500,
         10000,
         expect.any(Object),
-        logger
+        logger,
+        undefined,
+        { includeResponse: true }
       );
     });
   });
@@ -522,7 +531,7 @@ describe('RetryHttpClient', () => {
 
       fetchWithRetry
         .mockRejectedValueOnce(networkError)
-        .mockResolvedValueOnce({ success: true });
+        .mockResolvedValueOnce(createFetchResult({ success: true }));
 
       await client.request('https://example.com', { method: 'GET' });
 
@@ -609,6 +618,38 @@ describe('RetryHttpClient', () => {
       }
 
       expect(thrownError).toBe(error);
+    });
+  });
+
+  describe('salvage recovery', () => {
+    it('attempts salvage when a 503 occurs after a response with request id', async () => {
+      const client = new RetryHttpClient({ logger, dispatcher });
+      const initialHeaders = { headers: { 'X-Request-ID': 'req-123' } };
+      fetchWithRetry.mockResolvedValueOnce(
+        createFetchResult({ success: true }, initialHeaders)
+      );
+
+      await client.request('https://example.com/api/llm-request', {
+        method: 'GET',
+      });
+
+      const salvageResponse = createResponse('salvaged', { status: 200 });
+      const serviceError = new Error('Service unavailable');
+      serviceError.status = 503;
+      serviceError.body = 'Service unavailable';
+
+      fetchWithRetry.mockRejectedValueOnce(serviceError);
+      global.fetch.mockResolvedValueOnce(salvageResponse);
+
+      const result = await client.request(
+        'https://example.com/api/llm-request',
+        { method: 'GET' }
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://example.com/api/llm-request/salvage/req-123'
+      );
+      expect(result).toBe(salvageResponse);
     });
   });
 });
