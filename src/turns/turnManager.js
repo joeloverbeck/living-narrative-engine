@@ -251,6 +251,8 @@ class TurnManager extends ITurnManager {
         { error: error.message }
       );
     }
+
+    this.#roundManager.resetFlags();
     logEnd(this.#logger, 'Turn Manager stopped.');
   }
 

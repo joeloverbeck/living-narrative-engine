@@ -10,6 +10,7 @@ import {
 import { beforeEach, expect, jest } from '@jest/globals';
 import { createMockTurnHandler } from '../../common/mockFactories';
 import { createAiActor } from '../../common/turns/testActors.js';
+import RoundManager from '../../../src/turns/roundManager.js';
 
 // --- Test Setup Helpers ---
 // --- Test Suite ---
@@ -209,6 +210,23 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
           ) && call[1] === destroyError
       );
       expect(hasDestroyError === true || hasDestroyError === false).toBe(true);
+    });
+
+    it('should reset round state flags when stopping the manager', async () => {
+      const resetFlagsSpy = jest.spyOn(
+        RoundManager.prototype,
+        'resetFlags'
+      );
+      try {
+        await testBed.turnManager.start();
+        resetFlagsSpy.mockClear();
+
+        await testBed.turnManager.stop();
+
+        expect(resetFlagsSpy).toHaveBeenCalledTimes(1);
+      } finally {
+        resetFlagsSpy.mockRestore();
+      }
     });
   });
 
