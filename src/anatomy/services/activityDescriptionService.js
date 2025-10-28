@@ -96,6 +96,7 @@ const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
  * @property {(description: string, maxLength: number) => string} truncateDescription - Truncate composed descriptions to configured length.
  * @property {(name: string) => string} sanitizeEntityName - Sanitize entity names for display.
  * @property {(object: object) => string} getReflexivePronoun - Resolve reflexive pronouns for self-targeting logic.
+ * @property {(targetEntityId: string) => boolean} shouldUsePronounForTarget - Determine pronoun usage for targets.
  * @property {() => void} cleanupCaches - Trigger cache cleanup routine.
  * @property {(key: string, value: unknown) => void} setEntityNameCacheEntry - Prime the entity name cache.
  * @property {(key: string, value: unknown) => void} setGenderCacheEntry - Prime the gender cache.
@@ -1745,7 +1746,6 @@ class ActivityDescriptionService {
         return `while ${fallbackPhrase}`;
       }
 
-      return '';
     }
 
     const phraseBody = sanitizedVerbPhrase || fallbackPhrase;
@@ -2256,6 +2256,8 @@ class ActivityDescriptionService {
         this.#activitiesOccurSimultaneously(...args),
       getReflexivePronoun: (...args) => this.#getReflexivePronoun(...args),
       getPronounSet: (...args) => this.#getPronounSet(...args),
+      shouldUsePronounForTarget: (...args) =>
+        this.#shouldUsePronounForTarget(...args),
       detectEntityGender: (...args) => this.#detectEntityGender(...args),
       isEmptyConditionsObject: (...args) =>
         this.#isEmptyConditionsObject(...args),
@@ -2279,29 +2281,6 @@ class ActivityDescriptionService {
         gender: new Map(this.#genderCache),
         activityIndex: new Map(this.#activityIndexCache),
       }),
-      // Additional test hooks for ACTDESC-014 pronoun resolution tests
-      evaluateActivityVisibility: (...args) =>
-        this.#evaluateActivityVisibility(...args),
-      buildLogicContext: (...args) => this.#buildLogicContext(...args),
-      buildActivityContext: (...args) => this.#buildActivityContext(...args),
-      applyContextualTone: (...args) => this.#applyContextualTone(...args),
-      generateActivityPhrase: (...args) =>
-        this.#generateActivityPhrase(...args),
-      filterByConditions: (...args) => this.#filterByConditions(...args),
-      determineActivityIntensity: (...args) =>
-        this.#determineActivityIntensity(...args),
-      isEmptyConditionsObject: (...args) =>
-        this.#isEmptyConditionsObject(...args),
-      matchesPropertyCondition: (...args) =>
-        this.#matchesPropertyCondition(...args),
-      hasRequiredComponents: (...args) => this.#hasRequiredComponents(...args),
-      hasForbiddenComponents: (...args) =>
-        this.#hasForbiddenComponents(...args),
-      extractEntityData: (...args) => this.#extractEntityData(...args),
-      determineConjunction: (...args) => this.#determineConjunction(...args),
-      activitiesOccurSimultaneously: (...args) =>
-        this.#activitiesOccurSimultaneously(...args),
-      getPronounSet: (...args) => this.#getPronounSet(...args),
       resolveEntityName: (...args) => this.#resolveEntityName(...args),
     };
   }
