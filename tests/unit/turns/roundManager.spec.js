@@ -17,6 +17,7 @@ describe('RoundManager', () => {
 
     mockLogger = {
       debug: jest.fn(),
+      warn: jest.fn(),
       error: jest.fn(),
     };
 
@@ -226,6 +227,43 @@ describe('RoundManager', () => {
         mockTurnOrderService.startNewRound.mock.calls[0];
       expect(normalisedInitiative).toBeInstanceOf(Map);
       expect(normalisedInitiative.get(mockActor.id)).toBe(12);
+    });
+
+    it('should coerce initiative scores from string inputs into numbers', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeDataObject = { [mockActor.id]: '34' };
+
+      await roundManager.startRound('initiative', initiativeDataObject);
+
+      const [, , normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(normalisedInitiative.get(mockActor.id)).toBe(34);
+    });
+
+    it('should drop invalid initiative scores after coercion attempts', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeDataObject = { [mockActor.id]: 'not-a-number' };
+
+      await expect(
+        roundManager.startRound('initiative', initiativeDataObject)
+      ).rejects.toThrow(
+        'Cannot start an initiative round: initiativeData Map is required.'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
+        expect.objectContaining({
+          entityId: mockActor.id,
+          receivedType: 'string',
+        })
+      );
     });
 
     it('should normalise plain object initiative data when provided via options', async () => {
