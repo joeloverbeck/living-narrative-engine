@@ -571,6 +571,26 @@ class TurnManager extends ITurnManager {
     const successStatus = payload.success;
     let endedActorId = payload.entityId;
 
+    if (typeof endedActorId === 'string') {
+      const originalEntityId = endedActorId;
+      const trimmedEntityId = originalEntityId.trim();
+
+      if (trimmedEntityId.length === 0) {
+        this.#logger.warn(
+          `Received '${TURN_ENDED_ID}' event with an entityId comprised only of whitespace. Treating the id as missing.`,
+          { originalEntityId }
+        );
+        endedActorId = '';
+      } else if (trimmedEntityId !== originalEntityId) {
+        this.#logger.warn(
+          `Received '${TURN_ENDED_ID}' event for entity id '${originalEntityId}' with surrounding whitespace. Normalising to '${trimmedEntityId}'.`
+        );
+        endedActorId = trimmedEntityId;
+      } else {
+        endedActorId = trimmedEntityId;
+      }
+    }
+
     if (!endedActorId) {
       if (!this.#currentActor) {
         this.#logger.warn(
