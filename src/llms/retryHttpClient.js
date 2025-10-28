@@ -224,6 +224,7 @@ export class RetryHttpClient extends IHttpClient {
           silentDispatcher,
           this.#logger,
           undefined,
+          undefined,
           { includeResponse: true }
         );
 
