@@ -28,6 +28,29 @@ describe('safeDispatchError', () => {
     });
   });
 
+  it('normalizes primitive details into a schema-compliant structure', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+
+    await safeDispatchError(dispatcher, 'primitive payload', ' failure ');
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'primitive payload',
+      details: { raw: 'failure' },
+    });
+  });
+
+  it('wraps array details to avoid schema violations', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    const diagnostics = ['a', 'b'];
+
+    await safeDispatchError(dispatcher, 'array payload', diagnostics);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'array payload',
+      details: { items: diagnostics },
+    });
+  });
+
   it('throws if dispatcher is invalid', async () => {
     await expect(safeDispatchError({}, 'oops')).rejects.toMatchObject({
       name: 'InvalidDispatcherError',
@@ -175,9 +198,9 @@ describe('additional coverage', () => {
     const result = dispatchValidationError(dispatcher, 'bad', null);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'bad',
-      details: null,
+      details: {},
     });
-    expect(result).toEqual({ ok: false, error: 'bad', details: null });
+    expect(result).toEqual({ ok: false, error: 'bad', details: {} });
   });
 
   it('preserves provided diagnostic metadata in InvalidDispatcherError', () => {
