@@ -449,8 +449,8 @@ class PersistenceCoordinator {
 
     if (!this.#persistenceService) {
       const errorMsg =
-        'GamePersistenceService is not available. Cannot load game.';
-      this.#logger.error(`GameEngine.loadGame: ${errorMsg}`);
+        'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.';
+      this.#logger.error(errorMsg);
       return await this.#handleLoadFailure(errorMsg, saveIdentifier);
     }
 
