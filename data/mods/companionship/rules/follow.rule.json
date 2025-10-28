@@ -63,6 +63,16 @@
             }
           },
           {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": { "entityId": "{event.payload.targetId}" }
+            }
+          },
+          {
             "type": "GET_NAME",
             "parameters": {
               "entity_ref": "actor",
