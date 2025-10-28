@@ -287,7 +287,7 @@ function cloneAndFreezeValue(value) {
   }
   if (value instanceof RegExp) {
     const clonedRegExp = new RegExp(value.source, value.flags);
-    return Object.freeze(clonedRegExp);
+    return clonedRegExp;
   }
   if (value instanceof Map) {
     const cloned = new Map();
