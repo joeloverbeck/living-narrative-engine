@@ -403,6 +403,20 @@ export class ActionIndexingService {
       );
     }
 
+    /* ── fast path: reuse cached list when discovery returns empty ────── */
+    if (discovered.length === 0) {
+      const cached = this.#actorCache.get(actorId);
+      if (cached) {
+        this.#log.debug(
+          `ActionIndexingService: discovery returned empty for ${actorId}, reusing cached actions`
+        );
+        return cached.slice();
+      }
+
+      this.#actorCache.set(actorId, []);
+      return [];
+    }
+
     /* ── filter invalid entries before deduplication ─────────────────── */
     const { valid: validDiscovered, invalid: invalidEntries } =
       partitionDiscoveredActions(discovered);
