@@ -280,6 +280,30 @@ describe('OperationInterpreter', () => {
     );
   });
 
+  test('execute skips JsonLogic evaluation for malformed operator objects', () => {
+    const malformedJsonLogic = { if: 'literal string payload' };
+    const spy = jest.spyOn(jsonLogic, 'apply');
+
+    mockRegistry.getHandler.mockReturnValue(mockLogHandler);
+
+    try {
+      interpreter.execute(
+        {
+          type: 'CONFIGURE',
+          parameters: { payload: malformedJsonLogic },
+        },
+        mockExecutionContext
+      );
+
+      expect(spy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ if: 'literal string payload' }),
+        expect.anything()
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   test('execute should preserve JSON Logic conditions inside with_component_data filters', () => {
     mockRegistry.getHandler.mockReturnValue(mockQueryEntitiesHandler);
 
