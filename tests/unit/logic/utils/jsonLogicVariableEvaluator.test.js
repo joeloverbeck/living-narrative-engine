@@ -116,13 +116,18 @@ describe('jsonLogicVariableEvaluator', () => {
       test('should handle JsonLogic evaluation errors', () => {
         const rule = { invalidOperator: ['test'] };
         const evaluationContext = {};
+        const mockApply = jest
+          .spyOn(jsonLogic, 'apply')
+          .mockImplementation(() => {
+            throw new Error('Unexpected failure');
+          });
 
         const result = evaluateValue(
           rule,
           evaluationContext,
           mockLogger,
           'errorVar',
-          rule
+          { value: rule }
         );
 
         expect(result).toEqual({ success: false });
@@ -131,7 +136,7 @@ describe('jsonLogicVariableEvaluator', () => {
             'Error evaluating JsonLogic value for variable "errorVar"'
           ),
           expect.objectContaining({
-            errorMessage: expect.stringContaining('Unrecognized operation'),
+            errorMessage: 'Unexpected failure',
           })
         );
         expect(mockLogger.error).toHaveBeenCalledWith(
@@ -139,6 +144,31 @@ describe('jsonLogicVariableEvaluator', () => {
             'JsonLogic evaluation for variable "errorVar" failed with an error'
           )
         );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Original value: {"invalidOperator":["test"]}'
+          )
+        );
+
+        mockApply.mockRestore();
+      });
+
+      test('should treat unrecognized JsonLogic operators as literal values', () => {
+        const rule = { invalidOperator: ['test'] };
+        const evaluationContext = {};
+
+        const result = evaluateValue(
+          rule,
+          evaluationContext,
+          mockLogger,
+          'literalVar'
+        );
+
+        expect(result).toEqual({ success: true, value: rule });
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'SET_VARIABLE: Value for "literalVar" contains unrecognized JsonLogic operator "invalidOperator". Treating value as a literal.'
+        );
+        expect(mockLogger.error).not.toHaveBeenCalled();
       });
 
       test('should handle JsonLogic evaluation resulting in undefined', () => {
@@ -231,19 +261,17 @@ describe('jsonLogicVariableEvaluator', () => {
         );
       });
 
-      test('should handle errors without variable name', () => {
+      test('should treat unrecognized operators without variable name as literal values', () => {
         const rule = { invalidOp: 'test' };
         const evaluationContext = {};
 
         const result = evaluateValue(rule, evaluationContext, mockLogger);
 
-        expect(result).toEqual({ success: false });
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          'SET_VARIABLE: Error evaluating JsonLogic value. Storing \'undefined\'. Original value: {"invalidOp":"test"}',
-          expect.objectContaining({
-            errorMessage: expect.stringContaining('Unrecognized operation'),
-          })
+        expect(result).toEqual({ success: true, value: rule });
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'SET_VARIABLE: Value contains unrecognized JsonLogic operator "invalidOp". Treating value as a literal.'
         );
+        expect(mockLogger.error).not.toHaveBeenCalled();
       });
     });
 
@@ -448,6 +476,11 @@ describe('jsonLogicVariableEvaluator', () => {
       // Test handleEvaluationError with evaluationThrewError=true and no varName
       const rule = { invalidOperator: 'test' };
       const evaluationContext = {};
+      const mockApply = jest
+        .spyOn(jsonLogic, 'apply')
+        .mockImplementation(() => {
+          throw new Error('Generic failure');
+        });
 
       const result = evaluateValue(
         rule,
@@ -459,8 +492,16 @@ describe('jsonLogicVariableEvaluator', () => {
 
       expect(result).toEqual({ success: false });
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'SET_VARIABLE: JsonLogic evaluation failed with an error (see previous log). Assignment skipped. Original value: {"invalidOperator":"test"}'
+        expect.stringContaining(
+          'JsonLogic evaluation failed with an error (see previous log)'
+        )
       );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error evaluating JsonLogic value'),
+        { errorMessage: 'Generic failure' }
+      );
+
+      mockApply.mockRestore();
     });
 
     test('should handle contextMissing case without varName parameter', () => {
