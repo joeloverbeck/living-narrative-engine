@@ -128,6 +128,7 @@ class JsonLogicEvaluationService extends BaseService {
       'condition_ref', // Used for condition references
       // Anatomy/body part operators
       'hasPartWithComponentValue',
+      'hasBodyPartWithComponentValue',
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       // Clothing/equipment operators

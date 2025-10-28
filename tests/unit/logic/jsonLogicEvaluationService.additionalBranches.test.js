@@ -115,6 +115,27 @@ describe('JsonLogicEvaluationService uncovered branches', () => {
     );
     spy.mockRestore();
   });
+
+  test('allows hasBodyPartWithComponentValue operator during validation', () => {
+    const operation = jest.fn(() => true);
+    service.addOperation('hasBodyPartWithComponentValue', operation);
+
+    const rule = {
+      hasBodyPartWithComponentValue: [
+        'actor',
+        'core:movement',
+        'locked',
+        false,
+      ],
+    };
+
+    const result = service.evaluate(rule, { actor: { id: 'actor-1' } });
+
+    expect(result).toBe(true);
+    expect(operation).toHaveBeenCalled();
+
+    service.removeOperation('hasBodyPartWithComponentValue');
+  });
 });
 
 describe('evaluateConditionWithLogging', () => {
