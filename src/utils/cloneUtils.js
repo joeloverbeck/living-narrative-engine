@@ -93,6 +93,9 @@ export function safeDeepClone(value, logger) {
  */
 export function deepFreeze(object) {
   if (object && typeof object === 'object') {
+    if (object instanceof RegExp) {
+      return object;
+    }
     // Freeze properties before freezing self
     Object.keys(object).forEach((key) => {
       const value = object[key];
