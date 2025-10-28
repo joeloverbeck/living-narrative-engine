@@ -31,12 +31,17 @@ const JSON_LOGIC_OPERATOR_HINTS = Object.freeze([
   'var',
   'cat',
   'if',
+  '?:',
   '==',
+  '===',
   '!=',
+  '!==',
   '>',
   '<',
   '>=',
   '<=',
+  '!!',
+  '!',
   'and',
   'or',
   'not',
@@ -45,6 +50,8 @@ const JSON_LOGIC_OPERATOR_HINTS = Object.freeze([
   '*',
   '/',
   '%',
+  'min',
+  'max',
   'in',
   'map',
   'filter',
@@ -55,7 +62,44 @@ const JSON_LOGIC_OPERATOR_HINTS = Object.freeze([
   'merge',
   'missing',
   'missing_some',
+  'substr',
+  'log',
 ]);
+
+const KNOWN_JSON_LOGIC_OPERATORS = new Set(JSON_LOGIC_OPERATOR_HINTS);
+
+const JSON_LOGIC_PATCH_FLAG = '__lneOperationInterpreterPatched';
+
+if (!jsonLogic[JSON_LOGIC_PATCH_FLAG]) {
+  const originalAddOperation =
+    typeof jsonLogic.add_operation === 'function'
+      ? jsonLogic.add_operation.bind(jsonLogic)
+      : null;
+  if (originalAddOperation) {
+    jsonLogic.add_operation = function patchedAddOperation(name, code) {
+      KNOWN_JSON_LOGIC_OPERATORS.add(name);
+      return originalAddOperation(name, code);
+    };
+  }
+
+  const originalRemoveOperation =
+    typeof jsonLogic.rm_operation === 'function'
+      ? jsonLogic.rm_operation.bind(jsonLogic)
+      : null;
+  if (originalRemoveOperation) {
+    jsonLogic.rm_operation = function patchedRemoveOperation(name) {
+      KNOWN_JSON_LOGIC_OPERATORS.delete(name);
+      return originalRemoveOperation(name);
+    };
+  }
+
+  Object.defineProperty(jsonLogic, JSON_LOGIC_PATCH_FLAG, {
+    value: true,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
+}
 
 /**
  * Determines if the current traversal path should skip JSON Logic evaluation.
@@ -104,7 +148,7 @@ function evaluateJsonLogicRecursively(
   currentPath = []
 ) {
   // Skip if value is null or undefined
-  if (value == null) {
+  if (value === null || value === undefined) {
     return value;
   }
 
@@ -138,10 +182,11 @@ function evaluateJsonLogicRecursively(
     // Check if this looks like a JSON Logic expression
     // JSON Logic expressions are objects with operator keys like 'var', 'cat', 'if', etc.
     // We detect this by checking if it has known JSON Logic operators or starts with typical operators
+    const operatorKey = keys.length === 1 ? keys[0] : null;
     const isLikelyJsonLogic =
-      (typeof jsonLogic.is_logic === 'function' &&
-        jsonLogic.is_logic(value)) ||
-      JSON_LOGIC_OPERATOR_HINTS.some((operator) => keys.includes(operator));
+      operatorKey !== null &&
+      KNOWN_JSON_LOGIC_OPERATORS.has(operatorKey) &&
+      (typeof jsonLogic.is_logic !== 'function' || jsonLogic.is_logic(value));
 
     if (isLikelyJsonLogic) {
       try {
@@ -156,8 +201,13 @@ function evaluateJsonLogicRecursively(
           logger.warn(
             `OperationInterpreter: Failed to evaluate JSON Logic expression: ${message}. Using original value.`
           );
+          return value;
         }
-        return value;
+
+        logger.debug(
+          `OperationInterpreter: Skipping JSON Logic evaluation for unknown operator "${operatorKey}".`
+        );
+        // Fall through to recursive evaluation so nested JSON Logic fragments can still resolve.
       }
     }
 
