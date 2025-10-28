@@ -40,4 +40,16 @@ describe('SafeErrorLogger loading option normalization', () => {
       })
     );
   });
+
+  it('treats default context as high volume for backwards compatibility', () => {
+    safeErrorLogger.enableGameLoadingMode();
+
+    expect(dispatcher.setBatchMode).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({
+        context: 'game-load',
+        maxGlobalRecursion: 200,
+      })
+    );
+  });
 });

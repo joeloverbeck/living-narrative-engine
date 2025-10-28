@@ -1,4 +1,5 @@
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
+import { deepFreeze, freezeMap } from '../../utils/cloneUtils.js';
 import { ActionIndexingError } from './errors/actionIndexingError.js';
 
 /**
@@ -93,6 +94,14 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
     return `[Function:${value.name || 'anonymous'}]`;
   }
 
+  if (value instanceof Date) {
+    const timeValue = value.getTime();
+    if (Number.isNaN(timeValue)) {
+      return 'Date(Invalid)';
+    }
+    return `Date(${value.toISOString()})`;
+  }
+
   if (Array.isArray(value)) {
     if (seen.has(value)) {
       return '[Circular]';
@@ -176,6 +185,62 @@ function formatParamsForLog(params) {
   }
 }
 
+/**
+ * @description Clones a Set and returns an immutable proxy that blocks mutation methods.
+ * @param {Set<unknown>} set - The Set to clone and freeze.
+ * @returns {ReadonlySet<unknown>} Frozen clone of the provided Set.
+ */
+function freezeClonedSet(set) {
+  const cloned = new Set();
+  for (const item of set.values()) {
+    cloned.add(cloneAndFreezeValue(item));
+  }
+  Object.freeze(cloned);
+  return new Proxy(cloned, {
+    get(target, prop) {
+      if (prop === 'add' || prop === 'delete' || prop === 'clear') {
+        return () => {
+          throw new TypeError('Cannot modify frozen set');
+        };
+      }
+      const value = Reflect.get(target, prop, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+}
+
+/**
+ * @description Creates an immutable clone of the provided value suitable for caching.
+ * @param {*} value - Value to clone and freeze.
+ * @returns {*} Immutable clone of the provided value.
+ */
+function cloneAndFreezeValue(value) {
+  if (value === null || value === undefined) {
+    return value;
+  }
+  if (value instanceof Map) {
+    const cloned = new Map();
+    for (const [key, val] of value.entries()) {
+      cloned.set(key, cloneAndFreezeValue(val));
+    }
+    return freezeMap(cloned);
+  }
+  if (value instanceof Set) {
+    return freezeClonedSet(value);
+  }
+  if (Array.isArray(value)) {
+    return deepFreeze(value.map((item) => cloneAndFreezeValue(item)));
+  }
+  if (typeof value === 'object') {
+    const cloned = {};
+    for (const [key, val] of Object.entries(value)) {
+      cloned[key] = cloneAndFreezeValue(val);
+    }
+    return deepFreeze(cloned);
+  }
+  return value;
+}
+
 function truncateActions(uniqueArr) {
   if (uniqueArr.length > MAX_AVAILABLE_ACTIONS_PER_TURN) {
     const truncatedCount = uniqueArr.length - MAX_AVAILABLE_ACTIONS_PER_TURN;
@@ -195,14 +260,19 @@ function truncateActions(uniqueArr) {
  * @returns {import('../dtos/actionComposite.js').ActionComposite[]} Array of composites ready for indexing.
  */
 function buildComposites(uniqueArr) {
-  return uniqueArr.map((u, idx) => ({
-    index: idx + 1,
-    actionId: u.actionId,
-    commandString: u.commandString,
-    params: u.params,
-    description: u.description,
-    visual: u.visual,
-  }));
+  return uniqueArr.map((u, idx) =>
+    deepFreeze({
+      index: idx + 1,
+      actionId: u.actionId,
+      commandString: u.commandString,
+      params: cloneAndFreezeValue(u.params),
+      description: u.description,
+      visual:
+        u.visual === null || u.visual === undefined
+          ? null
+          : cloneAndFreezeValue(u.visual),
+    })
+  );
 }
 
 export class ActionIndexingService {

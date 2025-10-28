@@ -47,6 +47,7 @@ export default class RoundManager {
     }
 
     if (strategy === 'initiative') {
+      initiativeData = this.#normaliseInitiativeData(initiativeData);
       if (!(initiativeData instanceof Map) || initiativeData.size === 0) {
         const errorMsg =
           'Cannot start an initiative round: initiativeData Map is required.';
@@ -111,5 +112,73 @@ export default class RoundManager {
   resetFlags() {
     this.#inProgress = false;
     this.#hadSuccess = false;
+  }
+
+  /**
+   * Normalises initiative data passed to {@link startRound} into a Map.
+   *
+   * @param {unknown} rawInitiativeData - Initiative data provided by callers.
+   * @returns {Map<string, number> | undefined} Normalised initiative data or undefined when normalisation fails.
+   */
+  #normaliseInitiativeData(rawInitiativeData) {
+    if (rawInitiativeData instanceof Map) {
+      return rawInitiativeData;
+    }
+
+    if (Array.isArray(rawInitiativeData)) {
+      const normalisedFromArray = new Map();
+      for (const entry of rawInitiativeData) {
+        if (!Array.isArray(entry) || entry.length < 2) {
+          this.#logger.warn(
+            'RoundManager.startRound(): Ignoring malformed initiative entry from array input.',
+            { entry }
+          );
+          continue;
+        }
+        const [entityId, score] = entry;
+        if (typeof entityId !== 'string' || entityId.length === 0) {
+          this.#logger.warn(
+            'RoundManager.startRound(): Ignoring initiative entry with non-string entity id from array input.',
+            { entityId }
+          );
+          continue;
+        }
+        normalisedFromArray.set(entityId, score);
+      }
+      return normalisedFromArray.size > 0 ? normalisedFromArray : undefined;
+    }
+
+    if (
+      rawInitiativeData &&
+      typeof rawInitiativeData === 'object' &&
+      !Array.isArray(rawInitiativeData)
+    ) {
+      const entries = Object.entries(rawInitiativeData);
+      if (entries.length === 0) {
+        return undefined;
+      }
+      const normalisedFromObject = new Map();
+      for (const [entityId, score] of entries) {
+        if (typeof entityId !== 'string' || entityId.length === 0) {
+          this.#logger.warn(
+            'RoundManager.startRound(): Ignoring initiative entry with non-string entity id from object input.',
+            { entityId }
+          );
+          continue;
+        }
+        normalisedFromObject.set(entityId, score);
+      }
+
+      if (normalisedFromObject.size === 0) {
+        return undefined;
+      }
+
+      this.#logger.debug(
+        'RoundManager.startRound(): Normalised plain object initiative data into Map for initiative round.'
+      );
+      return normalisedFromObject;
+    }
+
+    return undefined;
   }
 }

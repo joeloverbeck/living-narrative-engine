@@ -257,6 +257,7 @@ beforeAll(async () => {
         { property: 'entityManager', token: IEntityManager },
         { property: 'logger', token: ILogger },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        { property: 'gameDataRepository', token: tokens.IGameDataRepository },
       ],
     },
     {

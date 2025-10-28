@@ -48,19 +48,24 @@ describe('TurnContext.endTurn', () => {
 
   it('calls onEndTurnCallback when the handler is still alive', () => {
     createContext(false); // handler NOT destroyed
-    expect(tc.getPromptSignal().aborted).toBe(false);
+    const initialSignal = tc.getPromptSignal();
+    expect(initialSignal.aborted).toBe(false);
 
     tc.endTurn(); // act
 
     expect(onEndTurnCb).toHaveBeenCalledTimes(1);
-    expect(tc.getPromptSignal().aborted).toBe(true); // prompt was cancelled
+    expect(initialSignal.aborted).toBe(true); // prompt was cancelled
+    expect(tc.getPromptSignal().aborted).toBe(false); // subsequent calls reuse a fresh controller
   });
 
   it('suppresses the callback when the handler is already destroyed', () => {
     createContext(true); // handler destroyed
+    const initialSignal = tc.getPromptSignal();
+    expect(initialSignal.aborted).toBe(false);
     tc.endTurn(); // act
 
     expect(onEndTurnCb).not.toHaveBeenCalled();
-    expect(tc.getPromptSignal().aborted).toBe(true); // still aborts the prompt
+    expect(initialSignal.aborted).toBe(true); // still aborts the original prompt
+    expect(tc.getPromptSignal().aborted).toBe(false); // future prompts can proceed
   });
 });

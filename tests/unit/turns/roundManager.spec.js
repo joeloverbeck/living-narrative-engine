@@ -192,6 +192,43 @@ describe('RoundManager', () => {
       );
     });
 
+    it('should normalise plain object initiative data into a Map', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeDataObject = { [mockActor.id]: 12 };
+
+      await roundManager.startRound('initiative', initiativeDataObject);
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledTimes(1);
+      const [, , normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(normalisedInitiative).toBeInstanceOf(Map);
+      expect(normalisedInitiative.get(mockActor.id)).toBe(12);
+    });
+
+    it('should normalise plain object initiative data when provided via options', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeDataObject = { [mockActor.id]: 7 };
+
+      await roundManager.startRound({
+        strategy: 'initiative',
+        initiativeData: initiativeDataObject,
+      });
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledTimes(1);
+      const [, , normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(normalisedInitiative).toBeInstanceOf(Map);
+      expect(normalisedInitiative.get(mockActor.id)).toBe(7);
+    });
+
     it('should filter out non-actor entities', async () => {
       // Arrange
       const mockActor = {

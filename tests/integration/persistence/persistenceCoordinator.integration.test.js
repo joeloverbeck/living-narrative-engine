@@ -8,9 +8,7 @@ import {
   ENGINE_OPERATION_FAILED_UI,
   GAME_SAVED_ID,
 } from '../../../src/constants/eventIds.js';
-import {
-  GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE,
-} from '../../common/engine/unavailableMessages.js';
+import { GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 class TestLogger {
   constructor() {

@@ -21,7 +21,11 @@ import { ensureValidLogger } from './loggerUtils.js';
  * @param {object} [deps.eventBus] - EventBus instance (deprecated - use safeEventDispatcher)
  * @returns {object} Safe error logging utilities
  */
-const HIGH_VOLUME_CONTEXTS = new Set(['game-initialization', 'game-load']);
+const HIGH_VOLUME_CONTEXTS = new Set([
+  'game-initialization',
+  'game-load',
+  'game-loading',
+]);
 
 export function createSafeErrorLogger({
   logger,
@@ -112,8 +116,12 @@ export function createSafeErrorLogger({
         }
       }
 
-      if (Object.prototype.hasOwnProperty.call(normalizedOptions, 'timeoutMs')) {
-        const coercedTimeout = normalizeTimeoutMsValue(normalizedOptions.timeoutMs);
+      if (
+        Object.prototype.hasOwnProperty.call(normalizedOptions, 'timeoutMs')
+      ) {
+        const coercedTimeout = normalizeTimeoutMsValue(
+          normalizedOptions.timeoutMs
+        );
         if (coercedTimeout !== undefined) {
           normalizedOptions.timeoutMs = coercedTimeout;
         } else {
@@ -167,12 +175,12 @@ export function createSafeErrorLogger({
    * Enables game loading mode which automatically manages EventBus batch mode.
    *
    * @param {object} [options] - Loading configuration
-   * @param {string} [options.context='game-loading'] - Context description
+   * @param {string} [options.context='game-load'] - Context description
    * @param {number} [options.timeoutMs=60000] - Auto-disable timeout
    */
   function enableGameLoadingMode(options = {}) {
     const defaultOptions = {
-      context: 'game-loading',
+      context: 'game-load',
       timeoutMs: 60000, // 1 minute timeout for safety
     };
 
@@ -195,17 +203,30 @@ export function createSafeErrorLogger({
       config: batchModeConfig,
     };
 
-    if (loadingContextStack.length === 0) {
+    const hadActiveContext = loadingContextStack.length > 0;
+    const previousOutermostStart = outermostStartTime;
+
+    if (!hadActiveContext) {
       outermostStartTime = now;
     }
 
     loadingContextStack.push(contextEntry);
-
     isGameLoading = true;
 
-    // Enable batch mode on EventBus with context-aware limits
-    // EventBus now handles event-specific limits based on context automatically
-    dispatcher.setBatchMode(true, batchModeConfig);
+    try {
+      // Enable batch mode on EventBus with context-aware limits
+      // EventBus now handles event-specific limits based on context automatically
+      dispatcher.setBatchMode(true, batchModeConfig);
+    } catch (error) {
+      loadingContextStack.pop();
+
+      if (!hadActiveContext) {
+        outermostStartTime = previousOutermostStart;
+        isGameLoading = false;
+      }
+
+      throw error;
+    }
 
     safeLogger.debug(
       `SafeErrorLogger: Enabled batch mode for ${loadingOptions.context} (depth: ${loadingContextStack.length}) - ` +

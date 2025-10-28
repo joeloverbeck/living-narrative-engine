@@ -179,6 +179,7 @@ describe('initLogger usage in constructors', () => {
       entityManager: { addComponent: jest.fn() },
       logger: mockLogger,
       safeEventDispatcher: { dispatch: jest.fn() },
+      gameDataRepository: { getComponentDefinition: jest.fn() },
     });
     expect(initHandlerLogger).toHaveBeenCalledWith(
       'AddComponentHandler',
