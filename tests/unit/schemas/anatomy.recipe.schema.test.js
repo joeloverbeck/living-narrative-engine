@@ -787,6 +787,35 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
       expect(ok).toBe(true);
     });
 
+    test('should reject exclusions with malformed slot group references', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid_exclusion',
+        blueprintId: 'anatomy:test',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: 'leg_*',
+            partType: 'leg',
+            exclude: {
+              slotGroups: ['limbSet'],
+            },
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining('pattern'),
+          }),
+        ])
+      );
+    });
+
     test('should validate all valid limbSet slot group formats', () => {
       const slotGroups = ['limbSet:leg', 'limbSet:arm', 'limbSet:tentacle', 'limbSet:wing_123'];
 

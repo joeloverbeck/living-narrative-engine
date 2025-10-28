@@ -689,6 +689,75 @@ describe('RecipePatternResolver', () => {
       });
     });
 
+    it('should support matchesAll filters combined with slot group exclusions', () => {
+      const template = {
+        topology: {
+          limbSets: [
+            { type: 'leg', id: 'front' },
+            { type: 'leg', id: 'rear' },
+          ],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(
+        (limbSet) => {
+          if (limbSet.id === 'front') {
+            return ['leg_front_left', 'leg_front_right'];
+          }
+          if (limbSet.id === 'rear') {
+            return ['leg_rear_left', 'leg_rear_right'];
+          }
+          return [];
+        }
+      );
+
+      const recipe = {
+        patterns: [
+          {
+            matchesAll: {
+              slotType: 'leg_segment',
+              orientation: '*_left',
+            },
+            partType: 'left_leg',
+            exclude: {
+              slotGroups: ['limbSet:leg'],
+            },
+          },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'beast:body',
+        slots: {
+          leg_front_left: {
+            orientation: 'front_left',
+            requirements: { partType: 'leg_segment' },
+          },
+          leg_front_right: {
+            orientation: 'front_right',
+            requirements: { partType: 'leg_segment' },
+          },
+          leg_rear_left: {
+            orientation: 'rear_left',
+            requirements: { partType: 'leg_segment' },
+          },
+          leg_rear_right: {
+            orientation: 'rear_right',
+            requirements: { partType: 'leg_segment' },
+          },
+        },
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({});
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Excluded 4 slots from group 'limbSet:leg'"
+      );
+    });
+
     it('should handle combined exclusions', () => {
       const template = {
         topology: {
