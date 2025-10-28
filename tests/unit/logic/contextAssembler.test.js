@@ -191,6 +191,30 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(actorId);
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
     });
+
+    test('should populate actor when actorId is the number 0', () => {
+      const zeroActorId = 0;
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === zeroActorId) {
+          return { id: zeroActorId };
+        }
+        return undefined;
+      });
+
+      const context = createJsonLogicContext(
+        baseEvent,
+        zeroActorId,
+        null,
+        mockEntityManager,
+        mockLogger
+      );
+
+      expect(context.actor).not.toBeNull();
+      expect(context.actor).toHaveProperty('id', zeroActorId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        zeroActorId
+      );
+    });
   });
 
   describe('AC4: Actor Population (Valid ID, Entity Not Found)', () => {
@@ -324,6 +348,30 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
         targetId
       );
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
+    });
+
+    test('should populate target when targetId is the number 0', () => {
+      const zeroTargetId = 0;
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === zeroTargetId) {
+          return { id: zeroTargetId };
+        }
+        return undefined;
+      });
+
+      const context = createJsonLogicContext(
+        baseEvent,
+        null,
+        zeroTargetId,
+        mockEntityManager,
+        mockLogger
+      );
+
+      expect(context.target).not.toBeNull();
+      expect(context.target).toHaveProperty('id', zeroTargetId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        zeroTargetId
+      );
     });
   });
 
