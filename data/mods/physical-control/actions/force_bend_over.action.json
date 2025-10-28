@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "physical-control:force_bend_over",
+  "name": "Force Bend Over",
+  "description": "Forcefully bend a close actor over a nearby surface",
+  "generateCombinations": true,
+  "targets": {
+    "primary": {
+      "scope": "positioning:close_actors_facing_each_other_or_behind_target",
+      "placeholder": "primary",
+      "description": "Actor you are bending over"
+    },
+    "secondary": {
+      "scope": "positioning:available_surfaces",
+      "placeholder": "secondary",
+      "description": "Surface sturdy enough to bend them over"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:biting_neck",
+      "positioning:kneeling_before",
+      "positioning:straddling_waist",
+      "positioning:hugging",
+      "positioning:being_hugged",
+      "positioning:receiving_blowjob",
+      "positioning:giving_blowjob"
+    ],
+    "primary": [
+      "positioning:kneeling_before",
+      "positioning:sitting_on",
+      "positioning:bending_over"
+    ]
+  },
+  "template": "bend {primary} over {secondary}",
+  "visual": {
+    "backgroundColor": "#2f2f2f",
+    "textColor": "#f8f9fa",
+    "hoverBackgroundColor": "#3f3d56",
+    "hoverTextColor": "#f8f9ff"
+  }
+}

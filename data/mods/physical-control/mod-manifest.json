@@ -27,18 +27,21 @@
   ],
   "content": {
     "actions": [
+      "force_bend_over.action.json",
       "force_to_knees.action.json",
       "push_off.action.json",
       "push_onto_lying_furniture.action.json",
       "turn_around.action.json"
     ],
     "rules": [
+      "handle_force_bend_over.rule.json",
       "handle_force_to_knees.rule.json",
       "handle_push_off.rule.json",
       "handle_push_onto_lying_furniture.rule.json",
       "handle_turn_around.rule.json"
     ],
     "conditions": [
+      "event-is-action-force-bend-over.condition.json",
       "event-is-action-force-to-knees.condition.json",
       "event-is-action-push-off.condition.json",
       "event-is-action-push-onto-lying-furniture.condition.json",
