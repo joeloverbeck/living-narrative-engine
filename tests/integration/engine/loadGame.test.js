@@ -14,7 +14,10 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
 import { DEFAULT_SAVE_ID } from '../../common/constants.js';
-import { GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
+import {
+  GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE,
+  GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE,
+} from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (context) => {
   describe('loadGame', () => {
@@ -153,12 +156,14 @@ describeEngineSuite('GameEngine', (context) => {
         const result = await engine.loadGame(SAVE_ID);
 
         // After the recent changes, handleLoadFailure is called which dispatches ENGINE_OPERATION_FAILED_UI
+        const userFacingMessage = GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE;
+
         expectDispatchSequence(
           bed.getSafeEventDispatcher().dispatch,
           [
             ENGINE_OPERATION_FAILED_UI,
             {
-              errorMessage: `Failed to load game: ${expectedMsg}`,
+              errorMessage: `Failed to load game: ${userFacingMessage}`,
               errorTitle: 'Load Failed',
             },
           ]
@@ -166,7 +171,7 @@ describeEngineSuite('GameEngine', (context) => {
         // eslint-disable-next-line jest/no-standalone-expect
         expect(result).toEqual({
           success: false,
-          error: expectedMsg,
+          error: userFacingMessage,
           data: null,
         });
         return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];

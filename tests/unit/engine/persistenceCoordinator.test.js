@@ -25,6 +25,9 @@ import {
   GAME_SAVED_ID,
 } from '../../../src/constants/eventIds.js';
 import {
+  GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE,
+} from '../../common/engine/unavailableMessages.js';
+import {
   PersistenceError,
   PersistenceErrorCodes,
 } from '../../../src/persistence/persistenceErrors.js';
@@ -647,8 +650,7 @@ describe('PersistenceCoordinator', () => {
 
     const result = await coordinator.loadGame(DEFAULT_SAVE_ID);
 
-    const expectedErrorMsg =
-      'GamePersistenceService is not available. Cannot load game.';
+    const expectedErrorMsg = GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE;
 
     expect(result).toEqual({
       success: false,

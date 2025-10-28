@@ -51,6 +51,14 @@ export const GAME_PERSISTENCE_SAVE_RESULT_UNAVAILABLE =
   'GamePersistenceService is not available. Cannot save game.';
 
 /**
+ * Failure message returned when GamePersistenceService is absent during load.
+ *
+ * @type {string}
+ */
+export const GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE =
+  'GamePersistenceService is not available. Cannot load game.';
+
+/**
  * Warning message when PlaytimeTracker is not available during engine stop.
  *
  * @type {string}
