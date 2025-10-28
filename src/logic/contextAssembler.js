@@ -253,13 +253,16 @@ export function createEvaluationContext(event, entityManager, logger) {
   const actorId = event.payload?.actorId;
   const targetId = event.payload?.targetId;
 
+  const hasActorId = actorId !== undefined && actorId !== null;
+  const hasTargetId = targetId !== undefined && targetId !== null;
+
   // Add actor context if actorId exists
-  if (actorId) {
+  if (hasActorId) {
     context.actor = createEntityContext(actorId, entityManager, logger);
   }
 
   // Add target context if targetId exists
-  if (targetId) {
+  if (hasTargetId) {
     context.target = createEntityContext(targetId, entityManager, logger);
   }
 

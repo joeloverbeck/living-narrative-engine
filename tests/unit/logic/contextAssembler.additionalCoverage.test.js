@@ -240,5 +240,26 @@ describe('contextAssembler utility helpers', () => {
 
       expect(context).toEqual({ event });
     });
+
+    it('treats zero-valued identifiers as valid actor/target references', () => {
+      const logger = createLoggerMock();
+      const entityManager = createEntityManagerMock();
+      const event = {
+        type: 'ACTION',
+        payload: { actorId: 0, targetId: 0 },
+      };
+
+      const context = createEvaluationContext(event, entityManager, logger);
+
+      expect(context.actor).toEqual({
+        id: 0,
+        components: { accessorFor: 0 },
+      });
+      expect(context.target).toEqual({
+        id: 0,
+        components: { accessorFor: 0 },
+      });
+      expect(accessorFactory).toHaveBeenCalledWith(0, entityManager, logger);
+    });
   });
 });
