@@ -912,6 +912,19 @@ describe('GameSessionManager', () => {
       expect(startEngineFn).toHaveBeenCalledWith('cosmic frontier');
     });
 
+    it('should preserve human-readable titles that include slash separators', async () => {
+      const saveData = {
+        metadata: { gameTitle: 'Chapter 1 / Prologue' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'story-slot');
+
+      expect(engineState.activeWorld).toBe('Chapter 1 / Prologue');
+      expect(startEngineFn).toHaveBeenCalledWith('Chapter 1 / Prologue');
+    });
+
     it('should decode and clean metadata worldName values that use encoded formatting', async () => {
       const saveData = {
         metadata: { gameTitle: '', worldName: 'Outer%20Rim_Outpost' },
