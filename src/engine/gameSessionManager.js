@@ -12,6 +12,15 @@ import {
 } from '../utils/savePathUtils.js';
 
 /**
+ * Matches characters that provide meaningful visual content in save names.
+ * Includes all Unicode letters, numbers and symbol classes so emoji- or
+ * glyph-based names are preserved.
+ *
+ * @type {RegExp}
+ */
+const MEANINGFUL_SAVE_NAME_CHARACTERS = /[\p{L}\p{N}\p{S}]/u;
+
+/**
  * @typedef {import('./engineState.js').default} EngineState
  * @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager
  * @typedef {import('../interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker
@@ -443,7 +452,10 @@ class GameSessionManager {
       extracted !== trimmedName || trimmedName.toLowerCase().endsWith('.sav');
     const candidate = isManualPattern ? extracted : trimmedName;
     const decodedCandidate = this.#decodePercentEncodedSegment(candidate);
-    const hasMeaningfulCharacters = /[a-z0-9]/i.test(decodedCandidate);
+    const normalizedForMeaning = decodedCandidate.replace(/[_\s-]+/g, '');
+    const hasMeaningfulCharacters =
+      normalizedForMeaning.length > 0 &&
+      MEANINGFUL_SAVE_NAME_CHARACTERS.test(normalizedForMeaning);
 
     if (isManualPattern && !hasMeaningfulCharacters) {
       return '';
