@@ -369,4 +369,249 @@ describe('ThematicDirectionsManagerController additional coverage', () => {
 
     await testBase.cleanup();
   });
+
+  it('falls back to native select when dropdown construction throws during initialization', async () => {
+    mockDropdownFactory = () => {
+      throw new Error('dropdown boom');
+    };
+
+    const { testBase, controller } = await createController();
+
+    controller._cacheElements();
+
+    await expect(controller._initializeAdditionalServices()).resolves.toBeUndefined();
+
+    expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
+      'Failed to initialize dropdown:',
+      expect.any(Error)
+    );
+
+    const selectElement = controller._getElement('conceptSelector');
+    expect(selectElement.classList.contains('native-fallback')).toBe(true);
+
+    await testBase.cleanup();
+  });
+
+  it('reports initialization failures from dependent services', async () => {
+    const { testBase, controller } = await createController();
+
+    controller._cacheElements();
+
+    const initError = new Error('service init failed');
+    const showErrorSpy = jest.spyOn(controller, '_showError');
+    testBase.mocks.characterBuilderService.initialize.mockRejectedValue(initError);
+
+    await expect(controller._initializeAdditionalServices()).rejects.toThrow(
+      initError
+    );
+
+    expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
+      'ThematicDirectionsManagerController: Failed to initialize',
+      initError
+    );
+    expect(showErrorSpy).toHaveBeenCalledWith(
+      'Failed to initialize directions manager. Please refresh the page.'
+    );
+
+    showErrorSpy.mockRestore();
+    await testBase.cleanup();
+  });
+
+  it('continues gracefully when dropdown fails to load initial items', async () => {
+    const loadError = new Error('load failed');
+    mockDropdownFactory = () => ({
+      loadItems: jest.fn().mockRejectedValue(loadError),
+      clear: jest.fn(),
+      enable: jest.fn(),
+      destroy: jest.fn(),
+    });
+
+    const dataset = [
+      {
+        direction: {
+          id: 'dir-1',
+          title: 'First',
+          description: 'Description one',
+          coreTension: 'Tension',
+          uniqueTwist: 'Twist',
+          narrativePotential: 'Potential',
+        },
+        concept: { id: 'concept-1', concept: 'Concept 1' },
+      },
+    ];
+
+    const { testBase, controller } = await createController();
+    controller._cacheElements();
+
+    await controller._initializeAdditionalServices();
+
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      dataset
+    );
+
+    await controller._loadInitialData();
+
+    expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
+      'Failed to load items into dropdown:',
+      loadError
+    );
+
+    await testBase.cleanup();
+  });
+
+  it('filters displayed results to orphaned directions when orphaned is selected', async () => {
+    mockDropdownFactory = (options) => ({
+      loadItems: jest.fn(async (items) => {
+        const select = options.element;
+        select.innerHTML = '';
+        items.forEach((item) => {
+          const option = document.createElement('option');
+          option.value = item.id;
+          option.textContent = item.concept || 'Orphaned';
+          select.appendChild(option);
+        });
+      }),
+      clear: jest.fn(),
+      enable: jest.fn(),
+      destroy: jest.fn(),
+    });
+
+    const dataset = [
+      {
+        direction: {
+          id: 'dir-orphan',
+          title: 'Unanchored',
+          description: 'No concept attached',
+          coreTension: 'Isolation',
+          uniqueTwist: 'Surprise',
+          narrativePotential: 'Growth',
+        },
+        concept: null,
+      },
+      {
+        direction: {
+          id: 'dir-linked',
+          title: 'Anchored',
+          description: 'Linked to concept',
+          coreTension: 'Conflict',
+          uniqueTwist: 'Reversal',
+          narrativePotential: 'Resolution',
+        },
+        concept: { id: 'concept-1', concept: 'Concept 1' },
+      },
+    ];
+
+    const { testBase, controller } = await createController();
+    const showResultsSpy = jest.spyOn(controller, '_showResults');
+
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      dataset
+    );
+
+    await controller.initialize();
+
+    const dropdownConfig = dropdownConfigs[0];
+    await dropdownConfig.onSelectionChange('orphaned');
+
+    const lastCall = showResultsSpy.mock.calls.at(-1);
+    expect(lastCall?.[0]).toHaveLength(1);
+    expect(lastCall?.[0][0].concept).toBeNull();
+
+    const orphanedInfo = document.querySelectorAll(
+      '.direction-concept-info.orphaned'
+    );
+    expect(orphanedInfo).toHaveLength(1);
+
+    showResultsSpy.mockRestore();
+    await testBase.cleanup();
+  });
+
+  it('connects delete button interaction to confirmation modal flow', async () => {
+    mockDropdownFactory = (options) => ({
+      loadItems: jest.fn(async (items) => {
+        const select = options.element;
+        select.innerHTML = '';
+        items.forEach((item) => {
+          const option = document.createElement('option');
+          option.value = item.id;
+          option.textContent = item.concept || 'Orphaned';
+          select.appendChild(option);
+        });
+      }),
+      clear: jest.fn(),
+      enable: jest.fn(),
+      destroy: jest.fn(),
+    });
+
+    const dataset = [
+      {
+        direction: {
+          id: 'dir-delete',
+          title: 'Delete Me',
+          description: 'To be removed',
+          coreTension: 'Risk',
+          uniqueTwist: 'Twist',
+          narrativePotential: 'Closure',
+        },
+        concept: { id: 'concept-1', concept: 'Concept 1' },
+      },
+    ];
+
+    const { testBase, controller } = await createController();
+    controller._showConfirmationModal = jest.fn();
+
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      dataset
+    );
+
+    await controller.initialize();
+
+    const deleteButton = document.querySelector(
+      '.direction-action-btn.delete-btn'
+    );
+    deleteButton.click();
+
+    expect(controller._showConfirmationModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('Delete Me'),
+      })
+    );
+
+    await testBase.cleanup();
+  });
+
+  it('clears and re-enables dropdown when refresh fails', async () => {
+    let dropdownInstance;
+    mockDropdownFactory = (options) => {
+      dropdownInstance = {
+        loadItems: jest.fn().mockResolvedValue(undefined),
+        clear: jest.fn(),
+        enable: jest.fn(),
+        destroy: jest.fn(),
+        element: options.element,
+      };
+      return dropdownInstance;
+    };
+
+    const { testBase, controller } = await createController();
+    controller._cacheElements();
+
+    await controller._initializeAdditionalServices();
+
+    const refreshError = new Error('refresh failed');
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
+      refreshError
+    );
+
+    await controller.refreshDropdown();
+
+    expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
+      'Failed to refresh dropdown:',
+      refreshError
+    );
+    expect(dropdownInstance.clear).toHaveBeenCalledTimes(1);
+    expect(dropdownInstance.enable).toHaveBeenCalledTimes(1);
+
+    await testBase.cleanup();
+  });
 });
