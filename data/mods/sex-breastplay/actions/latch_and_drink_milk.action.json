@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-breastplay:latch_and_drink_milk",
+  "name": "Latch and Drink Milk",
+  "description": "Seal your lips around the target's nipple and draw down their milk in slow, greedy pulls.",
+  "targets": {
+    "primary": {
+      "scope": "sex-breastplay:actors_with_breasts_facing_each_other",
+      "placeholder": "target",
+      "description": "Partner whose milk you're nursing"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"],
+    "target": ["sex-breastplay:is_lactating"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "template": "nurse at {target}'s breast",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#7a1d58",
+    "textColor": "#fde6f2",
+    "hoverBackgroundColor": "#8d2465",
+    "hoverTextColor": "#fff2f9"
+  }
+}

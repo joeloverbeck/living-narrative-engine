@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-breastplay:event-is-action-latch-and-drink-milk",
+  "description": "Checks if the triggering event is for the 'sex-breastplay:latch_and_drink_milk' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-breastplay:latch_and_drink_milk"
+    ]
+  }
+}
