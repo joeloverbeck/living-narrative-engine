@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import EntityRepositoryAdapter from '../../../../src/entities/services/entityRepositoryAdapter.js';
 import { DuplicateEntityError } from '../../../../src/errors/duplicateEntityError.js';
 import { EntityNotFoundError } from '../../../../src/errors/entityNotFoundError.js';
+import { MapManager } from '../../../../src/utils/mapManagerUtils.js';
 
 const createLogger = () => ({
   info: jest.fn(),
@@ -182,6 +183,93 @@ describe('EntityRepositoryAdapter', () => {
       const component1Entities = repo.getEntityIdsByComponent('component1');
       expect(component1Entities.size).toBe(1); // Should still be 1, not 2
     });
+
+    it('does nothing when removing unindexed component', () => {
+      logger.debug.mockClear();
+
+      repo.indexComponentRemove('missing-entity', 'nonexistent-component');
+
+      expect(logger.debug).not.toHaveBeenCalled();
+    });
+
+    it('handles removing entity without indexed components', () => {
+      const entityWithoutComponents = { id: 'no-components' };
+      repo.add(entityWithoutComponents);
+
+      logger.debug.mockClear();
+
+      const result = repo.remove('no-components');
+
+      expect(result).toBe(true);
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        expect.stringContaining('Unindexed component')
+      );
+    });
+  });
+
+  describe('park bench instrumentation', () => {
+    it('emits detailed debug logs when adding park bench with components', () => {
+      const parkBench = {
+        id: 'p_erotica:park_bench_instance',
+        componentTypeIds: ['positioning:allows_sitting', 'decor:seat'],
+      };
+
+      repo.add(parkBench);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        `[DEBUG] Adding park bench to repository:`,
+        expect.objectContaining({
+          entityId: parkBench.id,
+          componentTypeIds: parkBench.componentTypeIds,
+          componentCount: parkBench.componentTypeIds.length,
+          componentsBeforeIndexing: parkBench.componentTypeIds,
+        })
+      );
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        `[DEBUG] Indexing components for park bench instance:`,
+        expect.objectContaining({
+          entityId: parkBench.id,
+          componentTypeIds: parkBench.componentTypeIds,
+          hasComponentTypeIds: true,
+          componentTypeIdsLength: parkBench.componentTypeIds.length,
+        })
+      );
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        `[DEBUG] Indexing component 'positioning:allows_sitting' for park bench`
+      );
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        `[DEBUG] Indexed positioning:allows_sitting for entity '${parkBench.id}'`,
+        expect.objectContaining({
+          entityId: parkBench.id,
+          componentType: 'positioning:allows_sitting',
+          indexSize: 1,
+          allEntitiesWithComponent: expect.arrayContaining([parkBench.id]),
+        })
+      );
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        `[DEBUG] After indexing park bench:`,
+        expect.objectContaining({
+          entityId: parkBench.id,
+          allowsSittingIndexSize: 1,
+          allowsSittingIndexEntities: expect.arrayContaining([parkBench.id]),
+          totalComponentIndexSize: parkBench.componentTypeIds.length,
+        })
+      );
+    });
+
+    it('warns when park bench instance lacks components', () => {
+      const parkBench = { id: 'p_erotica:park_bench_instance' };
+
+      repo.add(parkBench);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        `[DEBUG] Park bench instance has no componentTypeIds property!`
+      );
+    });
   });
 
   describe('MonitoringCoordinator integration', () => {
@@ -296,6 +384,38 @@ describe('EntityRepositoryAdapter', () => {
     it('returns empty iterator when no entities', () => {
       const entities = Array.from(repo.entities());
       expect(entities).toHaveLength(0);
+    });
+
+    it('returns array of all entity ids', () => {
+      repo.add(entity);
+      repo.add({ id: 'e2', componentTypeIds: ['component3'] });
+
+      const ids = repo.getAllEntityIds();
+
+      expect(ids).toHaveLength(2);
+      expect(ids).toEqual(expect.arrayContaining(['e1', 'e2']));
+    });
+  });
+
+  describe('remove edge cases', () => {
+    it('suppresses removal log when underlying map delete fails', () => {
+      const removeSpy = jest
+        .spyOn(MapManager.prototype, 'remove')
+        .mockReturnValue(false);
+
+      try {
+        repo.add(entity);
+        logger.debug.mockClear();
+
+        const result = repo.remove('e1');
+
+        expect(result).toBe(false);
+        expect(logger.debug).not.toHaveBeenCalledWith(
+          `Entity 'e1' removed from repository and component index.`
+        );
+      } finally {
+        removeSpy.mockRestore();
+      }
     });
   });
 
@@ -423,6 +543,19 @@ describe('EntityRepositoryAdapter', () => {
         expect(result.errors).toHaveLength(0);
         expect(logger.warn).not.toHaveBeenCalled();
         expect(repo.size()).toBe(3); // All original entities remain
+      });
+
+      it('skips recording id when remove returns false during batch remove', () => {
+        const repoRemoveSpy = jest
+          .spyOn(repo, 'remove')
+          .mockReturnValue(false);
+
+        const result = repo.batchRemove(['e1']);
+
+        expect(repoRemoveSpy).toHaveBeenCalledWith('e1');
+        expect(result.removedIds).toHaveLength(0);
+
+        repoRemoveSpy.mockRestore();
       });
     });
   });
