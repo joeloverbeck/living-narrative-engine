@@ -97,6 +97,124 @@ describe('EntityConfigProvider', () => {
     });
   });
 
+  describe('environment override application', () => {
+    let getConfigSpy;
+    let validateConfigSpy;
+    let baseConfig;
+
+    const createBaseConfig = () => ({
+      limits: {
+        MAX_ENTITIES: 1000,
+        MAX_COMPONENT_SIZE: 2048,
+      },
+      cache: {
+        ENABLE_VALIDATION_CACHE: true,
+        ENABLE_DEFINITION_CACHE: true,
+      },
+      validation: {
+        STRICT_MODE: true,
+      },
+      performance: {
+        ENABLE_OPERATION_TRACING: false,
+        ENABLE_MONITORING: true,
+      },
+      logging: {
+        ENABLE_DEBUG_LOGGING: false,
+      },
+      errorHandling: {},
+      defaults: {},
+      entityCreation: {},
+      spatialIndex: {},
+    });
+
+    const cloneConfig = (config) => JSON.parse(JSON.stringify(config));
+
+    const createEnvironmentProvider = (overrides) => ({
+      getEnvironment: jest.fn().mockReturnValue({
+        NODE_ENV: 'custom',
+        IS_PRODUCTION: false,
+        IS_DEVELOPMENT: false,
+        IS_TEST: false,
+        ...overrides,
+      }),
+    });
+
+    beforeEach(() => {
+      baseConfig = createBaseConfig();
+      getConfigSpy = jest
+        .spyOn(EntityConfig, 'getConfig')
+        .mockImplementation(() => cloneConfig(baseConfig));
+      validateConfigSpy = jest
+        .spyOn(EntityConfig, 'validateConfig')
+        .mockImplementation(() => true);
+    });
+
+    afterEach(() => {
+      getConfigSpy.mockRestore();
+      validateConfigSpy.mockRestore();
+    });
+
+    it('applies production overrides for logging, performance, and validation', () => {
+      baseConfig.logging.ENABLE_DEBUG_LOGGING = true;
+      baseConfig.performance.ENABLE_OPERATION_TRACING = true;
+      baseConfig.validation.STRICT_MODE = false;
+
+      const provider = new EntityConfigProvider({
+        logger: mockLogger,
+        environmentProvider: createEnvironmentProvider({
+          NODE_ENV: 'production',
+          IS_PRODUCTION: true,
+        }),
+      });
+
+      expect(provider.getLoggingSettings().ENABLE_DEBUG_LOGGING).toBe(false);
+      expect(provider.getPerformanceSettings().ENABLE_OPERATION_TRACING).toBe(
+        false
+      );
+      expect(provider.getValidationSettings().STRICT_MODE).toBe(true);
+    });
+
+    it('applies development overrides when environment is development', () => {
+      baseConfig.logging.ENABLE_DEBUG_LOGGING = false;
+      baseConfig.performance.ENABLE_OPERATION_TRACING = false;
+      baseConfig.validation.STRICT_MODE = true;
+
+      const provider = new EntityConfigProvider({
+        logger: mockLogger,
+        environmentProvider: createEnvironmentProvider({
+          NODE_ENV: 'development',
+          IS_DEVELOPMENT: true,
+        }),
+      });
+
+      expect(provider.getLoggingSettings().ENABLE_DEBUG_LOGGING).toBe(true);
+      expect(provider.getPerformanceSettings().ENABLE_OPERATION_TRACING).toBe(
+        true
+      );
+      expect(provider.getValidationSettings().STRICT_MODE).toBe(false);
+    });
+
+    it('applies test overrides for logging, monitoring, and cache behavior', () => {
+      baseConfig.logging.ENABLE_DEBUG_LOGGING = true;
+      baseConfig.performance.ENABLE_MONITORING = true;
+      baseConfig.cache.ENABLE_VALIDATION_CACHE = true;
+      baseConfig.cache.ENABLE_DEFINITION_CACHE = true;
+
+      const provider = new EntityConfigProvider({
+        logger: mockLogger,
+        environmentProvider: createEnvironmentProvider({
+          NODE_ENV: 'test',
+          IS_TEST: true,
+        }),
+      });
+
+      expect(provider.getLoggingSettings().ENABLE_DEBUG_LOGGING).toBe(false);
+      expect(provider.getPerformanceSettings().ENABLE_MONITORING).toBe(false);
+      expect(provider.getCacheSettings().ENABLE_VALIDATION_CACHE).toBe(false);
+      expect(provider.getCacheSettings().ENABLE_DEFINITION_CACHE).toBe(false);
+    });
+  });
+
   describe('getConfig', () => {
     let provider;
 
@@ -551,22 +669,25 @@ describe('EntityConfigProvider', () => {
       expect(() => provider.getConfigSummary()).not.toThrow();
     });
 
-    it('should have ensureInitialized guard that throws when not initialized', () => {
-      // Test the private method behavior by testing a scenario where it would fail
-      // Create a provider with invalid config that prevents initialization
-      const spyInitialize = jest.spyOn(
-        EntityConfigProvider.prototype,
-        'constructor'
+    it('should throw when accessing configuration before initialization', () => {
+      const environmentProvider = {
+        getEnvironment: jest.fn().mockReturnValue({
+          NODE_ENV: 'test',
+          IS_PRODUCTION: false,
+          IS_DEVELOPMENT: false,
+          IS_TEST: true,
+        }),
+      };
+
+      const provider = new EntityConfigProvider({
+        logger: mockLogger,
+        environmentProvider,
+        autoInitialize: false,
+      });
+
+      expect(() => provider.getConfig()).toThrow(
+        'EntityConfigProvider is not initialized'
       );
-      try {
-        new EntityConfigProvider({
-          logger: mockLogger,
-          userConfig: { limits: { MAX_ENTITIES: -1 } },
-        });
-      } catch (error) {
-        expect(error.message).toContain('MAX_ENTITIES must be positive');
-      }
-      spyInitialize.mockRestore();
     });
   });
 });
