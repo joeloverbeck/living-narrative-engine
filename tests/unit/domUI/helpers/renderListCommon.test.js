@@ -58,7 +58,9 @@ describe('renderListCommon', () => {
     );
 
     expect(result).toEqual([]);
-    expect(container.textContent).toBe('none');
+    const message = container.querySelector('.empty-list-message');
+    expect(message).toBeTruthy();
+    expect(message?.textContent).toBe('none');
   });
 
   it('returns null and displays error when fetch fails', async () => {
@@ -73,6 +75,23 @@ describe('renderListCommon', () => {
       container,
       logger,
       factory
+    );
+
+    expect(result).toBeNull();
+    const message = container.querySelector('.error-message');
+    expect(message).toBeTruthy();
+    expect(message?.textContent).toBe('Error loading list data.');
+  });
+
+  it('falls back to simple text error when fetch fails without factory', async () => {
+    const fetchData = jest.fn().mockRejectedValue(new Error('fail'));
+
+    const result = await renderListCommon(
+      fetchData,
+      jest.fn(),
+      () => 'unused',
+      container,
+      logger
     );
 
     expect(result).toBeNull();
@@ -125,10 +144,31 @@ describe('renderListCommon', () => {
     );
 
     expect(result).toBeNull();
-    expect(container.textContent).toBe('List is empty.');
+    const message = container.querySelector('.empty-list-message');
+    expect(message).toBeTruthy();
+    expect(message?.textContent).toBe('List is empty.');
     expect(logger.warn).toHaveBeenCalledWith(
       '[renderListCommon] getEmptyMessage returned invalid type.',
       expect.objectContaining({ type: 'number' })
+    );
+  });
+
+  it('falls back to default empty message string when factory missing', async () => {
+    const fetchData = jest.fn().mockResolvedValue({});
+
+    const result = await renderListCommon(
+      fetchData,
+      jest.fn(),
+      () => Symbol('bad'),
+      container,
+      logger
+    );
+
+    expect(result).toBeNull();
+    expect(container.textContent).toBe('List is empty.');
+    expect(logger.warn).toHaveBeenCalledWith(
+      '[renderListCommon] getEmptyMessage returned invalid type.',
+      expect.objectContaining({ type: 'symbol' })
     );
   });
 
@@ -154,6 +194,24 @@ describe('renderListCommon', () => {
         returnedValue: 'not-element',
       })
     );
+  });
+
+  it('ignores null renderItem results without logging', async () => {
+    const fetchData = jest.fn().mockResolvedValue(['value']);
+    const renderItem = jest.fn(() => null);
+
+    const result = await renderListCommon(
+      fetchData,
+      renderItem,
+      () => 'empty',
+      container,
+      logger,
+      factory
+    );
+
+    expect(result).toEqual(['value']);
+    expect(container.childNodes).toHaveLength(0);
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('handles renderItem throwing and continues processing', async () => {
