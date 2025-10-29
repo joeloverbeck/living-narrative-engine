@@ -466,6 +466,42 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         expect.stringMatching(/matched 0 slots/)
       );
     });
+
+    it('should throw when limb set topology data is missing', () => {
+      mockDataRegistry.get.mockReturnValue({});
+
+      const recipe = {
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg' }],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'anatomy:spider',
+        slots: {},
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
+      );
+    });
+
+    it('should throw when appendage topology data is missing', () => {
+      mockDataRegistry.get.mockReturnValue({});
+
+      const recipe = {
+        patterns: [{ matchesGroup: 'appendage:tail', partType: 'tail' }],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'anatomy:wyrm',
+        slots: {},
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
+      );
+    });
   });
 
   describe('matchesPattern Validation', () => {
@@ -796,6 +832,54 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         /Exclusion property filter must be a valid object/
       );
     });
+
+    it('should validate exclusion slot groups when topology is missing', () => {
+      mockDataRegistry.get.mockReturnValue({});
+
+      const recipe = {
+        patterns: [
+          {
+            matchesPattern: 'leg_*',
+            partType: 'leg',
+            exclude: { slotGroups: ['appendage:tail'] },
+          },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'anatomy:wyrm',
+        slots: {},
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
+      );
+    });
+
+    it('should validate limb set exclusions when topology data is missing', () => {
+      mockDataRegistry.get.mockReturnValue({});
+
+      const recipe = {
+        patterns: [
+          {
+            matchesPattern: 'leg_*',
+            partType: 'leg',
+            exclude: { slotGroups: ['limbSet:leg'] },
+          },
+        ],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'anatomy:spider',
+        slots: {},
+      };
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
+      );
+    });
   });
 
   describe('Pattern Precedence Validation', () => {
@@ -892,6 +976,24 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         call[0].includes('equal specificity')
       );
       expect(warningCalls.length).toBe(0);
+    });
+
+    it('should handle precedence evaluation when blueprint slots are undefined', () => {
+      const recipe = {
+        patterns: [
+          { matchesPattern: 'leg_*', partType: 'leg' },
+          { matchesAll: { slotType: 'leg' }, partType: 'specific_leg' },
+        ],
+      };
+
+      const blueprint = {};
+
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).not.toThrow();
+
+      const zeroMatchWarnings = mockLogger.warn.mock.calls.filter((call) =>
+        typeof call[0] === 'string' && call[0].includes('matched 0 slots')
+      );
+      expect(zeroMatchWarnings.length).toBeGreaterThan(0);
     });
   });
 
