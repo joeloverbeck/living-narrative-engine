@@ -23,6 +23,8 @@ const mockActor = { id: 'test-actor' };
 const mockStrategy = { decideAction: jest.fn() };
 const mockOnEndTurnCallback = jest.fn();
 const mockHandlerInstance = {};
+const mockIsAwaitingProvider = jest.fn(() => true);
+const mockOnSetAwaitingCallback = jest.fn();
 
 describe('ConcreteTurnContextFactory', () => {
   let factoryDependencies;
@@ -55,8 +57,26 @@ describe('ConcreteTurnContextFactory', () => {
       );
     });
 
-    // NOTE: In a real-world scenario, a test for each missing dependency would be added.
-    // For brevity, only a few are shown here.
+    it('should throw an error if turnEndPort is not provided', () => {
+      delete factoryDependencies.turnEndPort;
+      expect(() => new ConcreteTurnContextFactory(factoryDependencies)).toThrow(
+        'ConcreteTurnContextFactory: turnEndPort is required.'
+      );
+    });
+
+    it('should throw an error if safeEventDispatcher is not provided', () => {
+      delete factoryDependencies.safeEventDispatcher;
+      expect(() => new ConcreteTurnContextFactory(factoryDependencies)).toThrow(
+        'ConcreteTurnContextFactory: safeEventDispatcher is required.'
+      );
+    });
+
+    it('should throw an error if entityManager is not provided', () => {
+      delete factoryDependencies.entityManager;
+      expect(() => new ConcreteTurnContextFactory(factoryDependencies)).toThrow(
+        'ConcreteTurnContextFactory: entityManager is required.'
+      );
+    });
 
     it('should construct successfully when all dependencies are provided', () => {
       expect(
@@ -69,11 +89,15 @@ describe('ConcreteTurnContextFactory', () => {
     it('should create a TurnContext with correctly assembled arguments', () => {
       // Arrange
       const factory = new ConcreteTurnContextFactory(factoryDependencies);
+      const createdTurnContext = { kind: 'turn-context-instance' };
+      TurnContext.mockImplementation(() => createdTurnContext);
       const createParams = {
         actor: mockActor,
         strategy: mockStrategy,
         onEndTurnCallback: mockOnEndTurnCallback,
         handlerInstance: mockHandlerInstance,
+        isAwaitingExternalEventProvider: mockIsAwaitingProvider,
+        onSetAwaitingExternalEventCallback: mockOnSetAwaitingCallback,
       };
 
       // Act
@@ -99,10 +123,12 @@ describe('ConcreteTurnContextFactory', () => {
         handlerInstance: mockHandlerInstance, // from create() params
         logger: mockLogger, // from factory's cache
         services: expectedServicesForContext, // assembled by the factory
+        isAwaitingExternalEventProvider: mockIsAwaitingProvider,
+        onSetAwaitingExternalEventCallback: mockOnSetAwaitingCallback,
       });
 
       // 3. The factory returned the instance created by the mock constructor.
-      expect(contextInstance).toBeInstanceOf(TurnContext);
+      expect(contextInstance).toBe(createdTurnContext);
     });
   });
 });
