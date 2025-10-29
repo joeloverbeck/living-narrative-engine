@@ -88,6 +88,20 @@ describe('noteTooltipFormatter', () => {
         expect(result).toContain('📍'); // Location icon
       });
 
+      it('should handle subject type without a subject', () => {
+        const note = {
+          text: 'Subject type only',
+          subjectType: 'event',
+        };
+
+        const result = formatNotesAsRichHtml(note);
+
+        expect(result).toContain('note-subject-type');
+        expect(result).toContain('data-type="event"');
+        expect(result).toContain('Subject type only');
+        expect(result).not.toContain('note-subject">');
+      });
+
       it('should handle note with missing optional fields', () => {
         const note = {
           text: 'Important observation',
@@ -96,6 +110,39 @@ describe('noteTooltipFormatter', () => {
         const result = formatNotesAsRichHtml(note);
 
         expect(result).toContain('Important observation');
+        expect(result).not.toContain('note-header');
+        expect(result).not.toContain('note-meta');
+      });
+
+      it('should trim whitespace from subject and subject type values', () => {
+        const note = {
+          text: 'Trimmed values',
+          subject: '  Alice  ',
+          subjectType: '  LOCATION  ',
+          context: '  Whispered rumors  ',
+        };
+
+        const result = formatNotesAsRichHtml(note);
+
+        expect(result).toContain('data-type="location"');
+        expect(result).toContain('Alice');
+        expect(result).toContain('Whispered rumors');
+        expect(result).not.toContain('  Alice  ');
+        expect(result).not.toContain('  LOCATION  ');
+        expect(result).not.toContain('  Whispered rumors  ');
+      });
+
+      it('should treat whitespace-only optional fields as absent', () => {
+        const note = {
+          text: 'Whitespace trimming',
+          subject: '   ',
+          subjectType: '   ',
+          context: '   ',
+        };
+
+        const result = formatNotesAsRichHtml(note);
+
+        expect(result).toContain('Whitespace trimming');
         expect(result).not.toContain('note-header');
         expect(result).not.toContain('note-meta');
       });
@@ -137,6 +184,12 @@ describe('noteTooltipFormatter', () => {
         const result = formatNotesAsRichHtml(note);
         expect(result).toBe('');
       });
+
+      it('should ignore non-object values when formatting a single entry', () => {
+        // @ts-expect-error - deliberately passing an incorrect type to test runtime handling
+        const result = formatNotesAsRichHtml('string value');
+        expect(result).toBe('');
+      });
     });
 
     describe('with array of notes', () => {
@@ -170,6 +223,7 @@ describe('noteTooltipFormatter', () => {
 
         expect(result).toContain('data-index="0"');
         expect(result).toContain('data-index="1"');
+        expect(result.match(/note-divider/g)?.length).toBe(1);
       });
 
       it('should handle array with single note', () => {
