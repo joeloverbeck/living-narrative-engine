@@ -31,11 +31,13 @@ export default class EntityConfigProvider {
    * @param {ILogger} deps.logger - Logger instance
    * @param {IEnvironmentProvider} [deps.environmentProvider] - Environment provider
    * @param {object} [deps.userConfig] - User configuration overrides
+   * @param {boolean} [deps.autoInitialize=true] - Whether to initialize immediately
    */
   constructor({
     logger,
     environmentProvider = new ProcessEnvironmentProvider(),
     userConfig = {},
+    autoInitialize = true,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
@@ -43,7 +45,9 @@ export default class EntityConfigProvider {
     this.#logger = ensureValidLogger(logger, 'EntityConfigProvider');
     this.#environmentProvider = environmentProvider;
 
-    this.#initialize(userConfig);
+    if (autoInitialize) {
+      this.#initialize(userConfig);
+    }
   }
 
   /**
