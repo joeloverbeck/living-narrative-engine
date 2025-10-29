@@ -486,6 +486,43 @@ describe('RemoveSittingClosenessHandler', () => {
       );
     });
 
+    it('should store successful result when formerly adjacent actors list is empty', async () => {
+      const parameters = {
+        furniture_id: 'furniture:couch',
+        actor_id: 'game:alice',
+        spot_index: 0,
+        result_variable: 'operation_result',
+      };
+
+      const furnitureComponent = {
+        spots: ['game:alice', 'game:bob', null],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValueOnce({ partners: ['game:bob'] })
+        .mockReturnValueOnce({});
+
+      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(true);
+
+      await handler.execute(parameters, executionContext);
+
+      expect(proximityUtils.getAdjacentSpots).not.toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No formerly adjacent actors found',
+        expect.objectContaining({
+          actorId: 'game:alice',
+        })
+      );
+      expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
+        'operation_result',
+        true,
+        executionContext,
+        mockDispatcher,
+        mockLogger
+      );
+    });
+
     it('should handle missing furniture component', async () => {
       const parameters = {
         furniture_id: 'furniture:couch',
@@ -812,6 +849,52 @@ describe('RemoveSittingClosenessHandler', () => {
       await handler.execute(parameters, executionContext);
 
       // Both actors should have movement unlocked since they have no partners
+      expect(movementUtils.updateMovementLock).toHaveBeenCalledWith(
+        mockEntityManager,
+        'game:alice',
+        false
+      );
+      expect(movementUtils.updateMovementLock).toHaveBeenCalledWith(
+        mockEntityManager,
+        'game:bob',
+        false
+      );
+    });
+
+    it('should default departing actor partner data to empty when component missing during removal', async () => {
+      const parameters = {
+        furniture_id: 'furniture:couch',
+        actor_id: 'game:alice',
+        spot_index: 0,
+      };
+
+      const furnitureComponent = {
+        spots: ['game:alice', 'game:bob'],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValueOnce({ partners: ['game:bob'] })
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce({ partners: ['game:alice'] })
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null);
+
+      proximityUtils.getAdjacentSpots.mockReturnValue([1]);
+
+      await handler.execute(parameters, executionContext);
+
+      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
+        'game:alice',
+        'positioning:closeness'
+      );
+      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
+        'game:bob',
+        'positioning:closeness'
+      );
       expect(movementUtils.updateMovementLock).toHaveBeenCalledWith(
         mockEntityManager,
         'game:alice',
