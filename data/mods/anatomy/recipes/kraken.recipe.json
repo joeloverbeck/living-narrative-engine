@@ -19,7 +19,8 @@
           "capacity": "massive",
           "pressure": "high"
         }
-      }
+      },
+      "preferId": "anatomy:kraken_ink_sac"
     },
     "beak": {
       "partType": "beak",
@@ -31,7 +32,8 @@
         "anatomy:crushing": {
           "biteForce": "titanic"
         }
-      }
+      },
+      "preferId": "anatomy:kraken_beak"
     }
   },
   "patterns": [

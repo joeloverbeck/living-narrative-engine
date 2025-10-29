@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:centaur_upper_torso",
+  "description": "A humanoid upper torso adapted to mount a centaur base",
+  "components": {
+    "anatomy:part": {
+      "subType": "centaur_upper_torso"
+    },
+    "core:name": {
+      "text": "centaur upper torso"
+    }
+  }
+}

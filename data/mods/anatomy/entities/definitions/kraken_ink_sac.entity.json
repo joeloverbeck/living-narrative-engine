@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:kraken_ink_sac",
+  "description": "A cavernous ink reservoir for an elder kraken",
+  "components": {
+    "anatomy:part": {
+      "subType": "ink_reservoir"
+    },
+    "core:name": {
+      "text": "kraken ink sac"
+    }
+  }
+}

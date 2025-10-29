@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:dragon_fire_gland",
+  "description": "A volatile gland that fuels a dragon's fire breath",
+  "components": {
+    "anatomy:part": {
+      "subType": "fire_gland"
+    },
+    "core:name": {
+      "text": "dragon fire gland"
+    }
+  }
+}

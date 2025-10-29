@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:centaur_leg_front",
+  "description": "A reinforced front leg built for centaur charges",
+  "components": {
+    "anatomy:part": {
+      "subType": "centaur_leg_front"
+    },
+    "core:name": {
+      "text": "centaur front leg"
+    }
+  }
+}

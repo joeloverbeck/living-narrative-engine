@@ -32,7 +32,8 @@
           "intensity": "inferno",
           "sprayPattern": "cone"
         }
-      }
+      },
+      "preferId": "anatomy:dragon_fire_gland"
     }
   },
   "patterns": [
