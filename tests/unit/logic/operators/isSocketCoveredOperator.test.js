@@ -301,6 +301,92 @@ describe('IsSocketCoveredOperator', () => {
       );
     });
 
+    it('should treat string-based layers as covering items', () => {
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_lower: {
+              base: 'bodysuit',
+            },
+          },
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['vagina', 'pubic_hair'],
+            },
+          },
+        });
+
+      const result = operator.evaluateInternal(
+        'entity1',
+        ['vagina'],
+        mockContext
+      );
+
+      expect(result).toBe(true);
+      expect(mockContext.trace.captureOperatorEvaluation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          potentialCoveringSlots: ['torso_lower'],
+          slotChecks: {
+            torso_lower: {
+              hasItems: true,
+              hasCoveringItems: true,
+              slotExists: true,
+              layers: ['base'],
+              itemCounts: {
+                base: 1,
+              },
+            },
+          },
+          coveredBySlot: 'torso_lower',
+          result: true,
+        })
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Slot 'torso_lower' covers sockets")
+      );
+    });
+
+    it('should record zero counts for empty string layers in trace output', () => {
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          equipped: {
+            torso_lower: {
+              base: '',
+              outer: 'coat',
+            },
+          },
+        })
+        .mockReturnValueOnce({
+          slotMappings: {
+            torso_lower: {
+              coveredSockets: ['vagina'],
+            },
+          },
+        });
+
+      const result = operator.evaluateInternal(
+        'entity1',
+        ['vagina'],
+        mockContext
+      );
+
+      expect(result).toBe(true);
+      expect(mockContext.trace.captureOperatorEvaluation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slotChecks: {
+            torso_lower: expect.objectContaining({
+              itemCounts: {
+                base: 0,
+                outer: 1,
+              },
+            }),
+          },
+        })
+      );
+    });
+
     it('should return true when any of multiple covering slots has items', () => {
       // Arrange
       mockEntityManager.getComponentData
@@ -589,6 +675,86 @@ describe('IsSocketCoveredOperator', () => {
     });
   });
 
+  describe('hasItemsInSlotExcludingAccessories', () => {
+    it('should return false when equipment data lacks equipped property', () => {
+      const result = operator.hasItemsInSlotExcludingAccessories({}, 'torso_lower');
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "isSocketCovered: hasItemsInSlotExcludingAccessories - No equipped property in equipment data"
+      );
+    });
+
+    it('should return false when slot has invalid structure', () => {
+      const result = operator.hasItemsInSlotExcludingAccessories(
+        { equipped: { torso_lower: ['bad-structure'] } },
+        'torso_lower'
+      );
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "isSocketCovered: hasItemsInSlotExcludingAccessories - Slot 'torso_lower' has invalid structure (not an object)"
+      );
+    });
+
+    it('should detect coverage when slot uses object item structure', () => {
+      const result = operator.hasItemsInSlotExcludingAccessories(
+        {
+          equipped: {
+            torso_lower: {
+              base: {
+                front: 'dress-front',
+              },
+              accessories: ['belt'],
+            },
+          },
+        },
+        'torso_lower'
+      );
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "isSocketCovered: hasItemsInSlotExcludingAccessories - Slot 'torso_lower' has covering items: true"
+      );
+    });
+
+    it('should detect coverage when slot stores single string item', () => {
+      const result = operator.hasItemsInSlotExcludingAccessories(
+        {
+          equipped: {
+            torso_lower: {
+              base: 'bodysuit',
+            },
+          },
+        },
+        'torso_lower'
+      );
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "isSocketCovered: hasItemsInSlotExcludingAccessories - Slot 'torso_lower' has covering items: true"
+      );
+    });
+
+    it('should return false when slot contains non-covering primitive values', () => {
+      const result = operator.hasItemsInSlotExcludingAccessories(
+        {
+          equipped: {
+            torso_lower: {
+              base: 0,
+            },
+          },
+        },
+        'torso_lower'
+      );
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "isSocketCovered: hasItemsInSlotExcludingAccessories - Slot 'torso_lower' has covering items: false"
+      );
+    });
+  });
+
   describe('cache management', () => {
     it('should cache socket-to-slot mappings', () => {
       // Arrange
@@ -638,6 +804,92 @@ describe('IsSocketCoveredOperator', () => {
 
       // Assert - slot_metadata fetched twice after cache clear
       expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(4);
+    });
+
+    it('should clear entire cache when no entityId provided', () => {
+      const slotMetadata = {
+        slotMappings: {
+          torso_lower: {
+            coveredSockets: ['vagina'],
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ equipped: {} })
+        .mockReturnValueOnce(slotMetadata)
+        .mockReturnValueOnce({ equipped: {} })
+        .mockReturnValueOnce(slotMetadata);
+
+      operator.evaluateInternal('entity1', ['vagina'], mockContext);
+      operator.clearCache();
+      operator.evaluateInternal('entity1', ['vagina'], mockContext);
+
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(4);
+    });
+
+    it('should remove cached entries only for the specified entity', () => {
+      const slotMetadata = {
+        slotMappings: {
+          torso_lower: {
+            coveredSockets: ['vagina'],
+          },
+        },
+      };
+
+      // Include invalid mapping to ensure branch coverage when mapping data is incomplete
+      slotMetadata.slotMappings.invalid_slot = { someOtherField: true };
+
+      const equipmentByEntity = {
+        entity1: {
+          equipped: {
+            torso_lower: {
+              base: ['skirt'],
+            },
+          },
+        },
+        entity2: {
+          equipped: {
+            torso_lower: {
+              base: ['dress'],
+            },
+          },
+        },
+      };
+
+      mockEntityManager.getComponentData.mockImplementation((entityId, type) => {
+        if (type === 'clothing:equipment') {
+          return equipmentByEntity[entityId];
+        }
+        if (type === 'clothing:slot_metadata') {
+          return slotMetadata;
+        }
+        return null;
+      });
+
+      operator.evaluateInternal('entity1', ['vagina'], mockContext);
+      operator.evaluateInternal('entity2', ['vagina'], mockContext);
+
+      mockEntityManager.getComponentData.mockClear();
+      mockEntityManager.getComponentData.mockImplementation((entityId, type) => {
+        if (type === 'clothing:equipment') {
+          return equipmentByEntity[entityId];
+        }
+        if (type === 'clothing:slot_metadata') {
+          return slotMetadata;
+        }
+        return null;
+      });
+
+      operator.clearCache('entity1');
+      operator.evaluateInternal('entity1', ['vagina'], mockContext);
+      operator.evaluateInternal('entity2', ['vagina'], mockContext);
+
+      const slotMetadataCalls = mockEntityManager.getComponentData.mock.calls.filter(
+        ([, type]) => type === 'clothing:slot_metadata'
+      );
+
+      expect(slotMetadataCalls).toHaveLength(1);
     });
   });
 });
