@@ -44,17 +44,25 @@ const MODEL_TO_ENCODING = {
 export class TokenEstimator extends ITokenEstimator {
   #logger;
   #encoderCache = new Map();
+  #encoderLoader;
 
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger instance
+   * @param {function(string): Promise<Function>|function(string): Function} [dependencies.encoderLoader] - Optional encoder loader
    */
-  constructor({ logger }) {
+  constructor({ logger, encoderLoader } = {}) {
     super();
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
+    if (encoderLoader && typeof encoderLoader !== 'function') {
+      throw new Error('TokenEstimator: encoderLoader must be a function');
+    }
     this.#logger = logger;
+    this.#encoderLoader = encoderLoader
+      ? async (encodingName) => encoderLoader(encodingName)
+      : this.#getEncoder.bind(this);
     this.#logger.debug('TokenEstimator: Instance created.');
   }
 
@@ -71,7 +79,7 @@ export class TokenEstimator extends ITokenEstimator {
 
     try {
       const encodingName = this.getEncodingForModel(model);
-      const encodeFn = await this.#getEncoder(encodingName);
+      const encodeFn = await this.#encoderLoader(encodingName);
       const tokens = encodeFn(text).length;
 
       this.#logger.debug('TokenEstimator: Estimated tokens', {
