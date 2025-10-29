@@ -1,0 +1,82 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:kraken_elder",
+  "blueprintId": "anatomy:kraken",
+  "bodyDescriptors": {
+    "build": "hulking",
+    "composition": "average",
+    "density": "hairless"
+  },
+  "slots": {
+    "ink_sac": {
+      "partType": "ink_reservoir",
+      "tags": [
+        "anatomy:part",
+        "anatomy:ink_reservoir"
+      ],
+      "properties": {
+        "anatomy:ink_reservoir": {
+          "capacity": "massive",
+          "pressure": "high"
+        }
+      }
+    },
+    "beak": {
+      "partType": "beak",
+      "tags": [
+        "anatomy:part",
+        "anatomy:crushing"
+      ],
+      "properties": {
+        "anatomy:crushing": {
+          "biteForce": "titanic"
+        }
+      }
+    }
+  },
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:tentacle",
+      "partType": "kraken_tentacle",
+      "tags": [
+        "anatomy:part",
+        "anatomy:prehensile",
+        "anatomy:suckered"
+      ],
+      "properties": {
+        "anatomy:prehensile": {
+          "strength": "colossal",
+          "dexterity": "precise"
+        },
+        "anatomy:suckered": {
+          "rows": 4,
+          "adhesion": "vacuum"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:head",
+      "partType": "kraken_head",
+      "tags": [
+        "anatomy:part",
+        "anatomy:sensory"
+      ],
+      "properties": {
+        "anatomy:sensory": {
+          "acuity": "abyssal",
+          "echolocation": true
+        }
+      }
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": [
+          "kraken_tentacle",
+          "ink_reservoir"
+        ]
+      }
+    ]
+  }
+}
