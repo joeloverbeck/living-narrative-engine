@@ -64,16 +64,6 @@ export default function createSlotAccessResolver({
   }
 
   /**
-   * Check if slot name is a clothing slot
-   *
-   * @param {string} slotName - Slot name to check
-   * @returns {boolean} True if slot is a clothing slot
-   */
-  function _isClothingSlot(slotName) {
-    return CLOTHING_SLOTS.includes(slotName);
-  }
-
-  /**
    * Enhancement function to improve existing resolveSlotAccess
    * This builds on the existing sophisticated candidate-based resolution
    *
@@ -113,81 +103,6 @@ export default function createSlotAccessResolver({
     };
 
     return layerToCoverage[layer] || 'direct';
-  }
-
-  /**
-   * Comprehensive error handling wrapper for coverage resolution
-   *
-   * @param {Function} resolveFn - The resolution function to wrap
-   * @param {string} targetSlot - The target slot being resolved
-   * @param {object} _trace - Optional trace logger (unused)
-   * @returns {Function} Wrapped resolution function with error handling
-   */
-  function _safeResolveCoverageAwareSlot(resolveFn, targetSlot, _trace) {
-    return function (...args) {
-      const startTime = performance.now();
-
-      try {
-        const result = resolveFn(...args);
-
-        // Performance logging removed - use error handler for critical issues only
-
-        return result;
-      } catch (error) {
-        if (errorHandler) {
-          errorHandler.handleError(
-            `Coverage resolution error for ${targetSlot}: ${error.message}`,
-            {
-              targetSlot,
-              originalError: error.message,
-              duration: performance.now() - startTime,
-            },
-            'SlotAccessResolver',
-            ErrorCodes.SLOT_ACCESS_FAILED
-          );
-        }
-
-        if (COVERAGE_FEATURES.enableErrorRecovery) {
-          return null; // Trigger fallback to legacy
-        }
-
-        throw error; // Re-throw if error recovery disabled
-      }
-    };
-  }
-
-  /**
-   * Select optimal resolution strategy based on complexity
-   *
-   * @param {string} entityId - Entity ID being resolved
-   * @param {string} targetSlot - Target slot name
-   * @returns {string} Strategy type ('legacy' or 'coverage')
-   */
-  function _selectResolutionStrategy(entityId, targetSlot) {
-    // For simple cases, use legacy resolution
-    const equipment = entitiesGateway.getComponentData(
-      entityId,
-      'clothing:equipment'
-    );
-    if (!equipment || !equipment.equipped) {
-      return 'legacy';
-    }
-
-    const directItems = Object.keys(
-      equipment.equipped[targetSlot] || {}
-    ).length;
-    const totalItems = Object.values(equipment.equipped || {}).reduce(
-      (sum, slot) => sum + (slot ? Object.keys(slot).length : 0),
-      0
-    );
-
-    // Use legacy for simple cases to avoid overhead
-    if (totalItems <= 3 && directItems > 0) {
-      return 'legacy';
-    }
-
-    // Use coverage-aware for complex cases
-    return 'coverage';
   }
 
   /**
@@ -272,18 +187,6 @@ export default function createSlotAccessResolver({
    */
   function resolveSlotAccess(clothingAccess, slotName, ctx) {
     // Validate inputs
-    if (!clothingAccess || typeof clothingAccess !== 'object') {
-      if (errorHandler) {
-        errorHandler.handleError(
-          'Invalid clothing access object provided',
-          { slotName, clothingAccess },
-          'SlotAccessResolver',
-          ErrorCodes.INVALID_DATA_GENERIC
-        );
-      }
-      return null;
-    }
-
     if (!slotName || typeof slotName !== 'string') {
       if (errorHandler) {
         errorHandler.handleError(
