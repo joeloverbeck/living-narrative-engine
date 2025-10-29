@@ -12,6 +12,14 @@ describe('AgeUtils', () => {
       expect(AgeUtils.getAverageAge(ageComponent)).toBe(25);
     });
 
+    it('should throw error when bestGuess is not a number', () => {
+      const ageComponent = { minAge: 20, maxAge: 30, bestGuess: '25' };
+
+      expect(() => AgeUtils.getAverageAge(ageComponent)).toThrow(
+        'bestGuess must be a number'
+      );
+    });
+
     it('should return average of min and max when no bestGuess', () => {
       const ageComponent = { minAge: 20, maxAge: 30 };
       expect(AgeUtils.getAverageAge(ageComponent)).toBe(25);
@@ -71,6 +79,14 @@ describe('AgeUtils', () => {
     it('should handle large age ranges', () => {
       const ageComponent = { minAge: 0, maxAge: 200 };
       expect(AgeUtils.getAgeUncertainty(ageComponent)).toBe(200);
+    });
+
+    it('should throw error for non-numeric age values', () => {
+      const ageComponent = { minAge: '0', maxAge: 200 };
+
+      expect(() => AgeUtils.getAgeUncertainty(ageComponent)).toThrow(
+        'Age values must be numbers'
+      );
     });
 
     it('should throw error for null component', () => {
@@ -139,6 +155,22 @@ describe('AgeUtils', () => {
         'Target age must be a number'
       );
     });
+
+    it('should throw error for non-numeric age values', () => {
+      const ageComponent = { minAge: '20', maxAge: 30 };
+
+      expect(() => AgeUtils.isAgeInRange(ageComponent, 25)).toThrow(
+        'Age values must be numbers'
+      );
+    });
+
+    it('should throw error when maxAge is less than minAge', () => {
+      const ageComponent = { minAge: 30, maxAge: 20 };
+
+      expect(() => AgeUtils.isAgeInRange(ageComponent, 25)).toThrow(
+        'maxAge must be greater than or equal to minAge'
+      );
+    });
   });
 
   describe('formatAgeDescription', () => {
@@ -171,6 +203,22 @@ describe('AgeUtils', () => {
     it('should throw error for null component', () => {
       expect(() => AgeUtils.formatAgeDescription(null)).toThrow(
         'Age component is required'
+      );
+    });
+
+    it('should throw error for non-numeric age values', () => {
+      const ageComponent = { minAge: '20', maxAge: 30 };
+
+      expect(() => AgeUtils.formatAgeDescription(ageComponent)).toThrow(
+        'Age values must be numbers'
+      );
+    });
+
+    it('should throw error when maxAge is less than minAge', () => {
+      const ageComponent = { minAge: 30, maxAge: 20 };
+
+      expect(() => AgeUtils.formatAgeDescription(ageComponent)).toThrow(
+        'maxAge must be greater than or equal to minAge'
       );
     });
 
