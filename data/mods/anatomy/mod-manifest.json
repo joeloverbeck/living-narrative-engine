@@ -23,6 +23,11 @@
     "entities": {
       "definitions": [
         "blueprint_slot.entity.json",
+        "dragon_head.entity.json",
+        "dragon_leg.entity.json",
+        "dragon_tail.entity.json",
+        "dragon_torso.entity.json",
+        "dragon_wing.entity.json",
         "human_ass_cheek.entity.json",
         "human_ass_cheek_bubbly.entity.json",
         "human_ass_cheek_firm.entity.json",
@@ -116,11 +121,6 @@
         "humanoid_nose.entity.json",
         "humanoid_nose_small.entity.json",
         "humanoid_teeth.entity.json",
-        "dragon_head.entity.json",
-        "dragon_leg.entity.json",
-        "dragon_tail.entity.json",
-        "dragon_torso.entity.json",
-        "dragon_wing.entity.json",
         "kraken_head.entity.json",
         "kraken_mantle.entity.json",
         "kraken_tentacle.entity.json",
@@ -132,25 +132,25 @@
       "instances": []
     },
     "blueprints": [
+      "centaur_warrior.blueprint.json",
+      "giant_spider.blueprint.json",
       "human_female.blueprint.json",
       "human_futa.blueprint.json",
       "human_male.blueprint.json",
-      "giant_spider.blueprint.json",
-      "red_dragon.blueprint.json",
       "kraken.blueprint.json",
-      "centaur_warrior.blueprint.json"
+      "red_dragon.blueprint.json"
     ],
     "recipes": [
+      "centaur_warrior.recipe.json",
+      "giant_forest_spider.recipe.json",
       "gorgeous_milf.recipe.json",
       "human_female.recipe.json",
       "human_futa.recipe.json",
       "human_male.recipe.json",
-      "giant_forest_spider.recipe.json",
-      "venomous_cave_spider.recipe.json",
-      "red_dragon.recipe.json",
       "ice_dragon.recipe.json",
       "kraken.recipe.json",
-      "centaur_warrior.recipe.json"
+      "red_dragon.recipe.json",
+      "venomous_cave_spider.recipe.json"
     ],
     "anatomyFormatting": [
       "default.json"
@@ -169,6 +169,12 @@
       "interaction_zoom.event.json",
       "limb_detached.event.json",
       "visualizer_state_changed.event.json"
+    ],
+    "structure-templates": [
+      "structure_arachnid_8leg.structure-template.json",
+      "structure_centauroid.structure-template.json",
+      "structure_octopoid.structure-template.json",
+      "structure_winged_quadruped.structure-template.json"
     ]
   }
 }

@@ -185,6 +185,15 @@
     "scopes": [
       "actors_in_location.scope",
       "environment.scope"
+    ],
+    "recipes": [
+      "examples/centaur-hybrid.recipe.json",
+      "examples/dragon-mixed-patterns.recipe.json",
+      "examples/property-filters/combined-filters.recipe.json",
+      "examples/property-filters/filter-by-orientation.recipe.json",
+      "examples/property-filters/filter-by-slottype.recipe.json",
+      "examples/property-filters/filter-by-socketid.recipe.json",
+      "examples/spider-property-filtering.recipe.json"
     ]
   }
 }
