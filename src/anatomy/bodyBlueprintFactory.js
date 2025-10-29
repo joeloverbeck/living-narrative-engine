@@ -375,6 +375,18 @@ export class BodyBlueprintFactory {
       this.#slotGenerator.generateBlueprintSlots(template) || {};
     const additionalSlots = blueprint.additionalSlots || {};
 
+    const conflictingSlots = Object.keys(additionalSlots).filter(slotKey =>
+      Object.prototype.hasOwnProperty.call(generatedSlots, slotKey)
+    );
+
+    if (conflictingSlots.length > 0) {
+      throw new ValidationError(
+        `Blueprint '${blueprint.id || 'unknown blueprint'}' additionalSlots conflict: slot(s) ${conflictingSlots.join(
+          ', '
+        )} already defined by structure template '${blueprint.structureTemplate}'.`
+      );
+    }
+
     this.#logger.info(
       `BodyBlueprintFactory: Generated ${generatedSockets.length} sockets and ${Object.keys(generatedSlots).length} slots from template`
     );
