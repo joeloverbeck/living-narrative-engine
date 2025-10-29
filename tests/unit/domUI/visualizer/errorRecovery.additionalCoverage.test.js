@@ -9,6 +9,7 @@ import { AnatomyRenderError } from '../../../../src/errors/anatomyRenderError.js
 import { AnatomyStateError } from '../../../../src/errors/anatomyStateError.js';
 
 class CustomFallbackError extends Error {}
+class MinimalFallbackError extends Error {}
 
 const createLogger = () => ({
   debug: jest.fn(),
@@ -35,6 +36,23 @@ describe('ErrorRecovery additional coverage', () => {
     if (recovery && !recovery.isDisposed()) {
       recovery.dispose();
     }
+  });
+
+  it('uses default context values when none provided', async () => {
+    const setup = createRecovery();
+    recovery = setup.recovery;
+
+    const outcome = await recovery.handleError(new Error('plain failure'));
+
+    expect(outcome.strategy).toBe('fallback');
+    expect(setup.eventDispatcher.dispatch).toHaveBeenCalledWith(
+      'anatomy:visualizer_error',
+      expect.objectContaining({
+        context: {},
+        strategy: 'fallback',
+      })
+    );
+    expect(recovery.getErrorHistory(1)[0].context).toEqual({});
   });
 
   it('throws when registering a fallback strategy with a non-function', () => {
@@ -144,6 +162,63 @@ describe('ErrorRecovery additional coverage', () => {
 
     expect(fallback.success).toBe(false);
     expect(fallback.userMessage).toContain('Could not render anatomy visualization');
+  });
+
+  it('handles layout calculation fallback branch', () => {
+    ({ recovery } = createRecovery());
+
+    const layoutFallback = recovery._handleRenderErrorFallback(
+      AnatomyRenderError.layoutCalculationFailed(
+        'hierarchical',
+        { nodes: [] },
+        new Error('layout too complex')
+      ),
+      {}
+    );
+
+    expect(layoutFallback).toEqual(
+      expect.objectContaining({
+        success: true,
+        result: { simpleLayout: true },
+        userMessage: 'Using simplified layout display.',
+      })
+    );
+  });
+
+  it('uses default messaging when custom fallback omits fields', async () => {
+    ({ recovery } = createRecovery());
+
+    recovery.registerFallbackStrategy('MinimalFallbackError', async () => ({
+      result: { minimal: true },
+    }));
+
+    const outcome = await recovery._executeCustomFallback(
+      new MinimalFallbackError('no extras'),
+      { operation: 'minimal' }
+    );
+
+    expect(outcome.userMessage).toBe('Used alternative approach.');
+    expect(outcome.suggestions).toEqual([]);
+    expect(outcome.result).toEqual({ result: { minimal: true } });
+  });
+
+  it('uses fallback defaults when handlers return empty metadata', async () => {
+    ({ recovery } = createRecovery());
+
+    const genericFallbackSpy = jest
+      .spyOn(recovery, '_handleGenericErrorFallback')
+      .mockReturnValue({});
+
+    const result = await recovery._executeFallbackStrategy(
+      new Error('incomplete fallback'),
+      {}
+    );
+
+    expect(result.userMessage).toBe('Used fallback approach.');
+    expect(result.suggestions).toEqual([]);
+    expect(result.result).toBeNull();
+
+    genericFallbackSpy.mockRestore();
   });
 
   it('handles state error fallback branches', () => {
