@@ -135,18 +135,6 @@ class GameStateRestorer extends BaseService {
         errorMsg
       );
     }
-    if (!this.#entityManager) {
-      return createPersistenceFailure(
-        PersistenceErrorCodes.UNEXPECTED_ERROR,
-        'EntityManager not available.'
-      );
-    }
-    if (!this.#playtimeTracker) {
-      return createPersistenceFailure(
-        PersistenceErrorCodes.UNEXPECTED_ERROR,
-        'PlaytimeTracker not available.'
-      );
-    }
     return createPersistenceSuccess(null);
   }
 
