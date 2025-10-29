@@ -140,6 +140,29 @@ describe('GameSessionManager edge case coverage', () => {
     );
   });
 
+  it('should return the trimmed identifier when decoding consistently yields whitespace', async () => {
+    extractSaveNameMock.mockImplementation((value) => value);
+
+    const originalDecode = global.decodeURIComponent;
+    global.decodeURIComponent = jest.fn(() => '   ');
+
+    const { manager, safeEventDispatcher } = createManager();
+
+    try {
+      await manager.prepareForLoadGameSession('ghost-slot');
+    } finally {
+      global.decodeURIComponent = originalDecode;
+    }
+
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: 'Loading ghost-slot...',
+        inputDisabledMessage: 'Loading game from ghost-slot...',
+      }
+    );
+  });
+
   it('should treat undefined extraction results as empty segments', async () => {
     extractSaveNameMock
       .mockImplementationOnce(() => undefined)

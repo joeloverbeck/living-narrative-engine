@@ -392,7 +392,6 @@ class GameSessionManager {
         if (formatted) {
           return formatted;
         }
-        continue;
       }
 
       if (normalizedSegment.startsWith(manualSavePrefix)) {
@@ -472,19 +471,19 @@ class GameSessionManager {
       return trimmedDecoded;
     }
 
-    const fallback = this.#decodePercentEncodedSegment(candidate.trim())
+    const fallback = this.#decodePercentEncodedSegment((candidate ?? '').trim())
       .replace(/[_]+/g, ' ')
       .trim();
     if (fallback.length > 0) {
       return fallback;
     }
 
-    const trimmedCandidate = candidate.trim();
-    if (!isManualPattern) {
-      return trimmedCandidate;
-    }
+    const trimmedCandidate =
+      typeof candidate === 'string'
+        ? candidate.trim()
+        : String(candidate ?? '').trim();
 
-    return /[a-z0-9]/i.test(trimmedCandidate) ? trimmedCandidate : '';
+    return trimmedCandidate;
   }
 
   /**
