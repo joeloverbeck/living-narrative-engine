@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:kraken_head",
+  "description": "A kraken head with massive beak",
+  "components": {
+    "anatomy:part": {
+      "subType": "kraken_head"
+    },
+    "core:name": {
+      "text": "kraken head"
+    }
+  }
+}

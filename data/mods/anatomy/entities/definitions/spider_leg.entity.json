@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:spider_leg",
+  "description": "A segmented spider leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "spider_leg"
+    },
+    "core:name": {
+      "text": "spider leg"
+    }
+  }
+}

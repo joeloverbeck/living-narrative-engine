@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:spider_pedipalp",
+  "description": "A spider pedipalp for sensory and manipulation",
+  "components": {
+    "anatomy:part": {
+      "subType": "spider_pedipalp"
+    },
+    "core:name": {
+      "text": "spider pedipalp"
+    }
+  }
+}

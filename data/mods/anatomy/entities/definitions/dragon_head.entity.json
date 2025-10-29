@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:dragon_head",
+  "description": "A draconic head with jaws and horns",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_head"
+    },
+    "core:name": {
+      "text": "dragon head"
+    }
+  }
+}
