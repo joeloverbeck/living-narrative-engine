@@ -33,6 +33,7 @@
       "fondle_breasts.action.json",
       "nuzzle_bare_breasts.action.json",
       "fondle_breasts_over_clothes.action.json",
+      "pinch_milk_out_of_nipple.action.json",
       "press_against_back.action.json",
       "press_against_chest.action.json"
     ],
@@ -40,6 +41,7 @@
       "event-is-action-fondle-breasts-over-clothes.condition.json",
       "event-is-action-fondle-breasts.condition.json",
       "event-is-action-nuzzle-bare-breasts.condition.json",
+      "event-is-action-pinch-milk-out-of-nipple.condition.json",
       "event-is-action-press-against-back.condition.json",
       "event-is-action-press-against-chest.condition.json"
     ],
@@ -47,6 +49,7 @@
       "handle_fondle_breasts.rule.json",
       "handle_nuzzle_bare_breasts.rule.json",
       "handle_fondle_breasts_over_clothes.rule.json",
+      "handle_pinch_milk_out_of_nipple.rule.json",
       "handle_press_against_back.rule.json",
       "handle_press_against_chest.rule.json"
     ],

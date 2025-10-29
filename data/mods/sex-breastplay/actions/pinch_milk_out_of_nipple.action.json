@@ -1,0 +1,34 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-breastplay:pinch_milk_out_of_nipple",
+  "name": "Pinch Milk Out of Nipple",
+  "description": "Pinch and roll your nipple until beads of milk gather at the tip, flaunting your lactation.",
+  "targets": "none",
+  "required_components": {
+    "actor": ["sex-breastplay:is_lactating"]
+  },
+  "template": "pinch milk out of your nipple",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "breast"]
+      },
+      "failure_message": "You need breasts to perform this action."
+    },
+    {
+      "logic": {
+        "or": [
+          { "not": { "isSocketCovered": ["actor", "left_chest"] } },
+          { "not": { "isSocketCovered": ["actor", "right_chest"] } }
+        ]
+      },
+      "failure_message": "Your breasts must be uncovered to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#7a1d58",
+    "textColor": "#fde6f2",
+    "hoverBackgroundColor": "#8d2465",
+    "hoverTextColor": "#fff2f9"
+  }
+}
