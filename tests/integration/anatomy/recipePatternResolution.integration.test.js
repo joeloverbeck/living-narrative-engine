@@ -387,7 +387,7 @@ describe('Recipe Pattern Resolution Integration', () => {
           },
           {
             matchesAll: {
-              orientation: '*_left',
+              orientation: 'left',
             },
             partType: 'fore_leg',
             tags: ['test:left_leg'],
