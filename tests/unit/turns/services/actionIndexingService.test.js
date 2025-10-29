@@ -295,6 +295,17 @@ describe('ActionIndexingService', () => {
     expect(service.resolve(actorId, 1)).toEqual(firstResult[0]);
   });
 
+  it('indexes zero actions when discovery list is empty for the first time', () => {
+    const actorId = 'actor-empty-initial';
+    const result = service.indexActions(actorId, []);
+
+    expect(result).toEqual([]);
+    expect(logger.debug).toHaveBeenCalledWith(
+      'ActionIndexingService: indexed 0 actions for actor-empty-initial (no discoveries provided)'
+    );
+    expect(service.getIndexedList(actorId)).toEqual([]);
+  });
+
   it('skips malformed discovered entries without throwing', () => {
     const rawActions = [
       null,
