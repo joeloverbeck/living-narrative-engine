@@ -361,6 +361,26 @@ describe('EntityLifecycleManager - Batch Operations', () => {
         expect(result.failureCount).toBe(1);
         expect(result.failures).toHaveLength(1);
       });
+
+      it('should stop processing further removals when stopOnError is enabled', async () => {
+        const instanceIds = ['e1', 'e2'];
+        const removeSpy = jest
+          .spyOn(manager, 'removeEntityInstance')
+          .mockRejectedValueOnce(new Error('boom'))
+          .mockResolvedValueOnce(undefined);
+
+        const result = await manager.batchRemoveEntities(instanceIds, {
+          stopOnError: true,
+        });
+
+        expect(removeSpy).toHaveBeenCalledTimes(1);
+        expect(result.totalProcessed).toBe(1);
+        expect(result.failureCount).toBe(1);
+        expect(result.successCount).toBe(0);
+        expect(result.failures).toHaveLength(1);
+
+        removeSpy.mockRestore();
+      });
     });
   });
 
@@ -405,6 +425,66 @@ describe('EntityLifecycleManager - Batch Operations', () => {
       expect(() => {
         manager.setBatchOperationManager(invalidBatchManager);
       }).toThrow();
+    });
+
+    it('should warn when setting batch manager while batch operations are disabled', () => {
+      const localDeps = createDependencies();
+      const disabledManager = new EntityLifecycleManager({
+        ...localDeps,
+        batchOperationManager: null,
+        enableBatchOperations: false,
+      });
+
+      const validBatchManager = {
+        batchCreateEntities: jest.fn(),
+        batchAddComponents: jest.fn(),
+        batchRemoveEntities: jest.fn(),
+      };
+
+      disabledManager.setBatchOperationManager(validBatchManager);
+
+      expect(localDeps.logger.warn).toHaveBeenCalledWith(
+        'Setting batch operation manager but batch operations are disabled'
+      );
+      expect(localDeps.logger.debug).not.toHaveBeenCalledWith(
+        'Batch operation manager set'
+      );
+    });
+
+    it('should set the batch manager and delegate operations when enabled', async () => {
+      const localDeps = createDependencies();
+      const enabledManager = new EntityLifecycleManager({
+        ...localDeps,
+        batchOperationManager: null,
+        enableBatchOperations: true,
+      });
+
+      const validBatchManager = {
+        batchCreateEntities: jest.fn().mockResolvedValue({ successes: [] }),
+        batchAddComponents: jest.fn().mockResolvedValue({ successes: [] }),
+        batchRemoveEntities: jest.fn().mockResolvedValue({
+          successes: ['e1'],
+          failures: [],
+          totalProcessed: 1,
+          successCount: 1,
+          failureCount: 0,
+          processingTime: 1,
+        }),
+      };
+
+      enabledManager.setBatchOperationManager(validBatchManager);
+
+      expect(localDeps.logger.debug).toHaveBeenCalledWith(
+        'Batch operation manager set'
+      );
+
+      const result = await enabledManager.batchRemoveEntities(['e1']);
+
+      expect(validBatchManager.batchRemoveEntities).toHaveBeenCalledWith(
+        ['e1'],
+        {}
+      );
+      expect(result.successCount).toBe(1);
     });
   });
 });

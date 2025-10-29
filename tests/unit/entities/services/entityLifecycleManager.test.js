@@ -534,6 +534,33 @@ describe('EntityLifecycleManager - Successful Operations', () => {
     );
   });
 
+  it('logs detailed debug information when constructing the park bench entity', async () => {
+    const deps = createDeps();
+    const mockEntity = {
+      id: 'p_erotica:park_bench_instance',
+      definitionId: 'park:def',
+      componentTypeIds: ['positioning:allows_sitting', 'core:test'],
+    };
+
+    deps.factory.create.mockReturnValue(mockEntity);
+    global.__definitionHelperMock.getDefinitionForCreate.mockReturnValue({
+      id: 'park:def',
+    });
+
+    const manager = initManager(deps);
+
+    await manager.createEntityInstance('park:def');
+
+    expect(deps.logger.debug).toHaveBeenCalledWith(
+      '[DEBUG] EntityLifecycleManager adding park bench to repository (construct):',
+      expect.objectContaining({
+        entityId: 'p_erotica:park_bench_instance',
+        hasAllowsSitting: true,
+        componentTypeIds: expect.arrayContaining(['positioning:allows_sitting']),
+      })
+    );
+  });
+
   it('successfully reconstructs entity', () => {
     const deps = createDeps();
     const mockEntity = { id: 'test-entity', definitionId: 'test:def' };
@@ -558,6 +585,37 @@ describe('EntityLifecycleManager - Successful Operations', () => {
     ).toHaveBeenCalledWith(mockEntity, true);
     expect(deps.logger.debug).toHaveBeenCalledWith(
       'Entity reconstructed: test-entity (definition: test:def)'
+    );
+  });
+
+  it('logs detailed debug information when reconstructing the park bench entity', () => {
+    const deps = createDeps();
+    const mockEntity = {
+      id: 'p_erotica:park_bench_instance',
+      definitionId: 'park:def',
+      componentTypeIds: ['positioning:allows_sitting'],
+    };
+    const serializedEntity = {
+      instanceId: 'p_erotica:park_bench_instance',
+      definitionId: 'park:def',
+    };
+
+    deps.factory.reconstruct.mockReturnValue(mockEntity);
+    global.__definitionHelperMock.getDefinitionForReconstruct.mockReturnValue({
+      id: 'park:def',
+    });
+
+    const manager = initManager(deps);
+
+    manager.reconstructEntity(serializedEntity);
+
+    expect(deps.logger.debug).toHaveBeenCalledWith(
+      '[DEBUG] EntityLifecycleManager adding park bench to repository (reconstruct):',
+      expect.objectContaining({
+        entityId: 'p_erotica:park_bench_instance',
+        hasAllowsSitting: true,
+        componentTypeIds: expect.arrayContaining(['positioning:allows_sitting']),
+      })
     );
   });
 });
