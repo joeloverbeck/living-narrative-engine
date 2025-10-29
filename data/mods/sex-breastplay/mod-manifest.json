@@ -36,6 +36,7 @@
       "lick_breasts.action.json",
       "squeeze_breasts_ardently.action.json",
       "fondle_breasts_over_clothes.action.json",
+      "latch_and_drink_milk.action.json",
       "pinch_milk_out_of_nipple.action.json",
       "press_against_back.action.json",
       "press_against_chest.action.json"
@@ -47,6 +48,7 @@
       "event-is-action-suck-on-nipples.condition.json",
       "event-is-action-lick-breasts.condition.json",
       "event-is-action-squeeze-breasts-ardently.condition.json",
+      "event-is-action-latch-and-drink-milk.condition.json",
       "event-is-action-pinch-milk-out-of-nipple.condition.json",
       "event-is-action-press-against-back.condition.json",
       "event-is-action-press-against-chest.condition.json"
@@ -58,6 +60,7 @@
       "handle_lick_breasts.rule.json",
       "handle_squeeze_breasts_ardently.rule.json",
       "handle_fondle_breasts_over_clothes.rule.json",
+      "handle_latch_and_drink_milk.rule.json",
       "handle_pinch_milk_out_of_nipple.rule.json",
       "handle_press_against_back.rule.json",
       "handle_press_against_chest.rule.json"
