@@ -183,6 +183,18 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(mockCreateSafeErrorLogger).not.toHaveBeenCalled();
   });
 
+  it('warns and falls back to defaults when initial config is not an object', () => {
+    createStrategy({
+      mode: LoggerMode.CONSOLE,
+      // @ts-expect-error - intentional invalid type to exercise defensive branch
+      config: 'not-an-object',
+    });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      '[LoggerStrategy] Invalid configuration provided, using defaults',
+    );
+  });
+
   it('does not mutate DEFAULT_CONFIG when normalizing missing config sections', () => {
     const originalRemote = JSON.parse(JSON.stringify(defaultConfig.remote));
     const originalCategories = JSON.parse(

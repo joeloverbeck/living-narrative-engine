@@ -115,7 +115,7 @@ class LoggerStrategy {
    * @param {*} [options.dependencies.mockLogger] - MockLogger instance (for tests)
    * @param {*} [options.dependencies.eventBus] - Event bus for error reporting
    */
-  constructor({ mode, config = {}, dependencies = {} } = {}) {
+  constructor({ mode, config: rawConfig, dependencies = {} } = {}) {
     this.#dependencies = dependencies;
     this.#loggerInstances = new Map();
     this.#logBuffer = [];
@@ -125,6 +125,16 @@ class LoggerStrategy {
     const { mode: _defaultMode, ...defaultConfigWithoutMode } = deepClone(
       DEFAULT_CONFIG
     );
+
+    let config = rawConfig;
+    if (config === undefined) {
+      config = {};
+    } else if (typeof config !== 'object' || config === null) {
+      // Trigger validation warning and ignore invalid configuration objects
+      this.#validateConfig(config);
+      config = {};
+    }
+
     this.#config = this.#validateConfig({
       ...defaultConfigWithoutMode,
       ...config,
@@ -184,12 +194,11 @@ class LoggerStrategy {
         typeof config.mode === 'string'
           ? config.mode.trim().toLowerCase()
           : config.mode;
-      if (typeof normalizedConfigMode === 'string') {
-        if (Object.values(LoggerMode).includes(normalizedConfigMode)) {
-          return normalizedConfigMode;
-        }
-      } else if (Object.values(LoggerMode).includes(config.mode)) {
-        return config.mode;
+      if (
+        typeof normalizedConfigMode === 'string' &&
+        Object.values(LoggerMode).includes(normalizedConfigMode)
+      ) {
+        return normalizedConfigMode;
       }
     }
 
@@ -460,15 +469,6 @@ class LoggerStrategy {
    * @param {string} newMode - The new logger mode
    */
   #switchMode(newMode) {
-    if (!Object.values(LoggerMode).includes(newMode)) {
-      if (this.#logger && typeof this.#logger.warn === 'function') {
-        this.#logger.warn(
-          `[LoggerStrategy] Invalid mode '${newMode}' for switching`
-        );
-      }
-      return;
-    }
-
     if (this.#mode === newMode) {
       // No change needed
       return;
@@ -887,10 +887,6 @@ class LoggerStrategy {
         return status;
       }
 
-      default:
-        if (this.#logger && typeof this.#logger.warn === 'function') {
-          this.#logger.warn(`[LoggerStrategy] Unknown command: ${command}`);
-        }
     }
   }
 
@@ -903,10 +899,6 @@ class LoggerStrategy {
    */
   #validateConfiguration(config) {
     const errors = [];
-
-    if (typeof config !== 'object' || config === null) {
-      return { valid: false, errors: ['Configuration must be an object'] };
-    }
 
     // Validate mode if present
     if (config.mode !== undefined) {
@@ -949,10 +941,6 @@ class LoggerStrategy {
    * @param {object} categories - Category configurations to update
    */
   #updateCategories(categories) {
-    if (!this.#config.categories) {
-      this.#config.categories = {};
-    }
-
     // Merge category updates
     this.#config.categories = {
       ...this.#config.categories,
