@@ -95,6 +95,29 @@ class RecipePatternResolver {
   }
 
   /**
+   * Determines whether a pattern currently exposes a matcher definition.
+   *
+   * @param {object} pattern - Pattern definition to inspect
+   * @returns {boolean} True when any matcher is defined
+   * @private
+   */
+  #hasMatcher(pattern) {
+    if (Array.isArray(pattern.matches) && pattern.matches.length > 0) {
+      return true;
+    }
+
+    if (pattern.matchesGroup !== undefined) {
+      return true;
+    }
+
+    if (pattern.matchesPattern !== undefined) {
+      return true;
+    }
+
+    return pattern.matchesAll !== undefined;
+  }
+
+  /**
    * Validates that pattern uses exactly one matcher type.
    * Ensures mutual exclusivity of matches, matchesGroup, matchesPattern, matchesAll.
    *
@@ -534,11 +557,7 @@ class RecipePatternResolver {
       const matchesGroupRef = pattern.matchesGroup;
       const matchesPatternStr = pattern.matchesPattern;
       const matchesAllFilter = pattern.matchesAll;
-      const hadMatcherAtStart =
-        hasExplicitMatches ||
-        matchesGroupRef !== undefined ||
-        matchesPatternStr !== undefined ||
-        Boolean(matchesAllFilter);
+      const hadMatcherAtStart = this.#hasMatcher(pattern);
       let matchedSlotKeys = [];
 
       // V1 pattern: explicit slot list (backward compatibility)
@@ -550,11 +569,34 @@ class RecipePatternResolver {
       }
       // V2 pattern: slot group selector
       else if (matchesGroupRef !== undefined) {
-        matchedSlotKeys = this.#resolveSlotGroup(
-          matchesGroupRef,
-          blueprint,
-          { throwOnZeroMatches: false, allowMissing: true }
-        );
+        try {
+          matchedSlotKeys = this.#resolveSlotGroup(
+            matchesGroupRef,
+            blueprint
+          );
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            if (
+              error.message.startsWith('Pattern ') ||
+              error.message.startsWith('Structure template not found')
+            ) {
+              throw error;
+            }
+
+            const wrappedMessage = `Pattern ${patternNumber}: ${error.message}`;
+            this.#logger.warn(wrappedMessage);
+            if (matchesGroupRef) {
+              const templateId =
+                blueprint?.structureTemplate || 'unknown template';
+              this.#logger.warn(
+                `Slot group '${matchesGroupRef}' not found or produced 0 slots in structure template '${templateId}'.`
+              );
+            }
+
+            throw new ValidationError(wrappedMessage);
+          }
+          throw error;
+        }
         this.#logger.debug(
           `matchesGroup '${matchesGroupRef}' resolved to ${matchedSlotKeys.length} slots`
         );
@@ -587,13 +629,12 @@ class RecipePatternResolver {
       }
 
       if (!usesExplicitMatches && matchedSlotKeys.length === 0) {
-        this.#logZeroMatchWarning({
+        this.#raiseZeroMatchError({
           pattern,
           blueprint,
           patternIndex: index,
           slotGroupRef: matchesGroupRef,
         });
-        continue;
       }
 
       // Apply exclusions if present
@@ -611,14 +652,13 @@ class RecipePatternResolver {
         );
 
         if (!usesExplicitMatches && filteredSlotKeys.length === 0) {
-          this.#logZeroMatchWarning({
+          this.#raiseZeroMatchError({
             pattern,
             blueprint,
             patternIndex: index,
             stage: 'after applying exclusions',
             slotGroupRef: matchesGroupRef,
           });
-          continue;
         }
       }
 
@@ -670,7 +710,11 @@ class RecipePatternResolver {
         };
       }
 
-      if (!hadMatcherAtStart && !patternHints.includes(defaultMatcherHint)) {
+      const hasMatcherAtEnd = this.#hasMatcher(pattern);
+      if (
+        !hasMatcherAtEnd &&
+        !patternHints.includes(defaultMatcherHint)
+      ) {
         patternHints.push(defaultMatcherHint);
       }
     }
@@ -993,7 +1037,7 @@ class RecipePatternResolver {
    * @throws {ValidationError} Always throws with composed message
    * @private
    */
-  #logZeroMatchWarning({
+  #raiseZeroMatchError({
     pattern,
     blueprint,
     stage,
@@ -1005,45 +1049,66 @@ class RecipePatternResolver {
     const blueprintId = blueprint?.id || 'unknown blueprint';
     const availability = this.#collectBlueprintAvailability(blueprint);
 
-    let matcherLabel;
-    if (pattern.matchesGroup || slotGroupRef) {
-      matcherLabel = `Slot group '${slotGroupRef ?? pattern.matchesGroup}'`;
+    let logMessage;
+    let errorMessage;
+    if (stage) {
+      const base = `Pattern ${this.#getPatternDescription(pattern)} matched 0 slots`;
+      logMessage = base;
+      errorMessage = base;
+    } else if (pattern.matchesGroup || slotGroupRef) {
+      const matcherLabel = `Slot group '${slotGroupRef ?? pattern.matchesGroup}'`;
+      const base = `Pattern ${patternNumber}: ${matcherLabel} matched 0 slots`;
+      logMessage = base;
+      errorMessage = base;
     } else if (pattern.matchesPattern) {
-      matcherLabel = `Pattern '${pattern.matchesPattern}'`;
+      const baseLog = `Pattern ${patternNumber}: Pattern '${pattern.matchesPattern}' matched 0 slots`;
+      const baseError = `Pattern ${patternNumber}: matchesPattern '${pattern.matchesPattern}' matched 0 slots`;
+      logMessage = baseLog;
+      errorMessage = baseError;
     } else if (pattern.matchesAll) {
-      matcherLabel = `matchesAll filter ${JSON.stringify(pattern.matchesAll)}`;
+      const filterStr = JSON.stringify(pattern.matchesAll);
+      const base = `Pattern ${patternNumber}: matchesAll filter ${filterStr} matched 0 slots`;
+      logMessage = base;
+      errorMessage = base;
     } else {
-      matcherLabel = this.#getPatternDescription(pattern);
+      const base = `Pattern ${patternNumber}: ${this.#getPatternDescription(pattern)} matched 0 slots`;
+      logMessage = base;
+      errorMessage = base;
     }
 
-    let message = `Pattern ${patternNumber}: ${matcherLabel} matched 0 slots`;
-
     if (stage) {
-      message += ` ${stage}`;
+      logMessage += ` ${stage}`;
+      errorMessage += ` ${stage}`;
     }
 
     if (pattern.matchesGroup || slotGroupRef) {
       const templateId = blueprint?.structureTemplate || 'unknown template';
-      message += ` in structure template '${templateId}'.`;
+      logMessage += ` in structure template '${templateId}'.`;
+      errorMessage += ` in structure template '${templateId}'.`;
     } else {
-      message += ` in blueprint '${blueprintId}'.`;
+      logMessage += ` in blueprint '${blueprintId}'.`;
+      errorMessage += ` in blueprint '${blueprintId}'.`;
     }
 
     if (availability.slotKeys.length > 0) {
-      message += ` Available slot keys: ${availability.slotKeys.join(', ')}.`;
+      logMessage += ` Available slot keys: ${availability.slotKeys.join(', ')}.`;
+      errorMessage += ` Available slot keys: ${availability.slotKeys.join(', ')}.`;
     } else {
-      message += ' Available slot keys: none.';
+      logMessage += ' Available slot keys: none.';
+      errorMessage += ' Available slot keys: none.';
     }
 
     if (availability.orientations.length > 0) {
-      message += ` Available orientations: ${availability.orientations.join(', ')}.`;
+      logMessage += ` Available orientations: ${availability.orientations.join(', ')}.`;
+      errorMessage += ` Available orientations: ${availability.orientations.join(', ')}.`;
     }
 
     if (availability.socketIds.length > 0) {
-      message += ` Available sockets: ${availability.socketIds.join(', ')}.`;
+      logMessage += ` Available sockets: ${availability.socketIds.join(', ')}.`;
+      errorMessage += ` Available sockets: ${availability.socketIds.join(', ')}.`;
     }
 
-    this.#logger.warn(message);
+    this.#logger.warn(logMessage);
 
     if (pattern.matchesGroup || slotGroupRef) {
       const groupRef = slotGroupRef ?? pattern.matchesGroup;
@@ -1052,6 +1117,8 @@ class RecipePatternResolver {
         `Slot group '${groupRef}' not found or produced 0 slots in structure template '${templateId}'.`
       );
     }
+
+    throw new ValidationError(errorMessage);
   }
 
   /**
