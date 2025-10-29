@@ -213,10 +213,18 @@ describe('AnatomyRecipeLoader integration coverage', () => {
       includes: ['core:macro.base', 'core:macro.extra'],
       constraints: {
         requires: [
-          ['core:heart', 'core:brain'],
-          ['core:spine', 'core:skull'],
+          {
+            components: ['core:heart', 'core:brain'],
+          },
+          {
+            partTypes: ['core:spine', 'core:skull'],
+          },
         ],
-        excludes: [['core:stone_skin', 'core:feather_skin']],
+        excludes: [
+          {
+            components: ['core:stone_skin', 'core:feather_skin'],
+          },
+        ],
       },
       bodyDescriptors: {
         build: 'athletic',
@@ -275,8 +283,12 @@ describe('AnatomyRecipeLoader integration coverage', () => {
       recipeId: 'core:humanoid',
       constraints: {
         requires: [
-          ['core:heart', 'core:brain'],
-          ['core:lungs', 'core:spine'],
+          {
+            components: ['core:heart', 'core:brain'],
+          },
+          {
+            partTypes: ['core:lungs', 'core:spine'],
+          },
         ],
       },
       bodyDescriptors: {
@@ -290,7 +302,11 @@ describe('AnatomyRecipeLoader integration coverage', () => {
     fileMap.set(`${basePath}/invalid-constraint.recipe.json`, {
       recipeId: 'core:invalidConstraint',
       constraints: {
-        requires: [['only-one']],
+        requires: [
+          {
+            components: ['only-one'],
+          },
+        ],
       },
     });
 
@@ -320,7 +336,7 @@ describe('AnatomyRecipeLoader integration coverage', () => {
     expect(constraintFailure).toBeDefined();
     expect(constraintFailure.error).toBeInstanceOf(ValidationError);
     expect(constraintFailure.error.message).toContain(
-      "Invalid 'requires' group"
+      "must contain at least 2 items"
     );
 
     const descriptorFailure = result.failures.find(
