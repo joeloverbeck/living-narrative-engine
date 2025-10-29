@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
+  "id": "anatomy:structure_arachnid_8leg",
+  "description": "Eight-legged arachnid body plan with pedipalps and abdomen attachment",
+  "topology": {
+    "rootType": "cephalothorax",
+    "limbSets": [
+      {
+        "type": "leg",
+        "count": 8,
+        "arrangement": "radial",
+        "arrangementHint": "four_pairs_bilateral",
+        "socketPattern": {
+          "idTemplate": "leg_{{index}}",
+          "orientationScheme": "indexed",
+          "allowedTypes": ["leg", "arachnid_leg"],
+          "nameTpl": "leg {{index}}"
+        }
+      }
+    ],
+    "appendages": [
+      {
+        "type": "pedipalp",
+        "count": 2,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "pedipalp_{{index}}",
+          "orientationScheme": "indexed",
+          "allowedTypes": ["pedipalp", "arachnid_pedipalp"],
+          "nameTpl": "pedipalp {{index}}"
+        }
+      },
+      {
+        "type": "abdomen",
+        "count": 1,
+        "attachment": "posterior",
+        "socketPattern": {
+          "idTemplate": "posterior_abdomen",
+          "allowedTypes": ["abdomen", "arachnid_abdomen"],
+          "nameTpl": "abdomen"
+        }
+      }
+    ]
+  }
+}
