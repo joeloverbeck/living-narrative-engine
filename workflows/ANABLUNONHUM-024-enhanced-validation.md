@@ -1,80 +1,89 @@
 # ANABLUNONHUM-024: Enhanced Validation Rules and Error Messages
 
-**Phase**: 6 - Validation & Tooling
-**Priority**: High
-**Estimated Effort**: 8-10 hours
+**Phase**: 6 - Validation & Tooling  
+**Priority**: High  
+**Estimated Effort**: 8-10 hours  
 **Dependencies**: ANABLUNONHUM-018, ANABLUNONHUM-023
 
 ## Overview
 
-Implement comprehensive validation with helpful, actionable error messages for template/blueprint/recipe issues.
+Implement comprehensive validation with helpful, actionable error messages for structure templates, blueprints, and recipes that participate in non-human anatomy generation. The existing pipeline already routes everything through `BodyBlueprintFactory` and the `GraphIntegrityValidator` rule chain—extend those surfaces instead of creating standalone validators.
 
-## Validation Services
+## Current Validation Surfaces
 
-### 1. Template Validator
-**File**: `src/anatomy/validation/templateValidator.js`
+- **BodyBlueprintFactory** (`src/anatomy/bodyBlueprintFactory.js`)
+  - Loads V1/V2 blueprints, merges structure template output, enforces slot dependencies, and validates recipe slot references via `#validateRecipeSlots` and `#processBlueprintSlots`.
+  - Dispatches `ValidationError`s when blueprint assembly fails.
+- **GraphIntegrityValidator** (`src/anatomy/graphIntegrityValidator.js`)
+  - Executes the rule chain defined in `src/anatomy/validation/rules/*.js` (socket limits, recipe constraints, cycle detection, orphan detection, joint consistency, part-type compatibility).
+  - Uses `ValidationContext` (`src/anatomy/validation/validationContext.js`) to aggregate issues and metadata.
+- **RecipePatternResolver & Constraint Evaluator** (`src/anatomy/recipePatternResolver.js`, `src/anatomy/recipeConstraintEvaluator.js`)
+  - Validate recipe patterns, slot group lookups, property filters, and conflict detection before graph assembly. They already reference the anatomy registry and structure templates described in `docs/anatomy/`.
 
-Rules:
-- limbSet counts positive and < 100
-- Socket ID templates generate unique IDs
-- Orientation schemes valid
-- No circular dependencies
+## Validation Enhancements
 
-### 2. Blueprint Validator
-**File**: `src/anatomy/validation/blueprintValidator.js`
+### 1. Structure Template Validation (V2 Blueprints)
+**Primary files**: `src/anatomy/bodyBlueprintFactory.js`, `src/anatomy/socketGenerator.js`, `src/anatomy/slotGenerator.js`  
+**Reference docs**: `docs/anatomy/structure-templates.md`, `docs/anatomy/common-non-human-patterns.md`
 
-Rules:
-- Referenced templates exist
-- Additional slots don't conflict with generated
-- Root entity type matches template expectation
-- V1/V2 feature separation enforced
+Rules to add/extend:
+- Enforce limb set counts (1-100) and positive appendage counts before calling the generators.
+- Ensure each `socketPattern.idTemplate` expands to unique IDs (`SocketGenerator.#validateSocketUniqueness`) and that orientation schemes listed in docs (bilateral, radial, quadrupedal, linear, custom) are respected. Provide guidance when unsupported schemes are encountered.
+- Validate that the template's `topology.rootType` aligns with the blueprint's `root` entity and that any limb set/appendage identifiers expected by downstream recipes (for slot groups) are present.
+- Surface template metadata (template id, limb set type, appendage type) into `ValidationContext` so rule messages can point back to the originating template.
 
-### 3. Recipe Validator
-**File**: `src/anatomy/validation/recipeValidator.js`
+### 2. Blueprint Validation
+**Primary files**: `src/anatomy/bodyBlueprintFactory.js`, `src/anatomy/graphIntegrityValidator.js`, `src/anatomy/validation/rules/*.js`  
+**Reference docs**: `docs/anatomy/blueprints-v2.md`
 
-Rules:
-- Slot groups resolve to actual slots
-- Wildcard patterns match existing slots
-- Property filters reference valid components
-- Pattern application conflicts detected
+Rules to add/extend:
+- When `BodyBlueprintFactory` merges generated slots with `additionalSlots`, detect conflicts (duplicate slot keys, conflicting parents) and report them before the graph build loop.
+- Ensure the blueprint root entity type matches the structure template topology root. For V1 blueprints, continue using existing slot-based checks.
+- Extend the validation rule chain with template-aware checks (e.g., verifying socket occupancy uses generated sockets, preventing circular slot dependencies beyond what `#sortSlotsByDependency` already guards against). Consider adding dedicated rule classes (e.g., `StructureTemplateRule`, `BlueprintRootRule`) under `src/anatomy/validation/rules/` and register them in `GraphIntegrityValidator.#initializeRules()`.
+- Capture available socket IDs and slot metadata in `ValidationContext` so error messages can enumerate valid options.
+
+### 3. Recipe Validation
+**Primary files**: `src/anatomy/recipePatternResolver.js`, `src/anatomy/recipeConstraintEvaluator.js`, `src/anatomy/graphIntegrityValidator.js`  
+**Reference docs**: `docs/anatomy/recipe-patterns.md`, `docs/anatomy/property-based-filtering-examples.md`
+
+Rules to add/extend:
+- Guarantee that slot groups (`matchesGroup`) resolve to slots generated by the active structure template. Reuse the resolver utilities that already query the DataRegistry.
+- Validate wildcard patterns and property filters against real socket definitions and part metadata, flagging mismatches with actionable hints (e.g., suggested group names or property keys).
+- Detect conflicts when multiple patterns compete for the same slot (e.g., recipe overrides vs. generated optional slots) and produce consolidated warnings/errors via the rule chain.
+- Feed recipe context (pattern index, matcher type) into `ValidationContext` for downstream messaging.
 
 ## Error Message Improvements
 
 ### Before
-```
+```text
 ValidationError: Recipe contains invalid slot key 'leg_3'
 ```
 
 ### After
+```text
+ValidationError: Recipe 'my_spider' references slot 'leg_3', which was not generated for blueprint 'anatomy:spider'.
+Available slots from template 'anatomy:structure_arachnid_8leg': leg_1, leg_2, leg_4, leg_5, leg_6, leg_7, leg_8, pedipalp_1, pedipalp_2, posterior_abdomen.
+Hint from RecipePatternResolver: use matchesGroup "limbSet:leg" to target all spider legs.
 ```
-ValidationError: Recipe 'my_spider' contains invalid slot key 'leg_3'.
 
-Blueprint 'anatomy:spider' uses structure template 'anatomy:structure_arachnid_8leg'
-which generates slots: leg_1, leg_2, leg_4, leg_5, leg_6, leg_7, leg_8, pedipalp_1, pedipalp_2, posterior_abdomen
-
-Did you mean: 'leg_4'?
-
-Hint: Use pattern matching to target all legs:
-{
-  "patterns": [{
-    "matchesGroup": "limbSet:leg",
-    "partType": "leg"
-  }]
-}
-```
+Error messages should always include:
+- Blueprint ID, recipe ID, and structure template ID (when applicable).
+- The list of available options gathered from `ValidationContext` metadata.
+- Suggestions for common fixes derived from the anatomy docs (e.g., switching to `matchesGroup`, correcting orientation tokens).
 
 ## Acceptance Criteria
 
-- [ ] Three validation services implemented
-- [ ] All validation rules from report implemented
-- [ ] Error messages include:
-  - [ ] Context (which file, which template)
-  - [ ] Available options listed
-  - [ ] Suggestions for fixes
-  - [ ] Helpful hints for common issues
-- [ ] 25+ validation test cases
-- [ ] Integration with existing validation infrastructure
+- [ ] Enhancements implemented through existing services (`BodyBlueprintFactory`, `GraphIntegrityValidator`, `recipePatternResolver`, new/updated rules in `src/anatomy/validation/rules/`).
+- [ ] Validation rules from the ANABLUNONHUM reports reflected in code (structure template limits, blueprint-template alignment, recipe pattern safety).
+- [ ] Error messages include context, available options, actionable suggestions, and hints for common mistakes.
+- [ ] 25+ new or updated test cases across `tests/unit/anatomy/` and `tests/integration/anatomy/` covering templates, blueprints, and recipes.
+- [ ] Updates wired into the existing validation infrastructure without introducing standalone validator entry points.
 
 ## References
 
-- **Source**: `reports/anatomy-blueprint-non-human-architecture.md` Section 6, 8.4
+- `reports/anatomy-blueprint-non-human-architecture.md` – Sections 6 & 8.4
+- `docs/anatomy/structure-templates.md`
+- `docs/anatomy/blueprints-v2.md`
+- `docs/anatomy/recipe-patterns.md`
+- `docs/anatomy/property-based-filtering-examples.md`
+- `docs/anatomy/common-non-human-patterns.md`
