@@ -19,6 +19,6 @@
     }
   ],
   "bodyDescriptors": {
-    "build": "average"
+    "composition": "average"
   }
 }

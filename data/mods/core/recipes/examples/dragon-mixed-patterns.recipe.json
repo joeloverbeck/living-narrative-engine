@@ -85,7 +85,6 @@
   "bodyDescriptors": {
     "build": "muscular",
     "skinColor": "crimson",
-    "height": "gigantic",
-    "age": "ancient"
+    "height": "gigantic"
   }
 }

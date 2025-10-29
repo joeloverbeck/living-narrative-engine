@@ -6,9 +6,10 @@ Body descriptors provide a convenient way to define overall body characteristics
 
 ## What are Body Descriptors?
 
-Body descriptors are recipe-level properties that automatically apply to generated body components. They cover four main categories:
+Body descriptors are recipe-level properties that automatically apply to generated body components. They cover five main categories:
 
-- **build**: Overall body build (skinny, slim, toned, athletic, shapely, thick, muscular, stocky)
+- **build**: Overall body build (skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky)
+- **height**: Overall height category (gigantic, very-tall, tall, average, short, petite, tiny)
 - **density**: Body hair density (hairless, sparse, light, moderate, hairy, very-hairy)
 - **composition**: Body composition (underweight, lean, average, soft, chubby, overweight, obese)
 - **skinColor**: Skin color (free-form text)
@@ -46,7 +47,7 @@ Body descriptors are defined in the `bodyDescriptors` section of anatomy recipes
 
 ### Partial Body Descriptors
 
-You don't need to specify all four descriptor types. You can define only the ones relevant to your recipe:
+You don't need to specify all descriptor types. You can define only the ones relevant to your recipe:
 
 ```json
 {
@@ -69,12 +70,25 @@ You don't need to specify all four descriptor types. You can define only the one
 
 - `skinny` - Very thin build
 - `slim` - Lean and slender
+- `lissom` - Gracefully flexible and slender
 - `toned` - Well-defined but not bulky
 - `athletic` - Sporty, fit physique
 - `shapely` - Curved, attractive build
+- `hourglass` - Pronounced waist-to-hip contrast
 - `thick` - Solid, substantial build
 - `muscular` - Heavily muscled
+- `hulking` - Massive, imposing frame
 - `stocky` - Short and sturdy
+
+#### Height Types
+
+- `gigantic` - Towering, colossal stature
+- `very-tall` - Significantly taller than average
+- `tall` - Noticeably tall build
+- `average` - Typical height range
+- `short` - Below average height
+- `petite` - Very small yet proportionate
+- `tiny` - Extremely small stature
 
 #### Density Types (Body Hair)
 
@@ -113,7 +127,7 @@ Body descriptors work with recipe inheritance. Child recipes can override parent
 {
   "recipeId": "mymod:base_humanoid",
   "bodyDescriptors": {
-    "build": "average",
+    "build": "toned",
     "composition": "average",
     "skinColor": "fair"
   }
@@ -357,7 +371,7 @@ Body descriptors are automatically validated against the anatomy recipe schema. 
 // ❌ Invalid - 'huge' is not a valid build type
 {
   "bodyDescriptors": {
-    "build": "huge"  // Should be one of: skinny, slim, toned, athletic, shapely, thick, muscular, stocky
+    "build": "huge"  // Should be one of: skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky
   }
 }
 
