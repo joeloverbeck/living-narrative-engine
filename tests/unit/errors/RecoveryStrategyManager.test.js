@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals
 import { createTestBed } from '../../common/testBed.js';
 import RecoveryStrategyManager from '../../../src/errors/RecoveryStrategyManager.js';
 import BaseError from '../../../src/errors/baseError.js';
+import * as errorHandlingConfig from '../../../src/config/errorHandling.config.js';
 
 describe('RecoveryStrategyManager - Core Recovery Logic', () => {
   let testBed;
@@ -28,6 +29,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     testBed.cleanup();
   });
 
@@ -340,6 +342,26 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const result = await promise;
       expect(result).toBe('constant-success');
     });
+
+    it('should default to exponential backoff when strategy is unknown', async () => {
+      const error = new Error('ETIMEDOUT');
+      const operation = jest.fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue('default-backoff-success');
+
+      const promise = recoveryManager.executeWithRecovery(operation, {
+        operationName: 'unknownBackoffOp',
+        maxRetries: 2,
+        backoff: 'mystery',
+        useCircuitBreaker: false
+      });
+
+      await jest.runAllTimersAsync();
+
+      const result = await promise;
+      expect(result).toBe('default-backoff-success');
+      expect(operation).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('Timeout Handling', () => {
@@ -473,6 +495,34 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       expect(result).toBe(0);
     });
 
+    it('should use generic fallback for validate operations', async () => {
+      const error = new Error('Validation failed');
+      const operation = jest.fn().mockRejectedValue(error);
+
+      const result = await recoveryManager.executeWithRecovery(operation, {
+        operationName: 'validateInput',
+        maxRetries: 1,
+        useCircuitBreaker: false,
+        useFallback: true
+      });
+
+      expect(result).toBe(false);
+    });
+
+    it('should use generic fallback for generate operations', async () => {
+      const error = new Error('Generation failed');
+      const operation = jest.fn().mockRejectedValue(error);
+
+      const result = await recoveryManager.executeWithRecovery(operation, {
+        operationName: 'generateReport',
+        maxRetries: 1,
+        useCircuitBreaker: false,
+        useFallback: true
+      });
+
+      expect(result).toEqual({});
+    });
+
     it('should handle fallback function errors gracefully', async () => {
       const error = new Error('Original failure');
       const operation = jest.fn().mockRejectedValue(error);
@@ -495,6 +545,28 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Fallback failed for failingFallbackOp', {
         error: 'Fallback failed'
       });
+    });
+
+    it('should use default configuration fallback when strategy has none', async () => {
+      const error = new Error('Strategy missing fallback');
+      const operation = jest.fn().mockRejectedValue(error);
+      const fallbackSpy = jest.spyOn(errorHandlingConfig, 'getFallbackValue');
+      fallbackSpy.mockReturnValue('config-fallback');
+
+      mockLogger.warn.mockClear();
+      recoveryManager.registerStrategy('DefaultFallbackError', {});
+
+      const result = await recoveryManager.executeWithRecovery(operation, {
+        operationName: 'render',
+        errorType: 'DefaultFallbackError',
+        maxRetries: 1,
+        useCircuitBreaker: false,
+        useFallback: true
+      });
+
+      expect(result).toBe('config-fallback');
+      expect(mockLogger.warn).toHaveBeenCalledWith('Using default fallback for render');
+      expect(fallbackSpy).toHaveBeenCalledWith(null, 'render');
     });
   });
 
