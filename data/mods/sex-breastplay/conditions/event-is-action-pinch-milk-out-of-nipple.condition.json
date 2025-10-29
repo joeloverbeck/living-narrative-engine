@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-breastplay:event-is-action-pinch-milk-out-of-nipple",
+  "description": "Checks if the triggering event is for the 'sex-breastplay:pinch_milk_out_of_nipple' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-breastplay:pinch_milk_out_of_nipple"
+    ]
+  }
+}
