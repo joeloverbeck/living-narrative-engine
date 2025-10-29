@@ -1,5 +1,29 @@
-import { describe, it, expect } from '@jest/globals';
+import { afterEach, describe, it, expect, jest } from '@jest/globals';
 import { formatTimestamp } from '../../../src/utils/textUtils.js';
+
+const OriginalDate = globalThis.Date;
+
+const installThrowingDate = (predicate) => {
+  class ThrowingDate extends OriginalDate {
+    constructor(value) {
+      if (predicate(value)) {
+        throw new Error('Date explosion');
+      }
+      super(value);
+    }
+  }
+
+  ThrowingDate.now = OriginalDate.now;
+  ThrowingDate.parse = OriginalDate.parse;
+  ThrowingDate.UTC = OriginalDate.UTC;
+
+  return ThrowingDate;
+};
+
+afterEach(() => {
+  globalThis.Date = OriginalDate;
+  jest.restoreAllMocks();
+});
 
 describe('formatTimestamp', () => {
   it('returns locale string for valid ISO input', () => {
@@ -42,5 +66,34 @@ describe('formatTimestamp', () => {
   it('supports Date instances as input', () => {
     const date = new Date('2023-05-15T08:30:00Z');
     expect(formatTimestamp(date)).toBe(date.toLocaleString());
+  });
+
+  it('returns fallback when Date construction throws for strings', () => {
+    globalThis.Date = installThrowingDate(
+      (value) => value === 'force-string-throw'
+    );
+    expect(formatTimestamp('force-string-throw', 'string-fallback')).toBe(
+      'string-fallback'
+    );
+  });
+
+  it('returns fallback when Date instances report non-finite time values', () => {
+    const date = new Date('2023-05-15T08:30:00Z');
+    jest.spyOn(date, 'getTime').mockReturnValue(Number.NaN);
+    expect(formatTimestamp(date, 'bad-date')).toBe('bad-date');
+  });
+
+  it('returns fallback when Date construction throws for numbers', () => {
+    globalThis.Date = installThrowingDate((value) => typeof value === 'number');
+    expect(formatTimestamp(42, 'number-fallback')).toBe('number-fallback');
+  });
+
+  it('supports objects coercible to valid timestamps', () => {
+    const coercible = {
+      [Symbol.toPrimitive]: () => '2024-03-20T10:15:30Z',
+    };
+
+    const expected = new Date('2024-03-20T10:15:30Z').toLocaleString();
+    expect(formatTimestamp(coercible)).toBe(expected);
   });
 });
