@@ -361,6 +361,40 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       expect(result).toBe('fallback result');
       expect(syncStrategy.fallback).toHaveBeenCalled();
     });
+
+    it('should apply registered transforms during synchronous handling', () => {
+      const transform = jest.fn((error) => {
+        error.addContext('syncTransformed', true);
+        return error;
+      });
+
+      centralErrorHandler.registerErrorTransform('BaseError', transform);
+
+      const error = new BaseError('Sync error', ErrorCodes.INVALID_DATA_GENERIC);
+
+      expect(() => centralErrorHandler.handleSync(error)).toThrow(BaseError);
+      expect(transform).toHaveBeenCalledWith(error);
+    });
+
+    it('should throw when sync strategy has no fallback', () => {
+      const syncStrategy = jest.fn();
+      syncStrategy.sync = true;
+
+      centralErrorHandler.registerRecoveryStrategy('SyncRecoverableError', syncStrategy);
+
+      class SyncRecoverableError extends BaseError {
+        constructor(message) {
+          super(message, 'SYNC_RECOVERABLE_ERROR');
+        }
+
+        isRecoverable() { return true; }
+      }
+
+      const error = new SyncRecoverableError('Needs fallback');
+
+      expect(() => centralErrorHandler.handleSync(error)).toThrow(BaseError);
+      expect(syncStrategy).not.toHaveBeenCalled();
+    });
   });
 
   describe('Fallback Values', () => {
@@ -485,6 +519,34 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       }
     });
 
+    it('should mark recovery attempted when no strategy exists', async () => {
+      class RecoverableError extends BaseError {
+        constructor(message) {
+          super(message, 'RECOVERABLE_ERROR');
+          this.name = 'RecoverableError';
+        }
+
+        isRecoverable() { return true; }
+      }
+
+      const recoverableError = new RecoverableError('Needs recovery');
+
+      mockLogger.error.mockClear();
+
+      try {
+        await centralErrorHandler.handle(recoverableError);
+        expect.fail('Expected handler to throw when no strategy is present');
+      } catch (enhancedError) {
+        expect(enhancedError).toBeInstanceOf(BaseError);
+        expect(enhancedError.getContext('recoveryAttempted')).toBe(true);
+      }
+
+      const metrics = centralErrorHandler.getMetrics();
+      expect(metrics.recoveredErrors).toBe(0);
+      expect(metrics.failedRecoveries).toBe(0);
+      expect(mockLogger.error).not.toHaveBeenCalledWith('Recovery failed', expect.any(Object));
+    });
+
     it('should handle non-BaseError correctly', async () => {
       const plainError = new Error('Plain error');
       const typeError = new TypeError('Type error');
@@ -530,6 +592,63 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       expect(metrics.errorsBySeverity.critical).toBe(1);
       expect(metrics.errorsBySeverity.warning).toBe(1);
       expect(metrics.errorsBySeverity.error).toBe(1);
+    });
+  });
+
+  describe('Context Truncation and Domain Listeners', () => {
+    it('should truncate oversized context payloads during classification', async () => {
+      const largePayload = 'x'.repeat(1500);
+      const error = new BaseError('Oversized context', ErrorCodes.INVALID_DATA_GENERIC, {
+        payload: largePayload
+      });
+
+      mockLogger.error.mockClear();
+
+      try {
+        await centralErrorHandler.handle(error, { extra: largePayload });
+      } catch {}
+
+      const errorLogCall = mockLogger.error.mock.calls.find(([message]) => message === 'Error occurred');
+      expect(errorLogCall).toBeDefined();
+      const [, logData] = errorLogCall;
+      expect(logData.context._truncated).toBe(true);
+      expect(logData.context._originalSize).toBeGreaterThan(centralErrorHandler.getMetrics().totalErrors);
+    });
+
+    it('should log informational severity with info logger', async () => {
+      class InfoError extends BaseError {
+        getSeverity() { return 'info'; }
+      }
+
+      const infoError = new InfoError('Informational', ErrorCodes.INVALID_DATA_GENERIC);
+
+      mockLogger.info.mockClear();
+
+      try {
+        await centralErrorHandler.handle(infoError);
+      } catch {}
+
+      expect(mockLogger.info).toHaveBeenCalledWith('Error handled', expect.objectContaining({
+        severity: 'info'
+      }));
+    });
+
+    it('should handle anatomy domain events through the event bus listener', async () => {
+      const anatomyEvent = {
+        payload: {
+          error: new Error('Anatomy failure'),
+          context: { domain: 'anatomy' }
+        }
+      };
+
+      const anatomyCallback = mockEventBus.subscribe.mock.calls.find(([event]) => event === 'ANATOMY_ERROR_OCCURRED')[1];
+      const handleSpy = jest.spyOn(centralErrorHandler, 'handle').mockResolvedValue(null);
+
+      await anatomyCallback(anatomyEvent);
+
+      expect(handleSpy).toHaveBeenCalledWith(anatomyEvent.payload.error, anatomyEvent.payload.context);
+
+      handleSpy.mockRestore();
     });
   });
 });
