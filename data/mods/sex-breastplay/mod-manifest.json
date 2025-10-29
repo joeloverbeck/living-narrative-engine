@@ -52,7 +52,9 @@
       "actors_with_breasts_facing_each_other_covered.scope",
       "actors_with_breasts_in_intimacy.scope"
     ],
-    "components": [],
+    "components": [
+      "is_lactating.component.json"
+    ],
     "events": [],
     "macros": [],
     "entities": {

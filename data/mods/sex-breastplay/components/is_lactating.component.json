@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "sex-breastplay:is_lactating",
+  "description": "Marker component indicating an entity is currently lactating so breastplay actions can branch on that state.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
