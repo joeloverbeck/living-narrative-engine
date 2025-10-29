@@ -185,6 +185,47 @@ describe('InputHandler', () => {
     expect(inputEl.focus).toHaveBeenCalled();
   });
 
+  test('core enable/disable events toggle command processing', () => {
+    const enableListener = ved.subscribe.mock.calls.find(
+      ([eventName]) => eventName === 'core:enable_input'
+    )[1];
+    const disableListener = ved.subscribe.mock.calls.find(
+      ([eventName]) => eventName === 'core:disable_input'
+    )[1];
+
+    enableListener();
+    inputEl.value = 'from-event';
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(callback).toHaveBeenCalledWith('from-event');
+    expect(inputEl.focus).toHaveBeenCalledTimes(1);
+
+    callback.mockClear();
+    disableListener();
+    inputEl.value = 'should-skip';
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  test('disable prevents commands until re-enabled and clear resets input', () => {
+    handler.enable();
+    inputEl.value = 'first';
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(callback).toHaveBeenCalledWith('first');
+
+    callback.mockClear();
+    handler.disable();
+    inputEl.value = 'second';
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(callback).not.toHaveBeenCalled();
+
+    handler.enable();
+    inputEl.value = 'third';
+    handler.clear();
+    expect(inputEl.value).toBe('');
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(callback).not.toHaveBeenCalled();
+  });
+
   test('handles events from injected document', () => {
     const globalSpy = jest.spyOn(dom, 'addEventListener');
     handler.enable();
@@ -213,5 +254,38 @@ describe('InputHandler', () => {
     expect(docMock.cb).toBeUndefined();
     const unsub = ved.subscribe.mock.results[0].value;
     expect(unsub).toHaveBeenCalled();
+  });
+
+  test('dispose logs warning when unsubscribe throws', () => {
+    const specialInput = dom.createElement('input');
+    dom.body.appendChild(specialInput);
+    const unsubError = jest.fn(() => {
+      throw new Error('fail');
+    });
+    const unsubOk = jest.fn();
+    const localVed = {
+      dispatch: jest.fn(),
+      subscribe: jest
+        .fn()
+        .mockReturnValueOnce(unsubError)
+        .mockReturnValueOnce(unsubOk),
+    };
+    const localDoc = createDocMock();
+    const localLogger = createLoggerMock();
+    const warnSpy = jest.spyOn(localLogger, 'warn');
+
+    const localHandler = new InputHandler(specialInput, callback, localVed, {
+      document: localDoc,
+      logger: localLogger,
+    });
+
+    localHandler.dispose();
+
+    expect(unsubError).toHaveBeenCalled();
+    expect(unsubOk).toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(
+      'InputHandler: Error during VED unsubscribe',
+      expect.any(Error)
+    );
   });
 });
