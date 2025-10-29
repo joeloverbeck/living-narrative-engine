@@ -4,6 +4,7 @@ import EventBus from '../../../../src/events/eventBus.js';
 import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
   ENTITY_REMOVED_ID,
 } from '../../../../src/constants/eventIds.js';
 import {
@@ -5070,13 +5071,17 @@ describe('ActivityDescriptionService', () => {
         hooks.subscribeToInvalidationEvents();
 
         hooks.setEntityNameCacheEntry('entity-2', 'Name');
+        hooks.setClosenessCacheEntry('entity-clos', ['partner']);
         expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(true);
+        expect(hooks.getCacheSnapshot().closeness.has('entity-clos')).toBe(true);
 
         handlers[COMPONENT_ADDED_ID]({ payload: {} });
         expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(true);
+        expect(hooks.getCacheSnapshot().closeness.has('entity-clos')).toBe(true);
 
         handlers[COMPONENT_REMOVED_ID]({ payload: {} });
         expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(true);
+        expect(hooks.getCacheSnapshot().closeness.has('entity-clos')).toBe(true);
 
         hooks.setEntityNameCacheEntry('entity-2', 'Name');
         handlers[COMPONENT_ADDED_ID]({
@@ -5087,6 +5092,37 @@ describe('ActivityDescriptionService', () => {
         });
 
         expect(hooks.getCacheSnapshot().entityName.has('entity-2')).toBe(false);
+
+        hooks.setClosenessCacheEntry('entity-clos', ['partner']);
+        handlers[COMPONENT_ADDED_ID]({
+          payload: {
+            componentTypeId: 'positioning:closeness',
+            entity: { id: 'entity-clos' },
+          },
+        });
+        expect(hooks.getCacheSnapshot().closeness.has('entity-clos')).toBe(false);
+
+        hooks.setClosenessCacheEntry('removed-clos', ['partner']);
+        handlers[COMPONENT_REMOVED_ID]({
+          payload: {
+            componentTypeId: 'positioning:closeness',
+            entity: { id: 'removed-clos' },
+          },
+        });
+        expect(hooks.getCacheSnapshot().closeness.has('removed-clos')).toBe(false);
+
+        hooks.setClosenessCacheEntry('batch-clos', ['partner']);
+        handlers[COMPONENTS_BATCH_ADDED_ID]({
+          payload: {
+            updates: [
+              {
+                componentTypeId: 'positioning:closeness',
+                instanceId: 'batch-clos',
+              },
+            ],
+          },
+        });
+        expect(hooks.getCacheSnapshot().closeness.has('batch-clos')).toBe(false);
 
         hooks.setEventBus(null);
       });
@@ -5615,6 +5651,7 @@ describe('ActivityDescriptionService', () => {
           signature: 'abc',
           index: {},
         });
+        hooks.setClosenessCacheEntry('jon', ['alicia']);
 
         await eventBus.dispatch(ENTITY_REMOVED_ID, {
           entity: { id: 'jon' },
@@ -5624,6 +5661,7 @@ describe('ActivityDescriptionService', () => {
         expect(snapshot.entityName.has('jon')).toBe(false);
         expect(snapshot.gender.has('jon')).toBe(false);
         expect(snapshot.activityIndex.has('jon')).toBe(false);
+        expect(snapshot.closeness.has('jon')).toBe(false);
       });
 
       it('supports batch invalidation helpers', () => {
@@ -5656,6 +5694,7 @@ describe('ActivityDescriptionService', () => {
           signature: 'abc',
           index: {},
         });
+        hooks.setClosenessCacheEntry('jon', ['alicia']);
 
         serviceWithEventBus.invalidateCache('jon', 'name');
 
@@ -5663,6 +5702,7 @@ describe('ActivityDescriptionService', () => {
         expect(snapshot.entityName.has('jon')).toBe(false);
         expect(snapshot.gender.has('jon')).toBe(true);
         expect(snapshot.activityIndex.has('jon')).toBe(true);
+        expect(snapshot.closeness.has('jon')).toBe(true);
       });
 
     it('invalidates gender and activity caches and warns on unknown types', () => {
@@ -5684,6 +5724,10 @@ describe('ActivityDescriptionService', () => {
       serviceWithEventBus.invalidateCache('jon', 'activity');
       expect(hooks.getCacheSnapshot().activityIndex.has('jon')).toBe(false);
 
+      hooks.setClosenessCacheEntry('jon', ['alicia']);
+      serviceWithEventBus.invalidateCache('jon', 'closeness');
+      expect(hooks.getCacheSnapshot().closeness.has('jon')).toBe(false);
+
       hooks.setEntityNameCacheEntry('jon', 'Jon');
       hooks.setGenderCacheEntry('jon', 'male');
       hooks.setActivityIndexCacheEntry('jon', {
@@ -5695,12 +5739,14 @@ describe('ActivityDescriptionService', () => {
           all: [],
         },
       });
+      hooks.setClosenessCacheEntry('jon', ['alicia']);
       serviceWithEventBus.invalidateCache('jon', 'all');
 
       const snapshot = hooks.getCacheSnapshot();
       expect(snapshot.entityName.has('jon')).toBe(false);
       expect(snapshot.gender.has('jon')).toBe(false);
       expect(snapshot.activityIndex.has('jon')).toBe(false);
+      expect(snapshot.closeness.has('jon')).toBe(false);
 
       serviceWithEventBus.invalidateCache('jon', 'unknown');
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -6072,6 +6118,47 @@ describe('ActivityDescriptionService', () => {
         originalImplementation ?? defaultGetEntityInstanceImplementation
       );
     });
+
+    it('continues collecting entity data when a component accessor throws', () => {
+      const hooks = service.getTestHooks();
+
+      mockLogger.warn.mockClear();
+
+      const entity = {
+        id: 'resilient-entity',
+        componentTypeIds: ['safe', 'fragile', 'stable'],
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'safe') {
+            return { ok: true };
+          }
+
+          if (componentId === 'fragile') {
+            throw new Error('component exploded');
+          }
+
+          if (componentId === 'stable') {
+            return { label: 'value' };
+          }
+
+          return undefined;
+        }),
+      };
+
+      const extracted = hooks.extractEntityData(entity);
+
+      expect(extracted).toEqual({
+        id: 'resilient-entity',
+        components: {
+          safe: { ok: true },
+          stable: { label: 'value' },
+        },
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to extract component data for fragile'),
+        expect.any(Error)
+      );
+    });
   });
 
   describe('deduplication handling', () => {
@@ -6247,6 +6334,60 @@ describe('ActivityDescriptionService', () => {
           template: '{actor} salutes {target}',
           priority: 7,
         })
+      );
+    });
+
+    it('warns and recovers when inline metadata provides invalid targetRole output', async () => {
+      mockLogger.warn.mockClear();
+
+      const inlineComponentId = 'inline:malformed-target';
+
+      const actorEntity = {
+        id: 'actor-inline-warning',
+        componentTypeIds: ['core:name', inlineComponentId],
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === inlineComponentId) {
+            return {
+              partner: { id: 'not-a-string' },
+              activityMetadata: {
+                shouldDescribeInActivity: true,
+                template: '{actor} greets {target}',
+                targetRole: 'partner',
+                priority: 55,
+              },
+            };
+          }
+
+          if (componentId === 'core:name') {
+            return { text: 'Actor Inline' };
+          }
+
+          return undefined;
+        }),
+        hasComponent: jest.fn().mockReturnValue(false),
+      };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-inline-warning') {
+          return actorEntity;
+        }
+
+        return defaultGetEntityInstanceImplementation(id);
+      });
+
+      const description = await service.generateActivityDescription(
+        'actor-inline-warning'
+      );
+
+      expect(description).toContain('Actor Inline greets');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'invalid target entity reference for role partner'
+        )
+      );
+
+      mockEntityManager.getEntityInstance.mockImplementation(
+        defaultGetEntityInstanceImplementation
       );
     });
 

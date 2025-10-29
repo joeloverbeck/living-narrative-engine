@@ -71,7 +71,7 @@ describe('Activity Description - Context Edge Cases', () => {
       gender: 'female',
     });
 
-    entityManager.addComponent(actor.id, 'positioning:closeness', {
+    await entityManager.addComponent(actor.id, 'positioning:closeness', {
       partners: [alicia.id],
     });
 
@@ -110,5 +110,61 @@ describe('Activity Description - Context Edge Cases', () => {
     const description = await service.generateActivityDescription(actor.id);
 
     expect(description.toLowerCase()).toContain('fiercely');
+  });
+
+  it('should update relationship tone immediately after closeness cache invalidation', async () => {
+    const actor = await createActor(entityManager, {
+      id: 'jon',
+      name: 'Jon Ureña',
+      gender: 'male',
+    });
+    const alicia = await createActor(entityManager, {
+      id: 'alicia',
+      name: 'Alicia Western',
+      gender: 'female',
+    });
+
+    await entityManager.addComponent(actor.id, 'positioning:closeness', {
+      partners: [alicia.id],
+    });
+
+    addInlineActivity(entityManager, actor.id, 'test:activity_generic', {
+      targetId: alicia.id,
+      targetRole: 'target',
+      template: '{actor} is sparring with {target}',
+      priority: 95,
+    });
+
+    const hooks = service.getTestHooks();
+
+    const baselineContext = hooks.buildActivityContext(actor.id, {
+      targetEntityId: alicia.id,
+      priority: 95,
+    });
+    expect(baselineContext.relationshipTone).toBe('closeness_partner');
+
+    await entityManager.addComponent(actor.id, 'positioning:closeness', {
+      partners: [],
+    });
+
+    const closenessAfterUpdate = entityManager
+      .getEntityInstance(actor.id)
+      .getComponentData('positioning:closeness');
+    expect(Array.isArray(closenessAfterUpdate?.partners)).toBe(true);
+    expect(closenessAfterUpdate.partners).toHaveLength(0);
+
+    const cachedContext = hooks.buildActivityContext(actor.id, {
+      targetEntityId: alicia.id,
+      priority: 95,
+    });
+    expect(cachedContext.relationshipTone).toBe('closeness_partner');
+
+    service.invalidateCache(actor.id, 'closeness');
+
+    const refreshedContext = hooks.buildActivityContext(actor.id, {
+      targetEntityId: alicia.id,
+      priority: 95,
+    });
+    expect(refreshedContext.relationshipTone).toBe('neutral');
   });
 });
