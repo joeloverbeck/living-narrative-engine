@@ -165,6 +165,77 @@ describe('GameSessionManager', () => {
       expect(stopError.cause).toBe(resetError);
     });
 
+    it('should append additional reset errors when the failure already tracks an array', async () => {
+      engineState.setStarted('ArrayWorld');
+      const stopError = new Error('Stop failure');
+      stopError.cause = { existing: true };
+      const existingResetError = new Error('Existing reset error');
+      stopError.resetErrors = [existingResetError];
+      const resetError = new Error('Reset failure');
+      stopFn.mockRejectedValue(stopError);
+      resetCoreGameStateFn.mockImplementation(() => {
+        throw resetError;
+      });
+
+      await expect(
+        gameSessionManager.prepareForNewGameSession('ArrayWorld')
+      ).rejects.toBe(stopError);
+
+      expect(stopError.resetErrors).toHaveLength(2);
+      expect(stopError.resetErrors).toContain(resetError);
+      expect(stopError.resetErrors).toContain(existingResetError);
+    });
+
+    it('should convert existing reset error metadata into an array when augmenting failure details', async () => {
+      engineState.setStarted('ConversionWorld');
+      const stopError = new Error('Stop failure');
+      stopError.cause = { existing: true };
+      stopError.resetErrors = 'previous reset';
+      const resetError = new Error('Reset failure');
+      stopFn.mockRejectedValue(stopError);
+      resetCoreGameStateFn.mockImplementation(() => {
+        throw resetError;
+      });
+
+      await expect(
+        gameSessionManager.prepareForNewGameSession('ConversionWorld')
+      ).rejects.toBe(stopError);
+
+      expect(Array.isArray(stopError.resetErrors)).toBe(true);
+      expect(stopError.resetErrors).toEqual(['previous reset', resetError]);
+    });
+
+    it('should recover when enriching failure metadata initially throws', async () => {
+      engineState.setStarted('SetterWorld');
+      const stopError = new Error('Stop failure');
+      let causeSetterCalls = 0;
+      Object.defineProperty(stopError, 'cause', {
+        configurable: true,
+        enumerable: true,
+        get() {
+          return this._cause;
+        },
+        set(value) {
+          causeSetterCalls += 1;
+          if (causeSetterCalls === 1) {
+            throw new Error('Setter failure');
+          }
+          this._cause = value;
+        },
+      });
+      const resetError = new Error('Reset failure');
+      stopFn.mockRejectedValue(stopError);
+      resetCoreGameStateFn.mockImplementation(() => {
+        throw resetError;
+      });
+
+      await expect(
+        gameSessionManager.prepareForNewGameSession('SetterWorld')
+      ).rejects.toBe(stopError);
+
+      expect(stopError.resetErrors).toEqual([resetError]);
+    });
+
     it('should log and rethrow when resetCoreGameStateFn throws without prior failures', async () => {
       const resetErrorMessage = 'Reset failure';
       resetCoreGameStateFn.mockImplementation(() => {
@@ -399,6 +470,20 @@ describe('GameSessionManager', () => {
         {
           titleMessage: 'Loading My Adventure Slot 1...',
           inputDisabledMessage: 'Loading game from My Adventure Slot 1...',
+        }
+      );
+    });
+
+    it('should preserve invalid percent-encoded segments when formatting save identifiers', async () => {
+      const malformedIdentifier = 'saves/manual_saves/manual_save_%E0%.sav';
+
+      await gameSessionManager.prepareForLoadGameSession(malformedIdentifier);
+
+      expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENGINE_OPERATION_IN_PROGRESS_UI,
+        {
+          titleMessage: 'Loading %E0%...',
+          inputDisabledMessage: 'Loading game from %E0%...',
         }
       );
     });
@@ -977,6 +1062,84 @@ describe('GameSessionManager', () => {
 
       expect(engineState.activeWorld).toBe('false');
       expect(startEngineFn).toHaveBeenCalledWith('false');
+    });
+
+    it('should ignore non-finite numeric metadata values when resolving the world name', async () => {
+      const saveData = {
+        metadata: { gameTitle: Infinity },
+        entities: [],
+        gameState: {},
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'inf-slot'
+      );
+
+      expect(engineState.activeWorld).toBe('inf-slot');
+      expect(startEngineFn).toHaveBeenCalledWith('inf-slot');
+      expect(result.success).toBe(true);
+    });
+
+    it('should fall back when coercing metadata values throws', async () => {
+      const problematic = {
+        toString() {
+          throw new Error('coercion failed');
+        },
+      };
+      const saveData = {
+        metadata: { gameTitle: problematic },
+        entities: [],
+        gameState: {},
+      };
+
+      const result = await gameSessionManager.finalizeLoadSuccess(
+        saveData,
+        'coercion-slot'
+      );
+
+      expect(engineState.activeWorld).toBe('coercion-slot');
+      expect(startEngineFn).toHaveBeenCalledWith('coercion-slot');
+      expect(result.success).toBe(true);
+    });
+
+    it('should treat metadata containing backslashes as file paths', async () => {
+      const saveData = {
+        metadata: { gameTitle: '', worldName: 'C\\\\saves\\\\manual_save_Episode1.sav' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'windows-slot');
+
+      expect(engineState.activeWorld).toBe('Episode1');
+      expect(startEngineFn).toHaveBeenCalledWith('Episode1');
+    });
+
+    it('should treat metadata ending with a slash as a path and fall back gracefully', async () => {
+      const saveData = {
+        metadata: { gameTitle: '', worldName: './unreadable/path/' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'slash-slot');
+
+      expect(engineState.activeWorld).toBe('slash-slot');
+      expect(startEngineFn).toHaveBeenCalledWith('slash-slot');
+    });
+
+    it('should return trimmed metadata when underscore replacement removes all characters', async () => {
+      const saveData = {
+        metadata: { gameTitle: '___' },
+        entities: [],
+        gameState: {},
+      };
+
+      await gameSessionManager.finalizeLoadSuccess(saveData, 'underscore-slot');
+
+      expect(engineState.activeWorld).toBe('___');
+      expect(startEngineFn).toHaveBeenCalledWith('___');
     });
   });
 
