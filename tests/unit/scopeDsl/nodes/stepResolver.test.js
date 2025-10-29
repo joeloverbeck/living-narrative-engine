@@ -272,6 +272,32 @@ describe('StepResolver', () => {
 
         expect(result).toEqual(new Set([42]));
       });
+
+      it('should use error handler when entity component access throws', () => {
+        const node = { type: 'Step', field: 'core:name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getComponentData.mockImplementation(() => {
+          throw new Error('Component lookup failed');
+        });
+
+        const result = resolverWithErrorHandler.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+        expect(errorHandler.handleError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message:
+              "StepResolver: Failed to extract field 'core:name' from entity 'entity1': Component lookup failed",
+          }),
+          { entityId: 'entity1', field: 'core:name', originalError: 'Component lookup failed' },
+          'StepResolver',
+          'SCOPE_3004'
+        );
+      });
     });
 
     describe('location.entities() special case', () => {
@@ -470,6 +496,99 @@ describe('StepResolver', () => {
 
         expect(result).toEqual(
           new Set([{ first: 'Entity', last: 'Name' }, 'Object Name'])
+        );
+      });
+    });
+
+    describe('diagnostics and complex parent values', () => {
+      it('should log diagnostics for object field access when logger is available', () => {
+        const node = { type: 'Step', field: 'core:details', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const logger = { debug: jest.fn() };
+        const ctx = {
+          dispatcher,
+          trace,
+          actorEntity,
+          runtimeCtx: { logger },
+        };
+
+        const parentObject = {
+          'core:details': 'revealed',
+          extra: true,
+        };
+
+        dispatcher.resolve.mockReturnValue(new Set([parentObject]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set(['revealed']));
+        expect(logger.debug).toHaveBeenCalledWith(
+          '[DIAGNOSTIC] StepResolver - Accessing field from object:',
+          expect.objectContaining({
+            field: 'core:details',
+            hasField: true,
+            valuePreview: 'revealed',
+            valueType: 'string',
+            objectKeys: expect.arrayContaining(['core:details', 'extra']),
+          })
+        );
+      });
+
+      it('should collect values from Set parent objects', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const ctx = { dispatcher, trace, actorEntity };
+
+        const nestedSet = new Set([
+          { name: 'Alpha', extra: 1 },
+          { name: 'Beta', extra: 2 },
+        ]);
+
+        dispatcher.resolve.mockReturnValue(new Set([nestedSet]));
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toEqual(new Set(['Alpha', 'Beta']));
+      });
+
+      it('should use error handler when logger diagnostics throw during component resolution', () => {
+        const node = { type: 'Step', field: 'components', parent: {} };
+        const actorEntity = createTestEntity('test-actor', {
+          'core:actor': {},
+        });
+        const failingLogger = {
+          debug: jest.fn(() => {
+            throw new Error('logger failed');
+          }),
+        };
+        const ctx = {
+          dispatcher,
+          trace,
+          actorEntity,
+          runtimeCtx: { logger: failingLogger },
+        };
+
+        dispatcher.resolve.mockReturnValue(new Set(['entity1']));
+        entitiesGateway.getEntityInstance.mockReturnValue({
+          componentTypeIds: ['core:info'],
+        });
+        entitiesGateway.getComponentData.mockReturnValue({ description: 'test' });
+
+        const result = resolverWithErrorHandler.resolve(node, ctx);
+
+        expect(result).toEqual(new Set());
+        expect(errorHandler.handleError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message:
+              "StepResolver: Failed to resolve entity parent value for field 'components' on entity 'entity1': logger failed",
+          }),
+          { entityId: 'entity1', field: 'components', originalError: 'logger failed' },
+          'StepResolver',
+          'SCOPE_3005'
         );
       });
     });
