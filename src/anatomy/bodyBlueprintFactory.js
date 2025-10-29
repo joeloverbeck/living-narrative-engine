@@ -369,8 +369,11 @@ export class BodyBlueprintFactory {
     }
 
     // Generate sockets and slots from template
-    const generatedSockets = this.#socketGenerator.generateSockets(template);
-    const generatedSlots = this.#slotGenerator.generateBlueprintSlots(template);
+    const generatedSockets =
+      this.#socketGenerator.generateSockets(template) || [];
+    const generatedSlots =
+      this.#slotGenerator.generateBlueprintSlots(template) || {};
+    const additionalSlots = blueprint.additionalSlots || {};
 
     this.#logger.info(
       `BodyBlueprintFactory: Generated ${generatedSockets.length} sockets and ${Object.keys(generatedSlots).length} slots from template`
@@ -381,7 +384,7 @@ export class BodyBlueprintFactory {
       ...blueprint,
       slots: {
         ...generatedSlots,
-        ...(blueprint.additionalSlots || {}),
+        ...additionalSlots,
       },
       _generatedSockets: generatedSockets,
     };
