@@ -19,12 +19,7 @@ describe('EntityInstanceData', () => {
   const validInstanceId = 'instance-123';
 
   it('should be creatable with valid instanceId and EntityDefinition', () => {
-    const instanceData = new EntityInstanceData(
-      validInstanceId,
-      entityDef,
-      {},
-      console
-    );
+    const instanceData = new EntityInstanceData(validInstanceId, entityDef);
     expect(instanceData).toBeInstanceOf(EntityInstanceData);
     expect(instanceData.instanceId).toBe(validInstanceId);
     expect(instanceData.definition).toBe(entityDef);
@@ -50,6 +45,17 @@ describe('EntityInstanceData', () => {
     expect(instanceData.overrides['custom:inventory']).toEqual({
       items: ['item1'],
     });
+  });
+
+  it('should default overrides to an empty object when null is provided', () => {
+    const instanceData = new EntityInstanceData(
+      validInstanceId,
+      entityDef,
+      null,
+      console
+    );
+
+    expect(instanceData.overrides).toEqual({});
   });
 
   it('should throw an error if instanceId is invalid', () => {
@@ -130,6 +136,19 @@ describe('EntityInstanceData', () => {
       const status = instanceData.getComponentData('custom:status');
       expect(status).toEqual({ effect: 'poisoned' });
       expect(status).not.toBe(instanceData.overrides['custom:status']);
+    });
+
+    it('should return null when an override explicitly nullifies the component', () => {
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {
+          'core:health': null,
+        },
+        console
+      );
+
+      expect(instanceData.getComponentData('core:health')).toBeNull();
     });
 
     it('should return undefined if component is not in definition or overrides', () => {
@@ -268,6 +287,17 @@ describe('EntityInstanceData', () => {
       expect(instanceData.removeComponentOverride('core:health')).toBe(false);
     });
 
+    it('should return false when component type id is invalid', () => {
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {},
+        console
+      );
+
+      expect(instanceData.removeComponentOverride('')).toBe(false);
+    });
+
     it('getComponentData should fall back to definition after override removal', () => {
       const instanceData = new EntityInstanceData(validInstanceId, entityDef, {
         'core:health': { current: 30 },
@@ -306,6 +336,58 @@ describe('EntityInstanceData', () => {
       expect(instanceData.hasComponent('non:existent')).toBe(false);
     });
 
+    it('should warn and delegate to hasComponentOverride when deprecated flag is true', () => {
+      const logger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {
+          'custom:status': { effect: 'stealth' },
+        },
+        logger
+      );
+
+      expect(instanceData.hasComponent('custom:status', true)).toBe(true);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'EntityInstanceData.hasComponent: The checkOverrideOnly flag is deprecated. Use hasComponentOverride(componentTypeId) instead.'
+      );
+    });
+
+    it('should warn when deprecated flag is supplied and continue to definition lookup when false', () => {
+      const logger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {},
+        logger
+      );
+
+      expect(instanceData.hasComponent('core:health', false)).toBe(true);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'EntityInstanceData.hasComponent: The checkOverrideOnly flag is deprecated. Use hasComponentOverride(componentTypeId) instead.'
+      );
+    });
+
+    it('should return false when provided component type id is invalid', () => {
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {},
+        console
+      );
+      expect(instanceData.hasComponent('   ')).toBe(false);
+    });
+
     it('should throw a TypeError when attempting to set a null override', () => {
       const instanceData = new EntityInstanceData(
         validInstanceId,
@@ -316,6 +398,46 @@ describe('EntityInstanceData', () => {
       expect(() =>
         instanceData.setComponentOverride('core:health', null)
       ).toThrow(TypeError);
+    });
+  });
+
+  describe('hasComponentOverride', () => {
+    it('should return true when a non-null override exists', () => {
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {
+          'custom:status': { effect: 'frozen' },
+        },
+        console
+      );
+
+      expect(instanceData.hasComponentOverride('custom:status')).toBe(true);
+    });
+
+    it('should return false when override is missing or null', () => {
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {
+          'custom:status': null,
+        },
+        console
+      );
+
+      expect(instanceData.hasComponentOverride('custom:status')).toBe(false);
+      expect(instanceData.hasComponentOverride('non:existent')).toBe(false);
+    });
+
+    it('should return false when component type id is invalid', () => {
+      const instanceData = new EntityInstanceData(
+        validInstanceId,
+        entityDef,
+        {},
+        console
+      );
+
+      expect(instanceData.hasComponentOverride('')).toBe(false);
     });
   });
 
@@ -376,6 +498,37 @@ describe('EntityInstanceData', () => {
         ])
       );
       expect(ids.length).toBe(4);
+    });
+
+    it('should emit debug information for the park bench instance', () => {
+      const logger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+      const instanceData = new EntityInstanceData(
+        'p_erotica:park_bench_instance',
+        entityDef,
+        {
+          'custom:bench-state': { occupied: true },
+        },
+        logger
+      );
+
+      const ids = instanceData.allComponentTypeIds;
+
+      expect(logger.info).toHaveBeenCalledWith(
+        `[DEBUG] EntityInstanceData.allComponentTypeIds for park bench:`,
+        expect.objectContaining({
+          instanceId: 'p_erotica:park_bench_instance',
+          definitionComponents: expect.arrayContaining(
+            Object.keys(entityDef.components)
+          ),
+          overrides: expect.arrayContaining(['custom:bench-state']),
+          result: expect.arrayContaining(ids),
+        })
+      );
     });
   });
 });
