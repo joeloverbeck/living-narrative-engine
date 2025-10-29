@@ -122,6 +122,28 @@ describe('VisualizerState - State Machine', () => {
       }).toThrow('Invalid state transition');
     });
   });
+
+  describe('Input Validation', () => {
+    it('should require a non-empty string when selecting an entity', () => {
+      expect(() => {
+        visualizerState.selectEntity('');
+      }).toThrow('Entity ID must be a non-empty string');
+
+      expect(() => {
+        visualizerState.selectEntity();
+      }).toThrow('Entity ID must be a non-empty string');
+    });
+
+    it('should require anatomy data to be a non-null object', () => {
+      expect(() => {
+        visualizerState.setAnatomyData(null);
+      }).toThrow('Anatomy data must be a non-null object');
+
+      expect(() => {
+        visualizerState.setAnatomyData('not-an-object');
+      }).toThrow('Anatomy data must be a non-null object');
+    });
+  });
 });
 
 describe('VisualizerState - Observer Pattern', () => {
@@ -194,6 +216,16 @@ describe('VisualizerState - Observer Pattern', () => {
         anatomyData: anatomyData,
         error: null,
       });
+    });
+
+    it('should require observers to be functions', () => {
+      expect(() => {
+        visualizerState.subscribe(null);
+      }).toThrow('Observer must be a function');
+
+      expect(() => {
+        visualizerState.subscribe('not-a-function');
+      }).toThrow('Observer must be a function');
     });
   });
 
@@ -273,6 +305,22 @@ describe('VisualizerState - Error Handling', () => {
       expect(() => {
         visualizerState.retry();
       }).toThrow('Cannot retry without previous entity selection');
+    });
+
+    it('should require error instances when setting error state', () => {
+      expect(() => {
+        visualizerState.setError('not-an-error');
+      }).toThrow('Error must be an Error instance');
+
+      expect(() => {
+        visualizerState.setError({ message: 'still not an Error' });
+      }).toThrow('Error must be an Error instance');
+    });
+
+    it('should only allow retry from the ERROR state', () => {
+      expect(() => {
+        visualizerState.retry();
+      }).toThrow('Can only retry from ERROR state');
     });
   });
 });
