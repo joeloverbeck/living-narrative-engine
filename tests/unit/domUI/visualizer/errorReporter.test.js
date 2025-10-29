@@ -825,6 +825,154 @@ describe('ErrorReporter', () => {
     });
   });
 
+  describe('Internal helper coverage', () => {
+    it('should consider allowed severities reportable when classifier hook is absent', () => {
+      ErrorClassifier.shouldReport = null;
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      expect(errorReporter._shouldReport({ severity: 'HIGH' })).toBe(true);
+    });
+
+    it('should skip metrics collection gracefully when collector is missing', async () => {
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      await expect(
+        errorReporter._collectMetrics({
+          classification: { severity: 'HIGH', category: 'render' },
+          context: { metadata: {} },
+        })
+      ).resolves.toBeUndefined();
+    });
+
+    it('should recursively sanitize nested sensitive keys', () => {
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      const sanitized = errorReporter._sanitizeData({
+        metadata: {
+          apiKey: 'top-secret',
+          nested: {
+            authToken: 'nested-secret',
+          },
+          optional: null,
+        },
+      });
+
+      expect(sanitized.metadata.apiKey).toBe('[REDACTED]');
+      expect(sanitized.metadata.nested.authToken).toBe('[REDACTED]');
+      expect(sanitized.metadata.optional).toBeNull();
+    });
+
+    it('should return non-object inputs unchanged during sanitization', () => {
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      expect(errorReporter._sanitizeData('plain-text')).toBe('plain-text');
+      expect(errorReporter._sanitizeData(null)).toBeNull();
+    });
+
+    it('should collect viewport information when browser globals are present', async () => {
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      const info = await errorReporter._collectEnvironmentInfo(undefined);
+
+      expect(info.viewport).toEqual({
+        width: global.window.innerWidth,
+        height: global.window.innerHeight,
+        devicePixelRatio: global.window.devicePixelRatio,
+      });
+    });
+
+    it('should expose unknown URL when browser location is unavailable', async () => {
+      const urlSpy = jest.spyOn(ErrorReporter, 'resolveCurrentUrl').mockReturnValue(undefined);
+
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      const info = await errorReporter._collectEnvironmentInfo(undefined);
+
+      expect(info.url).toBe('unknown');
+
+      urlSpy.mockRestore();
+    });
+
+    it('should redact url details when includeUrl configuration is disabled', async () => {
+      errorReporter = new ErrorReporter(
+        {
+          logger: mockLogger,
+          eventDispatcher: mockEventDispatcher,
+        },
+        {
+          includeUrl: false,
+        }
+      );
+
+      const info = await errorReporter._collectEnvironmentInfo(undefined);
+
+      expect(info.url).toBe('[REDACTED]');
+    });
+
+    it('should resolve current url from window when provided globals include location', () => {
+      expect(
+        ErrorReporter.resolveCurrentUrl({ window: { location: { href: 'https://example.app/' } } })
+      ).toBe('https://example.app/');
+    });
+
+    it('should fall back to global location when window is unavailable', () => {
+      expect(
+        ErrorReporter.resolveCurrentUrl({ location: { href: 'https://fallback.example/' } })
+      ).toBe('https://fallback.example/');
+    });
+
+    it('should return undefined when no location information exists', () => {
+      expect(
+        ErrorReporter.resolveCurrentUrl({ window: { location: {} }, location: {} })
+      ).toBeUndefined();
+    });
+
+    it('should fall back to global location when window lacks href', () => {
+      expect(
+        ErrorReporter.resolveCurrentUrl({
+          window: { location: {} },
+          location: { href: 'https://fallback.example/with-global' },
+        })
+      ).toBe('https://fallback.example/with-global');
+    });
+
+    it('should leverage globalThis fallback when globals argument is omitted', () => {
+      const expectedHref = global.window.location.href;
+
+      expect(ErrorReporter.resolveCurrentUrl()).toBe(expectedHref);
+    });
+
+    it('should skip viewport attachment when window globals are missing', async () => {
+      errorReporter = new ErrorReporter({
+        logger: mockLogger,
+        eventDispatcher: mockEventDispatcher,
+      });
+
+      const info = await errorReporter._collectEnvironmentInfo({});
+
+      expect(info).not.toHaveProperty('viewport');
+    });
+  });
+
   describe('Edge cases and error handling', () => {
     beforeEach(() => {
       errorReporter = new ErrorReporter({
