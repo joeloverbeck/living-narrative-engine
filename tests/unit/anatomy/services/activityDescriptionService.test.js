@@ -4785,6 +4785,31 @@ describe('ActivityDescriptionService', () => {
           expect(hooks.formatActivityDescription([], { id: 'actor' })).toBe('');
         });
 
+        it('short-circuits when activity integration is disabled in the config', () => {
+          const hooks = service.getTestHooks();
+          mockLogger.debug.mockClear();
+
+          mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValueOnce({
+            enabled: false,
+          });
+
+          const description = hooks.formatActivityDescription(
+            [
+              {
+                type: 'inline',
+                template: '{actor} waits',
+                targetEntityId: 'target-disabled',
+              },
+            ],
+            { id: 'actor-disabled' }
+          );
+
+          expect(description).toBe('');
+          expect(mockLogger.debug).toHaveBeenCalledWith(
+            'Activity description formatting disabled via configuration'
+          );
+        });
+
         it('handles iterable grouping results and phrase generation failures', () => {
           const hooks = service.getTestHooks();
           mockLogger.warn.mockClear();
@@ -5677,10 +5702,57 @@ describe('ActivityDescriptionService', () => {
         expect(snapshot.has('bobby')).toBe(true);
       });
 
-    it('warns when invalidateEntities receives non-array input', () => {
-      mockLogger.warn.mockClear();
+      it('ignores batch component events that lack valid updates', async () => {
+        hooks.setEntityNameCacheEntry('batch-invalid', 'Name');
+        hooks.setGenderCacheEntry('batch-invalid', 'female');
+        hooks.setActivityIndexCacheEntry('batch-invalid', {
+          signature: 'sig',
+          index: {},
+        });
 
-      serviceWithEventBus.invalidateEntities('jon');
+        await eventBus.dispatch(COMPONENTS_BATCH_ADDED_ID, null);
+        await eventBus.dispatch(COMPONENTS_BATCH_ADDED_ID, {
+          updates: [],
+        });
+
+        const snapshot = hooks.getCacheSnapshot();
+        expect(snapshot.entityName.has('batch-invalid')).toBe(true);
+        expect(snapshot.gender.has('batch-invalid')).toBe(true);
+        expect(snapshot.activityIndex.has('batch-invalid')).toBe(true);
+      });
+
+      it('processes batch component updates and invalidates relevant caches', async () => {
+        hooks.setEntityNameCacheEntry('batch-entity', 'Batch Name');
+        hooks.setGenderCacheEntry('batch-entity', 'nonbinary');
+        hooks.setActivityIndexCacheEntry('batch-entity', {
+          signature: 'sig',
+          index: {},
+        });
+        hooks.setClosenessCacheEntry('batch-entity', ['friend']);
+
+        await eventBus.dispatch(COMPONENTS_BATCH_ADDED_ID, {
+          updates: [
+            { componentTypeId: NAME_COMPONENT_ID },
+            { componentTypeId: NAME_COMPONENT_ID, instanceId: 'batch-entity' },
+            { componentTypeId: 'core:gender', entityId: 'batch-entity' },
+            {
+              componentTypeId: 'activity:description_metadata',
+              entity: { id: 'batch-entity' },
+            },
+          ],
+        });
+
+        const snapshot = hooks.getCacheSnapshot();
+        expect(snapshot.entityName.has('batch-entity')).toBe(false);
+        expect(snapshot.gender.has('batch-entity')).toBe(false);
+        expect(snapshot.activityIndex.has('batch-entity')).toBe(false);
+        expect(snapshot.closeness.has('batch-entity')).toBe(true);
+      });
+
+      it('warns when invalidateEntities receives non-array input', () => {
+        mockLogger.warn.mockClear();
+
+        serviceWithEventBus.invalidateEntities('jon');
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'ActivityDescriptionService: invalidateEntities called with non-array'
@@ -6388,6 +6460,24 @@ describe('ActivityDescriptionService', () => {
 
       mockEntityManager.getEntityInstance.mockImplementation(
         defaultGetEntityInstanceImplementation
+      );
+    });
+
+    it('warns when inline metadata target resolves to a blank string', () => {
+      const hooks = service.getTestHooks();
+      mockLogger.warn.mockClear();
+
+      const parsed = hooks.parseInlineMetadata(
+        'inline:blank-target',
+        { entityId: '   ' },
+        { template: '{actor} waves', targetRole: 'entityId' }
+      );
+
+      expect(parsed).toEqual(
+        expect.objectContaining({ targetEntityId: null, targetId: null })
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('blank target entity reference')
       );
     });
 

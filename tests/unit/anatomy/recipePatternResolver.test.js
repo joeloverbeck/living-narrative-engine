@@ -347,7 +347,7 @@ describe('RecipePatternResolver', () => {
       );
     });
 
-    it('should return empty when appendage data disappears after validation', () => {
+    it('should throw when appendage data disappears after validation', () => {
       const validationTemplate = {
         topology: {
           appendages: [{ type: 'tail', id: 'main_tail' }],
@@ -366,21 +366,20 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        id: 'dragon:body_blueprint',
         schemaVersion: '2.0',
         structureTemplate: 'dragon:body',
         slots: {},
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(result.slots).toEqual({});
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Found 0 appendages matching type 'tail'"
-      );
-      expect(mockSlotGenerator.extractSlotKeysFromAppendage).not.toHaveBeenCalled();
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/appendage:tail/);
+      expect(resolve).toThrow(/not found in structure template/);
     });
 
-    it('should return empty when limb set data disappears after validation', () => {
+    it('should throw when limb set data disappears after validation', () => {
       const validationTemplate = {
         topology: {
           limbSets: [{ type: 'leg', id: 'front' }],
@@ -399,18 +398,17 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        id: 'beast:body_blueprint',
         schemaVersion: '2.0',
         structureTemplate: 'beast:body',
         slots: {},
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(result.slots).toEqual({});
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Found 0 limb sets matching type 'leg'"
-      );
-      expect(mockSlotGenerator.extractSlotKeysFromLimbSet).not.toHaveBeenCalled();
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/limbSet:leg/);
+      expect(resolve).toThrow(/not found in structure template/);
     });
   });
 
@@ -505,35 +503,35 @@ describe('RecipePatternResolver', () => {
       });
     });
 
-    it('should return empty when no matches', () => {
+    it('should throw when no slots match the wildcard pattern', () => {
       const recipe = {
         patterns: [{ matchesPattern: 'wing_*', partType: 'wing_segment' }],
       };
 
       const blueprint = {
+        id: 'anatomy:test_blueprint',
         slots: {
           leg_left: {},
           leg_right: {},
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(result.slots).toEqual({});
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/matched 0 slots/);
+      expect(resolve).toThrow(/Available slot keys/);
     });
 
-    it('should handle missing blueprint slots when resolving wildcard patterns', () => {
+    it('should throw when wildcard pattern matches no blueprint slots', () => {
       const recipe = {
         patterns: [{ matchesPattern: 'wing_*', partType: 'wing_segment' }],
       };
 
       const blueprint = {};
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
-
-      expect(result.slots).toEqual({});
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Pattern 1: Pattern 'wing_*' matched 0 slots")
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
       );
     });
   });
@@ -688,7 +686,7 @@ describe('RecipePatternResolver', () => {
       });
     });
 
-    it('should handle matchesAll when blueprint lacks slot definitions', () => {
+    it('should throw for matchesAll when blueprint lacks slot definitions', () => {
       const recipe = {
         patterns: [
           {
@@ -698,19 +696,17 @@ describe('RecipePatternResolver', () => {
         ],
       };
 
-      const blueprint = {};
+      const blueprint = { id: 'anatomy:wingless' };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(result.slots).toEqual({});
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('matchesAll filter')
-      );
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/matched 0 slots/);
     });
   });
 
   describe('Pattern Exclusions', () => {
-    it('should exclude by slot groups', () => {
+    it('should throw when exclusions remove all slot group matches', () => {
       const template = {
         topology: {
           limbSets: [
@@ -745,6 +741,7 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        id: 'spider:body_blueprint',
         schemaVersion: '2.0',
         structureTemplate: 'spider:body',
         slots: {
@@ -755,10 +752,11 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
-      // Should be empty since we're excluding all legs
-      expect(result.slots).toEqual({});
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/matched 0 slots/);
+      expect(resolve).toThrow(/limbSet:leg/);
     });
 
     it('should exclude by properties', () => {
@@ -790,7 +788,7 @@ describe('RecipePatternResolver', () => {
       });
     });
 
-    it('should support matchesAll filters combined with slot group exclusions', () => {
+    it('should throw when matchesAll exclusions remove all resolved slots', () => {
       const template = {
         topology: {
           limbSets: [
@@ -829,6 +827,7 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        id: 'beast:body_blueprint',
         schemaVersion: '2.0',
         structureTemplate: 'beast:body',
         slots: {
@@ -851,12 +850,11 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(result.slots).toEqual({});
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        "Excluded 4 slots from group 'limbSet:leg'"
-      );
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/matched 0 slots/);
+      expect(resolve).toThrow(/Available orientations/);
     });
 
     it('should handle combined exclusions', () => {
@@ -1164,7 +1162,7 @@ describe('RecipePatternResolver', () => {
       );
     });
 
-    it('should warn when matchesAll filter yields no slots', () => {
+    it('should throw when matchesAll filter yields no slots', () => {
       const recipe = {
         patterns: [
           {
@@ -1184,15 +1182,9 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      resolver.resolveRecipePatterns(recipe, blueprint);
-
-      expect(
-        mockLogger.warn.mock.calls.some(call =>
-          typeof call[0] === 'string' &&
-          call[0].includes('matchesAll filter') &&
-          call[0].includes('matched 0 slots')
-        )
-      ).toBe(true);
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        ValidationError
+      );
     });
 
     it('should throw when exclusion slot group is missing in template', () => {
@@ -1215,8 +1207,11 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        id: 'golem:body_blueprint',
         structureTemplate: 'golem:body',
-        slots: {},
+        slots: {
+          leg_front: {},
+        },
       };
 
       expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
@@ -1244,7 +1239,7 @@ describe('RecipePatternResolver', () => {
       );
     });
 
-    it('should warn when a slot group resolves to zero slots', () => {
+    it('should throw when a slot group resolves to zero slots', () => {
       const template = {
         topology: {
           limbSets: [{ type: 'leg', id: 'front' }],
@@ -1254,23 +1249,22 @@ describe('RecipePatternResolver', () => {
       mockDataRegistry.get.mockReturnValue(template);
       mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([]);
 
-      resolver.resolveRecipePatterns(
-        {
-          patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
-        },
-        {
-          schemaVersion: '2.0',
-          structureTemplate: 'statue:body',
-          slots: {},
-        }
-      );
+      const recipe = {
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
+      };
 
-      expect(
-        mockLogger.warn.mock.calls.some(call =>
-          typeof call[0] === 'string' &&
-          call[0].includes("Slot group 'limbSet:leg' not found in template")
-        )
-      ).toBe(true);
+      const blueprint = {
+        id: 'statue:body_blueprint',
+        schemaVersion: '2.0',
+        structureTemplate: 'statue:body',
+        slots: {},
+      };
+
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/Slot group 'limbSet:leg'/);
+      expect(resolve).toThrow(/matched 0 slots/);
     });
 
     it('should describe matchesAll patterns in precedence warnings', () => {
@@ -1363,7 +1357,7 @@ describe('RecipePatternResolver', () => {
   });
 
   describe('Advanced matcher coverage', () => {
-    it('should support appendage exclusions during validation and resolution', () => {
+    it('should throw when appendage exclusions remove all resolved slots', () => {
       const template = {
         topology: {
           appendages: [
@@ -1394,6 +1388,7 @@ describe('RecipePatternResolver', () => {
       };
 
       const blueprint = {
+        id: 'dragon:body_blueprint',
         schemaVersion: '2.0',
         structureTemplate: 'dragon:body',
         slots: {
@@ -1402,12 +1397,11 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(result.slots).toEqual({});
-      expect(
-        mockSlotGenerator.extractSlotKeysFromAppendage
-      ).toHaveBeenCalled();
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/appendage:tail/);
+      expect(resolve).toThrow(/matched 0 slots/);
     });
 
     it('should warn when patterns of equal specificity overlap', () => {
@@ -1642,7 +1636,7 @@ describe('RecipePatternResolver', () => {
       ).toBe(true);
     });
 
-    it('should warn when blueprint loses structure template before resolution', () => {
+    it('should throw when blueprint loses structure template before resolution', () => {
       const template = {
         topology: {
           limbSets: [{ type: 'leg', id: 'front' }],
@@ -1669,13 +1663,13 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      resolver.resolveRecipePatterns(
-        {
-          patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg' }],
-        },
-        blueprint
-      );
+      const recipe = {
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg' }],
+      };
 
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(resolve).toThrow(ValidationError);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('blueprint has no structure template')
       );
@@ -1798,7 +1792,7 @@ describe('RecipePatternResolver', () => {
       ).toThrow("Invalid slot group type: 'unknownType'. Expected 'limbSet' or 'appendage'");
     });
 
-    it('should describe patterns as unknown when matcher disappears before override logging', () => {
+    it('should surface default hints when matcher disappears before override logging', () => {
       const template = {
         topology: {
           limbSets: [{ type: 'leg', id: 'front' }],
@@ -1822,7 +1816,7 @@ describe('RecipePatternResolver', () => {
         },
       });
 
-      resolver.resolveRecipePatterns(
+      const result = resolver.resolveRecipePatterns(
         {
           slots: {
             leg_front: { partType: 'existing' },
@@ -1838,9 +1832,12 @@ describe('RecipePatternResolver', () => {
         }
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('matchesAll: {}')
+      expect(result._patternHints).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Use matchesGroup selectors such as limbSet:leg'),
+        ])
       );
+      expect(result._patternConflicts).toEqual([]);
     });
   });
 });

@@ -4,6 +4,7 @@ import {
   getLogger,
   getSafeEventDispatcher,
 } from '../../../../src/turns/states/helpers/contextUtils.js';
+import * as contextUtils from '../../../../src/turns/states/helpers/contextUtils.js';
 
 class TestState extends AbstractTurnState {}
 
@@ -26,6 +27,25 @@ const makeInvalidHandler = (logger = makeLogger()) => ({
   getLogger: jest.fn(() => logger),
   resetStateAndResources: jest.fn(),
   requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
+});
+
+describe('AbstractTurnState constructor validation', () => {
+  test('throws when handler is missing and logs via console', () => {
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    class ConstructorTestState extends AbstractTurnState {}
+
+    expect(() => new ConstructorTestState()).toThrow(
+      'ConstructorTestState Constructor: BaseTurnHandler (handler) must be provided.'
+    );
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'ConstructorTestState Constructor: BaseTurnHandler (handler) must be provided.'
+    );
+
+    consoleSpy.mockRestore();
+  });
 });
 
 describe('getLogger helper', () => {
@@ -185,5 +205,53 @@ describe('AbstractTurnState._getTurnContext & _ensureContext', () => {
     );
     expect(invalidHandler.resetStateAndResources).toHaveBeenCalledTimes(1);
     expect(invalidHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('AbstractTurnState logging fallbacks and default implementations', () => {
+  test('_logStateTransition falls back to console logging when logger unavailable', () => {
+    const handlerLogger = makeLogger();
+    const handler = {
+      getLogger: jest.fn(() => handlerLogger),
+      getTurnContext: jest.fn(() => null),
+    };
+    const state = new TestState(handler);
+
+    const getLoggerSpy = jest
+      .spyOn(contextUtils, 'getLogger')
+      .mockReturnValueOnce(null);
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
+
+    state._logStateTransition('enter', 'actor-123', 'PrevState');
+
+    expect(handler.getTurnContext).toHaveBeenCalledTimes(1);
+    expect(getLoggerSpy).toHaveBeenCalledWith(null, handler);
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      '(Fallback log) TestState: Entered. Actor: actor-123. Previous state: PrevState.'
+    );
+
+    getLoggerSpy.mockRestore();
+    consoleLogSpy.mockRestore();
+  });
+
+  test("startTurn warns and throws when invoked on abstract state", async () => {
+    const handlerLogger = makeLogger();
+    const handler = {
+      getLogger: jest.fn(() => handlerLogger),
+      getTurnContext: jest.fn(() => ({
+        getActor: jest.fn(() => ({ id: 'context-actor' })),
+      })),
+    };
+    const state = new TestState(handler);
+
+    await expect(state.startTurn(handler)).rejects.toThrow(
+      "Method 'startTurn()' is not applicable for state TestState."
+    );
+
+    expect(handlerLogger.warn).toHaveBeenCalledWith(
+      "Method 'startTurn(actorId: UNKNOWN_ACTOR)' called on state TestState where it is not expected or handled."
+    );
   });
 });
