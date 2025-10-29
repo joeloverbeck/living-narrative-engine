@@ -1,7 +1,8 @@
 /**
  * @file Comprehensive test suite for ModifyArrayFieldHandler coverage gaps
- * @description Tests focused on achieving 100% coverage for uncovered lines:
- * 88-89, 96-99, 152-161, 183, 208-211, 235-238, 319, 332, 340
+ * @description Tests focused on achieving near-total coverage for validation,
+ * error handling, and context edge cases that are not exercised by the primary
+ * behavior suite.
  */
 
 import {
@@ -357,8 +358,7 @@ describe('ModifyArrayFieldHandler - Coverage Tests', () => {
   });
 
   describe('Execution Flow Edge Cases', () => {
-    // Covers line 319: Early return when applyModification returns null
-    test('should return early when applyModification returns null due to unknown mode', async () => {
+    test('should return early before modification when mode is invalid', async () => {
       const originalComponent = { items: ['a'] };
       mockEntityManager.getComponentData.mockReturnValue(originalComponent);
 

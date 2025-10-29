@@ -85,21 +85,6 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       `MODIFY_ARRAY_FIELD: Performing '${mode}' on field '${field}' for entity '${entityId}'.`
     );
 
-    if (!ARRAY_MODIFICATION_MODES.includes(mode)) {
-      logger.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
-      return null;
-    }
-
-    if (
-      value === undefined &&
-      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
-    ) {
-      logger.warn(
-        `MODIFY_ARRAY_FIELD: '${mode}' mode requires a 'value' parameter.`
-      );
-      return null;
-    }
-
     if (mode === 'pop' && targetArray.length === 0) {
       logger.debug(
         `MODIFY_ARRAY_FIELD: Attempted to 'pop' from an empty array on field '${field}'.`
@@ -316,9 +301,6 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       entityId,
       logger
     );
-    if (!modification) {
-      return;
-    }
     setByPath(clonedComponentData, field, modification.nextArray);
 
     // 5. Commit
