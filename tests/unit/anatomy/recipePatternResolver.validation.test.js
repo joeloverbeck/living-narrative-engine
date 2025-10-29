@@ -454,13 +454,24 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         slots: {},
       };
 
-      resolver.resolveRecipePatterns(recipe, blueprint);
+      expect.assertions(4);
+      try {
+        resolver.resolveRecipePatterns(recipe, blueprint);
+        throw new Error('Expected ValidationError for zero slot matches');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toContain(
+          "Pattern 1: Slot group 'limbSet:leg' matched 0 slots"
+        );
+      }
 
       expect(
         mockLogger.warn.mock.calls.some(
           call =>
             typeof call[0] === 'string' &&
-            call[0].includes("Slot group 'limbSet:leg' not found")
+            call[0].includes(
+              "Slot group 'limbSet:leg' not found or produced 0 slots"
+            )
         )
       ).toBe(true);
       expect(
@@ -555,7 +566,16 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         slots: { leg_left: {}, leg_right: {} },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      expect.assertions(3);
+      try {
+        resolver.resolveRecipePatterns(recipe, blueprint);
+        throw new Error('Expected ValidationError for non-matching pattern');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toContain(
+          "Pattern 1: matchesPattern 'wing_*' matched 0 slots"
+        );
+      }
 
       expect(
         mockLogger.warn.mock.calls.some(
@@ -564,7 +584,6 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
             call[0].includes("Pattern 1: Pattern 'wing_*' matched 0 slots")
         )
       ).toBe(true);
-      expect(result.slots).toEqual({});
     });
 
     it('should handle case-sensitive matching', () => {
@@ -706,22 +725,31 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      expect.assertions(3);
+      try {
+        resolver.resolveRecipePatterns(recipe, blueprint);
+        throw new Error('Expected ValidationError for non-matching filter');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toContain(
+          'Pattern 1: matchesAll filter {"slotType":"wing"} matched 0 slots'
+        );
+      }
 
       expect(
         mockLogger.warn.mock.calls.some(
           call =>
             typeof call[0] === 'string' &&
-            call[0].includes('matchesAll filter') &&
-            call[0].includes('matched 0 slots')
+            call[0].includes(
+              'Pattern 1: matchesAll filter {"slotType":"wing"} matched 0 slots'
+            )
         )
       ).toBe(true);
-      expect(result.slots).toEqual({});
     });
   });
 
   describe('Exclusion Validation', () => {
-    it('should accept valid exclusion by slot groups', () => {
+    it('should throw when exclusions remove all slot group matches', () => {
       const template = {
         topology: {
           limbSets: [
@@ -765,15 +793,30 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      expect.assertions(4);
+      try {
+        resolver.resolveRecipePatterns(recipe, blueprint);
+        throw new Error('Expected ValidationError after exclusions removed slots');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toContain(
+          "Pattern matchesGroup: 'limbSet:leg' matched 0 slots after applying exclusions"
+        );
+      }
 
-      expect(result.slots).toEqual({});
       expect(
         mockLogger.debug.mock.calls.some(
           call =>
             typeof call[0] === 'string' &&
             call[0].includes('Excluded') &&
             call[0].includes('limbSet:leg')
+        )
+      ).toBe(true);
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes('matched 0 slots after applying exclusions')
         )
       ).toBe(true);
     });
@@ -1010,17 +1053,24 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       const blueprint = { id: 'anatomy:missing_slots' };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      expect.assertions(3);
+      try {
+        resolver.resolveRecipePatterns(recipe, blueprint);
+        throw new Error('Expected ValidationError for missing blueprint slots');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toContain(
+          "Pattern 1: matchesPattern 'leg_*' matched 0 slots"
+        );
+      }
 
       expect(
         mockLogger.warn.mock.calls.some(
           call =>
             typeof call[0] === 'string' &&
-            call[0].includes('matchesAll filter') &&
-            call[0].includes('matched 0 slots')
+            call[0].includes("Pattern 1: Pattern 'leg_*' matched 0 slots")
         )
       ).toBe(true);
-      expect(result.slots).toEqual({});
     });
   });
 
