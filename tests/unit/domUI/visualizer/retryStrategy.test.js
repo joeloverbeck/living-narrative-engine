@@ -1087,4 +1087,106 @@ describe('RetryStrategy', () => {
       jest.useRealTimers();
     });
   });
+
+  describe('Circuit breaker edge coverage', () => {
+    beforeEach(() => {
+      // Configure lower threshold and zero timeout for faster transitions
+      retryStrategy = new RetryStrategy(
+        { logger: mockLogger },
+        { circuitBreakerThreshold: 3, circuitBreakerTimeoutMs: 0 }
+      );
+    });
+
+    it('should allow repeated HALF_OPEN checks to proceed', async () => {
+      const operationId = 'edge_half_open_checks';
+      const failingOperation = jest
+        .fn()
+        .mockRejectedValue(new Error('network error'));
+
+      for (let i = 0; i < 3; i++) {
+        await expect(
+          retryStrategy.execute(operationId, failingOperation, {
+            maxAttempts: 1,
+          })
+        ).rejects.toThrow('network error');
+      }
+
+      const firstCheck = retryStrategy._isCircuitClosed(operationId);
+      expect(firstCheck).toBe(true);
+
+      mockLogger.debug.mockClear();
+
+      const secondCheck = retryStrategy._isCircuitClosed(operationId);
+      expect(secondCheck).toBe(true);
+      expect(mockLogger.debug).not.toHaveBeenCalled();
+    });
+
+    it('should reopen circuit from HALF_OPEN using debug logging', async () => {
+      const operationId = 'edge_half_open_reopen';
+      const failingOperation = jest
+        .fn()
+        .mockRejectedValue(new Error('network error'));
+
+      for (let i = 0; i < 3; i++) {
+        await expect(
+          retryStrategy.execute(operationId, failingOperation, {
+            maxAttempts: 1,
+          })
+        ).rejects.toThrow('network error');
+      }
+
+      // Move into HALF_OPEN state
+      retryStrategy._isCircuitClosed(operationId);
+
+      // Simulate a failure while HALF_OPEN
+      retryStrategy._recordFailure(operationId, new Error('network error'));
+
+      mockLogger.debug.mockClear();
+
+      retryStrategy._updateCircuitBreaker(operationId);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('moved back to OPEN state after HALF_OPEN failure')
+      );
+    });
+
+    it('should fall back to default handling when circuit state is unknown', async () => {
+      const operationId = 'edge_unknown_state';
+      const failingOperation = jest
+        .fn()
+        .mockRejectedValue(new Error('network error'));
+
+      for (let i = 0; i < 3; i++) {
+        await expect(
+          retryStrategy.execute(operationId, failingOperation, {
+            maxAttempts: 1,
+          })
+        ).rejects.toThrow('network error');
+      }
+
+      const originalStates = { ...RetryStrategy.CIRCUIT_STATES };
+
+      try {
+        RetryStrategy.CIRCUIT_STATES.OPEN = 'mutated-open-state';
+
+        // Ensure breaker retains the previous state string value
+        const statusBefore = retryStrategy.getCircuitBreakerStatus(operationId);
+        expect(statusBefore.state).toBe(originalStates.OPEN);
+
+        const allowed = retryStrategy._isCircuitClosed(operationId);
+        expect(allowed).toBe(true);
+      } finally {
+        RetryStrategy.CIRCUIT_STATES.OPEN = originalStates.OPEN;
+      }
+    });
+
+    it('should use default retryable patterns when classifier is inconclusive', () => {
+      const shouldRetry = retryStrategy._shouldRetryError(
+        new Error('Fetch failure occurred while contacting service'),
+        { retryableErrors: undefined, context: {} }
+      );
+
+      expect(shouldRetry).toBe(true);
+    });
+  });
 });

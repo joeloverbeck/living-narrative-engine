@@ -446,6 +446,14 @@ class RetryStrategy {
     const breaker = this.#circuitBreakers.get(operationId);
     if (!breaker) return;
 
+    if (breaker.state === RetryStrategy.CIRCUIT_STATES.HALF_OPEN) {
+      breaker.state = RetryStrategy.CIRCUIT_STATES.OPEN;
+      this.#logger.debug(
+        `Circuit breaker ${operationId} moved back to OPEN state after HALF_OPEN failure`
+      );
+      return;
+    }
+
     if (breaker.failures >= this.#defaultConfig.circuitBreakerThreshold) {
       if (breaker.state !== RetryStrategy.CIRCUIT_STATES.OPEN) {
         breaker.state = RetryStrategy.CIRCUIT_STATES.OPEN;
@@ -453,11 +461,6 @@ class RetryStrategy {
           `Circuit breaker ${operationId} moved to OPEN state after ${breaker.failures} failures`
         );
       }
-    } else if (breaker.state === RetryStrategy.CIRCUIT_STATES.HALF_OPEN) {
-      breaker.state = RetryStrategy.CIRCUIT_STATES.OPEN;
-      this.#logger.debug(
-        `Circuit breaker ${operationId} moved back to OPEN state after HALF_OPEN failure`
-      );
     }
   }
 
