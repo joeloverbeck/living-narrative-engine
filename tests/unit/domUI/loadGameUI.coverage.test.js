@@ -16,6 +16,7 @@ import LoadGameUI from '../../../src/domUI/loadGameUI.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import * as listNavigationUtils from '../../../src/utils/listNavigationUtils.js';
+import { DomUtils } from '../../../src/utils/domUtils.js';
 import { SlotModalBase } from '../../../src/domUI/slotModalBase.js';
 import * as renderSlotItemModule from '../../../src/domUI/helpers/renderSlotItem.js';
 import * as createEmptySlotMessageModule from '../../../src/domUI/helpers/createEmptySlotMessage.js';
@@ -178,6 +179,13 @@ describe('LoadGameUI', () => {
       );
     });
 
+    it('should throw an error if userPrompt.confirm is not provided', () => {
+      const invalidPrompt = { confirm: undefined };
+      expect(() => createInstance({ userPrompt: invalidPrompt })).toThrow(
+        'IUserPrompt dependency is missing or invalid.'
+      );
+    });
+
     it('init() should log an error if loadService is invalid', () => {
       instance = createInstance();
       instance.init(null);
@@ -234,6 +242,17 @@ describe('LoadGameUI', () => {
       );
     });
 
+    it('should skip delete listener when delete button is unavailable', () => {
+      instance = createInstance();
+      instance.elements.deleteSaveButtonEl = null;
+      const spy = jest.spyOn(instance, '_addDomListener');
+
+      instance._initEventListeners();
+
+      const targets = spy.mock.calls.map((call) => call[0]);
+      expect(targets).not.toContain(deleteSaveButton);
+    });
+
     it('form submit should prevent default', () => {
       instance = createInstance();
       instance.init(mockLoadService);
@@ -259,6 +278,19 @@ describe('LoadGameUI', () => {
       expect(instance._populateLoadSlotsList).toHaveBeenCalled();
     });
 
+    it('_onShow should handle missing action buttons gracefully', async () => {
+      instance.elements.confirmLoadButtonEl = null;
+      instance.elements.deleteSaveButtonEl = null;
+      instance._populateLoadSlotsList.mockRestore();
+      const populateSpy = jest
+        .spyOn(instance, '_populateLoadSlotsList')
+        .mockResolvedValue();
+
+      await instance._onShow();
+
+      expect(populateSpy).toHaveBeenCalled();
+    });
+
     it('_getInitialFocusElement should return first good slot', () => {
       const goodSlotEl = mockDocument.createElement('div');
       goodSlotEl.className = 'save-slot';
@@ -277,6 +309,13 @@ describe('LoadGameUI', () => {
       instance.elements.listContainerElement = listContainer; // Empty
       const focusEl = instance._getInitialFocusElement();
       expect(focusEl).toBe(closeButton);
+    });
+
+    it('_getInitialFocusElement should fallback to modal when close button missing', () => {
+      instance.elements.listContainerElement = null;
+      instance.elements.closeButton = null;
+      const focusEl = instance._getInitialFocusElement();
+      expect(focusEl).toBe(instance.elements.modalElement);
     });
 
     it('_getEmptyLoadSlotsMessage should return a string if factory is missing', () => {
@@ -299,6 +338,126 @@ describe('LoadGameUI', () => {
         mockDomElementFactory,
         'No saved games found.'
       );
+    });
+
+    it('_onHide should clear list container and reset internal state', () => {
+      const clearSpy = jest.spyOn(instance, 'clearSlotData');
+      instance.elements.listContainerElement = listContainer;
+      instance.selectedSlotData = { ...aGoodSlot };
+      instance._lastStatusMessage = { message: 'keep me', type: 'info' };
+
+      instance._onHide();
+
+      expect(DomUtils.clearElement).toHaveBeenCalledWith(listContainer);
+      expect(clearSpy).toHaveBeenCalled();
+      expect(instance.selectedSlotData).toBeNull();
+      expect(instance._lastStatusMessage).toBeNull();
+    });
+
+    it('_onHide should skip clearing when list container is missing', () => {
+      const clearSpy = jest.spyOn(instance, 'clearSlotData');
+      instance.elements.listContainerElement = null;
+
+      instance._onHide();
+
+      expect(DomUtils.clearElement).not.toHaveBeenCalled();
+      expect(clearSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Status message handling', () => {
+    beforeEach(() => {
+      instance = createInstance();
+    });
+
+    it('should avoid re-rendering loading message when already shown', () => {
+      const superSpy = jest.spyOn(
+        SlotModalBase.prototype,
+        '_displayStatusMessage'
+      );
+      instance._lastStatusMessage = { message: 'Existing', type: 'info' };
+
+      instance._displayStatusMessage('Loading saved games...', 'info');
+
+      expect(superSpy).not.toHaveBeenCalled();
+      expect(instance._lastStatusMessage).toEqual({
+        message: 'Existing',
+        type: 'info',
+      });
+      superSpy.mockRestore();
+    });
+
+    it('should default status type to info when omitted', () => {
+      const superSpy = jest.spyOn(
+        SlotModalBase.prototype,
+        '_displayStatusMessage'
+      );
+
+      instance._displayStatusMessage('Hello world');
+
+      expect(superSpy).toHaveBeenCalledWith('Hello world', 'info');
+      superSpy.mockRestore();
+    });
+
+    it('should forward loading message when no previous status exists', () => {
+      const superSpy = jest.spyOn(
+        SlotModalBase.prototype,
+        '_displayStatusMessage'
+      );
+
+      instance._displayStatusMessage('Loading saved games...');
+
+      expect(superSpy).toHaveBeenCalledWith('Loading saved games...', 'info');
+      expect(instance._lastStatusMessage).toBeNull();
+      superSpy.mockRestore();
+    });
+
+    it('should keep last status message while slots populate', () => {
+      const superSpy = jest.spyOn(
+        SlotModalBase.prototype,
+        '_clearStatusMessage'
+      );
+      instance._isPopulatingSlots = true;
+      instance._lastStatusMessage = { message: 'Hold', type: 'warning' };
+
+      instance._clearStatusMessage();
+
+      expect(superSpy).not.toHaveBeenCalled();
+      expect(instance._lastStatusMessage).toEqual({
+        message: 'Hold',
+        type: 'warning',
+      });
+      superSpy.mockRestore();
+    });
+
+    it('should clear stored status when not populating', () => {
+      const superSpy = jest.spyOn(
+        SlotModalBase.prototype,
+        '_clearStatusMessage'
+      );
+      instance._isPopulatingSlots = false;
+      instance._lastStatusMessage = { message: 'Temp', type: 'info' };
+
+      instance._clearStatusMessage();
+
+      expect(superSpy).toHaveBeenCalled();
+      expect(instance._lastStatusMessage).toBeNull();
+      superSpy.mockRestore();
+    });
+
+    it('should call super clear when populating without status', () => {
+      const superSpy = jest.spyOn(
+        SlotModalBase.prototype,
+        '_clearStatusMessage'
+      );
+      instance._isPopulatingSlots = true;
+      instance._lastStatusMessage = null;
+
+      instance._clearStatusMessage();
+
+      expect(superSpy).toHaveBeenCalled();
+      expect(instance._lastStatusMessage).toBeNull();
+      superSpy.mockRestore();
     });
   });
 
@@ -369,6 +528,22 @@ describe('LoadGameUI', () => {
       expect(result.getAttribute('tabindex')).toBe('0');
     });
 
+    it('rendered slot items should delegate selection to _onItemSelected', () => {
+      const mockDiv = mockDocument.createElement('div');
+      renderSlotItemModule.renderGenericSlotItem.mockReturnValue(mockDiv);
+      instance = createInstance();
+      const selectionSpy = jest
+        .spyOn(instance, '_onItemSelected')
+        .mockImplementation(() => {});
+
+      instance._renderLoadSlotItem(aGoodSlot, 1);
+      const handler =
+        renderSlotItemModule.renderGenericSlotItem.mock.calls[0][5];
+      handler({ currentTarget: mockDiv });
+
+      expect(selectionSpy).toHaveBeenCalledWith(mockDiv, aGoodSlot);
+    });
+
     it('_populateLoadSlotsList should log error if container is missing', async () => {
       instance = createInstance();
       const spy = jest.spyOn(instance, '_displayStatusMessage');
@@ -381,6 +556,64 @@ describe('LoadGameUI', () => {
         'Error: UI component for slots missing.',
         'error'
       );
+    });
+
+    it('_populateLoadSlotsList should wire fetch, render, and status restoration', async () => {
+      instance = createInstance();
+      instance.init(mockLoadService);
+      const data = [{ ...aGoodSlot }];
+      instance.selectedSlotData = data[0];
+      instance._lastStatusMessage = { message: 'Keep', type: 'info' };
+
+      const getDataSpy = jest
+        .spyOn(instance, '_getLoadSlotsData')
+        .mockResolvedValue(data);
+      const renderSpy = jest
+        .spyOn(instance, '_renderLoadSlotItem')
+        .mockReturnValue(mockDocument.createElement('li'));
+      const emptySpy = jest
+        .spyOn(instance, '_getEmptyLoadSlotsMessage')
+        .mockReturnValue('empty');
+      const updateSpy = jest
+        .spyOn(instance, '_updateButtonStates')
+        .mockImplementation(() => {});
+      const statusSpy = jest.spyOn(instance, '_displayStatusMessage');
+
+      jest
+        .spyOn(instance, 'populateSlotsList')
+        .mockImplementation(async (fetchFn, renderFn, emptyFn, loadingMsg) => {
+          expect(loadingMsg).toBe('Loading saved games...');
+          const slots = await fetchFn();
+          slots.forEach((slot, index) => renderFn(slot, index));
+          emptyFn();
+        });
+
+      await instance._populateLoadSlotsList();
+
+      expect(getDataSpy).toHaveBeenCalled();
+      expect(renderSpy).toHaveBeenCalledWith(data[0], 0);
+      expect(emptySpy).toHaveBeenCalled();
+      expect(updateSpy).toHaveBeenCalledWith(data[0]);
+      expect(statusSpy).toHaveBeenCalledWith('Keep', 'info');
+      expect(instance._isPopulatingSlots).toBe(false);
+    });
+
+    it('_populateLoadSlotsList should skip status restoration when none exists', async () => {
+      instance = createInstance();
+      instance.init(mockLoadService);
+      instance.selectedSlotData = null;
+      instance._lastStatusMessage = null;
+
+      const statusSpy = jest.spyOn(instance, '_displayStatusMessage');
+      jest
+        .spyOn(instance, 'populateSlotsList')
+        .mockImplementation(async (fetchFn) => {
+          await fetchFn();
+        });
+
+      await instance._populateLoadSlotsList();
+
+      expect(statusSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -411,6 +644,24 @@ describe('LoadGameUI', () => {
       );
       expect(confirmLoadButton.disabled).toBe(true);
       expect(deleteSaveButton.disabled).toBe(false);
+    });
+
+    it('_onItemSelected should tolerate missing confirm button element', () => {
+      instance.elements.confirmLoadButtonEl = null;
+      const slotElement = mockDocument.createElement('div');
+
+      instance._onItemSelected(slotElement, aGoodSlot);
+
+      expect(deleteSaveButton.disabled).toBe(false);
+    });
+
+    it('_onItemSelected should tolerate missing delete button element', () => {
+      instance.elements.deleteSaveButtonEl = null;
+      const slotElement = mockDocument.createElement('div');
+
+      instance._onItemSelected(slotElement, aGoodSlot);
+
+      expect(confirmLoadButton.disabled).toBe(false);
     });
 
     it('_handleLoad should show error if no slot is selected', async () => {
@@ -475,6 +726,48 @@ describe('LoadGameUI', () => {
       expect(progressSpy).toHaveBeenLastCalledWith(false);
     });
 
+    it('_performLoad should report a successful load', async () => {
+      const result = await instance._performLoad(aGoodSlot);
+      expect(result).toEqual({ success: true, message: '' });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Game loaded successfully from slot-1')
+      );
+    });
+
+    it('_performLoad should use fallback error message when none provided', async () => {
+      mockLoadService.load.mockResolvedValue({ success: false });
+
+      const result = await instance._performLoad(aGoodSlot);
+
+      expect(result).toEqual({
+        success: false,
+        message: 'An unknown error occurred while loading the game.',
+      });
+    });
+
+    it('_performLoad should stringify non-error exceptions', async () => {
+      mockLoadService.load.mockRejectedValue('boom');
+
+      const result = await instance._performLoad(aGoodSlot);
+
+      expect(result).toEqual({ success: false, message: 'boom' });
+    });
+
+    it('_finalizeLoad should hide modal after success', () => {
+      jest.useFakeTimers();
+      const hideSpy = jest.spyOn(instance, 'hide').mockImplementation(() => {});
+      const statusSpy = jest.spyOn(instance, '_displayStatusMessage');
+
+      instance._finalizeLoad(true, '', aGoodSlot);
+
+      expect(statusSpy).toHaveBeenCalledWith(
+        'Game "Good Save" loaded successfully. Resuming...',
+        'success'
+      );
+      jest.runAllTimers();
+      expect(hideSpy).toHaveBeenCalled();
+    });
+
     it('_handleDelete should show error if no slot is selected', async () => {
       instance.selectedSlotData = null;
       const spy = jest.spyOn(instance, '_displayStatusMessage');
@@ -518,6 +811,36 @@ describe('LoadGameUI', () => {
       );
     });
 
+    it('_performDelete should prefer message property when available', async () => {
+      mockSaveLoadService.deleteManualSave.mockResolvedValue({
+        success: false,
+        message: 'Custom failure',
+      });
+
+      const result = await instance._performDelete(aGoodSlot);
+
+      expect(result).toEqual({ success: false, message: 'Custom failure' });
+    });
+
+    it('_performDelete should fall back to default message', async () => {
+      mockSaveLoadService.deleteManualSave.mockResolvedValue({ success: false });
+
+      const result = await instance._performDelete(aGoodSlot);
+
+      expect(result).toEqual({
+        success: false,
+        message: 'An unknown error occurred while deleting the save.',
+      });
+    });
+
+    it('_performDelete should stringify non-error exceptions', async () => {
+      mockSaveLoadService.deleteManualSave.mockRejectedValue('explode');
+
+      const result = await instance._performDelete(aGoodSlot);
+
+      expect(result).toEqual({ success: false, message: 'explode' });
+    });
+
     it('_handleDelete should refocus correctly after deletion', async () => {
       instance.selectedSlotData = aGoodSlot;
 
@@ -542,6 +865,52 @@ describe('LoadGameUI', () => {
       const newFirstSlot = listContainer.querySelector('.save-slot');
       expect(newFirstSlot.focus).toHaveBeenCalled();
       expect(deleteSaveButton.disabled).toBe(false); // Should be re-enabled for new item
+    });
+
+    it('_refreshAfterDelete should clear selection when no slot data matches', async () => {
+      const onItemSelectedSpy = jest
+        .spyOn(instance, '_onItemSelected')
+        .mockImplementation(() => {});
+      const statusSpy = jest.spyOn(instance, '_displayStatusMessage');
+      const opSpy = jest.spyOn(instance, '_setOperationInProgress');
+      const populateSpy = jest
+        .spyOn(instance, '_populateLoadSlotsList')
+        .mockResolvedValue();
+
+      const slotElement = mockDocument.createElement('div');
+      slotElement.className = 'save-slot';
+      slotElement.dataset.slotIdentifier = 'unknown';
+      slotElement.focus = jest.fn();
+      listContainer.appendChild(slotElement);
+      instance.currentSlotsDisplayData = [];
+
+      await instance._refreshAfterDelete({ success: true, message: '' }, aGoodSlot);
+
+      expect(populateSpy).toHaveBeenCalled();
+      expect(slotElement.focus).toHaveBeenCalled();
+      expect(onItemSelectedSpy).toHaveBeenCalledWith(null, null);
+      expect(statusSpy).toHaveBeenCalledWith(
+        'Save "Good Save" deleted successfully.',
+        'success'
+      );
+      expect(opSpy).toHaveBeenCalledWith(false);
+    });
+
+    it('_refreshAfterDelete should clear selection when no slots remain', async () => {
+      const onItemSelectedSpy = jest
+        .spyOn(instance, '_onItemSelected')
+        .mockImplementation(() => {});
+      const populateSpy = jest
+        .spyOn(instance, '_populateLoadSlotsList')
+        .mockResolvedValue();
+
+      listContainer.innerHTML = '';
+      instance.currentSlotsDisplayData = [];
+
+      await instance._refreshAfterDelete({ success: true, message: '' }, aGoodSlot);
+
+      expect(populateSpy).toHaveBeenCalled();
+      expect(onItemSelectedSpy).toHaveBeenCalledWith(null, null);
     });
 
     // Note: Testing _handleSlotNavigation is complex as it relies on a returned function.
