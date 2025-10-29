@@ -12,7 +12,7 @@ Create four complete structure template examples demonstrating different body pl
 ## Deliverables
 
 ### 1. Spider Template
-**File**: `data/mods/anatomy/templates/structure_arachnid_8leg.template.json`
+**File**: `data/mods/anatomy/structure-templates/structure_arachnid_8leg.structure-template.json`
 
 - 8 legs (radial arrangement)
 - 2 pedipalps
@@ -20,7 +20,7 @@ Create four complete structure template examples demonstrating different body pl
 - Demonstrates: indexed orientation, multiple appendage types
 
 ### 2. Dragon Template
-**File**: `data/mods/anatomy/templates/structure_winged_quadruped.template.json`
+**File**: `data/mods/anatomy/structure-templates/structure_winged_quadruped.structure-template.json`
 
 - 4 legs (quadrupedal)
 - 2 wings (dorsal)
@@ -28,14 +28,14 @@ Create four complete structure template examples demonstrating different body pl
 - Demonstrates: custom positions, mixed orientations
 
 ### 3. Octopoid Template
-**File**: `data/mods/anatomy/templates/structure_octopoid.template.json`
+**File**: `data/mods/anatomy/structure-templates/structure_octopoid.structure-template.json`
 
 - 8 tentacles (radial)
 - 1 mantle, 1 head
 - Demonstrates: radial symmetry, simple structure
 
 ### 4. Centaur Template
-**File**: `data/mods/anatomy/templates/structure_centauroid.template.json`
+**File**: `data/mods/anatomy/structure-templates/structure_centauroid.structure-template.json`
 
 - 4 legs (rear quadruped)
 - 2 arms (front humanoid)
