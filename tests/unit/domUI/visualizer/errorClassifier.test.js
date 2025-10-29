@@ -385,6 +385,22 @@ describe('ErrorClassifier', () => {
         expect(classification.priority).toBe('high');
       });
 
+      it(
+        'should assign HIGH priority when AnatomyVisualizationError reports MEDIUM severity with significant impact',
+        () => {
+          const error = new AnatomyDataError('Medium severity anatomy issue', {
+            severity: 'MEDIUM',
+            recoverable: true,
+          });
+          const context = { operation: 'entity_selection' };
+          const classification = ErrorClassifier.classify(error, context);
+
+          expect(classification.severity).toBe('MEDIUM');
+          expect(classification.userImpact).toBe('significant');
+          expect(classification.priority).toBe('high');
+        }
+      );
+
       it('should assign MEDIUM priority to MEDIUM severity errors', () => {
         const error = new AnatomyRenderError('Render error', {
           severity: 'MEDIUM',
