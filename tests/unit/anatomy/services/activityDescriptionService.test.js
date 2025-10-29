@@ -4669,6 +4669,366 @@ describe('ActivityDescriptionService', () => {
         expect(hooks.extractEntityData(null)).toBeNull();
       });
 
+      it('warns and filters out activities when visibility evaluation throws', () => {
+        const hooks = service.getTestHooks();
+        mockLogger.warn.mockClear();
+
+        const faultyActivity = {};
+        Object.defineProperty(faultyActivity, 'metadata', {
+          enumerable: true,
+          get() {
+            throw new Error('metadata access failed');
+          },
+        });
+
+        const result = hooks.filterByConditions([faultyActivity], {
+          id: 'entity-1',
+        });
+
+        expect(result).toEqual([]);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'Failed to evaluate activity visibility for activity metadata',
+          expect.any(Error)
+        );
+      });
+
+      it('handles required component iteration failures gracefully', () => {
+        const hooks = service.getTestHooks();
+        mockLogger.warn.mockClear();
+
+        const entity = {
+          id: 'entity-req',
+          hasComponent: jest.fn().mockReturnValue(true),
+        };
+
+        const required = ['core:trait'];
+        required.every = () => {
+          throw new Error('every failed');
+        };
+
+        expect(hooks.hasRequiredComponents(entity, required)).toBe(false);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to evaluate required components'),
+          expect.any(Error)
+        );
+      });
+
+      it('handles forbidden component evaluation failures', () => {
+        const hooks = service.getTestHooks();
+        mockLogger.warn.mockClear();
+
+        const throwingEntity = {
+          id: 'entity-forbidden',
+          hasComponent: jest.fn(() => {
+            throw new Error('lookup failed');
+          }),
+        };
+
+        expect(
+          hooks.hasForbiddenComponents(throwingEntity, ['core:trait'])
+        ).toBe(false);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to verify forbidden component core:trait'),
+          expect.any(Error)
+        );
+
+        mockLogger.warn.mockClear();
+
+        const safeEntity = {
+          id: 'entity-safe',
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+
+        const forbidden = ['core:trait'];
+        forbidden.some = () => {
+          throw new Error('iteration failed');
+        };
+
+        expect(hooks.hasForbiddenComponents(safeEntity, forbidden)).toBe(false);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to evaluate forbidden components'),
+          expect.any(Error)
+        );
+      });
+
+      it('deduplicates activities with invalid entries without mutating source', () => {
+        const hooks = service.getTestHooks();
+
+        expect(hooks.deduplicateActivitiesBySignature(null)).toEqual([]);
+
+        const emptyActivities = [];
+        const dedupedEmpty = hooks.deduplicateActivitiesBySignature(
+          emptyActivities
+        );
+        expect(dedupedEmpty).toEqual([]);
+        expect(dedupedEmpty).not.toBe(emptyActivities);
+
+        const deduped = hooks.deduplicateActivitiesBySignature([
+          null,
+          {
+            type: 'inline',
+            template: '{actor} waits patiently',
+            targetEntityId: 'target-1',
+          },
+        ]);
+
+        expect(deduped).toHaveLength(1);
+        expect(hooks.buildActivityDeduplicationKey(null)).toBe('invalid');
+      });
+
+      describe('formatActivityDescription edge cases', () => {
+        it('returns an empty string for falsy or empty activity collections', () => {
+          const hooks = service.getTestHooks();
+
+          expect(hooks.formatActivityDescription(null, null)).toBe('');
+          expect(hooks.formatActivityDescription([], { id: 'actor' })).toBe('');
+        });
+
+        it('handles iterable grouping results and phrase generation failures', () => {
+          const hooks = service.getTestHooks();
+          mockLogger.warn.mockClear();
+          mockLogger.error.mockClear();
+
+          const failingPrimary = {
+            targetEntityId: 'target-iterable',
+            priority: 100,
+            grouping: { groupKey: 'shared-group' },
+          };
+
+          Object.defineProperty(failingPrimary, 'type', {
+            enumerable: true,
+            get() {
+              throw new Error('primary phrase failure');
+            },
+          });
+
+          Object.defineProperty(failingPrimary, 'toneFlag', {
+            enumerable: true,
+            get() {
+              throw new Error('tone failure');
+            },
+          });
+
+          const successfulPrimary = {
+            type: 'inline',
+            template: '{actor} observes {target}',
+            targetEntityId: 'target-success',
+            priority: 80,
+            grouping: { groupKey: 'success-group' },
+          };
+
+          const relatedPhraseFailure = {
+            targetEntityId: 'target-related',
+            priority: 75,
+            type: 'inline',
+          };
+
+          Object.defineProperty(relatedPhraseFailure, 'template', {
+            enumerable: true,
+            get() {
+              throw new Error('related phrase failure');
+            },
+          });
+
+          const fragmentWrapper = {
+            activity: {
+              type: 'inline',
+              template: '{actor} nods at {target}',
+              targetEntityId: 'target-fragment',
+              priority: 60,
+            },
+          };
+
+          Object.defineProperty(fragmentWrapper, 'conjunction', {
+            enumerable: true,
+            get() {
+              throw new Error('fragment failure');
+            },
+          });
+
+          const actorEntity = {
+            id: 'actor-entity',
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Actor Name' };
+              }
+
+              if (componentId === 'core:gender') {
+                return { value: 'male' };
+              }
+
+              return null;
+            }),
+          };
+
+          const targetFactory = (id) => ({
+            id,
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: `${id}-name` };
+              }
+
+              if (componentId === 'core:gender') {
+                return { value: 'female' };
+              }
+
+              return null;
+            }),
+            hasComponent: jest.fn().mockReturnValue(true),
+          });
+
+          mockEntityManager.getEntityInstance.mockImplementation((id) => {
+            if (id === 'actor-entity') {
+              return actorEntity;
+            }
+
+            return targetFactory(id);
+          });
+
+          const originalIsArray = Array.isArray;
+          const isArraySpy = jest
+            .spyOn(Array, 'isArray')
+            .mockImplementation((value) => {
+              if (
+                originalIsArray(value) &&
+                value.length >= 0 &&
+                value[0] &&
+                typeof value[0] === 'object' &&
+                Object.prototype.hasOwnProperty.call(value[0], 'primaryActivity') &&
+                Object.prototype.hasOwnProperty.call(value[0], 'relatedActivities')
+              ) {
+                value.push(null);
+
+                value.forEach((group, index) => {
+                  if (
+                    group &&
+                    Object.prototype.hasOwnProperty.call(
+                      group,
+                      'relatedActivities'
+                    ) &&
+                    originalIsArray(group.relatedActivities)
+                  ) {
+                    group.relatedActivities.push(null);
+
+                    if (index === 1) {
+                      group.relatedActivities.push({
+                        activity: relatedPhraseFailure,
+                        conjunction: 'and',
+                      });
+                      group.relatedActivities.push(fragmentWrapper);
+                    }
+                  }
+                });
+
+                return false;
+              }
+
+              return originalIsArray(value);
+            });
+
+          const description = hooks.formatActivityDescription(
+            [failingPrimary, successfulPrimary],
+            actorEntity
+          );
+
+          expect(description).toContain('Activity:');
+
+          expect(mockLogger.warn).toHaveBeenCalledWith(
+            'Failed to apply contextual tone to activity',
+            expect.any(Error)
+          );
+          expect(mockLogger.error).toHaveBeenCalledWith(
+            'Failed to generate primary activity phrase',
+            expect.any(Error)
+          );
+          expect(mockLogger.error).toHaveBeenCalledWith(
+            'Failed to generate related activity phrase',
+            expect.any(Error)
+          );
+          expect(mockLogger.error).toHaveBeenCalledWith(
+            'Failed to build related activity fragment',
+            expect.any(Error)
+          );
+
+          isArraySpy.mockRestore();
+        });
+
+        it('warns when grouped activities cannot be iterated', () => {
+          const hooks = service.getTestHooks();
+          mockLogger.warn.mockClear();
+
+          const originalIsArray = Array.isArray;
+          const isArraySpy = jest
+            .spyOn(Array, 'isArray')
+            .mockImplementation((value) => {
+              if (
+                originalIsArray(value) &&
+                value.length >= 0 &&
+                value[0] &&
+                typeof value[0] === 'object' &&
+                Object.prototype.hasOwnProperty.call(value[0], 'primaryActivity')
+              ) {
+                Object.defineProperty(value, 'forEach', {
+                  configurable: true,
+                  value: undefined,
+                });
+                return false;
+              }
+
+              return originalIsArray(value);
+            });
+
+          const description = hooks.formatActivityDescription(
+            [
+              {
+                type: 'inline',
+                template: '{actor} waves at {target}',
+                targetEntityId: 'target-warning',
+                priority: 10,
+              },
+            ],
+            { id: 'actor-warning' }
+          );
+
+          expect(description).toBe('');
+          expect(mockLogger.warn).toHaveBeenCalledWith(
+            'Grouping activities returned unexpected data; ignoring result'
+          );
+
+          isArraySpy.mockRestore();
+        });
+
+        it('reports grouping failures when group construction throws', () => {
+          const hooks = service.getTestHooks();
+          mockLogger.error.mockClear();
+
+          const throwingActivity = {
+            type: 'inline',
+            template: '{actor} studies the room',
+            targetEntityId: 'target-throw',
+            priority: 20,
+          };
+
+          Object.defineProperty(throwingActivity, 'grouping', {
+            enumerable: true,
+            get() {
+              throw new Error('grouping failure');
+            },
+          });
+
+          const description = hooks.formatActivityDescription(
+            [throwingActivity],
+            { id: 'actor-group' }
+          );
+
+          expect(description).toBe('');
+          expect(mockLogger.error).toHaveBeenCalledWith(
+            'Failed to group activities for formatting',
+            expect.any(Error)
+          );
+        });
+      });
+
       it('exposes subscription helpers for cache invalidation', () => {
         const hooks = service.getTestHooks();
 
