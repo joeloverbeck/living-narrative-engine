@@ -11,24 +11,6 @@ import { isNonBlankString } from '../../utils/textUtils.js';
  */
 
 /**
- * Sanitizes HTML content to prevent XSS attacks.
- * Uses a whitelist approach for allowed HTML tags and attributes.
- *
- * @param {string} htmlString - The HTML string to sanitize.
- * @returns {string} The sanitized HTML string.
- */
-function sanitizeHtml(htmlString) {
-  if (!htmlString || typeof htmlString !== 'string') {
-    return '';
-  }
-
-  // Create a temporary div to parse HTML
-  const tempDiv = document.createElement('div');
-  tempDiv.textContent = htmlString; // This escapes all HTML
-  return tempDiv.innerHTML;
-}
-
-/**
  * Escapes HTML entities in text content.
  *
  * @param {string} text - The text to escape.
@@ -73,7 +55,7 @@ function getSubjectTypeIcon(subjectType) {
  * @param {number} index - The index of the note (for styling/numbering).
  * @returns {string} The formatted HTML string.
  */
-function formatSingleNoteAsHtml(note, index = 0) {
+function formatSingleNoteAsHtml(note, index) {
   if (!note || typeof note !== 'object') {
     return '';
   }
@@ -115,9 +97,7 @@ function formatSingleNoteAsHtml(note, index = 0) {
   if (escapedContext) {
     metaHtml += '<div class="note-meta">';
 
-    if (escapedContext) {
-      metaHtml += `<span class="note-context">${escapedContext}</span>`;
-    }
+    metaHtml += `<span class="note-context">${escapedContext}</span>`;
 
     metaHtml += '</div>';
   }
