@@ -3,8 +3,9 @@
 /**
  * @jest-environment node
  */
-import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals';
 import AtomicModifyComponentHandler from '../../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
+import * as contextVariableUtils from '../../../../src/utils/contextVariableUtils.js';
 
 // --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -83,6 +84,10 @@ describe('AtomicModifyComponentHandler', () => {
     });
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   // ---------------------------------------------------------------------------
   //  Constructor validation
   // ---------------------------------------------------------------------------
@@ -131,6 +136,41 @@ describe('AtomicModifyComponentHandler', () => {
       { params: undefined }
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+  });
+
+  test('stores failure result when entity validation fails', async () => {
+    const params = {
+      entity_ref: null,
+      component_type: 'ns:comp',
+      field: 'value',
+      expected_value: undefined,
+      new_value: 'next',
+      result_variable: 'result',
+    };
+
+    const ctx = buildCtx();
+    await handler.execute(params, ctx);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'ATOMIC_MODIFY_COMPONENT: "entity_ref" parameter is required.'
+    );
+    expect(ctx.evaluationContext.context.result).toBe(false);
+  });
+
+  test('skips storing result when result variable is invalid during early exit', async () => {
+    const params = {
+      entity_ref: null,
+      component_type: 'ns:comp',
+      field: 'value',
+      expected_value: undefined,
+      new_value: 'next',
+    };
+
+    const spy = jest.spyOn(contextVariableUtils, 'writeContextVariable');
+
+    await handler.execute(params, buildCtx());
+
+    expect(spy).not.toHaveBeenCalled();
   });
 
   test('validates field parameter is required', async () => {
@@ -607,6 +647,54 @@ describe('AtomicModifyComponentHandler', () => {
   // ---------------------------------------------------------------------------
   //  Path creation and modification edge cases
   // ---------------------------------------------------------------------------
+  test('logs and stores failure when setByPath cannot update path', async () => {
+    const currentComponent = { nested: 42 };
+    mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+
+    const ctx = buildCtx();
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'nested.value',
+        expected_value: undefined,
+        new_value: 'next',
+        result_variable: 'result',
+      },
+      ctx
+    );
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'ATOMIC_MODIFY_COMPONENT: Failed to set path "nested.value" on component "test:comp".'
+    );
+    expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+    expect(ctx.evaluationContext.context.result).toBe(false);
+  });
+
+  test('warns when storing result in context fails', async () => {
+    const currentComponent = { value: 'test' };
+    mockEntityManager.getComponentData.mockReturnValue(currentComponent);
+    jest
+      .spyOn(contextVariableUtils, 'writeContextVariable')
+      .mockReturnValue({ success: false, error: new Error('nope') });
+
+    const ctx = buildCtx();
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'value',
+        expected_value: 'test',
+        new_value: 'updated',
+        result_variable: 'result',
+      },
+      ctx
+    );
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'ATOMIC_MODIFY_COMPONENT: Failed to store result in context variable "result"'
+    );
+  });
   test('successfully creates nested paths that do not exist', async () => {
     const currentComponent = {}; // Empty component
     mockEntityManager.getComponentData.mockReturnValue(currentComponent);
