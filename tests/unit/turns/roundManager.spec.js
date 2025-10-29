@@ -281,6 +281,32 @@ describe('RoundManager', () => {
       );
     });
 
+    it('should default to round-robin when provided non-string or blank strategy input', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      await roundManager.startRound(42);
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
+        [mockActor],
+        'round-robin',
+        undefined
+      );
+
+      mockTurnOrderService.startNewRound.mockClear();
+
+      await roundManager.startRound('   ');
+
+      expect(mockTurnOrderService.startNewRound).toHaveBeenCalledWith(
+        [mockActor],
+        'round-robin',
+        undefined
+      );
+    });
+
     it('should fall back to initiative when unknown strategy provided with initiative data', async () => {
       const mockActor = {
         id: 'actor1',
@@ -321,6 +347,51 @@ describe('RoundManager', () => {
           entityId: mockActor.id,
           receivedType: 'string',
         })
+      );
+    });
+
+    it('should throw when initiative strategy receives an empty object', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      await expect(roundManager.startRound('initiative', {})).rejects.toThrow(
+        'Cannot start an initiative round: initiativeData Map is required.'
+      );
+    });
+
+    it('should throw when all object initiative entries are discarded during normalisation', async () => {
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      const initiativeDataObject = {
+        '   ': '  ',
+        actor1: '   ',
+        actor2: null,
+      };
+
+      await expect(
+        roundManager.startRound('initiative', initiativeDataObject)
+      ).rejects.toThrow(
+        'Cannot start an initiative round: initiativeData Map is required.'
+      );
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with blank entity id from object input after trimming whitespace.',
+        { entityId: '   ' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with empty string score.',
+        { entityId: 'actor1' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with missing score.',
+        { entityId: 'actor2' }
       );
     });
 
@@ -401,6 +472,64 @@ describe('RoundManager', () => {
       );
     });
 
+    it('should ignore invalid initiative entries from Maps while normalising scores', async () => {
+      const primaryActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      const secondaryActor = {
+        id: 'actor2',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [primaryActor, secondaryActor];
+
+      const initiativeData = new Map([
+        [123, 10],
+        ['   ', '  '],
+        ['actorEmpty', '   '],
+        ['actorMissing', null],
+        [' actor1 ', true],
+        ['actorNan', {}],
+        ['actor1', 12],
+        ['actor2', 4],
+      ]);
+
+      await roundManager.startRound('initiative', initiativeData);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with non-string entity id from Map input.',
+        { entityId: 123 }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with blank entity id from Map input after trimming whitespace.',
+        { entityId: '   ' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with empty string score.',
+        { entityId: 'actorEmpty' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with missing score.',
+        { entityId: 'actorMissing' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
+        expect.objectContaining({ entityId: 'actorNan', receivedType: 'object' })
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Duplicate initiative entry for entity id "actor1" after normalisation. Using latest value.',
+        expect.objectContaining({ entityId: 'actor1' })
+      );
+
+      const [, , normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(normalisedInitiative).toBeInstanceOf(Map);
+      expect(Array.from(normalisedInitiative.entries())).toEqual([
+        ['actor1', 12],
+        ['actor2', 4],
+      ]);
+    });
+
     it('should normalise strategy strings by trimming whitespace and casing', async () => {
       const mockActor = {
         id: 'actor1',
@@ -426,6 +555,78 @@ describe('RoundManager', () => {
         'round-robin',
         undefined
       );
+    });
+
+    it('should normalise initiative data provided as arrays while filtering invalid entries', async () => {
+      const primaryActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      const supportingActor = {
+        id: 'actor4',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      const tertiaryActor = {
+        id: 'actor6',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [primaryActor, supportingActor, tertiaryActor];
+
+      const initiativeArray = [
+        'invalid-entry',
+        [42, 11],
+        ['   ', 2],
+        [' actor1 ', '5'],
+        ['actor1', ' 7 '],
+        ['actor2', null],
+        ['actor3', {}],
+        ['actor4', true],
+        ['actor5', '   '],
+        ['actor6', 9],
+      ];
+
+      await roundManager.startRound('mystery', initiativeArray);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring malformed initiative entry from array input.',
+        { entry: 'invalid-entry' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with non-string entity id from array input.',
+        { entityId: 42 }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with blank entity id from array input after trimming whitespace.',
+        { entityId: '   ' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with missing score.',
+        { entityId: 'actor2' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
+        expect.objectContaining({ entityId: 'actor3', receivedType: 'object' })
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Ignoring initiative entry with empty string score.',
+        { entityId: 'actor5' }
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'RoundManager.startRound(): Duplicate initiative entry for entity id "actor1" after normalisation. Using latest value.',
+        expect.objectContaining({ entityId: 'actor1' })
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "RoundManager.startRound(): Unknown strategy 'mystery'. Falling back to 'initiative' because initiative data was provided."
+      );
+
+      const [, usedStrategy, normalisedInitiative] =
+        mockTurnOrderService.startNewRound.mock.calls[0];
+      expect(usedStrategy).toBe('initiative');
+      expect(Array.from(normalisedInitiative.entries())).toEqual([
+        ['actor1', 7],
+        ['actor4', 1],
+        ['actor6', 9],
+      ]);
     });
 
     it('should filter out non-actor entities', async () => {
