@@ -468,4 +468,11 @@ class OperationInterpreter extends BaseService {
   }
 }
 
+export const __internal = Object.freeze({
+  evaluateJsonLogicRecursively,
+  hasValidJsonLogicShape,
+  shouldSkipJsonLogicEvaluation,
+  JSON_LOGIC_SKIP_PATHS,
+});
+
 export default OperationInterpreter;

@@ -13,7 +13,10 @@ import {
   afterAll,
 } from '@jest/globals';
 import jsonLogic from 'json-logic-js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import OperationInterpreter, {
+  __internal as operationInterpreterInternals,
+} from '../../../src/logic/operationInterpreter.js';
+import * as contextUtils from '../../../src/utils/contextUtils.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 /**
@@ -41,6 +44,13 @@ const mockQueryEntitiesHandler = jest.fn();
 const mockHandlerWithError = jest.fn(() => {
   throw new Error('Handler failed!');
 });
+
+const {
+  evaluateJsonLogicRecursively,
+  hasValidJsonLogicShape,
+  shouldSkipJsonLogicEvaluation,
+  JSON_LOGIC_SKIP_PATHS,
+} = operationInterpreterInternals;
 
 /**
  * -----------------------------------------------------------------------
@@ -341,6 +351,225 @@ describe('OperationInterpreter', () => {
     );
   });
 
+  describe('JSON Logic evaluation scenarios', () => {
+    test('execute evaluates nested JSON Logic expressions with arrays and nested operators', () => {
+      const capturingHandler = jest.fn((params) => params);
+      mockRegistry.getHandler.mockReturnValue(capturingHandler);
+
+      const executionContext = {
+        ...mockExecutionContext,
+        actor: { ...mockExecutionContext.actor, name: 'Hero' },
+        evaluationContext: {
+          ...mockExecutionContext.evaluationContext,
+          context: { shouldLog: true, fallbackValue: 'fallback' },
+          actor: { name: 'Hero' },
+        },
+      };
+
+      const operation = {
+        type: 'CUSTOM_LOGIC',
+        parameters: {
+          value: {
+            if: [
+              { var: ['context.shouldLog', false] },
+              { log: { var: 'actor.name' } },
+              { var: 'context.fallbackValue' },
+            ],
+          },
+        },
+      };
+
+      interpreter.execute(operation, executionContext);
+
+      expect(capturingHandler).toHaveBeenCalledWith(
+        { value: 'Hero' },
+        executionContext
+      );
+    });
+
+    test('execute leaves invalid JsonLogic var operand unresolved', () => {
+      const capturingHandler = jest.fn((params) => params);
+      mockRegistry.getHandler.mockReturnValue(capturingHandler);
+      const spy = jest.spyOn(jsonLogic, 'apply');
+
+      const operation = {
+        type: 'CUSTOM_LOGIC',
+        parameters: {
+          value: { var: [] },
+        },
+      };
+
+      interpreter.execute(operation, mockExecutionContext);
+
+      expect(capturingHandler).toHaveBeenCalledWith(
+        { value: { var: [] } },
+        mockExecutionContext
+      );
+      expect(spy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ var: [] }),
+        expect.anything()
+      );
+
+      spy.mockRestore();
+    });
+
+    test('execute preserves action arrays defined in parameters', () => {
+      const capturingHandler = jest.fn((params) => params);
+      mockRegistry.getHandler.mockReturnValue(capturingHandler);
+
+      const operation = {
+        type: 'IF',
+        parameters: {
+          condition: { var: 'context.shouldRun' },
+          then_actions: [
+            { type: 'LOG', parameters: { message: '{actor.name}' } },
+          ],
+          metadata: { var: 'context.existingVar' },
+        },
+      };
+
+      const executionContext = {
+        ...mockExecutionContext,
+        evaluationContext: {
+          ...mockExecutionContext.evaluationContext,
+          context: { shouldRun: true, existingVar: 'present' },
+        },
+      };
+
+      interpreter.execute(operation, executionContext);
+
+      const [params] = capturingHandler.mock.calls[0];
+      expect(params.metadata).toBe('present');
+      expect(params.then_actions).toEqual(operation.parameters.then_actions);
+    });
+
+    test('execute evaluates supplementary with_component_data keys while skipping conditions', () => {
+      const capturingHandler = jest.fn((params) => params);
+      mockRegistry.getHandler.mockReturnValue(capturingHandler);
+
+      const executionContext = {
+        ...mockExecutionContext,
+        evaluationContext: {
+          ...mockExecutionContext.evaluationContext,
+          context: { shouldMatch: true, extraInfo: 'ready' },
+        },
+      };
+
+      const operation = {
+        type: 'QUERY_ENTITIES',
+        parameters: {
+          result_variable: 'followers',
+          filters: [
+            {
+              with_component_data: {
+                component_type: 'companionship:following',
+                condition: { '==': [{ var: 'context.shouldMatch' }, true] },
+                additional_value: { var: 'context.extraInfo' },
+              },
+            },
+          ],
+        },
+      };
+
+      interpreter.execute(operation, executionContext);
+
+      const [params] = capturingHandler.mock.calls[0];
+      expect(params.filters[0].with_component_data.condition).toEqual(
+        operation.parameters.filters[0].with_component_data.condition
+      );
+      expect(params.filters[0].with_component_data.additional_value).toBe(
+        'ready'
+      );
+    });
+
+    test('execute logs warning and returns original value when JsonLogic evaluation fails', () => {
+      const capturingHandler = jest.fn((params) => params);
+      mockRegistry.getHandler.mockReturnValue(capturingHandler);
+      const error = new Error('Computation failed');
+      const applySpy = jest
+        .spyOn(jsonLogic, 'apply')
+        .mockImplementation(() => {
+          throw error;
+        });
+
+      const executionContext = {
+        ...mockExecutionContext,
+        evaluationContext: {
+          ...mockExecutionContext.evaluationContext,
+          context: { value: 10 },
+        },
+      };
+
+      const logicPayload = { log: { var: 'context.value' } };
+      const operation = {
+        type: 'CUSTOM_LOGIC',
+        parameters: { payload: logicPayload },
+      };
+
+      interpreter.execute(operation, executionContext);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'OperationInterpreter: OperationInterpreter: Failed to evaluate JSON Logic expression: Computation failed. Using original value.'
+      );
+      expect(capturingHandler).toHaveBeenCalledWith(
+        { payload: logicPayload },
+        executionContext
+      );
+
+      applySpy.mockRestore();
+    });
+
+    test('execute logs error and skips handler when placeholder resolution fails', () => {
+      const capturingHandler = jest.fn();
+      mockRegistry.getHandler.mockReturnValue(capturingHandler);
+
+      const placeholderError = new Error('Unable to resolve placeholder');
+      const placeholderSpy = jest
+        .spyOn(contextUtils, 'resolvePlaceholders')
+        .mockImplementation(() => {
+          throw placeholderError;
+        });
+
+      const operation = {
+        type: 'CUSTOM_LOGIC',
+        parameters: { value: '{actor.name}' },
+      };
+
+      interpreter.execute(operation, mockExecutionContext);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'OperationInterpreter: Error resolving placeholders for operation "CUSTOM_LOGIC". Skipping handler.',
+        placeholderError
+      );
+      expect(capturingHandler).not.toHaveBeenCalled();
+
+      placeholderSpy.mockRestore();
+    });
+
+    test('execute propagates rejected handler promises with debug logging', async () => {
+      const rejection = new Error('Async failure');
+      const asyncHandler = jest.fn(() => Promise.reject(rejection));
+      mockRegistry.getHandler.mockReturnValue(asyncHandler);
+
+      const operation = {
+        type: 'PROMISE_OP',
+        parameters: { value: 'data' },
+      };
+
+      await expect(
+        interpreter.execute(operation, mockExecutionContext)
+      ).rejects.toThrow(rejection);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'OperationInterpreter: Handler for operation "PROMISE_OP" threw – re-throwing to caller.'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'OperationInterpreter: [DEBUG] OperationInterpreter.execute - Handler for "PROMISE_OP" threw error:',
+        rejection
+      );
+    });
+  });
+
   /* ────────────────────────────────────────────────────────────────────────
      Unknown handler
      ─────────────────────────────────────────────────────────────────────── */
@@ -434,5 +663,50 @@ describe('OperationInterpreter', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'OperationInterpreter: Handler for operation "ERROR_OP" threw – re-throwing to caller.'
     );
+  });
+});
+
+describe('OperationInterpreter internal helpers', () => {
+  test('hasValidJsonLogicShape handles expected truthy and falsy cases', () => {
+    expect(hasValidJsonLogicShape(null)).toBe(false);
+    expect(hasValidJsonLogicShape(['not', 'object'])).toBe(false);
+    expect(hasValidJsonLogicShape({ foo: 'bar' })).toBe(false);
+    expect(hasValidJsonLogicShape({ if: [1, 2, 3] })).toBe(true);
+    expect(hasValidJsonLogicShape({ var: [] })).toBe(false);
+    expect(hasValidJsonLogicShape({ var: ['context.value', 0] })).toBe(true);
+    expect(hasValidJsonLogicShape({ log: { var: 'actor.name' } })).toBe(true);
+  });
+
+  test('evaluateJsonLogicRecursively returns empty objects without evaluation', () => {
+    const loggerStub = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const emptyObject = {};
+
+    const result = evaluateJsonLogicRecursively(
+      emptyObject,
+      {},
+      loggerStub,
+      new Set(),
+      [],
+      ['filters']
+    );
+
+    expect(result).toBe(emptyObject);
+    expect(loggerStub.debug).not.toHaveBeenCalled();
+    expect(loggerStub.warn).not.toHaveBeenCalled();
+  });
+
+  test('shouldSkipJsonLogicEvaluation respects wildcard path comparisons', () => {
+    expect(
+      shouldSkipJsonLogicEvaluation(
+        ['filters', '0', 'with_component_data', 'condition'],
+        JSON_LOGIC_SKIP_PATHS
+      )
+    ).toBe(true);
+    expect(
+      shouldSkipJsonLogicEvaluation(
+        ['filters', '0', 'with_component_data', 'other'],
+        JSON_LOGIC_SKIP_PATHS
+      )
+    ).toBe(false);
   });
 });
