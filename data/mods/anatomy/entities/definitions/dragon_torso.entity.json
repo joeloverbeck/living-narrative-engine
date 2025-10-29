@@ -10,27 +10,27 @@
       "sockets": [
         {
           "id": "leg_left_front",
-          "orientation": "left_front",
+          "orientation": "left",
           "allowedTypes": ["dragon_leg"],
-          "nameTpl": "{{orientation}} leg"
+          "nameTpl": "{{orientation}} front leg"
         },
         {
           "id": "leg_right_front",
-          "orientation": "right_front",
+          "orientation": "right",
           "allowedTypes": ["dragon_leg"],
-          "nameTpl": "{{orientation}} leg"
+          "nameTpl": "{{orientation}} front leg"
         },
         {
           "id": "leg_left_rear",
-          "orientation": "left_rear",
+          "orientation": "left",
           "allowedTypes": ["dragon_leg"],
-          "nameTpl": "{{orientation}} leg"
+          "nameTpl": "{{orientation}} rear leg"
         },
         {
           "id": "leg_right_rear",
-          "orientation": "right_rear",
+          "orientation": "right",
           "allowedTypes": ["dragon_leg"],
-          "nameTpl": "{{orientation}} leg"
+          "nameTpl": "{{orientation}} rear leg"
         },
         {
           "id": "wing_left",
