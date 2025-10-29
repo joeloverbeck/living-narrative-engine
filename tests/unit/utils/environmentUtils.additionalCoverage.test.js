@@ -10,6 +10,7 @@ const {
   getMemoryUsagePercent,
   hasEnvironmentVariable,
   createProcessEnvShim,
+  getBooleanEnvironmentVariable,
 } = environmentUtilsModule;
 
 const GLOBAL_KEYS = [
@@ -77,6 +78,34 @@ describe('environmentUtils additional coverage', () => {
 
     const value = getEnvironmentVariable('EMPTY_KEY', 'default-value');
     expect(value).toBe('default-value');
+  });
+
+  it('returns configured defaults for missing and unrecognized boolean flags', () => {
+    globalThis.process = {
+      versions: { node: '20.0.0' },
+      env: {},
+    };
+
+    expect(getBooleanEnvironmentVariable('EXPERIMENT_FLAG', true)).toBe(true);
+
+    globalThis.process.env.EXPERIMENT_FLAG = 'perhaps';
+    expect(getBooleanEnvironmentVariable('EXPERIMENT_FLAG', true)).toBe(true);
+  });
+
+  it('falls back to provided boolean defaults when browser shim stores undefined', () => {
+    globalThis.process = { versions: {}, env: {} };
+    globalThis.window = { env: { SHIM_FLAG: undefined } };
+    globalThis.document = {};
+
+    expect(getBooleanEnvironmentVariable('SHIM_FLAG', true)).toBe(true);
+  });
+
+  it('treats null boolean values as absent and returns the fallback in browser shim', () => {
+    globalThis.process = { versions: {}, env: {} };
+    globalThis.window = { env: { SHIM_FLAG: null } };
+    globalThis.document = {};
+
+    expect(getBooleanEnvironmentVariable('SHIM_FLAG', false)).toBe(false);
   });
 
   it('treats absent global env as falsy when looking up variables', () => {
@@ -201,6 +230,31 @@ describe('environmentUtils additional coverage', () => {
     expect(getMemoryUsagePercent()).toBe(0);
   });
 
+  it('falls back to the heap total when V8 statistics are invalid', () => {
+    delete globalThis.performance;
+    globalThis.process = {
+      versions: { node: '20.0.0' },
+      memoryUsage: jest.fn(() => ({
+        heapUsed: 128,
+        heapTotal: 256,
+        external: 32,
+      })),
+      binding: jest.fn(() => ({
+        getHeapStatistics: () => ({ heap_size_limit: 0 }),
+      })),
+    };
+
+    const usage = getMemoryUsage();
+
+    expect(globalThis.process.binding).toHaveBeenCalledWith('v8');
+    expect(usage).toEqual({
+      heapUsed: 128,
+      heapTotal: 256,
+      heapLimit: 256,
+      external: 32,
+    });
+  });
+
   it('returns zeros when browser memory data is missing', () => {
     delete globalThis.process;
     globalThis.performance = {
@@ -224,6 +278,26 @@ describe('environmentUtils additional coverage', () => {
     };
 
     expect(hasEnvironmentVariable('DOES_NOT_EXIST')).toBe(false);
+  });
+
+  it('treats explicit null values as absent when checking presence', () => {
+    const spy = jest
+      .spyOn(environmentUtilsModule, 'getEnvironmentVariable')
+      .mockReturnValueOnce(null);
+
+    try {
+      expect(hasEnvironmentVariable('NULLISH')).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('treats explicit undefined values as absent when checking presence in browser shim', () => {
+    globalThis.process = { versions: {}, env: {} };
+    globalThis.window = { env: { UNDEFINED: undefined } };
+    globalThis.document = {};
+
+    expect(hasEnvironmentVariable('UNDEFINED')).toBe(false);
   });
 
   it('returns false when a fresh module experiences an environment lookup failure', async () => {

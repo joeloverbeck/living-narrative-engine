@@ -126,10 +126,6 @@ const FALSY_ENV_VALUES = new Set(['false', '0', 'no', 'off']);
  * @returns {boolean} Normalized boolean flag.
  */
 function normalizeBooleanEnvValue(rawValue, defaultValue = false) {
-  if (rawValue === undefined || rawValue === null) {
-    return defaultValue;
-  }
-
   const normalized = String(rawValue).trim().toLowerCase();
   if (normalized.length === 0) {
     return defaultValue;
@@ -231,10 +227,6 @@ export function getEnvironmentConfig() {
 export function hasEnvironmentVariable(key) {
   try {
     const rawValue = getEnvironmentVariable(key, undefined);
-
-    if (rawValue === undefined || rawValue === null) {
-      return false;
-    }
 
     const normalizedValue =
       typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
