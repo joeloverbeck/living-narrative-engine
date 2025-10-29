@@ -148,10 +148,16 @@ export class BaseBodyPartOperator {
       entityId = /** @type {{id: string|number}} */ (entity).id;
     } else if (entity && typeof entity === 'object') {
       entityId = /** @type {object} */ (entity);
-    } else if (
-      typeof entity === 'string' ||
-      typeof entity === 'number'
-    ) {
+    } else if (typeof entity === 'string') {
+      entityId = entity;
+    } else if (typeof entity === 'number') {
+      if (entity === 0) {
+        this.logger.warn(
+          `${this.operatorName}: Invalid entity at path ${entityPath}`
+        );
+        return null;
+      }
+
       entityId = entity;
     } else {
       this.logger.warn(
@@ -164,7 +170,9 @@ export class BaseBodyPartOperator {
       entityId === undefined ||
       entityId === null ||
       (typeof entityId === 'string' && entityId.trim() === '') ||
-      (typeof entityId === 'number' && Number.isNaN(entityId))
+      (!hasEntityId &&
+        typeof entityId === 'number' &&
+        (Number.isNaN(entityId) || entityId === 0))
     ) {
       this.logger.warn(
         `${this.operatorName}: Invalid entity at path ${entityPath}`
