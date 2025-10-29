@@ -158,6 +158,179 @@ describe('GameSessionManager edge case coverage', () => {
     );
   });
 
+  it('should record reset failures when stopFn already failed with an existing cause', async () => {
+    const deps = createDependencies();
+    deps.engineState.setStarted('ExistingWorld');
+
+    const stopFailure = new Error('Stop failed');
+    stopFailure.cause = new Error('Existing cause');
+    deps.stopFn.mockRejectedValue(stopFailure);
+
+    const resetFailure = new Error('Reset failed');
+    deps.resetCoreGameStateFn.mockRejectedValue(resetFailure);
+
+    const manager = new GameSessionManager({
+      logger: deps.logger,
+      turnManager: deps.turnManager,
+      playtimeTracker: deps.playtimeTracker,
+      safeEventDispatcher: deps.safeEventDispatcher,
+      engineState: deps.engineState,
+      stopFn: deps.stopFn,
+      resetCoreGameStateFn: deps.resetCoreGameStateFn,
+      startEngineFn: deps.startEngineFn,
+      anatomyInitializationService: deps.anatomyInitializationService,
+    });
+
+    await expect(
+      manager.prepareForNewGameSession('RecoveryWorld')
+    ).rejects.toBe(stopFailure);
+
+    expect(stopFailure.resetErrors).toEqual([resetFailure]);
+  });
+
+  it('should derive trimmed identifiers when percent decoding removes visible characters', async () => {
+    const originalDecode = global.decodeURIComponent;
+    global.decodeURIComponent = jest.fn((value) => {
+      if (value === 'Alpha') {
+        return '   ';
+      }
+      return originalDecode(value);
+    });
+
+    const { manager, safeEventDispatcher } = createManager();
+
+    try {
+      await manager.prepareForLoadGameSession('Alpha');
+    } finally {
+      global.decodeURIComponent = originalDecode;
+    }
+
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: 'Loading Alpha...',
+        inputDisabledMessage: 'Loading game from Alpha...',
+      }
+    );
+  });
+
+  it('should safely handle manual save names that normalize to empty output', async () => {
+    extractSaveNameMock.mockImplementation((value) => {
+      if (value === 'manual_case.sav') {
+        return undefined;
+      }
+      return value;
+    });
+
+    const { manager, safeEventDispatcher } = createManager();
+
+    await manager.prepareForLoadGameSession('manual_case.sav');
+
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: 'Loading manual case...',
+        inputDisabledMessage: 'Loading game from manual case...',
+      }
+    );
+  });
+
+  it('should default to a generic label when only the base save directory is provided', async () => {
+    extractSaveNameMock.mockImplementation((value) => {
+      if (value === 'saves') {
+        return '';
+      }
+      return value;
+    });
+
+    const { manager, safeEventDispatcher } = createManager();
+
+    await manager.prepareForLoadGameSession('saves/');
+
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: 'Loading saves...',
+        inputDisabledMessage: 'Loading game from saves...',
+      }
+    );
+  });
+
+  it('should normalize metadata world names that look like file paths after empty titles', async () => {
+    const { manager, engineState, startEngineFn } = createManager();
+
+    const saveData = {
+      metadata: {
+        gameTitle: { toString: () => '' },
+        worldName: 'C\\\\worlds\\\\archive',
+      },
+      entities: [],
+      gameState: {},
+    };
+
+    const result = await manager.finalizeLoadSuccess(saveData, 'slot-path');
+
+    expect(result.success).toBe(true);
+    expect(engineState.activeWorld).toBe('slot-path');
+    expect(startEngineFn).toHaveBeenCalledWith('slot-path');
+  });
+
+  it('should treat null extraction results as empty segments', async () => {
+    extractSaveNameMock.mockImplementation((value) => {
+      if (value === 'manual_save_null.sav') {
+        return null;
+      }
+      return value;
+    });
+
+    const { manager, safeEventDispatcher } = createManager();
+
+    await manager.prepareForLoadGameSession('manual_save_null.sav');
+
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: 'Loading null...',
+        inputDisabledMessage: 'Loading game from null...',
+      }
+    );
+  });
+
+  it('should support bigint metadata values when resolving world names', async () => {
+    const { manager, engineState, startEngineFn } = createManager();
+
+    const saveData = {
+      metadata: {
+        gameTitle: 42n,
+      },
+      entities: [],
+      gameState: {},
+    };
+
+    await manager.finalizeLoadSuccess(saveData, 'slot-bigint');
+
+    expect(engineState.activeWorld).toBe('42');
+    expect(startEngineFn).toHaveBeenCalledWith('42');
+  });
+
+  it('should coerce symbol metadata to readable world names', async () => {
+    const { manager, engineState, startEngineFn } = createManager();
+
+    const saveData = {
+      metadata: {
+        gameTitle: '',
+        worldName: Symbol('legends'),
+      },
+      entities: [],
+      gameState: {},
+    };
+
+    await manager.finalizeLoadSuccess(saveData, 'slot-symbol');
+
+    expect(engineState.activeWorld).toBe('Symbol(legends)');
+    expect(startEngineFn).toHaveBeenCalledWith('Symbol(legends)');
+  });
+
   it('should handle decoded metadata that collapses to empty strings when checking for file paths', async () => {
     const originalDecode = global.decodeURIComponent;
     global.decodeURIComponent = jest.fn((value) => {
