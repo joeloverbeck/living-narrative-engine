@@ -84,4 +84,43 @@ describe('EstablishFollowRelationHandler', () => {
       })
     );
   });
+
+  test('returns early when params are missing', async () => {
+    await handler.execute(null, execCtx);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'ESTABLISH_FOLLOW_RELATION: params missing or invalid.',
+      { params: null }
+    );
+    expect(em.addComponent).not.toHaveBeenCalled();
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+  });
+
+  test('dispatches error when leader id is invalid', async () => {
+    await handler.execute({ follower_id: 'A', leader_id: '' }, execCtx);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('leader_id'),
+      })
+    );
+    expect(em.addComponent).not.toHaveBeenCalled();
+  });
+
+  test('dispatches error when updating follower component fails', async () => {
+    const error = new Error('nope');
+    em.addComponent.mockRejectedValueOnce(error);
+    await handler.execute({ follower_id: 'A', leader_id: 'B' }, execCtx);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Failed updating follower component'),
+        details: expect.objectContaining({
+          error: error.message,
+          follower_id: 'A',
+          leader_id: 'B',
+        }),
+      })
+    );
+    expect(rebuild.execute).not.toHaveBeenCalled();
+  });
 });
