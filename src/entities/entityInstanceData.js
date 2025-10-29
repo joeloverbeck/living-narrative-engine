@@ -156,11 +156,6 @@ class EntityInstanceData {
       return false; // Invalid componentTypeId
     }
 
-    if (typeof this.#overrides !== 'object' || this.#overrides === null) {
-      this.#overrides = freeze({});
-      return false;
-    }
-
     if (
       Object.prototype.hasOwnProperty.call(this.#overrides, componentTypeId)
     ) {
