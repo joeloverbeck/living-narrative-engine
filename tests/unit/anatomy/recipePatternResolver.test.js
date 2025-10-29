@@ -346,6 +346,72 @@ describe('RecipePatternResolver', () => {
         ValidationError
       );
     });
+
+    it('should return empty when appendage data disappears after validation', () => {
+      const validationTemplate = {
+        topology: {
+          appendages: [{ type: 'tail', id: 'main_tail' }],
+        },
+      };
+
+      const emptyTemplate = { topology: {} };
+
+      mockDataRegistry.get
+        .mockImplementationOnce(() => validationTemplate)
+        .mockImplementationOnce(() => validationTemplate)
+        .mockImplementation(() => emptyTemplate);
+
+      const recipe = {
+        patterns: [{ matchesGroup: 'appendage:tail', partType: 'tail_segment' }],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'dragon:body',
+        slots: {},
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({});
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Found 0 appendages matching type 'tail'"
+      );
+      expect(mockSlotGenerator.extractSlotKeysFromAppendage).not.toHaveBeenCalled();
+    });
+
+    it('should return empty when limb set data disappears after validation', () => {
+      const validationTemplate = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      const emptyTemplate = { topology: {} };
+
+      mockDataRegistry.get
+        .mockImplementationOnce(() => validationTemplate)
+        .mockImplementationOnce(() => validationTemplate)
+        .mockImplementation(() => emptyTemplate);
+
+      const recipe = {
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'beast:body',
+        slots: {},
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({});
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Found 0 limb sets matching type 'leg'"
+      );
+      expect(mockSlotGenerator.extractSlotKeysFromLimbSet).not.toHaveBeenCalled();
+    });
   });
 
   describe('matchesPattern Resolution', () => {
@@ -454,6 +520,21 @@ describe('RecipePatternResolver', () => {
       const result = resolver.resolveRecipePatterns(recipe, blueprint);
 
       expect(result.slots).toEqual({});
+    });
+
+    it('should handle missing blueprint slots when resolving wildcard patterns', () => {
+      const recipe = {
+        patterns: [{ matchesPattern: 'wing_*', partType: 'wing_segment' }],
+      };
+
+      const blueprint = {};
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({});
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Pattern 1: Pattern 'wing_*' matched 0 slots")
+      );
     });
   });
 
@@ -605,6 +686,26 @@ describe('RecipePatternResolver', () => {
       expect(result.slots).toEqual({
         slot1: { partType: 'torso_part' },
       });
+    });
+
+    it('should handle matchesAll when blueprint lacks slot definitions', () => {
+      const recipe = {
+        patterns: [
+          {
+            matchesAll: { slotType: 'wing_segment' },
+            partType: 'wing_segment',
+          },
+        ],
+      };
+
+      const blueprint = {};
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({});
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('matchesAll filter')
+      );
     });
   });
 
@@ -801,6 +902,28 @@ describe('RecipePatternResolver', () => {
       // Only leg_left should remain
       expect(result.slots).toEqual({
         leg_left: { partType: 'part' },
+      });
+    });
+
+    it('should retain slots when exclusions reference undefined blueprint entries', () => {
+      const recipe = {
+        patterns: [
+          {
+            matches: ['phantom_slot'],
+            partType: 'phantom_part',
+            exclude: { properties: { orientation: 'left' } },
+          },
+        ],
+      };
+
+      const blueprint = {
+        slots: {},
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({
+        phantom_slot: { partType: 'phantom_part' },
       });
     });
   });
@@ -1716,7 +1839,7 @@ describe('RecipePatternResolver', () => {
       );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('unknown pattern')
+        expect.stringContaining('matchesAll: {}')
       );
     });
   });

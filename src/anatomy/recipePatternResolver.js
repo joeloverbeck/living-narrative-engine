@@ -202,14 +202,20 @@ class RecipePatternResolver {
     let groupExists = false;
     const availableGroups = [];
 
+    const topology = template?.topology;
+
     if (groupType === 'limbSet') {
-      const limbSets = template.topology?.limbSets || [];
+      const limbSets = Array.isArray(topology?.limbSets)
+        ? topology.limbSets
+        : [];
       groupExists = limbSets.some(ls => ls.type === groupName);
       availableGroups.push(
         ...limbSets.map(ls => `limbSet:${ls.type}`)
       );
-    } else if (groupType === 'appendage') {
-      const appendages = template.topology?.appendages || [];
+    } else {
+      const appendages = Array.isArray(topology?.appendages)
+        ? topology.appendages
+        : [];
       groupExists = appendages.some(a => a.type === groupName);
       availableGroups.push(
         ...appendages.map(a => `appendage:${a.type}`)
@@ -327,11 +333,17 @@ class RecipePatternResolver {
         const [groupType, groupName] = groupRef.split(':');
 
         let groupExists = false;
+        const topology = template?.topology;
+
         if (groupType === 'limbSet') {
-          const limbSets = template?.topology?.limbSets || [];
+          const limbSets = Array.isArray(topology?.limbSets)
+            ? topology.limbSets
+            : [];
           groupExists = limbSets.some(ls => ls.type === groupName);
-        } else if (groupType === 'appendage') {
-          const appendages = template?.topology?.appendages || [];
+        } else {
+          const appendages = Array.isArray(topology?.appendages)
+            ? topology.appendages
+            : [];
           groupExists = appendages.some(a => a.type === groupName);
         }
 
@@ -437,8 +449,8 @@ class RecipePatternResolver {
     if (pattern.matches) return 4; // Explicit list
     if (pattern.matchesAll) return 3; // Property-based
     if (pattern.matchesPattern) return 2; // Wildcard pattern
-    if (pattern.matchesGroup) return 1; // Slot group
-    return 0;
+    // At this point validation guarantees a matchesGroup pattern
+    return 1;
   }
 
   /**
@@ -451,14 +463,17 @@ class RecipePatternResolver {
   #getPatternDescription(pattern) {
     if (pattern.matches) {
       return `matches: explicit list`;
-    } else if (pattern.matchesGroup) {
-      return `matchesGroup: '${pattern.matchesGroup}'`;
-    } else if (pattern.matchesPattern) {
-      return `matchesPattern: '${pattern.matchesPattern}'`;
-    } else if (pattern.matchesAll) {
-      return `matchesAll: ${JSON.stringify(pattern.matchesAll)}`;
     }
-    return 'unknown pattern';
+
+    if (pattern.matchesGroup) {
+      return `matchesGroup: '${pattern.matchesGroup}'`;
+    }
+
+    if (pattern.matchesPattern) {
+      return `matchesPattern: '${pattern.matchesPattern}'`;
+    }
+
+    return `matchesAll: ${JSON.stringify(pattern.matchesAll ?? {})}`;
   }
 
   /**
@@ -529,7 +544,7 @@ class RecipePatternResolver {
       else if (pattern.matchesAll) {
         matchedSlotKeys = this.#resolvePropertyFilter(
           pattern.matchesAll,
-          blueprint.slots
+          blueprint.slots || {}
         );
         this.#logger.debug(
           `matchesAll resolved to ${matchedSlotKeys.length} slots`
