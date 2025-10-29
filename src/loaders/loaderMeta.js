@@ -103,7 +103,7 @@ export const meta = {
     registryKey: 'anatomyFormatting',
   },
   anatomyStructureTemplates: {
-    contentKey: 'structureTemplates',
+    contentKey: 'structure-templates',
     diskFolder: 'structure-templates',
     phase: 'definitions',
     registryKey: 'anatomyStructureTemplates',
