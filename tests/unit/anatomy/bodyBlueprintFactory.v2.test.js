@@ -455,12 +455,41 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       });
 
-      await expect(
-        factory.createAnatomyGraph('anatomy:griffin_v2', 'anatomy:griffin_standard')
-      ).rejects.toThrow(ValidationError);
-      await expect(
-        factory.createAnatomyGraph('anatomy:griffin_v2', 'anatomy:griffin_standard')
-      ).rejects.toThrow(/additionalSlots conflict/);
+      const result = await factory.createAnatomyGraph(
+        'anatomy:griffin_v2',
+        'anatomy:griffin_standard'
+      );
+
+      expect(result).toEqual({
+        rootId: 'griffin-root',
+        entities: ['griffin-root', 'child-entity-1'],
+      });
+
+      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledWith(
+        v2Blueprint.additionalSlots.wing_left.requirements,
+        undefined
+      );
+
+      expect(mockPartSelectionService.selectPart).toHaveBeenCalledWith(
+        v2Blueprint.additionalSlots.wing_left.requirements,
+        ['wing'],
+        undefined,
+        expect.any(Function)
+      );
+
+      expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenCalledWith(
+        'griffin-root',
+        'wing_left_socket',
+        'anatomy:test_part',
+        undefined,
+        'left'
+      );
+
+      expect(mockSocketManager.occupySocket).toHaveBeenCalledWith(
+        'griffin-root',
+        'wing_left_socket',
+        expect.any(Set)
+      );
     });
   });
 
