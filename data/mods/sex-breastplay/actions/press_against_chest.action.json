@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-breastplay:press_against_chest",
+  "name": "Press Against Chest",
+  "description": "Press yourself against the target's chest, letting your breasts meet them head-on.",
+  "targets": {
+    "primary": {
+      "scope": "positioning:close_actors_facing_each_other",
+      "placeholder": "target",
+      "description": "Partner facing you up close"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "press yourself against {target}'s chest",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "breast"]
+      },
+      "failure_message": "You need breasts to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#7a1d58",
+    "textColor": "#fde6f2",
+    "hoverBackgroundColor": "#8d2465",
+    "hoverTextColor": "#fff2f9"
+  }
+}
