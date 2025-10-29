@@ -28,6 +28,16 @@
           "allowedTypes": ["head", "cephalopod_head", "kraken_head"],
           "nameTpl": "head"
         }
+      },
+      {
+        "type": "ink_sac",
+        "count": 1,
+        "attachment": "posterior",
+        "socketPattern": {
+          "idTemplate": "ink_sac",
+          "allowedTypes": ["ink_reservoir", "ink_sac"],
+          "nameTpl": "ink sac"
+        }
       }
     ]
   }

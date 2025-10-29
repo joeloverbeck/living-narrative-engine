@@ -39,6 +39,16 @@
           "allowedTypes": ["abdomen", "arachnid_abdomen"],
           "nameTpl": "abdomen"
         }
+      },
+      {
+        "type": "spinnerets",
+        "count": 1,
+        "attachment": "posterior",
+        "socketPattern": {
+          "idTemplate": "spinnerets",
+          "allowedTypes": ["spinneret"],
+          "nameTpl": "spinnerets"
+        }
       }
     ]
   }
