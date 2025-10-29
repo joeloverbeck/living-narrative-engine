@@ -465,6 +465,7 @@ export default class BatchOperationManager extends IBatchOperationManager {
       case 'remove':
         return await this.#lifecycleManager.removeEntityInstance(item);
 
+      /* istanbul ignore next -- defensive guard for unexpected operations */
       default:
         throw new Error(`Unknown batch operation: ${operation}`);
     }
