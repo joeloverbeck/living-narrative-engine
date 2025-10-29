@@ -49,6 +49,16 @@
           "allowedTypes": ["dragon_tail", "reptilian_tail"],
           "nameTpl": "tail"
         }
+      },
+      {
+        "type": "fire_gland",
+        "count": 1,
+        "attachment": "ventral",
+        "socketPattern": {
+          "idTemplate": "fire_gland",
+          "allowedTypes": ["gland", "fire_gland"],
+          "nameTpl": "fire gland"
+        }
       }
     ]
   }
