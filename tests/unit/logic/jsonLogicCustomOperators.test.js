@@ -5,6 +5,11 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import { HasSittingSpaceToRightOperator } from '../../../src/logic/operators/hasSittingSpaceToRightOperator.js';
+import { CanScootCloserOperator } from '../../../src/logic/operators/canScootCloserOperator.js';
+import { IsClosestLeftOccupantOperator } from '../../../src/logic/operators/isClosestLeftOccupantOperator.js';
+import { IsClosestRightOccupantOperator } from '../../../src/logic/operators/isClosestRightOccupantOperator.js';
+import { IsSocketCoveredOperator } from '../../../src/logic/operators/isSocketCoveredOperator.js';
 
 describe('JsonLogicCustomOperators', () => {
   let customOperators;
@@ -68,6 +73,118 @@ describe('JsonLogicCustomOperators', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'JsonLogicCustomOperators: Custom JSON Logic operators registered successfully'
       );
+    });
+  });
+
+  describe('operator registration delegates to evaluate implementations', () => {
+    let operations;
+    let evaluationService;
+
+    beforeEach(() => {
+      operations = {};
+      evaluationService = {
+        addOperation: jest.fn((name, handler) => {
+          operations[name] = handler;
+        }),
+      };
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test.each([
+      {
+        operatorName: 'isSocketCovered',
+        operatorClass: IsSocketCoveredOperator,
+        invocationArgs: ['actor.path', 'socket-1'],
+        expectedParams: ['actor.path', 'socket-1'],
+      },
+      {
+        operatorName: 'hasSittingSpaceToRight',
+        operatorClass: HasSittingSpaceToRightOperator,
+        invocationArgs: ['entity.path', 'target.path', 3],
+        expectedParams: ['entity.path', 'target.path', 3],
+      },
+      {
+        operatorName: 'canScootCloser',
+        operatorClass: CanScootCloserOperator,
+        invocationArgs: ['entity.path', 'target.path'],
+        expectedParams: ['entity.path', 'target.path'],
+      },
+      {
+        operatorName: 'isClosestLeftOccupant',
+        operatorClass: IsClosestLeftOccupantOperator,
+        invocationArgs: ['candidate.path', 'target.path', 'actor.path'],
+        expectedParams: ['candidate.path', 'target.path', 'actor.path'],
+      },
+      {
+        operatorName: 'isClosestRightOccupant',
+        operatorClass: IsClosestRightOccupantOperator,
+        invocationArgs: ['candidate.path', 'target.path', 'actor.path'],
+        expectedParams: ['candidate.path', 'target.path', 'actor.path'],
+      },
+    ])(
+      'delegates %s evaluation to operator instance',
+      ({
+        operatorName,
+        operatorClass,
+        invocationArgs,
+        expectedParams,
+      }) => {
+        const evaluateReturn = `result-${operatorName}`;
+        const evaluateSpy = jest
+          .spyOn(operatorClass.prototype, 'evaluate')
+          .mockReturnValue(evaluateReturn);
+
+        customOperators.registerOperators(evaluationService);
+
+        expect(evaluationService.addOperation).toHaveBeenCalledWith(
+          operatorName,
+          expect.any(Function)
+        );
+
+        const context = { label: 'ctx' };
+        const operation = operations[operatorName];
+        expect(operation).toBeInstanceOf(Function);
+
+        const result = operation.call(context, ...invocationArgs);
+
+        expect(result).toBe(evaluateReturn);
+        expect(evaluateSpy).toHaveBeenCalledWith(expectedParams, context);
+      }
+    );
+  });
+
+  describe('clearCaches', () => {
+    test('logs when no socket coverage operator is registered', () => {
+      mockLogger.debug.mockClear();
+
+      customOperators.clearCaches();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'JsonLogicCustomOperators: Clearing custom operator caches'
+      );
+    });
+
+    test('clears socket coverage cache when operator exists', () => {
+      customOperators.registerOperators(jsonLogicService);
+
+      const clearCacheSpy = jest.spyOn(
+        customOperators.isSocketCoveredOp,
+        'clearCache'
+      );
+
+      mockLogger.debug.mockClear();
+
+      customOperators.clearCaches();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'JsonLogicCustomOperators: Clearing custom operator caches'
+      );
+      expect(clearCacheSpy).toHaveBeenCalledTimes(1);
+
+      clearCacheSpy.mockRestore();
     });
   });
 
