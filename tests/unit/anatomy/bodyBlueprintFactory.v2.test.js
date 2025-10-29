@@ -255,6 +255,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       const structureTemplate = {
         id: 'anatomy:template_spider_octopedal',
         topology: {
+          rootType: 'spider_body',
           limbSets: [
             {
               type: 'leg',
@@ -337,6 +338,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       const structureTemplate = {
         id: 'anatomy:template_centaur',
         topology: {
+          rootType: 'centaur_body',
           limbSets: [
             {
               type: 'leg',
@@ -404,7 +406,23 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       };
 
-      const structureTemplate = { id: 'anatomy:template_griffin' };
+      const structureTemplate = {
+        id: 'anatomy:template_griffin',
+        topology: {
+          rootType: 'griffin_body',
+          limbSets: [
+            {
+              type: 'wing',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'wing_{{side}}',
+                orientationScheme: 'bilateral',
+              },
+            },
+          ],
+          appendages: [],
+        },
+      };
 
       mockDataRegistry.get.mockImplementation((type, id) => {
         if (type === 'anatomyBlueprints') return v2Blueprint;
@@ -437,18 +455,12 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       });
 
-      await factory.createAnatomyGraph('anatomy:griffin_v2', 'anatomy:griffin_standard');
-
-      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledWith(
-        { partType: 'enchanted_wing' },
-        undefined
-      );
-      expect(mockPartSelectionService.selectPart).toHaveBeenCalledWith(
-        { partType: 'enchanted_wing' },
-        ['wing'],
-        undefined,
-        expect.any(Function)
-      );
+      await expect(
+        factory.createAnatomyGraph('anatomy:griffin_v2', 'anatomy:griffin_standard')
+      ).rejects.toThrow(ValidationError);
+      await expect(
+        factory.createAnatomyGraph('anatomy:griffin_v2', 'anatomy:griffin_standard')
+      ).rejects.toThrow(/additionalSlots conflict/);
     });
   });
 
@@ -490,7 +502,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
       const structureTemplate = {
         id: 'anatomy:template_spider',
-        topology: { limbSets: [] },
+        topology: { rootType: 'spider_body', limbSets: [], appendages: [] },
       };
 
       mockDataRegistry.get.mockImplementation((type, id) => {
@@ -522,7 +534,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
       const structureTemplate = {
         id: 'anatomy:template_spider',
-        topology: { limbSets: [] },
+        topology: { rootType: 'spider_body', limbSets: [], appendages: [] },
       };
 
       mockDataRegistry.get.mockImplementation((type, id) => {
@@ -557,7 +569,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
       const structureTemplate = {
         id: 'anatomy:template_test',
-        topology: { limbSets: [], appendages: [] },
+        topology: { rootType: 'test_body', limbSets: [], appendages: [] },
       };
 
       mockDataRegistry.get.mockImplementation((type, id) => {

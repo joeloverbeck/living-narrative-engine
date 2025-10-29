@@ -155,7 +155,40 @@ describe('BodyBlueprintFactory additional coverage', () => {
     deps.dataRegistry.get.mockImplementation((type, id) => {
       if (type === 'anatomyBlueprints') return blueprint;
       if (type === 'anatomyStructureTemplates' && id === 'template:humanoid')
-        return { id: 'template:humanoid' };
+        return {
+          id: 'template:humanoid',
+          topology: {
+            rootType: 'torso',
+            limbSets: [
+              {
+                type: 'shoulder',
+                count: 1,
+                socketPattern: {
+                  idTemplate: 'shoulder_socket',
+                  orientationScheme: 'bilateral',
+                },
+              },
+              {
+                type: 'arm',
+                count: 1,
+                socketPattern: {
+                  idTemplate: 'upper_arm_socket',
+                  orientationScheme: 'linear',
+                },
+              },
+            ],
+            appendages: [
+              {
+                type: 'sensor',
+                count: 1,
+                socketPattern: {
+                  idTemplate: 'aux_socket',
+                  orientationScheme: 'linear',
+                },
+              },
+            ],
+          },
+        };
       return null;
     });
     deps.recipeProcessor.loadRecipe.mockReturnValue(recipe);
@@ -259,7 +292,23 @@ describe('BodyBlueprintFactory additional coverage', () => {
     deps.dataRegistry.get.mockImplementation((type, id) => {
       if (type === 'anatomyBlueprints') return blueprint;
       if (type === 'anatomyStructureTemplates' && id === 'template:minimal')
-        return { id: 'template:minimal' };
+        return {
+          id: 'template:minimal',
+          topology: {
+            rootType: 'core',
+            limbSets: [],
+            appendages: [
+              {
+                type: 'core',
+                count: 1,
+                socketPattern: {
+                  idTemplate: 'core_socket',
+                  orientationScheme: 'linear',
+                },
+              },
+            ],
+          },
+        };
       return null;
     });
     deps.socketGenerator.generateSockets.mockReturnValue(generatedSockets);
