@@ -156,8 +156,6 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
     seen.delete(value);
     return serialized;
   }
-
-  return JSON.stringify(value);
 }
 
 /**
@@ -345,6 +343,18 @@ function buildComposites(uniqueArr) {
     })
   );
 }
+
+export const __private__ = Object.freeze({
+  deduplicateActions,
+  stableSerializeForKey,
+  createActionKey,
+  formatParamsForLog,
+  partitionDiscoveredActions,
+  freezeClonedSet,
+  cloneAndFreezeValue,
+  truncateActions,
+  buildComposites,
+});
 
 export class ActionIndexingService {
   /**
