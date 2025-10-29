@@ -23,6 +23,10 @@ jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => {
   };
 });
 
+const actualSafeDispatchError = jest.requireActual(
+  '../../../src/utils/safeDispatchErrorUtils.js'
+).safeDispatchError;
+
 const createLegacyPlayerActor = (id) => ({
   id,
   hasComponent: jest.fn((componentId) => {
@@ -44,6 +48,56 @@ const drainTimersAndMicrotasks = async (iterations = 3) => {
     jest.runOnlyPendingTimers();
     await Promise.resolve();
   }
+};
+
+const prepareActiveActorTurn = async (
+  bed,
+  {
+    actor,
+    actorId = 'actor-under-test',
+    actorOptions = {},
+    handlerOverrides = {},
+  } = {}
+) => {
+  const { turnOrderService, turnHandlerResolver } = bed.mocks;
+  turnOrderService.isEmpty.mockReset();
+  turnOrderService.getNextEntity.mockReset();
+  turnHandlerResolver.resolveHandler.mockReset();
+
+  const activeActor =
+    actor ||
+    createMockEntity(actorId, {
+      isActor: true,
+      isPlayer: false,
+      ...actorOptions,
+    });
+  bed.setActiveEntities(activeActor);
+
+  turnOrderService.isEmpty
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true);
+  turnOrderService.getNextEntity
+    .mockResolvedValueOnce(activeActor)
+    .mockResolvedValue(null);
+
+  const handler = {
+    startTurn: jest.fn().mockResolvedValue(),
+    destroy: jest.fn().mockResolvedValue(),
+    signalNormalApparentTermination: jest.fn(),
+    ...handlerOverrides,
+  };
+  turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
+
+  const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+  const advanceSpy = jest
+    .spyOn(bed.turnManager, 'advanceTurn')
+    .mockImplementationOnce(realAdvance)
+    .mockResolvedValue(undefined);
+
+  await bed.turnManager.advanceTurn();
+
+  advanceSpy.mockRestore();
+  return { actor: activeActor, handler };
 };
 
 describeTurnManagerSuite(
@@ -327,6 +381,121 @@ describeTurnManagerSuite(
       }
     );
 
+    test(
+      'ignores whitespace-only entity id events when no actor is active',
+      async () => {
+        const bed = getBed();
+        const { dispatcher, logger } = bed.mocks;
+
+        await bed.startRunning();
+
+        logger.warn.mockClear();
+
+        dispatcher._triggerEvent(TURN_ENDED_ID, {
+          entityId: '   ',
+          success: true,
+        });
+
+        await drainTimersAndMicrotasks(3);
+
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "entityId comprised only of whitespace. Treating the id as missing."
+          ),
+          expect.objectContaining({ originalEntityId: '   ' })
+        );
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "without an entityId and no active actor. Ignoring."
+          ),
+          expect.objectContaining({
+            type: TURN_ENDED_ID,
+            payload: expect.objectContaining({ entityId: '   ' }),
+          })
+        );
+      }
+    );
+
+    test('treats invalid player_type data as an AI actor', async () => {
+      const bed = getBed();
+      const { dispatcher } = bed.mocks;
+
+      await bed.startRunning();
+
+      const ambiguousActor = {
+        id: 'ambiguous-player-type',
+        hasComponent: jest.fn((componentId) => {
+          if (componentId === ACTOR_COMPONENT_ID) return true;
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) return true;
+          return false;
+        }),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) {
+            return { type: 42 };
+          }
+          return null;
+        }),
+      };
+
+      await prepareActiveActorTurn(bed, { actor: ambiguousActor });
+
+      dispatcher.dispatch.mockClear();
+
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: ambiguousActor.id,
+        success: true,
+      });
+      await drainTimersAndMicrotasks(4);
+
+      const processingEndedCall = dispatcher.dispatch.mock.calls.find(
+        ([eventId]) => eventId === TURN_PROCESSING_ENDED
+      );
+
+      expect(processingEndedCall).toBeDefined();
+      expect(processingEndedCall[1]).toMatchObject({
+        entityId: ambiguousActor.id,
+        actorType: 'ai',
+      });
+      expect(ambiguousActor.getComponentData).toHaveBeenCalledWith(
+        PLAYER_TYPE_COMPONENT_ID
+      );
+    });
+
+    test(
+      'returns early when manager stops during actor selection',
+      async () => {
+        const bed = getBed();
+        const { turnOrderService, turnHandlerResolver, dispatcher } =
+          bed.mocks;
+
+        await bed.startRunning();
+
+        const actor = createMockEntity('stopping-actor', {
+          isActor: true,
+          isPlayer: false,
+        });
+        bed.setActiveEntities(actor);
+
+        turnOrderService.isEmpty.mockResolvedValueOnce(false);
+        turnOrderService.getNextEntity.mockImplementationOnce(async () => {
+          await bed.turnManager.stop();
+          return actor;
+        });
+
+        turnHandlerResolver.resolveHandler.mockClear();
+        dispatcher.dispatch.mockClear();
+
+        await bed.turnManager.advanceTurn();
+
+        expect(turnHandlerResolver.resolveHandler).not.toHaveBeenCalled();
+        expect(
+          dispatcher.dispatch.mock.calls.some(
+            ([eventId]) => eventId === 'core:turn_started'
+          )
+        ).toBe(false);
+      }
+    );
+
     test('ignores turn ended events when manager is stopped', async () => {
       const bed = getBed();
       const { dispatcher, logger } = bed.mocks;
@@ -376,6 +545,194 @@ describeTurnManagerSuite(
           `Received '${TURN_ENDED_ID}' event but it has no payload. Ignoring.`
         ),
         expect.objectContaining({ type: TURN_ENDED_ID, payload: undefined })
+      );
+    });
+
+    test(
+      `${TURN_PROCESSING_ENDED} rejection triggers failure reporting`,
+      async () => {
+        jest.useFakeTimers({ legacyFakeTimers: false });
+        const bed = getBed();
+        const { dispatcher, logger } = bed.mocks;
+
+        await bed.startRunning();
+        const { actor } = await prepareActiveActorTurn(
+          bed,
+          { actorId: 'rejected-processing-actor' }
+        );
+
+        dispatcher.dispatch.mockClear();
+        logger.warn.mockClear();
+        safeDispatchError.mockClear();
+
+        dispatcher.dispatch.mockResolvedValueOnce(false);
+
+        try {
+          dispatcher._triggerEvent(TURN_ENDED_ID, {
+            entityId: actor.id,
+            success: true,
+          });
+
+          await drainTimersAndMicrotasks(5);
+
+          expect(logger.warn).toHaveBeenCalledWith(
+            `${TURN_PROCESSING_ENDED} dispatch was rejected by dispatcher for ${actor.id}.`,
+            { actorType: 'ai' }
+          );
+
+          expect(safeDispatchError).toHaveBeenCalledWith(
+            dispatcher,
+            `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
+            expect.objectContaining({
+              entityId: actor.id,
+              actorType: 'ai',
+              error: 'Dispatcher rejected event',
+            })
+          );
+        } finally {
+          jest.useRealTimers();
+        }
+      }
+    );
+
+    test(
+      `${TURN_PROCESSING_ENDED} unexpected result generates warning`,
+      async () => {
+        const bed = getBed();
+        const { dispatcher, logger } = bed.mocks;
+
+        await bed.startRunning();
+        const { actor } = await prepareActiveActorTurn(
+          bed,
+          { actorId: 'unexpected-processing-result' }
+        );
+
+        dispatcher.dispatch.mockClear();
+        logger.warn.mockClear();
+
+        dispatcher.dispatch.mockResolvedValueOnce('not-a-boolean');
+
+        dispatcher._triggerEvent(TURN_ENDED_ID, {
+          entityId: actor.id,
+          success: true,
+        });
+
+        await drainTimersAndMicrotasks(4);
+
+        expect(logger.warn).toHaveBeenCalledWith(
+          `${TURN_PROCESSING_ENDED} dispatch returned unexpected result: not-a-boolean`,
+          { entityId: actor.id, actorType: 'ai' }
+        );
+      }
+    );
+
+    test(
+      'handles scheduled advancement failure after dispatch rejection',
+      async () => {
+        jest.useFakeTimers({ legacyFakeTimers: false });
+        const bed = getBed();
+        const { dispatcher, logger } = bed.mocks;
+
+        await bed.startRunning();
+        const { actor } = await prepareActiveActorTurn(
+          bed,
+          { actorId: 'processing-dispatch-failure' }
+        );
+
+        dispatcher.dispatch.mockClear();
+        logger.error.mockClear();
+        safeDispatchError.mockClear();
+
+        const dispatchError = new Error('dispatch failure');
+        dispatcher.dispatch.mockImplementationOnce(() =>
+          Promise.reject(dispatchError)
+        );
+
+        safeDispatchError.mockImplementationOnce(() =>
+          Promise.reject(new Error('reporting failure'))
+        );
+        safeDispatchError.mockImplementationOnce(() => Promise.resolve(true));
+        safeDispatchError.mockImplementationOnce(() =>
+          Promise.reject(new Error('system dispatch failure'))
+        );
+
+        const advanceFailure = new Error('advance failure');
+        const advanceSpy = jest
+          .spyOn(bed.turnManager, 'advanceTurn')
+          .mockImplementationOnce(async () => {
+            throw advanceFailure;
+          });
+
+        try {
+          dispatcher._triggerEvent(TURN_ENDED_ID, {
+            entityId: actor.id,
+            success: true,
+          });
+
+          await drainTimersAndMicrotasks(6);
+
+          expect(safeDispatchError).toHaveBeenCalledWith(
+            dispatcher,
+            `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
+            expect.objectContaining({
+              entityId: actor.id,
+              actorType: 'ai',
+              error: dispatchError.message,
+            })
+          );
+
+          expect(safeDispatchError).toHaveBeenCalledWith(
+            dispatcher,
+            'Error during scheduled turn advancement',
+            expect.objectContaining({
+              entityId: actor.id,
+              error: advanceFailure.message,
+            })
+          );
+
+          expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining(
+              `Failed to dispatch system error after ${TURN_PROCESSING_ENDED} failure for ${actor.id}`
+            ),
+            expect.any(Error)
+          );
+
+          expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining(
+              'Failed to dispatch system error for advanceTurn failure'
+            ),
+            expect.any(Error)
+          );
+        } finally {
+          advanceSpy.mockRestore();
+          safeDispatchError.mockImplementation(actualSafeDispatchError);
+          jest.useRealTimers();
+        }
+      }
+    );
+
+    test('warns when success flag type is unsupported', async () => {
+      const bed = getBed();
+      const { dispatcher, logger } = bed.mocks;
+
+      await bed.startRunning();
+      const { actor } = await prepareActiveActorTurn(
+        bed,
+        { actorId: 'unsupported-success-actor' }
+      );
+
+      logger.warn.mockClear();
+
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: actor.id,
+        success: { unexpected: true },
+      });
+
+      await drainTimersAndMicrotasks(4);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('unsupported success flag type (object)'),
+        { receivedType: 'object' }
       );
     });
 
