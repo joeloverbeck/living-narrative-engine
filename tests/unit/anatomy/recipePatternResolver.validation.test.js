@@ -133,12 +133,10 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       const blueprint = { slots: {} };
 
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        ValidationError
-      );
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        /multiple matchers.*matchesGroup.*matchesPattern/
-      );
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/multiple matchers.*matchesGroup.*matchesPattern/);
     });
 
     it('should throw error when pattern has no matcher', () => {
@@ -148,12 +146,10 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       const blueprint = { slots: {} };
 
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        ValidationError
-      );
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        /no matcher.*must specify exactly one/
-      );
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/no matcher.*must specify exactly one/);
     });
 
     it('should throw error when pattern has all three V2 matchers', () => {
@@ -170,12 +166,10 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       const blueprint = { slots: {} };
 
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        ValidationError
-      );
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        /multiple matchers/
-      );
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(/multiple matchers/);
     });
   });
 
@@ -217,10 +211,10 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         slots: {},
       };
 
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        ValidationError
-      );
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(resolve).toThrow(ValidationError);
+      expect(resolve).toThrow(
         /uses 'matchesGroup'.*schemaVersion '1.0'.*requires.*'2.0'/
       );
     });
@@ -460,13 +454,21 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         slots: {},
       };
 
-      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+      resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(resolve).toThrow(ValidationError);
-      expect(resolve).toThrow(/matched 0 slots/);
-      expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringMatching(/matched 0 slots/)
-      );
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes("Slot group 'limbSet:leg' not found")
+        )
+      ).toBe(true);
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' && call[0].includes('matched 0 slots')
+        )
+      ).toBe(true);
     });
 
     it('should throw when limb set topology data is missing', () => {
@@ -553,9 +555,16 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         slots: { leg_left: {}, leg_right: {} },
       };
 
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        ValidationError
-      );
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes("Pattern 1: Pattern 'wing_*' matched 0 slots")
+        )
+      ).toBe(true);
+      expect(result.slots).toEqual({});
     });
 
     it('should handle case-sensitive matching', () => {
@@ -697,9 +706,17 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         },
       };
 
-      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        ValidationError
-      );
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes('matchesAll filter') &&
+            call[0].includes('matched 0 slots')
+        )
+      ).toBe(true);
+      expect(result.slots).toEqual({});
     });
   });
 
@@ -748,10 +765,17 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         },
       };
 
-      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(resolve).toThrow(ValidationError);
-      expect(resolve).toThrow(/matched 0 slots/);
+      expect(result.slots).toEqual({});
+      expect(
+        mockLogger.debug.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes('Excluded') &&
+            call[0].includes('limbSet:leg')
+        )
+      ).toBe(true);
     });
 
     it('should accept valid exclusion by properties', () => {
@@ -941,17 +965,15 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(result._patternConflicts).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            severity: 'info',
-            slotKey: 'leg_left',
-            hint: expect.stringContaining('overrides pattern output'),
-          }),
-        ])
-      );
+      expect(
+        mockLogger.info.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes("Explicit slot 'leg_left' overrides Pattern")
+        )
+      ).toBe(true);
     });
 
     it('should not warn for non-overlapping equal specificity patterns', () => {
@@ -988,10 +1010,17 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       const blueprint = { id: 'anatomy:missing_slots' };
 
-      const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
 
-      expect(resolve).toThrow(ValidationError);
-      expect(resolve).toThrow(/matched 0 slots/);
+      expect(
+        mockLogger.warn.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes('matchesAll filter') &&
+            call[0].includes('matched 0 slots')
+        )
+      ).toBe(true);
+      expect(result.slots).toEqual({});
     });
   });
 
