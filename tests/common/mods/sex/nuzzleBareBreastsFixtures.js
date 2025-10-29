@@ -13,6 +13,12 @@ export const NUZZLE_BARE_BREASTS_ACTION_ID =
   'sex-breastplay:nuzzle_bare_breasts';
 
 /**
+ * Identifier for the lick breasts action.
+ * @type {string}
+ */
+export const LICK_BREASTS_ACTION_ID = 'sex-breastplay:lick_breasts';
+
+/**
  * Default actor identifier used in breast nuzzling scenarios.
  * @type {string}
  */
