@@ -203,7 +203,7 @@ describe('Recipe Pattern Validation Integration', () => {
       expect(result.slots.leg_fr).toEqual({ partType: 'leg_segment' });
     });
 
-    it('should handle matchesGroup with slotGroups exclusion', () => {
+    it('should throw when slotGroups exclusion removes all matches', () => {
       const template = {
         topology: {
           limbSets: [
@@ -245,10 +245,15 @@ describe('Recipe Pattern Validation Integration', () => {
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      expect(() =>
+        resolver.resolveRecipePatterns(recipe, blueprint)
+      ).toThrow(
+        "Pattern matchesGroup: 'limbSet:leg' matched 0 slots after applying exclusions"
+      );
 
-      // Should be empty - pattern matches all, exclusion removes all
-      expect(result.slots).toEqual({});
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('matched 0 slots after applying exclusions')
+      );
     });
   });
 
@@ -400,7 +405,7 @@ describe('Recipe Pattern Validation Integration', () => {
   });
 
   describe('Warning Scenarios', () => {
-    it('should warn when pattern matches zero slots', () => {
+    it('should throw while warning when pattern matches zero slots', () => {
       const recipe = {
         patterns: [{ matchesPattern: 'nonexistent_*', partType: 'part' }],
       };
@@ -412,15 +417,16 @@ describe('Recipe Pattern Validation Integration', () => {
         },
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      expect(() =>
+        resolver.resolveRecipePatterns(recipe, blueprint)
+      ).toThrow("Pattern 1: matchesPattern 'nonexistent_*' matched 0 slots");
 
-      expect(result.slots).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('matched 0 slots')
       );
     });
 
-    it('should warn when matchesGroup matches zero slots', () => {
+    it('should throw while warning when matchesGroup matches zero slots', () => {
       const template = {
         topology: {
           limbSets: [{ type: 'leg', id: 'front' }],
@@ -440,9 +446,12 @@ describe('Recipe Pattern Validation Integration', () => {
         slots: {},
       };
 
-      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+      expect(() =>
+        resolver.resolveRecipePatterns(recipe, blueprint)
+      ).toThrow(
+        "Pattern 1: Slot group 'limbSet:leg' matched 0 slots in structure template 'spider:body'."
+      );
 
-      expect(result.slots).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('matched 0 slots')
       );
