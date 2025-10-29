@@ -46,6 +46,37 @@ describe('IsClosestLeftOccupantOperator', () => {
       );
     });
 
+    it('should resolve actor from a custom context path', () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'actor1' && componentId === 'positioning:sitting_on') {
+            return { furniture_id: 'furniture1', spot_index: 2 };
+          }
+          if (
+            entityId === 'occupant1' &&
+            componentId === 'positioning:sitting_on'
+          ) {
+            return { furniture_id: 'furniture1', spot_index: 0 };
+          }
+          if (
+            entityId === 'furniture1' &&
+            componentId === 'positioning:allows_sitting'
+          ) {
+            return { spots: ['occupant1', null, 'actor1'] };
+          }
+          return null;
+        }
+      );
+
+      const result = operator.evaluate(['entity', 'target', 'customActor'], {
+        entity: { id: 'occupant1' },
+        target: { id: 'furniture1' },
+        customActor: { id: 'actor1' },
+      });
+
+      expect(result).toBe(true);
+    });
+
     it('should return true with multiple occupants to the left', () => {
       // Furniture: [occupant1, occupant2, null, actor]
       // occupant2 is closest to actor
@@ -161,6 +192,34 @@ describe('IsClosestLeftOccupantOperator', () => {
       expect(result).toBe(false);
     });
 
+    it('should return false when actor is not on the target furniture', () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'actor1' && componentId === 'positioning:sitting_on') {
+            return { furniture_id: 'otherFurniture', spot_index: 2 };
+          }
+          if (
+            entityId === 'occupant1' &&
+            componentId === 'positioning:sitting_on'
+          ) {
+            return { furniture_id: 'furniture1', spot_index: 0 };
+          }
+          return null;
+        }
+      );
+
+      const result = operator.evaluate(['entity', 'target', 'actor'], {
+        entity: { id: 'occupant1' },
+        target: { id: 'furniture1' },
+        actor: { id: 'actor1' },
+      });
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('is not sitting on target furniture')
+      );
+    });
+
     it('should return false when candidate is to the right of actor', () => {
       // Furniture: [actor, occupant1, null]
       mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
@@ -185,6 +244,40 @@ describe('IsClosestLeftOccupantOperator', () => {
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('not to the left')
+      );
+    });
+
+    it('should return false when spot immediately to the left is occupied', () => {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'actor1' && componentId === 'positioning:sitting_on') {
+            return { furniture_id: 'furniture1', spot_index: 2 };
+          }
+          if (
+            entityId === 'occupant1' &&
+            componentId === 'positioning:sitting_on'
+          ) {
+            return { furniture_id: 'furniture1', spot_index: 0 };
+          }
+          if (
+            entityId === 'furniture1' &&
+            componentId === 'positioning:allows_sitting'
+          ) {
+            return { spots: ['occupant1', 'occupant2', 'actor1'] };
+          }
+          return null;
+        }
+      );
+
+      const result = operator.evaluate(['entity', 'target', 'actor'], {
+        entity: { id: 'occupant1' },
+        target: { id: 'furniture1' },
+        actor: { id: 'actor1' },
+      });
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('cannot scoot')
       );
     });
 
@@ -287,6 +380,75 @@ describe('IsClosestLeftOccupantOperator', () => {
       });
 
       expect(result).toBe(false);
+    });
+
+    it('should return false when no occupant exists to the left', () => {
+      const actorIndex = 3;
+      const candidateIndex = 1;
+      let candidateAccessCount = 0;
+
+      const spotsProxy = new Proxy(
+        [],
+        {
+          get(target, prop) {
+            if (prop === 'length') {
+              return 4;
+            }
+
+            const index = Number(prop);
+            if (Number.isNaN(index)) {
+              return target[prop];
+            }
+
+            if (index === actorIndex) {
+              return 'actor1';
+            }
+
+            if (index === candidateIndex) {
+              candidateAccessCount += 1;
+              return candidateAccessCount === 1 ? 'occupant1' : null;
+            }
+
+            if (index === actorIndex - 1) {
+              return null;
+            }
+
+            return null;
+          },
+        }
+      );
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === 'actor1' && componentId === 'positioning:sitting_on') {
+            return { furniture_id: 'furniture1', spot_index: actorIndex };
+          }
+          if (
+            entityId === 'occupant1' &&
+            componentId === 'positioning:sitting_on'
+          ) {
+            return { furniture_id: 'furniture1', spot_index: candidateIndex };
+          }
+          if (
+            entityId === 'furniture1' &&
+            componentId === 'positioning:allows_sitting'
+          ) {
+            return { spots: spotsProxy };
+          }
+          return null;
+        }
+      );
+
+      const result = operator.evaluate(['entity', 'target', 'actor'], {
+        entity: { id: 'occupant1' },
+        target: { id: 'furniture1' },
+        actor: { id: 'actor1' },
+      });
+
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('No occupant found')
+      );
     });
 
     it('should handle out-of-bounds actor spot_index', () => {
