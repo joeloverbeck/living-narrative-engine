@@ -5,7 +5,7 @@
   "description": "Gently fondle the target's breasts.",
   "targets": {
     "primary": {
-      "scope": "sex-breastplay:actors_with_breasts_facing_each_other",
+      "scope": "sex-breastplay:actors_with_breasts_facing_each_other_or_away",
       "placeholder": "target",
       "description": "Person with breasts to fondle"
     }

@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for fondle_breasts action discovery with socket coverage
- * @description Tests that the actors_with_breasts_facing_each_other scope properly filters
+ * @description Tests that the actors_with_breasts_facing_each_other_or_away scope properly filters
  * actors based on breast socket coverage, facing direction, and closeness
  *
  * NOTE: This test uses a mock MultiTargetResolutionStage that bypasses actual scope evaluation.
@@ -45,7 +45,7 @@ import path from 'path';
 const breastsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex-breastplay/scopes/actors_with_breasts_facing_each_other.scope'
+    '../../../data/mods/sex-breastplay/scopes/actors_with_breasts_facing_each_other_or_away.scope'
   ),
   'utf8'
 );
@@ -90,20 +90,35 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
     // Store the action
     dataRegistry.store('actions', fondleBreastsAction.id, fondleBreastsAction);
 
-    // Store the actual condition from the file system
-    const actualCondition = JSON.parse(
+    // Store the relevant positioning conditions from the file system
+    const facingEachOtherCondition = JSON.parse(
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/positioning/conditions/entity-not-in-facing-away.condition.json'
+          '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json'
         ),
         'utf8'
       )
     );
     dataRegistry.store(
       'conditions',
-      'positioning:entity-not-in-facing-away',
-      actualCondition
+      'positioning:both-actors-facing-each-other',
+      facingEachOtherCondition
+    );
+
+    const actorBehindCondition = JSON.parse(
+      fs.readFileSync(
+        path.resolve(
+          __dirname,
+          '../../../data/mods/positioning/conditions/actor-is-behind-entity.condition.json'
+        ),
+        'utf8'
+      )
+    );
+    dataRegistry.store(
+      'conditions',
+      'positioning:actor-is-behind-entity',
+      actorBehindCondition
     );
 
     // Initialize JSON Logic with custom operators
@@ -148,15 +163,17 @@ describe('Fondle Breasts Action Discovery Integration Tests', () => {
     const parser = new DefaultDslParser({ logger });
     const scopeDefinitions = parseScopeDefinitions(
       breastsScopeContent,
-      'actors_with_breasts_facing_each_other.scope'
+      'actors_with_breasts_facing_each_other_or_away.scope'
     );
 
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex-breastplay:actors_with_breasts_facing_each_other':
-        scopeDefinitions.get('sex-breastplay:actors_with_breasts_facing_each_other'),
+      'sex-breastplay:actors_with_breasts_facing_each_other_or_away':
+        scopeDefinitions.get(
+          'sex-breastplay:actors_with_breasts_facing_each_other_or_away'
+        ),
     });
 
     scopeEngine = new ScopeEngine();
@@ -251,7 +268,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
      *
      * @param targetClothingConfig
      */
-    function setupEntities(targetClothingConfig = {}) {
+    function setupEntities(targetClothingConfig = {}, options = {}) {
+      const { targetFacingAway = false, actorFacingAway = false } = options;
       const entities = [
         {
           id: 'actor1',
@@ -261,7 +279,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
               partners: ['target1'],
             },
             'positioning:facing_away': {
-              facing_away_from: [],
+              facing_away_from: actorFacingAway ? ['target1'] : [],
             },
           },
         },
@@ -273,7 +291,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
               partners: ['actor1'],
             },
             'positioning:facing_away': {
-              facing_away_from: [],
+              facing_away_from: targetFacingAway ? ['actor1'] : [],
             },
             'anatomy:body': {
               body: {
@@ -331,6 +349,24 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
     it('should discover action when both breasts are uncovered', async () => {
       // Arrange - no clothing equipment
       setupEntities({});
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert
+      const fondleBreastsActions = result.actions.filter(
+        (action) => action.id === 'sex-breastplay:fondle_breasts'
+      );
+      expect(fondleBreastsActions).toHaveLength(1);
+      expect(fondleBreastsActions[0].params.targetId).toBe('target1');
+    });
+
+    it('should discover action when the target is facing away from the actor', async () => {
+      // Arrange - target faces away to allow behind-the-back interaction
+      setupEntities({}, { targetFacingAway: true });
 
       // Act
       const actorEntity = entityManager.getEntityInstance('actor1');
