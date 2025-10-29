@@ -23,9 +23,29 @@ describe('renderPortraitElements', () => {
   let addListenerMock;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     img = document.createElement('img');
     container = document.createElement('div');
     addListenerMock = jest.fn();
+  });
+
+  it('logs a warning when required elements are missing', () => {
+    renderPortraitElements(
+      null,
+      container,
+      {
+        portraitPath: '/missing.png',
+      },
+      logger,
+      domFactory,
+      documentContext,
+      addListenerMock
+    );
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      '[renderPortraitElements] portrait elements missing.'
+    );
+    expect(logger.debug).not.toHaveBeenCalled();
   });
 
   it('shows image when portraitPath is provided', () => {
@@ -50,6 +70,32 @@ describe('renderPortraitElements', () => {
     expect(img.alt).toBe('alt');
     expect(img.style.display).toBe('block');
     expect(container.style.display).toBe('block');
+  });
+
+  it('falls back to default labels when name and alt text are missing', () => {
+    const dto = {
+      name: '',
+      description: 'A mysterious place.',
+      portraitPath: '/fallback.png',
+      portraitAltText: '',
+      exits: [],
+      characters: [],
+    };
+
+    renderPortraitElements(
+      img,
+      container,
+      dto,
+      logger,
+      domFactory,
+      documentContext,
+      addListenerMock
+    );
+
+    expect(img.alt).toBe('Image of location');
+    expect(container.getAttribute('aria-label')).toBe(
+      'Location portrait. Hover or focus to see description.'
+    );
   });
 
   it('hides image when no portraitPath', () => {
@@ -107,6 +153,45 @@ describe('renderPortraitElements', () => {
     expect(container.getAttribute('aria-label')).toBe(
       'Town Square portrait. Hover or focus to see description.'
     );
+  });
+
+  it('uses DOM addEventListener when helper is not provided', () => {
+    const dto = {
+      name: 'Forest Glade',
+      description: 'Sunlight dances through the canopy.',
+      portraitPath: '/forest.png',
+      portraitAltText: null,
+      exits: [],
+      characters: [],
+    };
+
+    let capturedHandler;
+    const addEventListenerSpy = jest
+      .spyOn(container, 'addEventListener')
+      .mockImplementation((event, handler) => {
+        capturedHandler = handler;
+      });
+
+    renderPortraitElements(
+      img,
+      container,
+      dto,
+      logger,
+      domFactory,
+      documentContext
+    );
+
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function)
+    );
+
+    expect(typeof capturedHandler).toBe('function');
+    expect(container.classList.contains('tooltip-open')).toBe(false);
+    capturedHandler();
+    expect(container.classList.contains('tooltip-open')).toBe(true);
+
+    addEventListenerSpy.mockRestore();
   });
 
   it('does not add tooltip when no description', () => {
