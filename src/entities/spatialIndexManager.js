@@ -442,9 +442,6 @@ class SpatialIndexManager extends MapManager {
           operation: 'add',
         });
 
-        if (options.stopOnError && result.failed.length > 0) {
-          break;
-        }
       } catch (error) {
         result.failed.push({ item: addition, error });
 
@@ -487,9 +484,6 @@ class SpatialIndexManager extends MapManager {
           operation: 'remove',
         });
 
-        if (options.stopOnError && result.failed.length > 0) {
-          break;
-        }
       } catch (error) {
         result.failed.push({ item: entityId, error });
 
@@ -538,9 +532,6 @@ class SpatialIndexManager extends MapManager {
           operation: 'move',
         });
 
-        if (options.stopOnError && result.failed.length > 0) {
-          break;
-        }
       } catch (error) {
         result.failed.push({ item: update, error });
 
@@ -586,9 +577,6 @@ class SpatialIndexManager extends MapManager {
           operation: 'rebuild',
         });
 
-        if (options.stopOnError && result.failed.length > 0) {
-          break;
-        }
       } catch (error) {
         result.failed.push({ item: entityLocation, error });
 
