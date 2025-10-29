@@ -128,6 +128,23 @@ class ErrorReporter {
   }
 
   /**
+   * @description Resolve the current URL from provided globals.
+   * @param {object} [globals=globalThis] - Execution context that may include window/location.
+   * @returns {string|undefined} Current href when available.
+   */
+  static resolveCurrentUrl(globals) {
+    const contextGlobals = globals ?? globalThis;
+    const windowContext = contextGlobals?.window;
+
+    if (windowContext && typeof windowContext.location?.href === 'string') {
+      return windowContext.location.href;
+    }
+
+    const globalHref = contextGlobals?.location?.href;
+    return typeof globalHref === 'string' ? globalHref : undefined;
+  }
+
+  /**
    * Report multiple errors as a batch
    *
    * @param {Array<{error: Error, context: object}>} errorBatch - Array of errors with contexts
@@ -507,23 +524,27 @@ class ErrorReporter {
    * @private
    * @returns {Promise<object>} Environment information
    */
-  async _collectEnvironmentInfo() {
+  async _collectEnvironmentInfo(globals) {
+    const contextGlobals = globals ?? globalThis;
+    const hasWindow = typeof contextGlobals.window !== 'undefined';
+    const resolvedUrl = this.#reportingConfig.includeUrl
+      ? ErrorReporter.resolveCurrentUrl(contextGlobals)
+      : '[REDACTED]';
+
     const env = {
       url: this.#reportingConfig.includeUrl
-        ? typeof window !== 'undefined'
-          ? window.location.href
-          : 'unknown'
+        ? resolvedUrl ?? 'unknown'
         : '[REDACTED]',
       timestamp: new Date().toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
 
     // Add viewport information if in browser
-    if (typeof window !== 'undefined') {
+    if (hasWindow && contextGlobals.window) {
       env.viewport = {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        devicePixelRatio: window.devicePixelRatio,
+        width: contextGlobals.window.innerWidth,
+        height: contextGlobals.window.innerHeight,
+        devicePixelRatio: contextGlobals.window.devicePixelRatio,
       };
     }
 
