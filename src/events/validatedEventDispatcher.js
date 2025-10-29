@@ -305,10 +305,6 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
       this.#logger.debug(
         `VED: Dispatch skipped for '${eventName}' due to validation failure (see error above).`
       );
-    } else {
-      this.#logger.debug(
-        `VED: Dispatch explicitly skipped for event '${eventName}'.`
-      );
     }
     return false;
   }
