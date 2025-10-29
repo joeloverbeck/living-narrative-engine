@@ -189,4 +189,149 @@ describe('advancedArrayModify', () => {
     expect(modified).toBe(false);
     expect(logger.error).toHaveBeenCalledWith('Unknown mode: invalid');
   });
+
+  describe('deep equality edge cases', () => {
+    it('detects duplicate nested arrays using deep equality', () => {
+      const nested = [1, { id: 2, tags: ['a', 'b'] }];
+      const arr = [nested];
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        [1, { id: 2, tags: ['a', 'b'] }],
+        logger
+      );
+
+      expect(modified).toBe(false);
+      expect(nextArray).toBe(arr);
+    });
+
+    it('treats arrays and array-like objects as different values', () => {
+      const arr = [[1, 2]];
+      const arrayLike = { 0: 1, 1: 2, length: 2 };
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        arrayLike,
+        logger
+      );
+
+      expect(modified).toBe(true);
+      expect(nextArray).toEqual([[1, 2], arrayLike]);
+      expect(nextArray[0]).toBe(arr[0]);
+    });
+
+    it('treats arrays with different lengths as distinct', () => {
+      const arr = [[1, 2]];
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        [1, 2, 3],
+        logger
+      );
+
+      expect(modified).toBe(true);
+      expect(nextArray).toEqual([[1, 2], [1, 2, 3]]);
+    });
+
+    it('treats arrays with mismatched elements as distinct', () => {
+      const arr = [[1, 2]];
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        [1, 3],
+        logger
+      );
+
+      expect(modified).toBe(true);
+      expect(nextArray).toEqual([[1, 2], [1, 3]]);
+    });
+
+    it('removes dates using timestamp comparison', () => {
+      const firstDate = new Date('2020-01-01T00:00:00Z');
+      const arr = [firstDate, new Date('2020-01-02T00:00:00Z')];
+
+      const { nextArray, modified } = advancedArrayModify(
+        'remove_by_value',
+        arr,
+        new Date('2020-01-01T00:00:00Z'),
+        logger
+      );
+
+      expect(modified).toBe(true);
+      expect(nextArray).toEqual([arr[1]]);
+      expect(arr[0]).toBe(firstDate);
+    });
+
+    it('treats instances with custom prototypes as unique entries', () => {
+      class CustomEntity {
+        constructor(id) {
+          this.id = id;
+        }
+      }
+
+      const arr = [new CustomEntity(1)];
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        new CustomEntity(1),
+        logger
+      );
+
+      expect(modified).toBe(true);
+      expect(nextArray).toHaveLength(2);
+      expect(nextArray[0]).toBe(arr[0]);
+    });
+
+    it('treats objects with extra keys as distinct', () => {
+      const arr = [{ id: 1 }];
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        { id: 1, extra: true },
+        logger
+      );
+
+      expect(modified).toBe(true);
+      expect(nextArray).toEqual([{ id: 1 }, { id: 1, extra: true }]);
+    });
+
+    it('treats objects missing keys as distinct even when lengths match', () => {
+      const arr = [{ id: 1 }];
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        { name: 1 },
+        logger
+      );
+
+      expect(modified).toBe(true);
+      expect(nextArray).toEqual([{ id: 1 }, { name: 1 }]);
+    });
+
+    it('handles circular references without infinite recursion', () => {
+      const circularA = {};
+      circularA.self = circularA;
+      const arr = [circularA];
+
+      const circularB = {};
+      circularB.self = circularB;
+
+      const { nextArray, modified } = advancedArrayModify(
+        'push_unique',
+        arr,
+        circularB,
+        logger
+      );
+
+      expect(modified).toBe(false);
+      expect(nextArray).toBe(arr);
+    });
+  });
 });
