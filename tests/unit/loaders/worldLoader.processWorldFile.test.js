@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import WorldLoader from '../../../src/loaders/worldLoader.js';
 import MissingEntityInstanceError from '../../../src/errors/missingEntityInstanceError.js';
 import MissingInstanceIdError from '../../../src/errors/missingInstanceIdError.js';
+import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
 import {
   createMockPathResolver,
   createMockDataFetcher,
@@ -105,6 +106,38 @@ describe('WorldLoader._processWorldFile', () => {
     });
   });
 
+  it('flags overrides when registry store reports previous value', async () => {
+    const totals = {
+      filesProcessed: 0,
+      filesFailed: 0,
+      instances: 0,
+      overrides: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
+    };
+
+    const mockWorldData = {
+      id: 'test:world',
+      name: 'Test World',
+      instances: [{ instanceId: 'core:player' }],
+    };
+    fetcher.fetch.mockResolvedValue(mockWorldData);
+    registry.get.mockReturnValue({ id: 'def' });
+    registry.store.mockReturnValue(true);
+
+    const updated = await loader._processWorldFile(
+      'modA',
+      'world1.json',
+      'schemaId',
+      totals
+    );
+
+    expect(updated.overrides).toBe(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "World 'test:world' from mod 'modA' overwrote an existing world definition."
+    );
+  });
+
   it('records failure when fetch throws', async () => {
     const totals = {
       filesProcessed: 0,
@@ -193,5 +226,76 @@ describe('WorldLoader._processWorldFile', () => {
       }
     );
     expect(updated.filesFailed).toBe(1);
+  });
+
+  it('warns when instances field is not an array', async () => {
+    const totals = {
+      filesProcessed: 0,
+      filesFailed: 0,
+      instances: 0,
+      overrides: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
+    };
+    const worldData = { id: 'w:1', instances: {} };
+    fetcher.fetch.mockResolvedValue(worldData);
+    registry.store.mockReturnValue(false);
+
+    const updated = await loader._processWorldFile(
+      'modA',
+      'world.json',
+      'schemaId',
+      totals
+    );
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "WorldLoader [modA]: 'instances' field in 'world.json' is not an array. Skipping instance validation.",
+      { modId: 'modA', filename: 'world.json', actualType: 'object' }
+    );
+    expect(updated).toEqual({
+      filesProcessed: 1,
+      filesFailed: 0,
+      instances: 0,
+      overrides: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
+    });
+  });
+
+  it('rethrows mods loader errors for missing definitions', async () => {
+    const totals = {
+      filesProcessed: 0,
+      filesFailed: 0,
+      instances: 0,
+      overrides: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
+    };
+
+    const worldData = {
+      id: 'w:1',
+      instances: [{ instanceId: 'mod:missing' }],
+    };
+    const modsLoaderError = new ModsLoaderError(
+      'Definition missing',
+      'missing_definition'
+    );
+
+    fetcher.fetch.mockResolvedValue(worldData);
+    registry.get.mockImplementation(() => {
+      throw modsLoaderError;
+    });
+
+    await expect(
+      loader._processWorldFile('modA', 'world.json', 'schemaId', totals)
+    ).rejects.toBe(modsLoaderError);
+    expect(logger.error).toHaveBeenCalledWith(
+      "WorldLoader [modA]: Failed to process world file 'world.json'. Path: '/mods/modA/worlds/world.json'. Error: Definition missing",
+      {
+        modId: 'modA',
+        filename: 'world.json',
+        error: modsLoaderError,
+      }
+    );
   });
 });
