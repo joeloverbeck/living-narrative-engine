@@ -2239,6 +2239,10 @@ class ActivityDescriptionService {
         this.#deduplicateActivitiesBySignature(...args),
       truncateDescription: (...args) => this.#truncateDescription(...args),
       sanitizeEntityName: (...args) => this.#sanitizeEntityName(...args),
+      buildActivityDeduplicationKey: (...args) =>
+        this.#buildActivityDeduplicationKey(...args),
+      formatActivityDescription: (...args) =>
+        this.#formatActivityDescription(...args),
       groupActivities: (...args) => this.#groupActivities(...args),
       getActivityIndex: (...args) => this.#getActivityIndex(...args),
       evaluateActivityVisibility: (...args) =>
