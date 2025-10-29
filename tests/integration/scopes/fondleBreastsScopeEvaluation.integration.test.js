@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for fondle_breasts scope evaluation with socket coverage
- * @description Tests that the actors_with_breasts_facing_each_other scope properly evaluates
+ * @description Tests that the actors_with_breasts_facing_each_other_or_away scope properly evaluates
  * with custom operators to filter actors based on breast socket coverage
  */
 
@@ -27,7 +27,7 @@ import path from 'path';
 const breastsScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex-breastplay/scopes/actors_with_breasts_facing_each_other.scope'
+    '../../../data/mods/sex-breastplay/scopes/actors_with_breasts_facing_each_other_or_away.scope'
   ),
   'utf8'
 );
@@ -53,20 +53,35 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
     entityManager = new SimpleEntityManager([]);
     dataRegistry = new InMemoryDataRegistry({ logger });
 
-    // Store the actual condition from the file system
-    const actualCondition = JSON.parse(
+    // Store the relevant positioning conditions from the file system
+    const facingEachOtherCondition = JSON.parse(
       fs.readFileSync(
         path.resolve(
           __dirname,
-          '../../../data/mods/positioning/conditions/entity-not-in-facing-away.condition.json'
+          '../../../data/mods/positioning/conditions/both-actors-facing-each-other.condition.json'
         ),
         'utf8'
       )
     );
     dataRegistry.store(
       'conditions',
-      'positioning:entity-not-in-facing-away',
-      actualCondition
+      'positioning:both-actors-facing-each-other',
+      facingEachOtherCondition
+    );
+
+    const actorBehindCondition = JSON.parse(
+      fs.readFileSync(
+        path.resolve(
+          __dirname,
+          '../../../data/mods/positioning/conditions/actor-is-behind-entity.condition.json'
+        ),
+        'utf8'
+      )
+    );
+    dataRegistry.store(
+      'conditions',
+      'positioning:actor-is-behind-entity',
+      actorBehindCondition
     );
 
     // Mock body graph service for custom operators
@@ -98,15 +113,17 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
     const parser = new DefaultDslParser({ logger });
     const scopeDefinitions = parseScopeDefinitions(
       breastsScopeContent,
-      'actors_with_breasts_facing_each_other.scope'
+      'actors_with_breasts_facing_each_other_or_away.scope'
     );
 
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex-breastplay:actors_with_breasts_facing_each_other':
-        scopeDefinitions.get('sex-breastplay:actors_with_breasts_facing_each_other'),
+      'sex-breastplay:actors_with_breasts_facing_each_other_or_away':
+        scopeDefinitions.get(
+          'sex-breastplay:actors_with_breasts_facing_each_other_or_away'
+        ),
     });
 
     scopeEngine = new ScopeEngine();
@@ -121,7 +138,8 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
    *
    * @param targetClothingConfig
    */
-  function setupEntities(targetClothingConfig = {}) {
+  function setupEntities(targetClothingConfig = {}, options = {}) {
+    const { targetFacingAway = false, actorFacingAway = false } = options;
     const entities = [
       {
         id: 'actor1',
@@ -131,7 +149,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
             partners: ['target1'],
           },
           'positioning:facing_away': {
-            facing_away_from: [],
+            facing_away_from: actorFacingAway ? ['target1'] : [],
           },
         },
       },
@@ -143,7 +161,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
             partners: ['actor1'],
           },
           'positioning:facing_away': {
-            facing_away_from: [],
+            facing_away_from: targetFacingAway ? ['actor1'] : [],
           },
           'anatomy:body': {
             body: {
@@ -206,7 +224,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
   function evaluateScope(actorId) {
     const actorEntity = entityManager.getEntityInstance(actorId);
     const scopeDef = scopeRegistry.getScope(
-      'sex-breastplay:actors_with_breasts_facing_each_other'
+      'sex-breastplay:actors_with_breasts_facing_each_other_or_away'
     );
 
     // Parse the scope expression
@@ -332,7 +350,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
       expect(resolvedIds.size).toBe(1);
     });
 
-    it('should properly evaluate positioning:entity-not-in-facing-away condition in isolation', () => {
+    it('should properly evaluate positioning:actor-is-behind-entity condition in isolation', () => {
       // Create test entities
       const actorEntity = { id: 'actor1', components: {} };
       const targetEntity = {
@@ -344,9 +362,41 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
         },
       };
 
-      // Create evaluation context as done in production
-      const mockLocationProvider = { getLocation: () => null };
-      const mockGateway = { getEntityInstance: () => null };
+      const evalContext = {
+        entity: targetEntity,
+        actor: actorEntity,
+        location: null,
+        components: targetEntity.components,
+        id: targetEntity.id,
+      };
+
+      const conditionLogic = {
+        in: [
+          { var: 'actor.id' },
+          {
+            var: 'entity.components.positioning:facing_away.facing_away_from',
+          },
+        ],
+      };
+
+      const result = jsonLogicEval.evaluate(conditionLogic, evalContext);
+
+      expect(result).toBe(true);
+    });
+
+    it('should properly evaluate positioning:both-actors-facing-each-other condition when neither actor is turned away', () => {
+      const actorEntity = {
+        id: 'actor1',
+        components: {
+          'positioning:facing_away': { facing_away_from: [] },
+        },
+      };
+      const targetEntity = {
+        id: 'target1',
+        components: {
+          'positioning:facing_away': { facing_away_from: [] },
+        },
+      };
 
       const evalContext = {
         entity: targetEntity,
@@ -356,90 +406,38 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
         id: targetEntity.id,
       };
 
-      // Test the condition directly
       const conditionLogic = {
-        '!': {
-          in: [
-            { var: 'actor.id' },
-            {
-              var: 'entity.components.positioning:facing_away.facing_away_from',
+        and: [
+          {
+            '!': {
+              in: [
+                { var: 'entity.id' },
+                {
+                  var: 'actor.components.positioning:facing_away.facing_away_from',
+                },
+              ],
             },
-          ],
-        },
+          },
+          {
+            '!': {
+              in: [
+                { var: 'actor.id' },
+                {
+                  var: 'entity.components.positioning:facing_away.facing_away_from',
+                },
+              ],
+            },
+          },
+        ],
       };
 
       const result = jsonLogicEval.evaluate(conditionLogic, evalContext);
-
-      // This should return false because 'actor1' IS in the facing_away_from array
-      // So !(actor1 in [actor1]) = !true = false
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
 
-    it('should exclude targets when target is facing away', () => {
-      // Arrange - target facing away, no clothing
-      const entities = [
-        {
-          id: 'actor1',
-          components: {
-            'core:actor': { name: 'Actor 1' },
-            'positioning:closeness': {
-              partners: ['target1'],
-            },
-            'positioning:facing_away': {
-              facing_away_from: [],
-            },
-          },
-        },
-        {
-          id: 'target1',
-          components: {
-            'core:actor': { name: 'Target 1' },
-            'positioning:closeness': {
-              partners: ['actor1'],
-            },
-            'positioning:facing_away': {
-              facing_away_from: ['actor1'], // Facing away from actor
-            },
-            'anatomy:body': {
-              body: {
-                root: 'torso1',
-              },
-            },
-          },
-        },
-        {
-          id: 'torso1',
-          components: {
-            'anatomy:part': {
-              parent: null,
-              children: ['breast1', 'breast2'],
-              subType: 'torso',
-            },
-          },
-        },
-        {
-          id: 'breast1',
-          components: {
-            'anatomy:part': {
-              parent: 'torso1',
-              children: [],
-              subType: 'breast',
-            },
-          },
-        },
-        {
-          id: 'breast2',
-          components: {
-            'anatomy:part': {
-              parent: 'torso1',
-              children: [],
-              subType: 'breast',
-            },
-          },
-        },
-      ];
-
-      entityManager.setEntities(entities);
+    it('should include targets when the actor can approach from behind', () => {
+      // Arrange - target facing away, breasts exposed
+      setupEntities({}, { targetFacingAway: true });
 
       // Clear any cached state that might interfere
       if (
@@ -449,25 +447,23 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
         jsonLogicCustomOperators.clearCaches();
       }
 
-      // Clear entity cache from entityHelpers - this could be contaminating evaluations
-      const {
-        clearEntityCache,
-      } = require('../../../src/scopeDsl/core/entityHelpers.js');
+      const { clearEntityCache } = require('../../../src/scopeDsl/core/entityHelpers.js');
       clearEntityCache();
 
       // Clear scope registry and re-register to ensure clean state
       scopeRegistry.clear();
 
-      // Re-parse and re-register the scope to ensure clean state
       const parser = new DefaultDslParser({ logger });
       const freshScopeDefinitions = parseScopeDefinitions(
         breastsScopeContent,
-        'actors_with_breasts_facing_each_other.scope'
+        'actors_with_breasts_facing_each_other_or_away.scope'
       );
 
       scopeRegistry.initialize({
-        'sex-breastplay:actors_with_breasts_facing_each_other':
-          freshScopeDefinitions.get('sex-breastplay:actors_with_breasts_facing_each_other'),
+        'sex-breastplay:actors_with_breasts_facing_each_other_or_away':
+          freshScopeDefinitions.get(
+            'sex-breastplay:actors_with_breasts_facing_each_other_or_away'
+          ),
       });
 
       // Mock hasPartOfType to find breasts
@@ -485,8 +481,8 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
 
       // Assert
       expect(resolvedIds).toBeInstanceOf(Set);
-      expect(resolvedIds.has('target1')).toBe(false);
-      expect(resolvedIds.size).toBe(0);
+      expect(resolvedIds.has('target1')).toBe(true);
+      expect(resolvedIds.size).toBe(1);
     });
   });
 });
