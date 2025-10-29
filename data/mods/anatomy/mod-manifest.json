@@ -115,20 +115,42 @@
         "humanoid_mouth.entity.json",
         "humanoid_nose.entity.json",
         "humanoid_nose_small.entity.json",
-        "humanoid_teeth.entity.json"
+        "humanoid_teeth.entity.json",
+        "dragon_head.entity.json",
+        "dragon_leg.entity.json",
+        "dragon_tail.entity.json",
+        "dragon_torso.entity.json",
+        "dragon_wing.entity.json",
+        "kraken_head.entity.json",
+        "kraken_mantle.entity.json",
+        "kraken_tentacle.entity.json",
+        "spider_abdomen.entity.json",
+        "spider_cephalothorax.entity.json",
+        "spider_leg.entity.json",
+        "spider_pedipalp.entity.json"
       ],
       "instances": []
     },
     "blueprints": [
       "human_female.blueprint.json",
       "human_futa.blueprint.json",
-      "human_male.blueprint.json"
+      "human_male.blueprint.json",
+      "giant_spider.blueprint.json",
+      "red_dragon.blueprint.json",
+      "kraken.blueprint.json",
+      "centaur_warrior.blueprint.json"
     ],
     "recipes": [
       "gorgeous_milf.recipe.json",
       "human_female.recipe.json",
       "human_futa.recipe.json",
-      "human_male.recipe.json"
+      "human_male.recipe.json",
+      "giant_forest_spider.recipe.json",
+      "venomous_cave_spider.recipe.json",
+      "red_dragon.recipe.json",
+      "ice_dragon.recipe.json",
+      "kraken.recipe.json",
+      "centaur_warrior.recipe.json"
     ],
     "anatomyFormatting": [
       "default.json"

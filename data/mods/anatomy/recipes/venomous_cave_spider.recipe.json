@@ -1,0 +1,99 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:venomous_cave_spider",
+  "blueprintId": "anatomy:giant_spider",
+  "bodyDescriptors": {
+    "build": "toned",
+    "density": "sparse",
+    "composition": "lean"
+  },
+  "slots": {
+    "spinnerets": {
+      "partType": "spinneret",
+      "tags": [
+        "anatomy:part",
+        "anatomy:silken"
+      ],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "silken"
+        },
+        "anatomy:web_weaver": {
+          "silkYield": "focused",
+          "silkStrength": "adhesive"
+        }
+      }
+    },
+    "venom_gland": {
+      "partType": "venom_gland",
+      "tags": [
+        "anatomy:part",
+        "anatomy:venom"
+      ],
+      "properties": {
+        "anatomy:venom": {
+          "potency": "extreme",
+          "delivery": "pressurized"
+        }
+      }
+    }
+  },
+  "patterns": [
+    {
+      "matchesPattern": "leg_*",
+      "partType": "spider_leg",
+      "tags": [
+        "anatomy:part",
+        "anatomy:chitinous"
+      ],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "slick"
+        },
+        "anatomy:venom_residue": {
+          "potency": "high"
+        }
+      }
+    },
+    {
+      "matchesPattern": "pedipalp_*",
+      "partType": "spider_pedipalp",
+      "tags": [
+        "anatomy:part",
+        "anatomy:venom"
+      ],
+      "properties": {
+        "anatomy:venom": {
+          "delivery": "injector",
+          "potency": "high"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:abdomen",
+      "partType": "spider_abdomen",
+      "tags": [
+        "anatomy:part",
+        "anatomy:venom"
+      ],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "smooth"
+        },
+        "anatomy:venom_storage": {
+          "capacity": "expanded"
+        }
+      }
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": [
+          "venom_gland",
+          "spider_leg"
+        ]
+      }
+    ]
+  }
+}

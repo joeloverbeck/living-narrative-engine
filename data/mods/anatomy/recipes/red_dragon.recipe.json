@@ -1,0 +1,117 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:red_dragon",
+  "blueprintId": "anatomy:red_dragon",
+  "bodyDescriptors": {
+    "build": "hulking",
+    "composition": "average",
+    "density": "hairless"
+  },
+  "slots": {
+    "head": {
+      "partType": "dragon_head",
+      "tags": [
+        "anatomy:part",
+        "anatomy:horned"
+      ],
+      "properties": {
+        "anatomy:horned": {
+          "style": "crown",
+          "length": "long"
+        }
+      }
+    },
+    "fire_gland": {
+      "partType": "fire_gland",
+      "tags": [
+        "anatomy:part",
+        "anatomy:fire_breathing"
+      ],
+      "properties": {
+        "anatomy:fire_breathing": {
+          "intensity": "inferno",
+          "sprayPattern": "cone"
+        }
+      }
+    }
+  },
+  "patterns": [
+    {
+      "matchesPattern": "leg_*_front",
+      "partType": "dragon_leg",
+      "tags": [
+        "anatomy:part",
+        "anatomy:scaled",
+        "anatomy:clawed"
+      ],
+      "properties": {
+        "anatomy:scaled": {
+          "color": "crimson",
+          "sheen": "molten"
+        },
+        "anatomy:clawed": {
+          "style": "razor",
+          "count": 4
+        }
+      }
+    },
+    {
+      "matchesPattern": "leg_*_rear",
+      "partType": "dragon_leg",
+      "tags": [
+        "anatomy:part",
+        "anatomy:scaled",
+        "anatomy:powerful"
+      ],
+      "properties": {
+        "anatomy:scaled": {
+          "color": "crimson",
+          "pattern": "ridged"
+        },
+        "anatomy:powerful": {
+          "drive": "sprinter"
+        }
+      }
+    },
+    {
+      "matchesGroup": "limbSet:wing",
+      "partType": "dragon_wing",
+      "tags": [
+        "anatomy:part",
+        "anatomy:scaled",
+        "anatomy:membranous"
+      ],
+      "properties": {
+        "anatomy:scaled": {
+          "color": "crimson"
+        },
+        "descriptors:length_category": {
+          "length": "vast"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:tail",
+      "partType": "dragon_tail",
+      "tags": [
+        "anatomy:part",
+        "anatomy:spiked"
+      ],
+      "properties": {
+        "anatomy:spiked": {
+          "tip": "barbed"
+        }
+      }
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": [
+          "fire_gland",
+          "dragon_wing"
+        ]
+      }
+    ]
+  }
+}
