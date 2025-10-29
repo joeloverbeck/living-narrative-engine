@@ -152,6 +152,28 @@ describe('BaseEquipmentOperator', () => {
       );
     });
 
+    test('should return false when entity ID is an empty string', () => {
+      mockContext.actor = { id: '   ' };
+
+      const result = operator.evaluate(['actor', 'test-value'], mockContext);
+
+      expect(result).toBe(false);
+      expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
+        'testOperator: Invalid entity at path actor'
+      );
+    });
+
+    test('should return false when entity ID is NaN', () => {
+      mockContext.actor = { id: Number.NaN };
+
+      const result = operator.evaluate(['actor', 'test-value'], mockContext);
+
+      expect(result).toBe(false);
+      expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
+        'testOperator: Invalid entity at path actor'
+      );
+    });
+
     test('should handle errors gracefully', () => {
       const errorOperator = new (class extends BaseEquipmentOperator {
         constructor(deps) {
@@ -271,6 +293,21 @@ describe('BaseEquipmentOperator', () => {
       expect(result).toBe(false);
     });
 
+    test('should return false when slot has invalid structure', () => {
+      const equipmentData = {
+        equipped: {
+          torso_upper: [],
+        },
+      };
+
+      const result = operator.hasItemsInSlot(equipmentData, 'torso_upper');
+
+      expect(result).toBe(false);
+      expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
+        "testOperator: hasItemsInSlot - Slot 'torso_upper' has invalid structure (not an object)"
+      );
+    });
+
     test('should return false when equipped is missing', () => {
       const equipmentData = {};
 
@@ -283,6 +320,22 @@ describe('BaseEquipmentOperator', () => {
       const result = operator.hasItemsInSlot(null, 'torso_upper');
 
       expect(result).toBe(false);
+    });
+
+    test('should return true when slot has object items', () => {
+      const equipmentData = {
+        equipped: {
+          head: {
+            outer: {
+              id: 'hat123',
+            },
+          },
+        },
+      };
+
+      const result = operator.hasItemsInSlot(equipmentData, 'head');
+
+      expect(result).toBe(true);
     });
   });
 
