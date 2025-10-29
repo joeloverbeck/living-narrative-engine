@@ -17,16 +17,8 @@
             },
             "orientation": {
               "type": "string",
-              "enum": [
-                "left",
-                "right",
-                "mid",
-                "upper",
-                "lower",
-                "front",
-                "back"
-              ],
-              "description": "Spatial orientation of this socket"
+              "pattern": "^[a-z0-9_]+$",
+              "description": "Spatial orientation of this socket (supports composite orientations like 'left_front')"
             },
             "allowedTypes": {
               "type": "array",

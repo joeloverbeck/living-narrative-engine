@@ -109,37 +109,112 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
    * @private
    */
   _validateConstraints(constraints, modId, filename) {
-    if (constraints.requires && !Array.isArray(constraints.requires)) {
+    this._validateConstraintCollection(
+      constraints.requires,
+      'requires',
+      modId,
+      filename
+    );
+    this._validateConstraintCollection(
+      constraints.excludes,
+      'excludes',
+      modId,
+      filename
+    );
+  }
+
+  /**
+   * Validates an individual constraint collection (requires/excludes).
+   *
+   * @param {unknown} collection - The constraint collection to validate.
+   * @param {'requires' | 'excludes'} constraintType - The constraint type for error context.
+   * @param {string} modId - Mod identifier for error context.
+   * @param {string} filename - Filename for error context.
+   * @private
+   */
+  _validateConstraintCollection(collection, constraintType, modId, filename) {
+    if (collection === undefined) {
+      return;
+    }
+
+    if (!Array.isArray(collection)) {
       throw new ValidationError(
-        `Invalid 'requires' constraint in recipe '${filename}' from mod '${modId}'. Expected array.`
+        `Invalid '${constraintType}' constraint in recipe '${filename}' from mod '${modId}'. Expected array.`
       );
     }
 
-    if (constraints.excludes && !Array.isArray(constraints.excludes)) {
+    collection.forEach((group, index) => {
+      if (!group || typeof group !== 'object' || Array.isArray(group)) {
+        throw new ValidationError(
+          `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'. Each group must be an object with 'components' and/or 'partTypes' arrays.`
+        );
+      }
+
+      const { components, partTypes, ...rest } = group;
+
+      if (Object.keys(rest).length > 0) {
+        throw new ValidationError(
+          `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'. Unexpected properties: ${Object.keys(rest).join(', ')}.`
+        );
+      }
+
+      if (!components && !partTypes) {
+        throw new ValidationError(
+          `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'. Specify at least one of 'components' or 'partTypes'.`
+        );
+      }
+
+      this._validateConstraintArray(
+        components,
+        constraintType,
+        'components',
+        modId,
+        filename,
+        index
+      );
+      this._validateConstraintArray(
+        partTypes,
+        constraintType,
+        'partTypes',
+        modId,
+        filename,
+        index
+      );
+    });
+  }
+
+  /**
+   * Validates that the provided constraint array (components/partTypes) is well formed.
+   *
+   * @param {unknown} value - The value to validate.
+   * @param {'requires' | 'excludes'} constraintType - The constraint type for error messages.
+   * @param {'components' | 'partTypes'} field - The field name being validated.
+   * @param {string} modId - Mod identifier for error context.
+   * @param {string} filename - Filename for error context.
+   * @param {number} index - Index of the group within the collection.
+   * @private
+   */
+  _validateConstraintArray(value, constraintType, field, modId, filename, index) {
+    if (value === undefined) {
+      return;
+    }
+
+    if (!Array.isArray(value)) {
       throw new ValidationError(
-        `Invalid 'excludes' constraint in recipe '${filename}' from mod '${modId}'. Expected array.`
+        `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'. '${field}' must be an array of strings.`
       );
     }
 
-    // Validate each constraint group has at least 2 items
-    if (constraints.requires) {
-      for (const group of constraints.requires) {
-        if (!Array.isArray(group) || group.length < 2) {
-          throw new ValidationError(
-            `Invalid 'requires' group in recipe '${filename}' from mod '${modId}'. Each group must have at least 2 items.`
-          );
-        }
-      }
+    if (value.length < 2) {
+      throw new ValidationError(
+        `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'. '${field}' must contain at least 2 items.`
+      );
     }
 
-    if (constraints.excludes) {
-      for (const group of constraints.excludes) {
-        if (!Array.isArray(group) || group.length < 2) {
-          throw new ValidationError(
-            `Invalid 'excludes' group in recipe '${filename}' from mod '${modId}'. Each group must have at least 2 items.`
-          );
-        }
-      }
+    if (!value.every((entry) => typeof entry === 'string')) {
+      throw new ValidationError(
+        `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'. '${field}' entries must all be strings.`
+      );
     }
   }
 

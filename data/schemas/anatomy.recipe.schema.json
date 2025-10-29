@@ -293,7 +293,7 @@
         },
         "matchesPattern": {
           "type": "string",
-          "pattern": "^[a-z0-9_]+\\*?$",
+          "pattern": "^(?:\\*?[a-z0-9_]+(?:\\*[a-z0-9_]+)*\\*?)$",
           "minLength": 1,
           "description": "Wildcard pattern for slot key matching: 'leg_*', 'tentacle_*', 'wing_*'. Pattern must be non-empty string."
         },

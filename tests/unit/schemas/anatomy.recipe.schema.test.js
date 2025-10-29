@@ -91,6 +91,72 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
       }
       expect(ok).toBe(true);
     });
+
+    test('should validate pattern with leading wildcard segment', () => {
+      const validRecipe = {
+        recipeId: 'creatures:gryphon',
+        blueprintId: 'anatomy:gryphon',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: '*_left',
+            partType: 'left_appendage',
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate pattern with infix wildcard segment', () => {
+      const validRecipe = {
+        recipeId: 'creatures:eldritch',
+        blueprintId: 'anatomy:eldritch',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: '*tentacle*',
+            partType: 'tentacle',
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate pattern with multiple wildcard segments', () => {
+      const validRecipe = {
+        recipeId: 'creatures:hydra',
+        blueprintId: 'anatomy:hydra',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: 'neck_*_segment*',
+            partType: 'hydra_neck',
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
   });
 
   describe('Valid Recipe - With Clothing Entities', () => {
@@ -1002,6 +1068,54 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           keyword: 'pattern',
+          instancePath: '/patterns/0/matchesPattern',
+        })
+      );
+    });
+
+    test('should reject wildcard pattern composed only of asterisk', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: '*',
+            partType: 'any',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          instancePath: '/patterns/0/matchesPattern',
+        })
+      );
+    });
+
+    test('should reject wildcard pattern with consecutive asterisks', () => {
+      const invalidRecipe = {
+        recipeId: 'creatures:invalid',
+        blueprintId: 'anatomy:invalid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matchesPattern: '**',
+            partType: 'any',
+          },
+        ],
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
           instancePath: '/patterns/0/matchesPattern',
         })
       );
