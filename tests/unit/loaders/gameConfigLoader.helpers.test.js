@@ -2,9 +2,14 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import GameConfigLoader from '../../../src/loaders/gameConfigLoader.js';
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
 import { validateAgainstSchema } from '../../../src/utils/schemaValidationUtils.js';
+import { formatAjvErrors } from '../../../src/utils/ajvUtils.js';
 
 jest.mock('../../../src/utils/schemaValidationUtils.js', () => ({
   validateAgainstSchema: jest.fn(),
+}));
+
+jest.mock('../../../src/utils/ajvUtils.js', () => ({
+  formatAjvErrors: jest.fn(() => 'formatted errors'),
 }));
 
 let configuration;
@@ -82,6 +87,17 @@ describe('GameConfigLoader helper methods', () => {
       expect(mods).toEqual(['one', 'two']);
     });
 
+    it('throws when schema id is missing', () => {
+      configuration.getContentTypeSchemaId.mockReturnValue(undefined);
+
+      expect(() =>
+        loader.validateConfigForTest({ mods: ['one'] }, '/game.json', 'game.json')
+      ).toThrow('Schema ID for ‘game’ configuration type not configured.');
+      expect(logger.error).toHaveBeenCalledWith(
+        "FATAL: Schema ID for 'game' configuration type not found in IConfiguration."
+      );
+    });
+
     it('throws when mods array missing', () => {
       const config = {};
       validateAgainstSchema.mockReturnValue(undefined);
@@ -90,6 +106,36 @@ describe('GameConfigLoader helper methods', () => {
         loader.validateConfigForTest(config, '/game.json', 'game.json')
       ).toThrow(/mods/);
       expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('throws when mods array contains non-strings', () => {
+      const config = { mods: ['one', 2] };
+      validateAgainstSchema.mockReturnValue(undefined);
+
+      expect(() =>
+        loader.validateConfigForTest(config, '/game.json', 'game.json')
+      ).toThrow(
+        "Validated game config 'game.json' 'mods' array contains non-string elements."
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "FATAL: Validated game config 'game.json' 'mods' array contains non-string elements. Path: /game.json."
+      );
+    });
+
+    it('formats ajv errors when validation fails', () => {
+      const config = { mods: ['one'] };
+      validateAgainstSchema.mockReturnValue(undefined);
+
+      loader.validateConfigForTest(config, '/game.json', 'game.json');
+
+      const options = validateAgainstSchema.mock.calls[0][4];
+      const message = options.failureMessage([{ instancePath: '/mods/0' }]);
+
+      expect(formatAjvErrors).toHaveBeenCalledWith(
+        [{ instancePath: '/mods/0' }],
+        config
+      );
+      expect(message).toContain('formatted errors');
     });
   });
 
