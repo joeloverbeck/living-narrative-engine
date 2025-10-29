@@ -461,7 +461,7 @@ class RecipePatternResolver {
         return this.#resolvePropertyFilter(pattern.matchesAll, blueprint.slots || {});
       }
       return [];
-    } catch (error) {
+    } catch {
       // Validation errors already thrown, return empty for precedence check
       return [];
     }
@@ -669,9 +669,11 @@ class RecipePatternResolver {
         expandedSlots[slotKey] = {
           partType: pattern.partType,
           preferId: pattern.preferId,
-          tags: pattern.tags,
-          notTags: pattern.notTags,
-          properties: pattern.properties,
+          tags: Array.isArray(pattern.tags) ? [...pattern.tags] : pattern.tags,
+          notTags: Array.isArray(pattern.notTags)
+            ? [...pattern.notTags]
+            : pattern.notTags,
+          properties: pattern.properties ? { ...pattern.properties } : undefined,
         };
       }
 
@@ -1086,6 +1088,48 @@ class RecipePatternResolver {
     }
 
     return filtered;
+  }
+
+  /**
+   * Merges pattern contributions into an existing slot definition.
+   * Preserves existing explicit values while augmenting tags, notTags, and properties.
+   *
+   * @param {object} existingSlot - The previously resolved slot definition
+   * @param {object} pattern - Pattern providing additional configuration
+   * @returns {object} Merged slot definition
+   * @private
+   */
+  #mergeSlotDefinition(existingSlot, pattern) {
+    const merged = { ...existingSlot };
+
+    if (pattern.partType && !merged.partType) {
+      merged.partType = pattern.partType;
+    }
+
+    if (pattern.preferId !== undefined && merged.preferId === undefined) {
+      merged.preferId = pattern.preferId;
+    }
+
+    if (Array.isArray(pattern.tags) && pattern.tags.length > 0) {
+      const existingTags = Array.isArray(merged.tags) ? merged.tags : [];
+      merged.tags = Array.from(new Set([...existingTags, ...pattern.tags]));
+    }
+
+    if (Array.isArray(pattern.notTags) && pattern.notTags.length > 0) {
+      const existingNotTags = Array.isArray(merged.notTags) ? merged.notTags : [];
+      merged.notTags = Array.from(
+        new Set([...existingNotTags, ...pattern.notTags])
+      );
+    }
+
+    if (pattern.properties && Object.keys(pattern.properties).length > 0) {
+      merged.properties = {
+        ...(merged.properties || {}),
+        ...pattern.properties,
+      };
+    }
+
+    return merged;
   }
 }
 
