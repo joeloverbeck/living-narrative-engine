@@ -43,7 +43,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
     mockRecipeProcessor = {
       loadRecipe: jest.fn(),
       processRecipe: jest.fn(),
-      mergeSlotRequirements: jest.fn(),
+      mergeSlotRequirements: jest.fn((requirements) => requirements),
     };
 
     mockPartSelectionService = {
@@ -217,6 +217,30 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       expect(mockSocketGenerator.generateSockets).not.toHaveBeenCalled();
       expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
     });
+
+    it('should not trigger v2 processing when schemaVersion is "2.0" but structureTemplate is missing', async () => {
+      const malformedBlueprint = {
+        id: 'anatomy:glitched_v2',
+        schemaVersion: '2.0',
+        root: 'anatomy:torso',
+      };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints') return malformedBlueprint;
+        return null;
+      });
+
+      const recipe = { recipeId: 'anatomy:default', slots: {} };
+      mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
+      mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+
+      await factory.createAnatomyGraph('anatomy:glitched_v2', 'anatomy:default');
+
+      expect(mockSocketGenerator.generateSockets).not.toHaveBeenCalled();
+      expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
+      expect(mockEntityGraphBuilder.addSocketsToEntity).not.toHaveBeenCalled();
+    });
   });
 
   describe('V2 Blueprint Processing', () => {
@@ -286,6 +310,10 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       );
       expect(mockSocketGenerator.generateSockets).toHaveBeenCalledWith(structureTemplate);
       expect(mockSlotGenerator.generateBlueprintSlots).toHaveBeenCalledWith(structureTemplate);
+      expect(mockEntityGraphBuilder.addSocketsToEntity).toHaveBeenCalledWith(
+        'root-entity-1',
+        generatedSockets
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Generated 2 sockets and 2 slots from template')
       );
@@ -359,6 +387,68 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       // The merged blueprint should have both generated slots and additionalSlots
       // additionalSlots should override if there's a conflict
       expect(mockLogger.info).toHaveBeenCalled();
+    });
+
+    it('should allow additionalSlots to override generated slot definitions', async () => {
+      const v2Blueprint = {
+        id: 'anatomy:griffin_v2',
+        schemaVersion: '2.0',
+        root: 'anatomy:griffin_body',
+        structureTemplate: 'anatomy:template_griffin',
+        additionalSlots: {
+          wing_left: {
+            socket: 'wing_left_socket',
+            requirements: { partType: 'enchanted_wing' },
+            optional: false,
+          },
+        },
+      };
+
+      const structureTemplate = { id: 'anatomy:template_griffin' };
+
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints') return v2Blueprint;
+        if (type === 'anatomyStructureTemplates') return structureTemplate;
+        return null;
+      });
+
+      mockSocketGenerator.generateSockets.mockReturnValue([
+        { id: 'wing_left_socket', orientation: 'left', allowedTypes: ['wing'] },
+      ]);
+      mockSlotGenerator.generateBlueprintSlots.mockReturnValue({
+        wing_left: {
+          socket: 'wing_left_socket',
+          requirements: { partType: 'standard_wing' },
+          optional: false,
+        },
+      });
+
+      const recipe = { recipeId: 'anatomy:griffin_standard', slots: {} };
+      mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
+      mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('griffin-root');
+
+      mockSocketManager.validateSocketAvailability.mockReturnValue({
+        valid: true,
+        socket: {
+          id: 'wing_left_socket',
+          orientation: 'left',
+          allowedTypes: ['wing'],
+        },
+      });
+
+      await factory.createAnatomyGraph('anatomy:griffin_v2', 'anatomy:griffin_standard');
+
+      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledWith(
+        { partType: 'enchanted_wing' },
+        undefined
+      );
+      expect(mockPartSelectionService.selectPart).toHaveBeenCalledWith(
+        { partType: 'enchanted_wing' },
+        ['wing'],
+        undefined,
+        expect.any(Function)
+      );
     });
   });
 
