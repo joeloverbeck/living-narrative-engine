@@ -120,6 +120,9 @@
         },
         "parts": {
           "$ref": "#/definitions/contentFileList"
+        },
+        "structure-templates": {
+          "$ref": "#/definitions/contentFileList"
         }
       },
       "additionalProperties": false
