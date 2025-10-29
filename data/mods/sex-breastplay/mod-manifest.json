@@ -32,6 +32,7 @@
     "actions": [
       "fondle_breasts.action.json",
       "nuzzle_bare_breasts.action.json",
+      "squeeze_breasts_ardently.action.json",
       "fondle_breasts_over_clothes.action.json",
       "pinch_milk_out_of_nipple.action.json",
       "press_against_back.action.json",
@@ -41,6 +42,7 @@
       "event-is-action-fondle-breasts-over-clothes.condition.json",
       "event-is-action-fondle-breasts.condition.json",
       "event-is-action-nuzzle-bare-breasts.condition.json",
+      "event-is-action-squeeze-breasts-ardently.condition.json",
       "event-is-action-pinch-milk-out-of-nipple.condition.json",
       "event-is-action-press-against-back.condition.json",
       "event-is-action-press-against-chest.condition.json"
@@ -48,6 +50,7 @@
     "rules": [
       "handle_fondle_breasts.rule.json",
       "handle_nuzzle_bare_breasts.rule.json",
+      "handle_squeeze_breasts_ardently.rule.json",
       "handle_fondle_breasts_over_clothes.rule.json",
       "handle_pinch_milk_out_of_nipple.rule.json",
       "handle_press_against_back.rule.json",
@@ -55,6 +58,7 @@
     ],
     "scopes": [
       "actors_with_breasts_facing_each_other.scope",
+      "actors_with_breasts_facing_each_other_or_away.scope",
       "actors_with_breasts_facing_each_other_covered.scope",
       "actors_with_breasts_in_intimacy.scope"
     ],
