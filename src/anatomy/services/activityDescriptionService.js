@@ -2241,6 +2241,15 @@ class ActivityDescriptionService {
       sanitizeEntityName: (...args) => this.#sanitizeEntityName(...args),
       buildActivityDeduplicationKey: (...args) =>
         this.#buildActivityDeduplicationKey(...args),
+      collectActivityMetadata: (...args) =>
+        this.#collectActivityMetadata(...args),
+      collectInlineMetadata: (...args) =>
+        this.#collectInlineMetadata(...args),
+      collectDedicatedMetadata: (...args) =>
+        this.#collectDedicatedMetadata(...args),
+      parseInlineMetadata: (...args) => this.#parseInlineMetadata(...args),
+      parseDedicatedMetadata: (...args) =>
+        this.#parseDedicatedMetadata(...args),
       formatActivityDescription: (...args) =>
         this.#formatActivityDescription(...args),
       groupActivities: (...args) => this.#groupActivities(...args),

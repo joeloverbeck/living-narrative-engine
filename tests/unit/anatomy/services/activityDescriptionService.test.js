@@ -6073,4 +6073,355 @@ describe('ActivityDescriptionService', () => {
       );
     });
   });
+
+  describe('deduplication handling', () => {
+    it('should log when duplicate activities are removed', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([
+        {
+          type: 'inline',
+          template: '{actor} greets {target}',
+          targetEntityId: 'entity_2',
+          priority: 5,
+        },
+        {
+          type: 'inline',
+          template: '{actor} greets {target}',
+          targetEntityId: 'entity_2',
+          priority: 1,
+        },
+      ]);
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'entity_1') {
+          return {
+            id,
+            componentTypeIds: [],
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Actor One' };
+              }
+              return undefined;
+            }),
+          };
+        }
+
+        if (id === 'entity_2') {
+          return {
+            id,
+            componentTypeIds: [],
+            getComponentData: jest.fn((componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Target Two' };
+              }
+              return undefined;
+            }),
+          };
+        }
+
+        return defaultGetEntityInstanceImplementation(id);
+      });
+
+      const description = await service.generateActivityDescription('entity_1');
+
+      expect(description).toBe('Activity: Actor One greets Target Two.');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Deduplicated 1 duplicate activities')
+      );
+    });
+
+    it('should return empty description when deduplication removes all candidates', async () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue(['placeholder']);
+
+      const description = await service.generateActivityDescription('entity_1');
+
+      expect(description).toBe('');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('No activities remaining after deduplication')
+      );
+    });
+  });
+
+  describe('metadata collector test hooks', () => {
+    it('should handle unresolved entities when collecting metadata', () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+      mockEntityManager.getEntityInstance.mockImplementation(() => {
+        throw new Error('lookup failure');
+      });
+
+      const hooks = service.getTestHooks();
+      const activities = hooks.collectActivityMetadata('missing-entity', null);
+
+      expect(Array.isArray(activities)).toBe(true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to resolve entity for metadata collection'),
+        expect.any(Error)
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'No entity available for inline metadata collection: missing-entity'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'No entity available for dedicated metadata collection: missing-entity'
+      );
+    });
+
+    it('should log when dedicated metadata collection throws unexpectedly', () => {
+      mockActivityIndex.findActivitiesForEntity.mockReturnValue([]);
+
+      const throwingEntity = {
+        id: 'entity-dedicated-throw',
+        componentTypeIds: [],
+        getComponentData: jest.fn(),
+      };
+
+      Object.defineProperty(throwingEntity, 'hasComponent', {
+        get() {
+          throw new Error('hasComponent getter failure');
+        },
+      });
+
+      const hooks = service.getTestHooks();
+      const activities = hooks.collectActivityMetadata(
+        'entity-dedicated-throw',
+        throwingEntity
+      );
+
+      expect(activities).toEqual([]);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Failed to collect dedicated metadata for entity entity-dedicated-throw'
+        ),
+        expect.any(Error)
+      );
+    });
+
+    it('should emit defensive warnings during inline metadata collection', () => {
+      const hooks = service.getTestHooks();
+
+      hooks.collectInlineMetadata(null);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Cannot collect inline metadata without a valid entity'
+      );
+
+      hooks.collectInlineMetadata({
+        id: 'inline-missing-getter',
+        componentTypeIds: ['inline:missing'],
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('missing getComponentData; skipping inline:missing')
+      );
+
+      hooks.collectInlineMetadata({
+        id: 'inline-invalid-data',
+        componentTypeIds: ['inline:invalid'],
+        getComponentData: jest.fn().mockReturnValue(null),
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Component inline:invalid returned invalid data')
+      );
+
+      hooks.collectInlineMetadata({
+        id: 'inline-malformed-metadata',
+        componentTypeIds: ['inline:malformed'],
+        getComponentData: jest.fn().mockReturnValue({
+          activityMetadata: 'not-an-object',
+        }),
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Activity metadata for inline:malformed is malformed')
+      );
+    });
+
+    it('should expose parseInlineMetadata helper output', () => {
+      const hooks = service.getTestHooks();
+
+      const parsed = hooks.parseInlineMetadata(
+        'inline:component',
+        { entityId: 'target-inline' },
+        { template: '{actor} salutes {target}', priority: 7 }
+      );
+
+      expect(parsed).toEqual(
+        expect.objectContaining({
+          sourceComponent: 'inline:component',
+          targetEntityId: 'target-inline',
+          template: '{actor} salutes {target}',
+          priority: 7,
+        })
+      );
+    });
+
+    it('should cover dedicated metadata guard branches', () => {
+      const hooks = service.getTestHooks();
+
+      hooks.collectDedicatedMetadata(null);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Cannot collect dedicated metadata without a valid entity'
+      );
+
+      hooks.collectDedicatedMetadata({
+        id: 'dedicated-missing-has',
+        componentTypeIds: [],
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Entity dedicated-missing-has is missing hasComponent; skipping dedicated metadata'
+        )
+      );
+
+      hooks.collectDedicatedMetadata({
+        id: 'dedicated-has-throws',
+        componentTypeIds: [],
+        hasComponent: jest.fn(() => {
+          throw new Error('explode');
+        }),
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to verify dedicated metadata component'),
+        expect.any(Error)
+      );
+
+      hooks.collectDedicatedMetadata({
+        id: 'dedicated-missing-getter',
+        componentTypeIds: [],
+        hasComponent: jest.fn().mockReturnValue(true),
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Entity dedicated-missing-getter is missing getComponentData; skipping dedicated metadata'
+        )
+      );
+
+      hooks.collectDedicatedMetadata({
+        id: 'dedicated-getter-throws',
+        componentTypeIds: [],
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn(() => {
+          throw new Error('read failure');
+        }),
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to read dedicated metadata for dedicated-getter-throws'),
+        expect.any(Error)
+      );
+
+      hooks.collectDedicatedMetadata({
+        id: 'dedicated-invalid',
+        componentTypeIds: [],
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest
+          .fn()
+          .mockImplementation((componentId) =>
+            componentId === 'activity:description_metadata' ? null : undefined
+          ),
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Dedicated metadata for dedicated-invalid is invalid')
+      );
+
+      const metadataThrow = {};
+      Object.defineProperty(metadataThrow, 'sourceComponent', {
+        get() {
+          throw new Error('metadata explosion');
+        },
+      });
+
+      hooks.collectDedicatedMetadata({
+        id: 'dedicated-parse-failure',
+        componentTypeIds: [],
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'activity:description_metadata') {
+            return metadataThrow;
+          }
+          if (componentId === 'pose:stance') {
+            return { entityId: 'target' };
+          }
+          return undefined;
+        }),
+      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to parse dedicated metadata',
+        expect.any(Error)
+      );
+    });
+
+    it('should expose parseDedicatedMetadata edge cases for coverage', () => {
+      const hooks = service.getTestHooks();
+
+      expect(hooks.parseDedicatedMetadata(null, { getComponentData: jest.fn() })).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Dedicated metadata payload is invalid; skipping'
+      );
+
+      expect(
+        hooks.parseDedicatedMetadata(
+          { sourceComponent: 'comp' },
+          { id: 'entity', getComponentData: undefined }
+        )
+      ).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Cannot parse dedicated metadata without component access')
+      );
+
+      expect(
+        hooks.parseDedicatedMetadata(
+          {},
+          { id: 'entity', getComponentData: jest.fn() }
+        )
+      ).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Dedicated metadata missing sourceComponent'
+      );
+
+      const sourceData = {};
+      Object.defineProperty(sourceData, 'entityId', {
+        get() {
+          throw new Error('target failure');
+        },
+      });
+
+      const parsed = hooks.parseDedicatedMetadata(
+        {
+          sourceComponent: 'pose:stance',
+          template: '{actor} watches {target}',
+        },
+        {
+          id: 'entity',
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'pose:stance') {
+              return sourceData;
+            }
+            return undefined;
+          }),
+        }
+      );
+
+      expect(parsed).toEqual(
+        expect.objectContaining({ sourceComponent: 'pose:stance', targetEntityId: null })
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to resolve target entity for dedicated metadata pose:stance'),
+        expect.any(Error)
+      );
+    });
+
+    it('should guard against component access errors in hasRequiredComponents', () => {
+      const hooks = service.getTestHooks();
+
+      const entity = {
+        id: 'entity-required-components',
+        hasComponent: jest.fn(() => {
+          throw new Error('component failure');
+        }),
+      };
+
+      expect(hooks.hasRequiredComponents(entity, ['core:required'])).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Failed to verify required component core:required for entity-required-components'
+        ),
+        expect.any(Error)
+      );
+    });
+  });
 });
