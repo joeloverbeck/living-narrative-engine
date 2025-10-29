@@ -89,7 +89,11 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:weaknesses': { text: 'I tend to be impatient' },
     "movement:exits": [],
     'anatomy:part': { subType: 'leg' },
-    'anatomy:sockets': { sockets: [{ id: 'ankle', allowedTypes: ['foot'] }] },
+    'anatomy:sockets': {
+      sockets: [
+        { id: 'front_left_ankle', orientation: 'left_front', allowedTypes: ['foot'] },
+      ],
+    },
     'anatomy:joint': { parentId: 'entity-123', socketId: 'ankle' },
     'anatomy:body': { recipeId: 'anatomy:human_female' },
     'anatomy:blueprintSlot': { slotId: 'left_breast' },

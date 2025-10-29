@@ -59,7 +59,18 @@ describe('AnatomyRecipeLoader._processFetchedItem', () => {
     const data = {
       recipeId: 'core:human',
       includes: ['macro1'],
-      constraints: { requires: [['a', 'b']], excludes: [['x', 'y']] },
+      constraints: {
+        requires: [
+          {
+            components: ['core:heart', 'core:lung'],
+          },
+        ],
+        excludes: [
+          {
+            partTypes: ['wing_primary', 'tentacle_primary'],
+          },
+        ],
+      },
     };
 
     const validateSpy = jest.spyOn(loader, '_validateConstraints');
@@ -153,27 +164,62 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
     ).toThrow(ValidationError);
   });
 
-  it('throws when a requires group has less than two items', () => {
+  it('throws when a requires group is not an object', () => {
     const constraints = { requires: [['onlyOne']] };
     expect(() =>
       loader._validateConstraints(constraints, 'core', 'file')
     ).toThrow(ValidationError);
   });
 
-  it('throws when excludes group is invalid', () => {
-    const constraints = { excludes: [['one']] };
+  it('throws when requires group omits both components and partTypes', () => {
+    const constraints = { requires: [{}] };
     expect(() =>
       loader._validateConstraints(constraints, 'core', 'file')
-    ).toThrow(ValidationError);
+    ).toThrow(/Specify at least one of 'components' or 'partTypes'/);
   });
 
-  it('does not throw for valid constraints', () => {
+  it('throws when requires components array is too small', () => {
     const constraints = {
       requires: [
-        ['a', 'b'],
-        ['c', 'd'],
+        {
+          components: ['only-one'],
+        },
       ],
-      excludes: [['x', 'y']],
+    };
+    expect(() =>
+      loader._validateConstraints(constraints, 'core', 'file')
+    ).toThrow(/must contain at least 2 items/);
+  });
+
+  it('throws when excludes partTypes entries are not strings', () => {
+    const constraints = {
+      excludes: [
+        {
+          partTypes: ['leg', 123],
+        },
+      ],
+    };
+    expect(() =>
+      loader._validateConstraints(constraints, 'core', 'file')
+    ).toThrow(/entries must all be strings/);
+  });
+
+  it('does not throw for valid V2 constraint objects', () => {
+    const constraints = {
+      requires: [
+        {
+          components: ['anatomy:wing', 'anatomy:arm_socket'],
+        },
+        {
+          partTypes: ['leg_front_left', 'leg_front_right'],
+        },
+      ],
+      excludes: [
+        {
+          components: ['anatomy:wing', 'anatomy:tentacle'],
+          partTypes: ['wing_primary', 'tentacle_primary'],
+        },
+      ],
     };
 
     expect(() =>

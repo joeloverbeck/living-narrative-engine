@@ -425,6 +425,72 @@ describe('Anatomy Recipe Schema - V2 Wildcard Patterns', () => {
     expect(result.isValid).toBe(true);
   });
 
+  it('should validate pattern with leading wildcard', () => {
+    const patternRecipe = {
+      recipeId: 'creatures:gryphon',
+      blueprintId: 'anatomy:gryphon',
+      slots: {
+        head: { partType: 'head' },
+      },
+      patterns: [
+        {
+          matchesPattern: '*_left',
+          partType: 'left_appendage',
+        },
+      ],
+    };
+
+    const result = validator.validate(SCHEMA_ID, patternRecipe);
+    if (!result.isValid) {
+      console.log('Validation errors:', JSON.stringify(result.errors, null, 2));
+    }
+    expect(result.isValid).toBe(true);
+  });
+
+  it('should validate pattern with infix wildcard', () => {
+    const patternRecipe = {
+      recipeId: 'creatures:eldritch',
+      blueprintId: 'anatomy:eldritch',
+      slots: {
+        head: { partType: 'head' },
+      },
+      patterns: [
+        {
+          matchesPattern: '*tentacle*',
+          partType: 'tentacle',
+        },
+      ],
+    };
+
+    const result = validator.validate(SCHEMA_ID, patternRecipe);
+    if (!result.isValid) {
+      console.log('Validation errors:', JSON.stringify(result.errors, null, 2));
+    }
+    expect(result.isValid).toBe(true);
+  });
+
+  it('should validate pattern with multiple wildcard segments', () => {
+    const patternRecipe = {
+      recipeId: 'creatures:hydra',
+      blueprintId: 'anatomy:hydra',
+      slots: {
+        head: { partType: 'head' },
+      },
+      patterns: [
+        {
+          matchesPattern: 'neck_*_segment*',
+          partType: 'hydra_neck',
+        },
+      ],
+    };
+
+    const result = validator.validate(SCHEMA_ID, patternRecipe);
+    if (!result.isValid) {
+      console.log('Validation errors:', JSON.stringify(result.errors, null, 2));
+    }
+    expect(result.isValid).toBe(true);
+  });
+
   it('should reject pattern with hyphens', () => {
     const invalidRecipe = {
       recipeId: 'creatures:invalid',
@@ -485,7 +551,7 @@ describe('Anatomy Recipe Schema - V2 Wildcard Patterns', () => {
     expect(result.errors).toBeDefined();
   });
 
-  it('should reject pattern with multiple wildcards', () => {
+  it('should reject pattern composed only of wildcard character', () => {
     const invalidRecipe = {
       recipeId: 'creatures:invalid',
       blueprintId: 'anatomy:invalid',
@@ -494,8 +560,28 @@ describe('Anatomy Recipe Schema - V2 Wildcard Patterns', () => {
       },
       patterns: [
         {
-          matchesPattern: 'leg_*_front',
-          partType: 'leg',
+          matchesPattern: '*',
+          partType: 'any',
+        },
+      ],
+    };
+
+    const result = validator.validate(SCHEMA_ID, invalidRecipe);
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toBeDefined();
+  });
+
+  it('should reject pattern with consecutive wildcards', () => {
+    const invalidRecipe = {
+      recipeId: 'creatures:invalid',
+      blueprintId: 'anatomy:invalid',
+      slots: {
+        head: { partType: 'head' },
+      },
+      patterns: [
+        {
+          matchesPattern: '**',
+          partType: 'any',
         },
       ],
     };
