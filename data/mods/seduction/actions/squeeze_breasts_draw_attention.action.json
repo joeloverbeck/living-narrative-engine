@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "seduction:squeeze_breasts_draw_attention",
+  "name": "Squeeze Breasts to Draw Attention",
+  "description": "Flaunt your bust by squeezing your bare breasts together, demanding every eye in the room.",
+  "targets": "none",
+  "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "squeeze your breasts to draw attention",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "breast"]
+      },
+      "failure_message": "You need breasts to perform this action."
+    },
+    {
+      "logic": {
+        "or": [
+          { "not": { "isSocketCovered": ["actor", "left_chest"] } },
+          { "not": { "isSocketCovered": ["actor", "right_chest"] } }
+        ]
+      },
+      "failure_message": "Your breasts must be uncovered to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#f57f17",
+    "textColor": "#000000",
+    "hoverBackgroundColor": "#f9a825",
+    "hoverTextColor": "#212121"
+  }
+}
