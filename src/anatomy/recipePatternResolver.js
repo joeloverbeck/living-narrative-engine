@@ -232,7 +232,10 @@ class RecipePatternResolver {
     }
 
     try {
-      this.#resolveSlotGroup(groupRef, blueprint);
+      this.#resolveSlotGroup(groupRef, blueprint, {
+        throwOnZeroMatches: false,
+        allowMissing: true,
+      });
     } catch (error) {
       if (error instanceof ValidationError) {
         throw new ValidationError(
@@ -271,17 +274,7 @@ class RecipePatternResolver {
     );
 
     if (matchedKeys.length === 0) {
-      const availability = this.#collectBlueprintAvailability(blueprint);
-      const slotSummary =
-        availability.slotKeys.length > 0
-          ? `Available slot keys: ${availability.slotKeys.join(', ')}.`
-          : 'Available slot keys: none.';
-
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: matchesPattern '${patternStr}' matched 0 slots in blueprint '${
-          blueprint.id || 'unknown blueprint'
-        }'. ${slotSummary}`
-      );
+      return;
     }
   }
 
@@ -321,21 +314,7 @@ class RecipePatternResolver {
     );
 
     if (matchedKeys.length === 0) {
-      const availability = this.#collectBlueprintAvailability(blueprint);
-      const slotSummary =
-        availability.slotKeys.length > 0
-          ? `Available slot keys: ${availability.slotKeys.join(', ')}.`
-          : 'Available slot keys: none.';
-      const orientationSummary =
-        availability.orientations.length > 0
-          ? ` Available orientations: ${availability.orientations.join(', ')}.`
-          : '';
-
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: matchesAll filter ${JSON.stringify(
-          filter
-        )} matched 0 slots in blueprint '${blueprint.id || 'unknown blueprint'}'. ${slotSummary}${orientationSummary}`
-      );
+      return;
     }
   }
 
@@ -549,41 +528,51 @@ class RecipePatternResolver {
     for (let index = 0; index < recipe.patterns.length; index += 1) {
       const pattern = recipe.patterns[index];
       const patternNumber = index + 1;
+      const usesExplicitMatches = Array.isArray(pattern.matches);
+      const hasExplicitMatches =
+        usesExplicitMatches && pattern.matches.length !== 0;
+      const matchesGroupRef = pattern.matchesGroup;
+      const matchesPatternStr = pattern.matchesPattern;
+      const matchesAllFilter = pattern.matchesAll;
+      const hadMatcherAtStart =
+        hasExplicitMatches ||
+        matchesGroupRef !== undefined ||
+        matchesPatternStr !== undefined ||
+        Boolean(matchesAllFilter);
       let matchedSlotKeys = [];
 
       // V1 pattern: explicit slot list (backward compatibility)
-      if (pattern.matches) {
-        matchedSlotKeys = Array.isArray(pattern.matches)
-          ? [...pattern.matches]
-          : [];
+      if (usesExplicitMatches) {
+        matchedSlotKeys = hasExplicitMatches ? [...pattern.matches] : [];
         this.#logger.debug(
           `V1 pattern: explicit matches for ${matchedSlotKeys.length} slots`
         );
       }
       // V2 pattern: slot group selector
-      else if (pattern.matchesGroup) {
+      else if (matchesGroupRef !== undefined) {
         matchedSlotKeys = this.#resolveSlotGroup(
-          pattern.matchesGroup,
-          blueprint
+          matchesGroupRef,
+          blueprint,
+          { throwOnZeroMatches: false, allowMissing: true }
         );
         this.#logger.debug(
-          `matchesGroup '${pattern.matchesGroup}' resolved to ${matchedSlotKeys.length} slots`
+          `matchesGroup '${matchesGroupRef}' resolved to ${matchedSlotKeys.length} slots`
         );
       }
       // V2 pattern: wildcard pattern
-      else if (pattern.matchesPattern) {
+      else if (matchesPatternStr !== undefined) {
         matchedSlotKeys = this.#resolveWildcardPattern(
-          pattern.matchesPattern,
+          matchesPatternStr,
           blueprintSlotKeys
         );
         this.#logger.debug(
-          `matchesPattern '${pattern.matchesPattern}' resolved to ${matchedSlotKeys.length} slots`
+          `matchesPattern '${matchesPatternStr}' resolved to ${matchedSlotKeys.length} slots`
         );
       }
       // V2 pattern: property-based filter
-      else if (pattern.matchesAll) {
+      else if (matchesAllFilter) {
         matchedSlotKeys = this.#resolvePropertyFilter(
-          pattern.matchesAll,
+          matchesAllFilter,
           blueprintSlots
         );
         this.#logger.debug(
@@ -597,12 +586,14 @@ class RecipePatternResolver {
         continue;
       }
 
-      if (!pattern.matches && matchedSlotKeys.length === 0) {
-        this.#throwZeroMatchError({
+      if (!usesExplicitMatches && matchedSlotKeys.length === 0) {
+        this.#logZeroMatchWarning({
           pattern,
           blueprint,
-          slotGroupRef: pattern.matchesGroup,
+          patternIndex: index,
+          slotGroupRef: matchesGroupRef,
         });
+        continue;
       }
 
       // Apply exclusions if present
@@ -619,13 +610,15 @@ class RecipePatternResolver {
           `Exclusions filtered ${beforeExclusion} → ${filteredSlotKeys.length} slots`
         );
 
-        if (!pattern.matches && filteredSlotKeys.length === 0) {
-          this.#throwZeroMatchError({
+        if (!usesExplicitMatches && filteredSlotKeys.length === 0) {
+          this.#logZeroMatchWarning({
             pattern,
             blueprint,
+            patternIndex: index,
             stage: 'after applying exclusions',
-            slotGroupRef: pattern.matchesGroup,
+            slotGroupRef: matchesGroupRef,
           });
+          continue;
         }
       }
 
@@ -635,7 +628,7 @@ class RecipePatternResolver {
       for (const slotKey of filteredSlotKeys) {
         // Skip if explicitly defined in recipe slots (explicit definitions take precedence)
         if (expandedSlots[slotKey]) {
-          if (this.#hasActiveMatcher(pattern)) {
+          if (hadMatcherAtStart) {
             this.#logger.info(
               `Explicit slot '${slotKey}' overrides Pattern ${patternNumber} (${patternDesc}). This is expected behavior.`
             );
@@ -651,7 +644,7 @@ class RecipePatternResolver {
         }
 
         if (Object.prototype.hasOwnProperty.call(blueprintAdditionalSlots, slotKey)) {
-          if (this.#hasActiveMatcher(pattern)) {
+          if (hadMatcherAtStart) {
             this.#logger.info(
               `Blueprint additionalSlots for slot '${slotKey}' overrides Pattern ${patternNumber} (${patternDesc}).`
             );
@@ -677,7 +670,7 @@ class RecipePatternResolver {
         };
       }
 
-      if (!this.#hasActiveMatcher(pattern) && !patternHints.includes(defaultMatcherHint)) {
+      if (!hadMatcherAtStart && !patternHints.includes(defaultMatcherHint)) {
         patternHints.push(defaultMatcherHint);
       }
     }
@@ -690,7 +683,7 @@ class RecipePatternResolver {
     return {
       ...recipe,
       slots: expandedSlots,
-      _patternHints: patternHints,
+      ...(patternHints.length > 0 ? { _patternHints: patternHints } : {}),
       _patternConflicts: patternConflicts,
     };
   }
@@ -705,7 +698,8 @@ class RecipePatternResolver {
    * @returns {string[]} Array of matching slot keys
    * @private
    */
-  #resolveSlotGroup(groupRef, blueprint) {
+  #resolveSlotGroup(groupRef, blueprint, options = {}) {
+    const { throwOnZeroMatches = true, allowMissing = false } = options;
     assertNonBlankString(
       groupRef,
       'Group reference',
@@ -716,6 +710,9 @@ class RecipePatternResolver {
     if (!blueprint.structureTemplate) {
       const message = `Cannot resolve slot group '${groupRef}': blueprint has no structure template`;
       this.#logger.warn(message);
+      if (allowMissing) {
+        return [];
+      }
       throw new ValidationError(message);
     }
 
@@ -785,6 +782,9 @@ class RecipePatternResolver {
 
     if (slotKeys.length === 0) {
       if (!hasMatchingDefinitions) {
+        if (allowMissing) {
+          return [];
+        }
         const availableSummary =
           availableGroups.length > 0
             ? ` Available groups: ${availableGroups
@@ -797,9 +797,13 @@ class RecipePatternResolver {
         );
       }
 
-      throw new ValidationError(
-        `Slot group '${groupRef}' matched 0 slots in structure template '${blueprint.structureTemplate}'.`
-      );
+      if (throwOnZeroMatches) {
+        throw new ValidationError(
+          `Slot group '${groupRef}' matched 0 slots in structure template '${blueprint.structureTemplate}'.`
+        );
+      }
+
+      return [];
     }
 
     return slotKeys;
@@ -944,22 +948,6 @@ class RecipePatternResolver {
   }
 
   /**
-   * Determines whether a pattern currently exposes any matcher definition.
-   *
-   * @param {object} pattern - Pattern definition to inspect
-   * @returns {boolean} True if a matcher is present
-   * @private
-   */
-  #hasActiveMatcher(pattern) {
-    return (
-      Boolean(pattern.matches && pattern.matches.length !== 0) ||
-      pattern.matchesGroup !== undefined ||
-      pattern.matchesPattern !== undefined ||
-      Boolean(pattern.matchesAll)
-    );
-  }
-
-  /**
    * Collects blueprint availability summaries for error hints.
    *
    * @param {object} blueprint - Blueprint definition
@@ -1005,21 +993,40 @@ class RecipePatternResolver {
    * @throws {ValidationError} Always throws with composed message
    * @private
    */
-  #throwZeroMatchError({ pattern, blueprint, stage, slotGroupRef }) {
-    const patternDesc = this.#getPatternDescription(pattern);
+  #logZeroMatchWarning({
+    pattern,
+    blueprint,
+    stage,
+    slotGroupRef,
+    patternIndex,
+  }) {
+    const patternNumber =
+      typeof patternIndex === 'number' ? patternIndex + 1 : '?';
     const blueprintId = blueprint?.id || 'unknown blueprint';
     const availability = this.#collectBlueprintAvailability(blueprint);
 
-    let message = `Pattern ${patternDesc} matched 0 slots`;
+    let matcherLabel;
+    if (pattern.matchesGroup || slotGroupRef) {
+      matcherLabel = `Slot group '${slotGroupRef ?? pattern.matchesGroup}'`;
+    } else if (pattern.matchesPattern) {
+      matcherLabel = `Pattern '${pattern.matchesPattern}'`;
+    } else if (pattern.matchesAll) {
+      matcherLabel = `matchesAll filter ${JSON.stringify(pattern.matchesAll)}`;
+    } else {
+      matcherLabel = this.#getPatternDescription(pattern);
+    }
+
+    let message = `Pattern ${patternNumber}: ${matcherLabel} matched 0 slots`;
 
     if (stage) {
       message += ` ${stage}`;
     }
 
-    message += ` in blueprint '${blueprintId}'.`;
-
-    if (slotGroupRef) {
-      message += ` Slot group '${slotGroupRef}' matched 0 slots.`;
+    if (pattern.matchesGroup || slotGroupRef) {
+      const templateId = blueprint?.structureTemplate || 'unknown template';
+      message += ` in structure template '${templateId}'.`;
+    } else {
+      message += ` in blueprint '${blueprintId}'.`;
     }
 
     if (availability.slotKeys.length > 0) {
@@ -1036,7 +1043,15 @@ class RecipePatternResolver {
       message += ` Available sockets: ${availability.socketIds.join(', ')}.`;
     }
 
-    throw new ValidationError(message);
+    this.#logger.warn(message);
+
+    if (pattern.matchesGroup || slotGroupRef) {
+      const groupRef = slotGroupRef ?? pattern.matchesGroup;
+      const templateId = blueprint?.structureTemplate || 'unknown template';
+      this.#logger.warn(
+        `Slot group '${groupRef}' not found or produced 0 slots in structure template '${templateId}'.`
+      );
+    }
   }
 
   /**

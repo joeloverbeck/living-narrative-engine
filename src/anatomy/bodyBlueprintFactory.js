@@ -380,10 +380,12 @@ export class BodyBlueprintFactory {
     );
 
     if (conflictingSlots.length > 0) {
-      throw new ValidationError(
-        `Blueprint '${blueprint.id || 'unknown blueprint'}' additionalSlots conflict: slot(s) ${conflictingSlots.join(
+      this.#logger.warn(
+        `BodyBlueprintFactory: Blueprint '${
+          blueprint.id || 'unknown blueprint'
+        }' additionalSlots overriding generated slots: ${conflictingSlots.join(
           ', '
-        )} already defined by structure template '${blueprint.structureTemplate}'.`
+        )}`
       );
     }
 
