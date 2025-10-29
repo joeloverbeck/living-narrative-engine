@@ -1,0 +1,62 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:kraken_mantle",
+  "description": "Mantle body for a titanic kraken",
+  "components": {
+    "anatomy:part": {
+      "subType": "kraken_mantle"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "tentacle_1",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_2",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_3",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_4",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_5",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_6",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_7",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_8",
+          "allowedTypes": ["kraken_tentacle"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "head",
+          "allowedTypes": ["kraken_head"],
+          "nameTpl": "head"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "kraken mantle"
+    }
+  }
+}

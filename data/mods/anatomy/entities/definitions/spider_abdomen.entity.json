@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:spider_abdomen",
+  "description": "The bulbous abdomen of a spider",
+  "components": {
+    "anatomy:part": {
+      "subType": "spider_abdomen"
+    },
+    "core:name": {
+      "text": "spider abdomen"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:kraken_tentacle",
+  "description": "A colossal kraken tentacle lined with suckers",
+  "components": {
+    "anatomy:part": {
+      "subType": "kraken_tentacle"
+    },
+    "core:name": {
+      "text": "kraken tentacle"
+    }
+  }
+}

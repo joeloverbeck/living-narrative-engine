@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:dragon_wing",
+  "description": "A broad, leathery dragon wing",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_wing"
+    },
+    "core:name": {
+      "text": "dragon wing"
+    }
+  }
+}

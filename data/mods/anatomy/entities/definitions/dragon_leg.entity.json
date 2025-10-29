@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:dragon_leg",
+  "description": "A muscular dragon leg ending in talons",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_leg"
+    },
+    "core:name": {
+      "text": "dragon leg"
+    }
+  }
+}

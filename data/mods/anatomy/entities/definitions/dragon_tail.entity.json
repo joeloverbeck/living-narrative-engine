@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:dragon_tail",
+  "description": "A long, balanced dragon tail",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_tail"
+    },
+    "core:name": {
+      "text": "dragon tail"
+    }
+  }
+}
