@@ -1092,6 +1092,182 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
     });
   });
 
+  describe('Batch processor failure scenarios', () => {
+    /**
+     * Runs a callback while forcing Promise.allSettled to throw.
+     *
+     * @param {(context: { failure: Error, failingAllSettled: jest.Mock }) => Promise<void>} callback - Test callback
+     * @returns {Promise<void>}
+     */
+    const withFailingAllSettled = async (callback) => {
+      const originalAllSettled = Promise.allSettled;
+      const failure = new Error('allSettled failure');
+      const failingAllSettled = jest.fn(() => {
+        throw failure;
+      });
+      Promise.allSettled = failingAllSettled;
+
+      try {
+        await callback({ failure, failingAllSettled });
+      } finally {
+        Promise.allSettled = originalAllSettled;
+      }
+    };
+
+    it('should mark entire creation batch as failed when processor throws', async () => {
+      const entitySpecs = [
+        { definitionId: 'test:entity1', opts: {} },
+        { definitionId: 'test:entity2', opts: {} },
+      ];
+
+      await withFailingAllSettled(async ({ failure, failingAllSettled }) => {
+        const result = await manager.batchCreateEntities(entitySpecs, {
+          enableParallel: true,
+        });
+
+        expect(result.failures).toHaveLength(2);
+        expect(result.totalProcessed).toBe(2);
+        expect(result.failures.every(({ error }) => error === failure)).toBe(true);
+        expect(mockDeps.logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Batch creation failed for batch 1'),
+          failure
+        );
+        expect(failingAllSettled).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('should rethrow creation batch errors when stopOnError is enabled', async () => {
+      const entitySpecs = [
+        { definitionId: 'test:entity1', opts: {} },
+        { definitionId: 'test:entity2', opts: {} },
+      ];
+
+      await withFailingAllSettled(async ({ failure }) => {
+        await expect(
+          manager.batchCreateEntities(entitySpecs, {
+            enableParallel: true,
+            stopOnError: true,
+          })
+        ).rejects.toBe(failure);
+
+        expect(mockDeps.logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Batch creation failed for batch 1'),
+          failure
+        );
+      });
+    });
+
+    it('should mark entire component addition batch as failed when processor throws', async () => {
+      const componentSpecs = [
+        {
+          instanceId: 'entity1',
+          componentTypeId: 'test:component',
+          componentData: {},
+        },
+        {
+          instanceId: 'entity2',
+          componentTypeId: 'test:component',
+          componentData: {},
+        },
+      ];
+
+      await withFailingAllSettled(async ({ failure }) => {
+        const result = await manager.batchAddComponents(componentSpecs, {
+          enableParallel: true,
+        });
+
+        expect(result.failures).toHaveLength(2);
+        expect(result.totalProcessed).toBe(2);
+        expect(result.failures.every(({ error }) => error === failure)).toBe(true);
+        expect(mockDeps.logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Batch component addition failed for batch 1'),
+          failure
+        );
+      });
+    });
+
+    it('should rethrow component addition errors when stopOnError is enabled', async () => {
+      const componentSpecs = [
+        {
+          instanceId: 'entity1',
+          componentTypeId: 'test:component',
+          componentData: {},
+        },
+      ];
+
+      await withFailingAllSettled(async ({ failure }) => {
+        await expect(
+          manager.batchAddComponents(componentSpecs, {
+            enableParallel: true,
+            stopOnError: true,
+          })
+        ).rejects.toBe(failure);
+
+        expect(mockDeps.logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Batch component addition failed for batch 1'),
+          failure
+        );
+      });
+    });
+
+    it('should mark entire removal batch as failed when processor throws', async () => {
+      const instanceIds = ['entity1', 'entity2'];
+
+      await withFailingAllSettled(async ({ failure }) => {
+        const result = await manager.batchRemoveEntities(instanceIds, {
+          enableParallel: true,
+        });
+
+        expect(result.failures).toHaveLength(2);
+        expect(result.totalProcessed).toBe(2);
+        expect(result.failures.every(({ error }) => error === failure)).toBe(true);
+        expect(mockDeps.logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Batch removal failed for batch 1'),
+          failure
+        );
+      });
+    });
+
+    it('should rethrow removal errors when stopOnError is enabled', async () => {
+      const instanceIds = ['entity1'];
+
+      await withFailingAllSettled(async ({ failure }) => {
+        await expect(
+          manager.batchRemoveEntities(instanceIds, {
+            enableParallel: true,
+            stopOnError: true,
+          })
+        ).rejects.toBe(failure);
+
+        expect(mockDeps.logger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Batch removal failed for batch 1'),
+          failure
+        );
+      });
+    });
+
+    it('should treat rejected promises from allSettled as failures', async () => {
+      const originalAllSettled = Promise.allSettled;
+      const rejection = new Error('promise rejected');
+      Promise.allSettled = jest.fn().mockResolvedValueOnce([
+        { status: 'rejected', reason: rejection },
+      ]);
+
+      const entitySpecs = [{ definitionId: 'test:entity', opts: {} }];
+      const result = await manager.batchCreateEntities(entitySpecs, {
+        enableParallel: true,
+      });
+
+      expect(result.failures).toHaveLength(1);
+      expect(result.failures[0]).toEqual({ item: null, error: rejection });
+      expect(result.failureCount).toBe(1);
+      expect(result.totalProcessed).toBe(1);
+      expect(Promise.allSettled).toHaveBeenCalledTimes(1);
+
+      Promise.allSettled = originalAllSettled;
+    });
+  });
+
   describe('Mixed operation scenarios', () => {
     it('should handle all operations with different batch sizes', async () => {
       // Test entity creation
