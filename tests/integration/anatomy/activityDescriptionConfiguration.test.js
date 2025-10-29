@@ -182,4 +182,44 @@ describe('Activity Description - Configuration Integration', () => {
     const activities = description.split('.').filter((s) => s.trim());
     expect(activities.length).toBeLessThanOrEqual(3); // Prefix + 2 activities
   });
+
+  it('should return empty description when formatting is disabled', async () => {
+    const mockAnatomyFormattingService = {
+      getActivityIntegrationConfig: jest.fn().mockReturnValue({
+        enabled: false,
+        prefix: 'Activity: ',
+        suffix: '.',
+        separator: '. ',
+        maxActivities: 5,
+      }),
+    };
+
+    const jsonLogicEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
+
+    const customService = new ActivityDescriptionService({
+      logger: testBed.mocks.logger,
+      entityManager,
+      anatomyFormattingService: mockAnatomyFormattingService,
+      jsonLogicEvaluationService,
+    });
+
+    const jonEntity = await entityManager.createEntityInstance('core:actor', {
+      instanceId: 'jon',
+    });
+
+    entityManager.addComponent(jonEntity.id, 'core:name', { text: 'Jon' });
+    entityManager.addComponent(jonEntity.id, 'test:activity_1', {
+      activityMetadata: {
+        shouldDescribeInActivity: true,
+        template: 'kneeling beside the altar',
+        priority: 40,
+      },
+    });
+
+    const description = await customService.generateActivityDescription('jon');
+
+    expect(description).toBe('');
+  });
 });

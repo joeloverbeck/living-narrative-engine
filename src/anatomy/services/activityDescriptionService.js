@@ -15,6 +15,7 @@ import {
 import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
+  COMPONENTS_BATCH_ADDED_ID,
   ENTITY_REMOVED_ID,
 } from '../../constants/eventIds.js';
 import {
@@ -24,6 +25,7 @@ import {
 
 const GENDER_COMPONENT_ID = 'core:gender';
 const ACTIVITY_METADATA_COMPONENT_ID = 'activity:description_metadata';
+const CLOSENESS_COMPONENT_ID = 'positioning:closeness';
 
 const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
   enabled: true,
@@ -101,7 +103,8 @@ const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
  * @property {(key: string, value: unknown) => void} setEntityNameCacheEntry - Prime the entity name cache.
  * @property {(key: string, value: unknown) => void} setGenderCacheEntry - Prime the gender cache.
  * @property {(key: string, value: ActivityIndexCacheValue) => void} setActivityIndexCacheEntry - Prime the activity index cache.
- * @property {() => { entityName: Map<string, TimedCacheEntry>; gender: Map<string, TimedCacheEntry>; activityIndex: Map<string, TimedCacheEntry>; }} getCacheSnapshot - Retrieve shallow cache snapshots.
+ * @property {(key: string, value: Array<string>) => void} setClosenessCacheEntry - Prime the closeness cache with partner arrays.
+ * @property {() => { entityName: Map<string, TimedCacheEntry>; gender: Map<string, TimedCacheEntry>; activityIndex: Map<string, TimedCacheEntry>; closeness: Map<string, TimedCacheEntry>; }} getCacheSnapshot - Retrieve shallow cache snapshots.
  */
 
 class ActivityDescriptionService {
@@ -560,7 +563,23 @@ class ActivityDescriptionService {
     }
 
     // Resolve target entity ID
-    const targetEntityId = componentData[targetRole];
+    const rawTargetEntityId = componentData?.[targetRole];
+    let targetEntityId = null;
+
+    if (typeof rawTargetEntityId === 'string') {
+      const trimmedTarget = rawTargetEntityId.trim();
+      if (trimmedTarget.length > 0) {
+        targetEntityId = trimmedTarget;
+      } else if (rawTargetEntityId.length > 0) {
+        this.#logger.warn(
+          `Inline metadata for ${componentId} provided blank target entity reference for role ${targetRole}; using null`
+        );
+      }
+    } else if (rawTargetEntityId !== undefined && rawTargetEntityId !== null) {
+      this.#logger.warn(
+        `Inline metadata for ${componentId} provided invalid target entity reference for role ${targetRole}; expected non-empty string`
+      );
+    }
 
     // For Phase 1 compatibility with existing formatter, provide a basic description
     // Phase 2 (ACTDESC-008) will handle proper template interpolation
@@ -900,7 +919,14 @@ class ActivityDescriptionService {
     if (Array.isArray(componentIds)) {
       for (const componentId of componentIds) {
         if (typeof entity.getComponentData === 'function') {
-          components[componentId] = entity.getComponentData(componentId);
+          try {
+            components[componentId] = entity.getComponentData(componentId);
+          } catch (error) {
+            this.#logger.warn(
+              `Failed to extract component data for ${componentId} on ${entity?.id ?? 'unknown entity'}`,
+              error
+            );
+          }
         }
       }
     }
@@ -1114,6 +1140,13 @@ class ActivityDescriptionService {
     // ACTDESC-008 (Phase 2 - Enhanced with Pronoun Resolution)
     // ACTDESC-014: Pronoun resolution implementation
     const config = this.#getActivityIntegrationConfig();
+
+    if (config?.enabled === false) {
+      this.#logger.debug(
+        'Activity description formatting disabled via configuration'
+      );
+      return '';
+    }
 
     if (!Array.isArray(activities) || activities.length === 0) {
       return '';
@@ -2287,12 +2320,15 @@ class ActivityDescriptionService {
         this.#setCacheValue(this.#genderCache, key, value),
       setActivityIndexCacheEntry: (key, value) =>
         this.#setCacheValue(this.#activityIndexCache, key, value),
+      setClosenessCacheEntry: (key, value) =>
+        this.#setCacheValue(this.#closenessCache, key, value),
       setEntityNameCacheRawEntry: (key, entry) =>
         this.#entityNameCache.set(key, entry),
       getCacheSnapshot: () => ({
         entityName: new Map(this.#entityNameCache),
         gender: new Map(this.#genderCache),
         activityIndex: new Map(this.#activityIndexCache),
+        closeness: new Map(this.#closenessCache),
       }),
       resolveEntityName: (...args) => this.#resolveEntityName(...args),
     };
@@ -2349,6 +2385,10 @@ class ActivityDescriptionService {
       if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
         this.#invalidateActivityCache(entityId);
       }
+
+      if (componentId === CLOSENESS_COMPONENT_ID) {
+        this.#invalidateClosenessCache(entityId);
+      }
     });
 
     subscribe(COMPONENT_REMOVED_ID, (event) => {
@@ -2369,6 +2409,47 @@ class ActivityDescriptionService {
 
       if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
         this.#invalidateActivityCache(entityId);
+      }
+
+      if (componentId === CLOSENESS_COMPONENT_ID) {
+        this.#invalidateClosenessCache(entityId);
+      }
+    });
+
+    subscribe(COMPONENTS_BATCH_ADDED_ID, (event) => {
+      const updates = event?.payload?.updates;
+
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return;
+      }
+
+      for (const update of updates) {
+        const componentId = update?.componentTypeId;
+        const entityId =
+          update?.instanceId ??
+          update?.entityId ??
+          update?.entity?.id ??
+          null;
+
+        if (!entityId || !componentId) {
+          continue;
+        }
+
+        if (componentId === NAME_COMPONENT_ID) {
+          this.#invalidateNameCache(entityId);
+        }
+
+        if (componentId === GENDER_COMPONENT_ID) {
+          this.#invalidateGenderCache(entityId);
+        }
+
+        if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
+          this.#invalidateActivityCache(entityId);
+        }
+
+        if (componentId === CLOSENESS_COMPONENT_ID) {
+          this.#invalidateClosenessCache(entityId);
+        }
       }
     });
 
@@ -2669,6 +2750,22 @@ class ActivityDescriptionService {
   }
 
   /**
+   * Invalidate closeness cache for entity.
+   *
+   * @param {string} entityId - Entity ID associated with the cache entry.
+   * @returns {void}
+   * @description Remove cached closeness partners for the supplied entity.
+   * @private
+   */
+  #invalidateClosenessCache(entityId) {
+    if (this.#closenessCache.delete(entityId)) {
+      this.#logger.debug(
+        `ActivityDescriptionService: Invalidated closeness cache for ${entityId}`
+      );
+    }
+  }
+
+  /**
    * Invalidate all caches for a single entity.
    *
    * @param {string} entityId - Entity ID whose cache entries should be removed.
@@ -2680,6 +2777,7 @@ class ActivityDescriptionService {
     this.#invalidateNameCache(entityId);
     this.#invalidateGenderCache(entityId);
     this.#invalidateActivityCache(entityId);
+    this.#invalidateClosenessCache(entityId);
   }
 
   /**
@@ -2726,6 +2824,9 @@ class ActivityDescriptionService {
         break;
       case 'activity':
         this.#invalidateActivityCache(entityId);
+        break;
+      case 'closeness':
+        this.#invalidateClosenessCache(entityId);
         break;
       case 'all':
         this.#invalidateAllCachesForEntity(entityId);

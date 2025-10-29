@@ -190,6 +190,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     const cacheSnapshot = hooks.getCacheSnapshot();
 
     expect(cacheSnapshot.entityName.size).toBeLessThanOrEqual(1000);
+    expect(cacheSnapshot.closeness.size).toBeLessThanOrEqual(1000);
   });
 
   it('should destroy resources properly', () => {
@@ -207,6 +208,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     expect(snapshot.entityName.size).toBe(0);
     expect(snapshot.gender.size).toBe(0);
     expect(snapshot.activityIndex.size).toBe(0);
+    expect(snapshot.closeness.size).toBe(0);
   });
 
   it('should not leak memory with repeated generations', async () => {
