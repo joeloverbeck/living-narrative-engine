@@ -32,6 +32,6 @@
     }
   ],
   "bodyDescriptors": {
-    "build": "aerodynamic"
+    "build": "slim"
   }
 }
