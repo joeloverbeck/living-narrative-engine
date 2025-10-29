@@ -4,7 +4,7 @@
  * @see src/entities/entityManager.js
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   describeEntityManagerSuite,
   TestData,
@@ -420,5 +420,135 @@ describeEntityManagerSuite(
         expect(entityManager).toBeDefined();
       });
     });
+
+    describe("getEntitiesWithComponent debug logging for 'positioning:allows_sitting'", () => {
+      it('should emit diagnostic log entries with component insights', async () => {
+        const bed = getBed();
+        const { entityManager } = bed;
+        const { logger } = bed.mocks;
+        const instanceId = 'allows-sitting-entity';
+
+        await bed.createBasicEntity({
+          instanceId,
+          overrides: {
+            'positioning:allows_sitting': { canSit: true },
+            'core:position': { locationId: 'zone:park-bench' },
+          },
+        });
+
+        logger.debug.mockClear();
+
+        const entities = entityManager.getEntitiesWithComponent(
+          'positioning:allows_sitting'
+        );
+
+        expect(Array.isArray(entities)).toBe(true);
+        expect(entities.map((entity) => entity.id)).toContain(instanceId);
+
+        const debugCall = logger.debug.mock.calls.find(([message]) =>
+          message.includes(
+            "EntityManager.getEntitiesWithComponent('positioning:allows_sitting')"
+          )
+        );
+
+        expect(debugCall).toBeDefined();
+        expect(debugCall[1]).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: instanceId,
+              hasPositionComponent: true,
+              positionData: expect.objectContaining({
+                locationId: 'zone:park-bench',
+              }),
+              allowsSittingData: expect.objectContaining({ canSit: true }),
+            }),
+          ])
+        );
+      });
+    });
+  }
+);
+
+let activeComponentMutationService;
+let activeLifecycleManager;
+let activeMonitoringCoordinator;
+
+const componentMutationServiceFactory = () => {
+  activeComponentMutationService = {
+    addComponent: jest.fn(),
+    removeComponent: jest.fn(),
+    batchAddComponentsOptimized: jest.fn(),
+  };
+  return activeComponentMutationService;
+};
+
+const lifecycleManagerFactory = () => {
+  activeLifecycleManager = {
+    createEntityInstance: jest.fn(async () => ({ id: 'mock-entity' })),
+    reconstructEntity: jest.fn(),
+    removeEntityInstance: jest.fn(),
+    batchCreateEntities: jest.fn(async () => ({ results: [], errors: [] })),
+  };
+  return activeLifecycleManager;
+};
+
+const monitoringCoordinatorFactory = () => {
+  activeMonitoringCoordinator = {
+    kind: 'monitoring-coordinator-mock',
+  };
+  return activeMonitoringCoordinator;
+};
+
+describeEntityManagerSuite(
+  'EntityManager - Service delegation and accessors',
+  (getBed) => {
+    beforeEach(() => {
+      expect(activeComponentMutationService).toBeDefined();
+      expect(activeLifecycleManager).toBeDefined();
+      expect(activeMonitoringCoordinator).toBeDefined();
+    });
+
+    it('delegates batchAddComponentsOptimized to the ComponentMutationService', async () => {
+      const { entityManager } = getBed();
+      const componentSpecs = [
+        {
+          instanceId: 'entity-1',
+          componentTypeId: 'core:name',
+          componentData: { name: 'Test One' },
+        },
+      ];
+      const expectedResult = {
+        results: ['ok'],
+        errors: [],
+        updateCount: 1,
+      };
+      activeComponentMutationService.batchAddComponentsOptimized.mockResolvedValue(
+        expectedResult
+      );
+
+      const result = await entityManager.batchAddComponentsOptimized(
+        componentSpecs,
+        false
+      );
+
+      expect(
+        activeComponentMutationService.batchAddComponentsOptimized
+      ).toHaveBeenCalledWith(componentSpecs, false);
+      expect(result).toBe(expectedResult);
+    });
+
+    it('exposes the configured monitoring coordinator instance', () => {
+      const { entityManager } = getBed();
+      const coordinator = entityManager.getMonitoringCoordinator();
+
+      expect(coordinator).toBe(activeMonitoringCoordinator);
+    });
+  },
+  {
+    entityManagerOptions: {
+      componentMutationService: componentMutationServiceFactory,
+      entityLifecycleManager: lifecycleManagerFactory,
+      monitoringCoordinator: monitoringCoordinatorFactory,
+    },
   }
 );
