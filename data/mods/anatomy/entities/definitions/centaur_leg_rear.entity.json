@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:centaur_leg_rear",
+  "description": "A powerful rear leg that anchors a centaur's gait",
+  "components": {
+    "anatomy:part": {
+      "subType": "centaur_leg_rear"
+    },
+    "core:name": {
+      "text": "centaur rear leg"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:dragon_ice_breath_gland",
+  "description": "A specialized gland that condenses freezing breath for ice dragons",
+  "components": {
+    "anatomy:part": {
+      "subType": "fire_gland"
+    },
+    "core:name": {
+      "text": "dragon ice breath gland"
+    }
+  }
+}

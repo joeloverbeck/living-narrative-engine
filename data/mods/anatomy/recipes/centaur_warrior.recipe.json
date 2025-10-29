@@ -56,7 +56,8 @@
           "gait": "charge",
           "hoofType": "reinforced"
         }
-      }
+      },
+      "preferId": "anatomy:centaur_leg_front"
     },
     {
       "matchesAll": {
@@ -73,7 +74,8 @@
           "gait": "stabilize",
           "hoofType": "anchored"
         }
-      }
+      },
+      "preferId": "anatomy:centaur_leg_rear"
     },
     {
       "matchesGroup": "appendage:upper_torso",
@@ -86,7 +88,8 @@
         "descriptors:build": {
           "build": "muscular"
         }
-      }
+      },
+      "preferId": "anatomy:centaur_upper_torso"
     },
     {
       "matchesGroup": "appendage:head",
@@ -99,7 +102,8 @@
         "descriptors:hair_style": {
           "style": "braided"
         }
-      }
+      },
+      "preferId": "anatomy:centaur_head"
     },
     {
       "matchesGroup": "appendage:tail",
@@ -112,7 +116,8 @@
         "descriptors:length_category": {
           "length": "long"
         }
-      }
+      },
+      "preferId": "anatomy:horse_tail"
     }
   ],
   "constraints": {

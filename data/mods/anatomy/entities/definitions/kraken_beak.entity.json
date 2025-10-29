@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:kraken_beak",
+  "description": "A crushing chitinous beak suited to an elder kraken",
+  "components": {
+    "anatomy:part": {
+      "subType": "beak"
+    },
+    "core:name": {
+      "text": "kraken beak"
+    }
+  }
+}

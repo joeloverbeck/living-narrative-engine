@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:horse_tail",
+  "description": "A flowing horse tail suited for equine hybrids",
+  "components": {
+    "anatomy:part": {
+      "subType": "horse_tail"
+    },
+    "core:name": {
+      "text": "horse tail"
+    }
+  }
+}

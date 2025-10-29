@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:centaur_head",
+  "description": "A vigilant centaur head with braided hair",
+  "components": {
+    "anatomy:part": {
+      "subType": "centaur_head"
+    },
+    "core:name": {
+      "text": "centaur head"
+    }
+  }
+}
