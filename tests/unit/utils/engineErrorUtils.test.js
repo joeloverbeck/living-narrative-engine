@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   dispatchFailureAndReset,
+  getReadableErrorMessage,
   processOperationFailure,
 } from '../../../src/utils/engineErrorUtils.js';
 import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
@@ -25,6 +26,23 @@ describe('engineErrorUtils', () => {
     };
 
     mockResetEngineState = jest.fn();
+  });
+
+  describe('getReadableErrorMessage', () => {
+    it('returns stringified primitives for numbers and booleans', () => {
+      expect(getReadableErrorMessage(42)).toBe('42');
+      expect(getReadableErrorMessage(false)).toBe('false');
+    });
+
+    it('uses custom object string representations when available', () => {
+      const fancyError = {
+        toString() {
+          return 'Fancy failure!';
+        },
+      };
+
+      expect(getReadableErrorMessage(fancyError)).toBe('Fancy failure!');
+    });
   });
 
   describe('dispatchFailureAndReset', () => {
@@ -423,6 +441,46 @@ describe('engineErrorUtils', () => {
         'engineErrorUtils.dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
       );
       expect(mockResetEngineState).toHaveBeenCalled();
+    });
+
+    it('attaches original error metadata when assigning cause fails', async () => {
+      const contextMessage = 'metadataOperation';
+      const rawError = { problem: 'disallowed' };
+      const title = 'Operation Failed';
+      const userPrefix = 'Unable to complete operation';
+      const originalDescriptor = Object.getOwnPropertyDescriptor(
+        Error.prototype,
+        'cause'
+      );
+
+      Object.defineProperty(Error.prototype, 'cause', {
+        configurable: true,
+        set() {
+          throw new Error('setter blocked');
+        },
+      });
+
+      try {
+        await processOperationFailure(
+          mockLogger,
+          mockDispatcher,
+          contextMessage,
+          rawError,
+          title,
+          userPrefix,
+          mockResetEngineState,
+          true
+        );
+
+        const [, loggedError] = mockLogger.error.mock.calls[0];
+        expect(loggedError.originalError).toBe(rawError);
+      } finally {
+        if (originalDescriptor) {
+          Object.defineProperty(Error.prototype, 'cause', originalDescriptor);
+        } else {
+          delete Error.prototype.cause;
+        }
+      }
     });
   });
 });
