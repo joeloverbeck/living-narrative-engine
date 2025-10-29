@@ -51,6 +51,13 @@ jest.mock('../../../src/scopeDsl/nodes/slotAccessResolver.js', () =>
     name: 'slotAccess',
   }))
 );
+jest.mock('../../../src/scopeDsl/nodes/scopeReferenceResolver.js', () =>
+  jest.fn(() => ({
+    canResolve: jest.fn(),
+    resolve: jest.fn(),
+    name: 'scopeReference',
+  }))
+);
 
 const createSourceResolver = require('../../../src/scopeDsl/nodes/sourceResolver.js');
 const createStepResolver = require('../../../src/scopeDsl/nodes/stepResolver.js');
@@ -59,6 +66,8 @@ const createUnionResolver = require('../../../src/scopeDsl/nodes/unionResolver.j
 const createArrayIterationResolver = require('../../../src/scopeDsl/nodes/arrayIterationResolver.js');
 const createClothingStepResolver = require('../../../src/scopeDsl/nodes/clothingStepResolver.js');
 const createSlotAccessResolver = require('../../../src/scopeDsl/nodes/slotAccessResolver.js');
+const createScopeReferenceResolver = require('../../../src/scopeDsl/nodes/scopeReferenceResolver.js');
+const createCycleDetectorModule = require('../../../src/scopeDsl/core/cycleDetector.js');
 
 describe('ScopeEngine helper methods', () => {
   let engine;
@@ -101,6 +110,22 @@ describe('ScopeEngine helper methods', () => {
         'e1',
         'c1'
       );
+    });
+
+    it('returns entity values when entity manager exposes plain object storage', () => {
+      const entityOne = { id: 'entity-1' };
+      const entityTwo = { id: 'entity-2' };
+      const gateway = engine._createEntitiesGateway({
+        entityManager: {
+          entities: {
+            [entityOne.id]: entityOne,
+            [entityTwo.id]: entityTwo,
+          },
+        },
+      });
+
+      const entities = gateway.getEntities();
+      expect(entities).toEqual([entityOne, entityTwo]);
     });
   });
 
@@ -185,6 +210,117 @@ describe('ScopeEngine helper methods', () => {
           name: 'array',
         },
       ]);
+    });
+
+    it('appends scope reference resolver when a registry is provided', () => {
+      const scopedEngine = new ScopeEngine({
+        scopeRegistry: {},
+        errorHandler: { handleError: jest.fn() },
+      });
+      const locationProvider = scopedEngine._createLocationProvider(runtimeCtx);
+      const entitiesGateway = scopedEngine._createEntitiesGateway(runtimeCtx);
+      const logicEval = scopedEngine._createLogicEvaluator(runtimeCtx);
+
+      const resolvers = scopedEngine._createResolvers({
+        locationProvider,
+        entitiesGateway,
+        logicEval,
+        runtimeCtx,
+      });
+
+      expect(createScopeReferenceResolver).toHaveBeenCalledWith({
+        scopeRegistry: {},
+        cycleDetector: null,
+        errorHandler: expect.objectContaining({ handleError: expect.any(Function) }),
+      });
+      expect(resolvers[resolvers.length - 1]).toEqual({
+        canResolve: expect.any(Function),
+        resolve: expect.any(Function),
+        name: 'scopeReference',
+      });
+    });
+  });
+
+  describe('resolve instrumentation and cycle detection', () => {
+    it('falls back to console.debug when logger diagnostics are unavailable', () => {
+      const actor = { id: 'actor-1' };
+      const dispatcherResolve = jest.fn(() => new Set(['actor-1']));
+      const ensureInitializedSpy = jest
+        .spyOn(engine, '_ensureInitialized')
+        .mockReturnValue({ resolve: dispatcherResolve });
+
+      const originalDebug = console.debug;
+      const debugSpy = jest.fn();
+      console.debug = debugSpy;
+
+      try {
+        const result = engine.resolve(
+          { type: 'Source', kind: 'actor' },
+          actor,
+          runtimeCtx
+        );
+
+        expect(result).toEqual(new Set(['actor-1']));
+        expect(debugSpy).toHaveBeenCalledWith(
+          '[DIAGNOSTIC] ScopeEngine.resolve called:',
+          expect.objectContaining({
+            astType: 'Source',
+            hasRuntimeCtx: true,
+            actorId: 'actor-1',
+          })
+        );
+        expect(dispatcherResolve).toHaveBeenCalled();
+      } finally {
+        console.debug = originalDebug;
+        ensureInitializedSpy.mockRestore();
+      }
+    });
+
+    it('uses scope reference keys when resolving nested scopes', () => {
+      const cycleDetector = { enter: jest.fn(), leave: jest.fn() };
+      const cycleDetectorSpy = jest
+        .spyOn(createCycleDetectorModule, 'default')
+        .mockReturnValue(cycleDetector);
+
+      const dispatcherResolve = jest.fn((node, ctx) => {
+        if (!ctx.__inner) {
+          const innerResult = ctx.dispatcher.resolve(
+            { type: 'ScopeReference', scopeId: 'scope-123' },
+            { ...ctx, __inner: true, depth: ctx.depth + 1 }
+          );
+          expect(innerResult).toBeInstanceOf(Set);
+        }
+        return new Set(['resolved']);
+      });
+
+      const ensureInitializedSpy = jest
+        .spyOn(engine, '_ensureInitialized')
+        .mockReturnValue({ resolve: dispatcherResolve });
+
+      const actorEntity = { id: 'actor-outer' };
+
+      try {
+        const result = engine.resolve(
+          { type: 'ScopeReference', scopeId: 'root-scope' },
+          actorEntity,
+          runtimeCtx
+        );
+
+        expect(result).toBeInstanceOf(Set);
+        const [, ctxFromCall] = dispatcherResolve.mock.calls[0];
+        ctxFromCall.dispatcher.resolve(
+          { type: 'ScopeReference', scopeId: 'manual-scope' },
+          { ...ctxFromCall, __inner: true, depth: ctxFromCall.depth + 1 }
+        );
+
+        expect(dispatcherResolve).toHaveBeenCalledTimes(3);
+        expect(cycleDetector.enter).toHaveBeenCalledWith('ScopeReference:scope-123');
+        expect(cycleDetector.enter).toHaveBeenCalledWith('ScopeReference:manual-scope');
+        expect(cycleDetector.leave).toHaveBeenCalledTimes(3);
+      } finally {
+        ensureInitializedSpy.mockRestore();
+        cycleDetectorSpy.mockRestore();
+      }
     });
   });
 });
