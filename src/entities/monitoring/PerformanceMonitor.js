@@ -206,12 +206,8 @@ export default class PerformanceMonitor {
    * @param {string} operation - Operation name
    * @param {number} duration - Duration in milliseconds
    * @param {string} [context] - Optional context information
-   */
+  */
   #recordOperation(operation, duration, context = '') {
-    if (!this.#enabled) {
-      return;
-    }
-
     // Update operation counts
     this.#operationCounts[operation] =
       (this.#operationCounts[operation] || 0) + 1;
@@ -281,7 +277,7 @@ export default class PerformanceMonitor {
       totalOperations,
       slowOperations,
       averageOperationTime,
-      maxOperationTime: maxOperationTime === -Infinity ? 0 : maxOperationTime,
+      maxOperationTime,
       minOperationTime: minOperationTime === Infinity ? 0 : minOperationTime,
       operationCounts: { ...this.#operationCounts },
       slowOperationsByType: { ...this.#slowOperationCounts },
