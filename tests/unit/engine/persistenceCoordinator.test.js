@@ -1,4 +1,4 @@
-import { describe, it, expect, jest } from '@jest/globals';
+import { afterEach, describe, it, expect, jest } from '@jest/globals';
 import PersistenceCoordinator from '../../../src/engine/persistenceCoordinator.js';
 import EngineState from '../../../src/engine/engineState.js';
 import {
@@ -6,6 +6,7 @@ import {
   createMockGamePersistenceService,
   createMockSafeEventDispatcher,
 } from '../../common/mockFactories/index.js';
+import * as engineErrorUtils from '../../../src/utils/engineErrorUtils.js';
 import {
   expectDispatchSequence,
   buildSaveDispatches,
@@ -108,6 +109,10 @@ function createCoordinator(overrides = {}) {
 }
 
 describe('PersistenceCoordinator', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('triggerManualSave dispatches events in order and returns success', async () => {
     const { coordinator, dispatcher, persistenceService, state } =
       createCoordinator();
@@ -238,6 +243,28 @@ describe('PersistenceCoordinator', () => {
     expect(logger.error).toHaveBeenCalledWith(
       `GameEngine.triggerManualSave: SafeEventDispatcher threw when dispatching ENGINE_READY_UI after save "${DEFAULT_SAVE_NAME}". Error: ${readyError.message}`,
       readyError
+    );
+  });
+
+  it('triggerManualSave normalizes non-Error thrown during GAME_SAVED dispatch', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+
+    persistenceService.saveGame.mockResolvedValue({
+      success: true,
+      filePath: 'path/to.sav',
+    });
+
+    dispatcher.dispatch
+      .mockResolvedValueOnce(true)
+      .mockRejectedValueOnce('dispatch failed')
+      .mockResolvedValueOnce(true);
+
+    await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: SafeEventDispatcher threw when dispatching GAME_SAVED_ID for save "${DEFAULT_SAVE_NAME}". Error: dispatch failed`,
+      expect.objectContaining({ message: 'dispatch failed' })
     );
   });
 
@@ -380,6 +407,39 @@ describe('PersistenceCoordinator', () => {
         'Unexpected error during save: Save operation failed'
       )
     );
+  });
+
+  it('triggerManualSave logs serialization failure when persistence error cannot be stringified', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+    const circularError = {};
+    circularError.self = circularError;
+
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: circularError,
+    });
+
+    await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    const serializationDebugCall = logger.debug.mock.calls.find(
+      ([message]) =>
+        message ===
+        'GameEngine.triggerManualSave: Failed to serialize persistence error for logging.'
+    );
+
+    expect(serializationDebugCall).toBeDefined();
+    expect(serializationDebugCall[1]).toBeInstanceOf(Error);
+    expect(serializationDebugCall[1].message).toContain('circular structure');
+
+    const failureDispatch = dispatcher.dispatch.mock.calls.find(
+      ([eventId]) => eventId === ENGINE_OPERATION_FAILED_UI
+    );
+    expect(failureDispatch).toBeDefined();
+    expect(failureDispatch[1]).toEqual({
+      errorMessage: 'Failed to save game: Unknown error.',
+      errorTitle: 'Save Failed',
+    });
   });
 
   it('triggerManualSave avoids duplicating failure prefix in dispatched message', async () => {
@@ -530,6 +590,34 @@ describe('PersistenceCoordinator', () => {
     );
   });
 
+  it('triggerManualSave falls back to default failure message when formatted error is blank', async () => {
+    const { coordinator, dispatcher, persistenceService } = createCoordinator();
+    const readableSpy = jest
+      .spyOn(engineErrorUtils, 'getReadableErrorMessage')
+      .mockReturnValue(' ');
+
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: '',
+      message: '',
+    });
+
+    const result = await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(result).toMatchObject({ success: false, error: ' ' });
+
+    const failureDispatch = dispatcher.dispatch.mock.calls.find(
+      ([eventId]) => eventId === ENGINE_OPERATION_FAILED_UI
+    );
+
+    expect(failureDispatch).toBeDefined();
+    expect(failureDispatch[1]).toEqual({
+      errorMessage: 'Failed to save game: Unknown error.',
+      errorTitle: 'Save Failed',
+    });
+    expect(readableSpy).toHaveBeenCalled();
+  });
+
   it('triggerManualSave prefers userFriendlyError for UI messaging while retaining detailed logs', async () => {
     const { coordinator, dispatcher, persistenceService, logger } =
       createCoordinator();
@@ -610,6 +698,28 @@ describe('PersistenceCoordinator', () => {
     );
     expect(logger.warn).toHaveBeenCalledWith(
       `GameEngine.triggerManualSave: SafeEventDispatcher reported failure when dispatching ENGINE_READY_UI after save "${DEFAULT_SAVE_NAME}".`
+    );
+  });
+
+  it('triggerManualSave normalizes non-Error thrown during failure UI dispatch', async () => {
+    const { coordinator, dispatcher, persistenceService, logger } =
+      createCoordinator();
+
+    persistenceService.saveGame.mockResolvedValue({
+      success: false,
+      error: 'Disk full',
+    });
+
+    dispatcher.dispatch
+      .mockResolvedValueOnce(true)
+      .mockRejectedValueOnce('failure dispatch failed')
+      .mockResolvedValueOnce(true);
+
+    await coordinator.triggerManualSave(DEFAULT_SAVE_NAME);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      `GameEngine.triggerManualSave: SafeEventDispatcher threw when dispatching ENGINE_OPERATION_FAILED_UI for save "${DEFAULT_SAVE_NAME}". Error: failure dispatch failed`,
+      expect.objectContaining({ message: 'failure dispatch failed' })
     );
   });
 
