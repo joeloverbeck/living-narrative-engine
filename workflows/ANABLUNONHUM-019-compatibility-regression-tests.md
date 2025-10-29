@@ -14,6 +14,7 @@ Body blueprint schema detection now routes v1 (manual slot) and v2 (structure te
 - **Blueprint v2 contracts**: V2 blueprints opt-in with `schemaVersion: "2.0"`, reference a `structureTemplate`, and may add `additionalSlots`. V1 blueprints omit the version (or use `"1.0"`) and continue to supply explicit `slots`, `parts`, and `compose` arrays.【F:docs/anatomy/blueprints-v2.md†L28-L75】【F:docs/anatomy/blueprints-v2.md†L95-L137】
 - **Structure template topology**: Templates declare limb sets, appendages, and socket generation patterns (e.g., spider, dragon, centaur) that the factory must resolve when processing v2 blueprints.【F:docs/anatomy/structure-templates.md†L1-L108】【F:docs/anatomy/structure-templates.md†L109-L190】
 - **Pattern migration**: Recipes for non-human creatures rely on `matchesGroup`, `matchesPattern`, and `matchesAll` to target template-generated slots, so regressions in the v2 flow will surface as recipe matcher failures.【F:docs/anatomy/v1-to-v2-pattern-migration.md†L1-L93】【F:docs/anatomy/v1-to-v2-pattern-migration.md†L95-L158】
+- **Reference fixtures**: Canonical non-human configurations (spider, tentacle, quadruped) outline which limb sets and matcher strategies should stay stable across releases—use them to sanity-check template/recipe combinations while running this suite.【F:docs/anatomy/common-non-human-patterns.md†L1-L87】【F:docs/anatomy/common-non-human-patterns.md†L88-L166】
 
 ## Pre-Execution Checklist
 
@@ -21,6 +22,7 @@ Body blueprint schema detection now routes v1 (manual slot) and v2 (structure te
 - [ ] Confirm new or updated blueprint fixtures identify their intended schema version.
 - [ ] Verify structure templates referenced by v2 blueprints exist in `data/mods/anatomy/templates/` and pass schema validation.
 - [ ] Ensure recipe fixtures targeting new structures have updated pattern definitions (no lingering `matches` arrays for v2-only slots).
+- [ ] Capture baseline slot inventories for representative templates (spider, dragon, quadruped) to compare against integration snapshots when diagnosing failures.
 
 ## Regression Matrix
 
@@ -29,6 +31,7 @@ Body blueprint schema detection now routes v1 (manual slot) and v2 (structure te
 | Integration | `tests/integration/anatomy/bodyBlueprintFactory.integration.test.js` | Legacy (v1) blueprint flow, manual slots, failure cleanup |
 | Integration | `tests/integration/anatomy/bodyBlueprintFactory.v2.integration.test.js` | Structure template flow, socket generation parity |
 | Integration | `tests/integration/anatomy/recipePatternResolution.integration.test.js` | Recipe matchers against generated slots |
+| Integration | `tests/integration/anatomy/recipePatternValidation.integration.test.js` | AJV + resolver guard rails for pattern definitions |
 | Integration | `tests/integration/loaders/anatomyStructureTemplateLoader.integration.test.js` | Template discovery, registry registration |
 | Unit | `tests/unit/anatomy/bodyBlueprintFactory.v2.test.js` | V2-specific processing, merge order, error handling |
 
@@ -46,6 +49,10 @@ Body blueprint schema detection now routes v1 (manual slot) and v2 (structure te
 - Execute `tests/integration/anatomy/recipePatternResolution.integration.test.js` to cover `matchesGroup`, `matchesPattern`, and `matchesAll` behaviors across generated slots.
 - Confirm v1 recipes still resolve against manual slots while v2 recipes exclusively target template-driven slots.
 
+### 3b. Recipe Pattern Validation
+- Run `tests/integration/anatomy/recipePatternValidation.integration.test.js` to guard against schema regressions that silently strip `matchesGroup` or mis-handle wildcard filters.
+- Validate that limb-set driven recipes (e.g., spider legs, quadruped orientation filters) preserve the matcher semantics described in the non-human pattern catalog.【F:docs/anatomy/common-non-human-patterns.md†L18-L87】【F:docs/anatomy/common-non-human-patterns.md†L107-L166】
+
 ### 4. Loader and Registry Integration
 - Run `tests/integration/loaders/anatomyStructureTemplateLoader.integration.test.js` to ensure structure templates populate the `anatomyStructureTemplates` registry without affecting legacy blueprint registries.
 - Validate schema enforcement for template fields and verify registry lookups used by `BodyBlueprintFactory` v2 path.
@@ -53,6 +60,12 @@ Body blueprint schema detection now routes v1 (manual slot) and v2 (structure te
 ### 5. Targeted Unit Validation
 - Use `tests/unit/anatomy/bodyBlueprintFactory.v2.test.js` to exercise `#processV2Blueprint`, merge ordering with `additionalSlots`, and error paths when templates are missing.
 - Verify logging expectations for malformed templates and ensure failure surfaces as actionable errors.
+
+## Fixture Inventory & Observability
+
+- Maintain fixture pairings between `data/mods/anatomy/blueprints/*.json` and `data/mods/anatomy/templates/*.json`—if you introduce a new template, clone or extend the existing integration snapshots to capture the generated socket map.
+- When adding or modifying fixtures, annotate the associated recipes to note whether they rely on limb sets (`limbSet:leg`), appendages (`appendage:tail`), or wildcard orientation filters so that diffing test snapshots quickly reveals which matcher segment regressed.【F:docs/anatomy/structure-templates.md†L70-L142】【F:docs/anatomy/v1-to-v2-pattern-migration.md†L59-L158】
+- Enable verbose logging (`DEBUG=anatomy:BodyBlueprintFactory`) during local runs if slot counts diverge; integration tests surface structured logs that highlight which sockets were generated, merged, or pruned.
 
 ## Data Contract Checks
 
@@ -67,6 +80,7 @@ npm run test:integration -- --runTestsByPath \
   tests/integration/anatomy/bodyBlueprintFactory.integration.test.js \
   tests/integration/anatomy/bodyBlueprintFactory.v2.integration.test.js \
   tests/integration/anatomy/recipePatternResolution.integration.test.js \
+  tests/integration/anatomy/recipePatternValidation.integration.test.js \
   tests/integration/loaders/anatomyStructureTemplateLoader.integration.test.js
 npm run test:unit -- --runTestsByPath tests/unit/anatomy/bodyBlueprintFactory.v2.test.js
 ```
