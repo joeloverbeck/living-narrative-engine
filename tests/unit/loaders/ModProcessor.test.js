@@ -210,6 +210,69 @@ describe('ModProcessor', () => {
       expect(result.status).toBe('skipped');
     });
 
+    it('loads anatomy structure templates using dashed manifest key', async () => {
+      const manifest = {
+        id: 'anatomy',
+        content: {
+          'structure-templates': [
+            'structure-templates/structure_octopoid.structure-template.json',
+          ],
+        },
+      };
+      const totalCounts = {};
+      const loader = {
+        constructor: { name: 'AnatomyStructureTemplateLoader' },
+        loadItemsForMod: jest.fn().mockResolvedValue({
+          count: 1,
+          overrides: 0,
+          errors: 0,
+          failures: [],
+        }),
+      };
+      const phaseLoaders = [
+        {
+          loader,
+          contentKey: 'structure-templates',
+          diskFolder: 'structure-templates',
+          registryKey: 'anatomyStructureTemplates',
+        },
+      ];
+
+      timer.mockReturnValueOnce(2000).mockReturnValueOnce(2085);
+
+      const result = await processor.processMod(
+        'anatomy',
+        manifest,
+        totalCounts,
+        phaseLoaders,
+        'definitions'
+      );
+
+      expect(result.status).toBe('success');
+      expect(loader.loadItemsForMod).toHaveBeenCalledWith(
+        'anatomy',
+        manifest,
+        'structure-templates',
+        'structure-templates',
+        'anatomyStructureTemplates'
+      );
+      expect(mockAggregator.aggregate).toHaveBeenCalledWith(
+        {
+          count: 1,
+          overrides: 0,
+          errors: 0,
+          failures: [],
+        },
+        'anatomyStructureTemplates'
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        "ModsLoader [anatomy, definitions]: Processing structure-templates content with 1 files..."
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        "ModsLoader [anatomy, definitions]: Found content for 'structure-templates'. Invoking loader 'AnatomyStructureTemplateLoader'."
+      );
+    });
+
     it('should handle unexpected errors during processing', async () => {
       const manifest = {
         id: 'test-mod',

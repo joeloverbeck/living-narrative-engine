@@ -23,6 +23,8 @@ This guide walks you through creating your first non-human creature using the Bl
 ## The Workflow
 
 ```
+
+`structure-templates` must be defined inside the manifest's `content` object using the dashed key so that the loader can register your templates.
 1. Structure Template → 2. Blueprint V2 → 3. Recipe → 4. Test Entity
 ```
 
@@ -226,22 +228,26 @@ Add your new files to the mod manifest.
   "id": "your_mod",
   "version": "1.0.0",
   "name": "Your Mod Name",
-  "entities": [
-    "entities/spider_cephalothorax.entity.json",
-    "entities/spider_leg.entity.json",
-    "entities/spider_abdomen.entity.json"
-  ],
-  "blueprints": [
-    "blueprints/spider.blueprint.json"
-  ],
-  "recipes": [
-    "recipes/spider.recipe.json"
-  ],
-  "structureTemplates": [
-    "structure-templates/spider.structure-template.json"
-  ]
+  "content": {
+    "entities": [
+      "entities/spider_cephalothorax.entity.json",
+      "entities/spider_leg.entity.json",
+      "entities/spider_abdomen.entity.json"
+    ],
+    "blueprints": [
+      "blueprints/spider.blueprint.json"
+    ],
+    "recipes": [
+      "recipes/spider.recipe.json"
+    ],
+    "structure-templates": [
+      "structure-templates/spider.structure-template.json"
+    ]
+  }
 }
 ```
+
+`structure-templates` must stay under the manifest's `content` object with the dashed key so the loader can register your templates.
 
 ## Step 6: Test Your Anatomy
 
