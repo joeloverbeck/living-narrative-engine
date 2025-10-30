@@ -68,6 +68,13 @@ describe('formatTimestamp', () => {
     expect(formatTimestamp(date)).toBe(date.toLocaleString());
   });
 
+  it('falls back when a finite numeric timestamp produces an invalid date', () => {
+    const invalidRangeTimestamp = 8640000000000001;
+    expect(formatTimestamp(invalidRangeTimestamp, 'range-error')).toBe(
+      'range-error'
+    );
+  });
+
   it('returns fallback when Date construction throws for strings', () => {
     globalThis.Date = installThrowingDate(
       (value) => value === 'force-string-throw'
@@ -88,6 +95,11 @@ describe('formatTimestamp', () => {
     expect(formatTimestamp(42, 'number-fallback')).toBe('number-fallback');
   });
 
+  it('returns fallback when fallback parameter is not a string', () => {
+    // @ts-expect-error - intentionally passing a non-string fallback to validate coercion
+    expect(formatTimestamp(null, { not: 'a string' })).toBe('Invalid Date');
+  });
+
   it('supports objects coercible to valid timestamps', () => {
     const coercible = {
       [Symbol.toPrimitive]: () => '2024-03-20T10:15:30Z',
@@ -95,5 +107,9 @@ describe('formatTimestamp', () => {
 
     const expected = new Date('2024-03-20T10:15:30Z').toLocaleString();
     expect(formatTimestamp(coercible)).toBe(expected);
+  });
+
+  it('returns fallback for objects that cannot be converted into a valid date', () => {
+    expect(formatTimestamp({})).toBe('Invalid Date');
   });
 });
