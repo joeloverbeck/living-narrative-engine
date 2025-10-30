@@ -38,7 +38,7 @@ V2 blueprints legitimately rely on templates for socket generation, as documente
 
 ### 2.3 Documentation Mismatch
 
-The non-human quickstart still instructs authors to use the camelCase `structureTemplates` manifest key, which no longer matches the schema or the shipping mod content. Even after fixing the loader, we should correct the documentation to avoid reintroducing the mismatch when content authors follow the guide.【F:docs/anatomy/non-human-quickstart.md†L221-L243】
+The non-human quickstart still instructs authors to use the camelCase `structureTemplates` manifest key and shows it at the root of the manifest instead of inside the `content` object. That guidance diverges from both the shipping anatomy mod (which nests `structure-templates` under `content`) and the schema definition. Even after fixing the loader, we should correct the documentation to avoid reintroducing the mismatch when content authors follow the guide.【F:docs/anatomy/non-human-quickstart.md†L221-L243】【F:data/mods/anatomy/mod-manifest.json†L14-L178】【F:data/schemas/mod-manifest.schema.json†L112-L178】
 
 ## 3. Proposed Fix
 
@@ -55,7 +55,7 @@ The non-human quickstart still instructs authors to use the camelCase `structure
 
 ### 3.3 Update Authoring Documentation
 
-- Adjust the manifest snippet in `docs/anatomy/non-human-quickstart.md` (and any related guides) to use the dashed `structure-templates` key so modders follow the schema-supported convention.
+- Adjust the manifest snippet in `docs/anatomy/non-human-quickstart.md` (and any related guides) to use the dashed `structure-templates` key and place it under the manifest's `content` object so modders follow the schema-supported convention.【F:docs/anatomy/non-human-quickstart.md†L221-L243】【F:data/mods/anatomy/mod-manifest.json†L14-L178】【F:data/schemas/mod-manifest.schema.json†L112-L178】
 - Optionally note in the guide that the loader expects `structure-templates` and that each entry should live under `data/mods/<modId>/structure-templates/` to reinforce the correct folder.
 
 ## 4. Acceptance Criteria
