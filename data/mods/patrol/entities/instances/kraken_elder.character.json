@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "patrol:kraken_elder_instance",
+    "definitionId": "patrol:kraken_elder"
+}
