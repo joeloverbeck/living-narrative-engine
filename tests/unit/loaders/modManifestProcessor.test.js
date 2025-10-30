@@ -216,4 +216,50 @@ describe('ModManifestProcessor.processManifests', () => {
     expect(result.finalModOrder).toEqual(['modC', 'modA']);
     expect(result.loadedManifestsMap.size).toBe(2);
   });
+
+  it('handles empty requested IDs without attempting to load manifests', async () => {
+    modLoadOrderResolver.resolve.mockReturnValue([]);
+
+    const result = await processor.processManifests([], worldName);
+
+    expect(manifestLoader.loadRequestedManifests).not.toHaveBeenCalled();
+    expect(result.loadedManifestsMap.size).toBe(0);
+    expect(result.finalModOrder).toEqual([]);
+    expect(result.incompatibilityCount).toBe(0);
+  });
+
+  it('ignores dependencies lacking identifiers or already loaded', async () => {
+    manifestMap = new Map([
+      [
+        'moda',
+        {
+          id: 'modA',
+          version: '1.0.0',
+          dependencies: [{ version: '^1.0.0' }, { id: 'modA' }],
+        },
+      ],
+    ]);
+
+    const secondMap = new Map();
+    manifestLoader = new DummyManifestLoader(manifestMap);
+    manifestLoader.loadRequestedManifests
+      .mockResolvedValueOnce(manifestMap)
+      .mockResolvedValueOnce(secondMap);
+
+    processor = new ModManifestProcessor({
+      modManifestLoader: manifestLoader,
+      logger,
+      registry,
+      validatedEventDispatcher: dispatcher,
+      modDependencyValidator,
+      modVersionValidator,
+      modLoadOrderResolver,
+    });
+
+    await processor.processManifests(['modA'], worldName);
+
+    expect(manifestLoader.loadRequestedManifests).toHaveBeenCalledTimes(1);
+    expect(modLoadOrderResolver.resolve).toHaveBeenCalled();
+  });
 });
+
