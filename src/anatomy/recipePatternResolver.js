@@ -583,6 +583,15 @@ class RecipePatternResolver {
               throw error;
             }
 
+            if (error.message.includes('matched 0 slots')) {
+              this.#raiseZeroMatchError({
+                pattern,
+                blueprint,
+                patternIndex: index,
+                slotGroupRef: matchesGroupRef,
+              });
+            }
+
             const wrappedMessage = `Pattern ${patternNumber}: ${error.message}`;
             this.#logger.warn(wrappedMessage);
             if (matchesGroupRef) {
@@ -1049,17 +1058,22 @@ class RecipePatternResolver {
     const blueprintId = blueprint?.id || 'unknown blueprint';
     const availability = this.#collectBlueprintAvailability(blueprint);
 
-    let logMessage;
-    let errorMessage;
-    if (stage) {
-      const base = `Pattern ${this.#getPatternDescription(pattern)} matched 0 slots`;
-      logMessage = base;
-      errorMessage = base;
-    } else if (pattern.matchesGroup || slotGroupRef) {
-      const matcherLabel = `Slot group '${slotGroupRef ?? pattern.matchesGroup}'`;
-      const base = `Pattern ${patternNumber}: ${matcherLabel} matched 0 slots`;
-      logMessage = base;
-      errorMessage = base;
+    let logMessage = `Pattern ${patternNumber}: ${this.#getPatternDescription(
+      pattern
+    )} matched 0 slots`;
+    let errorMessage = logMessage;
+
+    if (pattern.matchesGroup || slotGroupRef) {
+      if (stage) {
+        const base = `Pattern ${this.#getPatternDescription(pattern)} matched 0 slots`;
+        logMessage = base;
+        errorMessage = base;
+      } else {
+        const matcherLabel = `Slot group '${slotGroupRef ?? pattern.matchesGroup}'`;
+        const base = `Pattern ${patternNumber}: ${matcherLabel} matched 0 slots`;
+        logMessage = base;
+        errorMessage = base;
+      }
     } else if (pattern.matchesPattern) {
       const baseLog = `Pattern ${patternNumber}: Pattern '${pattern.matchesPattern}' matched 0 slots`;
       const baseError = `Pattern ${patternNumber}: matchesPattern '${pattern.matchesPattern}' matched 0 slots`;
@@ -1068,10 +1082,6 @@ class RecipePatternResolver {
     } else if (pattern.matchesAll) {
       const filterStr = JSON.stringify(pattern.matchesAll);
       const base = `Pattern ${patternNumber}: matchesAll filter ${filterStr} matched 0 slots`;
-      logMessage = base;
-      errorMessage = base;
-    } else {
-      const base = `Pattern ${patternNumber}: ${this.#getPatternDescription(pattern)} matched 0 slots`;
       logMessage = base;
       errorMessage = base;
     }
@@ -1172,47 +1182,6 @@ class RecipePatternResolver {
     return filtered;
   }
 
-  /**
-   * Merges pattern contributions into an existing slot definition.
-   * Preserves existing explicit values while augmenting tags, notTags, and properties.
-   *
-   * @param {object} existingSlot - The previously resolved slot definition
-   * @param {object} pattern - Pattern providing additional configuration
-   * @returns {object} Merged slot definition
-   * @private
-   */
-  #mergeSlotDefinition(existingSlot, pattern) {
-    const merged = { ...existingSlot };
-
-    if (pattern.partType && !merged.partType) {
-      merged.partType = pattern.partType;
-    }
-
-    if (pattern.preferId !== undefined && merged.preferId === undefined) {
-      merged.preferId = pattern.preferId;
-    }
-
-    if (Array.isArray(pattern.tags) && pattern.tags.length > 0) {
-      const existingTags = Array.isArray(merged.tags) ? merged.tags : [];
-      merged.tags = Array.from(new Set([...existingTags, ...pattern.tags]));
-    }
-
-    if (Array.isArray(pattern.notTags) && pattern.notTags.length > 0) {
-      const existingNotTags = Array.isArray(merged.notTags) ? merged.notTags : [];
-      merged.notTags = Array.from(
-        new Set([...existingNotTags, ...pattern.notTags])
-      );
-    }
-
-    if (pattern.properties && Object.keys(pattern.properties).length > 0) {
-      merged.properties = {
-        ...(merged.properties || {}),
-        ...pattern.properties,
-      };
-    }
-
-    return merged;
-  }
 }
 
 export default RecipePatternResolver;
