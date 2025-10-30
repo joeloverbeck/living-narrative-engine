@@ -8,6 +8,7 @@ import { DebugLoggingConfigMerger } from '../../../../src/logging/config/configM
 import {
   DEFAULT_CONFIG,
   CONFIG_PRESETS,
+  ENV_VAR_MAPPINGS,
 } from '../../../../src/logging/config/defaultConfig.js';
 
 describe('DebugLoggingConfigMerger', () => {
@@ -116,6 +117,81 @@ describe('DebugLoggingConfigMerger', () => {
       expect(result.categories.ui.level).toBe('debug');
     });
 
+    it('should skip override merging when overrides are not an object', () => {
+      const result = merger.mergeConfig(null, null, {});
+
+      expect(result).toEqual(DEFAULT_CONFIG);
+    });
+
+    it('should treat missing env vars as empty object during merge', () => {
+      const result = merger.mergeConfig({}, null, null);
+
+      expect(result).toEqual(DEFAULT_CONFIG);
+    });
+
+    it('should report zero categories when overrides remove them', () => {
+      const overrides = { categories: null };
+
+      const result = merger.mergeConfig(overrides, null, {});
+
+      expect(result.categories).toBeNull();
+    });
+
+    it('should default to process environment when env vars argument is omitted', () => {
+      const savedEnv = {};
+
+      for (const key of Object.keys(ENV_VAR_MAPPINGS)) {
+        savedEnv[key] = process.env[key];
+        delete process.env[key];
+      }
+
+      try {
+        const result = merger.mergeConfig();
+
+        expect(result).toEqual(DEFAULT_CONFIG);
+      } finally {
+        for (const key of Object.keys(ENV_VAR_MAPPINGS)) {
+          if (savedEnv[key] === undefined) {
+            delete process.env[key];
+          } else {
+            process.env[key] = savedEnv[key];
+          }
+        }
+      }
+    });
+
+    it('should handle missing environment variables object gracefully', () => {
+      const baseConfig = { sample: 'value' };
+      const result = merger.applyEnvironmentVariables(baseConfig, null);
+
+      expect(result).toBe(baseConfig);
+    });
+
+    it('should create category containers when applying new category environment variables', () => {
+      const envVars = {
+        DEBUG_LOG_CATEGORY_NEW_FEATURE_ENABLED: 'true',
+        DEBUG_LOG_CATEGORY_NEW_FEATURE_LEVEL: 'warn',
+        DEBUG_LOG_CATEGORY_NEW_FEATURE_THRESHOLD: 'verbose',
+      };
+
+      const result = merger.applyEnvironmentVariables({}, envVars);
+
+      expect(result.categories.new_feature).toEqual({
+        enabled: true,
+        level: 'warn',
+      });
+    });
+
+    it('should ignore category environment variables with unsupported suffixes', () => {
+      const envVars = {
+        DEBUG_LOG_CATEGORY_ENGINE_MODE: 'verbose',
+      };
+
+      const result = merger.applyEnvironmentVariables({}, envVars);
+
+      expect(result.categories).toBeUndefined();
+    });
+
     it('should respect precedence: env vars > overrides > preset > defaults', () => {
       const overrides = { mode: 'hybrid' };
       const envVars = { DEBUG_LOG_MODE: 'remote' };
@@ -208,6 +284,17 @@ describe('DebugLoggingConfigMerger', () => {
       expect(result.items).toEqual([4, 5]);
     });
 
+    it('should ignore inherited properties on the source object', () => {
+      const proto = { inherited: 'value' };
+      const source = Object.create(proto);
+      source.own = 'prop';
+
+      const result = merger.deepMerge({ own: 'original' }, source);
+
+      expect(result.own).toBe('prop');
+      expect(result).not.toHaveProperty('inherited');
+    });
+
     it('should return cloned source when target is not an object', () => {
       const result = merger.deepMerge(null, { a: 1 });
       expect(result).toEqual({ a: 1 });
@@ -265,6 +352,17 @@ describe('DebugLoggingConfigMerger', () => {
       expect(cloned.b).not.toBe(obj.b);
       expect(cloned.b.d).not.toBe(obj.b.d);
       expect(cloned.b.d[2]).not.toBe(obj.b.d[2]);
+    });
+
+    it('should ignore inherited properties when cloning objects', () => {
+      const proto = { inherited: 'value' };
+      const obj = Object.create(proto);
+      obj.own = 'prop';
+
+      const cloned = merger.deepClone(obj);
+
+      expect(cloned).toEqual({ own: 'prop' });
+      expect(cloned).not.toHaveProperty('inherited');
     });
   });
 
@@ -377,6 +475,23 @@ describe('DebugLoggingConfigMerger', () => {
       expect(result.logLevel).toBe('INFO');
     });
 
+    it('should skip migration when legacy config lacks log level', () => {
+      const currentConfig = { mode: 'development' };
+      const legacyConfig = { someOtherSetting: true };
+
+      const result = merger.mergeWithLegacySupport(
+        currentConfig,
+        legacyConfig,
+        null,
+        {}
+      );
+
+      expect(result).toEqual(
+        expect.objectContaining({ mode: 'development', enabled: true })
+      );
+      expect(result.someOtherSetting).toBeUndefined();
+    });
+
     it('should handle missing legacy config', () => {
       const result = merger.mergeWithLegacySupport(
         { mode: 'test' },
@@ -389,6 +504,62 @@ describe('DebugLoggingConfigMerger', () => {
       expect(mockLogger.info).not.toHaveBeenCalledWith(
         'Migrating legacy configuration'
       );
+    });
+
+    it('should surface errors that occur during legacy configuration merge', () => {
+      const originalMergeConfig = merger.mergeConfig;
+      merger.mergeConfig = jest.fn(() => {
+        throw new Error('merge boom');
+      });
+
+      expect(() =>
+        merger.mergeWithLegacySupport({}, { logLevel: 'INFO' }, null, {})
+      ).toThrow('Legacy configuration merge failed: merge boom');
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during legacy configuration merge',
+        expect.any(Error)
+      );
+
+      merger.mergeConfig = originalMergeConfig;
+    });
+
+    it('should use default arguments when called without parameters', () => {
+      const result = merger.mergeWithLegacySupport(
+        undefined,
+        undefined,
+        undefined,
+        {}
+      );
+
+      expect(result).toEqual(DEFAULT_CONFIG);
+    });
+
+    it('should respect process environment defaults when env vars omitted', () => {
+      const savedEnv = {};
+
+      for (const key of Object.keys(ENV_VAR_MAPPINGS)) {
+        savedEnv[key] = process.env[key];
+        delete process.env[key];
+      }
+
+      try {
+        const result = merger.mergeWithLegacySupport(
+          undefined,
+          undefined,
+          undefined
+        );
+
+        expect(result).toEqual(DEFAULT_CONFIG);
+      } finally {
+        for (const key of Object.keys(ENV_VAR_MAPPINGS)) {
+          if (savedEnv[key] === undefined) {
+            delete process.env[key];
+          } else {
+            process.env[key] = savedEnv[key];
+          }
+        }
+      }
     });
   });
 
@@ -421,6 +592,57 @@ describe('DebugLoggingConfigMerger', () => {
       expect(report.appliedOverrides).toEqual([]);
       expect(report.appliedEnvVars).toEqual([]);
       expect(report.config).toEqual(DEFAULT_CONFIG);
+    });
+
+    it('should handle non-object overrides gracefully in reports', () => {
+      const report = merger.mergeWithReport(null, null, null);
+
+      expect(report.appliedOverrides).toEqual([]);
+      expect(report.appliedEnvVars).toEqual([]);
+      expect(report.config).toEqual(DEFAULT_CONFIG);
+    });
+
+    it('should default to process environment when env vars argument is omitted', () => {
+      const savedEnv = {};
+
+      for (const key of Object.keys(ENV_VAR_MAPPINGS)) {
+        savedEnv[key] = process.env[key];
+        delete process.env[key];
+      }
+
+      try {
+        const report = merger.mergeWithReport();
+
+        expect(report.appliedEnvVars).toEqual([]);
+        expect(report.config).toEqual(DEFAULT_CONFIG);
+      } finally {
+        for (const key of Object.keys(ENV_VAR_MAPPINGS)) {
+          if (savedEnv[key] === undefined) {
+            delete process.env[key];
+          } else {
+            process.env[key] = savedEnv[key];
+          }
+        }
+      }
+    });
+
+    it('should log and rethrow errors during report generation', () => {
+      const originalMergeConfig = merger.mergeConfig;
+      const failure = new Error('report boom');
+      merger.mergeConfig = jest.fn(() => {
+        throw failure;
+      });
+
+      expect(() =>
+        merger.mergeWithReport({}, null, { DEBUG_LOG_MODE: 'remote' })
+      ).toThrow(failure);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error generating configuration merge report',
+        expect.any(Error)
+      );
+
+      merger.mergeConfig = originalMergeConfig;
     });
   });
 });
