@@ -897,4 +897,81 @@ describe('LogCategoryDetector', () => {
       expect(categories).toEqual(['ecs', 'engine']);
     });
   });
+
+  describe('category hint handling', () => {
+    it('should honor valid category hints from patterns', () => {
+      const message = 'Completely unrelated message';
+      const result = detector.detectCategory(message, {
+        categoryHint: 'ecs',
+      });
+
+      expect(result).toBe('ecs');
+    });
+
+    it('should recognize level-based category hints', () => {
+      const message = 'Generic info';
+      const result = detector.detectCategory(message, {
+        categoryHint: 'error',
+      });
+
+      expect(result).toBe('error');
+    });
+
+    it('should reject invalid category hints and fall back to patterns', () => {
+      const message = 'EntityManager initialized';
+      const result = detector.detectCategory(message, {
+        categoryHint: 'not-real',
+      });
+
+      expect(result).toBe('ecs');
+    });
+
+    it('should reject non-string hints', () => {
+      const message = 'EntityManager initialized';
+      const result = detector.detectCategory(message, {
+        categoryHint: 123,
+      });
+
+      expect(result).toBe('ecs');
+    });
+
+    it('should allow known dynamic categories even without patterns', () => {
+      detector.removePattern('performance');
+
+      const result = detector.detectCategory('Unmatched log entry', {
+        categoryHint: 'performance',
+      });
+
+      expect(result).toBe('performance');
+    });
+  });
+
+  describe('getValidCategoryHints', () => {
+    it('should include level-based and pattern categories', () => {
+      const hints = detector.getValidCategoryHints();
+
+      expect(hints).toEqual(expect.arrayContaining(['error', 'warning', 'info', 'debug']));
+      expect(hints).toContain('ecs');
+      expect(hints).toContain('engine');
+    });
+
+    it('should include custom patterns exactly once', () => {
+      detector.addPattern('custom-category', /custom/i, 10);
+      const hints = detector.getValidCategoryHints();
+
+      const occurrences = hints.filter((hint) => hint === 'custom-category');
+      expect(occurrences).toHaveLength(1);
+
+      const ecsOccurrences = hints.filter((hint) => hint === 'ecs');
+      expect(ecsOccurrences).toHaveLength(1);
+    });
+
+    it('should backfill common categories when patterns are removed', () => {
+      detector.removePattern('performance');
+
+      const hints = detector.getValidCategoryHints();
+
+      expect(hints).toContain('performance');
+    });
+  });
 });
