@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import AnatomyRecipeLoader from '../../../src/loaders/anatomyRecipeLoader.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
+import { BodyDescriptorValidationError } from '../../../src/anatomy/errors/bodyDescriptorValidationError.js';
 import {
   createMockConfiguration,
   createMockPathResolver,
@@ -28,8 +29,15 @@ jest.mock('../../../src/utils/idUtils.js', () => {
   };
 });
 
+jest.mock('../../../src/anatomy/utils/bodyDescriptorValidator.js', () => ({
+  BodyDescriptorValidator: {
+    validate: jest.fn(),
+  },
+}));
+
 import { processAndStoreItem } from '../../../src/loaders/helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../../../src/utils/idUtils.js';
+import { BodyDescriptorValidator } from '../../../src/anatomy/utils/bodyDescriptorValidator.js';
 
 describe('AnatomyRecipeLoader._processFetchedItem', () => {
   let loader;
@@ -53,6 +61,7 @@ describe('AnatomyRecipeLoader._processFetchedItem', () => {
     );
 
     jest.clearAllMocks();
+    BodyDescriptorValidator.validate.mockReset();
   });
 
   it('processes a valid recipe and stores it', async () => {
@@ -126,6 +135,28 @@ describe('AnatomyRecipeLoader._processFetchedItem', () => {
     expect(validateSpy).not.toHaveBeenCalled();
   });
 
+  it('validates body descriptors when provided', async () => {
+    const data = {
+      recipeId: 'core:human',
+      bodyDescriptors: { build: 'athletic' },
+    };
+    const descriptorSpy = jest.spyOn(loader, '_validateBodyDescriptors');
+
+    await loader._processFetchedItem(
+      'core',
+      'human.recipe.json',
+      '/tmp/human.recipe.json',
+      data,
+      'anatomyRecipes'
+    );
+
+    expect(descriptorSpy).toHaveBeenCalledWith(
+      data.bodyDescriptors,
+      'human',
+      'human.recipe.json'
+    );
+  });
+
   it('propagates errors from constraint validation', async () => {
     const data = { recipeId: 'core:human', constraints: { requires: ['bad'] } };
     jest.spyOn(loader, '_validateConstraints').mockImplementation(() => {
@@ -156,6 +187,7 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
       createSimpleMockDataRegistry(),
       createMockLogger()
     );
+    BodyDescriptorValidator.validate.mockReset();
   });
 
   it('throws when requires is not an array', () => {
@@ -169,6 +201,21 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
     expect(() =>
       loader._validateConstraints(constraints, 'core', 'file')
     ).toThrow(ValidationError);
+  });
+
+  it('throws when a group includes unexpected properties', () => {
+    const constraints = {
+      requires: [
+        {
+          components: ['core:heart', 'core:lung'],
+          unexpected: true,
+        },
+      ],
+    };
+
+    expect(() =>
+      loader._validateConstraints(constraints, 'core', 'file')
+    ).toThrow(/Unexpected properties: unexpected/);
   });
 
   it('throws when requires group omits both components and partTypes', () => {
@@ -189,6 +236,20 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
     expect(() =>
       loader._validateConstraints(constraints, 'core', 'file')
     ).toThrow(/must contain at least 2 items/);
+  });
+
+  it('throws when components is not declared as an array', () => {
+    const constraints = {
+      requires: [
+        {
+          components: 'core:heart',
+        },
+      ],
+    };
+
+    expect(() =>
+      loader._validateConstraints(constraints, 'core', 'file')
+    ).toThrow(/'components' must be an array of strings/);
   });
 
   it('throws when excludes partTypes entries are not strings', () => {
@@ -225,5 +286,62 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
     expect(() =>
       loader._validateConstraints(constraints, 'core', 'file')
     ).not.toThrow();
+  });
+});
+
+describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
+  let loader;
+
+  beforeEach(() => {
+    loader = new AnatomyRecipeLoader(
+      createMockConfiguration(),
+      createMockPathResolver(),
+      createMockDataFetcher(),
+      createMockSchemaValidator(),
+      createSimpleMockDataRegistry(),
+      createMockLogger()
+    );
+    BodyDescriptorValidator.validate.mockReset();
+  });
+
+  it('delegates to BodyDescriptorValidator when descriptors are provided', () => {
+    BodyDescriptorValidator.validate.mockImplementation(() => undefined);
+
+    expect(() =>
+      loader._validateBodyDescriptors({ build: 'athletic' }, 'human', 'human.json')
+    ).not.toThrow();
+
+    expect(BodyDescriptorValidator.validate).toHaveBeenCalledWith(
+      { build: 'athletic' },
+      "recipe 'human' from file 'human.json'"
+    );
+  });
+
+  it('wraps BodyDescriptorValidationError instances in ValidationError', () => {
+    BodyDescriptorValidator.validate.mockImplementation(() => {
+      throw new BodyDescriptorValidationError('bad descriptor');
+    });
+
+    const invokeValidation = () =>
+      loader._validateBodyDescriptors({ build: 'bad' }, 'human', 'human.json');
+
+    expect(invokeValidation).toThrow(ValidationError);
+    expect(invokeValidation).toThrow('bad descriptor');
+  });
+
+  it('rethrows unexpected errors from BodyDescriptorValidator', () => {
+    const unexpectedError = new Error('boom');
+    BodyDescriptorValidator.validate.mockImplementation(() => {
+      throw unexpectedError;
+    });
+
+    const invokeValidation = () =>
+      loader._validateBodyDescriptors(
+        { build: 'athletic' },
+        'human',
+        'human.json'
+      );
+
+    expect(invokeValidation).toThrow(unexpectedError);
   });
 });
