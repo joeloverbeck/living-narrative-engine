@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ModManifestProcessor from '../../../src/loaders/ModManifestProcessor.js';
+import ModDependencyError from '../../../src/errors/modDependencyError.js';
 
 describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
   let testBed;
@@ -180,7 +181,16 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
         requestedIds,
         { strictMode: false, allowWarnings: true }
       );
-      
+
+      expect(testBed.mockLogger.warn).toHaveBeenNthCalledWith(
+        1,
+        'Loading with 1 validation warnings'
+      );
+      expect(testBed.mockLogger.warn).toHaveBeenNthCalledWith(
+        2,
+        '  - test warning'
+      );
+
       // Verify traditional validation was skipped
       expect(mockDependencies.modDependencyValidator.validate).not.toHaveBeenCalled();
     });
@@ -211,6 +221,97 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
       expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
         'Validation orchestrator failed, falling back to traditional validation',
         expect.any(Error)
+      );
+    });
+
+    it('should fall back to traditional validation when orchestrator reports mods cannot load', async () => {
+      const requestedIds = ['core'];
+      const options = { validateCrossReferences: true };
+
+      mockOrchestrator.validateForLoading.mockResolvedValue({
+        canLoad: false,
+        warnings: [],
+      });
+      mockDependencies.modManifestLoader.loadRequestedManifests.mockResolvedValue(
+        new Map([['core', { id: 'core' }]])
+      );
+
+      const result = await processor.processManifests(
+        requestedIds,
+        'world',
+        options
+      );
+
+      expect(result.finalModOrder).toEqual(['core']);
+      expect(mockDependencies.modDependencyValidator.validate).toHaveBeenCalled();
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'Validation orchestrator failed, falling back to traditional validation',
+        expect.any(ModDependencyError)
+      );
+    });
+
+    it('should propagate orchestrator errors in strict mode when mods cannot load', async () => {
+      const requestedIds = ['core'];
+      const options = { validateCrossReferences: true, strictMode: true };
+
+      mockOrchestrator.validateForLoading.mockResolvedValue({
+        canLoad: false,
+        warnings: [],
+      });
+
+      await expect(
+        processor.processManifests(requestedIds, 'world', options)
+      ).rejects.toBeInstanceOf(ModDependencyError);
+
+      expect(mockDependencies.modDependencyValidator.validate).not.toHaveBeenCalled();
+      expect(testBed.mockLogger.warn).not.toHaveBeenCalledWith(
+        'Validation orchestrator failed, falling back to traditional validation',
+        expect.anything()
+      );
+    });
+
+    it('should propagate orchestrator error when strict mode is enabled', async () => {
+      const failure = new Error('strict failure');
+      const requestedIds = ['core'];
+      const options = { validateCrossReferences: true, strictMode: true };
+
+      mockOrchestrator.validateForLoading.mockRejectedValue(failure);
+
+      await expect(
+        processor.processManifests(requestedIds, 'world', options)
+      ).rejects.toBe(failure);
+
+      expect(mockDependencies.modDependencyValidator.validate).not.toHaveBeenCalled();
+      expect(testBed.mockLogger.warn).not.toHaveBeenCalledWith(
+        'Validation orchestrator failed, falling back to traditional validation',
+        expect.anything()
+      );
+    });
+
+    it('should use requested order when orchestrator omits load order', async () => {
+      const requestedIds = ['core', 'expansion'];
+      const options = { validateCrossReferences: true };
+
+      mockOrchestrator.validateForLoading.mockResolvedValue({
+        canLoad: true,
+        warnings: undefined,
+      });
+      mockDependencies.modManifestLoader.getLoadedManifests.mockResolvedValue(
+        undefined
+      );
+
+      const result = await processor.processManifests(
+        requestedIds,
+        'world',
+        options
+      );
+
+      expect(result.finalModOrder).toEqual(requestedIds);
+      expect(result.validationWarnings).toEqual([]);
+      expect(mockDependencies.registry.store).toHaveBeenCalledWith(
+        'meta',
+        'final_mod_order',
+        requestedIds
       );
     });
   });
