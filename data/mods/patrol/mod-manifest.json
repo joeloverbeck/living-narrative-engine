@@ -1,0 +1,44 @@
+{
+    "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+    "id": "patrol",
+    "version": "1.0.0",
+    "name": "patrol",
+    "description": "Scenario.",
+    "author": "Living Narrative Engine",
+    "gameVersion": ">=0.0.1",
+    "dependencies": [
+        {
+            "id": "core",
+            "version": "^1.0.0"
+        },
+        {
+            "id": "positioning",
+            "version": "^1.0.0"
+        },
+        {
+            "id": "anatomy",
+            "version": "^1.0.0"
+        },
+        {
+            "id": "clothing",
+            "version": "^1.0.0"
+        }
+    ],
+    "content": {
+        "actions": [],
+        "components": [],
+        "conditions": [],
+        "rules": [],
+        "entities": {
+            "definitions": [
+                "kraken_elder.character.json"
+            ],
+            "instances": [
+                "kraken_elder.character.json"
+            ]
+        },
+        "events": [],
+        "macros": [],
+        "scopes": []
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "patrol:kraken_elder",
+    "components": {
+        "core:name": {
+            "text": "kraken elder"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/kraken_elder.png",
+            "altText": "Kraken elder"
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "anatomy:body": {
+            "recipeId": "anatomy:kraken_elder"
+        },
+        "core:gender": {
+            "value": "male"
+        }
+    }
+}

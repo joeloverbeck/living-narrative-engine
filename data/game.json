@@ -20,7 +20,8 @@
     "caressing",
     "kissing",
     "physical-control",
-    "p_erotica"
+    "patrol",
+    "p_erotica_irun"
   ],
-  "startWorld": "p_erotica:irun"
+  "startWorld": "p_erotica_irun:irun"
 }
