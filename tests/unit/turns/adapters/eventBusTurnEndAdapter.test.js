@@ -170,6 +170,73 @@ describe('EventBusTurnEndAdapter', () => {
     ).not.toHaveBeenCalledWith(TURN_ENDED_ID, expect.anything());
   });
 
+  it('should attempt fallback error dispatch when invalid entity dispatch fails', async () => {
+    const invalidEntityId = '';
+    const dispatchError = new Error('primary dispatch failure');
+
+    mockSafeDispatcher.dispatch
+      .mockRejectedValueOnce(dispatchError)
+      .mockResolvedValueOnce(true);
+
+    const adapter = new EventBusTurnEndAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+      logger: mockLogger,
+    });
+
+    await expect(
+      adapter.notifyTurnEnded(invalidEntityId, true)
+    ).rejects.toThrow(
+      'EventBusTurnEndAdapter: entityId must be a non-empty string'
+    );
+
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(2);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenNthCalledWith(
+      1,
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('entityId must be a non-empty string'),
+      })
+    );
+    expect(mockSafeDispatcher.dispatch).toHaveBeenNthCalledWith(
+      2,
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Error dispatching'),
+        details: expect.objectContaining({
+          error: dispatchError.message,
+          entityId: invalidEntityId,
+        }),
+      })
+    );
+  });
+
+  it('should log when system error dispatch fails after invalid success value', async () => {
+    const dispatchError = new Error('secondary dispatch failure');
+
+    mockSafeDispatcher.dispatch.mockRejectedValueOnce(dispatchError);
+
+    const adapter = new EventBusTurnEndAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+      logger: mockLogger,
+    });
+
+    await expect(
+      adapter.notifyTurnEnded('npc-invalid-success', 'nope')
+    ).rejects.toThrow(TypeError);
+
+    expect(mockLogger.error).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("'success' parameter must be a boolean")
+    );
+
+    const lastErrorCall = mockLogger.error.mock.calls.at(-1);
+    expect(lastErrorCall).toBeDefined();
+    expect(lastErrorCall[0]).toContain(
+      'EventBusTurnEndAdapter: Error dispatching core:system_error_occurred after invalid success value'
+    );
+    expect(lastErrorCall[1]).toBe(dispatchError);
+  });
+
   it('should reject if dispatch throws an error', async () => {
     const dispatchError = new Error('VED failed for turn end');
     mockSafeDispatcher.dispatch.mockRejectedValueOnce(dispatchError);
@@ -186,6 +253,91 @@ describe('EventBusTurnEndAdapter', () => {
       expect.objectContaining({
         message: expect.stringContaining('failed to dispatch'),
       })
+    );
+  });
+
+  it('should attempt secondary error dispatch when reporting dispatch failure also fails', async () => {
+    const turnEndError = new Error('turn end failure');
+    const reportingError = new Error('reporting failure');
+
+    mockSafeDispatcher.dispatch
+      .mockRejectedValueOnce(turnEndError)
+      .mockRejectedValueOnce(reportingError)
+      .mockResolvedValueOnce(true);
+
+    const adapter = new EventBusTurnEndAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+      logger: mockLogger,
+    });
+
+    await expect(adapter.notifyTurnEnded('actor-1', true)).rejects.toThrow(
+      turnEndError
+    );
+
+    expect(mockSafeDispatcher.dispatch).toHaveBeenCalledTimes(3);
+    expect(mockSafeDispatcher.dispatch).toHaveBeenNthCalledWith(
+      1,
+      TURN_ENDED_ID,
+      expect.objectContaining({ entityId: 'actor-1', success: true })
+    );
+    expect(mockSafeDispatcher.dispatch).toHaveBeenNthCalledWith(
+      2,
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('failed to dispatch'),
+        details: expect.objectContaining({ raw: turnEndError.message }),
+      })
+    );
+    expect(mockSafeDispatcher.dispatch).toHaveBeenNthCalledWith(
+      3,
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining(
+          'Error dispatching core:system_error_occurred after failing core:turn_ended'
+        ),
+        details: expect.objectContaining({
+          error: reportingError.message,
+          entityId: 'actor-1',
+        }),
+      })
+    );
+  });
+
+  it('should use console as the default logger when none is provided', async () => {
+    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const adapter = new EventBusTurnEndAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+    });
+
+    try {
+      await adapter.notifyTurnEnded('console-actor', true);
+
+      expect(debugSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'EventBusTurnEndAdapter: Received notifyTurnEnded for console-actor with success=true.'
+        )
+      );
+      expect(errorSpy).not.toHaveBeenCalled();
+    } finally {
+      debugSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('should log legacy turnEnded usage with assumed success', async () => {
+    const adapter = new EventBusTurnEndAdapter({
+      safeEventDispatcher: mockSafeDispatcher,
+      logger: mockLogger,
+    });
+
+    await adapter.turnEnded('legacy-actor');
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'EventBusTurnEndAdapter: Legacy turnEnded called for legacy-actor. Assuming success=true.'
+      )
     );
   });
 });
