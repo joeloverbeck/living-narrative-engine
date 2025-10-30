@@ -410,6 +410,104 @@ describe('RecipePatternResolver', () => {
         "Pattern 1: Slot group 'limbSet:leg' not found in structure template 'beast:body'."
       );
     });
+
+    it('should rethrow unexpected errors during matchesGroup validation', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(() => {
+        throw new Error('generator validation failure');
+      });
+
+      const recipe = {
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'creature:body',
+        slots: {},
+      };
+
+      expect(() =>
+        resolver.resolveRecipePatterns(recipe, blueprint)
+      ).toThrow('generator validation failure');
+    });
+
+    it('should rethrow unexpected errors during matchesGroup resolution', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet
+        .mockImplementationOnce(() => ['leg_front'])
+        .mockImplementationOnce(() => {
+          throw new Error('generator resolution failure');
+        });
+
+      const recipe = {
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
+      };
+
+      const blueprint = {
+        schemaVersion: '2.0',
+        structureTemplate: 'creature:body',
+        slots: { leg_front: {} },
+      };
+
+      expect(() =>
+        resolver.resolveRecipePatterns(recipe, blueprint)
+      ).toThrow('generator resolution failure');
+    });
+
+    it('should provide availability details when slot generation returns no keys', () => {
+      const template = {
+        topology: {
+          limbSets: [{ type: 'leg', id: 'front' }],
+        },
+      };
+
+      mockDataRegistry.get.mockReturnValue(template);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([]);
+
+      const recipe = {
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
+      };
+
+      const blueprint = {
+        id: 'beast:alpha_blueprint',
+        schemaVersion: '2.0',
+        structureTemplate: 'beast:body',
+        slots: {
+          existing_slot: {
+            orientation: 'north',
+            socket: 'primary',
+          },
+        },
+        additionalSlots: {
+          aux_slot: {
+            orientation: 'south',
+          },
+        },
+      };
+
+      expect(() =>
+        resolver.resolveRecipePatterns(recipe, blueprint)
+      ).toThrow(
+        "Pattern 1: Slot group 'limbSet:leg' matched 0 slots in structure template 'beast:body'. Available slot keys: aux_slot, existing_slot. Available orientations: north, south. Available sockets: primary."
+      );
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Available slot keys: aux_slot, existing_slot.')
+      );
+    });
   });
 
   describe('matchesPattern Resolution', () => {
@@ -847,11 +945,21 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
-        'Pattern matchesAll: {"slotType":"leg_segment","orientation":"*_left"} matched 0 slots after applying exclusions'
-      );
+      try {
+        resolver.resolveRecipePatterns(recipe, blueprint);
+        throw new Error('Expected matchesAll exclusion error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toContain(
+          "Pattern 1: matchesAll filter {\"slotType\":\"leg_segment\",\"orientation\":\"*_left\"} matched 0 slots after applying exclusions"
+        );
+        expect(error.message).toContain(
+          "in blueprint 'beast:body_blueprint'. Available slot keys: leg_front_left, leg_front_right, leg_rear_left, leg_rear_right."
+        );
+        expect(error.message).toContain(
+          'Available orientations: front_left, front_right, rear_left, rear_right.'
+        );
+      }
     });
 
     it('should handle combined exclusions', () => {
@@ -1839,6 +1947,64 @@ describe('RecipePatternResolver', () => {
           call =>
             typeof call[0] === 'string' &&
             call[0].includes('Pattern resolution added 0 slot definitions')
+        )
+      ).toBe(true);
+    });
+  });
+
+  describe('Pattern conflict reporting', () => {
+    it('should capture blueprint additional slot overrides as conflicts', () => {
+      const recipe = {
+        patterns: [
+          {
+            matchesPattern: 'arm_*',
+            partType: 'arm_segment',
+            tags: ['pattern'],
+            notTags: ['skip'],
+            properties: { quality: 'standard' },
+          },
+        ],
+      };
+
+      const blueprint = {
+        slots: {
+          arm_left: { orientation: 'left' },
+          arm_right: { orientation: 'right' },
+        },
+        additionalSlots: {
+          arm_left: { orientation: 'left_override' },
+        },
+      };
+
+      const result = resolver.resolveRecipePatterns(recipe, blueprint);
+
+      expect(result.slots).toEqual({
+        arm_right: {
+          partType: 'arm_segment',
+          preferId: undefined,
+          tags: ['pattern'],
+          notTags: ['skip'],
+          properties: { quality: 'standard' },
+        },
+      });
+
+      expect(result._patternConflicts).toEqual([
+        {
+          severity: 'warning',
+          slotKey: 'arm_left',
+          pattern: "matchesPattern: 'arm_*'",
+          hint: "Blueprint additionalSlots overrides Pattern 1 output for slot 'arm_left'.",
+          patternIndex: 1,
+        },
+      ]);
+
+      expect(
+        mockLogger.info.mock.calls.some(
+          call =>
+            typeof call[0] === 'string' &&
+            call[0].includes(
+              "Blueprint additionalSlots for slot 'arm_left' overrides Pattern 1"
+            )
         )
       ).toBe(true);
     });
