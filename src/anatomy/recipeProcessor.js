@@ -134,8 +134,10 @@ export class RecipeProcessor {
     }
 
     // Recipe can add additional required components
+    // Use Set to deduplicate component requirements (blueprint + recipe may both specify same components)
     if (recipeSlot.tags) {
-      merged.components = [...(merged.components || []), ...recipeSlot.tags];
+      const existingComponents = merged.components || [];
+      merged.components = [...new Set([...existingComponents, ...recipeSlot.tags])];
     }
 
     // Recipe can add property requirements

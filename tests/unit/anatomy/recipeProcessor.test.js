@@ -244,6 +244,24 @@ describe('RecipeProcessor', () => {
       });
     });
 
+    it('should deduplicate components when blueprint and recipe specify same component', () => {
+      const blueprintReqs = {
+        components: ['anatomy:part'],
+      };
+      const recipeSlot = {
+        tags: ['anatomy:part', 'anatomy:sensory'],
+      };
+
+      const result = processor.mergeSlotRequirements(blueprintReqs, recipeSlot);
+
+      // Should contain anatomy:part only once, not duplicated
+      expect(result).toEqual({
+        components: ['anatomy:part', 'anatomy:sensory'],
+      });
+      // Verify no duplicates
+      expect(result.components.length).toBe(2);
+    });
+
     it('should handle blueprint without components when adding recipe tags', () => {
       const blueprintReqs = {
         // No components property

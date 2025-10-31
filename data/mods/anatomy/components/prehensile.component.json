@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:prehensile",
+  "description": "Marks a body part as capable of grasping and manipulating objects. Prehensile parts can grip, hold, and manipulate items with varying degrees of strength and dexterity.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "strength": {
+        "type": "string",
+        "description": "Gripping strength level of the prehensile part",
+        "enum": ["weak", "moderate", "strong", "powerful", "colossal"]
+      },
+      "dexterity": {
+        "type": "string",
+        "description": "Manipulation precision and fine motor control",
+        "enum": ["clumsy", "basic", "precise", "delicate"]
+      }
+    },
+    "additionalProperties": false
+  }
+}
