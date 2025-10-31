@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:suckered",
+  "description": "Marks a body part as having suction cups or suckers for adhesion. Suckered parts can attach to surfaces and prey with varying degrees of adhesive strength.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "rows": {
+        "type": "integer",
+        "description": "Number of sucker rows along the appendage",
+        "minimum": 1
+      },
+      "adhesion": {
+        "type": "string",
+        "description": "Adhesion strength of the suckers",
+        "enum": ["weak", "moderate", "strong", "vacuum"]
+      }
+    },
+    "additionalProperties": false
+  }
+}

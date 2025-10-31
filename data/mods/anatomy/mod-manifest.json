@@ -18,7 +18,10 @@
       "body.component.json",
       "joint.component.json",
       "part.component.json",
-      "sockets.component.json"
+      "prehensile.component.json",
+      "sensory.component.json",
+      "sockets.component.json",
+      "suckered.component.json"
     ],
     "entities": {
       "definitions": [
