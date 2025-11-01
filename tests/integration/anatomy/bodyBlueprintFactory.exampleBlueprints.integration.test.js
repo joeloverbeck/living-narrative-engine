@@ -48,6 +48,7 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
   let mockRecipeProcessor;
   let mockPartSelectionService;
   let mockSocketManager;
+  let mockEntityManager;
   let mockEntityGraphBuilder;
   let mockConstraintEvaluator;
   let mockValidator;
@@ -65,6 +66,10 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
+    };
+
+    mockEntityManager = {
+      getComponentData: jest.fn().mockReturnValue(null),
     };
 
     mockDataRegistry = {
@@ -128,7 +133,7 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
     slotGenerator = new SlotGenerator({ logger: mockLogger });
 
     factory = new BodyBlueprintFactory({
-      entityManager: {},
+      entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
       logger: mockLogger,
       eventDispatcher: mockEventDispatcher,

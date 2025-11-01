@@ -565,7 +565,10 @@
       "SlashCommand(/sc:pm)",
       "mcp__serena__initial_instructions",
       "mcp__serena__insert_before_symbol",
-      "Bash(NODE_ENV=test npm run test:memory:*)"
+      "Bash(NODE_ENV=test npm run test:memory:*)",
+      "Bash(npm test:*)",
+      "mcp__serena__list_memories",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:ink_reservoir",
+  "description": "Massive ink reservoir for a titanic kraken",
+  "components": {
+    "anatomy:part": {
+      "subType": "ink_reservoir"
+    },
+    "anatomy:ink_reservoir": {
+      "capacity": "massive",
+      "pressure": "high"
+    },
+    "core:name": {
+      "text": "ink reservoir"
+    }
+  }
+}

@@ -3,7 +3,6 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
-import { pathToFileURL } from 'node:url';
 
 import { getAppConfigService } from '../config/appConfig.js';
 import { createSecurityMiddleware } from '../middleware/security.js';
@@ -337,23 +336,23 @@ export function createProxyServer(options = {}) {
   };
 
   const stop = async () => {
-    if (!server) {
-      return;
-    }
-
-    await new Promise((resolve, reject) => {
-      server.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
+    // Always clean up services, even if server wasn't started
+    // This prevents timeout handles from lingering in tests
+    if (server) {
+      await new Promise((resolve, reject) => {
+        server.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        });
       });
-    });
+      server = null;
+    }
 
     cleanupServices();
     removeShutdownHandlers();
-    server = null;
     isShuttingDown = false;
   };
 
@@ -603,10 +602,10 @@ export function createProxyServer(options = {}) {
 
 export default createProxyServer;
 
-const isMainModule =
-  process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
-
-if (isMainModule) {
+// CLI entry point - only run when executed directly (not when imported in tests or other modules)
+// Detect if running as main module by checking if we're in a test environment
+// In test mode (NODE_ENV=test), this block is skipped entirely
+if (process.env.NODE_ENV !== 'test' && process.argv[1]?.endsWith('/server.js')) {
   const run = async () => {
     const serverController = createProxyServer();
     await serverController.start();
@@ -615,8 +614,6 @@ if (isMainModule) {
   run().catch((error) => {
     // eslint-disable-next-line no-console
     console.error('LLM Proxy Server failed to start', error);
-    if (process.env.NODE_ENV !== 'test') {
-      process.exit(1);
-    }
+    process.exit(1);
   });
 }

@@ -35,6 +35,15 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     titleElement.id = 'titleElement';
     document.body.append(outputDiv, messageList, inputElement, titleElement);
 
+    // Mock fetch to prevent HTTP requests for config files
+    // This allows config loaders to fail fast without retries
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+      headers: new Map(),
+    });
+
     // Create & configure the real container
     container = new AppContainer();
     await configureContainer(container, {
@@ -99,6 +108,14 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
   it('should throw an error if ActorTurnHandler constructor dependencies are manually misconfigured', async () => {
     // Arrange
+    // Mock fetch to prevent HTTP requests for config files
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found',
+      headers: new Map(),
+    });
+
     const brokenContainer = new AppContainer();
     await configureContainer(brokenContainer, {
       outputDiv: document.getElementById('outputDiv'),

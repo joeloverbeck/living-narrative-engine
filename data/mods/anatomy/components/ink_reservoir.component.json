@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:ink_reservoir",
+  "description": "Component for ink storage capability in cephalopods",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "capacity": {
+        "type": "string",
+        "description": "The storage capacity of the ink reservoir",
+        "enum": ["small", "medium", "large", "massive", "titanic"]
+      },
+      "pressure": {
+        "type": "string",
+        "description": "The pressure level for ink ejection",
+        "enum": ["low", "medium", "high", "extreme"]
+      }
+    },
+    "required": ["capacity", "pressure"],
+    "additionalProperties": false
+  }
+}

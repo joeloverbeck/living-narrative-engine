@@ -6,6 +6,9 @@ import ActivityIndexManager from '../../../src/anatomy/services/activityIndexMan
 import ActivityMetadataCollectionSystem from '../../../src/anatomy/services/activityMetadataCollectionSystem.js';
 import ActivityGroupingSystem from '../../../src/anatomy/services/grouping/activityGroupingSystem.js';
 import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.js';
+import ActivityContextBuildingSystem from '../../../src/anatomy/services/context/activityContextBuildingSystem.js';
+import ActivityFilteringSystem from '../../../src/anatomy/services/filtering/activityFilteringSystem.js';
+import ActivityConditionValidator from '../../../src/anatomy/services/validation/activityConditionValidator.js';
 import {
   registerActivityComponents,
   createActor,
@@ -17,6 +20,7 @@ describe('Activity Description - Context Edge Cases', () => {
   let testBed;
   let entityManager;
   let service;
+  let contextBuildingSystem;
   let jsonLogicEvaluationService;
 
   beforeEach(() => {
@@ -52,6 +56,20 @@ describe('Activity Description - Context Edge Cases', () => {
       entityManager,
       cacheManager,
     });
+    const conditionValidator = new ActivityConditionValidator({
+      logger: testBed.logger,
+    });
+    const filteringSystem = new ActivityFilteringSystem({
+      logger: testBed.logger,
+      conditionValidator,
+      entityManager,
+      jsonLogicEvaluationService,
+    });
+    contextBuildingSystem = new ActivityContextBuildingSystem({
+      entityManager,
+      logger: testBed.logger,
+      nlgSystem,
+    });
 
     service = new ActivityDescriptionService({
       logger: testBed.logger,
@@ -63,6 +81,8 @@ describe('Activity Description - Context Edge Cases', () => {
       metadataCollectionSystem,
       groupingSystem,
       nlgSystem,
+      filteringSystem,
+      contextBuildingSystem,
     });
 
     configureActivityFormatting(testBed.mockAnatomyFormattingService);
@@ -170,9 +190,7 @@ describe('Activity Description - Context Edge Cases', () => {
       priority: 95,
     });
 
-    const hooks = service.getTestHooks();
-
-    const baselineContext = hooks.buildActivityContext(actor.id, {
+    const baselineContext = contextBuildingSystem.buildActivityContext(actor.id, {
       targetEntityId: alicia.id,
       priority: 95,
     });
@@ -188,7 +206,7 @@ describe('Activity Description - Context Edge Cases', () => {
     expect(Array.isArray(closenessAfterUpdate?.partners)).toBe(true);
     expect(closenessAfterUpdate.partners).toHaveLength(0);
 
-    const cachedContext = hooks.buildActivityContext(actor.id, {
+    const cachedContext = contextBuildingSystem.buildActivityContext(actor.id, {
       targetEntityId: alicia.id,
       priority: 95,
     });
@@ -196,7 +214,7 @@ describe('Activity Description - Context Edge Cases', () => {
 
     service.invalidateCache(actor.id, 'closeness');
 
-    const refreshedContext = hooks.buildActivityContext(actor.id, {
+    const refreshedContext = contextBuildingSystem.buildActivityContext(actor.id, {
       targetEntityId: alicia.id,
       priority: 95,
     });

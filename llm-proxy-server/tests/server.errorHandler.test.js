@@ -19,7 +19,6 @@ let testManager;
 
 beforeEach(() => {
   jest.resetModules();
-  jest.useFakeTimers();
   httpAgentServiceInstance = null;
 
   // Set up test manager for proper resource cleanup
@@ -30,15 +29,31 @@ beforeEach(() => {
     backupEnvironment: false,
   });
 
+  // Create server instance mock first
+  const serverInstance = {
+    close: jest.fn((callback) => {
+      if (callback && typeof callback === 'function') {
+        setTimeout(() => callback(), 0);
+      }
+    }),
+    on: jest.fn(function (event, handler) {
+      return this;
+    }),
+    address: jest.fn(() => ({ port: 3001 })),
+  };
+
   app = {
     use: jest.fn(),
     get: jest.fn(),
     post: jest.fn(),
-    listen: jest.fn((p, cb) => cb && cb()),
+    listen: jest.fn((_port, _bindAddress, _cb) => {
+      // Call the callback to simulate successful server start
+      if (_cb && typeof _cb === 'function') {
+        setTimeout(() => _cb(), 0);
+      }
+      return serverInstance;
+    }),
   };
-
-  // Use test manager to create properly managed server instance
-  testManager.createMockServer(app, { port: 3001 });
 
   // Create a mock router for express.Router()
   const mockRouter = {
@@ -255,9 +270,15 @@ beforeEach(() => {
 
   // Note: debugRoutes.js has been removed from the system
 
+  const mockHealthRouter = {
+    get: jest.fn(),
+    post: jest.fn(),
+    use: jest.fn(),
+  };
+  const createHealthRoutes = jest.fn(() => mockHealthRouter);
   jest.doMock('../src/routes/healthRoutes.js', () => ({
     __esModule: true,
-    default: 'health-routes-mock',
+    default: createHealthRoutes,
   }));
 });
 
@@ -275,24 +296,33 @@ afterEach(() => {
     testManager.cleanup();
   }
 
-  jest.useRealTimers();
   jest.restoreAllMocks();
 });
 
+let serverController;
+
 const loadServer = async () => {
-  await import('../src/core/server.js');
+  // Create console logger instance
+  consoleLoggerInstance = {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
 
-  // Advance fake timers to allow any pending timers to execute
-  jest.runAllTimers();
+  const { createProxyServer } = await import('../src/core/server.js');
+  serverController = createProxyServer({
+    logger: consoleLoggerInstance,
+    metricsEnabled: false,
+    collectDefaultMetrics: false,
+    rateLimitingEnabled: false,
+  });
+  await serverController.start();
 
-  const loggerCtor = (await import('../src/consoleLogger.js')).ConsoleLogger;
-  // Find the logger instance used by the error handler (should be proxyLogger from server.js)
-  // Logger instances are created in this order during server.js import:
-  // [0] traceRoutes, [1] debugRoutes, [2] healthRoutes, [3] proxyLogger (line 69)
-  // The error handler uses proxyLogger, so we need the last instance created
-  const lastLoggerIndex = loggerCtor.mock.results.length - 1;
-  consoleLoggerInstance = loggerCtor.mock.results[lastLoggerIndex].value;
-  errorHandler = app.use.mock.calls.find(
+  // Give async operations time to complete
+  await new Promise((r) => setTimeout(r, 0));
+
+  errorHandler = serverController.app.use.mock.calls.find(
     (c) => typeof c[0] === 'function' && c[0].length === 4
   )[0];
 };

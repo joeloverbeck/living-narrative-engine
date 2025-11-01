@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "anatomy:crushing",
+  "description": "Component for crushing or biting force capability",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "biteForce": {
+        "type": "string",
+        "description": "The strength of the crushing or biting force",
+        "enum": ["weak", "moderate", "strong", "powerful", "titanic"]
+      }
+    },
+    "required": ["biteForce"],
+    "additionalProperties": false
+  }
+}

@@ -90,8 +90,8 @@ characters and overrides their names plus activity metadata.
 ### Generate the description
 
 ```javascript
-const activityService = container.resolve(tokens.ActivityDescriptionService);
-const summary = await activityService.generateActivityDescription(actor.id);
+const activityFacade = container.resolve(tokens.ActivityDescriptionFacade);
+const summary = await activityFacade.generateActivityDescription(actor.id);
 
 console.log(summary);
 // Activity: Jon Ureña is kneeling before Alicia Western.
@@ -151,7 +151,7 @@ entityManager.addComponent('guard_1', 'awareness:alert', {
 With the target currently alert, the activity is suppressed.
 
 ```javascript
-const summary = await activityService.generateActivityDescription('jon_ureña');
+const summary = await activityFacade.generateActivityDescription('jon_ureña');
 console.log(summary); // ""
 ```
 
@@ -159,7 +159,7 @@ Update the target state and regenerate:
 
 ```javascript
 entityManager.removeComponent('guard_1', 'awareness:alert');
-const updated = await activityService.generateActivityDescription('jon_ureña');
+const updated = await activityFacade.generateActivityDescription('jon_ureña');
 console.log(updated);
 // Activity: Jon Ureña is hiding in cover near Guard 1.
 ```
@@ -251,7 +251,7 @@ entityManager.addComponent('jon_ureña', 'intimacy:holding_hands', {
 ### Generate description
 
 ```javascript
-const summary = await activityService.generateActivityDescription('jon_ureña');
+const summary = await activityFacade.generateActivityDescription('jon_ureña');
 ```
 
 The service detects the shared group key, merges the phrases, and inserts a conjunction using the
@@ -300,7 +300,7 @@ clearing caches per update.
 
 ```javascript
 const actorIds = ['jon_ureña', 'alicia_western', 'guard_1'];
-activityService.invalidateEntities(actorIds);
+activityFacade.invalidateEntities(actorIds);
 ```
 
 The helper iterates the relevant caches (names, genders, activity indexes, closeness) and logs how

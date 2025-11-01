@@ -12,11 +12,18 @@ import {
   ensureValidLogger,
   assertNonBlankString,
 } from '../../utils/index.js';
+// Backward compatibility: Used for fallback instantiation when not injected
+/* eslint-disable-next-line no-unused-vars */
 import ActivityCacheManager from '../cache/activityCacheManager.js';
+/* eslint-disable-next-line no-unused-vars */
 import ActivityIndexManager from './activityIndexManager.js';
+/* eslint-disable-next-line no-unused-vars */
 import ActivityMetadataCollectionSystem from './activityMetadataCollectionSystem.js';
 import ActivityConditionValidator from './validation/activityConditionValidator.js';
+import ActivityFilteringSystem from './filtering/activityFilteringSystem.js';
+/* eslint-disable-next-line no-unused-vars */
 import ActivityNLGSystem from './activityNLGSystem.js';
+import ActivityContextBuildingSystem from './context/activityContextBuildingSystem.js';
 
 const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
   enabled: true,
@@ -105,7 +112,8 @@ class ActivityDescriptionService {
 
   #anatomyFormattingService;
 
-  #jsonLogicEvaluationService;
+  // eslint-disable-next-line no-unused-private-class-members
+  #jsonLogicEvaluationService; // Used during fallback instantiation
 
   #cacheManager = null;
 
@@ -113,17 +121,20 @@ class ActivityDescriptionService {
 
   #metadataCollectionSystem = null;
 
-  #conditionValidator = null;
+  #filteringSystem = null;
 
   #nlgSystem = null;
 
   #groupingSystem = null;
 
+  #contextBuildingSystem = null;
+
   #eventBus = null;
 
   #eventUnsubscribers = [];
 
-  #activityIndex = null; // Phase 3: ACTDESC-020
+  // eslint-disable-next-line no-unused-private-class-members
+  #activityIndex = null; // Phase 3: ACTDESC-020 - Reserved for future index caching
 
   #cacheConfig = {
     maxSize: 1000,
@@ -141,6 +152,13 @@ class ActivityDescriptionService {
    * @param {object} dependencies.jsonLogicEvaluationService - JSON Logic evaluation service
    * @param {object} [dependencies.activityIndex] - Optional index for performance (Phase 3)
    * @param {object} [dependencies.eventBus] - Optional event bus for error telemetry
+   * @param dependencies.cacheManager
+   * @param dependencies.indexManager
+   * @param dependencies.metadataCollectionSystem
+   * @param dependencies.groupingSystem
+   * @param dependencies.nlgSystem
+   * @param dependencies.filteringSystem
+   * @param dependencies.contextBuildingSystem
    */
   constructor({
     logger,
@@ -152,6 +170,8 @@ class ActivityDescriptionService {
     metadataCollectionSystem,
     groupingSystem,
     nlgSystem,
+    filteringSystem = null,
+    contextBuildingSystem = null,
     activityIndex = null,
     eventBus = null,
   }) {
@@ -196,6 +216,40 @@ class ActivityDescriptionService {
       requiredMethods: ['formatActivityDescription'],
     });
 
+    // For backward compatibility: create filtering system if not provided
+    if (!filteringSystem) {
+      const conditionValidator = new ActivityConditionValidator({ logger: this.#logger });
+      filteringSystem = new ActivityFilteringSystem({
+        logger: this.#logger,
+        conditionValidator,
+        jsonLogicEvaluationService,
+        entityManager,
+      });
+    } else {
+      validateDependency(
+        filteringSystem,
+        'IActivityFilteringSystem',
+        this.#logger,
+        { requiredMethods: ['filterByConditions'] }
+      );
+    }
+
+    // For backward compatibility: create context building system if not provided
+    if (!contextBuildingSystem) {
+      contextBuildingSystem = new ActivityContextBuildingSystem({
+        entityManager,
+        logger: this.#logger,
+        nlgSystem,
+      });
+    } else {
+      validateDependency(
+        contextBuildingSystem,
+        'IActivityContextBuildingSystem',
+        this.#logger,
+        { requiredMethods: ['buildActivityContext'] }
+      );
+    }
+
     this.#entityManager = entityManager;
     this.#anatomyFormattingService = anatomyFormattingService;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
@@ -204,6 +258,8 @@ class ActivityDescriptionService {
     this.#metadataCollectionSystem = metadataCollectionSystem;
     this.#groupingSystem = groupingSystem;
     this.#nlgSystem = nlgSystem;
+    this.#filteringSystem = filteringSystem;
+    this.#contextBuildingSystem = contextBuildingSystem;
     this.#activityIndex = activityIndex;
 
     // Validate event bus if provided
@@ -230,11 +286,6 @@ class ActivityDescriptionService {
     this.#cacheManager.registerCache('closeness', {
       ttl: this.#cacheConfig.ttl,
       maxSize: this.#cacheConfig.maxSize,
-    });
-
-    // Initialize condition validator
-    this.#conditionValidator = new ActivityConditionValidator({
-      logger: this.#logger,
     });
 
     // Subscribe to invalidation events only if event bus is available
@@ -410,133 +461,9 @@ class ActivityDescriptionService {
    * @private
    */
   #filterByConditions(activities, entity) {
-    if (!Array.isArray(activities) || activities.length === 0) {
-      return [];
-    }
-
-    return activities.filter((activity) => {
-      try {
-        return this.#evaluateActivityVisibility(activity, entity);
-      } catch (error) {
-        this.#logger.warn(
-          'Failed to evaluate activity visibility for activity metadata',
-          error
-        );
-        return false;
-      }
-    });
+    return this.#filteringSystem.filterByConditions(activities, entity);
   }
 
-  /**
-   * Determine whether a single activity should remain visible.
-   *
-   * @param {object} activity - Activity record produced by the collectors.
-   * @param {object} entity - Entity instance requesting the description.
-   * @returns {boolean} True when the activity should remain visible.
-   * @private
-   */
-  #evaluateActivityVisibility(activity, entity) {
-    if (!activity || activity.visible === false) {
-      return false;
-    }
-
-    if (typeof activity.condition === 'function') {
-      try {
-        return activity.condition(entity);
-      } catch (error) {
-        this.#logger.warn(
-          'Condition evaluation failed for activity description entry',
-          error
-        );
-        return false;
-      }
-    }
-
-    const metadata = activity.metadata ?? activity.activityMetadata ?? {};
-    const conditions = activity.conditions ?? metadata.conditions;
-
-    if (!conditions || this.#conditionValidator.isEmptyConditionsObject(conditions)) {
-      return metadata.shouldDescribeInActivity !== false;
-    }
-
-    if (metadata.shouldDescribeInActivity === false) {
-      return false;
-    }
-
-    if (
-      conditions.showOnlyIfProperty &&
-      !this.#conditionValidator.matchesPropertyCondition(activity, conditions.showOnlyIfProperty)
-    ) {
-      return false;
-    }
-
-    if (
-      Array.isArray(conditions.requiredComponents) &&
-      conditions.requiredComponents.length > 0 &&
-      !this.#conditionValidator.hasRequiredComponents(entity, conditions.requiredComponents)
-    ) {
-      return false;
-    }
-
-    if (
-      Array.isArray(conditions.forbiddenComponents) &&
-      conditions.forbiddenComponents.length > 0 &&
-      this.#conditionValidator.hasForbiddenComponents(entity, conditions.forbiddenComponents)
-    ) {
-      return false;
-    }
-
-    if (conditions.customLogic) {
-      const context = this.#buildLogicContext(activity, entity);
-
-      try {
-        const result = this.#jsonLogicEvaluationService.evaluate(
-          conditions.customLogic,
-          context
-        );
-
-        if (!result) {
-          return false;
-        }
-      } catch (error) {
-        this.#logger.warn('Failed to evaluate custom logic', error);
-        return true; // Fail open on JSON logic errors
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Construct the data payload used for JSON Logic evaluation.
-   *
-   * @param {object} activity - Activity record.
-   * @param {object} entity - Entity instance requesting the description.
-   * @returns {object} Data for JSON Logic rules.
-   * @private
-   */
-  #buildLogicContext(activity, entity) {
-    let targetEntity = null;
-
-    if (activity?.targetEntityId) {
-      try {
-        targetEntity = this.#entityManager.getEntityInstance(
-          activity.targetEntityId
-        );
-      } catch (error) {
-        this.#logger.warn(
-          `Failed to resolve target entity '${activity.targetEntityId}' for activity conditions`,
-          error
-        );
-      }
-    }
-
-    return {
-      entity: this.#conditionValidator.extractEntityData(entity),
-      activity: activity?.sourceData ?? {},
-      target: targetEntity ? this.#conditionValidator.extractEntityData(targetEntity) : null,
-    };
-  }
 
 
   // Note: Deduplication methods extracted to ActivityMetadataCollectionSystem
@@ -577,10 +504,8 @@ class ActivityDescriptionService {
     const contextAwareActivities = enableContextAwareness
       ? limitedActivities.map((activity) => {
           try {
-            const contextualised = this.#applyContextualTone(
-              activity,
-              this.#buildActivityContext(actorId, activity)
-            );
+            const context = this.#contextBuildingSystem.buildActivityContext(actorId, activity);
+            const contextualised = this.#contextBuildingSystem.applyContextualTone(activity, context);
             return contextualised ?? activity;
           } catch (error) {
             this.#logger.warn(
@@ -796,133 +721,20 @@ class ActivityDescriptionService {
   }
 
   /**
-   * Build the contextual payload for an activity.
-   *
-   * @description Build lightweight context for an activity based on available component data.
-   * @param {string} actorId - Actor entity ID.
-   * @param {object} activity - Activity metadata collected by the service.
-   * @returns {object} Normalised context payload.
-   * @private
+   * Note: Context building methods extracted to ActivityContextBuildingSystem (ACTDESSERREF-008)
+   * - #buildActivityContext
+   * - #determineActivityIntensity
+   * - #applyContextualTone
    */
-  #buildActivityContext(actorId, activity) {
-    const targetId = activity?.targetEntityId ?? activity?.targetId ?? null;
-
-    const context = {
-      targetId,
-      intensity: this.#determineActivityIntensity(activity?.priority),
-      relationshipTone: 'neutral',
-      targetGender: null,
-    };
-
-    if (!targetId || !actorId) {
-      return context;
-    }
-
-    let cachedPartners = this.#getCacheValue('closeness', actorId);
-
-    if (!cachedPartners) {
-      try {
-        const actorEntity = this.#entityManager.getEntityInstance(actorId);
-        const closenessData = actorEntity?.getComponentData?.(
-          'positioning:closeness'
-        );
-        cachedPartners = Array.isArray(closenessData?.partners)
-          ? [...closenessData.partners]
-          : [];
-      } catch (error) {
-        this.#logger.warn(
-          `Failed to retrieve closeness data for ${actorId}`,
-          error
-        );
-        cachedPartners = [];
-      }
-
-      this.#setCacheValue('closeness', actorId, cachedPartners);
-    }
-
-    context.targetGender = this.#nlgSystem.detectEntityGender(targetId);
-
-    if (Array.isArray(cachedPartners) && cachedPartners.includes(targetId)) {
-      context.relationshipTone = 'closeness_partner';
-    }
-
-    return context;
-  }
 
   /**
-   * Map activity priority onto an intensity bucket.
-   *
-   * @description Map activity priority onto an intensity bucket.
-   * @param {number} priority - Activity priority score (defaults to 0).
-   * @returns {string} Intensity level identifier.
-   * @private
+   * Note: Activity grouping methods extracted to ActivityGroupingSystem (ACTDESSERREF-007)
+   * - #groupActivities
+   * - #startActivityGroup
+   * - #shouldGroupActivities
+   * - #determineConjunction
+   * - #activitiesOccurSimultaneously
    */
-  #determineActivityIntensity(priority = 0) {
-    if (priority >= 90) {
-      return 'intense';
-    }
-
-    if (priority >= 70) {
-      return 'elevated';
-    }
-
-    return 'casual';
-  }
-
-  /**
-   * Apply contextual tone adjustments to an activity payload before rendering.
-   *
-   * @description Apply contextual tone adjustments to an activity payload before rendering.
-   * @param {object} activity - Original activity metadata.
-   * @param {object} context - Context payload from #buildActivityContext.
-   * @returns {object} Activity metadata with contextual overrides.
-   * @private
-   */
-  #applyContextualTone(activity, context) {
-    const adjusted = { ...activity };
-
-    if (!context || !context.targetId) {
-      return adjusted;
-    }
-
-    if (context.relationshipTone === 'closeness_partner') {
-      adjusted.contextualTone = 'intimate';
-      return adjusted;
-    }
-
-    if (context.intensity === 'intense') {
-      adjusted.contextualTone = 'intense';
-
-      if (typeof adjusted.adverb === 'string') {
-        adjusted.adverb = this.#nlgSystem.mergeAdverb(adjusted.adverb, 'fiercely');
-      } else if (adjusted.type === 'dedicated') {
-        adjusted.adverb = 'fiercely';
-      }
-
-      if (typeof adjusted.template === 'string') {
-        adjusted.template = this.#nlgSystem.injectSoftener(adjusted.template, 'fiercely');
-      }
-    }
-
-    return adjusted;
-  }
-
-
-  /**
-   * Group activities intelligently for natural composition.
-   *
-   * @description Group activities intelligently for natural composition.
-   * @param {Array<object>} activities - Activities sorted by priority.
-   * @param {string|null} cacheKey - Cache key used to reuse indexed activity structures.
-   * @returns {Array<ActivityGroup>} Grouped activities ready for rendering.
-   * @private
-   */
-  // Note: Activity grouping methods extracted to ActivityGroupingSystem (ACTDESSERREF-007)
-  // - #groupActivities
-  // - #startActivityGroup
-  // - #shouldGroupActivities
-  // - #determineConjunction
-  // - #activitiesOccurSimultaneously
 
   /**
    * Escape special characters within a string for safe RegExp usage.
@@ -940,75 +752,21 @@ class ActivityDescriptionService {
    * @returns {ActivityDescriptionTestHooks} Selected helper functions bound to the current service instance.
    */
   getTestHooks() {
+    // Adapter layer removed - tests now use extracted services directly via DI container.
+    // Remaining hooks provide access to ActivityDescriptionService's native implementation.
     return {
-      // NLG system test hooks (delegated to ActivityNLGSystem)
-      mergeAdverb: (...args) => this.#nlgSystem.mergeAdverb(...args),
-      injectSoftener: (...args) => this.#nlgSystem.injectSoftener(...args),
-      sanitizeVerbPhrase: (...args) => this.#nlgSystem.sanitizeVerbPhrase(...args),
-      buildRelatedActivityFragment: (...args) =>
-        this.#nlgSystem.buildRelatedActivityFragment(...args),
-      truncateDescription: (...args) => this.#nlgSystem.truncateDescription(...args),
-      sanitizeEntityName: (...args) => this.#nlgSystem.sanitizeEntityName(...args),
-      resolveEntityName: (...args) => this.#nlgSystem.resolveEntityName(...args),
-      shouldUsePronounForTarget: (...args) =>
-        this.#nlgSystem.shouldUsePronounForTarget(...args),
-      detectEntityGender: (...args) => this.#nlgSystem.detectEntityGender(...args),
-      getPronounSet: (...args) => this.#nlgSystem.getPronounSet(...args),
-      getReflexivePronoun: (...args) => this.#nlgSystem.getReflexivePronoun(...args),
-      generateActivityPhrase: (...args) =>
-        this.#nlgSystem.generateActivityPhrase(...args),
-      // ActivityDescriptionService-specific test hooks
+      // Native ActivityDescriptionService hooks for testing internal implementation
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
-      sortByPriority: (...args) => this.#groupingSystem.sortByPriority(...args),
+      getActivityIndex: (...args) => this.#getActivityIndex(...args),
       subscribeToInvalidationEvents: () =>
         this.#subscribeToInvalidationEvents(),
       setEventBus: (eventBus) => {
         this.#eventBus = eventBus;
       },
-      deduplicateActivitiesBySignature: (...args) =>
-        this.#metadataCollectionSystem.deduplicateActivitiesBySignature(...args),
-      buildActivityDeduplicationKey: (...args) =>
-        this.#metadataCollectionSystem.getTestHooks().buildActivityDeduplicationKey(...args),
-      collectActivityMetadata: (...args) =>
-        this.#metadataCollectionSystem.collectActivityMetadata(...args),
-      collectInlineMetadata: (...args) =>
-        this.#metadataCollectionSystem.collectInlineMetadata(...args),
-      collectDedicatedMetadata: (...args) =>
-        this.#metadataCollectionSystem.collectDedicatedMetadata(...args),
-      parseInlineMetadata: (...args) =>
-        this.#metadataCollectionSystem.getTestHooks().parseInlineMetadata(...args),
-      parseDedicatedMetadata: (...args) =>
-        this.#metadataCollectionSystem.getTestHooks().parseDedicatedMetadata(...args),
       formatActivityDescription: (...args) =>
         this.#formatActivityDescription(...args),
-      // Grouping system test hooks (delegated to ActivityGroupingSystem)
-      groupActivities: (...args) => this.#groupingSystem.groupActivities(...args),
-      getActivityIndex: (...args) => this.#getActivityIndex(...args),
-      shouldGroupActivities: (...args) =>
-        this.#groupingSystem.getTestHooks().shouldGroupActivities(...args),
-      startActivityGroup: (...args) =>
-        this.#groupingSystem.getTestHooks().startActivityGroup(...args),
-      evaluateActivityVisibility: (...args) =>
-        this.#evaluateActivityVisibility(...args),
-      buildLogicContext: (...args) => this.#buildLogicContext(...args),
-      buildActivityContext: (...args) => this.#buildActivityContext(...args),
-      applyContextualTone: (...args) => this.#applyContextualTone(...args),
       filterByConditions: (...args) => this.#filterByConditions(...args),
-      determineActivityIntensity: (...args) =>
-        this.#determineActivityIntensity(...args),
-      // Conjunction selection hooks (delegated to ActivityGroupingSystem)
-      determineConjunction: (...args) =>
-        this.#groupingSystem.getTestHooks().determineConjunction(...args),
-      activitiesOccurSimultaneously: (...args) =>
-        this.#groupingSystem.getTestHooks().activitiesOccurSimultaneously(...args),
-      isEmptyConditionsObject: (...args) =>
-        this.#conditionValidator.isEmptyConditionsObject(...args),
-      matchesPropertyCondition: (...args) =>
-        this.#conditionValidator.matchesPropertyCondition(...args),
-      hasRequiredComponents: (...args) => this.#conditionValidator.hasRequiredComponents(...args),
-      hasForbiddenComponents: (...args) =>
-        this.#conditionValidator.hasForbiddenComponents(...args),
-      extractEntityData: (...args) => this.#conditionValidator.extractEntityData(...args),
+      // Cache management hooks for performance and integration testing
       cleanupCaches: () => this.#cleanupCaches(),
       setEntityNameCacheEntry: (key, value) =>
         this.#setCacheValue('entityName', key, value),
@@ -1167,7 +925,8 @@ class ActivityDescriptionService {
    * @returns {unknown|null} Cached value or null if not found/expired.
    * @private
    */
-  #getCacheValue(cacheName, key) {
+  // eslint-disable-next-line no-unused-private-class-members
+  #getCacheValue(cacheName, key) { // Reserved for future direct cache access
     if (!this.#cacheManager) {
       return null;
     }
@@ -1205,6 +964,7 @@ class ActivityDescriptionService {
     if (this.#cacheManager) {
       this.#cacheManager.invalidateAll(entityId);
     }
+    this.#contextBuildingSystem.invalidateClosenessCache(entityId);
   }
 
   /**
@@ -1258,6 +1018,7 @@ class ActivityDescriptionService {
         break;
       case 'closeness':
         this.#cacheManager.invalidate('closeness', entityId);
+        this.#contextBuildingSystem.invalidateClosenessCache(entityId);
         break;
       case 'all':
         this.#invalidateAllCachesForEntity(entityId);

@@ -69,7 +69,9 @@ const createDependencies = () => {
   };
 
   return {
-    entityManager: {},
+    entityManager: {
+      getComponentData: jest.fn().mockReturnValue(undefined),
+    },
     dataRegistry,
     logger,
     eventDispatcher,

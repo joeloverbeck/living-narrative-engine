@@ -19,7 +19,6 @@ describe('main.js bootstrap phase inference coverage', () => {
   let originalAlert;
 
   beforeEach(() => {
-    jest.resetModules();
     Object.values(mockStageModules).forEach((mockFn) => mockFn.mockReset());
 
     originalAlert = global.alert;
@@ -76,7 +75,10 @@ describe('main.js bootstrap phase inference coverage', () => {
     const fetchedConfig = { startWorld: 'azure-bay' };
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => fetchedConfig });
 
-    const mainModule = await import('../../../src/main.js');
+    let mainModule;
+    await jest.isolateModulesAsync(async () => {
+      mainModule = await import('../../../src/main.js');
+    });
     setPhaseHelper = mainModule.__TEST_ONLY__setCurrentPhaseForError;
 
     await mainModule.bootstrapApp();
@@ -118,7 +120,10 @@ describe('main.js bootstrap phase inference coverage', () => {
       statusText: 'Service Unavailable',
     });
 
-    const mainModule = await import('../../../src/main.js');
+    let mainModule;
+    await jest.isolateModulesAsync(async () => {
+      mainModule = await import('../../../src/main.js');
+    });
 
     await mainModule.bootstrapApp();
 
@@ -193,7 +198,11 @@ describe('main.js bootstrap phase inference coverage', () => {
     const fetchedConfig = { startWorld: 'evergreen' };
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => fetchedConfig });
 
-    const { bootstrapApp, beginGame } = await import('../../../src/main.js');
+    let mainModule;
+    await jest.isolateModulesAsync(async () => {
+      mainModule = await import('../../../src/main.js');
+    });
+    const { bootstrapApp, beginGame } = mainModule;
 
     await bootstrapApp();
 
