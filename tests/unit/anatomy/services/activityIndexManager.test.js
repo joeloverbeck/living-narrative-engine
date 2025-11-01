@@ -3,7 +3,7 @@
  * @description Tests index building, signature generation, cache key construction, and caching logic
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import ActivityIndexManager from '../../../../src/anatomy/services/activityIndexManager.js';
 
 describe('ActivityIndexManager', () => {
@@ -22,14 +22,18 @@ describe('ActivityIndexManager', () => {
 
     // Create mock cache manager
     mockCacheManager = {
-      get: () => undefined,
-      set: () => {},
+      get: jest.fn(() => undefined),
+      set: jest.fn(),
     };
 
     indexManager = new ActivityIndexManager({
       cacheManager: mockCacheManager,
       logger: mockLogger,
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('constructor', () => {
@@ -253,6 +257,10 @@ describe('ActivityIndexManager', () => {
   });
 
   describe('buildActivitySignature', () => {
+    it('should return empty signature string when activities array is empty', () => {
+      expect(indexManager.buildActivitySignature([])).toBe('');
+    });
+
     it('should generate signature for single activity', () => {
       const activities = [
         {
@@ -291,7 +299,14 @@ describe('ActivityIndexManager', () => {
 
     it('should use descriptionType when sourceComponent is missing', () => {
       const activities = [
-        { type: 'combat', descriptionType: 'fallback', targetId: 'enemy', priority: 10 },
+        {
+          type: 'combat',
+          // Explicitly undefined to exercise nullish coalescing fallback branch
+          sourceComponent: undefined,
+          descriptionType: 'fallback',
+          targetId: 'enemy',
+          priority: 10,
+        },
       ];
 
       const signature = indexManager.buildActivitySignature(activities);
@@ -352,6 +367,14 @@ describe('ActivityIndexManager', () => {
       const signature = indexManager.buildActivitySignature(activities);
 
       expect(signature).toBe('generic:core:generic:target:10');
+    });
+
+    it('should handle nullish activity entries by falling back to safe defaults', () => {
+      const activities = [null, undefined];
+
+      const signature = indexManager.buildActivitySignature(activities);
+
+      expect(signature).toBe('generic:unknown:solo:50|generic:unknown:solo:50');
     });
 
     it('should generate deterministic signature for same activities', () => {
@@ -443,6 +466,22 @@ describe('ActivityIndexManager', () => {
   });
 
   describe('getActivityIndex', () => {
+    it('should return empty index for non-array input even when cache key is provided', () => {
+      const getCacheSpy = jest.spyOn(mockCacheManager, 'get');
+      const setCacheSpy = jest.spyOn(mockCacheManager, 'set');
+
+      const result = indexManager.getActivityIndex(null, 'cache-key');
+
+      expect(result).toEqual({
+        byTarget: new Map(),
+        byPriority: [],
+        byGroupKey: new Map(),
+        all: [],
+      });
+      expect(getCacheSpy).not.toHaveBeenCalled();
+      expect(setCacheSpy).not.toHaveBeenCalled();
+    });
+
     it('should return empty index for empty array', () => {
       const result = indexManager.getActivityIndex([], 'cache-key');
 
@@ -556,6 +595,27 @@ describe('ActivityIndexManager', () => {
       expect(cachedValue).toHaveProperty('signature');
       expect(cachedValue).toHaveProperty('index');
       expect(cachedValue.index.byTarget.get('actor1')).toEqual(activities);
+    });
+  });
+
+  describe('buildIndex', () => {
+    it('should delegate to getActivityIndex for backward compatibility', () => {
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
+      const cacheKey = 'legacy-key';
+      const getIndexSpy = jest.spyOn(indexManager, 'getActivityIndex');
+
+      indexManager.buildIndex(activities, cacheKey);
+
+      expect(getIndexSpy).toHaveBeenCalledWith(activities, cacheKey);
+    });
+
+    it('should use default cache key when not provided', () => {
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
+      const getIndexSpy = jest.spyOn(indexManager, 'getActivityIndex');
+
+      indexManager.buildIndex(activities);
+
+      expect(getIndexSpy).toHaveBeenCalledWith(activities, null);
     });
   });
 });

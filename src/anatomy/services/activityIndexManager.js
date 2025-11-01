@@ -91,14 +91,17 @@ class ActivityIndexManager {
     }
 
     // Sort by priority (descending)
-    index.byPriority = [...activities].sort((a, b) => {
-      const fallbackPriority = Number.NEGATIVE_INFINITY;
-      const aPriority =
-        typeof a?.priority === 'number' ? a.priority : fallbackPriority;
-      const bPriority =
-        typeof b?.priority === 'number' ? b.priority : fallbackPriority;
-      return bPriority - aPriority;
-    });
+    const fallbackPriority = Number.NEGATIVE_INFINITY;
+    const prioritizedActivities = activities.map((activity) => ({
+      activity,
+      priority:
+        typeof activity?.priority === 'number'
+          ? activity.priority
+          : fallbackPriority,
+    }));
+
+    prioritizedActivities.sort((a, b) => b.priority - a.priority);
+    index.byPriority = prioritizedActivities.map(({ activity }) => activity);
 
     return index;
   }
@@ -126,11 +129,25 @@ class ActivityIndexManager {
   buildActivitySignature(activities) {
     return activities
       .map((activity) => {
-        const source =
-          activity?.sourceComponent ?? activity?.descriptionType ?? 'unknown';
-        const target = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
-        const priority = activity?.priority ?? 50;
-        const type = activity?.type ?? 'generic';
+        const normalizedActivity = activity ?? {};
+        let source = 'unknown';
+        if (
+          normalizedActivity.sourceComponent !== null &&
+          normalizedActivity.sourceComponent !== undefined
+        ) {
+          source = normalizedActivity.sourceComponent;
+        } else if (
+          normalizedActivity.descriptionType !== null &&
+          normalizedActivity.descriptionType !== undefined
+        ) {
+          source = normalizedActivity.descriptionType;
+        }
+        const target =
+          normalizedActivity.targetEntityId ??
+          normalizedActivity.targetId ??
+          'solo';
+        const priority = normalizedActivity.priority ?? 50;
+        const type = normalizedActivity.type ?? 'generic';
         return `${type}:${source}:${target}:${priority}`;
       })
       .join('|');
