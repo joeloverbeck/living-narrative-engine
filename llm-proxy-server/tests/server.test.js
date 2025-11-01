@@ -32,15 +32,31 @@ beforeEach(() => {
     backupEnvironment: false,
   });
 
+  // Create server instance mock first
+  const serverInstance = {
+    close: jest.fn((callback) => {
+      if (callback && typeof callback === 'function') {
+        setTimeout(() => callback(), 0);
+      }
+    }),
+    on: jest.fn(function (event, handler) {
+      return this;
+    }),
+    address: jest.fn(() => ({ port: port || 3001 })),
+  };
+
   app = {
     use: jest.fn(),
     get: jest.fn(),
     post: jest.fn(),
-    listen: jest.fn((p, cb) => cb && cb()),
+    listen: jest.fn((_port, _bindAddress, _cb) => {
+      // Call the callback to simulate successful server start
+      if (_cb && typeof _cb === 'function') {
+        setTimeout(() => _cb(), 0);
+      }
+      return serverInstance;
+    }),
   };
-
-  // Use test manager to create properly managed server instance
-  testManager.createMockServer(app, { port });
 
   // Create a mock router for express.Router()
   const mockRouter = {
@@ -208,9 +224,15 @@ beforeEach(() => {
 
   // Note: debugRoutes.js has been removed from the system
 
+  const mockHealthRouter = {
+    get: jest.fn(),
+    post: jest.fn(),
+    use: jest.fn(),
+  };
+  const createHealthRoutes = jest.fn(() => mockHealthRouter);
   jest.doMock('../src/routes/healthRoutes.js', () => ({
     __esModule: true,
-    default: 'health-routes-mock',
+    default: createHealthRoutes,
   }));
 });
 
@@ -221,12 +243,30 @@ afterEach(() => {
   }
 });
 
+let serverController;
+let mockLogger;
+
 const loadServer = async () => {
-  await import('../src/core/server.js');
+  // Create mock logger instance
+  mockLogger = {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
+
+  const { createProxyServer } = await import('../src/core/server.js');
+  serverController = createProxyServer({
+    logger: mockLogger,
+    metricsEnabled: false,
+    collectDefaultMetrics: false,
+    rateLimitingEnabled: false,
+  });
+  await serverController.start();
   await new Promise((r) => setTimeout(r, 0));
 };
 
-const getRootHandler = () => app.get.mock.calls.find((c) => c[0] === '/')[1];
+const getRootHandler = () => serverController.app.get.mock.calls.find((c) => c[0] === '/')[1];
 
 describe('server initialization', () => {
   test('sets up CORS and JSON parsing when allowed origins provided', async () => {
@@ -238,8 +278,8 @@ describe('server initialization', () => {
       methods: ['POST', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'X-Title', 'HTTP-Referer'],
     });
-    expect(app.use).toHaveBeenCalledWith('cors-mw');
-    expect(app.use).toHaveBeenCalledWith('json-mw');
+    expect(serverController.app.use).toHaveBeenCalledWith('cors-mw');
+    expect(serverController.app.use).toHaveBeenCalledWith('json-mw');
   });
 
   test('root route returns 200 when operational', async () => {

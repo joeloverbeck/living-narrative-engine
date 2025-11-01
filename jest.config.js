@@ -9,7 +9,10 @@
  */
 module.exports = {
   testEnvironment: 'jsdom',
-  setupFiles: ['./tests/setup/cleanupTestDirectories.js'],
+  setupFiles: [
+    './tests/setup/cleanupTestDirectories.js',
+    './tests/setup/memorySetup.js',
+  ],
   setupFilesAfterEnv: ['./jest.setup.js'],
 
   // ES Module support configuration for dynamic imports

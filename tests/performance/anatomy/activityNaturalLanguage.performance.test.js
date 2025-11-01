@@ -75,6 +75,20 @@ describe('Activity Description - Performance', () => {
     mockNlgSystem = {
       generateNaturalLanguage: jest.fn((groups) => []),
       formatActivityDescription: jest.fn((groups) => ''),
+      detectEntityGender: jest.fn((entityId) => 'neutral'),
+      resolveEntityName: jest.fn((entityId) => entityId),
+      getPronounSet: jest.fn((gender) => ({
+        subject: 'they',
+        object: 'them',
+        possessive: 'their',
+        possessivePronoun: 'theirs',
+      })),
+      generateActivityPhrase: jest.fn((actorRef, activity) => `${actorRef} does something`),
+      sanitizeVerbPhrase: jest.fn((phrase) => phrase),
+      buildRelatedActivityFragment: jest.fn(() => ''),
+      mergeAdverb: jest.fn((current, injected) => `${current} ${injected}`.trim()),
+      injectSoftener: jest.fn((template, descriptor) => template),
+      truncateDescription: jest.fn((desc, maxLen) => desc),
     };
 
     service = new ActivityDescriptionService({

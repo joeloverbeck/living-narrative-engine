@@ -21,6 +21,10 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
   beforeEach(() => {
     // Create base mocks
+    mockEntityManager = {
+      getComponentData: jest.fn().mockReturnValue(undefined),
+    };
+
     mockDataRegistry = {
       get: jest.fn(),
     };

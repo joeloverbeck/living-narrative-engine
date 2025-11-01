@@ -48,11 +48,15 @@ import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionServi
 import { AnatomyFormattingService } from '../../services/anatomyFormattingService.js';
 import EquipmentDescriptionService from '../../clothing/services/equipmentDescriptionService.js';
 import ActivityDescriptionService from '../../anatomy/services/activityDescriptionService.js';
+import ActivityDescriptionFacade from '../../anatomy/services/activityDescriptionFacade.js';
 import ActivityGroupingSystem from '../../anatomy/services/grouping/activityGroupingSystem.js';
 import ActivityIndexManager from '../../anatomy/services/activityIndexManager.js';
 import ActivityCacheManager from '../../anatomy/cache/activityCacheManager.js';
 import ActivityMetadataCollectionSystem from '../../anatomy/services/activityMetadataCollectionSystem.js';
 import ActivityNLGSystem from '../../anatomy/services/activityNLGSystem.js';
+import ActivityConditionValidator from '../../anatomy/services/validation/activityConditionValidator.js';
+import ActivityFilteringSystem from '../../anatomy/services/filtering/activityFilteringSystem.js';
+import ActivityContextBuildingSystem from '../../anatomy/services/context/activityContextBuildingSystem.js';
 import { RecipeProcessor } from '../../anatomy/recipeProcessor.js';
 import PartSelectionService from '../../anatomy/partSelectionService.js';
 import { SocketManager } from '../../anatomy/socketManager.js';
@@ -514,6 +518,43 @@ export function registerWorldAndEntity(container) {
     'World and Entity Registration: Registered IActivityNLGSystem.'
   );
 
+  // Activity System: Condition Validator (ACTDESSERREF-004)
+  registrar.singletonFactory('IActivityConditionValidator', (c) => {
+    return new ActivityConditionValidator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityConditionValidator.'
+  );
+
+  // Activity System: Filtering System (ACTDESSERREF-004)
+  registrar.singletonFactory('IActivityFilteringSystem', (c) => {
+    return new ActivityFilteringSystem({
+      logger: c.resolve(tokens.ILogger),
+      conditionValidator: c.resolve('IActivityConditionValidator'),
+      jsonLogicEvaluationService: c.resolve(
+        tokens.JsonLogicEvaluationService
+      ),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityFilteringSystem.'
+  );
+
+  // Activity System: Context Building System (ACTDESSERREF-004)
+  registrar.singletonFactory('IActivityContextBuildingSystem', (c) => {
+    return new ActivityContextBuildingSystem({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      nlgSystem: c.resolve('IActivityNLGSystem'),
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityContextBuildingSystem.'
+  );
+
   registrar.singletonFactory(tokens.ActivityDescriptionService, (c) => {
     return new ActivityDescriptionService({
       logger: c.resolve(tokens.ILogger),
@@ -527,6 +568,8 @@ export function registerWorldAndEntity(container) {
       metadataCollectionSystem: c.resolve('IActivityMetadataCollectionSystem'),
       groupingSystem: c.resolve('IActivityGroupingSystem'),
       nlgSystem: c.resolve('IActivityNLGSystem'),
+      filteringSystem: c.resolve('IActivityFilteringSystem'),
+      contextBuildingSystem: c.resolve('IActivityContextBuildingSystem'),
       eventBus: c.isRegistered(tokens.IEventBus) ? c.resolve(tokens.IEventBus) : null,
       // activityIndex will be added in Phase 3 (ACTDESC-020)
     });
@@ -535,6 +578,26 @@ export function registerWorldAndEntity(container) {
     `World and Entity Registration: Registered ${String(
       tokens.ActivityDescriptionService
     )}.`
+  );
+
+  // Activity Description Facade (ACTDESSERREF-009) - Clean facade pattern
+  registrar.singletonFactory('IActivityDescriptionFacade', (c) => {
+    return new ActivityDescriptionFacade({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
+      cacheManager: c.resolve('IActivityCacheManager'),
+      indexManager: c.resolve('IActivityIndexManager'),
+      metadataCollectionSystem: c.resolve('IActivityMetadataCollectionSystem'),
+      nlgSystem: c.resolve('IActivityNLGSystem'),
+      groupingSystem: c.resolve('IActivityGroupingSystem'),
+      contextBuildingSystem: c.resolve('IActivityContextBuildingSystem'),
+      filteringSystem: c.resolve('IActivityFilteringSystem'),
+      eventBus: c.isRegistered(tokens.IEventBus) ? c.resolve(tokens.IEventBus) : null,
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityDescriptionFacade.'
   );
 
   registrar.singletonFactory(tokens.DescriptorFormatter, (c) => {

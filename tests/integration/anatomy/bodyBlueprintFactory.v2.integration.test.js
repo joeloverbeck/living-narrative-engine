@@ -85,6 +85,10 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
         .mockResolvedValue({ valid: true, errors: [], warnings: [] }),
     };
 
+    mockEntityManager = {
+      getComponentData: jest.fn().mockReturnValue(null),
+    };
+
     const mockRecipePatternResolver = {
       resolveRecipePatterns: jest.fn((recipe) => recipe),
     };

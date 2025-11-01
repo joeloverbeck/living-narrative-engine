@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:beak",
+  "description": "Titanic crushing beak of a kraken",
+  "components": {
+    "anatomy:part": {
+      "subType": "beak"
+    },
+    "anatomy:crushing": {
+      "biteForce": "titanic"
+    },
+    "core:name": {
+      "text": "beak"
+    }
+  }
+}

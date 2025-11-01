@@ -34,6 +34,8 @@ import { assertNonBlankString } from '../utils/dependencyUtils.js';
  * Factory service that orchestrates anatomy entity graph creation
  */
 export class BodyBlueprintFactory {
+  /** @type {IEntityManager} */
+  #entityManager;
   /** @type {IDataRegistry} */
   #dataRegistry;
   /** @type {ILogger} */
@@ -121,6 +123,7 @@ export class BodyBlueprintFactory {
     if (!recipePatternResolver)
       throw new InvalidArgumentError('recipePatternResolver is required');
 
+    this.#entityManager = entityManager;
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
     this.#eventDispatcher = eventDispatcher;
@@ -182,12 +185,32 @@ export class BodyBlueprintFactory {
 
       // Phase 1.5: Add generated sockets to root entity (V2 blueprints)
       if (blueprint._generatedSockets && blueprint._generatedSockets.length > 0) {
+        // Get existing sockets from entity definition (if any)
+        const existingSockets = this.#entityManager.getComponentData(rootId, 'anatomy:sockets');
+        const existingSocketList = existingSockets?.sockets || [];
+
+        // Merge template sockets with entity definition sockets
+        // Template sockets take precedence for duplicate IDs
+        const socketMap = new Map();
+
+        // Add entity definition sockets first
+        for (const socket of existingSocketList) {
+          socketMap.set(socket.id, socket);
+        }
+
+        // Add/override with template-generated sockets
+        for (const socket of blueprint._generatedSockets) {
+          socketMap.set(socket.id, socket);
+        }
+
+        const mergedSockets = Array.from(socketMap.values());
+
         this.#logger.debug(
-          `BodyBlueprintFactory: Adding ${blueprint._generatedSockets.length} generated sockets to root entity`
+          `BodyBlueprintFactory: Merging ${blueprint._generatedSockets.length} template sockets with ${existingSocketList.length} entity sockets (total: ${mergedSockets.length})`
         );
         await this.#entityGraphBuilder.addSocketsToEntity(
           rootId,
-          blueprint._generatedSockets
+          mergedSockets
         );
       }
 

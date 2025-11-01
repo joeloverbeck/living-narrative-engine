@@ -221,6 +221,7 @@ describe('ActivityDescriptionService - Memory Tests', () => {
     mockNlgSystem = {
       generateNaturalLanguage: jest.fn((groups) => []),
       formatActivityDescription: jest.fn((groups) => ''),
+      detectEntityGender: jest.fn(() => 'neutral'),
     };
 
     activityIndex = {

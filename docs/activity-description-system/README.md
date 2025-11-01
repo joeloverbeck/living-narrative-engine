@@ -18,7 +18,7 @@ inserted alongside torso, limb, and equipment descriptors with consistent format
    [Metadata Authoring Guide](./metadata-patterns.md) covers both patterns with complete
    schema examples.
 3. **Generate descriptions through the service** – Resolve
-   `ActivityDescriptionService` (usually via the dependency injection container) to obtain
+   `ActivityDescriptionFacade` (usually via the dependency injection container) to obtain
    summaries or use `BodyDescriptionComposer` for end-to-end body text generation. The
    [Integration Guide](./integration-guide.md#4-generating-descriptions) walks through the
    setup.
