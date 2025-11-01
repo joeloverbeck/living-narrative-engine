@@ -1,0 +1,178 @@
+{
+  "description": "Fixture for testing relationship tone detection and contextual tone application",
+  "relationshipScenarios": [
+    {
+      "name": "partner_relationship",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": ["target1"],
+        "close": [],
+        "acquaintances": []
+      },
+      "expectedTone": "closeness_partner",
+      "toneModifiers": {
+        "subtle": ["tenderly", "lovingly"],
+        "light": ["affectionately", "gently"],
+        "moderate": ["warmly"],
+        "firm": ["confidently"],
+        "intense": ["passionately", "eagerly"]
+      }
+    },
+    {
+      "name": "close_friend_relationship",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": [],
+        "close": ["target1"],
+        "acquaintances": []
+      },
+      "expectedTone": "closeness_close",
+      "toneModifiers": {
+        "subtle": ["gently", "carefully"],
+        "light": ["kindly", "softly"],
+        "moderate": ["friendly"],
+        "firm": ["firmly"],
+        "intense": ["enthusiastically"]
+      }
+    },
+    {
+      "name": "acquaintance_relationship",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": [],
+        "close": [],
+        "acquaintances": ["target1"]
+      },
+      "expectedTone": "closeness_acquaintance",
+      "toneModifiers": {
+        "subtle": ["politely", "carefully"],
+        "light": ["gently", "respectfully"],
+        "moderate": ["appropriately"],
+        "firm": ["firmly"],
+        "intense": ["boldly"]
+      }
+    },
+    {
+      "name": "neutral_relationship",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": [],
+        "close": [],
+        "acquaintances": []
+      },
+      "expectedTone": "neutral",
+      "toneModifiers": {
+        "subtle": ["gently"],
+        "light": ["lightly"],
+        "moderate": [],
+        "firm": ["firmly"],
+        "intense": ["intensely"]
+      }
+    },
+    {
+      "name": "missing_closeness_component",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": null,
+      "expectedTone": "neutral",
+      "toneModifiers": {
+        "subtle": ["gently"],
+        "light": ["lightly"],
+        "moderate": [],
+        "firm": ["firmly"],
+        "intense": ["intensely"]
+      }
+    }
+  ],
+  "intensityMappingTests": [
+    {
+      "priority": 10,
+      "expectedIntensity": "subtle",
+      "description": "Very low priority maps to subtle intensity"
+    },
+    {
+      "priority": 30,
+      "expectedIntensity": "light",
+      "description": "Low priority maps to light intensity"
+    },
+    {
+      "priority": 50,
+      "expectedIntensity": "moderate",
+      "description": "Medium priority maps to moderate intensity"
+    },
+    {
+      "priority": 70,
+      "expectedIntensity": "firm",
+      "description": "High priority maps to firm intensity"
+    },
+    {
+      "priority": 90,
+      "expectedIntensity": "intense",
+      "description": "Very high priority maps to intense intensity"
+    }
+  ],
+  "contextualToneApplicationTests": [
+    {
+      "name": "partner_intense_activity",
+      "relationshipTone": "closeness_partner",
+      "activityIntensity": "intense",
+      "activityTemplate": "{actor} is {modifier} kissing {target}",
+      "expectedModifiers": ["passionately", "eagerly"],
+      "expectedOutput": "John is passionately kissing Alice"
+    },
+    {
+      "name": "acquaintance_subtle_activity",
+      "relationshipTone": "closeness_acquaintance",
+      "activityIntensity": "subtle",
+      "activityTemplate": "{actor} is {modifier} touching {target}'s hand",
+      "expectedModifiers": ["politely", "carefully"],
+      "expectedOutput": "John is politely touching Alice's hand"
+    },
+    {
+      "name": "close_friend_moderate_activity",
+      "relationshipTone": "closeness_close",
+      "activityIntensity": "moderate",
+      "activityTemplate": "{actor} is {modifier} hugging {target}",
+      "expectedModifiers": ["friendly", "warmly"],
+      "expectedOutput": "John is friendly hugging Alice"
+    },
+    {
+      "name": "neutral_light_activity",
+      "relationshipTone": "neutral",
+      "activityIntensity": "light",
+      "activityTemplate": "{actor} is {modifier} tapping {target}'s shoulder",
+      "expectedModifiers": ["lightly"],
+      "expectedOutput": "John is lightly tapping Alice's shoulder"
+    }
+  ],
+  "edgeCases": [
+    {
+      "name": "missing_relationship_tone",
+      "relationshipTone": null,
+      "activityIntensity": "moderate",
+      "expectedBehavior": "Should default to neutral tone"
+    },
+    {
+      "name": "missing_activity_intensity",
+      "relationshipTone": "closeness_partner",
+      "activityIntensity": null,
+      "expectedBehavior": "Should default to moderate intensity"
+    },
+    {
+      "name": "unknown_relationship_tone",
+      "relationshipTone": "unknown_tone",
+      "activityIntensity": "moderate",
+      "expectedBehavior": "Should fall back to neutral tone"
+    },
+    {
+      "name": "unknown_activity_intensity",
+      "relationshipTone": "closeness_partner",
+      "activityIntensity": "unknown_intensity",
+      "expectedBehavior": "Should fall back to moderate intensity"
+    }
+  ]
+}

@@ -48,6 +48,11 @@ import { AnatomyDescriptionService } from '../../anatomy/anatomyDescriptionServi
 import { AnatomyFormattingService } from '../../services/anatomyFormattingService.js';
 import EquipmentDescriptionService from '../../clothing/services/equipmentDescriptionService.js';
 import ActivityDescriptionService from '../../anatomy/services/activityDescriptionService.js';
+import ActivityGroupingSystem from '../../anatomy/services/grouping/activityGroupingSystem.js';
+import ActivityIndexManager from '../../anatomy/services/activityIndexManager.js';
+import ActivityCacheManager from '../../anatomy/cache/activityCacheManager.js';
+import ActivityMetadataCollectionSystem from '../../anatomy/services/activityMetadataCollectionSystem.js';
+import ActivityNLGSystem from '../../anatomy/services/activityNLGSystem.js';
 import { RecipeProcessor } from '../../anatomy/recipeProcessor.js';
 import PartSelectionService from '../../anatomy/partSelectionService.js';
 import { SocketManager } from '../../anatomy/socketManager.js';
@@ -454,6 +459,61 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Activity System Components (ACTDESSERREF-001 through ACTDESSERREF-007)
+  registrar.singletonFactory('IActivityCacheManager', (c) => {
+    return new ActivityCacheManager({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityCacheManager.'
+  );
+
+  registrar.singletonFactory('IActivityIndexManager', (c) => {
+    return new ActivityIndexManager({
+      logger: c.resolve(tokens.ILogger),
+      cacheManager: c.resolve('IActivityCacheManager'),
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityIndexManager.'
+  );
+
+  registrar.singletonFactory('IActivityMetadataCollectionSystem', (c) => {
+    return new ActivityMetadataCollectionSystem({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      indexManager: c.resolve('IActivityIndexManager'),
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityMetadataCollectionSystem.'
+  );
+
+  registrar.singletonFactory('IActivityGroupingSystem', (c) => {
+    return new ActivityGroupingSystem({
+      indexManager: c.resolve('IActivityIndexManager'),
+      logger: c.resolve(tokens.ILogger),
+      config: {
+        simultaneousPriorityThreshold: 10,
+      },
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityGroupingSystem.'
+  );
+
+  registrar.singletonFactory('IActivityNLGSystem', (c) => {
+    return new ActivityNLGSystem({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      cacheManager: c.resolve('IActivityCacheManager'),
+    });
+  });
+  logger.debug(
+    'World and Entity Registration: Registered IActivityNLGSystem.'
+  );
+
   registrar.singletonFactory(tokens.ActivityDescriptionService, (c) => {
     return new ActivityDescriptionService({
       logger: c.resolve(tokens.ILogger),
@@ -462,6 +522,12 @@ export function registerWorldAndEntity(container) {
       jsonLogicEvaluationService: c.resolve(
         tokens.JsonLogicEvaluationService
       ),
+      cacheManager: c.resolve('IActivityCacheManager'),
+      indexManager: c.resolve('IActivityIndexManager'),
+      metadataCollectionSystem: c.resolve('IActivityMetadataCollectionSystem'),
+      groupingSystem: c.resolve('IActivityGroupingSystem'),
+      nlgSystem: c.resolve('IActivityNLGSystem'),
+      eventBus: c.isRegistered(tokens.IEventBus) ? c.resolve(tokens.IEventBus) : null,
       // activityIndex will be added in Phase 3 (ACTDESC-020)
     });
   });

@@ -406,23 +406,12 @@ describe('Recipe Pattern Resolution Integration', () => {
             'anatomy:part': { subType: 'torso' },
           },
         },
-        'test:fore_leg_left': {
-          id: 'test:fore_leg_left',
+        'test:fore_leg': {
+          id: 'test:fore_leg',
           components: {
             'anatomy:body_part': {
               partType: 'fore_leg',
-              name: 'Left Gryphon Fore Leg',
-            },
-            'anatomy:part': { subType: 'fore_leg' },
-            'test:left_leg': {},
-          },
-        },
-        'test:fore_leg_right': {
-          id: 'test:fore_leg_right',
-          components: {
-            'anatomy:body_part': {
-              partType: 'fore_leg',
-              name: 'Right Gryphon Fore Leg',
+              name: 'Gryphon Fore Leg',
             },
             'anatomy:part': { subType: 'fore_leg' },
           },

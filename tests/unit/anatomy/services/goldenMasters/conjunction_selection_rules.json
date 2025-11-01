@@ -1,0 +1,63 @@
+{
+  "description": "Conjunction selection rules for activity grouping",
+  "rules": [
+    {
+      "name": "simultaneous_activities_use_while",
+      "condition": "Activities with same target and similar priority",
+      "expectedConjunction": "while",
+      "examples": [
+        {
+          "activities": [
+            { "verb": "touching", "targetEntityId": "target1", "priority": 50 },
+            { "verb": "caressing", "targetEntityId": "target1", "priority": 55 }
+          ],
+          "expectedPhrase": "caressing {target} while touching {target}"
+        }
+      ]
+    },
+    {
+      "name": "sequential_activities_use_and",
+      "condition": "Activities with different targets or significant priority gap",
+      "expectedConjunction": "and",
+      "examples": [
+        {
+          "activities": [
+            { "verb": "kissing", "targetEntityId": "target1", "priority": 70 },
+            { "verb": "hugging", "targetEntityId": "target2", "priority": 60 }
+          ],
+          "expectedPhrase": "kissing {target1} and hugging {target2}"
+        }
+      ]
+    },
+    {
+      "name": "three_or_more_activities_use_comma_and",
+      "condition": "Three or more grouped activities",
+      "expectedPattern": "activity1, activity2, and activity3",
+      "examples": [
+        {
+          "activities": [
+            { "verb": "touching", "targetEntityId": "target1", "priority": 50 },
+            { "verb": "caressing", "targetEntityId": "target1", "priority": 55 },
+            { "verb": "kissing", "targetEntityId": "target1", "priority": 60 }
+          ],
+          "expectedPhrase": "kissing {target}, caressing {target}, and touching {target}"
+        }
+      ]
+    },
+    {
+      "name": "priority_based_ordering",
+      "condition": "Activities always ordered by descending priority",
+      "expectedOrder": "highest_priority_first",
+      "examples": [
+        {
+          "activities": [
+            { "verb": "touching", "targetEntityId": "target1", "priority": 30 },
+            { "verb": "caressing", "targetEntityId": "target1", "priority": 70 },
+            { "verb": "kissing", "targetEntityId": "target1", "priority": 50 }
+          ],
+          "expectedOrder": ["caressing (70)", "kissing (50)", "touching (30)"]
+        }
+      ]
+    }
+  ]
+}

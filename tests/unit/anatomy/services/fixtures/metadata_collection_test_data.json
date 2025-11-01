@@ -1,0 +1,223 @@
+{
+  "description": "Fixture for testing 3-tier metadata collection and deduplication",
+  "tier1_activity_index_data": {
+    "description": "Activities from ActivityIndex (Tier 1)",
+    "activities": [
+      {
+        "id": "index_activity_1",
+        "verb": "touching",
+        "bodyPart": "hand",
+        "priority": 50,
+        "source": "activityIndex"
+      },
+      {
+        "id": "index_activity_2",
+        "verb": "caressing",
+        "bodyPart": "face",
+        "priority": 60,
+        "source": "activityIndex"
+      }
+    ],
+    "expectedBehavior": "Should be collected first, highest priority source"
+  },
+  "tier2_inline_metadata": {
+    "description": "Inline metadata within entity components (Tier 2)",
+    "entity": {
+      "id": "entity_with_inline",
+      "name": "John",
+      "components": {
+        "anatomy:activity": {
+          "activities": [
+            {
+              "id": "inline_activity_1",
+              "verb": "kissing",
+              "bodyPart": "lips",
+              "priority": 70,
+              "source": "inlineMetadata"
+            }
+          ]
+        }
+      }
+    },
+    "expectedBehavior": "Should be collected after Tier 1, deduped by signature"
+  },
+  "tier3_dedicated_metadata": {
+    "description": "Dedicated metadata components (Tier 3)",
+    "entity": {
+      "id": "entity_with_dedicated",
+      "name": "Alice",
+      "components": {
+        "anatomy:activity_metadata": {
+          "activities": [
+            {
+              "id": "dedicated_activity_1",
+              "verb": "hugging",
+              "bodyPart": "torso",
+              "priority": 65,
+              "source": "dedicatedMetadata"
+            }
+          ]
+        }
+      }
+    },
+    "expectedBehavior": "Should be collected last, lowest priority source"
+  },
+  "deduplication_scenarios": [
+    {
+      "name": "exact_duplicate_across_tiers",
+      "tier1": [
+        {
+          "id": "activity_1",
+          "verb": "touching",
+          "bodyPart": "hand",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ],
+      "tier2": [
+        {
+          "id": "activity_1_duplicate",
+          "verb": "touching",
+          "bodyPart": "hand",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ],
+      "expectedResult": "Only one activity in final collection",
+      "dedupedBy": "signature"
+    },
+    {
+      "name": "similar_verb_different_body_part",
+      "tier1": [
+        {
+          "id": "activity_1",
+          "verb": "touching",
+          "bodyPart": "hand",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ],
+      "tier2": [
+        {
+          "id": "activity_2",
+          "verb": "touching",
+          "bodyPart": "face",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ],
+      "expectedResult": "Both activities in final collection",
+      "reason": "Different body parts create different signatures"
+    },
+    {
+      "name": "same_activity_different_targets",
+      "tier1": [
+        {
+          "id": "activity_1",
+          "verb": "touching",
+          "bodyPart": "hand",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ],
+      "tier2": [
+        {
+          "id": "activity_2",
+          "verb": "touching",
+          "bodyPart": "hand",
+          "targetEntityId": "target2",
+          "priority": 50
+        }
+      ],
+      "expectedResult": "Both activities in final collection",
+      "reason": "Different targets create different signatures"
+    }
+  ],
+  "complex_collection_scenario": {
+    "description": "Full 3-tier collection with deduplication",
+    "activityIndex": [
+      {
+        "id": "index_1",
+        "verb": "touching",
+        "bodyPart": "hand",
+        "targetEntityId": "target1",
+        "priority": 50
+      },
+      {
+        "id": "index_2",
+        "verb": "caressing",
+        "bodyPart": "face",
+        "targetEntityId": "target1",
+        "priority": 60
+      }
+    ],
+    "inlineMetadata": [
+      {
+        "id": "inline_1",
+        "verb": "touching",
+        "bodyPart": "hand",
+        "targetEntityId": "target1",
+        "priority": 50
+      },
+      {
+        "id": "inline_2",
+        "verb": "kissing",
+        "bodyPart": "lips",
+        "targetEntityId": "target2",
+        "priority": 70
+      }
+    ],
+    "dedicatedMetadata": [
+      {
+        "id": "dedicated_1",
+        "verb": "hugging",
+        "bodyPart": "torso",
+        "targetEntityId": "target3",
+        "priority": 65
+      },
+      {
+        "id": "dedicated_2",
+        "verb": "caressing",
+        "bodyPart": "face",
+        "targetEntityId": "target1",
+        "priority": 60
+      }
+    ],
+    "expectedFinalCollection": [
+      {
+        "id": "index_1",
+        "verb": "touching",
+        "bodyPart": "hand",
+        "targetEntityId": "target1",
+        "priority": 50,
+        "source": "activityIndex"
+      },
+      {
+        "id": "index_2",
+        "verb": "caressing",
+        "bodyPart": "face",
+        "targetEntityId": "target1",
+        "priority": 60,
+        "source": "activityIndex"
+      },
+      {
+        "id": "inline_2",
+        "verb": "kissing",
+        "bodyPart": "lips",
+        "targetEntityId": "target2",
+        "priority": 70,
+        "source": "inlineMetadata"
+      },
+      {
+        "id": "dedicated_1",
+        "verb": "hugging",
+        "bodyPart": "torso",
+        "targetEntityId": "target3",
+        "priority": 65,
+        "source": "dedicatedMetadata"
+      }
+    ],
+    "dedupedCount": 2,
+    "finalCount": 4
+  }
+}

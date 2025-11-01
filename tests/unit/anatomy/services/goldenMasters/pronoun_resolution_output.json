@@ -1,0 +1,75 @@
+{
+  "description": "Pronoun resolution scenarios covering all gender variations",
+  "scenarios": [
+    {
+      "name": "male_actor_female_target",
+      "actorGender": "male",
+      "targetGender": "female",
+      "template": "{actor} is touching {target}'s hand",
+      "expectedPronouns": {
+        "actor_subjective": "he",
+        "actor_objective": "him",
+        "actor_possessive": "his",
+        "target_subjective": "she",
+        "target_objective": "her",
+        "target_possessive": "her"
+      }
+    },
+    {
+      "name": "female_actor_male_target",
+      "actorGender": "female",
+      "targetGender": "male",
+      "template": "{actor} is touching {target}'s hand",
+      "expectedPronouns": {
+        "actor_subjective": "she",
+        "actor_objective": "her",
+        "actor_possessive": "her",
+        "target_subjective": "he",
+        "target_objective": "him",
+        "target_possessive": "his"
+      }
+    },
+    {
+      "name": "non_binary_actor",
+      "actorGender": "non_binary",
+      "targetGender": "female",
+      "template": "{actor} is touching {target}'s hand",
+      "expectedPronouns": {
+        "actor_subjective": "they",
+        "actor_objective": "them",
+        "actor_possessive": "their",
+        "target_subjective": "she",
+        "target_objective": "her",
+        "target_possessive": "her"
+      }
+    },
+    {
+      "name": "futa_actor",
+      "actorGender": "futa",
+      "targetGender": "male",
+      "template": "{actor} is touching {target}'s hand",
+      "expectedPronouns": {
+        "actor_subjective": "she",
+        "actor_objective": "her",
+        "actor_possessive": "her",
+        "target_subjective": "he",
+        "target_objective": "him",
+        "target_possessive": "his"
+      }
+    },
+    {
+      "name": "unknown_gender_defaults_to_they",
+      "actorGender": "unknown",
+      "targetGender": "female",
+      "template": "{actor} is touching {target}'s hand",
+      "expectedPronouns": {
+        "actor_subjective": "they",
+        "actor_objective": "them",
+        "actor_possessive": "their",
+        "target_subjective": "she",
+        "target_objective": "her",
+        "target_possessive": "her"
+      }
+    }
+  ]
+}

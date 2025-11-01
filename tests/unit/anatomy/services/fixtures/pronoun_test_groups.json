@@ -1,0 +1,120 @@
+{
+  "description": "Fixture for testing pronoun resolution across all gender combinations",
+  "entities": {
+    "male_entity_1": {
+      "id": "male_1",
+      "name": "John",
+      "components": {
+        "core:gender": { "value": "male" }
+      },
+      "expectedPronouns": {
+        "subjective": "he",
+        "objective": "him",
+        "possessive": "his"
+      }
+    },
+    "female_entity_1": {
+      "id": "female_1",
+      "name": "Alice",
+      "components": {
+        "core:gender": { "value": "female" }
+      },
+      "expectedPronouns": {
+        "subjective": "she",
+        "objective": "her",
+        "possessive": "her"
+      }
+    },
+    "non_binary_entity_1": {
+      "id": "non_binary_1",
+      "name": "Sam",
+      "components": {
+        "core:gender": { "value": "non_binary" }
+      },
+      "expectedPronouns": {
+        "subjective": "they",
+        "objective": "them",
+        "possessive": "their"
+      }
+    },
+    "futa_entity_1": {
+      "id": "futa_1",
+      "name": "Morgan",
+      "components": {
+        "core:gender": { "value": "futa" }
+      },
+      "expectedPronouns": {
+        "subjective": "she",
+        "objective": "her",
+        "possessive": "her"
+      }
+    },
+    "no_gender_component": {
+      "id": "unknown_1",
+      "name": "Unknown",
+      "components": {},
+      "expectedPronouns": {
+        "subjective": "they",
+        "objective": "them",
+        "possessive": "their"
+      }
+    }
+  },
+  "testPairs": [
+    {
+      "actor": "male_1",
+      "target": "female_1",
+      "scenario": "male touching female",
+      "activityTemplate": "{actor} is touching {target}'s hand",
+      "expectedOutput": "John is touching Alice's hand"
+    },
+    {
+      "actor": "female_1",
+      "target": "male_1",
+      "scenario": "female touching male",
+      "activityTemplate": "{actor} is touching {target}'s hand",
+      "expectedOutput": "Alice is touching John's hand"
+    },
+    {
+      "actor": "non_binary_1",
+      "target": "female_1",
+      "scenario": "non-binary touching female",
+      "activityTemplate": "{actor} is touching {target}'s hand",
+      "expectedOutput": "Sam is touching Alice's hand"
+    },
+    {
+      "actor": "futa_1",
+      "target": "male_1",
+      "scenario": "futa touching male",
+      "activityTemplate": "{actor} is touching {target}'s hand",
+      "expectedOutput": "Morgan is touching John's hand"
+    },
+    {
+      "actor": "unknown_1",
+      "target": "female_1",
+      "scenario": "unknown gender defaults to they/them",
+      "activityTemplate": "{actor} is touching {target}'s hand",
+      "expectedOutput": "Unknown is touching Alice's hand"
+    }
+  ],
+  "pronounContextTests": [
+    {
+      "template": "{actor} is holding {target} while {actor_pronoun} whispers to {target_pronoun_objective}",
+      "actorGender": "male",
+      "targetGender": "female",
+      "expectedResolvedTemplate": "John is holding Alice while he whispers to her"
+    },
+    {
+      "template": "{actor} takes {actor_possessive} hand and places it on {target_possessive} shoulder",
+      "actorGender": "female",
+      "targetGender": "male",
+      "expectedResolvedTemplate": "Alice takes her hand and places it on his shoulder"
+    },
+    {
+      "template": "{actor} and {target} look at each other, and {actor_pronoun} smiles at {target_pronoun_objective}",
+      "actorGender": "non_binary",
+      "targetGender": "futa",
+      "expectedResolvedTemplate": "Sam and Morgan look at each other, and they smile at her"
+    }
+  ]
+}

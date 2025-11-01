@@ -1,0 +1,180 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`ActivityDescriptionService - Golden Master Tests Complex Grouping Scenarios should handle complex conjunction patterns 1`] = `
+[
+  {
+    "primaryActivity": {
+      "activityMetadata": {},
+      "adverb": null,
+      "conditions": null,
+      "description": null,
+      "grouping": null,
+      "priority": 80,
+      "sourceComponent": "test:component",
+      "sourceData": {},
+      "targetEntityId": null,
+      "targetId": null,
+      "template": "{actor} interacts with {target}",
+      "type": "inline",
+      "verb": "kiss",
+    },
+    "relatedActivities": [],
+  },
+  {
+    "primaryActivity": {
+      "activityMetadata": {},
+      "adverb": null,
+      "conditions": null,
+      "description": null,
+      "grouping": null,
+      "priority": 52,
+      "sourceComponent": "test:component",
+      "sourceData": {},
+      "targetEntityId": null,
+      "targetId": null,
+      "template": "{actor} interacts with {target}",
+      "type": "inline",
+      "verb": "stroke",
+    },
+    "relatedActivities": [],
+  },
+  {
+    "primaryActivity": {
+      "activityMetadata": {},
+      "adverb": null,
+      "conditions": null,
+      "description": null,
+      "grouping": null,
+      "priority": 51,
+      "sourceComponent": "test:component",
+      "sourceData": {},
+      "targetEntityId": null,
+      "targetId": null,
+      "template": "{actor} interacts with {target}",
+      "type": "inline",
+      "verb": "caress",
+    },
+    "relatedActivities": [],
+  },
+  {
+    "primaryActivity": {
+      "activityMetadata": {},
+      "adverb": null,
+      "conditions": null,
+      "description": null,
+      "grouping": null,
+      "priority": 50,
+      "sourceComponent": "test:component",
+      "sourceData": {},
+      "targetEntityId": null,
+      "targetId": null,
+      "template": "{actor} interacts with {target}",
+      "type": "inline",
+      "verb": "touch",
+    },
+    "relatedActivities": [],
+  },
+]
+`;
+
+exports[`ActivityDescriptionService - Golden Master Tests Complex Grouping Scenarios should handle multiple targets with varying priorities 1`] = `
+[
+  {
+    "primaryActivity": {
+      "activityMetadata": {},
+      "adverb": null,
+      "conditions": null,
+      "description": null,
+      "grouping": null,
+      "priority": 80,
+      "sourceComponent": "test:component",
+      "sourceData": {},
+      "targetEntityId": "target1",
+      "targetId": "target1",
+      "template": "{actor} interacts with {target}",
+      "type": "inline",
+      "verb": "kiss",
+    },
+    "relatedActivities": [
+      {
+        "activity": {
+          "activityMetadata": {},
+          "adverb": null,
+          "conditions": null,
+          "description": null,
+          "grouping": null,
+          "priority": 52,
+          "sourceComponent": "test:component",
+          "sourceData": {},
+          "targetEntityId": "target1",
+          "targetId": "target1",
+          "template": "{actor} interacts with {target}",
+          "type": "inline",
+          "verb": "caress",
+        },
+        "conjunction": "and",
+      },
+      {
+        "activity": {
+          "activityMetadata": {},
+          "adverb": null,
+          "conditions": null,
+          "description": null,
+          "grouping": null,
+          "priority": 50,
+          "sourceComponent": "test:component",
+          "sourceData": {},
+          "targetEntityId": "target1",
+          "targetId": "target1",
+          "template": "{actor} interacts with {target}",
+          "type": "inline",
+          "verb": "touch",
+        },
+        "conjunction": "and",
+      },
+    ],
+  },
+  {
+    "primaryActivity": {
+      "activityMetadata": {},
+      "adverb": null,
+      "conditions": null,
+      "description": null,
+      "grouping": null,
+      "priority": 60,
+      "sourceComponent": "test:component",
+      "sourceData": {},
+      "targetEntityId": "target2",
+      "targetId": "target2",
+      "template": "{actor} interacts with {target}",
+      "type": "inline",
+      "verb": "hug",
+    },
+    "relatedActivities": [],
+  },
+]
+`;
+
+exports[`ActivityDescriptionService - Golden Master Tests End-to-End Workflow Validation should execute complete workflow from metadata collection to output 1`] = `""`;
+
+exports[`ActivityDescriptionService - Golden Master Tests Standard Scenarios (Regression Detection) should produce consistent output for multi-activity grouping scenario 1`] = `""`;
+
+exports[`ActivityDescriptionService - Golden Master Tests Standard Scenarios (Regression Detection) should produce consistent output for standard single-activity scenario 1`] = `""`;
+
+exports[`ActivityDescriptionService - Golden Master Tests Standard Scenarios (Regression Detection) should produce consistent pronoun resolution output 1`] = `
+{
+  "object": "them",
+  "possessive": "their",
+  "possessivePronoun": "theirs",
+  "subject": "they",
+}
+`;
+
+exports[`ActivityDescriptionService - Golden Master Tests Standard Scenarios (Regression Detection) should produce consistent pronoun resolution output 2`] = `
+{
+  "object": "them",
+  "possessive": "their",
+  "possessivePronoun": "theirs",
+  "subject": "they",
+}
+`;

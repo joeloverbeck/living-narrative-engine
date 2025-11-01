@@ -1,0 +1,161 @@
+{
+  "description": "End-to-end workflow validation from entity creation to final output",
+  "workflow": {
+    "name": "complete_activity_description_workflow",
+    "steps": [
+      {
+        "step": 1,
+        "action": "createEntities",
+        "entities": {
+          "actor1": {
+            "name": "John",
+            "gender": "male",
+            "components": {
+              "core:gender": { "value": "male" },
+              "positioning:closeness": {
+                "partners": ["target1"],
+                "close": ["target2"],
+                "acquaintances": []
+              }
+            }
+          },
+          "target1": {
+            "name": "Alice",
+            "gender": "female",
+            "components": {
+              "core:gender": { "value": "female" }
+            }
+          },
+          "target2": {
+            "name": "Bob",
+            "gender": "male",
+            "components": {
+              "core:gender": { "value": "male" }
+            }
+          }
+        }
+      },
+      {
+        "step": 2,
+        "action": "defineActivities",
+        "activities": [
+          {
+            "verb": "touching",
+            "template": "{actor} is gently touching {target}'s hand",
+            "targetEntityId": "target1",
+            "priority": 55,
+            "metadata": {
+              "bodyPart": "hand",
+              "intensity": "light"
+            }
+          },
+          {
+            "step": 3,
+            "action": "collectMetadata",
+            "expectedSources": ["activityIndex", "inlineMetadata", "dedicatedMetadata"],
+            "expectedDeduplication": true
+          },
+          {
+            "verb": "caressing",
+            "template": "{actor} is passionately caressing {target}'s face",
+            "targetEntityId": "target1",
+            "priority": 70,
+            "metadata": {
+              "bodyPart": "face",
+              "intensity": "intense"
+            }
+          },
+          {
+            "verb": "hugging",
+            "template": "{actor} is hugging {target}",
+            "targetEntityId": "target2",
+            "priority": 60,
+            "metadata": {
+              "bodyPart": "torso",
+              "intensity": "moderate"
+            }
+          }
+        ]
+      },
+      {
+        "step": 4,
+        "action": "filterActivities",
+        "expectedPipeline": [
+          "propertyBasedFiltering",
+          "requiredComponentChecks",
+          "forbiddenComponentChecks",
+          "jsonLogicConditions"
+        ],
+        "expectedRemainingActivities": 3
+      },
+      {
+        "step": 5,
+        "action": "groupActivities",
+        "expectedGroups": [
+          {
+            "primaryActivity": "caressing",
+            "relatedActivities": ["touching"]
+          },
+          {
+            "primaryActivity": "hugging",
+            "relatedActivities": []
+          }
+        ]
+      },
+      {
+        "step": 6,
+        "action": "generateNaturalLanguage",
+        "expectedPhrases": [
+          "John is passionately caressing Alice's face while gently touching her hand",
+          "John is hugging Bob"
+        ]
+      },
+      {
+        "step": 7,
+        "action": "buildContext",
+        "expectedContext": {
+          "relationshipTones": {
+            "target1": "closeness_partner",
+            "target2": "closeness_close"
+          },
+          "activityIntensities": {
+            "caressing": "intense",
+            "touching": "light",
+            "hugging": "moderate"
+          }
+        }
+      },
+      {
+        "step": 8,
+        "action": "applyContextualTone",
+        "expectedModifiers": {
+          "caressing": ["passionately"],
+          "touching": ["gently"],
+          "hugging": []
+        }
+      },
+      {
+        "step": 9,
+        "action": "generateFinalOutput",
+        "expectedOutput": "John is passionately caressing Alice's face while gently touching her hand, and hugging Bob"
+      }
+    ]
+  },
+  "validations": {
+    "cacheUtilization": {
+      "nameResolutionHits": ">= 2",
+      "metadataCollectionHits": ">= 1",
+      "prioritySortHits": ">= 1"
+    },
+    "performanceMetrics": {
+      "totalExecutionTimeMs": "< 100",
+      "memoryUsageBytes": "< 10485760"
+    },
+    "outputQuality": {
+      "pronounsCorrect": true,
+      "conjunctionsAppropriate": true,
+      "toneConsistent": true,
+      "grammarValid": true
+    }
+  }
+}

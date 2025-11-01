@@ -107,6 +107,11 @@ describe('registerWorldAndEntity', () => {
       tokens.EventDispatchService,
       () => mockEventDispatchService
     );
+    container.register(tokens.IEventBus, () => ({
+      dispatch: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+    }));
 
     // Other dependencies for services registered by registerWorldAndEntity
     container.register(tokens.IGameDataRepository, () => ({

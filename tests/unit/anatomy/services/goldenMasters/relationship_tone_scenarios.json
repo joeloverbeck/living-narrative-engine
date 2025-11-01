@@ -1,0 +1,56 @@
+{
+  "description": "Relationship tone detection via positioning:closeness component",
+  "scenarios": [
+    {
+      "name": "closeness_partner",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": ["target1"],
+        "close": [],
+        "acquaintances": []
+      },
+      "expectedTone": "closeness_partner"
+    },
+    {
+      "name": "closeness_close",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": [],
+        "close": ["target1"],
+        "acquaintances": []
+      },
+      "expectedTone": "closeness_close"
+    },
+    {
+      "name": "closeness_acquaintance",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": [],
+        "close": [],
+        "acquaintances": ["target1"]
+      },
+      "expectedTone": "closeness_acquaintance"
+    },
+    {
+      "name": "no_closeness_component",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": null,
+      "expectedTone": "neutral"
+    },
+    {
+      "name": "target_not_in_closeness",
+      "actorId": "actor1",
+      "targetId": "target1",
+      "closenessComponent": {
+        "partners": ["other1"],
+        "close": ["other2"],
+        "acquaintances": ["other3"]
+      },
+      "expectedTone": "neutral"
+    }
+  ]
+}

@@ -10,7 +10,8 @@
       "vision": true,
       "smell": true,
       "touch": true,
-      "acuity": "exceptional"
+      "acuity": "abyssal",
+      "echolocation": true
     },
     "core:name": {
       "text": "kraken head"

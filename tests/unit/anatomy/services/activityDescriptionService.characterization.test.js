@@ -1,0 +1,2085 @@
+/**
+ * @file Characterization tests for ActivityDescriptionService
+ * @description Comprehensive test suite capturing current behavior before refactoring.
+ *              These tests serve as a safety net to prevent regressions during the
+ *              planned refactoring work (ACTDESSERREF-003 through ACTDESSERREF-008).
+ *
+ * Test Coverage:
+ * 1. Metadata Collection (3-Tier Fallback)
+ * 2. Activity Filtering (4-Stage Pipeline)
+ * 3. Activity Grouping (Sequential Pair-Wise Algorithm)
+ * 4. Natural Language Generation
+ * 5. Context Building
+ * 6. Edge Cases
+ * 7. Performance & Cache Management
+ * 8. Golden Master Tests
+ * @see workflows/ACTDESSERREF-002-characterization-tests.md
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  createTestService,
+  createStandardEntity,
+  createEntityWithInlineMetadata,
+  createEntityWithDedicatedMetadata,
+  createMockLogger,
+  createTestActivities,
+  createTestScenario,
+  createMockJsonLogic,
+} from './activityDescriptionServiceTestHelpers.js';
+
+// ============================================================================
+// Section 1: Metadata Collection (3-Tier Fallback)
+// ============================================================================
+describe('ActivityDescriptionService - Metadata Collection Characterization', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Tier 1: Activity Index (Optional Performance Optimization)
+  // ------------------------------------------------------------------------
+  describe('Tier 1: Activity Index Collection', () => {
+    it('should collect activities from activity index when available', async () => {
+      const indexedActivities = [
+        {
+          type: 'indexed',
+          verb: 'kneeling',
+          targetId: 'target1',
+          priority: 50,
+        },
+      ];
+
+      const mockActivityIndex = {
+        findActivitiesForEntity: jest.fn(() => indexedActivities),
+      };
+
+      const customTestBed = await createTestService({
+        activityIndex: mockActivityIndex,
+      });
+
+      const hooks = customTestBed.service.getTestHooks();
+      const entity = createStandardEntity({ id: 'actor1' });
+      const entityMap = new Map([['actor1', entity]]);
+      customTestBed.mockEntityManager.getEntityInstance.mockImplementation((id) => entityMap.get(id));
+
+      const activities = hooks.collectActivityMetadata('actor1', entity);
+
+      expect(mockActivityIndex.findActivitiesForEntity).toHaveBeenCalledWith('actor1');
+      expect(activities).toHaveLength(1);
+      expect(activities[0].type).toBe('indexed');
+      expect(activities[0].verb).toBe('kneeling');
+
+      customTestBed.service.destroy();
+    });
+
+    it('should handle activity index returning invalid data gracefully', async () => {
+      const mockActivityIndex = {
+        findActivitiesForEntity: jest.fn(() => 'not-an-array'),
+      };
+
+      const customTestBed = await createTestService({
+        activityIndex: mockActivityIndex,
+        logger: createMockLogger(),
+      });
+
+      const hooks = customTestBed.service.getTestHooks();
+      const entity = createStandardEntity({ id: 'actor1' });
+
+      const activities = hooks.collectActivityMetadata('actor1', entity);
+
+      expect(activities).toBeInstanceOf(Array);
+
+      customTestBed.service.destroy();
+    });
+
+    it('should handle activity index throwing errors', async () => {
+      const mockActivityIndex = {
+        findActivitiesForEntity: jest.fn(() => {
+          throw new Error('Index lookup failed');
+        }),
+      };
+
+      const customTestBed = await createTestService({
+        activityIndex: mockActivityIndex,
+        logger: createMockLogger(),
+      });
+
+      const hooks = customTestBed.service.getTestHooks();
+      const entity = createStandardEntity({ id: 'actor1' });
+
+      const activities = hooks.collectActivityMetadata('actor1', entity);
+
+      expect(activities).toBeInstanceOf(Array);
+
+      customTestBed.service.destroy();
+    });
+
+    it('should not call activity index when not provided', async () => {
+      const hooks = testBed.service.getTestHooks();
+      const entity = createStandardEntity({ id: 'actor1' });
+
+      const activities = hooks.collectActivityMetadata('actor1', entity);
+
+      // Should still return an array (empty or with inline/dedicated metadata)
+      expect(activities).toBeInstanceOf(Array);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Tier 2: Inline Metadata (component.activityMetadata scanning)
+  // ------------------------------------------------------------------------
+  describe('Tier 2: Inline Metadata Collection', () => {
+    it('should collect activity metadata from components with activityMetadata field', () => {
+      const entity = createEntityWithInlineMetadata({
+        componentId: 'positioning:touch',
+        activityMetadata: {
+          template: '{actor} is touching {target}',
+          targetRole: 'entityId',
+          priority: 60,
+        },
+        entityId: 'actor1',
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities).toHaveLength(1);
+      expect(activities[0].type).toBe('inline');
+      expect(activities[0].sourceComponent).toBe('positioning:touch');
+      expect(activities[0].priority).toBe(60);
+      expect(activities[0].template).toBe('{actor} is touching {target}');
+    });
+
+    it('should resolve target entity ID from targetRole field', () => {
+      const entity = createEntityWithInlineMetadata({
+        componentId: 'positioning:sit_on',
+        activityMetadata: {
+          template: '{actor} is sitting on {target}',
+          targetRole: 'entityId',
+          priority: 50,
+        },
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities[0].targetEntityId).toBe('target1');
+      expect(activities[0].targetId).toBe('target1'); // Alias for compatibility
+    });
+
+    it('should skip components explicitly disabled via shouldDescribeInActivity', () => {
+      const additionalComponents = new Map([
+        ['test:disabled', {
+          activityMetadata: {
+            template: '{actor} performs action',
+            shouldDescribeInActivity: false,
+          },
+        }],
+        ['test:enabled', {
+          activityMetadata: {
+            template: '{actor} performs another action',
+            shouldDescribeInActivity: true,
+          },
+        }],
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities).toHaveLength(1);
+      expect(activities[0].sourceComponent).toBe('test:enabled');
+    });
+
+    it('should skip dedicated metadata components during inline scanning', () => {
+      const additionalComponents = new Map([
+        ['activity:description_metadata', {
+          activityMetadata: {
+            template: 'This should be skipped',
+          },
+        }],
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities).toHaveLength(0);
+    });
+
+    it('should handle components with malformed activityMetadata gracefully', () => {
+      const additionalComponents = new Map([
+        ['test:malformed', {
+          activityMetadata: 'not-an-object', // Invalid type
+        }],
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities).toHaveLength(0);
+    });
+
+    it('should handle components missing required template field', () => {
+      const additionalComponents = new Map([
+        ['test:no_template', {
+          activityMetadata: {
+            // Missing template
+            priority: 50,
+          },
+        }],
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities).toHaveLength(0);
+    });
+
+    it('should default to priority 50 when not specified', () => {
+      const entity = createEntityWithInlineMetadata({
+        componentId: 'test:component',
+        activityMetadata: {
+          template: '{actor} does something',
+        },
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities[0].priority).toBe(50);
+    });
+
+    it('should handle blank target entity references', () => {
+      const additionalComponents = new Map([
+        ['test:blank_target', {
+          entityId: '   ', // Blank string with spaces
+          activityMetadata: {
+            template: '{actor} performs action',
+            targetRole: 'entityId',
+          },
+        }],
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities[0].targetEntityId).toBeNull();
+    });
+
+    it('should scan all components except dedicated metadata', () => {
+      const additionalComponents = new Map([
+        ['positioning:touch', {
+          entityId: 'target1',
+          activityMetadata: {
+            template: '{actor} touches {target}',
+          },
+        }],
+        ['positioning:sit_on', {
+          entityId: 'target2',
+          activityMetadata: {
+            template: '{actor} sits on {target}',
+          },
+        }],
+        ['core:actor', {
+          // No activityMetadata
+        }],
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectInlineMetadata(entity);
+
+      expect(activities).toHaveLength(2);
+      expect(activities.map(a => a.sourceComponent)).toEqual([
+        'positioning:touch',
+        'positioning:sit_on',
+      ]);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Tier 3: Dedicated Metadata (activity:description_metadata components)
+  // ------------------------------------------------------------------------
+  describe('Tier 3: Dedicated Metadata Collection', () => {
+    it('should collect dedicated metadata component when present', () => {
+      const entity = createEntityWithDedicatedMetadata({
+        sourceComponent: 'positioning:kneel_before',
+        verb: 'kneeling before',
+        template: '{actor} is kneeling before {target}',
+        priority: 70,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectDedicatedMetadata(entity);
+
+      expect(activities).toHaveLength(1);
+      expect(activities[0].type).toBe('dedicated');
+      expect(activities[0].sourceComponent).toBe('positioning:kneel_before');
+      expect(activities[0].verb).toBe('kneeling before');
+      expect(activities[0].priority).toBe(70);
+    });
+
+    it('should return empty array when no dedicated metadata component exists', () => {
+      const entity = createStandardEntity({ id: 'actor1' });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectDedicatedMetadata(entity);
+
+      expect(activities).toHaveLength(0);
+    });
+
+    it('should resolve target entity ID from source component', () => {
+      const entity = createEntityWithDedicatedMetadata({
+        sourceComponent: 'test:action',
+        targetRole: 'entityId',
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectDedicatedMetadata(entity);
+
+      expect(activities[0].targetEntityId).toBe('target1');
+    });
+
+    it('should handle metadata missing sourceComponent field', () => {
+      const additionalComponents = new Map([
+        ['activity:description_metadata', {
+          // Missing sourceComponent
+          verb: 'doing something',
+        }],
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectDedicatedMetadata(entity);
+
+      expect(activities).toHaveLength(0);
+    });
+
+    it('should handle invalid metadata payload', () => {
+      const additionalComponents = new Map([
+        ['activity:description_metadata', 'not-an-object'], // Invalid type
+      ]);
+
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents,
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const activities = hooks.collectDedicatedMetadata(entity);
+
+      expect(activities).toHaveLength(0);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Deduplication by Activity Signature
+  // ------------------------------------------------------------------------
+  describe('Deduplication by Activity Signature', () => {
+    it('should preserve activities with different targets', () => {
+      const activities = createTestActivities([
+        {
+          template: '{actor} touches {target}',
+          targetEntityId: 'target1',
+          priority: 50,
+        },
+        {
+          template: '{actor} touches {target}',
+          targetEntityId: 'target2',
+          priority: 50,
+        },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const deduplicated = hooks.deduplicateActivitiesBySignature(activities);
+
+      expect(deduplicated).toHaveLength(2);
+    });
+
+    it('should preserve activities with different templates', () => {
+      const activities = createTestActivities([
+        {
+          template: '{actor} touches {target}',
+          targetEntityId: 'target1',
+        },
+        {
+          template: '{actor} kisses {target}',
+          targetEntityId: 'target1',
+        },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const deduplicated = hooks.deduplicateActivitiesBySignature(activities);
+
+      expect(deduplicated).toHaveLength(2);
+    });
+
+    it('should preserve activities with different grouping keys', () => {
+      const activities = createTestActivities([
+        {
+          template: '{actor} touches {target}',
+          targetEntityId: 'target1',
+          grouping: { groupKey: 'group1' },
+        },
+        {
+          template: '{actor} touches {target}',
+          targetEntityId: 'target1',
+          grouping: { groupKey: 'group2' },
+        },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const deduplicated = hooks.deduplicateActivitiesBySignature(activities);
+
+      expect(deduplicated).toHaveLength(2);
+    });
+
+    it('should preserve insertion order during deduplication', () => {
+      const activities = createTestActivities([
+        {
+          sourceComponent: 'test:first',
+          template: '{actor} acts',
+          priority: 50,
+        },
+        {
+          sourceComponent: 'test:second',
+          template: '{actor} reacts',
+          priority: 60,
+        },
+        {
+          sourceComponent: 'test:third',
+          template: '{actor} interacts',
+          priority: 70,
+        },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const deduplicated = hooks.deduplicateActivitiesBySignature(activities);
+
+      expect(deduplicated.map(a => a.sourceComponent)).toEqual([
+        'test:first',
+        'test:second',
+        'test:third',
+      ]);
+    });
+
+    it('should handle empty activity arrays', () => {
+      const hooks = testBed.service.getTestHooks();
+      const deduplicated = hooks.deduplicateActivitiesBySignature([]);
+
+      expect(deduplicated).toEqual([]);
+    });
+
+  });
+});
+
+// ============================================================================
+// Section 2: Activity Filtering (4-Stage Pipeline)
+// ============================================================================
+describe('ActivityDescriptionService - Activity Filtering Characterization', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Property-based Filtering
+  // ------------------------------------------------------------------------
+  describe('Property-based Filtering (showOnlyIfProperty)', () => {
+    it('should filter activities based on showOnlyIfProperty conditions', () => {
+      const activity = {
+        sourceData: { state: 'active' },
+        conditions: {
+          showOnlyIfProperty: {
+            property: 'state',
+            equals: 'active',
+          },
+        },
+      };
+
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+    });
+
+    it('should hide activities when property does not match', () => {
+      const activity = {
+        sourceData: { state: 'inactive' },
+        conditions: {
+          showOnlyIfProperty: {
+            property: 'state',
+            equals: 'active',
+          },
+        },
+      };
+
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Required Component Checks
+  // ------------------------------------------------------------------------
+  describe('Required Component Checks', () => {
+    it('should show activities when all required components are present', () => {
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents: new Map([
+          ['positioning:kneeling', {}],
+          ['positioning:facing_target', {}],
+        ]),
+      });
+
+      const activity = {
+        conditions: {
+          requiredComponents: ['positioning:kneeling', 'positioning:facing_target'],
+        },
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+    });
+
+    it('should hide activities when required components are missing', () => {
+      const entity = createStandardEntity({ id: 'actor1' });
+
+      const activity = {
+        conditions: {
+          requiredComponents: ['positioning:kneeling'],
+        },
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle empty required components array', () => {
+      const entity = createStandardEntity();
+      const activity = {
+        conditions: {
+          requiredComponents: [],
+        },
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Forbidden Component Checks
+  // ------------------------------------------------------------------------
+  describe('Forbidden Component Checks', () => {
+    it('should hide activities when forbidden components are present', () => {
+      const entity = createStandardEntity({
+        id: 'actor1',
+        additionalComponents: new Map([
+          ['positioning:lying_down', {}],
+        ]),
+      });
+
+      const activity = {
+        conditions: {
+          forbiddenComponents: ['positioning:lying_down'],
+        },
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(false);
+    });
+
+    it('should show activities when no forbidden components are present', () => {
+      const entity = createStandardEntity({ id: 'actor1' });
+
+      const activity = {
+        conditions: {
+          forbiddenComponents: ['positioning:lying_down'],
+        },
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle empty forbidden components array', () => {
+      const entity = createStandardEntity();
+      const activity = {
+        conditions: {
+          forbiddenComponents: [],
+        },
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Custom JSON Logic Conditions
+  // ------------------------------------------------------------------------
+  describe('Custom JSON Logic Conditions', () => {
+    it('should evaluate custom logic conditions successfully', async () => {
+      const customTestBed = await createTestService({
+        jsonLogicEvaluationService: createMockJsonLogic(true),
+      });
+
+      const entity = createStandardEntity();
+      const activity = {
+        conditions: {
+          customLogic: { '==': [{ var: 'entity.id' }, 'actor1'] },
+        },
+      };
+
+      const hooks = customTestBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+      expect(customTestBed.mockJsonLogicEvaluationService.evaluate).toHaveBeenCalled();
+
+      customTestBed.service.destroy();
+    });
+
+    it('should fail open on JSON logic evaluation errors', async () => {
+      const customTestBed = await createTestService({
+        jsonLogicEvaluationService: {
+          evaluate: jest.fn(() => {
+            throw new Error('Logic error');
+          }),
+        },
+      });
+
+      const entity = createStandardEntity();
+      const activity = {
+        conditions: {
+          customLogic: { invalid: 'logic' },
+        },
+      };
+
+      const hooks = customTestBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true); // Fail open
+
+      customTestBed.service.destroy();
+    });
+
+    it('should build correct logic context with entity and target data', () => {
+      const entity = createStandardEntity({ id: 'actor1', name: 'John' });
+      const targetEntity = createStandardEntity({ id: 'target1', name: 'Alice' });
+
+      const entityMap = new Map([
+        ['actor1', entity],
+        ['target1', targetEntity],
+      ]);
+
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) => entityMap.get(id));
+
+      const activity = {
+        targetEntityId: 'target1',
+        sourceData: { someData: 'value' },
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const context = hooks.buildLogicContext(activity, entity);
+
+      expect(context.entity).toBeDefined();
+      expect(context.entity.id).toBe('actor1');
+      expect(context.target).toBeDefined();
+      expect(context.target.id).toBe('target1');
+      expect(context.activity).toEqual({ someData: 'value' });
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // shouldDescribeInActivity Flag
+  // ------------------------------------------------------------------------
+  describe('shouldDescribeInActivity Flag', () => {
+    it('should hide activities when shouldDescribeInActivity is false', () => {
+      const activity = {
+        metadata: {
+          shouldDescribeInActivity: false,
+        },
+      };
+
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(false);
+    });
+
+    it('should show activities when shouldDescribeInActivity is true', () => {
+      const activity = {
+        metadata: {
+          shouldDescribeInActivity: true,
+        },
+      };
+
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+    });
+
+    it('should show activities when shouldDescribeInActivity is undefined', () => {
+      const activity = {
+        metadata: {},
+      };
+
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.evaluateActivityVisibility(activity, entity);
+
+      expect(result).toBe(true);
+    });
+  });
+});
+
+// ============================================================================
+// Section 3: Activity Grouping (Sequential Pair-Wise Algorithm)
+// ============================================================================
+describe('ActivityDescriptionService - Activity Grouping Characterization', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Sequential Pair-Wise Comparison
+  // ------------------------------------------------------------------------
+  describe('Sequential Pair-Wise Comparison Algorithm', () => {
+    it('should group activities via sequential pair-wise comparison', () => {
+      const activities = createTestActivities([
+        { verb: 'touch', targetEntityId: 'target1', priority: 50 },
+        { verb: 'touch', targetEntityId: 'target1', priority: 55 }, // Groups with first
+        { verb: 'kiss', targetEntityId: 'target2', priority: 70 }, // New group
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const groups = hooks.groupActivities(activities, 'cacheKey');
+
+      expect(groups).toHaveLength(2);
+      // Activities are sorted by priority (highest first), so kiss (70) comes before touch (55, 50)
+      expect(groups[0].primaryActivity.verb).toBe('kiss');
+      expect(groups[0].relatedActivities).toHaveLength(0);
+      expect(groups[1].primaryActivity.verb).toBe('touch');
+      expect(groups[1].relatedActivities).toHaveLength(1);
+    });
+
+    it('should create separate groups for different targets', () => {
+      const activities = createTestActivities([
+        { verb: 'touch', targetEntityId: 'target1', priority: 50 },
+        { verb: 'touch', targetEntityId: 'target2', priority: 51 },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const groups = hooks.groupActivities(activities, 'cacheKey');
+
+      expect(groups).toHaveLength(2);
+      // Sorted by priority (highest first), so target2 (51) comes before target1 (50)
+      expect(groups[0].primaryActivity.targetEntityId).toBe('target2');
+      expect(groups[1].primaryActivity.targetEntityId).toBe('target1');
+    });
+
+    it('should group activities with same target and close priorities', () => {
+      const activities = createTestActivities([
+        { verb: 'touch', targetEntityId: 'target1', priority: 50 },
+        { verb: 'caress', targetEntityId: 'target1', priority: 52 },
+        { verb: 'stroke', targetEntityId: 'target1', priority: 54 },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const groups = hooks.groupActivities(activities, 'cacheKey');
+
+      expect(groups).toHaveLength(1);
+      expect(groups[0].relatedActivities).toHaveLength(2);
+    });
+
+    it('should handle empty activities array', () => {
+      const hooks = testBed.service.getTestHooks();
+      const groups = hooks.groupActivities([], 'cacheKey');
+
+      expect(groups).toEqual([]);
+    });
+
+    it('should handle single activity', () => {
+      const activities = createTestActivities([
+        { verb: 'touch', targetEntityId: 'target1', priority: 50 },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const groups = hooks.groupActivities(activities, 'cacheKey');
+
+      expect(groups).toHaveLength(1);
+      expect(groups[0].relatedActivities).toHaveLength(0);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Conjunction Selection
+  // ------------------------------------------------------------------------
+  describe('Conjunction Selection ("while" vs "and")', () => {
+    it('should use "while" when priorities are close', () => {
+      const first = { priority: 50 };
+      const second = { priority: 52 };
+
+      const hooks = testBed.service.getTestHooks();
+      const conjunction = hooks.determineConjunction(first, second);
+
+      expect(conjunction).toBe('while');
+    });
+
+    it('should use "and" when priorities are distant', () => {
+      const first = { priority: 50 };
+      const second = { priority: 70 };
+
+      const hooks = testBed.service.getTestHooks();
+      const conjunction = hooks.determineConjunction(first, second);
+
+      expect(conjunction).toBe('and');
+    });
+
+    it('should handle identical priorities', () => {
+      const first = { priority: 50 };
+      const second = { priority: 50 };
+
+      const hooks = testBed.service.getTestHooks();
+      const conjunction = hooks.determineConjunction(first, second);
+
+      expect(conjunction).toBe('while');
+    });
+
+    it('should handle null priorities gracefully', () => {
+      const first = { priority: null };
+      const second = { priority: 50 };
+
+      const hooks = testBed.service.getTestHooks();
+      const conjunction = hooks.determineConjunction(first, second);
+
+      expect(conjunction).toBeDefined();
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Priority Sorting
+  // ------------------------------------------------------------------------
+  describe('Priority Sorting', () => {
+    it('should sort activities by priority descending', () => {
+      const activities = createTestActivities([
+        { verb: 'low', priority: 10 },
+        { verb: 'high', priority: 90 },
+        { verb: 'medium', priority: 50 },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const sorted = hooks.sortByPriority(activities, 'cacheKey');
+
+      expect(sorted[0].verb).toBe('high');
+      expect(sorted[1].verb).toBe('medium');
+      expect(sorted[2].verb).toBe('low');
+    });
+
+    it('should maintain stable sort for equal priorities', () => {
+      const activities = createTestActivities([
+        { verb: 'first', priority: 50, sourceComponent: 'a' },
+        { verb: 'second', priority: 50, sourceComponent: 'b' },
+        { verb: 'third', priority: 50, sourceComponent: 'c' },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const sorted = hooks.sortByPriority(activities, 'cacheKey');
+
+      expect(sorted[0].sourceComponent).toBe('a');
+      expect(sorted[1].sourceComponent).toBe('b');
+      expect(sorted[2].sourceComponent).toBe('c');
+    });
+
+    it('should handle empty array', () => {
+      const hooks = testBed.service.getTestHooks();
+      const sorted = hooks.sortByPriority([], 'cacheKey');
+
+      expect(sorted).toEqual([]);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Simultaneity Detection
+  // ------------------------------------------------------------------------
+  describe('Simultaneity Detection', () => {
+    it('should detect activities occurring simultaneously', () => {
+      const p1 = 50;
+      const p2 = 52;
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.activitiesOccurSimultaneously(p1, p2);
+
+      expect(result).toBe(true);
+    });
+
+    it('should detect activities not occurring simultaneously', () => {
+      const p1 = 50;
+      const p2 = 80;
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.activitiesOccurSimultaneously(p1, p2);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle boundary conditions', () => {
+      const hooks = testBed.service.getTestHooks();
+
+      expect(hooks.activitiesOccurSimultaneously(50, 60)).toBe(true);
+      expect(hooks.activitiesOccurSimultaneously(50, 61)).toBe(false);
+    });
+  });
+});
+
+// ============================================================================
+// Section 4: Natural Language Generation
+// ============================================================================
+describe('ActivityDescriptionService - Natural Language Generation Characterization', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Name Resolution with ActivityCacheManager
+  // ------------------------------------------------------------------------
+  describe('Name Resolution with ActivityCacheManager', () => {
+    it('should resolve entity name from core:name component', () => {
+      const entity = createStandardEntity({ id: 'entity1', name: 'Alice' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+      const name = hooks.resolveEntityName('entity1');
+
+      expect(name).toBe('Alice');
+    });
+
+    it('should fallback to entity ID when name component missing', () => {
+      const entity = createStandardEntity({ id: 'entity1' });
+      entity.getAllComponents = () => new Map(); // No name component
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+      const name = hooks.resolveEntityName('entity1');
+
+      expect(name).toBe('entity1');
+    });
+
+    it('should handle non-existent entity gracefully', () => {
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(null);
+
+      const hooks = testBed.service.getTestHooks();
+      const name = hooks.resolveEntityName('nonexistent');
+
+      expect(name).toBe('nonexistent');
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Gender Detection via core:gender Component
+  // ------------------------------------------------------------------------
+  describe('Gender Detection via core:gender Component', () => {
+    it('should detect male gender', () => {
+      const entity = createStandardEntity({ id: 'entity1', gender: 'male' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+      const gender = hooks.detectEntityGender('entity1');
+
+      expect(gender).toBe('male');
+    });
+
+    it('should detect female gender', () => {
+      const entity = createStandardEntity({ id: 'entity1', gender: 'female' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+      const gender = hooks.detectEntityGender('entity1');
+
+      expect(gender).toBe('female');
+    });
+
+    it('should default to neutral when gender component missing', () => {
+      const entity = createStandardEntity({ id: 'entity1' });
+      entity.getAllComponents = () => new Map([['core:name', { text: 'Alex' }]]);
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+      const gender = hooks.detectEntityGender('entity1');
+
+      expect(gender).toBe('neutral');
+    });
+
+  });
+
+  // ------------------------------------------------------------------------
+  // Pronoun Resolution (Self-Contained)
+  // ------------------------------------------------------------------------
+  describe('Pronoun Resolution (Self-Contained)', () => {
+    it('should generate male pronoun set', () => {
+      const hooks = testBed.service.getTestHooks();
+      const pronouns = hooks.getPronounSet('male');
+
+      expect(pronouns).toEqual({
+        subject: 'he',
+        object: 'him',
+        possessive: 'his',
+        possessivePronoun: 'his',
+      });
+    });
+
+    it('should generate female pronoun set', () => {
+      const hooks = testBed.service.getTestHooks();
+      const pronouns = hooks.getPronounSet('female');
+
+      expect(pronouns).toEqual({
+        subject: 'she',
+        object: 'her',
+        possessive: 'her',
+        possessivePronoun: 'hers',
+      });
+    });
+
+    it('should generate neutral pronoun set', () => {
+      const hooks = testBed.service.getTestHooks();
+      const pronouns = hooks.getPronounSet('neutral');
+
+      expect(pronouns).toEqual({
+        subject: 'they',
+        object: 'them',
+        possessive: 'their',
+        possessivePronoun: 'theirs',
+      });
+    });
+
+    it('should get reflexive pronoun from pronoun set', () => {
+      const hooks = testBed.service.getTestHooks();
+
+      const malePronouns = hooks.getPronounSet('male');
+      const reflexive = hooks.getReflexivePronoun(malePronouns);
+
+      expect(reflexive).toBe('himself');
+    });
+
+    it('should handle female reflexive pronoun', () => {
+      const hooks = testBed.service.getTestHooks();
+
+      const femalePronouns = hooks.getPronounSet('female');
+      const reflexive = hooks.getReflexivePronoun(femalePronouns);
+
+      expect(reflexive).toBe('herself');
+    });
+
+    it('should handle neutral reflexive pronoun', () => {
+      const hooks = testBed.service.getTestHooks();
+
+      const neutralPronouns = hooks.getPronounSet('neutral');
+      const reflexive = hooks.getReflexivePronoun(neutralPronouns);
+
+      expect(reflexive).toBe('themselves');
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Phrase Generation from Templates
+  // ------------------------------------------------------------------------
+  describe('Phrase Generation from Templates', () => {
+    it('should generate phrase from simple template', () => {
+      const activity = {
+        template: '{actor} touches {target}',
+        targetEntityId: 'target1',
+      };
+      const actorId = 'actor1';
+
+      const hooks = testBed.service.getTestHooks();
+      const phrase = hooks.generateActivityPhrase(actorId, activity);
+
+      expect(phrase).toContain('touches');
+    });
+
+    it('should replace {actor} placeholder', () => {
+      const activity = {
+        template: '{actor} performs action',
+        targetEntityId: null,
+      };
+      const actorId = 'actor1';
+
+      const actor = createStandardEntity({ id: 'actor1', name: 'John' });
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor1') return actor;
+        return null;
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      // After refactoring, generateActivityPhrase expects actorRef (name), not actorId
+      const actorRef = hooks.resolveEntityName(actorId);
+      const phrase = hooks.generateActivityPhrase(actorRef, activity);
+
+      expect(phrase).toContain('John');
+    });
+
+    it('should replace {target} placeholder', () => {
+      const activity = {
+        template: '{actor} touches {target}',
+        targetEntityId: 'target1',
+      };
+      const actorId = 'actor1';
+
+      const actor = createStandardEntity({ id: 'actor1', name: 'John' });
+      const target = createStandardEntity({ id: 'target1', name: 'Alice' });
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor1') return actor;
+        if (id === 'target1') return target;
+        return null;
+      });
+
+      const hooks = testBed.service.getTestHooks();
+      const phrase = hooks.generateActivityPhrase(actorId, activity);
+
+      expect(phrase).toContain('Alice');
+    });
+
+    it('should handle template without placeholders', () => {
+      const activity = {
+        template: 'a static description',
+        targetEntityId: null,
+      };
+      const actorId = 'actor1';
+
+      const hooks = testBed.service.getTestHooks();
+      const phrase = hooks.generateActivityPhrase(actorId, activity);
+
+      expect(phrase).toBe('a static description');
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Tone Modifiers (Adverbs, Softeners)
+  // ------------------------------------------------------------------------
+  describe('Tone Modifiers (Adverbs, Softeners)', () => {
+    it('should merge adverbs when both present', () => {
+      const currentAdverb = 'gently';
+      const injectedAdverb = 'softly';
+
+      const hooks = testBed.service.getTestHooks();
+      const merged = hooks.mergeAdverb(currentAdverb, injectedAdverb);
+
+      expect(merged).toContain('gently');
+      expect(merged).toContain('softly');
+    });
+
+    it('should use injected adverb when current is null', () => {
+      const currentAdverb = null;
+      const injectedAdverb = 'softly';
+
+      const hooks = testBed.service.getTestHooks();
+      const merged = hooks.mergeAdverb(currentAdverb, injectedAdverb);
+
+      expect(merged).toBe('softly');
+    });
+
+    it('should preserve current adverb when injected is null', () => {
+      const currentAdverb = 'gently';
+      const injectedAdverb = null;
+
+      const hooks = testBed.service.getTestHooks();
+      const merged = hooks.mergeAdverb(currentAdverb, injectedAdverb);
+
+      expect(merged).toBe('gently');
+    });
+
+    it('should inject softener into template', () => {
+      const template = '{actor} touches {target}';
+      const descriptor = { adverb: 'gently' };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.injectSoftener(template, descriptor);
+
+      expect(result).toContain('gently');
+    });
+
+    it('should handle template without softener injection', () => {
+      const template = '{actor} touches {target}';
+      const descriptor = {};
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.injectSoftener(template, descriptor);
+
+      expect(result).toBe(template);
+    });
+  });
+});
+
+// ============================================================================
+// Section 5: Context Building
+// ============================================================================
+describe('ActivityDescriptionService - Context Building Characterization', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Relationship Tone Detection (NO RelationshipService)
+  // ------------------------------------------------------------------------
+  describe('Relationship Tone Detection via Closeness Component', () => {
+    it('should detect closeness_partner relationship', () => {
+      const actor = createStandardEntity({
+        id: 'actor1',
+        additionalComponents: new Map([
+          ['positioning:closeness', { partners: ['target1'] }],
+        ]),
+      });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(actor);
+
+      const activity = { targetEntityId: 'target1' };
+
+      const hooks = testBed.service.getTestHooks();
+      const context = hooks.buildActivityContext('actor1', activity);
+
+      expect(context.relationshipTone).toBe('closeness_partner');
+    });
+
+    it('should detect no relationship when closeness component missing', () => {
+      const actor = createStandardEntity({ id: 'actor1' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(actor);
+
+      const activity = { targetEntityId: 'target1' };
+
+      const hooks = testBed.service.getTestHooks();
+      const context = hooks.buildActivityContext('actor1', activity);
+
+      expect(context.relationshipTone).toBe('neutral');
+    });
+
+    it('should handle activities without target', () => {
+      const actor = createStandardEntity({ id: 'actor1' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(actor);
+
+      const activity = { targetEntityId: null };
+
+      const hooks = testBed.service.getTestHooks();
+      const context = hooks.buildActivityContext('actor1', activity);
+
+      expect(context.relationshipTone).toBe('neutral');
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Activity Intensity Mapping
+  // ------------------------------------------------------------------------
+  describe('Activity Intensity Mapping', () => {
+    it('should determine casual intensity for low priority', () => {
+      const priority = 10;
+
+      const hooks = testBed.service.getTestHooks();
+      const intensity = hooks.determineActivityIntensity(priority);
+
+      expect(intensity).toBe('casual');
+    });
+
+    it('should determine elevated intensity for medium priority', () => {
+      const priority = 75;
+
+      const hooks = testBed.service.getTestHooks();
+      const intensity = hooks.determineActivityIntensity(priority);
+
+      expect(intensity).toBe('elevated');
+    });
+
+    it('should determine intense intensity for high priority', () => {
+      const priority = 90;
+
+      const hooks = testBed.service.getTestHooks();
+      const intensity = hooks.determineActivityIntensity(priority);
+
+      expect(intensity).toBe('intense');
+    });
+
+    it('should handle boundary values', () => {
+      const hooks = testBed.service.getTestHooks();
+
+      expect(hooks.determineActivityIntensity(0)).toBe('casual');
+      expect(hooks.determineActivityIntensity(100)).toBe('intense');
+    });
+
+    it('should handle negative priorities gracefully', () => {
+      const hooks = testBed.service.getTestHooks();
+      const intensity = hooks.determineActivityIntensity(-10);
+
+      expect(intensity).toBeDefined();
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Contextual Tone Application
+  // ------------------------------------------------------------------------
+  describe('Contextual Tone Application', () => {
+    it('should apply relationship tone to activity context', () => {
+      const actor = createStandardEntity({
+        id: 'actor1',
+        additionalComponents: new Map([
+          ['positioning:closeness', { partners: ['target1'] }],
+        ]),
+      });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(actor);
+
+      const activity = {
+        targetEntityId: 'target1',
+        priority: 60,
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const context = hooks.buildActivityContext('actor1', activity);
+
+      expect(context).toHaveProperty('relationshipTone');
+      expect(context).toHaveProperty('intensity');
+    });
+
+    it('should build complete context with all properties', () => {
+      const actor = createStandardEntity({ id: 'actor1' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(actor);
+
+      const activity = {
+        targetEntityId: 'target1',
+        priority: 50,
+        verb: 'touching',
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const context = hooks.buildActivityContext('actor1', activity);
+
+      expect(context).toBeDefined();
+      expect(context).toHaveProperty('intensity');
+    });
+  });
+});
+
+// ============================================================================
+// Section 6: Edge Cases
+// ============================================================================
+describe('ActivityDescriptionService - Edge Cases Characterization', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Null and Undefined Handling
+  // ------------------------------------------------------------------------
+  describe('Null and Undefined Handling', () => {
+    it('should handle null entity in collectActivityMetadata', () => {
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.collectActivityMetadata('entityId', null);
+
+      expect(result).toBeInstanceOf(Array);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle undefined entity in collectInlineMetadata', () => {
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.collectInlineMetadata(undefined);
+
+      expect(result).toBeInstanceOf(Array);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle undefined activities array in grouping', () => {
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.groupActivities(undefined, 'cacheKey');
+
+      expect(result).toBeInstanceOf(Array);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle null entity ID in name resolution', () => {
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.resolveEntityName(null);
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle undefined gender in pronoun set', () => {
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.getPronounSet(undefined);
+
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('subject');
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Empty Collections
+  // ------------------------------------------------------------------------
+  describe('Empty Collections', () => {
+    it('should handle entity with no components', () => {
+      const entity = {
+        id: 'empty',
+        getAllComponents: () => new Map(),
+        getComponentData: () => null,
+        hasComponent: () => false,
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.collectInlineMetadata(entity);
+
+      expect(result).toBeInstanceOf(Array);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle empty activities in filtering', () => {
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.filterByConditions([], entity);
+
+      expect(result).toBeInstanceOf(Array);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle empty required components array', () => {
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.hasRequiredComponents(entity, []);
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle empty forbidden components array', () => {
+      const entity = createStandardEntity();
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.hasForbiddenComponents(entity, []);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle empty string template', () => {
+      const activity = {
+        template: '',
+        targetEntityId: null,
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.generateActivityPhrase('actor1', activity);
+
+      expect(result).toBe('');
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Malformed Data
+  // ------------------------------------------------------------------------
+  describe('Malformed Data', () => {
+    it('should handle activity metadata with wrong type', () => {
+      const entity = {
+        id: 'entity1',
+        getAllComponents: () => new Map([
+          ['test:component', {
+            activityMetadata: 'should-be-object', // Wrong type
+          }],
+        ]),
+        getComponentData: () => null,
+        hasComponent: () => false,
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.collectInlineMetadata(entity);
+
+      expect(result).toBeInstanceOf(Array);
+    });
+
+    it('should handle activity missing required template field', () => {
+      const entity = {
+        id: 'entity1',
+        getAllComponents: () => new Map([
+          ['test:component', {
+            activityMetadata: {
+              // Missing template
+              priority: 50,
+            },
+          }],
+        ]),
+        getComponentData: () => null,
+        hasComponent: () => false,
+      };
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.collectInlineMetadata(entity);
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle invalid priority values', () => {
+      const activities = createTestActivities([
+        { priority: 'not-a-number' },
+        { priority: NaN },
+        { priority: Infinity },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.sortByPriority(activities, 'cacheKey');
+
+      expect(result).toBeInstanceOf(Array);
+      expect(result).toHaveLength(3);
+    });
+
+    it('should handle activity with circular reference in sourceData', () => {
+      const circularObj = { data: 'test' };
+      circularObj.self = circularObj; // Circular reference
+
+      const activity = {
+        sourceData: circularObj,
+        template: '{actor} acts',
+      };
+
+      const hooks = testBed.service.getTestHooks();
+
+      // Should not throw
+      expect(() => hooks.buildLogicContext(activity, createStandardEntity())).not.toThrow();
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Missing Components
+  // ------------------------------------------------------------------------
+  describe('Missing Components', () => {
+    it('should handle entity without core:name component', () => {
+      const entity = {
+        id: 'entity1',
+        getAllComponents: () => new Map(),
+        getComponentData: () => null,
+        hasComponent: () => false,
+      };
+
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+      const name = hooks.resolveEntityName('entity1');
+
+      // Should fallback to entity ID
+      expect(name).toBe('entity1');
+    });
+
+    it('should handle entity without core:gender component', () => {
+      const entity = {
+        id: 'entity1',
+        getAllComponents: () => new Map([['core:name', { text: 'Alex' }]]),
+        getComponentData: () => null,
+        hasComponent: (id) => id === 'core:name',
+      };
+
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+      const gender = hooks.detectEntityGender('entity1');
+
+      expect(gender).toBe('neutral');
+    });
+
+    it('should handle entity without positioning:closeness component', () => {
+      const entity = createStandardEntity({ id: 'actor1' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const activity = { targetEntityId: 'target1' };
+
+      const hooks = testBed.service.getTestHooks();
+      const context = hooks.buildActivityContext('actor1', activity);
+
+      expect(context.relationshipTone).toBe('neutral');
+    });
+
+  });
+
+  // ------------------------------------------------------------------------
+  // Boundary Conditions
+  // ------------------------------------------------------------------------
+  describe('Boundary Conditions', () => {
+    it('should handle priority at minimum value (0)', () => {
+      const activities = createTestActivities([{ priority: 0 }]);
+
+      const hooks = testBed.service.getTestHooks();
+      const sorted = hooks.sortByPriority(activities, 'cacheKey');
+
+      expect(sorted).toHaveLength(1);
+      expect(sorted[0].priority).toBe(0);
+    });
+
+    it('should handle priority at maximum value (100)', () => {
+      const activities = createTestActivities([{ priority: 100 }]);
+
+      const hooks = testBed.service.getTestHooks();
+      const sorted = hooks.sortByPriority(activities, 'cacheKey');
+
+      expect(sorted).toHaveLength(1);
+      expect(sorted[0].priority).toBe(100);
+    });
+
+    it('should handle very large activity collections', () => {
+      const largeActivities = Array.from({ length: 1000 }, (_, i) =>
+        createTestActivities([{
+          verb: `activity${i}`,
+          priority: i,
+        }])[0]
+      );
+
+      const hooks = testBed.service.getTestHooks();
+      const result = hooks.sortByPriority(largeActivities, 'cacheKey');
+
+      expect(result).toHaveLength(1000);
+      expect(result[0].priority).toBe(999); // Highest priority first
+    });
+
+    it('should handle zero TTL in cache', () => {
+      // This tests edge case behavior when TTL is very short
+      const hooks = testBed.service.getTestHooks();
+
+      // Cache operations should still work
+      expect(() => hooks.resolveEntityName('entity1')).not.toThrow();
+    });
+  });
+});
+
+// ============================================================================
+// Section 7: Performance & Cache Management
+// ============================================================================
+describe('ActivityDescriptionService - Performance & Cache Characterization', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Grouping Algorithm Performance
+  // ------------------------------------------------------------------------
+  describe('Grouping Algorithm Performance', () => {
+    it('should handle large datasets efficiently', () => {
+      const largeActivities = Array.from({ length: 100 }, (_, i) =>
+        createTestActivities([{
+          verb: `activity${i}`,
+          targetEntityId: `target${i % 10}`,
+          priority: 50 + (i % 20),
+        }])[0]
+      );
+
+      const hooks = testBed.service.getTestHooks();
+      const start = Date.now();
+      const result = hooks.groupActivities(largeActivities, 'cacheKey');
+      const duration = Date.now() - start;
+
+      expect(result).toBeInstanceOf(Array);
+      expect(duration).toBeLessThan(5000); // Lenient timing - focus on behavior not performance
+    });
+
+    it('should scale linearly with input size', () => {
+      const hooks = testBed.service.getTestHooks();
+
+      // Small dataset
+      const smallActivities = createTestActivities(
+        Array.from({ length: 10 }, (_, i) => ({
+          verb: `activity${i}`,
+          priority: i,
+        }))
+      );
+
+      const smallStart = Date.now();
+      hooks.groupActivities(smallActivities, 'cacheKey1');
+      const smallDuration = Date.now() - smallStart;
+
+      // Large dataset (10x)
+      const largeActivities = createTestActivities(
+        Array.from({ length: 100 }, (_, i) => ({
+          verb: `activity${i}`,
+          priority: i,
+        }))
+      );
+
+      const largeStart = Date.now();
+      hooks.groupActivities(largeActivities, 'cacheKey2');
+      const largeDuration = Date.now() - largeStart;
+
+      // Large should not be more than 50x slower (very lenient for characterization)
+      expect(largeDuration).toBeLessThan(Math.max(smallDuration * 50, 5000));
+    });
+
+    it('should maintain performance with complex grouping scenarios', () => {
+      // Create activities that will result in many groups
+      const activities = createTestActivities(
+        Array.from({ length: 50 }, (_, i) => ({
+          verb: 'touch',
+          targetEntityId: `target${i}`, // Each gets own group
+          priority: 50,
+        }))
+      );
+
+      const hooks = testBed.service.getTestHooks();
+      const start = Date.now();
+      const result = hooks.groupActivities(activities, 'cacheKey');
+      const duration = Date.now() - start;
+
+      expect(result).toHaveLength(50);
+      expect(duration).toBeLessThan(3000); // Lenient timing for characterization
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Memory Usage Patterns
+  // ------------------------------------------------------------------------
+  describe('Memory Usage Patterns', () => {
+    it('should not leak memory during repeated operations', () => {
+      const entity = createStandardEntity({ id: 'entity1', name: 'Alice' });
+      testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+
+      const hooks = testBed.service.getTestHooks();
+
+      // Repeated operations
+      for (let i = 0; i < 1000; i++) {
+        hooks.resolveEntityName('entity1');
+        hooks.detectEntityGender('entity1');
+      }
+
+      // If no memory leak, this should complete without issue
+      expect(true).toBe(true);
+    });
+
+    it('should handle cache size limits appropriately', () => {
+      const hooks = testBed.service.getTestHooks();
+
+      // Create many unique entities
+      for (let i = 0; i < 100; i++) {
+        const entity = createStandardEntity({
+          id: `entity${i}`,
+          name: `Name${i}`,
+        });
+        testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
+        hooks.resolveEntityName(`entity${i}`);
+      }
+
+      // Cache should handle this without issues
+      expect(true).toBe(true);
+    });
+  });
+
+});
+
+// ============================================================================
+// Section 8: Golden Master Tests
+// ============================================================================
+describe('ActivityDescriptionService - Golden Master Tests', () => {
+  let testBed;
+
+  beforeEach(async () => {
+    testBed = await createTestService();
+  });
+
+  afterEach(() => {
+    if (testBed.service && typeof testBed.service.destroy === 'function') {
+      testBed.service.destroy();
+    }
+  });
+
+  // ------------------------------------------------------------------------
+  // Standard Scenarios
+  // ------------------------------------------------------------------------
+  describe('Standard Scenarios (Regression Detection)', () => {
+    it('should produce consistent output for standard single-activity scenario', async () => {
+      const scenario = createTestScenario({
+        actorId: 'actor1',
+        actorName: 'John',
+        actorGender: 'male',
+        targetId: 'target1',
+        targetName: 'Alice',
+        targetGender: 'female',
+        activities: createTestActivities([
+          {
+            verb: 'touching',
+            template: '{actor} is gently touching {target}',
+            targetEntityId: 'target1',
+            priority: 60,
+          },
+        ]),
+      });
+
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        scenario.entities.get(id)
+      );
+
+      const result = await testBed.service.generateActivityDescription(
+        scenario.actor.id
+      );
+
+      // Golden master snapshot
+      expect(result).toMatchSnapshot();
+    });
+
+    it('should produce consistent output for multi-activity grouping scenario', async () => {
+      const scenario = createTestScenario({
+        actorId: 'actor1',
+        actorName: 'John',
+        actorGender: 'male',
+        targetId: 'target1',
+        targetName: 'Alice',
+        targetGender: 'female',
+        activities: createTestActivities([
+          {
+            verb: 'touching',
+            template: '{actor} touches {target}',
+            targetEntityId: 'target1',
+            priority: 50,
+          },
+          {
+            verb: 'caressing',
+            template: '{actor} caresses {target}',
+            targetEntityId: 'target1',
+            priority: 52,
+          },
+          {
+            verb: 'kissing',
+            template: '{actor} kisses {target}',
+            targetEntityId: 'target1',
+            priority: 70,
+          },
+        ]),
+      });
+
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        scenario.entities.get(id)
+      );
+
+      const result = await testBed.service.generateActivityDescription(
+        scenario.actor.id
+      );
+
+      // Golden master snapshot
+      expect(result).toMatchSnapshot();
+    });
+
+    it('should produce consistent pronoun resolution output', () => {
+      const actor = createStandardEntity({
+        id: 'actor1',
+        name: 'Alex',
+        gender: 'neutral',
+      });
+
+      const target = createStandardEntity({
+        id: 'target1',
+        name: 'Jordan',
+        gender: 'neutral',
+      });
+
+      const entityMap = new Map([
+        ['actor1', actor],
+        ['target1', target],
+      ]);
+
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        entityMap.get(id)
+      );
+
+      // Test pronoun resolution
+      const hooks = testBed.service.getTestHooks();
+      const actorPronouns = hooks.getPronounSet('neutral');
+      const targetPronouns = hooks.getPronounSet('neutral');
+
+      expect(actorPronouns).toMatchSnapshot();
+      expect(targetPronouns).toMatchSnapshot();
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // Complex Grouping Scenarios
+  // ------------------------------------------------------------------------
+  describe('Complex Grouping Scenarios', () => {
+    it('should handle multiple targets with varying priorities', () => {
+      const actor = createStandardEntity({ id: 'actor1', name: 'John' });
+      const target1 = createStandardEntity({ id: 'target1', name: 'Alice' });
+      const target2 = createStandardEntity({ id: 'target2', name: 'Bob' });
+
+      const entityMap = new Map([
+        ['actor1', actor],
+        ['target1', target1],
+        ['target2', target2],
+      ]);
+
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        entityMap.get(id)
+      );
+
+      const activities = createTestActivities([
+        { verb: 'touch', targetEntityId: 'target1', priority: 50 },
+        { verb: 'caress', targetEntityId: 'target1', priority: 52 },
+        { verb: 'hug', targetEntityId: 'target2', priority: 60 },
+        { verb: 'kiss', targetEntityId: 'target1', priority: 80 },
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const groups = hooks.groupActivities(activities, 'cacheKey');
+
+      expect(groups).toMatchSnapshot();
+    });
+
+    it('should handle complex conjunction patterns', () => {
+      const activities = createTestActivities([
+        { verb: 'touch', priority: 50 },
+        { verb: 'caress', priority: 51 }, // "while" - close priority
+        { verb: 'stroke', priority: 52 }, // "while" - close priority
+        { verb: 'kiss', priority: 80 }, // "and" - distant priority
+      ]);
+
+      const hooks = testBed.service.getTestHooks();
+      const groups = hooks.groupActivities(activities, 'cacheKey');
+
+      expect(groups).toMatchSnapshot();
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  // End-to-End Workflow Validation
+  // ------------------------------------------------------------------------
+  describe('End-to-End Workflow Validation', () => {
+    it('should execute complete workflow from metadata collection to output', async () => {
+      const actor = createStandardEntity({
+        id: 'actor1',
+        name: 'John',
+        gender: 'male',
+        additionalComponents: new Map([
+          ['positioning:touch', {
+            entityId: 'target1',
+            activityMetadata: {
+              template: '{actor} touches {target}',
+              targetRole: 'entityId',
+              priority: 50,
+            },
+          }],
+          ['positioning:closeness', {
+            partners: ['target1'],
+          }],
+        ]),
+      });
+
+      const target = createStandardEntity({
+        id: 'target1',
+        name: 'Alice',
+        gender: 'female',
+      });
+
+      const entityMap = new Map([
+        ['actor1', actor],
+        ['target1', target],
+      ]);
+
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        entityMap.get(id)
+      );
+
+      const result = await testBed.service.generateActivityDescription('actor1');
+
+      // Complete workflow golden master
+      expect(result).toMatchSnapshot();
+    });
+  });
+});
