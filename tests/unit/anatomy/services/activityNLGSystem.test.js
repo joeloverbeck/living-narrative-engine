@@ -4,7 +4,7 @@
  * pronoun resolution, phrase generation, tone modifiers, and composition.
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import ActivityNLGSystem from '../../../../src/anatomy/services/activityNLGSystem.js';
 
 describe('ActivityNLGSystem', () => {
@@ -113,6 +113,17 @@ describe('ActivityNLGSystem', () => {
       });
       expect(instance).toBeInstanceOf(ActivityNLGSystem);
     });
+
+    it('should default config to empty object when null is provided', () => {
+      const instance = new ActivityNLGSystem({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        cacheManager: mockCacheManager,
+        config: null,
+      });
+
+      expect(instance).toBeInstanceOf(ActivityNLGSystem);
+    });
   });
 
   describe('sanitizeEntityName', () => {
@@ -204,6 +215,62 @@ describe('ActivityNLGSystem', () => {
       const result = nlgSystem.resolveEntityName('error-entity');
       expect(result).toBe('error-entity');
     });
+
+    it('should fallback to entity id when name component access fails', () => {
+      mockCacheManager.get = () => undefined;
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'unstable-entity') {
+          return {
+            id: 'unstable-entity',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:name') {
+                throw new Error('component access failure');
+              }
+              return null;
+            },
+          };
+        }
+        return null;
+      };
+
+      mockCacheManager.set = () => {};
+
+      const result = nlgSystem.resolveEntityName('unstable-entity');
+      expect(result).toBe('unstable-entity');
+    });
+
+    it('should fallback to entity id when name component missing text', () => {
+      mockCacheManager.get = () => undefined;
+      mockCacheManager.set = () => {};
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'componentless') {
+          return {
+            id: 'componentless',
+            getComponentData: () => ({ text: undefined }),
+          };
+        }
+        return null;
+      };
+
+      const result = nlgSystem.resolveEntityName('componentless');
+      expect(result).toBe('componentless');
+    });
+
+    it('should fallback to provided entityId when entity id missing', () => {
+      mockCacheManager.get = () => undefined;
+      mockCacheManager.set = () => {};
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'nameless') {
+          return {
+            getComponentData: () => null,
+          };
+        }
+        return null;
+      };
+
+      const result = nlgSystem.resolveEntityName('nameless');
+      expect(result).toBe('nameless');
+    });
   });
 
   describe('shouldUsePronounForTarget', () => {
@@ -263,6 +330,45 @@ describe('ActivityNLGSystem', () => {
       };
 
       expect(nlgSystem.shouldUsePronounForTarget('error-entity')).toBe(false);
+    });
+
+    it('should use pronouns when actor component is retrieved via getComponentData', () => {
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'data-actor') {
+          return {
+            id: 'data-actor',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:actor') {
+                return { id: 'actor-component' };
+              }
+              return null;
+            },
+          };
+        }
+        return null;
+      };
+
+      expect(nlgSystem.shouldUsePronounForTarget('data-actor')).toBe(true);
+    });
+
+    it('should not use pronouns when gender component lacks value', () => {
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'unknown-gender') {
+          return {
+            id: 'unknown-gender',
+            hasComponent: (componentId) => componentId === 'core:gender',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:gender') {
+                return { value: '' };
+              }
+              return null;
+            },
+          };
+        }
+        return null;
+      };
+
+      expect(nlgSystem.shouldUsePronounForTarget('unknown-gender')).toBe(false);
     });
   });
 
@@ -481,6 +587,286 @@ describe('ActivityNLGSystem', () => {
       const result = nlgSystem.generateActivityPhrase(actorRef, activity, usePronounsForTarget, options);
       expect(result).toContain('himself');
     });
+
+    it('should return decomposed components when omitActor is true', () => {
+      const actorRef = 'John (Hero)';
+      const activity = {
+        type: 'inline',
+        description: 'is observing the horizon',
+      };
+
+      const result = nlgSystem.generateActivityPhrase(actorRef, activity, false, {
+        omitActor: true,
+      });
+
+      expect(result).toEqual({
+        fullPhrase: 'John (Hero) is observing the horizon',
+        verbPhrase: 'is observing the horizon',
+      });
+    });
+
+    it('should use object pronoun for self-target when reflexive not preferred', () => {
+      const actorRef = 'John';
+      const activity = { verb: 'supports', targetEntityId: 'test-actor-1' };
+      const options = {
+        actorId: 'test-actor-1',
+        actorPronouns: { subject: 'he', object: 'him' },
+        preferReflexivePronouns: false,
+      };
+
+      const result = nlgSystem.generateActivityPhrase(
+        actorRef,
+        activity,
+        true,
+        options
+      );
+
+      expect(result).toContain('him');
+    });
+
+    it('should fallback to actor name when self-target pronouns are disabled', () => {
+      const actorRef = 'John';
+      const activity = { verb: 'examines', targetEntityId: 'test-actor-1' };
+      const options = {
+        actorId: 'test-actor-1',
+        actorName: 'John',
+      };
+
+      const result = nlgSystem.generateActivityPhrase(
+        actorRef,
+        activity,
+        false,
+        options
+      );
+
+      expect(result).toContain('examines John');
+    });
+
+    it('should use target pronouns for non-self targets when enabled', () => {
+      mockCacheManager.get = () => undefined;
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'test-actor-1') {
+          return {
+            id: 'test-actor-1',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:gender') {
+                return { value: 'male' };
+              }
+              if (componentId === 'core:name') {
+                return { text: 'John Doe' };
+              }
+              return null;
+            },
+            hasComponent: (componentId) =>
+              componentId === 'core:actor' || componentId === 'core:gender',
+          };
+        }
+        if (entityId === 'listener-1') {
+          return {
+            id: 'listener-1',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:gender') {
+                return { value: 'female' };
+              }
+              if (componentId === 'core:name') {
+                return { text: 'Audience Member' };
+              }
+              return null;
+            },
+            hasComponent: (componentId) => componentId === 'core:gender',
+          };
+        }
+        return null;
+      };
+
+      const actorRef = 'John';
+      const activity = {
+        type: 'inline',
+        template: '{actor} thanks {target}',
+        targetEntityId: 'listener-1',
+      };
+
+      const result = nlgSystem.generateActivityPhrase(actorRef, activity, true, {
+        actorId: 'test-actor-1',
+      });
+
+      expect(result).toBe('John thanks her');
+    });
+
+    it('should handle dedicated activities without targets', () => {
+      const result = nlgSystem.generateActivityPhrase(
+        'John',
+        { type: 'dedicated', verb: 'meditating' },
+        false,
+        {}
+      );
+
+      expect(result).toBe('John is meditating');
+    });
+
+    it('should return empty components when omitActor is true and phrase blank', () => {
+      const result = nlgSystem.generateActivityPhrase(
+        'John',
+        { description: '   ' },
+        false,
+        { omitActor: true }
+      );
+
+      expect(result).toEqual({ fullPhrase: '', verbPhrase: '' });
+    });
+
+    it('should integrate target name into descriptive phrases', () => {
+      mockCacheManager.get = () => undefined;
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'test-actor-1') {
+          return {
+            id: 'test-actor-1',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'John' };
+              }
+              if (componentId === 'core:gender') {
+                return { value: 'male' };
+              }
+              return null;
+            },
+            hasComponent: (componentId) =>
+              componentId === 'core:actor' || componentId === 'core:gender',
+          };
+        }
+        if (entityId === 'target-1') {
+          return {
+            id: 'target-1',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Target' };
+              }
+              return null;
+            },
+            hasComponent: () => false,
+          };
+        }
+        return null;
+      };
+
+      const result = nlgSystem.generateActivityPhrase(
+        'John',
+        { description: 'greets', targetEntityId: 'target-1' },
+        false,
+        { actorId: 'test-actor-1' }
+      );
+
+      expect(result).toBe('John greets Target');
+    });
+
+    it('should skip actor token removal when actor reference absent', () => {
+      const activity = { verb: 'meditates' };
+      const result = nlgSystem.generateActivityPhrase(
+        '   ',
+        activity,
+        false,
+        { omitActor: true }
+      );
+
+      expect(result).toEqual({
+        fullPhrase: 'meditates',
+        verbPhrase: 'meditates',
+      });
+    });
+
+    it('should resolve actor name when provided actorName is not a string', () => {
+      mockCacheManager.get = () => undefined;
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'actor-without-name') {
+          return {
+            id: 'actor-without-name',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Resolved Name' };
+              }
+              if (componentId === 'core:gender') {
+                return { value: 'neutral' };
+              }
+              return null;
+            },
+            hasComponent: (componentId) => componentId === 'core:actor',
+          };
+        }
+        return null;
+      };
+
+      const result = nlgSystem.generateActivityPhrase(
+        'Resolved Name',
+        { description: 'waves', targetEntityId: 'actor-without-name' },
+        false,
+        { actorId: 'actor-without-name', actorName: 123 }
+      );
+
+      expect(result).toBe('Resolved Name waves Resolved Name');
+    });
+
+    it('should fallback to resolved target name when pronoun candidate missing', () => {
+      const pronounSpy = jest
+        .spyOn(nlgSystem, 'getPronounSet')
+        .mockImplementation(() => ({ subject: 'they' }));
+
+      mockCacheManager.get = () => undefined;
+      mockCacheManager.set = () => {};
+      mockEntityManager.getEntityInstance = (entityId) => {
+        if (entityId === 'speaker') {
+          return {
+            id: 'speaker',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Speaker' };
+              }
+              if (componentId === 'core:gender') {
+                return { value: 'neutral' };
+              }
+              return null;
+            },
+            hasComponent: (componentId) => componentId === 'core:actor',
+          };
+        }
+        if (entityId === 'audience') {
+          return {
+            id: 'audience',
+            getComponentData: (componentId) => {
+              if (componentId === 'core:name') {
+                return { text: 'Audience' };
+              }
+              if (componentId === 'core:gender') {
+                return { value: 'unknown' };
+              }
+              return null;
+            },
+            hasComponent: (componentId) => componentId === 'core:gender',
+          };
+        }
+        return null;
+      };
+
+      const result = nlgSystem.generateActivityPhrase(
+        'Speaker',
+        { description: 'addresses', targetEntityId: 'audience' },
+        true,
+        { actorId: 'speaker' }
+      );
+
+      expect(result).toBe('Speaker addresses Audience');
+      pronounSpy.mockRestore();
+    });
+
+    it('should use default dedicated verb when verb missing', () => {
+      const result = nlgSystem.generateActivityPhrase(
+        'John',
+        { type: 'dedicated' },
+        false,
+        {}
+      );
+
+      expect(result).toBe('John is interacting with');
+    });
   });
 
   describe('sanitizeVerbPhrase', () => {
@@ -501,6 +887,10 @@ describe('ActivityNLGSystem', () => {
 
     it('should handle normal phrases', () => {
       expect(nlgSystem.sanitizeVerbPhrase('kisses')).toBe('kisses');
+    });
+
+    it('should return empty string for whitespace-only phrases', () => {
+      expect(nlgSystem.sanitizeVerbPhrase('   ')).toBe('');
     });
   });
 
@@ -531,6 +921,98 @@ describe('ActivityNLGSystem', () => {
 
       const result = nlgSystem.buildRelatedActivityFragment(conjunction, phraseComponents, context);
       expect(result).toContain('and');
+    });
+
+    it('should return empty string when phrase components are missing', () => {
+      const context = {
+        actorName: 'John',
+        actorReference: 'John',
+        actorPronouns: { subject: 'he' },
+        pronounsEnabled: true,
+      };
+
+      const result = nlgSystem.buildRelatedActivityFragment('and', null, context);
+      expect(result).toBe('');
+    });
+
+    it('should return empty string when both sanitized and fallback phrases are empty', () => {
+      const context = {
+        actorName: 'John',
+        actorReference: 'John',
+        actorPronouns: { subject: 'he' },
+        pronounsEnabled: false,
+      };
+
+      const result = nlgSystem.buildRelatedActivityFragment('and', {
+        verbPhrase: '   ',
+        fullPhrase: '   ',
+      }, context);
+
+      expect(result).toBe('');
+    });
+
+    it('should return while fragment when copula is removed', () => {
+      const context = {
+        actorName: 'John',
+        actorReference: 'John',
+        actorPronouns: { subject: 'he' },
+        pronounsEnabled: false,
+      };
+
+      const result = nlgSystem.buildRelatedActivityFragment('while', {
+        verbPhrase: 'is running',
+        fullPhrase: 'is running',
+      }, context);
+
+      expect(result).toBe('while running');
+    });
+
+    it('should include subject when pronouns are enabled', () => {
+      const context = {
+        actorName: 'John',
+        actorReference: 'John',
+        actorPronouns: { subject: 'he' },
+        pronounsEnabled: true,
+      };
+
+      const result = nlgSystem.buildRelatedActivityFragment('while', {
+        verbPhrase: 'running quickly',
+        fullPhrase: 'running quickly',
+      }, context);
+
+      expect(result).toBe('while he running quickly');
+    });
+
+    it('should fallback to sanitized phrase when subject reference missing', () => {
+      const context = {
+        actorName: '',
+        actorReference: '',
+        actorPronouns: {},
+        pronounsEnabled: false,
+      };
+
+      const result = nlgSystem.buildRelatedActivityFragment('while', {
+        verbPhrase: 'running',
+        fullPhrase: 'running',
+      }, context);
+
+      expect(result).toBe('while running');
+    });
+
+    it('should fallback to full phrase when sanitized verb phrase missing', () => {
+      const context = {
+        actorName: 'John',
+        actorReference: 'John',
+        actorPronouns: { subject: 'he' },
+        pronounsEnabled: true,
+      };
+
+      const result = nlgSystem.buildRelatedActivityFragment('while', {
+        verbPhrase: '   ',
+        fullPhrase: 'is smiling brightly',
+      }, context);
+
+      expect(result).toBe('while is smiling brightly');
     });
   });
 
@@ -590,6 +1072,18 @@ describe('ActivityNLGSystem', () => {
 
       expect(nlgSystem.injectSoftener(template, descriptor)).toBe(template);
     });
+
+    it('should ignore descriptors that trim to empty strings', () => {
+      const template = 'embraces {target}';
+
+      expect(nlgSystem.injectSoftener(template, '   ')).toBe(template);
+    });
+
+    it('should avoid duplicating existing descriptors', () => {
+      const template = 'embraces gently {target}';
+
+      expect(nlgSystem.injectSoftener(template, 'gently')).toBe(template);
+    });
   });
 
   describe('truncateDescription', () => {
@@ -619,6 +1113,69 @@ describe('ActivityNLGSystem', () => {
 
       expect(result.length).toBeLessThan(5000);
       expect(result).toMatch(/\.\.\.$/);
+    });
+
+    it('should return empty string for whitespace-only values', () => {
+      expect(nlgSystem.truncateDescription('   ', 50)).toBe('');
+    });
+
+    it('should return trimmed text when maxLength is invalid', () => {
+      const text = 'Short description.';
+      expect(nlgSystem.truncateDescription(text, 0)).toBe('Short description.');
+      expect(nlgSystem.truncateDescription(text, Number.POSITIVE_INFINITY)).toBe(
+        'Short description.'
+      );
+    });
+
+    it('should prefer full sentences when truncating', () => {
+      const text = 'Sentence one. Sentence two is longer and should be removed.';
+      const result = nlgSystem.truncateDescription(text, 25);
+
+      expect(result).toBe('Sentence one.');
+    });
+  });
+
+  describe('formatActivityDescription', () => {
+    it('should return empty string for invalid or empty groups', () => {
+      expect(nlgSystem.formatActivityDescription(null)).toBe('');
+      expect(nlgSystem.formatActivityDescription([])).toBe('');
+    });
+
+    it('should filter invalid entries and compose description', () => {
+      const groups = [
+        { description: 'First event' },
+        null,
+        'Second event',
+        { description: '   ' },
+      ];
+
+      const result = nlgSystem.formatActivityDescription(groups, {
+        prefix: 'Before: ',
+        suffix: ' :After',
+        separator: ' & ',
+        maxLength: 200,
+      });
+
+      expect(result).toBe('Before: First event & Second event :After');
+    });
+
+    it('should return empty string when no descriptions resolved', () => {
+      const groups = [null, { description: '' }, { description: '   ' }];
+
+      expect(nlgSystem.formatActivityDescription(groups)).toBe('');
+    });
+
+    it('should respect maxLength when composing description', () => {
+      const groups = [
+        { description: 'Sentence one' },
+        { description: 'Sentence two' },
+      ];
+
+      const result = nlgSystem.formatActivityDescription(groups, {
+        maxLength: 20,
+      });
+
+      expect(result).toBe('Sentence one.');
     });
   });
 
@@ -663,10 +1220,38 @@ describe('ActivityNLGSystem', () => {
       expect(hooks.sanitizeEntityName('John Doe')).toBe('John Doe');
       expect(hooks.getPronounSet('male').subject).toBe('he');
 
+      expect(hooks.resolveEntityName('test-actor-1')).toBe('John Doe');
+      expect(hooks.detectEntityGender('test-actor-1')).toBe('male');
+      expect(hooks.getReflexivePronoun({ subject: 'they' })).toBe('themselves');
+
       // mergeAdverb concatenates adverbs unless one contains the other
       const mergedResult = hooks.mergeAdverb('soft', 'gentle');
       expect(mergedResult).toContain('soft');
       expect(mergedResult).toContain('gentle');
+
+      expect(hooks.shouldUsePronounForTarget('test-actor-1')).toBe(true);
+      expect(
+        hooks.generateActivityPhrase('John', { description: 'smiles' }, false)
+      ).toBe('John smiles');
+      expect(hooks.sanitizeVerbPhrase(' is walking')).toBe('walking');
+      expect(
+        hooks.buildRelatedActivityFragment(
+          'and',
+          { verbPhrase: 'walking', fullPhrase: 'walking' },
+          {
+            actorName: 'John',
+            actorReference: 'John',
+            actorPronouns: { subject: 'he' },
+            pronounsEnabled: false,
+          }
+        )
+      ).toBe('and walking');
+      expect(hooks.injectSoftener('greets {target}', 'warmly')).toBe(
+        'greets warmly {target}'
+      );
+      expect(hooks.truncateDescription('A tiny phrase.', 100)).toBe(
+        'A tiny phrase.'
+      );
     });
   });
 });
