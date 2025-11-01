@@ -20,7 +20,7 @@ jobs:
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '20' # You can specify your desired Node.js version
           cache: 'npm' # Cache npm dependencies for faster runs
@@ -43,7 +43,7 @@ jobs:
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '20' # You can specify your desired Node.js version
           cache: 'npm' # Cache npm dependencies for faster runs
@@ -66,7 +66,7 @@ jobs:
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '20' # You can specify your desired Node.js version
           cache: 'npm' # Cache npm dependencies for faster runs
@@ -89,7 +89,7 @@ jobs:
 
       # Step 2: Set up the correct version of Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '20' # You can specify your desired Node.js version
           cache: 'npm' # Cache npm dependencies for faster runs
@@ -116,7 +116,7 @@ jobs:
 
       # Step 2: Set up Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           # Cache dependencies specific to this sub-directory
