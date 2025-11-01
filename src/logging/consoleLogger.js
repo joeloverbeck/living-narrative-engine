@@ -71,24 +71,19 @@ class ConsoleLogger {
    * @returns {unknown} Message with the `[DEBUG]` prefix stripped when possible.
    */
   #stripDebugTag(message) {
-    if (typeof message !== 'string') {
-      return message;
-    }
-
     const trimmedStart = message.trimStart();
     if (trimmedStart.startsWith('[DEBUG]')) {
       const withoutTag = trimmedStart.slice('[DEBUG]'.length);
       return withoutTag.trimStart();
     }
 
+    // #isDebugTaggedMessage ensures that any message reaching this point includes a
+    // prefix followed by a "[DEBUG]" marker, so the regex match is guaranteed.
+    /** @type {RegExpMatchArray} */
     const taggedPrefixMatch = trimmedStart.match(/^([^[]*?:\s*)\[DEBUG\]\s*/);
-    if (taggedPrefixMatch) {
-      const [, prefix] = taggedPrefixMatch;
-      const remainder = trimmedStart.slice(taggedPrefixMatch[0].length);
-      return `${prefix}${remainder}`;
-    }
-
-    return message;
+    const [, prefix] = taggedPrefixMatch;
+    const remainder = trimmedStart.slice(taggedPrefixMatch[0].length);
+    return `${prefix}${remainder}`;
   }
 
   /**

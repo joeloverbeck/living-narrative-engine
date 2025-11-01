@@ -37,6 +37,13 @@ describe('ConsoleLogger', () => {
     return logger;
   };
 
+  it('defaults to INFO log level when no level is supplied', () => {
+    new ConsoleLogger();
+
+    expect(consoleSpies.info).not.toHaveBeenCalled();
+    expect(consoleSpies.debug).not.toHaveBeenCalled();
+  });
+
   it('respects provided string log level and logs initialization in debug mode', () => {
     new ConsoleLogger('DEBUG');
 
@@ -154,6 +161,25 @@ describe('ConsoleLogger', () => {
     expect(consoleSpies.error).toHaveBeenCalledWith('error message');
   });
 
+  it('suppresses warn and error output when thresholds are higher', () => {
+    const logger = new ConsoleLogger(LogLevel.ERROR);
+    jest.clearAllMocks();
+
+    logger.warn('warn suppressed');
+    expect(consoleSpies.warn).not.toHaveBeenCalled();
+
+    logger.error('error visible');
+    expect(consoleSpies.error).toHaveBeenCalledWith('error visible');
+
+    jest.clearAllMocks();
+
+    logger.setLogLevel(LogLevel.NONE);
+    jest.clearAllMocks();
+
+    logger.error('error suppressed');
+    expect(consoleSpies.error).not.toHaveBeenCalled();
+  });
+
   it('treats [DEBUG]-tagged messages as debug-level output', () => {
     const infoLogger = new ConsoleLogger(LogLevel.INFO);
     jest.clearAllMocks();
@@ -177,6 +203,17 @@ describe('ConsoleLogger', () => {
       'promoted to debug',
       'extra'
     );
+  });
+
+  it('ignores debug promotion for non-string values', () => {
+    const logger = new ConsoleLogger(LogLevel.DEBUG);
+    jest.clearAllMocks();
+
+    const payload = { text: '[DEBUG] object payload' };
+    logger.info(payload);
+
+    expect(consoleSpies.debug).not.toHaveBeenCalled();
+    expect(consoleSpies.info).toHaveBeenCalledWith(payload);
   });
 
   it('promotes prefixed [DEBUG] markers to debug output', () => {
