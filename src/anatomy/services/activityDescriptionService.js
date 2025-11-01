@@ -758,11 +758,14 @@ class ActivityDescriptionService {
       // Native ActivityDescriptionService hooks for testing internal implementation
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
       getActivityIndex: (...args) => this.#getActivityIndex(...args),
+      buildActivityIndexCacheKey: (...args) =>
+        this.#buildActivityIndexCacheKey(...args),
       subscribeToInvalidationEvents: () =>
         this.#subscribeToInvalidationEvents(),
       setEventBus: (eventBus) => {
         this.#eventBus = eventBus;
       },
+      dispatchError: (...args) => this.#dispatchError(...args),
       formatActivityDescription: (...args) =>
         this.#formatActivityDescription(...args),
       filterByConditions: (...args) => this.#filterByConditions(...args),
@@ -807,6 +810,12 @@ class ActivityDescriptionService {
           activityIndex: this.#cacheManager._getInternalCacheForTesting('activityIndex'),
           closeness: this.#cacheManager._getInternalCacheForTesting('closeness'),
         };
+      },
+      getCacheValue: (...args) => this.#getCacheValue(...args),
+      addEventUnsubscriber: (fn) => {
+        if (typeof fn === 'function') {
+          this.#eventUnsubscribers.push(fn);
+        }
       },
     };
   }
