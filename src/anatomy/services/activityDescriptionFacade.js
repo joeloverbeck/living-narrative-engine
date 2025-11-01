@@ -386,6 +386,11 @@ class ActivityDescriptionFacade {
       invalidateCache: (entityId) => this.invalidateCache(entityId),
       invalidateEntities: (entityIds) => this.invalidateEntities(entityIds),
       getActivityIntegrationConfig: () => this.#getActivityIntegrationConfig(),
+      registerEventUnsubscriber: (unsubscribeFn) => {
+        if (typeof unsubscribeFn === 'function') {
+          this.#eventUnsubscribers.push(unsubscribeFn);
+        }
+      },
     };
   }
 }

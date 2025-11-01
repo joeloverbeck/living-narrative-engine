@@ -457,6 +457,51 @@ describe('ActivityDescriptionFacade', () => {
       });
     });
 
+    it('should not dispatch error event when event bus is unavailable', async () => {
+      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementationOnce(() => {
+        throw new Error('Collection failed');
+      });
+
+      const facadeWithoutEventBus = new ActivityDescriptionFacade({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        anatomyFormattingService: mockAnatomyFormattingService,
+        cacheManager: mockCacheManager,
+        indexManager: mockIndexManager,
+        metadataCollectionSystem: mockMetadataCollectionSystem,
+        nlgSystem: mockNLGSystem,
+        groupingSystem: mockGroupingSystem,
+        contextBuildingSystem: mockContextBuildingSystem,
+        filteringSystem: mockFilteringSystem,
+        eventBus: undefined,
+      });
+
+      const entity = { id: 'entity_1' };
+      await facadeWithoutEventBus.generateActivityDescription(entity);
+
+      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+
+      facadeWithoutEventBus.destroy();
+    });
+
+    it('should warn when error dispatch fails', async () => {
+      const dispatchError = new Error('Dispatch failed');
+      mockEventBus.dispatch.mockImplementation(() => {
+        throw dispatchError;
+      });
+      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
+        throw new Error('Collection failed');
+      });
+
+      const entity = { id: 'entity_1' };
+      await facade.generateActivityDescription(entity);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to dispatch error event',
+        dispatchError
+      );
+    });
+
     it('should use default config when getActivityIntegrationConfig fails', async () => {
       mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(() => {
         throw new Error('Config error');
@@ -595,6 +640,10 @@ describe('ActivityDescriptionFacade', () => {
 
       expect(hooks.invalidateEntities).toBeDefined();
       expect(typeof hooks.invalidateEntities).toBe('function');
+
+      mockCacheManager.invalidate.mockClear();
+      hooks.invalidateEntities(['entity_1']);
+      expect(mockCacheManager.invalidate).toHaveBeenCalledWith('entityName', 'entity_1');
     });
 
     it('should expose getActivityIntegrationConfig hook', () => {
@@ -684,6 +733,23 @@ describe('ActivityDescriptionFacade', () => {
       });
 
       expect(() => facadeWithNullCacheDestroy.destroy()).not.toThrow();
+    });
+
+    it('should warn when an event unsubscriber throws during destroy', () => {
+      const hooks = facade.getTestHooks();
+      const unsubscribeError = new Error('unsubscribe failure');
+
+      hooks.registerEventUnsubscriber(() => {
+        throw unsubscribeError;
+      });
+
+      facade.destroy();
+      facade = null;
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to unsubscribe from event',
+        unsubscribeError
+      );
     });
 
     it('should unsubscribe from events on destroy when eventBus is provided', () => {
