@@ -1,0 +1,145 @@
+{
+  "description": "Fixture for performance and cache testing",
+  "cacheTestScenarios": [
+    {
+      "name": "name_resolution_cache_test",
+      "iterations": 1000,
+      "entities": [
+        { "id": "entity_1", "name": "John" },
+        { "id": "entity_2", "name": "Alice" },
+        { "id": "entity_3", "name": "Bob" },
+        { "id": "entity_4", "name": "Carol" },
+        { "id": "entity_5", "name": "Dave" }
+      ],
+      "callPattern": [
+        "entity_1", "entity_2", "entity_3", "entity_4", "entity_5",
+        "entity_1", "entity_2", "entity_3", "entity_4", "entity_5",
+        "entity_1", "entity_2", "entity_3", "entity_4", "entity_5"
+      ],
+      "expectedCacheHitRate": 0.67,
+      "expectedMaxLatency": 1
+    },
+    {
+      "name": "metadata_collection_cache_test",
+      "iterations": 100,
+      "entitiesWithActivities": [
+        {
+          "entityId": "entity_1",
+          "activityCount": 5
+        },
+        {
+          "entityId": "entity_2",
+          "activityCount": 3
+        },
+        {
+          "entityId": "entity_3",
+          "activityCount": 7
+        }
+      ],
+      "callPattern": "repeated",
+      "expectedCacheHitRate": 0.8,
+      "expectedMaxLatency": 5
+    }
+  ],
+  "performanceScenarios": [
+    {
+      "name": "grouping_10_activities",
+      "activityCount": 10,
+      "targetDistribution": {
+        "target1": 3,
+        "target2": 3,
+        "target3": 4
+      },
+      "expectedMaxLatencyMs": 5,
+      "expectedComplexity": "O(n log n)"
+    },
+    {
+      "name": "grouping_50_activities",
+      "activityCount": 50,
+      "targetDistribution": {
+        "target1": 15,
+        "target2": 20,
+        "target3": 15
+      },
+      "expectedMaxLatencyMs": 20,
+      "expectedComplexity": "O(n log n)"
+    },
+    {
+      "name": "grouping_100_activities",
+      "activityCount": 100,
+      "targetDistribution": {
+        "target1": 30,
+        "target2": 40,
+        "target3": 30
+      },
+      "expectedMaxLatencyMs": 50,
+      "expectedComplexity": "O(n log n)"
+    },
+    {
+      "name": "grouping_500_activities",
+      "activityCount": 500,
+      "targetDistribution": {
+        "target1": 150,
+        "target2": 200,
+        "target3": 150
+      },
+      "expectedMaxLatencyMs": 200,
+      "expectedComplexity": "O(n log n)"
+    }
+  ],
+  "memoryTestScenarios": [
+    {
+      "name": "stable_memory_usage",
+      "iterations": 10000,
+      "operationsPerIteration": 10,
+      "expectedMaxMemoryGrowthMB": 50,
+      "description": "Memory should remain stable with cache pruning"
+    },
+    {
+      "name": "cache_pruning_effectiveness",
+      "cacheSize": 1000,
+      "iterations": 5000,
+      "expectedPruningRate": 0.1,
+      "description": "LRU pruning should keep memory under control"
+    }
+  ],
+  "concurrencyTestScenarios": [
+    {
+      "name": "concurrent_description_generation",
+      "concurrentRequests": 100,
+      "activitiesPerRequest": 10,
+      "expectedMaxLatencyMs": 500,
+      "expectedThroughput": 200
+    },
+    {
+      "name": "cache_contention",
+      "concurrentReaders": 50,
+      "concurrentWriters": 10,
+      "iterations": 1000,
+      "expectedCacheHitRate": 0.7,
+      "description": "Cache should handle concurrent access without corruption"
+    }
+  ],
+  "scalabilityTestData": {
+    "small_scale": {
+      "entities": 10,
+      "activitiesPerEntity": 5,
+      "expectedLatencyMs": 10
+    },
+    "medium_scale": {
+      "entities": 50,
+      "activitiesPerEntity": 10,
+      "expectedLatencyMs": 50
+    },
+    "large_scale": {
+      "entities": 100,
+      "activitiesPerEntity": 20,
+      "expectedLatencyMs": 200
+    },
+    "very_large_scale": {
+      "entities": 500,
+      "activitiesPerEntity": 50,
+      "expectedLatencyMs": 1000
+    }
+  }
+}

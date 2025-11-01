@@ -1,0 +1,107 @@
+{
+  "description": "Fixture for testing complex activity grouping scenarios",
+  "activities": [
+    {
+      "id": "activity_1",
+      "verb": "touching",
+      "template": "{actor} is touching {target}'s hand",
+      "targetEntityId": "target1",
+      "priority": 50,
+      "metadata": {
+        "bodyPart": "hand",
+        "intensity": "light",
+        "shouldDescribeInActivity": true
+      }
+    },
+    {
+      "id": "activity_2",
+      "verb": "caressing",
+      "template": "{actor} is caressing {target}'s face",
+      "targetEntityId": "target1",
+      "priority": 55,
+      "metadata": {
+        "bodyPart": "face",
+        "intensity": "moderate",
+        "shouldDescribeInActivity": true
+      }
+    },
+    {
+      "id": "activity_3",
+      "verb": "kissing",
+      "template": "{actor} is kissing {target}",
+      "targetEntityId": "target2",
+      "priority": 70,
+      "metadata": {
+        "bodyPart": "lips",
+        "intensity": "intense",
+        "shouldDescribeInActivity": true
+      }
+    },
+    {
+      "id": "activity_4",
+      "verb": "hugging",
+      "template": "{actor} is hugging {target}",
+      "targetEntityId": "target3",
+      "priority": 60,
+      "metadata": {
+        "bodyPart": "torso",
+        "intensity": "moderate",
+        "shouldDescribeInActivity": true
+      }
+    },
+    {
+      "id": "activity_5",
+      "verb": "stroking",
+      "template": "{actor} is stroking {target}'s hair",
+      "targetEntityId": "target2",
+      "priority": 65,
+      "metadata": {
+        "bodyPart": "hair",
+        "intensity": "light",
+        "shouldDescribeInActivity": true
+      }
+    },
+    {
+      "id": "activity_6",
+      "verb": "holding",
+      "template": "{actor} is holding {target}'s hand",
+      "targetEntityId": "target1",
+      "priority": 45,
+      "metadata": {
+        "bodyPart": "hand",
+        "intensity": "light",
+        "shouldDescribeInActivity": true
+      }
+    },
+    {
+      "id": "activity_7",
+      "verb": "massaging",
+      "template": "{actor} is massaging {target}'s shoulders",
+      "targetEntityId": "target3",
+      "priority": 55,
+      "metadata": {
+        "bodyPart": "shoulders",
+        "intensity": "moderate",
+        "shouldDescribeInActivity": true
+      }
+    }
+  ],
+  "expectedGroupingBehavior": {
+    "totalGroups": 3,
+    "group1": {
+      "primaryActivity": "activity_3",
+      "relatedActivities": ["activity_5"],
+      "targetEntity": "target2"
+    },
+    "group2": {
+      "primaryActivity": "activity_4",
+      "relatedActivities": ["activity_7"],
+      "targetEntity": "target3"
+    },
+    "group3": {
+      "primaryActivity": "activity_2",
+      "relatedActivities": ["activity_1", "activity_6"],
+      "targetEntity": "target1"
+    }
+  }
+}

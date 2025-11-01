@@ -124,6 +124,27 @@ export class PartSelectionService {
     const candidates = [];
     const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
 
+    this.#logger.info(
+      `PartSelectionService: Searching ${allEntityDefs.length} entity definitions for partType=${requirements.partType}, allowedTypes=${JSON.stringify(allowedTypes)}`,
+      {
+        requirements,
+        recipeSlot,
+      }
+    );
+
+    // Log kraken_head specifically for diagnosis
+    const krakenHead = allEntityDefs.find((def) => def.id === 'anatomy:kraken_head');
+    if (krakenHead) {
+      this.#logger.info(
+        'PartSelectionService: Found kraken_head entity definition',
+        { krakenHead }
+      );
+    } else {
+      this.#logger.warn(
+        'PartSelectionService: kraken_head entity definition NOT found in registry'
+      );
+    }
+
     for (const entityDef of allEntityDefs) {
       if (
         this.#meetsAllRequirements(
@@ -171,15 +192,29 @@ export class PartSelectionService {
    * @returns {boolean} True if all requirements are met
    */
   #meetsAllRequirements(entityDef, requirements, allowedTypes, recipeSlot) {
+    const isKrakenHead = entityDef.id === 'anatomy:kraken_head';
+
     // Must be an anatomy part
     const anatomyPart = entityDef.components?.['anatomy:part'];
-    if (!anatomyPart) return false;
+    if (!anatomyPart) {
+      if (isKrakenHead) {
+        this.#logger.info(
+          `PartSelectionService: kraken_head FAILED - no anatomy:part component`
+        );
+      }
+      return false;
+    }
 
     // Check allowed types (handle wildcard)
     if (
       !allowedTypes.includes('*') &&
       !allowedTypes.includes(anatomyPart.subType)
     ) {
+      if (isKrakenHead) {
+        this.#logger.info(
+          `PartSelectionService: kraken_head FAILED - subType '${anatomyPart.subType}' not in allowedTypes [${allowedTypes.join(', ')}]`
+        );
+      }
       return false;
     }
 
@@ -188,6 +223,11 @@ export class PartSelectionService {
       requirements.partType &&
       anatomyPart.subType !== requirements.partType
     ) {
+      if (isKrakenHead) {
+        this.#logger.info(
+          `PartSelectionService: kraken_head FAILED - subType '${anatomyPart.subType}' !== required '${requirements.partType}'`
+        );
+      }
       return false;
     }
 
@@ -196,7 +236,18 @@ export class PartSelectionService {
       const hasAllComponents = requirements.components.every(
         (comp) => entityDef.components[comp] !== undefined
       );
-      if (!hasAllComponents) return false;
+      if (!hasAllComponents) {
+        if (isKrakenHead) {
+          const missing = requirements.components.filter(
+            (comp) => entityDef.components[comp] === undefined
+          );
+          this.#logger.info(
+            `PartSelectionService: kraken_head FAILED - missing required components: [${missing.join(', ')}]`,
+            { hasComponents: Object.keys(entityDef.components) }
+          );
+        }
+        return false;
+      }
     }
 
     // Check recipe slot requirements
@@ -206,7 +257,21 @@ export class PartSelectionService {
         const hasAllTags = recipeSlot.tags.every(
           (tag) => entityDef.components[tag] !== undefined
         );
-        if (!hasAllTags) return false;
+        if (!hasAllTags) {
+          if (isKrakenHead) {
+            const missing = recipeSlot.tags.filter(
+              (tag) => entityDef.components[tag] === undefined
+            );
+            this.#logger.info(
+              `PartSelectionService: kraken_head FAILED - missing required tags: [${missing.join(', ')}]`,
+              {
+                requiredTags: recipeSlot.tags,
+                hasComponents: Object.keys(entityDef.components),
+              }
+            );
+          }
+          return false;
+        }
       }
 
       // Check excluded tags

@@ -12,20 +12,11 @@ import {
   ensureValidLogger,
   assertNonBlankString,
 } from '../../utils/index.js';
-import {
-  COMPONENT_ADDED_ID,
-  COMPONENT_REMOVED_ID,
-  COMPONENTS_BATCH_ADDED_ID,
-  ENTITY_REMOVED_ID,
-} from '../../constants/eventIds.js';
-import {
-  NAME_COMPONENT_ID,
-  ACTOR_COMPONENT_ID,
-} from '../../constants/componentIds.js';
-
-const GENDER_COMPONENT_ID = 'core:gender';
-const ACTIVITY_METADATA_COMPONENT_ID = 'activity:description_metadata';
-const CLOSENESS_COMPONENT_ID = 'positioning:closeness';
+import ActivityCacheManager from '../cache/activityCacheManager.js';
+import ActivityIndexManager from './activityIndexManager.js';
+import ActivityMetadataCollectionSystem from './activityMetadataCollectionSystem.js';
+import ActivityConditionValidator from './validation/activityConditionValidator.js';
+import ActivityNLGSystem from './activityNLGSystem.js';
 
 const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
   enabled: true,
@@ -116,13 +107,17 @@ class ActivityDescriptionService {
 
   #jsonLogicEvaluationService;
 
-  #entityNameCache = new Map();
+  #cacheManager = null;
 
-  #genderCache = new Map();
+  #indexManager = null;
 
-  #activityIndexCache = new Map();
+  #metadataCollectionSystem = null;
 
-  #closenessCache = new Map();
+  #conditionValidator = null;
+
+  #nlgSystem = null;
+
+  #groupingSystem = null;
 
   #eventBus = null;
 
@@ -135,10 +130,6 @@ class ActivityDescriptionService {
     ttl: 60000,
     enableMetrics: false,
   };
-
-  #cleanupInterval = null;
-
-  #simultaneousPriorityThreshold = 10;
 
   /**
    * Creates an ActivityDescriptionService instance.
@@ -156,6 +147,11 @@ class ActivityDescriptionService {
     entityManager,
     anatomyFormattingService,
     jsonLogicEvaluationService,
+    cacheManager,
+    indexManager,
+    metadataCollectionSystem,
+    groupingSystem,
+    nlgSystem,
     activityIndex = null,
     eventBus = null,
   }) {
@@ -177,19 +173,74 @@ class ActivityDescriptionService {
       { requiredMethods: ['evaluate'] }
     );
 
+    validateDependency(cacheManager, 'IActivityCacheManager', this.#logger, {
+      requiredMethods: ['registerCache', 'get', 'set'],
+    });
+
+    validateDependency(indexManager, 'IActivityIndexManager', this.#logger, {
+      requiredMethods: ['buildIndex'],
+    });
+
+    validateDependency(
+      metadataCollectionSystem,
+      'IActivityMetadataCollectionSystem',
+      this.#logger,
+      { requiredMethods: ['collectActivityMetadata'] }
+    );
+
+    validateDependency(groupingSystem, 'IActivityGroupingSystem', this.#logger, {
+      requiredMethods: ['groupActivities', 'sortByPriority'],
+    });
+
+    validateDependency(nlgSystem, 'IActivityNLGSystem', this.#logger, {
+      requiredMethods: ['formatActivityDescription'],
+    });
+
     this.#entityManager = entityManager;
     this.#anatomyFormattingService = anatomyFormattingService;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
+    this.#cacheManager = cacheManager;
+    this.#indexManager = indexManager;
+    this.#metadataCollectionSystem = metadataCollectionSystem;
+    this.#groupingSystem = groupingSystem;
+    this.#nlgSystem = nlgSystem;
     this.#activityIndex = activityIndex;
+
+    // Validate event bus if provided
     if (eventBus !== null && eventBus !== undefined) {
       validateDependency(eventBus, 'EventBus', this.#logger, {
         requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
       });
       this.#eventBus = eventBus;
-      this.#subscribeToInvalidationEvents();
     }
 
-    this.#setupCacheCleanup();
+    // Register caches with appropriate configurations
+    this.#cacheManager.registerCache('entityName', {
+      ttl: this.#cacheConfig.ttl,
+      maxSize: this.#cacheConfig.maxSize,
+    });
+    this.#cacheManager.registerCache('gender', {
+      ttl: this.#cacheConfig.ttl,
+      maxSize: this.#cacheConfig.maxSize,
+    });
+    this.#cacheManager.registerCache('activityIndex', {
+      ttl: this.#cacheConfig.ttl,
+      maxSize: 100, // Smaller size for activity index
+    });
+    this.#cacheManager.registerCache('closeness', {
+      ttl: this.#cacheConfig.ttl,
+      maxSize: this.#cacheConfig.maxSize,
+    });
+
+    // Initialize condition validator
+    this.#conditionValidator = new ActivityConditionValidator({
+      logger: this.#logger,
+    });
+
+    // Subscribe to invalidation events only if event bus is available
+    if (this.#eventBus) {
+      this.#subscribeToInvalidationEvents();
+    }
   }
 
   /**
@@ -210,7 +261,9 @@ class ActivityDescriptionService {
     );
 
     // Gender components may change between invocations; refresh actor pronouns while retaining cached targets.
-    this.#genderCache.delete(entityId);
+    if (this.#cacheManager) {
+      this.#cacheManager.invalidate('gender', entityId);
+    }
 
     try {
       this.#logger.debug(
@@ -271,7 +324,7 @@ class ActivityDescriptionService {
         componentCount,
       });
 
-      const activities = this.#collectActivityMetadata(entityId, entity);
+      const activities = this.#metadataCollectionSystem.collectActivityMetadata(entityId, entity);
 
       if (activities.length === 0) {
         this.#logger.debug(`No activities found for entity: ${entityId}`);
@@ -294,7 +347,7 @@ class ActivityDescriptionService {
       let processedActivities = conditionedActivities;
 
       if (formattingConfig.deduplicateActivities !== false) {
-        processedActivities = this.#deduplicateActivitiesBySignature(
+        processedActivities = this.#metadataCollectionSystem.deduplicateActivitiesBySignature(
           conditionedActivities
         );
 
@@ -314,7 +367,7 @@ class ActivityDescriptionService {
         return '';
       }
 
-      const prioritizedActivities = this.#sortByPriority(
+      const prioritizedActivities = this.#groupingSystem.sortByPriority(
         processedActivities,
         this.#buildActivityIndexCacheKey('priority', entity?.id ?? entityId)
       );
@@ -346,423 +399,7 @@ class ActivityDescriptionService {
   }
 
   // Stub methods - to be implemented in subsequent tickets
-
-  #collectActivityMetadata(entityId, entity = null) {
-    // ACTDESC-006, ACTDESC-007
-    const activities = [];
-
-    // Collect from activity index (Phase 3)
-    if (
-      this.#activityIndex &&
-      typeof this.#activityIndex.findActivitiesForEntity === 'function'
-    ) {
-      try {
-        const indexedActivities =
-          this.#activityIndex.findActivitiesForEntity(entityId);
-
-        if (!Array.isArray(indexedActivities)) {
-          this.#logger.warn(
-            `Activity index returned invalid data for entity ${entityId}`
-          );
-        } else {
-          activities.push(...indexedActivities.filter(Boolean));
-        }
-      } catch (error) {
-        this.#logger.error(
-          `Failed to collect activity metadata for entity ${entityId}`,
-          error
-        );
-      }
-    }
-
-    // Collect inline metadata (ACTDESC-006)
-    let resolvedEntity = entity;
-    if (!resolvedEntity) {
-      try {
-        resolvedEntity = this.#entityManager.getEntityInstance(entityId);
-      } catch (error) {
-        this.#logger.warn(
-          `Failed to resolve entity for metadata collection: ${entityId}`,
-          error
-        );
-      }
-    }
-
-    if (resolvedEntity) {
-      try {
-        const inlineActivities = this.#collectInlineMetadata(resolvedEntity);
-        activities.push(...inlineActivities);
-      } catch (error) {
-        this.#logger.error(
-          `Failed to collect inline metadata for entity ${entityId}`,
-          error
-        );
-      }
-    } else {
-      this.#logger.warn(
-        `No entity available for inline metadata collection: ${entityId}`
-      );
-    }
-
-    // Collect dedicated metadata (ACTDESC-007)
-    if (resolvedEntity) {
-      try {
-        const dedicatedActivities =
-          this.#collectDedicatedMetadata(resolvedEntity);
-        activities.push(...dedicatedActivities);
-      } catch (error) {
-        this.#logger.error(
-          `Failed to collect dedicated metadata for entity ${entityId}`,
-          error
-        );
-      }
-    } else {
-      this.#logger.warn(
-        `No entity available for dedicated metadata collection: ${entityId}`
-      );
-    }
-
-    return activities.filter(Boolean);
-  }
-
-  /**
-   * Collect inline metadata from components.
-   *
-   * @param {object} entity - Entity instance
-   * @returns {Array<object>} Inline metadata activities
-   * @private
-   */
-
-  #collectInlineMetadata(entity) {
-    const activities = [];
-    if (!entity || typeof entity !== 'object') {
-      this.#logger.warn(
-        'Cannot collect inline metadata without a valid entity'
-      );
-      return activities;
-    }
-
-    const componentIds = Array.isArray(entity.componentTypeIds)
-      ? entity.componentTypeIds
-      : [];
-
-    this.#logger.info('Scanning components for inline metadata', {
-      entityId: entity?.id,
-      componentCount: componentIds.length,
-      componentIds: componentIds,
-    });
-
-    for (const componentId of componentIds) {
-      // Skip dedicated metadata components (already processed)
-      if (componentId === 'activity:description_metadata') {
-        continue;
-      }
-
-      if (typeof entity.getComponentData !== 'function') {
-        this.#logger.warn(
-          `Entity ${entity?.id ?? 'unknown'} is missing getComponentData; skipping ${componentId}`
-        );
-        continue;
-      }
-
-      let componentData;
-      try {
-        componentData = entity.getComponentData(componentId);
-      } catch (error) {
-        this.#logger.error(
-          `Failed to retrieve component data for ${componentId}`,
-          error
-        );
-        continue;
-      }
-
-      if (!componentData || typeof componentData !== 'object') {
-        this.#logger.warn(
-          `Component ${componentId} returned invalid data; skipping inline metadata`
-        );
-        continue;
-      }
-
-      const activityMetadata = componentData?.activityMetadata;
-
-      if (activityMetadata && typeof activityMetadata !== 'object') {
-        this.#logger.warn(
-          `Activity metadata for ${componentId} is malformed; skipping`
-        );
-        continue;
-      }
-
-      // Only process components that have activityMetadata and aren't explicitly disabled
-      if (
-        activityMetadata &&
-        activityMetadata?.shouldDescribeInActivity !== false
-      ) {
-        this.#logger.info('Found activity metadata in component', {
-          componentId,
-          hasTemplate: !!activityMetadata?.template,
-          hasPriority: !!activityMetadata?.priority,
-          hasTargetRole: !!activityMetadata?.targetRole,
-          shouldDescribe: activityMetadata?.shouldDescribeInActivity,
-        });
-
-        try {
-          const activity = this.#parseInlineMetadata(
-            componentId,
-            componentData,
-            activityMetadata
-          );
-          if (activity) {
-            this.#logger.info('Successfully parsed inline metadata', {
-              componentId,
-              activityPriority: activity.priority,
-            });
-            activities.push(activity);
-          } else {
-            this.#logger.info('Inline metadata parsing returned null', {
-              componentId,
-            });
-          }
-        } catch (error) {
-          this.#logger.error(
-            `Failed to parse inline metadata for ${componentId}`,
-            error
-          );
-        }
-      }
-    }
-
-    this.#logger.info('Finished scanning inline metadata', {
-      entityId: entity?.id,
-      activitiesFound: activities.length,
-      activitySources: activities.map((a) => a.source),
-    });
-
-    return activities;
-  }
-
-  /**
-   * Parse inline metadata into activity object.
-   *
-   * @param {string} componentId - Component ID
-   * @param {object} componentData - Full component data
-   * @param {object} activityMetadata - Activity metadata from component
-   * @returns {object|null} Activity object or null if invalid
-   * @private
-   */
-
-  #parseInlineMetadata(componentId, componentData, activityMetadata) {
-    const {
-      template,
-      targetRole = 'entityId',
-      priority = 50,
-    } = activityMetadata;
-
-    if (!template) {
-      this.#logger.warn(`Inline metadata missing template for ${componentId}`);
-      return null;
-    }
-
-    // Resolve target entity ID
-    const rawTargetEntityId = componentData?.[targetRole];
-    let targetEntityId = null;
-
-    if (typeof rawTargetEntityId === 'string') {
-      const trimmedTarget = rawTargetEntityId.trim();
-      if (trimmedTarget.length > 0) {
-        targetEntityId = trimmedTarget;
-      } else if (rawTargetEntityId.length > 0) {
-        this.#logger.warn(
-          `Inline metadata for ${componentId} provided blank target entity reference for role ${targetRole}; using null`
-        );
-      }
-    } else if (rawTargetEntityId !== undefined && rawTargetEntityId !== null) {
-      this.#logger.warn(
-        `Inline metadata for ${componentId} provided invalid target entity reference for role ${targetRole}; expected non-empty string`
-      );
-    }
-
-    // For Phase 1 compatibility with existing formatter, provide a basic description
-    // Phase 2 (ACTDESC-008) will handle proper template interpolation
-    const basicDescription = template
-      .replace(/\{actor\}/g, '')
-      .replace(/\{target\}/g, '')
-      .trim();
-
-    return {
-      type: 'inline',
-      sourceComponent: componentId,
-      sourceData: componentData,
-      activityMetadata,
-      conditions: activityMetadata?.conditions ?? null,
-      targetEntityId,
-      targetId: targetEntityId, // Alias for compatibility with formatter
-      priority,
-      template,
-      description: basicDescription, // Temporary for Phase 1 formatter
-    };
-  }
-
-  /**
-   * Collect dedicated metadata component.
-   *
-   * @param {object} entity - Entity instance
-   * @returns {Array<object>} Dedicated metadata activities (single item or empty)
-   * @private
-   */
-
-  #collectDedicatedMetadata(entity) {
-    const activities = [];
-
-    if (!entity || typeof entity !== 'object') {
-      this.#logger.warn(
-        'Cannot collect dedicated metadata without a valid entity'
-      );
-      return activities;
-    }
-
-    if (typeof entity.hasComponent !== 'function') {
-      this.#logger.warn(
-        `Entity ${entity?.id ?? 'unknown'} is missing hasComponent; skipping dedicated metadata`
-      );
-      return activities;
-    }
-
-    let hasMetadataComponent = false;
-    try {
-      hasMetadataComponent = entity.hasComponent(
-        'activity:description_metadata'
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to verify dedicated metadata component for ${entity?.id ?? 'unknown'}`,
-        error
-      );
-      return activities;
-    }
-
-    // Check if entity has dedicated metadata component type
-    // Note: Entity can only have ONE instance of each component type
-    if (!hasMetadataComponent) {
-      return activities;
-    }
-
-    // Get the single metadata component
-    if (typeof entity.getComponentData !== 'function') {
-      this.#logger.warn(
-        `Entity ${entity?.id ?? 'unknown'} is missing getComponentData; skipping dedicated metadata`
-      );
-      return activities;
-    }
-
-    let metadata;
-    try {
-      metadata = entity.getComponentData('activity:description_metadata');
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to read dedicated metadata for ${entity?.id ?? 'unknown'}`,
-        error
-      );
-      return activities;
-    }
-
-    if (!metadata || typeof metadata !== 'object') {
-      this.#logger.warn(
-        `Dedicated metadata for ${entity?.id ?? 'unknown'} is invalid; skipping`
-      );
-      return activities;
-    }
-
-    try {
-      const activity = this.#parseDedicatedMetadata(metadata, entity);
-      if (activity) {
-        activities.push(activity);
-      }
-    } catch (error) {
-      this.#logger.error(`Failed to parse dedicated metadata`, error);
-    }
-
-    return activities;
-  }
-
-  /**
-   * Parse dedicated metadata component into activity object.
-   *
-   * @param {object} metadata - Metadata component data
-   * @param {object} entity - Entity instance
-   * @returns {object|null} Activity object or null if invalid
-   * @private
-   */
-
-  #parseDedicatedMetadata(metadata, entity) {
-    if (!metadata || typeof metadata !== 'object') {
-      this.#logger.warn('Dedicated metadata payload is invalid; skipping');
-      return null;
-    }
-
-    if (!entity || typeof entity.getComponentData !== 'function') {
-      this.#logger.warn(
-        `Cannot parse dedicated metadata without component access for ${entity?.id ?? 'unknown'}`
-      );
-      return null;
-    }
-
-    const {
-      sourceComponent,
-      descriptionType,
-      targetRole,
-      priority = 50,
-    } = metadata;
-
-    if (!sourceComponent) {
-      this.#logger.warn('Dedicated metadata missing sourceComponent');
-      return null;
-    }
-
-    // Get source component data
-    let sourceData;
-    try {
-      sourceData = entity.getComponentData(sourceComponent);
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to retrieve source component ${sourceComponent} for dedicated metadata`,
-        error
-      );
-      return null;
-    }
-    if (!sourceData) {
-      this.#logger.warn(`Source component not found: ${sourceComponent}`);
-      return null;
-    }
-
-    // Resolve target entity ID
-    const roleKey = targetRole || 'entityId';
-    let targetEntityId = null;
-
-    try {
-      targetEntityId = sourceData?.[roleKey] ?? null;
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to resolve target entity for dedicated metadata ${sourceComponent}`,
-        error
-      );
-      targetEntityId = null;
-    }
-
-    return {
-      type: 'dedicated',
-      sourceComponent,
-      descriptionType,
-      metadata,
-      sourceData,
-      targetEntityId,
-      priority,
-      verb: metadata.verb,
-      template: metadata.template,
-      adverb: metadata.adverb,
-      conditions: metadata.conditions,
-      grouping: metadata.grouping,
-    };
-  }
+  // Note: Metadata collection methods extracted to ActivityMetadataCollectionSystem
 
   /**
    * Filter activities based on visibility-oriented condition metadata.
@@ -818,7 +455,7 @@ class ActivityDescriptionService {
     const metadata = activity.metadata ?? activity.activityMetadata ?? {};
     const conditions = activity.conditions ?? metadata.conditions;
 
-    if (!conditions || this.#isEmptyConditionsObject(conditions)) {
+    if (!conditions || this.#conditionValidator.isEmptyConditionsObject(conditions)) {
       return metadata.shouldDescribeInActivity !== false;
     }
 
@@ -828,7 +465,7 @@ class ActivityDescriptionService {
 
     if (
       conditions.showOnlyIfProperty &&
-      !this.#matchesPropertyCondition(activity, conditions.showOnlyIfProperty)
+      !this.#conditionValidator.matchesPropertyCondition(activity, conditions.showOnlyIfProperty)
     ) {
       return false;
     }
@@ -836,7 +473,7 @@ class ActivityDescriptionService {
     if (
       Array.isArray(conditions.requiredComponents) &&
       conditions.requiredComponents.length > 0 &&
-      !this.#hasRequiredComponents(entity, conditions.requiredComponents)
+      !this.#conditionValidator.hasRequiredComponents(entity, conditions.requiredComponents)
     ) {
       return false;
     }
@@ -844,7 +481,7 @@ class ActivityDescriptionService {
     if (
       Array.isArray(conditions.forbiddenComponents) &&
       conditions.forbiddenComponents.length > 0 &&
-      this.#hasForbiddenComponents(entity, conditions.forbiddenComponents)
+      this.#conditionValidator.hasForbiddenComponents(entity, conditions.forbiddenComponents)
     ) {
       return false;
     }
@@ -895,246 +532,15 @@ class ActivityDescriptionService {
     }
 
     return {
-      entity: this.#extractEntityData(entity),
+      entity: this.#conditionValidator.extractEntityData(entity),
       activity: activity?.sourceData ?? {},
-      target: targetEntity ? this.#extractEntityData(targetEntity) : null,
+      target: targetEntity ? this.#conditionValidator.extractEntityData(targetEntity) : null,
     };
   }
 
-  /**
-   * Extract relevant component information for JSON Logic.
-   *
-   * @param {object|null} entity - Entity instance.
-   * @returns {object|null} Simplified entity representation.
-   * @private
-   */
-  #extractEntityData(entity) {
-    if (!entity) {
-      return null;
-    }
 
-    const componentIds = entity.componentTypeIds ?? [];
-    const components = {};
-
-    if (Array.isArray(componentIds)) {
-      for (const componentId of componentIds) {
-        if (typeof entity.getComponentData === 'function') {
-          try {
-            components[componentId] = entity.getComponentData(componentId);
-          } catch (error) {
-            this.#logger.warn(
-              `Failed to extract component data for ${componentId} on ${entity?.id ?? 'unknown entity'}`,
-              error
-            );
-          }
-        }
-      }
-    }
-
-    return {
-      id: entity.id,
-      components,
-    };
-  }
-
-  /**
-   * Determine if the provided conditions object has no actionable rules.
-   *
-   * @param {object} conditions - Condition configuration from metadata.
-   * @returns {boolean} True when the object contains no keys.
-   * @private
-   */
-  #isEmptyConditionsObject(conditions) {
-    if (!conditions) {
-      return true;
-    }
-
-    return Object.keys(conditions).length === 0;
-  }
-
-  /**
-   * Verify a `showOnlyIfProperty` rule against the activity source data.
-   *
-   * @param {object} activity - Activity record.
-   * @param {object} rule - Rule with `property` and `equals` keys.
-   * @returns {boolean} True when the activity satisfies the rule.
-   * @private
-   */
-  #matchesPropertyCondition(activity, rule) {
-    if (!rule || !rule.property) {
-      return true;
-    }
-
-    const sourceData = activity?.sourceData ?? {};
-    return sourceData[rule.property] === rule.equals;
-  }
-
-  /**
-   * Verify that the entity has all components listed in `requiredComponents`.
-   *
-   * @param {object} entity - Entity instance.
-   * @param {Array<string>} required - Component identifiers.
-   * @returns {boolean} True when every component exists.
-   * @private
-   */
-  #hasRequiredComponents(entity, required) {
-    if (!entity || typeof entity.hasComponent !== 'function') {
-      return false;
-    }
-
-    try {
-      return required.every((componentId) => {
-        try {
-          return entity.hasComponent(componentId);
-        } catch (error) {
-          this.#logger.warn(
-            `Failed to verify required component ${componentId} for ${entity?.id ?? 'unknown'}`,
-            error
-          );
-          return false;
-        }
-      });
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to evaluate required components for ${entity?.id ?? 'unknown'}`,
-        error
-      );
-      return false;
-    }
-  }
-
-  /**
-   * Verify that the entity contains any forbidden components.
-   *
-   * @param {object} entity - Entity instance.
-   * @param {Array<string>} forbidden - Component identifiers.
-   * @returns {boolean} True when a forbidden component is present.
-   * @private
-   */
-  #hasForbiddenComponents(entity, forbidden) {
-    if (!entity || typeof entity.hasComponent !== 'function') {
-      return false;
-    }
-
-    try {
-      return forbidden.some((componentId) => {
-        try {
-          return entity.hasComponent(componentId);
-        } catch (error) {
-          this.#logger.warn(
-            `Failed to verify forbidden component ${componentId} for ${entity?.id ?? 'unknown'}`,
-            error
-          );
-          return false;
-        }
-      });
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to evaluate forbidden components for ${entity?.id ?? 'unknown'}`,
-        error
-      );
-      return false;
-    }
-  }
-
-  #sortByPriority(activities, cacheKey = null) {
-    // ACTDESC-016 (Phase 2)
-    const index = this.#getActivityIndex(activities, cacheKey);
-    return index.byPriority;
-  }
-
-  /**
-   * Remove duplicate activities that share the same descriptive signature.
-   *
-   * @description Collapse duplicate activities based on shared descriptive properties while preserving insertion order.
-   * @param {Array<object>} activities - Activities to deduplicate.
-   * @returns {Array<object>} Deduplicated activities preserving insertion order.
-   * @private
-   */
-  #deduplicateActivitiesBySignature(activities) {
-    if (!Array.isArray(activities) || activities.length === 0) {
-      return Array.isArray(activities) ? [...activities] : [];
-    }
-
-    const entriesBySignature = new Map();
-
-    for (const activity of activities) {
-      if (!activity || typeof activity !== 'object') {
-        continue;
-      }
-
-      const signature = this.#buildActivityDeduplicationKey(activity);
-      const existing = entriesBySignature.get(signature);
-
-      if (!existing) {
-        entriesBySignature.set(signature, activity);
-        continue;
-      }
-
-      const existingPriority = existing?.priority ?? 0;
-      const candidatePriority = activity?.priority ?? 0;
-
-      if (candidatePriority >= existingPriority) {
-        entriesBySignature.set(signature, activity);
-      }
-    }
-
-    return Array.from(entriesBySignature.values());
-  }
-
-  /**
-   * Build deterministic signature used for deduplicating activities.
-   *
-   * @description Build a reproducible signature for activity metadata so deduplication can compare semantic content rather than object identity.
-   * @param {object} activity - Activity metadata entry.
-   * @returns {string} Signature describing the activity interaction.
-   * @private
-   */
-  #buildActivityDeduplicationKey(activity) {
-    if (!activity || typeof activity !== 'object') {
-      return 'invalid';
-    }
-
-    const type = activity.type ?? 'generic';
-    const target = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
-    const groupKey = activity?.grouping?.groupKey ?? 'none';
-    const template =
-      typeof activity.template === 'string'
-        ? activity.template.trim().toLowerCase()
-        : '';
-    const sourceComponent =
-      typeof activity.sourceComponent === 'string'
-        ? activity.sourceComponent.trim().toLowerCase()
-        : '';
-    const description =
-      typeof activity.description === 'string'
-        ? activity.description.trim().toLowerCase()
-        : '';
-    const verb =
-      typeof activity.verb === 'string'
-        ? activity.verb.trim().toLowerCase()
-        : '';
-    const adverb =
-      typeof activity.adverb === 'string'
-        ? activity.adverb.trim().toLowerCase()
-        : '';
-
-    let signatureCore = '';
-
-    if (template) {
-      signatureCore = `template:${template}`;
-    } else if (sourceComponent) {
-      signatureCore = `source:${sourceComponent}`;
-    } else if (description) {
-      signatureCore = `description:${description}`;
-    } else if (verb) {
-      signatureCore = `verb:${verb}:${adverb}`;
-    } else {
-      signatureCore = 'activity:generic';
-    }
-
-    return `${type}|${signatureCore}|target:${target}|group:${groupKey}`;
-  }
+  // Note: Deduplication methods extracted to ActivityMetadataCollectionSystem
+  // Note: Priority sorting extracted to ActivityGroupingSystem (ACTDESSERREF-007)
 
   #formatActivityDescription(activities, entity, cacheKey = null) {
     // ACTDESC-008 (Phase 2 - Enhanced with Pronoun Resolution)
@@ -1154,9 +560,9 @@ class ActivityDescriptionService {
 
     // Get actor name and gender for pronoun resolution
     const actorId = entity?.id ?? null;
-    const actorName = this.#resolveEntityName(actorId);
-    const actorGender = this.#detectEntityGender(actorId);
-    const actorPronouns = this.#getPronounSet(actorGender);
+    const actorName = this.#nlgSystem.resolveEntityName(actorId);
+    const actorGender = this.#nlgSystem.detectEntityGender(actorId);
+    const actorPronouns = this.#nlgSystem.getPronounSet(actorGender);
     const pronounsEnabled =
       config.nameResolution?.usePronounsWhenAvailable === true;
     const preferReflexivePronouns =
@@ -1188,7 +594,7 @@ class ActivityDescriptionService {
 
     let groupedActivities = [];
     try {
-      const result = this.#groupActivities(contextAwareActivities, cacheKey);
+      const result = this.#groupingSystem.groupActivities(contextAwareActivities, cacheKey);
       if (Array.isArray(result)) {
         groupedActivities = result;
       } else if (result && typeof result.forEach === 'function') {
@@ -1223,7 +629,7 @@ class ActivityDescriptionService {
 
       let primaryPhraseResult;
       try {
-        primaryPhraseResult = this.#generateActivityPhrase(
+        primaryPhraseResult = this.#nlgSystem.generateActivityPhrase(
           actorReference,
           group.primaryActivity,
           useActorPronounForPrimary,
@@ -1267,7 +673,7 @@ class ActivityDescriptionService {
 
         let phraseComponents;
         try {
-          phraseComponents = this.#generateActivityPhrase(
+          phraseComponents = this.#nlgSystem.generateActivityPhrase(
             actorReference,
             related.activity,
             pronounsEnabled,
@@ -1295,7 +701,7 @@ class ActivityDescriptionService {
 
         let fragment;
         try {
-          fragment = this.#buildRelatedActivityFragment(
+          fragment = this.#nlgSystem.buildRelatedActivityFragment(
             related.conjunction,
             phraseComponents,
             {
@@ -1343,7 +749,7 @@ class ActivityDescriptionService {
       ? config.maxDescriptionLength
       : DEFAULT_ACTIVITY_FORMATTING_CONFIG.maxDescriptionLength;
 
-    return this.#truncateDescription(composedDescription, maxDescriptionLength);
+    return this.#nlgSystem.truncateDescription(composedDescription, maxDescriptionLength);
   }
 
   #getActivityIntegrationConfig() {
@@ -1412,7 +818,7 @@ class ActivityDescriptionService {
       return context;
     }
 
-    let cachedPartners = this.#getCacheValue(this.#closenessCache, actorId);
+    let cachedPartners = this.#getCacheValue('closeness', actorId);
 
     if (!cachedPartners) {
       try {
@@ -1431,10 +837,10 @@ class ActivityDescriptionService {
         cachedPartners = [];
       }
 
-      this.#setCacheValue(this.#closenessCache, actorId, cachedPartners);
+      this.#setCacheValue('closeness', actorId, cachedPartners);
     }
 
-    context.targetGender = this.#detectEntityGender(targetId);
+    context.targetGender = this.#nlgSystem.detectEntityGender(targetId);
 
     if (Array.isArray(cachedPartners) && cachedPartners.includes(targetId)) {
       context.relationshipTone = 'closeness_partner';
@@ -1488,344 +894,19 @@ class ActivityDescriptionService {
       adjusted.contextualTone = 'intense';
 
       if (typeof adjusted.adverb === 'string') {
-        adjusted.adverb = this.#mergeAdverb(adjusted.adverb, 'fiercely');
+        adjusted.adverb = this.#nlgSystem.mergeAdverb(adjusted.adverb, 'fiercely');
       } else if (adjusted.type === 'dedicated') {
         adjusted.adverb = 'fiercely';
       }
 
       if (typeof adjusted.template === 'string') {
-        adjusted.template = this.#injectSoftener(adjusted.template, 'fiercely');
+        adjusted.template = this.#nlgSystem.injectSoftener(adjusted.template, 'fiercely');
       }
     }
 
     return adjusted;
   }
 
-  /**
-   * Merge contextual adverbs without duplicating descriptors.
-   *
-   * @description Merge contextual adverbs without duplicating descriptors.
-   * @param {string} currentAdverb - Existing adverb string.
-   * @param {string} injected - Contextual adverb to merge.
-   * @returns {string} Merged adverb string.
-   * @private
-   */
-  #mergeAdverb(currentAdverb, injected) {
-    const normalizedInjected =
-      typeof injected === 'string' ? injected.trim() : '';
-    const normalizedCurrent =
-      typeof currentAdverb === 'string' ? currentAdverb.trim() : '';
-
-    if (!normalizedInjected) {
-      return normalizedCurrent;
-    }
-
-    if (!normalizedCurrent) {
-      return normalizedInjected;
-    }
-
-    const lowerCurrent = normalizedCurrent.toLowerCase();
-    if (lowerCurrent.includes(normalizedInjected.toLowerCase())) {
-      return normalizedCurrent;
-    }
-
-    return `${normalizedCurrent} ${normalizedInjected}`.trim();
-  }
-
-  /**
-   * Inject contextual descriptors into templates referencing targets.
-   *
-   * @description Inject contextual descriptors into templates that reference {target}.
-   * @param {string} template - Activity template string.
-   * @param {string} descriptor - Descriptor to inject (e.g. 'tenderly').
-   * @returns {string} Updated template string.
-   * @private
-   */
-  #injectSoftener(template, descriptor) {
-    if (!descriptor || typeof template !== 'string') {
-      return template;
-    }
-
-    const trimmedDescriptor = descriptor.trim();
-    if (!trimmedDescriptor) {
-      return template;
-    }
-
-    if (!template.includes('{target}')) {
-      return template;
-    }
-
-    const existingDescriptor = `${trimmedDescriptor} {target}`.toLowerCase();
-    if (template.toLowerCase().includes(existingDescriptor)) {
-      return template;
-    }
-
-    return template.replace('{target}', `${trimmedDescriptor} {target}`);
-  }
-
-  /**
-   * Generate a single activity phrase for the actor and optional target.
-   * ACTDESC-014: Enhanced with pronoun support for target entities
-   *
-   * @description Generate an activity phrase and optionally return decomposed components.
-   * @param {string} actorRef - Actor name or pronoun
-   * @param {object} activity - Activity object
-   * @param {boolean} usePronounsForTarget - Whether to use pronouns for target (default: false)
-   * @param {object} [options] - Additional generation options
-   * @param {boolean} [options.omitActor=false] - When true, return decomposed phrases for grouping
-   * @param {string} [options.actorId] - Actor entity identifier for self-target detection.
-   * @param {string} [options.actorName] - Actor display name for fallback references.
-   * @param {object} [options.actorPronouns] - Pre-resolved pronoun set for the actor.
-   * @param {boolean} [options.preferReflexivePronouns=true] - Whether self-targets should use reflexive pronouns.
-   * @param {boolean} [options.forceReflexivePronoun=false] - Force reflexive pronoun usage for self-targeting activities.
-   * @returns {string|ActivityPhraseComponents} Activity phrase or decomposed components when omitActor is true
-   * @private
-   */
-
-  #generateActivityPhrase(
-    actorRef,
-    activity,
-    usePronounsForTarget = false,
-    options = {}
-  ) {
-    const targetEntityId = activity.targetEntityId || activity.targetId;
-    const actorId = options?.actorId ?? null;
-    const actorName = options?.actorName ?? null;
-    const actorPronouns = options?.actorPronouns ?? null;
-    const preferReflexivePronouns = options?.preferReflexivePronouns !== false;
-    const forceReflexivePronoun = options?.forceReflexivePronoun === true;
-
-    // Resolve target reference (name or pronoun)
-    let targetRef = '';
-    if (targetEntityId) {
-      const isSelfTarget = actorId && targetEntityId === actorId;
-
-      if (isSelfTarget) {
-        const pronounSource =
-          actorPronouns ??
-          this.#getPronounSet(this.#detectEntityGender(actorId));
-
-        if (
-          (usePronounsForTarget || forceReflexivePronoun) &&
-          preferReflexivePronouns
-        ) {
-          targetRef = this.#getReflexivePronoun(pronounSource);
-        } else if (usePronounsForTarget) {
-          targetRef = pronounSource.object;
-        } else {
-          targetRef =
-            actorName && typeof actorName === 'string'
-              ? actorName
-              : this.#resolveEntityName(actorId);
-        }
-      } else if (
-        usePronounsForTarget &&
-        this.#shouldUsePronounForTarget(targetEntityId)
-      ) {
-        const targetGender = this.#detectEntityGender(targetEntityId);
-        const targetPronouns = this.#getPronounSet(targetGender);
-        const pronounCandidate = targetPronouns?.object;
-        targetRef = pronounCandidate
-          ? pronounCandidate
-          : this.#resolveEntityName(targetEntityId);
-      } else {
-        targetRef = this.#resolveEntityName(targetEntityId);
-      }
-    }
-
-    let rawPhrase = '';
-
-    if (activity.type === 'inline') {
-      // Use template replacement
-      if (activity.template) {
-        rawPhrase = activity.template
-          .replace(/\{actor\}/g, actorRef)
-          .replace(/\{target\}/g, targetRef);
-      } else if (activity.description) {
-        const normalizedDesc = activity.description.trim();
-        if (normalizedDesc) {
-          rawPhrase = targetRef
-            ? `${actorRef} ${normalizedDesc} ${targetRef}`
-            : `${actorRef} ${normalizedDesc}`;
-        }
-      }
-    } else if (activity.type === 'dedicated') {
-      // Dedicated metadata: construct from verb/adverb
-      const verb = (activity.verb || 'interacting with').trim();
-      const adverb = activity.adverb ? ` ${activity.adverb.trim()}` : '';
-
-      if (targetRef) {
-        rawPhrase = `${actorRef} is ${verb} ${targetRef}${adverb}`;
-      } else {
-        rawPhrase = `${actorRef} is ${verb}${adverb}`;
-      }
-    } else if (activity.description) {
-      const normalizedDesc = activity.description.trim();
-      if (normalizedDesc) {
-        rawPhrase = targetRef
-          ? `${actorRef} ${normalizedDesc} ${targetRef}`
-          : `${actorRef} ${normalizedDesc}`;
-      }
-    } else if (activity.verb) {
-      const normalizedVerb = activity.verb.trim();
-      if (normalizedVerb) {
-        rawPhrase = targetRef
-          ? `${actorRef} ${normalizedVerb} ${targetRef}`
-          : `${actorRef} ${normalizedVerb}`;
-      }
-    }
-
-    const normalizedPhrase = rawPhrase.trim();
-    const omitActor = options?.omitActor === true;
-
-    if (!omitActor) {
-      return normalizedPhrase;
-    }
-
-    if (!normalizedPhrase) {
-      return { fullPhrase: '', verbPhrase: '' };
-    }
-
-    const actorToken = (actorRef ?? '').trim();
-    let verbPhrase = normalizedPhrase;
-
-    if (actorToken) {
-      const actorPattern = new RegExp(
-        `^${this.#escapeRegExp(actorToken)}\\s+`,
-        'i'
-      );
-      verbPhrase = verbPhrase.replace(actorPattern, '').trim();
-    }
-
-    return {
-      fullPhrase: normalizedPhrase,
-      verbPhrase,
-    };
-  }
-
-  /**
-   * Sanitize verb phrases to prevent duplicate copulas when grouping activities.
-   *
-   * @description Sanitize verb phrases to prevent duplicate copulas when grouping activities.
-   * @param {string} phrase - Raw verb phrase with potential leading copula.
-   * @returns {string} Cleaned phrase suitable for conjunction usage.
-   * @private
-   */
-  #sanitizeVerbPhrase(phrase) {
-    if (!phrase) {
-      return '';
-    }
-
-    const trimmed = phrase.trim();
-    if (!trimmed) {
-      return '';
-    }
-
-    return trimmed.replace(/^(?:is|are|was|were|am)\s+/i, '').trim();
-  }
-
-  /**
-   * Build the fragment used to connect related activities to the primary activity.
-   *
-   * @description Build the fragment used to connect related activities to the primary activity.
-   * @param {string} conjunction - Conjunction used to join the phrase ("and" or "while").
-   * @param {ActivityPhraseComponents} phraseComponents - Generated phrase components for the related activity.
-   * @param {object} context - Actor context for pronoun and naming logic.
-   * @param {string} context.actorName - Resolved actor name.
-   * @param {string} context.actorReference - Reference used for the primary activity (name or pronoun).
-   * @param {object} context.actorPronouns - Pronoun set for the actor.
-   * @param {boolean} context.pronounsEnabled - Whether pronouns are enabled in configuration.
-   * @returns {string} Fragment to append to the primary phrase.
-   * @private
-   */
-  #buildRelatedActivityFragment(
-    conjunction,
-    phraseComponents,
-    { actorName, actorReference, actorPronouns, pronounsEnabled }
-  ) {
-    if (!phraseComponents) {
-      return '';
-    }
-
-    const rawVerbPhrase = phraseComponents.verbPhrase?.trim() ?? '';
-    const sanitizedVerbPhrase = this.#sanitizeVerbPhrase(rawVerbPhrase);
-    const removedCopula =
-      sanitizedVerbPhrase && rawVerbPhrase !== sanitizedVerbPhrase;
-    const fallbackPhrase = phraseComponents.fullPhrase?.trim() ?? '';
-    const safeConjunction = conjunction || 'and';
-
-    if (!sanitizedVerbPhrase && !fallbackPhrase) {
-      return '';
-    }
-
-    if (safeConjunction === 'while') {
-      if (sanitizedVerbPhrase) {
-        if (removedCopula) {
-          return `while ${sanitizedVerbPhrase}`;
-        }
-
-        const subjectRef = pronounsEnabled
-          ? actorPronouns.subject
-          : actorReference || actorName;
-
-        if (subjectRef) {
-          return `while ${subjectRef} ${sanitizedVerbPhrase}`;
-        }
-
-        return `while ${sanitizedVerbPhrase}`;
-      }
-
-      if (fallbackPhrase) {
-        return `while ${fallbackPhrase}`;
-      }
-
-    }
-
-    const phraseBody = sanitizedVerbPhrase || fallbackPhrase;
-
-    return `${safeConjunction} ${phraseBody}`;
-  }
-
-  /**
-   * Truncate a composed activity description to avoid UI overflow.
-   *
-   * @description Trim the supplied description and enforce a configurable maximum length, preferring natural sentence boundaries.
-   * @param {string} description - Full activity description to truncate.
-   * @param {number} maxLength - Maximum allowed character length.
-   * @returns {string} Truncated description respecting the configured limit.
-   * @private
-   */
-  #truncateDescription(description, maxLength = 500) {
-    if (typeof description !== 'string') {
-      return '';
-    }
-
-    const trimmed = description.trim();
-
-    if (!trimmed) {
-      return '';
-    }
-
-    if (!Number.isFinite(maxLength) || maxLength <= 0) {
-      return trimmed;
-    }
-
-    if (trimmed.length <= maxLength) {
-      return trimmed;
-    }
-
-    const lastPeriodIndex = trimmed.lastIndexOf('.', maxLength);
-
-    if (lastPeriodIndex > 0) {
-      const sentence = trimmed.slice(0, lastPeriodIndex + 1).trim();
-      if (sentence) {
-        return sentence;
-      }
-    }
-
-    const sliceLength = Math.max(0, maxLength - 3);
-    return `${trimmed.slice(0, sliceLength).trimEnd()}...`;
-  }
 
   /**
    * Group activities intelligently for natural composition.
@@ -1836,159 +917,12 @@ class ActivityDescriptionService {
    * @returns {Array<ActivityGroup>} Grouped activities ready for rendering.
    * @private
    */
-  #groupActivities(activities, cacheKey = null) {
-    const groups = [];
-    if (!Array.isArray(activities) || activities.length === 0) {
-      return groups;
-    }
-
-    const index = this.#getActivityIndex(activities, cacheKey);
-    const prioritized =
-      index.byPriority.length > 0 ? index.byPriority : activities;
-    const visited = new Set();
-
-    const candidateCache = new Map();
-
-    for (let i = 0; i < prioritized.length; i += 1) {
-      const activity = prioritized[i];
-
-      if (visited.has(activity)) {
-        continue;
-      }
-
-      const group = this.#startActivityGroup(activity);
-      visited.add(activity);
-
-      const targetId = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
-      const groupKey = activity?.grouping?.groupKey ?? null;
-
-      const candidateKey = `${groupKey ?? 'no-group'}::${targetId}`;
-      if (!candidateCache.has(candidateKey)) {
-        const candidates = new Set();
-
-        if (groupKey && index.byGroupKey?.has(groupKey)) {
-          index.byGroupKey.get(groupKey).forEach((candidate) => {
-            if (candidate !== activity) {
-              candidates.add(candidate);
-            }
-          });
-        }
-
-        if (index.byTarget.has(targetId)) {
-          index.byTarget.get(targetId).forEach((candidate) => {
-            if (candidate !== activity) {
-              candidates.add(candidate);
-            }
-          });
-        }
-
-        candidateCache.set(candidateKey, candidates);
-      }
-
-      const candidates = candidateCache.get(candidateKey);
-
-      for (let j = i + 1; j < prioritized.length; j += 1) {
-        const candidate = prioritized[j];
-
-        if (!candidates.has(candidate) || visited.has(candidate)) {
-          continue;
-        }
-
-        if (!this.#shouldGroupActivities(group.primaryActivity, candidate)) {
-          continue;
-        }
-
-        group.relatedActivities.push({
-          activity: candidate,
-          conjunction: this.#determineConjunction(
-            group.primaryActivity,
-            candidate
-          ),
-        });
-        visited.add(candidate);
-      }
-
-      groups.push(group);
-    }
-
-    return groups;
-  }
-
-  /**
-   * Initialise a new activity group container.
-   *
-   * @description Initialise a new activity group.
-   * @param {object} activity - Activity that becomes the group's primary entry.
-   * @returns {ActivityGroup} Fresh activity group container.
-   * @private
-   */
-  #startActivityGroup(activity) {
-    return {
-      primaryActivity: activity,
-      relatedActivities: [],
-    };
-  }
-
-  /**
-   * Determine if two activities should be grouped together.
-   *
-   * @description Determine if two activities should be grouped together.
-   * @param {object} first - Primary activity in the current group.
-   * @param {object} second - Candidate activity being evaluated.
-   * @returns {boolean} True when activities belong in the same group.
-   * @private
-   */
-  #shouldGroupActivities(first, second) {
-    const firstGroupKey = first?.grouping?.groupKey;
-    const secondGroupKey = second?.grouping?.groupKey;
-
-    if (firstGroupKey && firstGroupKey === secondGroupKey) {
-      return true;
-    }
-
-    const firstTarget = first?.targetEntityId ?? first?.targetId;
-    const secondTarget = second?.targetEntityId ?? second?.targetId;
-
-    if (firstTarget && firstTarget === secondTarget) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Determine the conjunction connecting two activities.
-   *
-   * @description Determine the conjunction connecting two activities.
-   * @param {object} first - Primary activity.
-   * @param {object} second - Related activity.
-   * @returns {string} Conjunction keyword.
-   * @private
-   */
-  #determineConjunction(first, second) {
-    const firstPriority = first?.priority ?? 0;
-    const secondPriority = second?.priority ?? 0;
-
-    return this.#activitiesOccurSimultaneously(firstPriority, secondPriority)
-      ? 'while'
-      : 'and';
-  }
-
-  /**
-   * Determine whether activities should be considered simultaneous.
-   *
-   * @description Determine whether activities should be considered simultaneous.
-   * @param {number} firstPriority - Priority of the first activity.
-   * @param {number} secondPriority - Priority of the second activity.
-   * @returns {boolean} True when priorities are within the simultaneous threshold.
-   * @private
-   */
-  #activitiesOccurSimultaneously(firstPriority, secondPriority) {
-    return (
-      Math.abs((firstPriority ?? 0) - (secondPriority ?? 0)) <=
-      this.#simultaneousPriorityThreshold
-    );
-  }
+  // Note: Activity grouping methods extracted to ActivityGroupingSystem (ACTDESSERREF-007)
+  // - #groupActivities
+  // - #startActivityGroup
+  // - #shouldGroupActivities
+  // - #determineConjunction
+  // - #activitiesOccurSimultaneously
 
   /**
    * Escape special characters within a string for safe RegExp usage.
@@ -1998,256 +932,6 @@ class ActivityDescriptionService {
    * @returns {string} Escaped string.
    * @private
    */
-  #escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  /**
-   * Normalise entity names to remove control characters and redundant whitespace.
-   *
-   * @description Sanitise a potentially untrusted entity name before exposing it to user interfaces.
-   * @param {string} name - Raw entity name value.
-   * @returns {string} Sanitised entity name with graceful fallback.
-   * @private
-   */
-  #sanitizeEntityName(name) {
-    if (typeof name !== 'string') {
-      return 'Unknown entity';
-    }
-
-    const withoutControl = name.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-    const withoutZeroWidth = withoutControl.replace(
-      /[\u200B-\u200D\uFEFF]/g,
-      ''
-    );
-    const collapsedWhitespace = withoutZeroWidth.replace(/\s+/g, ' ').trim();
-
-    if (!collapsedWhitespace) {
-      return 'Unknown entity';
-    }
-
-    return collapsedWhitespace;
-  }
-
-  #resolveEntityName(entityId) {
-    // ACTDESC-009
-    if (!entityId) {
-      return 'Unknown entity';
-    }
-
-    const cachedName = this.#getCacheValue(this.#entityNameCache, entityId);
-    if (cachedName) {
-      return cachedName;
-    }
-
-    try {
-      const entity = this.#entityManager.getEntityInstance(entityId);
-
-      if (!entity) {
-        this.#logger.debug(
-          `Failed to resolve entity name for ${entityId}: entity not found`
-        );
-        const fallbackName = this.#sanitizeEntityName(entityId);
-        this.#setCacheValue(this.#entityNameCache, entityId, fallbackName);
-        return fallbackName;
-      }
-
-      // Entities use core:name component for their names
-      let resolvedName;
-      try {
-        const nameComponent = entity?.getComponentData?.('core:name');
-        resolvedName = nameComponent?.text ?? entity?.id ?? entityId;
-      } catch (error) {
-        this.#logger.debug(
-          `Failed to access name component for entity ${entityId}`,
-          error
-        );
-        resolvedName = entity?.id ?? entityId;
-      }
-
-      const sanitisedName = this.#sanitizeEntityName(resolvedName);
-
-      this.#setCacheValue(this.#entityNameCache, entityId, sanitisedName);
-      return sanitisedName;
-    } catch (error) {
-      this.#logger.debug(
-        `Failed to resolve entity name for ${entityId}`,
-        error
-      );
-      const fallbackName = this.#sanitizeEntityName(entityId);
-      this.#setCacheValue(this.#entityNameCache, entityId, fallbackName);
-      return fallbackName;
-    }
-  }
-
-  /**
-   * Determine whether pronouns should be used when referencing a target entity.
-   *
-   * @description Restrict pronoun usage to sentient targets such as actors or
-   * entities with explicit gender metadata to avoid misgendering inanimate
-   * objects like furniture.
-   * @param {string} targetEntityId - Identifier of the target entity.
-   * @returns {boolean} True if pronouns should be used for the target entity.
-   * @private
-   */
-  #shouldUsePronounForTarget(targetEntityId) {
-    if (!targetEntityId) {
-      return false;
-    }
-
-    try {
-      const targetEntity =
-        this.#entityManager?.getEntityInstance?.(targetEntityId);
-
-      if (!targetEntity) {
-        return false;
-      }
-
-      if (typeof targetEntity.hasComponent === 'function') {
-        if (targetEntity.hasComponent(ACTOR_COMPONENT_ID)) {
-          return true;
-        }
-
-        if (targetEntity.hasComponent(GENDER_COMPONENT_ID)) {
-          const genderComponent =
-            targetEntity.getComponentData?.(GENDER_COMPONENT_ID);
-          if (genderComponent?.value) {
-            return true;
-          }
-        }
-      }
-
-      const actorComponent =
-        targetEntity.getComponentData?.(ACTOR_COMPONENT_ID);
-      if (actorComponent) {
-        return true;
-      }
-
-      const genderData = targetEntity.getComponentData?.(GENDER_COMPONENT_ID);
-      return Boolean(genderData?.value);
-    } catch (error) {
-      if (this.#logger && typeof this.#logger.debug === 'function') {
-        this.#logger.debug(
-          `Skipping pronoun usage for unresolved target ${targetEntityId}`,
-          error
-        );
-      }
-      return false;
-    }
-  }
-
-  /**
-   * Detect entity gender for pronoun resolution.
-   * ACTDESC-014: Phase 2 Natural Language Enhancement
-   *
-   * @param {string} entityId - Entity ID
-   * @returns {string} Gender: 'male', 'female', 'neutral', or 'unknown'
-   * @private
-   */
-  #detectEntityGender(entityId) {
-    if (!entityId) {
-      return 'unknown';
-    }
-
-    const cachedGender = this.#getCacheValue(this.#genderCache, entityId);
-    if (cachedGender) {
-      return cachedGender;
-    }
-
-    let resolvedGender = 'neutral';
-
-    try {
-      const entity = this.#entityManager.getEntityInstance(entityId);
-      if (!entity) {
-        resolvedGender = 'unknown';
-      } else {
-        // Check for explicit gender component
-        const genderComponent = entity.getComponentData?.('core:gender');
-        if (genderComponent?.value) {
-          resolvedGender = genderComponent.value; // 'male', 'female', 'neutral'
-        } else {
-          resolvedGender = 'neutral';
-        }
-      }
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to detect gender for entity ${entityId}`,
-        error
-      );
-      resolvedGender = 'neutral';
-    }
-
-    this.#setCacheValue(this.#genderCache, entityId, resolvedGender);
-    return resolvedGender;
-  }
-
-  /**
-   * Resolve the reflexive pronoun for a given pronoun set.
-   *
-   * @description Map subject pronouns to their reflexive equivalents for self-targeting activities.
-   * @param {object} pronouns - Pronoun set containing subject/object forms.
-   * @returns {string} Reflexive pronoun suitable for self-references.
-   * @private
-   */
-  #getReflexivePronoun(pronouns) {
-    const subject = pronouns?.subject?.toLowerCase?.() ?? '';
-
-    switch (subject) {
-      case 'he':
-        return 'himself';
-      case 'she':
-        return 'herself';
-      case 'it':
-        return 'itself';
-      case 'i':
-        return 'myself';
-      case 'you':
-        return 'yourself';
-      case 'we':
-        return 'ourselves';
-      default:
-        return 'themselves';
-    }
-  }
-
-  /**
-   * Get pronouns for entity based on gender.
-   * ACTDESC-014: Phase 2 Natural Language Enhancement
-   *
-   * @param {string} gender - Gender value ('male', 'female', 'neutral', 'unknown')
-   * @returns {object} Pronoun set with subject, object, possessive, possessivePronoun
-   * @private
-   */
-  #getPronounSet(gender) {
-    const pronounSets = {
-      male: {
-        subject: 'he',
-        object: 'him',
-        possessive: 'his',
-        possessivePronoun: 'his',
-      },
-      female: {
-        subject: 'she',
-        object: 'her',
-        possessive: 'her',
-        possessivePronoun: 'hers',
-      },
-      neutral: {
-        subject: 'they',
-        object: 'them',
-        possessive: 'their',
-        possessivePronoun: 'theirs',
-      },
-      unknown: {
-        subject: 'they',
-        object: 'them',
-        possessive: 'their',
-        possessivePronoun: 'theirs',
-      },
-    };
-
-    return pronounSets[gender] || pronounSets.neutral;
-  }
 
   /**
    * Provide controlled access to private helpers for white-box unit testing.
@@ -2257,80 +941,115 @@ class ActivityDescriptionService {
    */
   getTestHooks() {
     return {
-      mergeAdverb: (...args) => this.#mergeAdverb(...args),
-      injectSoftener: (...args) => this.#injectSoftener(...args),
-      sanitizeVerbPhrase: (...args) => this.#sanitizeVerbPhrase(...args),
+      // NLG system test hooks (delegated to ActivityNLGSystem)
+      mergeAdverb: (...args) => this.#nlgSystem.mergeAdverb(...args),
+      injectSoftener: (...args) => this.#nlgSystem.injectSoftener(...args),
+      sanitizeVerbPhrase: (...args) => this.#nlgSystem.sanitizeVerbPhrase(...args),
       buildRelatedActivityFragment: (...args) =>
-        this.#buildRelatedActivityFragment(...args),
+        this.#nlgSystem.buildRelatedActivityFragment(...args),
+      truncateDescription: (...args) => this.#nlgSystem.truncateDescription(...args),
+      sanitizeEntityName: (...args) => this.#nlgSystem.sanitizeEntityName(...args),
+      resolveEntityName: (...args) => this.#nlgSystem.resolveEntityName(...args),
+      shouldUsePronounForTarget: (...args) =>
+        this.#nlgSystem.shouldUsePronounForTarget(...args),
+      detectEntityGender: (...args) => this.#nlgSystem.detectEntityGender(...args),
+      getPronounSet: (...args) => this.#nlgSystem.getPronounSet(...args),
+      getReflexivePronoun: (...args) => this.#nlgSystem.getReflexivePronoun(...args),
+      generateActivityPhrase: (...args) =>
+        this.#nlgSystem.generateActivityPhrase(...args),
+      // ActivityDescriptionService-specific test hooks
       buildActivityIndex: (...args) => this.#buildActivityIndex(...args),
+      sortByPriority: (...args) => this.#groupingSystem.sortByPriority(...args),
       subscribeToInvalidationEvents: () =>
         this.#subscribeToInvalidationEvents(),
       setEventBus: (eventBus) => {
         this.#eventBus = eventBus;
       },
       deduplicateActivitiesBySignature: (...args) =>
-        this.#deduplicateActivitiesBySignature(...args),
-      truncateDescription: (...args) => this.#truncateDescription(...args),
-      sanitizeEntityName: (...args) => this.#sanitizeEntityName(...args),
+        this.#metadataCollectionSystem.deduplicateActivitiesBySignature(...args),
       buildActivityDeduplicationKey: (...args) =>
-        this.#buildActivityDeduplicationKey(...args),
+        this.#metadataCollectionSystem.getTestHooks().buildActivityDeduplicationKey(...args),
       collectActivityMetadata: (...args) =>
-        this.#collectActivityMetadata(...args),
+        this.#metadataCollectionSystem.collectActivityMetadata(...args),
       collectInlineMetadata: (...args) =>
-        this.#collectInlineMetadata(...args),
+        this.#metadataCollectionSystem.collectInlineMetadata(...args),
       collectDedicatedMetadata: (...args) =>
-        this.#collectDedicatedMetadata(...args),
-      parseInlineMetadata: (...args) => this.#parseInlineMetadata(...args),
+        this.#metadataCollectionSystem.collectDedicatedMetadata(...args),
+      parseInlineMetadata: (...args) =>
+        this.#metadataCollectionSystem.getTestHooks().parseInlineMetadata(...args),
       parseDedicatedMetadata: (...args) =>
-        this.#parseDedicatedMetadata(...args),
+        this.#metadataCollectionSystem.getTestHooks().parseDedicatedMetadata(...args),
       formatActivityDescription: (...args) =>
         this.#formatActivityDescription(...args),
-      groupActivities: (...args) => this.#groupActivities(...args),
+      // Grouping system test hooks (delegated to ActivityGroupingSystem)
+      groupActivities: (...args) => this.#groupingSystem.groupActivities(...args),
       getActivityIndex: (...args) => this.#getActivityIndex(...args),
+      shouldGroupActivities: (...args) =>
+        this.#groupingSystem.getTestHooks().shouldGroupActivities(...args),
+      startActivityGroup: (...args) =>
+        this.#groupingSystem.getTestHooks().startActivityGroup(...args),
       evaluateActivityVisibility: (...args) =>
         this.#evaluateActivityVisibility(...args),
       buildLogicContext: (...args) => this.#buildLogicContext(...args),
       buildActivityContext: (...args) => this.#buildActivityContext(...args),
       applyContextualTone: (...args) => this.#applyContextualTone(...args),
-      generateActivityPhrase: (...args) =>
-        this.#generateActivityPhrase(...args),
       filterByConditions: (...args) => this.#filterByConditions(...args),
       determineActivityIntensity: (...args) =>
         this.#determineActivityIntensity(...args),
-      determineConjunction: (...args) => this.#determineConjunction(...args),
+      // Conjunction selection hooks (delegated to ActivityGroupingSystem)
+      determineConjunction: (...args) =>
+        this.#groupingSystem.getTestHooks().determineConjunction(...args),
       activitiesOccurSimultaneously: (...args) =>
-        this.#activitiesOccurSimultaneously(...args),
-      getReflexivePronoun: (...args) => this.#getReflexivePronoun(...args),
-      getPronounSet: (...args) => this.#getPronounSet(...args),
-      shouldUsePronounForTarget: (...args) =>
-        this.#shouldUsePronounForTarget(...args),
-      detectEntityGender: (...args) => this.#detectEntityGender(...args),
+        this.#groupingSystem.getTestHooks().activitiesOccurSimultaneously(...args),
       isEmptyConditionsObject: (...args) =>
-        this.#isEmptyConditionsObject(...args),
+        this.#conditionValidator.isEmptyConditionsObject(...args),
       matchesPropertyCondition: (...args) =>
-        this.#matchesPropertyCondition(...args),
-      hasRequiredComponents: (...args) => this.#hasRequiredComponents(...args),
+        this.#conditionValidator.matchesPropertyCondition(...args),
+      hasRequiredComponents: (...args) => this.#conditionValidator.hasRequiredComponents(...args),
       hasForbiddenComponents: (...args) =>
-        this.#hasForbiddenComponents(...args),
-      extractEntityData: (...args) => this.#extractEntityData(...args),
+        this.#conditionValidator.hasForbiddenComponents(...args),
+      extractEntityData: (...args) => this.#conditionValidator.extractEntityData(...args),
       cleanupCaches: () => this.#cleanupCaches(),
       setEntityNameCacheEntry: (key, value) =>
-        this.#setCacheValue(this.#entityNameCache, key, value),
+        this.#setCacheValue('entityName', key, value),
       setGenderCacheEntry: (key, value) =>
-        this.#setCacheValue(this.#genderCache, key, value),
+        this.#setCacheValue('gender', key, value),
       setActivityIndexCacheEntry: (key, value) =>
-        this.#setCacheValue(this.#activityIndexCache, key, value),
+        this.#setCacheValue('activityIndex', key, value),
       setClosenessCacheEntry: (key, value) =>
-        this.#setCacheValue(this.#closenessCache, key, value),
-      setEntityNameCacheRawEntry: (key, entry) =>
-        this.#entityNameCache.set(key, entry),
-      getCacheSnapshot: () => ({
-        entityName: new Map(this.#entityNameCache),
-        gender: new Map(this.#genderCache),
-        activityIndex: new Map(this.#activityIndexCache),
-        closeness: new Map(this.#closenessCache),
-      }),
-      resolveEntityName: (...args) => this.#resolveEntityName(...args),
+        this.#setCacheValue('closeness', key, value),
+      setEntityNameCacheRawEntry: (key, entry) => {
+        // Legacy test hook - now delegates to cache manager with proper structure
+        if (!this.#cacheManager) {
+          return;
+        }
+        // If entry has the old structure {value, expiresAt}, extract the value
+        const valueToStore = entry && typeof entry === 'object' && 'value' in entry
+          ? entry.value
+          : entry;
+
+        if (valueToStore !== undefined && valueToStore !== null) {
+          this.#cacheManager.set('entityName', key, valueToStore);
+        }
+      },
+      getCacheSnapshot: () => {
+        if (!this.#cacheManager) {
+          return {
+            entityName: new Map(),
+            gender: new Map(),
+            activityIndex: new Map(),
+            closeness: new Map(),
+          };
+        }
+
+        // Access the internal cache structure using test-only method
+        return {
+          entityName: this.#cacheManager._getInternalCacheForTesting('entityName'),
+          gender: this.#cacheManager._getInternalCacheForTesting('gender'),
+          activityIndex: this.#cacheManager._getInternalCacheForTesting('activityIndex'),
+          closeness: this.#cacheManager._getInternalCacheForTesting('closeness'),
+        };
+      },
     };
   }
 
@@ -2341,124 +1060,14 @@ class ActivityDescriptionService {
    * @returns {void}
    * @private
    */
+  /**
+   * Subscribe to invalidation events - delegated to cache manager.
+   *
+   * @description No-op method maintained for backward compatibility. Event subscriptions are handled by ActivityCacheManager.
+   * @private
+   */
   #subscribeToInvalidationEvents() {
-    if (!this.#eventBus) {
-      return;
-    }
-
-    const subscribe = (eventId, handler) => {
-      try {
-        const unsubscribe = this.#eventBus.subscribe(eventId, handler);
-        if (typeof unsubscribe === 'function') {
-          this.#eventUnsubscribers.push(unsubscribe);
-        }
-      } catch (error) {
-        this.#logger.warn(
-          `Failed to subscribe to cache invalidation event: ${eventId}`,
-          error
-        );
-      }
-    };
-
-    const getEntityId = (event) =>
-      event?.payload?.entity?.id ??
-      event?.payload?.entity?.instanceId ??
-      event?.payload?.entityId ??
-      null;
-
-    subscribe(COMPONENT_ADDED_ID, (event) => {
-      const componentId = event?.payload?.componentTypeId;
-      const entityId = getEntityId(event);
-
-      if (!entityId || !componentId) {
-        return;
-      }
-
-      if (componentId === NAME_COMPONENT_ID) {
-        this.#invalidateNameCache(entityId);
-      }
-
-      if (componentId === GENDER_COMPONENT_ID) {
-        this.#invalidateGenderCache(entityId);
-      }
-
-      if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
-        this.#invalidateActivityCache(entityId);
-      }
-
-      if (componentId === CLOSENESS_COMPONENT_ID) {
-        this.#invalidateClosenessCache(entityId);
-      }
-    });
-
-    subscribe(COMPONENT_REMOVED_ID, (event) => {
-      const componentId = event?.payload?.componentTypeId;
-      const entityId = getEntityId(event);
-
-      if (!entityId || !componentId) {
-        return;
-      }
-
-      if (componentId === NAME_COMPONENT_ID) {
-        this.#invalidateNameCache(entityId);
-      }
-
-      if (componentId === GENDER_COMPONENT_ID) {
-        this.#invalidateGenderCache(entityId);
-      }
-
-      if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
-        this.#invalidateActivityCache(entityId);
-      }
-
-      if (componentId === CLOSENESS_COMPONENT_ID) {
-        this.#invalidateClosenessCache(entityId);
-      }
-    });
-
-    subscribe(COMPONENTS_BATCH_ADDED_ID, (event) => {
-      const updates = event?.payload?.updates;
-
-      if (!Array.isArray(updates) || updates.length === 0) {
-        return;
-      }
-
-      for (const update of updates) {
-        const componentId = update?.componentTypeId;
-        const entityId =
-          update?.instanceId ??
-          update?.entityId ??
-          update?.entity?.id ??
-          null;
-
-        if (!entityId || !componentId) {
-          continue;
-        }
-
-        if (componentId === NAME_COMPONENT_ID) {
-          this.#invalidateNameCache(entityId);
-        }
-
-        if (componentId === GENDER_COMPONENT_ID) {
-          this.#invalidateGenderCache(entityId);
-        }
-
-        if (componentId === ACTIVITY_METADATA_COMPONENT_ID) {
-          this.#invalidateActivityCache(entityId);
-        }
-
-        if (componentId === CLOSENESS_COMPONENT_ID) {
-          this.#invalidateClosenessCache(entityId);
-        }
-      }
-    });
-
-    subscribe(ENTITY_REMOVED_ID, (event) => {
-      const entityId = getEntityId(event);
-      if (entityId) {
-        this.#invalidateAllCachesForEntity(entityId);
-      }
-    });
+    // Cache manager handles event subscriptions automatically
   }
 
   /**
@@ -2470,43 +1079,7 @@ class ActivityDescriptionService {
    * @private
    */
   #buildActivityIndex(activities) {
-    const index = {
-      byTarget: new Map(),
-      byPriority: [],
-      byGroupKey: new Map(),
-      all: Array.isArray(activities) ? activities : [],
-    };
-
-    if (!Array.isArray(activities) || activities.length === 0) {
-      return index;
-    }
-
-    for (const activity of activities) {
-      const targetId = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
-      if (!index.byTarget.has(targetId)) {
-        index.byTarget.set(targetId, []);
-      }
-      index.byTarget.get(targetId).push(activity);
-
-      const groupKey = activity?.grouping?.groupKey;
-      if (groupKey) {
-        if (!index.byGroupKey.has(groupKey)) {
-          index.byGroupKey.set(groupKey, []);
-        }
-        index.byGroupKey.get(groupKey).push(activity);
-      }
-    }
-
-    index.byPriority = [...activities].sort((a, b) => {
-      const fallbackPriority = Number.NEGATIVE_INFINITY;
-      const aPriority =
-        typeof a?.priority === 'number' ? a.priority : fallbackPriority;
-      const bPriority =
-        typeof b?.priority === 'number' ? b.priority : fallbackPriority;
-      return bPriority - aPriority;
-    });
-
-    return index;
+    return this.#indexManager.buildActivityIndex(activities);
   }
 
   #dispatchError(errorType, context = {}) {
@@ -2534,56 +1107,13 @@ class ActivityDescriptionService {
   }
 
   /**
-   * Setup periodic cache cleanup interval.
+   * Cleanup method for test hooks - cache manager handles cleanup automatically.
    *
-   * @description Setup periodic cache cleanup interval.
-   * @private
-   */
-  #setupCacheCleanup() {
-    if (typeof setInterval !== 'undefined') {
-      this.#cleanupInterval = setInterval(() => {
-        this.#cleanupCaches();
-      }, 30000);
-
-      if (typeof this.#cleanupInterval?.unref === 'function') {
-        this.#cleanupInterval.unref();
-      }
-    }
-  }
-
-  /**
-   * Cleanup cache entries and enforce size limits.
-   *
-   * @description Cleanup cache entries and enforce size limits.
+   * @description No-op method maintained for test compatibility. Cache cleanup is handled by ActivityCacheManager.
    * @private
    */
   #cleanupCaches() {
-    const now = Date.now();
-    this.#pruneCache(this.#entityNameCache, this.#cacheConfig.maxSize, now);
-    this.#pruneCache(this.#genderCache, this.#cacheConfig.maxSize, now);
-    this.#pruneCache(this.#activityIndexCache, 100, now);
-    this.#pruneCache(this.#closenessCache, this.#cacheConfig.maxSize, now);
-  }
-
-  /**
-   * Remove expired entries and enforce cache size limits.
-   *
-   * @description Remove expired entries and enforce cache size limits.
-   * @param {Map<string, TimedCacheEntry>} cache - Cache map storing entries with TTL metadata.
-   * @param {number} maxSize - Maximum size before aggressive cleanup.
-   * @param {number} now - Current timestamp for TTL comparison.
-   * @private
-   */
-  #pruneCache(cache, maxSize, now) {
-    for (const [key, entry] of cache.entries()) {
-      if (!entry || (entry.expiresAt && entry.expiresAt <= now)) {
-        cache.delete(key);
-      }
-    }
-
-    if (cache.size > maxSize) {
-      cache.clear();
-    }
+    // Cache manager handles periodic cleanup automatically
   }
 
   /**
@@ -2596,54 +1126,7 @@ class ActivityDescriptionService {
    * @private
    */
   #getActivityIndex(activities, cacheKey = null) {
-    if (!Array.isArray(activities) || activities.length === 0) {
-      return {
-        byTarget: new Map(),
-        byPriority: [],
-        byGroupKey: new Map(),
-        all: Array.isArray(activities) ? activities : [],
-      };
-    }
-
-    if (!cacheKey) {
-      return this.#buildActivityIndex(activities);
-    }
-
-    const signature = this.#buildActivitySignature(activities);
-    const cachedEntry = this.#getCacheValue(this.#activityIndexCache, cacheKey);
-
-    if (cachedEntry && cachedEntry.signature === signature) {
-      return cachedEntry.index;
-    }
-
-    const index = this.#buildActivityIndex(activities);
-    this.#setCacheValue(this.#activityIndexCache, cacheKey, {
-      signature,
-      index,
-    });
-
-    return index;
-  }
-
-  /**
-   * Build deterministic signature for activity collections.
-   *
-   * @description Build deterministic signature for activity collections.
-   * @param {Array<object>} activities - Activities to summarise.
-   * @returns {string} Signature string for cache validation.
-   * @private
-   */
-  #buildActivitySignature(activities) {
-    return activities
-      .map((activity) => {
-        const source =
-          activity?.sourceComponent ?? activity?.descriptionType ?? 'unknown';
-        const target = activity?.targetEntityId ?? activity?.targetId ?? 'solo';
-        const priority = activity?.priority ?? 50;
-        const type = activity?.type ?? 'generic';
-        return `${type}:${source}:${target}:${priority}`;
-      })
-      .join('|');
+    return this.#indexManager.getActivityIndex(activities, cacheKey);
   }
 
   /**
@@ -2656,7 +1139,7 @@ class ActivityDescriptionService {
    * @private
    */
   #buildActivityIndexCacheKey(namespace, entityId) {
-    return `${namespace}:${entityId ?? 'unknown'}`;
+    return this.#indexManager.buildActivityIndexCacheKey(namespace, entityId);
   }
 
   /**
@@ -2668,101 +1151,46 @@ class ActivityDescriptionService {
    * @returns {unknown|null} Cached value when present and fresh.
    * @private
    */
-  #getCacheValue(cache, key) {
-    if (!cache.has(key)) {
+  /**
+   * Resolve cache reference to cache name for CacheManager
+   *
+   * @private
+   * @param {Map} cacheMapReference - Reference to old cache Map
+   * @returns {string} Cache name
+   */
+  /**
+   * Retrieve a value from the unified cache manager.
+   *
+   * @description Retrieve a value from the unified cache manager.
+   * @param {string} cacheName - Name of the cache (entityName, gender, activityIndex, closeness).
+   * @param {string} key - Cache key for retrieval.
+   * @returns {unknown|null} Cached value or null if not found/expired.
+   * @private
+   */
+  #getCacheValue(cacheName, key) {
+    if (!this.#cacheManager) {
       return null;
     }
 
-    const entry = cache.get(key);
-    if (!entry) {
-      cache.delete(key);
-      return null;
-    }
-
-    if (entry.expiresAt && entry.expiresAt <= Date.now()) {
-      cache.delete(key);
-      return null;
-    }
-
-    return entry.value ?? null;
+    const value = this.#cacheManager.get(cacheName, key);
+    return value !== undefined ? value : null;
   }
 
   /**
-   * Store a value within a TTL-governed cache.
+   * Store a value in the unified cache manager.
    *
-   * @description Store a value within a TTL-governed cache.
-   * @param {Map<string, TimedCacheEntry>} cache - Cache map storing entries with expiry metadata.
+   * @description Store a value in the unified cache manager.
+   * @param {string} cacheName - Name of the cache (entityName, gender, activityIndex, closeness).
    * @param {string} key - Cache key for storage.
    * @param {unknown} value - Cached value payload.
    * @private
    */
-  #setCacheValue(cache, key, value) {
-    const expiresAt = Date.now() + this.#cacheConfig.ttl;
-    cache.set(key, { value, expiresAt });
-  }
-
-  /**
-   * Invalidate name cache for entity.
-   *
-   * @param {string} entityId - Entity ID associated with the cache entry.
-   * @returns {void}
-   * @description Remove cached name for the supplied entity when state changes.
-   * @private
-   */
-  #invalidateNameCache(entityId) {
-    if (this.#entityNameCache.delete(entityId)) {
-      this.#logger.debug(
-        `ActivityDescriptionService: Invalidated name cache for ${entityId}`
-      );
+  #setCacheValue(cacheName, key, value) {
+    if (!this.#cacheManager) {
+      return;
     }
-  }
 
-  /**
-   * Invalidate gender cache for entity.
-   *
-   * @param {string} entityId - Entity ID associated with the cache entry.
-   * @returns {void}
-   * @description Remove cached gender information for the supplied entity.
-   * @private
-   */
-  #invalidateGenderCache(entityId) {
-    if (this.#genderCache.delete(entityId)) {
-      this.#logger.debug(
-        `ActivityDescriptionService: Invalidated gender cache for ${entityId}`
-      );
-    }
-  }
-
-  /**
-   * Invalidate activity cache for entity.
-   *
-   * @param {string} entityId - Entity ID associated with the cache entry.
-   * @returns {void}
-   * @description Remove cached activity index entries for the supplied entity.
-   * @private
-   */
-  #invalidateActivityCache(entityId) {
-    if (this.#activityIndexCache.delete(entityId)) {
-      this.#logger.debug(
-        `ActivityDescriptionService: Invalidated activity cache for ${entityId}`
-      );
-    }
-  }
-
-  /**
-   * Invalidate closeness cache for entity.
-   *
-   * @param {string} entityId - Entity ID associated with the cache entry.
-   * @returns {void}
-   * @description Remove cached closeness partners for the supplied entity.
-   * @private
-   */
-  #invalidateClosenessCache(entityId) {
-    if (this.#closenessCache.delete(entityId)) {
-      this.#logger.debug(
-        `ActivityDescriptionService: Invalidated closeness cache for ${entityId}`
-      );
-    }
+    this.#cacheManager.set(cacheName, key, value);
   }
 
   /**
@@ -2770,14 +1198,13 @@ class ActivityDescriptionService {
    *
    * @param {string} entityId - Entity ID whose cache entries should be removed.
    * @returns {void}
-   * @description Remove name, gender, and activity caches for the supplied entity identifier.
+   * @description Delegate cache invalidation to the unified cache manager.
    * @private
    */
   #invalidateAllCachesForEntity(entityId) {
-    this.#invalidateNameCache(entityId);
-    this.#invalidateGenderCache(entityId);
-    this.#invalidateActivityCache(entityId);
-    this.#invalidateClosenessCache(entityId);
+    if (this.#cacheManager) {
+      this.#cacheManager.invalidateAll(entityId);
+    }
   }
 
   /**
@@ -2810,23 +1237,27 @@ class ActivityDescriptionService {
    * Invalidate specific cache type for entity.
    *
    * @param {string} entityId - Entity ID to invalidate.
-   * @param {string} [cacheType='all'] - Cache type to invalidate.
+   * @param {string} [cacheType] - Cache type to invalidate.
    * @returns {void}
-   * @description Remove cached data for a specific cache segment or all caches for an entity.
+   * @description Delegate cache invalidation to the unified cache manager.
    */
   invalidateCache(entityId, cacheType = 'all') {
+    if (!this.#cacheManager) {
+      return;
+    }
+
     switch (cacheType) {
       case 'name':
-        this.#invalidateNameCache(entityId);
+        this.#cacheManager.invalidate('entityName', entityId);
         break;
       case 'gender':
-        this.#invalidateGenderCache(entityId);
+        this.#cacheManager.invalidate('gender', entityId);
         break;
       case 'activity':
-        this.#invalidateActivityCache(entityId);
+        this.#cacheManager.invalidate('activityIndex', entityId);
         break;
       case 'closeness':
-        this.#invalidateClosenessCache(entityId);
+        this.#cacheManager.invalidate('closeness', entityId);
         break;
       case 'all':
         this.#invalidateAllCachesForEntity(entityId);
@@ -2842,13 +1273,12 @@ class ActivityDescriptionService {
    * Clear all caches completely.
    *
    * @returns {void}
-   * @description Remove every cached entry for entity names, genders, activity indexes, and closeness calculations.
+   * @description Delegate cache clearing to the unified cache manager.
    */
   clearAllCaches() {
-    this.#entityNameCache.clear();
-    this.#genderCache.clear();
-    this.#activityIndexCache.clear();
-    this.#closenessCache.clear();
+    if (this.#cacheManager) {
+      this.#cacheManager.clearAll();
+    }
     this.#logger.info('ActivityDescriptionService: Cleared all caches');
   }
 
@@ -2859,21 +1289,23 @@ class ActivityDescriptionService {
    * @returns {void}
    */
   destroy() {
+    // Destroy cache manager (handles cleanup interval and event unsubscription)
+    if (this.#cacheManager) {
+      this.#cacheManager.destroy();
+      this.#cacheManager = null;
+    }
+
+    // Clean up any remaining event subscriptions (deprecated, but kept for backward compatibility)
     while (this.#eventUnsubscribers.length > 0) {
       const unsubscribe = this.#eventUnsubscribers.pop();
       try {
         unsubscribe?.();
       } catch (error) {
         this.#logger.warn(
-          'ActivityDescriptionService: Failed to unsubscribe cache invalidation handler',
+          'ActivityDescriptionService: Failed to unsubscribe event handler',
           error
         );
       }
-    }
-
-    if (this.#cleanupInterval) {
-      clearInterval(this.#cleanupInterval);
-      this.#cleanupInterval = null;
     }
 
     this.clearAllCaches();

@@ -1,0 +1,117 @@
+{
+  "description": "Edge case scenarios for robustness testing",
+  "scenarios": [
+    {
+      "name": "null_entity",
+      "input": {
+        "entityId": "entity1",
+        "entity": null
+      },
+      "expectedOutput": []
+    },
+    {
+      "name": "empty_activities_array",
+      "input": {
+        "actorId": "actor1",
+        "activities": []
+      },
+      "expectedOutput": ""
+    },
+    {
+      "name": "missing_target_entity",
+      "input": {
+        "actorId": "actor1",
+        "activities": [
+          {
+            "verb": "touching",
+            "template": "{actor} is touching {target}",
+            "targetEntityId": "missing_target",
+            "priority": 50
+          }
+        ]
+      },
+      "expectedBehavior": "Should use fallback name '[Unknown]' for missing target"
+    },
+    {
+      "name": "malformed_template",
+      "input": {
+        "actorId": "actor1",
+        "activities": [
+          {
+            "verb": "touching",
+            "template": "{actor is touching {target",
+            "targetEntityId": "target1",
+            "priority": 50
+          }
+        ]
+      },
+      "expectedBehavior": "Should handle malformed template gracefully without throwing"
+    },
+    {
+      "name": "missing_gender_component",
+      "input": {
+        "actorId": "actor1",
+        "targetId": "target1",
+        "actorComponents": {},
+        "targetComponents": {}
+      },
+      "expectedBehavior": "Should default to 'they/them/their' pronouns"
+    },
+    {
+      "name": "circular_entity_references",
+      "input": {
+        "actorId": "actor1",
+        "activities": [
+          {
+            "verb": "touching",
+            "template": "{actor} is touching {target}",
+            "targetEntityId": "actor1",
+            "priority": 50
+          }
+        ]
+      },
+      "expectedBehavior": "Should handle self-referential activities without infinite loops"
+    },
+    {
+      "name": "very_long_activity_chain",
+      "input": {
+        "actorId": "actor1",
+        "activities": []
+      },
+      "activityCount": 100,
+      "expectedBehavior": "Should handle large collections without performance degradation"
+    },
+    {
+      "name": "unicode_in_entity_names",
+      "input": {
+        "actorName": "José María",
+        "targetName": "李明",
+        "activityTemplate": "{actor} is greeting {target}"
+      },
+      "expectedOutput": "José María is greeting 李明"
+    },
+    {
+      "name": "special_characters_in_templates",
+      "input": {
+        "actorName": "John",
+        "targetName": "Alice",
+        "activityTemplate": "{actor} says \"Hello!\" to {target}"
+      },
+      "expectedOutput": "John says \"Hello!\" to Alice"
+    },
+    {
+      "name": "undefined_priority",
+      "input": {
+        "activities": [
+          {
+            "verb": "touching",
+            "template": "{actor} is touching {target}",
+            "targetEntityId": "target1",
+            "priority": undefined
+          }
+        ]
+      },
+      "expectedBehavior": "Should treat undefined priority as 0 or lowest priority"
+    }
+  ]
+}

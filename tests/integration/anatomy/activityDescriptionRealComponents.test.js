@@ -13,6 +13,11 @@ import {
 } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
+import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
+import ActivityIndexManager from '../../../src/anatomy/services/activityIndexManager.js';
+import ActivityMetadataCollectionSystem from '../../../src/anatomy/services/activityMetadataCollectionSystem.js';
+import ActivityGroupingSystem from '../../../src/anatomy/services/grouping/activityGroupingSystem.js';
+import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.js';
 import holdingHandComponent from '../../../data/mods/hand-holding/components/holding_hand.component.json';
 import sittingOnComponent from '../../../data/mods/positioning/components/sitting_on.component.json';
 import beingHuggedComponent from '../../../data/mods/positioning/components/being_hugged.component.json';
@@ -49,11 +54,41 @@ describe('Activity Description - Real Mod Components', () => {
     jsonLogicEvaluationService = {
       evaluate: jest.fn().mockReturnValue(true),
     };
+
+    // Create real dependencies for integration testing
+    const cacheManager = new ActivityCacheManager({
+      logger: testBed.mocks.logger,
+      eventBus: null,
+    });
+    const indexManager = new ActivityIndexManager({
+      cacheManager,
+      logger: testBed.mocks.logger,
+    });
+    const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
+      entityManager: testBed.entityManager,
+      logger: testBed.mocks.logger,
+      activityIndex: null,
+    });
+    const groupingSystem = new ActivityGroupingSystem({
+      indexManager,
+      logger: testBed.mocks.logger,
+    });
+    const nlgSystem = new ActivityNLGSystem({
+      logger: testBed.mocks.logger,
+      entityManager: testBed.entityManager,
+      cacheManager,
+    });
+
     activityDescriptionService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager: testBed.entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
       jsonLogicEvaluationService,
+      cacheManager,
+      indexManager,
+      metadataCollectionSystem,
+      groupingSystem,
+      nlgSystem,
     });
   });
 

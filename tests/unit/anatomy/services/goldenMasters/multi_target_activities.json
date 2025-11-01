@@ -1,0 +1,93 @@
+{
+  "description": "Multi-target activity scenarios with complex grouping patterns",
+  "input": {
+    "actorId": "actor1",
+    "actorName": "John",
+    "actorGender": "male",
+    "activities": [
+      {
+        "verb": "touching",
+        "template": "{actor} is touching {target}'s shoulder",
+        "targetEntityId": "target1",
+        "priority": 50
+      },
+      {
+        "verb": "touching",
+        "template": "{actor} is holding {target}'s hand",
+        "targetEntityId": "target1",
+        "priority": 55
+      },
+      {
+        "verb": "kissing",
+        "template": "{actor} is kissing {target}",
+        "targetEntityId": "target2",
+        "priority": 70
+      },
+      {
+        "verb": "hugging",
+        "template": "{actor} is hugging {target}",
+        "targetEntityId": "target3",
+        "priority": 60
+      },
+      {
+        "verb": "caressing",
+        "template": "{actor} is caressing {target}'s face",
+        "targetEntityId": "target2",
+        "priority": 65
+      }
+    ],
+    "entities": {
+      "target1": {
+        "name": "Alice",
+        "gender": "female"
+      },
+      "target2": {
+        "name": "Bob",
+        "gender": "male"
+      },
+      "target3": {
+        "name": "Carol",
+        "gender": "female"
+      }
+    }
+  },
+  "expectedGroups": [
+    {
+      "primaryActivity": {
+        "verb": "kissing",
+        "targetEntityId": "target2",
+        "priority": 70
+      },
+      "relatedActivities": [
+        {
+          "verb": "caressing",
+          "targetEntityId": "target2",
+          "priority": 65
+        }
+      ]
+    },
+    {
+      "primaryActivity": {
+        "verb": "hugging",
+        "targetEntityId": "target3",
+        "priority": 60
+      },
+      "relatedActivities": []
+    },
+    {
+      "primaryActivity": {
+        "verb": "touching",
+        "targetEntityId": "target1",
+        "priority": 55
+      },
+      "relatedActivities": [
+        {
+          "verb": "touching",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ]
+    }
+  ],
+  "expectedOutput": "John is kissing Bob while caressing his face, hugging Carol, and holding Alice's hand and touching her shoulder"
+}

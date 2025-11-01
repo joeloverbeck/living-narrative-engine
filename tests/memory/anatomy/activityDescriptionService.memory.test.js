@@ -1,3 +1,8 @@
+/**
+ * @file Memory tests for ActivityDescriptionService
+ * @description Tests memory usage patterns and leak detection for activity description generation
+ */
+
 import {
   afterEach,
   beforeEach,
@@ -6,45 +11,11 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import { performance } from 'node:perf_hooks';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 
-const createLogger = () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-});
+describe('ActivityDescriptionService - Memory Tests', () => {
+  jest.setTimeout(120000); // 2 minutes for memory stabilization
 
-const createEntity = (id, gender = 'neutral') => {
-  const components = new Map();
-  components.set('core:name', { text: id });
-  components.set('core:gender', { value: gender });
-  components.set('positioning:closeness', { partners: [] });
-
-  return {
-    id,
-    componentTypeIds: [],
-    activities: [],
-    getComponentData: (componentId) => components.get(componentId),
-    hasComponent: (componentId) => components.has(componentId),
-  };
-};
-
-const addActivity = (entity, template, targetId = null, priority = 50) => {
-  const activity = {
-    type: 'inline',
-    template,
-    targetEntityId: targetId,
-    priority,
-    activityMetadata: { shouldDescribeInActivity: true },
-  };
-
-  entity.activities.push(activity);
-  return activity;
-};
-
-describe('ActivityDescriptionService - Performance Optimizations', () => {
   let entities;
   let mockEntityManager;
   let mockFormattingService;
@@ -56,6 +27,41 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
   let mockNlgSystem;
   let service;
   let activityIndex;
+
+  const createLogger = () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  });
+
+  const createEntity = (id, gender = 'neutral') => {
+    const components = new Map();
+    components.set('core:name', { text: id });
+    components.set('core:gender', { value: gender });
+    components.set('positioning:closeness', { partners: [] });
+
+    return {
+      id,
+      componentTypeIds: [],
+      activities: [],
+      getComponentData: (componentId) => components.get(componentId),
+      hasComponent: (componentId) => components.has(componentId),
+    };
+  };
+
+  const addActivity = (entity, template, targetId = null, priority = 50) => {
+    const activity = {
+      type: 'inline',
+      template,
+      targetEntityId: targetId,
+      priority,
+      activityMetadata: { shouldDescribeInActivity: true },
+    };
+
+    entity.activities.push(activity);
+    return activity;
+  };
 
   const createService = () =>
     new ActivityDescriptionService({
@@ -71,7 +77,10 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
       activityIndex,
     });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Force garbage collection before each test
+    await global.memoryTestUtils.forceGCAndWait();
+
     entities = new Map();
 
     mockEntityManager = {
@@ -117,7 +126,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
         const byTarget = new Map();
         const byGroupKey = new Map();
         if (Array.isArray(activities)) {
-          activities.forEach(activity => {
+          activities.forEach((activity) => {
             const targetId = activity?.targetEntityId || 'solo';
             if (!byTarget.has(targetId)) {
               byTarget.set(targetId, []);
@@ -146,7 +155,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
         const byTarget = new Map();
         const byGroupKey = new Map();
         if (Array.isArray(activities)) {
-          activities.forEach(activity => {
+          activities.forEach((activity) => {
             const targetId = activity?.targetEntityId || 'solo';
             if (!byTarget.has(targetId)) {
               byTarget.set(targetId, []);
@@ -173,7 +182,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
         const byTarget = new Map();
         const byGroupKey = new Map();
         if (Array.isArray(activities)) {
-          activities.forEach(activity => {
+          activities.forEach((activity) => {
             const targetId = activity?.targetEntityId || 'solo';
             if (!byTarget.has(targetId)) {
               byTarget.set(targetId, []);
@@ -203,7 +212,9 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     };
 
     mockGroupingSystem = {
-      groupActivities: jest.fn((index) => ({ groups: [], simultaneousActivities: [] })),
+      groupActivities: jest
+        .fn()
+        .mockReturnValue({ groups: [], simultaneousActivities: [] }),
       sortByPriority: jest.fn((activities) => activities),
     };
 
@@ -222,9 +233,11 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     service = createService();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     service.destroy();
     entities.clear();
+    // Force garbage collection after each test
+    await global.memoryTestUtils.forceGCAndWait();
   });
 
   const registerEntity = (entity) => {
@@ -232,103 +245,56 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     return entity;
   };
 
-  it('should generate single activity under 5ms', async () => {
-    const jon = registerEntity(createEntity('jon', 'male'));
-    const alicia = registerEntity(createEntity('alicia', 'female'));
-    addActivity(jon, '{actor} waves to {target}', alicia.id, 80);
+  describe('Memory leak detection', () => {
+    it('should not leak memory with repeated activity description generations', async () => {
+      const jon = registerEntity(createEntity('jon', 'male'));
+      addActivity(jon, '{actor} is waving', null, 75);
 
-    const start = performance.now();
-    await service.generateActivityDescription(jon.id);
-    const duration = performance.now() - start;
+      const iterations = global.memoryTestUtils.isCI() ? 800 : 1000;
 
-    expect(duration).toBeLessThan(5);
-  });
+      // Establish memory baseline
+      await global.memoryTestUtils.forceGCAndWait();
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
-  it('should handle 10 activities under 50ms', async () => {
-    const jon = registerEntity(createEntity('jon', 'male'));
-    const alicia = registerEntity(createEntity('alicia', 'female'));
+      // Generate activity descriptions many times to detect memory leaks
+      for (let i = 0; i < iterations; i++) {
+        await service.generateActivityDescription(jon.id);
+      }
 
-    for (let i = 0; i < 10; i += 1) {
-      addActivity(jon, `{actor} action${i} with {target}`, alicia.id, 90 - i);
-    }
+      // Allow memory to stabilize with extended time
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage(8);
 
-    const start = performance.now();
-    await service.generateActivityDescription(jon.id);
-    const duration = performance.now() - start;
+      // Clear references and force cleanup
+      await global.memoryTestUtils.forceGCAndWait();
+      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(8);
 
-    expect(duration).toBeLessThan(50);
-  });
+      // Calculate memory metrics
+      const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
+      const memoryLeakage = Math.max(0, finalMemory - baselineMemory);
+      const memoryPerOperation = memoryGrowth / iterations;
 
-  it('should benefit from name caching', async () => {
-    const jon = registerEntity(createEntity('jon', 'male'));
-    const alicia = registerEntity(createEntity('alicia', 'female'));
+      // Memory efficiency assertions - adjusted based on observed behavior
+      const maxMemoryGrowthMB = global.memoryTestUtils.isCI() ? 15 : 12; // Reasonable growth for 1000 operations
+      const maxMemoryLeakageMB = global.memoryTestUtils.isCI() ? 3 : 2; // Memory that doesn't get cleaned up
+      const maxMemoryPerOperationBytes = global.memoryTestUtils.isCI()
+        ? 15000
+        : 12000; // Per operation overhead including mock accumulation
 
-    for (let i = 0; i < 5; i += 1) {
-      addActivity(jon, `{actor} performs action${i} with {target}`, alicia.id, 80 - i);
-    }
+      expect(memoryGrowth).toBeLessThan(maxMemoryGrowthMB * 1024 * 1024);
+      expect(memoryLeakage).toBeLessThan(maxMemoryLeakageMB * 1024 * 1024);
+      expect(memoryPerOperation).toBeLessThan(maxMemoryPerOperationBytes);
 
-    const firstStart = performance.now();
-    await service.generateActivityDescription(jon.id);
-    const firstDuration = performance.now() - firstStart;
-
-    const secondStart = performance.now();
-    await service.generateActivityDescription(jon.id);
-    const secondDuration = performance.now() - secondStart;
-
-    expect(secondDuration).toBeLessThan(firstDuration * 0.7);
-  });
-
-  it('should index activities efficiently', () => {
-    const hooks = service.getTestHooks();
-    const activities = [];
-
-    for (let i = 0; i < 20; i += 1) {
-      activities.push({
-        type: 'inline',
-        sourceComponent: `comp${i}`,
-        targetEntityId: i % 3 === 0 ? 'alicia' : i % 3 === 1 ? 'bobby' : null,
-        priority: i,
-        grouping: { groupKey: i % 2 === 0 ? 'even' : 'odd' },
-      });
-    }
-
-    const start = performance.now();
-    const index = hooks.buildActivityIndex(activities);
-    const duration = performance.now() - start;
-
-    expect(duration).toBeLessThan(15);
-    expect(index.byTarget.size).toBeGreaterThan(0);
-  });
-
-  it('should cleanup caches when limit exceeded', () => {
-    const hooks = service.getTestHooks();
-
-    for (let i = 0; i < 1500; i += 1) {
-      hooks.setEntityNameCacheEntry(`entity${i}`, `Name ${i}`);
-    }
-
-    hooks.cleanupCaches();
-    const cacheSnapshot = hooks.getCacheSnapshot();
-
-    expect(cacheSnapshot.entityName.size).toBeLessThanOrEqual(1000);
-    expect(cacheSnapshot.closeness.size).toBeLessThanOrEqual(1000);
-  });
-
-  it('should destroy resources properly', () => {
-    const hooks = service.getTestHooks();
-    hooks.setEntityNameCacheEntry('entity1', 'Entity One');
-    hooks.setGenderCacheEntry('entity1', 'female');
-    hooks.setActivityIndexCacheEntry('priority:entity1', {
-      signature: 'test',
-      index: { byTarget: new Map(), byPriority: [], byGroupKey: new Map(), all: [] },
+      console.log(
+        `Activity description generation memory - Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)}MB, ` +
+          `Growth: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB, ` +
+          `Peak: ${(peakMemory / 1024 / 1024).toFixed(2)}MB, ` +
+          `Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB, ` +
+          `Leakage: ${(memoryLeakage / 1024 / 1024).toFixed(2)}MB, ` +
+          `Per Operation: ${memoryPerOperation.toFixed(2)} bytes, ` +
+          `Iterations: ${iterations}`
+      );
     });
-
-    service.destroy();
-
-    const snapshot = hooks.getCacheSnapshot();
-    expect(snapshot.entityName.size).toBe(0);
-    expect(snapshot.gender.size).toBe(0);
-    expect(snapshot.activityIndex.size).toBe(0);
-    expect(snapshot.closeness.size).toBe(0);
   });
 });

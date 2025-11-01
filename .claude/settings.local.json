@@ -563,7 +563,9 @@
       "Bash(while read f)",
       "Bash(do echo \"=== $f ===\")",
       "SlashCommand(/sc:pm)",
-      "mcp__serena__initial_instructions"
+      "mcp__serena__initial_instructions",
+      "mcp__serena__insert_before_symbol",
+      "Bash(NODE_ENV=test npm run test:memory:*)"
     ],
     "deny": [],
     "ask": []

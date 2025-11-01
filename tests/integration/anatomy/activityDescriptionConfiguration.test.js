@@ -7,6 +7,11 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { jest } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
+import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
+import ActivityIndexManager from '../../../src/anatomy/services/activityIndexManager.js';
+import ActivityMetadataCollectionSystem from '../../../src/anatomy/services/activityMetadataCollectionSystem.js';
+import ActivityGroupingSystem from '../../../src/anatomy/services/grouping/activityGroupingSystem.js';
+import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.js';
 
 describe('Activity Description - Configuration Integration', () => {
   let testBed;
@@ -66,11 +71,40 @@ describe('Activity Description - Configuration Integration', () => {
       evaluate: jest.fn().mockReturnValue(true),
     };
 
+    // Create real dependencies for integration testing
+    const cacheManager = new ActivityCacheManager({
+      logger: testBed.mocks.logger,
+      eventBus: null,
+    });
+    const indexManager = new ActivityIndexManager({
+      cacheManager,
+      logger: testBed.mocks.logger,
+    });
+    const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
+      entityManager,
+      logger: testBed.mocks.logger,
+      activityIndex: null,
+    });
+    const groupingSystem = new ActivityGroupingSystem({
+      indexManager,
+      logger: testBed.mocks.logger,
+    });
+    const nlgSystem = new ActivityNLGSystem({
+      logger: testBed.mocks.logger,
+      entityManager,
+      cacheManager,
+    });
+
     const customService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
       jsonLogicEvaluationService,
+      cacheManager,
+      indexManager,
+      metadataCollectionSystem,
+      groupingSystem,
+      nlgSystem,
     });
 
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
@@ -105,11 +139,40 @@ describe('Activity Description - Configuration Integration', () => {
       evaluate: jest.fn().mockReturnValue(true),
     };
 
+    // Create real dependencies for integration testing
+    const cacheManager = new ActivityCacheManager({
+      logger: testBed.mocks.logger,
+      eventBus: null,
+    });
+    const indexManager = new ActivityIndexManager({
+      cacheManager,
+      logger: testBed.mocks.logger,
+    });
+    const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
+      entityManager,
+      logger: testBed.mocks.logger,
+      activityIndex: null,
+    });
+    const groupingSystem = new ActivityGroupingSystem({
+      indexManager,
+      logger: testBed.mocks.logger,
+    });
+    const nlgSystem = new ActivityNLGSystem({
+      logger: testBed.mocks.logger,
+      entityManager,
+      cacheManager,
+    });
+
     const customService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
       jsonLogicEvaluationService,
+      cacheManager,
+      indexManager,
+      metadataCollectionSystem,
+      groupingSystem,
+      nlgSystem,
     });
 
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
@@ -153,11 +216,40 @@ describe('Activity Description - Configuration Integration', () => {
       evaluate: jest.fn().mockReturnValue(true),
     };
 
+    // Create real dependencies for integration testing
+    const cacheManager = new ActivityCacheManager({
+      logger: testBed.mocks.logger,
+      eventBus: null,
+    });
+    const indexManager = new ActivityIndexManager({
+      cacheManager,
+      logger: testBed.mocks.logger,
+    });
+    const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
+      entityManager,
+      logger: testBed.mocks.logger,
+      activityIndex: null,
+    });
+    const groupingSystem = new ActivityGroupingSystem({
+      indexManager,
+      logger: testBed.mocks.logger,
+    });
+    const nlgSystem = new ActivityNLGSystem({
+      logger: testBed.mocks.logger,
+      entityManager,
+      cacheManager,
+    });
+
     const customService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
       jsonLogicEvaluationService,
+      cacheManager,
+      indexManager,
+      metadataCollectionSystem,
+      groupingSystem,
+      nlgSystem,
     });
 
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
@@ -198,11 +290,40 @@ describe('Activity Description - Configuration Integration', () => {
       evaluate: jest.fn().mockReturnValue(true),
     };
 
+    // Create real dependencies for integration testing
+    const cacheManager = new ActivityCacheManager({
+      logger: testBed.mocks.logger,
+      eventBus: null,
+    });
+    const indexManager = new ActivityIndexManager({
+      cacheManager,
+      logger: testBed.mocks.logger,
+    });
+    const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
+      entityManager,
+      logger: testBed.mocks.logger,
+      activityIndex: null,
+    });
+    const groupingSystem = new ActivityGroupingSystem({
+      indexManager,
+      logger: testBed.mocks.logger,
+    });
+    const nlgSystem = new ActivityNLGSystem({
+      logger: testBed.mocks.logger,
+      entityManager,
+      cacheManager,
+    });
+
     const customService = new ActivityDescriptionService({
       logger: testBed.mocks.logger,
       entityManager,
       anatomyFormattingService: mockAnatomyFormattingService,
       jsonLogicEvaluationService,
+      cacheManager,
+      indexManager,
+      metadataCollectionSystem,
+      groupingSystem,
+      nlgSystem,
     });
 
     const jonEntity = await entityManager.createEntityInstance('core:actor', {

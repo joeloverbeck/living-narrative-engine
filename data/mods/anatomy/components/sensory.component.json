@@ -28,7 +28,11 @@
       "acuity": {
         "type": "string",
         "description": "Overall sensory acuity level",
-        "enum": ["poor", "average", "acute", "exceptional", "supernatural"]
+        "enum": ["poor", "average", "acute", "exceptional", "supernatural", "abyssal"]
+      },
+      "echolocation": {
+        "type": "boolean",
+        "description": "Whether this part provides echolocation capability for navigation and object detection"
       }
     },
     "additionalProperties": false

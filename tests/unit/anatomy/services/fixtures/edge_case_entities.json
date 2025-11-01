@@ -1,0 +1,204 @@
+{
+  "description": "Fixture for testing edge cases and boundary conditions",
+  "edgeCaseEntities": [
+    {
+      "name": "null_entity",
+      "entity": null,
+      "expectedBehavior": "Should handle gracefully without throwing"
+    },
+    {
+      "name": "undefined_entity",
+      "entity": undefined,
+      "expectedBehavior": "Should handle gracefully without throwing"
+    },
+    {
+      "name": "empty_entity",
+      "entity": {
+        "id": "empty_1",
+        "components": {}
+      },
+      "expectedBehavior": "Should use defaults for missing data"
+    },
+    {
+      "name": "malformed_component_data",
+      "entity": {
+        "id": "malformed_1",
+        "name": "Malformed",
+        "components": {
+          "core:gender": "not_an_object"
+        }
+      },
+      "expectedBehavior": "Should handle malformed component data gracefully"
+    },
+    {
+      "name": "unicode_name",
+      "entity": {
+        "id": "unicode_1",
+        "name": "José María 李明 Müller",
+        "components": {
+          "core:gender": { "value": "male" }
+        }
+      },
+      "expectedBehavior": "Should preserve unicode characters in output"
+    },
+    {
+      "name": "very_long_name",
+      "entity": {
+        "id": "long_name_1",
+        "name": "A".repeat(1000),
+        "components": {
+          "core:gender": { "value": "female" }
+        }
+      },
+      "expectedBehavior": "Should handle extremely long names without issues"
+    },
+    {
+      "name": "special_characters_in_name",
+      "entity": {
+        "id": "special_1",
+        "name": "John \"The Rock\" O'Connor",
+        "components": {
+          "core:gender": { "value": "male" }
+        }
+      },
+      "expectedBehavior": "Should preserve special characters in names"
+    },
+    {
+      "name": "circular_reference_prevention",
+      "entity": {
+        "id": "circular_1",
+        "name": "Self-Referencing",
+        "components": {
+          "core:gender": { "value": "non_binary" },
+          "positioning:closeness": {
+            "partners": ["circular_1"]
+          }
+        }
+      },
+      "expectedBehavior": "Should detect and prevent circular reference issues"
+    }
+  ],
+  "edgeCaseActivities": [
+    {
+      "name": "empty_template",
+      "activity": {
+        "verb": "action",
+        "template": "",
+        "targetEntityId": "target1",
+        "priority": 50
+      },
+      "expectedBehavior": "Should handle empty template gracefully"
+    },
+    {
+      "name": "malformed_template_missing_braces",
+      "activity": {
+        "verb": "action",
+        "template": "actor is touching target",
+        "targetEntityId": "target1",
+        "priority": 50
+      },
+      "expectedBehavior": "Should handle templates without placeholder braces"
+    },
+    {
+      "name": "template_with_unclosed_braces",
+      "activity": {
+        "verb": "action",
+        "template": "{actor is touching {target",
+        "targetEntityId": "target1",
+        "priority": 50
+      },
+      "expectedBehavior": "Should handle malformed template syntax"
+    },
+    {
+      "name": "negative_priority",
+      "activity": {
+        "verb": "action",
+        "template": "{actor} is touching {target}",
+        "targetEntityId": "target1",
+        "priority": -10
+      },
+      "expectedBehavior": "Should handle negative priority values"
+    },
+    {
+      "name": "undefined_priority",
+      "activity": {
+        "verb": "action",
+        "template": "{actor} is touching {target}",
+        "targetEntityId": "target1",
+        "priority": undefined
+      },
+      "expectedBehavior": "Should treat undefined priority as lowest priority"
+    },
+    {
+      "name": "missing_target_entity",
+      "activity": {
+        "verb": "action",
+        "template": "{actor} is touching {target}",
+        "targetEntityId": "non_existent_target",
+        "priority": 50
+      },
+      "expectedBehavior": "Should use fallback name '[Unknown]' for missing target"
+    },
+    {
+      "name": "null_metadata",
+      "activity": {
+        "verb": "action",
+        "template": "{actor} is touching {target}",
+        "targetEntityId": "target1",
+        "priority": 50,
+        "metadata": null
+      },
+      "expectedBehavior": "Should handle null metadata gracefully"
+    },
+    {
+      "name": "very_high_priority",
+      "activity": {
+        "verb": "action",
+        "template": "{actor} is touching {target}",
+        "targetEntityId": "target1",
+        "priority": Number.MAX_SAFE_INTEGER
+      },
+      "expectedBehavior": "Should handle extremely high priority values"
+    }
+  ],
+  "boundaryConditions": [
+    {
+      "name": "zero_activities",
+      "activities": [],
+      "expectedOutput": ""
+    },
+    {
+      "name": "single_activity",
+      "activities": [
+        {
+          "verb": "touching",
+          "template": "{actor} is touching {target}",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ],
+      "expectedOutput": "Should produce single activity description"
+    },
+    {
+      "name": "large_activity_collection",
+      "activityCount": 1000,
+      "expectedBehavior": "Should handle large collections without performance degradation"
+    },
+    {
+      "name": "deeply_nested_components",
+      "entity": {
+        "id": "nested_1",
+        "name": "Nested",
+        "components": {
+          "core:gender": { "value": "male" },
+          "positioning:closeness": {
+            "partners": ["p1", "p2", "p3"],
+            "close": ["c1", "c2", "c3", "c4", "c5"],
+            "acquaintances": ["a1", "a2", "a3", "a4", "a5", "a6", "a7"]
+          }
+        }
+      },
+      "expectedBehavior": "Should handle deeply nested component data"
+    }
+  ]
+}

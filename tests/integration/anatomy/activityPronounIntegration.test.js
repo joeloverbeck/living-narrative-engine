@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
+import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
+import ActivityIndexManager from '../../../src/anatomy/services/activityIndexManager.js';
+import ActivityMetadataCollectionSystem from '../../../src/anatomy/services/activityMetadataCollectionSystem.js';
+import ActivityGroupingSystem from '../../../src/anatomy/services/grouping/activityGroupingSystem.js';
+import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.js';
 import {
   registerActivityComponents,
   createActor,
@@ -23,11 +28,41 @@ describe('Activity Description - Pronoun Edge Cases', () => {
     jsonLogicEvaluationService = {
       evaluate: jest.fn().mockReturnValue(true),
     };
+
+    // Create real dependencies for integration testing
+    const cacheManager = new ActivityCacheManager({
+      logger: testBed.logger,
+      eventBus: null,
+    });
+    const indexManager = new ActivityIndexManager({
+      cacheManager,
+      logger: testBed.logger,
+    });
+    const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
+      entityManager,
+      logger: testBed.logger,
+      activityIndex: null,
+    });
+    const groupingSystem = new ActivityGroupingSystem({
+      indexManager,
+      logger: testBed.logger,
+    });
+    const nlgSystem = new ActivityNLGSystem({
+      logger: testBed.logger,
+      entityManager,
+      cacheManager,
+    });
+
     service = new ActivityDescriptionService({
       logger: testBed.logger,
       entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
       jsonLogicEvaluationService,
+      cacheManager,
+      indexManager,
+      metadataCollectionSystem,
+      groupingSystem,
+      nlgSystem,
     });
 
     configureActivityFormatting(testBed.mockAnatomyFormattingService);

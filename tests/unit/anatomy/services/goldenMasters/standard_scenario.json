@@ -1,0 +1,20 @@
+{
+  "description": "Standard single-activity scenario with basic pronoun resolution",
+  "input": {
+    "actorId": "actor1",
+    "actorName": "John",
+    "actorGender": "male",
+    "targetId": "target1",
+    "targetName": "Alice",
+    "targetGender": "female",
+    "activities": [
+      {
+        "verb": "touching",
+        "template": "{actor} is gently touching {target}",
+        "targetEntityId": "target1",
+        "priority": 60
+      }
+    ]
+  },
+  "expectedOutput": "John is gently touching Alice"
+}

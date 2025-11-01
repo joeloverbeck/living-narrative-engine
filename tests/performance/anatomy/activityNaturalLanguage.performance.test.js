@@ -14,6 +14,11 @@ describe('Activity Description - Performance', () => {
   let entityManager;
   let service;
   let jsonLogicEvaluationService;
+  let mockCacheManager;
+  let mockIndexManager;
+  let mockMetadataCollectionSystem;
+  let mockGroupingSystem;
+  let mockNlgSystem;
 
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
@@ -24,11 +29,64 @@ describe('Activity Description - Performance', () => {
     jsonLogicEvaluationService = {
       evaluate: jest.fn().mockReturnValue(true),
     };
+
+    mockCacheManager = {
+      registerCache: jest.fn(),
+      get: jest.fn(),
+      set: jest.fn(),
+      invalidate: jest.fn(),
+      invalidateAll: jest.fn(),
+      clearAll: jest.fn(),
+      destroy: jest.fn(),
+    };
+
+    mockIndexManager = {
+      buildActivityIndex: jest.fn((activities) => ({
+        byTarget: new Map(),
+        byPriority: [],
+        byGroupKey: new Map(),
+        all: activities || [],
+      })),
+      buildActivitySignature: jest.fn(() => ''),
+      buildActivityIndexCacheKey: jest.fn(() => ''),
+      getActivityIndex: jest.fn((activities) => ({
+        byTarget: new Map(),
+        byPriority: [],
+        byGroupKey: new Map(),
+        all: activities || [],
+      })),
+      buildIndex: jest.fn((activities) => ({
+        byTarget: new Map(),
+        byPriority: [],
+        byGroupKey: new Map(),
+        all: activities || [],
+      })),
+    };
+
+    mockMetadataCollectionSystem = {
+      collectActivityMetadata: jest.fn((entityId, entity) => []),
+    };
+
+    mockGroupingSystem = {
+      groupActivities: jest.fn((index) => ({ groups: [], simultaneousActivities: [] })),
+      sortByPriority: jest.fn((activities) => activities),
+    };
+
+    mockNlgSystem = {
+      generateNaturalLanguage: jest.fn((groups) => []),
+      formatActivityDescription: jest.fn((groups) => ''),
+    };
+
     service = new ActivityDescriptionService({
       logger: testBed.logger,
       entityManager,
       anatomyFormattingService: testBed.mockAnatomyFormattingService,
       jsonLogicEvaluationService,
+      cacheManager: mockCacheManager,
+      indexManager: mockIndexManager,
+      metadataCollectionSystem: mockMetadataCollectionSystem,
+      groupingSystem: mockGroupingSystem,
+      nlgSystem: mockNlgSystem,
     });
 
     configureActivityFormatting(testBed.mockAnatomyFormattingService);

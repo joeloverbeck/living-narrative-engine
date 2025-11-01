@@ -1,0 +1,63 @@
+{
+  "description": "Complex grouping scenario with multiple activities and conjunction selection",
+  "input": {
+    "actorId": "actor1",
+    "actorName": "John",
+    "actorGender": "male",
+    "activities": [
+      {
+        "verb": "touching",
+        "template": "{actor} is touching {target}'s hand",
+        "targetEntityId": "target1",
+        "priority": 50
+      },
+      {
+        "verb": "touching",
+        "template": "{actor} is caressing {target}'s face",
+        "targetEntityId": "target1",
+        "priority": 55
+      },
+      {
+        "verb": "kissing",
+        "template": "{actor} is kissing {target}",
+        "targetEntityId": "target2",
+        "priority": 70
+      }
+    ],
+    "entities": {
+      "target1": {
+        "name": "Alice",
+        "gender": "female"
+      },
+      "target2": {
+        "name": "Bob",
+        "gender": "male"
+      }
+    }
+  },
+  "expectedGroups": [
+    {
+      "primaryActivity": {
+        "verb": "kissing",
+        "targetEntityId": "target2",
+        "priority": 70
+      },
+      "relatedActivities": []
+    },
+    {
+      "primaryActivity": {
+        "verb": "touching",
+        "targetEntityId": "target1",
+        "priority": 55
+      },
+      "relatedActivities": [
+        {
+          "verb": "touching",
+          "targetEntityId": "target1",
+          "priority": 50
+        }
+      ]
+    }
+  ],
+  "expectedOutput": "John is kissing Bob while caressing Alice's face and touching her hand"
+}

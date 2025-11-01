@@ -1,0 +1,55 @@
+{
+  "description": "Activity intensity mapping for tone application",
+  "intensityLevels": [
+    {
+      "name": "subtle",
+      "priority": 10,
+      "expectedIntensity": "subtle",
+      "toneModifiers": ["gently", "softly", "lightly"]
+    },
+    {
+      "name": "light",
+      "priority": 30,
+      "expectedIntensity": "light",
+      "toneModifiers": ["carefully", "tenderly"]
+    },
+    {
+      "name": "moderate",
+      "priority": 50,
+      "expectedIntensity": "moderate",
+      "toneModifiers": []
+    },
+    {
+      "name": "firm",
+      "priority": 70,
+      "expectedIntensity": "firm",
+      "toneModifiers": ["firmly", "decisively"]
+    },
+    {
+      "name": "intense",
+      "priority": 90,
+      "expectedIntensity": "intense",
+      "toneModifiers": ["intensely", "passionately", "eagerly"]
+    }
+  ],
+  "contextualToneScenarios": [
+    {
+      "name": "partner_intense_activity",
+      "relationshipTone": "closeness_partner",
+      "activityIntensity": "intense",
+      "expectedModifiers": ["passionately", "eagerly"]
+    },
+    {
+      "name": "acquaintance_subtle_activity",
+      "relationshipTone": "closeness_acquaintance",
+      "activityIntensity": "subtle",
+      "expectedModifiers": ["carefully", "gently"]
+    },
+    {
+      "name": "neutral_moderate_activity",
+      "relationshipTone": "neutral",
+      "activityIntensity": "moderate",
+      "expectedModifiers": []
+    }
+  ]
+}

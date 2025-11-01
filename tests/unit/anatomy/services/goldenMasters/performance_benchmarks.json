@@ -1,0 +1,72 @@
+{
+  "description": "Performance benchmarks for cache and algorithm validation",
+  "benchmarks": [
+    {
+      "name": "name_resolution_cache_hit_rate",
+      "iterations": 1000,
+      "entityCount": 10,
+      "expectedCacheHitRate": 0.9,
+      "expectedMaxLatency": 1,
+      "description": "Name resolution should hit cache >90% after first call"
+    },
+    {
+      "name": "grouping_algorithm_performance",
+      "activityCounts": [10, 50, 100, 500],
+      "expectedMaxLatencyMs": {
+        "10": 5,
+        "50": 20,
+        "100": 50,
+        "500": 200
+      },
+      "description": "Grouping should scale linearly with activity count"
+    },
+    {
+      "name": "metadata_collection_cache",
+      "iterations": 100,
+      "entitiesPerIteration": 5,
+      "expectedCacheHitRate": 0.8,
+      "description": "Metadata collection should leverage cache effectively"
+    },
+    {
+      "name": "filter_pipeline_performance",
+      "activityCount": 1000,
+      "filtersApplied": 4,
+      "expectedMaxLatencyMs": 100,
+      "description": "4-stage filter pipeline should complete within 100ms"
+    },
+    {
+      "name": "memory_usage_stability",
+      "iterations": 10000,
+      "expectedMaxMemoryGrowthMB": 50,
+      "description": "Memory usage should remain stable with cache pruning"
+    },
+    {
+      "name": "concurrent_description_generation",
+      "concurrentRequests": 100,
+      "expectedMaxLatencyMs": 500,
+      "description": "Should handle concurrent requests without degradation"
+    }
+  ],
+  "cacheMetrics": {
+    "nameResolutionCache": {
+      "expectedHitRate": 0.9,
+      "expectedMissRate": 0.1,
+      "ttl": 300000
+    },
+    "metadataCache": {
+      "expectedHitRate": 0.85,
+      "expectedMissRate": 0.15,
+      "ttl": 300000
+    },
+    "prioritySortCache": {
+      "expectedHitRate": 0.75,
+      "expectedMissRate": 0.25,
+      "ttl": 300000
+    },
+    "activityGroupCache": {
+      "expectedHitRate": 0.7,
+      "expectedMissRate": 0.3,
+      "ttl": 300000
+    }
+  }
+}
