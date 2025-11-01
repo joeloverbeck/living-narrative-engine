@@ -3,7 +3,7 @@
  * @description Tests 3-tier metadata collection, parsing, and deduplication
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import ActivityMetadataCollectionSystem from '../../../../src/anatomy/services/activityMetadataCollectionSystem.js';
 
 describe('ActivityMetadataCollectionSystem', () => {
@@ -13,10 +13,10 @@ describe('ActivityMetadataCollectionSystem', () => {
 
   beforeEach(() => {
     mockLogger = {
-      debug: () => {},
-      info: () => {},
-      warn: () => {},
-      error: () => {},
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
     };
 
     mockEntityManager = {
@@ -27,6 +27,10 @@ describe('ActivityMetadataCollectionSystem', () => {
       logger: mockLogger,
       entityManager: mockEntityManager,
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Constructor', () => {
@@ -71,6 +75,16 @@ describe('ActivityMetadataCollectionSystem', () => {
       mockEntityManager.getEntityInstance = () => null;
 
       const result = system.collectActivityMetadata('missing_entity');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle entity resolution errors gracefully', () => {
+      mockEntityManager.getEntityInstance = () => {
+        throw new Error('resolution failure');
+      };
+
+      const result = system.collectActivityMetadata('entity_without_instance');
 
       expect(result).toEqual([]);
     });
@@ -241,6 +255,34 @@ describe('ActivityMetadataCollectionSystem', () => {
       expect(result.some((a) => a.type === 'inline')).toBe(true);
     });
 
+    it('should continue when inline metadata collection throws', () => {
+      jest
+        .spyOn(system, 'collectInlineMetadata')
+        .mockImplementation(() => {
+          throw new Error('inline failure');
+        });
+
+      const mockEntity = { id: 'entity', componentTypeIds: [] };
+
+      const result = system.collectActivityMetadata('entity', mockEntity);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should continue when dedicated metadata collection throws', () => {
+      jest
+        .spyOn(system, 'collectDedicatedMetadata')
+        .mockImplementation(() => {
+          throw new Error('dedicated failure');
+        });
+
+      const mockEntity = { id: 'entity', componentTypeIds: [] };
+
+      const result = system.collectActivityMetadata('entity', mockEntity);
+
+      expect(result).toEqual([]);
+    });
+
     it('should use provided entity instead of fetching when available', () => {
       const mockEntity = {
         id: 'test_entity',
@@ -288,6 +330,17 @@ describe('ActivityMetadataCollectionSystem', () => {
         id: 'test_entity',
         componentTypeIds: ['activity:description_metadata'],
         getComponentData: () => null,
+      };
+
+      const result = system.collectInlineMetadata(mockEntity);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should skip components when getComponentData is unavailable', () => {
+      const mockEntity = {
+        componentTypeIds: ['positioning:kneeling'],
+        // Intentionally missing getComponentData method
       };
 
       const result = system.collectInlineMetadata(mockEntity);
@@ -366,6 +419,18 @@ describe('ActivityMetadataCollectionSystem', () => {
       expect(result).toEqual([]);
     });
 
+    it('should skip component data that is not an object', () => {
+      const mockEntity = {
+        id: 'test_entity',
+        componentTypeIds: ['positioning:kneeling'],
+        getComponentData: () => 'invalid-data',
+      };
+
+      const result = system.collectInlineMetadata(mockEntity);
+
+      expect(result).toEqual([]);
+    });
+
     it('should handle malformed activityMetadata', () => {
       const mockEntity = {
         id: 'test_entity',
@@ -414,6 +479,49 @@ describe('ActivityMetadataCollectionSystem', () => {
       expect(result[0].sourceComponent).toBe('positioning:kneeling');
       expect(result[1].sourceComponent).toBe('positioning:sitting');
     });
+
+    it('should handle inline metadata that produces null activity', () => {
+      const mockEntity = {
+        id: 'test_entity',
+        componentTypeIds: ['positioning:kneeling'],
+        getComponentData: () => ({
+          entityId: 'target_entity',
+          activityMetadata: {
+            // Missing template triggers null result
+            priority: 10,
+          },
+        }),
+      };
+
+      const result = system.collectInlineMetadata(mockEntity);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle inline metadata parsing errors gracefully', () => {
+      const mockEntity = {
+        id: 'test_entity',
+        componentTypeIds: ['positioning:kneeling'],
+        getComponentData: () => {
+          const componentData = {};
+          Object.defineProperty(componentData, 'entityId', {
+            get() {
+              throw new Error('failed to access target');
+            },
+          });
+
+          componentData.activityMetadata = {
+            template: '{actor} observes {target}',
+          };
+
+          return componentData;
+        },
+      };
+
+      const result = system.collectInlineMetadata(mockEntity);
+
+      expect(result).toEqual([]);
+    });
   });
 
   describe('collectDedicatedMetadata', () => {
@@ -425,7 +533,6 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should return empty array if entity missing hasComponent', () => {
       const mockEntity = {
-        id: 'test_entity',
       };
 
       const result = system.collectDedicatedMetadata(mockEntity);
@@ -435,7 +542,6 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should return empty array if no metadata component', () => {
       const mockEntity = {
-        id: 'test_entity',
         hasComponent: () => false,
       };
 
@@ -446,7 +552,6 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should handle hasComponent errors', () => {
       const mockEntity = {
-        id: 'test_entity',
         hasComponent: () => {
           throw new Error('Has component error');
         },
@@ -459,7 +564,6 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should return empty array if entity missing getComponentData', () => {
       const mockEntity = {
-        id: 'test_entity',
         hasComponent: () => true,
       };
 
@@ -470,7 +574,6 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should handle getComponentData errors', () => {
       const mockEntity = {
-        id: 'test_entity',
         hasComponent: () => true,
         getComponentData: () => {
           throw new Error('Get component error');
@@ -484,7 +587,6 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should handle invalid metadata', () => {
       const mockEntity = {
-        id: 'test_entity',
         hasComponent: () => true,
         getComponentData: () => null,
       };
@@ -538,6 +640,30 @@ describe('ActivityMetadataCollectionSystem', () => {
           }
           // Source component not found
           return null;
+        },
+      };
+
+      const result = system.collectDedicatedMetadata(mockEntity);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should capture errors thrown during dedicated metadata parsing', () => {
+      const explodingMetadata = {};
+      Object.defineProperty(explodingMetadata, 'sourceComponent', {
+        get() {
+          throw new Error('boom');
+        },
+      });
+
+      const mockEntity = {
+        id: 'test_entity',
+        hasComponent: () => true,
+        getComponentData: (componentId) => {
+          if (componentId === 'activity:description_metadata') {
+            return explodingMetadata;
+          }
+          return {};
         },
       };
 
@@ -609,6 +735,28 @@ describe('ActivityMetadataCollectionSystem', () => {
           template: 'kneeling',
           targetId: 'target1',
           priority: 75,
+        },
+      ];
+
+      const result = system.deduplicateActivitiesBySignature(activities);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].priority).toBe(75);
+    });
+
+    it('should retain original activity when candidate has lower priority', () => {
+      const activities = [
+        {
+          type: 'inline',
+          template: 'kneeling',
+          targetId: 'target1',
+          priority: 75,
+        },
+        {
+          type: 'inline',
+          template: 'kneeling',
+          targetId: 'target1',
+          priority: 10,
         },
       ];
 
@@ -811,6 +959,132 @@ describe('ActivityMetadataCollectionSystem', () => {
       expect(key).toContain('target:actor1');
       expect(key).toContain('group:combat');
     });
+
+    it('should warn when inline metadata is missing template via test hook', () => {
+      const hooks = system.getTestHooks();
+
+      const result = hooks.parseInlineMetadata(
+        'positioning:kneeling',
+        { entityId: 'target' },
+        { priority: 10 }
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle invalid dedicated metadata payloads via test hook', () => {
+      const hooks = system.getTestHooks();
+
+      const result = hooks.parseDedicatedMetadata(null, {
+        getComponentData: () => ({}),
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle missing component access in dedicated metadata parsing', () => {
+      const hooks = system.getTestHooks();
+
+      const result = hooks.parseDedicatedMetadata(
+        { sourceComponent: 'positioning:kneeling' },
+        {}
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle source component retrieval errors in dedicated metadata parsing', () => {
+      const hooks = system.getTestHooks();
+
+      const result = hooks.parseDedicatedMetadata(
+        { sourceComponent: 'positioning:kneeling' },
+        {
+          getComponentData: () => {
+            throw new Error('fail');
+          },
+        }
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle target resolution errors in dedicated metadata parsing', () => {
+      const hooks = system.getTestHooks();
+
+      const sourceData = {};
+      Object.defineProperty(sourceData, 'entityId', {
+        get() {
+          throw new Error('resolve error');
+        },
+      });
+
+      const result = hooks.parseDedicatedMetadata(
+        { sourceComponent: 'positioning:kneeling' },
+        {
+          getComponentData: (componentId) => {
+            if (componentId === 'positioning:kneeling') {
+              return sourceData;
+            }
+            return {};
+          },
+        }
+      );
+
+      expect(result).toEqual({
+        type: 'dedicated',
+        sourceComponent: 'positioning:kneeling',
+        descriptionType: undefined,
+        metadata: { sourceComponent: 'positioning:kneeling' },
+        sourceData,
+        targetEntityId: null,
+        priority: 50,
+        verb: undefined,
+        template: undefined,
+        adverb: undefined,
+        conditions: undefined,
+        grouping: undefined,
+      });
+    });
+
+    it('should create signature fallbacks when template is missing', () => {
+      const hooks = system.getTestHooks();
+
+      expect(hooks.buildActivityDeduplicationKey(null)).toBe('invalid');
+
+      const sourceSignature = hooks.buildActivityDeduplicationKey({
+        type: 'inline',
+        sourceComponent: 'Positioning:Kneeling',
+      });
+      expect(sourceSignature).toContain('source:positioning:kneeling');
+
+      const descriptionSignature = hooks.buildActivityDeduplicationKey({
+        type: 'inline',
+        description: 'Quietly waiting',
+      });
+      expect(descriptionSignature).toContain('description:quietly waiting');
+
+      const verbSignature = hooks.buildActivityDeduplicationKey({
+        type: 'dedicated',
+        verb: 'Observe',
+        adverb: 'Carefully',
+      });
+      expect(verbSignature).toContain('verb:observe:carefully');
+
+      const fallbackSignature = hooks.buildActivityDeduplicationKey({});
+      expect(fallbackSignature).toContain('activity:generic');
+    });
+
+    it('should handle missing target role via test hook', () => {
+      const hooks = system.getTestHooks();
+
+      const result = hooks.parseInlineMetadata(
+        'positioning:kneeling',
+        { other: 'value' },
+        { template: 'kneeling', targetRole: 'missing' }
+      );
+
+      expect(result?.targetEntityId).toBeNull();
+    });
   });
 
   describe('Edge Cases', () => {
@@ -860,6 +1134,23 @@ describe('ActivityMetadataCollectionSystem', () => {
           activityMetadata: {
             template: 'kneeling',
             priority: 50,
+          },
+        }),
+      };
+
+      const result = system.collectInlineMetadata(mockEntity);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].targetEntityId).toBeNull();
+    });
+
+    it('should handle inline metadata with empty target string', () => {
+      const mockEntity = {
+        componentTypeIds: ['positioning:kneeling'],
+        getComponentData: () => ({
+          entityId: '',
+          activityMetadata: {
+            template: 'kneeling',
           },
         }),
       };
