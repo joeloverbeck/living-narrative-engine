@@ -196,4 +196,204 @@ describe('PartSelectionService additional branch coverage', () => {
     expect(message).toContain('Required tags: [tag2]');
     expect(message).toContain('Excluded tags: [bad]');
   });
+
+  it('logs diagnostic information when kraken_head definition is present', async () => {
+    const krakenHead = {
+      id: 'anatomy:kraken_head',
+      components: {
+        'anatomy:part': { subType: 'tentacle' },
+      },
+    };
+    const defs = [krakenHead];
+    const registry = createMockDataRegistry(defs);
+    const logger = createMockLogger();
+    const service = new PartSelectionService({
+      dataRegistry: registry,
+      logger,
+      eventDispatchService: createMockEventDispatchService(),
+    });
+
+    const rng = jest.fn().mockReturnValue(0);
+    const result = await service.selectPart({}, ['tentacle'], undefined, rng);
+
+    expect(result).toBe('anatomy:kraken_head');
+    expect(logger.info).toHaveBeenCalledWith(
+      'PartSelectionService: Found kraken_head entity definition',
+      { krakenHead }
+    );
+  });
+
+  it('logs when kraken_head is missing the anatomy part component', async () => {
+    const defs = [
+      { id: 'anatomy:kraken_head', components: {} },
+      {
+        id: 'valid',
+        components: {
+          'anatomy:part': { subType: 'arm' },
+        },
+      },
+    ];
+    const registry = createMockDataRegistry(defs);
+    const logger = createMockLogger();
+    const service = new PartSelectionService({
+      dataRegistry: registry,
+      logger,
+      eventDispatchService: createMockEventDispatchService(),
+    });
+
+    const rng = jest.fn().mockReturnValue(0);
+    const result = await service.selectPart({}, ['arm'], undefined, rng);
+
+    expect(result).toBe('valid');
+    expect(logger.info).toHaveBeenCalledWith(
+      'PartSelectionService: kraken_head FAILED - no anatomy:part component'
+    );
+  });
+
+  it('logs when kraken_head subtype is not in allowed types', async () => {
+    const defs = [
+      {
+        id: 'anatomy:kraken_head',
+        components: {
+          'anatomy:part': { subType: 'tentacle' },
+        },
+      },
+      {
+        id: 'valid',
+        components: {
+          'anatomy:part': { subType: 'arm' },
+        },
+      },
+    ];
+    const registry = createMockDataRegistry(defs);
+    const logger = createMockLogger();
+    const service = new PartSelectionService({
+      dataRegistry: registry,
+      logger,
+      eventDispatchService: createMockEventDispatchService(),
+    });
+
+    const rng = jest.fn().mockReturnValue(0);
+    const result = await service.selectPart({}, ['arm'], undefined, rng);
+
+    expect(result).toBe('valid');
+    expect(logger.info).toHaveBeenCalledWith(
+      "PartSelectionService: kraken_head FAILED - subType 'tentacle' not in allowedTypes [arm]"
+    );
+  });
+
+  it('logs when kraken_head subtype does not satisfy partType requirement', async () => {
+    const defs = [
+      {
+        id: 'anatomy:kraken_head',
+        components: {
+          'anatomy:part': { subType: 'arm' },
+        },
+      },
+      {
+        id: 'valid',
+        components: {
+          'anatomy:part': { subType: 'leg' },
+        },
+      },
+    ];
+    const registry = createMockDataRegistry(defs);
+    const logger = createMockLogger();
+    const service = new PartSelectionService({
+      dataRegistry: registry,
+      logger,
+      eventDispatchService: createMockEventDispatchService(),
+    });
+
+    const rng = jest.fn().mockReturnValue(0);
+    const result = await service.selectPart(
+      { partType: 'leg' },
+      ['arm', 'leg'],
+      undefined,
+      rng
+    );
+
+    expect(result).toBe('valid');
+    expect(logger.info).toHaveBeenCalledWith(
+      "PartSelectionService: kraken_head FAILED - subType 'arm' !== required 'leg'"
+    );
+  });
+
+  it('logs missing required components for kraken_head', async () => {
+    const defs = [
+      {
+        id: 'anatomy:kraken_head',
+        components: {
+          'anatomy:part': { subType: 'head' },
+        },
+      },
+      {
+        id: 'valid',
+        components: {
+          'anatomy:part': { subType: 'head' },
+          'anatomy:brain': {},
+        },
+      },
+    ];
+    const registry = createMockDataRegistry(defs);
+    const logger = createMockLogger();
+    const service = new PartSelectionService({
+      dataRegistry: registry,
+      logger,
+      eventDispatchService: createMockEventDispatchService(),
+    });
+
+    const rng = jest.fn().mockReturnValue(0);
+    const result = await service.selectPart(
+      { components: ['anatomy:brain'] },
+      ['head'],
+      undefined,
+      rng
+    );
+
+    expect(result).toBe('valid');
+    expect(logger.info).toHaveBeenCalledWith(
+      'PartSelectionService: kraken_head FAILED - missing required components: [anatomy:brain]',
+      { hasComponents: ['anatomy:part'] }
+    );
+  });
+
+  it('logs missing required tags for kraken_head', async () => {
+    const defs = [
+      {
+        id: 'anatomy:kraken_head',
+        components: {
+          'anatomy:part': { subType: 'head' },
+          'tag:fire': {},
+        },
+      },
+      {
+        id: 'valid',
+        components: {
+          'anatomy:part': { subType: 'head' },
+          'tag:water': {},
+        },
+      },
+    ];
+    const registry = createMockDataRegistry(defs);
+    const logger = createMockLogger();
+    const service = new PartSelectionService({
+      dataRegistry: registry,
+      logger,
+      eventDispatchService: createMockEventDispatchService(),
+    });
+
+    const rng = jest.fn().mockReturnValue(0);
+    const recipeSlot = { tags: ['tag:water'] };
+    const result = await service.selectPart({}, ['head'], recipeSlot, rng);
+
+    expect(result).toBe('valid');
+    expect(logger.info).toHaveBeenCalledWith(
+      'PartSelectionService: kraken_head FAILED - missing required tags: [tag:water]',
+      {
+        requiredTags: ['tag:water'],
+        hasComponents: expect.arrayContaining(['anatomy:part', 'tag:fire']),
+      }
+    );
+  });
 });
