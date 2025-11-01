@@ -229,6 +229,15 @@ describe('CharacterDataFormatter', () => {
       const result = formatter.formatProfileSection('');
       expect(result).toBe('');
     });
+
+    it('should trim whitespace-only profile text and return empty string', () => {
+      const result = formatter.formatProfileSection('   ');
+
+      expect(result).toBe('');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterDataFormatter: Empty profile text after trimming'
+      );
+    });
   });
 
   describe('formatSpeechPatterns', () => {
@@ -348,6 +357,15 @@ describe('CharacterDataFormatter', () => {
     it('should return empty string for empty content', () => {
       const result = formatter.formatOptionalSection('Likes', '');
       expect(result).toBe('');
+    });
+
+    it('should trim whitespace-only optional section content and return empty string', () => {
+      const result = formatter.formatOptionalSection('Likes', '    ');
+
+      expect(result).toBe('');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterDataFormatter: Empty content for Likes section after trimming'
+      );
     });
   });
 
