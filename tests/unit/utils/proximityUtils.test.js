@@ -791,14 +791,92 @@ describe('proximityUtils', () => {
           )
         ).not.toThrow();
       });
+
+      it('should skip debug logging if the method becomes unavailable after validation', () => {
+        const debugSpy = jest.fn();
+        let debugAccessCount = 0;
+        const dynamicLogger = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          get debug() {
+            debugAccessCount += 1;
+            if (debugAccessCount <= 2) {
+              return debugSpy;
+            }
+            return undefined;
+          },
+        };
+
+        const result = validateProximityParameters(
+          'core:furniture_1',
+          'mod:actor_1',
+          5,
+          dynamicLogger
+        );
+
+        expect(result).toBe(true);
+        expect(debugSpy).not.toHaveBeenCalled();
+      });
     });
 
     describe('unexpected error handling', () => {
       it('should catch and wrap unexpected errors during validation', () => {
-        // Note: This is a complex edge case to test properly
-        // The function has comprehensive error handling for unexpected runtime errors
-        // The try/catch block will handle any unexpected errors during validation
-        expect(true).toBe(true); // Placeholder - comprehensive error handling is implemented
+        const runtimeFailure = new Error('info getter failure');
+        const throwingLogger = {
+          get info() {
+            throw runtimeFailure;
+          },
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        };
+
+        expect(() =>
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            0,
+            throwingLogger
+          )
+        ).toThrow(
+          `Unexpected error during parameter validation: ${runtimeFailure.message}`
+        );
+
+        expect(throwingLogger.error).toHaveBeenCalledWith(
+          'Unexpected validation error',
+          expect.objectContaining({
+            originalError: runtimeFailure.message,
+            stack: expect.any(String),
+          })
+        );
+      });
+
+      it('should handle unexpected errors when logger error method becomes unavailable', () => {
+        const runtimeFailure = new Error('info getter failure');
+        const errorSpy = jest.fn();
+        const throwingLogger = {
+          get info() {
+            delete this.error;
+            throw runtimeFailure;
+          },
+          warn: jest.fn(),
+          error: errorSpy,
+          debug: jest.fn(),
+        };
+
+        expect(() =>
+          validateProximityParameters(
+            'core:furniture_1',
+            'mod:actor_1',
+            0,
+            throwingLogger
+          )
+        ).toThrow(
+          `Unexpected error during parameter validation: ${runtimeFailure.message}`
+        );
+
+        expect(errorSpy).not.toHaveBeenCalled();
       });
 
       it('should re-throw InvalidArgumentError without wrapping', () => {
