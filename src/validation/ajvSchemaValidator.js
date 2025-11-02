@@ -74,9 +74,6 @@ class AjvSchemaValidator {
       }
 
       const pointer = fragment.startsWith('#') ? fragment.slice(1) : fragment;
-      if (!pointer) {
-        return schemaObject;
-      }
 
       const parts = pointer
         .split('/')

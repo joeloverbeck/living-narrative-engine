@@ -253,6 +253,46 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         expect(invalid.isValid).toBe(false);
       }
     });
+
+    it('should resolve full schema when referencing an ID with trailing hash fragment', async () => {
+      jest.resetModules();
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
+      const validator = new AjvSchemaValidator({
+        logger: mockLogger,
+      });
+
+      const baseSchema = {
+        $id: 'schema://living-narrative-engine/hash/base.json',
+        type: 'number',
+        minimum: 0,
+      };
+
+      await validator.addSchema(baseSchema, baseSchema.$id);
+
+      const referencingSchema = {
+        $id: 'schema://living-narrative-engine/hash/consumer.json',
+        type: 'object',
+        properties: {
+          foo: {
+            $ref: 'schema://living-narrative-engine/hash/base.json#',
+          },
+        },
+        required: ['foo'],
+      };
+
+      await validator.addSchema(referencingSchema, referencingSchema.$id);
+
+      const success = validator.validate(referencingSchema.$id, { foo: 42 });
+      expect(success.isValid).toBe(true);
+
+      const failure = validator.validate(referencingSchema.$id, { foo: 'bad' });
+      expect(failure.isValid).toBe(false);
+      expect(Array.isArray(failure.errors)).toBe(true);
+    });
   });
 
   describe('Lines 257-260, 333-336, 441-444, 658-661 - Ajv error paths', () => {
