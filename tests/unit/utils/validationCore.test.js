@@ -72,6 +72,20 @@ describe('validationCore', () => {
         }).toThrow(InvalidArgumentError);
       });
 
+      it('should log using the validated logger when assertion fails', () => {
+        expect(() => {
+          string.assertNonBlank('', 'failureParam');
+        }).toThrow(InvalidArgumentError);
+
+        expect(ensureValidLogger).toHaveBeenCalledWith(
+          undefined,
+          'string.assertNonBlank'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining("Parameter 'failureParam' must be a non-blank string")
+        );
+      });
+
       it('should include parameter name in error message', () => {
         expect(() => {
           string.assertNonBlank('', 'myParam');
@@ -106,16 +120,30 @@ describe('validationCore', () => {
       it('should return trimmed string for valid input', () => {
         const result = string.validateParam('  test  ', 'myParam', mockLogger);
         expect(result).toBe('test');
+        expect(ensureValidLogger).toHaveBeenCalledWith(
+          mockLogger,
+          'string.validateParam'
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          "Validated parameter 'myParam': \"test\""
+        );
       });
 
       it('should return null for invalid input', () => {
         const result = string.validateParam('', 'myParam', mockLogger);
         expect(result).toBe(null);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          "Parameter 'myParam' is not a valid non-blank string"
+        );
       });
 
       it('should work without logger', () => {
         const result = string.validateParam('test', 'myParam');
         expect(result).toBe('test');
+        expect(ensureValidLogger).toHaveBeenCalledWith(
+          undefined,
+          'string.validateParam'
+        );
       });
     });
   });
@@ -175,10 +203,42 @@ describe('validationCore', () => {
           type.assertHasMethods(null, ['method1'], 'testObj');
         }).toThrow("Parameter 'testObj' must be an object");
       });
+
+      it('should list all missing methods in error message', () => {
+        const obj = {
+          method1: () => {},
+        };
+
+        expect(() => {
+          type.assertHasMethods(
+            obj,
+            ['method1', 'method2', 'method3'],
+            'complexObj'
+          );
+        }).toThrow(
+          "Parameter 'complexObj' is missing required methods: method2, method3"
+        );
+      });
     });
   });
 
   describe('logger utilities', () => {
+    describe('ensure', () => {
+      it('should delegate to ensureValidLogger with fallback context', () => {
+        const fallbackContext = 'logger.ensureFallback';
+        const customLogger = { ...mockLogger };
+        ensureValidLogger.mockReturnValueOnce(customLogger);
+
+        const result = loggerValidation.ensure(null, fallbackContext);
+
+        expect(ensureValidLogger).toHaveBeenCalledWith(
+          null,
+          fallbackContext
+        );
+        expect(result).toBe(customLogger);
+      });
+    });
+
     describe('isValid', () => {
       it('should return true for valid logger objects', () => {
         expect(loggerValidation.isValid(mockLogger)).toBe(true);
