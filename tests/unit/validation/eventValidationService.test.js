@@ -69,6 +69,26 @@ describe('EventValidationService', () => {
       );
     });
 
+    it('should default to empty errors when schema validation provides none', async () => {
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'actor_123',
+        actionId: 'test:action',
+        targetId: 'target_456',
+        originalInput: 'test action',
+      };
+
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+      });
+
+      const result = await service.validateEvent(event);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual([]);
+      expect(result.source).toBe('schema');
+    });
+
     it('should perform business rule validation when schema validation passes', async () => {
       const event = {
         eventName: 'core:attempt_action',
@@ -84,7 +104,6 @@ describe('EventValidationService', () => {
 
       mockSchemaValidator.validate.mockReturnValue({
         isValid: true,
-        errors: [],
       });
 
       const result = await service.validateEvent(event);
@@ -94,6 +113,27 @@ describe('EventValidationService', () => {
       expect(result.source).toBe('complete');
       expect(result.details.hasMultipleTargets).toBe(true);
       expect(result.details.targetCount).toBe(2);
+    });
+
+    it('should report business rule failures when detected', async () => {
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'actor_123',
+        actionId: 'test:action',
+        targets: {},
+        targetId: 'target_456',
+        originalInput: 'test action',
+      };
+
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: true,
+      });
+
+      const result = await service.validateEvent(event);
+
+      expect(result.isValid).toBe(false);
+      expect(result.source).toBe('business_rules');
+      expect(result.errors).toContain('targets object cannot be empty');
     });
 
     it('should combine warnings from schema and business validation', async () => {
@@ -232,6 +272,54 @@ describe('EventValidationService', () => {
       expect(results[0].isValid).toBe(true);
       expect(results[1].isValid).toBe(false);
       expect(results[1].errors).toContain('Invalid event structure');
+    });
+
+    it('should capture thrown errors during batch validation', async () => {
+      const events = [
+        {
+          eventName: 'core:attempt_action',
+          actorId: 'actor_123',
+          actionId: 'test:action',
+          targetId: 'target_456',
+          originalInput: 'test action 1',
+        },
+        {
+          eventName: 'core:attempt_action',
+          actorId: 'actor_789',
+          actionId: 'test:action',
+          targetId: 'target_987',
+          originalInput: 'test action 2',
+        },
+      ];
+
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const originalValidateEvent = service.validateEvent.bind(service);
+      const validateEventSpy = jest
+        .spyOn(service, 'validateEvent')
+        .mockImplementationOnce((event, schemaId) =>
+          originalValidateEvent(event, schemaId)
+        )
+        .mockImplementationOnce(() =>
+          Promise.reject(new Error('Batch failure'))
+        );
+
+      const results = await service.validateEvents(events);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].isValid).toBe(true);
+      expect(results[1].isValid).toBe(false);
+      expect(results[1].errors).toEqual(['Validation error: Batch failure']);
+      expect(results[1].source).toBe('batch_error');
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to validate event at index 1',
+        expect.any(Error)
+      );
+
+      validateEventSpy.mockRestore();
     });
   });
 
