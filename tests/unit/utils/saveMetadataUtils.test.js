@@ -205,6 +205,29 @@ describe('validateSaveMetadataFields', () => {
     });
   });
 
+  test('falls back to unknown identifier when both metadata and file name are missing', () => {
+    const metadata = {
+      identifier: '',
+      saveName: '',
+      timestamp: '',
+      playtimeSeconds: undefined,
+    };
+
+    const result = validateSaveMetadataFields(metadata, '   ', logger);
+
+    expect(extractSaveName).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('unknown-manual-save')
+    );
+    expect(result).toEqual({
+      identifier: 'unknown-manual-save',
+      saveName: 'Unknown Save (Bad Metadata)',
+      timestamp: 'N/A',
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+  });
+
   test('treats non-object metadata as corrupted without throwing', () => {
     extractSaveName.mockReturnValue('Primitive Metadata Save');
 
@@ -224,6 +247,22 @@ describe('validateSaveMetadataFields', () => {
     expect(result).toEqual({
       identifier: 'manual_save_string.sav',
       saveName: 'Primitive Metadata Save (Bad Metadata)',
+      timestamp: 'N/A',
+      playtimeSeconds: 0,
+      isCorrupted: true,
+    });
+  });
+
+  test('handles missing file names for non-object metadata with unknown identifier', () => {
+    const result = validateSaveMetadataFields(undefined, undefined, logger);
+
+    expect(extractSaveName).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('unknown-manual-save')
+    );
+    expect(result).toEqual({
+      identifier: 'unknown-manual-save',
+      saveName: 'Unknown Save (Bad Metadata)',
       timestamp: 'N/A',
       playtimeSeconds: 0,
       isCorrupted: true,
