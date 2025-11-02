@@ -63,6 +63,12 @@ describe('formatTimestamp', () => {
     expect(formatTimestamp(Number.NaN, 'bad-number')).toBe('bad-number');
   });
 
+  it('formats finite numeric timestamps as locale strings', () => {
+    const epochMillis = Date.UTC(2024, 0, 5, 14, 30, 15);
+    const expected = new Date(epochMillis).toLocaleString();
+    expect(formatTimestamp(epochMillis)).toBe(expected);
+  });
+
   it('supports Date instances as input', () => {
     const date = new Date('2023-05-15T08:30:00Z');
     expect(formatTimestamp(date)).toBe(date.toLocaleString());
@@ -98,6 +104,12 @@ describe('formatTimestamp', () => {
   it('returns fallback when fallback parameter is not a string', () => {
     // @ts-expect-error - intentionally passing a non-string fallback to validate coercion
     expect(formatTimestamp(null, { not: 'a string' })).toBe('Invalid Date');
+  });
+
+  it('trims string inputs before attempting to parse them', () => {
+    const ts = ' 2024-01-12T09:45:30Z  ';
+    const expected = new Date('2024-01-12T09:45:30Z').toLocaleString();
+    expect(formatTimestamp(ts)).toBe(expected);
   });
 
   it('supports objects coercible to valid timestamps', () => {

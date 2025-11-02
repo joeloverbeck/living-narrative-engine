@@ -20,8 +20,20 @@ describe('formatPlaytime', () => {
     expect(formatPlaytime(0)).toBe('00:00:00');
   });
 
+  it('formats values with two-digit components without adding extra padding', () => {
+    expect(formatPlaytime(37230)).toBe('10:20:30');
+  });
+
+  it('floors fractional seconds when formatting', () => {
+    expect(formatPlaytime(37230.987)).toBe('10:20:30');
+  });
+
   it('formats hours, minutes and seconds', () => {
     // 1 hour, 1 minute, 1 second = 3661 seconds
     expect(formatPlaytime(3661)).toBe('01:01:01');
+  });
+
+  it('handles short durations producing two-digit seconds correctly', () => {
+    expect(formatPlaytime(12)).toBe('00:00:12');
   });
 });
