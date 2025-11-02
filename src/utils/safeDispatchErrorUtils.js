@@ -51,7 +51,7 @@ export class InvalidDispatcherError extends Error {
 export async function safeDispatchError(
   dispatcher,
   messageOrContext,
-  details = {},
+  details,
   logger
 ) {
   const log = ensureValidLogger(logger, 'safeDispatchError');
@@ -157,33 +157,30 @@ function normalizeDetailsPayload(rawDetails) {
   }
 
   const valueType = typeof rawDetails;
+  let normalizedDetails = {};
 
   if (valueType === 'object') {
-    return /** @type {Record<string, unknown>} */ (rawDetails);
+    normalizedDetails = /** @type {Record<string, unknown>} */ (rawDetails);
   }
 
   if (valueType === 'string') {
     const trimmed = rawDetails.trim();
-    return trimmed ? { raw: trimmed } : {};
+    normalizedDetails = trimmed ? { raw: trimmed } : {};
   }
 
   if (valueType === 'number' || valueType === 'boolean' || valueType === 'bigint') {
-    return { raw: String(rawDetails) };
+    normalizedDetails = { raw: String(rawDetails) };
   }
 
   if (valueType === 'symbol') {
-    return { raw: rawDetails.description || rawDetails.toString() };
+    normalizedDetails = { raw: rawDetails.description || rawDetails.toString() };
   }
 
   if (valueType === 'function') {
-    return { raw: rawDetails.name || rawDetails.toString() };
+    normalizedDetails = { raw: rawDetails.name || rawDetails.toString() };
   }
 
-  try {
-    return { raw: String(rawDetails) };
-  } catch {
-    return {};
-  }
+  return normalizedDetails;
 }
 
 // --- FILE END ---
