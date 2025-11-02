@@ -51,6 +51,56 @@ describe('safeDispatchError', () => {
     });
   });
 
+  it('drops array wrappers when diagnostics list is empty', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+
+    await safeDispatchError(dispatcher, 'empty array payload', []);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'empty array payload',
+      details: {},
+    });
+  });
+
+  it('returns false and logs a warning when dispatch reports failure', async () => {
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue('nope') };
+
+    const result = await safeDispatchError(dispatcher, 'warn-level failure', {}, logger);
+
+    expect(result).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'safeDispatchError: Dispatcher reported failure for core:system_error_occurred.',
+      { dispatchResult: 'nope' }
+    );
+  });
+
+  it('returns false and logs an error when dispatch throws', async () => {
+    const dispatchedError = new Error('dispatch boom');
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const dispatcher = {
+      dispatch: jest.fn().mockRejectedValue(dispatchedError),
+    };
+
+    const result = await safeDispatchError(dispatcher, 'exception failure', {}, logger);
+
+    expect(result).toBe(false);
+    expect(logger.error).toHaveBeenCalledWith(
+      'safeDispatchError: Failed to dispatch core:system_error_occurred.',
+      dispatchedError
+    );
+  });
+
   it('throws if dispatcher is invalid', async () => {
     await expect(safeDispatchError({}, 'oops')).rejects.toMatchObject({
       name: 'InvalidDispatcherError',
@@ -209,5 +259,76 @@ describe('additional coverage', () => {
 
     expect(err.details).toBe(metadata);
     expect(err.name).toBe('InvalidDispatcherError');
+  });
+
+  it('converts symbol details into a descriptive payload', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    const symbolDetail = Symbol('symbolic-context');
+
+    await safeDispatchError(dispatcher, 'symbol failure', symbolDetail);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'symbol failure',
+      details: { raw: 'symbolic-context' },
+    });
+  });
+
+  it('falls back to symbol stringification when description is absent', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    const symbolDetail = Symbol();
+
+    await safeDispatchError(dispatcher, 'symbol fallback', symbolDetail);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'symbol fallback',
+      details: { raw: symbolDetail.toString() },
+    });
+  });
+
+  it('uses the function name when normalizing callable diagnostics', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    function diagnosticProbe() {}
+
+    await safeDispatchError(dispatcher, 'function detail', diagnosticProbe);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'function detail',
+      details: { raw: 'diagnosticProbe' },
+    });
+  });
+
+  it('falls back to function stringification when the name is missing', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    const anonymousFn = function () {};
+    Object.defineProperty(anonymousFn, 'name', { value: '', configurable: true });
+
+    await safeDispatchError(dispatcher, 'anonymous function detail', anonymousFn);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'anonymous function detail',
+      details: { raw: anonymousFn.toString() },
+    });
+  });
+
+  it('stringifies numeric diagnostics consistently', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+
+    await safeDispatchError(dispatcher, 'numeric detail', 404);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'numeric detail',
+      details: { raw: '404' },
+    });
+  });
+
+  it('discards whitespace-only string diagnostics', async () => {
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+
+    await safeDispatchError(dispatcher, 'whitespace detail', '   ');
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'whitespace detail',
+      details: {},
+    });
   });
 });
