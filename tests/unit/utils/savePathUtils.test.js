@@ -110,6 +110,17 @@ describe('savePathUtils', () => {
       expect(extractSaveName('saves/manual_saves/')).toBe('');
       expect(extractSaveName('')).toBe('');
     });
+
+    it('should return empty string when input contains only separators', () => {
+      expect(extractSaveName('////')).toBe('');
+      expect(extractSaveName('\\\\')).toBe('');
+    });
+
+    it('should skip blank segments and empty candidates while scanning', () => {
+      expect(
+        extractSaveName('manual_saves/   /manual_save_.sav')
+      ).toBe('');
+    });
   });
 
   describe('manualSavePath', () => {
