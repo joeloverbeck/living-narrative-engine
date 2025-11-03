@@ -217,31 +217,44 @@ describe('Cephalopod Species Variety - E2E', () => {
   });
 
   describe('Registry Validation', () => {
-    it('should not have deprecated kraken-specific entities in registry', async () => {
+    it('should have species-specific entities with generic subTypes in registry', async () => {
       // Arrange - Ensure data is loaded
       await testBed.loadAnatomyModData();
 
-      // Assert
-      const deprecatedKrakenTentacle = testBed.getEntityDefinition('anatomy:kraken_tentacle');
-      const deprecatedKrakenMantle = testBed.getEntityDefinition('anatomy:kraken_mantle');
+      // Assert - Species-specific entities should exist
+      const krakenTentacle = testBed.getEntityDefinition('anatomy:kraken_tentacle');
+      const krakenMantle = testBed.getEntityDefinition('anatomy:kraken_mantle');
+      const squidTentacle = testBed.getEntityDefinition('anatomy:squid_tentacle');
+      const squidMantle = testBed.getEntityDefinition('anatomy:squid_mantle');
+      const octopusTentacle = testBed.getEntityDefinition('anatomy:octopus_tentacle');
+      const octopusMantle = testBed.getEntityDefinition('anatomy:octopus_mantle');
 
-      expect(deprecatedKrakenTentacle).toBeUndefined();
-      expect(deprecatedKrakenMantle).toBeUndefined();
+      expect(krakenTentacle).toBeDefined();
+      expect(krakenMantle).toBeDefined();
+      expect(squidTentacle).toBeDefined();
+      expect(squidMantle).toBeDefined();
+      expect(octopusTentacle).toBeDefined();
+      expect(octopusMantle).toBeDefined();
+
+      // Assert - All should have generic subTypes
+      expect(krakenTentacle.components['anatomy:part'].subType).toBe('tentacle');
+      expect(krakenMantle.components['anatomy:part'].subType).toBe('mantle');
+      expect(squidTentacle.components['anatomy:part'].subType).toBe('tentacle');
+      expect(squidMantle.components['anatomy:part'].subType).toBe('mantle');
+      expect(octopusTentacle.components['anatomy:part'].subType).toBe('tentacle');
+      expect(octopusMantle.components['anatomy:part'].subType).toBe('mantle');
     });
 
-    it('should have generic entities in registry', async () => {
+    it('should not have generic entity files in registry', async () => {
       // Arrange - Ensure data is loaded
       await testBed.loadAnatomyModData();
 
-      // Assert
+      // Assert - Generic entity files should not exist
       const genericTentacle = testBed.getEntityDefinition('anatomy:tentacle');
       const genericMantle = testBed.getEntityDefinition('anatomy:mantle');
 
-      expect(genericTentacle).toBeDefined();
-      expect(genericMantle).toBeDefined();
-
-      expect(genericTentacle.components['anatomy:part'].subType).toBe('tentacle');
-      expect(genericMantle.components['anatomy:part'].subType).toBe('mantle');
+      expect(genericTentacle).toBeNull();
+      expect(genericMantle).toBeNull();
     });
   });
 });

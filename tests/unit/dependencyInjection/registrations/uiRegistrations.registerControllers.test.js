@@ -30,7 +30,10 @@ jest.mock(
   })
 );
 
-jest.mock('../../../../src/input/globalKeyHandler.js', () => jest.fn());
+jest.mock(
+  '../../../../src/domUI/perceptibleEventSenderController.js',
+  () => jest.fn()
+);
 
 describe('registerControllers', () => {
   let mockRegistrar;
@@ -114,49 +117,65 @@ describe('registerControllers', () => {
     });
   });
 
-  describe('GlobalKeyHandler factory', () => {
-    it('should register GlobalKeyHandler as singleton factory', () => {
+  describe('PerceptibleEventSenderController factory', () => {
+    it('should register PerceptibleEventSenderController as singleton factory', () => {
       registerControllers(mockRegistrar, mockLogger);
 
-      const globalKeyCall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.GlobalKeyHandler
+      const perceptibleEventSenderCall = mockRegisterWithLog.mock.calls.find(
+        (call) => call[1] === tokens.PerceptibleEventSenderController
       );
 
-      expect(globalKeyCall).toBeDefined();
-      expect(globalKeyCall[3].lifecycle).toBe('singletonFactory');
+      expect(perceptibleEventSenderCall).toBeDefined();
+      expect(perceptibleEventSenderCall[3].lifecycle).toBe('singletonFactory');
     });
 
-    it('should create GlobalKeyHandler with correct dependencies', () => {
+    it('should create PerceptibleEventSenderController with correct dependencies', () => {
       registerControllers(mockRegistrar, mockLogger);
 
-      const globalKeyCall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.GlobalKeyHandler
+      const perceptibleEventSenderCall = mockRegisterWithLog.mock.calls.find(
+        (call) => call[1] === tokens.PerceptibleEventSenderController
       );
 
-      const factory = globalKeyCall[2];
-      const mockDocument = document;
-      const mockEventDispatcher = { dispatch: jest.fn() };
+      const factory = perceptibleEventSenderCall[2];
+      const mockEventBus = { dispatch: jest.fn() };
+      const mockDocumentContext = { query: jest.fn() };
+      const mockEntityManager = { getEntity: jest.fn() };
+      const mockOperationInterpreter = { interpret: jest.fn() };
       const mockContainer = {
         resolve: jest.fn((token) => {
           const mocks = {
-            [tokens.WindowDocument]: mockDocument,
-            [tokens.IValidatedEventDispatcher]: mockEventDispatcher,
+            [tokens.ISafeEventDispatcher]: mockEventBus,
+            [tokens.IDocumentContext]: mockDocumentContext,
+            [tokens.ILogger]: mockLogger,
+            [tokens.IEntityManager]: mockEntityManager,
+            [tokens.OperationInterpreter]: mockOperationInterpreter,
           };
           return mocks[token] || jest.fn();
         }),
       };
 
-      const MockGlobalKeyHandler = require('../../../../src/input/globalKeyHandler.js');
+      const MockPerceptibleEventSenderController = require('../../../../src/domUI/perceptibleEventSenderController.js');
       const result = factory(mockContainer);
 
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.WindowDocument);
       expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.IValidatedEventDispatcher
+        tokens.ISafeEventDispatcher
       );
-      expect(MockGlobalKeyHandler).toHaveBeenCalledWith(
-        mockDocument,
-        mockEventDispatcher
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IDocumentContext
       );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.OperationInterpreter
+      );
+
+      expect(MockPerceptibleEventSenderController).toHaveBeenCalledWith({
+        eventBus: mockEventBus,
+        documentContext: mockDocumentContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        operationInterpreter: mockOperationInterpreter,
+      });
     });
   });
 
@@ -387,7 +406,7 @@ describe('registerControllers', () => {
       (call) => call[1]
     );
     expect(registeredTokens).toContain(tokens.InputStateController);
-    expect(registeredTokens).toContain(tokens.GlobalKeyHandler);
+    expect(registeredTokens).toContain(tokens.PerceptibleEventSenderController);
     expect(registeredTokens).toContain(tokens.ProcessingIndicatorController);
     expect(registeredTokens).toContain(tokens.VisualizerState);
     expect(registeredTokens).toContain(tokens.AnatomyLoadingDetector);

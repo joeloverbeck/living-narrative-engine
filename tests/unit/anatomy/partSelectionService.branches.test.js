@@ -218,8 +218,14 @@ describe('PartSelectionService additional branch coverage', () => {
 
     expect(result).toBe('anatomy:kraken_head');
     expect(logger.info).toHaveBeenCalledWith(
-      'PartSelectionService: Found kraken_head entity definition',
-      { krakenHead }
+      'PartSelectionService: Checking kraken_head against requirements',
+      {
+        entityId: 'anatomy:kraken_head',
+        allowedTypes: ['tentacle'],
+        requirements: {},
+        hasAnatomyPart: true,
+        subType: 'tentacle',
+      }
     );
   });
 

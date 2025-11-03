@@ -258,7 +258,8 @@ describe('BodyBlueprintFactory additional coverage', () => {
       'upper_arm_socket',
       'part:left_upper_arm',
       'owner:1',
-      'left'
+      'left',
+      {}
     );
     expect(deps.logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('warnings')
@@ -345,7 +346,8 @@ describe('BodyBlueprintFactory additional coverage', () => {
       'core_socket',
       'part:core',
       undefined,
-      undefined
+      undefined,
+      {}
     );
     expect(result.entities).toEqual(['entity:root', 'entity:core']);
   });
@@ -826,7 +828,8 @@ describe('BodyBlueprintFactory additional coverage', () => {
       'hand_socket',
       'anatomy:test_part',
       undefined,
-      'left'
+      'left',
+      {}
     );
   });
 

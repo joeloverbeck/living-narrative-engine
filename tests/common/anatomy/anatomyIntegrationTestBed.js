@@ -1426,19 +1426,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      // Generic cephalopod entities
-      'anatomy:tentacle': {
-        id: 'anatomy:tentacle',
-        description: 'Generic cephalopod tentacle or arm',
-        components: {
-          'anatomy:part': {
-            subType: 'tentacle',
-          },
-          'core:name': {
-            text: 'tentacle',
-          },
-        },
-      },
+      // Species-specific cephalopod entities
       'anatomy:kraken_tentacle': {
         id: 'anatomy:kraken_tentacle',
         description: 'Elder kraken tentacle with enormous size and dark purple coloring',
@@ -1463,32 +1451,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
           'descriptors:shape_general': {
             shape: 'cylindrical',
-          },
-        },
-      },
-      'anatomy:mantle': {
-        id: 'anatomy:mantle',
-        description: 'Generic cephalopod mantle body',
-        components: {
-          'anatomy:part': {
-            subType: 'mantle',
-          },
-          'anatomy:sockets': {
-            sockets: [
-              {
-                id: 'ink_sac',
-                allowedTypes: ['ink_reservoir', 'ink_sac'],
-                nameTpl: 'ink sac',
-              },
-              {
-                id: 'beak',
-                allowedTypes: ['beak', 'cephalopod_beak'],
-                nameTpl: 'beak',
-              },
-            ],
-          },
-          'core:name': {
-            text: 'mantle',
           },
         },
       },
@@ -1527,6 +1489,115 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
           'descriptors:shape_general': {
             shape: 'oval',
+          },
+        },
+      },
+      'anatomy:squid_tentacle': {
+        id: 'anatomy:squid_tentacle',
+        description: 'Common squid tentacle with medium size, long length and translucent-white coloring',
+        components: {
+          'anatomy:part': {
+            subType: 'tentacle',
+          },
+          'core:name': {
+            text: 'tentacle',
+          },
+          'descriptors:size_category': {
+            size: 'medium',
+          },
+          'descriptors:length_category': {
+            length: 'long',
+          },
+          'descriptors:color_extended': {
+            color: 'translucent-white',
+          },
+        },
+      },
+      'anatomy:squid_mantle': {
+        id: 'anatomy:squid_mantle',
+        description: 'Common squid mantle body with small size and pale-translucent smooth texture',
+        components: {
+          'anatomy:part': {
+            subType: 'mantle',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'ink_sac',
+                allowedTypes: ['ink_reservoir', 'ink_sac'],
+                nameTpl: 'ink sac',
+              },
+              {
+                id: 'beak',
+                allowedTypes: ['beak', 'cephalopod_beak'],
+                nameTpl: 'beak',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'mantle',
+          },
+          'descriptors:size_category': {
+            size: 'small',
+          },
+          'descriptors:color_extended': {
+            color: 'pale-translucent',
+          },
+          'descriptors:texture': {
+            texture: 'smooth',
+          },
+        },
+      },
+      'anatomy:octopus_tentacle': {
+        id: 'anatomy:octopus_tentacle',
+        description: 'Common octopus tentacle with medium size, thick shape and reddish-brown coloring',
+        components: {
+          'anatomy:part': {
+            subType: 'tentacle',
+          },
+          'core:name': {
+            text: 'tentacle',
+          },
+          'descriptors:size_category': {
+            size: 'medium',
+          },
+          'descriptors:shape_general': {
+            shape: 'thick',
+          },
+          'descriptors:color_extended': {
+            color: 'reddish-brown',
+          },
+        },
+      },
+      'anatomy:octopus_mantle': {
+        id: 'anatomy:octopus_mantle',
+        description: 'Common octopus mantle body with medium size and soft texture',
+        components: {
+          'anatomy:part': {
+            subType: 'mantle',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'ink_sac',
+                allowedTypes: ['ink_reservoir', 'ink_sac'],
+                nameTpl: 'ink sac',
+              },
+              {
+                id: 'beak',
+                allowedTypes: ['beak', 'cephalopod_beak'],
+                nameTpl: 'beak',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'mantle',
+          },
+          'descriptors:size_category': {
+            size: 'medium',
+          },
+          'descriptors:texture': {
+            texture: 'soft',
           },
         },
       },

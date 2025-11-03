@@ -40,7 +40,6 @@ jest.mock(
   })
 );
 
-jest.mock('../../../../src/input/globalKeyHandler.js', () => jest.fn());
 jest.mock('../../../../src/input/inputHandler.js', () => jest.fn());
 jest.mock('../../../../src/alerting/alertRouter.js', () => jest.fn());
 jest.mock('../../../../src/domUI/saveGameUI.js', () => jest.fn());
@@ -133,7 +132,6 @@ describe('registerUI - integration test', () => {
     expect(mockContainer.resolve).toHaveBeenCalledWith(
       tokens.ActionResultRenderer
     );
-    expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.GlobalKeyHandler);
   });
 
   it('should register all expected tokens', () => {
@@ -192,9 +190,6 @@ describe('registerUI - integration test', () => {
     );
     expect(messages).toContain(
       `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
-    );
-    expect(messages).toContain(
-      `UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`
     );
     expect(messages).toContain('UI Registrations: Complete.');
   });
