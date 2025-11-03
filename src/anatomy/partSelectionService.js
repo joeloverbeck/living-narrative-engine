@@ -132,20 +132,46 @@ export class PartSelectionService {
       }
     );
 
-    // Log kraken_head specifically for diagnosis
-    const krakenHead = allEntityDefs.find((def) => def.id === 'anatomy:kraken_head');
-    if (krakenHead) {
-      this.#logger.info(
-        'PartSelectionService: Found kraken_head entity definition',
-        { krakenHead }
-      );
-    } else {
-      this.#logger.warn(
-        'PartSelectionService: kraken_head entity definition NOT found in registry'
-      );
-    }
-
     for (const entityDef of allEntityDefs) {
+      const isKrakenHead = entityDef.id === 'anatomy:kraken_head';
+      const isKrakenTentacle = entityDef.id === 'anatomy:kraken_tentacle';
+      const isGenericTentacle = entityDef.id === 'anatomy:tentacle';
+      const isGenericMantle = entityDef.id === 'anatomy:mantle';
+
+      // Log diagnostic entities BEFORE validation
+      if (isGenericTentacle || isGenericMantle) {
+        console.log(`🔍 PartSelectionService: Checking ${entityDef.id} against requirements`);
+        console.log('  allowedTypes:', allowedTypes);
+        console.log('  requirements:', requirements);
+        console.log('  hasAnatomyPart:', !!entityDef.components?.['anatomy:part']);
+        console.log('  subType:', entityDef.components?.['anatomy:part']?.subType);
+        console.log('  allComponents:', Object.keys(entityDef.components || {}));
+      }
+      if (isKrakenHead) {
+        this.#logger.info(
+          'PartSelectionService: Checking kraken_head against requirements',
+          {
+            entityId: entityDef.id,
+            allowedTypes,
+            requirements,
+            hasAnatomyPart: !!entityDef.components?.['anatomy:part'],
+            subType: entityDef.components?.['anatomy:part']?.subType,
+          }
+        );
+      }
+      if (isKrakenTentacle) {
+        this.#logger.info(
+          'PartSelectionService: Checking kraken_tentacle against requirements',
+          {
+            entityId: entityDef.id,
+            allowedTypes,
+            requirements,
+            hasAnatomyPart: !!entityDef.components?.['anatomy:part'],
+            subType: entityDef.components?.['anatomy:part']?.subType,
+          }
+        );
+      }
+
       if (
         this.#meetsAllRequirements(
           entityDef,
@@ -154,7 +180,36 @@ export class PartSelectionService {
           recipeSlot
         )
       ) {
+        // Log SUCCESS for diagnostic entities
+        if (isGenericTentacle || isGenericMantle) {
+          console.log(`✅ PartSelectionService: ${entityDef.id} PASSED all validation checks`);
+        }
+        if (isKrakenHead) {
+          this.#logger.info(
+            'PartSelectionService: kraken_head PASSED all validation checks'
+          );
+        }
+        if (isKrakenTentacle) {
+          this.#logger.info(
+            'PartSelectionService: kraken_tentacle PASSED all validation checks'
+          );
+        }
         candidates.push(entityDef.id);
+      } else {
+        // Log FAILURE for diagnostic entities
+        if (isGenericTentacle || isGenericMantle) {
+          console.log(`❌ PartSelectionService: ${entityDef.id} FAILED validation (see detailed failure reason above)`);
+        }
+        if (isKrakenHead) {
+          this.#logger.info(
+            'PartSelectionService: kraken_head FAILED validation (see detailed failure reason above)'
+          );
+        }
+        if (isKrakenTentacle) {
+          this.#logger.info(
+            'PartSelectionService: kraken_tentacle FAILED validation (see detailed failure reason above)'
+          );
+        }
       }
     }
 
@@ -193,6 +248,9 @@ export class PartSelectionService {
    */
   #meetsAllRequirements(entityDef, requirements, allowedTypes, recipeSlot) {
     const isKrakenHead = entityDef.id === 'anatomy:kraken_head';
+    const isKrakenTentacle = entityDef.id === 'anatomy:kraken_tentacle';
+    const isGenericTentacle = entityDef.id === 'anatomy:tentacle';
+    const isGenericMantle = entityDef.id === 'anatomy:mantle';
 
     // Must be an anatomy part
     const anatomyPart = entityDef.components?.['anatomy:part'];
@@ -200,6 +258,11 @@ export class PartSelectionService {
       if (isKrakenHead) {
         this.#logger.info(
           `PartSelectionService: kraken_head FAILED - no anatomy:part component`
+        );
+      }
+      if (isKrakenTentacle) {
+        this.#logger.info(
+          `PartSelectionService: kraken_tentacle FAILED - no anatomy:part component`
         );
       }
       return false;
@@ -215,6 +278,11 @@ export class PartSelectionService {
           `PartSelectionService: kraken_head FAILED - subType '${anatomyPart.subType}' not in allowedTypes [${allowedTypes.join(', ')}]`
         );
       }
+      if (isKrakenTentacle) {
+        this.#logger.info(
+          `PartSelectionService: kraken_tentacle FAILED - subType '${anatomyPart.subType}' not in allowedTypes [${allowedTypes.join(', ')}]`
+        );
+      }
       return false;
     }
 
@@ -226,6 +294,11 @@ export class PartSelectionService {
       if (isKrakenHead) {
         this.#logger.info(
           `PartSelectionService: kraken_head FAILED - subType '${anatomyPart.subType}' !== required '${requirements.partType}'`
+        );
+      }
+      if (isKrakenTentacle) {
+        this.#logger.info(
+          `PartSelectionService: kraken_tentacle FAILED - subType '${anatomyPart.subType}' !== required '${requirements.partType}'`
         );
       }
       return false;
@@ -246,6 +319,15 @@ export class PartSelectionService {
             { hasComponents: Object.keys(entityDef.components) }
           );
         }
+        if (isKrakenTentacle) {
+          const missing = requirements.components.filter(
+            (comp) => entityDef.components[comp] === undefined
+          );
+          this.#logger.info(
+            `PartSelectionService: kraken_tentacle FAILED - missing required components: [${missing.join(', ')}]`,
+            { hasComponents: Object.keys(entityDef.components) }
+          );
+        }
         return false;
       }
     }
@@ -258,12 +340,33 @@ export class PartSelectionService {
           (tag) => entityDef.components[tag] !== undefined
         );
         if (!hasAllTags) {
+          if (isGenericTentacle || isGenericMantle) {
+            const missing = recipeSlot.tags.filter(
+              (tag) => entityDef.components[tag] === undefined
+            );
+            console.log(`❌ ${entityDef.id} FAILED - missing required tags: [${missing.join(', ')}]`);
+            console.log('  requiredTags:', recipeSlot.tags);
+            console.log('  hasComponents:', Object.keys(entityDef.components));
+            console.log('  componentDetails:', entityDef.components);
+          }
           if (isKrakenHead) {
             const missing = recipeSlot.tags.filter(
               (tag) => entityDef.components[tag] === undefined
             );
             this.#logger.info(
               `PartSelectionService: kraken_head FAILED - missing required tags: [${missing.join(', ')}]`,
+              {
+                requiredTags: recipeSlot.tags,
+                hasComponents: Object.keys(entityDef.components),
+              }
+            );
+          }
+          if (isKrakenTentacle) {
+            const missing = recipeSlot.tags.filter(
+              (tag) => entityDef.components[tag] === undefined
+            );
+            this.#logger.info(
+              `PartSelectionService: kraken_tentacle FAILED - missing required tags: [${missing.join(', ')}]`,
               {
                 requiredTags: recipeSlot.tags,
                 hasComponents: Object.keys(entityDef.components),
@@ -282,21 +385,39 @@ export class PartSelectionService {
         if (hasExcludedTag) return false;
       }
 
-      // Check property requirements
-      if (
-        recipeSlot.properties &&
-        !this.#matchesProperties(entityDef, recipeSlot.properties)
-      ) {
-        return false;
+      // Check recipe slot properties (selection criteria)
+      if (recipeSlot.properties && Object.keys(recipeSlot.properties).length > 0) {
+        if (!this.#matchesProperties(entityDef, recipeSlot.properties)) {
+          if (this.#logger && this.#logger.debug) {
+            this.#logger.debug(
+              `Entity ${entityDef.id} filtered out - properties don't match recipe slot requirements`,
+              {
+                entityId: entityDef.id,
+                recipeProperties: recipeSlot.properties,
+                entityComponents: entityDef.components,
+              }
+            );
+          }
+          return false;
+        }
       }
     }
 
-    // Check base property requirements
-    if (
-      requirements.properties &&
-      !this.#matchesProperties(entityDef, requirements.properties)
-    ) {
-      return false;
+    // Check requirements properties (selection criteria)
+    if (requirements.properties && Object.keys(requirements.properties).length > 0) {
+      if (!this.#matchesProperties(entityDef, requirements.properties)) {
+        if (this.#logger && this.#logger.debug) {
+          this.#logger.debug(
+            `Entity ${entityDef.id} filtered out - properties don't match requirements`,
+            {
+              entityId: entityDef.id,
+              requiredProperties: requirements.properties,
+              entityComponents: entityDef.components,
+            }
+          );
+        }
+        return false;
+      }
     }
 
     return true;

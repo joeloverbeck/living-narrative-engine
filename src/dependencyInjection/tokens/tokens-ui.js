@@ -41,6 +41,7 @@ export const uiTokens = freeze({
   AnatomyLoadingDetector: 'AnatomyLoadingDetector',
   VisualizerStateController: 'VisualizerStateController',
   PortraitModalRenderer: 'PortraitModalRenderer',
+  PerceptibleEventSenderController: 'PerceptibleEventSenderController',
   // Anatomy Renderer Components
   LayoutEngine: 'LayoutEngine',
   RadialLayoutStrategy: 'RadialLayoutStrategy',

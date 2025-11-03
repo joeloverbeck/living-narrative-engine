@@ -175,6 +175,7 @@ class SocketGenerator {
       id: socketId,
       orientation,
       allowedTypes: [...allowedTypes],
+      index, // Store index for name template substitution
     };
 
     // Add optional name template if provided

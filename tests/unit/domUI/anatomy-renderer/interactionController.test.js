@@ -169,7 +169,8 @@ describe('InteractionController', () => {
       );
       expect(mockElement.addEventListener).toHaveBeenCalledWith(
         'wheel',
-        expect.any(Function)
+        expect.any(Function),
+        { passive: false }
       );
       expect(mockElement.addEventListener).toHaveBeenCalledWith(
         'click',

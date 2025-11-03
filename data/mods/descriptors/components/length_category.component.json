@@ -8,7 +8,15 @@
       "length": {
         "type": "string",
         "description": "The length category",
-        "enum": ["very-short", "short", "average", "long", "very-long"],
+        "enum": [
+          "very-short",
+          "short",
+          "average",
+          "long",
+          "very-long",
+          "extremely-long",
+          "immense"
+        ],
         "default": "average"
       }
     },

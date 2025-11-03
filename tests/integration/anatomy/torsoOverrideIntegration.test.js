@@ -401,7 +401,8 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
       );
 
       expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:human_male_torso'
+        'anatomy:human_male_torso',
+        { componentOverrides: {} }
       );
       expect(testBed.logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Using recipe torso override')
@@ -466,7 +467,8 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
       );
 
       expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:human_female_torso'
+        'anatomy:human_female_torso',
+        { componentOverrides: {} }
       );
       expect(testBed.logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Using recipe torso override')
@@ -544,7 +546,8 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
       );
 
       expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:human_female_torso'
+        'anatomy:human_female_torso',
+        { componentOverrides: {} }
       );
       expect(testBed.logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Using recipe torso override')
@@ -608,7 +611,8 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
       );
 
       expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:human_male_torso'
+        'anatomy:human_male_torso',
+        { componentOverrides: {} }
       );
       expect(testBed.logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Using recipe torso override')

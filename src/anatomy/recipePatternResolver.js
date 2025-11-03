@@ -550,6 +550,7 @@ class RecipePatternResolver {
 
     for (let index = 0; index < recipe.patterns.length; index += 1) {
       const pattern = recipe.patterns[index];
+      console.log(`[DEBUG RecipePatternResolver] Pattern ${index}:`, JSON.stringify(pattern, null, 2));
       const patternNumber = index + 1;
       const usesExplicitMatches = Array.isArray(pattern.matches);
       const hasExplicitMatches =
@@ -708,6 +709,11 @@ class RecipePatternResolver {
           continue;
         }
 
+        console.log(`[DEBUG RecipePatternResolver] Expanding slot ${slotKey}`);
+        console.log('[DEBUG]   FULL PATTERN:', JSON.stringify(pattern, null, 2));
+        console.log('[DEBUG]   pattern.properties:', pattern.properties);
+        console.log('[DEBUG]   pattern.properties exists?', !!pattern.properties);
+
         expandedSlots[slotKey] = {
           partType: pattern.partType,
           preferId: pattern.preferId,
@@ -717,6 +723,8 @@ class RecipePatternResolver {
             : pattern.notTags,
           properties: pattern.properties ? { ...pattern.properties } : undefined,
         };
+
+        console.log('[DEBUG]   expandedSlots[slotKey]:', JSON.stringify(expandedSlots[slotKey], null, 2));
       }
 
       const hasMatcherAtEnd = this.#hasMatcher(pattern);

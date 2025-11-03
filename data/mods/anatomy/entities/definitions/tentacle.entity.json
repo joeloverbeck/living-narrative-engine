@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:tentacle",
+  "description": "Generic cephalopod tentacle or arm",
+  "components": {
+    "anatomy:part": {
+      "subType": "tentacle"
+    },
+    "core:name": {
+      "text": "tentacle"
+    }
+  }
+}

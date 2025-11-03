@@ -18,7 +18,6 @@ describe('registerUI - main orchestration function', () => {
   let mockUiElements;
   let mockChatAlertRenderer;
   let mockActionResultRenderer;
-  let mockGlobalKeyHandler;
   let MockRegistrar;
 
   beforeEach(() => {
@@ -36,7 +35,6 @@ describe('registerUI - main orchestration function', () => {
 
     mockChatAlertRenderer = { initialize: jest.fn() };
     mockActionResultRenderer = { initialize: jest.fn() };
-    mockGlobalKeyHandler = { initialize: jest.fn() };
 
     mockContainer = {
       resolve: jest.fn((token) => {
@@ -44,7 +42,6 @@ describe('registerUI - main orchestration function', () => {
           [tokens.ILogger]: mockLogger,
           [tokens.ChatAlertRenderer]: mockChatAlertRenderer,
           [tokens.ActionResultRenderer]: mockActionResultRenderer,
-          [tokens.GlobalKeyHandler]: mockGlobalKeyHandler,
         };
         return mocks[token] || jest.fn();
       }),
@@ -97,15 +94,6 @@ describe('registerUI - main orchestration function', () => {
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
-    );
-  });
-
-  it('should eagerly instantiate GlobalKeyHandler', () => {
-    registerUI(mockContainer, mockUiElements);
-
-    expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.GlobalKeyHandler);
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`
     );
   });
 
@@ -186,7 +174,6 @@ describe('registerUI - main orchestration function', () => {
         'UI Registrations: Registered IInputHandler (legacy) with VED.',
         `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`,
         `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`,
-        `UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`,
         'UI Registrations: Complete.',
       ]);
     });
@@ -205,11 +192,9 @@ describe('registerUI - main orchestration function', () => {
       // Eager instantiations should happen after registrations
       const chatAlertIndex = tokenOrder.indexOf(tokens.ChatAlertRenderer);
       const actionResultIndex = tokenOrder.indexOf(tokens.ActionResultRenderer);
-      const globalKeyIndex = tokenOrder.indexOf(tokens.GlobalKeyHandler);
 
       expect(chatAlertIndex).toBeGreaterThan(0);
       expect(actionResultIndex).toBeGreaterThan(chatAlertIndex);
-      expect(globalKeyIndex).toBeGreaterThan(actionResultIndex);
     });
 
     it('should work with different UI element types', () => {
@@ -236,7 +221,6 @@ describe('registerUI - main orchestration function', () => {
             [tokens.ILogger]: mockLogger,
             [tokens.ChatAlertRenderer]: mockChatAlertRenderer,
             [tokens.ActionResultRenderer]: mockActionResultRenderer,
-            [tokens.GlobalKeyHandler]: mockGlobalKeyHandler,
           };
           return services[token] || jest.fn();
         }),
@@ -252,9 +236,6 @@ describe('registerUI - main orchestration function', () => {
       );
       expect(workflowContainer.resolve).toHaveBeenCalledWith(
         tokens.ActionResultRenderer
-      );
-      expect(workflowContainer.resolve).toHaveBeenCalledWith(
-        tokens.GlobalKeyHandler
       );
 
       // Verify logging sequence

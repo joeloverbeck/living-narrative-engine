@@ -114,7 +114,7 @@ describe('DispatchPerceptibleEventHandler', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
       expect.objectContaining({
-        contextualData: { recipientIds: [], excludedActorIds: [] },
+        contextualData: { recipientIds: [], excludedActorIds: [], skipRuleLogging: false },
       })
     );
   });
@@ -134,7 +134,7 @@ describe('DispatchPerceptibleEventHandler', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
       expect.objectContaining({
-        contextualData: { recipientIds: ['observer-1'], excludedActorIds: [] },
+        contextualData: { recipientIds: ['observer-1'], excludedActorIds: [], skipRuleLogging: false },
       })
     );
   });
@@ -257,7 +257,7 @@ describe('DispatchPerceptibleEventHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         'core:perceptible_event',
         expect.objectContaining({
-          contextualData: { recipientIds: [], excludedActorIds: ['npc:a'] },
+          contextualData: { recipientIds: [], excludedActorIds: ['npc:a'], skipRuleLogging: false },
         })
       );
     });
@@ -277,7 +277,7 @@ describe('DispatchPerceptibleEventHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         'core:perceptible_event',
         expect.objectContaining({
-          contextualData: { recipientIds: [], excludedActorIds: [] },
+          contextualData: { recipientIds: [], excludedActorIds: [], skipRuleLogging: false },
         })
       );
     });

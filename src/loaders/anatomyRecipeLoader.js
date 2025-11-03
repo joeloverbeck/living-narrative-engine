@@ -57,6 +57,11 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
       `AnatomyRecipeLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
     );
 
+    // DEBUG: Log recipe patterns if this is kraken recipe
+    if (filename === 'kraken.recipe.json' && data.patterns && data.patterns.length > 0) {
+      console.log('[DEBUG AnatomyRecipeLoader] kraken.recipe.json FETCHED - Pattern 0:', JSON.stringify(data.patterns[0], null, 2));
+    }
+
     // Validate the recipeId field
     const { baseId } = parseAndValidateId(
       data,

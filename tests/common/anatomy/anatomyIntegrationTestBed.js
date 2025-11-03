@@ -645,6 +645,17 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
   }
 
   /**
+   * Loads structure templates into the registry
+   *
+   * @param {object} templates - Structure templates to load
+   */
+  loadStructureTemplates(templates) {
+    for (const [id, data] of Object.entries(templates)) {
+      this.registry.store('anatomyStructureTemplates', id, data);
+    }
+  }
+
+  /**
    * Helper method to generate a body using the gorgeous milf recipe
    * This requires that the appropriate data has been loaded into the registry
    *
@@ -855,6 +866,96 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             },
           },
           required: ['equipped'],
+        },
+      },
+      'descriptors:size_category': {
+        id: 'descriptors:size_category',
+        description: 'Size category descriptor',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            size: { type: 'string' },
+          },
+          required: ['size'],
+        },
+      },
+      'descriptors:length_category': {
+        id: 'descriptors:length_category',
+        description: 'Length category descriptor',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            length: { type: 'string' },
+          },
+          required: ['length'],
+        },
+      },
+      'descriptors:texture': {
+        id: 'descriptors:texture',
+        description: 'Texture descriptor',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            texture: { type: 'string' },
+          },
+          required: ['texture'],
+        },
+      },
+      'descriptors:color_extended': {
+        id: 'descriptors:color_extended',
+        description: 'Extended color descriptor',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            color: { type: 'string' },
+          },
+          required: ['color'],
+        },
+      },
+      'descriptors:shape_general': {
+        id: 'descriptors:shape_general',
+        description: 'General shape descriptor',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            shape: { type: 'string' },
+          },
+          required: ['shape'],
+        },
+      },
+      'anatomy:sensory': {
+        id: 'anatomy:sensory',
+        description: 'Sensory capabilities component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            acuity: { type: 'string' },
+            echolocation: { type: 'boolean' },
+            vision: { type: 'boolean' },
+            smell: { type: 'boolean' },
+            touch: { type: 'boolean' },
+          },
+        },
+      },
+      'anatomy:crushing': {
+        id: 'anatomy:crushing',
+        description: 'Crushing/biting capability component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            biteForce: { type: 'string' },
+          },
+        },
+      },
+      'anatomy:ink_reservoir': {
+        id: 'anatomy:ink_reservoir',
+        description: 'Ink reservoir capability component',
+        dataSchema: {
+          type: 'object',
+          properties: {
+            capacity: { type: 'string' },
+            pressure: { type: 'string' },
+          },
         },
       },
     });
@@ -1325,6 +1426,186 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      // Generic cephalopod entities
+      'anatomy:tentacle': {
+        id: 'anatomy:tentacle',
+        description: 'Generic cephalopod tentacle or arm',
+        components: {
+          'anatomy:part': {
+            subType: 'tentacle',
+          },
+          'core:name': {
+            text: 'tentacle',
+          },
+        },
+      },
+      'anatomy:kraken_tentacle': {
+        id: 'anatomy:kraken_tentacle',
+        description: 'Elder kraken tentacle with enormous size and dark purple coloring',
+        components: {
+          'anatomy:part': {
+            subType: 'tentacle',
+          },
+          'core:name': {
+            text: 'tentacle',
+          },
+          'descriptors:size_category': {
+            size: 'enormous',
+          },
+          'descriptors:length_category': {
+            length: 'extremely-long',
+          },
+          'descriptors:texture': {
+            texture: 'suckered',
+          },
+          'descriptors:color_extended': {
+            color: 'dark-purple',
+          },
+          'descriptors:shape_general': {
+            shape: 'cylindrical',
+          },
+        },
+      },
+      'anatomy:mantle': {
+        id: 'anatomy:mantle',
+        description: 'Generic cephalopod mantle body',
+        components: {
+          'anatomy:part': {
+            subType: 'mantle',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'ink_sac',
+                allowedTypes: ['ink_reservoir', 'ink_sac'],
+                nameTpl: 'ink sac',
+              },
+              {
+                id: 'beak',
+                allowedTypes: ['beak', 'cephalopod_beak'],
+                nameTpl: 'beak',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'mantle',
+          },
+        },
+      },
+      'anatomy:kraken_mantle': {
+        id: 'anatomy:kraken_mantle',
+        description: 'Elder kraken mantle body with massive size and abyssal black coloring',
+        components: {
+          'anatomy:part': {
+            subType: 'mantle',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'ink_sac',
+                allowedTypes: ['ink_reservoir', 'ink_sac'],
+                nameTpl: 'ink sac',
+              },
+              {
+                id: 'beak',
+                allowedTypes: ['beak', 'cephalopod_beak'],
+                nameTpl: 'beak',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'mantle',
+          },
+          'descriptors:size_category': {
+            size: 'massive',
+          },
+          'descriptors:color_extended': {
+            color: 'abyssal-black',
+          },
+          'descriptors:texture': {
+            texture: 'smooth',
+          },
+          'descriptors:shape_general': {
+            shape: 'oval',
+          },
+        },
+      },
+      'anatomy:beak': {
+        id: 'anatomy:beak',
+        description: 'Cephalopod beak',
+        components: {
+          'anatomy:part': {
+            subType: 'beak',
+          },
+          'anatomy:crushing': {
+            biteForce: 'moderate',
+          },
+          'core:name': {
+            text: 'beak',
+          },
+        },
+      },
+      'anatomy:ink_reservoir': {
+        id: 'anatomy:ink_reservoir',
+        description: 'Cephalopod ink reservoir',
+        components: {
+          'anatomy:part': {
+            subType: 'ink_reservoir',
+          },
+          'anatomy:ink_reservoir': {
+            capacity: 'moderate',
+            pressure: 'medium',
+          },
+          'core:name': {
+            text: 'ink reservoir',
+          },
+        },
+      },
+      'anatomy:head': {
+        id: 'anatomy:head',
+        description: 'Generic cephalopod head',
+        components: {
+          'anatomy:part': {
+            subType: 'head',
+          },
+          'anatomy:sensory': {
+            vision: true,
+            smell: true,
+            touch: true,
+          },
+          'core:name': {
+            text: 'head',
+          },
+        },
+      },
+      'anatomy:kraken_head': {
+        id: 'anatomy:kraken_head',
+        description: 'A kraken head with massive beak',
+        components: {
+          'anatomy:part': {
+            subType: 'head',
+          },
+          'anatomy:sensory': {
+            vision: true,
+            smell: true,
+            touch: true,
+            acuity: 'abyssal',
+            echolocation: true,
+          },
+          'core:name': {
+            text: 'kraken head',
+          },
+          'descriptors:size_category': {
+            size: 'gigantic',
+          },
+          'descriptors:shape_general': {
+            shape: 'bulbous',
+          },
+          'descriptors:color_extended': {
+            color: 'murky-green',
+          },
+        },
+      },
     });
 
     // Load slot libraries
@@ -1492,6 +1773,44 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             $use: 'standard_foot',
             parent: 'right_leg',
           },
+        },
+      },
+    });
+
+    // Load structure templates
+    this.loadStructureTemplates({
+      'anatomy:structure_octopoid': {
+        id: 'anatomy:structure_octopoid',
+        description:
+          'Octopoid mantle with radial tentacles and anterior head attachment',
+        topology: {
+          rootType: 'mantle',
+          limbSets: [
+            {
+              type: 'tentacle',
+              count: 8,
+              arrangement: 'radial',
+              arrangementHint: 'octagonal_radial',
+              socketPattern: {
+                idTemplate: 'tentacle_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['tentacle'],
+                nameTpl: 'tentacle {{index}}',
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              attachment: 'anterior',
+              socketPattern: {
+                idTemplate: 'head',
+                allowedTypes: ['head'],
+                nameTpl: 'head',
+              },
+            },
+          ],
         },
       },
     });
@@ -1692,6 +2011,30 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      // Kraken blueprint for cephalopods
+      'anatomy:kraken': {
+        id: 'anatomy:kraken',
+        schemaVersion: '2.0',
+        root: 'anatomy:kraken_mantle',
+        structureTemplate: 'anatomy:structure_octopoid',
+        additionalSlots: {
+          ink_sac: {
+            socket: 'ink_sac',
+            requirements: {
+              partType: 'ink_reservoir',
+              components: ['anatomy:part'],
+            },
+          },
+          beak: {
+            socket: 'beak',
+            requirements: {
+              partType: 'beak',
+              components: ['anatomy:part'],
+            },
+            optional: true,
+          },
+        },
+      },
     });
 
     // Load anatomy recipes
@@ -1846,6 +2189,167 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         ],
       },
+      // Cephalopod recipes
+      'anatomy:kraken_elder': {
+        recipeId: 'anatomy:kraken_elder',
+        blueprintId: 'anatomy:kraken',
+        bodyDescriptors: {
+          build: 'hulking',
+          composition: 'average',
+          density: 'hairless',
+        },
+        slots: {
+          root: {
+            partType: 'mantle',
+            properties: {
+              'descriptors:size_category': {
+                size: 'massive',
+              },
+              'descriptors:color_extended': {
+                color: 'abyssal-black',
+              },
+              'descriptors:texture': {
+                texture: 'smooth',
+              },
+              'descriptors:shape_general': {
+                shape: 'oval',
+              },
+            },
+          },
+          ink_sac: {
+            partType: 'ink_reservoir',
+            tags: ['anatomy:part', 'anatomy:ink_reservoir'],
+          },
+          beak: {
+            partType: 'beak',
+            tags: ['anatomy:part', 'anatomy:crushing'],
+          },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:tentacle',
+            partType: 'tentacle',
+            tags: ['anatomy:part'],
+            properties: {
+              'descriptors:size_category': {
+                size: 'enormous',
+              },
+              'descriptors:length_category': {
+                length: 'extremely-long',
+              },
+              'descriptors:texture': {
+                texture: 'suckered',
+              },
+              'descriptors:color_extended': {
+                color: 'dark-purple',
+              },
+              'descriptors:shape_general': {
+                shape: 'cylindrical',
+              },
+            },
+          },
+          {
+            matchesGroup: 'appendage:head',
+            partType: 'head',
+            tags: ['anatomy:part', 'anatomy:sensory'],
+            properties: {
+              'anatomy:sensory': {
+                acuity: 'abyssal',
+                echolocation: true,
+              },
+            },
+          },
+        ],
+        constraints: {
+          requires: [
+            {
+              partTypes: ['tentacle', 'ink_reservoir'],
+            },
+          ],
+        },
+      },
+      'anatomy:squid_common': {
+        recipeId: 'anatomy:squid_common',
+        blueprintId: 'anatomy:kraken',
+        bodyDescriptors: {
+          build: 'slim',
+          composition: 'lean',
+          density: 'hairless',
+        },
+        slots: {
+          root: {
+            partType: 'mantle',
+          },
+          ink_sac: {
+            partType: 'ink_reservoir',
+            tags: ['anatomy:part', 'anatomy:ink_reservoir'],
+          },
+          beak: {
+            partType: 'beak',
+            tags: ['anatomy:part', 'anatomy:crushing'],
+          },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:tentacle',
+            partType: 'tentacle',
+            tags: ['anatomy:part'],
+          },
+          {
+            matchesGroup: 'appendage:head',
+            partType: 'head',
+            tags: ['anatomy:part', 'anatomy:sensory'],
+          },
+        ],
+        constraints: {
+          requires: [
+            {
+              partTypes: ['tentacle', 'ink_reservoir'],
+            },
+          ],
+        },
+      },
+      'anatomy:octopus_common': {
+        recipeId: 'anatomy:octopus_common',
+        blueprintId: 'anatomy:kraken',
+        bodyDescriptors: {
+          build: 'stocky',
+          composition: 'lean',
+          density: 'hairless',
+        },
+        slots: {
+          root: {
+            partType: 'mantle',
+          },
+          ink_sac: {
+            partType: 'ink_reservoir',
+            tags: ['anatomy:part', 'anatomy:ink_reservoir'],
+          },
+          beak: {
+            partType: 'beak',
+            tags: ['anatomy:part', 'anatomy:crushing'],
+          },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:tentacle',
+            partType: 'tentacle',
+            tags: ['anatomy:part'],
+          },
+          {
+            matchesGroup: 'appendage:head',
+            partType: 'head',
+            tags: ['anatomy:part', 'anatomy:sensory'],
+          },
+        ],
+        constraints: {
+          requires: [
+            {
+              partTypes: ['tentacle', 'ink_reservoir'],
+            },
+          ],
+        },
+      },
     });
   }
 
@@ -1910,10 +2414,10 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
    * Gets an entity definition by ID
    *
    * @param {string} id - The entity definition ID
-   * @returns {object} The entity definition data
+   * @returns {object|null} The entity definition data, or null if not found
    */
   getEntityDefinition(id) {
-    return this.registry.get('entityDefinitions', id);
+    return this.registry.get('entityDefinitions', id) || null;
   }
 
   /**
@@ -2067,7 +2571,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
   async createActor({ recipeId }) {
     // Ensure we have the anatomy mod data loaded
     if (!this.registry.get('anatomyRecipes', recipeId)) {
-      this.loadAnatomyModData();
+      await this.loadAnatomyModData();
     }
 
     // Create the actor entity

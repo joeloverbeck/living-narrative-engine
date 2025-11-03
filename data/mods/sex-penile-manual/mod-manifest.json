@@ -27,21 +27,18 @@
   "content": {
     "actions": [
       "fondle_penis.action.json",
-      "guide_hand_to_clothed_crotch.action.json",
       "pump_penis.action.json",
       "pump_penis_from_up_close.action.json",
       "rub_penis_over_clothes.action.json"
     ],
     "conditions": [
       "event-is-action-fondle-penis.condition.json",
-      "event-is-action-guide-hand-to-clothed-crotch.condition.json",
       "event-is-action-pump-penis-from-up-close.condition.json",
       "event-is-action-pump-penis.condition.json",
       "event-is-action-rub-penis-over-clothes.condition.json"
     ],
     "rules": [
       "handle_fondle_penis.rule.json",
-      "handle_guide_hand_to_clothed_crotch.rule.json",
       "handle_pump_penis.rule.json",
       "handle_pump_penis_from_up_close.rule.json",
       "handle_rub_penis_over_clothes.rule.json"

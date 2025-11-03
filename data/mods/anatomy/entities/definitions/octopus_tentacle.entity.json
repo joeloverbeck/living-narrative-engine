@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:octopus_tentacle",
+  "description": "Common octopus tentacle with thick build and reddish-brown coloring",
+  "components": {
+    "anatomy:part": {
+      "subType": "tentacle"
+    },
+    "core:name": {
+      "text": "tentacle"
+    },
+    "descriptors:build": {
+      "build": "thick"
+    },
+    "descriptors:length_category": {
+      "length": "average"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
+    },
+    "descriptors:color_extended": {
+      "color": "reddish-brown"
+    },
+    "descriptors:shape_general": {
+      "shape": "cylindrical"
+    }
+  }
+}

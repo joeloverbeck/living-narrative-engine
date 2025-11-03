@@ -1,0 +1,104 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:octopus_common",
+  "blueprintId": "anatomy:kraken",
+  "bodyDescriptors": {
+    "build": "stocky",
+    "composition": "lean",
+    "density": "hairless"
+  },
+  "slots": {
+    "root": {
+      "partType": "mantle",
+      "properties": {
+        "descriptors:size_category": {
+          "size": "medium"
+        },
+        "descriptors:color_extended": {
+          "color": "reddish-brown"
+        },
+        "descriptors:texture": {
+          "texture": "bumpy"
+        },
+        "descriptors:shape_general": {
+          "shape": "oval"
+        }
+      }
+    },
+    "ink_sac": {
+      "partType": "ink_reservoir",
+      "tags": [
+        "anatomy:part",
+        "anatomy:ink_reservoir"
+      ],
+      "properties": {
+        "anatomy:ink_reservoir": {
+          "capacity": "moderate",
+          "pressure": "medium"
+        }
+      }
+    },
+    "beak": {
+      "partType": "beak",
+      "tags": [
+        "anatomy:part",
+        "anatomy:crushing"
+      ],
+      "properties": {
+        "anatomy:crushing": {
+          "biteForce": "strong"
+        }
+      }
+    }
+  },
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:tentacle",
+      "partType": "tentacle",
+      "tags": [
+        "anatomy:part"
+      ],
+      "properties": {
+        "descriptors:size_category": {
+          "size": "thick"
+        },
+        "descriptors:length_category": {
+          "length": "average"
+        },
+        "descriptors:texture": {
+          "texture": "suckered"
+        },
+        "descriptors:color_extended": {
+          "color": "reddish-brown"
+        },
+        "descriptors:shape_general": {
+          "shape": "cylindrical"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:head",
+      "partType": "head",
+      "tags": [
+        "anatomy:part",
+        "anatomy:sensory"
+      ],
+      "properties": {
+        "anatomy:sensory": {
+          "acuity": "excellent",
+          "echolocation": false
+        }
+      }
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": [
+          "tentacle",
+          "ink_reservoir"
+        ]
+      }
+    ]
+  }
+}

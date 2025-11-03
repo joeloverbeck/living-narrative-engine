@@ -1235,4 +1235,69 @@ describe('SocketGenerator', () => {
       ]);
     });
   });
+
+  describe('Socket Index Storage', () => {
+    it('should include index property in generated sockets', () => {
+      const template = {
+        topology: {
+          rootType: 'mantle',
+          limbSets: [
+            {
+              type: 'tentacle',
+              count: 3,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'tentacle_{{index}}',
+                nameTpl: 'tentacle {{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['tentacle'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      expect(sockets).toHaveLength(3);
+      // Verify each socket has an index property
+      expect(sockets[0].index).toBe(1);
+      expect(sockets[1].index).toBe(2);
+      expect(sockets[2].index).toBe(3);
+      // Verify index is used in socket IDs
+      expect(sockets[0].id).toBe('tentacle_1');
+      expect(sockets[1].id).toBe('tentacle_2');
+      expect(sockets[2].id).toBe('tentacle_3');
+    });
+
+    it('should store index for name template substitution', () => {
+      const template = {
+        topology: {
+          rootType: 'body',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'bilateral_pairs',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}_{{index}}',
+                nameTpl: '{{orientation}} leg {{index}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+        },
+      };
+
+      const sockets = socketGenerator.generateSockets(template);
+
+      // Bilateral arrangement generates indices sequentially (not per pair)
+      expect(sockets).toHaveLength(4);
+      expect(sockets[0].index).toBe(1); // left front
+      expect(sockets[1].index).toBe(2); // right front
+      expect(sockets[2].index).toBe(3); // left rear
+      expect(sockets[3].index).toBe(4); // right rear
+    });
+  });
 });

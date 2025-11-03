@@ -197,14 +197,14 @@ export class AnatomyGenerationWorkflow extends BaseService {
         const nameData = partEntity.getComponentData('core:name');
         const name = nameData ? nameData.text : null;
 
-        if (name) {
-          parts.set(name, partEntityId);
+        // Use name as the key for parts map indexing
+        const key = name || partEntityId;
 
-          // Debug logging to understand naming issues
-          const anatomyPart = partEntity.getComponentData('anatomy:part');
-          const jointData = partEntity.getComponentData('anatomy:joint');
+        if (key) {
+          parts.set(key, partEntityId);
+
           this.#logger.debug(
-            `AnatomyGenerationWorkflow: Mapped part '${name}' to entity '${partEntityId}' - subType: ${anatomyPart?.subType}, orientation: ${anatomyPart?.orientation}, parentId: ${jointData?.parentId}, socketId: ${jointData?.socketId}`
+            `AnatomyGenerationWorkflow: Mapped part '${key}' to entity '${partEntityId}'`
           );
         }
       }

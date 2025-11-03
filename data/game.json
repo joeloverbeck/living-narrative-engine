@@ -1,6 +1,7 @@
 {
   "mods": [
     "core",
+    "descriptors",
     "activity",
     "movement",
     "companionship",
@@ -21,7 +22,7 @@
     "kissing",
     "physical-control",
     "patrol",
-    "p_erotica"
+    "p_erotica_grocery_store"
   ],
-  "startWorld": "p_erotica:uncle"
+  "startWorld": "p_erotica_grocery_store:grocery_store"
 }

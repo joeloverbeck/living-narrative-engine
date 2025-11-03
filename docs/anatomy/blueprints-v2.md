@@ -162,6 +162,28 @@ The referenced template defines:
 
 The blueprint loader resolves the template and generates all sockets automatically.
 
+### Template Features
+
+Templates support powerful socket generation capabilities:
+
+- **Socket ID Generation**: `idTemplate` with variables (`{{index}}`, `{{orientation}}`, `{{position}}`, `{{type}}`)
+- **Automatic Naming**: `nameTpl` generates entity display names (e.g., "left leg", "tentacle 3")
+- **Orientation Schemes**:
+  - `bilateral` - Left/right alternation
+  - `quadrupedal` - Four-leg arrangement (front-left, front-right, rear-left, rear-right)
+  - `radial` - Circular arrangement (supports special octagonal layout for 8 items)
+  - `indexed` - Numeric sequence (1, 2, 3, ...)
+  - `custom` - Explicit positions array
+- **Type Restrictions**: `allowedTypes` array constrains which part types can attach to generated sockets
+
+### Socket Merging
+
+When a V2 blueprint is processed:
+1. Template generates sockets based on `limbSets` and `appendages`
+2. Root entity definition may have additional sockets in its `anatomy:sockets` component
+3. Template-generated sockets override entity definition sockets for duplicate IDs
+4. Final merged socket list is applied to the root entity
+
 ## Additional Slots
 
 The `additionalSlots` property allows adding sockets beyond what the template generates. This is useful for:
@@ -745,7 +767,7 @@ Once tested, you can replace the V1 version.
 ## Related Documentation
 
 - **Structure Templates**: [structure-templates.md](./structure-templates.md) - Creating templates
-- **Recipe Patterns**: [recipe-patterns.md](./recipe-patterns.md) - Populating template-generated slots
+- **Recipe Patterns**: [recipe-patterns.md](./recipe-patterns.md) - Populating template-generated slots with pattern matching
 - **Quick Start**: [non-human-quickstart.md](./non-human-quickstart.md) - End-to-end tutorial
 
 ## Next Steps
@@ -760,5 +782,5 @@ Once tested, you can replace the V1 version.
 
 **Schema File**: `data/schemas/anatomy.blueprint.schema.json`
 **Example Blueprints V1**: `data/mods/anatomy/blueprints/human_*.blueprint.json`
-**Example Blueprints V2**: Coming in future mods
+**Example Blueprints V2**: `data/mods/anatomy/blueprints/kraken.blueprint.json`, `red_dragon.blueprint.json`, `giant_spider.blueprint.json`, `centaur_warrior.blueprint.json`
 **Structure Templates**: See [structure-templates.md](./structure-templates.md)

@@ -3,6 +3,7 @@
 #app-layout-container {
   display: flex;
   flex: 1 1 auto;
+  height: calc(100vh - 120px); /* Reserve space for header + footer */
   min-height: 0;
   overflow: hidden;
   background-color: var(--primary-bg-color);

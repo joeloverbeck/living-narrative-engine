@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "seduction:brush_hair_back_coyly",
+  "name": "Brush Hair Back Coyly",
+  "description": "Run your fingers through your hair and tuck it behind your ear in a coy, flirtatious gesture.",
+  "targets": "none",
+  "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "brush your hair back coyly",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "hair"]
+      },
+      "failure_message": "You need hair to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#f57f17",
+    "textColor": "#000000",
+    "hoverBackgroundColor": "#f9a825",
+    "hoverTextColor": "#212121"
+  }
+}

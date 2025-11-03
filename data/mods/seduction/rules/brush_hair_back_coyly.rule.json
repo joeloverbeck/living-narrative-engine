@@ -1,0 +1,58 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "brush_hair_back_coyly",
+  "comment": "Handles the 'seduction:brush_hair_back_coyly' action. Generates descriptive text about the actor brushing their hair back coyly.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "seduction:event-is-action-brush-hair-back-coyly"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name for the messages.",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get location for the perceptible event.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Construct the perceptible log message for observers.",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} brushes their hair back coyly."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_self_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": null
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}

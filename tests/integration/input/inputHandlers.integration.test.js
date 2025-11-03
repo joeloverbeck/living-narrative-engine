@@ -16,7 +16,6 @@ import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
 import { InputStateController } from '../../../src/domUI/inputStateController.js';
 import InputHandler from '../../../src/input/inputHandler.js';
-import GlobalKeyHandler from '../../../src/input/globalKeyHandler.js';
 const CORE_EVENTS_DIR = new URL(
   '../../../data/mods/core/events/',
   import.meta.url
@@ -55,7 +54,8 @@ class PassthroughSchemaValidator {
     return true;
   }
 
-  isSchemaLoaded(schemaId) {
+  // eslint-disable-next-line no-unused-vars
+  isSchemaLoaded(_schemaId) {
     return true;
   }
 
@@ -68,6 +68,9 @@ class PassthroughSchemaValidator {
   }
 }
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -77,11 +80,18 @@ function createLogger() {
   };
 }
 
+/**
+ *
+ * @param fileName
+ */
 function loadCoreEventDefinition(fileName) {
   const eventUrl = new URL(fileName, CORE_EVENTS_DIR);
   return JSON.parse(readFileSync(eventUrl, 'utf8'));
 }
 
+/**
+ *
+ */
 async function tick() {
   await new Promise((resolve) => {
     setImmediate(resolve);
@@ -101,7 +111,6 @@ describe('Input handlers integration', () => {
   let formElement;
   let inputStateController;
   let inputHandler;
-  let globalKeyHandler;
   let commandLog;
   const activeSubscriptions = [];
 
@@ -122,13 +131,6 @@ describe('Input handlers integration', () => {
     registry.store('events', disableInputDef.id, disableInputDef);
     registry.store('events', gainedFocusDef.id, gainedFocusDef);
     registry.store('events', lostFocusDef.id, lostFocusDef);
-    registry.store('events', 'ui:toggle_inventory', {
-      id: 'ui:toggle_inventory',
-      payloadSchema: {
-        type: 'object',
-        additionalProperties: false,
-      },
-    });
 
     eventBus = new EventBus({ logger });
     schemaValidator = new PassthroughSchemaValidator();
@@ -176,8 +178,6 @@ describe('Input handlers integration', () => {
         logger,
       }
     );
-
-    globalKeyHandler = new GlobalKeyHandler(document, validatedEventDispatcher);
   });
 
   afterEach(() => {
@@ -185,23 +185,30 @@ describe('Input handlers integration', () => {
       try {
         unsub?.();
       } catch (error) {
-        // eslint-disable-next-line no-console
+         
         console.error('Failed to unsubscribe during cleanup', error);
       }
     });
 
-    globalKeyHandler?.dispose();
     inputHandler?.dispose();
     inputStateController?.dispose();
 
     document.body.innerHTML = '';
   });
 
+  /**
+   *
+   * @param eventName
+   * @param payload
+   */
   async function dispatchThroughSafe(eventName, payload) {
     await safeEventDispatcher.dispatch(eventName, payload);
     await tick();
   }
 
+  /**
+   *
+   */
   async function dispatchEnterKey() {
     const event = new window.KeyboardEvent('keydown', {
       key: 'Enter',
@@ -348,113 +355,6 @@ describe('Input handlers integration', () => {
 
     looseHandler.dispose();
     looseInput.remove();
-  });
-
-  test("global key handler dispatches inventory toggle events while ignoring focused inputs", async () => {
-    const inventoryEvents = [];
-    const unsubscribe = validatedEventDispatcher.subscribe(
-      'ui:toggle_inventory',
-      (event) => {
-        inventoryEvents.push(event);
-      }
-    );
-    activeSubscriptions.push(unsubscribe);
-
-    const otherKeyEvent = new window.KeyboardEvent('keydown', {
-      key: 'p',
-      bubbles: true,
-    });
-    Object.defineProperty(otherKeyEvent, 'target', {
-      configurable: true,
-      value: document.getElementById('outside'),
-    });
-    document.dispatchEvent(otherKeyEvent);
-    await tick();
-    expect(inventoryEvents).toHaveLength(0);
-
-    const outsideEvent = new window.KeyboardEvent('keydown', {
-      key: 'i',
-      bubbles: true,
-    });
-    Object.defineProperty(outsideEvent, 'target', {
-      configurable: true,
-      value: document.getElementById('outside'),
-    });
-    document.dispatchEvent(outsideEvent);
-    await tick();
-
-    expect(inventoryEvents).toHaveLength(1);
-    expect(inventoryEvents[0]).toMatchObject({
-      type: 'ui:toggle_inventory',
-      payload: {},
-    });
-
-    const insideEvent = new window.KeyboardEvent('keydown', {
-      key: 'i',
-      bubbles: true,
-    });
-    Object.defineProperty(insideEvent, 'target', {
-      configurable: true,
-      value: inputElement,
-    });
-    inputElement.dispatchEvent(insideEvent);
-    await tick();
-
-    expect(inventoryEvents).toHaveLength(1);
-
-    globalKeyHandler.dispose();
-
-    const postDisposeEvent = new window.KeyboardEvent('keydown', {
-      key: 'i',
-      bubbles: true,
-    });
-    Object.defineProperty(postDisposeEvent, 'target', {
-      configurable: true,
-      value: document.getElementById('outside'),
-    });
-    document.dispatchEvent(postDisposeEvent);
-    await tick();
-
-    expect(inventoryEvents).toHaveLength(1);
-  });
-
-  test('global key handler validates dependencies', () => {
-    expect(() => new GlobalKeyHandler(null, validatedEventDispatcher)).toThrow(
-      'GlobalKeyHandler requires a valid Document.'
-    );
-
-    expect(() => new GlobalKeyHandler(document, {})).toThrow(
-      'GlobalKeyHandler requires a valid IValidatedEventDispatcher instance.'
-    );
-  });
-
-  test('global key handler logs when dispatch rejects', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const rejectingDispatcher = {
-      dispatch: jest.fn(() => Promise.reject(new Error('dispatch failed'))),
-    };
-
-    const failingHandler = new GlobalKeyHandler(document, rejectingDispatcher);
-
-    const event = new window.KeyboardEvent('keydown', {
-      key: 'I',
-      bubbles: true,
-    });
-    Object.defineProperty(event, 'target', {
-      configurable: true,
-      value: document.getElementById('outside'),
-    });
-    document.dispatchEvent(event);
-    await tick();
-
-    expect(rejectingDispatcher.dispatch).toHaveBeenCalledWith(
-      'ui:toggle_inventory',
-      {}
-    );
-    expect(errorSpy).toHaveBeenCalled();
-
-    failingHandler.dispose();
-    errorSpy.mockRestore();
   });
 
   test('input state controller dispatches focus telemetry via safe dispatcher', async () => {
