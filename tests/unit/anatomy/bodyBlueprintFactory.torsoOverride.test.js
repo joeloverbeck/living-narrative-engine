@@ -146,7 +146,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'anatomy:human_male_torso',
         recipe,
-        undefined
+        undefined,
+        {}
       );
       expect(result.rootId).toBe('torso-1');
       expect(result.entities).toEqual(['torso-1']);
@@ -204,7 +205,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'anatomy:human_male_torso',
         recipe,
-        undefined
+        undefined,
+        {}
       );
       expect(result.rootId).toBe('torso-1');
       expect(result.entities).toEqual(['torso-1']);
@@ -254,7 +256,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'anatomy:human_male_torso',
         recipe,
-        undefined
+        undefined,
+        {}
       );
       expect(result.rootId).toBe('torso-1');
     });
@@ -305,7 +308,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'anatomy:human_male_torso',
         recipe,
-        undefined
+        undefined,
+        {}
       );
       expect(result.rootId).toBe('torso-1');
     });
@@ -359,7 +363,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'anatomy:human_male_torso',
         recipe,
-        undefined
+        undefined,
+        {}
       );
       expect(result.rootId).toBe('torso-1');
     });
@@ -401,7 +406,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'anatomy:human_male_torso',
         recipe,
-        undefined
+        undefined,
+        {}
       );
       expect(result.rootId).toBe('torso-1');
       // No torso override logging expected from BodyBlueprintFactory itself
@@ -455,7 +461,8 @@ describe('BodyBlueprintFactory - Torso Override', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'anatomy:human_male_torso',
         recipe,
-        ownerId
+        ownerId,
+        {}
       );
     });
   });

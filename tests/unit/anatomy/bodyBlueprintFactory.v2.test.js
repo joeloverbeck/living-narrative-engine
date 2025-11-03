@@ -486,7 +486,8 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         'wing_left_socket',
         'anatomy:test_part',
         undefined,
-        'left'
+        'left',
+        {}
       );
 
       expect(mockSocketManager.occupySocket).toHaveBeenCalledWith(

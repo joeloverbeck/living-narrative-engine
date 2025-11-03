@@ -720,6 +720,7 @@ describe('ClothingInstantiationService - Coverage Tests', () => {
           {
             entityId: 'shirt',
             layer: 'invalid_layer',
+            properties: { 'clothing:wearable': { size: 'medium' } }, // Need non-empty properties to trigger layer validation
           },
         ],
       };

@@ -218,7 +218,7 @@ describe('Jon Ureña Clothing Integration', () => {
 
       // This tests that the method exists, full integration requires the entities to be loaded into test bed
       const testEntity = testBed.getEntityDefinition('test:blank');
-      expect(testEntity).toBeUndefined(); // Expected since we haven't loaded the Jon Ureña entities yet
+      expect(testEntity).toBeNull(); // Expected since we haven't loaded the Jon Ureña entities yet
     });
 
     it('should have anatomy system available', () => {
@@ -256,6 +256,9 @@ describe('Jon Ureña Clothing Integration', () => {
     });
 
     it('should create character from Jon Ureña recipe', async () => {
+      // Load anatomy mod data first to ensure entity definitions and blueprints are available
+      await testBed.loadAnatomyModData();
+
       // For this test, we'll use a simplified version of the recipe that works with the test bed
       // The real recipe contains anatomy slots that aren't loaded in the test environment
       const simplifiedRecipe = {

@@ -250,6 +250,9 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
           {
             entityId: 'shirt',
             layer: 'outer',
+            properties: {
+              'clothing:wearable': {},
+            },
           },
         ],
       };
@@ -393,11 +396,11 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       });
 
       // Should preserve existing clothing:wearable properties and add layer
-      expect(capturedProperties['clothing:wearable']).toHaveProperty(
+      expect(capturedProperties.componentOverrides['clothing:wearable']).toHaveProperty(
         'someExistingProp',
         'value'
       );
-      expect(capturedProperties['clothing:wearable']).toHaveProperty(
+      expect(capturedProperties.componentOverrides['clothing:wearable']).toHaveProperty(
         'layer',
         'outer'
       );
@@ -875,15 +878,25 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       });
 
       // Verify that clothing:wearable was created in finalProperties
-      expect(capturedProperties).toHaveProperty('clothing:wearable');
-      expect(capturedProperties['clothing:wearable']).toHaveProperty(
+      expect(capturedProperties.componentOverrides).toHaveProperty('clothing:wearable');
+      expect(capturedProperties.componentOverrides['clothing:wearable']).toHaveProperty(
         'layer',
         'outer'
       );
-      expect(capturedProperties).toHaveProperty('core:physical');
+      expect(capturedProperties.componentOverrides).toHaveProperty('core:physical');
     });
 
     it('should handle layer resolution failure', async () => {
+      mockDeps.dataRegistry.get.mockReturnValue({
+        components: {
+          'clothing:wearable': {
+            equipmentSlots: { primary: 'shirt' },
+            layer: 'base',
+            allowedLayers: ['base', 'outer'],
+          },
+        },
+      });
+
       mockDeps.layerResolutionService.resolveAndValidateLayer.mockReturnValue({
         isValid: false,
         error: 'Invalid layer specified',
@@ -894,6 +907,9 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
           {
             entityId: 'shirt',
             layer: 'invalid_layer',
+            properties: {
+              'clothing:wearable': {},
+            },
           },
         ],
       };

@@ -97,7 +97,8 @@ describe('EntityGraphBuilder', () => {
         'owner'
       );
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        't2'
+        't2',
+        { componentOverrides: {} }
       );
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         't2',
@@ -115,7 +116,8 @@ describe('EntityGraphBuilder', () => {
       });
       expect(mocks.logger.warn).toHaveBeenCalled();
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'base'
+        'base',
+        { componentOverrides: {} }
       );
       expect(id).toBe('base');
     });
@@ -133,7 +135,8 @@ describe('EntityGraphBuilder', () => {
         "EntityGraphBuilder: Recipe torso override 'badTorso' is not a valid torso part, using blueprint default"
       );
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'base'
+        'base',
+        { componentOverrides: {} }
       );
       expect(id).toBe('base');
     });
@@ -177,7 +180,8 @@ describe('EntityGraphBuilder', () => {
 
       // Should have created entity with the selected torso
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:selected_torso'
+        'anatomy:selected_torso',
+        { componentOverrides: {} }
       );
       expect(id).toBe('selected-entity-123');
 
@@ -224,7 +228,8 @@ describe('EntityGraphBuilder', () => {
 
       // Should fall back to blueprint default
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:default_torso'
+        'anatomy:default_torso',
+        { componentOverrides: {} }
       );
       expect(id).toBe('default-entity-123');
 
@@ -260,7 +265,8 @@ describe('EntityGraphBuilder', () => {
         "EntityGraphBuilder: No torso found matching recipe properties, using blueprint default 'anatomy:default_torso'"
       );
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:default_torso'
+        'anatomy:default_torso',
+        { componentOverrides: {} }
       );
       expect(id).toBe('default-entity-123');
     });
@@ -369,7 +375,8 @@ describe('EntityGraphBuilder', () => {
 
       // Should use the preferId
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'anatomy:preferred_torso'
+        'anatomy:preferred_torso',
+        { componentOverrides: {} }
       );
       expect(id).toBe('preferred-entity-123');
     });
@@ -383,7 +390,8 @@ describe('EntityGraphBuilder', () => {
         'armDef'
       );
       expect(mocks.entityManager.createEntityInstance).toHaveBeenCalledWith(
-        'armDef'
+        'armDef',
+        { componentOverrides: {} }
       );
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         'armDef',

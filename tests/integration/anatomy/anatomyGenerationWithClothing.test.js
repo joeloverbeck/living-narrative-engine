@@ -449,19 +449,23 @@ describe('Anatomy Generation with Clothing Integration', () => {
       expect(entityManager.createEntityInstance).toHaveBeenCalledWith(
         'clothing:peasant_shirt',
         expect.objectContaining({
-          color: 'brown',
-          condition: 0.7,
-          'clothing:wearable': expect.objectContaining({
-            layer: 'base',
+          componentOverrides: expect.objectContaining({
+            color: 'brown',
+            condition: 0.7,
+            'clothing:wearable': expect.objectContaining({
+              layer: 'base',
+            }),
           }),
         })
       );
       expect(entityManager.createEntityInstance).toHaveBeenCalledWith(
         'clothing:rough_trousers',
         expect.objectContaining({
-          color: 'gray',
-          'clothing:wearable': expect.objectContaining({
-            layer: 'base',
+          componentOverrides: expect.objectContaining({
+            color: 'gray',
+            'clothing:wearable': expect.objectContaining({
+              layer: 'base',
+            }),
           }),
         })
       );

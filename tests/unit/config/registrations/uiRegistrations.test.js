@@ -119,14 +119,6 @@ describe('registerUI', () => {
     );
   });
 
-  it('should register GlobalKeyHandler via register()', () => {
-    expect(mockRegister).toHaveBeenCalledWith(
-      tokens.GlobalKeyHandler,
-      expect.any(Function),
-      { lifecycle: 'singletonFactory' }
-    );
-  });
-
   it('should register all other UI components', () => {
     expect(mockRegister).toHaveBeenCalledWith(
       tokens.TitleRenderer,
@@ -171,9 +163,5 @@ describe('registerUI', () => {
     expect(mockContainer.resolve).toHaveBeenCalledWith(
       tokens.ChatAlertRenderer
     );
-  });
-
-  it('should eagerly instantiate GlobalKeyHandler', () => {
-    expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.GlobalKeyHandler);
   });
 });

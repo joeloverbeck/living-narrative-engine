@@ -395,7 +395,8 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
         'neck',
         'anatomy:test_head',
         undefined,
-        undefined
+        undefined,
+        {}
       );
       expect(
         mockEntityGraphBuilder.createAndAttachPart
@@ -405,7 +406,8 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
         'left_eye',
         'anatomy:test_eye',
         undefined,
-        'left'
+        'left',
+        {}
       );
 
       // Verify result includes all entities

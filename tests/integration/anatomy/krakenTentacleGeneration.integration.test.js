@@ -210,10 +210,12 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
     expect(krakenEntity.components['descriptors:color_extended']).toBeDefined();
     expect(krakenEntity.components['descriptors:shape_general']).toBeDefined();
 
-    // Generic tentacle should also exist (for non-kraken use cases)
-    const genericEntity = testBed.getEntityDefinition('anatomy:tentacle');
-    expect(genericEntity).toBeDefined();
-    expect(genericEntity.components['anatomy:part'].subType).toBe('tentacle');
+    // Specialized tentacle entities should exist for different species
+    const octopusEntity = testBed.getEntityDefinition('anatomy:octopus_tentacle');
+    expect(octopusEntity).toBeDefined();
+    expect(octopusEntity.components['anatomy:part'].subType).toBe('tentacle');
+    const squidEntity = testBed.getEntityDefinition('anatomy:squid_tentacle');
+    expect(squidEntity).toBeDefined();
   });
 
   it('should use generic head entity for kraken', async () => {

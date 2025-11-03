@@ -148,9 +148,11 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
     expect(krakenEntity.components['anatomy:sockets']).toBeDefined();
     expect(krakenEntity.components['anatomy:sockets'].sockets).toHaveLength(2);
 
-    // Generic mantle should also exist (for non-kraken use cases)
-    const genericEntity = testBed.getEntityDefinition('anatomy:mantle');
-    expect(genericEntity).toBeDefined();
-    expect(genericEntity.components['anatomy:part'].subType).toBe('mantle');
+    // Specialized mantle entities should exist for different species
+    const octopusEntity = testBed.getEntityDefinition('anatomy:octopus_mantle');
+    expect(octopusEntity).toBeDefined();
+    expect(octopusEntity.components['anatomy:part'].subType).toBe('mantle');
+    const squidEntity = testBed.getEntityDefinition('anatomy:squid_mantle');
+    expect(squidEntity).toBeDefined();
   });
 });

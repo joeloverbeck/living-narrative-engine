@@ -211,7 +211,8 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalledWith(
         'test:torso',
         expect.any(Object),
-        options.ownerId
+        options.ownerId,
+        {}
       );
     });
 
@@ -327,7 +328,8 @@ describe('BodyBlueprintFactory (Refactored)', () => {
         'head_socket',
         'test:head',
         options.ownerId,
-        'left'
+        'left',
+        {}
       );
     });
 
