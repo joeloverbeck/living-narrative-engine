@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "ballet:do_grand_jete",
+  "name": "Do Grand Jeté",
+  "description": "Execute heroic split leap with classical ballet preparation",
+  "targets": "none",
+  "required_components": {
+    "actor": ["ballet:is_ballet_dancer"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "do grand jeté",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#283593",
+    "textColor": "#c5cae9",
+    "hoverBackgroundColor": "#3949ab",
+    "hoverTextColor": "#e8eaf6"
+  }
+}

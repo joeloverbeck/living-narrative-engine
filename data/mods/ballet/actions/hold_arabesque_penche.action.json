@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "ballet:hold_arabesque_penche",
+  "name": "Hold Arabesque Penché",
+  "description": "Maintain arabesque position with controlled forward hinge",
+  "targets": "none",
+  "required_components": {
+    "actor": ["ballet:is_ballet_dancer"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "hold arabesque penché",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#283593",
+    "textColor": "#c5cae9",
+    "hoverBackgroundColor": "#3949ab",
+    "hoverTextColor": "#e8eaf6"
+  }
+}

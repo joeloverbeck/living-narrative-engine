@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "ballet:event-is-action-do-bourree-couru-on-pointe",
+  "description": "Evaluates to true if the event is attempting the Do Bourrée Couru on Pointe action",
+  "logic": {
+    "and": [
+      {
+        "==": [
+          {
+            "var": "actionId"
+          },
+          "ballet:do_bourree_couru_on_pointe"
+        ]
+      }
+    ]
+  }
+}

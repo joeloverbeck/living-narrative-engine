@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "ballet:do_plies_in_fifth",
+  "name": "Do Pliés in Fifth",
+  "description": "Perform classical pliés in fifth position, establishing turnout and alignment",
+  "targets": "none",
+  "required_components": {
+    "actor": ["ballet:is_ballet_dancer"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "do pliés in fifth",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#283593",
+    "textColor": "#c5cae9",
+    "hoverBackgroundColor": "#3949ab",
+    "hoverTextColor": "#e8eaf6"
+  }
+}

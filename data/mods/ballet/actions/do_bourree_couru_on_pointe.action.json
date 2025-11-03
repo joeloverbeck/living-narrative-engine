@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "ballet:do_bourree_couru_on_pointe",
+  "name": "Do Bourrée Couru on Pointe",
+  "description": "Perform gliding travel on pointe with rapid tiny steps",
+  "targets": "none",
+  "required_components": {
+    "actor": ["ballet:is_ballet_dancer"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "do bourrée couru on pointe",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#283593",
+    "textColor": "#c5cae9",
+    "hoverBackgroundColor": "#3949ab",
+    "hoverTextColor": "#e8eaf6"
+  }
+}

@@ -5,6 +5,7 @@
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
+import { OrientationResolver } from './shared/orientationResolver.js';
 
 /**
  * Service to generate socket definitions from structure template limbSet/appendage patterns.
@@ -150,14 +151,22 @@ class SocketGenerator {
     const { idTemplate, orientationScheme, allowedTypes, nameTpl, positions } =
       socketPattern;
 
-    // Resolve orientation based on scheme
-    const orientation = this.#resolveOrientation(
+    // Resolve orientation using shared OrientationResolver
+    const orientation = OrientationResolver.resolveOrientation(
       orientationScheme,
       index,
       totalCount,
       positions,
       arrangement
     );
+
+    // Warn about custom scheme without positions (helpful for mod developers)
+    if (orientationScheme === 'custom' && (!positions || positions.length === 0)) {
+      this.#logger.warn(
+        'SocketGenerator: Custom orientation scheme used without positions array. ' +
+          'Falling back to indexed positions. Provide positions array for proper naming.'
+      );
+    }
 
     // Build template variable context
     const variables = {
@@ -184,145 +193,6 @@ class SocketGenerator {
     }
 
     return socket;
-  }
-
-  /**
-   * Resolves orientation based on orientation scheme
-   *
-   * @param {string} scheme - Orientation scheme (bilateral, quadrupedal, radial, indexed, custom)
-   * @param {number} index - Current index (1-based)
-   * @param {number} totalCount - Total count of items in set
-   * @param {Array<string>} [positions] - Explicit positions for custom/radial schemes
-   * @param {string} [arrangement] - Arrangement type for context
-   * @returns {string} Resolved orientation string
-   * @private
-   */
-  #resolveOrientation(scheme = 'indexed', index, totalCount, positions, arrangement) {
-    const effectivePositions = positions ?? null;
-    const effectiveArrangement = arrangement ?? null;
-
-    switch (scheme) {
-      case 'bilateral':
-        return this.#resolveBilateralOrientation(
-          index,
-          totalCount,
-          effectiveArrangement
-        );
-
-      case 'quadrupedal':
-        // Quadrupedal is a specific bilateral arrangement
-        return this.#resolveBilateralOrientation(
-          index,
-          totalCount,
-          'quadrupedal'
-        );
-
-      case 'radial':
-        return this.#resolveRadialOrientation(
-          index,
-          totalCount,
-          effectivePositions
-        );
-
-      case 'custom':
-        return this.#resolveCustomOrientation(index, effectivePositions);
-
-      case 'indexed':
-      default:
-        return String(index);
-    }
-  }
-
-  /**
-   * Resolves bilateral orientation (left/right pairs)
-   * For quadrupedal arrangements, produces left_front, right_front, left_rear, right_rear
-   *
-   * @param {number} index - Current index (1-based)
-   * @param {number} totalCount - Total count of items
-   * @param {string} [arrangement] - Arrangement type
-   * @returns {string} Bilateral orientation
-   * @private
-   */
-  #resolveBilateralOrientation(index, totalCount, arrangement) {
-    const arrangementType = arrangement ?? null;
-
-    // For quadrupedal arrangement (4 legs)
-    if (arrangementType === 'quadrupedal' && totalCount === 4) {
-      const positions = ['left_front', 'right_front', 'left_rear', 'right_rear'];
-      return positions[index - 1];
-    }
-
-    // Standard bilateral: alternate left/right
-    // Odd indices = left, even indices = right
-    const side = index % 2 === 1 ? 'left' : 'right';
-
-    // For pairs, just return left/right
-    if (totalCount === 2) {
-      return side;
-    }
-
-    // For larger sets, we might need position qualifiers
-    // But for now, just alternate left/right
-    return side;
-  }
-
-  /**
-   * Resolves radial orientation (circular arrangement)
-   * Uses positions array if provided, otherwise generates position names
-   *
-   * @param {number} index - Current index (1-based)
-   * @param {number} totalCount - Total count of items
-   * @param {Array<string>} [positions] - Explicit position names
-   * @returns {string} Radial position name
-   * @private
-   */
-  #resolveRadialOrientation(index, totalCount, positions) {
-    const effectivePositions = positions ?? null;
-
-    if (effectivePositions && effectivePositions.length > 0) {
-      // Use explicit positions array (0-based indexing)
-      return effectivePositions[index - 1] || `position_${index}`;
-    }
-
-    // Generate default radial positions based on count
-    // For common counts, use named positions
-    if (totalCount === 8) {
-      const octagonalPositions = [
-        'anterior',
-        'anterior_right',
-        'right',
-        'posterior_right',
-        'posterior',
-        'posterior_left',
-        'left',
-        'anterior_left',
-      ];
-      return octagonalPositions[index - 1];
-    }
-
-    // Default: use generic position naming
-    return `position_${index}`;
-  }
-
-  /**
-   * Resolves custom orientation using explicit positions array
-   *
-   * @param {number} index - Current index (1-based)
-   * @param {Array<string>} [positions] - Explicit position names
-   * @returns {string} Position name from array
-   * @private
-   */
-  #resolveCustomOrientation(index, positions) {
-    const effectivePositions = positions ?? null;
-
-    if (!effectivePositions || effectivePositions.length === 0) {
-      this.#logger.warn(
-        `SocketGenerator: Custom orientation scheme used without positions array, falling back to index ${index}`
-      );
-      return `position_${index}`;
-    }
-
-    return effectivePositions[index - 1] || `position_${index}`;
   }
 
   /**

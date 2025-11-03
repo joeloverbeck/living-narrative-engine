@@ -853,8 +853,8 @@ describe('Template Processor Pipeline Integration', () => {
       // First 2 use provided positions, remaining use fallback pattern
       expect(sockets[0].id).toBe('leg_front');
       expect(sockets[1].id).toBe('leg_back');
-      expect(sockets[2].id).toMatch(/^leg_position_\d+$/);
-      expect(sockets[3].id).toMatch(/^leg_position_\d+$/);
+      expect(sockets[2].id).toBe('leg_3');
+      expect(sockets[3].id).toBe('leg_4');
     });
   });
 });

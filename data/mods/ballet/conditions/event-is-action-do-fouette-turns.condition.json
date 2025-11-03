@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "ballet:event-is-action-do-fouette-turns",
+  "description": "Evaluates to true if the event is attempting the Do Fouetté Turns action",
+  "logic": {
+    "and": [
+      {
+        "==": [
+          {
+            "var": "actionId"
+          },
+          "ballet:do_fouette_turns"
+        ]
+      }
+    ]
+  }
+}

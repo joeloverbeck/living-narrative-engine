@@ -1,0 +1,60 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "ballet",
+  "version": "1.0.0",
+  "name": "Ballet",
+  "description": "Classical ballet movements and techniques for graceful performers",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "do_bourree_couru_on_pointe.action.json",
+      "do_developpe_a_la_seconde.action.json",
+      "do_entrechat_six.action.json",
+      "do_fouette_turns.action.json",
+      "do_grand_jete.action.json",
+      "do_pirouette_en_dehors_from_fourth.action.json",
+      "do_plies_in_fifth.action.json",
+      "do_rond_de_jambe_a_terre.action.json",
+      "do_tendus_en_croix.action.json",
+      "hold_arabesque_penche.action.json"
+    ],
+    "rules": [
+      "handle_do_bourree_couru_on_pointe.rule.json",
+      "handle_do_developpe_a_la_seconde.rule.json",
+      "handle_do_entrechat_six.rule.json",
+      "handle_do_fouette_turns.rule.json",
+      "handle_do_grand_jete.rule.json",
+      "handle_do_pirouette_en_dehors_from_fourth.rule.json",
+      "handle_do_plies_in_fifth.rule.json",
+      "handle_do_rond_de_jambe_a_terre.rule.json",
+      "handle_do_tendus_en_croix.rule.json",
+      "handle_hold_arabesque_penche.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-do-bourree-couru-on-pointe.condition.json",
+      "event-is-action-do-developpe-a-la-seconde.condition.json",
+      "event-is-action-do-entrechat-six.condition.json",
+      "event-is-action-do-fouette-turns.condition.json",
+      "event-is-action-do-grand-jete.condition.json",
+      "event-is-action-do-pirouette-en-dehors-from-fourth.condition.json",
+      "event-is-action-do-plies-in-fifth.condition.json",
+      "event-is-action-do-rond-de-jambe-a-terre.condition.json",
+      "event-is-action-do-tendus-en-croix.condition.json",
+      "event-is-action-hold-arabesque-penche.condition.json"
+    ],
+    "components": [
+      "is_ballet_dancer.component.json"
+    ]
+  }
+}

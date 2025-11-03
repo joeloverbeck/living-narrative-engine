@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:blush_pink_cotton_robe",
+  "description": "A lightweight cotton robe in delicate blush pink",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base"]
+    },
+    "core:material": {
+      "material": "cotton",
+      "properties": ["breathable", "flexible"]
+    },
+    "descriptors:color_extended": {
+      "color": "blush-pink"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper", "left_arm_clothing", "right_arm_clothing"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.55
+    },
+    "core:name": {
+      "text": "Blush Pink Cotton Robe"
+    },
+    "core:description": {
+      "text": "A lightweight cotton robe in a delicate blush pink, perfect for lazy mornings or winding down in the evening. The breathable fabric drapes loosely over the body, secured with a matching fabric belt at the waist. Roomy pockets and full-length sleeves provide both functionality and comfort, while the soft cotton feels gentle against bare skin."
+    }
+  }
+}

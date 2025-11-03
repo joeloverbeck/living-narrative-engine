@@ -12,6 +12,8 @@
           "bumpy",
           "coarse",
           "croc-embossed",
+          "fleece",
+          "fuzzy",
           "glossy",
           "leathery",
           "matte",
@@ -25,6 +27,7 @@
           "slick",
           "slimy",
           "smooth",
+          "soft",
           "suckered",
           "terry",
           "velvety"

@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "ballet:event-is-action-do-plies-in-fifth",
+  "description": "Evaluates to true if the event is attempting the Do Pliés in Fifth action",
+  "logic": {
+    "and": [
+      {
+        "==": [
+          {
+            "var": "actionId"
+          },
+          "ballet:do_plies_in_fifth"
+        ]
+      }
+    ]
+  }
+}
