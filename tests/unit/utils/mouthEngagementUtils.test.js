@@ -183,6 +183,23 @@ describe('mouthEngagementUtils', () => {
         expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
       });
 
+      test('should return null when body component lacks parts map', async () => {
+        mockEntityManager.getComponentData.mockReturnValueOnce({
+          body: {
+            root: 'torso_1',
+          },
+        });
+
+        const result = await updateMouthEngagementLock(
+          mockEntityManager,
+          'entity_1',
+          true
+        );
+
+        expect(result).toBeNull();
+        expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
+      });
+
       test('should skip non-mouth parts', async () => {
         // Setup entity with mixed parts
         mockEntityManager.getComponentData
@@ -353,6 +370,20 @@ describe('mouthEngagementUtils', () => {
       mockEntityManager.getComponentData
         .mockReturnValueOnce(null) // No anatomy:body
         .mockReturnValueOnce(null); // No engagement
+
+      const result = isMouthLocked(mockEntityManager, 'entity_1');
+      expect(result).toBe(false);
+    });
+
+    test('should ignore anatomy parts that are not mouths', () => {
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          body: {
+            root: 'torso_1',
+            parts: { head: 'head_1' },
+          },
+        })
+        .mockReturnValueOnce({ subType: 'head' });
 
       const result = isMouthLocked(mockEntityManager, 'entity_1');
       expect(result).toBe(false);

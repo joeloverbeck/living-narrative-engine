@@ -166,12 +166,18 @@ async function updateLegacyMouthEngagement(entityManager, entityId, locked) {
  */
 function cloneComponent(component) {
   // Use native structuredClone if available (Node 17+)
-  if (typeof structuredClone === 'function') {
-    return structuredClone(component);
+  const structuredCloneFn = globalThis.structuredClone;
+
+  if (typeof structuredCloneFn === 'function') {
+    return structuredCloneFn(component);
   }
   // Fallback to utility function
   return deepClone(component);
 }
+
+export const __testing__ = {
+  cloneComponent,
+};
 
 /**
  * Check if an entity's mouth is currently locked.
