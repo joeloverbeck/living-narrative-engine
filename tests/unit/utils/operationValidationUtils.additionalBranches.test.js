@@ -35,6 +35,18 @@ describe('operationValidationUtils additional branches', () => {
     expect(safeDispatchError).not.toHaveBeenCalled();
   });
 
+  it('dispatches when entityRef is missing and dispatcher provided', () => {
+    const dispatcher = { dispatch: jest.fn() };
+    const result = validateEntityRef(null, ctx, logger, dispatcher, 'TEST');
+    expect(result).toBeNull();
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      dispatcher,
+      'TEST: "entity_ref" parameter is required.',
+      { entity_ref: null },
+      logger
+    );
+  });
+
   it('warns when entityRef cannot be resolved and no dispatcher', () => {
     const badRef = { bad: true };
     const result = validateEntityRef(badRef, ctx, logger);
