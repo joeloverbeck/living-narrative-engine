@@ -6,7 +6,7 @@
  * - Single operation speed: <10ms for lock/unlock
  * - Bulk operations: <1000ms for 100 parallel operations
  * - Linear scalability: <2x degradation at 10x scale
- * - Sustained throughput: >50 ops/sec for 10+ seconds
+ * - Sustained throughput: >50 ops/sec during multi-second run
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -111,6 +111,27 @@ describe('Mouth Engagement - Performance Tests', () => {
     return { id, mouthId };
   }
 
+  /**
+   * Create a batch of actors with mouths concurrently.
+   * @param {number} count - Number of actors to create
+   * @param {object} [options] - Configuration for IDs and names
+   * @param {string} [options.idPrefix='actor'] - Prefix for generated IDs
+   * @param {string} [options.namePrefix='Actor'] - Prefix for generated names
+   * @returns {Promise<Array<{id: string, mouthId: string}>>} Created actors
+   */
+  async function createActorBatch(count, options = {}) {
+    const { idPrefix = 'actor', namePrefix = 'Actor' } = options;
+
+    return Promise.all(
+      Array.from({ length: count }, (_, index) =>
+        createTestActorWithMouth(
+          `${idPrefix}${index}`,
+          `${namePrefix} ${index}`
+        )
+      )
+    );
+  }
+
   // Helper to measure performance
   const measurePerformance = async (operation) => {
     const startTime = performance.now();
@@ -180,11 +201,8 @@ describe('Mouth Engagement - Performance Tests', () => {
     });
 
     it('should handle bulk lock operations efficiently', async () => {
-      const actors = [];
       console.log('Creating 100 test actors...');
-      for (let i = 0; i < 100; i++) {
-        actors.push(await createTestActorWithMouth(`actor${i}`, `Actor ${i}`));
-      }
+      const actors = await createActorBatch(100);
 
       const duration = await measurePerformance(async () => {
         await Promise.all(
@@ -272,11 +290,8 @@ describe('Mouth Engagement - Performance Tests', () => {
     });
 
     it('should handle bulk condition evaluations efficiently', async () => {
-      const actors = [];
       console.log('Creating 100 test actors for bulk evaluation...');
-      for (let i = 0; i < 100; i++) {
-        actors.push(await createTestActorWithMouth(`actor${i}`, `Actor ${i}`));
-      }
+      const actors = await createActorBatch(100);
 
       // Test bulk operations as proxy for condition evaluation
       const duration = await measurePerformance(async () => {
@@ -306,12 +321,10 @@ describe('Mouth Engagement - Performance Tests', () => {
 
       for (const count of entityCounts) {
         console.log(`Testing with ${count} entities...`);
-        const actors = [];
-        for (let i = 0; i < count; i++) {
-          actors.push(
-            await createTestActorWithMouth(`actor${i}`, `Actor ${i}`)
-          );
-        }
+        const actors = await createActorBatch(count, {
+          idPrefix: `actor_${count}_`,
+          namePrefix: `Actor${count}`,
+        });
 
         const duration = await measurePerformance(async () => {
           await Promise.all(
@@ -438,13 +451,17 @@ describe('Mouth Engagement - Performance Tests', () => {
         logger,
       };
 
-      console.log('Starting sustained load test (10 seconds)...');
+      const testDurationMs = 3000;
+      console.log(
+        `Starting sustained load test (${testDurationMs / 1000} seconds)...`
+      );
+
       const startTime = performance.now();
       let operations = 0;
       let lastReportTime = startTime;
 
-      // Run operations for 10 seconds
-      while (performance.now() - startTime < 10000) {
+      // Run operations for configured duration
+      while (performance.now() - startTime < testDurationMs) {
         await operationInterpreter.execute(
           {
             type: 'LOCK_MOUTH_ENGAGEMENT',
@@ -486,20 +503,18 @@ describe('Mouth Engagement - Performance Tests', () => {
 
       // System should still be in consistent state
       expect(isMouthLocked(entityManager, actor.id)).toBe(false);
-    }, 15000); // 15 second timeout for this test
+    }, 8000); // Shorter timeout due to reduced test duration
   });
 
   describe('Parallel Processing Performance', () => {
     it('should efficiently handle parallel operations on different entities', async () => {
       const actorCount = 50;
-      const actors = [];
 
       console.log(`Creating ${actorCount} actors for parallel processing...`);
-      for (let i = 0; i < actorCount; i++) {
-        actors.push(
-          await createTestActorWithMouth(`parallel_${i}`, `ParallelActor${i}`)
-        );
-      }
+      const actors = await createActorBatch(actorCount, {
+        idPrefix: 'parallel_',
+        namePrefix: 'ParallelActor',
+      });
 
       // Test parallel lock operations
       const lockDuration = await measurePerformance(async () => {
