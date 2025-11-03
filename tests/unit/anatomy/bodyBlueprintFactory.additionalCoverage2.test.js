@@ -1012,4 +1012,112 @@ describe('BodyBlueprintFactory additional coverage', () => {
       })
     );
   });
+
+  it('merges entity sockets with generated sockets and applies component overrides', async () => {
+    const componentOverrides = {
+      'component:musculature': { strength: 5 },
+      'component:skin': { color: 'blue' },
+    };
+
+    const blueprint = {
+      id: 'anatomy:humanoid',
+      root: 'anatomy:torso',
+      schemaVersion: '1.0',
+      slots: {
+        left_arm: {
+          id: 'slot:left_arm',
+          parent: null,
+          socket: 'arm_socket',
+          requirements: { partType: 'arm' },
+        },
+      },
+      _generatedSockets: [
+        {
+          id: 'arm_socket',
+          allowedTypes: ['arm'],
+          orientation: 'left',
+          nameTpl: 'Left Arm {{id}}',
+        },
+      ],
+    };
+
+    const recipe = {
+      recipeId: 'recipe:humanoid',
+      slots: {
+        root: { properties: {} },
+        left_arm: {
+          properties: componentOverrides,
+        },
+      },
+    };
+
+    deps.dataRegistry.get.mockImplementation((type, id) => {
+      if (type === 'anatomyBlueprints' && id === 'anatomy:humanoid') {
+        return blueprint;
+      }
+      return null;
+    });
+    deps.recipeProcessor.loadRecipe.mockReturnValue(recipe);
+    deps.recipeProcessor.processRecipe.mockReturnValue(recipe);
+    deps.recipeProcessor.mergeSlotRequirements.mockReturnValue({
+      partType: 'arm',
+    });
+
+    deps.entityGraphBuilder.createRootEntity.mockResolvedValue('entity:root');
+    deps.entityManager.getComponentData.mockReturnValue({
+      sockets: [
+        {
+          id: 'legacy_socket',
+          allowedTypes: ['legacy'],
+        },
+      ],
+    });
+
+    deps.socketManager.validateSocketAvailability.mockReturnValue({
+      valid: true,
+      socket: {
+        id: 'arm_socket',
+        allowedTypes: ['arm'],
+        orientation: 'left',
+        nameTpl: 'Left Arm {{id}}',
+      },
+    });
+    deps.partSelectionService.selectPart.mockResolvedValue('anatomy:left_arm');
+    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue('entity:left_arm');
+    deps.entityGraphBuilder.getPartType.mockReturnValue('arm');
+    deps.socketManager.generatePartName.mockReturnValue('Left Arm');
+
+    const factory = new BodyBlueprintFactory(deps);
+
+    const result = await factory.createAnatomyGraph(
+      'anatomy:humanoid',
+      'recipe:humanoid',
+      { ownerId: 'entity:owner' }
+    );
+
+    expect(result).toEqual({
+      rootId: 'entity:root',
+      entities: ['entity:root', 'entity:left_arm'],
+    });
+
+    expect(deps.entityGraphBuilder.addSocketsToEntity).toHaveBeenCalledWith(
+      'entity:root',
+      [
+        expect.objectContaining({ id: 'legacy_socket' }),
+        expect.objectContaining({ id: 'arm_socket' }),
+      ]
+    );
+    expect(deps.entityGraphBuilder.createAndAttachPart).toHaveBeenCalledWith(
+      'entity:root',
+      'arm_socket',
+      'anatomy:left_arm',
+      'entity:owner',
+      'left',
+      componentOverrides
+    );
+    expect(deps.logger.debug).toHaveBeenCalledWith(
+      "BodyBlueprintFactory: Will apply 2 component overrides from recipe slot 'left_arm' during entity creation",
+      componentOverrides
+    );
+  });
 });
