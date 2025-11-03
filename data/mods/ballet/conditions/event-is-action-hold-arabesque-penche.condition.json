@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "ballet:event-is-action-hold-arabesque-penche",
+  "description": "Evaluates to true if the event is attempting the Hold Arabesque Penché action",
+  "logic": {
+    "and": [
+      {
+        "==": [
+          {
+            "var": "actionId"
+          },
+          "ballet:hold_arabesque_penche"
+        ]
+      }
+    ]
+  }
+}

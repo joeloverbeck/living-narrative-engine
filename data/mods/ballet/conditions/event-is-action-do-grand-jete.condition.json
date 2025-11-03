@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "ballet:event-is-action-do-grand-jete",
+  "description": "Evaluates to true if the event is attempting the Do Grand Jeté action",
+  "logic": {
+    "and": [
+      {
+        "==": [
+          {
+            "var": "actionId"
+          },
+          "ballet:do_grand_jete"
+        ]
+      }
+    ]
+  }
+}

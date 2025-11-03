@@ -14,13 +14,14 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 21 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 20 available for future work.
+**Status**: 22 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 19 available for future work.
 
 ### Active Mod Assignments
 
 | Mod                      | Color Scheme       | Section | Background Color | State    |
 | ------------------------ | ------------------ | ------- | ---------------- | -------- |
 | Affection                | Soft Purple        | 3.1     | `#6a1b9a`        | Active   |
+| Ballet                   | Indigo Professional| 10.1    | `#283593`        | Active   |
 | Caressing                | Dark Purple        | 7.2     | `#311b92`        | Active   |
 | Clothing                 | Earth Brown        | 4.2     | `#6d4c41`        | Active   |
 | Companionship            | Deep Teal          | 3.3     | `#00695c`        | Active   |
@@ -55,7 +56,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Dark Theme**: Deep Blue (7.1), Midnight Green (7.3)
 - **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
 - **Additional Versatile**: Journey Cobalt (9.1), Pathfinder Slate (9.2)
-- **Professional/Modern**: Indigo Professional (10.1), Cool Grey Modern (10.3)
+- **Professional/Modern**: Cool Grey Modern (10.3)
 - **Expansion Set (Section 11)**: Starlight Navy (11.4), Evergreen Shadow (11.5), Molten Copper (11.6), Arctic Steel (11.8)
 
 **Recommendation**: When creating new mods, select from the available combinations above to maintain visual consistency and avoid conflicts.
@@ -537,9 +538,9 @@ This specification provides a curated collection of pre-validated color combinat
 
 - **Normal Contrast**: 10.58:1 🌟 AAA
 - **Hover Contrast**: 9.89:1 🌟 AAA
-- **Use Cases**: Professional actions, business logic
-- **Theme**: Corporate, trustworthy, stable
-- 🟢 **AVAILABLE**
+- **Use Cases**: Professional actions, ballet techniques, disciplined artistic performance
+- **Theme**: Professional, disciplined, artistic, graceful
+- ✅ **USED BY**: Ballet mod (classical ballet movements and techniques)
 
 #### 10.2 Deep Orange Energy
 

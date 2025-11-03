@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "ballet:do_rond_de_jambe_a_terre",
+  "name": "Do Rond de Jambe à Terre",
+  "description": "Trace circular leg movements along the floor with pure hip rotation",
+  "targets": "none",
+  "required_components": {
+    "actor": ["ballet:is_ballet_dancer"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "do rond de jambe à terre",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#283593",
+    "textColor": "#c5cae9",
+    "hoverBackgroundColor": "#3949ab",
+    "hoverTextColor": "#e8eaf6"
+  }
+}

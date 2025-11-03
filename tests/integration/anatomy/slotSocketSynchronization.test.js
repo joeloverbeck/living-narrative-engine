@@ -258,12 +258,12 @@ describe('SlotGenerator + SocketGenerator Synchronization', () => {
 
       expect(slotKeys).toEqual(socketIds);
       expect(slotKeys).toEqual([
-        'tentacle_position_1',
-        'tentacle_position_2',
-        'tentacle_position_3',
-        'tentacle_position_4',
-        'tentacle_position_5',
-        'tentacle_position_6',
+        'tentacle_1',
+        'tentacle_2',
+        'tentacle_3',
+        'tentacle_4',
+        'tentacle_5',
+        'tentacle_6',
       ]);
     });
   });
@@ -325,9 +325,9 @@ describe('SlotGenerator + SocketGenerator Synchronization', () => {
 
       expect(slotKeys).toEqual(socketIds);
       expect(slotKeys).toEqual([
-        'limb_position_1',
-        'limb_position_2',
-        'limb_position_3',
+        'limb_1',
+        'limb_2',
+        'limb_3',
       ]);
     });
   });

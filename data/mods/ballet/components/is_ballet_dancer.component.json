@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "ballet:is_ballet_dancer",
+  "description": "Marker component indicating the entity has ballet training and can perform classical ballet techniques",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

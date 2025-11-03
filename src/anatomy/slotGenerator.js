@@ -5,6 +5,7 @@
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
+import { OrientationResolver } from './shared/orientationResolver.js';
 
 /**
  * Service to generate slot definitions from structure template limbSet/appendage patterns.
@@ -156,8 +157,8 @@ class SlotGenerator {
         arrangement
       );
 
-      // Calculate orientation for this slot (same logic as in #generateSlotKey)
-      const orientation = this.#resolveOrientation(
+      // Calculate orientation for this slot using shared resolver
+      const orientation = OrientationResolver.resolveOrientation(
         socketPattern.orientationScheme,
         index,
         count,
@@ -195,8 +196,8 @@ class SlotGenerator {
       // Generate slot key (also determines orientation)
       const slotKey = this.#generateSlotKey(socketPattern, index, count);
 
-      // Calculate orientation for this slot (same logic as in #generateSlotKey)
-      const orientation = this.#resolveOrientation(
+      // Calculate orientation for this slot using shared resolver
+      const orientation = OrientationResolver.resolveOrientation(
         socketPattern.orientationScheme,
         index,
         count,
@@ -266,14 +267,22 @@ class SlotGenerator {
     const { idTemplate, orientationScheme, allowedTypes, positions } =
       socketPattern;
 
-    // Resolve orientation using same logic as SocketGenerator
-    const orientation = this.#resolveOrientation(
+    // Resolve orientation using shared OrientationResolver
+    const orientation = OrientationResolver.resolveOrientation(
       orientationScheme,
       index,
       totalCount,
       positions,
       arrangement
     );
+
+    // Warn about custom scheme without positions (helpful for mod developers)
+    if (orientationScheme === 'custom' && (!positions || positions.length === 0)) {
+      this.#logger.warn(
+        'SlotGenerator: Custom orientation scheme used without positions array. ' +
+          'Falling back to indexed positions. Provide positions array for proper naming.'
+      );
+    }
 
     // Build variable context
     const variables = {
@@ -285,142 +294,6 @@ class SlotGenerator {
 
     // Apply template (must match SocketGenerator's logic exactly)
     return this.#applyTemplate(idTemplate, variables);
-  }
-
-  /**
-   * Resolves orientation based on orientation scheme.
-   * MUST match SocketGenerator's orientation resolution logic exactly.
-   *
-   * @param {string} scheme - Orientation scheme (bilateral, quadrupedal, radial, indexed, custom)
-   * @param {number} index - Current index (1-based)
-   * @param {number} totalCount - Total count of items in set
-   * @param {Array<string>} [positions] - Explicit positions for custom/radial schemes
-   * @param {string} [arrangement] - Arrangement type for context
-   * @returns {string} Resolved orientation string
-   * @private
-   */
-  #resolveOrientation(
-    scheme = 'indexed',
-    index,
-    totalCount,
-    positions = null,
-    arrangement = null
-  ) {
-    switch (scheme) {
-      case 'bilateral':
-        return this.#resolveBilateralOrientation(
-          index,
-          totalCount,
-          arrangement
-        );
-
-      case 'quadrupedal':
-        // Quadrupedal is a specific bilateral arrangement
-        return this.#resolveBilateralOrientation(
-          index,
-          totalCount,
-          'quadrupedal'
-        );
-
-      case 'radial':
-        return this.#resolveRadialOrientation(index, totalCount, positions);
-
-      case 'custom':
-        return this.#resolveCustomOrientation(index, positions);
-
-      case 'indexed':
-      default:
-        return String(index);
-    }
-  }
-
-  /**
-   * Resolves bilateral orientation (left/right pairs).
-   * For quadrupedal arrangements, produces left_front, right_front, left_rear, right_rear.
-   * MUST match SocketGenerator's bilateral logic.
-   *
-   * @param {number} index - Current index (1-based)
-   * @param {number} totalCount - Total count of items
-   * @param {string} [arrangement] - Arrangement type
-   * @returns {string} Bilateral orientation
-   * @private
-   */
-  #resolveBilateralOrientation(index, totalCount, arrangement = null) {
-    // For quadrupedal arrangement (4 legs)
-    if (arrangement === 'quadrupedal' && totalCount === 4) {
-      const positions = ['left_front', 'right_front', 'left_rear', 'right_rear'];
-      return positions[index - 1] || 'mid';
-    }
-
-    // Standard bilateral: alternate left/right
-    // Odd indices = left, even indices = right
-    const side = index % 2 === 1 ? 'left' : 'right';
-
-    // For pairs, just return left/right
-    if (totalCount === 2) {
-      return side;
-    }
-
-    // For larger sets, we might need position qualifiers
-    // But for now, just alternate left/right
-    return side;
-  }
-
-  /**
-   * Resolves radial orientation (circular arrangement).
-   * Uses positions array if provided, otherwise generates position names.
-   * MUST match SocketGenerator's radial logic.
-   *
-   * @param {number} index - Current index (1-based)
-   * @param {number} totalCount - Total count of items
-   * @param {Array<string>} [positions] - Explicit position names
-   * @returns {string} Radial position name
-   * @private
-   */
-  #resolveRadialOrientation(index, totalCount, positions = null) {
-    if (positions && positions.length > 0) {
-      // Use explicit positions array (0-based indexing)
-      return positions[index - 1] || `position_${index}`;
-    }
-
-    // Generate default radial positions based on count
-    // For common counts, use named positions
-    if (totalCount === 8) {
-      const octagonalPositions = [
-        'anterior',
-        'anterior_right',
-        'right',
-        'posterior_right',
-        'posterior',
-        'posterior_left',
-        'left',
-        'anterior_left',
-      ];
-      return octagonalPositions[index - 1] || `position_${index}`;
-    }
-
-    // Default: use generic position naming
-    return `position_${index}`;
-  }
-
-  /**
-   * Resolves custom orientation using explicit positions array.
-   * MUST match SocketGenerator's custom logic.
-   *
-   * @param {number} index - Current index (1-based)
-   * @param {Array<string>} [positions] - Explicit position names
-   * @returns {string} Position name from array
-   * @private
-   */
-  #resolveCustomOrientation(index, positions = null) {
-    if (!positions || positions.length === 0) {
-      this.#logger.warn(
-        `SlotGenerator: Custom orientation scheme used without positions array, falling back to index ${index}`
-      );
-      return `position_${index}`;
-    }
-
-    return positions[index - 1] || `position_${index}`;
   }
 
   /**

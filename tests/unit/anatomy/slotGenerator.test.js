@@ -447,12 +447,12 @@ describe('SlotGenerator', () => {
       const slots = slotGenerator.generateBlueprintSlots(template);
 
       expect(Object.keys(slots)).toHaveLength(6);
-      expect(slots['tentacle_position_1']).toBeDefined();
-      expect(slots['tentacle_position_2']).toBeDefined();
-      expect(slots['tentacle_position_3']).toBeDefined();
-      expect(slots['tentacle_position_4']).toBeDefined();
-      expect(slots['tentacle_position_5']).toBeDefined();
-      expect(slots['tentacle_position_6']).toBeDefined();
+      expect(slots['tentacle_1']).toBeDefined();
+      expect(slots['tentacle_2']).toBeDefined();
+      expect(slots['tentacle_3']).toBeDefined();
+      expect(slots['tentacle_4']).toBeDefined();
+      expect(slots['tentacle_5']).toBeDefined();
+      expect(slots['tentacle_6']).toBeDefined();
     });
   });
 
@@ -505,9 +505,9 @@ describe('SlotGenerator', () => {
       const slots = slotGenerator.generateBlueprintSlots(template);
 
       expect(Object.keys(slots)).toHaveLength(3);
-      expect(slots['limb_position_1']).toBeDefined();
-      expect(slots['limb_position_2']).toBeDefined();
-      expect(slots['limb_position_3']).toBeDefined();
+      expect(slots['limb_1']).toBeDefined();
+      expect(slots['limb_2']).toBeDefined();
+      expect(slots['limb_3']).toBeDefined();
       expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Custom orientation scheme used without positions array')
       );

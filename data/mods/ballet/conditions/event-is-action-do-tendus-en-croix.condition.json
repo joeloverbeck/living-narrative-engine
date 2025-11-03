@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "ballet:event-is-action-do-tendus-en-croix",
+  "description": "Evaluates to true if the event is attempting the Do Tendus en Croix action",
+  "logic": {
+    "and": [
+      {
+        "==": [
+          {
+            "var": "actionId"
+          },
+          "ballet:do_tendus_en_croix"
+        ]
+      }
+    ]
+  }
+}

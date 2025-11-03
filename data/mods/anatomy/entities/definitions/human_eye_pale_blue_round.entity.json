@@ -1,0 +1,19 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_eye_pale_blue_round",
+    "description": "A human eye with pale-blue iris and round shape",
+    "components": {
+        "anatomy:part": {
+            "subType": "eye"
+        },
+        "descriptors:color_extended": {
+            "color": "pale-blue"
+        },
+        "descriptors:shape_eye": {
+            "shape": "round"
+        },
+        "core:name": {
+            "text": "eye"
+        }
+    }
+}

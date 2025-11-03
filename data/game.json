@@ -22,7 +22,8 @@
     "kissing",
     "physical-control",
     "patrol",
-    "p_erotica_grocery_store"
+    "ballet",
+    "p_erotica_gymnast"
   ],
-  "startWorld": "p_erotica_grocery_store:grocery_store"
+  "startWorld": "p_erotica_gymnast:gymnast"
 }

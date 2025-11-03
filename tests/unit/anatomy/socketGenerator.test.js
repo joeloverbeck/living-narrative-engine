@@ -417,8 +417,8 @@ describe('SocketGenerator', () => {
       const sockets = socketGenerator.generateSockets(template);
 
       expect(sockets).toHaveLength(5);
-      expect(sockets[0].orientation).toBe('position_1');
-      expect(sockets[4].orientation).toBe('position_5');
+      expect(sockets[0].orientation).toBe('1');
+      expect(sockets[4].orientation).toBe('5');
     });
 
     it('should generate fallback positions when explicit list is shorter than count', () => {
@@ -446,7 +446,7 @@ describe('SocketGenerator', () => {
       expect(sockets).toHaveLength(3);
       expect(sockets[0].orientation).toBe('north');
       expect(sockets[1].orientation).toBe('east');
-      expect(sockets[2].orientation).toBe('position_3');
+      expect(sockets[2].orientation).toBe('3');
     });
   });
 
@@ -499,8 +499,8 @@ describe('SocketGenerator', () => {
       const sockets = socketGenerator.generateSockets(template);
 
       expect(sockets).toHaveLength(2);
-      expect(sockets[0].id).toBe('limb_position_1');
-      expect(sockets[1].id).toBe('limb_position_2');
+      expect(sockets[0].id).toBe('limb_1');
+      expect(sockets[1].id).toBe('limb_2');
       expect(testBed.mockLogger.warn).toHaveBeenCalled();
       for (const [message] of testBed.mockLogger.warn.mock.calls) {
         expect(message).toContain(
@@ -532,8 +532,8 @@ describe('SocketGenerator', () => {
 
       expect(sockets).toHaveLength(3);
       expect(sockets[0].id).toBe('limb_alpha');
-      expect(sockets[1].id).toBe('limb_position_2');
-      expect(sockets[2].id).toBe('limb_position_3');
+      expect(sockets[1].id).toBe('limb_2');
+      expect(sockets[2].id).toBe('limb_3');
       expect(testBed.mockLogger.warn).not.toHaveBeenCalled();
     });
   });

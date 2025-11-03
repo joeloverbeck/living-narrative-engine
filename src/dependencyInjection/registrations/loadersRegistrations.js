@@ -96,8 +96,12 @@ import SchemaPhase from '../../loaders/phases/SchemaPhase.js';
 import GameConfigPhase from '../../loaders/phases/GameConfigPhase.js';
 import ManifestPhase from '../../loaders/phases/ManifestPhase.js';
 import ContentPhase from '../../loaders/phases/contentPhase.js';
+import AnatomyValidationPhase from '../../loaders/phases/anatomyValidationPhase.js';
 import WorldPhase from '../../loaders/phases/worldPhase.js';
 import SummaryPhase from '../../loaders/phases/summaryPhase.js';
+
+// --- Anatomy Validation Imports ---
+import { BlueprintRecipeValidationRule } from '../../anatomy/validation/rules/blueprintRecipeValidationRule.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
 import ContentLoadManager from '../../loaders/ContentLoadManager.js';
 import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
@@ -365,6 +369,17 @@ export async function registerLoaders(container) {
     () => new WorldLoadSummaryLogger()
   );
 
+  // === Anatomy Validation Services ===
+  registrar.singletonFactory(
+    tokens.BlueprintRecipeValidationRule,
+    (c) =>
+      new BlueprintRecipeValidationRule({
+        logger: c.resolve(tokens.ILogger),
+        recipePatternResolver: c.resolve(tokens.IRecipePatternResolver),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      })
+  );
+
   // === New: Loading Phases ===
   registrar.singletonFactory(
     tokens.SchemaPhase,
@@ -405,6 +420,17 @@ export async function registerLoaders(container) {
   );
 
   registrar.singletonFactory(
+    tokens.AnatomyValidationPhase,
+    (c) =>
+      new AnatomyValidationPhase({
+        logger: c.resolve(tokens.ILogger),
+        blueprintRecipeValidationRule: c.resolve(
+          tokens.BlueprintRecipeValidationRule
+        ),
+      })
+  );
+
+  registrar.singletonFactory(
     tokens.WorldPhase,
     (c) =>
       new WorldPhase({
@@ -439,6 +465,7 @@ export async function registerLoaders(container) {
       { token: tokens.GameConfigPhase, name: 'GameConfigPhase' },
       { token: tokens.ManifestPhase, name: 'ManifestPhase' },
       { token: tokens.ContentPhase, name: 'ContentPhase' },
+      { token: tokens.AnatomyValidationPhase, name: 'AnatomyValidationPhase' },
       { token: tokens.WorldPhase, name: 'WorldPhase' },
       { token: tokens.SummaryPhase, name: 'SummaryPhase' },
     ];
