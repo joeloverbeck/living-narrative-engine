@@ -98,10 +98,10 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
         locationId,
         descriptionText: 'Alice briefly examines the ancient tome.',
         perceptionType: 'item_examined_brief',
-        contextualData: {
+        contextualData: expect.objectContaining({
           recipientIds: [],
           excludedActorIds: [actorId],
-        },
+        }),
       })
     );
 
@@ -245,10 +245,10 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'core:perceptible_event',
       expect.objectContaining({
-        contextualData: {
+        contextualData: expect.objectContaining({
           recipientIds: [],
           excludedActorIds: [],
-        },
+        }),
       })
     );
 

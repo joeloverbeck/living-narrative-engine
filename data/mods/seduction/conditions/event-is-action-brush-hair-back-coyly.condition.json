@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "seduction:event-is-action-brush-hair-back-coyly",
+  "description": "Checks if the triggering event is for the 'seduction:brush_hair_back_coyly' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "seduction:brush_hair_back_coyly"
+    ]
+  }
+}

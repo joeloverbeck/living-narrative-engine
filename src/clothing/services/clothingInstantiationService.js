@@ -558,11 +558,19 @@ export class ClothingInstantiationService extends BaseService {
       );
     }
 
+    // Check if recipe provides any property overrides
+    const hasPropertyOverrides =
+      propertyOverrides && Object.keys(propertyOverrides).length > 0;
+
     // Apply layer resolution using precedence hierarchy
     const clothingComponent = definition.components?.['clothing:wearable'];
-    let finalProperties = { ...propertyOverrides };
 
-    if (clothingComponent) {
+    // Only create component overrides if recipe provides properties
+    // Otherwise, use entity definition as-is to preserve all required fields
+    let clothingEntity;
+    if (hasPropertyOverrides && clothingComponent) {
+      let finalProperties = { ...propertyOverrides };
+
       // Apply layer resolution hierarchy: Recipe > Entity > Blueprint
       const layerResult = this.#layerResolutionService.resolveAndValidateLayer(
         clothingConfig.layer, // Recipe override (highest precedence)
@@ -586,13 +594,19 @@ export class ClothingInstantiationService extends BaseService {
       this.#logger.debug(
         `Resolved layer for '${entityDefId}': '${layerResult.layer}'`
       );
-    }
 
-    // Create the entity instance with property overrides
-    const clothingEntity = await this.#entityManager.createEntityInstance(
-      entityDefId,
-      finalProperties
-    );
+      // Create with component overrides
+      clothingEntity = await this.#entityManager.createEntityInstance(
+        entityDefId,
+        { componentOverrides: finalProperties }
+      );
+    } else {
+      // No property overrides - use entity definition completely
+      // This preserves all required fields like equipmentSlots
+      clothingEntity = await this.#entityManager.createEntityInstance(
+        entityDefId
+      );
+    }
 
     // Return the entity ID string, not the Entity object
     if (!clothingEntity) {

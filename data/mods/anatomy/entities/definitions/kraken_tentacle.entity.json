@@ -1,21 +1,28 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "anatomy:kraken_tentacle",
-  "description": "A colossal kraken tentacle lined with suckers",
+  "description": "Elder kraken tentacle with enormous size and dark purple coloring",
   "components": {
     "anatomy:part": {
-      "subType": "kraken_tentacle"
-    },
-    "anatomy:prehensile": {
-      "strength": "colossal",
-      "dexterity": "precise"
-    },
-    "anatomy:suckered": {
-      "rows": 4,
-      "adhesion": "vacuum"
+      "subType": "tentacle"
     },
     "core:name": {
-      "text": "kraken tentacle"
+      "text": "tentacle"
+    },
+    "descriptors:size_category": {
+      "size": "enormous"
+    },
+    "descriptors:length_category": {
+      "length": "extremely-long"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
+    },
+    "descriptors:color_extended": {
+      "color": "dark-purple"
+    },
+    "descriptors:shape_general": {
+      "shape": "cylindrical"
     }
   }
 }

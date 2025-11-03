@@ -56,6 +56,11 @@
             "nameTpl": {
               "type": "string",
               "description": "Template for auto-naming attached parts. Supports {{orientation}}, {{type}}, {{index}}, {{parent.name}}"
+            },
+            "index": {
+              "type": "integer",
+              "description": "Sequential index for template substitution (e.g., {{index}} in nameTpl). Used to generate unique names for multiple parts of the same type.",
+              "minimum": 1
             }
           },
           "required": ["id", "allowedTypes"],

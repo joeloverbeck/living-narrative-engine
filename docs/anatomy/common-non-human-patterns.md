@@ -11,6 +11,36 @@ This guide provides battle-tested patterns for common non-human anatomies. Each 
 - Recipe pattern strategies
 - Complete working examples
 
+## Understanding Structure Template Properties
+
+Before diving into patterns, it's important to understand two key properties that work together in structure templates:
+
+### `arrangement` (Spatial Layout)
+Defines how limbs are spatially positioned on the body:
+- **`bilateral`**: Mirrored left/right pairs (arms, legs, wings)
+- **`radial`**: Evenly distributed around a center point (spider legs, octopus tentacles)
+- **`quadrupedal`**: Four-legged arrangement with front/rear differentiation
+- **`linear`**: Sequential arrangement along a line (spine segments)
+- **`custom`**: User-defined positioning (hybrid creatures, unique anatomies)
+
+### `orientationScheme` (Orientation Computation)
+Defines how orientation values are computed for slot IDs:
+- **`bilateral`**: Generates `left`/`right` orientations for paired limbs
+- **`indexed`**: Generates numeric indices (e.g., `tentacle_1`, `tentacle_2`, ..., `tentacle_8`)
+- **`radial`**: (Reserved for future use - currently use `indexed` for radial arrangements)
+- **`custom`**: User-defined orientation values
+
+### Typical Combinations
+
+| Creature Type | arrangement | orientationScheme | Result |
+|--------------|-------------|-------------------|---------|
+| Human/Humanoid | `bilateral` | `bilateral` | `arm_left`, `arm_right` |
+| Spider/Octopus | `radial` | `indexed` | `leg_1`, `leg_2`, ..., `leg_8` |
+| Quadruped | `quadrupedal` | `bilateral` | `leg_front_left`, `leg_rear_right` |
+| Hybrid/Custom | `custom` | `indexed` | Custom orientation values |
+
+**Important**: The examples in this guide use the validated combinations found in actual structure template files. Always refer to the schema at `data/schemas/anatomy.structure-template.schema.json` for the definitive list of valid values.
+
 ## Pattern Categories
 
 ### Radial Symmetry Creatures
@@ -27,7 +57,8 @@ This guide provides battle-tested patterns for common non-human anatomies. Each 
       {
         "id": "leg",
         "count": 8,
-        "orientationScheme": "radial",
+        "arrangement": "radial",
+        "orientationScheme": "indexed",
         "requirements": {
           "partType": "spider_leg"
         }
@@ -75,7 +106,8 @@ This guide provides battle-tested patterns for common non-human anatomies. Each 
       {
         "id": "tentacle",
         "count": 8,
-        "orientationScheme": "radial",
+        "arrangement": "radial",
+        "orientationScheme": "indexed",
         "requirements": {
           "partType": "tentacle"
         }
@@ -83,8 +115,7 @@ This guide provides battle-tested patterns for common non-human anatomies. Each 
     ],
     "appendages": [
       {
-        "id": "head",
-        "orientationScheme": "singular"
+        "id": "head"
       }
     ]
   }
@@ -297,15 +328,16 @@ This guide provides battle-tested patterns for common non-human anatomies. Each 
       {
         "id": "limb",
         "count": 6,
-        "orientationScheme": "mixed",
+        "arrangement": "custom",
+        "orientationScheme": "indexed",
         "requirements": {
           "partType": "limb"
         }
       }
     ],
     "appendages": [
-      { "id": "head", "orientationScheme": "singular" },
-      { "id": "tail", "orientationScheme": "singular" }
+      { "id": "head" },
+      { "id": "tail" }
     ]
   }
 }
@@ -706,22 +738,27 @@ Order: Explicit slots → Property filters → Group matches → Pattern wildcar
 
 ### Debugging Filters
 
-Enable recipe resolution logging to see which slots match:
+**Validation Strategy**: Test patterns against the actual implementation to ensure matches work correctly:
 
-```javascript
-// In RecipePatternResolver
-console.log('Matched slots for pattern:', matchedKeys);
-```
+1. **Verify Slot Generation**: Check that structure template generates expected slot IDs
+2. **Test Filter Patterns**: Use test fixtures to validate `matchesAll` filters
+3. **Schema Validation**: Ensure all recipe patterns pass schema validation
+
+**Common Debugging Steps**:
+1. Review the generated slot structure from your blueprint
+2. Verify wildcard patterns match the actual slot naming convention
+3. Check that `slotType`, `orientation`, and `socketId` values align with structure template output
+4. Use integration tests to validate recipe pattern resolution
 
 Common issues:
-- **No matches**: Check wildcard syntax, verify slot names
-- **Wrong slots matched**: Review filter specificity
-- **Missing slots**: Ensure structure template generates them
+- **No matches**: Check wildcard syntax (e.g., `*_front` not `_front`), verify slot names match structure template output
+- **Wrong slots matched**: Review filter specificity - add more conditions to `matchesAll` to narrow matches
+- **Missing slots**: Ensure structure template `count` and `arrangement` generate expected slots
 
 ## References
 
-- **Implementation**: `src/anatomy/recipePatternResolver.js` (lines 346-395)
-- **Schema**: `data/schemas/anatomy.recipe.schema.json` (lines 299-318)
+- **Implementation**: `src/anatomy/recipePatternResolver.js` (property filtering: lines 952-1001, pattern resolution: lines 526-742)
+- **Schema**: `data/schemas/anatomy.recipe.schema.json` (matchesAll definition: lines 300-319, exclude array: lines 347-368)
 - **Examples Directory**: `data/mods/core/recipes/examples/`
 - **Structure Templates**: `docs/anatomy/structure-templates.md`
 - **Blueprint V2**: `docs/anatomy/blueprints-v2.md`

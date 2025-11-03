@@ -131,7 +131,9 @@ class InteractionController {
         this.#boundHandlers.get('mousemove')
       );
       document.addEventListener('mouseup', this.#boundHandlers.get('mouseup'));
-      element.addEventListener('wheel', this.#boundHandlers.get('wheel'));
+      element.addEventListener('wheel', this.#boundHandlers.get('wheel'), {
+        passive: false,
+      });
       element.addEventListener('click', this.#boundHandlers.get('click'));
       element.addEventListener(
         'mouseover',

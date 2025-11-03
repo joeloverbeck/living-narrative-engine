@@ -8,7 +8,18 @@
       "shape": {
         "type": "string",
         "description": "The general shape",
-        "enum": ["round", "square", "oval", "elongated", "angular", "curved"],
+        "enum": [
+          "angular",
+          "bulbous",
+          "conical",
+          "curved",
+          "cylindrical",
+          "elongated",
+          "oval",
+          "round",
+          "square",
+          "tapered"
+        ],
         "default": "round"
       }
     },

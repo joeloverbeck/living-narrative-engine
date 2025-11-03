@@ -8,6 +8,23 @@
     "density": "hairless"
   },
   "slots": {
+    "root": {
+      "partType": "mantle",
+      "properties": {
+        "descriptors:size_category": {
+          "size": "massive"
+        },
+        "descriptors:color_extended": {
+          "color": "abyssal-black"
+        },
+        "descriptors:texture": {
+          "texture": "smooth"
+        },
+        "descriptors:shape_general": {
+          "shape": "oval"
+        }
+      }
+    },
     "ink_sac": {
       "partType": "ink_reservoir",
       "tags": [
@@ -37,26 +54,31 @@
   "patterns": [
     {
       "matchesGroup": "limbSet:tentacle",
-      "partType": "kraken_tentacle",
+      "partType": "tentacle",
       "tags": [
-        "anatomy:part",
-        "anatomy:prehensile",
-        "anatomy:suckered"
+        "anatomy:part"
       ],
       "properties": {
-        "anatomy:prehensile": {
-          "strength": "colossal",
-          "dexterity": "precise"
+        "descriptors:size_category": {
+          "size": "enormous"
         },
-        "anatomy:suckered": {
-          "rows": 4,
-          "adhesion": "vacuum"
+        "descriptors:length_category": {
+          "length": "extremely-long"
+        },
+        "descriptors:texture": {
+          "texture": "suckered"
+        },
+        "descriptors:color_extended": {
+          "color": "dark-purple"
+        },
+        "descriptors:shape_general": {
+          "shape": "cylindrical"
         }
       }
     },
     {
       "matchesGroup": "appendage:head",
-      "partType": "kraken_head",
+      "partType": "head",
       "tags": [
         "anatomy:part",
         "anatomy:sensory"
@@ -73,7 +95,7 @@
     "requires": [
       {
         "partTypes": [
-          "kraken_tentacle",
+          "tentacle",
           "ink_reservoir"
         ]
       }

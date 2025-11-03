@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-physical-control:event-is-action-guide-hand-to-clothed-crotch",
+  "description": "Checks if the triggering event is for the 'sex-physical-control:guide_hand_to_clothed_crotch' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-physical-control:guide_hand_to_clothed_crotch"
+    ]
+  }
+}

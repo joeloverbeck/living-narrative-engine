@@ -57,9 +57,10 @@ export class EntityGraphBuilder {
    * @param {string} rootDefinitionId - Definition ID for the root entity
    * @param {object} recipe - The recipe being used
    * @param {string} [ownerId] - Optional owner entity ID
+   * @param {Object<string, object>} [componentOverrides] - Optional component data to add/override (e.g., descriptor properties from recipe slots)
    * @returns {Promise<string>} The created root entity ID
    */
-  async createRootEntity(rootDefinitionId, recipe, ownerId) {
+  async createRootEntity(rootDefinitionId, recipe, ownerId, componentOverrides = {}) {
     // Check if recipe has a torso override
     let actualRootDefinitionId = rootDefinitionId;
 
@@ -131,7 +132,8 @@ export class EntityGraphBuilder {
     }
 
     const rootEntity = await this.#entityManager.createEntityInstance(
-      actualRootDefinitionId
+      actualRootDefinitionId,
+      { componentOverrides }
     );
 
     // Verify entity was created successfully before proceeding with component addition
@@ -184,6 +186,7 @@ export class EntityGraphBuilder {
    * @param {string} partDefinitionId - Definition ID for the part
    * @param {string} [ownerId] - Owner ID to set on the created part (optional)
    * @param {string} [socketOrientation] - Orientation from the parent socket (optional)
+   * @param {Object<string, object>} [componentOverrides] - Optional component data to add/override (e.g., descriptor properties from recipe patterns)
    * @returns {Promise<string|null>} Created entity ID or null on failure
    */
   async createAndAttachPart(
@@ -191,12 +194,15 @@ export class EntityGraphBuilder {
     socketId,
     partDefinitionId,
     ownerId,
-    socketOrientation
+    socketOrientation,
+    componentOverrides = {}
   ) {
     try {
-      // Create the child entity
-      const childEntity =
-        await this.#entityManager.createEntityInstance(partDefinitionId);
+      // Create the child entity with component overrides
+      const childEntity = await this.#entityManager.createEntityInstance(
+        partDefinitionId,
+        { componentOverrides }
+      );
 
       // Verify entity was created successfully before proceeding
       const verifyChildEntity = this.#entityManager.getEntityInstance(childEntity.id);

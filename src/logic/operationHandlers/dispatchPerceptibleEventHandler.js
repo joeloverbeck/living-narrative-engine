@@ -177,7 +177,10 @@ class DispatchPerceptibleEventHandler {
       involvedEntities: Array.isArray(involved_entities)
         ? involved_entities
         : [],
-      contextualData: normalizedContextualData,
+      contextualData: {
+        ...normalizedContextualData,
+        skipRuleLogging: log_entry, // Skip rule logging when handler logs directly
+      },
     };
 
     this.#logger.debug('DISPATCH_PERCEPTIBLE_EVENT: dispatching event', {

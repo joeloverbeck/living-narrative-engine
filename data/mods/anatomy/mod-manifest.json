@@ -16,15 +16,16 @@
     "components": [
       "blueprintSlot.component.json",
       "body.component.json",
+      "crushing.component.json",
+      "ink_reservoir.component.json",
       "joint.component.json",
       "part.component.json",
-      "prehensile.component.json",
       "sensory.component.json",
-      "sockets.component.json",
-      "suckered.component.json"
+      "sockets.component.json"
     ],
     "entities": {
       "definitions": [
+        "beak.entity.json",
         "blueprint_slot.entity.json",
         "dragon_head.entity.json",
         "dragon_leg.entity.json",
@@ -124,13 +125,20 @@
         "humanoid_nose.entity.json",
         "humanoid_nose_small.entity.json",
         "humanoid_teeth.entity.json",
+        "ink_reservoir.entity.json",
         "kraken_head.entity.json",
         "kraken_mantle.entity.json",
         "kraken_tentacle.entity.json",
+        "mantle.entity.json",
+        "octopus_mantle.entity.json",
+        "octopus_tentacle.entity.json",
         "spider_abdomen.entity.json",
         "spider_cephalothorax.entity.json",
         "spider_leg.entity.json",
-        "spider_pedipalp.entity.json"
+        "spider_pedipalp.entity.json",
+        "squid_mantle.entity.json",
+        "squid_tentacle.entity.json",
+        "tentacle.entity.json"
       ],
       "instances": []
     },
@@ -152,7 +160,9 @@
       "human_male.recipe.json",
       "ice_dragon.recipe.json",
       "kraken.recipe.json",
+      "octopus.recipe.json",
       "red_dragon.recipe.json",
+      "squid.recipe.json",
       "venomous_cave_spider.recipe.json"
     ],
     "anatomyFormatting": [

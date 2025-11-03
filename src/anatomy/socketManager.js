@@ -204,8 +204,8 @@ export class SocketManager {
     );
     name = name.replace('{{parent.name}}', parentName);
 
-    // TODO: Handle {{index}} for multiple parts of same type
-    name = name.replace('{{index}}', '');
+    // Substitute {{index}} with the socket's index value
+    name = name.replace('{{index}}', String(socket.index || ''));
 
     const finalName = name.trim();
 

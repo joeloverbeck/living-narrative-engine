@@ -307,4 +307,108 @@ describe('SocketManager', () => {
       expect(errors).toEqual([]);
     });
   });
+
+  describe('generatePartName - {{index}} substitution', () => {
+    it('should substitute {{index}} with socket index value', () => {
+      const socket = {
+        id: 'tentacle_3',
+        nameTpl: 'tentacle {{index}}',
+        index: 3,
+      };
+      const partEntityId = 'part:123';
+
+      entityManager.getEntityInstance.mockReturnValue({
+        getComponentData: (componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'tentacle' };
+          }
+          if (componentId === 'anatomy:joint') {
+            return { parentId: 'parent:1' };
+          }
+          return null;
+        },
+      });
+
+      const name = manager.generatePartName(socket, partEntityId);
+
+      expect(name).toBe('tentacle 3');
+    });
+
+    it('should handle missing index gracefully', () => {
+      const socket = {
+        id: 'tentacle_1',
+        nameTpl: 'tentacle {{index}}',
+        // No index property
+      };
+      const partEntityId = 'part:456';
+
+      entityManager.getEntityInstance.mockReturnValue({
+        getComponentData: (componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'tentacle' };
+          }
+          if (componentId === 'anatomy:joint') {
+            return { parentId: 'parent:1' };
+          }
+          return null;
+        },
+      });
+
+      const name = manager.generatePartName(socket, partEntityId);
+
+      // Should replace {{index}} with empty string when index is missing
+      expect(name).toBe('tentacle');
+    });
+
+    it('should combine {{index}} with other template variables', () => {
+      const socket = {
+        id: 'leg_left_2',
+        nameTpl: '{{orientation}} leg {{index}}',
+        orientation: 'left',
+        index: 2,
+      };
+      const partEntityId = 'part:789';
+
+      entityManager.getEntityInstance.mockReturnValue({
+        getComponentData: (componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'leg', orientation: 'left' };
+          }
+          if (componentId === 'anatomy:joint') {
+            return { parentId: 'parent:1' };
+          }
+          return null;
+        },
+      });
+
+      const name = manager.generatePartName(socket, partEntityId);
+
+      expect(name).toBe('left leg 2');
+    });
+
+    it('should work with indexed tentacles for v2 creatures', () => {
+      const socket = {
+        id: 'tentacle_5',
+        nameTpl: 'tentacle {{index}}',
+        index: 5,
+      };
+      const partEntityId = 'part:kraken_tentacle_5';
+
+      entityManager.getEntityInstance.mockReturnValue({
+        getComponentData: (componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { subType: 'tentacle' };
+          }
+          if (componentId === 'anatomy:joint') {
+            return { parentId: 'parent:mantle' };
+          }
+          return null;
+        },
+      });
+
+      const name = manager.generatePartName(socket, partEntityId);
+
+      expect(name).toBe('tentacle 5');
+    });
+  });
 });

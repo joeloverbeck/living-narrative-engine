@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-physical-control:event-is-action-pull-head-to-bare-penis",
+  "description": "Checks if the triggering event is for the 'sex-physical-control:pull_head_to_bare_penis' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-physical-control:pull_head_to_bare_penis"
+    ]
+  }
+}

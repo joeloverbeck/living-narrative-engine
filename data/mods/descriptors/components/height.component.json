@@ -9,13 +9,15 @@
         "type": "string",
         "description": "The height category",
         "enum": [
-          "gigantic",
-          "very-tall",
-          "tall",
-          "average",
-          "short",
+          "tiny",
           "petite",
-          "tiny"
+          "short",
+          "average",
+          "tall",
+          "very-tall",
+          "gigantic",
+          "colossal",
+          "titanic"
         ],
         "default": "average"
       }

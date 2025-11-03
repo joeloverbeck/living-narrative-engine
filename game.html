@@ -120,6 +120,115 @@
           </details>
         </div>
 
+        <!-- PERCEPTIBLE EVENT SENDER -->
+        <div
+          id="perceptible-event-sender-widget"
+          class="widget"
+          role="region"
+          aria-labelledby="perceptible-event-heading"
+        >
+          <h3 id="perceptible-event-heading">Send Perceptible Event</h3>
+
+          <!-- Message Input -->
+          <div class="form-group">
+            <label for="perceptible-event-message">Event Message</label>
+            <textarea
+              id="perceptible-event-message"
+              class="perceptible-event-textarea"
+              placeholder="Enter event description (e.g., 'A loud crash echoes from nearby')"
+              rows="3"
+              aria-describedby="message-help"
+            ></textarea>
+            <span id="message-help" class="help-text">
+              Describe what actors in the location perceive
+            </span>
+          </div>
+
+          <!-- Location Selector -->
+          <div class="form-group">
+            <label for="perceptible-event-location">Target Location</label>
+            <select
+              id="perceptible-event-location"
+              class="perceptible-event-select"
+              aria-describedby="location-help"
+            >
+              <option value="">-- Select Location --</option>
+            </select>
+            <span id="location-help" class="help-text">
+              Location where event will be perceived
+            </span>
+          </div>
+
+          <!-- Recipient Filter (Optional) -->
+          <details class="filter-section">
+            <summary>Advanced Filters (Optional)</summary>
+
+            <div class="filter-group">
+              <label>
+                <input
+                  type="radio"
+                  name="filter-mode"
+                  value="all"
+                  checked
+                  aria-describedby="filter-mode-help"
+                />
+                All actors in location
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="filter-mode"
+                  value="specific"
+                />
+                Specific actors only
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="filter-mode"
+                  value="exclude"
+                />
+                Exclude specific actors
+              </label>
+            </div>
+
+            <div id="actor-filter-container" style="display: none;">
+              <select
+                id="perceptible-event-actors"
+                class="perceptible-event-select"
+                multiple
+                size="4"
+                aria-label="Select actors"
+              >
+              </select>
+            </div>
+
+            <span id="filter-mode-help" class="help-text">
+              Choose who perceives the event
+            </span>
+          </details>
+
+          <!-- Send Button -->
+          <button
+            type="button"
+            id="send-perceptible-event-button"
+            class="button-primary"
+            disabled
+          >
+            Send Event
+          </button>
+
+          <!-- Status Message -->
+          <div
+            id="perceptible-event-status"
+            class="status-message-area"
+            role="status"
+            aria-live="polite"
+          ></div>
+        </div>
+
         <!-- GAME-ACTIONS widget (unchanged) -->
         <div
           id="game-actions-widget"

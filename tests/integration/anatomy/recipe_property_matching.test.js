@@ -113,21 +113,30 @@ describe('Recipe Property Matching Integration', () => {
     expect(['anatomy:hair_minimal', 'anatomy:hair_extended']).toContain(result);
   });
 
-  it('should not match entities missing required properties', async () => {
-    // Load entity that's missing a required property
+  it('should reject entities with mismatching property values', async () => {
+    // Load entities with different property values
     testBed.loadEntityDefinitions({
-      'anatomy:hair_incomplete': {
-        id: 'anatomy:hair_incomplete',
+      'anatomy:hair_brown': {
+        id: 'anatomy:hair_brown',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'hair' },
-          'descriptors:color_extended': { color: 'brown' }, // Wrong color
+          'descriptors:color_extended': { color: 'brown' }, // Different color
+          'descriptors:length_hair': { length: 'long' },
+          'descriptors:hair_style': { style: 'wavy' },
+        },
+      },
+      'anatomy:hair_blonde': {
+        id: 'anatomy:hair_blonde',
+        components: {
+          [ANATOMY_PART_COMPONENT_ID]: { subType: 'hair' },
+          'descriptors:color_extended': { color: 'blonde' }, // Matches recipe
           'descriptors:length_hair': { length: 'long' },
           'descriptors:hair_style': { style: 'wavy' },
         },
       },
     });
 
-    // Recipe requires specific color
+    // Recipe specifies blonde - should filter to only blonde entities
     const requirements = {
       partType: 'hair',
       components: [ANATOMY_PART_COMPONENT_ID],
@@ -135,21 +144,21 @@ describe('Recipe Property Matching Integration', () => {
 
     const recipeSlot = {
       properties: {
-        'descriptors:color_extended': { color: 'blonde' }, // Required but not present
+        'descriptors:color_extended': { color: 'blonde' },
         'descriptors:length_hair': { length: 'long' },
       },
     };
 
-    await expect(
-      testBed.partSelectionService.selectPart(
-        requirements,
-        ['hair'],
-        recipeSlot,
-        Math.random
-      )
-    ).rejects.toThrow(
-      'No entity definitions found matching anatomy requirements'
+    // Selection should succeed and select the matching entity
+    const result = await testBed.partSelectionService.selectPart(
+      requirements,
+      ['hair'],
+      recipeSlot,
+      Math.random
     );
+
+    // Should select blonde hair, NOT brown hair
+    expect(result).toBe('anatomy:hair_blonde');
   });
 
   it('should handle complex property matching scenarios like Amaia Castillo recipe', async () => {

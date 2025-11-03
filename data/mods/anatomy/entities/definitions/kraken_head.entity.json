@@ -4,7 +4,7 @@
   "description": "A kraken head with massive beak",
   "components": {
     "anatomy:part": {
-      "subType": "kraken_head"
+      "subType": "head"
     },
     "anatomy:sensory": {
       "vision": true,
@@ -15,6 +15,15 @@
     },
     "core:name": {
       "text": "kraken head"
+    },
+    "descriptors:size_category": {
+      "size": "gigantic"
+    },
+    "descriptors:shape_general": {
+      "shape": "bulbous"
+    },
+    "descriptors:color_extended": {
+      "color": "murky-green"
     }
   }
 }

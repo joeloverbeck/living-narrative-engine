@@ -176,10 +176,14 @@ export class BodyBlueprintFactory {
       const context = new AnatomyGraphContext(options.seed);
 
       // Phase 1: Create root entity
+      // Extract componentOverrides from recipe's root slot if present
+      const rootComponentOverrides = resolvedRecipe.slots?.root?.properties || {};
+
       const rootId = await this.#entityGraphBuilder.createRootEntity(
         blueprint.root,
         resolvedRecipe,
-        options.ownerId
+        options.ownerId,
+        rootComponentOverrides
       );
       context.setRootId(rootId);
 
@@ -216,10 +220,15 @@ export class BodyBlueprintFactory {
 
       // Phase 2: Process blueprint slots if defined
       if (blueprint.slots) {
+        console.log('[DEBUG] BodyBlueprintFactory: Phase 2 - Processing blueprint slots');
+        console.log('[DEBUG]   blueprint.slots keys:', Object.keys(blueprint.slots));
+        console.log('[DEBUG]   resolvedRecipe.slots keys:', Object.keys(resolvedRecipe.slots || {}));
         this.#logger.debug(
           `BodyBlueprintFactory: Processing ${Object.keys(blueprint.slots).length} blueprint slots`
         );
         await this.#processBlueprintSlots(blueprint, resolvedRecipe, context, options.ownerId);
+      } else {
+        console.log('[DEBUG] BodyBlueprintFactory: Phase 2 - SKIPPED (blueprint.slots is falsy)', blueprint.slots);
       }
 
       // Phase 3: Validate constraints
@@ -309,8 +318,8 @@ export class BodyBlueprintFactory {
     // Note: 'torso' is a special slot used to override the root entity
     const invalidSlotKeys = [];
     for (const slotKey of Object.keys(recipe.slots)) {
-      // Skip 'torso' slot as it's used for root entity override
-      if (slotKey === 'torso') {
+      // Skip special slots: 'torso' for root entity override, 'root' for root mantle definition
+      if (slotKey === 'torso' || slotKey === 'root') {
         continue;
       }
 
@@ -437,11 +446,36 @@ export class BodyBlueprintFactory {
    * @private
    */
   async #processBlueprintSlots(blueprint, recipe, context, ownerId) {
+    console.log('[DEBUG] #processBlueprintSlots CALLED');
+    console.log('[DEBUG]   blueprint.slots exists?', !!blueprint.slots);
+    console.log('[DEBUG]   blueprint.slots keys:', blueprint.slots ? Object.keys(blueprint.slots) : 'N/A');
+
+    // Debug logging for recipe slots
+    this.#logger.debug(
+      `BodyBlueprintFactory: Recipe has ${recipe.slots ? Object.keys(recipe.slots).length : 0} slots`,
+      recipe.slots ? Object.keys(recipe.slots) : []
+    );
+
     // Sort slots by dependency order
     const sortedSlots = this.#sortSlotsByDependency(blueprint.slots);
+    console.log('[DEBUG] #processBlueprintSlots - after sort:');
+    console.log('[DEBUG]   sortedSlots type:', sortedSlots.constructor.name);
+    console.log('[DEBUG]   sortedSlots.length or size:', sortedSlots.length || sortedSlots.size);
+    console.log('[DEBUG]   sortedSlots keys:', Array.from(sortedSlots.keys()));
+
+    this.#logger.debug(
+      `BodyBlueprintFactory: Processing ${sortedSlots.length} blueprint slots`,
+      Array.from(sortedSlots.keys())
+    );
 
     for (const [slotKey, slot] of sortedSlots) {
       try {
+        // Log slot processing start for diagnostics
+        this.#logger.info(
+          `BodyBlueprintFactory: Processing slot '${slotKey}'`,
+          { slotId: slot.id, parent: slot.parent, socket: slot.socket }
+        );
+
         // Determine parent entity
         let parentEntityId;
         if (slot.parent === null || slot.parent === undefined) {
@@ -470,6 +504,10 @@ export class BodyBlueprintFactory {
             throw new ValidationError(socketValidation.error);
           }
           // Skip optional slots if socket not available
+          this.#logger.info(
+            `BodyBlueprintFactory: SKIPPING slot '${slotKey}' - socket validation failed`,
+            { socketValidation }
+          );
           continue;
         }
 
@@ -499,8 +537,16 @@ export class BodyBlueprintFactory {
         );
 
         if (!partDefinitionId && slot.optional) {
+          this.#logger.info(
+            `BodyBlueprintFactory: SKIPPING optional slot '${slotKey}' - no part selected`
+          );
           continue; // Skip optional slots if no part found
         }
+
+        // Log successful part selection
+        this.#logger.info(
+          `BodyBlueprintFactory: Selected part '${partDefinitionId}' for slot '${slotKey}'`
+        );
 
         if (!partDefinitionId) {
           throw new ValidationError(
@@ -535,15 +581,46 @@ export class BodyBlueprintFactory {
         );
 
         // Create and attach the part
+        // Get slot properties from recipe patterns (descriptor components, etc.)
+        console.log(`[DEBUG] Processing slot: ${slotKey}`);
+        console.log('[DEBUG]   recipe.slots?.[slotKey]:', JSON.stringify(recipe.slots?.[slotKey], null, 2));
+        const componentOverrides = recipe.slots?.[slotKey]?.properties || {};
+        console.log('[DEBUG]   componentOverrides:', JSON.stringify(componentOverrides, null, 2));
+        console.log('[DEBUG]   componentOverrides keys:', Object.keys(componentOverrides));
+
+        this.#logger.debug(
+          `BodyBlueprintFactory: Checking for properties in recipe.slots['${slotKey}']`,
+          {
+            hasSlots: !!recipe.slots,
+            slotKeys: recipe.slots ? Object.keys(recipe.slots) : [],
+            hasSlotKey: !!recipe.slots?.[slotKey],
+            slotData: recipe.slots?.[slotKey]
+          }
+        );
+        if (Object.keys(componentOverrides).length > 0) {
+          this.#logger.debug(
+            `BodyBlueprintFactory: Will apply ${Object.keys(componentOverrides).length} component overrides from recipe slot '${slotKey}' during entity creation`,
+            componentOverrides
+          );
+        } else {
+          this.#logger.debug(
+            `BodyBlueprintFactory: No component overrides found for slot '${slotKey}'`
+          );
+        }
+
         const childId = await this.#entityGraphBuilder.createAndAttachPart(
           parentEntityId,
           socket.id,
           partDefinitionId,
           ownerId,
-          orientation
+          orientation,
+          componentOverrides
         );
 
         if (childId) {
+          this.#logger.info(
+            `BodyBlueprintFactory: Created entity '${childId}' for slot '${slotKey}'`
+          );
           context.addCreatedEntity(childId);
           context.mapSlotToEntity(slotKey, childId);
 

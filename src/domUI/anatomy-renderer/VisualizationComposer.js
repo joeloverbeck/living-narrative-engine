@@ -250,9 +250,25 @@ class VisualizationComposer {
     }
     allPartIds.add(bodyData.root);
 
+    // DIAGNOSTIC 1: Log initial collection - shows what entities are in bodyData.parts
+    this.#logger.info(
+      `VisualizationComposer: Initial collection - ${allPartIds.size} entities in bodyData`,
+      {
+        root: bodyData.root,
+        allPartIds: Array.from(allPartIds),
+        partsObject: bodyData.parts,
+      }
+    );
+
     // Process nodes breadth-first
     while (queue.length > 0) {
       const { id, depth, parent } = queue.shift();
+
+      // DIAGNOSTIC 2: Log node processing start
+      this.#logger.info(
+        `VisualizationComposer: Processing entity '${id}' at depth ${depth}`,
+        { id, depth, parent, queueSize: queue.length }
+      );
 
       if (visited.has(id)) continue;
       visited.add(id);
@@ -312,6 +328,27 @@ class VisualizationComposer {
                 if (partJoint && partJoint.parentId === id) {
                   children.push(partId);
                   queue.push({ id: partId, depth: depth + 1, parent: id });
+
+                  // DIAGNOSTIC 3: Log successful parent-child match
+                  this.#logger.info(
+                    `VisualizationComposer: MATCH - Entity '${partId}' has parent '${id}'`,
+                    {
+                      childId: partId,
+                      parentId: id,
+                      jointSocketId: partJoint.socketId,
+                    }
+                  );
+                } else {
+                  // DIAGNOSTIC 4: Log parent-child match failure
+                  this.#logger.info(
+                    `VisualizationComposer: NO MATCH - Entity '${partId}' parent is '${partJoint?.parentId || 'none'}', checking against '${id}'`,
+                    {
+                      partId,
+                      checkingAgainstParent: id,
+                      actualParent: partJoint?.parentId || 'none',
+                      hasJoint: !!partJoint,
+                    }
+                  );
                 }
               }
             } catch (err) {
@@ -325,6 +362,20 @@ class VisualizationComposer {
         this.#logger.error(`Error processing entity ${id}:`, error);
       }
     }
+
+    // DIAGNOSTIC 5: Log BFS completion - shows visited vs. unvisited entities
+    const unvisitedIds = Array.from(allPartIds).filter(
+      (partId) => !visited.has(partId)
+    );
+    this.#logger.info(
+      `VisualizationComposer: BFS complete - ${visited.size} visited, ${unvisitedIds.length} unvisited`,
+      {
+        visitedCount: visited.size,
+        visitedIds: Array.from(visited),
+        unvisitedCount: unvisitedIds.length,
+        unvisitedIds,
+      }
+    );
 
     // Handle unconnected parts
     this.#handleUnconnectedParts(bodyData, visited);
@@ -426,6 +477,12 @@ class VisualizationComposer {
         unvisitedParts.push({ name: partName, id: partId });
       }
     }
+
+    // DIAGNOSTIC 6: Log unconnected parts handler activation
+    this.#logger.info(
+      `VisualizationComposer: Unconnected parts handler - processing ${unvisitedParts.length} orphaned entities`,
+      { unvisitedParts }
+    );
 
     if (unvisitedParts.length > 0) {
       this.#logger.warn(

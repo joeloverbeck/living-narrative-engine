@@ -11,7 +11,6 @@ import { tokens } from '../tokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
 import { registerWithLog } from '../../utils/registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
-import GlobalKeyHandler from '../../input/globalKeyHandler.js';
 import AlertRouter from '../../alerting/alertRouter.js';
 
 // --- NEW DOM UI Component Imports ---
@@ -41,6 +40,7 @@ import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
 import { PortraitModalRenderer } from '../../domUI/portraitModalRenderer.js';
 import { EngineUIManager } from '../../domUI/engineUIManager.js';
+import PerceptibleEventSenderController from '../../domUI/perceptibleEventSenderController.js';
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
@@ -392,12 +392,15 @@ export function registerControllers(registrar, logger) {
 
   registerWithLog(
     registrar,
-    tokens.GlobalKeyHandler,
+    tokens.PerceptibleEventSenderController,
     (c) =>
-      new GlobalKeyHandler(
-        c.resolve(tokens.WindowDocument),
-        c.resolve(tokens.IValidatedEventDispatcher)
-      ),
+      new PerceptibleEventSenderController({
+        eventBus: c.resolve(tokens.ISafeEventDispatcher),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
+        operationInterpreter: c.resolve(tokens.OperationInterpreter),
+      }),
     { lifecycle: 'singletonFactory' },
     logger
   );
@@ -564,11 +567,6 @@ export function registerUI(
   container.resolve(tokens.ActionResultRenderer);
   logger.debug(
     `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
-  );
-
-  container.resolve(tokens.GlobalKeyHandler);
-  logger.debug(
-    `UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`
   );
 
   logger.debug('UI Registrations: Complete.');

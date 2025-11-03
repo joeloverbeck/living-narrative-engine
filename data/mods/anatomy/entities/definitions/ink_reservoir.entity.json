@@ -12,6 +12,15 @@
     },
     "core:name": {
       "text": "ink reservoir"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:color_extended": {
+      "color": "abyssal-black"
+    },
+    "descriptors:texture": {
+      "texture": "slick"
     }
   }
 }

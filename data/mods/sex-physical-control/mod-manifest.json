@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "sex-physical-control",
+  "version": "1.0.0",
+  "name": "Sex - Physical Control",
+  "description": "Sexual actions involving physical guidance and control of a partner's body.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    { "id": "anatomy", "version": "^1.0.0" },
+    { "id": "clothing", "version": "^1.0.0" },
+    { "id": "core", "version": "^1.0.0" },
+    { "id": "positioning", "version": "^1.0.0" },
+    { "id": "sex-core", "version": "^1.0.0" }
+  ],
+  "content": {
+    "actions": [
+      "guide_hand_to_clothed_crotch.action.json",
+      "pull_head_to_bare_penis.action.json",
+      "pull_head_to_clothed_crotch.action.json"
+    ],
+    "conditions": [
+      "event-is-action-guide-hand-to-clothed-crotch.condition.json",
+      "event-is-action-pull-head-to-bare-penis.condition.json",
+      "event-is-action-pull-head-to-clothed-crotch.condition.json"
+    ],
+    "rules": [
+      "handle_guide_hand_to_clothed_crotch.rule.json",
+      "handle_pull_head_to_bare_penis.rule.json",
+      "handle_pull_head_to_clothed_crotch.rule.json"
+    ]
+  }
+}
