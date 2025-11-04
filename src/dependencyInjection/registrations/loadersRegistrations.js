@@ -102,6 +102,8 @@ import SummaryPhase from '../../loaders/phases/summaryPhase.js';
 
 // --- Anatomy Validation Imports ---
 import { BlueprintRecipeValidationRule } from '../../anatomy/validation/rules/blueprintRecipeValidationRule.js';
+import SlotGenerator from '../../anatomy/slotGenerator.js';
+import RecipePatternResolver from '../../anatomy/recipePatternResolver.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
 import ContentLoadManager from '../../loaders/ContentLoadManager.js';
 import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
@@ -370,6 +372,22 @@ export async function registerLoaders(container) {
   );
 
   // === Anatomy Validation Services ===
+  // Register SlotGenerator (required by RecipePatternResolver)
+  registrar.singletonFactory(tokens.ISlotGenerator, (c) => {
+    return new SlotGenerator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
+  // Register RecipePatternResolver (required by BlueprintRecipeValidationRule)
+  registrar.singletonFactory(tokens.IRecipePatternResolver, (c) => {
+    return new RecipePatternResolver({
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      slotGenerator: c.resolve(tokens.ISlotGenerator),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
   registrar.singletonFactory(
     tokens.BlueprintRecipeValidationRule,
     (c) =>
