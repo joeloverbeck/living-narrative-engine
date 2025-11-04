@@ -3,15 +3,11 @@
   "id": "ballet:event-is-action-do-pirouette-en-dehors-from-fourth",
   "description": "Evaluates to true if the event is attempting the Do Pirouette en Dehors from Fourth action",
   "logic": {
-    "and": [
+    "==": [
       {
-        "==": [
-          {
-            "var": "actionId"
-          },
-          "ballet:do_pirouette_en_dehors_from_fourth"
-        ]
-      }
+        "var": "event.payload.actionId"
+      },
+      "ballet:do_pirouette_en_dehors_from_fourth"
     ]
   }
 }
