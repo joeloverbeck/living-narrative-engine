@@ -1,0 +1,31 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "music",
+  "version": "1.0.0",
+  "name": "Music Performance System",
+  "description": "Musical performance capabilities with instruments and emotional moods",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "is_musician.component.json",
+      "is_instrument.component.json",
+      "playing_music.component.json",
+      "performance_mood.component.json"
+    ],
+    "actions": [],
+    "rules": [],
+    "conditions": [],
+    "scopes": []
+  }
+}
