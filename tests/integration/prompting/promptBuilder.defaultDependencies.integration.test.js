@@ -24,6 +24,7 @@ const SAMPLE_PROMPT_DATA = {
   availableActionsInfoContent: 'Respond with detailed explanations.',
   finalInstructionsContent: 'Summarise the reasoning before the answer.',
   assistantResponsePrefix: '\n',
+  characterName: 'Integration Agent',
   perceptionLogArray: [
     { type: 'visual', content: 'Console displays system boot sequence.' },
     { type: 'audio', content: 'Cooling fans ramp to operational speed.' },
@@ -72,6 +73,9 @@ describe('PromptBuilder default dependency integration', () => {
     );
     expect(prompt).toContain(
       '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- Maintain deterministic processing.\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you\'re thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>'
+    );
+    expect(prompt).toContain(
+      "NOTES WRITING GUIDANCE: The notes must be concise, but written in Integration Agent's own voice. Focus each note on critical facts while preserving Integration Agent's perspective. Avoid generic or neutral phrasing. Keep any new notes distinct from the existing entries listed below."
     );
     expect(prompt).toContain(
       '<notes>\n## Other\n### General\n- Primary objective: clarify architecture.\n</notes>'

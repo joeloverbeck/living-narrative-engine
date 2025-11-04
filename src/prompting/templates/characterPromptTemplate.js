@@ -31,6 +31,8 @@ export const CHARACTER_PROMPT_TEMPLATE = `<task_definition>
 
 {thoughtsSection}
 
+{notesVoiceGuidance}
+
 {notesSection}
 
 {goalsSection}

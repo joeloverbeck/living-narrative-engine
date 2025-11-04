@@ -6,6 +6,11 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { PromptDataFormatter } from '../../../src/prompting/promptDataFormatter.js';
 
+const makeNotesGuidance = (name = 'your character', hasExistingNotes = false) =>
+  `NOTES WRITING GUIDANCE: The notes must be concise, but written in ${name}'s own voice. Focus each note on critical facts while preserving ${name}'s perspective. Avoid generic or neutral phrasing.${
+    hasExistingNotes ? ' Keep any new notes distinct from the existing entries listed below.' : ''
+  }`;
+
 describe('PromptDataFormatter - Conditional Section Rendering', () => {
   let formatter;
   let mockLogger;
@@ -258,6 +263,7 @@ Recent thoughts (avoid repeating or barely rephrasing these):
 Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
 </thoughts>`
       );
+      expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('<goals>\n- Test goal\n</goals>');
     });
@@ -335,6 +341,25 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       );
     });
 
+    test('notesVoiceGuidance personalizes output with character name and existing notes', () => {
+      const promptData = {
+        characterName: 'Amaia Castillo',
+        notesArray: [
+          {
+            text: 'Existing strategic note',
+            subject: 'Opportunity',
+            subjectType: 'plan',
+          },
+        ],
+      };
+
+      const result = formatter.formatPromptData(promptData);
+
+      expect(result.notesVoiceGuidance).toBe(
+        makeNotesGuidance('Amaia Castillo', true)
+      );
+    });
+
     test('handles all empty sections correctly', () => {
       const promptData = {
         thoughtsArray: [],
@@ -356,6 +381,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       expect(result.thoughtsVoiceGuidance).toBe(
         "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects."
       );
+      expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
     });
 
     test('handles mixed empty and non-empty sections', () => {
@@ -381,6 +407,7 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
       expect(result.goalsSection).toBe(
         '<goals>\n- Achieve something\n</goals>'
       );
+      expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
     });
 
     test('preserves all other fields unchanged', () => {

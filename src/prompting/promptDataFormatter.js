@@ -450,6 +450,35 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
   }
 
   /**
+   * Formats voice guidance for notes section
+   *
+   * @param {Array<{text: string, subject?: string}>} notesArray - Array of note objects
+   * @param {string|undefined} characterName - The current character name for personalization
+   * @returns {string} Voice guidance for note writing
+   */
+  formatNotesVoiceGuidance(notesArray, characterName) {
+    const safeName =
+      typeof characterName === 'string' && characterName.trim().length > 0
+        ? characterName.trim()
+        : 'your character';
+
+    const baseGuidance =
+      `NOTES WRITING GUIDANCE: The notes must be concise, but written in ${safeName}'s own voice. Focus each note on critical facts while preserving ${safeName}'s perspective. Avoid generic or neutral phrasing.`;
+
+    if (!Array.isArray(notesArray) || notesArray.length === 0) {
+      this.#logger.debug(
+        'PromptDataFormatter: Notes voice guidance generated without existing notes'
+      );
+      return baseGuidance;
+    }
+
+    this.#logger.debug(
+      `PromptDataFormatter: Notes voice guidance generated with ${notesArray.length} existing notes`
+    );
+    return `${baseGuidance} Keep any new notes distinct from the existing entries listed below.`;
+  }
+
+  /**
    * Format notes section with conditional XML wrapper
    *
    * @param {Array<{text: string, timestamp: string}>} notesArray - Array of notes
@@ -519,6 +548,10 @@ Generate a fresh, unique thought that builds upon your mental state. Your though
     );
     formattedData.thoughtsSection = this.formatThoughtsSection(
       promptData.thoughtsArray || []
+    );
+    formattedData.notesVoiceGuidance = this.formatNotesVoiceGuidance(
+      promptData.notesArray || [],
+      promptData.characterName
     );
     formattedData.notesSection = this.formatNotesSection(
       promptData.notesArray || []

@@ -21,6 +21,7 @@ const EXPECTED_SEGMENT_ORDER = [
   '</perception_log>',
   '{thoughtsVoiceGuidance}',
   '{thoughtsSection}',
+  '{notesVoiceGuidance}',
   '{notesSection}',
   '{goalsSection}',
   '<available_actions_info>',
@@ -63,7 +64,12 @@ describe('characterPromptTemplate', () => {
     expect(newlineSeparated[guidanceIndex - 1]).toBe('');
     expect(newlineSeparated[guidanceIndex + 1]).toBe('');
 
-    const optionalSections = ['{thoughtsSection}', '{notesSection}', '{goalsSection}'];
+    const optionalSections = [
+      '{thoughtsSection}',
+      '{notesVoiceGuidance}',
+      '{notesSection}',
+      '{goalsSection}',
+    ];
 
     for (const section of optionalSections) {
       const index = newlineSeparated.indexOf(section);
