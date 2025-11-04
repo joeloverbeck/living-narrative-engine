@@ -468,7 +468,7 @@ export class BodyDescriptionComposer {
 
     const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
     if (bodyHairDescription) {
-      descriptors.body_hair = `Hair density: ${bodyHairDescription}`;
+      descriptors.body_hair = `Body hair: ${bodyHairDescription}`;
     }
 
     const compositionDescription =
