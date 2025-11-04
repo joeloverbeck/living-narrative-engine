@@ -209,6 +209,30 @@ describe('AnatomyValidationPhase Integration', () => {
         mockRecipePatternResolver.resolveRecipePatterns
       ).toHaveBeenCalledTimes(2);
     });
+
+    it('should ignore recipes targeting other blueprints when using blueprintId', async () => {
+      const ctx = createLoadContext({
+        blueprints: [{ id: 'test:bp1', slots: { slot1: {} } }],
+        recipes: [
+          {
+            id: 'other:recipe',
+            blueprintId: 'other:blueprint',
+            patterns: [{ matchesPattern: '*', partType: 'test:part' }],
+          },
+        ],
+      });
+
+      mockRecipePatternResolver.resolveRecipePatterns.mockImplementation(() => {
+        throw new Error('should not be called for non-matching blueprint');
+      });
+
+      const result = await validationPhase.execute(ctx);
+
+      expect(mockRecipePatternResolver.resolveRecipePatterns).not.toHaveBeenCalled();
+      expect(result.anatomyValidation.errors).toBe(0);
+      expect(result.anatomyValidation.warnings).toBe(0);
+      expect(result.anatomyValidation.issues).toHaveLength(0);
+    });
   });
 
   describe('Error Handling', () => {

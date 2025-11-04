@@ -184,6 +184,65 @@ describe('BlueprintRecipeValidationRule', () => {
     });
   });
 
+  describe('recipe targeting', () => {
+    it('should skip recipes targeting other blueprints via blueprintId', async () => {
+      const blueprint = {
+        id: 'test:blueprint',
+        slots: { slot1: {} },
+      };
+
+      const recipe = {
+        id: 'other:recipe',
+        blueprintId: 'other:blueprint',
+        patterns: [{ matchesPattern: '*', partType: 'test:part' }],
+      };
+
+      mockPatternResolver.resolveRecipePatterns.mockImplementation(() => {
+        throw new Error('should not be called for non-matching blueprints');
+      });
+
+      const context = new LoadTimeValidationContext({
+        blueprints: { 'test:blueprint': blueprint },
+        recipes: { 'other:recipe': recipe },
+      });
+
+      const issues = await validationRule.validate(context);
+
+      expect(mockPatternResolver.resolveRecipePatterns).not.toHaveBeenCalled();
+      expect(issues).toHaveLength(0);
+    });
+
+    it('should validate recipes that use blueprintId when targetBlueprint is missing', async () => {
+      const blueprint = {
+        id: 'test:blueprint',
+        slots: { slot1: {} },
+      };
+
+      const recipe = {
+        id: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        patterns: [{ matchesPattern: 'slot1', partType: 'test:part' }],
+      };
+
+      mockPatternResolver.resolveRecipePatterns.mockResolvedValue({
+        slot1: { partType: 'test:part', patternIndex: 0 },
+      });
+
+      const context = new LoadTimeValidationContext({
+        blueprints: { 'test:blueprint': blueprint },
+        recipes: { 'test:recipe': recipe },
+      });
+
+      const issues = await validationRule.validate(context);
+
+      expect(mockPatternResolver.resolveRecipePatterns).toHaveBeenCalledWith(
+        recipe,
+        blueprint
+      );
+      expect(issues).toHaveLength(0);
+    });
+  });
+
   describe('pattern matching validation', () => {
     it('should warn about zero-match patterns', async () => {
       const blueprint = {
