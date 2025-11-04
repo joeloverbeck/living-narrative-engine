@@ -18,5 +18,5 @@ runGymnasticsActionIntegrationTests({
   description:
     'Roll backward through a tucked inversion to recover facing forward',
   logMessageSuffix:
-    'unfolds from the backward roll, landing centered and alert',
+    'tucks down and rolls backward smoothly, rising centered and alert.',
 });

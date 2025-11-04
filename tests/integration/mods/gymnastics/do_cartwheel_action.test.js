@@ -17,5 +17,5 @@ runGymnasticsActionIntegrationTests({
   template: 'do cartwheel',
   description:
     'Swing laterally through a hand-supported inversion to land facing the opposite direction',
-  logMessageSuffix: 'sticks the cartwheel, finishing aligned and balanced',
+  logMessageSuffix: 'performs a cartwheel with precision, landing aligned and balanced.',
 });
