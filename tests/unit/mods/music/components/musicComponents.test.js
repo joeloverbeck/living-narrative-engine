@@ -20,6 +20,14 @@ describe('Music Mod Components - Schema Validation', () => {
     ajv = new Ajv({ strict: false, allErrors: true });
     addFormats(ajv);
 
+    // Load the common schema first (required by component schema)
+    const commonSchemaPath = path.resolve(
+      testDir,
+      '../../../../../data/schemas/common.schema.json'
+    );
+    const commonSchema = JSON.parse(readFileSync(commonSchemaPath, 'utf8'));
+    ajv.addSchema(commonSchema, 'schema://living-narrative-engine/common.schema.json');
+
     // Load the component schema
     const componentSchemaPath = path.resolve(
       testDir,

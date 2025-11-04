@@ -200,6 +200,7 @@ describe('registerLoaders additional coverage', () => {
       [actualTokens.EventLoader, { id: 'event' }],
       [actualTokens.ConditionLoader, { id: 'condition' }],
       [actualTokens.MacroLoader, { id: 'macro' }],
+      [actualTokens.LookupLoader, { id: 'lookup' }],
       [actualTokens.ActionLoader, { id: 'action' }],
       [actualTokens.RuleLoader, { id: 'rule' }],
       [actualTokens.GoalLoader, { id: 'goal' }],

@@ -253,7 +253,12 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
         id: 'test-entity-id',
       };
 
-      mockServices.bodyGraphService.getAllParts.mockReturnValue([]);
+      // Mock at least one body part so the composer continues processing
+      mockServices.bodyGraphService.getAllParts.mockReturnValue(['torso-id']);
+      mockServices.entityFinder.getEntityInstance.mockReturnValue({
+        hasComponent: () => true,
+        getComponentData: () => ({ subType: 'torso' }),
+      });
 
       const description = await composer.composeDescription(mockBodyEntity);
 
@@ -292,7 +297,12 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
         id: 'test-entity-id',
       };
 
-      mockServices.bodyGraphService.getAllParts.mockReturnValue([]);
+      // Mock at least one body part so the composer continues processing
+      mockServices.bodyGraphService.getAllParts.mockReturnValue(['torso-id']);
+      mockServices.entityFinder.getEntityInstance.mockReturnValue({
+        hasComponent: () => true,
+        getComponentData: () => ({ subType: 'torso' }),
+      });
 
       const description = await composer.composeDescription(mockBodyEntity);
 
