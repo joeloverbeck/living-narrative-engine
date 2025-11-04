@@ -5,7 +5,7 @@
   "bodyDescriptors": {
     "build": "slim",
     "composition": "lean",
-    "density": "hairless"
+    "hairDensity": "hairless"
   },
   "slots": {
     "root": {

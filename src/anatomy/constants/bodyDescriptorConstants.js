@@ -67,8 +67,8 @@ export const DESCRIPTOR_METADATA = {
     validValues: Object.values(BODY_BUILD_TYPES),
     description: 'Body build type',
   },
-  density: {
-    label: 'Body hair density',
+  hairDensity: {
+    label: 'Hair density',
     validValues: Object.values(BODY_HAIR_DENSITY),
     description: 'Body hair density level',
   },
@@ -81,6 +81,11 @@ export const DESCRIPTOR_METADATA = {
     label: 'Skin color',
     validValues: null, // Free-form string
     description: 'Skin color descriptor',
+  },
+  smell: {
+    label: 'Smell',
+    validValues: null, // Free-form string
+    description: 'Body smell descriptor',
   },
   height: {
     label: 'Height',

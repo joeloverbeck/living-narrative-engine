@@ -5,7 +5,7 @@
   "bodyDescriptors": {
     "build": "athletic",
     "composition": "lean",
-    "density": "light",
+    "hairDensity": "light",
     "height": "very-tall"
   },
   "slots": {

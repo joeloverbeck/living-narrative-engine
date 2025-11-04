@@ -19,7 +19,7 @@
       "build": "lissom"
     },
     "descriptors:body_hair": {
-      "density": "hairless"
+      "hairDensity": "hairless"
     },
     "descriptors:firmness": {
       "firmness": "soft"

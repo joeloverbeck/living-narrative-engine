@@ -152,7 +152,7 @@
             "stocky"
           ]
         },
-        "density": {
+        "hairDensity": {
           "type": "string",
           "enum": [
             "hairless",
@@ -176,6 +176,9 @@
           ]
         },
         "skinColor": {
+          "type": "string"
+        },
+        "smell": {
           "type": "string"
         },
         "height": {

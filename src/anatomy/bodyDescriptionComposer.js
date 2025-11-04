@@ -140,9 +140,13 @@ export class BodyDescriptionComposer {
 
       // Skip body descriptor types as they're already handled above
       if (
-        ['build', 'body_composition', 'body_hair', 'skin_color'].includes(
-          partType
-        )
+        [
+          'build',
+          'body_composition',
+          'body_hair',
+          'skin_color',
+          'smell',
+        ].includes(partType)
       ) {
         processedTypes.add(partType);
         continue;
@@ -413,9 +417,9 @@ export class BodyDescriptionComposer {
   extractBodyHairDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
 
-    // Check body.descriptors first (note: density maps to "Body hair")
-    if (bodyComponent?.body?.descriptors?.density) {
-      return bodyComponent.body.descriptors.density;
+    // Check body.descriptors first (note: hairDensity maps to "Hair density")
+    if (bodyComponent?.body?.descriptors?.hairDensity) {
+      return bodyComponent.body.descriptors.hairDensity;
     }
 
     // Fallback to entity-level component for backward compatibility
@@ -423,14 +427,14 @@ export class BodyDescriptionComposer {
       const bodyHairComponent = bodyEntity.getComponentData(
         'descriptors:body_hair'
       );
-      if (bodyHairComponent?.density) {
+      if (bodyHairComponent?.hairDensity || bodyHairComponent?.density) {
         // eslint-disable-next-line no-console
         console.warn(
           `[DEPRECATION] Entity ${bodyEntity.id || 'unknown'} uses entity-level descriptor 'descriptors:body_hair'. ` +
-            'Please migrate to body.descriptors.density in anatomy:body component. ' +
+            'Please migrate to body.descriptors.hairDensity in anatomy:body component. ' +
             'Entity-level descriptors will be removed in a future version.'
         );
-        return bodyHairComponent.density;
+        return bodyHairComponent.hairDensity || bodyHairComponent.density;
       }
     }
 
@@ -464,13 +468,18 @@ export class BodyDescriptionComposer {
 
     const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
     if (bodyHairDescription) {
-      descriptors.body_hair = `Body hair: ${bodyHairDescription}`;
+      descriptors.body_hair = `Hair density: ${bodyHairDescription}`;
     }
 
     const compositionDescription =
       this.extractBodyCompositionDescription(bodyEntity);
     if (compositionDescription) {
       descriptors.body_composition = `Body composition: ${compositionDescription}`;
+    }
+
+    const smellDescription = this.extractSmellDescription(bodyEntity);
+    if (smellDescription) {
+      descriptors.smell = `Smell: ${smellDescription}`;
     }
 
     return descriptors;
@@ -489,6 +498,7 @@ export class BodyDescriptionComposer {
       'build',
       'body_composition',
       'body_hair',
+      'smell',
     ];
     const filtered = descriptionOrder.filter((type) =>
       bodyDescriptorTypes.includes(type)
@@ -529,6 +539,37 @@ export class BodyDescriptionComposer {
             'Entity-level descriptors will be removed in a future version.'
         );
         return skinColorComponent.skinColor;
+      }
+    }
+
+    return '';
+  }
+
+  /**
+   * Extract smell description from body entity
+   *
+   * @param {object} bodyEntity - The body entity
+   * @returns {string} Smell description
+   */
+  extractSmellDescription(bodyEntity) {
+    const bodyComponent = this.#getBodyComponent(bodyEntity);
+
+    // Check body.descriptors first
+    if (bodyComponent?.body?.descriptors?.smell) {
+      return bodyComponent.body.descriptors.smell;
+    }
+
+    // Fallback to entity-level component for backward compatibility
+    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+      const smellComponent = bodyEntity.getComponentData('descriptors:smell');
+      if (smellComponent?.smell) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[DEPRECATION] Entity ${bodyEntity.id || 'unknown'} uses entity-level descriptor 'descriptors:smell'. ` +
+            'Please migrate to body.descriptors.smell in anatomy:body component. ' +
+            'Entity-level descriptors will be removed in a future version.'
+        );
+        return smellComponent.smell;
       }
     }
 

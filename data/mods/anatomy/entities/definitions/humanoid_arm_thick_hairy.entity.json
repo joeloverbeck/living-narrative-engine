@@ -19,7 +19,7 @@
       "build": "thick"
     },
     "descriptors:body_hair": {
-      "density": "hairy"
+      "hairDensity": "hairy"
     },
     "core:name": {
       "text": "thick, hairy arm"

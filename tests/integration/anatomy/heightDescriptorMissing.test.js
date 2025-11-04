@@ -82,7 +82,7 @@ describe('Height Descriptor Missing Issue', () => {
     expect(anatomyBodyComponent.body).toBeDefined();
     expect(anatomyBodyComponent.body.descriptors).toBeDefined();
     expect(anatomyBodyComponent.body.descriptors.build).toBe('stocky');
-    expect(anatomyBodyComponent.body.descriptors.density).toBe('hairy');
+    expect(anatomyBodyComponent.body.descriptors.hairDensity).toBe('hairy');
     expect(anatomyBodyComponent.body.descriptors.height).toBe('tall'); // This should be present
 
     console.log(
@@ -110,7 +110,7 @@ describe('Height Descriptor Missing Issue', () => {
       const hasBuildDescriptor =
         descriptionComponent.text.includes('Build: stocky');
       const hasBodyHairDescriptor =
-        descriptionComponent.text.includes('Body hair: hairy');
+        descriptionComponent.text.includes('Hair density: hairy');
 
       console.log('Has Height descriptor in description?', hasHeightDescriptor);
       console.log('Has Build descriptor in description?', hasBuildDescriptor);
@@ -183,11 +183,11 @@ describe('Height Descriptor Missing Issue', () => {
     // Check if height descriptor is properly formatted in the descriptors object
     expect(bodyLevelDescriptors.height).toBe('Height: tall'); // This is where the issue might be
     expect(bodyLevelDescriptors.build).toBe('Build: stocky');
-    expect(bodyLevelDescriptors.body_hair).toBe('Body hair: hairy');
+    expect(bodyLevelDescriptors.body_hair).toBe('Hair density: hairy');
 
     // The composed description should include ALL of these
     expect(composedDescription).toContain('Height: tall'); // This is the failing assertion
     expect(composedDescription).toContain('Build: stocky');
-    expect(composedDescription).toContain('Body hair: hairy');
+    expect(composedDescription).toContain('Hair density: hairy');
   });
 });

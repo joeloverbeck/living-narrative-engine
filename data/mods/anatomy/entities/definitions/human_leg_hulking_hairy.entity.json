@@ -21,7 +21,7 @@
             "build": "hulking"
         },
         "descriptors:body_hair": {
-            "density": "hairy"
+            "hairDensity": "hairy"
         },
         "core:name": {
             "text": "hulking, hairy leg"

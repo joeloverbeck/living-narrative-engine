@@ -94,7 +94,7 @@
       "build": "thick"
     },
     "descriptors:body_hair": {
-      "density": "hairy"
+      "hairDensity": "hairy"
     },
     "descriptors:body_composition": {
       "composition": "overweight"

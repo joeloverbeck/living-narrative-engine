@@ -102,7 +102,7 @@ describe('Exact Jon Ureña Recipe - Height Descriptor Issue', () => {
     // Check if all expected descriptors are there
     expect(anatomyBodyComponent.body.descriptors.height).toBe('tall');
     expect(anatomyBodyComponent.body.descriptors.build).toBe('stocky');
-    expect(anatomyBodyComponent.body.descriptors.density).toBe('hairy');
+    expect(anatomyBodyComponent.body.descriptors.hairDensity).toBe('hairy');
     expect(anatomyBodyComponent.body.descriptors.skinColor).toBe('olive');
 
     // Generate description to test the full pipeline
@@ -127,7 +127,7 @@ describe('Exact Jon Ureña Recipe - Height Descriptor Issue', () => {
       // Check if all descriptors are present in the description
       expect(descriptionComponent.text).toContain('Height: tall');
       expect(descriptionComponent.text).toContain('Build: stocky');
-      expect(descriptionComponent.text).toContain('Body hair: hairy');
+      expect(descriptionComponent.text).toContain('Hair density: hairy');
       expect(descriptionComponent.text).toContain('Skin color: olive');
     } else {
       fail('No description was generated');
@@ -203,9 +203,9 @@ describe('Exact Jon Ureña Recipe - Height Descriptor Issue', () => {
     expect(bodyHairDescription).toBe('hairy');
     expect(bodyLevelDescriptors.height).toBe('Height: tall');
     expect(bodyLevelDescriptors.build).toBe('Build: stocky');
-    expect(bodyLevelDescriptors.body_hair).toBe('Body hair: hairy');
+    expect(bodyLevelDescriptors.body_hair).toBe('Hair density: hairy');
     expect(composedDescription).toContain('Height: tall');
     expect(composedDescription).toContain('Build: stocky');
-    expect(composedDescription).toContain('Body hair: hairy');
+    expect(composedDescription).toContain('Hair density: hairy');
   });
 });
