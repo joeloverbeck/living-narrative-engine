@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "music:is_instrument",
+  "description": "Marker component indicating this item is a playable musical instrument",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

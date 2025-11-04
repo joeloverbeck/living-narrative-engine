@@ -14,7 +14,7 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 23 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 18 available for future work.
+**Status**: 24 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 17 available for future work.
 
 ### Active Mod Assignments
 
@@ -32,6 +32,7 @@ This specification provides a curated collection of pre-validated color combinat
 | Items                    | Aurora Depths      | 11.1    | `#004d61`        | Reserved |
 | Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
 | Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
+| Music                    | Starlight Navy     | 11.4    | `#1a2332`        | Active   |
 | Positioning              | Deep Orange Energy | 10.2    | `#bf360c`        | Active   |
 | Seduction                | Golden Divine      | 5.2     | `#f57f17`        | Active   |
 | Sex-Core                 | Mystic Purple      | 5.1     | `#4a148c`        | Active   |
@@ -58,7 +59,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
 - **Additional Versatile**: Pathfinder Slate (9.2)
 - **Professional/Modern**: Cool Grey Modern (10.3)
-- **Expansion Set (Section 11)**: Starlight Navy (11.4), Evergreen Shadow (11.5), Molten Copper (11.6), Arctic Steel (11.8)
+- **Expansion Set (Section 11)**: Evergreen Shadow (11.5), Molten Copper (11.6), Arctic Steel (11.8)
 
 **Recommendation**: When creating new mods, select from the available combinations above to maintain visual consistency and avoid conflicts.
 
@@ -634,18 +635,18 @@ This specification provides a curated collection of pre-validated color combinat
 
 ```json
 {
-  "backgroundColor": "#0f172a",
-  "textColor": "#e2e8f0",
-  "hoverBackgroundColor": "#1e293b",
-  "hoverTextColor": "#f8fafc"
+  "backgroundColor": "#1a2332",
+  "textColor": "#d1d5db",
+  "hoverBackgroundColor": "#2d3748",
+  "hoverTextColor": "#f3f4f6"
 }
 ```
 
-- **Normal Contrast**: 14.48:1 🌟 AAA
-- **Hover Contrast**: 13.98:1 🌟 AAA
-- **Use Cases**: Strategic planning, late-night operations, investigative mods
-- **Theme**: Cosmic clarity, disciplined calm
-- 🟢 **AVAILABLE**
+- **Normal Contrast**: 11.8:1 🌟 AAA
+- **Hover Contrast**: 9.2:1 🌟 AAA
+- **Use Cases**: Musical performance actions, artistic performances, creative expression
+- **Theme**: Artistic sophistication and creative expression with calm, focused aesthetic
+- ✅ **USED BY**: Music mod (musical performance system)
 
 #### 11.5 Evergreen Shadow
 
