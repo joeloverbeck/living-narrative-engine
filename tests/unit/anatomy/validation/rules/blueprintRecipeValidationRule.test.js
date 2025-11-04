@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { BlueprintRecipeValidationRule } from '../../../../../src/anatomy/validation/rules/blueprintRecipeValidationRule.js';
 import { LoadTimeValidationContext } from '../../../../../src/anatomy/validation/loadTimeValidationContext.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../../src/constants/systemEventIds.js';
 import { createTestBed } from '../../../../common/testBed.js';
 
 describe('BlueprintRecipeValidationRule', () => {
@@ -267,16 +268,16 @@ describe('BlueprintRecipeValidationRule', () => {
       const issues = await validationRule.validate(context);
 
       // Should have dispatched error event
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'SYSTEM_ERROR_OCCURRED',
-        payload: expect.objectContaining({
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
           error: 'Pattern resolution failed',
           context: expect.objectContaining({
             blueprintId: 'test:blueprint',
             recipeId: 'test:recipe',
           }),
-        }),
-      });
+        })
+      );
 
       // Should have error issue
       expect(issues.some((i) => i.type === 'validation_error')).toBe(true);

@@ -6,6 +6,7 @@
 
 import { ValidationRule } from '../validationRule.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../constants/systemEventIds.js';
 
 /** @typedef {import('../loadTimeValidationContext.js').LoadTimeValidationContext} LoadTimeValidationContext */
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
@@ -111,17 +112,19 @@ export class BlueprintRecipeValidationRule extends ValidationRule {
             issues.push(...validationResult);
           } catch (err) {
             // Dispatch error event following project pattern
-            this.#safeEventDispatcher.dispatch({
-              type: 'SYSTEM_ERROR_OCCURRED',
-              payload: {
-                error: err.message,
-                context: {
-                  blueprintId,
-                  recipeId,
-                  validationRule: this.ruleId,
-                },
+            const payload = {
+              error: err.message,
+              context: {
+                blueprintId,
+                recipeId,
+                validationRule: this.ruleId,
               },
-            });
+            };
+
+            this.#safeEventDispatcher.dispatch(
+              SYSTEM_ERROR_OCCURRED_ID,
+              payload
+            );
 
             this.#logger.error(
               `Blueprint-Recipe validation failed for ${recipeId} → ${blueprintId}`,
