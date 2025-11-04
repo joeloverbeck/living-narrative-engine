@@ -131,6 +131,9 @@ describe('registerLoaders full instantiation coverage', () => {
     mockClass('../../../../src/loaders/phases/contentPhase.js', () =>
       mockPhase('ContentPhase')
     );
+    mockClass('../../../../src/loaders/phases/anatomyValidationPhase.js', () =>
+      mockPhase('anatomy-validation')
+    );
     mockClass('../../../../src/loaders/phases/worldPhase.js', () =>
       mockPhase('WorldPhase')
     );
@@ -170,6 +173,33 @@ describe('registerLoaders full instantiation coverage', () => {
       default: class MockViolationReporter {
         constructor(config) {
           created.violationReporter = config;
+        }
+      },
+    }));
+
+    jest.doMock('../../../../src/anatomy/slotGenerator.js', () => ({
+      __esModule: true,
+      default: class MockSlotGenerator {
+        constructor(config) {
+          created.slotGenerator = config;
+        }
+      },
+    }));
+
+    jest.doMock('../../../../src/anatomy/recipePatternResolver.js', () => ({
+      __esModule: true,
+      default: class MockRecipePatternResolver {
+        constructor(config) {
+          created.recipePatternResolver = config;
+        }
+      },
+    }));
+
+    jest.doMock('../../../../src/anatomy/validation/rules/blueprintRecipeValidationRule.js', () => ({
+      __esModule: true,
+      BlueprintRecipeValidationRule: class MockBlueprintRecipeValidationRule {
+        constructor(config) {
+          created.blueprintRecipeValidationRule = config;
         }
       },
     }));
@@ -222,17 +252,18 @@ describe('registerLoaders full instantiation coverage', () => {
     expect(created.modsLoader.cache).toBe(loadCache);
     expect(created.modsLoader.session).toBeInstanceOf(Object);
     expect(created.modsLoadSession.cache).toBe(loadCache);
-    expect(created.modsLoadSession.phases).toHaveLength(6);
+    expect(created.modsLoadSession.phases).toHaveLength(7);
     expect(created.modsLoadSession.phases.map((phase) => phase.name)).toEqual([
       'SchemaPhase',
       'GameConfigPhase',
       'ManifestPhase',
       'ContentPhase',
+      'anatomy-validation',
       'WorldPhase',
       'SummaryPhase',
     ]);
     expect(logger.debug).toHaveBeenCalledWith(
-      'ModsLoader: All 6 phases resolved successfully'
+      'ModsLoader: All 7 phases resolved successfully'
     );
 
     const schemaLoader = container.resolve(tokens.SchemaLoader);

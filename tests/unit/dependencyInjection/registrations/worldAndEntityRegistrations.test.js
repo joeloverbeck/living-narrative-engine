@@ -123,6 +123,16 @@ describe('registerWorldAndEntity', () => {
     container.register(tokens.UuidGenerator, () => ({
       generate: jest.fn().mockReturnValue('test-uuid'),
     }));
+
+    // Register ISlotGenerator (moved to loadersRegistrations.js in production)
+    container.register(tokens.ISlotGenerator, () => ({
+      generate: jest.fn().mockReturnValue([]),
+    }));
+
+    // Register IRecipePatternResolver (moved to loadersRegistrations.js in production)
+    container.register(tokens.IRecipePatternResolver, () => ({
+      resolve: jest.fn().mockReturnValue([]),
+    }));
   });
 
   afterEach(() => {
