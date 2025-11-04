@@ -39,6 +39,8 @@ describe('Complete Anatomy Descriptions Integration', () => {
 
       const result = await composer.composeDescription(entity);
 
+      expect(result).toContain('Height: average');
+      expect(result).toContain('Skin color: olive');
       expect(result).toContain('Build: athletic');
       expect(result).toContain('Body composition: lean');
       expect(result).toContain('Body hair: moderate');
@@ -84,6 +86,8 @@ describe('Complete Anatomy Descriptions Integration', () => {
       const values = extractDescriptorValues(result);
 
       expect(values).toMatchObject({
+        Height: 'average',
+        'Skin color': 'olive',
         Build: 'athletic',
         'Body composition': 'lean',
         'Body hair': 'moderate',

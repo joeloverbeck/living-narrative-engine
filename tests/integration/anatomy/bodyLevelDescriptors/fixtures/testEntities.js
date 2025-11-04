@@ -3,17 +3,13 @@ import { ANATOMY_BODY_COMPONENT_ID } from '../../../../../src/constants/componen
 
 /**
  * Create a fully-featured humanoid entity with all descriptors
+ * Uses the new body.descriptors format (not deprecated entity-level components)
  */
 export const createCompleteHumanoidEntity = () => {
   const entity = {
     id: 'test-humanoid-complete',
     hasComponent: jest.fn().mockImplementation((componentId) => {
-      const components = [
-        ANATOMY_BODY_COMPONENT_ID,
-        'descriptors:build',
-        'descriptors:body_composition',
-        'descriptors:body_hair',
-      ];
+      const components = [ANATOMY_BODY_COMPONENT_ID];
       return components.includes(componentId);
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -21,12 +17,16 @@ export const createCompleteHumanoidEntity = () => {
         [ANATOMY_BODY_COMPONENT_ID]: {
           body: {
             root: 'torso',
+            descriptors: {
+              height: 'average',
+              skinColor: 'olive',
+              build: 'athletic',
+              composition: 'lean',
+              density: 'moderate',
+            },
             // Parts would be managed by bodyGraphService.getAllParts()
           },
         },
-        'descriptors:build': { build: 'athletic' },
-        'descriptors:body_composition': { composition: 'lean' },
-        'descriptors:body_hair': { density: 'moderate' },
       };
       return componentData[componentId] || null;
     }),
@@ -37,16 +37,13 @@ export const createCompleteHumanoidEntity = () => {
 
 /**
  * Create humanoid with partial descriptors
+ * Uses the new body.descriptors format (not deprecated entity-level components)
  */
 export const createPartialHumanoidEntity = () => {
   const entity = {
     id: 'test-humanoid-partial',
     hasComponent: jest.fn().mockImplementation((componentId) => {
-      const components = [
-        ANATOMY_BODY_COMPONENT_ID,
-        'descriptors:build',
-        'descriptors:body_hair',
-      ];
+      const components = [ANATOMY_BODY_COMPONENT_ID];
       return components.includes(componentId);
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -54,11 +51,13 @@ export const createPartialHumanoidEntity = () => {
         [ANATOMY_BODY_COMPONENT_ID]: {
           body: {
             root: 'torso',
+            descriptors: {
+              build: 'average',
+              density: 'light',
+              // Missing composition and skinColor
+            },
           },
         },
-        'descriptors:build': { build: 'average' },
-        // Missing body_composition
-        'descriptors:body_hair': { density: 'light' },
       };
       return componentData[componentId] || null;
     }),
@@ -109,17 +108,13 @@ export const createMockBodyParts = () => {
 
 /**
  * Create entity with edge case descriptors
+ * Uses the new body.descriptors format (not deprecated entity-level components)
  */
 export const createEdgeCaseEntity = () => {
   const entity = {
     id: 'test-edge-case',
     hasComponent: jest.fn().mockImplementation((componentId) => {
-      const components = [
-        ANATOMY_BODY_COMPONENT_ID,
-        'descriptors:build',
-        'descriptors:body_composition',
-        'descriptors:body_hair',
-      ];
+      const components = [ANATOMY_BODY_COMPONENT_ID];
       return components.includes(componentId);
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -127,11 +122,13 @@ export const createEdgeCaseEntity = () => {
         [ANATOMY_BODY_COMPONENT_ID]: {
           body: {
             root: 'torso',
+            descriptors: {
+              build: '', // Empty string
+              composition: null, // Null value
+              density: 'very-hairy', // Hyphenated value
+            },
           },
         },
-        'descriptors:build': { build: '' }, // Empty string
-        'descriptors:body_composition': { composition: null }, // Null value
-        'descriptors:body_hair': { density: 'very-hairy' }, // Hyphenated value
       };
       return componentData[componentId] || null;
     }),
@@ -166,6 +163,7 @@ export const createMalformedEntity = () => {
 
 /**
  * Create entity with all valid body hair density values for comprehensive testing
+ * Uses the new body.descriptors format (not deprecated entity-level components)
  *
  * @param densityValue
  */
@@ -173,7 +171,7 @@ export const createBodyHairVariantsEntity = (densityValue) => {
   const entity = {
     id: `test-body-hair-${densityValue}`,
     hasComponent: jest.fn().mockImplementation((componentId) => {
-      const components = [ANATOMY_BODY_COMPONENT_ID, 'descriptors:body_hair'];
+      const components = [ANATOMY_BODY_COMPONENT_ID];
       return components.includes(componentId);
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -181,9 +179,11 @@ export const createBodyHairVariantsEntity = (densityValue) => {
         [ANATOMY_BODY_COMPONENT_ID]: {
           body: {
             root: 'torso',
+            descriptors: {
+              density: densityValue,
+            },
           },
         },
-        'descriptors:body_hair': { density: densityValue },
       };
       return componentData[componentId] || null;
     }),
@@ -194,6 +194,7 @@ export const createBodyHairVariantsEntity = (densityValue) => {
 
 /**
  * Create entity with all valid body composition values for comprehensive testing
+ * Uses the new body.descriptors format (not deprecated entity-level components)
  *
  * @param compositionValue
  */
@@ -201,10 +202,7 @@ export const createBodyCompositionVariantsEntity = (compositionValue) => {
   const entity = {
     id: `test-body-composition-${compositionValue}`,
     hasComponent: jest.fn().mockImplementation((componentId) => {
-      const components = [
-        ANATOMY_BODY_COMPONENT_ID,
-        'descriptors:body_composition',
-      ];
+      const components = [ANATOMY_BODY_COMPONENT_ID];
       return components.includes(componentId);
     }),
     getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -212,9 +210,11 @@ export const createBodyCompositionVariantsEntity = (compositionValue) => {
         [ANATOMY_BODY_COMPONENT_ID]: {
           body: {
             root: 'torso',
+            descriptors: {
+              composition: compositionValue,
+            },
           },
         },
-        'descriptors:body_composition': { composition: compositionValue },
       };
       return componentData[componentId] || null;
     }),
