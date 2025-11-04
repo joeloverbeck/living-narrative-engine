@@ -79,8 +79,7 @@ import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
 import SocketGenerator from '../../anatomy/socketGenerator.js';
-import SlotGenerator from '../../anatomy/slotGenerator.js';
-import RecipePatternResolver from '../../anatomy/recipePatternResolver.js';
+// Note: SlotGenerator and RecipePatternResolver imports removed - registered in loadersRegistrations.js
 import UuidGenerator from '../../adapters/UuidGenerator.js';
 
 /**
@@ -346,29 +345,8 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
-  registrar.singletonFactory(tokens.ISlotGenerator, (c) => {
-    return new SlotGenerator({
-      logger: c.resolve(tokens.ILogger),
-    });
-  });
-  logger.debug(
-    `World and Entity Registration: Registered ${String(
-      tokens.ISlotGenerator
-    )}.`
-  );
-
-  registrar.singletonFactory(tokens.IRecipePatternResolver, (c) => {
-    return new RecipePatternResolver({
-      dataRegistry: c.resolve(tokens.IDataRegistry),
-      slotGenerator: c.resolve(tokens.ISlotGenerator),
-      logger: c.resolve(tokens.ILogger),
-    });
-  });
-  logger.debug(
-    `World and Entity Registration: Registered ${String(
-      tokens.IRecipePatternResolver
-    )}.`
-  );
+  // Note: ISlotGenerator and IRecipePatternResolver are now registered in loadersRegistrations.js
+  // since they're required by BlueprintRecipeValidationRule during the loading phase
 
   registrar.singletonFactory(tokens.BodyBlueprintFactory, (c) => {
     return new BodyBlueprintFactory({
