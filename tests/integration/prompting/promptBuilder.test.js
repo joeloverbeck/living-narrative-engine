@@ -31,6 +31,7 @@ const SAMPLE_PROMPT_DATA = {
   userInputContent: 'Test user input',
   finalInstructionsContent: 'Test final instructions',
   assistantResponsePrefix: '\n',
+  characterName: 'Test Character',
   perceptionLogArray: [
     { type: 'visual', content: 'Test perception 1' },
     { type: 'audio', content: 'Test perception 2' },
@@ -124,6 +125,9 @@ describe('PromptBuilder (template-based)', () => {
       "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- Test thought 1\n- Test thought 2\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
     );
     expect(prompt).toContain(
+      "NOTES WRITING GUIDANCE: The notes must be concise, but written in Test Character's own voice. Focus each note on critical facts while preserving Test Character's perspective. Avoid generic or neutral phrasing. Keep any new notes distinct from the existing entries listed below."
+    );
+    expect(prompt).toContain(
       '<notes>\n## Other\n### General\n- Test note 1\n- Test note 2\n</notes>'
     );
     expect(prompt).toContain('<goals>\n- Test goal 1\n- Test goal 2\n</goals>');
@@ -169,6 +173,9 @@ describe('PromptBuilder (template-based)', () => {
     // Should contain sections with content
     expect(prompt).toContain(
       "<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- I have a thought\n\n-----\nGenerate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.\n</thoughts>"
+    );
+    expect(prompt).toContain(
+      "NOTES WRITING GUIDANCE: The notes must be concise, but written in Test Character's own voice. Focus each note on critical facts while preserving Test Character's perspective. Avoid generic or neutral phrasing."
     );
     expect(prompt).toContain('<goals>\n- Complete the quest\n</goals>');
 
