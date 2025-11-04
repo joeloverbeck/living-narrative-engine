@@ -3,15 +3,11 @@
   "id": "ballet:event-is-action-do-rond-de-jambe-a-terre",
   "description": "Evaluates to true if the event is attempting the Do Rond de Jambe à Terre action",
   "logic": {
-    "and": [
+    "==": [
       {
-        "==": [
-          {
-            "var": "actionId"
-          },
-          "ballet:do_rond_de_jambe_a_terre"
-        ]
-      }
+        "var": "event.payload.actionId"
+      },
+      "ballet:do_rond_de_jambe_a_terre"
     ]
   }
 }

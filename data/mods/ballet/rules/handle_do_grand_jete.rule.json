@@ -26,7 +26,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{actor} executes a running preparation and launches into a soaring split leap"
+        "value": "{context.actorName} executes a running preparation and launches into a soaring split leap"
       }
     },
     {

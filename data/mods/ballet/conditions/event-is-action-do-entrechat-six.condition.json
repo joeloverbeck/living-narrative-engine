@@ -3,15 +3,11 @@
   "id": "ballet:event-is-action-do-entrechat-six",
   "description": "Evaluates to true if the event is attempting the Do Entrechat Six action",
   "logic": {
-    "and": [
+    "==": [
       {
-        "==": [
-          {
-            "var": "actionId"
-          },
-          "ballet:do_entrechat_six"
-        ]
-      }
+        "var": "event.payload.actionId"
+      },
+      "ballet:do_entrechat_six"
     ]
   }
 }

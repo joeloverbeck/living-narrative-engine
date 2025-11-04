@@ -26,7 +26,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{actor} tilts forward while raising their back leg into a dramatic arabesque"
+        "value": "{context.actorName} tilts forward while raising their back leg into a dramatic arabesque"
       }
     },
     {

@@ -3,15 +3,11 @@
   "id": "ballet:event-is-action-do-developpe-a-la-seconde",
   "description": "Evaluates to true if the event is attempting the Do Développé à la Seconde action",
   "logic": {
-    "and": [
+    "==": [
       {
-        "==": [
-          {
-            "var": "actionId"
-          },
-          "ballet:do_developpe_a_la_seconde"
-        ]
-      }
+        "var": "event.payload.actionId"
+      },
+      "ballet:do_developpe_a_la_seconde"
     ]
   }
 }
