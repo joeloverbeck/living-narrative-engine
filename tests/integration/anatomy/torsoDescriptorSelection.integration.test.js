@@ -128,7 +128,7 @@ describe('Torso Descriptor-Based Selection Integration', () => {
       const buildComponent = rootEntity.getComponentData('descriptors:build');
       const bodyHairComponent = rootEntity.getComponentData('descriptors:body_hair');
       expect(buildComponent?.build).toBe('thick');
-      expect(bodyHairComponent?.density).toBe('hairy');
+      expect(bodyHairComponent?.hairDensity).toBe('hairy');
     });
 
     it('should correctly select torso for Jon Urena recipe after fix', async () => {
@@ -222,7 +222,7 @@ describe('Torso Descriptor-Based Selection Integration', () => {
       const buildComponent = rootEntity.getComponentData('descriptors:build');
       const bodyHairComponent = rootEntity.getComponentData('descriptors:body_hair');
       expect(buildComponent?.build).toBe('thick');
-      expect(bodyHairComponent?.density).toBe('hairy');
+      expect(bodyHairComponent?.hairDensity).toBe('hairy');
     });
 
     it('should handle multiple matching torso candidates with randomization', async () => {

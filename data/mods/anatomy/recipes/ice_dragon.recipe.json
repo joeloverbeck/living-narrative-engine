@@ -5,7 +5,7 @@
   "bodyDescriptors": {
     "build": "muscular",
     "composition": "lean",
-    "density": "hairless"
+    "hairDensity": "hairless"
   },
   "slots": {
     "head": {

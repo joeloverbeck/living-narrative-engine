@@ -121,7 +121,7 @@ describe('BodyDescriptionComposer - Body-Level Descriptors', () => {
     });
 
     describe('extractBodyHairDescription', () => {
-      it('should extract density from body.descriptors.density', () => {
+      it('should extract density from body.descriptors.hairDensity', () => {
         const mockEntity = {
           id: 'entity_123',
           getComponentData: jest.fn((componentId) => {

@@ -1,12 +1,12 @@
 /**
- * @file Unit tests for BodyDescriptionComposer skinColor descriptor extraction
- * @description Tests that skinColor is properly extracted and displayed in body descriptions
+ * @file Unit tests for BodyDescriptionComposer smell descriptor extraction
+ * @description Tests that smell is properly extracted and displayed in body descriptions
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 
-describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
+describe('BodyDescriptionComposer - Smell Descriptor', () => {
   let composer;
   let mockServices;
 
@@ -25,6 +25,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
           'build',
           'body_composition',
           'body_hair',
+          'smell',
           'head',
           'torso',
         ]),
@@ -45,8 +46,8 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
     jest.clearAllMocks();
   });
 
-  describe('extractSkinColorDescription', () => {
-    it('should extract skinColor from body.descriptors', () => {
+  describe('extractSmellDescription', () => {
+    it('should extract smell from body.descriptors', () => {
       const mockBodyEntity = {
         hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
         getComponentData: jest.fn((componentId) => {
@@ -55,7 +56,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
               body: {
                 root: 'test-root-id',
                 descriptors: {
-                  skinColor: 'tanned',
+                  smell: 'musky',
                 },
               },
             };
@@ -65,12 +66,12 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
         id: 'test-entity-id',
       };
 
-      const skinColor = composer.extractSkinColorDescription(mockBodyEntity);
+      const smell = composer.extractSmellDescription(mockBodyEntity);
 
-      expect(skinColor).toBe('tanned');
+      expect(smell).toBe('musky');
     });
 
-    it('should return empty string when skinColor is not defined', () => {
+    it('should return empty string when smell is not defined', () => {
       const mockBodyEntity = {
         hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
         getComponentData: jest.fn((componentId) => {
@@ -89,23 +90,22 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
         id: 'test-entity-id',
       };
 
-      const skinColor = composer.extractSkinColorDescription(mockBodyEntity);
+      const smell = composer.extractSmellDescription(mockBodyEntity);
 
-      expect(skinColor).toBe('');
+      expect(smell).toBe('');
     });
 
-    it('should handle various skinColor values', () => {
+    it('should handle various smell values', () => {
       const testCases = [
-        'fair',
-        'tanned',
-        'olive',
-        'dark',
-        'ebony',
-        'pale',
-        'bronze',
+        'musky',
+        'sweaty and musky',
+        'pungent manly perfume',
+        'rotten meat and feces',
+        'fresh and clean',
+        'earthy and natural',
       ];
 
-      for (const skinColorValue of testCases) {
+      for (const smellValue of testCases) {
         const mockBodyEntity = {
           hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
           getComponentData: jest.fn((componentId) => {
@@ -114,7 +114,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
                 body: {
                   root: 'test-root-id',
                   descriptors: {
-                    skinColor: skinColorValue,
+                    smell: smellValue,
                   },
                 },
               };
@@ -124,15 +124,15 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
           id: 'test-entity-id',
         };
 
-        const skinColor = composer.extractSkinColorDescription(mockBodyEntity);
+        const smell = composer.extractSmellDescription(mockBodyEntity);
 
-        expect(skinColor).toBe(skinColorValue);
+        expect(smell).toBe(smellValue);
       }
     });
   });
 
-  describe('extractBodyLevelDescriptors with skinColor', () => {
-    it('should include skinColor in body-level descriptors', () => {
+  describe('extractBodyLevelDescriptors with smell', () => {
+    it('should include smell in body-level descriptors', () => {
       const mockBodyEntity = {
         hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
         getComponentData: jest.fn((componentId) => {
@@ -144,8 +144,9 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
                 descriptors: {
                   build: 'athletic',
                   composition: 'lean',
-                  density: 'moderate',
+                  hairDensity: 'moderate',
                   skinColor: 'olive',
+                  smell: 'musky',
                   height: 'tall',
                 },
               },
@@ -158,6 +159,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
 
       const descriptors = composer.extractBodyLevelDescriptors(mockBodyEntity);
 
+      expect(descriptors.smell).toBe('Smell: musky');
       expect(descriptors.skin_color).toBe('Skin color: olive');
       expect(descriptors.build).toBe('Build: athletic');
       expect(descriptors.body_composition).toBe('Body composition: lean');
@@ -165,7 +167,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
       expect(descriptors.height).toBe('Height: tall');
     });
 
-    it('should format skinColor with proper label', () => {
+    it('should format smell with proper label', () => {
       const mockBodyEntity = {
         hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
         getComponentData: jest.fn((componentId) => {
@@ -174,7 +176,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
               body: {
                 root: 'test-root-id',
                 descriptors: {
-                  skinColor: 'fair',
+                  smell: 'sweaty and musky',
                 },
               },
             };
@@ -186,12 +188,12 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
 
       const descriptors = composer.extractBodyLevelDescriptors(mockBodyEntity);
 
-      expect(descriptors.skin_color).toBe('Skin color: fair');
+      expect(descriptors.smell).toBe('Smell: sweaty and musky');
     });
   });
 
-  describe('composeDescription with skinColor', () => {
-    it('should include skinColor in composed description', async () => {
+  describe('composeDescription with smell', () => {
+    it('should include smell in composed description', async () => {
       const mockBodyEntity = {
         hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
         getComponentData: jest.fn((componentId) => {
@@ -204,7 +206,8 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
                   skinColor: 'tanned',
                   build: 'muscular',
                   composition: 'lean',
-                  density: 'hairy',
+                  hairDensity: 'hairy',
+                  smell: 'pungent manly perfume',
                 },
               },
             };
@@ -223,56 +226,17 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
 
       const description = await composer.composeDescription(mockBodyEntity);
 
-      // Should contain the skinColor descriptor
-      expect(description).toContain('Skin color: tanned');
+      // Should contain the smell descriptor
+      expect(description).toContain('Smell: pungent manly perfume');
       // Should also contain other descriptors
       expect(description).toContain('Height: average');
+      expect(description).toContain('Skin color: tanned');
       expect(description).toContain('Build: muscular');
       expect(description).toContain('Body composition: lean');
       expect(description).toContain('Hair density: hairy');
     });
 
-    it('should place skinColor in correct order in description', async () => {
-      const mockBodyEntity = {
-        hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
-        getComponentData: jest.fn((componentId) => {
-          if (componentId === 'anatomy:body') {
-            return {
-              body: {
-                root: 'root-part-id',
-                descriptors: {
-                  height: 'tall',
-                  skinColor: 'olive',
-                  build: 'athletic',
-                },
-              },
-            };
-          }
-          return null;
-        }),
-        id: 'test-entity-id',
-      };
-
-      mockServices.bodyGraphService.getAllParts.mockReturnValue([]);
-
-      const description = await composer.composeDescription(mockBodyEntity);
-
-      // Check that descriptors appear in the configured order
-      const heightIndex = description.indexOf('Height: tall');
-      const skinColorIndex = description.indexOf('Skin color: olive');
-      const buildIndex = description.indexOf('Build: athletic');
-
-      expect(heightIndex).toBeGreaterThan(-1);
-      expect(skinColorIndex).toBeGreaterThan(-1);
-      expect(buildIndex).toBeGreaterThan(-1);
-
-      // Height should come before skin color (based on our mock descriptionOrder)
-      expect(heightIndex).toBeLessThan(skinColorIndex);
-      // Skin color should come before build (based on our mock descriptionOrder)
-      expect(skinColorIndex).toBeLessThan(buildIndex);
-    });
-
-    it('should work without skinColor when not provided', async () => {
+    it('should work without smell when not provided', async () => {
       const mockBodyEntity = {
         hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
         getComponentData: jest.fn((componentId) => {
@@ -296,8 +260,8 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
 
       const description = await composer.composeDescription(mockBodyEntity);
 
-      // Should NOT contain skin color
-      expect(description).not.toContain('Skin color:');
+      // Should NOT contain smell
+      expect(description).not.toContain('Smell:');
       // Should still contain other descriptors
       expect(description).toContain('Build: slim');
       expect(description).toContain('Body composition: average');

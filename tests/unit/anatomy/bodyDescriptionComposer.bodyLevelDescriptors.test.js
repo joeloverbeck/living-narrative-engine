@@ -74,7 +74,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
       // Should extract the descriptors with proper formatting
       expect(descriptors).toBeDefined();
       expect(descriptors.build).toBe('Build: stocky');
-      expect(descriptors.body_hair).toBe('Body hair: hairy');
+      expect(descriptors.body_hair).toBe('Hair density: hairy');
     });
 
     it('should handle missing anatomy:body component gracefully', () => {
@@ -138,7 +138,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
       const descriptors = composer.extractBodyLevelDescriptors(mockBodyEntity);
 
       expect(descriptors.build).toBe('Build: stocky');
-      expect(descriptors.body_hair).toBe('Body hair: hairy');
+      expect(descriptors.body_hair).toBe('Hair density: hairy');
       expect(descriptors.skin_color).toBe('Skin color: tan');
       expect(descriptors.body_composition).toBe('Body composition: muscular');
     });
@@ -191,7 +191,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
   });
 
   describe('extractBodyHairDescription', () => {
-    it('should extract body hair descriptor from body.descriptors.density', () => {
+    it('should extract body hair descriptor from body.descriptors.hairDensity', () => {
       mockBodyEntity = {
         hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
         getComponentData: jest.fn((componentId) => {
@@ -273,7 +273,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
 
       // Should contain the body-level descriptors
       expect(description).toContain('Build: stocky');
-      expect(description).toContain('Body hair: hairy');
+      expect(description).toContain('Hair density: hairy');
     });
   });
 });

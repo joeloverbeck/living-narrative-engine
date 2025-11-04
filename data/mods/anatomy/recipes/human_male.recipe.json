@@ -4,7 +4,7 @@
   "blueprintId": "anatomy:human_male",
   "bodyDescriptors": {
     "build": "muscular",
-    "density": "hairy",
+    "hairDensity": "hairy",
     "composition": "lean",
     "skinColor": "tanned"
   },

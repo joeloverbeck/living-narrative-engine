@@ -272,7 +272,7 @@ describe('Jon Ureña Recipe Clothing Integration Unit Tests', () => {
         'thick'
       );
       expect(
-        recipe.slots.torso.properties['descriptors:body_hair'].density
+        recipe.slots.torso.properties['descriptors:body_hair'].hairDensity
       ).toBe('hairy');
 
       // Verify male-specific anatomy is preserved
@@ -305,11 +305,11 @@ describe('Jon Ureña Recipe Clothing Integration Unit Tests', () => {
 
       // Verify muscular, hairy characteristics are maintained
       expect(armPattern.properties['descriptors:build'].build).toBe('muscular');
-      expect(armPattern.properties['descriptors:body_hair'].density).toBe(
+      expect(armPattern.properties['descriptors:body_hair'].hairDensity).toBe(
         'hairy'
       );
       expect(legPattern.properties['descriptors:build'].build).toBe('muscular');
-      expect(legPattern.properties['descriptors:body_hair'].density).toBe(
+      expect(legPattern.properties['descriptors:body_hair'].hairDensity).toBe(
         'hairy'
       );
     });

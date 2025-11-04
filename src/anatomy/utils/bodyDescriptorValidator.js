@@ -91,7 +91,7 @@ export class BodyDescriptorValidator {
   /**
    * Validates a specific descriptor type
    *
-   * @param {'build'|'density'|'composition'|'skinColor'} descriptorType - The descriptor type
+   * @param {'build'|'hairDensity'|'composition'|'skinColor'|'smell'|'height'} descriptorType - The descriptor type
    * @param {string} value - The value to validate
    * @param {string} context - Context for error messages
    * @throws {BodyDescriptorValidationError} If validation fails

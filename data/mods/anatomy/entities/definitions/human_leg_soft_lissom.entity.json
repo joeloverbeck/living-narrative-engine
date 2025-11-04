@@ -22,7 +22,7 @@
       "firmness": "soft"
     },
     "descriptors:body_hair": {
-      "density": "hairless"
+      "hairDensity": "hairless"
     },
     "core:name": {
       "text": "soft, lissom leg"

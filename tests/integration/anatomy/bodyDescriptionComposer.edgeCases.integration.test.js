@@ -276,7 +276,7 @@ describe('BodyDescriptionComposer edge case integration', () => {
     expect(descriptors.height).toBe('Height: 6 ft');
     expect(descriptors.build).toBe('Build: athletic');
     expect(descriptors.body_composition).toBe('Body composition: lean muscle');
-    expect(descriptors.body_hair).toBe('Body hair: trimmed');
+    expect(descriptors.body_hair).toBe('Hair density: trimmed');
     expect(descriptors.skin_color).toBe('Skin color: tan');
 
     const emptyDescriptorsEntity = {
@@ -379,7 +379,7 @@ describe('BodyDescriptionComposer edge case integration', () => {
       height: 'Height: six feet tall',
       build: 'Build: muscular',
       body_composition: 'Body composition: lean mass',
-      body_hair: 'Body hair: light fuzz',
+      body_hair: 'Hair density: light fuzz',
       skin_color: 'Skin color: copper',
     });
 

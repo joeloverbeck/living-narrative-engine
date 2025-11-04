@@ -45,8 +45,20 @@
                   "stocky"
                 ]
               },
+              "hairDensity": {
+                "type": "string",
+                "enum": [
+                  "hairless",
+                  "sparse",
+                  "light",
+                  "moderate",
+                  "hairy",
+                  "very-hairy"
+                ]
+              },
               "density": {
                 "type": "string",
+                "description": "DEPRECATED: Use hairDensity instead",
                 "enum": [
                   "hairless",
                   "sparse",
@@ -69,6 +81,9 @@
                 ]
               },
               "skinColor": {
+                "type": "string"
+              },
+              "smell": {
                 "type": "string"
               },
               "height": {

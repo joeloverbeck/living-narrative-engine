@@ -4,7 +4,7 @@
   "blueprintId": "anatomy:giant_spider",
   "bodyDescriptors": {
     "build": "athletic",
-    "density": "hairy",
+    "hairDensity": "hairy",
     "composition": "lean"
   },
   "slots": {
@@ -20,7 +20,7 @@
           "texture": "chitinous"
         },
         "descriptors:body_hair": {
-          "density": "hairy"
+          "hairDensity": "hairy"
         },
         "anatomy:web_weaver": {
           "silkYield": "abundant",
@@ -43,7 +43,7 @@
           "texture": "chitinous"
         },
         "descriptors:body_hair": {
-          "density": "hairy"
+          "hairDensity": "hairy"
         },
         "anatomy:traction": {
           "surfaceGrip": "forest_bark"

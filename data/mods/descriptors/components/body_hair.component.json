@@ -5,7 +5,7 @@
   "dataSchema": {
     "type": "object",
     "properties": {
-      "density": {
+      "hairDensity": {
         "type": "string",
         "description": "The density or amount of body hair",
         "enum": [
@@ -17,9 +17,21 @@
           "very-hairy"
         ],
         "default": "moderate"
+      },
+      "density": {
+        "type": "string",
+        "description": "DEPRECATED: Use hairDensity instead. The density or amount of body hair",
+        "enum": [
+          "hairless",
+          "sparse",
+          "light",
+          "moderate",
+          "hairy",
+          "very-hairy"
+        ]
       }
     },
-    "required": ["density"],
+    "required": [],
     "additionalProperties": false
   }
 }

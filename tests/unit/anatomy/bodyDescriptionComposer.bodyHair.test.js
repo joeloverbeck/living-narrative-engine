@@ -52,7 +52,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null; // Primary lookup fails, triggers fallback
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: 'moderate' };
+            return { hairDensity: 'moderate' };
           }
           return null;
         }),
@@ -83,7 +83,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
               return null; // Primary lookup fails, triggers fallback
             }
             if (componentId === 'descriptors:body_hair') {
-              return { density: value };
+              return { hairDensity: value };
             }
             return null;
           }),
@@ -101,7 +101,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: 'very-hairy' };
+            return { hairDensity: 'very-hairy' };
           }
           return null;
         }),
@@ -188,7 +188,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: null };
+            return { hairDensity: null };
           }
           return null;
         }),
@@ -205,7 +205,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: undefined };
+            return { hairDensity: undefined };
           }
           return null;
         }),
@@ -222,7 +222,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: '' };
+            return { hairDensity: '' };
           }
           return null;
         }),
@@ -253,7 +253,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: 123 };
+            return { hairDensity: 123 };
           }
           return null;
         }),
@@ -271,7 +271,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: true };
+            return { hairDensity: true };
           }
           return null;
         }),
@@ -288,7 +288,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: { nested: 'value' } };
+            return { hairDensity: { nested: 'value' } };
           }
           return null;
         }),
@@ -350,7 +350,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: false };
+            return { hairDensity: false };
           }
           return null;
         }),
@@ -367,7 +367,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: 0 };
+            return { hairDensity: 0 };
           }
           return null;
         }),
@@ -385,7 +385,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
           }
           if (componentId === 'descriptors:body_hair') {
             return {
-              density: 'moderate',
+              hairDensity: 'moderate',
               color: 'brown', // Additional property
               texture: 'coarse', // Additional property
             };
@@ -407,7 +407,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: 'hairy' };
+            return { hairDensity: 'hairy' };
           }
           return null;
         }),
@@ -430,7 +430,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
             return null;
           }
           if (componentId === 'descriptors:body_hair') {
-            return { density: 'sparse' };
+            return { hairDensity: 'sparse' };
           }
           return null;
         }),
