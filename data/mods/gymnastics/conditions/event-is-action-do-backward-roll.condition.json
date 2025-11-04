@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "gymnastics:event-is-action-do-backward-roll",
+  "description": "Evaluates to true if the event is attempting the Do Backward Roll action",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "gymnastics:do_backward_roll"
+    ]
+  }
+}

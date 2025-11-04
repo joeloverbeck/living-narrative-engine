@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "gymnastics:event-is-action-do-cartwheel",
+  "description": "Evaluates to true if the event is attempting the Do Cartwheel action",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "gymnastics:do_cartwheel"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "gymnastics:do_cartwheel",
+  "name": "Do Cartwheel",
+  "description": "Swing laterally through a hand-supported inversion to land facing the opposite direction",
+  "targets": "none",
+  "required_components": {
+    "actor": ["gymnastics:is_gymnast"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:hugging"]
+  },
+  "template": "do cartwheel",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#1a237e",
+    "textColor": "#e8eaf6",
+    "hoverBackgroundColor": "#283593",
+    "hoverTextColor": "#ffffff"
+  }
+}
