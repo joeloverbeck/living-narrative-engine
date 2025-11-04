@@ -98,11 +98,11 @@ export class BlueprintRecipeValidationRule extends ValidationRule {
 
     for (const [blueprintId, blueprint] of Object.entries(blueprints)) {
       for (const [recipeId, recipe] of Object.entries(recipes)) {
-        // Only validate if recipe targets this blueprint
-        if (
-          !recipe.targetBlueprint ||
-          recipe.targetBlueprint === blueprintId
-        ) {
+        const recipeBlueprintId =
+          recipe.blueprintId ?? recipe.targetBlueprint ?? null;
+
+        // Only validate if recipe explicitly targets this blueprint
+        if (!recipeBlueprintId || recipeBlueprintId === blueprintId) {
           try {
             const validationResult = await this.#validateRecipe(
               blueprint,
