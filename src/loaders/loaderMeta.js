@@ -36,6 +36,12 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'macros',
   },
+  lookups: {
+    contentKey: 'lookups',
+    diskFolder: 'lookups',
+    phase: 'definitions',
+    registryKey: 'lookups',
+  },
   actions: {
     contentKey: 'actions',
     diskFolder: 'actions',

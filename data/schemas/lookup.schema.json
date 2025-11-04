@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/lookup.schema.json",
+  "title": "Lookup Definition",
+  "description": "Defines a static reference/lookup table that maps keys to structured data values.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+    },
+    "description": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+    },
+    "dataSchema": {
+      "type": "object",
+      "description": "JSON Schema defining the structure of each value in the lookup table. All entries must conform to this schema.",
+      "additionalProperties": true
+    },
+    "entries": {
+      "type": "object",
+      "description": "Map of lookup keys to their corresponding data values. Each value is validated against dataSchema.",
+      "minProperties": 1,
+      "additionalProperties": true
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional note for modders. Ignored at runtime."
+    }
+  },
+  "required": ["id", "description", "dataSchema", "entries"],
+  "additionalProperties": false
+}
