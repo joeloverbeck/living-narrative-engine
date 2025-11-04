@@ -163,7 +163,7 @@ describe('BodyDescriptionComposer - Smell Descriptor', () => {
       expect(descriptors.skin_color).toBe('Skin color: olive');
       expect(descriptors.build).toBe('Build: athletic');
       expect(descriptors.body_composition).toBe('Body composition: lean');
-      expect(descriptors.body_hair).toBe('Hair density: moderate');
+      expect(descriptors.body_hair).toBe('Body hair: moderate');
       expect(descriptors.height).toBe('Height: tall');
     });
 
@@ -233,7 +233,7 @@ describe('BodyDescriptionComposer - Smell Descriptor', () => {
       expect(description).toContain('Skin color: tanned');
       expect(description).toContain('Build: muscular');
       expect(description).toContain('Body composition: lean');
-      expect(description).toContain('Hair density: hairy');
+      expect(description).toContain('Body hair: hairy');
     });
 
     it('should work without smell when not provided', async () => {
@@ -256,7 +256,11 @@ describe('BodyDescriptionComposer - Smell Descriptor', () => {
         id: 'test-entity-id',
       };
 
-      mockServices.bodyGraphService.getAllParts.mockReturnValue([]);
+      mockServices.bodyGraphService.getAllParts.mockReturnValue(['torso-id']);
+      mockServices.entityFinder.getEntityInstance.mockReturnValue({
+        hasComponent: () => true,
+        getComponentData: () => ({ subType: 'torso' }),
+      });
 
       const description = await composer.composeDescription(mockBodyEntity);
 

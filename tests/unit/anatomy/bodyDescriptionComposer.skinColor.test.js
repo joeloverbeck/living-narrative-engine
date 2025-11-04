@@ -144,7 +144,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
                 descriptors: {
                   build: 'athletic',
                   composition: 'lean',
-                  density: 'moderate',
+                  hairDensity: 'moderate',
                   skinColor: 'olive',
                   height: 'tall',
                 },
@@ -161,7 +161,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
       expect(descriptors.skin_color).toBe('Skin color: olive');
       expect(descriptors.build).toBe('Build: athletic');
       expect(descriptors.body_composition).toBe('Body composition: lean');
-      expect(descriptors.body_hair).toBe('Hair density: moderate');
+      expect(descriptors.body_hair).toBe('Body hair: moderate');
       expect(descriptors.height).toBe('Height: tall');
     });
 
@@ -204,7 +204,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
                   skinColor: 'tanned',
                   build: 'muscular',
                   composition: 'lean',
-                  density: 'hairy',
+                  hairDensity: 'hairy',
                 },
               },
             };
@@ -229,7 +229,7 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
       expect(description).toContain('Height: average');
       expect(description).toContain('Build: muscular');
       expect(description).toContain('Body composition: lean');
-      expect(description).toContain('Hair density: hairy');
+      expect(description).toContain('Body hair: hairy');
     });
 
     it('should place skinColor in correct order in description', async () => {
