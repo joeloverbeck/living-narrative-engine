@@ -34,6 +34,7 @@ export const coreTokens = freeze({
   ActionLoader: 'ActionLoader',
   EventLoader: 'EventLoader',
   MacroLoader: 'MacroLoader',
+  LookupLoader: 'LookupLoader',
   EntityLoader: 'EntityLoader',
   EntityInstanceLoader: 'EntityInstanceLoader',
   WorldLoader: 'WorldLoader',

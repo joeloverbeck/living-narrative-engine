@@ -8,3 +8,10 @@
  * @type {string}
  */
 export const SCOPES_KEY = 'scopes';
+
+/**
+ * Registry key for storing loaded lookup definitions.
+ *
+ * @type {string}
+ */
+export const LOOKUPS_KEY = 'lookups';

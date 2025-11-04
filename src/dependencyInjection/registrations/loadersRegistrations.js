@@ -32,6 +32,7 @@
 /** @typedef {import('../../modding/modLoadOrderResolver.js').default} ModLoadOrderResolver */
 /** @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader */
 /** @typedef {import('../../loaders/goalLoader.js').default} GoalLoader */
+/** @typedef {import('../../loaders/lookupLoader.js').default} LookupLoader */
 /** @typedef {import('../../loaders/registryCacheAdapter.js').default} ILoadCache */
 /** @typedef {import('../../data/textDataFetcher.js').default} TextDataFetcher */
 
@@ -69,6 +70,7 @@ import EventLoader from '../../loaders/eventLoader.js';
 import GameConfigLoader from '../../loaders/gameConfigLoader.js';
 import GoalLoader from '../../loaders/goalLoader.js';
 import MacroLoader from '../../loaders/macroLoader.js';
+import LookupLoader from '../../loaders/lookupLoader.js';
 import ModManifestLoader from '../../modding/modManifestLoader.js';
 import ModsLoader from '../../loaders/modsLoader.js';
 import ModsLoadSession from '../../loaders/ModsLoadSession.js';
@@ -234,6 +236,7 @@ export async function registerLoaders(container) {
   registerLoader(tokens.ActionLoader, ActionLoader);
   registerLoader(tokens.EventLoader, EventLoader);
   registerLoader(tokens.MacroLoader, MacroLoader);
+  registerLoader(tokens.LookupLoader, LookupLoader);
   // EntityDefinitionLoader needs a custom registration to include SafeEventDispatcher
   registrar.singletonFactory(
     tokens.EntityLoader,
@@ -345,6 +348,7 @@ export async function registerLoaders(container) {
           eventLoader: c.resolve(tokens.EventLoader),
           conditionLoader: c.resolve(tokens.ConditionLoader),
           macroLoader: c.resolve(tokens.MacroLoader),
+          lookupLoader: c.resolve(tokens.LookupLoader),
           actionLoader: c.resolve(tokens.ActionLoader),
           ruleLoader: c.resolve(tokens.RuleLoader),
           goalLoader: c.resolve(tokens.GoalLoader),
