@@ -18,5 +18,5 @@ runGymnasticsActionIntegrationTests({
   description:
     'Tuck tightly and roll forward along the spine for a smooth transition',
   logMessageSuffix:
-    'completes a fluid forward roll, returning to a ready stance',
+    'completes a fluid forward roll, returning to a ready stance.',
 });
