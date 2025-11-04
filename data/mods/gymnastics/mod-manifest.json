@@ -1,0 +1,39 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "gymnastics",
+  "version": "1.0.0",
+  "name": "Gymnastics",
+  "description": "Core floor gymnastics maneuvers focused on rolls and cartwheels for trained gymnasts",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "do_forward_roll.action.json",
+      "do_backward_roll.action.json",
+      "do_cartwheel.action.json"
+    ],
+    "rules": [
+      "handle_do_forward_roll.rule.json",
+      "handle_do_backward_roll.rule.json",
+      "handle_do_cartwheel.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-do-forward-roll.condition.json",
+      "event-is-action-do-backward-roll.condition.json",
+      "event-is-action-do-cartwheel.condition.json"
+    ],
+    "components": [
+      "is_gymnast.component.json"
+    ]
+  }
+}

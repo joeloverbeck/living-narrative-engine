@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "gymnastics:is_gymnast",
+  "description": "Marker component indicating the entity is a trained gymnast capable of performing tumbling fundamentals",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
