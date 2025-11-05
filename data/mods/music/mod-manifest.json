@@ -36,7 +36,16 @@
       "set_triumphant_mood_on_instrument.action.json"
     ],
     "rules": [
-      "handle_set_aggressive_mood_on_instrument.rule.json"
+      "handle_set_aggressive_mood_on_instrument.rule.json",
+      "handle_set_cheerful_mood_on_instrument.rule.json",
+      "handle_set_eerie_mood_on_instrument.rule.json",
+      "handle_set_meditative_mood_on_instrument.rule.json",
+      "handle_set_mournful_mood_on_instrument.rule.json",
+      "handle_set_playful_mood_on_instrument.rule.json",
+      "handle_set_solemn_mood_on_instrument.rule.json",
+      "handle_set_tender_mood_on_instrument.rule.json",
+      "handle_set_tense_mood_on_instrument.rule.json",
+      "handle_set_triumphant_mood_on_instrument.rule.json"
     ],
     "conditions": [
       "event-is-action-set-aggressive-mood-on-instrument.condition.json",
