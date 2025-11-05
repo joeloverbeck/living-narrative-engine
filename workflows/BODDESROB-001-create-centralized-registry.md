@@ -12,11 +12,13 @@ Create a centralized registry that serves as the single source of truth for all 
 
 ## Problem Context
 
-Currently, body descriptor configuration is scattered across 4+ files:
+Currently, body descriptor configuration is scattered across 6 files:
 - Schema definition: `data/schemas/anatomy.recipe.schema.json`
 - Constants: `src/anatomy/constants/bodyDescriptorConstants.js`
 - Formatting config: `data/mods/anatomy/anatomy-formatting/default.json`
 - Implementation: `src/anatomy/bodyDescriptionComposer.js`
+- Validator utilities: `src/anatomy/utils/bodyDescriptorValidator.js`
+- Helper utilities: `src/anatomy/utils/bodyDescriptorUtils.js`
 
 This leads to synchronization issues where descriptors can be defined but missing from formatting configuration, causing silent failures.
 
@@ -65,7 +67,7 @@ export const BODY_DESCRIPTOR_REGISTRY = {
   height: {
     schemaProperty: 'height',
     displayLabel: 'Height',
-    displayKey: 'height',
+    displayKey: 'height', // Matches schema property (no conversion needed)
     dataPath: 'body.descriptors.height',
     validValues: ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'],
     displayOrder: 10,
@@ -73,15 +75,90 @@ export const BODY_DESCRIPTOR_REGISTRY = {
     formatter: (value) => `Height: ${value}`,
     required: false,
   },
-  // ... other descriptors
+  skinColor: {
+    schemaProperty: 'skinColor', // camelCase in schema and data
+    displayLabel: 'Skin color',
+    displayKey: 'skin_color', // snake_case in formatting config (descriptionOrder)
+    dataPath: 'body.descriptors.skinColor', // Uses schema property name
+    validValues: null, // Free-form string
+    displayOrder: 20,
+    extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.skinColor,
+    formatter: (value) => `Skin color: ${value}`,
+    required: false,
+  },
+  build: {
+    schemaProperty: 'build',
+    displayLabel: 'Build',
+    displayKey: 'build',
+    dataPath: 'body.descriptors.build',
+    validValues: ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'],
+    displayOrder: 30,
+    extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.build,
+    formatter: (value) => `Build: ${value}`,
+    required: false,
+  },
+  composition: {
+    schemaProperty: 'composition', // Note: NOT 'body_composition'
+    displayLabel: 'Body composition',
+    displayKey: 'body_composition', // snake_case in formatting config
+    dataPath: 'body.descriptors.composition',
+    validValues: ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'],
+    displayOrder: 40,
+    extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.composition,
+    formatter: (value) => `Body composition: ${value}`,
+    required: false,
+  },
+  hairDensity: {
+    schemaProperty: 'hairDensity', // camelCase in schema
+    displayLabel: 'Body hair density',
+    displayKey: 'body_hair', // snake_case in formatting config
+    dataPath: 'body.descriptors.hairDensity',
+    validValues: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'],
+    displayOrder: 50,
+    extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.hairDensity,
+    formatter: (value) => `Body hair: ${value}`,
+    required: false,
+  },
+  smell: {
+    schemaProperty: 'smell',
+    displayLabel: 'Smell',
+    displayKey: 'smell',
+    dataPath: 'body.descriptors.smell',
+    validValues: null, // Free-form string
+    displayOrder: 60,
+    extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.smell,
+    formatter: (value) => `Smell: ${value}`,
+    required: false,
+  },
 };
 ```
+
+### Key Design Notes
+
+**Schema Property vs Display Key:**
+- `schemaProperty`: The property name as defined in `anatomy.recipe.schema.json` (camelCase)
+- `displayKey`: The key used in `anatomy-formatting/default.json` descriptionOrder (snake_case for some)
+- `dataPath`: Uses the schema property name for accessing data in components
+
+**Naming Convention Mappings:**
+| Schema Property | Display Key | Notes |
+|----------------|-------------|-------|
+| height | height | Same in both |
+| skinColor | skin_color | camelCase → snake_case |
+| build | build | Same in both |
+| composition | body_composition | Different word + snake_case |
+| hairDensity | body_hair | Different word + snake_case |
+| smell | smell | Same in both |
+
+This dual naming convention exists because:
+- Schema and component data use camelCase (JavaScript convention)
+- Formatting configuration uses snake_case (historical format, matches part types)
 
 ### Implementation Steps
 
 1. Create `src/anatomy/registries/` directory if it doesn't exist
 2. Create `bodyDescriptorRegistry.js` with BODY_DESCRIPTOR_REGISTRY constant
-3. Add all 6 descriptor definitions with complete metadata
+3. Add all 6 descriptor definitions with complete metadata (see structure above)
 4. Implement helper functions for registry access
 5. Add comprehensive JSDoc documentation
 6. Export all public APIs
@@ -272,3 +349,12 @@ describe('bodyDescriptorRegistry', () => {
 - Registry is read-only at runtime - no dynamic registration yet (future enhancement)
 - Focus on correctness and completeness over optimization
 - Extractor and formatter functions should be pure (no side effects)
+
+### Coordination with Existing Files
+
+The new registry should be designed to eventually replace/consolidate logic from:
+- `bodyDescriptorConstants.js` - Contains DESCRIPTOR_METADATA (similar but less complete)
+- `bodyDescriptorValidator.js` - Uses DESCRIPTOR_METADATA for validation
+- `bodyDescriptorUtils.js` - Uses DESCRIPTOR_METADATA for formatting
+
+In future tickets, these files will be migrated to use the new centralized registry instead of DESCRIPTOR_METADATA. For now, the registry should be self-contained and not modify existing files.
