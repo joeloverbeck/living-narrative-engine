@@ -1,6 +1,7 @@
-music:instrument_actor_is_playing := entities(core:actor)[][{
-  "==": [
+music:instrument_actor_is_playing := entities(items:item)[][{"and": [
+  {"!!": {"var": "entity.components.music:is_instrument"}},
+  {"==": [
     {"var": "entity.id"},
     {"var": "actor.components.music:playing_music.playing_on"}
-  ]
-}]
+  ]}
+]}]
