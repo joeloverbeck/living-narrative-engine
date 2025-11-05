@@ -1,18 +1,18 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "id": "music:handle_set_triumphant_mood",
-  "description": "Handle setting triumphant mood on instrument performance",
-  "event": "music:event-is-action-set-triumphant-mood",
+  "id": "music:handle_set_eerie_mood_on_instrument",
+  "description": "Handle setting eerie mood on instrument performance",
+  "event": "music:event-is-action-set-eerie-mood",
   "operations": [
     {
       "type": "QUERY_LOOKUP",
       "lookup_id": "music:mood_lexicon",
-      "entry_key": "triumphant",
+      "entry_key": "eerie",
       "result_variable": "mood_data",
       "missing_value": {
-        "adj": "triumphant",
-        "adjectives": "triumphant",
-        "noun": "triumphant"
+        "adj": "eerie",
+        "adjectives": "eerie",
+        "noun": "eerie"
       }
     },
     {
@@ -30,7 +30,7 @@
       "entity_ref": "target",
       "component_type": "music:performance_mood",
       "data": {
-        "mood": "triumphant",
+        "mood": "eerie",
         "set_by_actor": {"var": "actor.id"}
       }
     },
@@ -40,7 +40,7 @@
         "type": "music_mood_set",
         "actorId": {"var": "actor.id"},
         "targetId": {"var": "target.id"},
-        "mood": "triumphant",
+        "mood": "eerie",
         "message": {
           "cat": [
             {"var": "actor_name"},
@@ -48,7 +48,7 @@
             {"var": "instrument_name"},
             " with a ",
             {"var": "mood_data.adj"},
-            ", triumphant tone"
+            ", eerie tone"
           ]
         }
       }
