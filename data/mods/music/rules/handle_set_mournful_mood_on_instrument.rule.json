@@ -1,57 +1,87 @@
 {
-  "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "id": "music:handle_set_mournful_mood_on_instrument",
-  "description": "Handle setting mournful mood on instrument performance",
-  "event": "music:event-is-action-set-mournful-mood",
-  "operations": [
+  "": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_set_mournful_mood_on_instrument",
+  "comment": "Handle setting mournful mood on instrument performance",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "music:event-is-action-set-mournful-mood-on-instrument"
+  },
+  "actions": [
     {
-      "type": "QUERY_LOOKUP",
-      "lookup_id": "music:mood_lexicon",
-      "entry_key": "mournful",
-      "result_variable": "mood_data",
-      "missing_value": {
-        "adj": "mournful",
-        "adjectives": "mournful",
-        "noun": "mournful"
+      "type": "QUERY_COMPONENT",
+      "comment": "Fetch actor position for location context",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "variable_name": "actor_name",
-      "value": {"var": "actor.components.core:actor.name"}
+      "type": "QUERY_LOOKUP",
+      "parameters": {
+        "lookup_id": "music:mood_lexicon",
+        "entry_key": "mournful",
+        "result_variable": "mood_data",
+        "missing_value": {
+          "adj": "mournful",
+          "adjectives": "mournful",
+          "noun": "mournful"
+        }
+      }
     },
     {
-      "type": "SET_VARIABLE",
-      "variable_name": "instrument_name",
-      "value": {"var": "target.components.core:actor.name"}
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actor_name"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "instrument_name"
+      }
     },
     {
       "type": "MODIFY_COMPONENT",
-      "entity_ref": "target",
-      "component_type": "music:performance_mood",
-      "data": {
-        "mood": "mournful",
-        "set_by_actor": {"var": "actor.id"}
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "music:performance_mood",
+        "field": "mood",
+        "mode": "set",
+        "value": "mournful"
+      }
+    },
+    {
+      "type": "MODIFY_COMPONENT",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "music:performance_mood",
+        "field": "set_by_actor",
+        "mode": "set",
+        "value": "{event.payload.actorId}"
       }
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "event": {
-        "type": "music_mood_set",
-        "actorId": {"var": "actor.id"},
-        "targetId": {"var": "target.id"},
-        "mood": "mournful",
-        "message": {
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": {
           "cat": [
-            {"var": "actor_name"},
+            "{context.actor_name}",
             " begins to play ",
-            {"var": "instrument_name"},
+            "{context.instrument_name}",
             " with a ",
-            {"var": "mood_data.adj"},
+            "{context.mood_data.adj}",
             ", mournful tone"
           ]
-        }
+        },
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}"
       }
-    }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
   ]
 }

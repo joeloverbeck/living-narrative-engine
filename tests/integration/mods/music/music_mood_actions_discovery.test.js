@@ -39,15 +39,22 @@ describe('Music Mood Actions - Discovery', () => {
         );
 
         // Create actor WITHOUT is_musician component
-        const actor = await fixture.createEntity({
-          name: 'Regular Person',
-          components: ['core:actor'],
+        const actor = fixture.createEntity({
+          id: 'regular_person',
+          components: {
+          'core:actor': { text: 'Regular Person' },
+          'core:position': { locationId: 'room1' }
+          }
         });
 
         // Create instrument
-        const instrument = await fixture.createEntity({
-          name: 'Lute',
-          components: ['items:item', 'music:is_instrument'],
+        const instrument = fixture.createEntity({
+          id: 'lute',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Lute' }
+          }
         });
 
         const actions = await fixture.discoverActionsForActor(actor.id);
@@ -69,15 +76,22 @@ describe('Music Mood Actions - Discovery', () => {
         );
 
         // Create musician actor
-        const actor = await fixture.createEntity({
-          name: 'Musician',
-          components: ['core:actor', 'music:is_musician'],
+        const actor = fixture.createEntity({
+          id: 'musician',
+          components: {
+          'core:actor': { text: 'Musician' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
         });
 
         // Create regular item (not instrument)
-        const item = await fixture.createEntity({
-          name: 'Book',
-          components: ['items:item'],
+        const item = fixture.createEntity({
+          id: 'book',
+          components: {
+          'items:item': {},
+          'core:name': { text: 'Book' }
+          }
         });
 
         const actions = await fixture.discoverActionsForActor(actor.id);
@@ -101,15 +115,23 @@ describe('Music Mood Actions - Discovery', () => {
         );
 
         // Create musician actor
-        const actor = await fixture.createEntity({
-          name: 'Bard',
-          components: ['core:actor', 'music:is_musician'],
+        const actor = fixture.createEntity({
+          id: 'bard',
+          components: {
+          'core:actor': { text: 'Bard' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
         });
 
         // Create instrument
-        const instrument = await fixture.createEntity({
-          name: 'Harp',
-          components: ['items:item', 'music:is_instrument'],
+        const instrument = fixture.createEntity({
+          id: 'harp',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Harp' }
+          }
         });
 
         const actions = await fixture.discoverActionsForActor(actor.id);
@@ -134,21 +156,33 @@ describe('Music Mood Actions - Discovery', () => {
       );
 
       // Create musician actor
-      const actor = await fixture.createEntity({
-        name: 'Performer',
-        components: ['core:actor', 'music:is_musician'],
-      });
+      const actor = fixture.createEntity({
+          id: 'performer',
+          components: {
+          'core:actor': { text: 'Performer' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
+        });
 
       // Create multiple instruments
-      const lute = await fixture.createEntity({
-        name: 'Lute',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const lute = fixture.createEntity({
+          id: 'lute',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Lute' }
+          }
+        });
 
-      const drum = await fixture.createEntity({
-        name: 'Drum',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const drum = fixture.createEntity({
+          id: 'drum',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Drum' }
+          }
+        });
 
       const actions = await fixture.discoverActionsForActor(actor.id);
 
