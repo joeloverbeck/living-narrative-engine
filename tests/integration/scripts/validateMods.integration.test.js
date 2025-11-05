@@ -8,6 +8,7 @@ import { createTestBed } from '../../common/testBed.js';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs/promises';
+import os from 'os';
 
 /**
  * Cache of CLI invocation promises to avoid repeated expensive runs.
@@ -75,7 +76,8 @@ describe('ValidateMods CLI Integration', () => {
 
   beforeAll(async () => {
     testModName = `integration_test_mod_${Date.now()}`;
-    tempModPath = path.join('data', 'mods', testModName);
+    // Use absolute path to ensure cleanup works regardless of working directory
+    tempModPath = path.join(process.cwd(), 'data', 'mods', testModName);
 
     await fs.mkdir(path.join(tempModPath, 'components'), { recursive: true });
 
@@ -139,7 +141,8 @@ describe('ValidateMods CLI Integration', () => {
       try {
         await fs.rm(tempModPath, { recursive: true, force: true });
       } catch (error) {
-        // Ignore cleanup errors
+        // Log cleanup errors for debugging, but don't fail the test
+        console.error(`Failed to clean up test mod at ${tempModPath}:`, error.message);
       }
     }
   });
