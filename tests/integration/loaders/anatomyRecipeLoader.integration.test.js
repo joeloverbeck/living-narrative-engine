@@ -228,7 +228,7 @@ describe('AnatomyRecipeLoader integration coverage', () => {
       },
       bodyDescriptors: {
         build: 'athletic',
-        density: 'light',
+        hairDensity: 'light',
         composition: 'lean',
         height: 'tall',
         skinColor: 'bronze',
@@ -293,7 +293,7 @@ describe('AnatomyRecipeLoader integration coverage', () => {
       },
       bodyDescriptors: {
         build: 'toned',
-        density: 'sparse',
+        hairDensity: 'sparse',
         composition: 'average',
         height: 'average',
       },

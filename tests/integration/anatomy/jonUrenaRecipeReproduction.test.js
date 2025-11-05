@@ -25,7 +25,7 @@ describe('Jon Urena Recipe - Body Level Descriptors Issue', () => {
       blueprintId: 'anatomy:humanoid', // Use the simple test blueprint
       bodyDescriptors: {
         build: 'stocky',
-        density: 'hairy',
+        hairDensity: 'hairy',
       },
       slots: {},
       patterns: [],
@@ -105,7 +105,7 @@ describe('Jon Urena Recipe - Body Level Descriptors Issue', () => {
       const hasBuildDescriptor =
         descriptionComponent.text.includes('Build: stocky');
       const hasBodyHairDescriptor =
-        descriptionComponent.text.includes('Hair density: hairy');
+        descriptionComponent.text.includes('Body hair: hairy');
 
       console.log('Has Build descriptor?', hasBuildDescriptor);
       console.log('Has Body hair descriptor?', hasBodyHairDescriptor);
@@ -169,10 +169,10 @@ describe('Jon Urena Recipe - Body Level Descriptors Issue', () => {
     expect(buildDescription).toBe('stocky');
     expect(bodyHairDescription).toBe('hairy');
     expect(bodyLevelDescriptors.build).toBe('Build: stocky');
-    expect(bodyLevelDescriptors.body_hair).toBe('Hair density: hairy');
+    expect(bodyLevelDescriptors.body_hair).toBe('Body hair: hairy');
 
     // The composed description should include these
     expect(composedDescription).toContain('Build: stocky');
-    expect(composedDescription).toContain('Hair density: hairy');
+    expect(composedDescription).toContain('Body hair: hairy');
   });
 });

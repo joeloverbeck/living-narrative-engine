@@ -2267,7 +2267,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         bodyDescriptors: {
           build: 'hulking',
           composition: 'average',
-          density: 'hairless',
+          hairDensity: 'hairless',
         },
         slots: {
           root: {
@@ -2345,7 +2345,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         bodyDescriptors: {
           build: 'slim',
           composition: 'lean',
-          density: 'hairless',
+          hairDensity: 'hairless',
         },
         slots: {
           root: {
@@ -2386,7 +2386,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         bodyDescriptors: {
           build: 'stocky',
           composition: 'lean',
-          density: 'hairless',
+          hairDensity: 'hairless',
         },
         slots: {
           root: {
