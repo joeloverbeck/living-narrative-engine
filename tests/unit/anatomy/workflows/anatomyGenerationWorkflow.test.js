@@ -458,7 +458,7 @@ describe('AnatomyGenerationWorkflow', () => {
     it('should validate valid complete body descriptors', () => {
       const bodyDescriptors = {
         build: 'muscular',
-        density: 'hairy',
+        hairDensity: 'hairy',
         composition: 'lean',
         skinColor: 'tanned',
       };
@@ -519,7 +519,7 @@ describe('AnatomyGenerationWorkflow', () => {
 
     it('should throw error for invalid density value', () => {
       const bodyDescriptors = {
-        density: 'super-hairy',
+        hairDensity: 'super-hairy',
       };
 
       expect(() =>
@@ -528,7 +528,7 @@ describe('AnatomyGenerationWorkflow', () => {
       expect(() =>
         workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
       ).toThrow(
-        "Invalid density descriptor: 'super-hairy' in recipe 'test-recipe'. Must be one of: hairless, sparse, light, moderate, hairy, very-hairy"
+        "Invalid hairDensity descriptor: 'super-hairy' in recipe 'test-recipe'. Must be one of: hairless, sparse, light, moderate, hairy, very-hairy"
       );
     });
 
@@ -608,8 +608,8 @@ describe('AnatomyGenerationWorkflow', () => {
         'very-hairy',
       ];
 
-      validDensities.forEach((density) => {
-        const bodyDescriptors = { density };
+      validDensities.forEach((hairDensity) => {
+        const bodyDescriptors = { hairDensity };
         expect(() =>
           workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
         ).not.toThrow();

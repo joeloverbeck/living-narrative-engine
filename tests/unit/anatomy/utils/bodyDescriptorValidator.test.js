@@ -26,7 +26,7 @@ describe('BodyDescriptorValidator', () => {
     it('should pass validation for valid descriptor combinations', () => {
       const validDescriptors = {
         build: BODY_BUILD_TYPES.ATHLETIC,
-        density: BODY_HAIR_DENSITY.MODERATE,
+        hairDensity: BODY_HAIR_DENSITY.MODERATE,
         composition: BODY_COMPOSITION_TYPES.LEAN,
         skinColor: 'pale',
       };
@@ -71,7 +71,7 @@ describe('BodyDescriptorValidator', () => {
     it('should throw error for invalid density values', () => {
       expect(() =>
         BodyDescriptorValidator.validate(
-          { density: 'invalid-density' },
+          { hairDensity: 'invalid-density' },
           'test-recipe'
         )
       ).toThrow(BodyDescriptorValidationError);
@@ -100,7 +100,7 @@ describe('BodyDescriptorValidator', () => {
         BodyDescriptorValidator.validate({ build: 123 }, 'test-recipe')
       ).toThrow(BodyDescriptorValidationError);
       expect(() =>
-        BodyDescriptorValidator.validate({ density: {} }, 'test-recipe')
+        BodyDescriptorValidator.validate({ hairDensity: {} }, 'test-recipe')
       ).toThrow(BodyDescriptorValidationError);
     });
 
@@ -237,7 +237,7 @@ describe('BodyDescriptorValidator', () => {
   describe('getDescriptorLabel', () => {
     it('should return correct labels for known properties', () => {
       expect(BodyDescriptorValidator.getDescriptorLabel('build')).toBe('Build');
-      expect(BodyDescriptorValidator.getDescriptorLabel('density')).toBe(
+      expect(BodyDescriptorValidator.getDescriptorLabel('hairDensity')).toBe(
         'Body hair density'
       );
       expect(BodyDescriptorValidator.getDescriptorLabel('composition')).toBe(
@@ -260,7 +260,7 @@ describe('BodyDescriptorValidator', () => {
       const buildValues = BodyDescriptorValidator.getValidValues('build');
       expect(buildValues).toEqual(Object.values(BODY_BUILD_TYPES));
 
-      const densityValues = BodyDescriptorValidator.getValidValues('density');
+      const densityValues = BodyDescriptorValidator.getValidValues('hairDensity');
       expect(densityValues).toEqual(Object.values(BODY_HAIR_DENSITY));
 
       const compositionValues =
@@ -280,7 +280,7 @@ describe('BodyDescriptorValidator', () => {
   describe('hasEnumValidation', () => {
     it('should return true for enum-validated properties', () => {
       expect(BodyDescriptorValidator.hasEnumValidation('build')).toBe(true);
-      expect(BodyDescriptorValidator.hasEnumValidation('density')).toBe(true);
+      expect(BodyDescriptorValidator.hasEnumValidation('hairDensity')).toBe(true);
       expect(BodyDescriptorValidator.hasEnumValidation('composition')).toBe(
         true
       );
