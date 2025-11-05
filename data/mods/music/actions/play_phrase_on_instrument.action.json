@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "music:play_phrase_on_instrument",
+  "name": "Play Phrase on Instrument",
+  "description": "Perform an expressive musical phrase on the instrument you are currently playing, reflecting the current performance mood.",
+  "targets": {
+    "primary": {
+      "scope": "music:instrument_actor_is_playing",
+      "placeholder": "instrument",
+      "description": "The instrument you are currently playing"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "music:is_musician",
+      "music:playing_music",
+      "music:performance_mood"
+    ],
+    "primary": [
+      "items:item",
+      "music:is_instrument"
+    ]
+  },
+  "prerequisites": [],
+  "template": "play phrase on {instrument}",
+  "visual": {
+    "backgroundColor": "#1a2332",
+    "textColor": "#d1d5db",
+    "hoverBackgroundColor": "#2d3748",
+    "hoverTextColor": "#f3f4f6"
+  }
+}

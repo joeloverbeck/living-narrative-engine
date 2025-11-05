@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "music:event-is-action-play-phrase-on-instrument",
+  "description": "Evaluates to true when the event is an attempt to play a phrase on an instrument",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "music:play_phrase_on_instrument"
+    ]
+  }
+}
