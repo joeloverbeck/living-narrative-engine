@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_set_aggressive_mood_on_instrument",
-  "comment": "Handles the 'music:set_aggressive_mood_on_instrument' action. Sets performance mood component, adds playing_music and doing_complex_performance components, dispatches descriptive perceptible event and ends turn.",
+  "rule_id": "handle_set_playful_mood_on_instrument",
+  "comment": "Handles the 'music:set_playful_mood_on_instrument' action. Sets performance mood component, adds playing_music and doing_complex_performance components, dispatches descriptive perceptible event and ends turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "music:event-is-action-set-aggressive-mood-on-instrument"
+    "condition_ref": "music:event-is-action-set-playful-mood-on-instrument"
   },
   "actions": [
     {
@@ -27,9 +27,9 @@
       "type": "QUERY_LOOKUP",
       "parameters": {
         "lookup_id": "music:mood_lexicon",
-        "entry_key": "aggressive",
+        "entry_key": "playful",
         "result_variable": "moodData",
-        "missing_value": { "adj": "aggressive", "adjectives": "aggressive", "noun": "aggressive" }
+        "missing_value": { "adj": "playful", "adjectives": "playful", "noun": "playful" }
       }
     },
     {
@@ -38,7 +38,7 @@
         "entity_ref": "actor",
         "component_type": "music:performance_mood",
         "value": {
-          "mood": "aggressive"
+          "mood": "playful"
         }
       }
     },

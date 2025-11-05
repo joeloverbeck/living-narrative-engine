@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "music:event-is-action-set-aggressive-mood",
+  "id": "music:event-is-action-set-aggressive-mood-on-instrument",
   "description": "Aggressive mood action triggered",
   "logic": {
     "==": [

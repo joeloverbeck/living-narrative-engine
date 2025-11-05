@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "music:event-is-action-set-tender-mood",
+  "id": "music:event-is-action-set-tender-mood-on-instrument",
   "description": "Tender mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.actionId"},
+      {"var": "event.payload.actionId"},
       "music:set_tender_mood_on_instrument"
     ]
   }

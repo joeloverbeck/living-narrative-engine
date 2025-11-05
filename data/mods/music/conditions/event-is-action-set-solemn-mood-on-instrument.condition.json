@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "music:event-is-action-set-solemn-mood",
+  "id": "music:event-is-action-set-solemn-mood-on-instrument",
   "description": "Solemn mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.actionId"},
+      {"var": "event.payload.actionId"},
       "music:set_solemn_mood_on_instrument"
     ]
   }

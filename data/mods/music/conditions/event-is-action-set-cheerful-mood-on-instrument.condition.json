@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "music:event-is-action-set-cheerful-mood",
+  "id": "music:event-is-action-set-cheerful-mood-on-instrument",
   "description": "Cheerful mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.actionId"},
+      {"var": "event.payload.actionId"},
       "music:set_cheerful_mood_on_instrument"
     ]
   }
