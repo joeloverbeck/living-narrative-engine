@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createIntegrationTestBed } from '../../common/integrationTestBed.js';
+import { TestBedAnatomy } from '../../common/testbed.anatomy.js';
 
 describe('SkinColor in Anatomy Descriptions - Integration', () => {
   let testBed;
@@ -12,26 +12,26 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
   let bodyDescriptionComposer;
 
   beforeEach(async () => {
-    testBed = await createIntegrationTestBed();
-    entityManager = testBed.container.resolve('IEntityManager');
-    bodyDescriptionComposer = testBed.container.resolve(
-      'IBodyDescriptionComposer'
-    );
+    testBed = new TestBedAnatomy();
+    await testBed.setup();
+    entityManager = testBed.entityManager;
+    bodyDescriptionComposer = testBed.bodyDescriptionComposer;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     if (testBed && typeof testBed.cleanup === 'function') {
-      testBed.cleanup();
+      await testBed.cleanup();
     }
   });
 
   describe('Recipe with skinColor bodyDescriptor', () => {
     it('should include skinColor in description when present in recipe', async () => {
       // Create a test entity with anatomy:body component containing skinColor
-      const actorId = await entityManager.createEntityInstance('core:actor', {
+      const actor = await entityManager.createEntityInstance('core:actor', {
         skipValidation: false,
         generateId: true,
       });
+      const actorId = actor.id;
 
       // Add anatomy:body component with body.descriptors.skinColor
       await entityManager.addComponent(actorId, 'anatomy:body', {
@@ -71,10 +71,11 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
 
       for (const skinColor of skinColorValues) {
         // Create entity with specific skinColor
-        const actorId = await entityManager.createEntityInstance('core:actor', {
+        const actor = await entityManager.createEntityInstance('core:actor', {
           skipValidation: false,
           generateId: true,
         });
+        const actorId = actor.id;
 
         await entityManager.addComponent(actorId, 'anatomy:body', {
           recipeId: `test:recipe_${skinColor}`,
@@ -97,10 +98,11 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
 
     it('should handle recipe without skinColor gracefully', async () => {
       // Create entity without skinColor
-      const actorId = await entityManager.createEntityInstance('core:actor', {
+      const actor = await entityManager.createEntityInstance('core:actor', {
         skipValidation: false,
         generateId: true,
       });
+      const actorId = actor.id;
 
       await entityManager.addComponent(actorId, 'anatomy:body', {
         recipeId: 'test:recipe_no_skin_color',
@@ -127,10 +129,11 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
     });
 
     it('should place skinColor in correct order relative to other descriptors', async () => {
-      const actorId = await entityManager.createEntityInstance('core:actor', {
+      const actor = await entityManager.createEntityInstance('core:actor', {
         skipValidation: false,
         generateId: true,
       });
+      const actorId = actor.id;
 
       await entityManager.addComponent(actorId, 'anatomy:body', {
         recipeId: 'test:recipe_all_descriptors',
@@ -141,7 +144,7 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
             skinColor: 'olive',
             build: 'slim',
             composition: 'lean',
-            density: 'light',
+            hairDensity: 'light',
           },
           parts: {},
         },
@@ -174,10 +177,11 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
     });
 
     it('should work with only skinColor descriptor', async () => {
-      const actorId = await entityManager.createEntityInstance('core:actor', {
+      const actor = await entityManager.createEntityInstance('core:actor', {
         skipValidation: false,
         generateId: true,
       });
+      const actorId = actor.id;
 
       await entityManager.addComponent(actorId, 'anatomy:body', {
         recipeId: 'test:recipe_only_skin_color',
@@ -204,10 +208,11 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
 
   describe('Backward compatibility with deprecated entity-level components', () => {
     it('should still extract skinColor from deprecated descriptors:skin_color component', async () => {
-      const actorId = await entityManager.createEntityInstance('core:actor', {
+      const actor = await entityManager.createEntityInstance('core:actor', {
         skipValidation: false,
         generateId: true,
       });
+      const actorId = actor.id;
 
       // Add anatomy:body without skinColor in body.descriptors
       await entityManager.addComponent(actorId, 'anatomy:body', {
@@ -232,10 +237,11 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
     });
 
     it('should prefer body.descriptors.skinColor over deprecated format', async () => {
-      const actorId = await entityManager.createEntityInstance('core:actor', {
+      const actor = await entityManager.createEntityInstance('core:actor', {
         skipValidation: false,
         generateId: true,
       });
+      const actorId = actor.id;
 
       // Add both new and deprecated formats
       await entityManager.addComponent(actorId, 'anatomy:body', {
