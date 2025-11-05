@@ -18,10 +18,10 @@
   ],
   "content": {
     "components": [
-      "is_musician.component.json",
       "is_instrument.component.json",
-      "playing_music.component.json",
-      "performance_mood.component.json"
+      "is_musician.component.json",
+      "performance_mood.component.json",
+      "playing_music.component.json"
     ],
     "actions": [],
     "rules": [],

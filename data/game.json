@@ -22,8 +22,10 @@
     "kissing",
     "physical-control",
     "patrol",
-    "ballet",
-    "p_erotica_gymnast"
+    "ballet",    
+    "gymnastics",
+    "music",
+    "p_erotica_duchess"
   ],
-  "startWorld": "p_erotica_gymnast:gymnast"
+  "startWorld": "p_erotica_duchess:duchess"
 }

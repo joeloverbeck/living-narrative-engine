@@ -18,19 +18,19 @@
   ],
   "content": {
     "actions": [
-      "do_forward_roll.action.json",
       "do_backward_roll.action.json",
-      "do_cartwheel.action.json"
+      "do_cartwheel.action.json",
+      "do_forward_roll.action.json"
     ],
     "rules": [
-      "handle_do_forward_roll.rule.json",
       "handle_do_backward_roll.rule.json",
-      "handle_do_cartwheel.rule.json"
+      "handle_do_cartwheel.rule.json",
+      "handle_do_forward_roll.rule.json"
     ],
     "conditions": [
-      "event-is-action-do-forward-roll.condition.json",
       "event-is-action-do-backward-roll.condition.json",
-      "event-is-action-do-cartwheel.condition.json"
+      "event-is-action-do-cartwheel.condition.json",
+      "event-is-action-do-forward-roll.condition.json"
     ],
     "components": [
       "is_gymnast.component.json"
