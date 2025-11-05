@@ -5,21 +5,58 @@
  */
 
 import { describe, it, expect, beforeAll } from '@jest/globals';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { join } from 'path';
+import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'fs';
-import { validateAgainstSchema } from '../../../../src/validation/schemaValidationUtils.js';
+import { validateAgainstSchema } from '../../../../src/utils/schemaValidationUtils.js';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import SchemaLoader from '../../../../src/loaders/schemaLoader.js';
+import StaticConfiguration from '../../../../src/configuration/staticConfiguration.js';
+import DefaultPathResolver from '../../../../src/pathing/defaultPathResolver.js';
+import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
 describe('Music Mod Rule Schema Validation', () => {
   let validator;
+  let logger;
 
   beforeAll(async () => {
-    validator = new AjvSchemaValidator();
-    await validator.loadSchemas();
+    const config = new StaticConfiguration();
+    const resolver = new DefaultPathResolver(config);
+
+    // Use console logger to see actual errors
+    logger = {
+      debug: (...args) => console.log('[DEBUG]', ...args),
+      info: (...args) => console.log('[INFO]', ...args),
+      warn: (...args) => console.warn('[WARN]', ...args),
+      error: (...args) => console.error('[ERROR]', ...args),
+    };
+
+    validator = new AjvSchemaValidator({ logger });
+
+    const fetcher = {
+      async fetch(path) {
+        const data = await readFile(path, { encoding: 'utf-8' });
+        return JSON.parse(data);
+      },
+    };
+
+    const schemaLoader = new SchemaLoader(
+      config,
+      resolver,
+      fetcher,
+      validator,
+      logger
+    );
+
+    // Load all schemas including dependencies
+    await schemaLoader.loadAndCompileAllSchemas();
+
+    // Verify rule schema is loaded
+    const ruleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
+    const isLoaded = validator.isSchemaLoaded(ruleSchemaId);
+    if (!isLoaded) {
+      throw new Error(`Rule schema not loaded: ${ruleSchemaId}`);
+    }
   });
 
   const musicRuleFiles = [
@@ -40,8 +77,8 @@ describe('Music Mod Rule Schema Validation', () => {
       it(`should validate ${fileName} with QUERY_LOOKUP operations`, () => {
         // Arrange
         const filePath = join(
-          __dirname,
-          '../../../../data/mods/music/rules',
+          process.cwd(),
+          'data/mods/music/rules',
           fileName
         );
         const ruleContent = JSON.parse(readFileSync(filePath, 'utf-8'));
@@ -49,9 +86,10 @@ describe('Music Mod Rule Schema Validation', () => {
         // Act & Assert
         expect(() => {
           validateAgainstSchema(
-            ruleContent,
+            validator,
             'schema://living-narrative-engine/rule.schema.json',
-            validator
+            ruleContent,
+            logger
           );
         }).not.toThrow();
 
@@ -91,9 +129,10 @@ describe('Music Mod Rule Schema Validation', () => {
       // Act & Assert
       expect(() => {
         validateAgainstSchema(
-          sampleRule,
+          validator,
           'schema://living-narrative-engine/rule.schema.json',
-          validator
+          sampleRule,
+          logger
         );
       }).not.toThrow();
     });
@@ -119,9 +158,10 @@ describe('Music Mod Rule Schema Validation', () => {
       // Act & Assert
       expect(() => {
         validateAgainstSchema(
-          sampleRule,
+          validator,
           'schema://living-narrative-engine/rule.schema.json',
-          validator
+          sampleRule,
+          logger
         );
       }).not.toThrow();
     });
@@ -148,9 +188,10 @@ describe('Music Mod Rule Schema Validation', () => {
       // Act & Assert
       expect(() => {
         validateAgainstSchema(
-          invalidRule,
+          validator,
           'schema://living-narrative-engine/rule.schema.json',
-          validator
+          invalidRule,
+          logger
         );
       }).toThrow();
     });
@@ -175,9 +216,10 @@ describe('Music Mod Rule Schema Validation', () => {
       // Act & Assert
       expect(() => {
         validateAgainstSchema(
-          invalidRule,
+          validator,
           'schema://living-narrative-engine/rule.schema.json',
-          validator
+          invalidRule,
+          logger
         );
       }).toThrow();
     });
@@ -202,9 +244,10 @@ describe('Music Mod Rule Schema Validation', () => {
       // Act & Assert
       expect(() => {
         validateAgainstSchema(
-          invalidRule,
+          validator,
           'schema://living-narrative-engine/rule.schema.json',
-          validator
+          invalidRule,
+          logger
         );
       }).toThrow();
     });
