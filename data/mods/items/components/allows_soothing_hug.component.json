@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "items:allows_soothing_hug",
+  "description": "Marker component identifying comfort items (plush toys, stuffed animals, pillows, etc.) that can be hugged for emotional soothing.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
