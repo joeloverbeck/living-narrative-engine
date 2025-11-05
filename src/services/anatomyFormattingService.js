@@ -1,7 +1,10 @@
 // src/services/anatomyFormattingService.js
 
+/* global process */
+
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { validateDependencies } from '../utils/dependencyUtils.js';
+import { BodyDescriptorValidator } from '../anatomy/validators/bodyDescriptorValidator.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
@@ -59,6 +62,9 @@ export class AnatomyFormattingService {
     this.dataRegistry = dataRegistry;
     this.logger = logger;
     this.safeEventDispatcher = safeEventDispatcher;
+
+    // Initialize validator for bootstrap validation
+    this._validator = new BodyDescriptorValidator({ logger: this.logger });
 
     // Cache for merged configuration
     this._mergedConfig = null;
@@ -130,6 +136,10 @@ export class AnatomyFormattingService {
     }
 
     this._mergedConfig = mergedConfig;
+
+    // Validate configuration consistency during bootstrap
+    this._validateConfigurationConsistency();
+
     this._configInitialized = true;
 
     this.logger.debug('AnatomyFormattingService: Configuration initialized', {
@@ -207,6 +217,45 @@ export class AnatomyFormattingService {
     }
 
     return merged;
+  }
+
+  /**
+   * Validate configuration consistency with registry
+   * Called during initialization to detect issues at startup
+   *
+   * @private
+   */
+  _validateConfigurationConsistency() {
+    const result = this._validator.validateFormattingConfig(this._mergedConfig);
+
+    // Log errors (critical issues)
+    for (const error of result.errors) {
+      this.logger.error(`[Body Descriptor Config] ${error}`);
+    }
+
+    // Log warnings (missing descriptors)
+    for (const warning of result.warnings) {
+      this.logger.warn(`[Body Descriptor Config] ${warning}`);
+    }
+
+    // In development mode, fail fast on errors
+    if (process.env.NODE_ENV !== 'production' && result.errors.length > 0) {
+      throw new Error(
+        `Body descriptor configuration errors detected:\n${result.errors.join('\n')}`
+      );
+    }
+
+    // In development mode, make warnings visible
+    if (process.env.NODE_ENV !== 'production' && result.warnings.length > 0) {
+      /* eslint-disable no-console */
+      console.warn('\n⚠️  Body Descriptor Configuration Issues:\n');
+      result.warnings.forEach((warning) => {
+        console.warn(`   ${warning}`);
+      });
+      console.warn('\n   Fix by adding missing descriptors to:');
+      console.warn('   data/mods/anatomy/anatomy-formatting/default.json\n');
+      /* eslint-enable no-console */
+    }
   }
 
   /**
