@@ -255,12 +255,18 @@ describe('AnatomyValidationPhase Integration', () => {
 
       const result = await validationPhase.execute(ctx);
 
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'SYSTEM_ERROR_OCCURRED',
-        payload: expect.objectContaining({
+      // Event dispatch signature: dispatch(eventId, payload)
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
           error: 'Pattern resolution failed',
-        }),
-      });
+          context: expect.objectContaining({
+            blueprintId: 'test:blueprint',
+            recipeId: 'test:recipe',
+            validationRule: 'blueprint-recipe-coverage',
+          }),
+        })
+      );
 
       expect(result.anatomyValidation.errors).toBeGreaterThanOrEqual(1);
     });
