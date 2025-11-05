@@ -177,7 +177,7 @@ describe('BodyDescriptionComposer real module integration', () => {
     expect(lines[0]).toBe('Height: 6ft 2in');
     expect(description).toContain('Build: broad-shouldered');
     expect(description).toContain('Body composition: athletic');
-    expect(description).toContain('Hair density: sparse');
+    expect(description).toContain('Body hair: sparse');
     expect(description).toContain('Skin color: bronzed');
     expect(description).not.toContain('Equipped');
     expect(description).not.toContain('tail');

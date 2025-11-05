@@ -55,6 +55,7 @@ describe('DescriptionConfiguration', () => {
         'body_composition',
         'body_hair',
         'skin_color',
+        'smell',
         'hair',
         'eye',
         'face',
@@ -78,7 +79,7 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration({});
       const result = config.getDescriptionOrder();
 
-      expect(result.length).toBe(21);
+      expect(result.length).toBe(22);
       expect(result[0]).toBe('height');
     });
 
