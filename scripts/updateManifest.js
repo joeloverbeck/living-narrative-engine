@@ -19,7 +19,16 @@
 
 const fs = require('fs/promises');
 const path = require('path');
-const { ValidationError } = require('../src/errors/validationError.js');
+
+// Local ValidationError class for this script
+class ValidationError extends Error {
+  constructor(message, componentTypeId = null, validationErrors = null) {
+    super(message);
+    this.name = 'ValidationError';
+    this.componentTypeId = componentTypeId;
+    this.validationErrors = validationErrors;
+  }
+}
 
 // --- CONFIGURATION ---
 const MODS_BASE_PATH = path.join('data', 'mods');
@@ -206,13 +215,44 @@ async function scanPortraitDirectoryRecursively(basePath, currentPath = '') {
       files.push(...subFiles);
     } else if (entry.isFile()) {
       // Check if file has a supported image extension
-      const hasImageExtension = imageExtensions.some(ext => 
+      const hasImageExtension = imageExtensions.some(ext =>
         entry.name.toLowerCase().endsWith(ext)
       );
       if (hasImageExtension) {
         // Add the portrait file with its relative path
         files.push(entryPath);
       }
+    }
+  }
+
+  return files;
+}
+
+/**
+ * Recursively scan a directory for lookup files (.lookup.json extension), maintaining the relative path structure.
+ *
+ * @param {string} basePath - The base path to scan from
+ * @param {string} currentPath - The current directory being scanned
+ * @returns {Promise<string[]>} Array of file paths relative to basePath
+ */
+async function scanLookupDirectoryRecursively(basePath, currentPath = '') {
+  const fullPath = path.join(basePath, currentPath);
+  const entries = await fs.readdir(fullPath, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(currentPath, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively scan subdirectories
+      const subFiles = await scanLookupDirectoryRecursively(
+        basePath,
+        entryPath
+      );
+      files.push(...subFiles);
+    } else if (entry.isFile() && entry.name.endsWith('.lookup.json')) {
+      // Add the lookup file with its relative path
+      files.push(entryPath);
     }
   }
 
@@ -658,6 +698,11 @@ async function processContentType(modPath, contentType, manifest, opts) {
       } else if (contentType === 'portraits') {
         files = await scanPortraitDirectoryRecursively(contentDirPath);
         console.log(`  - Scanned "${contentType}": Found ${files.length} image file(s).`);
+        manifest.content[contentType] = files.sort();
+        result.filesProcessed += files.length;
+      } else if (contentType === 'lookups') {
+        files = await scanLookupDirectoryRecursively(contentDirPath);
+        console.log(`  - Scanned "${contentType}": Found ${files.length} .lookup.json file(s).`);
         manifest.content[contentType] = files.sort();
         result.filesProcessed += files.length;
       } else {
