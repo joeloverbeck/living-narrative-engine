@@ -84,6 +84,12 @@ export class DescriptorFormatter {
    */
   formatSingleDescriptor(descriptor) {
     const { componentId, value } = descriptor;
+
+    // Handle embellishment descriptors with "embellished with" prefix
+    if (componentId === 'descriptors:embellishment') {
+      return `embellished with ${value}`;
+    }
+
     // Handle multi-word values that should stay hyphenated
     if (value.includes('-')) {
       return value;

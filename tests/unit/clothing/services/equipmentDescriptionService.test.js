@@ -666,7 +666,7 @@ describe('EquipmentDescriptionService', () => {
           'core:material': { material: 'silk' },
           'descriptors:color_basic': { color: 'white' },
           'descriptors:texture': { texture: 'smooth' },
-          'descriptors:embellishment': { embellishment: 'crystal' },
+          'descriptors:embellishment': { embellishment: 'crystals' },
           'core:name': { text: 'shirt' },
         },
       };
@@ -677,7 +677,7 @@ describe('EquipmentDescriptionService', () => {
       });
       mockEntityManager.getEntityInstance.mockResolvedValue(mockShirtEntity);
       mockDescriptorFormatter.formatDescriptors.mockReturnValue(
-        'silk, white, smooth, crystal, formal'
+        'silk, white, smooth, embellished with crystals, formal'
       );
 
       // Act
@@ -685,7 +685,7 @@ describe('EquipmentDescriptionService', () => {
 
       // Assert
       expect(result).toBe(
-        'Wearing: silk, white, smooth, crystal, formal shirt.'
+        'Wearing: silk, white, smooth, embellished with crystals, formal shirt.'
       );
       expect(mockDescriptorFormatter.formatDescriptors).toHaveBeenCalledWith(
         expect.arrayContaining([
@@ -703,7 +703,7 @@ describe('EquipmentDescriptionService', () => {
           }),
           expect.objectContaining({
             componentId: 'descriptors:embellishment',
-            value: 'crystal',
+            value: 'crystals',
           }),
           expect.objectContaining({
             componentId: 'descriptors:style',
