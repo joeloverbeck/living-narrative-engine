@@ -67,6 +67,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
 
     const mockEventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn(), // Add subscribe method for ClothingInstantiationService
     };
 
     const mockLayerResolutionService = {
@@ -152,6 +153,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
 
     const mockEventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn(), // Add subscribe method for ClothingInstantiationService
     };
 
     const mockLayerResolutionService = {
@@ -270,6 +272,7 @@ describe('Anatomy Visualizer - Service Integration', () => {
 
     const mockEventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn(), // Add subscribe method for ClothingInstantiationService
     };
 
     const mockLayerResolutionService = {

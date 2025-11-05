@@ -425,23 +425,39 @@ export class BodyDescriptionComposer {
   /**
    * Extract all body-level descriptors and return them as formatted strings
    * Uses centralized registry for extraction and formatting
+   * Falls back to deprecated entity-level components for backward compatibility
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
    * @returns {Object<string, string>} Map of descriptor type to formatted string
    */
   extractBodyLevelDescriptors(bodyEntity) {
-    const bodyComponent = this.#getBodyComponent(bodyEntity);
     const descriptors = {};
+
+    // Map registry descriptor names to their extraction methods
+    // These methods include fallback logic for deprecated entity-level components
+    const extractionMethodMap = {
+      height: this.extractHeightDescription.bind(this),
+      skinColor: this.extractSkinColorDescription.bind(this),
+      build: this.extractBuildDescription.bind(this),
+      composition: this.extractBodyCompositionDescription.bind(this),
+      hairDensity: this.extractBodyHairDescription.bind(this),
+      smell: this.extractSmellDescription.bind(this),
+    };
 
     // Iterate through registry in display order
     for (const descriptorName of getDescriptorsByDisplayOrder()) {
       const metadata = BODY_DESCRIPTOR_REGISTRY[descriptorName];
-      const value = metadata.extractor(bodyComponent);
+      const extractMethod = extractionMethodMap[descriptorName];
 
-      if (value) {
-        // Use formatter from registry (formatters already include label)
-        // e.g., formatter returns "Height: tall" not just "tall"
-        descriptors[metadata.displayKey] = metadata.formatter(value);
+      if (extractMethod) {
+        // Use extraction method which includes fallback logic
+        const value = extractMethod(bodyEntity);
+
+        if (value) {
+          // Use formatter from registry (formatters already include label)
+          // e.g., formatter returns "Height: tall" not just "tall"
+          descriptors[metadata.displayKey] = metadata.formatter(value);
+        }
       }
     }
 
