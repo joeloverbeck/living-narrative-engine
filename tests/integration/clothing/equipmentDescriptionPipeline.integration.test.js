@@ -220,7 +220,7 @@ describe('Equipment Description Pipeline Integration', () => {
           'core:description': { text: 'flats' },
           'core:material': { material: 'satin' },
           'descriptors:color_basic': { color: 'blush' },
-          'descriptors:embellishment': { embellishment: 'crystal' },
+          'descriptors:embellishment': { embellishment: 'crystals' },
           'clothing:wearable': {
             slotId: 'feet_clothing',
             layer: 'base',
@@ -235,7 +235,7 @@ describe('Equipment Description Pipeline Integration', () => {
           entityId
         );
 
-      expect(result).toContain('crystal');
+      expect(result).toContain('embellished with crystals');
       expect(result).toContain('flats');
     });
   });

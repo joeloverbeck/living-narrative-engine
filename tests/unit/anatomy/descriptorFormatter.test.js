@@ -53,6 +53,16 @@ describe('DescriptorFormatter', () => {
   });
 
   describe('formatSingleDescriptor', () => {
+    it('formats embellishment descriptors with "embellished with" prefix', () => {
+      const formatter = createFormatter();
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:embellishment',
+          value: 'crystals',
+        })
+      ).toBe('embellished with crystals');
+    });
+
     it('keeps hyphenated values intact', () => {
       const formatter = createFormatter();
       expect(
