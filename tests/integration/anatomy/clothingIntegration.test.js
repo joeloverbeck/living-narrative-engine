@@ -123,11 +123,34 @@ describe('Anatomy-Clothing Integration', () => {
       })),
     };
 
-    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+    const mockBlueprint = {
+      clothingSlotMappings: {
+        torso: {
+          socketIds: ['torso-socket'],
+          allowedLayers: ['base', 'outer'],
+        },
+      },
+    };
+
+    // Mock for getEntityInstance - returns both the actor entity and clothing instance
+    mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      if (id === entityId) return mockEntity;
+      if (id === 'clothing-instance-1') return mockClothingEntity;
+      return null;
+    });
+
     mockDataRegistry.get.mockReturnValue(mockRecipe);
     mockEntityManager.createEntityInstance.mockResolvedValue(
       mockClothingEntity
     );
+
+    // Mock anatomy data for validation
+    mockBodyGraphService.getAnatomyData.mockResolvedValue({ recipeId });
+    mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+      mockBlueprint
+    );
+    mockSlotResolver.resolveClothingSlot.mockResolvedValue(['torso-socket']);
+
     mockClothingSlotValidator.validateSlotCompatibility.mockResolvedValue({
       valid: true,
     });
@@ -198,8 +221,16 @@ describe('Anatomy-Clothing Integration', () => {
     const entityId = 'test-entity';
     const recipeId = 'core:adult_human';
 
-    // Setup mocks to cause an error
-    mockEntityManager.getEntityInstance.mockReturnValue(null); // Entity not found
+    // Setup mocks - entity exists but recipe access throws an error
+    const mockEntity = {
+      getComponentData: jest.fn(() => ({ recipeId })),
+    };
+
+    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+    // Make dataRegistry.get throw an error to trigger exception handling
+    mockDataRegistry.get.mockImplementation(() => {
+      throw new Error('Database connection failed');
+    });
 
     // Create a promise that resolves when error event is dispatched
     const errorEventDispatched = new Promise((resolve) => {
@@ -255,11 +286,34 @@ describe('Anatomy-Clothing Integration', () => {
       })),
     };
 
-    mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+    const mockBlueprint = {
+      clothingSlotMappings: {
+        torso: {
+          socketIds: ['torso-socket'],
+          allowedLayers: ['base', 'outer'],
+        },
+      },
+    };
+
+    // Mock for getEntityInstance - returns both the actor entity and clothing instance
+    mockEntityManager.getEntityInstance.mockImplementation((id) => {
+      if (id === entityId) return mockEntity;
+      if (id === 'clothing-instance-1') return mockClothingEntity;
+      return null;
+    });
+
     mockDataRegistry.get.mockReturnValue(mockRecipe);
     mockEntityManager.createEntityInstance.mockResolvedValue(
       mockClothingEntity
     );
+
+    // Mock anatomy data for validation
+    mockBodyGraphService.getAnatomyData.mockResolvedValue({ recipeId });
+    mockAnatomyBlueprintRepository.getBlueprintByRecipeId.mockResolvedValue(
+      mockBlueprint
+    );
+    mockSlotResolver.resolveClothingSlot.mockResolvedValue(['torso-socket']);
+
     mockClothingSlotValidator.validateSlotCompatibility.mockResolvedValue({
       valid: true,
     });
