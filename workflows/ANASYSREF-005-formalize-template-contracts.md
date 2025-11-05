@@ -10,104 +10,124 @@
 
 ## Problem Statement
 
-Structure templates lack **formal validation**, leading to:
-- Runtime errors from invalid template configurations
-- No IDE autocomplete support
-- Unclear contract between templates and generators
-- Template errors discovered during anatomy generation, not at load time
+**NOTE**: A JSON schema already exists at `data/schemas/anatomy.structure-template.schema.json`, but it may not be fully enforced at load time. This workflow focuses on ensuring the schema validation is properly integrated into the loading process.
+
+Structure templates have partial validation, but could be improved:
+- Some runtime errors from invalid template configurations still possible
+- Schema validation may not be consistently enforced at load time
+- Template errors could be caught earlier in the loading process
 
 ---
 
 ## Objective
 
-Create and enforce **JSON Schema validation** for structure templates:
-- Define formal contract for template structure
-- Validate at load time (fail fast)
-- Provide IDE support via schema
-- Document expected structure clearly
+Ensure **JSON Schema validation** is properly enforced for structure templates:
+- Verify existing schema at `data/schemas/anatomy.structure-template.schema.json` is comprehensive
+- Ensure validation occurs at load time in `anatomyStructureTemplateLoader.js` (fail fast)
+- Verify IDE support via schema is working
+- Ensure error handling provides clear feedback
 
 ---
 
 ## Implementation Details
 
-### 1. Create JSON Schema
+### 1. Verify Existing JSON Schema
 
-**File**: `data/schemas/anatomy/structure-template.schema.json`
+**File**: `data/schemas/anatomy.structure-template.schema.json` (ALREADY EXISTS)
+
+**Schema ID**: `schema://living-narrative-engine/anatomy.structure-template.schema.json`
+
+The existing schema defines the structure template format:
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "schema://living-narrative-engine/anatomy/structure-template",
+  "$id": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
   "title": "Anatomy Structure Template",
-  "description": "Defines socket patterns for V2 anatomy blueprints",
+  "description": "Parameterized body structure definition for generating anatomy blueprints",
   "type": "object",
-  "required": ["id", "socketPatterns"],
+  "required": ["id", "topology"],
   "properties": {
     "id": {
-      "type": "string",
-      "pattern": "^[a-z0-9_]+:[a-z0-9_]+$",
-      "description": "Template identifier in format modId:templateId"
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier (e.g., 'anatomy:structure_humanoid')"
     },
     "description": {
       "type": "string",
-      "description": "Human-readable description of template purpose"
+      "minLength": 10,
+      "description": "Human-readable description"
     },
-    "socketPatterns": {
-      "type": "array",
-      "minItems": 1,
-      "description": "Array of socket pattern definitions",
-      "items": {
-        "$ref": "#/definitions/socketPattern"
+    "topology": {
+      "type": "object",
+      "required": ["rootType"],
+      "properties": {
+        "rootType": {
+          "type": "string",
+          "description": "Root body part type (e.g., 'torso', 'cephalothorax')"
+        },
+        "limbSets": {
+          "type": "array",
+          "description": "Limb set definitions (legs, arms, tentacles, wings)",
+          "items": {
+            "type": "object",
+            "required": ["type", "count", "socketPattern"],
+            "properties": {
+              "type": { "type": "string" },
+              "count": { "type": "integer", "minimum": 1, "maximum": 100 },
+              "arrangement": {
+                "enum": ["bilateral", "radial", "quadrupedal", "linear", "custom"]
+              },
+              "socketPattern": {
+                "$ref": "#/definitions/socketPattern"
+              }
+            }
+          }
+        },
+        "appendages": {
+          "type": "array",
+          "description": "Appendage definitions (head, tail, abdomen)",
+          "items": {
+            "type": "object",
+            "required": ["type", "count", "attachment", "socketPattern"],
+            "properties": {
+              "type": { "type": "string" },
+              "count": { "type": "integer", "minimum": 1, "maximum": 10 },
+              "attachment": {
+                "enum": ["anterior", "posterior", "dorsal", "ventral", "lateral", "custom"]
+              },
+              "socketPattern": {
+                "$ref": "#/definitions/socketPattern"
+              }
+            }
+          }
+        }
       }
     }
   },
   "definitions": {
     "socketPattern": {
       "type": "object",
-      "required": ["slotType", "idTemplate", "orientationScheme"],
+      "required": ["idTemplate", "allowedTypes"],
       "properties": {
-        "slotType": {
-          "type": "string",
-          "description": "Type of slot being generated"
-        },
         "idTemplate": {
           "type": "string",
-          "description": "Template string with {index}, {orientation}, {type} variables",
-          "pattern": ".*\\{(index|orientation|position|type)\\}.*"
+          "pattern": "^[a-z_]+(\\{\\{[a-z_]+\\}\\}.*)?$",
+          "description": "Template with {{index}}, {{orientation}}, {{position}} variables"
         },
         "orientationScheme": {
-          "type": "string",
-          "enum": ["bilateral", "radial", "indexed", "custom", "quadrupedal"],
-          "description": "How to resolve orientation values"
+          "enum": ["bilateral", "radial", "indexed", "custom"],
+          "default": "indexed",
+          "description": "How orientations are computed"
         },
         "allowedTypes": {
           "type": "array",
           "items": { "type": "string" },
-          "minItems": 1,
-          "description": "Allowed entity types for this slot"
+          "minItems": 1
         },
         "positions": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Custom position names (for 'custom' orientation scheme)"
-        },
-        "count": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Number of sockets to generate (overridden by blueprint parameters)"
-        },
-        "limbSet": {
-          "type": "string",
-          "description": "Limb set grouping for recipe pattern matching"
-        }
-      },
-      "if": {
-        "properties": { "orientationScheme": { "const": "custom" } }
-      },
-      "then": {
-        "required": ["positions"],
-        "properties": {
-          "positions": { "minItems": 1 }
+          "description": "Explicit position names for custom arrangements"
         }
       }
     }
@@ -115,57 +135,166 @@ Create and enforce **JSON Schema validation** for structure templates:
 }
 ```
 
-### 2. Schema Validation at Load Time
+**Key Structure Notes**:
+- Templates use `topology: { rootType, limbSets[], appendages[] }` structure
+- Socket patterns nested inside limbSets and appendages
+- Template variables use **double braces**: `{{index}}`, `{{orientation}}`, `{{position}}`
+- Orientation schemes in socketPattern: `bilateral`, `radial`, `indexed`, `custom` (no quadrupedal here)
+- Arrangement in limbSets supports: `bilateral`, `radial`, `quadrupedal`, `linear`, `custom`
 
-**File**: `src/loaders/anatomyStructureTemplateLoader.js`
+### 2. Enhance Schema Validation at Load Time
+
+**File**: `src/loaders/anatomyStructureTemplateLoader.js` (ALREADY EXISTS)
+
+The loader already exists and extends `SimpleItemLoader`. It has manual validation in `_processFetchedItem`. We should enhance it to use schema validation:
 
 ```javascript
-import { validateAgainstSchema } from '../validation/ajvSchemaValidator.js';
-import { InvalidStructureTemplateError } from '../anatomy/errors/invalidStructureTemplateError.js';
+// Existing imports at top of file
+import { SimpleItemLoader } from './simpleItemLoader.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
+import { ValidationError } from '../errors/validationError.js';
+import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
+import { formatAjvErrors } from '../utils/ajvUtils.js';
 
-export class AnatomyStructureTemplateLoader {
-  #logger;
-  #schemaValidator;
-
-  constructor({ logger, schemaValidator }) {
-    this.#logger = logger;
-    this.#schemaValidator = schemaValidator;
+class AnatomyStructureTemplateLoader extends SimpleItemLoader {
+  constructor(config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger) {
+    super(
+      'anatomyStructureTemplates',
+      config,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger
+    );
   }
 
-  loadTemplate(templatePath) {
-    const template = this.#readTemplateFile(templatePath);
-
-    // Validate against schema
-    const validationResult = validateAgainstSchema(
-      template,
-      'schema://living-narrative-engine/anatomy/structure-template'
+  /**
+   * Processes a single fetched anatomy structure template file's data.
+   * @override
+   */
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
+    this._logger.debug(
+      `AnatomyStructureTemplateLoader [${modId}]: Processing ${filename}`
     );
 
-    if (!validationResult.valid) {
-      const errors = formatAjvErrors(validationResult.errors);
-      throw new InvalidStructureTemplateError(
-        `Template ${template.id} failed schema validation:\n${errors}`,
-        validationResult.errors
+    // First validate against JSON schema
+    try {
+      validateAgainstSchema(
+        this._schemaValidator,
+        'schema://living-narrative-engine/anatomy.structure-template.schema.json',
+        data,
+        this._logger,
+        {
+          validationDebugMessage: `Validating structure template from ${filename}`,
+          failureMessage: `Structure template '${filename}' from mod '${modId}' failed schema validation`,
+          failureThrowMessage: `Invalid structure template in '${filename}' from mod '${modId}'`,
+          filePath: resolvedPath
+        }
+      );
+    } catch (validationError) {
+      // Schema validation throws on failure, re-throw as ValidationError
+      throw new ValidationError(
+        `Structure template schema validation failed: ${validationError.message}`,
+        data.id,
+        validationError
       );
     }
 
-    this.#logger.debug(`Structure template ${template.id} validated successfully`);
-    return template;
+    // Manual validation (kept for backward compatibility and additional checks)
+    if (!data.id) {
+      throw new ValidationError(
+        `Invalid structure template in '${filename}' from mod '${modId}'. Missing required 'id' field.`
+      );
+    }
+    if (!data.topology) {
+      throw new ValidationError(
+        `Invalid structure template in '${filename}' from mod '${modId}'. Missing required 'topology' field.`
+      );
+    }
+    if (!data.topology.rootType) {
+      throw new ValidationError(
+        `Invalid structure template in '${filename}' from mod '${modId}'. Missing required 'topology.rootType' field.`
+      );
+    }
+
+    // Validate limb sets if present
+    if (data.topology.limbSets && Array.isArray(data.topology.limbSets)) {
+      this._validateLimbSets(data.topology.limbSets, modId, filename);
+    }
+
+    // Validate appendages if present
+    if (data.topology.appendages && Array.isArray(data.topology.appendages)) {
+      this._validateAppendages(data.topology.appendages, modId, filename);
+    }
+
+    // Store the template in the registry
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
+      data,
+      idProp: 'id',
+      category: 'anatomyStructureTemplates',
+      modId,
+      filename,
+    });
+
+    this._logger.debug(
+      `AnatomyStructureTemplateLoader [${modId}]: Successfully processed ${filename}. Registry key: ${qualifiedId}`
+    );
+
+    return { qualifiedId, didOverride };
+  }
+
+  // _validateLimbSets, _validateAppendages, _validateSocketPattern methods remain unchanged
+}
+```
+
+**Key Changes**:
+- Import `validateAgainstSchema` from `../utils/schemaValidationUtils.js` (not from validator)
+- Import `formatAjvErrors` from `../utils/ajvUtils.js`
+- Call `validateAgainstSchema(validator, schemaId, data, logger, context)` with correct signature
+- Use correct schema ID: `schema://living-narrative-engine/anatomy.structure-template.schema.json`
+- Throw `ValidationError` (existing error class) instead of custom error
+- Keep existing manual validation for backward compatibility
+
+### 3. Error Handling
+
+**No custom error class needed** - use existing `ValidationError` from `src/errors/validationError.js`
+
+The existing `ValidationError` class already handles validation failures:
+
+```javascript
+// From src/errors/validationError.js
+export class ValidationError extends BaseError {
+  constructor(message, componentTypeId = null, validationErrors = null) {
+    super(message, 'VALIDATION_ERROR', { componentTypeId, validationErrors });
+    this.name = 'ValidationError';
+    this.componentTypeId = componentTypeId;
+    this.validationErrors = validationErrors;
   }
 }
 ```
 
-### 3. Custom Error Class
+**Usage in loader**:
+```javascript
+import { ValidationError } from '../errors/validationError.js';
 
-**File**: `src/anatomy/errors/invalidStructureTemplateError.js`
+throw new ValidationError(
+  `Structure template schema validation failed: ${error.message}`,
+  data.id,
+  validationErrors
+);
+```
+
+If a more specific error is needed, follow the pattern of `BodyDescriptorValidationError` which extends `ValidationError`:
 
 ```javascript
-export class InvalidStructureTemplateError extends Error {
-  constructor(message, validationErrors = []) {
-    super(message);
-    this.name = 'InvalidStructureTemplateError';
-    this.code = 'INVALID_STRUCTURE_TEMPLATE';
-    this.validationErrors = validationErrors;
+// src/anatomy/errors/structureTemplateValidationError.js (OPTIONAL)
+import { ValidationError } from '../../errors/validationError.js';
+
+export class StructureTemplateValidationError extends ValidationError {
+  constructor(message, templateId = null, validationErrors = null) {
+    super(message, templateId, validationErrors);
+    this.name = 'StructureTemplateValidationError';
   }
 }
 ```
@@ -177,91 +306,274 @@ export class InvalidStructureTemplateError extends Error {
 ### Schema Validation Tests
 
 ```javascript
-// tests/unit/schemas/anatomy/structureTemplateSchema.test.js
-describe('Structure Template Schema', () => {
-  it('should validate valid structure template', () => {
+// tests/unit/loaders/anatomyStructureTemplateLoader.schemaValidation.test.js
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { createTestBed } from '../../common/testBed.js';
+
+describe('AnatomyStructureTemplateLoader - Schema Validation', () => {
+  let testBed;
+  let loader;
+  let schemaValidator;
+
+  beforeEach(() => {
+    testBed = createTestBed();
+    schemaValidator = testBed.getMockSchemaValidator();
+    loader = testBed.getLoader('anatomyStructureTemplates');
+  });
+
+  it('should validate valid structure template with limbSets', async () => {
     const template = {
       id: 'anatomy:test_template',
-      socketPatterns: [{
-        slotType: 'tentacle',
-        idTemplate: 'tentacle_{orientation}_{index}',
-        orientationScheme: 'radial',
-        allowedTypes: ['tentacle']
-      }]
+      description: 'Test template for validation',
+      topology: {
+        rootType: 'torso',
+        limbSets: [{
+          type: 'tentacle',
+          count: 8,
+          arrangement: 'radial',
+          socketPattern: {
+            idTemplate: 'tentacle_{{index}}',
+            orientationScheme: 'indexed',
+            allowedTypes: ['tentacle']
+          }
+        }]
+      }
     };
 
-    const result = validateAgainstSchema(template, 'schema://living-narrative-engine/anatomy/structure-template');
-    expect(result.valid).toBe(true);
+    // Mock schema validator to return valid
+    schemaValidator.validate.mockReturnValue({ isValid: true, errors: null });
+
+    const result = await loader._processFetchedItem(
+      'test_mod',
+      'test.json',
+      '/path/to/test.json',
+      template,
+      'anatomyStructureTemplates'
+    );
+
+    expect(result.qualifiedId).toBe('test_mod:test_template');
   });
 
-  it('should reject template with invalid orientation scheme', () => {
+  it('should reject template with invalid orientation scheme', async () => {
     const template = {
       id: 'anatomy:test',
-      socketPatterns: [{
-        slotType: 'limb',
-        idTemplate: 'limb_{index}',
-        orientationScheme: 'invalid_scheme'  // Invalid!
-      }]
+      description: 'Test template with invalid scheme',
+      topology: {
+        rootType: 'torso',
+        limbSets: [{
+          type: 'limb',
+          count: 4,
+          socketPattern: {
+            idTemplate: 'limb_{{index}}',
+            orientationScheme: 'invalid_scheme',  // Invalid!
+            allowedTypes: ['limb']
+          }
+        }]
+      }
     };
 
-    const result = validateAgainstSchema(template, 'schema://living-narrative-engine/anatomy/structure-template');
-    expect(result.valid).toBe(false);
+    // Mock schema validator to return invalid
+    schemaValidator.validate.mockReturnValue({
+      isValid: false,
+      errors: [{
+        instancePath: '/topology/limbSets/0/socketPattern/orientationScheme',
+        message: 'must be equal to one of the allowed values'
+      }]
+    });
+
+    await expect(async () => {
+      await loader._processFetchedItem(
+        'test_mod',
+        'test.json',
+        '/path/to/test.json',
+        template,
+        'anatomyStructureTemplates'
+      );
+    }).rejects.toThrow(/schema validation failed/);
   });
 
-  it('should require positions for custom orientation scheme', () => {
+  it('should validate template with appendages', async () => {
     const template = {
-      id: 'anatomy:test',
-      socketPatterns: [{
-        slotType: 'limb',
-        idTemplate: 'limb_{orientation}',
-        orientationScheme: 'custom'
-        // Missing required positions array!
-      }]
+      id: 'anatomy:test_appendage',
+      description: 'Test template with appendages',
+      topology: {
+        rootType: 'cephalothorax',
+        appendages: [{
+          type: 'head',
+          count: 1,
+          attachment: 'anterior',
+          socketPattern: {
+            idTemplate: 'head',
+            allowedTypes: ['head']
+          }
+        }]
+      }
     };
 
-    const result = validateAgainstSchema(template, 'schema://living-narrative-engine/anatomy/structure-template');
-    expect(result.valid).toBe(false);
+    schemaValidator.validate.mockReturnValue({ isValid: true, errors: null });
+
+    const result = await loader._processFetchedItem(
+      'test_mod',
+      'test.json',
+      '/path/to/test.json',
+      template,
+      'anatomyStructureTemplates'
+    );
+
+    expect(result.qualifiedId).toBe('test_mod:test_appendage');
+  });
+
+  it('should validate template variable syntax uses double braces', () => {
+    const template = {
+      id: 'anatomy:test',
+      description: 'Test double brace syntax',
+      topology: {
+        rootType: 'torso',
+        limbSets: [{
+          type: 'leg',
+          count: 2,
+          socketPattern: {
+            idTemplate: 'leg_{{orientation}}_{{index}}',  // Double braces!
+            orientationScheme: 'bilateral',
+            allowedTypes: ['leg']
+          }
+        }]
+      }
+    };
+
+    // Pattern should match: ^[a-z_]+(\\{\\{[a-z_]+\\}\\}.*)?$
+    expect(template.topology.limbSets[0].socketPattern.idTemplate).toMatch(/\{\{[a-z_]+\}\}/);
   });
 });
 ```
+
+**Key Test Corrections**:
+- Use correct template structure: `topology: { rootType, limbSets[], appendages[] }`
+- Template variables use **double braces**: `{{index}}`, not `{index}`
+- Correct schema ID: `schema://living-narrative-engine/anatomy.structure-template.schema.json`
+- Test file location: `tests/unit/loaders/` (not `tests/unit/schemas/`)
+- Use `testBed` pattern for mocking
+- Test async `_processFetchedItem` method
 
 ### Integration Tests
 
 ```javascript
-// tests/integration/loaders/structureTemplateValidation.test.js
-describe('Structure Template Loading with Validation', () => {
-  it('should reject invalid template at load time', async () => {
-    const loader = testBed.container.resolve('IAnatomyStructureTemplateLoader');
+// tests/integration/loaders/anatomyStructureTemplateLoader.integration.test.js
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { createTestBed } from '../../common/testBed.js';
 
-    // Attempt to load invalid template
-    await expect(async () => {
-      await loader.loadTemplate('invalid-template.json');
-    }).rejects.toThrow(InvalidStructureTemplateError);
+describe('Structure Template Loading with Validation', () => {
+  let testBed;
+
+  beforeEach(() => {
+    testBed = createTestBed();
   });
 
-  it('should load valid templates successfully', async () => {
-    const loader = testBed.container.resolve('IAnatomyStructureTemplateLoader');
-    const template = await loader.loadTemplate('anatomy:structure_humanoid');
+  afterEach(() => {
+    testBed.cleanup();
+  });
 
-    expect(template.id).toBe('anatomy:structure_humanoid');
-    expect(template.socketPatterns).toBeDefined();
+  it('should reject invalid template at load time', async () => {
+    const invalidTemplate = {
+      id: 'anatomy:invalid',
+      // Missing required topology field
+    };
+
+    const loader = testBed.getLoader('anatomyStructureTemplates');
+
+    await expect(async () => {
+      await loader._processFetchedItem(
+        'test_mod',
+        'invalid.json',
+        '/path/to/invalid.json',
+        invalidTemplate,
+        'anatomyStructureTemplates'
+      );
+    }).rejects.toThrow(/topology/);
+  });
+
+  it('should load valid octopoid template successfully', async () => {
+    const registry = testBed.getDataRegistry();
+
+    // Load actual template from data
+    const template = registry.getItem('anatomyStructureTemplates', 'anatomy:structure_octopoid');
+
+    expect(template).toBeDefined();
+    expect(template.id).toBe('anatomy:structure_octopoid');
+    expect(template.topology).toBeDefined();
+    expect(template.topology.rootType).toBe('mantle');
+    expect(template.topology.limbSets).toBeDefined();
+    expect(template.topology.limbSets.length).toBeGreaterThan(0);
+
+    // Verify socket pattern structure
+    const firstLimbSet = template.topology.limbSets[0];
+    expect(firstLimbSet.socketPattern).toBeDefined();
+    expect(firstLimbSet.socketPattern.idTemplate).toBeDefined();
+    expect(firstLimbSet.socketPattern.allowedTypes).toBeDefined();
+    expect(Array.isArray(firstLimbSet.socketPattern.allowedTypes)).toBe(true);
+  });
+
+  it('should validate all existing structure templates', async () => {
+    const registry = testBed.getDataRegistry();
+    const templates = registry.getAllItems('anatomyStructureTemplates');
+
+    expect(templates.size).toBeGreaterThan(0);
+
+    // All loaded templates should have valid structure
+    for (const [id, template] of templates) {
+      expect(template.id).toBe(id);
+      expect(template.topology).toBeDefined();
+      expect(template.topology.rootType).toBeDefined();
+
+      // Validate limbSets if present
+      if (template.topology.limbSets) {
+        for (const limbSet of template.topology.limbSets) {
+          expect(limbSet.type).toBeDefined();
+          expect(limbSet.count).toBeGreaterThan(0);
+          expect(limbSet.socketPattern).toBeDefined();
+          expect(limbSet.socketPattern.idTemplate).toBeDefined();
+          expect(limbSet.socketPattern.allowedTypes).toBeDefined();
+        }
+      }
+
+      // Validate appendages if present
+      if (template.topology.appendages) {
+        for (const appendage of template.topology.appendages) {
+          expect(appendage.type).toBeDefined();
+          expect(appendage.count).toBeGreaterThan(0);
+          expect(appendage.attachment).toBeDefined();
+          expect(appendage.socketPattern).toBeDefined();
+        }
+      }
+    }
   });
 });
 ```
+
+**Key Integration Test Corrections**:
+- Use `testBed.getLoader()` and `testBed.getDataRegistry()` patterns
+- Test actual templates like `anatomy:structure_octopoid`
+- Validate `topology` structure, not `socketPatterns`
+- Check `topology.rootType`, `topology.limbSets`, `topology.appendages`
+- Verify socket patterns are nested in limbSets/appendages
+- Test file location: `tests/integration/loaders/`
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] JSON Schema created for structure templates
-- [ ] Schema validation integrated into template loader
-- [ ] InvalidStructureTemplateError class created
-- [ ] All existing templates pass schema validation
-- [ ] Schema tests achieve 95% coverage
-- [ ] Integration tests verify load-time validation
-- [ ] IDE autocomplete works with schema (VS Code)
-- [ ] Documentation updated with schema reference
+- [ ] Verify JSON Schema at `data/schemas/anatomy.structure-template.schema.json` is comprehensive
+- [ ] Schema validation properly integrated into `anatomyStructureTemplateLoader.js`
+- [ ] Use existing `ValidationError` class (no custom error needed unless beneficial)
+- [ ] All existing templates pass schema validation (octopoid, arachnid, etc.)
+- [ ] Schema validation tests added to `tests/unit/loaders/anatomyStructureTemplateLoader.schemaValidation.test.js`
+- [ ] Integration tests verify load-time validation in `tests/integration/loaders/`
+- [ ] IDE autocomplete works with schema (VS Code) - verify `$schema` references
+- [ ] Loader correctly validates template structure: `topology: { rootType, limbSets[], appendages[] }`
+- [ ] Template variable syntax validated: `{{index}}`, `{{orientation}}`, `{{position}}` (double braces)
+- [ ] Orientation schemes validated: `bilateral`, `radial`, `indexed`, `custom`
 - [ ] Existing tests still pass
+- [ ] Test coverage for loader validation logic at 90%+
 
 ---
 
@@ -283,13 +595,47 @@ describe('Structure Template Loading with Validation', () => {
 ## Definition of Done
 
 - All acceptance criteria checked
-- All existing templates validated
+- All existing templates validated against schema
+- Schema validation integrated into loader
 - Code review approved
-- Tests passing
-- Documentation updated
+- All tests passing (unit, integration, existing)
+- ESLint passing on modified files
+- Test coverage maintained at 90%+ for loader
+- Documentation updated if needed
 - Merged to main branch
 
 ---
 
+## Codebase Reality Check - Corrections Made
+
+This workflow was analyzed and corrected to match actual codebase structure:
+
+### Critical Corrections:
+1. **Schema Already Exists**: `data/schemas/anatomy.structure-template.schema.json` (not `data/schemas/anatomy/structure-template.schema.json`)
+2. **Schema ID**: `schema://living-narrative-engine/anatomy.structure-template.schema.json` (not `schema://living-narrative-engine/anatomy/structure-template`)
+3. **Template Structure**: Uses `topology: { rootType, limbSets[], appendages[] }` (not flat `socketPatterns[]`)
+4. **Template Variables**: Use `{{index}}`, `{{orientation}}`, `{{position}}` (double braces, not single)
+5. **validateAgainstSchema**: Signature is `(validator, schemaId, data, logger, context)`, imported from `../utils/schemaValidationUtils.js`
+6. **formatAjvErrors**: Import from `../utils/ajvUtils.js`
+7. **Error Class**: Use existing `ValidationError` from `../errors/validationError.js` (not custom `InvalidStructureTemplateError`)
+8. **Loader Exists**: `anatomyStructureTemplateLoader.js` already exists with validation
+9. **Orientation Schemes**: socketPattern supports `bilateral`, `radial`, `indexed`, `custom` (no quadrupedal); limbSet arrangement supports `bilateral`, `radial`, `quadrupedal`, `linear`, `custom`
+10. **Test Locations**: `tests/unit/loaders/` and `tests/integration/loaders/` (not `tests/unit/schemas/`)
+
+### Files Referenced (Verified to Exist):
+- `/home/user/living-narrative-engine/data/schemas/anatomy.structure-template.schema.json`
+- `/home/user/living-narrative-engine/src/loaders/anatomyStructureTemplateLoader.js`
+- `/home/user/living-narrative-engine/src/utils/schemaValidationUtils.js`
+- `/home/user/living-narrative-engine/src/utils/ajvUtils.js`
+- `/home/user/living-narrative-engine/src/errors/validationError.js`
+- `/home/user/living-narrative-engine/src/validation/ajvSchemaValidator.js`
+
+### Example Templates (Verified):
+- `data/mods/anatomy/structure-templates/structure_octopoid.structure-template.json`
+- `data/mods/anatomy/structure-templates/structure_arachnid_8leg.structure-template.json`
+
+---
+
 **Created**: 2025-11-03
-**Status**: Not Started
+**Updated**: 2025-11-05 (Validated against codebase)
+**Status**: Ready for Implementation
