@@ -90,8 +90,9 @@ describe('Anatomy-Clothing Integration', () => {
 
   it('should subscribe to ANATOMY_GENERATED event on construction', () => {
     // Verify that subscription happened (check logger output)
+    // Note: BaseService automatically prefixes service name, so message appears twice
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'ClothingInstantiationService: Subscribed to ANATOMY_GENERATED events'
+      'ClothingInstantiationService: ClothingInstantiationService: Subscribed to ANATOMY_GENERATED events'
     );
   });
 

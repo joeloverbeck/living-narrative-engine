@@ -102,6 +102,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
 
     eventBus = {
       dispatch: jest.fn(),
+      subscribe: jest.fn(), // Add subscribe method for ClothingInstantiationService
     };
 
     // Create mock layer resolution service
