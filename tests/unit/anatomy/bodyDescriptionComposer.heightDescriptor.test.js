@@ -62,7 +62,7 @@ describe('BodyDescriptionComposer - Height Descriptor Issue', () => {
               },
               descriptors: {
                 build: 'stocky',
-                density: 'hairy',
+                hairDensity: 'hairy',
                 height: 'tall', // This is the key descriptor that should be extracted
               },
             },
@@ -167,7 +167,7 @@ describe('BodyDescriptionComposer - Height Descriptor Issue', () => {
               parts: {},
               descriptors: {
                 build: 'stocky',
-                density: 'hairy',
+                hairDensity: 'hairy',
                 // height is missing
               },
             },
