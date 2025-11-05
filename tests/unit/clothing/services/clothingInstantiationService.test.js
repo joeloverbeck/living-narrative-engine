@@ -86,6 +86,7 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       },
       eventBus: {
         dispatch: jest.fn(),
+        subscribe: jest.fn(),
       },
     };
 

@@ -52,6 +52,7 @@ describe('ClothingInstantiationService - Coverage Tests', () => {
       },
       eventBus: {
         dispatch: jest.fn(),
+        subscribe: jest.fn(),
       },
     };
 
