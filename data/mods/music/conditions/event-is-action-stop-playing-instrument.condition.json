@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "music:event-is-action-stop-playing-instrument",
+  "description": "Evaluates to true when the event is an attempt to stop playing an instrument",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "music:stop_playing_instrument"
+    ]
+  }
+}
