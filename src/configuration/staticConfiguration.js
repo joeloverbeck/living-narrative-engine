@@ -137,6 +137,7 @@ class StaticConfiguration {
       'ui-icons.schema.json',
       'ui-labels.schema.json',
       'world.schema.json',
+      'lookup.schema.json',
       'anatomy.recipe.schema.json',
       'anatomy.blueprint.schema.json',
       'anatomy.blueprint-part.schema.json',
@@ -176,6 +177,7 @@ class StaticConfiguration {
       game: 'schema://living-narrative-engine/game.schema.json',
       world: 'schema://living-narrative-engine/world.schema.json',
       'prompt-text': 'schema://living-narrative-engine/prompt-text.schema.json',
+      lookups: 'schema://living-narrative-engine/lookup.schema.json',
       anatomyRecipes:
         'schema://living-narrative-engine/anatomy.recipe.schema.json',
       anatomyBlueprints:

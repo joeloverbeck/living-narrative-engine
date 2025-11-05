@@ -30,6 +30,7 @@ describe('StaticConfiguration Validation Test', () => {
       'llm-configs',
       'prompt-text', // Added to ensure prompt text validation works
       'world', // Added to ensure world validation works
+      'lookups', // Added to ensure lookup validation works
     ];
 
     // 3. Assert: Check that each essential type returns a valid schema ID.
@@ -116,6 +117,29 @@ describe('StaticConfiguration Validation Test', () => {
 
     // 3. Assert
     expect(schemaFiles).toContain('world.schema.json');
+  });
+
+  it('should include lookup schema in the schema files list', () => {
+    // 1. Arrange
+    const configService = new StaticConfiguration();
+
+    // 2. Act
+    const schemaFiles = configService.getSchemaFiles();
+
+    // 3. Assert
+    expect(schemaFiles).toContain('lookup.schema.json');
+  });
+
+  it('should provide schema ID for lookups content type', () => {
+    // 1. Arrange
+    const configService = new StaticConfiguration();
+
+    // 2. Act
+    const schemaId = configService.getContentTypeSchemaId('lookups');
+
+    // 3. Assert
+    expect(schemaId).toBeDefined();
+    expect(schemaId).toBe('schema://living-narrative-engine/lookup.schema.json');
   });
 
   describe('Operation Schema Files', () => {
