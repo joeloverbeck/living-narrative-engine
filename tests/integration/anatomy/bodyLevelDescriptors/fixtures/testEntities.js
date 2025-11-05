@@ -22,7 +22,7 @@ export const createCompleteHumanoidEntity = () => {
               skinColor: 'olive',
               build: 'athletic',
               composition: 'lean',
-              density: 'moderate',
+              hairDensity: 'moderate',
             },
             // Parts would be managed by bodyGraphService.getAllParts()
           },
@@ -53,7 +53,7 @@ export const createPartialHumanoidEntity = () => {
             root: 'torso',
             descriptors: {
               build: 'average',
-              density: 'light',
+              hairDensity: 'light',
               // Missing composition and skinColor
             },
           },
@@ -180,7 +180,7 @@ export const createBodyHairVariantsEntity = (densityValue) => {
           body: {
             root: 'torso',
             descriptors: {
-              density: densityValue,
+              hairDensity: densityValue,
             },
           },
         },

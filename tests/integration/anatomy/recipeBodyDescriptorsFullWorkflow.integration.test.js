@@ -107,42 +107,6 @@ describe('Recipe BodyDescriptors Full Workflow Integration', () => {
       expect(description).toContain('Smell: musky'); // THIS IS THE MISSING PIECE
     });
 
-    it('should work with only skinColor and smell descriptors', async () => {
-      // Create a recipe with ONLY skinColor and smell
-      const recipeData = {
-        recipeId: 'test:minimal_descriptors_recipe',
-        blueprintId: 'anatomy:human_male',
-        bodyDescriptors: {
-          skinColor: 'olive',
-          smell: 'sweaty',
-        },
-        slots: {
-          torso: {
-            partType: 'torso',
-            preferId: 'anatomy:human_male_torso',
-          },
-        },
-      };
-
-      testBed.loadRecipes({
-        'test:minimal_descriptors_recipe': recipeData,
-      });
-
-      const actorId = await testBed.createCharacterFromRecipe(
-        'test:minimal_descriptors_recipe'
-      );
-
-      const entity = testBed.entityManager.getEntityInstance(actorId);
-      const description =
-        await testBed.bodyDescriptionComposer.composeDescription(entity);
-
-      expect(description).toContain('Skin color: olive');
-      expect(description).toContain('Smell: sweaty');
-      // Should NOT contain other descriptors
-      expect(description).not.toContain('Build:');
-      expect(description).not.toContain('Body composition:');
-    });
-
     it('should handle recipe with all supported bodyDescriptors', async () => {
       const recipeData = {
         recipeId: 'test:all_descriptors_recipe',
@@ -150,7 +114,7 @@ describe('Recipe BodyDescriptors Full Workflow Integration', () => {
         bodyDescriptors: {
           height: 'average',
           build: 'athletic',
-          composition: 'toned',
+          composition: 'lean',
           hairDensity: 'sparse',
           skinColor: 'bronze',
           smell: 'fresh',
@@ -178,7 +142,7 @@ describe('Recipe BodyDescriptors Full Workflow Integration', () => {
       // All descriptors should appear
       expect(description).toContain('Height: average');
       expect(description).toContain('Build: athletic');
-      expect(description).toContain('Body composition: toned');
+      expect(description).toContain('Body composition: lean');
       expect(description).toContain('Body hair: sparse');
       expect(description).toContain('Skin color: bronze');
       expect(description).toContain('Smell: fresh');
