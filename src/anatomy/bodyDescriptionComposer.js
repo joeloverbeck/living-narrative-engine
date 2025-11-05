@@ -98,12 +98,12 @@ export class BodyDescriptionComposer {
 
     // Get all body parts
     const allParts = this.bodyGraphService.getAllParts(bodyComponent.body);
-    if (!allParts || allParts.length === 0) {
-      return '';
-    }
 
-    // Group parts by subtype
-    const partsByType = this.groupPartsByType(allParts);
+    // Group parts by subtype (empty if no parts)
+    const partsByType =
+      allParts && allParts.length > 0
+        ? this.groupPartsByType(allParts)
+        : new Map();
 
     // Build structured description following configured order
     const lines = [];
