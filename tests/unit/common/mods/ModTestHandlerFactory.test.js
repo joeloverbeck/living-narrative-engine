@@ -49,6 +49,7 @@ describe('ModTestHandlerFactory', () => {
 
     mockGameDataRepository = {
       getComponentDefinition: jest.fn().mockReturnValue(null),
+      get: jest.fn().mockReturnValue(null), // Required by QueryLookupHandler
     };
   });
 
@@ -219,7 +220,7 @@ describe('ModTestHandlerFactory', () => {
         mockGameDataRepository
       );
 
-      // Should have all standard handlers plus ADD_COMPONENT
+      // Should have all standard handlers plus QUERY_LOOKUP and ADD_COMPONENT
       const expectedHandlers = [
         'QUERY_COMPONENT',
         'QUERY_COMPONENTS',
@@ -230,6 +231,7 @@ describe('ModTestHandlerFactory', () => {
         'END_TURN',
         'SET_VARIABLE',
         'LOG_MESSAGE',
+        'QUERY_LOOKUP',
         'ADD_COMPONENT',
       ];
 
@@ -238,8 +240,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct number of handlers (9 standard + 1 ADD_COMPONENT)
-      expect(Object.keys(handlers)).toHaveLength(10);
+      // Verify correct number of handlers (9 standard + 1 QUERY_LOOKUP + 1 ADD_COMPONENT)
+      expect(Object.keys(handlers)).toHaveLength(11);
     });
 
     it('should configure ADD_COMPONENT handler correctly', () => {
@@ -286,6 +288,7 @@ describe('ModTestHandlerFactory', () => {
         'END_TURN',
         'SET_VARIABLE',
         'LOG_MESSAGE',
+        'QUERY_LOOKUP',
         'ADD_COMPONENT',
         'REMOVE_COMPONENT',
       ];
@@ -295,7 +298,7 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      expect(Object.keys(handlers)).toHaveLength(11);
+      expect(Object.keys(handlers)).toHaveLength(12);
     });
 
     it('should configure mutation handlers with executable methods', () => {
@@ -425,8 +428,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct total number of handlers (9 standard + 10 positioning)
-      expect(Object.keys(handlers)).toHaveLength(19);
+      // Verify correct total number of handlers (9 standard + 1 QUERY_LOOKUP + 10 positioning)
+      expect(Object.keys(handlers)).toHaveLength(20);
     });
 
     it('should configure all handlers with execute functions', () => {
@@ -635,8 +638,8 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeDefined();
       expect(handlers.BREAK_CLOSENESS_WITH_TARGET).toBeDefined();
 
-      // Should have 9 standard + 10 positioning-specific handlers
-      expect(Object.keys(handlers)).toHaveLength(19);
+      // Should have 9 standard + 1 QUERY_LOOKUP + 10 positioning-specific handlers
+      expect(Object.keys(handlers)).toHaveLength(20);
     });
 
     it('should return createHandlersWithComponentMutations for affection', () => {
@@ -646,7 +649,7 @@ describe('ModTestHandlerFactory', () => {
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
-      expect(Object.keys(handlers)).toHaveLength(11);
+      expect(Object.keys(handlers)).toHaveLength(12);
     });
 
     it('should return createStandardHandlers for other categories', () => {
@@ -667,7 +670,7 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers.MODIFY_COMPONENT).toBeUndefined();
         expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeUndefined();
 
-        expect(Object.keys(handlers)).toHaveLength(9); // 9 standard handlers only
+        expect(Object.keys(handlers)).toHaveLength(10); // 9 standard + QUERY_LOOKUP handlers
       });
     });
 
@@ -678,7 +681,7 @@ describe('ModTestHandlerFactory', () => {
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
-      expect(Object.keys(handlers)).toHaveLength(11);
+      expect(Object.keys(handlers)).toHaveLength(12);
     });
 
     it('should return createStandardHandlers for unknown categories', () => {
@@ -692,7 +695,7 @@ describe('ModTestHandlerFactory', () => {
         // Unknown categories get standard handlers without positioning-specific ones
         expect(handlers.ADD_COMPONENT).toBeUndefined();
         expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeUndefined();
-        expect(Object.keys(handlers)).toHaveLength(9); // 9 standard handlers
+        expect(Object.keys(handlers)).toHaveLength(10); // 9 standard + QUERY_LOOKUP handlers
       });
     });
 
