@@ -3,6 +3,7 @@
 import { SimpleItemLoader } from './simpleItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { ValidationError } from '../errors/validationError.js';
+import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -55,7 +56,30 @@ class AnatomyStructureTemplateLoader extends SimpleItemLoader {
       `AnatomyStructureTemplateLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
     );
 
-    // Validate required fields
+    // First validate against JSON schema
+    try {
+      validateAgainstSchema(
+        this._schemaValidator,
+        'schema://living-narrative-engine/anatomy.structure-template.schema.json',
+        data,
+        this._logger,
+        {
+          validationDebugMessage: `Validating structure template from ${filename}`,
+          failureMessage: `Structure template '${filename}' from mod '${modId}' failed schema validation`,
+          failureThrowMessage: `Invalid structure template in '${filename}' from mod '${modId}'`,
+          filePath: resolvedPath,
+        }
+      );
+    } catch (validationError) {
+      // Schema validation throws on failure, re-throw as ValidationError
+      throw new ValidationError(
+        `Structure template schema validation failed: ${validationError.message}`,
+        data.id,
+        validationError
+      );
+    }
+
+    // Validate required fields (kept for backward compatibility and additional checks)
     if (!data.id) {
       throw new ValidationError(
         `Invalid structure template in '${filename}' from mod '${modId}'. Missing required 'id' field.`
