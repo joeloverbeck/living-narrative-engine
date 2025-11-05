@@ -366,7 +366,7 @@ describe('EquipmentDescriptionService', () => {
 
       // Assert
       expect(result).toBe(
-        'Wearing: cotton, blue shirt and leather, brown boots.'
+        'Wearing: cotton, blue shirt | leather, brown boots.'
       );
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(2);
       expect(mockDescriptorFormatter.formatDescriptors).toHaveBeenCalledTimes(
@@ -538,7 +538,7 @@ describe('EquipmentDescriptionService', () => {
       const result = await service.generateEquipmentDescription(entityId);
 
       // Assert
-      expect(result).toBe('Wearing: shirt | boots, and gloves.');
+      expect(result).toBe('Wearing: shirt | boots | gloves.');
     });
 
     it('should group items by category correctly', async () => {
@@ -582,7 +582,7 @@ describe('EquipmentDescriptionService', () => {
       const result = await service.generateEquipmentDescription(entityId);
 
       // Assert
-      expect(result).toBe('Wearing: jacket and shirt.');
+      expect(result).toBe('Wearing: jacket | shirt.');
     });
 
     it('should handle core:name component for item name', async () => {
@@ -1249,7 +1249,7 @@ describe('EquipmentDescriptionService', () => {
       const result = await service.generateEquipmentDescription(entityId);
 
       // Assert
-      expect(result).toBe('Wearing: jacket and shirt.');
+      expect(result).toBe('Wearing: jacket | shirt.');
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledTimes(2);
     });
 

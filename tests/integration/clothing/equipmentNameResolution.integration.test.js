@@ -51,7 +51,7 @@ describe('Equipment Name Resolution Integration Tests', () => {
 
       // Assert
       expect(result).toBe(
-        'Wearing: cotton, blue dress shirt and leather, brown boots.'
+        'Wearing: cotton, blue dress shirt | leather, brown boots.'
       );
     });
 

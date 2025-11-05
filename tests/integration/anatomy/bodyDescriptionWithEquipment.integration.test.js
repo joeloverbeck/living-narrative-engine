@@ -87,7 +87,7 @@ describe('Body Description with Equipment Integration', () => {
         prefix: 'Wearing: ',
         suffix: '.',
         separator: ', ',
-        itemSeparator: ', ',
+        itemSeparator: ' | ',
         placement: 'after_anatomy',
       }),
     };
@@ -314,7 +314,7 @@ describe('Body Description with Equipment Integration', () => {
     expect(result).toContain('Hair: long, black hair');
     expect(result).toContain('Torso: lean, toned torso');
     expect(result).toContain(
-      'Wearing: black, silky, stretch-silk bodysuit and brown, leather, sturdy boots.'
+      'Wearing: black, silky, stretch-silk bodysuit | brown, leather, sturdy boots.'
     );
   });
 
@@ -648,7 +648,7 @@ describe('Body Description with Equipment Integration', () => {
     const result = await bodyDescriptionComposer.composeDescription(bodyEntity);
 
     // Assert
-    expect(result).toContain('Wearing: jacket, shirt, and shoes.');
+    expect(result).toContain('Wearing: jacket | shirt | shoes.');
     // Verify the order (jacket first as outerwear, then shirt, then shoes)
     const wearingIndex = result.indexOf('Wearing:');
     const jacketIndex = result.indexOf('jacket', wearingIndex);
