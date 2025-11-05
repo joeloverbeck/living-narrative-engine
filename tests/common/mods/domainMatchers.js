@@ -7,9 +7,10 @@
  * Checks if action execution succeeded by examining events array
  *
  * @param {Array} received - Events array from testFixture
- * @param {string} expectedMessage - Expected success message
+ * @param {string} [expectedMessage] - Optional expected success message. If not provided, just checks for success event existence.
  * @returns {{pass: boolean, message: Function}} Jest matcher result
  * @example expect(testFixture.events).toHaveActionSuccess('Alice sits down')
+ * @example expect(testFixture.events).toHaveActionSuccess() // Just check for success
  */
 function toHaveActionSuccess(received, expectedMessage) {
   const { printReceived, printExpected, matcherHint } = this.utils;
@@ -22,7 +23,10 @@ function toHaveActionSuccess(received, expectedMessage) {
     (e) => e.eventType === 'core:display_successful_action_result'
   );
 
-  const pass = successEvent && successEvent.payload.message === expectedMessage;
+  // If no expected message is provided, just check that success event exists
+  const pass = expectedMessage === undefined
+    ? !!successEvent
+    : successEvent && successEvent.payload.message === expectedMessage;
 
   if (pass) {
     return {

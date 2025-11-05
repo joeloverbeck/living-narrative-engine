@@ -223,21 +223,21 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
       await testFixture.executeAction('actor1', 'guitar_1');
 
       const perceptibleEvents = testFixture.events.filter(
-        (e) => e.type === 'core:perceptible_event'
+        (e) => e.eventType === 'core:perceptible_event'
       );
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
 
       const perceptibleEvent = perceptibleEvents[0];
       expect(perceptibleEvent.payload).toBeDefined();
-      expect(perceptibleEvent.payload.message).toBeDefined();
+      expect(perceptibleEvent.payload.descriptionText).toBeDefined();
 
       // The message should contain the mood adjective from the lookup
       // For 'aggressive', the adjective is 'hard-edged'
-      expect(perceptibleEvent.payload.message).toContain('Message Test Bard');
-      expect(perceptibleEvent.payload.message).toContain('hard-edged');
-      expect(perceptibleEvent.payload.message).toContain('shredding guitar');
-      expect(perceptibleEvent.payload.message).toMatch(/sets a.*tone on/);
+      expect(perceptibleEvent.payload.descriptionText).toContain('Message Test Bard');
+      expect(perceptibleEvent.payload.descriptionText).toContain('hard-edged');
+      expect(perceptibleEvent.payload.descriptionText).toContain('shredding guitar');
+      expect(perceptibleEvent.payload.descriptionText).toMatch(/sets a.*tone on/);
     });
 
     it('should work with instrument at actor location (not in inventory)', async () => {
@@ -419,7 +419,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
       await testFixture.executeAction('actor1', 'violin_1');
 
       const perceptibleEvents = testFixture.events.filter(
-        (e) => e.type === 'core:perceptible_event'
+        (e) => e.eventType === 'core:perceptible_event'
       );
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
@@ -454,7 +454,7 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
       await testFixture.executeAction('actor1', 'trumpet_1');
 
       const perceptibleEvents = testFixture.events.filter(
-        (e) => e.type === 'core:perceptible_event'
+        (e) => e.eventType === 'core:perceptible_event'
       );
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
