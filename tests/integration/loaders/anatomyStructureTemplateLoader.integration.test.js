@@ -21,6 +21,11 @@ describe('AnatomyStructureTemplateLoader Integration Tests', () => {
     const pathResolver = createMockPathResolver();
     const dataFetcher = createMockDataFetcher();
     schemaValidator = createMockSchemaValidator();
+
+    // Configure schema validator to report schema as loaded
+    schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
+    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
+
     dataRegistry = createSimpleMockDataRegistry();
     logger = createMockLogger();
 
@@ -318,6 +323,254 @@ describe('AnatomyStructureTemplateLoader Integration Tests', () => {
       // Schema validation happens in base class during loading phase
       expect(result).toBeDefined();
       expect(result.qualifiedId).toBeDefined();
+    });
+
+    it('should reject invalid template at load time (missing topology)', async () => {
+      const invalidTemplate = {
+        id: 'anatomy:invalid',
+        description: 'Invalid template missing topology field',
+        // Missing required topology field
+      };
+
+      await expect(
+        loader._processFetchedItem(
+          'test_mod',
+          'invalid.json',
+          '/path/to/invalid.json',
+          invalidTemplate,
+          'anatomyStructureTemplates'
+        )
+      ).rejects.toThrow(/topology/);
+    });
+
+    it('should reject invalid template at load time (missing rootType)', async () => {
+      const invalidTemplate = {
+        id: 'anatomy:invalid',
+        description: 'Invalid template missing rootType',
+        topology: {
+          // Missing required rootType field
+          limbSets: [],
+        },
+      };
+
+      await expect(
+        loader._processFetchedItem(
+          'test_mod',
+          'invalid.json',
+          '/path/to/invalid.json',
+          invalidTemplate,
+          'anatomyStructureTemplates'
+        )
+      ).rejects.toThrow(/rootType/);
+    });
+
+    it('should load valid octopoid-style template successfully', async () => {
+      const octopoidTemplate = {
+        id: 'anatomy:test_octopoid',
+        description: 'Octopoid template with radial tentacles',
+        topology: {
+          rootType: 'mantle',
+          limbSets: [
+            {
+              type: 'tentacle',
+              count: 8,
+              arrangement: 'radial',
+              socketPattern: {
+                idTemplate: 'tentacle_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['tentacle'],
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              attachment: 'anterior',
+              socketPattern: {
+                idTemplate: 'anterior_head',
+                allowedTypes: ['head'],
+              },
+            },
+          ],
+        },
+      };
+
+      const result = await loader._processFetchedItem(
+        'test_mod',
+        'octopoid.json',
+        '/path/to/octopoid.json',
+        octopoidTemplate,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result).toBeDefined();
+      expect(result.qualifiedId).toBeDefined();
+    });
+
+    it('should validate socket pattern structure', async () => {
+      const template = {
+        id: 'anatomy:test_socket',
+        description: 'Template with socket pattern validation',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      const result = await loader._processFetchedItem(
+        'test_mod',
+        'socket.json',
+        '/path/to/socket.json',
+        template,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result).toBeDefined();
+    });
+
+    it('should validate limb set structure with all fields', async () => {
+      const template = {
+        id: 'anatomy:test_limbset',
+        description: 'Template with complete limb set validation',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'leg_{{position}}',
+                orientationScheme: 'custom',
+                allowedTypes: ['leg'],
+                positions: ['front_left', 'front_right', 'rear_left', 'rear_right'],
+              },
+              optional: false,
+              arrangementHint: 'quadrupedal stance',
+            },
+          ],
+        },
+      };
+
+      const result = await loader._processFetchedItem(
+        'test_mod',
+        'limbset.json',
+        '/path/to/limbset.json',
+        template,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result).toBeDefined();
+    });
+
+    it('should validate appendage structure with all fields', async () => {
+      const template = {
+        id: 'anatomy:test_appendage',
+        description: 'Template with complete appendage validation',
+        topology: {
+          rootType: 'cephalothorax',
+          appendages: [
+            {
+              type: 'tail',
+              count: 1,
+              attachment: 'posterior',
+              socketPattern: {
+                idTemplate: 'posterior_tail',
+                allowedTypes: ['tail'],
+                nameTpl: '{{type}}',
+              },
+              optional: false,
+            },
+          ],
+        },
+      };
+
+      const result = await loader._processFetchedItem(
+        'test_mod',
+        'appendage.json',
+        '/path/to/appendage.json',
+        template,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result).toBeDefined();
+    });
+
+    it('should validate template with double-brace variable syntax', async () => {
+      const template = {
+        id: 'anatomy:test_variables',
+        description: 'Template testing double-brace variable syntax',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_{{orientation}}_{{index}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      const result = await loader._processFetchedItem(
+        'test_mod',
+        'variables.json',
+        '/path/to/variables.json',
+        template,
+        'anatomyStructureTemplates'
+      );
+
+      expect(result).toBeDefined();
+
+      // Verify double-brace syntax
+      const socketPattern = template.topology.limbSets[0].socketPattern;
+      expect(socketPattern.idTemplate).toMatch(/\{\{[a-z_]+\}\}/);
+    });
+
+    it('should reject template with invalid orientation scheme', async () => {
+      const template = {
+        id: 'anatomy:invalid_scheme',
+        description: 'Template with invalid orientation scheme',
+        topology: {
+          rootType: 'torso',
+          limbSets: [
+            {
+              type: 'arm',
+              count: 2,
+              socketPattern: {
+                idTemplate: 'arm_{{index}}',
+                orientationScheme: 'invalid_orientation_scheme',
+                allowedTypes: ['arm'],
+              },
+            },
+          ],
+        },
+      };
+
+      await expect(
+        loader._processFetchedItem(
+          'test_mod',
+          'invalid_scheme.json',
+          '/path/to/invalid_scheme.json',
+          template,
+          'anatomyStructureTemplates'
+        )
+      ).rejects.toThrow(ValidationError);
     });
   });
 

@@ -23,12 +23,18 @@ import { processAndStoreItem } from '../../../src/loaders/helpers/processAndStor
 describe('AnatomyStructureTemplateLoader._processFetchedItem', () => {
   let loader;
   let logger;
+  let schemaValidator;
 
   beforeEach(() => {
     const config = createMockConfiguration();
     const pathResolver = createMockPathResolver();
     const dataFetcher = createMockDataFetcher();
-    const schemaValidator = createMockSchemaValidator();
+    schemaValidator = createMockSchemaValidator();
+
+    // Configure schema validator to report schema as loaded
+    schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
+    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
+
     const dataRegistry = createSimpleMockDataRegistry();
     logger = createMockLogger();
 
@@ -258,11 +264,15 @@ describe('AnatomyStructureTemplateLoader._validateLimbSets', () => {
   let loader;
 
   beforeEach(() => {
+    const schemaValidator = createMockSchemaValidator();
+    schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
+    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
+
     loader = new AnatomyStructureTemplateLoader(
       createMockConfiguration(),
       createMockPathResolver(),
       createMockDataFetcher(),
-      createMockSchemaValidator(),
+      schemaValidator,
       createSimpleMockDataRegistry(),
       createMockLogger()
     );
@@ -431,11 +441,15 @@ describe('AnatomyStructureTemplateLoader._validateAppendages', () => {
   let loader;
 
   beforeEach(() => {
+    const schemaValidator = createMockSchemaValidator();
+    schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
+    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
+
     loader = new AnatomyStructureTemplateLoader(
       createMockConfiguration(),
       createMockPathResolver(),
       createMockDataFetcher(),
-      createMockSchemaValidator(),
+      schemaValidator,
       createSimpleMockDataRegistry(),
       createMockLogger()
     );
@@ -593,11 +607,15 @@ describe('AnatomyStructureTemplateLoader._validateSocketPattern', () => {
   let loader;
 
   beforeEach(() => {
+    const schemaValidator = createMockSchemaValidator();
+    schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
+    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
+
     loader = new AnatomyStructureTemplateLoader(
       createMockConfiguration(),
       createMockPathResolver(),
       createMockDataFetcher(),
-      createMockSchemaValidator(),
+      schemaValidator,
       createSimpleMockDataRegistry(),
       createMockLogger()
     );
@@ -822,6 +840,8 @@ describe('AnatomyStructureTemplateLoader - Constructor', () => {
     const pathResolver = createMockPathResolver();
     const dataFetcher = createMockDataFetcher();
     const schemaValidator = createMockSchemaValidator();
+    schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
+    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
     const dataRegistry = createSimpleMockDataRegistry();
     const logger = createMockLogger();
 
@@ -844,12 +864,18 @@ describe('AnatomyStructureTemplateLoader - Architecture Integration', () => {
   let loader;
   let dataRegistry;
   let logger;
+  let schemaValidator;
 
   beforeEach(() => {
     const config = createMockConfiguration();
     const pathResolver = createMockPathResolver();
     const dataFetcher = createMockDataFetcher();
-    const schemaValidator = createMockSchemaValidator();
+    schemaValidator = createMockSchemaValidator();
+
+    // Configure schema validator to report schema as loaded
+    schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
+    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
+
     dataRegistry = createSimpleMockDataRegistry();
     logger = createMockLogger();
 
