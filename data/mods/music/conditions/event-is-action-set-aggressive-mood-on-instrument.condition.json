@@ -4,7 +4,7 @@
   "description": "Aggressive mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.actionId"},
+      {"var": "event.payload.actionId"},
       "music:set_aggressive_mood_on_instrument"
     ]
   }

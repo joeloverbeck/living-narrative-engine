@@ -35,7 +35,9 @@
       "set_tense_mood_on_instrument.action.json",
       "set_triumphant_mood_on_instrument.action.json"
     ],
-    "rules": [],
+    "rules": [
+      "handle_set_aggressive_mood_on_instrument.rule.json"
+    ],
     "conditions": [
       "event-is-action-set-aggressive-mood-on-instrument.condition.json",
       "event-is-action-set-cheerful-mood-on-instrument.condition.json",

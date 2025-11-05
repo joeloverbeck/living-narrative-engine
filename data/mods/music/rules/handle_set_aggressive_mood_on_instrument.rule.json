@@ -1,0 +1,97 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_set_aggressive_mood_on_instrument",
+  "comment": "Handles the 'music:set_aggressive_mood_on_instrument' action. Sets performance mood component, adds playing_music and doing_complex_performance components, dispatches descriptive perceptible event and ends turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "music:event-is-action-set-aggressive-mood"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "instrumentName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_LOOKUP",
+      "parameters": {
+        "lookup_id": "music:mood_lexicon",
+        "entry_key": "aggressive",
+        "result_variable": "moodData",
+        "missing_value": { "adj": "aggressive", "adjectives": "aggressive", "noun": "aggressive" }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "music:performance_mood",
+        "value": {
+          "mood": "aggressive"
+        }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "music:playing_music",
+        "value": {
+          "playing_on": "{event.payload.primaryId}"
+        }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:doing_complex_performance",
+        "value": {}
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} sets a {context.moodData.adj} tone on the {context.instrumentName}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}
