@@ -1,0 +1,42 @@
+{
+  "defaultConfigId": "test-openai",
+  "configs": {
+    "test-openai": {
+      "configId": "test-openai",
+      "displayName": "Test OpenAI GPT-4",
+      "modelIdentifier": "gpt-4",
+      "endpointUrl": "https://api.openai.com/v1/chat/completions",
+      "apiType": "openai",
+      "apiKeyFileName": "openai-api-key.txt",
+      "jsonOutputStrategy": {
+        "method": "tool_calling",
+        "toolName": "structured_response"
+      },
+      "defaultParameters": {
+        "temperature": 0.7,
+        "max_tokens": 2000
+      },
+      "promptElements": [
+        {
+          "name": "system",
+          "wrapper": {
+            "start": "",
+            "end": ""
+          }
+        },
+        {
+          "name": "user",
+          "wrapper": {
+            "start": "",
+            "end": ""
+          }
+        }
+      ],
+      "promptAssemblyOrder": ["system", "user"],
+      "contextTokenLimit": 8000,
+      "promptFrame": {
+        "system": "You are a helpful assistant."
+      }
+    }
+  }
+}
