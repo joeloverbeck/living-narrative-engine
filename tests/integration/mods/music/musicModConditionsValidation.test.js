@@ -7,8 +7,11 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
+import StaticConfiguration from '../../../../src/configuration/staticConfiguration.js';
+import DefaultPathResolver from '../../../../src/pathing/defaultPathResolver.js';
+import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
+import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
+import SchemaLoader from '../../../../src/loaders/schemaLoader.js';
 
 // Use process.cwd() for project root in tests
 const projectRoot = process.cwd();
@@ -28,12 +31,58 @@ const MUSIC_CONDITION_FILES = [
 ];
 
 describe('Music mod condition files validation', () => {
+  let validator;
+  const conditionSchemaId =
+    'schema://living-narrative-engine/condition.schema.json';
+
+  beforeAll(async () => {
+    // Set up proper schema validation infrastructure
+    const config = new StaticConfiguration();
+    const resolver = new DefaultPathResolver(config);
+    const logger = new ConsoleLogger('ERROR');
+    validator = new AjvSchemaValidator({ logger });
+
+    const fetcher = {
+      async fetch(path) {
+        const data = await readFile(path, { encoding: 'utf-8' });
+        return JSON.parse(data);
+      },
+    };
+
+    const schemaLoader = new SchemaLoader(
+      config,
+      resolver,
+      fetcher,
+      validator,
+      logger
+    );
+
+    // Load all schemas to ensure $ref resolution works
+    await schemaLoader.loadAndCompileAllSchemas();
+  });
+
   describe('Schema validation', () => {
     MUSIC_CONDITION_FILES.forEach((filename) => {
-      // Skipped: Schema validation with AJV has $ref resolution issues in test environment
-      // The other tests below adequately validate the condition structure
-      it.skip(`should validate ${filename} against condition schema`, async () => {
-        // This test is skipped due to AJV $ref resolution issues
+      it(`should validate ${filename} against condition schema`, async () => {
+        const filePath = join(
+          projectRoot,
+          'data/mods/music/conditions',
+          filename
+        );
+
+        const fileContent = await readFile(filePath, 'utf-8');
+        const conditionData = JSON.parse(fileContent);
+
+        const result = validator.validate(conditionSchemaId, conditionData);
+
+        if (!result.isValid) {
+          console.error(
+            `Schema validation errors for ${filename}:`,
+            result.errors
+          );
+        }
+
+        expect(result.isValid).toBe(true);
       });
 
       it(`should have 'logic' property (not 'condition') in ${filename}`, async () => {
