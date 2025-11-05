@@ -32,6 +32,7 @@ describe('Infrastructure Error Handling - Corrected', () => {
     mockEventBus = testBed.mockValidatedEventDispatcher;
     mockGameDataRepository = {
       getComponentDefinition: jest.fn().mockReturnValue(null),
+      get: jest.fn().mockReturnValue(null),
     };
   });
 
