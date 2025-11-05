@@ -835,6 +835,35 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(actorIds) };
         }
 
+        // Handle the music:instrument_actor_is_playing scope
+        if (scopeName === 'music:instrument_actor_is_playing') {
+          // Get actor from context
+          const actor =
+            context?.actor || entityManager.getEntityInstance(context);
+          if (!actor) {
+            return { success: true, value: new Set() };
+          }
+
+          // Get actor's playing_music component
+          const playingMusic = actor.components?.['music:playing_music'];
+          if (!playingMusic || !playingMusic.playing_on) {
+            return { success: true, value: new Set() };
+          }
+
+          // Check if the instrument exists and has music:is_instrument component
+          const instrument = entityManager.getEntityInstance(
+            playingMusic.playing_on
+          );
+          if (
+            !instrument ||
+            !instrument.components?.['music:is_instrument']
+          ) {
+            return { success: true, value: new Set() };
+          }
+
+          return { success: true, value: new Set([playingMusic.playing_on]) };
+        }
+
         // Handle other scopes or return empty set
         if (scopeName === 'none' || scopeName === 'self') {
           return { success: true, value: new Set([scopeName]) };
