@@ -14,7 +14,7 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 24 color schemes are actively implemented across mods (plus 1 reserved assignment) out of 42 defined combinations, leaving 17 available for future work.
+**Status**: 25 color schemes are actively implemented across mods out of 42 defined combinations, leaving 17 available for future work.
 
 ### Active Mod Assignments
 
@@ -29,7 +29,7 @@ This specification provides a curated collection of pre-validated color combinat
 | Exercise                 | Orange Flame       | 2.3     | `#e65100`        | Active   |
 | Gymnastics               | Journey Cobalt     | 9.1     | `#1a237e`        | Active   |
 | Hugging                  | Warm Embrace       | 3.4     | `#7d2a50`        | Active   |
-| Items                    | Aurora Depths      | 11.1    | `#004d61`        | Reserved |
+| Items                    | Aurora Depths      | 11.1    | `#004d61`        | Active   |
 | Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
 | Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
 | Music                    | Starlight Navy     | 11.4    | `#1a2332`        | Active   |
@@ -595,7 +595,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.38:1 ✅ AA
 - **Use Cases**: Inventory and item management, calm focus states
 - **Theme**: Aquatic depth, precise utility, trustworthy teal
-- 🔒 **RESERVED FOR**: Items mod (inventory interactions – implementation pending)
+- ✅ **USED BY**: Items mod (inventory and item interaction actions)
 
 #### 11.2 Ironclad Slate
 

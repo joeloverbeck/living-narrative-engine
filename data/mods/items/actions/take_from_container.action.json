@@ -17,5 +17,11 @@
       "contextFrom": "primary"
     }
   },
-  "template": "take {secondary.name} from {primary.name}"
+  "template": "take {secondary.name} from {primary.name}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }

@@ -14,5 +14,11 @@
     "primary": ["items:item", "items:readable"]
   },
   "prerequisites": [],
-  "template": "read {item}"
+  "template": "read {item}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }
