@@ -536,7 +536,8 @@ class EquipmentDescriptionService {
     const torsoUpperMapping = slotMappings.torso_upper;
     if (
       torsoUpperMapping &&
-      this.#isSlotUnoccupied(equippedData, 'torso_upper')
+      this.#isSlotUnoccupied(equippedData, 'torso_upper') &&
+      !this.#hasSecondaryCoverage(equippedData, 'torso_upper')
     ) {
       exposureNotes.push('Torso is fully exposed.');
 
@@ -552,7 +553,8 @@ class EquipmentDescriptionService {
     const torsoLowerMapping = slotMappings.torso_lower;
     if (
       torsoLowerMapping &&
-      this.#isSlotUnoccupied(equippedData, 'torso_lower')
+      this.#isSlotUnoccupied(equippedData, 'torso_lower') &&
+      !this.#hasSecondaryCoverage(equippedData, 'torso_lower')
     ) {
       exposureNotes.push('Genitals are fully exposed.');
     }
@@ -577,6 +579,58 @@ class EquipmentDescriptionService {
     }
 
     return Object.values(slotLayers).every((layerValue) => !layerValue);
+  }
+
+  /**
+   * @description Check if any equipped items provide secondary coverage for a slot
+   * via their clothing:coverage_mapping component.
+   * @param {object|null} equippedData - Raw equipped slot data keyed by slot identifier.
+   * @param {string} targetSlotId - Slot to check for secondary coverage.
+   * @returns {boolean} True if any equipped item covers the target slot via coverage_mapping.
+   */
+  #hasSecondaryCoverage(equippedData, targetSlotId) {
+    if (!equippedData || typeof equippedData !== 'object') {
+      return false;
+    }
+
+    // Iterate through all equipped items
+    for (const [_slotId, slotLayers] of Object.entries(equippedData)) {
+      if (!slotLayers || typeof slotLayers !== 'object') {
+        continue;
+      }
+
+      for (const itemId of Object.values(slotLayers)) {
+        if (!itemId || typeof itemId !== 'string') {
+          continue;
+        }
+
+        try {
+          // Check if this item has coverage_mapping
+          const coverageMapping = this.#entityManager.getComponentData(
+            itemId,
+            'clothing:coverage_mapping'
+          );
+
+          if (
+            coverageMapping &&
+            Array.isArray(coverageMapping.covers) &&
+            coverageMapping.covers.includes(targetSlotId)
+          ) {
+            // This item provides secondary coverage for the target slot
+            return true;
+          }
+        } catch (error) {
+          // Item doesn't have coverage_mapping or error accessing it
+          // Continue checking other items
+          this.#logger.debug(
+            `Could not check coverage_mapping for item ${itemId}`,
+            error
+          );
+        }
+      }
+    }
+
+    return false;
   }
 
   /**
