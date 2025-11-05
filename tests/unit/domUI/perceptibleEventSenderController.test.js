@@ -542,5 +542,85 @@ describe('PerceptibleEventSenderController', () => {
         'PerceptibleEventSenderController cleaned up'
       );
     });
+
+    it('should log error if cleanup fails', () => {
+      controller.initialize();
+
+      // Make cleanup fail by causing eventBus.unsubscribe to throw
+      mockEventBus.unsubscribe.mockImplementation(() => {
+        throw new Error('Cleanup error');
+      });
+
+      expect(() => controller.cleanup()).not.toThrow();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during PerceptibleEventSenderController cleanup',
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('Additional Edge Cases', () => {
+    it('should throw and log error if initialization fails', () => {
+      const badDom = new JSDOM('<div></div>');
+      const badDocContext = new DocumentContext(badDom.window.document, badDom.window);
+
+      const badController = new PerceptibleEventSenderController({
+        eventBus: mockEventBus,
+        documentContext: badDocContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        operationInterpreter: mockOperationInterpreter,
+      });
+
+      expect(() => badController.initialize()).toThrow();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[PerceptibleEventSender] Failed to initialize',
+        expect.any(Error)
+      );
+
+      badDom.window.close();
+    });
+
+    it('should call refresh method to reload locations', () => {
+      controller.initialize();
+
+      mockLogger.debug.mockClear();
+      mockEntityManager.getEntitiesWithComponent.mockClear();
+
+      const mockLocations = [
+        {
+          id: 'location:new',
+          getComponent: jest.fn().mockReturnValue({ name: 'New Location' }),
+        },
+      ];
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(mockLocations);
+
+      controller.refresh();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[PerceptibleEventSender] Manual refresh requested - reloading locations'
+      );
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(EXITS_COMPONENT_ID);
+    });
+
+    it('should log success when subscription succeeds', () => {
+      mockEventBus.subscribe.mockReturnValue(() => {}); // Return unsubscribe function
+
+      const newController = new PerceptibleEventSenderController({
+        eventBus: mockEventBus,
+        documentContext: mockDocumentContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        operationInterpreter: mockOperationInterpreter,
+      });
+
+      newController.initialize();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[PerceptibleEventSender] Successfully subscribed to ENGINE_READY_UI event'
+      );
+
+      newController.cleanup();
+    });
   });
 });
