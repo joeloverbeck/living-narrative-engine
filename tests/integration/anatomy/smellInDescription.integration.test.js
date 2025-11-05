@@ -3,25 +3,36 @@
  * @description Validates that smell descriptor from anatomy recipe appears correctly in composed descriptions
  */
 
-import { describe, it, expect } from '@jest/globals';
-import { createContainer } from '../../../src/dependencyInjection/container.js';
-import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { TestBedAnatomy } from '../../common/testbed.anatomy.js';
 
 describe('Smell in Body Description - Integration', () => {
+  let testBed;
+  let entityManager;
+  let bodyDescriptionComposer;
+
+  beforeEach(async () => {
+    testBed = new TestBedAnatomy();
+    await testBed.setup();
+    entityManager = testBed.entityManager;
+    bodyDescriptionComposer = testBed.bodyDescriptionComposer;
+  });
+
+  afterEach(async () => {
+    if (testBed && typeof testBed.cleanup === 'function') {
+      await testBed.cleanup();
+    }
+  });
+
   it('should include smell descriptor in body description', async () => {
-    // Create container with all dependencies
-    const container = createContainer();
-
-    // Get required services
-    const entityFactory = container.resolve(tokens.IEntityFactory);
-    const componentManager = container.resolve(tokens.IComponentManager);
-    const bodyDescriptionComposer = container.resolve(
-      tokens.IBodyDescriptionComposer
-    );
-
     // Create a body entity with smell descriptor
-    const bodyEntity = entityFactory.createEntity('test-body');
-    componentManager.addComponent(bodyEntity.id, 'anatomy:body', {
+    const actor = await entityManager.createEntityInstance('core:actor', {
+      skipValidation: false,
+      generateId: true,
+    });
+    const actorId = actor.id;
+
+    await entityManager.addComponent(actorId, 'anatomy:body', {
       recipeId: 'test:recipe',
       body: {
         root: 'root-id',
@@ -30,12 +41,16 @@ describe('Smell in Body Description - Integration', () => {
           smell: 'musky',
           build: 'athletic',
         },
+        parts: {},
       },
     });
 
+    // Get the entity instance
+    const entity = entityManager.getEntityInstance(actorId);
+
     // Compose the description
     const description = await bodyDescriptionComposer.composeDescription(
-      bodyEntity
+      entity
     );
 
     // Verify smell appears in description
@@ -45,13 +60,6 @@ describe('Smell in Body Description - Integration', () => {
   });
 
   it('should handle multiple complex smell values', async () => {
-    const container = createContainer();
-    const entityFactory = container.resolve(tokens.IEntityFactory);
-    const componentManager = container.resolve(tokens.IComponentManager);
-    const bodyDescriptionComposer = container.resolve(
-      tokens.IBodyDescriptionComposer
-    );
-
     const testCases = [
       'sweaty and musky',
       'pungent manly perfume',
@@ -60,19 +68,26 @@ describe('Smell in Body Description - Integration', () => {
     ];
 
     for (const smellValue of testCases) {
-      const bodyEntity = entityFactory.createEntity(`test-body-${smellValue}`);
-      componentManager.addComponent(bodyEntity.id, 'anatomy:body', {
+      const actor = await entityManager.createEntityInstance('core:actor', {
+        skipValidation: false,
+        generateId: true,
+      });
+      const actorId = actor.id;
+
+      await entityManager.addComponent(actorId, 'anatomy:body', {
         recipeId: 'test:recipe',
         body: {
           root: 'root-id',
           descriptors: {
             smell: smellValue,
           },
+          parts: {},
         },
       });
 
+      const entity = entityManager.getEntityInstance(actorId);
       const description = await bodyDescriptionComposer.composeDescription(
-        bodyEntity
+        entity
       );
 
       expect(description).toContain(`Smell: ${smellValue}`);
@@ -80,15 +95,13 @@ describe('Smell in Body Description - Integration', () => {
   });
 
   it('should work when smell is not provided', async () => {
-    const container = createContainer();
-    const entityFactory = container.resolve(tokens.IEntityFactory);
-    const componentManager = container.resolve(tokens.IComponentManager);
-    const bodyDescriptionComposer = container.resolve(
-      tokens.IBodyDescriptionComposer
-    );
+    const actor = await entityManager.createEntityInstance('core:actor', {
+      skipValidation: false,
+      generateId: true,
+    });
+    const actorId = actor.id;
 
-    const bodyEntity = entityFactory.createEntity('test-body-no-smell');
-    componentManager.addComponent(bodyEntity.id, 'anatomy:body', {
+    await entityManager.addComponent(actorId, 'anatomy:body', {
       recipeId: 'test:recipe',
       body: {
         root: 'root-id',
@@ -96,11 +109,13 @@ describe('Smell in Body Description - Integration', () => {
           build: 'slim',
           composition: 'average',
         },
+        parts: {},
       },
     });
 
+    const entity = entityManager.getEntityInstance(actorId);
     const description = await bodyDescriptionComposer.composeDescription(
-      bodyEntity
+      entity
     );
 
     expect(description).not.toContain('Smell:');
