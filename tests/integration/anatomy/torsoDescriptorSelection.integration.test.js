@@ -54,7 +54,7 @@ describe('Torso Descriptor-Based Selection Integration', () => {
             partType: 'torso',
             properties: {
               'descriptors:build': { build: 'thick' },
-              'descriptors:body_hair': { density: 'hairy' },
+              'descriptors:body_hair': { hairDensity: 'hairy' },
             },
             // NOTE: No preferId specified - should use property-based selection
           },
@@ -80,7 +80,7 @@ describe('Torso Descriptor-Based Selection Integration', () => {
         components: {
           'anatomy:part': { subType: 'torso' },
           'descriptors:build': { build: 'thick' },
-          'descriptors:body_hair': { density: 'hairy' },
+          'descriptors:body_hair': { hairDensity: 'hairy' },
           'anatomy:sockets': { sockets: [] },
           'core:name': { text: 'torso' },
         },
@@ -141,7 +141,7 @@ describe('Torso Descriptor-Based Selection Integration', () => {
             partType: 'torso',
             properties: {
               'descriptors:build': { build: 'thick' },
-              'descriptors:body_hair': { density: 'hairy' },
+              'descriptors:body_hair': { hairDensity: 'hairy' },
             },
             // No preferId - this is the issue
           },
@@ -175,7 +175,7 @@ describe('Torso Descriptor-Based Selection Integration', () => {
         components: {
           'anatomy:part': { subType: 'torso' },
           'descriptors:build': { build: 'thick' },
-          'descriptors:body_hair': { density: 'hairy' },
+          'descriptors:body_hair': { hairDensity: 'hairy' },
           'anatomy:sockets': { sockets: [] },
           'core:name': { text: 'torso' },
         },

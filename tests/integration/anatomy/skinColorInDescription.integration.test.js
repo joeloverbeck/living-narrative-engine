@@ -43,7 +43,7 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
             skinColor: 'tanned',
             build: 'muscular',
             composition: 'lean',
-            density: 'hairy',
+            hairDensity: 'hairy',
           },
           parts: {},
         },
@@ -63,7 +63,7 @@ describe('SkinColor in Anatomy Descriptions - Integration', () => {
       expect(description).toContain('Height: tall');
       expect(description).toContain('Build: muscular');
       expect(description).toContain('Body composition: lean');
-      expect(description).toContain('Hair density: hairy');
+      expect(description).toContain('Body hair: hairy');
     });
 
     it('should work with different skinColor values', async () => {

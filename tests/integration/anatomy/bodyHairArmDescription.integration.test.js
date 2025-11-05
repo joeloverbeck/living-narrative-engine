@@ -25,7 +25,7 @@ describe('Body Hair Arm Description Integration', () => {
           build: 'muscular',
         },
         'descriptors:body_hair': {
-          density: 'hairy',
+          hairDensity: 'hairy',
         },
         'core:name': {
           text: 'muscular, hairy arm',

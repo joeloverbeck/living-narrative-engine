@@ -382,7 +382,7 @@ describe('Body Descriptors Integration', () => {
           parts: { torso: 'torso-1' },
           descriptors: {
             composition: 'average', // Should be used from body.descriptors
-            density: 'hairy', // Should be used from body.descriptors
+            hairDensity: 'hairy', // Should be used from body.descriptors
           },
         },
       });

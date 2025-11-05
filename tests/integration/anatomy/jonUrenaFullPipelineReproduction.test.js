@@ -22,7 +22,7 @@ describe('Jon Ureña Full Pipeline - Height Descriptor Issue', () => {
       bodyDescriptors: {
         height: 'tall',
         build: 'stocky',
-        density: 'hairy', // maps to "Body hair" in description
+        hairDensity: 'hairy', // maps to "Body hair" in description
         skinColor: 'olive',
       },
       slots: {
@@ -128,7 +128,7 @@ describe('Jon Ureña Full Pipeline - Height Descriptor Issue', () => {
     // ALL descriptors should be present in the final description
     expect(descriptionComponent.text).toContain('Height: tall');
     expect(descriptionComponent.text).toContain('Build: stocky');
-    expect(descriptionComponent.text).toContain('Hair density: hairy');
+    expect(descriptionComponent.text).toContain('Body hair: hairy');
     expect(descriptionComponent.text).toContain('Skin color: olive');
   });
 
@@ -200,7 +200,7 @@ describe('Jon Ureña Full Pipeline - Height Descriptor Issue', () => {
     expect(bodyHairExtraction).toBe('hairy');
     expect(bodyLevelDescriptors.height).toBe('Height: tall');
     expect(bodyLevelDescriptors.build).toBe('Build: stocky');
-    expect(bodyLevelDescriptors.body_hair).toBe('Hair density: hairy');
+    expect(bodyLevelDescriptors.body_hair).toBe('Body hair: hairy');
 
     const finalDescription = await composer.composeDescription(entity);
     console.log('Final composed description:', finalDescription);
@@ -208,6 +208,6 @@ describe('Jon Ureña Full Pipeline - Height Descriptor Issue', () => {
     // Verify final description contains all descriptors
     expect(finalDescription).toContain('Height: tall');
     expect(finalDescription).toContain('Build: stocky');
-    expect(finalDescription).toContain('Hair density: hairy');
+    expect(finalDescription).toContain('Body hair: hairy');
   });
 });

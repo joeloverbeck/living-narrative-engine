@@ -125,7 +125,7 @@ export const createEdgeCaseEntity = () => {
             descriptors: {
               build: '', // Empty string
               composition: null, // Null value
-              density: 'very-hairy', // Hyphenated value
+              hairDensity: 'very-hairy', // Hyphenated value
             },
           },
         },

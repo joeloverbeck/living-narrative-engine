@@ -174,7 +174,7 @@ describe('Body Hair Integration', () => {
       hasComponent: jest.fn().mockReturnValue(true),
       getComponentData: jest.fn().mockImplementation((componentId) => {
         if (componentId === 'descriptors:body_hair') {
-          return { density: 'hairy' };
+          return { hairDensity: 'hairy' };
         }
         if (componentId === 'descriptors:build') {
           return { build: 'stocky' };
