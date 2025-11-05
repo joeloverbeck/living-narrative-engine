@@ -27,6 +27,7 @@ const handlerModuleDefinitions = [
   ['RemoveComponentHandler', `${handlerBasePath}/removeComponentHandler.js`],
   ['QueryComponentHandler', `${handlerBasePath}/queryComponentHandler.js`],
   ['QueryComponentsHandler', `${handlerBasePath}/queryComponentsHandler.js`],
+  ['QueryLookupHandler', `${handlerBasePath}/queryLookupHandler.js`],
   ['SetVariableHandler', `${handlerBasePath}/setVariableHandler.js`],
   ['EndTurnHandler', `${handlerBasePath}/endTurnHandler.js`],
   [
@@ -283,6 +284,15 @@ beforeAll(async () => {
       handlerName: 'QueryComponentsHandler',
       dependencies: [
         { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.QueryLookupHandler,
+      handlerName: 'QueryLookupHandler',
+      dependencies: [
+        { property: 'dataRegistry', token: tokens.IDataRegistry },
         { property: 'logger', token: ILogger },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],

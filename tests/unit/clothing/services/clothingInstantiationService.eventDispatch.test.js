@@ -74,6 +74,7 @@ function createMocks() {
     },
     eventBus: {
       dispatch: jest.fn(),
+      subscribe: jest.fn(),
     },
   };
 }

@@ -166,10 +166,14 @@ describe('BodyDescriptionComposer', () => {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-            return { body: { root: 'torso-1' } };
-          }
-          if (componentId === 'descriptors:build') {
-            return { build: 'slender' };
+            return {
+              body: {
+                root: 'torso-1',
+                descriptors: {
+                  build: 'slender',
+                },
+              },
+            };
           }
           return null;
         }),
@@ -822,16 +826,16 @@ describe('BodyDescriptionComposer', () => {
       hasComponent: jest.fn().mockReturnValue(true),
       getComponentData: jest.fn().mockImplementation((componentId) => {
         if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-          return { body: { root: 'torso-1' } };
-        }
-        if (componentId === 'descriptors:build') {
-          return { build: 'athletic' };
-        }
-        if (componentId === 'descriptors:body_composition') {
-          return { composition: 'lean' };
-        }
-        if (componentId === 'descriptors:body_hair') {
-          return { density: 'moderate' };
+          return {
+            body: {
+              root: 'torso-1',
+              descriptors: {
+                build: 'athletic',
+                composition: 'lean',
+                hairDensity: 'moderate',
+              },
+            },
+          };
         }
         return null;
       }),
@@ -887,19 +891,17 @@ describe('BodyDescriptionComposer', () => {
           hasComponent: jest.fn().mockReturnValue(true),
           getComponentData: jest.fn().mockImplementation((componentId) => {
             if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-              return { body: { root: 'torso-1' } };
-            }
-            if (componentId === 'descriptors:build') {
-              return { build: 'athletic' };
-            }
-            if (componentId === 'descriptors:body_composition') {
-              return { composition: 'lean' };
-            }
-            if (componentId === 'descriptors:body_hair') {
-              return { density: 'moderate' };
-            }
-            if (componentId === 'descriptors:skin_color') {
-              return { skinColor: 'olive' };
+              return {
+                body: {
+                  root: 'torso-1',
+                  descriptors: {
+                    build: 'athletic',
+                    composition: 'lean',
+                    hairDensity: 'moderate',
+                    skinColor: 'olive',
+                  },
+                },
+              };
             }
             return null;
           }),
@@ -934,15 +936,17 @@ describe('BodyDescriptionComposer', () => {
           hasComponent: jest.fn().mockReturnValue(true),
           getComponentData: jest.fn().mockImplementation((componentId) => {
             if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-              return { body: { root: 'torso-1' } };
+              return {
+                body: {
+                  root: 'torso-1',
+                  descriptors: {
+                    build: 'athletic',
+                    hairDensity: 'light',
+                    // Missing body_composition
+                  },
+                },
+              };
             }
-            if (componentId === 'descriptors:build') {
-              return { build: 'athletic' };
-            }
-            if (componentId === 'descriptors:body_hair') {
-              return { density: 'light' };
-            }
-            // Missing body_composition
             return null;
           }),
         };
@@ -968,13 +972,15 @@ describe('BodyDescriptionComposer', () => {
           hasComponent: jest.fn().mockReturnValue(true),
           getComponentData: jest.fn().mockImplementation((componentId) => {
             if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-              return { body: { root: 'dummy-part-1' } };
-            }
-            if (componentId === 'descriptors:build') {
-              return { build: 'athletic' };
-            }
-            if (componentId === 'descriptors:body_composition') {
-              return { composition: 'lean' };
+              return {
+                body: {
+                  root: 'dummy-part-1',
+                  descriptors: {
+                    build: 'athletic',
+                    composition: 'lean',
+                  },
+                },
+              };
             }
             return null;
           }),
