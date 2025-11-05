@@ -2,7 +2,9 @@
  * Expected outputs for various entity configurations in integration tests
  */
 
-export const expectedCompleteDescription = `Build: athletic
+export const expectedCompleteDescription = `Height: average
+Skin color: olive
+Build: athletic
 Body composition: lean
 Body hair: moderate
 Head: Generated description for head-part-id
@@ -54,6 +56,8 @@ export const expectedDescriptorValues = {
  * Expected descriptor ordering for validation
  */
 export const expectedDescriptorOrder = [
+  'Height',
+  'Skin color',
   'Build',
   'Body composition',
   'Body hair',
