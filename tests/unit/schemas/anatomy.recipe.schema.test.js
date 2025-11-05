@@ -341,7 +341,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         },
         bodyDescriptors: {
           build: 'muscular',
-          density: 'hairy',
+          hairDensity: 'hairy',
           composition: 'lean',
           skinColor: 'tanned',
         },
@@ -448,7 +448,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         'very-hairy',
       ];
 
-      densities.forEach((density) => {
+      densities.forEach((hairDensity) => {
         const validRecipe = {
           recipeId: 'anatomy:test_density',
           blueprintId: 'anatomy:human',
@@ -456,7 +456,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
             head: { partType: 'head' },
           },
           bodyDescriptors: {
-            density: density,
+            hairDensity,
           },
         };
 
@@ -552,7 +552,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
           head: { partType: 'head' },
         },
         bodyDescriptors: {
-          density: 'super-hairy',
+          hairDensity: 'super-hairy',
         },
       };
 
@@ -561,7 +561,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           message: 'must be equal to one of the allowed values',
-          instancePath: '/bodyDescriptors/density',
+          instancePath: '/bodyDescriptors/hairDensity',
         })
       );
     });
@@ -620,7 +620,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         },
         bodyDescriptors: {
           build: 123,
-          density: true,
+          hairDensity: true,
           composition: ['array'],
           skinColor: { object: 'value' },
         },
@@ -647,7 +647,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         },
         bodyDescriptors: {
           build: 'muscular',
-          density: 'hairy',
+          hairDensity: 'hairy',
           composition: 'lean',
           skinColor: 'tanned',
         },

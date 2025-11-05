@@ -68,7 +68,7 @@ export const DESCRIPTOR_METADATA = {
     description: 'Body build type',
   },
   hairDensity: {
-    label: 'Hair density',
+    label: 'Body hair density',
     validValues: Object.values(BODY_HAIR_DENSITY),
     description: 'Body hair density level',
   },

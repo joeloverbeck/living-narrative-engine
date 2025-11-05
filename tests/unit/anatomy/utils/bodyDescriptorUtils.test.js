@@ -18,7 +18,7 @@ describe('bodyDescriptorUtils', () => {
       expect(formatDescriptorForDisplay('build', 'athletic')).toBe(
         'Build: athletic'
       );
-      expect(formatDescriptorForDisplay('density', 'moderate')).toBe(
+      expect(formatDescriptorForDisplay('hairDensity', 'moderate')).toBe(
         'Body hair density: moderate'
       );
       expect(formatDescriptorForDisplay('composition', 'lean')).toBe(
@@ -45,7 +45,7 @@ describe('bodyDescriptorUtils', () => {
     it('should filter out empty and null values', () => {
       const input = {
         build: BODY_BUILD_TYPES.ATHLETIC,
-        density: '',
+        hairDensity: '',
         composition: null,
         skinColor: 'pale',
         emptyString: '   ',
@@ -89,7 +89,7 @@ describe('bodyDescriptorUtils', () => {
     it('should merge descriptor objects with override precedence', () => {
       const base = {
         build: BODY_BUILD_TYPES.SLIM,
-        density: 'light',
+        hairDensity: 'light',
         skinColor: 'fair',
       };
       const override = {
@@ -99,7 +99,7 @@ describe('bodyDescriptorUtils', () => {
       const result = mergeDescriptors(base, override);
       expect(result).toEqual({
         build: BODY_BUILD_TYPES.ATHLETIC, // overridden
-        density: 'light', // from base
+        hairDensity: 'light', // from base
         skinColor: 'fair', // from base
         composition: 'lean', // from override
       });
@@ -108,7 +108,7 @@ describe('bodyDescriptorUtils', () => {
     it('should filter invalid values during merge', () => {
       const base = {
         build: BODY_BUILD_TYPES.SLIM,
-        density: '',
+        hairDensity: '',
         skinColor: 'fair',
       };
       const override = {
@@ -136,7 +136,7 @@ describe('bodyDescriptorUtils', () => {
     it('should return properties with valid values', () => {
       const descriptors = {
         build: BODY_BUILD_TYPES.ATHLETIC,
-        density: '',
+        hairDensity: '',
         composition: 'lean',
         skinColor: null,
         validProp: 'value',
@@ -164,7 +164,7 @@ describe('bodyDescriptorUtils', () => {
     it('should convert descriptors to formatted display array', () => {
       const descriptors = {
         build: BODY_BUILD_TYPES.ATHLETIC,
-        density: 'moderate',
+        hairDensity: 'moderate',
         skinColor: 'pale',
       };
       const result = descriptorsToDisplayArray(descriptors);
@@ -177,7 +177,7 @@ describe('bodyDescriptorUtils', () => {
     it('should filter out invalid values before formatting', () => {
       const descriptors = {
         build: BODY_BUILD_TYPES.ATHLETIC,
-        density: '',
+        hairDensity: '',
         composition: null,
         skinColor: 'pale',
       };

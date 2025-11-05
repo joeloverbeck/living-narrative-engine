@@ -22,7 +22,7 @@ describe('Jon Ureña Recipe Clothing Integration Unit Tests', () => {
           partType: 'torso',
           properties: {
             'descriptors:build': { build: 'thick' },
-            'descriptors:body_hair': { density: 'hairy' },
+            'descriptors:body_hair': { hairDensity: 'hairy' },
           },
         },
         head: {
@@ -63,7 +63,7 @@ describe('Jon Ureña Recipe Clothing Integration Unit Tests', () => {
           partType: 'arm',
           properties: {
             'descriptors:build': { build: 'muscular' },
-            'descriptors:body_hair': { density: 'hairy' },
+            'descriptors:body_hair': { hairDensity: 'hairy' },
           },
         },
         {
@@ -71,7 +71,7 @@ describe('Jon Ureña Recipe Clothing Integration Unit Tests', () => {
           partType: 'leg',
           properties: {
             'descriptors:build': { build: 'muscular' },
-            'descriptors:body_hair': { density: 'hairy' },
+            'descriptors:body_hair': { hairDensity: 'hairy' },
           },
         },
         {
