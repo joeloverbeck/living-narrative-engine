@@ -1,0 +1,76 @@
+{
+  "$schema": "schema://living-narrative-engine/lookup.schema.json",
+  "id": "music:mood_lexicon",
+  "description": "Maps musical mood names to descriptive adjectives and nouns for performance narrative generation",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "adj": {
+        "type": "string",
+        "description": "Primary adjective describing the mood"
+      },
+      "adjectives": {
+        "type": "string",
+        "description": "Comma-separated list of adjectives for variety"
+      },
+      "noun": {
+        "type": "string",
+        "description": "Noun form of the mood descriptor"
+      }
+    },
+    "required": ["adj", "adjectives", "noun"],
+    "additionalProperties": false
+  },
+  "entries": {
+    "cheerful": {
+      "adj": "bright",
+      "adjectives": "bright, skipping",
+      "noun": "bouncy"
+    },
+    "solemn": {
+      "adj": "grave",
+      "adjectives": "measured, weighty",
+      "noun": "grave"
+    },
+    "mournful": {
+      "adj": "aching",
+      "adjectives": "low, aching",
+      "noun": "woeful"
+    },
+    "eerie": {
+      "adj": "unsettling",
+      "adjectives": "thin, uneasy",
+      "noun": "hollow"
+    },
+    "tense": {
+      "adj": "tight",
+      "adjectives": "insistent, tight",
+      "noun": "tight"
+    },
+    "triumphant": {
+      "adj": "bold",
+      "adjectives": "ringing, bold",
+      "noun": "bold"
+    },
+    "tender": {
+      "adj": "soft",
+      "adjectives": "soft, warm",
+      "noun": "delicate"
+    },
+    "playful": {
+      "adj": "teasing",
+      "adjectives": "quick, teasing",
+      "noun": "skipping"
+    },
+    "aggressive": {
+      "adj": "hard-edged",
+      "adjectives": "driving, sharp",
+      "noun": "hard-driving"
+    },
+    "meditative": {
+      "adj": "calm",
+      "adjectives": "slow, even",
+      "noun": "steady"
+    }
+  }
+}

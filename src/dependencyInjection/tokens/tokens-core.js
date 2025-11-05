@@ -173,6 +173,7 @@ export const coreTokens = freeze({
   RemoveComponentHandler: 'RemoveComponentHandler',
   QueryComponentHandler: 'QueryComponentHandler',
   QueryComponentsHandler: 'QueryComponentsHandler',
+  QueryLookupHandler: 'QueryLookupHandler',
   SetVariableHandler: 'SetVariableHandler',
   EndTurnHandler: 'EndTurnHandler',
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
