@@ -33,6 +33,7 @@ import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/loc
 import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
 import BreakClosenessWithTargetHandler from '../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
+import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
@@ -502,6 +503,61 @@ export class ModTestHandlerFactory {
   }
 
   /**
+   * Creates handlers with description regeneration support for mods that need to update entity descriptions.
+   *
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @param {object} [dataRegistry] - Optional data registry instance for lookup operations
+   * @returns {object} Handlers with ADD_COMPONENT, REMOVE_COMPONENT, and REGENERATE_DESCRIPTION included
+   * @throws {Error} If any required parameter is missing or invalid
+   */
+  static createHandlersWithDescriptionRegeneration(
+    entityManager,
+    eventBus,
+    logger,
+    dataRegistry
+  ) {
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createHandlersWithDescriptionRegeneration'
+    );
+
+    const baseHandlers = this.createHandlersWithComponentMutations(
+      entityManager,
+      eventBus,
+      logger,
+      dataRegistry
+    );
+
+    const safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        eventBus.dispatch(eventType, payload);
+        return Promise.resolve(true);
+      }),
+    };
+
+    // Create a mock body description composer for testing
+    const bodyDescriptionComposer = {
+      composeDescription: jest.fn(
+        async (entity) => `Description for ${entity.id}`
+      ),
+    };
+
+    return {
+      ...baseHandlers,
+      REGENERATE_DESCRIPTION: new RegenerateDescriptionHandler({
+        entityManager,
+        bodyDescriptionComposer,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+    };
+  }
+
+  /**
    * Determines the appropriate handler factory method based on mod category.
    *
    * @param {string} modCategory - The mod category (e.g., 'positioning', 'intimacy')
@@ -521,6 +577,7 @@ export class ModTestHandlerFactory {
       hugging: this.createHandlersWithComponentMutations.bind(this),
       kissing: this.createHandlersWithMouthEngagement.bind(this),
       vampirism: this.createHandlersWithComponentMutations.bind(this),
+      music: this.createHandlersWithDescriptionRegeneration.bind(this),
     };
 
     if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {
