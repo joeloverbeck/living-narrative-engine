@@ -80,19 +80,17 @@ describe('Partial Anatomy Descriptions Integration', () => {
     it('should handle only build descriptor', async () => {
       const entity = createMinimalHumanoidEntity();
 
-      // Add only build descriptor
-      entity.hasComponent.mockImplementation((componentId) => {
-        return (
-          componentId === 'anatomy:body' || componentId === 'descriptors:build'
-        );
-      });
-
+      // Add only build descriptor using new format
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
-          return { body: { root: 'torso' } };
-        }
-        if (componentId === 'descriptors:build') {
-          return { build: 'slim' };
+          return {
+            body: {
+              root: 'torso',
+              descriptors: {
+                build: 'slim',
+              },
+            },
+          };
         }
         return null;
       });
@@ -131,13 +129,15 @@ describe('Partial Anatomy Descriptions Integration', () => {
 
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
-          return { body: { root: 'torso' } };
-        }
-        if (componentId === 'descriptors:build') {
-          return null; // Null component data
-        }
-        if (componentId === 'descriptors:body_hair') {
-          return { density: 'light' };
+          return {
+            body: {
+              root: 'torso',
+              descriptors: {
+                hairDensity: 'light',
+                // build is intentionally missing (null)
+              },
+            },
+          };
         }
         return null;
       });
@@ -153,13 +153,15 @@ describe('Partial Anatomy Descriptions Integration', () => {
 
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
-          return { body: { root: 'torso' } };
-        }
-        if (componentId === 'descriptors:build') {
-          return {}; // Empty object
-        }
-        if (componentId === 'descriptors:body_hair') {
-          return { density: 'light' };
+          return {
+            body: {
+              root: 'torso',
+              descriptors: {
+                hairDensity: 'light',
+                // build would be undefined (not set)
+              },
+            },
+          };
         }
         return null;
       });
@@ -175,13 +177,15 @@ describe('Partial Anatomy Descriptions Integration', () => {
 
       entity.getComponentData.mockImplementation((componentId) => {
         if (componentId === 'anatomy:body') {
-          return { body: { root: 'torso' } };
-        }
-        if (componentId === 'descriptors:build') {
-          return { wrongProperty: 'athletic' }; // Wrong property name
-        }
-        if (componentId === 'descriptors:body_hair') {
-          return { density: 'light' };
+          return {
+            body: {
+              root: 'torso',
+              descriptors: {
+                wrongProperty: 'athletic', // Wrong property name (not 'build')
+                hairDensity: 'light',
+              },
+            },
+          };
         }
         return null;
       });
@@ -233,19 +237,16 @@ describe('Partial Anatomy Descriptions Integration', () => {
       for (const buildValue of validBuilds) {
         const entity = createMinimalHumanoidEntity();
 
-        entity.hasComponent.mockImplementation((componentId) => {
-          return (
-            componentId === 'anatomy:body' ||
-            componentId === 'descriptors:build'
-          );
-        });
-
         entity.getComponentData.mockImplementation((componentId) => {
           if (componentId === 'anatomy:body') {
-            return { body: { root: 'torso' } };
-          }
-          if (componentId === 'descriptors:build') {
-            return { build: buildValue };
+            return {
+              body: {
+                root: 'torso',
+                descriptors: {
+                  build: buildValue,
+                },
+              },
+            };
           }
           return null;
         });
@@ -333,13 +334,24 @@ describe('Partial Anatomy Descriptions Integration', () => {
       const entity = createPartialHumanoidEntity();
       let callCount = 0;
 
-      entity.hasComponent.mockImplementation((componentId) => {
+      entity.getComponentData.mockImplementation((componentId) => {
         callCount++;
-        // Simulate components appearing/disappearing
-        if (componentId === 'descriptors:build') {
-          return callCount % 2 === 0;
+        if (componentId === 'anatomy:body') {
+          // Simulate descriptors appearing/disappearing
+          const descriptors = {};
+          if (callCount % 2 === 0) {
+            descriptors.build = 'average';
+          }
+          descriptors.hairDensity = 'light';
+
+          return {
+            body: {
+              root: 'torso',
+              descriptors: descriptors,
+            },
+          };
         }
-        return true;
+        return null;
       });
 
       // Should handle inconsistent state gracefully

@@ -99,25 +99,27 @@ describe('Complete Anatomy Descriptions Integration', () => {
       for (const combination of testDataCombinations) {
         const entity = createCompleteHumanoidEntity();
 
-        // Mock the entity to return specific values
+        // Mock the entity to return specific values using new format
         entity.getComponentData.mockImplementation((componentId) => {
           if (componentId === 'anatomy:body') {
-            return { body: { root: 'torso' } };
-          }
-          if (componentId === 'descriptors:build' && combination.config.build) {
-            return { build: combination.config.build };
-          }
-          if (
-            componentId === 'descriptors:body_composition' &&
-            combination.config.bodyComposition
-          ) {
-            return { composition: combination.config.bodyComposition };
-          }
-          if (
-            componentId === 'descriptors:body_hair' &&
-            combination.config.bodyHair
-          ) {
-            return { density: combination.config.bodyHair };
+            const descriptors = {};
+
+            if (combination.config.build) {
+              descriptors.build = combination.config.build;
+            }
+            if (combination.config.bodyComposition) {
+              descriptors.composition = combination.config.bodyComposition;
+            }
+            if (combination.config.bodyHair) {
+              descriptors.hairDensity = combination.config.bodyHair;
+            }
+
+            return {
+              body: {
+                root: 'torso',
+                descriptors: descriptors,
+              }
+            };
           }
           return null;
         });

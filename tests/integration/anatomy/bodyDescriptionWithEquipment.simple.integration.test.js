@@ -68,11 +68,11 @@ describe('Body Description with Equipment Integration - Simple', () => {
             body: {
               root: 'torso_1',
               parts: ['torso_1'],
+              descriptors: {
+                build: 'athletic',
+              },
             },
           };
-        }
-        if (componentId === 'descriptors:build') {
-          return { build: 'athletic' };
         }
         return null;
       }),
@@ -120,11 +120,11 @@ describe('Body Description with Equipment Integration - Simple', () => {
             body: {
               root: 'torso_1',
               parts: ['torso_1'],
+              descriptors: {
+                build: 'athletic',
+              },
             },
           };
-        }
-        if (componentId === 'descriptors:build') {
-          return { build: 'athletic' };
         }
         return null;
       }),
@@ -172,11 +172,11 @@ describe('Body Description with Equipment Integration - Simple', () => {
             body: {
               root: 'torso_1',
               parts: ['torso_1'],
+              descriptors: {
+                build: 'athletic',
+              },
             },
           };
-        }
-        if (componentId === 'descriptors:build') {
-          return { build: 'athletic' };
         }
         return null;
       }),
