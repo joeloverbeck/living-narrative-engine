@@ -3,6 +3,10 @@ import { DescriptionConfiguration } from './configuration/descriptionConfigurati
 import { DescriptionTemplate } from './templates/descriptionTemplate.js';
 import { TextFormatter } from './templates/textFormatter.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
+import {
+  BODY_DESCRIPTOR_REGISTRY,
+  getDescriptorsByDisplayOrder,
+} from './registries/bodyDescriptorRegistry.js';
 // Validation utilities are imported but not actively used yet
 // They will be used in future phases of the migration
 
@@ -302,31 +306,17 @@ export class BodyDescriptionComposer {
 
   /**
    * Extract height description from body entity
+   * Kept for backward compatibility but delegates to registry
    *
    * @param {object} bodyEntity - The body entity
-   * @returns {string} Height description
+   * @returns {string} Raw height value or empty string (not formatted)
    */
   extractHeightDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
-
-    // Debug logging for height extraction issue
-
-    // Only log debug info if logger debug level is enabled to reduce console spam
-    if (this.#logger && typeof this.#logger.debug === 'function') {
-      this.#logger.debug('Checking height descriptor', {
-        hasBodyComponent: !!bodyComponent?.body,
-        hasDescriptors: !!bodyComponent?.body?.descriptors,
-        hasHeight: !!bodyComponent?.body?.descriptors?.height,
-      });
-    }
-
-    // Check body.descriptors first
-    if (bodyComponent?.body?.descriptors?.height) {
-      return bodyComponent.body.descriptors.height;
-    }
+    const value = BODY_DESCRIPTOR_REGISTRY.height.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
       const heightComponent = bodyEntity.getComponentData('descriptors:height');
 
       if (heightComponent?.height) {
@@ -341,25 +331,22 @@ export class BodyDescriptionComposer {
       }
     }
 
-    return '';
+    return value || '';
   }
 
   /**
    * Extract overall build description from body entity
+   * Kept for backward compatibility but delegates to registry
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
-   * @returns {string} Build descriptor value or empty string
+   * @returns {string} Build descriptor value or empty string (not formatted)
    */
   extractBuildDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
-
-    // Check body.descriptors first
-    if (bodyComponent?.body?.descriptors?.build) {
-      return bodyComponent.body.descriptors.build;
-    }
+    const value = BODY_DESCRIPTOR_REGISTRY.build.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
       const buildComponent = bodyEntity.getComponentData('descriptors:build');
       if (buildComponent?.build) {
         // eslint-disable-next-line no-console
@@ -372,25 +359,22 @@ export class BodyDescriptionComposer {
       }
     }
 
-    return '';
+    return value || '';
   }
 
   /**
    * Extract body composition description from body entity
+   * Kept for backward compatibility but delegates to registry
    *
    * @param {object} bodyEntity - The body entity
-   * @returns {string} Body composition description
+   * @returns {string} Body composition value or empty string (not formatted)
    */
   extractBodyCompositionDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
-
-    // Check body.descriptors first
-    if (bodyComponent?.body?.descriptors?.composition) {
-      return bodyComponent.body.descriptors.composition;
-    }
+    const value = BODY_DESCRIPTOR_REGISTRY.composition.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
       const compositionComponent = bodyEntity.getComponentData(
         'descriptors:body_composition'
       );
@@ -405,25 +389,22 @@ export class BodyDescriptionComposer {
       }
     }
 
-    return '';
+    return value || '';
   }
 
   /**
    * Extract body hair description from body entity
+   * Kept for backward compatibility but delegates to registry
    *
    * @param {object} bodyEntity - The body entity
-   * @returns {string} Body hair description
+   * @returns {string} Body hair value or empty string (not formatted)
    */
   extractBodyHairDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
-
-    // Check body.descriptors first (note: hairDensity maps to "Hair density")
-    if (bodyComponent?.body?.descriptors?.hairDensity) {
-      return bodyComponent.body.descriptors.hairDensity;
-    }
+    const value = BODY_DESCRIPTOR_REGISTRY.hairDensity.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
       const bodyHairComponent = bodyEntity.getComponentData(
         'descriptors:body_hair'
       );
@@ -438,48 +419,30 @@ export class BodyDescriptionComposer {
       }
     }
 
-    return '';
+    return value || '';
   }
 
   /**
    * Extract all body-level descriptors and return them as formatted strings
+   * Uses centralized registry for extraction and formatting
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
    * @returns {Object<string, string>} Map of descriptor type to formatted string
    */
   extractBodyLevelDescriptors(bodyEntity) {
+    const bodyComponent = this.#getBodyComponent(bodyEntity);
     const descriptors = {};
 
-    // Add height FIRST (before other descriptors)
-    const heightDescription = this.extractHeightDescription(bodyEntity);
-    if (heightDescription) {
-      descriptors.height = `Height: ${heightDescription}`;
-    }
+    // Iterate through registry in display order
+    for (const descriptorName of getDescriptorsByDisplayOrder()) {
+      const metadata = BODY_DESCRIPTOR_REGISTRY[descriptorName];
+      const value = metadata.extractor(bodyComponent);
 
-    const skinColorDescription = this.extractSkinColorDescription(bodyEntity);
-    if (skinColorDescription) {
-      descriptors.skin_color = `Skin color: ${skinColorDescription}`;
-    }
-
-    const buildDescription = this.extractBuildDescription(bodyEntity);
-    if (buildDescription) {
-      descriptors.build = `Build: ${buildDescription}`;
-    }
-
-    const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
-    if (bodyHairDescription) {
-      descriptors.body_hair = `Body hair: ${bodyHairDescription}`;
-    }
-
-    const compositionDescription =
-      this.extractBodyCompositionDescription(bodyEntity);
-    if (compositionDescription) {
-      descriptors.body_composition = `Body composition: ${compositionDescription}`;
-    }
-
-    const smellDescription = this.extractSmellDescription(bodyEntity);
-    if (smellDescription) {
-      descriptors.smell = `Smell: ${smellDescription}`;
+      if (value) {
+        // Use formatter from registry (formatters already include label)
+        // e.g., formatter returns "Height: tall" not just "tall"
+        descriptors[metadata.displayKey] = metadata.formatter(value);
+      }
     }
 
     return descriptors;
@@ -487,25 +450,25 @@ export class BodyDescriptionComposer {
 
   /**
    * Extract the body-level descriptor order from the overall description order
+   * Derives from registry instead of hardcoded list
    *
    * @param {Array<string>} descriptionOrder - Full description order array
    * @returns {Array<string>} Ordered array of body descriptor types
    */
   getBodyDescriptorOrder(descriptionOrder) {
-    const bodyDescriptorTypes = [
-      'height', // Add height first in the list
-      'skin_color',
-      'build',
-      'body_composition',
-      'body_hair',
-      'smell',
-    ];
-    const filtered = descriptionOrder.filter((type) =>
-      bodyDescriptorTypes.includes(type)
+    // Get all display keys from registry
+    const registryDisplayKeys = getDescriptorsByDisplayOrder().map(
+      (name) => BODY_DESCRIPTOR_REGISTRY[name].displayKey
     );
 
-    // Defensive logic: ensure height is always first if it's missing from configuration
-    if (!filtered.includes('height')) {
+    // Filter the config order to only include registry display keys
+    // This maintains config-specified order while using registry as source of truth
+    const filtered = descriptionOrder.filter((type) =>
+      registryDisplayKeys.includes(type)
+    );
+
+    // Defensive: ensure height is first if present in registry but missing from config
+    if (registryDisplayKeys.includes('height') && !filtered.includes('height')) {
       filtered.unshift('height');
     }
 
@@ -514,20 +477,17 @@ export class BodyDescriptionComposer {
 
   /**
    * Extract skin color description from body entity
+   * Kept for backward compatibility but delegates to registry
    *
    * @param {object} bodyEntity - The body entity
-   * @returns {string} Skin color description
+   * @returns {string} Skin color value or empty string (not formatted)
    */
   extractSkinColorDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
-
-    // Check body.descriptors first
-    if (bodyComponent?.body?.descriptors?.skinColor) {
-      return bodyComponent.body.descriptors.skinColor;
-    }
+    const value = BODY_DESCRIPTOR_REGISTRY.skinColor.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
       const skinColorComponent = bodyEntity.getComponentData(
         'descriptors:skin_color'
       );
@@ -542,25 +502,22 @@ export class BodyDescriptionComposer {
       }
     }
 
-    return '';
+    return value || '';
   }
 
   /**
    * Extract smell description from body entity
+   * Kept for backward compatibility but delegates to registry
    *
    * @param {object} bodyEntity - The body entity
-   * @returns {string} Smell description
+   * @returns {string} Smell value or empty string (not formatted)
    */
   extractSmellDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
-
-    // Check body.descriptors first
-    if (bodyComponent?.body?.descriptors?.smell) {
-      return bodyComponent.body.descriptors.smell;
-    }
+    const value = BODY_DESCRIPTOR_REGISTRY.smell.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
       const smellComponent = bodyEntity.getComponentData('descriptors:smell');
       if (smellComponent?.smell) {
         // eslint-disable-next-line no-console
@@ -573,6 +530,6 @@ export class BodyDescriptionComposer {
       }
     }
 
-    return '';
+    return value || '';
   }
 }
