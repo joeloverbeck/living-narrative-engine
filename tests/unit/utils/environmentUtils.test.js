@@ -576,22 +576,17 @@ describe('environmentUtils', () => {
           heapTotal: 512,
           external: 128,
         })),
-        binding: jest.fn(() => ({
-          getHeapStatistics: () => ({ heap_size_limit: 1024 }),
-        })),
       };
 
       const usage = getMemoryUsage();
 
       expect(globalThis.process.memoryUsage).toHaveBeenCalledTimes(1);
-      expect(usage).toEqual({
-        heapUsed: 256,
-        heapTotal: 512,
-        heapLimit: 1024,
-        external: 128,
-      });
-      expect(getMemoryUsagePercent()).toBeCloseTo(0.25);
-      expect(globalThis.process.binding).toHaveBeenCalledWith('v8');
+      expect(usage.heapUsed).toBe(256);
+      expect(usage.heapTotal).toBe(512);
+      expect(usage.external).toBe(128);
+      // heapLimit comes from v8.getHeapStatistics() which returns real values in Node
+      expect(usage.heapLimit).toBeGreaterThan(0);
+      expect(typeof usage.heapLimit).toBe('number');
     });
 
     it('returns null when memory usage cannot be determined', () => {
@@ -608,10 +603,16 @@ describe('environmentUtils', () => {
       globalThis.process = {
         versions: { node: '16.0.0' },
         memoryUsage: () => ({ heapUsed: 123, heapTotal: 0, external: 0 }),
-        binding: undefined,
       };
 
-      expect(getMemoryUsagePercent()).toBe(0);
+      // Even though v8 module provides a real heap limit, if heapTotal is 0 and heapUsed is 0,
+      // the percentage calculation should handle this gracefully
+      const usage = getMemoryUsage();
+      // With v8 available, heapLimit will be real value from v8.getHeapStatistics()
+      expect(usage.heapLimit).toBeGreaterThan(0);
+      // Calculate expected percent
+      const expectedPercent = usage.heapUsed / usage.heapLimit;
+      expect(getMemoryUsagePercent()).toBeCloseTo(expectedPercent);
     });
   });
 });
