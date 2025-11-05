@@ -1,0 +1,90 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_play_ostinato_on_instrument",
+  "comment": "Handles playing an ostinato (repetitive musical pattern) on the currently-played instrument, using the actor's current performance mood to flavor the narrative description.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "music:event-is-action-play-ostinato-on-instrument"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Capture the actor name",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Capture the instrument name",
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "instrumentName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position for contextual logging",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Retrieve current performance mood",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "music:performance_mood",
+        "result_variable": "performanceMood"
+      }
+    },
+    {
+      "type": "QUERY_LOOKUP",
+      "comment": "Retrieve mood descriptors from lexicon, specifically the noun form for ostinato message",
+      "parameters": {
+        "lookup_id": "music:mood_lexicon",
+        "entry_key": "{context.performanceMood.mood}",
+        "result_variable": "moodDescriptor",
+        "missing_value": { "noun": "rhythmic" }
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Compose perceptible event message",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} locks into a {context.moodDescriptor.noun} ostinato on the {context.instrumentName}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set perception type for event categorization",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Capture location for event dispatch",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Capture target ID for event dispatch",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

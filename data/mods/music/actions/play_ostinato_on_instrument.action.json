@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "music:play_ostinato_on_instrument",
+  "name": "Play Ostinato on Instrument",
+  "description": "Lock into a repetitive musical pattern (ostinato) on the instrument you are currently playing. This technique works best with driving, insistent, or rhythmic moods.",
+  "targets": {
+    "primary": {
+      "scope": "music:instrument_actor_is_playing",
+      "placeholder": "instrument",
+      "description": "The instrument you are currently playing"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "music:is_musician",
+      "music:playing_music",
+      "music:performance_mood"
+    ],
+    "primary": [
+      "items:item",
+      "music:is_instrument"
+    ]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "in": [
+          {
+            "var": "actor.components.music:performance_mood.mood"
+          },
+          ["tense", "cheerful", "aggressive", "playful", "meditative", "solemn"]
+        ]
+      },
+      "failure_message": "Ostinato patterns don't work well with your current performance mood. Try a mood that's more driving, insistent, or rhythmic."
+    }
+  ],
+  "template": "play ostinato on {instrument}",
+  "visual": {
+    "backgroundColor": "#1a2332",
+    "textColor": "#d1d5db",
+    "hoverBackgroundColor": "#2d3748",
+    "hoverTextColor": "#f3f4f6"
+  }
+}
