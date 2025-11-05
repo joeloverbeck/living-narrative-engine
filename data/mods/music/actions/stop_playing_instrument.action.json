@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "music:stop_playing_instrument",
+  "name": "Stop Playing Instrument",
+  "description": "Stop playing the instrument you are currently performing on, ending the musical performance.",
+  "targets": {
+    "primary": {
+      "scope": "music:instrument_actor_is_playing",
+      "placeholder": "instrument",
+      "description": "The instrument you are currently playing"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "music:is_musician",
+      "music:playing_music"
+    ],
+    "primary": [
+      "items:item",
+      "music:is_instrument"
+    ]
+  },
+  "prerequisites": [],
+  "template": "stop playing {instrument}",
+  "visual": {
+    "backgroundColor": "#1a2332",
+    "textColor": "#d1d5db",
+    "hoverBackgroundColor": "#2d3748",
+    "hoverTextColor": "#f3f4f6"
+  }
+}
