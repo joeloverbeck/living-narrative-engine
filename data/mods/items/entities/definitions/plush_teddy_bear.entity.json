@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:plush_teddy_bear",
+  "description": "A soft and cuddly teddy bear that provides comfort and emotional support.",
+  "components": {
+    "core:name": {
+      "text": "plush teddy bear"
+    },
+    "core:description": {
+      "text": "A well-loved stuffed teddy bear with soft brown fur and button eyes. Its plush body is perfect for comforting hugs."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:allows_soothing_hug": {},
+    "items:weight": {
+      "weight": 0.3
+    }
+  }
+}
