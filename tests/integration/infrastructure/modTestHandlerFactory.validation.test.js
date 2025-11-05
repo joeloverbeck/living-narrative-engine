@@ -67,6 +67,7 @@ describe('ModTestHandlerFactory - Deep Validation (TSTAIMIG-002)', () => {
 
     mockGameDataRepository = {
       getComponentDefinition: jest.fn().mockReturnValue(null),
+      get: jest.fn().mockReturnValue(undefined),
     };
   });
 

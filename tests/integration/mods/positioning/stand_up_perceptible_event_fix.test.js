@@ -80,6 +80,7 @@ describe('positioning:stand_up perceptible event fix', () => {
 
     mockGameDataRepository = {
       getComponentDefinition: jest.fn().mockReturnValue(null),
+      get: jest.fn().mockReturnValue(undefined),
     };
 
     // Expand macros in stand_up rule

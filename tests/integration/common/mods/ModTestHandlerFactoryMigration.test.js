@@ -34,6 +34,7 @@ import ModifyComponentHandler from '../../../../src/logic/operationHandlers/modi
 import AtomicModifyComponentHandler from '../../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import BreakClosenessWithTargetHandler from '../../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import MergeClosenessCircleHandler from '../../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
+import QueryLookupHandler from '../../../../src/logic/operationHandlers/queryLookupHandler.js';
 import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
@@ -69,6 +70,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
 
     gameDataRepository = {
       getComponentDefinition: jest.fn().mockReturnValue(null),
+      get: jest.fn().mockReturnValue(undefined),
     };
   });
 
@@ -82,9 +84,10 @@ describe('ModTestHandlerFactory Migration Validation', () => {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param {object} [gameDataRepository] - Optional game data repository instance
    * @returns {object} Manually created handlers object
    */
-  function createManualHandlers(entityManager, eventBus, logger) {
+  function createManualHandlers(entityManager, eventBus, logger, gameDataRepository) {
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
@@ -92,7 +95,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       }),
     };
 
-    return {
+    const handlers = {
       QUERY_COMPONENT: new QueryComponentHandler({
         entityManager,
         logger,
@@ -125,6 +128,17 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       SET_VARIABLE: new SetVariableHandler({ logger }),
       LOG_MESSAGE: new LogHandler({ logger }),
     };
+
+    // Add QUERY_LOOKUP handler if gameDataRepository is provided
+    if (gameDataRepository) {
+      handlers.QUERY_LOOKUP = new QueryLookupHandler({
+        dataRegistry: gameDataRepository,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      });
+    }
+
+    return handlers;
   }
 
   /**
@@ -142,7 +156,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
     logger,
     gameDataRepository
   ) {
-    const baseHandlers = createManualHandlers(entityManager, eventBus, logger);
+    const baseHandlers = createManualHandlers(entityManager, eventBus, logger, gameDataRepository);
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
@@ -201,7 +215,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       };
     }
 
-    const baseHandlers = createManualHandlers(entityManager, eventBus, logger);
+    const baseHandlers = createManualHandlers(entityManager, eventBus, logger, gameDataRepository);
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
