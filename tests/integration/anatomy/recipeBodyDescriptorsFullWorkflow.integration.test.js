@@ -124,7 +124,23 @@ describe('Recipe BodyDescriptors Full Workflow Integration', () => {
             partType: 'torso',
             preferId: 'anatomy:human_male_torso',
           },
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:humanoid_head',
+          },
         },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg',
+          },
+        ],
       };
 
       testBed.loadRecipes({
