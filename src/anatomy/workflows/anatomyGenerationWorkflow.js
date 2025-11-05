@@ -12,6 +12,8 @@ import { BodyDescriptorValidationError } from '../errors/bodyDescriptorValidatio
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
 /** @typedef {import('../../clothing/services/clothingInstantiationService.js').ClothingInstantiationService} ClothingInstantiationService */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../services/anatomySocketIndex.js').default} AnatomySocketIndex */
 
 /**
  * Workflow responsible for generating the anatomy graph structure
@@ -28,6 +30,10 @@ export class AnatomyGenerationWorkflow extends BaseService {
   #bodyBlueprintFactory;
   /** @type {ClothingInstantiationService} */
   #clothingInstantiationService;
+  /** @type {ISafeEventDispatcher} */
+  #eventBus;
+  /** @type {AnatomySocketIndex} */
+  #socketIndex;
 
   /**
    * @param {object} deps
@@ -36,6 +42,8 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @param {ILogger} deps.logger
    * @param {BodyBlueprintFactory} deps.bodyBlueprintFactory
    * @param {ClothingInstantiationService} [deps.clothingInstantiationService] - Optional for backward compatibility
+   * @param {ISafeEventDispatcher} [deps.eventBus] - Event bus for publishing anatomy generation events
+   * @param {AnatomySocketIndex} [deps.socketIndex] - Socket index for anatomy structure lookups
    */
   constructor({
     entityManager,
@@ -43,6 +51,8 @@ export class AnatomyGenerationWorkflow extends BaseService {
     logger,
     bodyBlueprintFactory,
     clothingInstantiationService,
+    eventBus,
+    socketIndex,
   }) {
     super();
     this.#logger = this._init('AnatomyGenerationWorkflow', logger, {
@@ -63,6 +73,8 @@ export class AnatomyGenerationWorkflow extends BaseService {
     this.#dataRegistry = dataRegistry;
     this.#bodyBlueprintFactory = bodyBlueprintFactory;
     this.#clothingInstantiationService = clothingInstantiationService;
+    this.#eventBus = eventBus;
+    this.#socketIndex = socketIndex;
   }
 
   /**
@@ -170,6 +182,38 @@ export class AnatomyGenerationWorkflow extends BaseService {
     // Include clothing result if available
     if (clothingResult) {
       result.clothingResult = clothingResult;
+    }
+
+    // Publish ANATOMY_GENERATED event if eventBus and socketIndex are available
+    if (this.#eventBus && this.#socketIndex) {
+      try {
+        // Get the blueprint from the recipe to include in the event
+        const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
+        const blueprintId = recipe?.blueprintId;
+
+        // Get sockets for the owner entity
+        const sockets = await this.#socketIndex.getEntitySockets(ownerId);
+
+        this.#eventBus.dispatch('ANATOMY_GENERATED', {
+          entityId: ownerId,
+          blueprintId: blueprintId,
+          sockets: sockets,
+          timestamp: Date.now(),
+          bodyParts: graphResult.entities,
+          partsMap: partsMap instanceof Map ? Object.fromEntries(partsMap) : partsMap,
+          slotEntityMappings: slotEntityMappings instanceof Map ? Object.fromEntries(slotEntityMappings) : slotEntityMappings,
+        });
+
+        this.#logger.debug(
+          `AnatomyGenerationWorkflow: Published ANATOMY_GENERATED event for entity '${ownerId}'`
+        );
+      } catch (error) {
+        // Don't fail the generation if event publication fails
+        this.#logger.error(
+          `AnatomyGenerationWorkflow: Failed to publish ANATOMY_GENERATED event for entity '${ownerId}'`,
+          error
+        );
+      }
     }
 
     return result;

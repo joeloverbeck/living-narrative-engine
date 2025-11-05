@@ -48,6 +48,8 @@ export class AnatomyGenerationService {
    * @param {AnatomyDescriptionService} deps.anatomyDescriptionService - Service providing textual descriptions.
    * @param {BodyGraphService} deps.bodyGraphService - Service for body graph operations.
    * @param {ClothingInstantiationService} [deps.clothingInstantiationService] - Service for instantiating clothing (optional).
+   * @param {object} [deps.eventBus] - Event bus for anatomy events (optional).
+   * @param {object} [deps.socketIndex] - Anatomy socket index service (optional).
    */
   constructor({
     entityManager,
@@ -57,6 +59,8 @@ export class AnatomyGenerationService {
     anatomyDescriptionService,
     bodyGraphService,
     clothingInstantiationService,
+    eventBus,
+    socketIndex,
   }) {
     if (!entityManager)
       throw new InvalidArgumentError('entityManager is required');
@@ -80,6 +84,8 @@ export class AnatomyGenerationService {
       logger,
       bodyBlueprintFactory,
       clothingInstantiationService,
+      eventBus,
+      socketIndex,
     });
 
     const descriptionWorkflow = new DescriptionGenerationWorkflow({

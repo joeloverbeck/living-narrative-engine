@@ -158,6 +158,106 @@ export class ClothingInstantiationService extends BaseService {
     this.#cache = anatomyClothingCache;
     this.#layerResolutionService = layerResolutionService;
     this.#eventBus = eventBus;
+
+    // Subscribe to ANATOMY_GENERATED events
+    this.#eventBus.subscribe(
+      'ANATOMY_GENERATED',
+      this.#handleAnatomyGenerated.bind(this)
+    );
+
+    this.#logger.debug(
+      'ClothingInstantiationService: Subscribed to ANATOMY_GENERATED events'
+    );
+  }
+
+  /**
+   * Handles ANATOMY_GENERATED event
+   * Instantiates clothing based on the anatomy recipe
+   *
+   * @private
+   * @param {object} event - The event object
+   * @param {object} event.payload - Event payload
+   * @param {string} event.payload.entityId - Entity ID that anatomy was generated for
+   * @param {string} event.payload.blueprintId - Blueprint ID used
+   * @param {Array} event.payload.sockets - Socket information
+   * @param {object} event.payload.partsMap - Map of anatomy parts
+   * @param {object} event.payload.slotEntityMappings - Slot to entity mappings
+   * @returns {Promise<void>}
+   */
+  async #handleAnatomyGenerated(event) {
+    const { entityId, partsMap, slotEntityMappings } = event.payload;
+
+    this.#logger.info(
+      `ClothingInstantiationService: Handling ANATOMY_GENERATED event for entity '${entityId}'`
+    );
+
+    try {
+      // Get the anatomy:body component to find the recipe
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      if (!entity) {
+        this.#logger.warn(
+          `ClothingInstantiationService: Entity '${entityId}' not found`
+        );
+        return;
+      }
+
+      const anatomyBodyData = entity.getComponentData('anatomy:body');
+      if (!anatomyBodyData?.recipeId) {
+        this.#logger.debug(
+          `ClothingInstantiationService: Entity '${entityId}' has no recipe ID`
+        );
+        return;
+      }
+
+      // Get the recipe
+      const recipe = this.#dataRegistry.get(
+        'anatomyRecipes',
+        anatomyBodyData.recipeId
+      );
+      if (!recipe) {
+        this.#logger.warn(
+          `ClothingInstantiationService: Recipe '${anatomyBodyData.recipeId}' not found`
+        );
+        return;
+      }
+
+      // Check if recipe has clothing entities
+      if (!recipe.clothingEntities || recipe.clothingEntities.length === 0) {
+        this.#logger.debug(
+          `ClothingInstantiationService: Recipe '${anatomyBodyData.recipeId}' has no clothing entities`
+        );
+        return;
+      }
+
+      // Convert partsMap and slotEntityMappings back to Maps if they're plain objects
+      const partsMapConverted =
+        partsMap instanceof Map ? partsMap : new Map(Object.entries(partsMap));
+      const slotEntityMappingsConverted =
+        slotEntityMappings instanceof Map
+          ? slotEntityMappings
+          : new Map(Object.entries(slotEntityMappings));
+
+      // Instantiate clothing
+      await this.instantiateRecipeClothing(entityId, recipe, {
+        partsMap: partsMapConverted,
+        slotEntityMappings: slotEntityMappingsConverted,
+      });
+
+      this.#logger.info(
+        `ClothingInstantiationService: Successfully handled ANATOMY_GENERATED event for entity '${entityId}'`
+      );
+    } catch (error) {
+      this.#logger.error(
+        `ClothingInstantiationService: Failed to handle ANATOMY_GENERATED event for entity '${entityId}'`,
+        error
+      );
+
+      // Dispatch error event
+      this.#eventBus.dispatch('CLOTHING_INSTANTIATION_FAILED', {
+        entityId,
+        error: error.message,
+      });
+    }
   }
 
   /**
