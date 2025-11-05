@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "music:event-is-action-set-eerie-mood",
   "description": "Eerie mood action triggered",
-  "condition": {
+  "logic": {
     "==": [
       {"var": "event.actionId"},
       "music:set_eerie_mood_on_instrument"

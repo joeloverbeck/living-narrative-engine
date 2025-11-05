@@ -2,7 +2,7 @@
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "music:event-is-action-set-meditative-mood",
   "description": "Meditative mood action triggered",
-  "condition": {
+  "logic": {
     "==": [
       {"var": "event.actionId"},
       "music:set_meditative_mood_on_instrument"
