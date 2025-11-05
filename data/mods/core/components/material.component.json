@@ -9,6 +9,7 @@
         "type": "string",
         "description": "The primary material composition",
         "enum": [
+          "brocade",
           "calfskin",
           "canvas",
           "ceramic",
@@ -38,6 +39,7 @@
           "stretch-silk",
           "suede",
           "synthetic",
+          "velvet",
           "wood",
           "wool"
         ]

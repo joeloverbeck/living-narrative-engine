@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:full_length_black_velvet_gown",
+  "description": "Elegant full-length gown in rich black velvet",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "full_body"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "velvet"
+    },
+    "core:name": {
+      "text": "full-length black velvet gown"
+    },
+    "core:description": {
+      "text": "A stunning full-length gown crafted from sumptuous black velvet, its rich texture absorbing and reflecting light in mesmerizing patterns. The structured bodice provides elegant shape before flowing into a sweeping skirt that pools at the feet, creating a silhouette of timeless gothic elegance. The velvet's dense pile creates tactile luxury while maintaining visual depth that shifts with every movement. Perfect for formal gothic occasions, this gown embodies dark romance and regal sophistication, making any wearer feel like gothic royalty."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "velvety"
+    },
+    "descriptors:length_category": {
+      "length": "very-long"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper",
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.2
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:military_coat_midnight_blue_gold_epaulettes",
+  "description": "Structured military coat in midnight blue with gold epaulettes",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "wool",
+      "properties": [
+        "insulating"
+      ]
+    },
+    "core:name": {
+      "text": "military coat with gold epaulettes"
+    },
+    "core:description": {
+      "text": "An impeccably tailored military coat in rich midnight blue, its dark hue almost black in shadow yet revealing deep blue undertones in light. Structured shoulders are adorned with gleaming gold epaulettes that add formality and rank, while decorative chain details and brass buttons create visual interest down the double-breasted front. The military-grade wool provides warmth and structure, holding a crisp silhouette that commands respect. This coat embodies gothic military elegance, perfect for making a formal yet commanding impression."
+    },
+    "descriptors:color_extended": {
+      "color": "midnight-blue"
+    },
+    "descriptors:embellishment": {
+      "embellishment": "metal-chain"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 2.0
+    }
+  }
+}
