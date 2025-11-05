@@ -39,21 +39,32 @@ describe('Music Mood Actions - Execution', () => {
         );
 
         // Create musician actor
-        const actor = await fixture.createEntity({
-          name: 'Musician',
-          components: ['core:actor', 'music:is_musician'],
+        const actor = fixture.createEntity({
+          id: 'musician',
+          components: {
+          'core:actor': { text: 'Musician' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
         });
 
         // Create instrument
-        const instrument = await fixture.createEntity({
-          name: 'Flute',
-          components: ['items:item', 'music:is_instrument'],
+        const instrument = fixture.createEntity({
+          id: 'flute',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Flute' }
+          }
         });
 
+        fixture.reset([actor, instrument]);
+
+        fixture.reset([actor, instrument]);
         await fixture.executeAction(actor.id, instrument.id);
 
         // Verify component was added/modified
-        const moodComponent = fixture.getComponent(
+        const moodComponent = fixture.entityManager.getComponentData(
           instrument.id,
           'music:performance_mood'
         );
@@ -73,20 +84,29 @@ describe('Music Mood Actions - Execution', () => {
           `music:set_${mood.key}_mood_on_instrument`
         );
 
-        const actor = await fixture.createEntity({
-          name: 'Bard',
-          components: ['core:actor', 'music:is_musician'],
+        const actor = fixture.createEntity({
+          id: 'bard',
+          components: {
+          'core:actor': { text: 'Bard' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
         });
 
-        const instrument = await fixture.createEntity({
-          name: 'Violin',
-          components: ['items:item', 'music:is_instrument'],
+        const instrument = fixture.createEntity({
+          id: 'violin',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Violin' }
+          }
         });
 
+        fixture.reset([actor, instrument]);
         await fixture.executeAction(actor.id, instrument.id);
 
         // Get dispatched events
-        const events = fixture.getDispatchedEvents();
+        const events = fixture.events;
         const musicEvent = events.find((e) => e.type === 'music_mood_set');
 
         expect(musicEvent).toBeDefined();
@@ -105,19 +125,28 @@ describe('Music Mood Actions - Execution', () => {
           `music:set_${mood.key}_mood_on_instrument`
         );
 
-        const actor = await fixture.createEntity({
-          name: 'Performer',
-          components: ['core:actor', 'music:is_musician'],
+        const actor = fixture.createEntity({
+          id: 'performer',
+          components: {
+          'core:actor': { text: 'Performer' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
         });
 
-        const instrument = await fixture.createEntity({
-          name: 'Lyre',
-          components: ['items:item', 'music:is_instrument'],
+        const instrument = fixture.createEntity({
+          id: 'lyre',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Lyre' }
+          }
         });
 
+        fixture.reset([actor, instrument]);
         await fixture.executeAction(actor.id, instrument.id);
 
-        const events = fixture.getDispatchedEvents();
+        const events = fixture.events;
         const musicEvent = events.find((e) => e.type === 'music_mood_set');
 
         expect(musicEvent).toBeDefined();
@@ -139,15 +168,23 @@ describe('Music Mood Actions - Execution', () => {
         'music:set_cheerful_mood_on_instrument'
       );
 
-      const actor = await fixture.createEntity({
-        name: 'Songbird',
-        components: ['core:actor', 'music:is_musician'],
-      });
+      const actor = fixture.createEntity({
+          id: 'songbird',
+          components: {
+          'core:actor': { text: 'Songbird' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
+        });
 
-      const instrument = await fixture.createEntity({
-        name: 'Golden Harp',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const instrument = fixture.createEntity({
+          id: 'golden_harp',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Golden Harp' }
+          }
+        });
 
       // Test each mood sequentially
       for (const mood of MOODS) {
@@ -157,19 +194,28 @@ describe('Music Mood Actions - Execution', () => {
         );
 
         // Re-create entities for each test
-        const testActor = await fixture.createEntity({
-          name: 'Songbird',
-          components: ['core:actor', 'music:is_musician'],
+        const testActor = fixture.createEntity({
+          id: 'songbird',
+          components: {
+          'core:actor': { text: 'Songbird' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
         });
 
-        const testInstrument = await fixture.createEntity({
-          name: 'Golden Harp',
-          components: ['items:item', 'music:is_instrument'],
+        const testInstrument = fixture.createEntity({
+          id: 'golden_harp',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Golden Harp' }
+          }
         });
 
+        fixture.reset([actor, instrument]);
         await fixture.executeAction(testActor.id, testInstrument.id);
 
-        const events = fixture.getDispatchedEvents();
+        const events = fixture.events;
         const musicEvent = events.find((e) => e.type === 'music_mood_set');
 
         expect(musicEvent.message).toBe(
@@ -188,20 +234,29 @@ describe('Music Mood Actions - Execution', () => {
         'music:set_cheerful_mood_on_instrument'
       );
 
-      const actor = await fixture.createEntity({
-        name: 'Musician',
-        components: ['core:actor', 'music:is_musician'],
-      });
+      const actor = fixture.createEntity({
+          id: 'musician',
+          components: {
+          'core:actor': { text: 'Musician' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
+        });
 
-      const instrument = await fixture.createEntity({
-        name: 'Lute',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const instrument = fixture.createEntity({
+          id: 'lute',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Lute' }
+          }
+        });
 
       // Set cheerful mood first
+        fixture.reset([actor, instrument]);
       await fixture.executeAction(actor.id, instrument.id);
 
-      let moodComponent = fixture.getComponent(
+      let moodComponent = fixture.entityManager.getComponentData(
         instrument.id,
         'music:performance_mood'
       );
@@ -214,19 +269,28 @@ describe('Music Mood Actions - Execution', () => {
       );
 
       // Re-create entities
-      const actor2 = await fixture.createEntity({
-        name: 'Musician',
-        components: ['core:actor', 'music:is_musician'],
-      });
+      const actor2 = fixture.createEntity({
+          id: 'musician',
+          components: {
+          'core:actor': { text: 'Musician' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
+        });
 
-      const instrument2 = await fixture.createEntity({
-        name: 'Lute',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const instrument2 = fixture.createEntity({
+          id: 'lute',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Lute' }
+          }
+        });
 
+        fixture.reset([actor, instrument]);
       await fixture.executeAction(actor2.id, instrument2.id);
 
-      moodComponent = fixture.getComponent(
+      moodComponent = fixture.entityManager.getComponentData(
         instrument2.id,
         'music:performance_mood'
       );
@@ -241,22 +305,35 @@ describe('Music Mood Actions - Execution', () => {
         'music:set_cheerful_mood_on_instrument'
       );
 
-      const actor = await fixture.createEntity({
-        name: 'Orchestra Leader',
-        components: ['core:actor', 'music:is_musician'],
-      });
+      const actor = fixture.createEntity({
+          id: 'orchestra_leader',
+          components: {
+          'core:actor': { text: 'Orchestra Leader' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
+        });
 
-      const lute = await fixture.createEntity({
-        name: 'Lute',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const lute = fixture.createEntity({
+          id: 'lute',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Lute' }
+          }
+        });
 
-      const drum = await fixture.createEntity({
-        name: 'Drum',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const drum = fixture.createEntity({
+          id: 'drum',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Drum' }
+          }
+        });
 
       // Set cheerful mood on lute
+        fixture.reset([actor, instrument]);
       await fixture.executeAction(actor.id, lute.id);
 
       // Set aggressive mood on drum
@@ -265,29 +342,42 @@ describe('Music Mood Actions - Execution', () => {
         'music:set_aggressive_mood_on_instrument'
       );
 
-      const actor2 = await fixture.createEntity({
-        name: 'Orchestra Leader',
-        components: ['core:actor', 'music:is_musician'],
-      });
+      const actor2 = fixture.createEntity({
+          id: 'orchestra_leader',
+          components: {
+          'core:actor': { text: 'Orchestra Leader' },
+          'core:position': { locationId: 'room1' },
+          'music:is_musician': {}
+          }
+        });
 
-      const lute2 = await fixture.createEntity({
-        name: 'Lute',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const lute2 = fixture.createEntity({
+          id: 'lute',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Lute' }
+          }
+        });
 
-      const drum2 = await fixture.createEntity({
-        name: 'Drum',
-        components: ['items:item', 'music:is_instrument'],
-      });
+      const drum2 = fixture.createEntity({
+          id: 'drum',
+          components: {
+          'items:item': {},
+          'music:is_instrument': {},
+          'core:name': { text: 'Drum' }
+          }
+        });
 
+        fixture.reset([actor, instrument]);
       await fixture.executeAction(actor2.id, drum2.id);
 
       // Verify lute has cheerful mood
-      const luteMood = fixture.getComponent(lute2.id, 'music:performance_mood');
+      const luteMood = fixture.entityManager.getComponentData(lute2.id, 'music:performance_mood');
       expect(luteMood).toBeUndefined(); // Since we recreated entities
 
       // Verify drum has aggressive mood
-      const drumMood = fixture.getComponent(drum2.id, 'music:performance_mood');
+      const drumMood = fixture.entityManager.getComponentData(drum2.id, 'music:performance_mood');
       expect(drumMood.mood).toBe('aggressive');
     });
   });
