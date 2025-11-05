@@ -21,5 +21,11 @@
     ]
   },
   "prerequisites": [],
-  "template": "coat your lips evenly with {item}"
+  "template": "coat your lips evenly with {item}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }

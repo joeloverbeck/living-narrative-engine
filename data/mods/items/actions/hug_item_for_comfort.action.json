@@ -18,5 +18,11 @@
     ]
   },
   "prerequisites": [],
-  "template": "hug {item} to soothe yourself"
+  "template": "hug {item} to soothe yourself",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }

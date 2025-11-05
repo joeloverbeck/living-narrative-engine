@@ -11,5 +11,11 @@
     }
   },
   "prerequisites": [],
-  "template": "drop {item}"
+  "template": "drop {item}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }

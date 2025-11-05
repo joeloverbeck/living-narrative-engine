@@ -19,5 +19,11 @@
       "description": "Item to give"
     }
   },
-  "template": "give {item} to {recipient}"
+  "template": "give {item} to {recipient}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }

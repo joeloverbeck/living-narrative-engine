@@ -14,5 +14,11 @@
     "actor": ["items:inventory"]
   },
   "prerequisites": [],
-  "template": "pick up {item}"
+  "template": "pick up {item}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }

@@ -19,5 +19,11 @@
       "description": "Inventory item to store"
     }
   },
-  "template": "put {secondary.name} in {primary.name}"
+  "template": "put {secondary.name} in {primary.name}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
 }
