@@ -7,6 +7,18 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
+// Import all mood action definitions
+import cheerfulAction from '../../../../data/mods/music/actions/set_cheerful_mood_on_instrument.action.json';
+import solemnAction from '../../../../data/mods/music/actions/set_solemn_mood_on_instrument.action.json';
+import mournfulAction from '../../../../data/mods/music/actions/set_mournful_mood_on_instrument.action.json';
+import eerieAction from '../../../../data/mods/music/actions/set_eerie_mood_on_instrument.action.json';
+import tenseAction from '../../../../data/mods/music/actions/set_tense_mood_on_instrument.action.json';
+import triumphantAction from '../../../../data/mods/music/actions/set_triumphant_mood_on_instrument.action.json';
+import tenderAction from '../../../../data/mods/music/actions/set_tender_mood_on_instrument.action.json';
+import playfulAction from '../../../../data/mods/music/actions/set_playful_mood_on_instrument.action.json';
+import aggressiveAction from '../../../../data/mods/music/actions/set_aggressive_mood_on_instrument.action.json';
+import meditativeAction from '../../../../data/mods/music/actions/set_meditative_mood_on_instrument.action.json';
+
 const MOODS = [
   'cheerful',
   'solemn',
@@ -19,6 +31,28 @@ const MOODS = [
   'aggressive',
   'meditative',
 ];
+
+const MOOD_ACTIONS = {
+  cheerful: cheerfulAction,
+  solemn: solemnAction,
+  mournful: mournfulAction,
+  eerie: eerieAction,
+  tense: tenseAction,
+  triumphant: triumphantAction,
+  tender: tenderAction,
+  playful: playfulAction,
+  aggressive: aggressiveAction,
+  meditative: meditativeAction,
+};
+
+/**
+ * Registers all mood actions for discovery
+ * @param {ModTestFixture} fixture - Active test fixture instance
+ */
+function configureActionDiscovery(fixture) {
+  const allActions = Object.values(MOOD_ACTIONS);
+  fixture.testEnv.actionIndex.buildIndex(allActions);
+}
 
 describe('Music Mood Actions - Discovery', () => {
   let fixture;
@@ -57,7 +91,10 @@ describe('Music Mood Actions - Discovery', () => {
           }
         });
 
-        const actions = await fixture.discoverActionsForActor(actor.id);
+        fixture.reset([actor, instrument]);
+        configureActionDiscovery(fixture);
+
+        const actions = await fixture.discoverActions(actor.id);
         const moodAction = actions.find(
           (a) => a.id === `music:set_${mood}_mood_on_instrument`
         );
@@ -94,7 +131,10 @@ describe('Music Mood Actions - Discovery', () => {
           }
         });
 
-        const actions = await fixture.discoverActionsForActor(actor.id);
+        fixture.reset([actor, item]);
+        configureActionDiscovery(fixture);
+
+        const actions = await fixture.discoverActions(actor.id);
         const moodAction = actions.find(
           (a) =>
             a.id === `music:set_${mood}_mood_on_instrument` &&
@@ -134,7 +174,10 @@ describe('Music Mood Actions - Discovery', () => {
           }
         });
 
-        const actions = await fixture.discoverActionsForActor(actor.id);
+        fixture.reset([actor, instrument]);
+        configureActionDiscovery(fixture);
+
+        const actions = await fixture.discoverActions(actor.id);
         const moodAction = actions.find(
           (a) =>
             a.id === `music:set_${mood}_mood_on_instrument` &&
@@ -184,7 +227,10 @@ describe('Music Mood Actions - Discovery', () => {
           }
         });
 
-      const actions = await fixture.discoverActionsForActor(actor.id);
+      fixture.reset([actor, lute, drum]);
+      configureActionDiscovery(fixture);
+
+      const actions = await fixture.discoverActions(actor.id);
 
       // Should have 10 mood actions per instrument = 20 total
       const moodActions = actions.filter((a) =>

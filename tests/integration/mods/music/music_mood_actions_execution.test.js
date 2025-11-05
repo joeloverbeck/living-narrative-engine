@@ -59,8 +59,6 @@ describe('Music Mood Actions - Execution', () => {
         });
 
         fixture.reset([actor, instrument]);
-
-        fixture.reset([actor, instrument]);
         await fixture.executeAction(actor.id, instrument.id);
 
         // Verify component was added/modified
@@ -107,12 +105,11 @@ describe('Music Mood Actions - Execution', () => {
 
         // Get dispatched events
         const events = fixture.events;
-        const musicEvent = events.find((e) => e.type === 'music_mood_set');
+        const perceptibleEvent = events.find((e) => e.eventType === 'core:perceptible_event');
 
-        expect(musicEvent).toBeDefined();
-        expect(musicEvent.mood).toBe(mood.key);
-        expect(musicEvent.message).toContain(mood.expectedAdj);
-        expect(musicEvent.message).toContain(mood.key);
+        expect(perceptibleEvent).toBeDefined();
+        expect(perceptibleEvent.payload.descriptionText).toContain(mood.expectedAdj);
+        expect(perceptibleEvent.payload.descriptionText).toContain(mood.key);
       });
     }
   });
@@ -147,16 +144,15 @@ describe('Music Mood Actions - Execution', () => {
         await fixture.executeAction(actor.id, instrument.id);
 
         const events = fixture.events;
-        const musicEvent = events.find((e) => e.type === 'music_mood_set');
+        const perceptibleEvent = events.find((e) => e.eventType === 'core:perceptible_event');
 
-        expect(musicEvent).toBeDefined();
-        expect(musicEvent.actorId).toBe(actor.id);
-        expect(musicEvent.targetId).toBe(instrument.id);
-        expect(musicEvent.mood).toBe(mood.key);
-        expect(musicEvent.message).toContain('Performer');
-        expect(musicEvent.message).toContain('Lyre');
-        expect(musicEvent.message).toContain('begins to play');
-        expect(musicEvent.message).toContain(`${mood.key} tone`);
+        expect(perceptibleEvent).toBeDefined();
+        expect(perceptibleEvent.payload.actorId).toBe(actor.id);
+        expect(perceptibleEvent.payload.targetId).toBe(instrument.id);
+        expect(perceptibleEvent.payload.descriptionText).toContain('Performer');
+        expect(perceptibleEvent.payload.descriptionText).toContain('Lyre');
+        expect(perceptibleEvent.payload.descriptionText).toContain('begins to play');
+        expect(perceptibleEvent.payload.descriptionText).toContain(`${mood.key} tone`);
       });
     }
   });
@@ -212,13 +208,13 @@ describe('Music Mood Actions - Execution', () => {
           }
         });
 
-        fixture.reset([actor, instrument]);
+        fixture.reset([testActor, testInstrument]);
         await fixture.executeAction(testActor.id, testInstrument.id);
 
         const events = fixture.events;
-        const musicEvent = events.find((e) => e.type === 'music_mood_set');
+        const perceptibleEvent = events.find((e) => e.eventType === 'core:perceptible_event');
 
-        expect(musicEvent.message).toBe(
+        expect(perceptibleEvent.payload.descriptionText).toBe(
           `Songbird begins to play Golden Harp with a ${mood.expectedAdj}, ${mood.key} tone`
         );
 
@@ -287,7 +283,7 @@ describe('Music Mood Actions - Execution', () => {
           }
         });
 
-        fixture.reset([actor, instrument]);
+        fixture.reset([actor2, instrument2]);
       await fixture.executeAction(actor2.id, instrument2.id);
 
       moodComponent = fixture.entityManager.getComponentData(
@@ -333,7 +329,7 @@ describe('Music Mood Actions - Execution', () => {
         });
 
       // Set cheerful mood on lute
-        fixture.reset([actor, instrument]);
+        fixture.reset([actor, lute, drum]);
       await fixture.executeAction(actor.id, lute.id);
 
       // Set aggressive mood on drum
@@ -369,7 +365,7 @@ describe('Music Mood Actions - Execution', () => {
           }
         });
 
-        fixture.reset([actor, instrument]);
+        fixture.reset([actor2, lute2, drum2]);
       await fixture.executeAction(actor2.id, drum2.id);
 
       // Verify lute has cheerful mood
