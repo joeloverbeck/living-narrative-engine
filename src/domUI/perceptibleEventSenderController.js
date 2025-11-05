@@ -120,7 +120,7 @@ class PerceptibleEventSenderController {
       actorFilterContainer: this.#documentContext.query('#actor-filter-container'),
       sendButton: this.#documentContext.query('#send-perceptible-event-button'),
       statusArea: this.#documentContext.query('#perceptible-event-status'),
-      filterModeRadios: this.#documentContext.query('input[name="filter-mode"]', true), // query all
+      widget: this.#documentContext.query('#perceptible-event-sender-widget'),
     };
 
     // Verify required elements exist
@@ -464,11 +464,13 @@ class PerceptibleEventSenderController {
     this.#elements.actorFilterContainer.style.display = 'none';
 
     // Reset filter mode to 'all'
-    const filterModeRadios = this.#documentContext.query('input[name="filter-mode"]', true);
-    if (filterModeRadios && filterModeRadios.length > 0) {
-      filterModeRadios.forEach((radio) => {
-        radio.checked = radio.value === 'all';
-      });
+    if (this.#elements.widget) {
+      const filterModeRadios = this.#elements.widget.querySelectorAll('input[name="filter-mode"]');
+      if (filterModeRadios && filterModeRadios.length > 0) {
+        filterModeRadios.forEach((radio) => {
+          radio.checked = radio.value === 'all';
+        });
+      }
     }
 
     this.#validateForm();
