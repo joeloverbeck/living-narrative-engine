@@ -6,6 +6,7 @@
 
 import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
 import request from 'supertest';
+import path from 'node:path';
 import { createProxyServer } from '../../src/core/server.js';
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 
@@ -42,6 +43,9 @@ describe('Server Lifecycle Integration Tests', () => {
 
     // Set test environment
     process.env.NODE_ENV = 'test';
+
+    // Set path to test LLM config file (relative to project root)
+    process.env.LLM_CONFIG_PATH = path.resolve(process.cwd(), 'tests/fixtures/test-llm-configs.json');
   });
 
   afterEach(async () => {
