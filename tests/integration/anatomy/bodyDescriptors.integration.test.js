@@ -30,7 +30,7 @@ describe('Body Descriptors Integration', () => {
         bodyDescriptors: {
           height: 'tall',
           build: 'athletic',
-          density: 'moderate',
+          hairDensity: 'moderate',
           composition: 'lean',
           skinColor: 'olive',
         },
@@ -75,7 +75,7 @@ describe('Body Descriptors Integration', () => {
       expect(bodyComponent.body.descriptors).toEqual({
         height: 'tall',
         build: 'athletic',
-        density: 'moderate',
+        hairDensity: 'moderate',
         composition: 'lean',
         skinColor: 'olive',
       });
@@ -207,7 +207,7 @@ describe('Body Descriptors Integration', () => {
           descriptors: {
             skinColor: 'olive',
             build: 'athletic',
-            density: 'moderate',
+            hairDensity: 'moderate',
             composition: 'lean',
           },
         },
@@ -227,7 +227,7 @@ describe('Body Descriptors Integration', () => {
       expect(bodyComponent.body.descriptors).toEqual({
         skinColor: 'olive',
         build: 'athletic',
-        density: 'moderate',
+        hairDensity: 'moderate',
         composition: 'lean',
       });
 
@@ -262,7 +262,7 @@ describe('Body Descriptors Integration', () => {
           descriptors: {
             build: 'athletic', // Should override entity-level 'stocky'
             composition: 'lean', // Should override entity-level 'chubby'
-            density: 'moderate',
+            hairDensity: 'moderate',
             skinColor: 'olive',
           },
         },
@@ -278,7 +278,7 @@ describe('Body Descriptors Integration', () => {
         testBed.bodyDescriptionComposer.extractBodyCompositionDescription(
           mockEntity1
         );
-      const density =
+      const hairDensity =
         testBed.bodyDescriptionComposer.extractBodyHairDescription(mockEntity1);
       const skinColor =
         testBed.bodyDescriptionComposer.extractSkinColorDescription(
@@ -287,7 +287,7 @@ describe('Body Descriptors Integration', () => {
 
       expect(build).toBe('athletic'); // From body.descriptors, not entity-level
       expect(composition).toBe('lean'); // From body.descriptors, not entity-level
-      expect(density).toBe('moderate'); // From body.descriptors
+      expect(hairDensity).toBe('moderate'); // From body.descriptors
       expect(skinColor).toBe('olive'); // From body.descriptors
     });
 
@@ -423,7 +423,7 @@ describe('Body Descriptors Integration', () => {
         bodyDescriptors: {
           height: 'tall',
           build: 'athletic',
-          density: 'moderate',
+          hairDensity: 'moderate',
           composition: 'lean',
           skinColor: 'olive',
         },

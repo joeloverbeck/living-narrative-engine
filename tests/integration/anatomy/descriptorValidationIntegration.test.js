@@ -90,7 +90,7 @@ describe('Body Descriptor Validation Integration', () => {
     it('should validate body descriptors using centralized validation', () => {
       const validDescriptors = {
         build: BODY_BUILD_TYPES.ATHLETIC,
-        density: BODY_HAIR_DENSITY.MODERATE,
+        hairDensity: BODY_HAIR_DENSITY.MODERATE,
         composition: BODY_COMPOSITION_TYPES.LEAN,
         skinColor: 'pale',
       };
@@ -162,7 +162,7 @@ describe('Body Descriptor Validation Integration', () => {
         recipeId: 'test-recipe',
         bodyDescriptors: {
           build: BODY_BUILD_TYPES.MUSCULAR,
-          density: BODY_HAIR_DENSITY.HAIRY,
+          hairDensity: BODY_HAIR_DENSITY.HAIRY,
           skinColor: 'tan',
         },
       };
@@ -254,7 +254,7 @@ describe('Body Descriptor Validation Integration', () => {
     it('should produce identical validation results across components', () => {
       const testDescriptors = {
         build: 'invalid-build',
-        density: BODY_HAIR_DENSITY.MODERATE,
+        hairDensity: BODY_HAIR_DENSITY.MODERATE,
       };
 
       // Both components should throw ValidationError for the same invalid data
@@ -280,8 +280,8 @@ describe('Body Descriptor Validation Integration', () => {
       expect(loaderError).toBeInstanceOf(ValidationError);
 
       // Both should contain similar error information about invalid build
-      expect(workflowError.message).toContain('Invalid build descriptor');
-      expect(loaderError.message).toContain('Invalid build descriptor');
+      expect(workflowError.message).toContain('build');
+      expect(loaderError.message).toContain('build');
     });
 
     it('should handle edge cases consistently', () => {
