@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "music:lute",
+  "description": "A stringed musical instrument with a rounded body and graceful neck, popular in medieval and Renaissance periods",
+  "components": {
+    "core:name": {
+      "text": "lute"
+    },
+    "core:description": {
+      "text": "An elegant pear-shaped stringed instrument with a rounded back and a bent neck. Its delicate strings produce warm, resonant tones that evoke times of courtly romance and wandering minstrels."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "music:is_instrument": {},
+    "items:weight": {
+      "weight": 1.2
+    }
+  }
+}
