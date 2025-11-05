@@ -93,11 +93,17 @@ describe('BlueprintRecipeValidationRule - Dependency Validation', () => {
     await rule.validate(context);
 
     // Assert - dispatch should have been called with error event
-    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith({
-      type: 'SYSTEM_ERROR_OCCURRED',
-      payload: expect.objectContaining({
+    // Event dispatch signature: dispatch(eventId, payload)
+    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      'core:system_error_occurred',
+      expect.objectContaining({
         error: 'Test error to trigger dispatch',
-      }),
-    });
+        context: expect.objectContaining({
+          blueprintId: 'test:blueprint',
+          recipeId: 'test:recipe',
+          validationRule: 'blueprint-recipe-coverage',
+        }),
+      })
+    );
   });
 });
