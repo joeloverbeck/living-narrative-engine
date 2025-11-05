@@ -115,10 +115,14 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
 
       mockEntity.getComponentData.mockImplementation((componentId) => {
         if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-          return { body: { root: 'torso-1' } };
-        }
-        if (componentId === 'descriptors:build') {
-          return { build: 'athletic' };
+          return {
+            body: {
+              root: 'torso-1',
+              descriptors: {
+                build: 'athletic',
+              },
+            },
+          };
         }
         return null;
       });
@@ -133,7 +137,7 @@ describe('BodyDescriptionComposer Entity Interface Fix', () => {
 
       expect(result).toContain('Build: athletic');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
-        'descriptors:build'
+        ANATOMY_BODY_COMPONENT_ID
       );
     });
 
