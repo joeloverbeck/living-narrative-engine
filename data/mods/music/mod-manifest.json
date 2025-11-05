@@ -24,6 +24,7 @@
       "playing_music.component.json"
     ],
     "actions": [
+      "play_phrase_on_instrument.action.json",
       "set_aggressive_mood_on_instrument.action.json",
       "set_cheerful_mood_on_instrument.action.json",
       "set_eerie_mood_on_instrument.action.json",
@@ -36,6 +37,7 @@
       "set_triumphant_mood_on_instrument.action.json"
     ],
     "rules": [
+      "handle_play_phrase_on_instrument.rule.json",
       "handle_set_aggressive_mood_on_instrument.rule.json",
       "handle_set_cheerful_mood_on_instrument.rule.json",
       "handle_set_eerie_mood_on_instrument.rule.json",
@@ -48,6 +50,7 @@
       "handle_set_triumphant_mood_on_instrument.rule.json"
     ],
     "conditions": [
+      "event-is-action-play-phrase-on-instrument.condition.json",
       "event-is-action-set-aggressive-mood-on-instrument.condition.json",
       "event-is-action-set-cheerful-mood-on-instrument.condition.json",
       "event-is-action-set-eerie-mood-on-instrument.condition.json",
@@ -59,7 +62,9 @@
       "event-is-action-set-tense-mood-on-instrument.condition.json",
       "event-is-action-set-triumphant-mood-on-instrument.condition.json"
     ],
-    "scopes": [],
+    "scopes": [
+      "instrument_actor_is_playing.scope"
+    ],
     "lookups": [
       "mood_lexicon.lookup.json"
     ],
