@@ -118,7 +118,7 @@ class QueryLookupHandler extends BaseOperationHandler {
     return {
       lookupId: trimmedLookupId,
       entryKey: trimmedEntryKey,
-      resultVar: result_variable,
+      resultVar: trimmedResultVar,
       trimmedResultVar: trimmedResultVar,
       missingValue: missing_value,
     };

@@ -5,6 +5,7 @@
 
 import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals';
 import QueryLookupHandler from '../../../../src/logic/operationHandlers/queryLookupHandler.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
 
 const createMockLogger = () => ({
   info: jest.fn(),
@@ -28,6 +29,8 @@ const createMockDataRegistry = (lookups = {}) => ({
 
 /**
  * Builds a mock execution context with evaluation context.
+ * Note: Does not set a logger property so that the handler uses
+ * the logger passed to its constructor.
  *
  * @param {object} [contextData={}] - Initial context variables
  * @returns {object} Mock execution context
@@ -40,7 +43,7 @@ function buildExecutionContext(contextData = {}) {
       actor: { id: 'actor1' },
       target: { id: 'target1' },
     },
-    logger: createMockLogger(),
+    // No logger property - handler will use constructor's logger
   };
 }
 
@@ -125,8 +128,9 @@ describe('QueryLookupHandler', () => {
       handler.execute(null, executionContext);
 
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          type: 'error_occurred',
+          message: expect.any(String),
         })
       );
     });
@@ -136,8 +140,9 @@ describe('QueryLookupHandler', () => {
       handler.execute('invalid', executionContext);
 
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          type: 'error_occurred',
+          message: expect.any(String),
         })
       );
     });
@@ -153,11 +158,9 @@ describe('QueryLookupHandler', () => {
       );
 
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          type: 'error_occurred',
-          payload: expect.objectContaining({
-            message: expect.stringContaining('lookup_id'),
-          }),
+          message: expect.stringContaining('lookup_id'),
         })
       );
     });
@@ -173,11 +176,9 @@ describe('QueryLookupHandler', () => {
       );
 
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          type: 'error_occurred',
-          payload: expect.objectContaining({
-            message: expect.stringContaining('entry_key'),
-          }),
+          message: expect.stringContaining('entry_key'),
         })
       );
     });
@@ -193,11 +194,9 @@ describe('QueryLookupHandler', () => {
       );
 
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          type: 'error_occurred',
-          payload: expect.objectContaining({
-            message: expect.stringContaining('result_variable'),
-          }),
+          message: expect.stringContaining('result_variable'),
         })
       );
     });
@@ -214,8 +213,9 @@ describe('QueryLookupHandler', () => {
       );
 
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          type: 'error_occurred',
+          message: expect.any(String),
         })
       );
     });
@@ -372,8 +372,9 @@ describe('QueryLookupHandler', () => {
 
       expect(executionContext.evaluationContext.context.myResult).toBe('error_fallback');
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          type: 'error_occurred',
+          message: expect.any(String),
         })
       );
     });
