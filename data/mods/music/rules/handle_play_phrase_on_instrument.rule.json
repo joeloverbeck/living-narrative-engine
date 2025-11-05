@@ -55,7 +55,7 @@
       "type": "SET_VARIABLE",
       "comment": "Compose perceptible event message",
       "parameters": {
-        "variable_name": "phraseMessage",
+        "variable_name": "logMessage",
         "value": "{context.actorName} shapes a {context.moodDescriptor.adjectives} phrase on the {context.instrumentName}."
       }
     },
