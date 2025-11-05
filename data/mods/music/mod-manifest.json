@@ -62,6 +62,12 @@
     "scopes": [],
     "lookups": [
       "mood_lexicon.lookup.json"
-    ]
+    ],
+    "entities": {
+      "definitions": [
+        "acoustic_guitar.entity.json",
+        "lute.entity.json"
+      ]
+    }
   }
 }

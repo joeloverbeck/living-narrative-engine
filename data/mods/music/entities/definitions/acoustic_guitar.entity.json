@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "music:acoustic_guitar",
+  "description": "A six-stringed instrument with a hollow wooden body that produces rich, warm tones without amplification",
+  "components": {
+    "core:name": {
+      "text": "acoustic guitar"
+    },
+    "core:description": {
+      "text": "A classic acoustic guitar with a polished wooden body and six steel strings. Its hollow resonating chamber produces bright, versatile tones suitable for everything from gentle fingerpicking to energetic strumming."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "music:is_instrument": {},
+    "items:weight": {
+      "weight": 2.0
+    }
+  }
+}
