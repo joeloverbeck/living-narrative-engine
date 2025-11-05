@@ -248,7 +248,7 @@ Test cases:
 
 ```javascript
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { BodyDescriptorValidator } from '../../../src/anatomy/validators/bodyDescriptorValidator.js';
+import { BodyDescriptorValidator } from '../../../../src/anatomy/validators/bodyDescriptorValidator.js';
 
 describe('BodyDescriptorValidator', () => {
   let validator;
