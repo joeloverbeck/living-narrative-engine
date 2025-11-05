@@ -44,9 +44,12 @@ export const createServiceMocks = () => {
     getDescriptionOrder: jest
       .fn()
       .mockReturnValue([
+        'height',
+        'skin_color',
         'build',
         'body_composition',
         'body_hair',
+        'smell',
         'head',
         'hair',
         'eyes',
@@ -126,9 +129,12 @@ export const createRealisticServiceMocks = () => {
     getDescriptionOrder: jest
       .fn()
       .mockReturnValue([
+        'height',
+        'skin_color',
         'build',
         'body_composition',
         'body_hair',
+        'smell',
         'head',
         'hair',
         'eyes',
