@@ -153,7 +153,7 @@ describe('Equipment Description Flow Integration', () => {
 
       // Assert
       expect(result).toBe(
-        'Wearing: white linen structured blazer | graphite wool wide leg trousers | black calfskin belt, and black leather stiletto pumps.'
+        'Wearing: white linen structured blazer | graphite wool wide leg trousers | black calfskin belt | black leather stiletto pumps.'
       );
 
       // Verify that all entities were retrieved
@@ -251,7 +251,7 @@ describe('Equipment Description Flow Integration', () => {
 
       // Assert
       expect(result).toBe(
-        'Wearing: blue cotton shirt and white canvas sneakers. Genitals are fully exposed.'
+        'Wearing: blue cotton shirt | white canvas sneakers. Genitals are fully exposed.'
       );
 
       // Verify that both entity formats were handled

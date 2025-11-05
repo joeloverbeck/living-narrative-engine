@@ -80,7 +80,7 @@ describe('Body Description with Equipment Integration - Simple', () => {
 
     // Mock equipment description service to return equipment description
     equipmentDescriptionService.generateEquipmentDescription.mockResolvedValue(
-      'Wearing: black leather jacket and sturdy boots.'
+      'Wearing: black leather jacket | sturdy boots.'
     );
 
     // Mock entity finder to return torso entity
@@ -103,7 +103,7 @@ describe('Body Description with Equipment Integration - Simple', () => {
     // Assert
     expect(result).toContain('Build: athletic');
     expect(result).toContain('Torso: lean, muscular torso');
-    expect(result).toContain('Wearing: black leather jacket and sturdy boots.');
+    expect(result).toContain('Wearing: black leather jacket | sturdy boots.');
     expect(
       equipmentDescriptionService.generateEquipmentDescription
     ).toHaveBeenCalledWith('character_1');

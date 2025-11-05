@@ -496,11 +496,9 @@ class EquipmentDescriptionService {
       return `${prefix}${exposuresText}`.trim();
     } else if (allDescriptions.length === 1) {
       baseDescription = `${prefix}${allDescriptions[0]}${suffix}`;
-    } else if (allDescriptions.length === 2) {
-      baseDescription = `${prefix}${allDescriptions[0]} and ${allDescriptions[1]}${suffix}`;
     } else {
-      const lastItem = allDescriptions.pop();
-      baseDescription = `${prefix}${allDescriptions.join(itemSeparator)}, and ${lastItem}${suffix}`;
+      // Use itemSeparator consistently for all items
+      baseDescription = `${prefix}${allDescriptions.join(itemSeparator)}${suffix}`;
     }
 
     if (!exposuresText) {
