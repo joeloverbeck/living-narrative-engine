@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "id": "music:handle_set_solemn_mood",
+  "id": "music:handle_set_solemn_mood_on_instrument",
   "description": "Handle setting solemn mood on instrument performance",
   "event": "music:event-is-action-set-solemn-mood",
   "operations": [

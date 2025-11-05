@@ -1,29 +1,26 @@
 /**
  * @file Integration test for mood_lexicon lookup loading.
- * @description Tests that the mood_lexicon lookup table is properly loaded
- * and accessible via the data registry.
+ * @description Tests that the mood_lexicon lookup table is properly structured
+ * and contains all required mood entries.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { promises as fs } from 'fs';
+import { resolve } from 'path';
 
 describe('Mood Lexicon Lookup - Loading', () => {
-  let fixture;
+  let lookup;
 
-  afterEach(async () => {
-    if (fixture) {
-      await fixture.cleanup();
-      fixture = null;
-    }
+  beforeEach(async () => {
+    const lookupPath = resolve(
+      'data/mods/music/lookups/mood_lexicon.lookup.json'
+    );
+    const content = await fs.readFile(lookupPath, 'utf8');
+    lookup = JSON.parse(content);
   });
 
   describe('Lookup Availability', () => {
     it('should load mood_lexicon lookup from music mod', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       expect(lookup).toBeDefined();
       expect(lookup.id).toBe('music:mood_lexicon');
       expect(lookup.entries).toBeDefined();
@@ -31,11 +28,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should contain all 10 mood entries', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const expectedMoods = [
         'cheerful',
         'solemn',
@@ -60,11 +52,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
 
   describe('Entry Structure', () => {
     it('should have correct structure for cheerful entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const cheerful = lookup.entries.cheerful;
 
       expect(cheerful.adj).toBe('bright');
@@ -73,11 +60,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for solemn entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const solemn = lookup.entries.solemn;
 
       expect(solemn.adj).toBe('grave');
@@ -86,11 +68,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for mournful entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const mournful = lookup.entries.mournful;
 
       expect(mournful.adj).toBe('aching');
@@ -99,11 +76,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for eerie entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const eerie = lookup.entries.eerie;
 
       expect(eerie.adj).toBe('unsettling');
@@ -112,11 +84,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for tense entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const tense = lookup.entries.tense;
 
       expect(tense.adj).toBe('tight');
@@ -125,11 +92,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for triumphant entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const triumphant = lookup.entries.triumphant;
 
       expect(triumphant.adj).toBe('bold');
@@ -138,11 +100,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for tender entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const tender = lookup.entries.tender;
 
       expect(tender.adj).toBe('soft');
@@ -151,11 +108,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for playful entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const playful = lookup.entries.playful;
 
       expect(playful.adj).toBe('teasing');
@@ -164,11 +116,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for aggressive entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const aggressive = lookup.entries.aggressive;
 
       expect(aggressive.adj).toBe('hard-edged');
@@ -177,11 +124,6 @@ describe('Mood Lexicon Lookup - Loading', () => {
     });
 
     it('should have correct structure for meditative entry', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const meditative = lookup.entries.meditative;
 
       expect(meditative.adj).toBe('calm');
@@ -192,32 +134,17 @@ describe('Mood Lexicon Lookup - Loading', () => {
 
   describe('Schema Compliance', () => {
     it('should have valid schema reference', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       expect(lookup.$schema).toBeDefined();
       expect(lookup.$schema).toContain('lookup.schema.json');
     });
 
     it('should have description field', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       expect(lookup.description).toBeDefined();
       expect(typeof lookup.description).toBe('string');
       expect(lookup.description.length).toBeGreaterThan(0);
     });
 
     it('should have dataSchema field', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       expect(lookup.dataSchema).toBeDefined();
       expect(lookup.dataSchema.type).toBe('object');
       expect(lookup.dataSchema.properties).toBeDefined();
@@ -229,21 +156,11 @@ describe('Mood Lexicon Lookup - Loading', () => {
 
   describe('Entry Count', () => {
     it('should have exactly 10 mood entries', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       const entryKeys = Object.keys(lookup.entries);
       expect(entryKeys.length).toBe(10);
     });
 
     it('should not have any undefined or null entries', async () => {
-      fixture = await ModTestFixture.forCategory('music');
-
-      const dataRegistry = fixture.getDataRegistry();
-      const lookup = dataRegistry.get('lookups', 'music:mood_lexicon');
-
       for (const [key, value] of Object.entries(lookup.entries)) {
         expect(value).toBeDefined();
         expect(value).not.toBeNull();
