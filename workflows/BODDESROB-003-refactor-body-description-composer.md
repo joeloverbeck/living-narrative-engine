@@ -45,30 +45,58 @@ Currently, `BodyDescriptionComposer` has:
 ### Current Implementation (Before)
 
 ```javascript
-// src/anatomy/bodyDescriptionComposer.js (current)
+// src/anatomy/bodyDescriptionComposer.js (current - lines 494-513, 450-486)
 
-getBodyDescriptorOrder() {
-  const config = this.#anatomyFormattingService.getDescriptionOrder();
+/**
+ * Extract the body-level descriptor order from the overall description order
+ * NOTE: Takes descriptionOrder as a parameter (not fetched internally)
+ */
+getBodyDescriptorOrder(descriptionOrder) {
   const bodyDescriptorTypes = [
     'height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell'
   ];
-  return config.filter(type => bodyDescriptorTypes.includes(type));
+  const filtered = descriptionOrder.filter((type) =>
+    bodyDescriptorTypes.includes(type)
+  );
+
+  // Defensive logic: ensure height is always first if missing
+  if (!filtered.includes('height')) {
+    filtered.unshift('height');
+  }
+
+  return filtered;
 }
 
 extractBodyLevelDescriptors(bodyEntity) {
   const descriptors = {};
 
-  const heightDesc = this.extractHeightDescription(bodyEntity);
-  if (heightDesc) descriptors.height = heightDesc;
+  // Individual extraction methods called directly
+  const heightDescription = this.extractHeightDescription(bodyEntity);
+  if (heightDescription) {
+    descriptors.height = `Height: ${heightDescription}`;
+  }
 
-  const skinColorDesc = this.extractSkinColorDescription(bodyEntity);
-  if (skinColorDesc) descriptors.skin_color = skinColorDesc;
+  const skinColorDescription = this.extractSkinColorDescription(bodyEntity);
+  if (skinColorDescription) {
+    descriptors.skin_color = `Skin color: ${skinColorDescription}`;
+  }
 
-  // ... more individual extractions
+  // ... similar for build, body_hair, body_composition, smell
 
   return descriptors;
 }
+
+// Usage in composeDescription() (lines 110-127):
+const descriptionOrder = this.config.getDescriptionOrder();
+const bodyLevelDescriptors = this.extractBodyLevelDescriptors(bodyEntity);
+const bodyDescriptorOrder = this.getBodyDescriptorOrder(descriptionOrder);
 ```
+
+**Key Implementation Details:**
+- Uses `this.config` (DescriptionConfiguration instance) not `this.#anatomyFormattingService` directly
+- `getBodyDescriptorOrder()` takes `descriptionOrder` parameter - not fetched internally
+- Individual extraction methods return raw values (e.g., "tall")
+- Formatting with labels (e.g., "Height: tall") happens in `extractBodyLevelDescriptors()`
 
 ### Target Implementation (After)
 
@@ -95,10 +123,9 @@ extractBodyLevelDescriptors(bodyEntity) {
     const value = metadata.extractor(bodyComponent);
 
     if (value) {
-      // Use formatter from registry
-      descriptors[metadata.displayKey] = metadata.formatter
-        ? metadata.formatter(value)
-        : `${metadata.displayLabel}: ${value}`;
+      // Use formatter from registry (formatters already include label)
+      // e.g., formatter returns "Height: tall" not just "tall"
+      descriptors[metadata.displayKey] = metadata.formatter(value);
     }
   }
 
@@ -107,28 +134,74 @@ extractBodyLevelDescriptors(bodyEntity) {
 
 /**
  * Get body descriptor order from registry
- * Replaces hardcoded list with registry-derived order
- * @returns {string[]} Array of descriptor display keys
+ * IMPORTANT: Still needs to respect configuration ordering when available
+ * @param {string[]} descriptionOrder - Full description order from config
+ * @returns {string[]} Filtered array of body descriptor display keys
  */
-getBodyDescriptorOrder() {
-  return getDescriptorsByDisplayOrder().map(
+getBodyDescriptorOrder(descriptionOrder) {
+  // Get all display keys from registry
+  const registryDisplayKeys = getDescriptorsByDisplayOrder().map(
     name => BODY_DESCRIPTOR_REGISTRY[name].displayKey
   );
+
+  // Filter the config order to only include registry display keys
+  // This maintains config-specified order while using registry as source of truth
+  const filtered = descriptionOrder.filter(type =>
+    registryDisplayKeys.includes(type)
+  );
+
+  // Defensive: ensure height is first if present in registry but missing from config
+  if (registryDisplayKeys.includes('height') && !filtered.includes('height')) {
+    filtered.unshift('height');
+  }
+
+  return filtered;
 }
 
 /**
  * Extract height description (registry wrapper)
- * @deprecated Use extractBodyLevelDescriptors() instead
+ * Kept for backward compatibility but delegates to registry
  * @param {Object} bodyEntity - Body entity
- * @returns {string} Height description or empty string
+ * @returns {string} Raw height value or empty string (not formatted)
  */
 extractHeightDescription(bodyEntity) {
   const bodyComponent = this.#getBodyComponent(bodyEntity);
-  return BODY_DESCRIPTOR_REGISTRY.height.extractor(bodyComponent) || '';
+  const value = BODY_DESCRIPTOR_REGISTRY.height.extractor(bodyComponent);
+  return value || '';
 }
 
-// Similar wrappers for other descriptors...
+// Similar wrappers for other descriptors (extractSkinColorDescription, etc.)
+// All delegate to registry extractors and return raw values (not formatted)
 ```
+
+**Key Design Decisions:**
+1. **Registry as extractor source**: Use registry extractors instead of individual methods
+2. **Registry formatters include labels**: No need for separate label concatenation
+3. **Respect configuration order**: `getBodyDescriptorOrder()` still filters config order
+4. **Backward compatible wrappers**: Individual extraction methods remain but delegate to registry
+5. **Raw values from wrappers**: Individual methods return raw values for backward compatibility
+
+### Important Architecture Notes
+
+**Registry Key Mapping:**
+The registry uses two different key types that must be understood:
+- **descriptorName** (registry key): `height`, `skinColor`, `build`, `composition`, `hairDensity`, `smell`
+- **displayKey** (config order key): `height`, `skin_color`, `build`, `body_composition`, `body_hair`, `smell`
+
+Example: Registry entry `skinColor` has `displayKey: 'skin_color'` to match config ordering.
+
+**Service Access Pattern:**
+- `this.anatomyFormattingService` - Direct service reference (available in constructor)
+- `this.config` - DescriptionConfiguration wrapper instance (created in constructor)
+- Most code uses `this.config.getDescriptionOrder()` not `this.anatomyFormattingService.getDescriptionOrder()`
+- This pattern provides defaults when formatting service is unavailable
+
+**Ordering Strategy:**
+The refactored code should:
+1. Use registry `displayOrder` for relative ordering of descriptors
+2. Still respect configuration `descriptionOrder` when available
+3. Filter config order to only include descriptors present in registry
+4. This maintains flexibility while using registry as source of truth
 
 ### Implementation Steps
 
@@ -214,44 +287,100 @@ Update existing tests:
 ```javascript
 describe('BodyDescriptionComposer - Registry Integration', () => {
   it('should extract descriptors using registry extractors', () => {
-    // Create entity with body descriptors
-    const bodyEntity = createTestBodyEntity({
-      height: 'tall',
-      skinColor: 'tan',
-      build: 'athletic',
-    });
+    // Create entity with body descriptors in anatomy:body component
+    const bodyEntity = {
+      hasComponent: jest.fn((id) => id === 'anatomy:body'),
+      getComponentData: jest.fn((id) => {
+        if (id === 'anatomy:body') {
+          return {
+            body: {
+              descriptors: {
+                height: 'tall',
+                skinColor: 'tan',
+                build: 'athletic',
+              }
+            }
+          };
+        }
+        return null;
+      }),
+      id: 'test-entity'
+    };
 
     const descriptors = composer.extractBodyLevelDescriptors(bodyEntity);
 
-    // Verify all registry descriptors processed
+    // Verify registry descriptors processed with correct display keys
     expect(descriptors).toHaveProperty('height');
-    expect(descriptors).toHaveProperty('skin_color');
+    expect(descriptors).toHaveProperty('skin_color'); // Note: snake_case display key
     expect(descriptors).toHaveProperty('build');
   });
 
   it('should use registry formatters for descriptor values', () => {
-    const bodyEntity = createTestBodyEntity({ height: 'tall' });
+    const bodyEntity = {
+      hasComponent: jest.fn((id) => id === 'anatomy:body'),
+      getComponentData: jest.fn((id) => {
+        if (id === 'anatomy:body') {
+          return {
+            body: { descriptors: { height: 'tall' } }
+          };
+        }
+        return null;
+      }),
+      id: 'test-entity'
+    };
+
     const descriptors = composer.extractBodyLevelDescriptors(bodyEntity);
 
-    // Verify formatter applied
-    expect(descriptors.height).toContain('Height:');
+    // Verify formatter applied (includes label)
+    expect(descriptors.height).toBe('Height: tall');
   });
 
-  it('should return descriptors in registry display order', () => {
-    const order = composer.getBodyDescriptorOrder();
+  it('should filter config order to registry display keys', () => {
+    // Mock config with various types including non-descriptor types
+    const mockConfig = ['height', 'head', 'skin_color', 'torso', 'build'];
+    const order = composer.getBodyDescriptorOrder(mockConfig);
 
-    // Verify order matches registry
-    expect(order).toEqual([
-      'height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell'
-    ]);
+    // Should only include descriptor types from registry
+    expect(order).toEqual(['height', 'skin_color', 'build']);
+    expect(order).not.toContain('head');
+    expect(order).not.toContain('torso');
   });
 
   it('should handle missing descriptors gracefully', () => {
-    const bodyEntity = createTestBodyEntity({}); // No descriptors
+    const bodyEntity = {
+      hasComponent: jest.fn((id) => id === 'anatomy:body'),
+      getComponentData: jest.fn((id) => {
+        if (id === 'anatomy:body') {
+          return { body: { descriptors: {} } }; // No descriptors
+        }
+        return null;
+      }),
+      id: 'test-entity'
+    };
+
     const descriptors = composer.extractBodyLevelDescriptors(bodyEntity);
 
     // Should return empty object, not throw
     expect(descriptors).toEqual({});
+  });
+
+  it('should maintain backward compatibility with individual extraction methods', () => {
+    const bodyEntity = {
+      hasComponent: jest.fn((id) => id === 'anatomy:body'),
+      getComponentData: jest.fn((id) => {
+        if (id === 'anatomy:body') {
+          return {
+            body: { descriptors: { height: 'tall' } }
+          };
+        }
+        return null;
+      }),
+      id: 'test-entity'
+    };
+
+    // Individual method should return raw value (not formatted)
+    const height = composer.extractHeightDescription(bodyEntity);
+    expect(height).toBe('tall'); // Not "Height: tall"
   });
 });
 ```
@@ -321,3 +450,47 @@ The registry-based approach enables:
 - Keep eye on integration with formatting service
 - Consider logging registry usage for debugging
 - Document any breaking changes clearly
+
+## Workflow Corrections Applied
+
+**Date**: 2025-11-05
+**Status**: Workflow assumptions validated and corrected
+
+### Corrections Made:
+
+1. **Fixed `getBodyDescriptorOrder()` signature**
+   - **Was**: Method shown with no parameters
+   - **Corrected**: Method takes `descriptionOrder` parameter and filters it
+
+2. **Corrected service access pattern**
+   - **Was**: Showed `this.#anatomyFormattingService.getDescriptionOrder()`
+   - **Corrected**: Uses `this.config.getDescriptionOrder()` (DescriptionConfiguration wrapper)
+
+3. **Clarified registry key mapping**
+   - **Added**: Documentation of descriptorName vs displayKey distinction
+   - **Example**: `skinColor` (registry) → `skin_color` (display key)
+
+4. **Updated target implementation**
+   - **Was**: Showed `getBodyDescriptorOrder()` with no parameters deriving purely from registry
+   - **Corrected**: Method respects config order while using registry as source of truth
+
+5. **Fixed test examples**
+   - **Was**: Used simplified test entity creation
+   - **Corrected**: Proper entity structure with `hasComponent()` and `getComponentData()` methods
+   - **Added**: Test for backward compatibility with individual extraction methods
+
+6. **Added architecture notes**
+   - Registry key types and their usage
+   - Service access patterns (direct vs wrapper)
+   - Ordering strategy that balances registry and configuration
+
+### Validation Summary:
+
+All assumptions have been cross-referenced with production code:
+- ✅ `src/anatomy/bodyDescriptionComposer.js` (lines 287-577)
+- ✅ `src/anatomy/registries/bodyDescriptorRegistry.js` (complete file)
+- ✅ `src/services/anatomyFormattingService.js` (getDescriptionOrder interface)
+- ✅ `src/anatomy/configuration/descriptionConfiguration.js` (wrapper pattern)
+- ✅ `tests/unit/anatomy/bodyDescriptionComposer.bodyLevelDescriptors.test.js` (test patterns)
+
+The workflow now accurately reflects the production code structure and can serve as a reliable implementation guide.
