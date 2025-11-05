@@ -761,6 +761,9 @@ class BaseModTestFixture {
     // Load action definitions for the mod to enable action discovery
     const actionDefinitions = await this.loadActionDefinitions();
 
+    // Load lookup definitions for the mod to support QUERY_LOOKUP operations
+    const lookups = await this.loadLookupDefinitions();
+
     const supportingActions = Array.isArray(this.options.supportingActions)
       ? this.options.supportingActions
           .filter((actionId) => typeof actionId === 'string')
@@ -973,6 +976,7 @@ class BaseModTestFixture {
       actions: actionDefinitions,
       conditions,  // Pass conditions map instead of dataRegistry
       macros,  // Pass macros for expansion
+      lookups,  // Pass lookups for QUERY_LOOKUP operations
     });
   }
 
@@ -1017,6 +1021,54 @@ class BaseModTestFixture {
     } catch (error) {
       // If the actions directory doesn't exist or can't be read, return empty array
       return [];
+    }
+  }
+
+  /**
+   * Loads all lookup definitions from the mod's lookups directory.
+   *
+   * @returns {Promise<object>} Object mapping lookup IDs to lookup definitions
+   */
+  async loadLookupDefinitions() {
+    const lookupsDir = resolve(`data/mods/${this.modId}/lookups`);
+
+    try {
+      const files = await fs.readdir(lookupsDir);
+
+      const lookupFiles = files.filter(f => f.endsWith('.lookup.json'));
+
+      const lookups = await Promise.all(
+        lookupFiles.map(async (file) => {
+          try {
+            const filePath = resolve(lookupsDir, file);
+            const content = await fs.readFile(filePath, 'utf8');
+            const parsed = JSON.parse(content);
+
+            // Validate that the lookup has an id and entries
+            if (!parsed.id || !parsed.entries) {
+              return null;
+            }
+
+            return parsed;
+          } catch (error) {
+            // Silently skip files that can't be loaded
+            return null;
+          }
+        })
+      );
+
+      // Filter out nulls from failed loads and convert to map
+      const lookupMap = {};
+      for (const lookup of lookups) {
+        if (lookup !== null && lookup.id) {
+          lookupMap[lookup.id] = lookup;
+        }
+      }
+
+      return lookupMap;
+    } catch (error) {
+      // If the lookups directory doesn't exist or can't be read, return empty object
+      return {};
     }
   }
 

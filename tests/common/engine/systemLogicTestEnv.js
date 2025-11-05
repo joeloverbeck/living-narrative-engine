@@ -69,6 +69,7 @@ export function createBaseRuleEnvironment({
   conditions = {},
   macros = {},
   scopes = {},
+  lookups = {},
   logger = null,
   createLogger = null,
   dataRegistry = null,
@@ -126,6 +127,15 @@ export function createBaseRuleEnvironment({
             return macros[macroId] || undefined;
           }),
           getComponentDefinition: jest.fn().mockReturnValue(null),
+          get: jest.fn().mockImplementation((type, id) => {
+            if (type === 'macros') {
+              return macros[id] || undefined;
+            }
+            if (type === 'lookups') {
+              return lookups[id] || undefined;
+            }
+            return undefined;
+          }),
         });
 
   const bus =
