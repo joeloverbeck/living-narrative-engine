@@ -118,6 +118,9 @@
         "libraries": {
           "$ref": "#/definitions/contentFileList"
         },
+        "lookups": {
+          "$ref": "#/definitions/contentFileList"
+        },
         "parts": {
           "$ref": "#/definitions/contentFileList"
         },
