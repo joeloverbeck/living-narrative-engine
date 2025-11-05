@@ -3,8 +3,28 @@
 **Priority**: 🟢 **RECOMMENDED**
 **Phase**: 2 - Structural Improvements
 **Estimated Effort**: 20-30 hours
-**Dependencies**: ANASYSREF-001, ANASYSREF-002, ANASYSREF-003
+**Dependencies**: ANASYSREF-002 (See Dependencies section for clarification)
 **Report Reference**: `reports/anatomy-system-refactoring-analysis.md` (Section: Phase 2.1)
+**Last Validated**: 2025-11-05
+
+---
+
+## ⚠️ Implementation Notes (Updated 2025-11-05)
+
+**Critical Codebase Facts Verified**:
+1. **EventBus Interface**: Uses `subscribe(eventName, listener)` not `.on()`
+2. **EventBus.dispatch**: Takes `(eventName, payload)` as separate arguments, not a single object
+3. **AnatomySocketIndex**: Method is `getEntitySockets(entityId)` not `getAllSockets()`
+4. **AnatomyGenerationWorkflow**: Currently does NOT have eventBus or socketIndex dependencies (will need to be added)
+5. **ClothingInstantiationService**: Location is `/src/clothing/services/clothingInstantiationService.js`
+6. **Test Paths**: Correct directories exist for unit and integration tests
+
+**Key Changes Required**:
+- Add `eventBus` dependency to AnatomyGenerationWorkflow constructor
+- Add `socketIndex` dependency to AnatomyGenerationWorkflow constructor
+- Implement event publication in workflow's `generate()` method
+- Update ClothingInstantiationService to subscribe to ANATOMY_GENERATED events
+- Use correct EventBus method names throughout
 
 ---
 
@@ -47,19 +67,20 @@ Refactor to an **event-driven architecture** with clear ownership:
 
 ```javascript
 // In anatomyGenerationWorkflow.js
+// NOTE: This workflow currently does NOT have eventBus or socketIndex dependencies
+// These will need to be added to the constructor during implementation
 async execute() {
   // ... existing anatomy generation logic
 
   // Publish event when anatomy is ready
-  this.#eventBus.dispatch({
-    type: 'ANATOMY_GENERATED',
-    payload: {
-      entityId,
-      blueprintId: blueprint.id,
-      socketIndex: this.#socketIndex.getAllSockets(entityId),
-      timestamp: Date.now(),
-      bodyParts: result.entities.map(e => e.id)
-    }
+  // NOTE: EventBus.dispatch takes (eventName, payload) not a single object
+  this.#eventBus.dispatch('ANATOMY_GENERATED', {
+    entityId,
+    blueprintId: blueprint.id,
+    // NOTE: AnatomySocketIndex uses getEntitySockets(entityId), not getAllSockets()
+    sockets: await this.#socketIndex.getEntitySockets(entityId),
+    timestamp: Date.now(),
+    bodyParts: result.entities.map(e => e.id)
   });
 
   return result;
@@ -76,7 +97,8 @@ constructor({ eventBus, logger, clothingService }) {
   this.#clothingService = clothingService;
 
   // Subscribe to anatomy events
-  this.#eventBus.on('ANATOMY_GENERATED', this.#handleAnatomyGenerated.bind(this));
+  // NOTE: EventBus uses 'subscribe', not 'on'
+  this.#eventBus.subscribe('ANATOMY_GENERATED', this.#handleAnatomyGenerated.bind(this));
 }
 
 async #handleAnatomyGenerated(event) {
@@ -88,9 +110,9 @@ async #handleAnatomyGenerated(event) {
     await this.#clothingService.instantiateDefaultClothing(entityId, socketIndex);
   } catch (err) {
     this.#logger.error(`Failed to instantiate clothing for ${entityId}`, err);
-    this.#eventBus.dispatch({
-      type: 'CLOTHING_INSTANTIATION_FAILED',
-      payload: { entityId, error: err.message }
+    this.#eventBus.dispatch('CLOTHING_INSTANTIATION_FAILED', {
+      entityId,
+      error: err.message
     });
   }
 }
@@ -162,7 +184,12 @@ Clothing service instantiates items
 CLOTHING_INSTANTIATED
 ```
 
-Full implementation in `src/anatomy/workflows/anatomyGenerationWorkflow.js`.
+**File Locations** (Verified 2025-11-05):
+- Anatomy Workflow: `/src/anatomy/workflows/anatomyGenerationWorkflow.js` ✓
+- Clothing Service: `/src/clothing/services/clothingInstantiationService.js` ✓
+- SlotResolver: `/src/anatomy/integration/SlotResolver.js` ✓
+- EventBus: `/src/events/eventBus.js` ✓
+- SocketIndex: `/src/anatomy/services/anatomySocketIndex.js` ✓
 
 ---
 
@@ -174,20 +201,51 @@ Test event publication and subscription:
 
 ```javascript
 // tests/unit/anatomy/workflows/anatomyGenerationWorkflow.events.test.js
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { AnatomyGenerationWorkflow } from '../../../../src/anatomy/workflows/anatomyGenerationWorkflow.js';
+
 describe('AnatomyGenerationWorkflow - Events', () => {
-  it('should publish ANATOMY_GENERATED event on completion', async () => {
-    const eventBus = testBed.createMockEventBus();
-    const workflow = testBed.createAnatomyGenerationWorkflow({ eventBus });
+  let mockEventBus;
+  let mockSocketIndex;
+  let workflow;
 
-    await workflow.execute({ blueprintId: 'test:blueprint' });
+  beforeEach(() => {
+    mockEventBus = {
+      dispatch: jest.fn(),
+      subscribe: jest.fn(),
+    };
 
-    expect(eventBus.dispatch).toHaveBeenCalledWith({
-      type: 'ANATOMY_GENERATED',
-      payload: expect.objectContaining({
-        entityId: expect.any(String),
-        socketIndex: expect.any(Object)
-      })
+    mockSocketIndex = {
+      getEntitySockets: jest.fn().mockResolvedValue([
+        { id: 'socket1', orientation: 'neutral' }
+      ]),
+    };
+
+    // Note: Actual constructor has different dependencies
+    // This is a simplified example showing the new dependencies needed
+    workflow = new AnatomyGenerationWorkflow({
+      entityManager: mockEntityManager,
+      dataRegistry: mockDataRegistry,
+      logger: mockLogger,
+      bodyBlueprintFactory: mockBodyBlueprintFactory,
+      eventBus: mockEventBus,  // NEW DEPENDENCY
+      socketIndex: mockSocketIndex,  // NEW DEPENDENCY
     });
+  });
+
+  it('should publish ANATOMY_GENERATED event on completion', async () => {
+    // Setup test...
+
+    await workflow.generate('test-blueprint', 'test-recipe', { ownerId: 'test-entity' });
+
+    // EventBus.dispatch signature is (eventName, payload)
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+      'ANATOMY_GENERATED',
+      expect.objectContaining({
+        entityId: expect.any(String),
+        sockets: expect.any(Array)
+      })
+    );
   });
 });
 ```
@@ -198,17 +256,31 @@ Test full anatomy-to-clothing flow:
 
 ```javascript
 // tests/integration/anatomy/clothingIntegration.test.js
-describe('Anatomy-Clothing Integration', () => {
-  it('should instantiate clothing after anatomy generation', async () => {
-    const testBed = createTestBed();
-    const eventBus = testBed.container.resolve('IEventBus');
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { createTestBed } from '../../common/testBed.js';
 
+describe('Anatomy-Clothing Integration', () => {
+  let testBed;
+  let eventBus;
+
+  beforeEach(() => {
+    testBed = createTestBed();
+    // Note: Actual integration will require full container setup
+    // This assumes eventBus is available from DI container
+    eventBus = testBed.mockValidatedEventDispatcher;
+  });
+
+  it('should instantiate clothing after anatomy generation', async () => {
+    // Track when clothing instantiation event is dispatched
     const clothingInstantiated = new Promise(resolve => {
-      eventBus.on('CLOTHING_INSTANTIATED', resolve);
+      // EventBus uses 'subscribe', not 'on'
+      eventBus.subscribe('CLOTHING_INSTANTIATED', resolve);
     });
 
-    // Generate anatomy
-    await testBed.generateAnatomy({ blueprintId: 'anatomy:humanoid_body' });
+    // Generate anatomy (implementation needed)
+    // This will trigger ANATOMY_GENERATED event
+    // which should trigger clothing instantiation
+    // await anatomyGenerationService.generate(...);
 
     // Wait for clothing instantiation
     const event = await clothingInstantiated;
@@ -252,7 +324,9 @@ describe('Anatomy-Clothing Integration', () => {
 ## Dependencies
 
 **Depends On**:
-- ANASYSREF-001, ANASYSREF-002, ANASYSREF-003 (Phase 1 stability)
+- ANASYSREF-002 (Add pattern validation warnings)
+- **NOTE**: ANASYSREF-001 and ANASYSREF-003 referenced but do not exist in workflow directory
+- Recommend clarifying actual Phase 1 dependencies before implementation
 
 **Blocks**:
 - ANASYSREF-006 (cache management can be simplified after decoupling)
