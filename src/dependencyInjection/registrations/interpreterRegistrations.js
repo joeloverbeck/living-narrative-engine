@@ -72,6 +72,7 @@ export function registerInterpreters(container) {
     registry.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));
     registry.register('QUERY_COMPONENT', bind(tokens.QueryComponentHandler));
     registry.register('QUERY_COMPONENTS', bind(tokens.QueryComponentsHandler));
+    registry.register('QUERY_LOOKUP', bind(tokens.QueryLookupHandler));
     registry.register('QUERY_ENTITIES', bind(tokens.QueryEntitiesHandler));
     registry.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
     registry.register('END_TURN', bind(tokens.EndTurnHandler));

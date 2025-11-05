@@ -14,6 +14,7 @@ import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponen
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentsHandler from '../../logic/operationHandlers/queryComponentsHandler.js';
+import QueryLookupHandler from '../../logic/operationHandlers/queryLookupHandler.js';
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
 import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
@@ -156,6 +157,16 @@ export function registerOperationHandlers(registrar) {
       (c, Handler) =>
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.QueryLookupHandler,
+      QueryLookupHandler,
+      (c, Handler) =>
+        new Handler({
+          dataRegistry: c.resolve(tokens.IDataRegistry),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),

@@ -1,0 +1,57 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "id": "music:handle_set_meditative_mood",
+  "description": "Handle setting meditative mood on instrument performance",
+  "event": "music:event-is-action-set-meditative-mood",
+  "operations": [
+    {
+      "type": "QUERY_LOOKUP",
+      "lookup_id": "music:mood_lexicon",
+      "entry_key": "meditative",
+      "result_variable": "mood_data",
+      "missing_value": {
+        "adj": "meditative",
+        "adjectives": "meditative",
+        "noun": "meditative"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "variable_name": "actor_name",
+      "value": {"var": "actor.components.core:actor.name"}
+    },
+    {
+      "type": "SET_VARIABLE",
+      "variable_name": "instrument_name",
+      "value": {"var": "target.components.core:actor.name"}
+    },
+    {
+      "type": "MODIFY_COMPONENT",
+      "entity_ref": "target",
+      "component_type": "music:performance_mood",
+      "data": {
+        "mood": "meditative",
+        "set_by_actor": {"var": "actor.id"}
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "event": {
+        "type": "music_mood_set",
+        "actorId": {"var": "actor.id"},
+        "targetId": {"var": "target.id"},
+        "mood": "meditative",
+        "message": {
+          "cat": [
+            {"var": "actor_name"},
+            " begins to play ",
+            {"var": "instrument_name"},
+            " with a ",
+            {"var": "mood_data.adj"},
+            ", meditative tone"
+          ]
+        }
+      }
+    }
+  ]
+}

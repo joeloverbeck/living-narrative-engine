@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "music:set_triumphant_mood_on_instrument",
+  "name": "Set Triumphant Mood on Instrument",
+  "description": "Play an instrument with a triumphant emotional tone, or transition an ongoing performance to a triumphant mood.",
+  "targets": {
+    "primary": {
+      "scope": "items:examinable_items",
+      "placeholder": "instrument",
+      "description": "Instrument to play with triumphant mood"
+    }
+  },
+  "required_components": {
+    "actor": ["music:is_musician"],
+    "primary": ["items:item", "music:is_instrument"]
+  },
+  "prerequisites": [],
+  "template": "set triumphant mood on {instrument}",
+  "visual": {
+    "backgroundColor": "#1a2332",
+    "textColor": "#d1d5db",
+    "hoverBackgroundColor": "#2d3748",
+    "hoverTextColor": "#f3f4f6"
+  }
+}
