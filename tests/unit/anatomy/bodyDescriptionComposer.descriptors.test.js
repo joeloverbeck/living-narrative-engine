@@ -129,7 +129,7 @@ describe('BodyDescriptionComposer - Body-Level Descriptors', () => {
               return {
                 body: {
                   descriptors: {
-                    density: 'moderate',
+                    hairDensity: 'moderate',
                   },
                 },
               };

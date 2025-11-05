@@ -502,7 +502,7 @@ describe('BodyDescriptionComposer', () => {
                 descriptors: {
                   height: 'tall',
                   build: 'athletic',
-                  density: 'moderate',
+                  hairDensity: 'moderate',
                   composition: 'lean',
                   skinColor: 'olive',
                 },
@@ -732,7 +732,7 @@ describe('BodyDescriptionComposer', () => {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockImplementation((componentId) => {
           if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-            return { body: { descriptors: { density: 'moderate' } } };
+            return { body: { descriptors: { hairDensity: 'moderate' } } };
           }
           if (componentId === 'descriptors:body_hair') {
             return { density: 'hairy' }; // Should be ignored

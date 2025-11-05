@@ -57,7 +57,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
                 root: 'test-root-id',
                 descriptors: {
                   build: 'stocky', // From recipe bodyDescriptors
-                  density: 'hairy', // From recipe bodyDescriptors
+                  hairDensity: 'hairy', // From recipe bodyDescriptors
                 },
               },
             };
@@ -74,7 +74,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
       // Should extract the descriptors with proper formatting
       expect(descriptors).toBeDefined();
       expect(descriptors.build).toBe('Build: stocky');
-      expect(descriptors.body_hair).toBe('Hair density: hairy');
+      expect(descriptors.body_hair).toBe('Body hair: hairy');
     });
 
     it('should handle missing anatomy:body component gracefully', () => {
@@ -123,7 +123,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
                 root: 'test-root-id',
                 descriptors: {
                   build: 'stocky',
-                  density: 'hairy',
+                  hairDensity: 'hairy',
                   skinColor: 'tan',
                   composition: 'muscular',
                 },
@@ -138,7 +138,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
       const descriptors = composer.extractBodyLevelDescriptors(mockBodyEntity);
 
       expect(descriptors.build).toBe('Build: stocky');
-      expect(descriptors.body_hair).toBe('Hair density: hairy');
+      expect(descriptors.body_hair).toBe('Body hair: hairy');
       expect(descriptors.skin_color).toBe('Skin color: tan');
       expect(descriptors.body_composition).toBe('Body composition: muscular');
     });
@@ -199,7 +199,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
             return {
               body: {
                 descriptors: {
-                  density: 'hairy',
+                  hairDensity: 'hairy',
                 },
               },
             };
@@ -250,7 +250,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
                 root: 'root-part-id',
                 descriptors: {
                   build: 'stocky',
-                  density: 'hairy',
+                  hairDensity: 'hairy',
                 },
               },
             };
@@ -273,7 +273,7 @@ describe('BodyDescriptionComposer - Body Level Descriptors', () => {
 
       // Should contain the body-level descriptors
       expect(description).toContain('Build: stocky');
-      expect(description).toContain('Hair density: hairy');
+      expect(description).toContain('Body hair: hairy');
     });
   });
 });
