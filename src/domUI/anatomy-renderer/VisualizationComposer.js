@@ -251,7 +251,7 @@ class VisualizationComposer {
     allPartIds.add(bodyData.root);
 
     // DIAGNOSTIC 1: Log initial collection - shows what entities are in bodyData.parts
-    this.#logger.info(
+    this.#logger.debug(
       `VisualizationComposer: Initial collection - ${allPartIds.size} entities in bodyData`,
       {
         root: bodyData.root,
@@ -265,7 +265,7 @@ class VisualizationComposer {
       const { id, depth, parent } = queue.shift();
 
       // DIAGNOSTIC 2: Log node processing start
-      this.#logger.info(
+      this.#logger.debug(
         `VisualizationComposer: Processing entity '${id}' at depth ${depth}`,
         { id, depth, parent, queueSize: queue.length }
       );
@@ -330,7 +330,7 @@ class VisualizationComposer {
                   queue.push({ id: partId, depth: depth + 1, parent: id });
 
                   // DIAGNOSTIC 3: Log successful parent-child match
-                  this.#logger.info(
+                  this.#logger.debug(
                     `VisualizationComposer: MATCH - Entity '${partId}' has parent '${id}'`,
                     {
                       childId: partId,
@@ -340,7 +340,7 @@ class VisualizationComposer {
                   );
                 } else {
                   // DIAGNOSTIC 4: Log parent-child match failure
-                  this.#logger.info(
+                  this.#logger.debug(
                     `VisualizationComposer: NO MATCH - Entity '${partId}' parent is '${partJoint?.parentId || 'none'}', checking against '${id}'`,
                     {
                       partId,
@@ -367,7 +367,7 @@ class VisualizationComposer {
     const unvisitedIds = Array.from(allPartIds).filter(
       (partId) => !visited.has(partId)
     );
-    this.#logger.info(
+    this.#logger.debug(
       `VisualizationComposer: BFS complete - ${visited.size} visited, ${unvisitedIds.length} unvisited`,
       {
         visitedCount: visited.size,
@@ -479,7 +479,7 @@ class VisualizationComposer {
     }
 
     // DIAGNOSTIC 6: Log unconnected parts handler activation
-    this.#logger.info(
+    this.#logger.debug(
       `VisualizationComposer: Unconnected parts handler - processing ${unvisitedParts.length} orphaned entities`,
       { unvisitedParts }
     );
