@@ -5,6 +5,7 @@
 
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
+import QueryLookupHandler from '../../../src/logic/operationHandlers/queryLookupHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
@@ -94,10 +95,11 @@ export class ModTestHandlerFactory {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param {object} [dataRegistry] - Optional data registry instance for lookup operations
    * @returns {object} Standard handlers object with common operation handlers
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createStandardHandlers(entityManager, eventBus, logger) {
+  static createStandardHandlers(entityManager, eventBus, logger, dataRegistry) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -111,7 +113,7 @@ export class ModTestHandlerFactory {
       }),
     };
 
-    return {
+    const handlers = {
       QUERY_COMPONENT: new QueryComponentHandler({
         entityManager,
         logger,
@@ -144,6 +146,17 @@ export class ModTestHandlerFactory {
       SET_VARIABLE: new SetVariableHandler({ logger }),
       LOG_MESSAGE: new LogHandler({ logger }),
     };
+
+    // Add QUERY_LOOKUP handler if dataRegistry is provided
+    if (dataRegistry) {
+      handlers.QUERY_LOOKUP = new QueryLookupHandler({
+        dataRegistry,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      });
+    }
+
+    return handlers;
   }
 
   /**
@@ -165,7 +178,8 @@ export class ModTestHandlerFactory {
     const baseHandlers = this.createStandardHandlers(
       entityManager,
       eventBus,
-      logger
+      logger,
+      gameDataRepository
     );
 
     const safeDispatcher = {
@@ -210,7 +224,8 @@ export class ModTestHandlerFactory {
     const baseHandlers = this.createStandardHandlers(
       entityManager,
       eventBus,
-      logger
+      logger,
+      gameDataRepository
     );
 
     const safeDispatcher = {
@@ -415,10 +430,11 @@ export class ModTestHandlerFactory {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
+   * @param {object} [dataRegistry] - Optional data registry instance for lookup operations
    * @returns {object} Handlers with item operation handlers included
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithItemsSupport(entityManager, eventBus, logger) {
+  static createHandlersWithItemsSupport(entityManager, eventBus, logger, dataRegistry) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -429,7 +445,8 @@ export class ModTestHandlerFactory {
     const baseHandlers = this.createStandardHandlers(
       entityManager,
       eventBus,
-      logger
+      logger,
+      dataRegistry
     );
 
     const safeDispatcher = {
@@ -586,7 +603,8 @@ export class ModTestHandlerFactory {
     const baseHandlers = this.createStandardHandlers(
       entityManager,
       eventBus,
-      logger
+      logger,
+      gameDataRepository
     );
 
     const safeDispatcher = {
