@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:black_diamond_silver_spike_collar",
+  "description": "Gothic statement collar with black diamonds and silver spikes",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "steel",
+      "properties": [
+        "reflective"
+      ]
+    },
+    "core:name": {
+      "text": "black diamond and silver spike collar"
+    },
+    "core:description": {
+      "text": "A dramatic choker-style collar that marries gothic elegance with edgy rebellion. Black diamonds are set in polished silver, their dark facets glinting mysteriously, while sharp decorative spikes emerge at intervals around the piece. The collar sits close to the neck, creating a commanding statement that draws the eye upward. This distinctive accessory transforms any outfit into a bold declaration of gothic sophistication."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:embellishment": {
+      "embellishment": "spike"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.3
+    }
+  }
+}

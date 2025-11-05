@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:black_silk_robe_kimono_sleeves",
+  "description": "Luxurious black silk robe with wide kimono sleeves",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": [
+          "left_arm_clothing",
+          "right_arm_clothing"
+        ]
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "silk"
+    },
+    "core:name": {
+      "text": "black silk robe with kimono sleeves"
+    },
+    "core:description": {
+      "text": "An elegant fusion of Eastern and gothic aesthetics, this flowing robe features wide kimono-style sleeves that drape gracefully with movement. Crafted from lustrous black silk adorned with subtle gold thread embroidery forming elegant patterns, the robe wraps closed with a tie belt at the waist. The luxurious drape and soft texture create comfort without sacrificing visual drama. This piece transitions seamlessly from intimate loungewear to statement layering piece, bringing Asian-inspired elegance to gothic wardrobes."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_lower"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.6
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:silver_chain_pendant_necklace",
+  "description": "Gothic silver chain necklace with decorative pendant",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "steel"
+    },
+    "core:name": {
+      "text": "silver chain pendant necklace"
+    },
+    "core:description": {
+      "text": "A versatile silver chain necklace featuring gothic pendant motifs such as crosses, symbolic charms, or ornate medallions. The chain links catch light as they drape around the neck, while the pendant serves as a focal point for personal expression. The silver finish can be kept polished for bright shine or allowed to oxidize for an aged, weathered aesthetic. This layerable piece serves as a gothic jewelry staple, easily paired with other accessories or worn alone for understated dark elegance."
+    },
+    "descriptors:color_extended": {
+      "color": "silver"
+    },
+    "descriptors:embellishment": {
+      "embellishment": "metal-chain"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.2
+    }
+  }
+}

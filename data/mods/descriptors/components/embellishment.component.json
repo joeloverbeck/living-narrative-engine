@@ -8,7 +8,7 @@
       "embellishment": {
         "type": "string",
         "description": "The primary embellishment featured on the item",
-        "enum": ["crystal", "gemstone", "metal-chain", "pearl"]
+        "enum": ["crystal", "gemstone", "metal-chain", "pearl", "spike"]
       }
     },
     "required": ["embellishment"],

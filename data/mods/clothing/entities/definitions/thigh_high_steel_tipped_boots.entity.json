@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:thigh_high_steel_tipped_boots",
+  "description": "Dramatic thigh-high boots with steel-tipped heels",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "thigh-high steel-tipped boots"
+    },
+    "core:description": {
+      "text": "Commanding thigh-high boots crafted from sleek black leather, fitted closely to the leg from toe to thigh. Steel-tipped heels provide both durability and a distinctive sharp click with each step, announcing your presence before you arrive. The boots feature a side zipper for easy wear while maintaining their streamlined silhouette. These statement pieces combine elegance with edge, adding commanding height while creating a bold gothic aesthetic that pairs beautifully with leather trousers or dramatic gowns."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:length_category": {
+      "length": "very-long"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "feet"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 1.8
+    }
+  }
+}
