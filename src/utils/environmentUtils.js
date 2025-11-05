@@ -6,6 +6,7 @@
 
 /**
  * Detects the current runtime environment
+ *
  * @returns {string} The detected environment: 'browser', 'node', 'webworker', or 'unknown'
  */
 export function detectEnvironment() {
@@ -33,6 +34,7 @@ export function detectEnvironment() {
 
 /**
  * Checks if we're running in a Node.js environment
+ *
  * @returns {boolean} True if running in Node.js
  */
 export function isNodeEnvironment() {
@@ -41,6 +43,7 @@ export function isNodeEnvironment() {
 
 /**
  * Checks if we're running in a browser environment
+ *
  * @returns {boolean} True if running in browser
  */
 export function isBrowserEnvironment() {
@@ -49,6 +52,7 @@ export function isBrowserEnvironment() {
 
 /**
  * Checks if we're running in a test environment
+ *
  * @returns {boolean} True if running in test environment
  */
 export function isTestEnvironment() {
@@ -67,8 +71,9 @@ export function isTestEnvironment() {
 
 /**
  * Safely gets an environment variable with fallback support
+ *
  * @param {string} key - The environment variable key
- * @param {string} [defaultValue=''] - Default value if variable not found
+ * @param {string} [defaultValue] - Default value if variable not found
  * @returns {string} The environment variable value or default
  */
 export function getEnvironmentVariable(key, defaultValue = '') {
@@ -121,7 +126,7 @@ const FALSY_ENV_VALUES = new Set(['false', '0', 'no', 'off']);
  * (case and whitespace insensitive) and falls back to a default when no value
  * is provided.
  * @param {unknown} rawValue - The raw value retrieved from environment lookup.
- * @param {boolean} [defaultValue=false] - Fallback boolean used when the value
+ * @param {boolean} [defaultValue] - Fallback boolean used when the value
  *   is absent or empty.
  * @returns {boolean} Normalized boolean flag.
  */
@@ -149,7 +154,7 @@ function normalizeBooleanEnvValue(rawValue, defaultValue = false) {
  * common truthy and falsy values (e.g., "TRUE", "1", "on"). When the
  * variable is undefined or empty, the provided default value is returned.
  * @param {string} key - Environment variable key.
- * @param {boolean} [defaultValue=false] - Default boolean returned when the
+ * @param {boolean} [defaultValue] - Default boolean returned when the
  *   variable is missing.
  * @returns {boolean} Normalized boolean value.
  */
@@ -160,6 +165,7 @@ export function getBooleanEnvironmentVariable(key, defaultValue = false) {
 
 /**
  * Gets the current NODE_ENV or equivalent
+ *
  * @returns {string} The environment mode: 'test', 'production', 'development'
  */
 export function getEnvironmentMode() {
@@ -188,6 +194,7 @@ export function getEnvironmentMode() {
 
 /**
  * Checks if debug configuration loading should be skipped
+ *
  * @returns {boolean} True if debug config loading should be skipped
  */
 export function shouldSkipDebugConfig() {
@@ -196,6 +203,7 @@ export function shouldSkipDebugConfig() {
 
 /**
  * Gets a configuration object with common environment settings
+ *
  * @returns {object} Configuration object with environment settings
  */
 export function getEnvironmentConfig() {
@@ -221,6 +229,7 @@ export function getEnvironmentConfig() {
 
 /**
  * Safe environment variable checker that doesn't throw in browser
+ *
  * @param {string} key - Environment variable key to check
  * @returns {boolean} True if the environment variable exists and is truthy
  */
@@ -251,13 +260,14 @@ export function hasEnvironmentVariable(key) {
     return typeof rawValue === 'string'
       ? normalizedValue.length > 0
       : Boolean(rawValue);
-  } catch (error) {
+  } catch {
     return false;
   }
 }
 
 /**
  * Creates a safe process.env-like object that works in both environments
+ *
  * @returns {object} Process.env-compatible object
  */
 export function createProcessEnvShim() {
@@ -289,6 +299,7 @@ export function createProcessEnvShim() {
 
 /**
  * Check if garbage collection is available
+ *
  * @returns {boolean} True if GC is available (Node.js with --expose-gc flag)
  */
 export function isGarbageCollectionAvailable() {
@@ -298,6 +309,7 @@ export function isGarbageCollectionAvailable() {
 
 /**
  * Trigger garbage collection if available
+ *
  * @returns {boolean} True if GC was triggered
  */
 export function triggerGarbageCollection() {
@@ -310,6 +322,44 @@ export function triggerGarbageCollection() {
 }
 
 /**
+ * Lazy-loaded v8 module cache for Node.js environments
+ *
+ * @type {object|null}
+ */
+let v8ModuleCache = null;
+let v8ModuleAttempted = false;
+
+/**
+ * Gets the v8 module if available (Node.js only)
+ *
+ * @returns {object|null} The v8 module or null if unavailable
+ */
+function getV8Module() {
+  // Return cached result if already attempted
+  if (v8ModuleAttempted) {
+    return v8ModuleCache;
+  }
+
+  v8ModuleAttempted = true;
+
+  // Only attempt in Node.js environment
+  if (typeof process === 'undefined' || !process.versions?.node) {
+    return null;
+  }
+
+  try {
+    // Use dynamic import for ES modules or require for CommonJS
+    // In Node.js, we can use require for built-in modules
+    // eslint-disable-next-line no-undef
+    v8ModuleCache = require('v8');
+    return v8ModuleCache;
+  } catch {
+    // v8 module not available
+    return null;
+  }
+}
+
+/**
  * Resolves the Node.js heap size limit using V8 statistics when available.
  *
  * @param {number} defaultLimit - Fallback heap limit when statistics are unavailable.
@@ -318,18 +368,15 @@ export function triggerGarbageCollection() {
 function resolveNodeHeapLimit(defaultLimit) {
   const fallbackLimit = Number.isFinite(defaultLimit) ? defaultLimit : 0;
 
-  if (
-    typeof process === 'undefined' ||
-    process === null ||
-    typeof process.binding !== 'function'
-  ) {
+  if (typeof process === 'undefined' || process === null) {
     return fallbackLimit;
   }
 
   try {
-    const v8Binding = process.binding('v8');
-    if (v8Binding && typeof v8Binding.getHeapStatistics === 'function') {
-      const stats = v8Binding.getHeapStatistics();
+    // Use the modern v8 module instead of deprecated process.binding
+    const v8 = getV8Module();
+    if (v8 && typeof v8.getHeapStatistics === 'function') {
+      const stats = v8.getHeapStatistics();
       const heapLimitCandidate = stats?.heap_size_limit;
       if (
         typeof heapLimitCandidate === 'number' &&
@@ -340,7 +387,7 @@ function resolveNodeHeapLimit(defaultLimit) {
       }
     }
   } catch {
-    // Ignore errors from unavailable bindings and fall back to the default limit
+    // Ignore errors from unavailable modules and fall back to the default limit
   }
 
   return fallbackLimit;
@@ -348,6 +395,7 @@ function resolveNodeHeapLimit(defaultLimit) {
 
 /**
  * Get memory usage based on environment
+ *
  * @returns {object|null} Memory usage object or null if not available
  */
 export function getMemoryUsage() {
@@ -387,6 +435,7 @@ export function getMemoryUsage() {
 
 /**
  * Get memory usage value in bytes
+ *
  * @returns {number} Current memory usage in bytes or 0 if not available
  */
 export function getMemoryUsageBytes() {
@@ -396,6 +445,7 @@ export function getMemoryUsageBytes() {
 
 /**
  * Get memory usage percentage
+ *
  * @returns {number} Memory usage as percentage (0-1) or 0 if not available
  */
 export function getMemoryUsagePercent() {
