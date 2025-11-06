@@ -46,7 +46,7 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
     it('should require actor to not be hugging anyone', () => {
       validateComponentRequirements(brushHairBackCoylyAction, {
         required: {},
-        forbidden: { actor: ['positioning:hugging'] },
+        forbidden: { actor: ['positioning:hugging', 'positioning:doing_complex_performance'] },
       });
     });
 
