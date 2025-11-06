@@ -5,16 +5,29 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../../common/mods/ModEntityBuilder.js';
 import takeFromContainerAction from '../../../../data/mods/items/actions/take_from_container.action.json' assert { type: 'json' };
+
+const ACTION_ID = 'items:take_from_container';
 
 describe('items:take_from_container action definition', () => {
   let testFixture;
+  let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:take_from_container'
-    );
+    testFixture = await ModTestFixture.forAction('items', ACTION_ID);
+
+    configureActionDiscovery = () => {
+      const { testEnv } = testFixture;
+      if (!testEnv) {
+        return;
+      }
+
+      testEnv.actionIndex.buildIndex([takeFromContainerAction]);
+    };
   });
 
   afterEach(() => {
@@ -68,6 +81,13 @@ describe('items:take_from_container action definition', () => {
     expect(takeFromContainerAction.generateCombinations).toBe(true);
   });
 
+  it('should require actor to have inventory component', () => {
+    expect(takeFromContainerAction.required_components).toBeDefined();
+    expect(takeFromContainerAction.required_components.actor).toEqual([
+      'items:inventory',
+    ]);
+  });
+
   describe('Expected action discovery behavior (manual testing)', () => {
     it('should appear when open containers with items exist at actor location', () => {
       // Manual test case:
@@ -110,6 +130,90 @@ describe('items:take_from_container action definition', () => {
       // 2. Take item from container
       // 3. Expected: take_from_container actions should reflect updated container contents
       expect(true).toBe(true);
+    });
+
+    it('should NOT appear when actor lacks inventory component', () => {
+      const room = ModEntityScenarios.createRoom('storage', 'Storage Room');
+
+      const actor = new ModEntityBuilder('actor_no_inventory')
+        .withName('Bob')
+        .atLocation('storage')
+        .asActor()
+        .build();
+
+      const container = new ModEntityBuilder('chest1')
+        .withName('wooden chest')
+        .atLocation('storage')
+        .withComponent('items:item', {})
+        .withComponent('items:container', {
+          contents: ['sword1'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+          isOpen: true,
+          isLocked: false,
+        })
+        .build();
+
+      const sword = new ModEntityBuilder('sword1')
+        .withName('iron sword')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .build();
+
+      testFixture.reset([room, actor, container, sword]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        'actor_no_inventory'
+      );
+      const hasTakeAction = availableActions.some(
+        (action) => action.id === ACTION_ID
+      );
+
+      expect(hasTakeAction).toBe(false);
+    });
+
+    it('should appear when actor has inventory and open container with items exists', () => {
+      const room = ModEntityScenarios.createRoom('storage', 'Storage Room');
+
+      const actor = new ModEntityBuilder('actor_with_inventory')
+        .withName('Alice')
+        .atLocation('storage')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 20, maxItems: 5 },
+        })
+        .build();
+
+      const container = new ModEntityBuilder('chest2')
+        .withName('wooden chest')
+        .atLocation('storage')
+        .withComponent('items:item', {})
+        .withComponent('items:container', {
+          contents: ['potion1'],
+          capacity: { maxWeight: 50, maxItems: 10 },
+          isOpen: true,
+          isLocked: false,
+        })
+        .build();
+
+      const potion = new ModEntityBuilder('potion1')
+        .withName('health potion')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .build();
+
+      testFixture.reset([room, actor, container, potion]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        'actor_with_inventory'
+      );
+      const takeActions = availableActions.filter(
+        (action) => action.id === ACTION_ID
+      );
+
+      expect(takeActions.length).toBeGreaterThan(0);
     });
   });
 });
