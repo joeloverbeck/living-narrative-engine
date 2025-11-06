@@ -46,7 +46,7 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
     it('should require actor to not be hugging anyone', () => {
       validateComponentRequirements(drawAttentionToAssAction, {
         required: {},
-        forbidden: { actor: ['positioning:hugging'] },
+        forbidden: { actor: ['positioning:hugging', 'positioning:doing_complex_performance'] },
       });
     });
 

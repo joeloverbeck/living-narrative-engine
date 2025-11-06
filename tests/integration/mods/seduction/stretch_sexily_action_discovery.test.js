@@ -45,7 +45,7 @@ describe('seduction:stretch_sexily action discovery', () => {
       expect(stretchSexilyAction.targets).toBe('none');
       expect(stretchSexilyAction.required_components).toEqual({});
       expect(stretchSexilyAction.forbidden_components).toEqual({
-        actor: ['positioning:hugging'],
+        actor: ['positioning:hugging', 'positioning:doing_complex_performance'],
       });
     });
   });
