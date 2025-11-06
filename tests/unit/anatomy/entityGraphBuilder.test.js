@@ -420,15 +420,15 @@ describe('EntityGraphBuilder', () => {
         'left'
       );
 
+      // Verify anatomy:part component is updated with orientation only (no parentEntity)
+      // Parent relationship is stored in anatomy:joint component instead
       expect(mocks.entityManager.addComponent).toHaveBeenCalledWith(
         'armDef',
         'anatomy:part',
         {
           subType: 'arm',
           someOtherField: 'value',
-          parentEntity: 'torso',
           orientation: 'left',
-          parentEntity: 'torso',
         }
       );
       expect(mocks.logger.debug).toHaveBeenCalledWith(
