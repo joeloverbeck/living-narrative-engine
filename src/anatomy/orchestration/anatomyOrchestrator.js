@@ -207,6 +207,10 @@ export class AnatomyOrchestrator extends BaseService {
           descriptors: existingBodyDescriptors,
         }),
       },
+      // Preserve clothingSlots if they exist (added by the workflow)
+      ...(existingData.clothingSlots && {
+        clothingSlots: existingData.clothingSlots,
+      }),
     };
 
     await this.#entityManager.addComponent(

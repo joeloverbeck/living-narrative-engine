@@ -520,10 +520,39 @@ export class AnatomyGenerationWorkflow extends BaseService {
       );
     }
 
+    // Get blueprint to extract clothing slot mappings
+    const blueprint = recipe?.blueprintId
+      ? this.#dataRegistry.get('anatomyBlueprints', recipe.blueprintId)
+      : null;
+
+    // Build clothing slots from blueprint mappings
+    const clothingSlots = {};
+    if (blueprint?.clothingSlotMappings) {
+      for (const [slotKey, mapping] of Object.entries(
+        blueprint.clothingSlotMappings
+      )) {
+        clothingSlots[slotKey] = {
+          ...(mapping.anatomySockets && {
+            anatomySockets: [...mapping.anatomySockets],
+          }),
+          ...(mapping.blueprintSlots && {
+            blueprintSlots: [...mapping.blueprintSlots],
+          }),
+          ...(mapping.allowedLayers && {
+            allowedLayers: [...mapping.allowedLayers],
+          }),
+        };
+      }
+      this.#logger.debug(
+        `AnatomyGenerationWorkflow: Added ${Object.keys(clothingSlots).length} clothing slots from blueprint '${recipe.blueprintId}'`
+      );
+    }
+
     const updatedData = {
       ...existingData,
       recipeId, // Ensure recipe ID is preserved
       body: bodyObject,
+      clothingSlots, // Add clothing slots
     };
 
     await this.#entityManager.addComponent(
@@ -533,7 +562,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
     );
 
     this.#logger.debug(
-      `AnatomyGenerationWorkflow: Updated entity '${entityId}' with body structure (root: '${graphResult.rootId}', ${Object.keys(partsObject).length} parts)`
+      `AnatomyGenerationWorkflow: Updated entity '${entityId}' with body structure (root: '${graphResult.rootId}', ${Object.keys(partsObject).length} parts, ${Object.keys(clothingSlots).length} clothing slots)`
     );
   }
 
