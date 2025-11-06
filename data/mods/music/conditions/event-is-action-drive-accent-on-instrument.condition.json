@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "music:event-is-action-drive-accent-on-instrument",
+  "description": "Evaluates to true when the event is an attempt to drive an accent on an instrument",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "music:drive_accent_on_instrument"
+    ]
+  }
+}
