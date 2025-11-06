@@ -76,6 +76,7 @@ import { ClothingManagementService } from '../../clothing/services/clothingManag
 import { ClothingAccessibilityService } from '../../clothing/services/clothingAccessibilityService.js';
 import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBlueprintRepository.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
+import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
 import SocketGenerator from '../../anatomy/socketGenerator.js';
@@ -758,12 +759,26 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register AnatomyCacheCoordinator
+  registrar.singletonFactory(tokens.IAnatomyCacheCoordinator, (c) => {
+    return new AnatomyCacheCoordinator({
+      eventBus: c.resolve(tokens.IEventBus),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.IAnatomyCacheCoordinator
+    )}.`
+  );
+
   // Register AnatomySocketIndex
   registrar.singletonFactory(tokens.IAnatomySocketIndex, (c) => {
     return new AnatomySocketIndex({
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
+      cacheCoordinator: c.resolve(tokens.IAnatomyCacheCoordinator),
     });
   });
   logger.debug(
@@ -809,6 +824,7 @@ export function registerWorldAndEntity(container) {
       anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
       anatomySocketIndex: c.resolve(tokens.IAnatomySocketIndex),
       cache: c.resolve(tokens.AnatomyClothingCache),
+      cacheCoordinator: c.resolve(tokens.IAnatomyCacheCoordinator),
     });
   });
   logger.debug(

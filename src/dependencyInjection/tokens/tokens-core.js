@@ -94,6 +94,7 @@ export const coreTokens = freeze({
   SlotResolver: 'SlotResolver',
   IAnatomyBlueprintRepository: 'IAnatomyBlueprintRepository',
   IAnatomySocketIndex: 'IAnatomySocketIndex',
+  IAnatomyCacheCoordinator: 'IAnatomyCacheCoordinator',
   AnatomyClothingCache: 'AnatomyClothingCache',
   LayerResolutionService: 'LayerResolutionService',
   DescriptorFormatter: 'DescriptorFormatter',
