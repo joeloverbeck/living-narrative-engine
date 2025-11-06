@@ -29,6 +29,11 @@
     "testicle",
     "tail",
     "wing",
+    "spider_cephalothorax",
+    "spider_leg",
+    "spider_abdomen",
+    "spider_pedipalp",
+    "spinneret",
     "mantle",
     "tentacle",
     "ink_reservoir",
@@ -47,7 +52,9 @@
     "wing",
     "testicle",
     "ass_cheek",
-    "tentacle"
+    "tentacle",
+    "spider_leg",
+    "spider_pedipalp"
   ],
   "irregularPlurals": {
     "foot": "feet",

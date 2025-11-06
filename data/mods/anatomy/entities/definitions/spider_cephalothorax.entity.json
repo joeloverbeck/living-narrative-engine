@@ -64,6 +64,11 @@
           "id": "abdomen",
           "allowedTypes": ["spider_abdomen"],
           "nameTpl": "abdomen"
+        },
+        {
+          "id": "spinnerets",
+          "allowedTypes": ["spinneret"],
+          "nameTpl": "spinnerets"
         }
       ]
     },
