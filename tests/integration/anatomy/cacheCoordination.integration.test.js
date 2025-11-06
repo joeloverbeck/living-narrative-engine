@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { registerCore } from '../../../src/dependencyInjection/registrations/coreRegistrations.js';
+import { registerInfrastructure } from '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js';
 import { registerWorldAndEntity } from '../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js';
 import { AnatomyCacheCoordinator } from '../../../src/anatomy/cache/anatomyCacheCoordinator.js';
 
@@ -26,10 +26,36 @@ describe('Cache Coordination Integration', () => {
     // Create a minimal container with necessary services
     container = new AppContainer();
 
-    // Register core services
-    registerCore(container);
+    // Register only the minimal core dependencies required by infrastructure
+    const mockLogger = testBed.createMockLogger();
+    container.register(tokens.ILogger, () => mockLogger, { lifecycle: 'singleton' });
 
-    // Register world and entity services (includes coordinator)
+    // Register mock document context for CriticalLogNotifier
+    const mockDocumentContext = testBed.createMock('documentContext', ['createElement']);
+    container.register(tokens.IDocumentContext, () => mockDocumentContext, { lifecycle: 'singleton' });
+
+    // Register schema validator and data registry required by infrastructure
+    const mockSchemaValidator = testBed.createMock('SchemaValidator', [
+      'validateAgainstSchema', 'validate', 'getSchema', 'loadSchema'
+    ]);
+    const mockDataRegistry = testBed.createMock('DataRegistry', [
+      'get', 'set', 'has', 'delete', 'clear', 'getAll',
+      'getWorldDefinition', 'getAllWorldDefinitions', 'getStartingPlayerId',
+      'getStartingLocationId', 'getActionDefinition', 'getAllActionDefinitions',
+      'getEntityDefinition', 'getAllEntityDefinitions', 'getEventDefinition',
+      'getAllEventDefinitions', 'getComponentDefinition', 'getAllComponentDefinitions',
+      'getConditionDefinition', 'getAllConditionDefinitions', 'getGoalDefinition',
+      'getAllGoalDefinitions', 'getEntityInstanceDefinition', 'getAllEntityInstanceDefinitions',
+      'store'
+    ]);
+
+    container.register(tokens.ISchemaValidator, () => mockSchemaValidator, { lifecycle: 'singleton' });
+    container.register(tokens.IDataRegistry, () => mockDataRegistry, { lifecycle: 'singleton' });
+
+    // Register infrastructure services (includes event bus, spatial index, etc.)
+    registerInfrastructure(container);
+
+    // Register world and entity services (includes coordinator and all anatomy/clothing services)
     registerWorldAndEntity(container);
 
     // Resolve services
