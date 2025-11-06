@@ -4,6 +4,9 @@
   "name": "Take From Container",
   "description": "Take an item from an open container",
   "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory"]
+  },
   "targets": {
     "primary": {
       "scope": "items:open_containers_at_location",
