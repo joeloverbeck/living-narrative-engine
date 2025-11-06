@@ -776,6 +776,14 @@ This tool can be integrated into your CI/CD pipeline to automatically validate b
 - Config: `data/mods/anatomy/anatomy-formatting/default.json`
 - Recipes: `data/mods/anatomy/recipes/*.recipe.json`
 
+**Documentation:**
+
+- [Body Descriptor Registry](docs/anatomy/body-descriptor-registry.md) - Registry architecture and API reference
+- [Adding Body Descriptors](docs/anatomy/adding-body-descriptors.md) - Step-by-step guide for adding new descriptors
+- [Validator API Reference](docs/anatomy/body-descriptor-validator-reference.md) - Complete validator documentation
+- [Body Descriptors Technical Guide](docs/development/body-descriptors-technical.md) - Technical implementation details
+- [Body Descriptor Migration Guide](docs/migration/body-descriptor-migration.md) - Migration from old patterns
+
 ## 🎨 Visual Customization
 
 Actions can now be visually customized with custom colors! Modders can specify:

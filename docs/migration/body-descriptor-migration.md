@@ -21,6 +21,36 @@ This guide provides step-by-step instructions for migrating existing anatomy con
 - **Mixed Mode**: Use both systems simultaneously during transition
 - **Automatic Precedence**: Body descriptors take precedence when present
 
+## Body Descriptor Registry
+
+The new body descriptor system is built around a centralized registry that serves as the single source of truth for all descriptor metadata.
+
+**Registry Location**: `src/anatomy/registries/bodyDescriptorRegistry.js`
+
+**Benefits**:
+- **Centralized Configuration**: All descriptor metadata in one place
+- **Automatic Validation**: Built-in validation ensures consistency
+- **Type Safety**: Controlled vocabularies with enumerated values
+- **Easy Extension**: Add new descriptors by updating the registry
+
+**Current Descriptors** (6 total):
+- height, skinColor, build, composition, hairDensity, smell
+
+**Registry Properties**: Each descriptor has 9 properties including schema name, display configuration, valid values, and extraction/formatting functions.
+
+**Validation Tool**: `npm run validate:body-descriptors`
+
+Before and after migration, use the validation tool to ensure system consistency:
+
+```bash
+npm run validate:body-descriptors
+```
+
+**Documentation**:
+- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Complete registry architecture
+- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Guide for adding new descriptors
+- [Validator Reference](../anatomy/body-descriptor-validator-reference.md) - Validation tool API
+
 ## Migration Strategies
 
 ### Strategy 1: Recipe-by-Recipe Migration (Recommended)
@@ -382,7 +412,38 @@ grep -r "descriptors:body_hair" data/mods/your-mod | wc -l
 
 ### Phase 4: Validation
 
-1. **Automated Testing**:
+1. **Run Validation Tool**:
+
+```bash
+npm run validate:body-descriptors
+```
+
+Expected output after successful migration:
+```
+🔍 Body Descriptor System Validation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Checking Registry...
+   Found 6 registered descriptors
+   height, skinColor, build, composition, hairDensity, smell
+
+📄 Validating Formatting Configuration...
+   ✅ Formatting configuration is valid
+
+🧬 Validating Anatomy Recipes...
+   ✅ human_male.recipe.json
+   ✅ human_female.recipe.json
+   ✅ your_migrated_recipe.recipe.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Validation Passed
+
+Body descriptor system is consistent.
+```
+
+2. **Automated Testing**:
 
 ```javascript
 describe('Migration Validation', () => {
@@ -401,7 +462,7 @@ describe('Migration Validation', () => {
 });
 ```
 
-2. **Manual Verification**:
+3. **Manual Verification**:
    - Generate multiple instances
    - Test edge cases and variants
    - Verify performance improvements
