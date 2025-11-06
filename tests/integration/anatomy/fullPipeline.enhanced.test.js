@@ -8,6 +8,8 @@
  * - Socket/slot synchronization
  * - Clothing slot generation
  * - Validation of anatomy graph structure
+ *
+ * Note: Spider/arachnid anatomy tests are covered in tests/regression/anatomy/spider.regression.test.js
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -225,65 +227,6 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
 
       expect(armSocketIds).toEqual(['left_shoulder', 'right_shoulder']);
       expect(legSocketIds).toEqual(['left_hip', 'right_hip']);
-    });
-  });
-
-  describe('Complete Pipeline - Arachnid', () => {
-    it.skip('should generate spider with correct radial leg arrangement', async () => {
-      const actor = await testBed.createActor({
-        recipeId: 'anatomy:giant_forest_spider',
-      });
-
-      await anatomyGenerationService.generateAnatomy(actor.id);
-
-      const actorInstance = entityManager.getEntityInstance(actor.id);
-      const anatomyData = actorInstance.getComponentData('anatomy:body');
-
-      const parts = anatomyData.body.parts;
-      const legs = Object.keys(parts).filter((name) => name.includes('leg'));
-
-      // Verify 8 legs
-      expect(legs).toHaveLength(8);
-
-      // Verify root sockets
-      const rootEntity = entityManager.getEntityInstance(anatomyData.body.root);
-      const socketsComp = rootEntity.getComponentData('anatomy:sockets');
-
-      const legSockets = socketsComp.sockets.filter((s) =>
-        s.id.includes('leg')
-      );
-      expect(legSockets.length).toBe(8);
-
-      // Verify octagonal orientations
-      const orientations = legSockets.map((s) => s.orientation);
-      expect(new Set(orientations).size).toBe(8);
-    });
-
-    it.skip('should properly handle complex spider anatomy with appendages', async () => {
-      const actor = await testBed.createActor({
-        recipeId: 'anatomy:giant_forest_spider',
-      });
-
-      await anatomyGenerationService.generateAnatomy(actor.id);
-
-      const actorInstance = entityManager.getEntityInstance(actor.id);
-      const anatomyData = actorInstance.getComponentData('anatomy:body');
-
-      const parts = anatomyData.body.parts;
-
-      // Verify multiple part types
-      const legs = Object.keys(parts).filter((name) => name.includes('leg'));
-
-      expect(legs.length).toBeGreaterThan(0);
-
-      // Verify all parts are valid entities
-      for (const partId of Object.values(parts)) {
-        const partEntity = entityManager.getEntityInstance(partId);
-        expect(partEntity).toBeDefined();
-      }
-
-      // Verify clothing slots field exists
-      expect(anatomyData).toHaveProperty('clothingSlots');
     });
   });
 
