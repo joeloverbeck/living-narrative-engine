@@ -46,7 +46,7 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
       expect(brushHairBackCoylyAction.targets).toBe('none');
       expect(brushHairBackCoylyAction.required_components).toEqual({});
       expect(brushHairBackCoylyAction.forbidden_components).toEqual({
-        actor: ['positioning:hugging'],
+        actor: ['positioning:hugging', 'positioning:doing_complex_performance'],
       });
     });
   });
