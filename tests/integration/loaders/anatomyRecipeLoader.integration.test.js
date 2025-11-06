@@ -344,8 +344,9 @@ describe('AnatomyRecipeLoader integration coverage', () => {
     );
     expect(descriptorFailure).toBeDefined();
     expect(descriptorFailure.error).toBeInstanceOf(ValidationError);
+    // New validator produces "Invalid value '42' for build. Expected one of: ..."
     expect(descriptorFailure.error.message).toContain(
-      "Body descriptor 'build' must be a string"
+      "Invalid value '42' for build"
     );
 
     const storedRecipe = registry.get('anatomyRecipes', 'core:humanoid');
