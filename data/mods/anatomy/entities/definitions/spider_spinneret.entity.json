@@ -8,6 +8,12 @@
     },
     "core:name": {
       "text": "spinneret"
+    },
+    "descriptors:texture": {
+      "texture": "chitinous"
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
     }
   }
 }

@@ -4,7 +4,7 @@
   "description": "A draconic head with jaws and horns",
   "components": {
     "anatomy:part": {
-      "subType": "head"
+      "subType": "dragon_head"
     },
     "core:name": {
       "text": "dragon head"

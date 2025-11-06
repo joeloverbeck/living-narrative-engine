@@ -136,6 +136,7 @@
         "spider_cephalothorax.entity.json",
         "spider_leg.entity.json",
         "spider_pedipalp.entity.json",
+        "spider_spinneret.entity.json",
         "squid_mantle.entity.json",
         "squid_tentacle.entity.json"
       ],

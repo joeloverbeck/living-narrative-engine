@@ -601,7 +601,8 @@
       "Bash(git log:*)",
       "mcp__morphllm-fast-apply__list_allowed_directories",
       "mcp__morphllm-fast-apply__directory_tree",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "mcp__serena__check_onboarding_performed"
     ],
     "deny": [],
     "ask": []

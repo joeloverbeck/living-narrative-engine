@@ -10,6 +10,7 @@
         "description": "The surface texture",
         "enum": [
           "bumpy",
+          "chitinous",
           "coarse",
           "croc-embossed",
           "fleece",
