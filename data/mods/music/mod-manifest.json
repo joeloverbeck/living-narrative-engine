@@ -24,6 +24,7 @@
       "playing_music.component.json"
     ],
     "actions": [
+      "play_flourish_on_instrument.action.json",
       "play_drone_on_instrument.action.json",
       "play_ostinato_on_instrument.action.json",
       "play_phrase_on_instrument.action.json",
@@ -40,6 +41,7 @@
       "stop_playing_instrument.action.json"
     ],
     "rules": [
+      "handle_play_flourish_on_instrument.rule.json",
       "handle_play_drone_on_instrument.rule.json",
       "handle_play_ostinato_on_instrument.rule.json",
       "handle_play_phrase_on_instrument.rule.json",
@@ -56,6 +58,7 @@
       "handle_stop_playing_instrument.rule.json"
     ],
     "conditions": [
+      "event-is-action-play-flourish-on-instrument.condition.json",
       "event-is-action-play-drone-on-instrument.condition.json",
       "event-is-action-play-ostinato-on-instrument.condition.json",
       "event-is-action-play-phrase-on-instrument.condition.json",

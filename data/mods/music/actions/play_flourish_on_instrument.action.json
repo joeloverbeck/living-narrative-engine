@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "music:play_flourish_on_instrument",
+  "name": "Play Flourish on Instrument",
+  "description": "Execute a showy ornamental flourish on the instrument you are currently playing. This technique works best with playful, triumphant, cheerful, or tender moods.",
+  "targets": {
+    "primary": {
+      "scope": "music:instrument_actor_is_playing",
+      "placeholder": "instrument",
+      "description": "The instrument you are currently playing"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "music:is_musician",
+      "music:playing_music",
+      "music:performance_mood"
+    ],
+    "primary": [
+      "items:item",
+      "music:is_instrument"
+    ]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "in": [
+          {
+            "var": "actor.components.music:performance_mood.mood"
+          },
+          ["playful", "triumphant", "cheerful", "tender"]
+        ]
+      },
+      "failure_message": "Flourishes don't work well with your current performance mood. Try a mood that's more playful, triumphant, cheerful, or tender."
+    }
+  ],
+  "template": "play flourish on {instrument}",
+  "visual": {
+    "backgroundColor": "#1a2332",
+    "textColor": "#d1d5db",
+    "hoverBackgroundColor": "#2d3748",
+    "hoverTextColor": "#f3f4f6"
+  }
+}
