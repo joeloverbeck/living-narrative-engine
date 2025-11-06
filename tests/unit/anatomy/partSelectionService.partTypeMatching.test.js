@@ -66,16 +66,25 @@ describe('PartSelectionService - partType/subType Matching', () => {
       expect(result).toBe('anatomy:spider_leg');
     });
 
-    it('should reject entity when subType does not match partType', () => {
+    it('should reject entity when subType does not match partType', async () => {
       // Create entity definition with generic subType
-      const entityDef = {
-        id: 'anatomy:spider_leg',
-        components: {
-          'anatomy:part': {
-            subType: 'leg', // Generic type (WRONG)
+      const defs = [
+        {
+          id: 'anatomy:spider_leg',
+          components: {
+            'anatomy:part': {
+              subType: 'leg', // Generic type (WRONG)
+            },
           },
         },
-      };
+      ];
+
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
 
       // Create requirements with specific partType
       const requirements = {
@@ -85,25 +94,31 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['leg', 'spider_leg'];
 
-      // Mock getEntityDefinitions to return our test entity
-      mockDataRegistry.getEntityDefinitions = () => [entityDef];
-
-      // Should NOT find matching entity (subType "leg" !== partType "spider_leg")
-      const result = partSelectionService.selectPart(requirements, allowedTypes);
-
-      expect(result).toBeNull(); // No match found
+      // Should throw because subType "leg" !== partType "spider_leg"
+      await expect(
+        service.selectPart(requirements, allowedTypes, undefined, Math.random)
+      ).rejects.toThrow('No entity definitions found matching anatomy requirements');
     });
 
-    it('should accept entity when no partType is specified', () => {
+    it('should accept entity when no partType is specified', async () => {
       // When no partType specified, only allowedTypes matters
-      const entityDef = {
-        id: 'anatomy:generic_leg',
-        components: {
-          'anatomy:part': {
-            subType: 'leg',
+      const defs = [
+        {
+          id: 'anatomy:generic_leg',
+          components: {
+            'anatomy:part': {
+              subType: 'leg',
+            },
           },
         },
-      };
+      ];
+
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
 
       const requirements = {
         // No partType specified
@@ -112,19 +127,16 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['leg'];
 
-      mockDataRegistry.getEntityDefinitions = () => [entityDef];
+      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
 
-      const result = partSelectionService.selectPart(requirements, allowedTypes);
-
-      expect(result).toBeDefined();
-      expect(result.id).toBe('anatomy:generic_leg');
+      expect(result).toBe('anatomy:generic_leg');
     });
   });
 
   describe('Multiple Entity Selection', () => {
-    it('should select correct entity when multiple entities have same generic subType', () => {
+    it('should select correct entity when multiple entities have same generic subType', async () => {
       // Multiple entities with same generic subType but different IDs
-      const entities = [
+      const defs = [
         {
           id: 'anatomy:human_leg',
           components: {
@@ -151,6 +163,13 @@ describe('PartSelectionService - partType/subType Matching', () => {
         },
       ];
 
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
+
       const requirements = {
         partType: 'spider_leg',
         components: ['anatomy:part'],
@@ -158,18 +177,14 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['leg', 'spider_leg', 'dragon_leg'];
 
-      mockDataRegistry.getEntityDefinitions = () => entities;
-
-      const result = partSelectionService.selectPart(requirements, allowedTypes);
+      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
 
       // Should select spider_leg, not human_leg or dragon_leg
-      expect(result).toBeDefined();
-      expect(result.id).toBe('anatomy:spider_leg');
-      expect(result.components['anatomy:part'].subType).toBe('spider_leg');
+      expect(result).toBe('anatomy:spider_leg');
     });
 
-    it('should return null when no entities match both allowedTypes and partType', () => {
-      const entities = [
+    it('should throw when no entities match both allowedTypes and partType', async () => {
+      const defs = [
         {
           id: 'anatomy:human_leg',
           components: {
@@ -188,6 +203,13 @@ describe('PartSelectionService - partType/subType Matching', () => {
         },
       ];
 
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
+
       const requirements = {
         partType: 'spider_leg', // No entity has this subType
         components: ['anatomy:part'],
@@ -195,24 +217,32 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['leg', 'spider_leg', 'dragon_leg'];
 
-      mockDataRegistry.getEntityDefinitions = () => entities;
-
-      const result = partSelectionService.selectPart(requirements, allowedTypes);
-
-      expect(result).toBeNull();
+      // Should throw because no entity matches spider_leg
+      await expect(
+        service.selectPart(requirements, allowedTypes, undefined, Math.random)
+      ).rejects.toThrow('No entity definitions found matching anatomy requirements');
     });
   });
 
   describe('AllowedTypes and PartType Interaction', () => {
-    it('should validate both allowedTypes and partType constraints', () => {
-      const entityDef = {
-        id: 'anatomy:spider_leg',
-        components: {
-          'anatomy:part': {
-            subType: 'spider_leg',
+    it('should validate both allowedTypes and partType constraints', async () => {
+      const defs = [
+        {
+          id: 'anatomy:spider_leg',
+          components: {
+            'anatomy:part': {
+              subType: 'spider_leg',
+            },
           },
         },
-      };
+      ];
+
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
 
       const requirements = {
         partType: 'spider_leg',
@@ -221,25 +251,34 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       // allowedTypes includes spider_leg
       const allowedTypes1 = ['spider_leg', 'leg'];
-      mockDataRegistry.getEntityDefinitions = () => [entityDef];
-      const result1 = partSelectionService.selectPart(requirements, allowedTypes1);
-      expect(result1).toBeDefined(); // Should match
+      const result1 = await service.selectPart(requirements, allowedTypes1, undefined, Math.random);
+      expect(result1).toBe('anatomy:spider_leg'); // Should match
 
       // allowedTypes does NOT include spider_leg
       const allowedTypes2 = ['leg', 'arm'];
-      const result2 = partSelectionService.selectPart(requirements, allowedTypes2);
-      expect(result2).toBeNull(); // Should not match (subType not in allowedTypes)
+      await expect(
+        service.selectPart(requirements, allowedTypes2, undefined, Math.random)
+      ).rejects.toThrow('No entity definitions found matching anatomy requirements'); // Should throw (subType not in allowedTypes)
     });
 
-    it('should accept wildcard in allowedTypes', () => {
-      const entityDef = {
-        id: 'anatomy:spider_leg',
-        components: {
-          'anatomy:part': {
-            subType: 'spider_leg',
+    it('should accept wildcard in allowedTypes', async () => {
+      const defs = [
+        {
+          id: 'anatomy:spider_leg',
+          components: {
+            'anatomy:part': {
+              subType: 'spider_leg',
+            },
           },
         },
-      };
+      ];
+
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
 
       const requirements = {
         partType: 'spider_leg',
@@ -249,29 +288,35 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // Wildcard allows any type
       const allowedTypes = ['*'];
 
-      mockDataRegistry.getEntityDefinitions = () => [entityDef];
+      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
 
-      const result = partSelectionService.selectPart(requirements, allowedTypes);
-
-      expect(result).toBeDefined();
-      expect(result.id).toBe('anatomy:spider_leg');
+      expect(result).toBe('anatomy:spider_leg');
     });
   });
 
   describe('Real-World Spider Scenario', () => {
-    it('should reproduce the bug: spider_leg entity with subType="leg" rejected for partType="spider_leg"', () => {
+    it('should reproduce the bug: spider_leg entity with subType="leg" rejected for partType="spider_leg"', async () => {
       // This reproduces the actual bug from the error logs
-      const spiderLegEntity = {
-        id: 'anatomy:spider_leg',
-        components: {
-          'anatomy:part': {
-            subType: 'leg', // BUG: Generic instead of specific
-          },
-          'core:name': {
-            text: 'spider leg',
+      const defs = [
+        {
+          id: 'anatomy:spider_leg',
+          components: {
+            'anatomy:part': {
+              subType: 'leg', // BUG: Generic instead of specific
+            },
+            'core:name': {
+              text: 'spider leg',
+            },
           },
         },
-      };
+      ];
+
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
 
       const requirements = {
         partType: 'spider_leg', // Recipe requires specific type
@@ -281,27 +326,34 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['leg']; // Socket allows generic type
 
-      mockDataRegistry.getEntityDefinitions = () => [spiderLegEntity];
-
-      // Should fail because subType "leg" !== partType "spider_leg"
-      const result = partSelectionService.selectPart(requirements, allowedTypes);
-
-      expect(result).toBeNull(); // Bug reproduced: No match found
+      // Should throw because subType "leg" !== partType "spider_leg"
+      await expect(
+        service.selectPart(requirements, allowedTypes, undefined, Math.random)
+      ).rejects.toThrow('No entity definitions found matching anatomy requirements'); // Bug reproduced: No match found
     });
 
-    it('should work after fix: spider_leg entity with subType="spider_leg" accepted', () => {
+    it('should work after fix: spider_leg entity with subType="spider_leg" accepted', async () => {
       // This shows the fix: entity subType matches recipe partType
-      const spiderLegEntity = {
-        id: 'anatomy:spider_leg',
-        components: {
-          'anatomy:part': {
-            subType: 'spider_leg', // FIXED: Specific type matches recipe
-          },
-          'core:name': {
-            text: 'spider leg',
+      const defs = [
+        {
+          id: 'anatomy:spider_leg',
+          components: {
+            'anatomy:part': {
+              subType: 'spider_leg', // FIXED: Specific type matches recipe
+            },
+            'core:name': {
+              text: 'spider leg',
+            },
           },
         },
-      };
+      ];
+
+      mockRegistry = createMockDataRegistry(defs);
+      service = new PartSelectionService({
+        dataRegistry: mockRegistry,
+        logger: mockLogger,
+        eventDispatchService: mockDispatchService,
+      });
 
       const requirements = {
         partType: 'spider_leg',
@@ -311,14 +363,10 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['spider_leg']; // Socket allows specific type
 
-      mockDataRegistry.getEntityDefinitions = () => [spiderLegEntity];
-
       // Should succeed because subType "spider_leg" === partType "spider_leg"
-      const result = partSelectionService.selectPart(requirements, allowedTypes);
+      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
 
-      expect(result).toBeDefined();
-      expect(result.id).toBe('anatomy:spider_leg');
-      expect(result.components['anatomy:part'].subType).toBe('spider_leg');
+      expect(result).toBe('anatomy:spider_leg');
     });
   });
 });
