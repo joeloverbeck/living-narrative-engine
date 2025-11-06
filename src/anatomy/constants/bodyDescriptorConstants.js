@@ -1,100 +1,99 @@
 /**
- * @file Body descriptor constants and metadata
- * Centralized definitions for body-level descriptors used across the anatomy system
+ * @file Body descriptor constants - Exports registry-based constants
+ * @deprecated Import directly from bodyDescriptorRegistry instead
+ * This file maintained for backward compatibility
+ *
+ * All constants are now derived from the centralized registry at:
+ * @see ../registries/bodyDescriptorRegistry.js
+ *
+ * Migration note: This file will be removed in a future major version.
+ * Please update imports to use the registry directly where possible.
  */
+
+import { BODY_DESCRIPTOR_REGISTRY } from '../registries/bodyDescriptorRegistry.js';
+
+/**
+ * Convert array of values to object with UPPER_CASE keys
+ * Converts hyphenated values to UPPER_SNAKE_CASE
+ *
+ * @private
+ * @param {string[]|null} values - Array of values to convert
+ * @returns {object} Object with uppercase keys mapping to original values
+ * @example
+ * arrayToConstantObject(['athletic', 'very-tall'])
+ * // Returns { ATHLETIC: 'athletic', VERY_TALL: 'very-tall' }
+ */
+function arrayToConstantObject(values) {
+  if (!values) return {};
+  return values.reduce((acc, value) => {
+    const key = value.toUpperCase().replace(/-/g, '_');
+    acc[key] = value;
+    return acc;
+  }, {});
+}
 
 /**
  * Valid body build types
+ *
+ * @deprecated Import BODY_DESCRIPTOR_REGISTRY.build.validValues instead
  */
-export const BODY_BUILD_TYPES = {
-  SKINNY: 'skinny',
-  SLIM: 'slim',
-  LISSOM: 'lissom',
-  TONED: 'toned',
-  ATHLETIC: 'athletic',
-  SHAPELY: 'shapely',
-  HOURGLASS: 'hourglass',
-  THICK: 'thick',
-  MUSCULAR: 'muscular',
-  HULKING: 'hulking',
-  STOCKY: 'stocky',
-};
+export const BODY_BUILD_TYPES = arrayToConstantObject(
+  BODY_DESCRIPTOR_REGISTRY.build?.validValues
+);
 
 /**
  * Valid body hair density levels
+ *
+ * @deprecated Import BODY_DESCRIPTOR_REGISTRY.hairDensity.validValues instead
  */
-export const BODY_HAIR_DENSITY = {
-  HAIRLESS: 'hairless',
-  SPARSE: 'sparse',
-  LIGHT: 'light',
-  MODERATE: 'moderate',
-  HAIRY: 'hairy',
-  VERY_HAIRY: 'very-hairy',
-};
+export const BODY_HAIR_DENSITY = arrayToConstantObject(
+  BODY_DESCRIPTOR_REGISTRY.hairDensity?.validValues
+);
 
 /**
  * Valid body composition types
+ *
+ * @deprecated Import BODY_DESCRIPTOR_REGISTRY.composition.validValues instead
  */
-export const BODY_COMPOSITION_TYPES = {
-  UNDERWEIGHT: 'underweight',
-  LEAN: 'lean',
-  AVERAGE: 'average',
-  SOFT: 'soft',
-  CHUBBY: 'chubby',
-  OVERWEIGHT: 'overweight',
-  OBESE: 'obese',
-};
+export const BODY_COMPOSITION_TYPES = arrayToConstantObject(
+  BODY_DESCRIPTOR_REGISTRY.composition?.validValues
+);
 
 /**
  * Valid height categories
+ *
+ * @deprecated Import BODY_DESCRIPTOR_REGISTRY.height.validValues instead
  */
-export const HEIGHT_CATEGORIES = {
-  GIGANTIC: 'gigantic',
-  VERY_TALL: 'very-tall',
-  TALL: 'tall',
-  AVERAGE: 'average',
-  SHORT: 'short',
-  PETITE: 'petite',
-  TINY: 'tiny',
-};
+export const HEIGHT_CATEGORIES = arrayToConstantObject(
+  BODY_DESCRIPTOR_REGISTRY.height?.validValues
+);
 
 /**
  * Descriptor metadata including display labels and validation info
+ *
+ * @deprecated Import BODY_DESCRIPTOR_REGISTRY directly instead
  */
-export const DESCRIPTOR_METADATA = {
-  build: {
-    label: 'Build',
-    validValues: Object.values(BODY_BUILD_TYPES),
-    description: 'Body build type',
+export const DESCRIPTOR_METADATA = Object.entries(BODY_DESCRIPTOR_REGISTRY).reduce(
+  (acc, [key, metadata]) => {
+    acc[key] = {
+      label: metadata.displayLabel,
+      validValues: metadata.validValues,
+      description: `${metadata.displayLabel} descriptor`,
+    };
+    return acc;
   },
-  hairDensity: {
-    label: 'Body hair density',
-    validValues: Object.values(BODY_HAIR_DENSITY),
-    description: 'Body hair density level',
-  },
-  composition: {
-    label: 'Body composition',
-    validValues: Object.values(BODY_COMPOSITION_TYPES),
-    description: 'Body composition type',
-  },
-  skinColor: {
-    label: 'Skin color',
-    validValues: null, // Free-form string
-    description: 'Skin color descriptor',
-  },
-  smell: {
-    label: 'Smell',
-    validValues: null, // Free-form string
-    description: 'Body smell descriptor',
-  },
-  height: {
-    label: 'Height',
-    validValues: Object.values(HEIGHT_CATEGORIES),
-    description: 'Height category',
-  },
-};
+  {}
+);
 
 /**
  * All supported descriptor property names
+ *
+ * @deprecated Import from bodyDescriptorRegistry.getAllDescriptorNames() instead
  */
 export const SUPPORTED_DESCRIPTOR_PROPERTIES = Object.keys(DESCRIPTOR_METADATA);
+
+/**
+ * Re-export registry for convenience
+ * This is the recommended import for new code
+ */
+export { BODY_DESCRIPTOR_REGISTRY } from '../registries/bodyDescriptorRegistry.js';
