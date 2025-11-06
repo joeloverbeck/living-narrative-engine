@@ -948,6 +948,76 @@ Keep similar patterns together for readability:
 ]
 ```
 
+## Pattern Validation & Load-Time Checks
+
+### Load-Time Validation
+
+Recipe patterns are validated when mods are loaded:
+- **Schema Validation**: Against `data/schemas/anatomy.recipe.schema.json` via AJV
+- **Pattern Syntax**: Ensures exactly one matcher type per pattern
+- **Blueprint Consistency**: Verifies referenced blueprintId exists
+
+**Validation Process** (`src/anatomy/recipePatternResolver.js`):
+```javascript
+// Pattern resolution happens during recipe processing
+// Zero-match patterns are logged but don't fail validation
+if (resolvedSlots.length === 0) {
+  this.#logger.debug(`Pattern matched zero slots for ${pattern.matchesGroup || pattern.matchesPattern}`);
+}
+```
+
+**Important**: Patterns that match zero slots are currently allowed (logged at debug level). This is intentional to support optional patterns, but can hide configuration errors. Always check logs during development.
+
+### Pattern-Blueprint Synchronization
+
+**Critical Requirement**: Recipe patterns depend on blueprint slot structure generated from structure templates. Changes to templates require corresponding recipe updates.
+
+**Synchronization Flow**:
+```
+Structure Template → SlotGenerator → Blueprint Slots → Recipe Patterns
+         (defines)      (generates)       (contains)       (matches)
+```
+
+**Example Synchronization Issue**:
+```json
+// Structure template generates: leg_1, leg_2, leg_3, leg_4
+{
+  "socketPattern": {
+    "idTemplate": "leg_{{index}}",
+    "orientationScheme": "indexed"
+  }
+}
+
+// Recipe pattern must match generated format
+{
+  "matchesPattern": "leg_*"  // ✅ Matches leg_1, leg_2, etc.
+}
+
+// If template changes to bilateral orientation:
+{
+  "idTemplate": "leg_{{orientation}}",
+  "orientationScheme": "bilateral"  // Now generates: leg_left, leg_right
+}
+
+// Recipe pattern needs update:
+{
+  "matchesPattern": "leg_*"  // ⚠️ Still matches, but pattern is less specific
+  // or
+  "matchesGroup": "limbSet:leg"  // ✅ Better - independent of naming
+}
+```
+
+### Debugging Pattern Matching
+
+Enable debug logging to see pattern resolution:
+```javascript
+// Logger configuration shows pattern matching details
+this.#logger.debug(`Resolving pattern: ${JSON.stringify(pattern)}`);
+this.#logger.debug(`Matched ${slots.length} slots: ${slots.map(s => s.key).join(', ')}`);
+```
+
+See [Architecture Guide](./architecture.md) for details on the pattern resolution pipeline.
+
 ## Troubleshooting
 
 ### Pattern Doesn't Match Expected Slots
@@ -957,6 +1027,7 @@ Keep similar patterns together for readability:
 1. Inspect blueprint to see generated slot keys
 2. Adjust pattern to match actual slot naming
 3. Use explicit `slots` for debugging
+4. Check structure template's socket pattern configuration
 
 ### Pattern Matches Too Many Slots
 
@@ -970,6 +1041,8 @@ Keep similar patterns together for readability:
 1. Verify slot keys exist in blueprint
 2. Check pattern syntax (case-sensitive)
 3. Use debugging recipe with explicit `slots` to verify slot keys
+4. Enable debug logging to see pattern resolution details
+5. Verify structure template's `orientationScheme` matches expected slot naming
 
 ### Multiple Patterns Match Same Slot
 
@@ -980,6 +1053,15 @@ Keep similar patterns together for readability:
 
 **Cause**: Using multiple matcher types in one pattern or missing required fields.
 **Fix**: Ensure each pattern has exactly one of `matches`, `matchesGroup`, `matchesPattern`, or `matchesAll`.
+
+### Silent Pattern Failures
+
+**Cause**: Pattern matches zero slots but recipe still loads (logged at debug level only).
+**Fix**:
+1. Enable debug logging during development
+2. Check logs for "Pattern matched zero slots" messages
+3. Verify structure template changes haven't broken pattern matching
+4. Consider using `matchesGroup` for resilience against template naming changes
 
 ## Related Documentation
 
