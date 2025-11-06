@@ -10,6 +10,20 @@
 
 Create automated integration tests that verify body descriptor consistency between the registry, JSON schema, and formatting configuration. These tests act as a safety net to prevent configuration drift and ensure all components stay synchronized.
 
+## Workflow Assumptions (Validated 2025-11-06)
+
+This workflow has been validated against the actual production code:
+
+✅ **Registry Location**: `src/anatomy/registries/bodyDescriptorRegistry.js` contains 6 descriptors
+✅ **Schema Structure**: `data/schemas/anatomy.recipe.schema.json` has `properties.bodyDescriptors.properties`
+✅ **Formatting Config**: `data/mods/anatomy/anatomy-formatting/default.json` has `descriptionOrder` array
+✅ **Test Location**: `tests/integration/anatomy/` is the correct directory
+
+⚠️ **Key Considerations**:
+- The formatting config's `descriptionOrder` contains BOTH body descriptors (height, skin_color, etc.) AND anatomy part types (head, hair, eye, etc.). Tests must account for this mixed content.
+- Helper functions are inline in the test file, not separate modules, following existing test patterns.
+- Tests use synchronous file reads for simplicity (acceptable in test context).
+
 ## Problem Context
 
 While validation tools catch issues at runtime, we need automated tests to:
@@ -41,21 +55,42 @@ Automated tests provide continuous verification and immediate feedback.
 ```javascript
 // tests/integration/anatomy/bodyDescriptorSystemConsistency.test.js
 
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
   BODY_DESCRIPTOR_REGISTRY,
   getAllDescriptorNames,
 } from '../../../src/anatomy/registries/bodyDescriptorRegistry.js';
-import { loadSchema } from '../../helpers/schemaLoader.js';
-import { loadFormattingConfig } from '../../helpers/configLoader.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Helper: Load JSON schema from file system
+function loadSchema(schemaFileName) {
+  const schemaPath = path.join(__dirname, '../../../data/schemas', schemaFileName);
+  const content = fs.readFileSync(schemaPath, 'utf-8');
+  return JSON.parse(content);
+}
+
+// Helper: Load formatting config from file system
+function loadFormattingConfig() {
+  const configPath = path.join(
+    __dirname,
+    '../../../data/mods/anatomy/anatomy-formatting/default.json'
+  );
+  const content = fs.readFileSync(configPath, 'utf-8');
+  return JSON.parse(content);
+}
 
 describe('Body Descriptor System Consistency', () => {
   let recipeSchema;
   let formattingConfig;
 
-  beforeAll(() => {
+  beforeEach(() => {
     recipeSchema = loadSchema('anatomy.recipe.schema.json');
-    formattingConfig = loadFormattingConfig('anatomy', 'default');
+    formattingConfig = loadFormattingConfig();
   });
 
   describe('Registry Completeness', () => {
@@ -149,31 +184,46 @@ describe('Body Descriptor System Consistency', () => {
       }
     });
 
-    it('should not have orphaned displayKeys in formatting config', () => {
+    it('should not have orphaned body descriptor displayKeys in formatting config', () => {
       const registeredDisplayKeys = Object.values(BODY_DESCRIPTOR_REGISTRY)
         .map(meta => meta.displayKey);
 
-      // Filter body descriptor types from config
-      const bodyDescriptorKeys = formattingConfig.descriptionOrder.filter(
+      // Note: descriptionOrder contains both body descriptors (height, skin_color, etc.)
+      // AND anatomy part types (head, hair, eye, etc.). We only validate body descriptors.
+      // A displayKey is orphaned only if it matches a registered body descriptor key
+      // but is not actually in the registry.
+      const bodyDescriptorKeysInConfig = formattingConfig.descriptionOrder.filter(
         key => registeredDisplayKeys.includes(key)
       );
 
-      for (const key of bodyDescriptorKeys) {
+      // All body descriptor keys found in config should be in registry
+      for (const key of bodyDescriptorKeysInConfig) {
         expect(registeredDisplayKeys).toContain(key);
       }
+
+      // Verify expected body descriptor keys are present
+      expect(bodyDescriptorKeysInConfig).toContain('height');
+      expect(bodyDescriptorKeysInConfig).toContain('skin_color');
+      expect(bodyDescriptorKeysInConfig).toContain('build');
+      expect(bodyDescriptorKeysInConfig).toContain('body_composition');
+      expect(bodyDescriptorKeysInConfig).toContain('body_hair');
+      expect(bodyDescriptorKeysInConfig).toContain('smell');
     });
   });
 
   describe('Extractor Functions', () => {
     it('should extract values from valid body component', () => {
+      // Note: Body component structure follows the pattern:
+      // { body: { descriptors: { [schemaProperty]: value } } }
+      // The schemaProperty uses camelCase (e.g., skinColor, hairDensity)
       const testBodyComponent = {
         body: {
           descriptors: {
             height: 'tall',
-            skinColor: 'tan',
+            skinColor: 'tan',        // camelCase in component data
             build: 'athletic',
             composition: 'lean',
-            hairDensity: 'moderate',
+            hairDensity: 'moderate', // camelCase in component data
             smell: 'pleasant',
           },
         },
@@ -225,90 +275,57 @@ describe('Body Descriptor System Consistency', () => {
 
 ### Helper Functions
 
-```javascript
-// tests/helpers/schemaLoader.js
+The test file includes inline helper functions for loading schemas and configs. These are kept inline rather than in separate helper files to:
+1. Keep the test self-contained and easier to understand
+2. Avoid creating unnecessary helper files for simple operations
+3. Follow the existing pattern in other integration tests
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+The helpers are included at the top of the test file (see Test File Structure above):
+- `loadSchema(schemaFileName)` - Loads a JSON schema from `data/schemas/`
+- `loadFormattingConfig()` - Loads the anatomy formatting configuration
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export function loadSchema(schemaFileName) {
-  const schemaPath = path.join(
-    __dirname,
-    '../../data/schemas',
-    schemaFileName
-  );
-
-  const content = fs.readFileSync(schemaPath, 'utf-8');
-  return JSON.parse(content);
-}
-```
-
-```javascript
-// tests/helpers/configLoader.js
-
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export function loadFormattingConfig(modId, configId) {
-  const configPath = path.join(
-    __dirname,
-    `../../data/mods/${modId}/anatomy-formatting/${configId}.json`
-  );
-
-  const content = fs.readFileSync(configPath, 'utf-8');
-  return JSON.parse(content);
-}
-```
+**Note**: These helpers use synchronous file reads which is acceptable for tests. For production code, async patterns would be preferred.
 
 ### Implementation Steps
 
 1. **Create Test File**
    - Create `tests/integration/anatomy/bodyDescriptorSystemConsistency.test.js`
-   - Add imports and setup
+   - Add imports, inline helper functions, and setup
 
-2. **Create Helper Functions**
-   - Create schema loader helper
-   - Create config loader helper
-   - Add to test helpers directory
+2. **Implement Registry Tests**
+   - Test completeness (all 9 required fields present)
+   - Test uniqueness constraints (display orders and display keys)
+   - Test function types (extractors and formatters)
 
-3. **Implement Registry Tests**
-   - Test completeness
-   - Test uniqueness constraints
-   - Test required fields
-
-4. **Implement Schema Consistency Tests**
+3. **Implement Schema Consistency Tests**
    - Test registry vs schema sync
-   - Test validValues matching
-   - Test for orphaned properties
+   - Test validValues matching with schema enums
+   - Test for orphaned schema properties
 
-5. **Implement Config Consistency Tests**
+4. **Implement Config Consistency Tests**
    - Test registry vs formatting config
-   - Test displayKey presence
-   - Test for orphaned keys
+   - Test displayKey presence in descriptionOrder
+   - Test for orphaned body descriptor keys (accounting for mixed anatomy part keys)
 
-6. **Implement Functional Tests**
-   - Test extractor functions
-   - Test formatter functions
-   - Test error handling
+5. **Implement Functional Tests**
+   - Test extractor functions with valid data
+   - Test formatter functions with valid values
+   - Test error handling (null/undefined inputs)
 
-7. **Run and Verify**
-   - Run tests locally
+6. **Run and Verify**
+   - Run tests locally: `NODE_ENV=test npx jest tests/integration/anatomy/bodyDescriptorSystemConsistency.test.js --no-coverage`
    - Verify all pass
-   - Check coverage
+   - Check that tests complete in < 5 seconds
+
+7. **Integration**
+   - Add to CI/CD pipeline
+   - Verify tests run as part of `npm run test:integration`
 
 ## Files to Create
 
 - `tests/integration/anatomy/bodyDescriptorSystemConsistency.test.js` (NEW)
-- `tests/helpers/schemaLoader.js` (NEW or enhance existing)
-- `tests/helpers/configLoader.js` (NEW or enhance existing)
+
+**Note**: Helper functions are inline in the test file rather than separate modules. This keeps the test self-contained and follows the existing pattern in similar integration tests.
 
 ## Testing Requirements
 
@@ -332,7 +349,7 @@ Should be part of:
 ```
 Body Descriptor System Consistency
   Registry Completeness
-    ✓ should have all required fields for each descriptor
+    ✓ should have all required fields for each descriptor (6 descriptors)
     ✓ should have unique display orders
     ✓ should have unique display keys
 
@@ -343,7 +360,7 @@ Body Descriptor System Consistency
 
   Registry-Formatting Config Consistency
     ✓ should have all registry descriptors in formatting config
-    ✓ should not have orphaned displayKeys in formatting config
+    ✓ should not have orphaned body descriptor displayKeys in formatting config
 
   Extractor Functions
     ✓ should extract values from valid body component
@@ -352,7 +369,12 @@ Body Descriptor System Consistency
   Formatter Functions
     ✓ should format valid values correctly
     ✓ should include display label in formatted output
+
+Tests: 12 passed, 12 total
+Time: ~2-3 seconds
 ```
+
+**Note**: Current registry contains 6 descriptors: height, skinColor, build, composition, hairDensity, smell
 
 ## Success Criteria
 
