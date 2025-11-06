@@ -11,7 +11,7 @@
     "spinnerets": {
       "partType": "spinneret",
       "tags": [
-        "anatomy:part",
+        "anatomy:part"
       ],
       "properties": {
         "descriptors:texture": {
