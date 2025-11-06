@@ -94,6 +94,7 @@
     "validate:cross-refs": "node scripts/validateMods.js --no-dependencies",
     "validate:critical": "node scripts/validateMods.js --severity critical",
     "validate:ci": "node scripts/validateMods.js --strict --format junit --output test-results.xml",
+    "validate:body-descriptors": "node scripts/validate-body-descriptors.js",
     "update-manifest": "node scripts/updateManifest.js",
     "update-manifest:validate": "node scripts/updateManifest.js --validate-references",
     "update-manifest:strict": "node scripts/updateManifest.js --validate-references --fail-on-violations",
