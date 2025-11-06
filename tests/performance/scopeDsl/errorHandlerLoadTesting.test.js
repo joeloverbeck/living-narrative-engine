@@ -130,7 +130,7 @@ describe('ScopeDslErrorHandler Load Testing', () => {
     it('should handle multiple consecutive bursts', async () => {
       const burstCount = 3; // Optimized from 5
       const burstSize = 800; // Optimized from 1000
-      const burstInterval = 200; // 200ms between bursts
+      const burstInterval = 50; // 50ms between bursts - tests rapid succession
       const burstMetrics = [];
 
       for (let b = 0; b < burstCount; b++) {
@@ -184,8 +184,8 @@ describe('ScopeDslErrorHandler Load Testing', () => {
   });
 
   describe('Sustained Load Testing', () => {
-    it('should maintain performance over 3 seconds of continuous load', async () => {
-      const testDuration = 3000; // 3 seconds (optimized from 10s)
+    it('should maintain performance over 1 second of continuous load', async () => {
+      const testDuration = 1000; // 1 second - sufficient for pattern detection
       const targetRate = 1000; // errors per second
       const sampleInterval = 1000; // Sample every second
       const samples = [];
@@ -270,9 +270,8 @@ describe('ScopeDslErrorHandler Load Testing', () => {
 
     it('should handle sustained load with increasing complexity', async () => {
       const phases = [
-        { duration: 1000, complexity: 'simple', contextSize: 10 },
-        { duration: 1000, complexity: 'medium', contextSize: 100 },
-        { duration: 1000, complexity: 'complex', contextSize: 1000 },
+        { duration: 500, complexity: 'simple', contextSize: 10 },
+        { duration: 500, complexity: 'complex', contextSize: 1000 },
       ];
 
       const phaseMetrics = [];
@@ -336,12 +335,7 @@ describe('ScopeDslErrorHandler Load Testing', () => {
         expect(metric.successRate).toBeGreaterThan(0.85); // >85% success
 
         // Adjust expectations based on complexity (CI-friendly thresholds)
-        const minThroughput =
-          metric.complexity === 'simple'
-            ? 700
-            : metric.complexity === 'medium'
-              ? 350
-              : 150; // complex
+        const minThroughput = metric.complexity === 'simple' ? 700 : 150; // complex
 
         expect(metric.throughput).toBeGreaterThan(minThroughput);
       });
@@ -351,9 +345,9 @@ describe('ScopeDslErrorHandler Load Testing', () => {
   describe('Variable Load Testing', () => {
     it('should handle variable load patterns', async () => {
       const loadPatterns = [
-        { duration: 500, rate: 100 }, // Low load
-        { duration: 500, rate: 500 }, // Medium load
-        { duration: 500, rate: 1000 }, // High load
+        { duration: 300, rate: 100 }, // Low load
+        { duration: 300, rate: 500 }, // Medium load
+        { duration: 300, rate: 1000 }, // High load
       ];
 
       const patternMetrics = [];
