@@ -20,6 +20,9 @@
       "music:is_instrument"
     ]
   },
+  "forbidden_components": {
+    "actor": ["positioning:closeness"]
+  },
   "prerequisites": [],
   "template": "stop playing {instrument}",
   "visual": {

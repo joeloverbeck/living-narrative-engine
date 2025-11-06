@@ -21,6 +21,9 @@
       "music:is_instrument"
     ]
   },
+  "forbidden_components": {
+    "actor": ["positioning:closeness"]
+  },
   "prerequisites": [
     {
       "logic": {

@@ -14,6 +14,9 @@
     "actor": ["music:is_musician"],
     "primary": ["items:item", "music:is_instrument"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:closeness"]
+  },
   "prerequisites": [],
   "template": "set triumphant mood on {instrument}",
   "visual": {

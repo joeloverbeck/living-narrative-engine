@@ -11,7 +11,7 @@
     }
   },
   "forbidden_components": {
-    "actor": ["positioning:hugging", "positioning:giving_blowjob"]
+    "actor": ["positioning:hugging", "positioning:giving_blowjob", "positioning:doing_complex_performance"]
   },
   "template": "sucker-punch {target}",
   "visual": {
