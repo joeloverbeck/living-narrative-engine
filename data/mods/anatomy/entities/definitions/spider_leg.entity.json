@@ -4,10 +4,16 @@
   "description": "A segmented spider leg",
   "components": {
     "anatomy:part": {
-      "subType": "leg"
+      "subType": "spider_leg"
     },
     "core:name": {
       "text": "spider leg"
+    },
+    "descriptors:texture": {
+      "texture": "chitinous"
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
     }
   }
 }

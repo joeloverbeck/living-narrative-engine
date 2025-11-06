@@ -4,10 +4,16 @@
   "description": "A spider pedipalp for sensory and manipulation",
   "components": {
     "anatomy:part": {
-      "subType": "pedipalp"
+      "subType": "spider_pedipalp"
     },
     "core:name": {
       "text": "spider pedipalp"
+    },
+    "descriptors:texture": {
+      "texture": "chitinous"
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
     }
   }
 }
