@@ -28,6 +28,7 @@ const GLOBAL_KEYS = [
   '__DEBUG_LOG_SILENT__',
   '__NODE_ENV__',
   'jest',
+  'require',
 ];
 
 function snapshotGlobals() {
@@ -358,5 +359,114 @@ describe('environmentUtils additional coverage', () => {
         'PROXY_USE_HTTPS',
       ])
     );
+  });
+
+  it('falls back to the provided heap limit when process becomes unavailable mid-calculation', async () => {
+    await jest.isolateModulesAsync(async () => {
+      const originalProcess = globalThis.process;
+
+      try {
+        delete globalThis.performance;
+        globalThis.process = {
+          versions: { node: '20.0.0' },
+          memoryUsage: jest.fn(() => {
+            globalThis.process = null;
+            return {
+              heapUsed: 512,
+              heapTotal: 1024,
+              external: 128,
+            };
+          }),
+        };
+
+        const mod = await import('../../../src/utils/environmentUtils.js');
+        const usage = mod.getMemoryUsage();
+
+        expect(usage).toEqual(
+          expect.objectContaining({
+            heapUsed: 512,
+            heapTotal: 1024,
+            external: 128,
+            heapLimit: 1024,
+          })
+        );
+      } finally {
+        globalThis.process = originalProcess;
+      }
+    });
+  });
+
+  it('skips loading the v8 module when the node version flag disappears', async () => {
+    await jest.isolateModulesAsync(async () => {
+      delete globalThis.performance;
+
+      const originalProcess = globalThis.process;
+      const originalRequire = globalThis.require;
+
+      try {
+        globalThis.require = jest.fn(() => {
+          throw new Error('v8 should not be required when node flag is missing');
+        });
+
+        globalThis.process = {
+          versions: { node: '20.0.0' },
+          memoryUsage: jest.fn(() => {
+            delete globalThis.process.versions.node;
+            return {
+              heapUsed: 256,
+              heapTotal: 768,
+              external: 64,
+            };
+          }),
+        };
+
+        const mod = await import('../../../src/utils/environmentUtils.js');
+        const usage = mod.getMemoryUsage();
+
+        expect(globalThis.require).not.toHaveBeenCalled();
+        expect(usage.heapLimit).toBe(768);
+      } finally {
+        globalThis.process = originalProcess;
+        globalThis.require = originalRequire;
+      }
+    });
+  });
+
+  it('falls back gracefully when the v8 module throws during resolution', async () => {
+    await jest.isolateModulesAsync(async () => {
+      delete globalThis.performance;
+
+      const originalProcess = globalThis.process;
+
+      try {
+        globalThis.process = {
+          versions: { node: '20.0.0' },
+          memoryUsage: jest.fn(() => ({
+            heapUsed: 100,
+            heapTotal: 500,
+            external: 0,
+          })),
+        };
+
+        jest.doMock('v8', () => {
+          throw new Error('no v8 available');
+        });
+
+        const mod = await import('../../../src/utils/environmentUtils.js');
+        const usage = mod.getMemoryUsage();
+
+        expect(usage).toEqual(
+          expect.objectContaining({
+            heapUsed: 100,
+            heapTotal: 500,
+            heapLimit: 500,
+          })
+        );
+      } finally {
+        globalThis.process = originalProcess;
+        jest.resetModules();
+        jest.dontMock('v8');
+      }
+    });
   });
 });
