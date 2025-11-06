@@ -13,7 +13,7 @@
         "socketPattern": {
           "idTemplate": "leg_{{index}}",
           "orientationScheme": "indexed",
-          "allowedTypes": ["leg", "arachnid_leg"],
+          "allowedTypes": ["leg"],
           "nameTpl": "leg {{index}}"
         }
       }
@@ -26,7 +26,7 @@
         "socketPattern": {
           "idTemplate": "pedipalp_{{index}}",
           "orientationScheme": "indexed",
-          "allowedTypes": ["pedipalp", "arachnid_pedipalp"],
+          "allowedTypes": ["pedipalp"],
           "nameTpl": "pedipalp {{index}}"
         }
       },
@@ -36,7 +36,7 @@
         "attachment": "posterior",
         "socketPattern": {
           "idTemplate": "posterior_abdomen",
-          "allowedTypes": ["abdomen", "arachnid_abdomen"],
+          "allowedTypes": ["abdomen"],
           "nameTpl": "abdomen"
         }
       }

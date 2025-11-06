@@ -108,25 +108,12 @@ export class AnatomyCacheCoordinator {
       }
     }
 
-    // Skip monitoring event dispatch during batch mode to prevent recursion
-    // The anatomy:cache_invalidated event is only used for monitoring/debugging,
-    // and dispatching it from within event handlers during batch operations
-    // causes unnecessary recursion depth accumulation
-    if (
-      typeof this.#eventBus.isBatchModeEnabled === 'function' &&
-      this.#eventBus.isBatchModeEnabled()
-    ) {
-      this.#logger.debug(
-        `Skipping anatomy:cache_invalidated event dispatch during batch mode for entity ${entityId}`
-      );
-      return;
-    }
-
-    // Publish event for monitoring (only when not in batch mode)
-    this.#eventBus.dispatch('anatomy:cache_invalidated', {
-      entityId,
-      cacheCount: invalidatedCount,
-    });
+    // Log cache invalidation for monitoring/debugging
+    // Previously dispatched anatomy:cache_invalidated event, but this caused
+    // infinite recursion loops with no subscribers. Replaced with direct logging.
+    this.#logger.debug(
+      `Invalidated ${invalidatedCount} anatomy cache(s) for entity ${entityId}`
+    );
   }
 
   /**

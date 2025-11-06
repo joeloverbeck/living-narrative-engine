@@ -598,7 +598,9 @@
       "Bash(tests/common/mods/sex/pullHeadToClothedCrotchFixtures.js)",
       "Bash(do node -e \"JSON.parse(require(''fs'').readFileSync(''$file''))\")",
       "Bash(NODE_ENV=test npm run test:e2e:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "mcp__morphllm-fast-apply__list_allowed_directories",
+      "mcp__morphllm-fast-apply__directory_tree"
     ],
     "deny": [],
     "ask": []
