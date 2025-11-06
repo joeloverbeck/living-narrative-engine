@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "music:play_drone_on_instrument",
+  "name": "Play Drone on Instrument",
+  "description": "Hold a sustained, continuous tone (drone) on the instrument you are currently playing. This technique works best with contemplative, atmospheric, or solemn moods.",
+  "targets": {
+    "primary": {
+      "scope": "music:instrument_actor_is_playing",
+      "placeholder": "instrument",
+      "description": "The instrument you are currently playing"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "music:is_musician",
+      "music:playing_music",
+      "music:performance_mood"
+    ],
+    "primary": [
+      "items:item",
+      "music:is_instrument"
+    ]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "in": [
+          {
+            "var": "actor.components.music:performance_mood.mood"
+          },
+          ["eerie", "solemn", "meditative", "mournful"]
+        ]
+      },
+      "failure_message": "Sustained drones don't work well with your current performance mood. Try a mood that's more contemplative, atmospheric, or solemn."
+    }
+  ],
+  "template": "play drone on {instrument}",
+  "visual": {
+    "backgroundColor": "#1a2332",
+    "textColor": "#d1d5db",
+    "hoverBackgroundColor": "#2d3748",
+    "hoverTextColor": "#f3f4f6"
+  }
+}
