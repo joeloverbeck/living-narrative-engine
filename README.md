@@ -707,6 +707,75 @@ describe('positioning:sit_down', () => {
 });
 ```
 
+## Developer Validation Tools
+
+### Body Descriptor Validation
+
+The body descriptor validation tool ensures consistency across the anatomy system. It validates that all body descriptors are properly configured in the registry, formatting configuration, and recipe files.
+
+**Run validation:**
+
+```bash
+npm run validate:body-descriptors
+```
+
+**What it checks:**
+
+- **Registry Completeness**: Verifies all descriptors are registered
+- **Formatting Configuration**: Ensures all registered descriptors appear in `descriptionOrder`
+- **Recipe Validation**: Validates body descriptors in anatomy recipes against allowed values
+- **System Consistency**: Checks for missing or invalid descriptor values
+
+**Exit Codes:**
+
+- `0` - Validation passed (all checks successful)
+- `1` - Validation failed (errors found that need fixing)
+
+**Example Output:**
+
+```
+🔍 Body Descriptor System Validation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Checking Registry...
+   Found 6 registered descriptors
+   height, skinColor, build, composition, hairDensity, smell
+
+📄 Validating Formatting Configuration...
+   ✅ Formatting configuration is valid
+
+🧬 Validating Anatomy Recipes...
+   ✅ human_male.recipe.json
+   ✅ human_female.recipe.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Validation Passed
+Body descriptor system is consistent.
+```
+
+**CI/CD Integration:**
+
+This tool can be integrated into your CI/CD pipeline to automatically validate body descriptors before deployment:
+
+```yaml
+- name: Validate Body Descriptors
+  run: npm run validate:body-descriptors
+```
+
+**When to use:**
+
+- Before committing changes to anatomy recipes or descriptors
+- As part of pre-push hooks
+- In CI/CD pipelines for automated validation
+- When debugging body descriptor issues
+
+**Related Files:**
+
+- Script: `scripts/validate-body-descriptors.js`
+- Registry: `src/anatomy/registries/bodyDescriptorRegistry.js`
+- Validator: `src/anatomy/validators/bodyDescriptorValidator.js`
+- Config: `data/mods/anatomy/anatomy-formatting/default.json`
+- Recipes: `data/mods/anatomy/recipes/*.recipe.json`
+
 ## 🎨 Visual Customization
 
 Actions can now be visually customized with custom colors! Modders can specify:
