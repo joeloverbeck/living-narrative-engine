@@ -6,7 +6,7 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:hugging"]
+    "actor": ["positioning:hugging", "positioning:doing_complex_performance"]
   },
   "template": "draw attention to your breasts",
   "prerequisites": [
