@@ -6,6 +6,28 @@
 **Estimated Effort**: 1 day
 **Dependencies**: BODDESROB-001, BODDESROB-002, BODDESROB-003, BODDESROB-007
 
+## Workflow Validation Summary
+
+**Validated**: 2025-11-06
+
+This workflow has been validated against the actual codebase. Key corrections made:
+
+1. **Corrected File Paths**:
+   - Architecture doc is at `docs/anatomy/architecture.md` (not `docs/architecture/anatomy-system.md`)
+   - Development guide is `anatomy-development-guide.md` (not `anatomy-development.md`)
+
+2. **Identified Existing Documentation**:
+   - `docs/migration/body-descriptor-migration.md` already exists (comprehensive migration guide)
+   - `docs/development/body-descriptors-technical.md` already exists (technical details)
+   - `docs/development/anatomy-development-guide.md` already exists (general guide)
+   - `docs/anatomy/architecture.md` already exists (architecture overview)
+
+3. **Corrected Approach**: Changed from "create from scratch" to "enhance existing and create registry-specific" documentation
+
+4. **Added Implementation Details**: Documented actual registry exports, methods, descriptor count (6), and display orders (10-60, next: 70)
+
+5. **Clarified Locations**: Added complete file paths for registry, validator, schema, config, tests, and CLI tool
+
 ## Overview
 
 Update all project documentation to reflect the new body descriptor registry architecture. This includes technical documentation, developer guides, architecture docs, and user-facing documentation.
@@ -13,13 +35,19 @@ Update all project documentation to reflect the new body descriptor registry arc
 ## Problem Context
 
 After implementing the registry system, documentation needs to be updated to:
-- Explain the new architecture
-- Guide developers on adding new descriptors
+- Explain the new registry architecture
+- Guide developers on adding new descriptors using the registry
 - Document validation tools and processes
 - Update CLAUDE.md with architectural changes
 - Provide examples and best practices
 
-Outdated documentation leads to confusion and incorrect usage patterns.
+**Important Note**: Substantial documentation already exists for the body descriptor system:
+- `docs/migration/body-descriptor-migration.md` - Comprehensive migration guide
+- `docs/development/body-descriptors-technical.md` - Technical implementation details
+- `docs/development/anatomy-development-guide.md` - General anatomy development guide
+- `docs/anatomy/architecture.md` - Anatomy system architecture
+
+This ticket focuses on **enhancing existing documentation** and creating **registry-specific** documentation to complement what's already in place. The goal is to integrate registry concepts throughout the documentation ecosystem rather than creating entirely new documentation from scratch.
 
 ## Acceptance Criteria
 
@@ -39,23 +67,23 @@ Outdated documentation leads to confusion and incorrect usage patterns.
 ### Documentation Files to Create/Update
 
 1. **Architecture Documentation**
-   - Create: `docs/anatomy/body-descriptor-registry.md`
-   - Update: `docs/architecture/anatomy-system.md`
+   - Create: `docs/anatomy/body-descriptor-registry.md` (NEW - central registry documentation)
+   - Update: `docs/anatomy/architecture.md` (EXISTS - update with registry architecture)
 
 2. **Developer Guides**
-   - Create: `docs/guides/adding-body-descriptors.md`
-   - Update: `docs/development/anatomy-development.md`
+   - Create: `docs/anatomy/adding-body-descriptors.md` (NEW - step-by-step guide)
+   - Update: `docs/development/anatomy-development-guide.md` (EXISTS - update development workflow)
+   - Update: `docs/development/body-descriptors-technical.md` (EXISTS - enhance registry coverage)
 
 3. **Technical Reference**
-   - Create: `docs/reference/body-descriptor-validator.md`
-   - Update: `docs/reference/anatomy-api.md`
+   - Create: `docs/anatomy/body-descriptor-validator-reference.md` (NEW - validator API reference)
 
 4. **Project Documentation**
    - Update: `README.md` (add validation tool)
    - Update: `CLAUDE.md` (architecture section)
 
 5. **Migration Documentation**
-   - Create: `docs/migration/body-descriptor-registry-migration.md`
+   - Update: `docs/migration/body-descriptor-migration.md` (EXISTS - enhance with registry-specific guidance)
 
 ### Content Structure
 
@@ -85,7 +113,12 @@ Each descriptor in the registry contains:
 
 ### Location
 
-Registry: `src/anatomy/registries/bodyDescriptorRegistry.js`
+- **Registry**: `src/anatomy/registries/bodyDescriptorRegistry.js`
+- **Validator**: `src/anatomy/validators/bodyDescriptorValidator.js`
+- **Validation Script**: `scripts/validate-body-descriptors.js`
+- **JSON Schema**: `data/schemas/anatomy.recipe.schema.json` (lines 135-198)
+- **Formatting Config**: `data/mods/anatomy/anatomy-formatting/default.json`
+- **Tests**: `tests/unit/anatomy/registries/bodyDescriptorRegistry.test.js`
 
 ## Usage
 
@@ -179,12 +212,16 @@ Common issues:
 
 ## See Also
 
-- [Body Descriptor Validator](./body-descriptor-validator.md)
-- [Adding Body Descriptors Guide](../guides/adding-body-descriptors.md)
-- [Anatomy System Architecture](../architecture/anatomy-system.md)
+- [Body Descriptor Validator Reference](./body-descriptor-validator-reference.md)
+- [Adding Body Descriptors Guide](./adding-body-descriptors.md)
+- [Anatomy System Architecture](./architecture.md)
+- [Body Descriptors Technical Guide](../development/body-descriptors-technical.md)
+- [Body Descriptor Migration Guide](../migration/body-descriptor-migration.md)
 ```
 
 #### Developer Guide: Adding Body Descriptors
+
+Location: `docs/anatomy/adding-body-descriptors.md` (NEW)
 
 ```markdown
 # Guide: Adding Body Descriptors
@@ -212,7 +249,7 @@ yourDescriptor: {
   displayKey: 'your_descriptor',
   dataPath: 'body.descriptors.yourDescriptor',
   validValues: ['value1', 'value2', 'value3'],
-  displayOrder: 80, // Choose next available number
+  displayOrder: 70, // Next available: 70 (after smell at 60)
   extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.yourDescriptor,
   formatter: (value) => `Your Descriptor: ${value}`,
   required: false,
@@ -221,9 +258,9 @@ yourDescriptor: {
 
 ### 2. Update JSON Schema
 
-File: `data/schemas/anatomy.recipe.schema.json`
+File: `data/schemas/anatomy.recipe.schema.json` (lines 135-198)
 
-Add property to `bodyDescriptors`:
+Add property to `bodyDescriptors` object:
 
 ```json
 {
@@ -238,6 +275,8 @@ Add property to `bodyDescriptors`:
   }
 }
 ```
+
+**Note**: The schema property name should match the `schemaProperty` field in the registry.
 
 ### 3. Update Formatting Configuration
 
@@ -333,16 +372,17 @@ Complete example of adding a posture descriptor...
 ### Implementation Steps
 
 1. **Create New Documentation**
-   - Write body descriptor registry documentation
-   - Write developer guide for adding descriptors
-   - Write technical reference for validator
-   - Write migration guide
+   - Write body descriptor registry documentation (`docs/anatomy/body-descriptor-registry.md`)
+   - Write developer guide for adding descriptors (`docs/anatomy/adding-body-descriptors.md`)
+   - Write validator API reference (`docs/anatomy/body-descriptor-validator-reference.md`)
 
 2. **Update Existing Documentation**
    - Update README.md with validation tool
    - Update CLAUDE.md with registry architecture
-   - Update anatomy system documentation
-   - Update API reference
+   - Update anatomy architecture documentation (`docs/anatomy/architecture.md`)
+   - Update development guide (`docs/development/anatomy-development-guide.md`)
+   - Enhance technical guide (`docs/development/body-descriptors-technical.md`)
+   - Enhance migration guide (`docs/migration/body-descriptor-migration.md`)
 
 3. **Add Examples**
    - Complete code examples
@@ -357,29 +397,41 @@ Complete example of adding a posture descriptor...
 
 ## Files to Create
 
-- `docs/anatomy/body-descriptor-registry.md` (NEW)
-- `docs/guides/adding-body-descriptors.md` (NEW)
-- `docs/reference/body-descriptor-validator.md` (NEW)
-- `docs/migration/body-descriptor-registry-migration.md` (NEW)
+- `docs/anatomy/body-descriptor-registry.md` (NEW - central registry documentation)
+- `docs/anatomy/adding-body-descriptors.md` (NEW - step-by-step developer guide)
+- `docs/anatomy/body-descriptor-validator-reference.md` (NEW - validator API reference)
 
 ## Files to Update
 
-- `README.md` (MODIFY)
+- `README.md` (EXISTS)
   - Add validation tool section
-  - Update architecture overview
+  - Update architecture overview with registry
 
-- `CLAUDE.md` (MODIFY)
+- `CLAUDE.md` (EXISTS)
   - Update anatomy system section
   - Add registry pattern to architecture
   - Update development workflow
+  - Add validation commands
 
-- `docs/architecture/anatomy-system.md` (MODIFY if exists)
-  - Add registry architecture
+- `docs/anatomy/architecture.md` (EXISTS)
+  - Add registry architecture section
   - Update data flow diagrams
+  - Document registry integration points
 
-- `docs/development/anatomy-development.md` (MODIFY if exists)
-  - Update development workflow
+- `docs/development/anatomy-development-guide.md` (EXISTS)
+  - Update development workflow with registry
   - Add registry usage patterns
+  - Include validation tool in workflow
+
+- `docs/development/body-descriptors-technical.md` (EXISTS)
+  - Enhance with registry implementation details
+  - Document registry-based validation
+  - Update code examples to use registry
+
+- `docs/migration/body-descriptor-migration.md` (EXISTS)
+  - Add registry-specific migration notes
+  - Document validation tool usage
+  - Include registry-based best practices
 
 ## Success Criteria
 
@@ -394,36 +446,39 @@ Complete example of adding a posture descriptor...
 
 ## Content Checklist
 
-### Body Descriptor Registry Doc
+### Body Descriptor Registry Doc (NEW)
 - [ ] Overview and purpose
 - [ ] Architecture explanation
 - [ ] Registry structure documentation
 - [ ] Usage examples
-- [ ] API reference
+- [ ] API reference (getDescriptorMetadata, getAllDescriptorNames, etc.)
 - [ ] Validation documentation
 - [ ] Best practices
 - [ ] Troubleshooting
 
-### Developer Guide
+### Developer Guide (NEW)
 - [ ] Step-by-step process
 - [ ] Prerequisites
-- [ ] Code examples
+- [ ] Code examples for all 3 files (registry, schema, config)
 - [ ] Verification checklist
 - [ ] Common issues and solutions
-- [ ] Complete example
+- [ ] Complete example with displayOrder values
 
-### README.md Updates
-- [ ] Add validation tool section
-- [ ] Update quick start if needed
-- [ ] Add registry overview
-- [ ] Update architecture section
+### Validator Reference (NEW)
+- [ ] BodyDescriptorValidator API
+- [ ] validateRecipeDescriptors() method
+- [ ] validateFormattingConfig() method
+- [ ] Validation result structure
+- [ ] CLI tool usage (`npm run validate:body-descriptors`)
+- [ ] Integration with CI/CD
 
-### CLAUDE.md Updates
-- [ ] Update anatomy system section
-- [ ] Add registry pattern
-- [ ] Update file structure
-- [ ] Update development workflow
-- [ ] Add validation commands
+### Existing Doc Enhancements
+- [ ] README.md: Add validation tool section
+- [ ] CLAUDE.md: Add registry pattern to architecture section
+- [ ] `docs/anatomy/architecture.md`: Add registry architecture
+- [ ] `docs/development/anatomy-development-guide.md`: Add registry workflow
+- [ ] `docs/development/body-descriptors-technical.md`: Add registry implementation
+- [ ] `docs/migration/body-descriptor-migration.md`: Add registry usage patterns
 
 ## Related Tickets
 
@@ -459,3 +514,16 @@ Complete example of adding a posture descriptor...
 - Keep docs in sync with code
 - Version documentation if needed
 - Consider adding diagrams for complex concepts
+
+## Existing Implementation Details
+
+The following components are already implemented and should be accurately documented:
+
+- **Registry Exports**: `BODY_DESCRIPTOR_REGISTRY`, `getDescriptorMetadata()`, `getAllDescriptorNames()`, `getDescriptorsByDisplayOrder()`, `validateDescriptorValue()`
+- **Registry Properties**: Each descriptor has 9 properties: schemaProperty, displayLabel, displayKey, dataPath, validValues, displayOrder, extractor, formatter, required
+- **Current Descriptors**: height, skinColor, build, composition, hairDensity, smell (6 total)
+- **Display Orders**: Currently used: 10, 20, 30, 40, 50, 60 (next available: 70)
+- **Validator Class**: `BodyDescriptorValidator` in `src/anatomy/validators/bodyDescriptorValidator.js`
+- **Validation Methods**: `validateRecipeDescriptors()`, `validateFormattingConfig()`
+- **CLI Tool**: `scripts/validate-body-descriptors.js` with npm script `validate:body-descriptors`
+- **Test Coverage**: Comprehensive unit tests at `tests/unit/anatomy/registries/bodyDescriptorRegistry.test.js`
