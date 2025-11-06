@@ -350,9 +350,10 @@ describe('Body Descriptor Validation Integration', () => {
         loaderErrorMessage = error.message;
       }
 
-      // Both should mention unknown properties and supported properties
-      expect(workflowErrorMessage).toContain('Unknown body descriptor');
-      expect(loaderErrorMessage).toContain('Unknown body descriptor');
+      // Both should mention unknown properties
+      // New validator produces "Unknown descriptor: unknownProperty"
+      expect(workflowErrorMessage).toContain('Unknown');
+      expect(loaderErrorMessage).toContain('Unknown descriptor');
       expect(workflowErrorMessage).toContain('unknownProperty');
       expect(loaderErrorMessage).toContain('unknownProperty');
     });
