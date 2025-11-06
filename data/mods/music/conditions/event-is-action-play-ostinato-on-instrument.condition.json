@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "music:event-is-action-play-ostinato-on-instrument",
+  "description": "Evaluates to true when the event is an attempt to play an ostinato on an instrument",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "music:play_ostinato_on_instrument"
+    ]
+  }
+}
