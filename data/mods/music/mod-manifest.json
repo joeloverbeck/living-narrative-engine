@@ -36,7 +36,8 @@
       "set_tender_mood_on_instrument.action.json",
       "set_tense_mood_on_instrument.action.json",
       "set_triumphant_mood_on_instrument.action.json",
-      "stop_playing_instrument.action.json"
+      "stop_playing_instrument.action.json",
+      "swell_music_on_instrument.action.json"
     ],
     "rules": [
       "handle_play_ostinato_on_instrument.rule.json",
@@ -51,7 +52,8 @@
       "handle_set_tender_mood_on_instrument.rule.json",
       "handle_set_tense_mood_on_instrument.rule.json",
       "handle_set_triumphant_mood_on_instrument.rule.json",
-      "handle_stop_playing_instrument.rule.json"
+      "handle_stop_playing_instrument.rule.json",
+      "handle_swell_music_on_instrument.rule.json"
     ],
     "conditions": [
       "event-is-action-play-ostinato-on-instrument.condition.json",
@@ -66,7 +68,8 @@
       "event-is-action-set-tender-mood-on-instrument.condition.json",
       "event-is-action-set-tense-mood-on-instrument.condition.json",
       "event-is-action-set-triumphant-mood-on-instrument.condition.json",
-      "event-is-action-stop-playing-instrument.condition.json"
+      "event-is-action-stop-playing-instrument.condition.json",
+      "event-is-action-swell-music-on-instrument.condition.json"
     ],
     "scopes": [
       "instrument_actor_is_playing.scope"
