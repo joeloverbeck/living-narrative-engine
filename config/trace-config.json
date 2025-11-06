@@ -2,10 +2,9 @@
   "$schema": "../data/schemas/trace-config.schema.json",
   "traceAnalysisEnabled": false,
   "actionTracing": {
-    "enabled": true,
+    "enabled": false,
     "tracedActions": [
-      "positioning:straddle_waist_facing_away",
-      "positioning:straddle_waist_facing"
+      "music:play_phrase_on_instrument"
     ],
     "outputDirectory": "./traces/straddling",
     "verbosity": "verbose",
