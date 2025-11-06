@@ -48,7 +48,7 @@
       "properties": {}
     },
     {
-      "matchesGroup": "appendage:abdomen",
+      "matchesGroup": "appendage:torso",
       "partType": "spider_abdomen",
       "tags": [
         "anatomy:part"

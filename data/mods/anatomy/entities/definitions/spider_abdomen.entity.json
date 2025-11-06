@@ -4,7 +4,7 @@
   "description": "The bulbous abdomen of a spider",
   "components": {
     "anatomy:part": {
-      "subType": "abdomen"
+      "subType": "torso"
     },
     "core:name": {
       "text": "spider abdomen"

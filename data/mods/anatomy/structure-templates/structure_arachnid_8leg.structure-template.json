@@ -31,13 +31,13 @@
         }
       },
       {
-        "type": "abdomen",
+        "type": "torso",
         "count": 1,
         "attachment": "posterior",
         "socketPattern": {
-          "idTemplate": "posterior_abdomen",
-          "allowedTypes": ["abdomen"],
-          "nameTpl": "abdomen"
+          "idTemplate": "posterior_torso",
+          "allowedTypes": ["torso"],
+          "nameTpl": "torso"
         }
       }
     ]

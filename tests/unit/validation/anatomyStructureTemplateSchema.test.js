@@ -202,12 +202,12 @@ describe('Anatomy Structure Template Schema - Valid Templates', () => {
         ],
         appendages: [
           {
-            type: 'abdomen',
+            type: 'torso',
             count: 1,
             attachment: 'posterior',
             socketPattern: {
               idTemplate: 'posterior_abdomen',
-              allowedTypes: ['abdomen'],
+              allowedTypes: ['torso'],
             },
           },
         ],
