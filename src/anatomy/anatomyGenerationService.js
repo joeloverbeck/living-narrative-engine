@@ -126,9 +126,10 @@ export class AnatomyGenerationService {
 
       if (!checkResult.needsGeneration) {
         if (checkResult.reason === 'Entity not found') {
-          this.#logger.warn(
+          this.#logger.error(
             `AnatomyGenerationService: Entity '${entityId}' not found`
           );
+          throw new InvalidArgumentError(`Entity '${entityId}' not found`);
         } else if (
           checkResult.reason === 'anatomy:body component has no recipeId'
         ) {

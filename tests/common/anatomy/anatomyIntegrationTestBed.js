@@ -782,6 +782,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
               type: 'string',
               enum: ['left', 'right', 'mid', 'upper', 'lower', 'front', 'back'],
             },
+            parentEntity: { type: 'string' },
           },
           required: ['subType'],
           additionalProperties: false,
@@ -2281,6 +2282,57 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
             matches: ['left_foot', 'right_foot'],
             partType: 'foot',
             preferId: 'anatomy:human_foot',
+          },
+        ],
+      },
+      'anatomy:human_male': {
+        recipeId: 'anatomy:human_male',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:human_male_torso',
+          },
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:humanoid_head',
+          },
+        },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg',
+          },
+          {
+            matches: ['left_hand', 'right_hand'],
+            partType: 'hand',
+            preferId: 'anatomy:human_hand',
+          },
+          {
+            matches: ['left_foot', 'right_foot'],
+            partType: 'foot',
+            preferId: 'anatomy:human_foot',
+          },
+          {
+            matches: ['penis'],
+            partType: 'penis',
+            preferId: 'anatomy:human_penis',
+          },
+          {
+            matches: ['left_testicle', 'right_testicle'],
+            partType: 'testicle',
+            preferId: 'anatomy:human_testicle',
+          },
+          {
+            matches: ['pubic_hair'],
+            partType: 'pubic_hair',
+            preferId: 'anatomy:human_pubic_hair',
           },
         ],
       },
