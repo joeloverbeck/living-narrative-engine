@@ -46,8 +46,6 @@
     ],
     "rules": [
       "handle_apply_lipstick.rule.json",
-      "handle_drink_entirely.rule.json",
-      "handle_drink_from.rule.json",
       "handle_drop_item.rule.json",
       "handle_examine_item.rule.json",
       "handle_give_item.rule.json",
