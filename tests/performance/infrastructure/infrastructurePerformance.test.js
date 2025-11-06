@@ -194,6 +194,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
       // Create a minimal mock dataRegistry for the test
       const mockDataRegistry = {
         getComponentDefinition: jest.fn().mockReturnValue(null),
+        get: jest.fn().mockReturnValue(undefined),
       };
 
       const stats = await performanceTest(
@@ -231,6 +232,7 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
       // Create a minimal mock dataRegistry for the test
       const mockDataRegistry = {
         getComponentDefinition: jest.fn().mockReturnValue(null),
+        get: jest.fn().mockReturnValue(undefined),
       };
 
       const stats = await performanceTest(
