@@ -1,33 +1,79 @@
-# BODDESROB-005: Integrate Recipe Validation in Anatomy Recipe Loader
+# BODDESROB-005: Migrate AnatomyRecipeLoader to Enhanced Validator
 
 **Status**: TODO
 **Priority**: MEDIUM
 **Phase**: 3 (Integration)
-**Estimated Effort**: 1 day
-**Dependencies**: BODDESROB-001, BODDESROB-002
+**Estimated Effort**: 0.5 days
+**Dependencies**: BODDESROB-001, BODDESROB-002, BODDESROB-004
+
+---
+
+## WORKFLOW VALIDATION SUMMARY
+
+**Validated**: 2025-11-06
+**Validator**: Claude Code Agent
+
+### Key Corrections Made:
+
+1. **Implementation Status**
+   - CORRECTED: Validation IS already implemented (added in BODDESROB-004 commit 2f7df1c)
+   - CORRECTED: Uses WRONG validator (`src/anatomy/utils/bodyDescriptorValidator.js` with static methods)
+   - CORRECTED: Needs MIGRATION to `src/anatomy/validators/bodyDescriptorValidator.js` (instance methods)
+   - This is a REPLACEMENT task, not an integration task
+
+2. **AnatomyRecipeLoader Structure**
+   - CORRECTED: Extends `SimpleItemLoader`, not standalone class
+   - CORRECTED: Constructor takes 6 positional params: `(config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger)`
+   - CORRECTED: Main method is `_processFetchedItem(modId, filename, resolvedPath, data, registryKey)` NOT `loadRecipe()`
+   - CONFIRMED: Validation already called at lines 88-90
+   - CONFIRMED: Method `_validateBodyDescriptors()` exists at lines 235-248
+
+3. **Validator Situation**
+   - CONFIRMED: TWO validators exist
+   - OLD (currently used): `/home/user/living-narrative-engine/src/anatomy/utils/bodyDescriptorValidator.js` (static `validate()`, throws errors)
+   - NEW (target): `/home/user/living-narrative-engine/src/anatomy/validators/bodyDescriptorValidator.js` (instance `validateRecipeDescriptors()`, returns `{ valid, errors, warnings }`)
+   - Task is to migrate from OLD to NEW
+
+4. **Test Files**
+   - CORRECTED: Test file is `tests/unit/loaders/anatomyRecipeLoader.processFetchedItem.test.js` (not generic name)
+   - CONFIRMED: Multiple test files exist for anatomyRecipeLoader
+   - Need to update existing test mocks
+
+5. **Recipe Structure**
+   - CONFIRMED: Recipes DO have `bodyDescriptors` property
+   - CONFIRMED: Structure matches workflow assumptions
+
+All code examples updated to reflect MIGRATION approach and actual codebase structure.
+
+---
 
 ## Overview
 
-Integrate body descriptor validation into the anatomy recipe loading process. This ensures that recipe body descriptors are validated against the registry when recipes are loaded, catching invalid or unknown descriptors early in the data flow.
+Migrate the anatomy recipe loader from the old static validator (`src/anatomy/utils/bodyDescriptorValidator.js`) to the new enhanced validator (`src/anatomy/validators/bodyDescriptorValidator.js`). This enables structured error/warning reporting, environment-specific behavior, and better integration with the centralized registry.
 
 ## Problem Context
 
-Currently, anatomy recipes can contain:
-- Invalid descriptor values (e.g., `height: 'super-mega-tall'` instead of valid enum)
-- Unknown descriptors not defined in registry
-- Malformed descriptor data
+Currently, body descriptor validation is implemented in `AnatomyRecipeLoader` (added in BODDESROB-004), but it uses the old validator which:
+- Uses static methods that throw errors immediately
+- Cannot collect multiple errors and warnings
+- Lacks environment-specific behavior (dev vs production)
+- Does not provide structured validation results
+- Prevents implementing sophisticated error reporting
 
-These issues are only discovered when:
-- Descriptions are generated (runtime)
-- Integration tests run (if covered)
-- Users report missing/incorrect descriptions
+The new validator from BODDESROB-002 provides:
+- Structured results: `{ valid, errors, warnings }`
+- Ability to collect multiple issues
+- Integration with centralized registry
+- Better error messages with suggestions
+- Support for warnings (unknown descriptors)
 
-Recipe validation will catch these issues during recipe loading, providing immediate feedback.
+This migration will enable proper error collection, warnings for unknown descriptors, and environment-aware behavior.
 
 ## Acceptance Criteria
 
-- [ ] Validator integrated into anatomy recipe loader
-- [ ] Body descriptor validation runs when recipes are loaded
+- [ ] Import changed from old validator (utils/) to new validator (validators/)
+- [ ] Validator instance creation added (with logger)
+- [ ] `_validateBodyDescriptors()` method replaced to use new validator
 - [ ] Invalid descriptor values are detected and reported
 - [ ] Unknown descriptors trigger warnings
 - [ ] Clear error messages with recipe ID and file path
@@ -35,262 +81,331 @@ Recipe validation will catch these issues during recipe loading, providing immed
 - [ ] Production mode logs warnings and continues
 - [ ] Validation results logged appropriately
 - [ ] Performance impact minimal (< 10ms per recipe)
-- [ ] Integration tests verify validation behavior
+- [ ] Existing tests updated for new validator interface
+- [ ] All tests pass with new validator
 
 ## Technical Details
 
-### Integration Point
+### Migration Point
 
-Modify the anatomy recipe loader to validate body descriptors after loading:
+**IMPORTANT**: AnatomyRecipeLoader extends `SimpleItemLoader` and uses protected fields (not private `#`). The loader already has validation - we're REPLACING the implementation.
 
+**Current Implementation** (lines 235-248):
 ```javascript
-// src/loaders/anatomyRecipeLoader.js (enhanced)
-
-import { BodyDescriptorValidator } from '../anatomy/validators/bodyDescriptorValidator.js';
-
-export class AnatomyRecipeLoader {
-  #logger;
-  #validator;
-
-  constructor({ logger }) {
-    this.#logger = ensureValidLogger(logger, 'AnatomyRecipeLoader');
-    this.#validator = new BodyDescriptorValidator({ logger: this.#logger });
-  }
-
-  /**
-   * Load and validate anatomy recipe
-   */
-  async loadRecipe(recipeId, recipeData, filePath) {
-    // Existing loading logic...
-    const recipe = this.#parseRecipe(recipeData);
-
-    // Validate body descriptors if present
-    if (recipe.bodyDescriptors) {
-      this.#validateBodyDescriptors(recipeId, recipe.bodyDescriptors, filePath);
+// BEFORE: Uses old static validator that throws
+_validateBodyDescriptors(bodyDescriptors, recipeId, filename) {
+  try {
+    BodyDescriptorValidator.validate(  // ❌ Old validator
+      bodyDescriptors,
+      `recipe '${recipeId}' from file '${filename}'`
+    );
+  } catch (error) {
+    if (error instanceof BodyDescriptorValidationError) {
+      throw new ValidationError(error.message);
     }
-
-    return recipe;
-  }
-
-  /**
-   * Validate body descriptors in recipe
-   * @private
-   */
-  #validateBodyDescriptors(recipeId, bodyDescriptors, filePath) {
-    const result = this.#validator.validateRecipeDescriptors(bodyDescriptors);
-
-    // Build context for error messages
-    const context = `Recipe: ${recipeId} (${filePath})`;
-
-    // Log errors
-    for (const error of result.errors) {
-      this.#logger.error(`[Recipe Validation] ${context} - ${error}`);
-    }
-
-    // Log warnings
-    for (const warning of result.warnings) {
-      this.#logger.warn(`[Recipe Validation] ${context} - ${warning}`);
-    }
-
-    // In development mode, fail fast on validation errors
-    if (process.env.NODE_ENV !== 'production' && !result.valid) {
-      throw new Error(
-        `Body descriptor validation failed for ${context}:\n${result.errors.join('\n')}`
-      );
-    }
+    throw error;
   }
 }
 ```
 
+**Target Implementation**:
+```javascript
+// src/loaders/anatomyRecipeLoader.js (line 7 - change import)
+
+// BEFORE:
+// import { BodyDescriptorValidator } from '../anatomy/utils/bodyDescriptorValidator.js';
+// import { BodyDescriptorValidationError } from '../anatomy/errors/bodyDescriptorValidationError.js';
+
+// AFTER:
+import { BodyDescriptorValidator } from '../anatomy/validators/bodyDescriptorValidator.js';
+// BodyDescriptorValidationError import can be removed
+
+// Lines 235-248 - Replace _validateBodyDescriptors method:
+
+/**
+ * Validates body descriptors for proper structure and values
+ *
+ * @param {object} bodyDescriptors - The body descriptors to validate
+ * @param {string} recipeId - The recipe ID for error messages
+ * @param {string} filename - The filename for error messages
+ * @throws {ValidationError} If body descriptors are invalid (dev mode only)
+ * @private
+ */
+_validateBodyDescriptors(bodyDescriptors, recipeId, filename) {
+  // Create validator instance with logger
+  const validator = new BodyDescriptorValidator({ logger: this._logger });
+
+  // Get structured validation results
+  const result = validator.validateRecipeDescriptors(bodyDescriptors);
+
+  // Build context for error messages
+  const context = `Recipe: ${recipeId} (${filename})`;
+
+  // Log all errors
+  for (const error of result.errors) {
+    this._logger.error(`[Recipe Validation] ${context} - ${error}`);
+  }
+
+  // Log all warnings (e.g., unknown descriptors)
+  for (const warning of result.warnings) {
+    this._logger.warn(`[Recipe Validation] ${context} - ${warning}`);
+  }
+
+  // In development mode, fail fast on validation errors
+  if (process.env.NODE_ENV !== 'production' && !result.valid) {
+    throw new ValidationError(
+      `Body descriptor validation failed for ${context}:\n${result.errors.join('\n')}`
+    );
+  }
+
+  // In production mode, log but continue (errors already logged above)
+}
+```
+
+**Key Changes**:
+1. Import from `validators/` instead of `utils/`
+2. Create validator instance (not static call)
+3. Call `validateRecipeDescriptors()` which returns `{ valid, errors, warnings }`
+4. Log ALL errors and warnings (structured iteration)
+5. Add environment-specific behavior (dev fails, prod continues)
+6. Keep ValidationError throw in dev mode for consistency
+
 ### Implementation Steps
 
-1. **Import Validator**
-   - Add BodyDescriptorValidator import to recipe loader
-   - Initialize validator in constructor
+1. **Change Validator Import** (Line 7)
+   - Replace import from `../anatomy/utils/bodyDescriptorValidator.js`
+   - Import from `../anatomy/validators/bodyDescriptorValidator.js`
+   - Remove `BodyDescriptorValidationError` import (no longer needed)
 
-2. **Add Validation Call**
-   - Call validator after recipe parsing
-   - Only validate if bodyDescriptors present
-   - Pass recipe ID and file path for context
+2. **Replace _validateBodyDescriptors Method** (Lines 235-248)
+   - Remove try/catch block (no longer throws immediately)
+   - Create validator instance with logger
+   - Call `validateRecipeDescriptors()` to get structured results
+   - Iterate and log all errors
+   - Iterate and log all warnings
 
-3. **Add Error Handling**
-   - Log validation errors with context
-   - Log warnings for unknown descriptors
-   - Fail fast in development mode
+3. **Add Environment Logic**
+   - Check `process.env.NODE_ENV !== 'production'`
+   - Development: throw ValidationError if `!result.valid`
+   - Production: log warnings, continue loading (no throw)
 
-4. **Environment Logic**
-   - Development: throw on validation errors
-   - Production: log warnings, continue loading
-   - Use NODE_ENV for detection
+4. **Update Test Mocks** (`tests/unit/loaders/anatomyRecipeLoader.processFetchedItem.test.js`)
+   - Change mock path from utils/ to validators/
+   - Change from static mock to instance mock
+   - Mock `validateRecipeDescriptors()` to return `{ valid, errors, warnings }`
+   - Update test expectations for new behavior
 
-5. **Update Tests**
-   - Test valid recipe loading
-   - Test invalid descriptor values
-   - Test unknown descriptors
-   - Test environment-specific behavior
+5. **Test Environment Behavior**
+   - Add/update tests for dev mode (throws on invalid)
+   - Add/update tests for prod mode (doesn't throw)
+   - Test warning logging for unknown descriptors
+   - Test error logging with context
 
 ## Files to Modify
 
-- `src/loaders/anatomyRecipeLoader.js` (MODIFY)
-  - Import BodyDescriptorValidator
-  - Add validation during recipe loading
-  - Add error/warning logging
-  - Add environment-specific behavior
+- `/home/user/living-narrative-engine/src/loaders/anatomyRecipeLoader.js` (MODIFY)
+  - Line 7: Change import from utils/ to validators/
+  - Line 8: Remove BodyDescriptorValidationError import
+  - Lines 235-248: Replace `_validateBodyDescriptors()` method implementation
+  - Add environment-specific behavior (dev vs prod)
+
+- `/home/user/living-narrative-engine/tests/unit/loaders/anatomyRecipeLoader.processFetchedItem.test.js` (MODIFY)
+  - Lines 32-36: Update mock from utils/ to validators/
+  - Change from static mock to instance mock
+  - Update test expectations for new behavior
+  - Add tests for environment-specific behavior
 
 ## Testing Requirements
 
 ### Unit Tests
 
-**File**: Update `tests/unit/loaders/anatomyRecipeLoader.test.js`
+**File**: `/home/user/living-narrative-engine/tests/unit/loaders/anatomyRecipeLoader.processFetchedItem.test.js` (UPDATE EXISTING)
 
-Test cases:
-1. Recipe with valid descriptors loads successfully
-2. Recipe with invalid descriptor values triggers errors
-3. Recipe with unknown descriptors triggers warnings
-4. Validation errors include recipe ID and file path
-5. Development mode fails on invalid descriptors
-6. Production mode logs warnings but continues
-7. Recipes without bodyDescriptors skip validation
+**Changes Required**:
+
+1. **Update Mock** (lines 32-36):
+```javascript
+// BEFORE:
+jest.mock('../../../src/anatomy/utils/bodyDescriptorValidator.js', () => ({
+  BodyDescriptorValidator: { validate: jest.fn() }
+}));
+
+// AFTER:
+jest.mock('../../../src/anatomy/validators/bodyDescriptorValidator.js', () => ({
+  BodyDescriptorValidator: jest.fn().mockImplementation(() => ({
+    validateRecipeDescriptors: jest.fn().mockReturnValue({
+      valid: true,
+      errors: [],
+      warnings: []
+    })
+  }))
+}));
+```
+
+2. **Add/Update Test Cases**:
+- Recipe with valid descriptors loads successfully (UPDATE - check new mock)
+- Recipe with invalid descriptor values triggers errors (UPDATE - new return format)
+- Recipe with unknown descriptors triggers warnings (NEW)
+- Validation errors include recipe ID and filename (UPDATE)
+- Development mode fails on invalid descriptors (NEW)
+- Production mode logs warnings but continues (NEW)
+- Recipes without bodyDescriptors skip validation (EXISTING - should still work)
 
 ### Integration Tests
 
-**File**: `tests/integration/loaders/anatomyRecipeValidation.test.js`
+**File**: `/home/user/living-narrative-engine/tests/integration/loaders/anatomyRecipeLoader.integration.test.js` (UPDATE EXISTING)
 
 Test cases:
-1. Load real anatomy recipes and validate
-2. Create test recipe with invalid descriptors
-3. Verify validation errors are logged
-4. Verify warnings for unknown descriptors
-5. Test complete loading flow with validation
+1. Load real anatomy recipes with validator
+2. Verify warnings for unknown descriptors in test recipes
+3. Test complete loading flow with new validator
+4. Verify environment behavior (if applicable to integration tests)
 
 ### Test Template
 
+**NOTE**: The actual test file uses `_processFetchedItem()` method, not `loadRecipe()`. Update existing tests in the file.
+
 ```javascript
-describe('AnatomyRecipeLoader - Descriptor Validation', () => {
+// In tests/unit/loaders/anatomyRecipeLoader.processFetchedItem.test.js
+
+// Update the mock at the top of file (around line 32):
+jest.mock('../../../src/anatomy/validators/bodyDescriptorValidator.js', () => ({
+  BodyDescriptorValidator: jest.fn().mockImplementation(() => ({
+    validateRecipeDescriptors: jest.fn().mockReturnValue({
+      valid: true,
+      errors: [],
+      warnings: []
+    })
+  }))
+}));
+
+import { BodyDescriptorValidator } from '../../../src/anatomy/validators/bodyDescriptorValidator.js';
+
+describe('AnatomyRecipeLoader._processFetchedItem - Body Descriptor Validation', () => {
   let loader;
-  let mockLogger;
+  let logger;
+  let mockValidateRecipeDescriptors;
 
   beforeEach(() => {
-    mockLogger = createMockLogger();
-    loader = new AnatomyRecipeLoader({ logger: mockLogger });
+    const config = createMockConfiguration();
+    const pathResolver = createMockPathResolver();
+    const dataFetcher = createMockDataFetcher();
+    const schemaValidator = createMockSchemaValidator();
+    const dataRegistry = createSimpleMockDataRegistry();
+    logger = createMockLogger();
+
+    loader = new AnatomyRecipeLoader(
+      config,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger
+    );
+
+    // Get reference to mocked method
+    mockValidateRecipeDescriptors = BodyDescriptorValidator.mock.results[0].value.validateRecipeDescriptors;
+    jest.clearAllMocks();
   });
 
   describe('Valid Descriptors', () => {
-    it('should load recipe with valid body descriptors', async () => {
-      const recipeData = {
-        id: 'test:recipe',
+    it('should process recipe with valid body descriptors', async () => {
+      const data = {
+        recipeId: 'core:human',
         bodyDescriptors: {
           height: 'tall',
-          skinColor: 'tan',
           build: 'athletic',
         },
       };
 
-      await expect(
-        loader.loadRecipe('test:recipe', recipeData, 'test/path.json')
-      ).resolves.not.toThrow();
-    });
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: true,
+        errors: [],
+        warnings: []
+      });
 
-    it('should not log errors or warnings for valid descriptors', async () => {
-      const recipeData = {
-        id: 'test:recipe',
-        bodyDescriptors: { height: 'tall' },
-      };
+      await loader._processFetchedItem(
+        'core',
+        'human.recipe.json',
+        '/tmp/human.recipe.json',
+        data,
+        'anatomyRecipes'
+      );
 
-      await loader.loadRecipe('test:recipe', recipeData, 'test/path.json');
-
-      expect(mockLogger.error).not.toHaveBeenCalled();
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(logger.warn).not.toHaveBeenCalled();
     });
   });
 
   describe('Invalid Descriptors', () => {
-    beforeEach(() => {
+    it('should log errors and fail in development mode', async () => {
+      const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
-    });
 
-    it('should reject recipe with invalid descriptor values', async () => {
-      const recipeData = {
-        id: 'test:recipe',
-        bodyDescriptors: {
-          height: 'super-mega-tall', // Invalid
-        },
-      };
-
-      await expect(
-        loader.loadRecipe('test:recipe', recipeData, 'test/path.json')
-      ).rejects.toThrow('Body descriptor validation failed');
-    });
-
-    it('should log error with recipe context', async () => {
-      const recipeData = {
-        id: 'test:recipe',
+      const data = {
+        recipeId: 'core:human',
         bodyDescriptors: { height: 'invalid' },
       };
 
-      try {
-        await loader.loadRecipe('test:recipe', recipeData, 'test/path.json');
-      } catch (err) {
-        // Expected
-      }
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: false,
+        errors: ['Invalid height descriptor: \'invalid\''],
+        warnings: []
+      });
 
-      expect(mockLogger.error).toHaveBeenCalled();
-      expect(mockLogger.error.mock.calls[0][0]).toContain('test:recipe');
-      expect(mockLogger.error.mock.calls[0][0]).toContain('test/path.json');
+      await expect(
+        loader._processFetchedItem('core', 'human.recipe.json', '/tmp/human.recipe.json', data, 'anatomyRecipes')
+      ).rejects.toThrow('Body descriptor validation failed');
+
+      expect(logger.error).toHaveBeenCalled();
+      expect(logger.error.mock.calls[0][0]).toContain('core:human');
+      expect(logger.error.mock.calls[0][0]).toContain('human.recipe.json');
+
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('should log errors but not fail in production mode', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      const data = {
+        recipeId: 'core:human',
+        bodyDescriptors: { height: 'invalid' },
+      };
+
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: false,
+        errors: ['Invalid height descriptor'],
+        warnings: []
+      });
+
+      await expect(
+        loader._processFetchedItem('core', 'human.recipe.json', '/tmp/human.recipe.json', data, 'anatomyRecipes')
+      ).resolves.not.toThrow();
+
+      expect(logger.error).toHaveBeenCalled();
+
+      process.env.NODE_ENV = originalEnv;
     });
   });
 
   describe('Unknown Descriptors', () => {
-    it('should log warning for unknown descriptors', async () => {
-      const recipeData = {
-        id: 'test:recipe',
-        bodyDescriptors: {
-          unknownDescriptor: 'value',
-        },
+    it('should log warnings for unknown descriptors', async () => {
+      const data = {
+        recipeId: 'core:human',
+        bodyDescriptors: { unknownDescriptor: 'value' },
       };
 
-      await loader.loadRecipe('test:recipe', recipeData, 'test/path.json');
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: true,
+        errors: [],
+        warnings: ['Unknown body descriptor \'unknownDescriptor\'']
+      });
 
-      expect(mockLogger.warn).toHaveBeenCalled();
-      expect(mockLogger.warn.mock.calls[0][0]).toContain('Unknown body descriptor');
-    });
-  });
+      await loader._processFetchedItem('core', 'human.recipe.json', '/tmp/human.recipe.json', data, 'anatomyRecipes');
 
-  describe('Environment Behavior', () => {
-    it('should fail fast in development mode', async () => {
-      process.env.NODE_ENV = 'development';
-      const recipeData = {
-        bodyDescriptors: { height: 'invalid' },
-      };
-
-      await expect(
-        loader.loadRecipe('test:recipe', recipeData, 'test/path.json')
-      ).rejects.toThrow();
-    });
-
-    it('should not fail in production mode', async () => {
-      process.env.NODE_ENV = 'production';
-      const recipeData = {
-        bodyDescriptors: { height: 'invalid' },
-      };
-
-      await expect(
-        loader.loadRecipe('test:recipe', recipeData, 'test/path.json')
-      ).resolves.not.toThrow();
-    });
-  });
-
-  describe('Recipes Without Body Descriptors', () => {
-    it('should skip validation if bodyDescriptors not present', async () => {
-      const recipeData = {
-        id: 'test:recipe',
-        // No bodyDescriptors
-      };
-
-      await loader.loadRecipe('test:recipe', recipeData, 'test/path.json');
-
-      expect(mockLogger.error).not.toHaveBeenCalled();
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalled();
+      expect(logger.warn.mock.calls[0][0]).toContain('Unknown body descriptor');
     });
   });
 });
@@ -298,22 +413,28 @@ describe('AnatomyRecipeLoader - Descriptor Validation', () => {
 
 ## Success Criteria
 
-- [ ] Validation integrated into recipe loader
-- [ ] Invalid descriptors detected during loading
-- [ ] Unknown descriptors trigger warnings
-- [ ] Error messages include recipe ID and file path
-- [ ] Development mode fails fast on errors
-- [ ] Production mode logs warnings only
-- [ ] All tests pass
+- [ ] Validator import migrated from utils/ to validators/
+- [ ] BodyDescriptorValidationError import removed
+- [ ] `_validateBodyDescriptors()` method uses new validator instance
+- [ ] Method returns structured results `{ valid, errors, warnings }`
+- [ ] Invalid descriptors detected and all errors logged
+- [ ] Unknown descriptors trigger warnings (logged)
+- [ ] Error messages include recipe ID and filename context
+- [ ] Development mode fails fast on validation errors
+- [ ] Production mode logs warnings but continues
+- [ ] Test mocks updated to new validator interface
+- [ ] All existing tests still pass
+- [ ] New tests added for environment behavior
 - [ ] ESLint passes with no errors
 - [ ] Performance impact < 10ms per recipe
 - [ ] Existing recipe loading still works
 
 ## Related Tickets
 
-- Depends on: BODDESROB-001 (Centralized Registry)
-- Depends on: BODDESROB-002 (Enhanced Validator)
-- Related to: BODDESROB-004 (Bootstrap Validation)
+- Depends on: BODDESROB-001 (Centralized Registry) ✅ COMPLETED
+- Depends on: BODDESROB-002 (Enhanced Validator) ✅ COMPLETED (commit d9fee14)
+- Depends on: BODDESROB-004 (Bootstrap Validation) ✅ COMPLETED (commit 2f7df1c)
+- Enables: BODDESROB-006 (Migration and Cleanup)
 - Related to: Spec Section 4.3 "Phase 3: Integrate Validation"
 
 ## Validation Scope
@@ -344,10 +465,14 @@ Error in recipe
 
 ## Notes
 
+- **This is a MIGRATION task, not new implementation** - validation already exists
+- Focus on replacing validator, not adding validation logic
 - Keep validation focused on body descriptors only
-- Don't duplicate schema validation
+- Don't duplicate schema validation (already handled by JSON schema)
 - Performance is important - recipes loaded frequently
-- Consider caching validation results if needed
+- New validator provides better error collection and warnings
+- Environment-specific behavior enables dev/prod differences
 - Make error messages actionable with fix suggestions
 - Test with real anatomy recipes
-- Document validation behavior in loader comments
+- Update comments in loader to reflect new validator usage
+- After this migration, BODDESROB-006 can remove the old validator entirely
