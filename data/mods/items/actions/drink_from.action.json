@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:drink_from",
+  "name": "Drink From",
+  "description": "Take a single serving from a drinkable container, reducing its volume by the serving size.",
+  "targets": {
+    "primary": {
+      "scope": "items:examinable_items",
+      "placeholder": "primary",
+      "description": "Drinkable container to consume from"
+    }
+  },
+  "required_components": {
+    "primary": [
+      "items:drinkable",
+      "items:liquid_container"
+    ]
+  },
+  "prerequisites": [],
+  "template": "drink from {primary}"
+}
