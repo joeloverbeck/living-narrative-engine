@@ -600,7 +600,8 @@
       "Bash(NODE_ENV=test npm run test:e2e:*)",
       "Bash(git log:*)",
       "mcp__morphllm-fast-apply__list_allowed_directories",
-      "mcp__morphllm-fast-apply__directory_tree"
+      "mcp__morphllm-fast-apply__directory_tree",
+      "Bash(netstat:*)"
     ],
     "deny": [],
     "ask": []

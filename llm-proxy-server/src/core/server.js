@@ -3,6 +3,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import net from 'net';
 
 import { getAppConfigService } from '../config/appConfig.js';
 import { createSecurityMiddleware } from '../middleware/security.js';
@@ -397,9 +398,71 @@ export function createProxyServer(options = {}) {
     process.on('beforeExit', beforeExitHandler);
   };
 
+  /**
+   * Check if a port is available for binding
+   * @param {number} port - Port number to check
+   * @returns {Promise<boolean>} True if port is available
+   */
+  const checkPortAvailable = (port) => {
+    return new Promise((resolve) => {
+      const tester = net
+        .createServer()
+        .once('error', () => resolve(false))
+        .once('listening', () => {
+          tester.close(() => resolve(true));
+        })
+        .listen(port, '0.0.0.0');
+    });
+  };
+
+  /**
+   * Find what process is using a port
+   * @param {number} port - Port number to check
+   * @returns {Promise<string|null>} Process info or null if not found
+   */
+  const findPortProcess = async (port) => {
+    try {
+      const { execSync } = await import('child_process');
+      const result = execSync(`lsof -ti:${port}`, { encoding: 'utf8' });
+      return result.trim();
+    } catch {
+      return null;
+    }
+  };
+
   const start = async () => {
     if (server) {
       return;
+    }
+
+    // Pre-flight port availability check
+    const portAvailable = await checkPortAvailable(PORT);
+    if (!portAvailable) {
+      const processPid = await findPortProcess(PORT);
+      const errorMsg = processPid
+        ? `Port ${PORT} is already in use by process ${processPid}`
+        : `Port ${PORT} is already in use by another process`;
+
+      proxyLogger.error(
+        `LLM Proxy Server: ${errorMsg}. Cannot start server.`
+      );
+      proxyLogger.info(
+        `To resolve this issue, try one of the following:`
+      );
+      proxyLogger.info(
+        `  1. Kill the process: kill -9 ${processPid || '<PID>'}`
+      );
+      proxyLogger.info(
+        `  2. Find process: lsof -ti:${PORT} or netstat -tulpn | grep ${PORT}`
+      );
+      proxyLogger.info(
+        `  3. Change port: Set PROXY_PORT environment variable to a different port`
+      );
+      proxyLogger.info(
+        `  4. Run cleanup script: npm run cleanup:ports`
+      );
+
+      throw new Error(errorMsg);
     }
 
     await llmConfigService.initialize();
@@ -532,11 +595,36 @@ export function createProxyServer(options = {}) {
           proxyLogger.info('--- End of Startup Summary ---');
           resolve();
         })
-        .on('error', (error) => {
-          proxyLogger.error(
-            'LLM Proxy Server: A critical error occurred during asynchronous server startup sequence PRIOR to app.listen.',
-            error
-          );
+        .on('error', async (error) => {
+          if (error.code === 'EADDRINUSE') {
+            const processPid = await findPortProcess(PORT);
+            proxyLogger.error(
+              `LLM Proxy Server: Port ${PORT} is already in use${processPid ? ` by process ${processPid}` : ''}`
+            );
+            proxyLogger.error(
+              'This error should have been caught by pre-flight check. Port may have been occupied after check.'
+            );
+            proxyLogger.info(
+              'To resolve this issue, try one of the following:'
+            );
+            proxyLogger.info(
+              `  1. Kill the process: kill -9 ${processPid || '<PID>'}`
+            );
+            proxyLogger.info(
+              `  2. Find process: lsof -ti:${PORT} or netstat -tulpn | grep ${PORT}`
+            );
+            proxyLogger.info(
+              `  3. Change port: Set PROXY_PORT environment variable to a different port`
+            );
+            proxyLogger.info(
+              `  4. Run cleanup script: npm run cleanup:ports`
+            );
+          } else {
+            proxyLogger.error(
+              'LLM Proxy Server: A critical error occurred during asynchronous server startup sequence PRIOR to app.listen.',
+              error
+            );
+          }
           proxyLogger.error(
             'LLM Proxy Server: CRITICAL - Proxy will NOT be operational due to a severe error during startup initialization steps.'
           );
