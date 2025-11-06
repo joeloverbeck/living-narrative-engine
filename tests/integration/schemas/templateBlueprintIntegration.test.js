@@ -53,12 +53,12 @@ describe('Template-Blueprint Integration - Spider (8 Legs)', () => {
         ],
         appendages: [
           {
-            type: 'abdomen',
+            type: 'torso',
             count: 1,
             attachment: 'posterior',
             socketPattern: {
               idTemplate: 'posterior_abdomen',
-              allowedTypes: ['abdomen', 'spider_abdomen'],
+              allowedTypes: ['torso', 'spider_abdomen'],
             },
           },
         ],
@@ -694,12 +694,12 @@ describe('Template-Blueprint Integration - Complex Structures', () => {
             },
           },
           {
-            type: 'abdomen',
+            type: 'torso',
             count: 1,
             attachment: 'posterior',
             socketPattern: {
               idTemplate: 'posterior_abdomen',
-              allowedTypes: ['abdomen', 'insect_abdomen'],
+              allowedTypes: ['torso', 'insect_abdomen'],
             },
           },
         ],

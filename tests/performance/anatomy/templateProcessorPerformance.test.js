@@ -105,7 +105,7 @@ describe('Template Processor Performance', () => {
           ],
           appendages: [
             {
-              type: 'abdomen',
+              type: 'torso',
               count: 1,
               attachment: 'posterior',
               socketPattern: {

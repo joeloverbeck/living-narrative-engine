@@ -129,7 +129,7 @@ describe('Template Processor Pipeline Integration', () => {
           ],
           appendages: [
             {
-              type: 'abdomen',
+              type: 'torso',
               count: 1,
               attachment: 'posterior',
               socketPattern: {

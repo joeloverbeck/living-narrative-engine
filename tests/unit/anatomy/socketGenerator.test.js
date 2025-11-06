@@ -804,7 +804,7 @@ describe('SocketGenerator', () => {
           ],
           appendages: [
             {
-              type: 'abdomen',
+              type: 'torso',
               count: 1,
               socketPattern: {
                 idTemplate: 'abdomen',

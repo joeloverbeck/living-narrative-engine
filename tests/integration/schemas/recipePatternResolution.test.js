@@ -159,7 +159,7 @@ describe('Recipe Pattern Resolution - Spider (8 Legs with Group Patterns)', () =
           tags: ['anatomy:sensory'],
         },
         {
-          matchesGroup: 'appendage:abdomen',
+          matchesGroup: 'appendage:torso',
           partType: 'abdomen',
           tags: ['anatomy:silk_producing'],
         },
