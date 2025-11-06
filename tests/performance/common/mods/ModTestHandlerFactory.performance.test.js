@@ -38,6 +38,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
     gameDataRepository = {
       getComponentDefinition: jest.fn().mockReturnValue(null),
+      get: jest.fn().mockReturnValue(undefined),
     };
 
     performanceResults = {
