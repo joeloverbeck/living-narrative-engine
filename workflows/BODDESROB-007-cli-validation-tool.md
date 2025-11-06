@@ -150,7 +150,7 @@ async function main() {
 
   // 3. Validate Sample Recipes
   console.log('\n🧬 Validating Anatomy Recipes...');
-  const sampleRecipes = ['human_male.json', 'human_female.json'];
+  const sampleRecipes = ['human_male.recipe.json', 'human_female.recipe.json'];
 
   for (const recipeFile of sampleRecipes) {
     const recipe = loadRecipe(recipeFile);
@@ -316,8 +316,8 @@ fi
    ✅ Formatting configuration is valid
 
 🧬 Validating Anatomy Recipes...
-   ✅ human_male.json
-   ✅ human_female.json
+   ✅ human_male.recipe.json
+   ✅ human_female.recipe.json
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -344,9 +344,9 @@ Body descriptor system is consistent.
    Body descriptor 'smell' defined in registry but missing from descriptionOrder. Descriptor will not appear in generated descriptions.
 
 🧬 Validating Anatomy Recipes...
-   ✅ human_male.json
+   ✅ human_male.recipe.json
 
-   ❌ human_female.json:
+   ❌ human_female.recipe.json:
       Invalid value 'super-tall' for height. Expected one of: gigantic, very-tall, tall, average, short, petite, tiny
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
