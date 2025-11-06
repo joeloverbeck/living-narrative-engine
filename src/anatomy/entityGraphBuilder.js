@@ -236,35 +236,30 @@ export class EntityGraphBuilder {
         socketId: socketId,
       });
 
-      // Update anatomy:part component with parent reference and orientation
-      const anatomyPart = this.#entityManager.getComponentData(
-        childEntity.id,
-        'anatomy:part'
-      );
-      if (anatomyPart) {
-        // Update the anatomy:part component with parentEntity and orientation
-        const updatedPart = {
-          ...anatomyPart,
-          parentEntity: parentId, // Add parent entity reference
-        };
+      // Update anatomy:part component with orientation if provided
+      if (socketOrientation) {
+        const anatomyPart = this.#entityManager.getComponentData(
+          childEntity.id,
+          'anatomy:part'
+        );
+        if (anatomyPart) {
+          // Update the anatomy:part component with orientation
+          // Note: Parent relationship is stored in anatomy:joint, not anatomy:part
+          const updatedPart = {
+            ...anatomyPart,
+            orientation: socketOrientation,
+          };
 
-        // Add orientation if provided from socket
-        if (socketOrientation) {
-          updatedPart.orientation = socketOrientation;
+          await this.#entityManager.addComponent(
+            childEntity.id,
+            'anatomy:part',
+            updatedPart
+          );
+
           this.#logger.debug(
             `EntityGraphBuilder: Propagated orientation '${socketOrientation}' to child entity '${childEntity.id}'`
           );
         }
-
-        await this.#entityManager.addComponent(
-          childEntity.id,
-          'anatomy:part',
-          updatedPart
-        );
-
-        this.#logger.debug(
-          `EntityGraphBuilder: Added parentEntity reference '${parentId}' to child entity '${childEntity.id}'`
-        );
       }
 
       this.#logger.debug(
