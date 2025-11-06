@@ -643,6 +643,52 @@ npm run validate:mod:my_mod
 ✅ **Do**: Test critical synchronization requirements
 ❌ **Don't**: Only test individual components in isolation
 
+### Working with Body Descriptors
+
+**Body Descriptor Registry**: `src/anatomy/registries/bodyDescriptorRegistry.js`
+
+The registry provides centralized management of body descriptor metadata:
+
+```javascript
+import {
+  getDescriptorMetadata,
+  validateDescriptorValue,
+} from './anatomy/registries/bodyDescriptorRegistry.js';
+
+// Get descriptor metadata
+const meta = getDescriptorMetadata('height');
+console.log(meta.validValues); // ['gigantic', 'very-tall', ...]
+
+// Validate a value
+const result = validateDescriptorValue('build', 'athletic');
+console.log(result.valid); // true
+```
+
+**Adding New Descriptors**:
+
+1. Add to registry (`src/anatomy/registries/bodyDescriptorRegistry.js`)
+2. Update schema (`data/schemas/anatomy.recipe.schema.json`)
+3. Add to formatting config (`data/mods/anatomy/anatomy-formatting/default.json`)
+4. Run validation: `npm run validate:body-descriptors`
+5. Add tests
+
+**Validation Tool**:
+
+```bash
+npm run validate:body-descriptors
+```
+
+Checks:
+- Registry completeness
+- Formatting configuration
+- Recipe descriptor values
+- System consistency
+
+**Documentation**:
+- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Full API reference
+- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Step-by-step guide
+- [Validator Reference](../anatomy/body-descriptor-validator-reference.md) - Validator API
+
 ## Getting Help
 
 ### Documentation
@@ -650,6 +696,8 @@ npm run validate:mod:my_mod
 - [Architecture Guide](../anatomy/architecture.md) - System overview
 - [Structure Templates](../anatomy/structure-templates.md) - Template syntax
 - [Recipe Patterns](../anatomy/recipe-patterns.md) - Pattern matching
+- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Registry API
+- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Step-by-step guide
 - [Troubleshooting](../anatomy/troubleshooting.md) - Common issues
 - [Testing Guide](../testing/anatomy-testing-guide.md) - Testing patterns
 - [Refactoring History](../anatomy/refactoring-history.md) - Architectural changes

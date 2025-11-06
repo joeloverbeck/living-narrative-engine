@@ -360,6 +360,52 @@ The Scope DSL supports the following operators:
 
 Note: Both `+` and `|` produce identical union behavior. Use whichever feels more natural.
 
+### Body Descriptor Registry
+
+The Body Descriptor Registry provides a centralized, single source of truth for all body descriptor metadata in the anatomy system.
+
+**Location**: `src/anatomy/registries/bodyDescriptorRegistry.js`
+
+**Purpose**: Eliminates manual synchronization across multiple files (schema, code, formatting config) by centralizing all descriptor metadata.
+
+**Registry Structure**:
+
+Each descriptor contains 9 properties:
+- `schemaProperty` - Property name in JSON schema (camelCase)
+- `displayLabel` - Human-readable label
+- `displayKey` - Key in formatting config (snake_case)
+- `dataPath` - Path in body component
+- `validValues` - Array of valid values or `null` for free-form
+- `displayOrder` - Numeric priority (10, 20, 30, ...)
+- `extractor` - Function to extract value from body component
+- `formatter` - Function to format value for display
+- `required` - Whether descriptor is required
+
+**Current Descriptors** (6 total):
+- height (10), skinColor (20), build (30), composition (40), hairDensity (50), smell (60)
+- Next available display order: 70
+
+**Exports**:
+```javascript
+import {
+  BODY_DESCRIPTOR_REGISTRY,
+  getDescriptorMetadata,
+  getAllDescriptorNames,
+  getDescriptorsByDisplayOrder,
+  validateDescriptorValue,
+} from './registries/bodyDescriptorRegistry.js';
+```
+
+**Validation**:
+- CLI Tool: `npm run validate:body-descriptors`
+- Validator Class: `src/anatomy/validators/bodyDescriptorValidator.js`
+- Validates: Registry completeness, formatting config, recipe descriptors
+
+**Documentation**:
+- [Body Descriptor Registry](docs/anatomy/body-descriptor-registry.md) - Full architecture and API
+- [Adding Body Descriptors](docs/anatomy/adding-body-descriptors.md) - Step-by-step guide
+- [Validator Reference](docs/anatomy/body-descriptor-validator-reference.md) - Validator API
+
 ## 🔄 Development Workflow
 
 ### Essential Commands
@@ -388,6 +434,9 @@ npm run build           # Bundle for browser
 # Utilities
 npm run create-mod      # Create new mod scaffold
 npm run update-manifest # Update mod manifests
+
+# Validation
+npm run validate:body-descriptors  # Validate body descriptor system consistency
 ```
 
 ### Character Builder Tools

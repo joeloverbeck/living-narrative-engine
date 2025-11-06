@@ -574,6 +574,134 @@ eventBus.on('ANATOMY_STRUCTURE_CHANGED', ({ rootEntityId }) => {
 
 **Cache Invalidation**: Mod reload only (blueprints/recipes don't change at runtime)
 
+### Body Descriptor Registry
+
+**Location**: `src/anatomy/registries/bodyDescriptorRegistry.js`
+
+**Purpose**: Centralized source of truth for body descriptor metadata
+
+The Body Descriptor Registry eliminates the need for manual synchronization across multiple files by providing a single, authoritative source for all descriptor configuration.
+
+#### Registry Structure
+
+Each descriptor in the registry contains complete metadata:
+
+```javascript
+{
+  schemaProperty: 'height',           // Property name in JSON schema (camelCase)
+  displayLabel: 'Height',             // Human-readable label
+  displayKey: 'height',               // Key in formatting config
+  dataPath: 'body.descriptors.height', // Path in body component
+  validValues: ['gigantic', 'very-tall', ...], // Valid values or null
+  displayOrder: 10,                   // Display priority (lower = earlier)
+  extractor: (bodyComponent) => ...,  // Extraction function
+  formatter: (value) => ...,          // Formatting function
+  required: false,                    // Whether required
+}
+```
+
+#### Current Descriptors
+
+The registry currently defines 6 descriptors:
+
+- **height** (order: 10) - Enumerated: gigantic, very-tall, tall, average, short, petite, tiny
+- **skinColor** (order: 20) - Free-form string
+- **build** (order: 30) - Enumerated: skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky
+- **composition** (order: 40) - Enumerated: underweight, lean, average, soft, chubby, overweight, obese
+- **hairDensity** (order: 50) - Enumerated: hairless, sparse, light, moderate, hairy, very-hairy
+- **smell** (order: 60) - Free-form string
+
+**Next Available Display Order**: 70
+
+#### API Functions
+
+```javascript
+import {
+  BODY_DESCRIPTOR_REGISTRY,
+  getDescriptorMetadata,
+  getAllDescriptorNames,
+  getDescriptorsByDisplayOrder,
+  validateDescriptorValue,
+} from './registries/bodyDescriptorRegistry.js';
+
+// Get specific descriptor metadata
+const meta = getDescriptorMetadata('height');
+
+// Get all descriptor names
+const names = getAllDescriptorNames();
+// Returns: ['height', 'skinColor', 'build', 'composition', 'hairDensity', 'smell']
+
+// Get descriptors sorted by display order
+const ordered = getDescriptorsByDisplayOrder();
+
+// Validate a descriptor value
+const result = validateDescriptorValue('height', 'tall');
+// Returns: { valid: true } or { valid: false, error: "..." }
+```
+
+#### Integration Points
+
+**Recipe Processing**:
+- Recipes define body descriptors in `bodyDescriptors` field
+- AnatomyGenerationWorkflow copies descriptors to body component during generation
+- Stored at `body.descriptors.{schemaProperty}` in anatomy:body component
+
+**Validation**:
+- `BodyDescriptorValidator` class validates recipes against registry
+- CLI tool (`npm run validate:body-descriptors`) checks system consistency
+- Validates: registry completeness, formatting config, recipe descriptors
+
+**Description Generation**:
+- `BodyDescriptionComposer` uses registry extractors to retrieve values
+- Registry formatters generate display strings
+- Display order determines appearance order in descriptions
+
+#### Files Synchronized by Registry
+
+The registry serves as the source of truth for:
+
+1. **JSON Schema** (`data/schemas/anatomy.recipe.schema.json` lines 135-198)
+   - Property definitions must match registry `schemaProperty`
+   - Enum arrays must match registry `validValues`
+
+2. **Formatting Config** (`data/mods/anatomy/anatomy-formatting/default.json`)
+   - `descriptionOrder` array must include all registry `displayKey` values
+   - Descriptors missing from this array won't appear in descriptions
+
+3. **Body Component Structure**
+   - Descriptors stored at `body.descriptors.{schemaProperty}`
+   - Accessed via registry `dataPath` property
+
+#### Validation Tool
+
+**Command**: `npm run validate:body-descriptors`
+
+**Location**: `scripts/validate-body-descriptors.js`
+
+**Validates**:
+- Registry completeness
+- Formatting configuration includes all descriptors
+- Sample recipes use valid descriptor values
+- System consistency across all files
+
+**CI/CD Integration**:
+```yaml
+- name: Validate Body Descriptors
+  run: npm run validate:body-descriptors
+```
+
+#### Adding New Descriptors
+
+To add a new body descriptor:
+
+1. Add entry to `BODY_DESCRIPTOR_REGISTRY` with all 9 properties
+2. Update JSON schema in `data/schemas/anatomy.recipe.schema.json`
+3. Add `displayKey` to `descriptionOrder` in formatting config
+4. Run `npm run validate:body-descriptors` to verify
+5. Add tests in `tests/unit/anatomy/registries/bodyDescriptorRegistry.test.js`
+
+**Documentation**: See [Adding Body Descriptors Guide](./adding-body-descriptors.md) for step-by-step instructions
+
 ## Extension Points
 
 ### Adding New Orientation Schemes
@@ -645,6 +773,9 @@ class BlueprintRecipeValidator {
 
 - [Structure Templates](./structure-templates.md) - Template syntax and examples
 - [Recipe Patterns](./recipe-patterns.md) - Pattern matching guide
+- [Body Descriptor Registry](./body-descriptor-registry.md) - Registry architecture and API
+- [Adding Body Descriptors](./adding-body-descriptors.md) - Step-by-step guide for adding descriptors
+- [Body Descriptor Validator Reference](./body-descriptor-validator-reference.md) - Validator API documentation
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions
 - [Refactoring History](./refactoring-history.md) - Architectural evolution
 - [Testing Guide](../testing/anatomy-testing-guide.md) - Testing patterns

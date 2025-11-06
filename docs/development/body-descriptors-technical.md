@@ -11,16 +11,108 @@ The Body Descriptors system provides a recipe-level approach to defining body ch
 The body descriptor system integrates with several core anatomy components:
 
 ```
-Recipe (bodyDescriptors) → AnatomyGenerationWorkflow → Body Component (body.descriptors) → BodyDescriptionComposer → Generated Description
+Recipe (bodyDescriptors) → Registry Validation → AnatomyGenerationWorkflow → Body Component (body.descriptors) → BodyDescriptionComposer (uses registry extractors) → Generated Description
 ```
 
 #### Key Files
 
-- **Schema**: `data/schemas/anatomy.recipe.schema.json` (lines 135-180)
+- **Registry**: `src/anatomy/registries/bodyDescriptorRegistry.js` - Centralized metadata source
+- **Validator**: `src/anatomy/validators/bodyDescriptorValidator.js` - System validation
+- **Validation Script**: `scripts/validate-body-descriptors.js` - CLI tool
+- **Schema**: `data/schemas/anatomy.recipe.schema.json` (lines 135-198)
 - **Implementation**: `src/anatomy/bodyDescriptionComposer.js`
-- **Workflow**: `src/anatomy/anatomyGenerationWorkflow.js`
+- **Workflow**: `src/anatomy/workflows/anatomyGenerationWorkflow.js`
+- **Formatting Config**: `data/mods/anatomy/anatomy-formatting/default.json`
 - **Tests**: `tests/integration/anatomy/bodyDescriptors.integration.test.js`
 - **Performance Tests**: `tests/performance/anatomy/bodyDescriptionComposer.performance.test.js`
+- **Registry Tests**: `tests/unit/anatomy/registries/bodyDescriptorRegistry.test.js`
+
+### Body Descriptor Registry
+
+**Location**: `src/anatomy/registries/bodyDescriptorRegistry.js`
+
+**Purpose**: Single source of truth for all body descriptor metadata
+
+The registry eliminates manual synchronization across multiple files by centralizing descriptor configuration.
+
+#### Registry Structure
+
+Each descriptor contains 9 required properties:
+
+```javascript
+export const BODY_DESCRIPTOR_REGISTRY = {
+  height: {
+    schemaProperty: 'height',           // Property name in JSON schema (camelCase)
+    displayLabel: 'Height',             // Human-readable label for display
+    displayKey: 'height',               // Key in formatting config descriptionOrder
+    dataPath: 'body.descriptors.height', // Path to access data in body component
+    validValues: ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'],
+    displayOrder: 10,                   // Display priority (lower numbers first)
+    extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.height,
+    formatter: (value) => `Height: ${value}`,
+    required: false,                    // Whether descriptor is required
+  },
+  // ... additional descriptors
+};
+```
+
+#### Registry API
+
+```javascript
+import {
+  BODY_DESCRIPTOR_REGISTRY,
+  getDescriptorMetadata,
+  getAllDescriptorNames,
+  getDescriptorsByDisplayOrder,
+  validateDescriptorValue,
+} from './registries/bodyDescriptorRegistry.js';
+
+// Get specific descriptor metadata
+const heightMeta = getDescriptorMetadata('height');
+console.log(heightMeta.displayLabel); // "Height"
+console.log(heightMeta.validValues);  // ['gigantic', 'very-tall', ...]
+
+// Get all descriptor names
+const allNames = getAllDescriptorNames();
+// Returns: ['height', 'skinColor', 'build', 'composition', 'hairDensity', 'smell']
+
+// Validate a descriptor value
+const result = validateDescriptorValue('height', 'tall');
+// Returns: { valid: true }
+```
+
+#### Validation Tool
+
+**Command**: `npm run validate:body-descriptors`
+
+Validates:
+- Registry completeness
+- Formatting configuration
+- Sample recipes
+- System consistency
+
+**BodyDescriptorValidator Class**:
+
+```javascript
+import { BodyDescriptorValidator } from './anatomy/validators/bodyDescriptorValidator.js';
+
+const validator = new BodyDescriptorValidator();
+
+// Validate recipe descriptors
+const result = validator.validateRecipeDescriptors({
+  build: 'athletic',
+  composition: 'lean',
+});
+
+if (!result.valid) {
+  console.error('Validation failed:', result.errors);
+}
+```
+
+**Documentation**:
+- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Full API reference
+- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Step-by-step guide
+- [Validator Reference](../anatomy/body-descriptor-validator-reference.md) - Validator API
 
 ### Data Flow
 
