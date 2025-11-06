@@ -24,6 +24,7 @@
       "playing_music.component.json"
     ],
     "actions": [
+      "play_drone_on_instrument.action.json",
       "play_ostinato_on_instrument.action.json",
       "play_phrase_on_instrument.action.json",
       "set_aggressive_mood_on_instrument.action.json",
@@ -39,6 +40,7 @@
       "stop_playing_instrument.action.json"
     ],
     "rules": [
+      "handle_play_drone_on_instrument.rule.json",
       "handle_play_ostinato_on_instrument.rule.json",
       "handle_play_phrase_on_instrument.rule.json",
       "handle_set_aggressive_mood_on_instrument.rule.json",
@@ -54,6 +56,7 @@
       "handle_stop_playing_instrument.rule.json"
     ],
     "conditions": [
+      "event-is-action-play-drone-on-instrument.condition.json",
       "event-is-action-play-ostinato-on-instrument.condition.json",
       "event-is-action-play-phrase-on-instrument.condition.json",
       "event-is-action-set-aggressive-mood-on-instrument.condition.json",
