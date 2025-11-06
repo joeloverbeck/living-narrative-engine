@@ -8,6 +8,38 @@
 
 ---
 
+## Workflow Validation Notes
+
+**Validation Date**: 2025-11-06
+**Status**: Workflow has been validated against the actual codebase
+
+### Corrections Made:
+
+1. **File Path Corrections**:
+   - `docs/anatomy/v2-structure-templates.md` → `docs/anatomy/structure-templates.md` (actual file)
+   - `docs/anatomy/recipes.md` → `docs/anatomy/recipe-patterns.md` (actual file)
+   - `docs/anatomy/architecture.md` → Flagged as NEW FILE NEEDED
+   - `docs/testing/anatomy-testing-guide.md` → Flagged as NEW FILE NEEDED
+
+2. **Code Reference Corrections**:
+   - `socketIndex.getAllSockets()` → `anatomySocketIndex.getEntitySockets()` (actual method)
+   - `config.anatomy.logging.level` → Updated to generic logger configuration reference
+   - References to `BlueprintRecipeValidator` and "Pattern matched zero slots" warnings clarified as planned features from ANASYSREF-002
+
+3. **Verified Existing Components**:
+   - OrientationResolver exists at `src/anatomy/shared/orientationResolver.js` ✅
+   - ANATOMY_GENERATED event exists (dispatched from anatomyGenerationWorkflow.js) ✅
+   - AnatomySocketIndex exists at `src/anatomy/services/anatomySocketIndex.js` ✅
+   - Cache invalidation system exists (via cacheCoordinator) ✅
+
+### Important Context:
+
+This documentation ticket documents the **implemented** changes from previous refactoring tickets (especially ANASYSREF-001) as well as **planned** improvements from ANASYSREF-002. When creating documentation, clearly distinguish between:
+- Features already implemented (OrientationResolver, event-driven integration)
+- Features planned for implementation (BlueprintRecipeValidator, enhanced validation warnings)
+
+---
+
 ## Problem Statement
 
 Documentation needs updates to reflect:
@@ -33,10 +65,10 @@ Update and create documentation:
 ### 1. Update Existing Docs
 
 **Files to Update**:
-- `docs/anatomy/v2-structure-templates.md` - Add validation requirements, OrientationResolver reference
-- `docs/anatomy/recipes.md` - Document pattern matching validation, load-time checks
-- `docs/anatomy/architecture.md` - Update architecture diagrams, event-driven integration
-- `docs/testing/anatomy-testing-guide.md` - Add contract testing patterns, regression tests
+- `docs/anatomy/structure-templates.md` - Add validation requirements, OrientationResolver reference
+- `docs/anatomy/recipe-patterns.md` - Document pattern matching validation, load-time checks
+- **NEW FILE NEEDED**: `docs/anatomy/architecture.md` - Create architecture diagrams, event-driven integration overview
+- **NEW FILE NEEDED**: `docs/testing/anatomy-testing-guide.md` - Create guide with contract testing patterns, regression tests
 
 ### 2. Create Troubleshooting Guide
 
@@ -50,15 +82,17 @@ Update and create documentation:
 **Symptoms**: Entity has anatomy component but missing body parts
 
 **Root Causes**:
-1. Recipe pattern matching failed (check logs for zero-match warnings)
-2. Blueprint-recipe mismatch (validate with BlueprintRecipeValidator)
+1. Recipe pattern matching failed (check logs for pattern matching issues)
+2. Blueprint-recipe mismatch (validate blueprint-recipe consistency)
 3. Structure template error (check schema validation)
 
 **Debugging Steps**:
-1. Enable debug logging: `config.anatomy.logging.level = 'debug'`
-2. Check pattern matching: Look for "Pattern matched zero slots" warnings
-3. Validate blueprint: Use BlueprintRecipeValidator
-4. Verify template: Check structure template schema
+1. Enable debug logging in your anatomy services (check logger configuration)
+2. Check pattern matching: Review recipe pattern definitions in anatomy recipes
+3. Validate blueprint: Check blueprint structure matches recipe expectations
+4. Verify template: Check structure template schema validation
+
+**Note**: Some validation features mentioned here (e.g., BlueprintRecipeValidator, zero-match warnings) are planned improvements from ANASYSREF-002 and may not yet be implemented. Check the refactoring analysis report for implementation status.
 
 ## Problem: Clothing not attaching to body parts
 
@@ -70,9 +104,9 @@ Update and create documentation:
 3. Missing ANATOMY_GENERATED event
 
 **Debugging Steps**:
-1. Check socket index: `socketIndex.getAllSockets(entityId)`
-2. Verify clothing slot mappings
-3. Check event dispatch logs for ANATOMY_GENERATED
+1. Check socket index: `anatomySocketIndex.getEntitySockets(entityId)` (available at `src/anatomy/services/anatomySocketIndex.js`)
+2. Verify clothing slot mappings in SlotResolver
+3. Check event dispatch logs for ANATOMY_GENERATED event (dispatched from anatomyGenerationWorkflow.js)
 ```
 
 ### 3. Refactoring History
@@ -99,13 +133,21 @@ Quick-start guide for developers working on anatomy system:
 
 ## Acceptance Criteria
 
-- [ ] All existing docs updated
-- [ ] Troubleshooting guide created
-- [ ] Refactoring history documented
-- [ ] Developer onboarding guide created
-- [ ] Examples and code snippets updated
-- [ ] Architecture diagrams updated
-- [ ] All docs reviewed for accuracy
+- [ ] Existing docs updated:
+  - [ ] `docs/anatomy/structure-templates.md` - Add validation requirements, OrientationResolver reference
+  - [ ] `docs/anatomy/recipe-patterns.md` - Document pattern matching validation, load-time checks
+- [ ] New architecture documentation created:
+  - [ ] `docs/anatomy/architecture.md` - Architecture diagrams, event-driven integration
+  - [ ] `docs/testing/anatomy-testing-guide.md` - Contract testing patterns, regression tests
+- [ ] Troubleshooting guide created:
+  - [ ] `docs/anatomy/troubleshooting.md` - Common issues and debugging steps
+- [ ] Refactoring history documented:
+  - [ ] `docs/anatomy/refactoring-history.md` - Architectural changes and migration guidance
+- [ ] Developer onboarding guide created:
+  - [ ] `docs/development/anatomy-development-guide.md` - Quick-start guide for anatomy system development
+- [ ] Examples and code snippets verified for accuracy
+- [ ] All code references validated against actual implementation
+- [ ] Distinction made between implemented vs. planned features
 
 ---
 
