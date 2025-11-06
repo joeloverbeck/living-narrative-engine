@@ -1433,6 +1433,7 @@ describe('AnatomyGenerationWorkflow', () => {
               right_arm: 'arm-2',
             },
           },
+          clothingSlots: {},
         }
       );
 
@@ -1466,6 +1467,7 @@ describe('AnatomyGenerationWorkflow', () => {
               right_arm: 'arm-2',
             },
           },
+          clothingSlots: {},
         }
       );
 

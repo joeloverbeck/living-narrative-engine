@@ -426,6 +426,7 @@ describe('EntityGraphBuilder', () => {
         {
           subType: 'arm',
           someOtherField: 'value',
+          parentEntity: 'torso',
           orientation: 'left',
         }
       );
