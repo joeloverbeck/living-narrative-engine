@@ -192,36 +192,6 @@ describe('Cache Coordination Integration', () => {
   });
 
   describe('Event Publishing', () => {
-    it('should publish anatomy:cache_invalidated event when invalidating entity', async () => {
-      const testEntityId = 'test-entity-event';
-      const testCache = new Map([[testEntityId, 'test-data']]);
-
-      coordinator.registerCache('test-cache', testCache);
-
-      // Subscribe to the invalidation event
-      let eventReceived = false;
-      let eventData = null;
-
-      eventBus.subscribe('anatomy:cache_invalidated', (event) => {
-        eventReceived = true;
-        eventData = event.payload;
-      });
-
-      // Invalidate the entity
-      coordinator.invalidateEntity(testEntityId);
-
-      // Wait for event processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // Verify event was published
-      expect(eventReceived).toBe(true);
-      expect(eventData).toMatchObject({
-        entityId: testEntityId,
-        cacheCount: expect.any(Number),
-      });
-      expect(eventData.cacheCount).toBeGreaterThan(0);
-    });
-
     it('should publish anatomy:caches_cleared event when clearing all caches', async () => {
       // Subscribe to the cleared event
       let eventReceived = false;

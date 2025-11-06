@@ -4,7 +4,7 @@
   "description": "A spider pedipalp for sensory and manipulation",
   "components": {
     "anatomy:part": {
-      "subType": "spider_pedipalp"
+      "subType": "pedipalp"
     },
     "core:name": {
       "text": "spider pedipalp"

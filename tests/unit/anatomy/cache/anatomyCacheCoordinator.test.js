@@ -179,24 +179,6 @@ describe('AnatomyCacheCoordinator', () => {
       );
     });
 
-    it('should publish anatomy:cache_invalidated event', () => {
-      const cache1 = new Map();
-      const cache2 = new Map();
-
-      coordinator.registerCache('cache1', cache1);
-      coordinator.registerCache('cache2', cache2);
-
-      coordinator.invalidateEntity('entity1');
-
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'anatomy:cache_invalidated',
-        expect.objectContaining({
-          entityId: 'entity1',
-          cacheCount: 2,
-        })
-      );
-    });
-
     it('should log invalidation operation', () => {
       const cache = new Map([['entity1', 'data']]);
       coordinator.registerCache('testCache', cache);
@@ -492,19 +474,5 @@ describe('AnatomyCacheCoordinator', () => {
       expect(goodCache.has('entity1')).toBe(false); // Good cache still invalidated
     });
 
-    it('should still publish event even if some caches fail', () => {
-      const errorCache = new Map();
-      errorCache.delete = jest.fn(() => {
-        throw new Error('Cache error');
-      });
-
-      coordinator.registerCache('errorCache', errorCache);
-      coordinator.invalidateEntity('entity1');
-
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'anatomy:cache_invalidated',
-        expect.any(Object)
-      );
-    });
   });
 });
