@@ -28,13 +28,16 @@ jest.mock('../../../src/utils/idUtils.js', () => {
   };
 });
 
+// Create a mock implementation that can be reconfigured per test
+const mockValidateRecipeDescriptors = jest.fn().mockReturnValue({
+  valid: true,
+  errors: [],
+  warnings: []
+});
+
 jest.mock('../../../src/anatomy/validators/bodyDescriptorValidator.js', () => ({
   BodyDescriptorValidator: jest.fn().mockImplementation(() => ({
-    validateRecipeDescriptors: jest.fn().mockReturnValue({
-      valid: true,
-      errors: [],
-      warnings: []
-    })
+    validateRecipeDescriptors: mockValidateRecipeDescriptors
   }))
 }));
 
@@ -294,7 +297,6 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
 describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
   let loader;
   let logger;
-  let mockValidateRecipeDescriptors;
 
   beforeEach(() => {
     const config = createMockConfiguration();
@@ -313,20 +315,16 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
       logger
     );
 
-    // Get reference to mocked method from the constructor mock
-    mockValidateRecipeDescriptors = BodyDescriptorValidator.mock.results[0]?.value?.validateRecipeDescriptors;
     jest.clearAllMocks();
   });
 
   describe('Valid Descriptors', () => {
     it('should process recipe with valid body descriptors', () => {
-      if (mockValidateRecipeDescriptors) {
-        mockValidateRecipeDescriptors.mockReturnValue({
-          valid: true,
-          errors: [],
-          warnings: []
-        });
-      }
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: true,
+        errors: [],
+        warnings: []
+      });
 
       expect(() =>
         loader._validateBodyDescriptors({ build: 'athletic' }, 'human', 'human.json')
@@ -342,13 +340,11 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
 
-      if (mockValidateRecipeDescriptors) {
-        mockValidateRecipeDescriptors.mockReturnValue({
-          valid: false,
-          errors: ['Invalid height descriptor: \'invalid\''],
-          warnings: []
-        });
-      }
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: false,
+        errors: ['Invalid height descriptor: \'invalid\''],
+        warnings: []
+      });
 
       expect(() =>
         loader._validateBodyDescriptors({ height: 'invalid' }, 'human', 'human.json')
@@ -365,13 +361,11 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
       const originalEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'production';
 
-      if (mockValidateRecipeDescriptors) {
-        mockValidateRecipeDescriptors.mockReturnValue({
-          valid: false,
-          errors: ['Invalid height descriptor'],
-          warnings: []
-        });
-      }
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: false,
+        errors: ['Invalid height descriptor'],
+        warnings: []
+      });
 
       expect(() =>
         loader._validateBodyDescriptors({ height: 'invalid' }, 'human', 'human.json')
@@ -385,13 +379,11 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
 
   describe('Unknown Descriptors', () => {
     it('should log warnings for unknown descriptors', () => {
-      if (mockValidateRecipeDescriptors) {
-        mockValidateRecipeDescriptors.mockReturnValue({
-          valid: true,
-          errors: [],
-          warnings: ['Unknown body descriptor \'unknownDescriptor\'']
-        });
-      }
+      mockValidateRecipeDescriptors.mockReturnValue({
+        valid: true,
+        errors: [],
+        warnings: ['Unknown body descriptor \'unknownDescriptor\'']
+      });
 
       expect(() =>
         loader._validateBodyDescriptors({ unknownDescriptor: 'value' }, 'human', 'human.json')
