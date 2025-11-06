@@ -1,0 +1,27 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "patrol:giant_forest_spider",
+    "components": {
+        "core:name": {
+            "text": "giant forest spider"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/giant_forest_spider.png",
+            "altText": "Giant forest spider."
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "anatomy:body": {
+            "recipeId": "anatomy:giant_forest_spider"
+        },
+        "core:gender": {
+            "value": "male"
+        }
+    }
+}
