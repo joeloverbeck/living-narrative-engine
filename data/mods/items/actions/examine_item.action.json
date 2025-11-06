@@ -13,6 +13,9 @@
   "required_components": {
     "primary": ["items:item", "core:description"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:doing_complex_performance"]
+  },
   "prerequisites": [],
   "template": "examine {item}",
   "visual": {

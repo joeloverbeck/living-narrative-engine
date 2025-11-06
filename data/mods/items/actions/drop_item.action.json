@@ -10,6 +10,9 @@
       "description": "Item to drop"
     }
   },
+  "forbidden_components": {
+    "actor": ["positioning:doing_complex_performance"]
+  },
   "prerequisites": [],
   "template": "drop {item}",
   "visual": {

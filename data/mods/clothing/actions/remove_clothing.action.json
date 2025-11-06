@@ -13,6 +13,9 @@
   "required_components": {
     "actor": ["clothing:equipment"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:doing_complex_performance"]
+  },
   "template": "remove {target}",
   "prerequisites": [],
   "visual": {

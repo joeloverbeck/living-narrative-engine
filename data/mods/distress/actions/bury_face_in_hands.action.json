@@ -6,7 +6,7 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:biting_neck", "positioning:hugging"]
+    "actor": ["positioning:biting_neck", "positioning:hugging", "positioning:doing_complex_performance"]
   },
   "template": "bury your face in your hands",
   "prerequisites": [],
