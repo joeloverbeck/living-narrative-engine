@@ -428,6 +428,7 @@ describe('EntityGraphBuilder', () => {
           someOtherField: 'value',
           parentEntity: 'torso',
           orientation: 'left',
+          parentEntity: 'torso',
         }
       );
       expect(mocks.logger.debug).toHaveBeenCalledWith(
