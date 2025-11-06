@@ -51,8 +51,9 @@ export class AnatomyCacheCoordinator {
 
   /**
    * Registers a cache for coordinated invalidation.
+   *
    * @param {string} cacheId - Unique cache identifier
-   * @param {Map|Object} cache - Cache instance with delete() method or invalidate() method
+   * @param {Map | object} cache - Cache instance with delete() method or invalidate() method
    */
   registerCache(cacheId, cache) {
     if (this.#caches.has(cacheId)) {
@@ -65,6 +66,7 @@ export class AnatomyCacheCoordinator {
 
   /**
    * Unregisters a cache.
+   *
    * @param {string} cacheId - Cache identifier to unregister
    */
   unregisterCache(cacheId) {
@@ -74,6 +76,7 @@ export class AnatomyCacheCoordinator {
 
   /**
    * Invalidates all caches for an entity (transactional).
+   *
    * @param {string} entityId - Entity to invalidate
    */
   invalidateEntity(entityId) {
@@ -105,7 +108,21 @@ export class AnatomyCacheCoordinator {
       }
     }
 
-    // Publish event for monitoring
+    // Skip monitoring event dispatch during batch mode to prevent recursion
+    // The anatomy:cache_invalidated event is only used for monitoring/debugging,
+    // and dispatching it from within event handlers during batch operations
+    // causes unnecessary recursion depth accumulation
+    if (
+      typeof this.#eventBus.isBatchModeEnabled === 'function' &&
+      this.#eventBus.isBatchModeEnabled()
+    ) {
+      this.#logger.debug(
+        `Skipping anatomy:cache_invalidated event dispatch during batch mode for entity ${entityId}`
+      );
+      return;
+    }
+
+    // Publish event for monitoring (only when not in batch mode)
     this.#eventBus.dispatch('anatomy:cache_invalidated', {
       entityId,
       cacheCount: invalidatedCount,
@@ -135,6 +152,7 @@ export class AnatomyCacheCoordinator {
 
   /**
    * Gets the number of registered caches.
+   *
    * @returns {number} Number of registered caches
    */
   getCacheCount() {
