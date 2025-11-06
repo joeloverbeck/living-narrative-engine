@@ -8,6 +8,17 @@
 
 ---
 
+## Context
+
+**Note**: The codebase already has a general cache invalidation system in `src/scopeDsl/core/entityHelpers.js` that listens to component lifecycle events (`core:component_added`, `core:component_removed`, `core:components_batch_added`). This workflow proposes a **dedicated anatomy-specific cache coordinator** that:
+- Provides a centralized registry for anatomy-related caches
+- Enables transactional invalidation across multiple cache instances
+- Adds monitoring and debugging capabilities specific to anatomy caching
+
+The existing system and the proposed coordinator can coexist, with the coordinator providing additional benefits for anatomy-specific cache management.
+
+---
+
 ## Problem Statement
 
 Cache invalidation logic is **spread across multiple services**, leading to:
@@ -49,9 +60,10 @@ export class AnatomyCacheCoordinator {
     this.#logger = logger;
 
     // Subscribe to invalidation events
-    this.#eventBus.on('ENTITY_DESTROYED', this.#handleEntityDestroyed.bind(this));
-    this.#eventBus.on('ANATOMY_MODIFIED', this.#handleAnatomyModified.bind(this));
-    this.#eventBus.on('COMPONENTS_BATCH_REMOVED', this.#handleComponentsRemoved.bind(this));
+    this.#eventBus.subscribe('core:entity_removed', this.#handleEntityRemoved.bind(this));
+    this.#eventBus.subscribe('core:component_added', this.#handleComponentChanged.bind(this));
+    this.#eventBus.subscribe('core:component_removed', this.#handleComponentChanged.bind(this));
+    this.#eventBus.subscribe('core:components_batch_added', this.#handleComponentsBatchAdded.bind(this));
   }
 
   /**
@@ -106,9 +118,9 @@ export class AnatomyCacheCoordinator {
     }
 
     // Publish event for monitoring
-    this.#eventBus.dispatch({
-      type: 'ANATOMY_CACHE_INVALIDATED',
-      payload: { entityId, cacheCount: invalidatedCount }
+    this.#eventBus.dispatch('anatomy:cache_invalidated', {
+      entityId,
+      cacheCount: invalidatedCount
     });
   }
 
@@ -130,20 +142,35 @@ export class AnatomyCacheCoordinator {
       }
     }
 
-    this.#eventBus.dispatch({ type: 'ANATOMY_CACHES_CLEARED' });
+    this.#eventBus.dispatch('anatomy:caches_cleared', {});
   }
 
   // Event handlers
-  #handleEntityDestroyed({ payload: { entityId } }) {
-    this.invalidateEntity(entityId);
+  #handleEntityRemoved({ payload }) {
+    // Handle entity removal - payload may have instanceId or entity object
+    const entityId = payload?.instanceId || payload?.entity?.id;
+    if (entityId) {
+      this.invalidateEntity(entityId);
+    }
   }
 
-  #handleAnatomyModified({ payload: { entityId } }) {
-    this.invalidateEntity(entityId);
+  #handleComponentChanged({ payload }) {
+    // Handle component additions/removals - payload has entity object
+    const entityId = payload?.entity?.id;
+    if (entityId) {
+      this.invalidateEntity(entityId);
+    }
   }
 
-  #handleComponentsRemoved({ payload: { entityId } }) {
-    this.invalidateEntity(entityId);
+  #handleComponentsBatchAdded({ payload }) {
+    // Handle batch component additions - payload has updates array
+    if (payload?.updates) {
+      payload.updates.forEach((update) => {
+        if (update.instanceId) {
+          this.invalidateEntity(update.instanceId);
+        }
+      });
+    }
   }
 }
 ```
@@ -153,20 +180,26 @@ export class AnatomyCacheCoordinator {
 Services register their caches with the coordinator:
 
 ```javascript
-// In socketIndex service initialization
-constructor({ cacheCoordinator }) {
-  this.#cache = new Map();
+// In AnatomySocketIndex service
+// File: src/anatomy/services/anatomySocketIndex.js
+constructor({ logger, entityManager, bodyGraphService, cacheCoordinator }) {
+  // ... existing initialization ...
 
   if (cacheCoordinator) {
-    cacheCoordinator.registerCache('socketIndex', this.#cache);
+    cacheCoordinator.registerCache('anatomySocketIndex:socketToEntity', this.#socketToEntityMap);
+    cacheCoordinator.registerCache('anatomySocketIndex:entityToSockets', this.#entityToSocketsMap);
+    cacheCoordinator.registerCache('anatomySocketIndex:rootEntity', this.#rootEntityCache);
   }
 }
 
 // In SlotResolver
-constructor({ cacheCoordinator }) {
-  this.#cache = new Map();
+// File: src/anatomy/integration/SlotResolver.js
+constructor({ logger, entityManager, bodyGraphService, anatomyBlueprintRepository,
+             anatomySocketIndex, cache, cacheCoordinator }) {
+  // ... existing initialization ...
 
-  if (cacheCoordinator) {
+  // Note: SlotResolver already uses AnatomyClothingCache which could be registered
+  if (cacheCoordinator && this.#cache instanceof Map) {
     cacheCoordinator.registerCache('slotResolver', this.#cache);
   }
 }
@@ -174,20 +207,49 @@ constructor({ cacheCoordinator }) {
 
 ### 3. Dependency Injection
 
-**File**: `src/dependencyInjection/registrations/anatomyRegistrations.js`
+**File**: `src/dependencyInjection/registrations/worldAndEntityRegistrations.js`
 
 ```javascript
 import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
+import { tokens } from '../tokens.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 
-export function registerAnatomyServices(container) {
-  // Register cache coordinator first
-  container.registerSingleton('IAnatomyCacheCoordinator', ({ eventBus, logger }) => {
-    return new AnatomyCacheCoordinator({ eventBus, logger });
+export function registerWorldAndEntity(container) {
+  const registrar = new Registrar(container);
+  const logger = container.resolve(tokens.ILogger);
+
+  // Register cache coordinator first (add to existing registrations)
+  registrar.singletonFactory(tokens.IAnatomyCacheCoordinator, (c) => {
+    return new AnatomyCacheCoordinator({
+      eventBus: c.resolve(tokens.IEventBus),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(tokens.IAnatomyCacheCoordinator)}.`
+  );
+
+  // Update existing AnatomySocketIndex registration to include coordinator
+  registrar.singletonFactory(tokens.IAnatomySocketIndex, (c) => {
+    return new AnatomySocketIndex({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      cacheCoordinator: c.resolve(tokens.IAnatomyCacheCoordinator),
+    });
   });
 
-  // Other services receive coordinator as dependency
-  container.register('ISocketIndex', ({ cacheCoordinator, logger }) => {
-    return new SocketIndex({ cacheCoordinator, logger });
+  // Update existing SlotResolver registration to include coordinator
+  registrar.singletonFactory(tokens.SlotResolver, (c) => {
+    return new SlotResolver({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      bodyGraphService: c.resolve(tokens.BodyGraphService),
+      anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
+      anatomySocketIndex: c.resolve(tokens.IAnatomySocketIndex),
+      cache: c.resolve(tokens.AnatomyClothingCache),
+      cacheCoordinator: c.resolve(tokens.IAnatomyCacheCoordinator),
+    });
   });
 }
 ```
@@ -235,26 +297,31 @@ describe('AnatomyCacheCoordinator', () => {
     expect(cache2.has('entity1')).toBe(false);
   });
 
-  it('should handle ENTITY_DESTROYED event', () => {
+  it('should handle core:entity_removed event', () => {
     const cache = new Map([['entity1', 'data']]);
     coordinator.registerCache('testCache', cache);
 
-    mockEventBus.dispatch({
-      type: 'ENTITY_DESTROYED',
-      payload: { entityId: 'entity1' }
+    // Trigger the event that coordinator subscribed to
+    const handler = mockEventBus.subscribe.mock.calls.find(
+      call => call[0] === 'core:entity_removed'
+    )[1];
+
+    handler({
+      type: 'core:entity_removed',
+      payload: { instanceId: 'entity1' }
     });
 
     expect(cache.has('entity1')).toBe(false);
   });
 
-  it('should publish ANATOMY_CACHE_INVALIDATED event', () => {
+  it('should publish anatomy:cache_invalidated event', () => {
     coordinator.registerCache('cache', new Map());
     coordinator.invalidateEntity('entity1');
 
-    expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-      type: 'ANATOMY_CACHE_INVALIDATED',
-      payload: expect.objectContaining({ entityId: 'entity1' })
-    });
+    expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+      'anatomy:cache_invalidated',
+      expect.objectContaining({ entityId: 'entity1' })
+    );
   });
 });
 ```
@@ -264,22 +331,32 @@ describe('AnatomyCacheCoordinator', () => {
 ```javascript
 // tests/integration/anatomy/cacheCoordination.test.js
 describe('Cache Coordination Integration', () => {
-  it('should invalidate all anatomy caches when entity destroyed', async () => {
-    const testBed = createTestBed();
-    const coordinator = testBed.container.resolve('IAnatomyCacheCoordinator');
-    const socketIndex = testBed.container.resolve('ISocketIndex');
+  it('should invalidate all anatomy caches when entity components change', async () => {
+    // Note: This test would need to be implemented with actual game engine setup
+    const container = /* create and configure container */;
+    const coordinator = container.resolve(tokens.IAnatomyCacheCoordinator);
+    const socketIndex = container.resolve(tokens.IAnatomySocketIndex);
+    const entityManager = container.resolve(tokens.IEntityManager);
 
-    // Generate anatomy (populates caches)
-    const entityId = await testBed.generateAnatomy({ blueprintId: 'anatomy:humanoid_body' });
+    // Create an entity with anatomy
+    const entityId = 'test-entity-id';
+    // ... entity creation logic ...
 
-    // Verify cache populated
-    expect(socketIndex.getCachedSockets(entityId)).toBeDefined();
+    // Build socket index (populates caches)
+    await socketIndex.buildIndex(entityId);
 
-    // Destroy entity
-    await testBed.destroyEntity(entityId);
+    // Verify cache populated by checking internal maps
+    // Note: May need to add test helper methods to AnatomySocketIndex
+    const sockets = await socketIndex.getEntitySockets(entityId);
+    expect(sockets.length).toBeGreaterThan(0);
 
-    // Verify caches invalidated
-    expect(socketIndex.getCachedSockets(entityId)).toBeUndefined();
+    // Simulate component change that triggers cache invalidation
+    await entityManager.setComponent(entityId, 'anatomy:sockets', { sockets: [] });
+
+    // Verify caches were invalidated by coordinator
+    // The next call should rebuild the index
+    const socketsAfterInvalidation = await socketIndex.getEntitySockets(entityId);
+    expect(socketsAfterInvalidation).toBeDefined();
   });
 });
 ```
@@ -289,11 +366,15 @@ describe('Cache Coordination Integration', () => {
 ## Acceptance Criteria
 
 - [ ] AnatomyCacheCoordinator service created
-- [ ] Event-driven invalidation (ENTITY_DESTROYED, ANATOMY_MODIFIED)
+- [ ] Event-driven invalidation (core:entity_removed, core:component_added, core:component_removed, core:components_batch_added)
 - [ ] Cache registration/unregistration API
-- [ ] Transactional invalidation (all-or-nothing)
-- [ ] Event publication for monitoring
+- [ ] Transactional invalidation (all-or-nothing with error handling)
+- [ ] Event publication for monitoring (anatomy:cache_invalidated, anatomy:caches_cleared)
 - [ ] Services register their caches with coordinator
+- [ ] Add IAnatomyCacheCoordinator token to tokens file
+- [ ] Update AnatomySocketIndex to accept optional cacheCoordinator parameter
+- [ ] Update SlotResolver to accept optional cacheCoordinator parameter
+- [ ] Update worldAndEntityRegistrations.js to register coordinator and pass to services
 - [ ] Unit tests achieve 95% coverage
 - [ ] Integration tests verify automatic invalidation
 - [ ] Existing tests still pass
