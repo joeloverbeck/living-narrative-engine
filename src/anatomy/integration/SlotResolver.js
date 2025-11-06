@@ -41,6 +41,7 @@ class SlotResolver {
    * @param {object} params.anatomySocketIndex - Socket index service
    * @param {Map} [params.slotEntityMappings] - Optional slot-to-entity mappings
    * @param {AnatomyClothingCache} [params.cache] - Cache service
+   * @param {object} [params.cacheCoordinator] - Optional cache coordinator
    */
   constructor({
     logger,
@@ -51,9 +52,16 @@ class SlotResolver {
     anatomySocketIndex,
     slotEntityMappings,
     cache,
+    cacheCoordinator,
   }) {
     this.#logger = ensureValidLogger(logger, this.constructor.name);
     this.#cache = cache || new Map();
+
+    // Register cache with coordinator if both are provided and cache is a Map
+    if (cacheCoordinator && this.#cache instanceof Map) {
+      cacheCoordinator.registerCache('slotResolver', this.#cache);
+      this.#logger.debug('Registered SlotResolver cache with coordinator');
+    }
 
     // Initialize default strategies if none provided
     if (strategies) {

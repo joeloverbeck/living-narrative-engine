@@ -31,7 +31,7 @@ class AnatomySocketIndex extends BaseService {
   #entityToSocketsMap = new Map(); // entityId -> SocketInfo[]
   #rootEntityCache = new Map(); // rootEntityId -> Set<entityId>
 
-  constructor({ logger, entityManager, bodyGraphService }) {
+  constructor({ logger, entityManager, bodyGraphService, cacheCoordinator }) {
     super();
 
     this.#logger = this._init('AnatomySocketIndex', logger, {
@@ -47,6 +47,25 @@ class AnatomySocketIndex extends BaseService {
 
     this.#entityManager = entityManager;
     this.#bodyGraphService = bodyGraphService;
+
+    // Register caches with coordinator if provided
+    if (cacheCoordinator) {
+      cacheCoordinator.registerCache(
+        'anatomySocketIndex:socketToEntity',
+        this.#socketToEntityMap
+      );
+      cacheCoordinator.registerCache(
+        'anatomySocketIndex:entityToSockets',
+        this.#entityToSocketsMap
+      );
+      cacheCoordinator.registerCache(
+        'anatomySocketIndex:rootEntity',
+        this.#rootEntityCache
+      );
+      this.#logger.debug(
+        'Registered AnatomySocketIndex caches with coordinator'
+      );
+    }
   }
 
   /**
