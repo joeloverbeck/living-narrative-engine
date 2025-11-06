@@ -4,8 +4,7 @@ import { SimpleItemLoader } from './simpleItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { ValidationError } from '../errors/validationError.js';
-import { BodyDescriptorValidator } from '../anatomy/utils/bodyDescriptorValidator.js';
-import { BodyDescriptorValidationError } from '../anatomy/errors/bodyDescriptorValidationError.js';
+import { BodyDescriptorValidator } from '../anatomy/validators/bodyDescriptorValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -229,22 +228,37 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
    * @param {object} bodyDescriptors - The body descriptors to validate
    * @param {string} recipeId - The recipe ID for error messages
    * @param {string} filename - The filename for error messages
-   * @throws {ValidationError} If body descriptors are invalid
+   * @throws {ValidationError} If body descriptors are invalid (dev mode only)
    * @private
    */
   _validateBodyDescriptors(bodyDescriptors, recipeId, filename) {
-    try {
-      BodyDescriptorValidator.validate(
-        bodyDescriptors,
-        `recipe '${recipeId}' from file '${filename}'`
-      );
-    } catch (error) {
-      if (error instanceof BodyDescriptorValidationError) {
-        // Convert BodyDescriptorValidationError to ValidationError to maintain consistency
-        throw new ValidationError(error.message);
-      }
-      throw error;
+    // Create validator instance with logger
+    const validator = new BodyDescriptorValidator({ logger: this._logger });
+
+    // Get structured validation results
+    const result = validator.validateRecipeDescriptors(bodyDescriptors);
+
+    // Build context for error messages
+    const context = `Recipe: ${recipeId} (${filename})`;
+
+    // Log all errors
+    for (const error of result.errors) {
+      this._logger.error(`[Recipe Validation] ${context} - ${error}`);
     }
+
+    // Log all warnings (e.g., unknown descriptors)
+    for (const warning of result.warnings) {
+      this._logger.warn(`[Recipe Validation] ${context} - ${warning}`);
+    }
+
+    // In development mode, fail fast on validation errors
+    if (process.env.NODE_ENV !== 'production' && !result.valid) {
+      throw new ValidationError(
+        `Body descriptor validation failed for ${context}:\n${result.errors.join('\n')}`
+      );
+    }
+
+    // In production mode, log but continue (errors already logged above)
   }
 }
 

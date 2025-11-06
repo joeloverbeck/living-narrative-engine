@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import AnatomyRecipeLoader from '../../../src/loaders/anatomyRecipeLoader.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
-import { BodyDescriptorValidationError } from '../../../src/anatomy/errors/bodyDescriptorValidationError.js';
 import {
   createMockConfiguration,
   createMockPathResolver,
@@ -29,15 +28,19 @@ jest.mock('../../../src/utils/idUtils.js', () => {
   };
 });
 
-jest.mock('../../../src/anatomy/utils/bodyDescriptorValidator.js', () => ({
-  BodyDescriptorValidator: {
-    validate: jest.fn(),
-  },
+jest.mock('../../../src/anatomy/validators/bodyDescriptorValidator.js', () => ({
+  BodyDescriptorValidator: jest.fn().mockImplementation(() => ({
+    validateRecipeDescriptors: jest.fn().mockReturnValue({
+      valid: true,
+      errors: [],
+      warnings: []
+    })
+  }))
 }));
 
 import { processAndStoreItem } from '../../../src/loaders/helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../../../src/utils/idUtils.js';
-import { BodyDescriptorValidator } from '../../../src/anatomy/utils/bodyDescriptorValidator.js';
+import { BodyDescriptorValidator } from '../../../src/anatomy/validators/bodyDescriptorValidator.js';
 
 describe('AnatomyRecipeLoader._processFetchedItem', () => {
   let loader;
@@ -61,7 +64,6 @@ describe('AnatomyRecipeLoader._processFetchedItem', () => {
     );
 
     jest.clearAllMocks();
-    BodyDescriptorValidator.validate.mockReset();
   });
 
   it('processes a valid recipe and stores it', async () => {
@@ -187,7 +189,7 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
       createSimpleMockDataRegistry(),
       createMockLogger()
     );
-    BodyDescriptorValidator.validate.mockReset();
+    jest.clearAllMocks();
   });
 
   it('throws when requires is not an array', () => {
@@ -291,57 +293,112 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
 
 describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
   let loader;
+  let logger;
+  let mockValidateRecipeDescriptors;
 
   beforeEach(() => {
+    const config = createMockConfiguration();
+    const pathResolver = createMockPathResolver();
+    const dataFetcher = createMockDataFetcher();
+    const schemaValidator = createMockSchemaValidator();
+    const dataRegistry = createSimpleMockDataRegistry();
+    logger = createMockLogger();
+
     loader = new AnatomyRecipeLoader(
-      createMockConfiguration(),
-      createMockPathResolver(),
-      createMockDataFetcher(),
-      createMockSchemaValidator(),
-      createSimpleMockDataRegistry(),
-      createMockLogger()
+      config,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger
     );
-    BodyDescriptorValidator.validate.mockReset();
+
+    // Get reference to mocked method from the constructor mock
+    mockValidateRecipeDescriptors = BodyDescriptorValidator.mock.results[0]?.value?.validateRecipeDescriptors;
+    jest.clearAllMocks();
   });
 
-  it('delegates to BodyDescriptorValidator when descriptors are provided', () => {
-    BodyDescriptorValidator.validate.mockImplementation(() => undefined);
+  describe('Valid Descriptors', () => {
+    it('should process recipe with valid body descriptors', () => {
+      if (mockValidateRecipeDescriptors) {
+        mockValidateRecipeDescriptors.mockReturnValue({
+          valid: true,
+          errors: [],
+          warnings: []
+        });
+      }
 
-    expect(() =>
-      loader._validateBodyDescriptors({ build: 'athletic' }, 'human', 'human.json')
-    ).not.toThrow();
+      expect(() =>
+        loader._validateBodyDescriptors({ build: 'athletic' }, 'human', 'human.json')
+      ).not.toThrow();
 
-    expect(BodyDescriptorValidator.validate).toHaveBeenCalledWith(
-      { build: 'athletic' },
-      "recipe 'human' from file 'human.json'"
-    );
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
   });
 
-  it('wraps BodyDescriptorValidationError instances in ValidationError', () => {
-    BodyDescriptorValidator.validate.mockImplementation(() => {
-      throw new BodyDescriptorValidationError('bad descriptor');
+  describe('Invalid Descriptors', () => {
+    it('should log errors and fail in development mode', () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      if (mockValidateRecipeDescriptors) {
+        mockValidateRecipeDescriptors.mockReturnValue({
+          valid: false,
+          errors: ['Invalid height descriptor: \'invalid\''],
+          warnings: []
+        });
+      }
+
+      expect(() =>
+        loader._validateBodyDescriptors({ height: 'invalid' }, 'human', 'human.json')
+      ).toThrow(ValidationError);
+
+      expect(logger.error).toHaveBeenCalled();
+      expect(logger.error.mock.calls[0][0]).toContain('human');
+      expect(logger.error.mock.calls[0][0]).toContain('human.json');
+
+      process.env.NODE_ENV = originalEnv;
     });
 
-    const invokeValidation = () =>
-      loader._validateBodyDescriptors({ build: 'bad' }, 'human', 'human.json');
+    it('should log errors but not fail in production mode', () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
-    expect(invokeValidation).toThrow(ValidationError);
-    expect(invokeValidation).toThrow('bad descriptor');
+      if (mockValidateRecipeDescriptors) {
+        mockValidateRecipeDescriptors.mockReturnValue({
+          valid: false,
+          errors: ['Invalid height descriptor'],
+          warnings: []
+        });
+      }
+
+      expect(() =>
+        loader._validateBodyDescriptors({ height: 'invalid' }, 'human', 'human.json')
+      ).not.toThrow();
+
+      expect(logger.error).toHaveBeenCalled();
+
+      process.env.NODE_ENV = originalEnv;
+    });
   });
 
-  it('rethrows unexpected errors from BodyDescriptorValidator', () => {
-    const unexpectedError = new Error('boom');
-    BodyDescriptorValidator.validate.mockImplementation(() => {
-      throw unexpectedError;
+  describe('Unknown Descriptors', () => {
+    it('should log warnings for unknown descriptors', () => {
+      if (mockValidateRecipeDescriptors) {
+        mockValidateRecipeDescriptors.mockReturnValue({
+          valid: true,
+          errors: [],
+          warnings: ['Unknown body descriptor \'unknownDescriptor\'']
+        });
+      }
+
+      expect(() =>
+        loader._validateBodyDescriptors({ unknownDescriptor: 'value' }, 'human', 'human.json')
+      ).not.toThrow();
+
+      expect(logger.warn).toHaveBeenCalled();
+      expect(logger.warn.mock.calls[0][0]).toContain('Unknown body descriptor');
     });
-
-    const invokeValidation = () =>
-      loader._validateBodyDescriptors(
-        { build: 'athletic' },
-        'human',
-        'human.json'
-      );
-
-    expect(invokeValidation).toThrow(unexpectedError);
   });
 });
