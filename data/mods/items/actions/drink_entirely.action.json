@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:drink_entirely",
+  "name": "Drink Entirely",
+  "description": "Consume all remaining liquid from a drinkable container, emptying it completely.",
+  "targets": {
+    "primary": {
+      "scope": "items:examinable_items",
+      "placeholder": "primary",
+      "description": "Drinkable container to empty completely"
+    }
+  },
+  "required_components": {
+    "primary": [
+      "items:drinkable",
+      "items:liquid_container"
+    ]
+  },
+  "prerequisites": [],
+  "template": "drink entirety of {primary}"
+}

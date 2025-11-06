@@ -21,8 +21,10 @@
       "allows_soothing_hug.component.json",
       "can_apply_lipstick.component.json",
       "container.component.json",
+      "drinkable.component.json",
       "inventory.component.json",
       "item.component.json",
+      "liquid_container.component.json",
       "openable.component.json",
       "portable.component.json",
       "readable.component.json",
@@ -30,6 +32,8 @@
     ],
     "actions": [
       "apply_lipstick.action.json",
+      "drink_entirely.action.json",
+      "drink_from.action.json",
       "drop_item.action.json",
       "examine_item.action.json",
       "give_item.action.json",
@@ -42,6 +46,8 @@
     ],
     "rules": [
       "handle_apply_lipstick.rule.json",
+      "handle_drink_entirely.rule.json",
+      "handle_drink_from.rule.json",
       "handle_drop_item.rule.json",
       "handle_examine_item.rule.json",
       "handle_give_item.rule.json",
@@ -54,6 +60,8 @@
     ],
     "conditions": [
       "event-is-action-apply-lipstick.condition.json",
+      "event-is-action-drink-entirely.condition.json",
+      "event-is-action-drink-from.condition.json",
       "event-is-action-drop-item.condition.json",
       "event-is-action-examine-item.condition.json",
       "event-is-action-give-item.condition.json",
