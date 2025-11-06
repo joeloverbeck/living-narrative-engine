@@ -485,4 +485,72 @@ describe('EquipmentDescriptionService - Secondary Coverage', () => {
       expect(result).not.toContain('Genitals are fully exposed');
     });
   });
+
+  describe('edge cases for coverage mapping inspection', () => {
+    it('should skip invalid slot shapes, ignore non-string layer values, and log coverage mapping errors', async () => {
+      const entityId = 'character_edge_case';
+      const coveringItemId = 'clothing:edge_case_trousers';
+
+      mockClothingManagementService.getEquippedItems.mockResolvedValue({
+        success: true,
+        equipped: {
+          unexpected_slot: 'just-a-string',
+          torso_lower: {
+            base: null,
+          },
+          legs: {
+            base: null,
+            outer: coveringItemId,
+          },
+        },
+      });
+
+      const coveringItemEntity = {
+        id: coveringItemId,
+        components: {
+          'core:name': { text: 'edge case trousers' },
+        },
+      };
+
+      mockEntityManager.getEntityInstance.mockResolvedValue(coveringItemEntity);
+      mockDescriptorFormatter.formatDescriptors.mockReturnValue('');
+
+      const coverageError = new Error('coverage unavailable');
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedEntityId, componentId) => {
+          if (
+            requestedEntityId === entityId &&
+            componentId === 'clothing:slot_metadata'
+          ) {
+            return {
+              slotMappings: {
+                torso_lower: {
+                  coveredSockets: ['genitals'],
+                },
+              },
+            };
+          }
+
+          if (
+            requestedEntityId === coveringItemId &&
+            componentId === 'clothing:coverage_mapping'
+          ) {
+            throw coverageError;
+          }
+
+          return null;
+        }
+      );
+
+      const result = await service.generateEquipmentDescription(entityId);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Could not check coverage_mapping for item ${coveringItemId}`
+        ),
+        coverageError
+      );
+      expect(result).toContain('Genitals are fully exposed.');
+    });
+  });
 });
