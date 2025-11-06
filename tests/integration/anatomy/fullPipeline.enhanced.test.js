@@ -331,9 +331,11 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
     });
 
     it('should handle invalid actor ID gracefully', async () => {
-      await expect(async () => {
-        await anatomyGenerationService.generateAnatomy('invalid_actor_id');
-      }).rejects.toThrow();
+      // Graceful handling means it should NOT throw, but return false
+      const result = await anatomyGenerationService.generateAnatomy(
+        'invalid_actor_id'
+      );
+      expect(result).toBe(false);
     });
 
     it('should validate anatomy data structure', async () => {
