@@ -12,8 +12,6 @@
       "partType": "spinneret",
       "tags": [
         "anatomy:part",
-        "anatomy:chitinous",
-        "anatomy:web_weaver"
       ],
       "properties": {
         "descriptors:texture": {
@@ -21,10 +19,6 @@
         },
         "descriptors:body_hair": {
           "hairDensity": "hairy"
-        },
-        "anatomy:web_weaver": {
-          "silkYield": "abundant",
-          "silkStrength": "resilient"
         }
       }
     }
@@ -34,9 +28,7 @@
       "matchesGroup": "limbSet:leg",
       "partType": "spider_leg",
       "tags": [
-        "anatomy:part",
-        "anatomy:chitinous",
-        "anatomy:hairy"
+        "anatomy:part"
       ],
       "properties": {
         "descriptors:texture": {
@@ -44,9 +36,6 @@
         },
         "descriptors:body_hair": {
           "hairDensity": "hairy"
-        },
-        "anatomy:traction": {
-          "surfaceGrip": "forest_bark"
         }
       }
     },
@@ -54,22 +43,15 @@
       "matchesGroup": "appendage:pedipalp",
       "partType": "spider_pedipalp",
       "tags": [
-        "anatomy:part",
-        "anatomy:sensory"
+        "anatomy:part"
       ],
-      "properties": {
-        "anatomy:sensory": {
-          "acuity": "keen",
-          "vibrationSense": "high"
-        }
-      }
+      "properties": {}
     },
     {
       "matchesGroup": "appendage:abdomen",
       "partType": "spider_abdomen",
       "tags": [
-        "anatomy:part",
-        "anatomy:chitinous"
+        "anatomy:part"
       ],
       "properties": {
         "descriptors:texture": {
