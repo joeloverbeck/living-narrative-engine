@@ -11,9 +11,20 @@
 import {
   validateDependency,
   assertPresent,
-  assertNonBlankString,
 } from '../utils/dependencyUtils.js';
 import { ValidationError } from '../errors/validationError.js';
+import {
+  resolveSlotGroup,
+  validateMatchesGroup
+} from './recipePatternResolver/matchers/groupMatcher.js';
+import {
+  resolveWildcardPattern,
+  validateMatchesPattern,
+} from './recipePatternResolver/matchers/wildcardMatcher.js';
+import {
+  resolvePropertyFilter,
+  validateMatchesAll
+} from './recipePatternResolver/matchers/propertyMatcher.js';
 
 /**
  * Resolves V2 recipe patterns into concrete slot definitions
@@ -77,11 +88,16 @@ class RecipePatternResolver {
 
       // Phase 2: Pattern-specific validation
       if (pattern.matchesGroup) {
-        this.#validateMatchesGroup(pattern, blueprint, i);
+        const deps = {
+          dataRegistry: this.#dataRegistry,
+          slotGenerator: this.#slotGenerator,
+          logger: this.#logger
+        };
+        validateMatchesGroup(pattern, blueprint, i, deps);
       } else if (pattern.matchesPattern !== undefined) {
-        this.#validateMatchesPattern(pattern, blueprint, i);
+        validateMatchesPattern(pattern, blueprint, i, this.#logger);
       } else if (pattern.matchesAll) {
-        this.#validateMatchesAll(pattern, blueprint, i);
+        validateMatchesAll(pattern, blueprint, i, this.#logger);
       }
 
       // Phase 3: Exclusion validation
@@ -187,159 +203,6 @@ class RecipePatternResolver {
     }
   }
 
-  /**
-   * Validates matchesGroup pattern.
-   * Checks group format, existence in template, and match count.
-   *
-   * @param {object} pattern - Pattern with matchesGroup
-   * @param {object} blueprint - Blueprint with structure template
-   * @param {number} patternIndex - Pattern index for error messages
-   * @throws {ValidationError} If group validation fails
-   * @private
-   */
-  #validateMatchesGroup(pattern, blueprint, patternIndex) {
-    const groupRef = pattern.matchesGroup;
-
-    // Validate format
-    const [groupType, groupName] = groupRef.split(':');
-
-    if (!groupType || !groupName) {
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: Slot group '${groupRef}' format invalid. Expected 'limbSet:{type}' or 'appendage:{type}'.`
-      );
-    }
-
-    if (groupType !== 'limbSet' && groupType !== 'appendage') {
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: Slot group '${groupRef}' format invalid. Expected 'limbSet:{type}' or 'appendage:{type}'.`
-      );
-    }
-
-    // Load structure template
-    const template = this.#dataRegistry.get(
-      'anatomyStructureTemplates',
-      blueprint.structureTemplate
-    );
-
-    // Check group exists in template
-    let groupExists = false;
-    const availableGroups = [];
-
-    const topology = template?.topology;
-
-    if (groupType === 'limbSet') {
-      const limbSets = Array.isArray(topology?.limbSets)
-        ? topology.limbSets
-        : [];
-      groupExists = limbSets.some(ls => ls.type === groupName);
-      availableGroups.push(
-        ...limbSets.map(ls => `limbSet:${ls.type}`)
-      );
-    } else {
-      const appendages = Array.isArray(topology?.appendages)
-        ? topology.appendages
-        : [];
-      groupExists = appendages.some(a => a.type === groupName);
-      availableGroups.push(
-        ...appendages.map(a => `appendage:${a.type}`)
-      );
-    }
-
-    if (!groupExists) {
-      const availableStr = availableGroups.length > 0
-        ? ` Available groups: ${availableGroups.map(g => `'${g}'`).join(', ')}`
-        : '';
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: Slot group '${groupRef}' not found in structure template '${blueprint.structureTemplate}'.${availableStr}`
-      );
-    }
-
-    try {
-      this.#resolveSlotGroup(groupRef, blueprint, {
-        throwOnZeroMatches: false,
-        allowMissing: true,
-      });
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw new ValidationError(
-          `Pattern ${patternIndex + 1}: ${error.message}`
-        );
-      }
-
-      throw error;
-    }
-  }
-
-  /**
-   * Validates matchesPattern wildcard pattern.
-   * Checks pattern is non-empty and warns if no matches.
-   *
-   * @param {object} pattern - Pattern with matchesPattern
-   * @param {string[]} blueprintSlotKeys - Available slot keys
-   * @param {number} patternIndex - Pattern index for error messages
-   * @throws {ValidationError} If pattern is invalid
-   * @private
-   */
-  #validateMatchesPattern(pattern, blueprint, patternIndex) {
-    const patternStr = pattern.matchesPattern;
-
-    // Check pattern is non-empty string
-    if (typeof patternStr !== 'string' || patternStr.length === 0) {
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: Pattern must be a non-empty string`
-      );
-    }
-
-    const blueprintSlotKeys = Object.keys(blueprint.slots || {});
-    const matchedKeys = this.#resolveWildcardPattern(
-      patternStr,
-      blueprintSlotKeys
-    );
-
-    if (matchedKeys.length === 0) {
-      return;
-    }
-  }
-
-  /**
-   * Validates matchesAll property-based filter.
-   * Checks at least one filter property exists, validates wildcard usage.
-   *
-   * @param {object} pattern - Pattern with matchesAll
-   * @param {object} blueprintSlots - Blueprint slot definitions
-   * @param {number} patternIndex - Pattern index for error messages
-   * @throws {ValidationError} If filter is invalid
-   * @private
-   */
-  #validateMatchesAll(pattern, blueprint, patternIndex) {
-    const filter = pattern.matchesAll;
-
-    // Check at least one filter property
-    const filterProps = ['slotType', 'orientation', 'socketId'];
-    const presentProps = filterProps.filter(p => filter[p] !== undefined);
-
-    if (presentProps.length === 0) {
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: matchesAll must have at least one filter property: 'slotType', 'orientation', or 'socketId'.`
-      );
-    }
-
-    // Validate wildcard restrictions: slotType doesn't support wildcards
-    if (filter.slotType && typeof filter.slotType === 'string' && filter.slotType.includes('*')) {
-      throw new ValidationError(
-        `Pattern ${patternIndex + 1}: matchesAll wildcard pattern on 'slotType' is not supported. Wildcards only work on 'orientation' and 'socketId'.`
-      );
-    }
-
-    const matchedKeys = this.#resolvePropertyFilter(
-      filter,
-      blueprint.slots || {}
-    );
-
-    if (matchedKeys.length === 0) {
-      return;
-    }
-  }
 
   /**
    * Validates pattern exclusions.
@@ -453,14 +316,20 @@ class RecipePatternResolver {
       if (pattern.matches) {
         return pattern.matches;
       } else if (pattern.matchesGroup) {
-        return this.#resolveSlotGroup(pattern.matchesGroup, blueprint);
+        const deps = {
+          dataRegistry: this.#dataRegistry,
+          slotGenerator: this.#slotGenerator,
+          logger: this.#logger
+        };
+        return resolveSlotGroup(pattern.matchesGroup, blueprint, {}, deps);
       } else if (pattern.matchesPattern) {
-        return this.#resolveWildcardPattern(
+        return resolveWildcardPattern(
           pattern.matchesPattern,
-          Object.keys(blueprint.slots || {})
+          Object.keys(blueprint.slots || {}),
+          this.#logger
         );
       } else if (pattern.matchesAll) {
-        return this.#resolvePropertyFilter(pattern.matchesAll, blueprint.slots || {});
+        return resolvePropertyFilter(pattern.matchesAll, blueprint.slots || {}, this.#logger);
       }
       return [];
     } catch {
@@ -550,7 +419,6 @@ class RecipePatternResolver {
 
     for (let index = 0; index < recipe.patterns.length; index += 1) {
       const pattern = recipe.patterns[index];
-      console.log(`[DEBUG RecipePatternResolver] Pattern ${index}:`, JSON.stringify(pattern, null, 2));
       const patternNumber = index + 1;
       const usesExplicitMatches = Array.isArray(pattern.matches);
       const hasExplicitMatches =
@@ -571,9 +439,16 @@ class RecipePatternResolver {
       // V2 pattern: slot group selector
       else if (matchesGroupRef !== undefined) {
         try {
-          matchedSlotKeys = this.#resolveSlotGroup(
+          const deps = {
+            dataRegistry: this.#dataRegistry,
+            slotGenerator: this.#slotGenerator,
+            logger: this.#logger
+          };
+          matchedSlotKeys = resolveSlotGroup(
             matchesGroupRef,
-            blueprint
+            blueprint,
+            {},
+            deps
           );
         } catch (error) {
           if (error instanceof ValidationError) {
@@ -613,9 +488,10 @@ class RecipePatternResolver {
       }
       // V2 pattern: wildcard pattern
       else if (matchesPatternStr !== undefined) {
-        matchedSlotKeys = this.#resolveWildcardPattern(
+        matchedSlotKeys = resolveWildcardPattern(
           matchesPatternStr,
-          blueprintSlotKeys
+          blueprintSlotKeys,
+          this.#logger
         );
         this.#logger.debug(
           `matchesPattern '${matchesPatternStr}' resolved to ${matchedSlotKeys.length} slots`
@@ -623,9 +499,10 @@ class RecipePatternResolver {
       }
       // V2 pattern: property-based filter
       else if (matchesAllFilter) {
-        matchedSlotKeys = this.#resolvePropertyFilter(
+        matchedSlotKeys = resolvePropertyFilter(
           matchesAllFilter,
-          blueprintSlots
+          blueprintSlots,
+          this.#logger
         );
         this.#logger.debug(
           `matchesAll resolved to ${matchedSlotKeys.length} slots`
@@ -709,11 +586,6 @@ class RecipePatternResolver {
           continue;
         }
 
-        console.log(`[DEBUG RecipePatternResolver] Expanding slot ${slotKey}`);
-        console.log('[DEBUG]   FULL PATTERN:', JSON.stringify(pattern, null, 2));
-        console.log('[DEBUG]   pattern.properties:', pattern.properties);
-        console.log('[DEBUG]   pattern.properties exists?', !!pattern.properties);
-
         expandedSlots[slotKey] = {
           partType: pattern.partType,
           preferId: pattern.preferId,
@@ -723,8 +595,6 @@ class RecipePatternResolver {
             : pattern.notTags,
           properties: pattern.properties ? { ...pattern.properties } : undefined,
         };
-
-        console.log('[DEBUG]   expandedSlots[slotKey]:', JSON.stringify(expandedSlots[slotKey], null, 2));
       }
 
       const hasMatcherAtEnd = this.#hasMatcher(pattern);
@@ -749,270 +619,12 @@ class RecipePatternResolver {
     };
   }
 
-  /**
-   * Resolves matchesGroup pattern to slot keys.
-   *
-   * Format: "limbSet:leg" or "appendage:tail"
-   *
-   * @param {string} groupRef - Group reference in format "type:name"
-   * @param {object} blueprint - Blueprint with structure template reference
-   * @returns {string[]} Array of matching slot keys
-   * @private
-   */
-  #resolveSlotGroup(groupRef, blueprint, options = {}) {
-    const { throwOnZeroMatches = true, allowMissing = false } = options;
-    assertNonBlankString(
-      groupRef,
-      'Group reference',
-      'resolveSlotGroup',
-      this.#logger
-    );
-
-    if (!blueprint.structureTemplate) {
-      const message = `Cannot resolve slot group '${groupRef}': blueprint has no structure template`;
-      this.#logger.warn(message);
-      if (allowMissing) {
-        return [];
-      }
-      throw new ValidationError(message);
-    }
-
-    // Load structure template from DataRegistry
-    const template = this.#dataRegistry.get(
-      'anatomyStructureTemplates',
-      blueprint.structureTemplate
-    );
-
-    if (!template) {
-      throw new ValidationError(
-        `Structure template not found: ${blueprint.structureTemplate}`
-      );
-    }
-
-    const [groupType, groupName] = groupRef.split(':');
-
-    if (!groupType || !groupName) {
-      throw new ValidationError(
-        `Invalid slot group reference format: '${groupRef}'`
-      );
-    }
-
-    if (groupType !== 'limbSet' && groupType !== 'appendage') {
-      throw new ValidationError(
-        `Invalid slot group type: '${groupType}'. Expected 'limbSet' or 'appendage'`
-      );
-    }
-
-    const slotKeys = [];
-    let availableGroups = [];
-    let hasMatchingDefinitions = false;
-
-    if (groupType === 'limbSet') {
-      const limbSets = Array.isArray(template.topology?.limbSets)
-        ? template.topology.limbSets
-        : [];
-      const matchingLimbSets = limbSets.filter(ls => ls.type === groupName);
-      availableGroups = limbSets.map(ls => `limbSet:${ls.type}`);
-      hasMatchingDefinitions = matchingLimbSets.length > 0;
-
-      this.#logger.debug(
-        `Found ${matchingLimbSets.length} limb sets matching type '${groupName}'`
-      );
-
-      for (const limbSet of matchingLimbSets) {
-        const keys = this.#generateSlotKeysFromLimbSet(limbSet);
-        slotKeys.push(...keys);
-      }
-    } else if (groupType === 'appendage') {
-      const appendages = Array.isArray(template.topology?.appendages)
-        ? template.topology.appendages
-        : [];
-      const matchingAppendages = appendages.filter(a => a.type === groupName);
-      availableGroups = appendages.map(a => `appendage:${a.type}`);
-      hasMatchingDefinitions = matchingAppendages.length > 0;
-
-      this.#logger.debug(
-        `Found ${matchingAppendages.length} appendages matching type '${groupName}'`
-      );
-
-      for (const appendage of matchingAppendages) {
-        const keys = this.#generateSlotKeysFromAppendage(appendage);
-        slotKeys.push(...keys);
-      }
-    }
-
-    if (slotKeys.length === 0) {
-      if (!hasMatchingDefinitions) {
-        if (allowMissing) {
-          return [];
-        }
-        const availableSummary =
-          availableGroups.length > 0
-            ? ` Available groups: ${availableGroups
-                .map(group => `'${group}'`)
-                .join(', ')}.`
-            : '';
-
-        throw new ValidationError(
-          `Slot group '${groupRef}' not found in structure template '${blueprint.structureTemplate}'.${availableSummary}`
-        );
-      }
-
-      if (throwOnZeroMatches) {
-        throw new ValidationError(
-          `Slot group '${groupRef}' matched 0 slots in structure template '${blueprint.structureTemplate}'.`
-        );
-      }
-
-      return [];
-    }
-
-    return slotKeys;
-  }
-
-  /**
-   * Generates slot keys from limb set definition.
-   *
-   * @param {object} limbSet - Limb set definition from structure template
-   * @returns {string[]} Array of slot keys
-   * @private
-   */
-  #generateSlotKeysFromLimbSet(limbSet) {
-    assertPresent(limbSet, 'Limb set is required');
-
-    // Leverage existing SlotGenerator logic
-    return this.#slotGenerator.extractSlotKeysFromLimbSet(limbSet);
-  }
-
-  /**
-   * Generates slot keys from appendage definition.
-   *
-   * @param {object} appendage - Appendage definition from structure template
-   * @returns {string[]} Array of slot keys
-   * @private
-   */
-  #generateSlotKeysFromAppendage(appendage) {
-    assertPresent(appendage, 'Appendage is required');
-
-    // Leverage existing SlotGenerator logic
-    return this.#slotGenerator.extractSlotKeysFromAppendage(appendage);
-  }
-
-  /**
-   * Resolves matchesPattern with wildcards to matching slot keys.
-   *
-   * Pattern examples: "leg_*", "*_left", "*tentacle*"
-   *
-   * @param {string} pattern - Wildcard pattern
-   * @param {string[]} slotKeys - Available slot keys to match against
-   * @returns {string[]} Array of matching slot keys
-   * @private
-   */
-  #resolveWildcardPattern(pattern, slotKeys) {
-    assertNonBlankString(
-      pattern,
-      'Pattern',
-      'resolveWildcardPattern',
-      this.#logger
-    );
-    assertPresent(slotKeys, 'Slot keys array is required');
-
-    const regex = this.#wildcardToRegex(pattern);
-    const matches = slotKeys.filter(key => regex.test(key));
-
-    this.#logger.debug(
-      `Wildcard pattern '${pattern}' matched ${matches.length} of ${slotKeys.length} slots`
-    );
-
-    return matches;
-  }
-
-  /**
-   * Converts wildcard pattern to regular expression.
-   *
-   * Escapes regex special characters and replaces * with .*
-   *
-   * @param {string} pattern - Wildcard pattern (e.g., "leg_*", "*_left")
-   * @returns {RegExp} Compiled regular expression
-   * @private
-   */
-  #wildcardToRegex(pattern) {
-    // Escape all regex special characters except *
-    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-    // Replace * with .*
-    const regexPattern = escaped.replace(/\*/g, '.*');
-    return new RegExp(`^${regexPattern}$`);
-  }
-
-  /**
-   * Resolves matchesAll with property filters to matching slot keys.
-   *
-   * Filters slots by:
-   * - slotType: Exact match on slot's partType requirement
-   * - orientation: Pattern match on slot's orientation (supports wildcards)
-   * - socketId: Pattern match on slot's socket (supports wildcards)
-   *
-   * @param {object} filter - Property filter criteria
-   * @param {object} blueprintSlots - Blueprint's slot definitions
-   * @returns {string[]} Array of matching slot keys
-   * @private
-   */
-  #resolvePropertyFilter(filter, blueprintSlots) {
-    assertPresent(filter, 'Filter is required');
-    assertPresent(blueprintSlots, 'Blueprint slots are required');
-
-    const matchedKeys = [];
-
-    for (const [slotKey, slotDef] of Object.entries(blueprintSlots)) {
-      let matches = true;
-
-      // Filter by slotType (exact match on partType requirement)
-      if (
-        filter.slotType &&
-        slotDef.requirements?.partType !== filter.slotType
-      ) {
-        matches = false;
-      }
-
-      // Filter by orientation (with wildcard support)
-      if (filter.orientation && slotDef.orientation) {
-        const orientationRegex = this.#wildcardToRegex(filter.orientation);
-        if (!orientationRegex.test(slotDef.orientation)) {
-          matches = false;
-        }
-      } else if (filter.orientation && !slotDef.orientation) {
-        // Filter specifies orientation but slot has none
-        matches = false;
-      }
-
-      // Filter by socketId (with wildcard support)
-      if (filter.socketId && slotDef.socket) {
-        const socketRegex = this.#wildcardToRegex(filter.socketId);
-        if (!socketRegex.test(slotDef.socket)) {
-          matches = false;
-        }
-      } else if (filter.socketId && !slotDef.socket) {
-        // Filter specifies socket but slot has none
-        matches = false;
-      }
-
-      if (matches) {
-        matchedKeys.push(slotKey);
-      }
-    }
-
-    this.#logger.debug(
-      `Property filter matched ${matchedKeys.length} of ${Object.keys(blueprintSlots).length} slots`
-    );
-
-    return matchedKeys;
-  }
 
   /**
    * Collects blueprint availability summaries for error hints.
    *
    * @param {object} blueprint - Blueprint definition
-   * @returns {{slotKeys: string[], orientations: string[], socketIds: string[]}}
+   * @returns {{slotKeys: string[], orientations: string[], socketIds: string[]}} Object with blueprint availability info
    * @private
    */
   #collectBlueprintAvailability(blueprint) {
@@ -1049,6 +661,7 @@ class RecipePatternResolver {
    * @param {object} options - Error context options
    * @param {object} options.pattern - Pattern that failed to match
    * @param {object} options.blueprint - Blueprint being resolved
+   * @param {number} [options.patternIndex] - Pattern index for error messages
    * @param {string} [options.stage] - Stage descriptor (e.g., 'after applying exclusions')
    * @param {string} [options.slotGroupRef] - Slot group reference context
    * @throws {ValidationError} Always throws with composed message
@@ -1161,7 +774,12 @@ class RecipePatternResolver {
     // Exclude slot groups
     if (exclusions.slotGroups && Array.isArray(exclusions.slotGroups)) {
       for (const groupRef of exclusions.slotGroups) {
-        const excludedKeys = this.#resolveSlotGroup(groupRef, blueprint);
+        const deps = {
+          dataRegistry: this.#dataRegistry,
+          slotGenerator: this.#slotGenerator,
+          logger: this.#logger
+        };
+        const excludedKeys = resolveSlotGroup(groupRef, blueprint, {}, deps);
         filtered = filtered.filter(key => !excludedKeys.includes(key));
         this.#logger.debug(
           `Excluded ${excludedKeys.length} slots from group '${groupRef}'`
