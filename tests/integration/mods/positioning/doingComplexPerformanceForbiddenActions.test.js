@@ -18,6 +18,12 @@ import drawAttentionToAssAction from '../../../../data/mods/seduction/actions/dr
 import drawAttentionToBreastsAction from '../../../../data/mods/seduction/actions/draw_attention_to_breasts.action.json';
 import grabCrotchDrawAttentionAction from '../../../../data/mods/seduction/actions/grab_crotch_draw_attention.action.json';
 import stretchSexilyAction from '../../../../data/mods/seduction/actions/stretch_sexily.action.json';
+import goAction from '../../../../data/mods/movement/actions/go.action.json';
+import getCloseAction from '../../../../data/mods/positioning/actions/get_close.action.json';
+import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import placeYourselfBehindAction from '../../../../data/mods/positioning/actions/place_yourself_behind.action.json';
+import sitDownAction from '../../../../data/mods/positioning/actions/sit_down.action.json';
+import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
 
 /**
  * Test suite for verifying forbidden component behavior for various actions
@@ -97,6 +103,48 @@ describe('actions forbidden when doing complex performance', () => {
     it('stretch_sexily should have positioning:doing_complex_performance as forbidden component', () => {
       expect(stretchSexilyAction.forbidden_components).toBeDefined();
       expect(stretchSexilyAction.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
+    });
+
+    it('go should have positioning:doing_complex_performance as forbidden component', () => {
+      expect(goAction.forbidden_components).toBeDefined();
+      expect(goAction.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
+    });
+
+    it('get_close should have positioning:doing_complex_performance as forbidden component', () => {
+      expect(getCloseAction.forbidden_components).toBeDefined();
+      expect(getCloseAction.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
+    });
+
+    it('kneel_before should have positioning:doing_complex_performance as forbidden component', () => {
+      expect(kneelBeforeAction.forbidden_components).toBeDefined();
+      expect(kneelBeforeAction.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
+    });
+
+    it('place_yourself_behind should have positioning:doing_complex_performance as forbidden component', () => {
+      expect(placeYourselfBehindAction.forbidden_components).toBeDefined();
+      expect(placeYourselfBehindAction.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
+    });
+
+    it('sit_down should have positioning:doing_complex_performance as forbidden component', () => {
+      expect(sitDownAction.forbidden_components).toBeDefined();
+      expect(sitDownAction.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
+    });
+
+    it('turn_your_back should have positioning:doing_complex_performance as forbidden component', () => {
+      expect(turnYourBackAction.forbidden_components).toBeDefined();
+      expect(turnYourBackAction.forbidden_components.actor).toContain(
         'positioning:doing_complex_performance'
       );
     });
@@ -322,6 +370,168 @@ describe('actions forbidden when doing complex performance', () => {
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('seduction:stretch_sexily');
+      });
+    });
+
+    describe('Movement actions', () => {
+      it('go is NOT available when actor is doing complex performance', () => {
+        const room1 = ModEntityScenarios.createRoom('room1', 'Test Room 1');
+        const room2 = ModEntityScenarios.createRoom('room2', 'Test Room 2');
+
+        const actor = new ModEntityBuilder('actor1')
+          .withName('Performer')
+          .atLocation('room1')
+          .asActor()
+          .withComponent('positioning:doing_complex_performance', {})
+          .build();
+
+        // Create a direction from room1 to room2
+        const direction = new ModEntityBuilder('dir1')
+          .withName('north')
+          .withComponent('movement:direction', {
+            source: 'room1',
+            destination: 'room2',
+            description: 'To the north'
+          })
+          .build();
+
+        testFixture.reset([room1, room2, actor, direction]);
+        testFixture.testEnv.actionIndex.buildIndex([goAction]);
+
+        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const ids = availableActions.map((action) => action.id);
+
+        expect(ids).not.toContain('movement:go');
+      });
+    });
+
+    describe('Positioning actions', () => {
+      it('get_close is NOT available when actor is doing complex performance', () => {
+        const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+
+        const actor = new ModEntityBuilder('actor1')
+          .withName('Performer')
+          .atLocation('room1')
+          .asActor()
+          .withComponent('positioning:doing_complex_performance', {})
+          .build();
+
+        const target = new ModEntityBuilder('actor2')
+          .withName('Target')
+          .atLocation('room1')
+          .asActor()
+          .build();
+
+        testFixture.reset([room, actor, target]);
+        testFixture.testEnv.actionIndex.buildIndex([getCloseAction]);
+
+        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const ids = availableActions.map((action) => action.id);
+
+        expect(ids).not.toContain('positioning:get_close');
+      });
+
+      it('kneel_before is NOT available when actor is doing complex performance', () => {
+        const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+
+        const actor = new ModEntityBuilder('actor1')
+          .withName('Performer')
+          .atLocation('room1')
+          .asActor()
+          .withComponent('positioning:doing_complex_performance', {})
+          .build();
+
+        const target = new ModEntityBuilder('actor2')
+          .withName('Target')
+          .atLocation('room1')
+          .asActor()
+          .build();
+
+        testFixture.reset([room, actor, target]);
+        testFixture.testEnv.actionIndex.buildIndex([kneelBeforeAction]);
+
+        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const ids = availableActions.map((action) => action.id);
+
+        expect(ids).not.toContain('positioning:kneel_before');
+      });
+
+      it('place_yourself_behind is NOT available when actor is doing complex performance', () => {
+        const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+
+        const actor = new ModEntityBuilder('actor1')
+          .withName('Performer')
+          .atLocation('room1')
+          .asActor()
+          .withComponent('positioning:doing_complex_performance', {})
+          .build();
+
+        const target = new ModEntityBuilder('actor2')
+          .withName('Target')
+          .atLocation('room1')
+          .asActor()
+          .build();
+
+        testFixture.reset([room, actor, target]);
+        testFixture.testEnv.actionIndex.buildIndex([placeYourselfBehindAction]);
+
+        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const ids = availableActions.map((action) => action.id);
+
+        expect(ids).not.toContain('positioning:place_yourself_behind');
+      });
+
+      it('sit_down is NOT available when actor is doing complex performance', () => {
+        const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+
+        const actor = new ModEntityBuilder('actor1')
+          .withName('Performer')
+          .atLocation('room1')
+          .asActor()
+          .withComponent('positioning:doing_complex_performance', {})
+          .build();
+
+        const chair = new ModEntityBuilder('chair1')
+          .withName('chair')
+          .atLocation('room1')
+          .withComponent('positioning:furniture', {
+            capacity: 1,
+            occupied_by: []
+          })
+          .build();
+
+        testFixture.reset([room, actor, chair]);
+        testFixture.testEnv.actionIndex.buildIndex([sitDownAction]);
+
+        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const ids = availableActions.map((action) => action.id);
+
+        expect(ids).not.toContain('positioning:sit_down');
+      });
+
+      it('turn_your_back is NOT available when actor is doing complex performance', () => {
+        const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+
+        const actor = new ModEntityBuilder('actor1')
+          .withName('Performer')
+          .atLocation('room1')
+          .asActor()
+          .withComponent('positioning:doing_complex_performance', {})
+          .build();
+
+        const target = new ModEntityBuilder('actor2')
+          .withName('Target')
+          .atLocation('room1')
+          .asActor()
+          .build();
+
+        testFixture.reset([room, actor, target]);
+        testFixture.testEnv.actionIndex.buildIndex([turnYourBackAction]);
+
+        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const ids = availableActions.map((action) => action.id);
+
+        expect(ids).not.toContain('positioning:turn_your_back');
       });
     });
   });

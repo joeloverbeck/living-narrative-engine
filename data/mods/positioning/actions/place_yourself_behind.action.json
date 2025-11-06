@@ -21,7 +21,8 @@
       "positioning:sitting_on",
       "positioning:kneeling_before",
       "positioning:lying_down",
-      "positioning:straddling_waist"
+      "positioning:straddling_waist",
+      "positioning:doing_complex_performance"
     ],
     "primary": ["positioning:lying_down", "positioning:giving_blowjob"]
   },

@@ -12,7 +12,7 @@
   },
   "required_components": {},
   "forbidden_components": {
-    "actor": ["positioning:closeness"]
+    "actor": ["positioning:closeness", "positioning:doing_complex_performance"]
   },
   "template": "get close to {target}",
   "prerequisites": [

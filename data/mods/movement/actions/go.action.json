@@ -11,6 +11,9 @@
     }
   },
   "template": "go to {destination}",
+  "forbidden_components": {
+    "actor": ["positioning:doing_complex_performance"]
+  },
   "prerequisites": [
     {
       "logic": {
