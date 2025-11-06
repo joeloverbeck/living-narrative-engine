@@ -323,19 +323,12 @@ export class TurnOrderService extends ITurnOrderService {
           `TurnOrderService: Adding entity "${entity.id}" with initiative ${score} to the current round.`
         );
         this.#currentQueue.add(entity, score);
-      } else if (this.#currentStrategy === 'round-robin') {
+      } else {
+        // startNewRound guarantees #currentStrategy is 'round-robin' here
         this.#logger.debug(
           `TurnOrderService: Adding entity "${entity.id}" to the end of the round-robin queue.`
         );
         this.#currentQueue.add(entity); // Priority is ignored
-      } else {
-        // This case should theoretically not happen if startNewRound validated strategy
-        this.#logger.error(
-          `TurnOrderService.addEntity: Internal error - current strategy "${this.#currentStrategy}" is unknown.`
-        );
-        throw new Error(
-          `Internal error: Unknown current strategy "${this.#currentStrategy}"`
-        );
       }
       this.#logger.debug(
         `TurnOrderService: Entity "${entity.id}" successfully added to the turn order.`
