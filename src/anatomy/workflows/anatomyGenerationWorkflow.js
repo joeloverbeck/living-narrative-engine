@@ -10,7 +10,7 @@ import { BodyDescriptorValidationError } from '../errors/bodyDescriptorValidatio
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
+/** @typedef {import('../bodyBlueprintFactory/bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
 /** @typedef {import('../../clothing/services/clothingInstantiationService.js').ClothingInstantiationService} ClothingInstantiationService */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../services/anatomySocketIndex.js').default} AnatomySocketIndex */

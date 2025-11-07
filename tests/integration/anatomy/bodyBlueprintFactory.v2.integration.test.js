@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
+import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 import SocketGenerator from '../../../src/anatomy/socketGenerator.js';
 import SlotGenerator from '../../../src/anatomy/slotGenerator.js';
 import { ValidationError } from '../../../src/errors/validationError.js';

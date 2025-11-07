@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
-import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
+import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ValidationError } from '../../../src/errors/index.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';

@@ -36,7 +36,7 @@ import {
 } from '../../entities/entityAccessService.js';
 import ComponentAccessService from '../../entities/componentAccessService.js';
 import LocationDisplayService from '../../entities/services/locationDisplayService.js';
-import { BodyBlueprintFactory } from '../../anatomy/bodyBlueprintFactory.js';
+import { BodyBlueprintFactory } from '../../anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 import { GraphIntegrityValidator } from '../../anatomy/graphIntegrityValidator.js';
 import { BodyGraphService } from '../../anatomy/bodyGraphService.js';
 import { AnatomyGenerationService } from '../../anatomy/anatomyGenerationService.js';
