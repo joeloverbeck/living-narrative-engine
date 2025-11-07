@@ -4,6 +4,8 @@
  * for common AJV validation issues, particularly for operation type validation.
  */
 
+import OperationValidationError from '../errors/operationValidationError.js';
+
 /**
  * CRITICAL: Pre-validation whitelist for operation types
  *
@@ -80,6 +82,40 @@ const KNOWN_OPERATION_TYPES = [
   'HAS_BODY_PART_WITH_COMPONENT_VALUE',
   'SEQUENCE',
 ];
+
+/**
+ * Validates operation type against whitelist
+ *
+ * Performs validation:
+ * 1. Checks if type is in KNOWN_OPERATION_TYPES whitelist
+ * 2. Provides detailed error messages with actionable guidance
+ *
+ * Note: This function runs in both Node.js and browser contexts,
+ * so it cannot perform file system checks. The error message includes
+ * guidance for all potential missing registrations based on the whitelist check.
+ *
+ * @param {string} operationType - The operation type to validate
+ * @param {ILogger} logger - Logger instance
+ * @throws {OperationValidationError} If operation is not in whitelist
+ */
+export function validateOperationType(operationType, logger) {
+  // Check whitelist
+  if (!KNOWN_OPERATION_TYPES.includes(operationType)) {
+    // Assume all registration types might be missing since we can't check file system
+    const missingRegistrations = ['whitelist', 'schema', 'reference'];
+
+    const error = new OperationValidationError(operationType, missingRegistrations);
+    logger.error('Operation validation failed', {
+      operationType,
+      missingRegistrations,
+      errorMessage: error.message,
+    });
+    throw error;
+  }
+
+  // Validation passed
+  logger.debug('Operation type validation passed', { operationType });
+}
 
 /**
  * Result of pre-validation check
