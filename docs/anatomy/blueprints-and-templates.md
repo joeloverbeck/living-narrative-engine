@@ -12,10 +12,10 @@ This guide covers Blueprint V2 and structure templates—the system for defining
 - Complete examples for common creature types
 
 **Related Documentation**:
-- [Recipe Patterns](./recipe-patterns.md) - Pattern matching for template-generated slots
-- [Common Non-Human Patterns](./common-non-human-patterns.md) - Complete creature examples
+- [Recipe Pattern Matching](./recipe-pattern-matching.md) - Pattern matching for template-generated slots
+- [Common Creature Patterns](./recipe-pattern-matching.md#part-4-common-creature-patterns) - Complete creature examples
 - [Non-Human Quickstart](./non-human-quickstart.md) - Step-by-step tutorial
-- [Property-Based Filtering](./property-based-filtering-examples.md) - Advanced filtering
+- [Pattern Reference](./recipe-pattern-matching.md#part-2-pattern-reference) - Advanced filtering
 
 **Schema Locations**:
 - Blueprints: `data/schemas/anatomy.blueprint.schema.json`
@@ -1446,7 +1446,7 @@ Always include clear `description` in templates:
 **Fix**:
 1. Check what sockets your template generates (use the OrientationResolver logic)
 2. Update recipe patterns to match the generated socket IDs
-3. See [Recipe Patterns](./recipe-patterns.md) for pattern matching strategies
+3. See [Recipe Pattern Matching](./recipe-pattern-matching.md) for pattern matching strategies
 4. See [Troubleshooting Guide](./troubleshooting.md) for detailed diagnostics
 
 ## Orientation Mismatch (Slots vs Sockets)
@@ -1456,22 +1456,22 @@ Always include clear `description` in templates:
 1. Check the template's `orientationScheme` setting
 2. Ensure recipes use matching patterns
 3. Remember: OrientationResolver is the single source of truth
-4. See [Common Non-Human Patterns](./common-non-human-patterns.md) for examples
+4. See [Common Creature Patterns](./recipe-pattern-matching.md#part-4-common-creature-patterns) for examples
 
 ---
 
 # Related Documentation
 
 ## Core Documentation
-- **Recipe Patterns**: [recipe-patterns.md](./recipe-patterns.md) - Pattern matching for template-generated slots
-- **Common Non-Human Patterns**: [common-non-human-patterns.md](./common-non-human-patterns.md) - Complete creature examples
+- **Recipe Pattern Matching**: [recipe-pattern-matching.md](./recipe-pattern-matching.md) - Pattern matching for template-generated slots
+- **Common Creature Patterns**: [recipe-pattern-matching.md#part-4-common-creature-patterns](./recipe-pattern-matching.md#part-4-common-creature-patterns) - Complete creature examples
 - **Quick Start**: [non-human-quickstart.md](./non-human-quickstart.md) - End-to-end tutorial
-- **Property-Based Filtering**: [property-based-filtering-examples.md](./property-based-filtering-examples.md) - Advanced filtering
+- **Pattern Reference**: [recipe-pattern-matching.md#part-2-pattern-reference](./recipe-pattern-matching.md#part-2-pattern-reference) - Advanced filtering
 
 ## System Documentation
 - **Troubleshooting Guide**: [troubleshooting.md](./troubleshooting.md) - General troubleshooting
 - **Clothing System**: [../mods/anatomy-formatting.md](../mods/anatomy-formatting.md) - Clothing slot details
-- **Architecture**: [architecture.md](./architecture.md) - System architecture overview
+- **Anatomy System Guide**: [anatomy-system-guide.md](./anatomy-system-guide.md) - System architecture overview
 
 ## Code References
 - **OrientationResolver**: `src/anatomy/shared/orientationResolver.js` - Orientation logic
@@ -1489,5 +1489,5 @@ Always include clear `description` in templates:
 2. Identify candidates for V2 migration (creatures with repeating limbs)
 3. Create structure templates for common body plans
 4. Convert blueprints to V2
-5. Update recipes to match new socket names (see [recipe-patterns.md](./recipe-patterns.md))
+5. Update recipes to match new socket names (see [recipe-pattern-matching.md](./recipe-pattern-matching.md))
 6. Test by instantiating entities with your anatomy

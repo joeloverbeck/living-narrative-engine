@@ -49,7 +49,7 @@ console.log('Socket patterns:', template.topology.limbSets.map(ls => ls.socketPa
 - Use `matchesGroup: "limbSet:leg"` for resilience against template naming changes
 - Verify template's `orientationScheme` matches expected slot keys
 - Update recipe patterns when structure templates change
-- See [Pattern Matching Best Practices](./pattern-matching-best-practices.md)
+- See [Recipe Pattern Matching - Best Practices](./recipe-pattern-matching.md#part-3-best-practices)
 
 #### 2. Blueprint-recipe mismatch
 
@@ -90,7 +90,7 @@ console.log('Socket patterns:', template.topology.limbSets.map(ls => ls.socketPa
 - Fix template schema violations
 - Use valid orientation schemes
 - Keep counts within schema limits
-- See [Structure Templates Guide](./structure-templates.md)
+- See [Blueprints and Templates Guide](./blueprints-and-templates.md#part-2-structure-templates)
 
 #### 4. Part selection failure
 
@@ -116,7 +116,7 @@ console.log(`Found ${partDefs.length} part definitions for ${partType}`);
 - Ensure part entities have `anatomy:part` component
 - Verify entity definitions validate against schemas
 
-**Note**: Some validation features (e.g., BlueprintRecipeValidator, zero-match warnings) are planned improvements from ANASYSREF-002 and may not yet be implemented. Check [Refactoring History](./refactoring-history.md) for implementation status.
+**Note**: Some validation features (e.g., BlueprintRecipeValidator, zero-match warnings) are planned improvements from ANASYSREF-002 and may not yet be implemented. Check [Anatomy System Guide - Evolution History](./anatomy-system-guide.md) for implementation status.
 
 ## Problem: Clothing not attaching to body parts
 
@@ -154,7 +154,7 @@ console.log('Clothing slot mappings:', slotMetadata?.slotMappings);
 - Verify socket IDs in AnatomySocketIndex match expected clothing slots
 - Update clothing slot mappings when templates change
 - Ensure anatomy generation completes before clothing instantiation
-- See [Architecture Guide](./architecture.md) for clothing integration details
+- See [Anatomy System Guide](./anatomy-system-guide.md) for clothing integration details
 
 #### 2. Cache invalidation timing issue
 
@@ -238,7 +238,7 @@ console.log('Quadrupedal result:', quadrupedal); // Should be 'left_front'
 - Verify both generators import and use OrientationResolver
 - Never duplicate orientation logic
 - Update OrientationResolver for new orientation schemes
-- See [Refactoring History](./refactoring-history.md) for orientation resolution architecture
+- See [Anatomy System Guide](./anatomy-system-guide.md) for orientation resolution architecture
 
 ## Problem: Tests failing after template changes
 
@@ -487,7 +487,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
 **Remember:** `allowedTypes ⊇ partType = subType`
 
 **References**:
-- **Architecture Documentation**: `docs/anatomy/anatomy-system-guide.md`
+- **Anatomy System Guide**: [anatomy-system-guide.md](./anatomy-system-guide.md)
 - **Part Selection Service**: `src/anatomy/partSelectionService.js:271-305`
 
 ## Problem: Performance degradation with complex anatomy

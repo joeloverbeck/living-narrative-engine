@@ -7,8 +7,7 @@ Anatomy recipes define what body parts a creature should have by matching bluepr
 **Schema Location**: `data/schemas/anatomy.recipe.schema.json`
 
 **Related Guides**:
-- [Blueprint V2](./blueprints-v2.md) - Structure template integration
-- [Structure Templates](./structure-templates.md) - Socket generation
+- [Blueprints and Templates](./blueprints-and-templates.md) - Blueprint V2, structure templates, and socket generation
 - [Non-Human Quickstart](./non-human-quickstart.md) - Complete workflow tutorial
 
 ## Table of Contents

@@ -881,7 +881,7 @@ const template = {
 
 ## Related Documentation
 
-- [Architecture Guide](../anatomy/architecture.md) - System architecture overview
+- [Anatomy System Guide](../anatomy/anatomy-system-guide.md) - System architecture overview
 - [Troubleshooting](../anatomy/troubleshooting.md) - Common issues and solutions
 - [Mod Testing Guide](./mod-testing-guide.md) - General mod testing patterns
 - [Development Guide](../development/anatomy-development-guide.md) - Quick-start for developers

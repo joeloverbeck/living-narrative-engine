@@ -110,9 +110,7 @@ if (!result.valid) {
 ```
 
 **Documentation**:
-- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Full API reference
-- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Step-by-step guide
-- [Validator Reference](../anatomy/body-descriptor-validator-reference.md) - Validator API
+- [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ### Data Flow
 

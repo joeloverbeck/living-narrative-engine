@@ -342,7 +342,7 @@ describe('OrientationResolver - myNewScheme', () => {
 
 4. Add contract tests for SlotGenerator ↔ SocketGenerator synchronization
 
-5. Document in [Structure Templates Guide](../anatomy/structure-templates.md)
+5. Document in [Blueprints and Templates Guide](../anatomy/blueprints-and-templates.md)
 
 ### Adding a New Pattern Matcher
 
@@ -373,7 +373,7 @@ async resolve(blueprint, recipe) {
 
 4. Add tests for new matcher
 
-5. Document in [Recipe Patterns Guide](../anatomy/recipe-patterns.md)
+5. Document in [Recipe Pattern Matching Guide](../anatomy/recipe-pattern-matching.md)
 
 ### Subscribing to Anatomy Events
 
@@ -685,22 +685,19 @@ Checks:
 - System consistency
 
 **Documentation**:
-- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Full API reference
-- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Step-by-step guide
-- [Validator Reference](../anatomy/body-descriptor-validator-reference.md) - Validator API
+- [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ## Getting Help
 
 ### Documentation
 
-- [Architecture Guide](../anatomy/architecture.md) - System overview
-- [Structure Templates](../anatomy/structure-templates.md) - Template syntax
-- [Recipe Patterns](../anatomy/recipe-patterns.md) - Pattern matching
-- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Registry API
-- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Step-by-step guide
-- [Troubleshooting](../anatomy/troubleshooting.md) - Common issues
+- [Anatomy System Guide](../anatomy/anatomy-system-guide.md) - System overview and architecture
+- [Blueprints and Templates](../anatomy/blueprints-and-templates.md) - Blueprint V2 and structure templates
+- [Recipe Pattern Matching](../anatomy/recipe-pattern-matching.md) - Pattern matching reference
+- [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Body descriptor system
+- [Non-Human Quickstart](../anatomy/non-human-quickstart.md) - End-to-end tutorial
+- [Troubleshooting](../anatomy/troubleshooting.md) - Common issues and solutions
 - [Testing Guide](../testing/anatomy-testing-guide.md) - Testing patterns
-- [Refactoring History](../anatomy/refactoring-history.md) - Architectural changes
 
 ### Code References
 
