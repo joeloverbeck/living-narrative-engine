@@ -271,6 +271,32 @@ describe('items:drink_entirely action integration', () => {
       expect(publicEvent.payload.descriptionText).not.toContain('private flavor');
     });
 
+    it('excludes acting actor from public perceptible event', async () => {
+      const scenario = setupDrinkEntirelyScenario(
+        'Alice',
+        'tavern',
+        'ale-mug-1',
+        600,
+        200,
+        'Strong and bitter.'
+      );
+      testFixture.reset([scenario.room, scenario.actor, scenario.container]);
+
+      await testFixture.executeAction('test:actor1', 'ale-mug-1');
+
+      // Find public perceptible event
+      const publicEvent = testFixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.perceptionType === 'liquid_consumed_entirely' &&
+          (!e.payload.contextualData?.recipientIds || e.payload.contextualData.recipientIds.length === 0)
+      );
+
+      expect(publicEvent).toBeDefined();
+      expect(publicEvent.payload.contextualData.excludedActorIds).toEqual(['test:actor1']);
+      expect(publicEvent.payload.descriptionText).not.toContain('bitter');
+    });
+
     it('sends private message with flavor text only to actor', async () => {
       const scenario = setupDrinkEntirelyScenario(
         'Grace',
@@ -322,6 +348,30 @@ describe('items:drink_entirely action integration', () => {
       expect(privateEvent.payload.descriptionText).toContain('Henry drinks entirely from bottle-1, emptying it.');
       // Should still dispatch event even with empty flavor
       expect(privateEvent.payload.contextualData.flavorText).toBe('');
+    });
+
+    it('dispatches UI success message', async () => {
+      const scenario = setupDrinkEntirelyScenario(
+        'Bob',
+        'saloon',
+        'whiskey-bottle-1',
+        500,
+        100,
+        'Smooth and potent.',
+        false,
+        'whiskey-bottle-1' // Use ID as name for predictable message
+      );
+      testFixture.reset([scenario.room, scenario.actor, scenario.container]);
+
+      await testFixture.executeAction('test:actor1', 'whiskey-bottle-1');
+
+      // Find the UI success message event
+      const successEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:display_successful_action_result'
+      );
+
+      expect(successEvent).toBeDefined();
+      expect(successEvent.payload.message).toBe('Bob drinks entirely from whiskey-bottle-1, emptying it.');
     });
   });
 

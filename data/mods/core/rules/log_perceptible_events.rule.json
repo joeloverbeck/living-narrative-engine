@@ -34,7 +34,8 @@
           "involvedEntities": "{event.payload.involvedEntities}"
         },
         "originating_actor_id": "{event.payload.actorId}",
-        "recipient_ids": "{event.payload.contextualData.recipientIds}"
+        "recipient_ids": "{event.payload.contextualData.recipientIds}",
+        "excluded_actor_ids": "{event.payload.contextualData.excludedActorIds}"
       }
     }
   ]

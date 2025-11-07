@@ -47,6 +47,22 @@
               "minLength": 1
             }
           ]
+        },
+        "excluded_actor_ids": {
+          "description": "Optional list of actor IDs to exclude from perception. Accepts literal arrays or placeholder strings that resolve to arrays at runtime.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
         }
       },
       "required": ["location_id", "entry"],
