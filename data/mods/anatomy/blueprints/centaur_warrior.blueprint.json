@@ -12,6 +12,30 @@
         "components": ["anatomy:part"]
       },
       "optional": true
+    },
+    "arm_left": {
+      "parent": "upper_torso",
+      "socket": "arm_left",
+      "requirements": {
+        "partType": "arm",
+        "components": ["anatomy:part"]
+      }
+    },
+    "arm_right": {
+      "parent": "upper_torso",
+      "socket": "arm_right",
+      "requirements": {
+        "partType": "arm",
+        "components": ["anatomy:part"]
+      }
+    },
+    "head": {
+      "parent": "upper_torso",
+      "socket": "head",
+      "requirements": {
+        "partType": "head",
+        "components": ["anatomy:part"]
+      }
     }
   },
   "clothingSlotMappings": {

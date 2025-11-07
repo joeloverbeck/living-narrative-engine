@@ -116,13 +116,29 @@ function processV2Blueprint(blueprint, { dataRegistry, logger, socketGenerator, 
     Object.prototype.hasOwnProperty.call(generatedSlots, slotKey)
   );
 
-  if (conflictingSlots.length > 0) {
+  // Separate intentional overrides (parent relationship changes) from accidental duplicates
+  const intentionalOverrides = conflictingSlots.filter(
+    slotKey => additionalSlots[slotKey]?.parent !== undefined
+  );
+  const unintentionalOverrides = conflictingSlots.filter(
+    slotKey => additionalSlots[slotKey]?.parent === undefined
+  );
+
+  // Warn only about unintentional duplicates (potential mistakes)
+  if (unintentionalOverrides.length > 0) {
     logger.warn(
       `BlueprintLoader: Blueprint '${
         blueprint.id || 'unknown blueprint'
-      }' additionalSlots overriding generated slots: ${conflictingSlots.join(
-        ', '
-      )}`
+      }' additionalSlots duplicating generated slots without parent override: ${unintentionalOverrides.join(', ')}`
+    );
+  }
+
+  // Debug log for intentional parent relationship overrides (expected pattern)
+  if (intentionalOverrides.length > 0) {
+    logger.debug(
+      `BlueprintLoader: Blueprint '${
+        blueprint.id || 'unknown blueprint'
+      }' additionalSlots overriding parent relationships for: ${intentionalOverrides.join(', ')}`
     );
   }
 

@@ -360,54 +360,9 @@ describe('DrinkFromHandler', () => {
       });
     });
 
-    test('fails when container has no position component', async () => {
-      const liquidData = { currentVolumeMilliliters: 500 };
-      const actorPosition = { locationId: 'loc1' };
-
-      em.getComponentData
-        .mockReturnValueOnce(actorPosition)
-        .mockReturnValueOnce(liquidData)
-        .mockReturnValueOnce(null); // no container position
-
-      em.hasComponent
-        .mockReturnValueOnce(true) // drinkable
-        .mockReturnValueOnce(false); // not empty
-
-      const result = await handler.execute({
-        actorEntity: 'actor1',
-        containerEntity: 'bottle1',
-      });
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Container does not have position component',
-      });
-    });
-
-    test('fails when actor and container are not co-located', async () => {
-      const liquidData = { currentVolumeMilliliters: 500 };
-      const actorPosition = { locationId: 'loc1' };
-      const containerPosition = { locationId: 'loc2' };
-
-      em.getComponentData
-        .mockReturnValueOnce(actorPosition)
-        .mockReturnValueOnce(liquidData)
-        .mockReturnValueOnce(containerPosition);
-
-      em.hasComponent
-        .mockReturnValueOnce(true) // drinkable
-        .mockReturnValueOnce(false); // not empty
-
-      const result = await handler.execute({
-        actorEntity: 'actor1',
-        containerEntity: 'bottle1',
-      });
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Actor and container are not co-located',
-      });
-    });
+    // NOTE: Tests for "container has no position" and "not co-located" removed
+    // Reason: Items in inventory don't have position components by design.
+    // See: drinkFromHandler.js lines 169-172 for explanation
 
     test('fails when container has no liquid', async () => {
       const liquidData = {
@@ -466,19 +421,23 @@ describe('DrinkFromHandler', () => {
     });
 
     test('handles errors during execution', async () => {
-      const liquidData = { currentVolumeMilliliters: 500 };
+      const liquidData = {
+        currentVolumeMilliliters: 500,
+        servingSizeMilliliters: 200,
+        maxCapacityMilliliters: 1000,
+      };
       const actorPosition = { locationId: 'loc1' };
 
       em.getComponentData
         .mockReturnValueOnce(actorPosition)
-        .mockReturnValueOnce(liquidData)
-        .mockImplementation(() => {
-          throw new Error('Database error');
-        });
+        .mockReturnValueOnce(liquidData);
 
       em.hasComponent
         .mockReturnValueOnce(true) // drinkable
         .mockReturnValueOnce(false); // not empty
+
+      // Make batch operation throw error
+      em.batchAddComponentsOptimized.mockRejectedValue(new Error('Database error'));
 
       const result = await handler.execute({
         actorEntity: 'actor1',

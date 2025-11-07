@@ -9,9 +9,21 @@
     "anatomy:sockets": {
       "sockets": [
         {
-          "id": "neck",
-          "allowedTypes": ["head", "neck"],
+          "id": "head",
+          "allowedTypes": ["head", "centaur_head", "human_head", "humanoid_head"],
           "nameTpl": "{{type}}"
+        },
+        {
+          "id": "arm_left",
+          "orientation": "left",
+          "allowedTypes": ["arm", "humanoid_arm", "centaur_arm", "human_arm"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "arm_right",
+          "orientation": "right",
+          "allowedTypes": ["arm", "humanoid_arm", "centaur_arm", "human_arm"],
+          "nameTpl": "{{orientation}} {{type}}"
         }
       ]
     },
