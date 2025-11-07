@@ -34,7 +34,7 @@ Developers frequently update registration files (`preValidationUtils.js`, `inter
  * When adding a new operation handler:
  * 1. Add operation type constant to this array
  * 2. Ensure it matches the "const" value in your schema exactly
- * 3. Run `npm run validate:operations` to verify consistency
+ * 3. Run `npm run validate` or `npm run validate:strict` to verify consistency
  *
  * Common mistake: Forgetting this step causes "Unknown operation type" errors
  *
@@ -42,7 +42,7 @@ Developers frequently update registration files (`preValidationUtils.js`, `inter
  * - data/schemas/operations/[operationName].schema.json (type constant)
  * - src/dependencyInjection/registrations/interpreterRegistrations.js (registry mapping)
  *
- * @see docs/adding-operations.md for complete checklist
+ * @see CLAUDE.md "Adding New Operations - Complete Checklist" for complete checklist
  */
 const KNOWN_OPERATION_TYPES = [
   'ADD_COMPONENT',
@@ -67,24 +67,40 @@ const KNOWN_OPERATION_TYPES = [
  *
  * Requirements:
  * - Operation type must match schema "const" value exactly
- * - Handler token must be defined in tokens-core.js
+ * - Handler token must be defined in tokens-core.js (without "I" prefix)
  * - Handler must be registered in operationHandlerRegistrations.js
  *
  * Verification:
- * Run `npm run validate:operations` to check consistency
+ * Run `npm run validate` or `npm run validate:strict` to check consistency
  *
  * @see src/dependencyInjection/tokens/tokens-core.js
  * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js
  * @see src/utils/preValidationUtils.js (KNOWN_OPERATION_TYPES)
  */
-export function registerInterpreter(container) {
-  const operationRegistry = container.resolve(tokens.IOperationRegistry);
+export function registerInterpreters(container) {
+  const registrar = new Registrar(container);
+
+  // ... other registrations ...
+
+  // ---------------------------------------------------------------------------
+  //  OperationRegistry
+  // ---------------------------------------------------------------------------
+  registrar.singletonFactory(tokens.OperationRegistry, (c) => {
+    const registry = new OperationRegistry({
+      logger: c.resolve(tokens.ILogger),
+    });
+
+  // Defer resolution of handlers until execution time
+  const bind =
+    (tkn) =>
+    (...args) =>
+      c.resolve(tkn).execute(...args);
 
   // Operation mappings - keep alphabetically sorted
-  // Format: operationRegistry.registerOperation('OPERATION_TYPE', tokens.IHandlerToken);
-  operationRegistry.registerOperation('ADD_COMPONENT', tokens.IAddComponentHandler);
-  operationRegistry.registerOperation('DRINK_ENTIRELY', tokens.IDrinkEntirelyHandler);
-  operationRegistry.registerOperation('DRINK_FROM', tokens.IDrinkFromHandler);
+  // Format: registry.register('OPERATION_TYPE', bind(tokens.HandlerToken));
+  registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));
+  registry.register('DRINK_ENTIRELY', bind(tokens.DrinkEntirelyHandler));
+  registry.register('DRINK_FROM', bind(tokens.DrinkFromHandler));
   // ... ADD NEW MAPPINGS HERE (alphabetically)
 }
 ```
@@ -99,17 +115,17 @@ export function registerInterpreter(container) {
 /**
  * Operation Handler Factory Registrations
  *
- * Registers operation handler classes with the DI container
+ * Registers operation handler classes with the DI container using factory pattern
  *
  * When adding a new operation handler:
  * 1. Import the handler class at the top of this file
- * 2. Add container.register(tokens.IHandlerToken, HandlerClass)
- * 3. Ensure token is defined in tokens-core.js
- * 4. Keep imports and registrations alphabetically sorted
+ * 2. Add factory entry to handlerFactories array: [token, HandlerClass, factory function]
+ * 3. Ensure token is defined in tokens-core.js (without "I" prefix)
+ * 4. Keep imports and factory entries alphabetically sorted
  *
  * Requirements:
  * - Handler class must extend BaseOperationHandler
- * - Token must be defined in tokens-core.js
+ * - Token must be defined in tokens-core.js (e.g., DrinkFromHandler, not IDrinkFromHandler)
  * - Handler file must exist in src/logic/operationHandlers/
  *
  * Verification:
@@ -125,13 +141,45 @@ import DrinkEntirelyHandler from '../../logic/operationHandlers/drinkEntirelyHan
 import DrinkFromHandler from '../../logic/operationHandlers/drinkFromHandler.js';
 // ... ADD NEW IMPORTS HERE (alphabetically)
 
-export function registerOperationHandlers(container) {
-  // Register operation handlers (keep alphabetically sorted)
-  // Format: container.register(tokens.IHandlerToken, HandlerClass);
-  container.register(tokens.IAddComponentHandler, AddComponentHandler);
-  container.register(tokens.IDrinkEntirelyHandler, DrinkEntirelyHandler);
-  container.register(tokens.IDrinkFromHandler, DrinkFromHandler);
-  // ... ADD NEW REGISTRATIONS HERE (alphabetically)
+export function registerOperationHandlers(registrar) {
+  const handlerFactories = [
+    [
+      tokens.AddComponentHandler,
+      AddComponentHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          gameDataRepository: c.resolve(tokens.IGameDataRepository),
+        }),
+    ],
+    [
+      tokens.DrinkEntirelyHandler,
+      DrinkEntirelyHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DrinkFromHandler,
+      DrinkFromHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    // ... ADD NEW FACTORY ENTRIES HERE (alphabetically)
+  ];
+
+  for (const [token, ctor, factory] of handlerFactories) {
+    registrar.singletonFactory(token, (c) => factory(c, ctor));
+  }
 }
 ```
 
@@ -144,32 +192,34 @@ export function registerOperationHandlers(container) {
  * Dependency Injection Tokens
  *
  * Tokens for operation handlers follow the pattern:
- * I[OperationName]Handler: 'I[OperationName]Handler'
+ * [OperationName]Handler: '[OperationName]Handler'
  *
  * Naming conventions:
- * - Start with 'I' (Interface convention)
  * - Use PascalCase for operation name
  * - End with 'Handler'
- * - Example: IDrinkFromHandler for DRINK_FROM operation
+ * - Do NOT use 'I' prefix for operation handlers (unlike other service interfaces)
+ * - Example: DrinkFromHandler for DRINK_FROM operation (not IDrinkFromHandler)
  *
  * When adding a new operation handler token:
- * 1. Add token following the pattern above
- * 2. Keep tokens alphabetically sorted
+ * 1. Add token following the pattern above (without "I" prefix)
+ * 2. Keep tokens alphabetically sorted within the operation handlers section
  * 3. Register handler in operationHandlerRegistrations.js
  * 4. Map operation in interpreterRegistrations.js
  *
  * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js
  * @see src/dependencyInjection/registrations/interpreterRegistrations.js
  */
-export const tokens = {
-  // Operation Handler Tokens (alphabetically sorted)
-  IAddComponentHandler: 'IAddComponentHandler',
-  IDrinkEntirelyHandler: 'IDrinkEntirelyHandler',
-  IDrinkFromHandler: 'IDrinkFromHandler',
+export const coreTokens = freeze({
+  // ... other tokens ...
+
+  // Operation Handler Tokens (alphabetically sorted, NO "I" prefix)
+  AddComponentHandler: 'AddComponentHandler',
+  DrinkEntirelyHandler: 'DrinkEntirelyHandler',
+  DrinkFromHandler: 'DrinkFromHandler',
   // ... ADD NEW OPERATION HANDLER TOKENS HERE (alphabetically)
 
-  // Other tokens...
-};
+  // ... other tokens...
+});
 ```
 
 ## Acceptance Criteria
