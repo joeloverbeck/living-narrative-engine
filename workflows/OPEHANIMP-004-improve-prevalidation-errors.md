@@ -95,7 +95,7 @@ function formatValidationError(operationType, missingRegistrations) {
     lines.push('');
     lines.push('  ⚠️  SCHEMA FILE NOT FOUND');
     const schemaFileName = operationType.toLowerCase().split('_').map((word, idx) =>
-      idx === 0 ? word : word.charAt(0) + word.slice(1)
+      idx === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     ).join('') + '.schema.json';
     lines.push(`  Expected: data/schemas/operations/${schemaFileName}`);
     lines.push('  Action: Create schema file following the pattern:');
@@ -107,22 +107,22 @@ function formatValidationError(operationType, missingRegistrations) {
   // Check for schema reference missing
   if (missingRegistrations.includes('reference')) {
     const schemaFileName = operationType.toLowerCase().split('_').map((word, idx) =>
-      idx === 0 ? word : word.charAt(0) + word.slice(1)
+      idx === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     ).join('') + '.schema.json';
     lines.push('');
     lines.push('  ⚠️  SCHEMA NOT REFERENCED IN operation.schema.json');
-    lines.push('  File: data/schemas/operations/operation.schema.json');
-    lines.push('  Location: oneOf array');
+    lines.push('  File: data/schemas/operation.schema.json');
+    lines.push('  Location: anyOf array within Operation definition');
     lines.push('  Action: Add $ref entry (keep alphabetically sorted)');
-    lines.push(`  Code to add: { "$ref": "./${schemaFileName}" },`);
+    lines.push(`  Code to add: { "$ref": "./operations/${schemaFileName}" },`);
     lines.push('');
     lines.push('  Example:');
     lines.push('  ```json');
     lines.push('  {');
-    lines.push('    "oneOf": [');
-    lines.push('      { "$ref": "./addComponent.schema.json" },');
-    lines.push(`      { "$ref": "./${schemaFileName}" },  // <-- Add this line`);
-    lines.push('      { "$ref": "./removeComponent.schema.json" }');
+    lines.push('    "anyOf": [');
+    lines.push('      { "$ref": "./operations/addComponent.schema.json" },');
+    lines.push(`      { "$ref": "./operations/${schemaFileName}" },  // <-- Add this line`);
+    lines.push('      { "$ref": "./operations/removeComponent.schema.json" }');
     lines.push('    ]');
     lines.push('  }');
     lines.push('  ```');
@@ -131,15 +131,14 @@ function formatValidationError(operationType, missingRegistrations) {
   lines.push('');
   lines.push('🔧 Verification commands:');
   lines.push('  After fixing, run these commands to verify:');
-  lines.push('  1. npm run validate:schemas     # Verify schema is valid');
-  lines.push('  2. npm run validate:operations  # Verify all registrations');
-  lines.push('  3. npm run test:unit            # Run unit tests');
+  lines.push('  1. npm run validate          # Verify schema is valid');
+  lines.push('  2. npm run validate:strict   # Strict validation with all checks');
+  lines.push('  3. npm run test:unit         # Run unit tests');
   lines.push('');
   lines.push('📚 Complete registration guide:');
-  lines.push('  - CLAUDE.md (search "Adding New Operations")');
-  lines.push('  - docs/adding-operations.md');
+  lines.push('  - CLAUDE.md (search "Adding New Operations - Complete Checklist")');
   lines.push('');
-  lines.push('💡 Tip: Use `npm run create-operation <name>` to scaffold new operations automatically');
+  lines.push('💡 Tip: Follow the 8-step checklist in CLAUDE.md for complete operation setup');
 
   return lines.join('\n');
 }
@@ -151,11 +150,11 @@ export default OperationValidationError;
 
 **File**: `src/utils/preValidationUtils.js`
 
-Update the validation logic to provide comprehensive checks:
+**IMPORTANT**: This file is imported by `schemaValidationUtils.js` which runs in browser contexts. We CANNOT use Node.js `fs` or `path` modules here. The enhanced validation must work without file system access.
+
+Update the validation logic to provide comprehensive error messages without file system checks:
 
 ```javascript
-import fs from 'fs';
-import path from 'path';
 import OperationValidationError from '../errors/operationValidationError.js';
 
 /**
@@ -171,55 +170,26 @@ const KNOWN_OPERATION_TYPES = [
 ];
 
 /**
- * Validates operation type and checks all registration points
+ * Validates operation type against whitelist
  *
- * Performs comprehensive validation:
+ * Performs validation:
  * 1. Checks if type is in KNOWN_OPERATION_TYPES whitelist
- * 2. Verifies schema file exists
- * 3. Checks schema is referenced in operation.schema.json
+ * 2. Provides detailed error messages with actionable guidance
+ *
+ * Note: This function runs in both Node.js and browser contexts,
+ * so it cannot perform file system checks. The error message includes
+ * guidance for all potential missing registrations based on the whitelist check.
  *
  * @param {string} operationType - The operation type to validate
  * @param {ILogger} logger - Logger instance
- * @throws {OperationValidationError} If any registration is missing
+ * @throws {OperationValidationError} If operation is not in whitelist
  */
 export function validateOperationType(operationType, logger) {
-  const missingRegistrations = [];
-
-  // Check 1: Whitelist
+  // Check whitelist
   if (!KNOWN_OPERATION_TYPES.includes(operationType)) {
-    missingRegistrations.push('whitelist');
-  }
+    // Assume all registration types might be missing since we can't check file system
+    const missingRegistrations = ['whitelist', 'schema', 'reference'];
 
-  // Check 2: Schema exists
-  const schemaFileName = operationType.toLowerCase().split('_').map((word, idx) =>
-    idx === 0 ? word : word.charAt(0) + word.slice(1)
-  ).join('') + '.schema.json';
-  const schemaPath = path.join(process.cwd(), 'data/schemas/operations', schemaFileName);
-
-  if (!fs.existsSync(schemaPath)) {
-    missingRegistrations.push('schema');
-  }
-
-  // Check 3: Schema referenced in operation.schema.json
-  const operationSchemaPath = path.join(process.cwd(), 'data/schemas/operations/operation.schema.json');
-
-  try {
-    const operationSchemaContent = fs.readFileSync(operationSchemaPath, 'utf8');
-    const operationSchema = JSON.parse(operationSchemaContent);
-
-    const isReferenced = operationSchema.oneOf?.some(ref =>
-      ref.$ref?.includes(schemaFileName)
-    );
-
-    if (!isReferenced) {
-      missingRegistrations.push('reference');
-    }
-  } catch (error) {
-    logger.warn('Could not verify schema reference', { error: error.message });
-  }
-
-  // If any checks failed, throw detailed error
-  if (missingRegistrations.length > 0) {
     const error = new OperationValidationError(operationType, missingRegistrations);
     logger.error('Operation validation failed', {
       operationType,
@@ -229,12 +199,98 @@ export function validateOperationType(operationType, logger) {
     throw error;
   }
 
-  // All checks passed
+  // Validation passed
   logger.debug('Operation type validation passed', { operationType });
 }
 ```
 
-### 3. Update Error Import in Consumers
+### 3. Alternative Approach: Enhanced Validation Script
+
+Since `preValidationUtils.js` cannot use Node.js file system APIs, create a separate validation script for comprehensive pre-flight checks:
+
+**File**: `scripts/validateOperationRegistrations.js`
+
+```javascript
+#!/usr/bin/env node
+
+/**
+ * @file Validates that all operations are properly registered across the codebase
+ * @description Checks schema files, schema references, and whitelist consistency
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..');
+
+// Read KNOWN_OPERATION_TYPES from preValidationUtils.js
+const preValidationUtilsPath = path.join(projectRoot, 'src/utils/preValidationUtils.js');
+const preValidationContent = fs.readFileSync(preValidationUtilsPath, 'utf8');
+const knownOpsMatch = preValidationContent.match(/const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/);
+const knownOperations = knownOpsMatch[1]
+  .split('\n')
+  .map(line => line.trim())
+  .filter(line => line.startsWith("'"))
+  .map(line => line.replace(/^'|',?$/g, ''));
+
+console.log(`Found ${knownOperations.length} operations in KNOWN_OPERATION_TYPES\n`);
+
+// Check each operation
+let hasErrors = false;
+
+for (const operationType of knownOperations) {
+  const schemaFileName = operationType.toLowerCase().split('_').map((word, idx) =>
+    idx === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join('') + '.schema.json';
+
+  const schemaPath = path.join(projectRoot, 'data/schemas/operations', schemaFileName);
+
+  // Check 1: Schema file exists
+  if (!fs.existsSync(schemaPath)) {
+    console.error(`❌ ${operationType}: Schema file missing`);
+    console.error(`   Expected: data/schemas/operations/${schemaFileName}\n`);
+    hasErrors = true;
+    continue;
+  }
+
+  // Check 2: Schema referenced in operation.schema.json
+  const operationSchemaPath = path.join(projectRoot, 'data/schemas/operation.schema.json');
+  const operationSchemaContent = fs.readFileSync(operationSchemaPath, 'utf8');
+
+  if (!operationSchemaContent.includes(`./operations/${schemaFileName}`)) {
+    console.error(`❌ ${operationType}: Not referenced in operation.schema.json`);
+    console.error(`   Add: { "$ref": "./operations/${schemaFileName}" } to anyOf array\n`);
+    hasErrors = true;
+  } else {
+    console.log(`✅ ${operationType}: All registrations valid`);
+  }
+}
+
+if (hasErrors) {
+  console.error('\n❌ Operation registration validation FAILED');
+  process.exit(1);
+} else {
+  console.log('\n✅ All operations properly registered');
+  process.exit(0);
+}
+```
+
+### 4. Update package.json
+
+Add the new validation script:
+
+```json
+{
+  "scripts": {
+    "validate:operations": "node scripts/validateOperationRegistrations.js"
+  }
+}
+```
+
+### 5. Update Error Import in Consumers
 
 Update any files that call `validateOperationType` to handle the new error type:
 
@@ -265,11 +321,13 @@ try {
   - Exact code snippets to add
   - Verification commands
   - Links to documentation
-- [ ] `validateOperationType` performs all three checks (whitelist, schema exists, schema referenced)
+- [ ] `validateOperationType` throws `OperationValidationError` with actionable guidance
+- [ ] Separate validation script created for comprehensive file system checks
 - [ ] Error messages use emojis and formatting for readability
 - [ ] All existing callers handle the new error type
 - [ ] Tests are added for error formatting
 - [ ] Error messages are tested with actual invalid operations
+- [ ] Browser compatibility maintained (no Node.js modules in preValidationUtils.js)
 
 ## Testing
 
@@ -293,19 +351,15 @@ describe('validateOperationType - Enhanced Error Messages', () => {
     }).toThrow(/src\/utils\/preValidationUtils\.js/);
   });
 
-  it('should provide detailed error for missing schema file', () => {
-    // Mock KNOWN_OPERATION_TYPES to include operation
-    // Mock file system to return false for schema file
-    expect(() => {
-      validateOperationType('MISSING_SCHEMA', mockLogger);
-    }).toThrow(/SCHEMA FILE NOT FOUND/);
-  });
-
-  it('should provide detailed error for missing schema reference', () => {
-    // Mock all checks to pass except schema reference
-    expect(() => {
-      validateOperationType('UNREFERENCED', mockLogger);
-    }).toThrow(/SCHEMA NOT REFERENCED/);
+  it('should include guidance for all potential issues', () => {
+    try {
+      validateOperationType('MISSING_OP', mockLogger);
+      fail('Should have thrown');
+    } catch (error) {
+      expect(error.message).toMatch(/SCHEMA FILE NOT FOUND/);
+      expect(error.message).toMatch(/SCHEMA NOT REFERENCED/);
+      expect(error.message).toMatch(/NOT IN PRE-VALIDATION WHITELIST/);
+    }
   });
 
   it('should pass validation for fully registered operation', () => {
@@ -313,27 +367,43 @@ describe('validateOperationType - Enhanced Error Messages', () => {
       validateOperationType('ADD_COMPONENT', mockLogger);
     }).not.toThrow();
   });
+
+  it('should provide correct verification commands', () => {
+    try {
+      validateOperationType('BAD_OP', mockLogger);
+      fail('Should have thrown');
+    } catch (error) {
+      expect(error.message).toMatch(/npm run validate/);
+      expect(error.message).toMatch(/npm run validate:strict/);
+      expect(error.message).toMatch(/npm run test:unit/);
+    }
+  });
 });
 ```
 
 ### Integration Test
 
+**File**: `tests/integration/validation/operationValidationError.test.js`
+
 Create a test that triggers the error in a real scenario and verifies the output.
 
 ## Implementation Notes
 
-- Use Node.js `fs` module for file system checks (already in dependencies)
-- Handle file system errors gracefully
-- Format error messages for terminal output (emoji support)
+- **CRITICAL**: `preValidationUtils.js` is used in browser contexts and CANNOT use Node.js `fs` or `path` modules
+- Separate the comprehensive validation into a Node.js script (`validateOperationRegistrations.js`)
 - Keep error messages under 80 columns where possible for readability
+- Use emoji formatting for better visual parsing
+- Reference correct schema structure (`anyOf` not `oneOf`)
+- Point to correct file paths (`data/schemas/operation.schema.json`)
+- Use actual available npm commands (`npm run validate`, `npm run validate:strict`)
 
 ## Time Estimate
 
-4-5 hours (including testing)
+5-6 hours (including script creation and testing)
 
 ## Related Tickets
 
-- OPEHANIMP-001: Update CLAUDE.md with enhanced checklist
+- OPEHANIMP-001: Update CLAUDE.md with enhanced checklist (already completed)
 - OPEHANIMP-005: Enhance error messages in operation registry
 
 ## Success Metrics
@@ -341,3 +411,4 @@ Create a test that triggers the error in a real scenario and verifies the output
 - Debugging time reduced from 1-2 hours to <15 minutes
 - Developers can fix errors without consulting documentation
 - Zero support requests about "Unknown operation type" errors
+- Browser compatibility maintained (no broken imports)
