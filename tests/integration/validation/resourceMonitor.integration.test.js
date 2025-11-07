@@ -6,6 +6,7 @@ import {
 
 const originalMemoryUsage = globalThis.process?.memoryUsage;
 const originalGc = globalThis.gc;
+const originalPerformance = globalThis.performance;
 
 /**
  * Creates a memory usage mock that iterates through provided snapshots
@@ -48,6 +49,12 @@ describe('ResourceMonitor integration', () => {
       globalThis.gc = originalGc;
     } else {
       delete globalThis.gc;
+    }
+
+    if (originalPerformance) {
+      globalThis.performance = originalPerformance;
+    } else {
+      delete globalThis.performance;
     }
   });
 
@@ -229,5 +236,154 @@ describe('ResourceMonitor integration', () => {
       }
       monitor.stopMonitoring();
     }
+  });
+
+  it('manages lifecycle transitions across runtime fallbacks and manual cleanup scenarios', () => {
+    const megabyte = 1024 * 1024;
+    const nodeMemorySnapshots = [4 * megabyte, 6 * megabyte, 8 * megabyte];
+    const memoryUsageMock = createMemoryUsageMock(nodeMemorySnapshots);
+    globalThis.process.memoryUsage = memoryUsageMock;
+
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const defaultMonitor = new ResourceMonitor({});
+    expect(defaultMonitor.maxMemoryUsage).toBe(512 * megabyte);
+    expect(defaultMonitor.maxProcessingTime).toBe(30000);
+    expect(defaultMonitor.maxConcurrentOperations).toBe(10);
+    expect(defaultMonitor.memoryCheckInterval).toBe(1000);
+    expect(defaultMonitor.memoryWarningThreshold).toBe(0.75);
+    expect(defaultMonitor.memoryCriticalThreshold).toBe(0.9);
+
+    defaultMonitor.startMonitoring();
+    jest.advanceTimersByTime(defaultMonitor.memoryCheckInterval);
+    defaultMonitor.stopMonitoring();
+
+    const monitor = new ResourceMonitor({
+      config: {
+        maxMemoryUsage: 50 * megabyte,
+        maxConcurrentOperations: 10,
+        maxProcessingTime: 80,
+        memoryCheckInterval: 25,
+        memoryWarningThreshold: 0.6,
+        memoryCriticalThreshold: 0.9,
+      },
+      logger,
+    });
+
+    const originalSetInterval = global.setInterval;
+    const originalClearInterval = global.clearInterval;
+    let interceptedIntervalId = null;
+
+    global.setInterval = jest.fn((fn, delay, ...args) => {
+      interceptedIntervalId = originalSetInterval(fn, delay, ...args);
+      return 0;
+    });
+
+    global.clearInterval = jest.fn((intervalId) => {
+      if (intervalId === 0 && interceptedIntervalId) {
+        originalClearInterval(interceptedIntervalId);
+        interceptedIntervalId = null;
+      } else {
+        originalClearInterval(intervalId);
+      }
+    });
+
+    try {
+      monitor.startMonitoring();
+      const timersAfterFirstStart = jest.getTimerCount();
+      monitor.startMonitoring();
+      expect(jest.getTimerCount()).toBe(timersAfterFirstStart);
+
+      const lifecycleGuard = monitor.createOperationGuard('lifecycle:node', { timeout: 40 });
+      jest.advanceTimersByTime(12);
+      expect(lifecycleGuard.getDuration()).toBeGreaterThanOrEqual(12);
+
+      monitor.stopMonitoring();
+      expect(lifecycleGuard.isActive()).toBe(false);
+      expect(logger.debug).toHaveBeenCalledWith('Resource monitoring stopped', expect.any(Object));
+    } finally {
+      if (interceptedIntervalId) {
+        originalClearInterval(interceptedIntervalId);
+        interceptedIntervalId = null;
+      }
+      global.setInterval = originalSetInterval;
+      global.clearInterval = originalClearInterval;
+    }
+
+    expect(jest.getTimerCount()).toBe(0);
+
+    globalThis.process.memoryUsage = undefined;
+    globalThis.performance = { memory: { usedJSHeapSize: 32 * megabyte } };
+
+    monitor.startMonitoring();
+    const guardA = monitor.createOperationGuard('runtime:alpha');
+    const guardB = monitor.createOperationGuard('runtime:beta');
+    const guardC = monitor.createOperationGuard('runtime:gamma');
+
+    delete globalThis.gc;
+    globalThis.performance.memory.usedJSHeapSize = 49 * megabyte;
+    jest.advanceTimersByTime(monitor.memoryCheckInterval);
+    globalThis.performance.memory.usedJSHeapSize = 32 * megabyte;
+
+    const warningStats = monitor.getResourceStats();
+    expect(warningStats.status).toBe('WARNING');
+    expect(warningStats.memory.current).toBe(32 * megabyte);
+
+    globalThis.performance = {};
+    const fallbackStats = monitor.getResourceStats();
+    expect(fallbackStats.memory.current).toBe(3 * megabyte);
+    expect(fallbackStats.memory.formatted.current).toBe('3 MB');
+
+    guardA.cleanup();
+    guardA.cleanup();
+
+    monitor.maxMemoryUsage = 1.5 * megabyte;
+    expect(() => monitor.checkResourceLimits()).toThrow(ResourceExhaustionError);
+
+    monitor.reset();
+    expect(logger.debug).toHaveBeenCalledWith('Resource monitor reset');
+    expect(monitor.getResourceStats().operations.current).toBe(0);
+    expect(guardB.isActive()).toBe(false);
+    expect(guardC.isActive()).toBe(false);
+
+    const originalSetTimeout = globalThis.setTimeout;
+    const originalClearTimeout = globalThis.clearTimeout;
+    let interceptedTimeoutId = null;
+    let storedRealTimeout = null;
+
+    globalThis.setTimeout = jest.fn((fn, delay, ...args) => {
+      storedRealTimeout = originalSetTimeout(fn, delay, ...args);
+      interceptedTimeoutId = 0;
+      return interceptedTimeoutId;
+    });
+
+    globalThis.clearTimeout = jest.fn((timeoutId) => {
+      if (timeoutId === interceptedTimeoutId && storedRealTimeout !== null) {
+        originalClearTimeout(storedRealTimeout);
+        storedRealTimeout = null;
+      } else {
+        originalClearTimeout(timeoutId);
+      }
+    });
+
+    const ephemeralGuard = monitor.createOperationGuard('runtime:ephemeral', { timeout: 15 });
+    try {
+      ephemeralGuard.cleanup();
+      expect(ephemeralGuard.isActive()).toBe(false);
+      expect(() => jest.advanceTimersByTime(16)).not.toThrow();
+    } finally {
+      if (storedRealTimeout !== null) {
+        originalClearTimeout(storedRealTimeout);
+      }
+      globalThis.setTimeout = originalSetTimeout;
+      globalThis.clearTimeout = originalClearTimeout;
+    }
+
+    monitor.stopMonitoring();
   });
 });
