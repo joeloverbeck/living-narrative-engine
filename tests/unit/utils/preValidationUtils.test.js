@@ -3,7 +3,7 @@
  * @description Unit tests for preValidationUtils
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 
 import {
   validateOperationStructure,
@@ -11,7 +11,9 @@ import {
   validateRuleStructure,
   performPreValidation,
   formatPreValidationError,
+  validateOperationType,
 } from '../../../src/utils/preValidationUtils.js';
+import OperationValidationError from '../../../src/errors/operationValidationError.js';
 
 describe('preValidationUtils', () => {
   describe('validateOperationStructure', () => {
@@ -688,6 +690,188 @@ describe('preValidationUtils', () => {
       expect(message).toContain('test.path');
       expect(message).toContain('Error with all params');
       expect(message).toContain('Suggestion 1');
+    });
+  });
+
+  describe('validateOperationType - Enhanced Error Messages', () => {
+    let mockLogger;
+
+    beforeEach(() => {
+      mockLogger = {
+        error: jest.fn(),
+        debug: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      };
+    });
+
+    it('should provide detailed error for missing whitelist entry', () => {
+      expect(() => {
+        validateOperationType('NEW_OPERATION', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      expect(() => {
+        validateOperationType('NEW_OPERATION', mockLogger);
+      }).toThrow(/NOT IN PRE-VALIDATION WHITELIST/);
+
+      expect(() => {
+        validateOperationType('NEW_OPERATION', mockLogger);
+      }).toThrow(/src\/utils\/preValidationUtils\.js/);
+    });
+
+    it('should include guidance for all potential issues', () => {
+      expect(() => {
+        validateOperationType('MISSING_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      // Test the error message separately
+      let errorMessage;
+      try {
+        validateOperationType('MISSING_OP', mockLogger);
+      } catch (err) {
+        errorMessage = err.message;
+      }
+      expect(errorMessage).toMatch(/SCHEMA FILE NOT FOUND/);
+      expect(errorMessage).toMatch(/SCHEMA NOT REFERENCED/);
+      expect(errorMessage).toMatch(/NOT IN PRE-VALIDATION WHITELIST/);
+    });
+
+    it('should pass validation for fully registered operation', () => {
+      expect(() => {
+        validateOperationType('ADD_COMPONENT', mockLogger);
+      }).not.toThrow();
+    });
+
+    it('should provide correct verification commands', () => {
+      expect(() => {
+        validateOperationType('BAD_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      let errorMessage;
+      try {
+        validateOperationType('BAD_OP', mockLogger);
+      } catch (err) {
+        errorMessage = err.message;
+      }
+      expect(errorMessage).toMatch(/npm run validate/);
+      expect(errorMessage).toMatch(/npm run validate:strict/);
+      expect(errorMessage).toMatch(/npm run test:unit/);
+    });
+
+    it('should include file paths in error message', () => {
+      expect(() => {
+        validateOperationType('TEST_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      let errorMessage;
+      try {
+        validateOperationType('TEST_OP', mockLogger);
+      } catch (err) {
+        errorMessage = err.message;
+      }
+      expect(errorMessage).toMatch(/src\/utils\/preValidationUtils\.js/);
+      expect(errorMessage).toMatch(/data\/schemas\/operation\.schema\.json/);
+      expect(errorMessage).toMatch(/data\/schemas\/operations\//);
+    });
+
+    it('should include code snippets in error message', () => {
+      expect(() => {
+        validateOperationType('SAMPLE_OPERATION', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      let errorMessage;
+      try {
+        validateOperationType('SAMPLE_OPERATION', mockLogger);
+      } catch (err) {
+        errorMessage = err.message;
+      }
+      expect(errorMessage).toMatch(/SAMPLE_OPERATION/);
+      expect(errorMessage).toMatch(/Code to add:/);
+      expect(errorMessage).toMatch(/Example:/);
+    });
+
+    it('should log error details to logger', () => {
+      expect(() => {
+        validateOperationType('UNKNOWN_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Operation validation failed',
+        expect.objectContaining({
+          operationType: 'UNKNOWN_OP',
+          missingRegistrations: ['whitelist', 'schema', 'reference'],
+        })
+      );
+    });
+
+    it('should log debug message for valid operation', () => {
+      validateOperationType('QUERY_COMPONENT', mockLogger);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Operation type validation passed',
+        expect.objectContaining({
+          operationType: 'QUERY_COMPONENT',
+        })
+      );
+    });
+
+    it('should set operationType property on error', () => {
+      expect(() => {
+        validateOperationType('MY_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      let caughtError;
+      try {
+        validateOperationType('MY_OP', mockLogger);
+      } catch (err) {
+        caughtError = err;
+      }
+      expect(caughtError).toBeInstanceOf(OperationValidationError);
+      expect(caughtError.operationType).toBe('MY_OP');
+    });
+
+    it('should set missingRegistrations property on error', () => {
+      expect(() => {
+        validateOperationType('MY_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      let caughtError;
+      try {
+        validateOperationType('MY_OP', mockLogger);
+      } catch (err) {
+        caughtError = err;
+      }
+      expect(caughtError).toBeInstanceOf(OperationValidationError);
+      expect(caughtError.missingRegistrations).toEqual(['whitelist', 'schema', 'reference']);
+    });
+
+    it('should have correct error name', () => {
+      expect(() => {
+        validateOperationType('MY_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      let caughtError;
+      try {
+        validateOperationType('MY_OP', mockLogger);
+      } catch (err) {
+        caughtError = err;
+      }
+      expect(caughtError.name).toBe('OperationValidationError');
+    });
+
+    it('should reference CLAUDE.md documentation', () => {
+      expect(() => {
+        validateOperationType('TEST_OP', mockLogger);
+      }).toThrow(OperationValidationError);
+
+      let errorMessage;
+      try {
+        validateOperationType('TEST_OP', mockLogger);
+      } catch (err) {
+        errorMessage = err.message;
+      }
+      expect(errorMessage).toMatch(/CLAUDE\.md/);
+      expect(errorMessage).toMatch(/8-step checklist/);
     });
   });
 });
