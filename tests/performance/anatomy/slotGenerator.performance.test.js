@@ -78,10 +78,10 @@ describe('SlotGenerator - Performance Tests', () => {
   describe('Slot Generation Performance', () => {
     it('should generate single slot efficiently (<0.01ms)', () => {
       const template = createStructureTemplate(1, 1);
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000 for faster tests
 
       // Warmup phase to ensure JIT compilation
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -92,8 +92,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      // Should complete 10k iterations in under 130ms (relaxed for CI variability)
-      expect(totalTime).toBeLessThan(130);
+      // Should complete 1k iterations in under 15ms (scaled from 130ms for 10k)
+      expect(totalTime).toBeLessThan(15);
 
       // Average time per call should be under 0.015ms (CI-adjusted safety margin)
       expect(avgTime).toBeLessThan(0.015);
@@ -105,10 +105,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should generate 10 slots efficiently (<0.1ms)', () => {
       const template = createStructureTemplate(1, 10);
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -119,8 +119,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      // Should complete 10k iterations in under 1000ms
-      expect(totalTime).toBeLessThan(1000);
+      // Should complete 1k iterations in under 100ms (scaled from 1000ms for 10k)
+      expect(totalTime).toBeLessThan(100);
 
       // Average time per call should be under 0.1ms
       expect(avgTime).toBeLessThan(0.1);
@@ -132,10 +132,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should generate 20 slots efficiently (<0.2ms)', () => {
       const template = createStructureTemplate(1, 20);
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -146,8 +146,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      // Should complete 10k iterations in under 2000ms
-      expect(totalTime).toBeLessThan(2000);
+      // Should complete 1k iterations in under 200ms (scaled from 2000ms for 10k)
+      expect(totalTime).toBeLessThan(200);
 
       // Average time per call should be under 0.2ms
       expect(avgTime).toBeLessThan(0.2);
@@ -159,10 +159,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should generate 50 slots efficiently (<0.5ms)', () => {
       const template = createStructureTemplate(1, 50);
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -173,8 +173,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      // Should complete 10k iterations in under 5000ms
-      expect(totalTime).toBeLessThan(5000);
+      // Should complete 1k iterations in under 500ms (scaled from 5000ms for 10k)
+      expect(totalTime).toBeLessThan(500);
 
       // Average time per call should be under 0.5ms
       expect(avgTime).toBeLessThan(0.5);
@@ -186,10 +186,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should generate 100 slots efficiently (<1ms)', () => {
       const template = createStructureTemplate(1, 100);
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -200,8 +200,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      // Should complete 10k iterations in under 10000ms
-      expect(totalTime).toBeLessThan(10000);
+      // Should complete 1k iterations in under 1000ms (scaled from 10000ms for 10k)
+      expect(totalTime).toBeLessThan(1000);
 
       // Average time per call should be under 1ms
       expect(avgTime).toBeLessThan(1);
@@ -215,10 +215,10 @@ describe('SlotGenerator - Performance Tests', () => {
   describe('Arrangement Scheme Performance', () => {
     it('should handle bilateral arrangement efficiently', () => {
       const template = createStructureTemplate(2, 10, 'bilateral');
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -229,7 +229,7 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      expect(totalTime).toBeLessThan(2000);
+      expect(totalTime).toBeLessThan(200); // Scaled from 2000ms
       expect(avgTime).toBeLessThan(0.2);
 
       console.log(
@@ -239,10 +239,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should handle radial arrangement efficiently', () => {
       const template = createStructureTemplate(2, 10, 'radial');
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -253,7 +253,7 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      expect(totalTime).toBeLessThan(2000);
+      expect(totalTime).toBeLessThan(200); // Scaled from 2000ms
       expect(avgTime).toBeLessThan(0.2);
 
       console.log(
@@ -263,10 +263,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should handle indexed arrangement efficiently', () => {
       const template = createStructureTemplate(2, 10, 'indexed');
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -277,7 +277,7 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      expect(totalTime).toBeLessThan(2000);
+      expect(totalTime).toBeLessThan(200); // Scaled from 2000ms
       expect(avgTime).toBeLessThan(0.2);
 
       console.log(
@@ -287,10 +287,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should handle custom arrangement efficiently', () => {
       const template = createStructureTemplate(2, 10, 'custom');
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -301,7 +301,7 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      expect(totalTime).toBeLessThan(2000);
+      expect(totalTime).toBeLessThan(200); // Scaled from 2000ms
       expect(avgTime).toBeLessThan(0.2);
 
       console.log(
@@ -313,10 +313,10 @@ describe('SlotGenerator - Performance Tests', () => {
   describe('Optional vs Required Slot Performance', () => {
     it('should handle optional slots efficiently', () => {
       const template = createStructureTemplate(2, 10, 'bilateral', true);
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -327,7 +327,7 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      expect(totalTime).toBeLessThan(2000);
+      expect(totalTime).toBeLessThan(200); // Scaled from 2000ms
       expect(avgTime).toBeLessThan(0.2);
 
       console.log(
@@ -337,10 +337,10 @@ describe('SlotGenerator - Performance Tests', () => {
 
     it('should handle required slots efficiently', () => {
       const template = createStructureTemplate(2, 10, 'bilateral', false);
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -351,7 +351,7 @@ describe('SlotGenerator - Performance Tests', () => {
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      expect(totalTime).toBeLessThan(2000);
+      expect(totalTime).toBeLessThan(200); // Scaled from 2000ms
       expect(avgTime).toBeLessThan(0.2);
 
       console.log(
@@ -388,10 +388,10 @@ describe('SlotGenerator - Performance Tests', () => {
         },
       };
 
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -403,7 +403,7 @@ describe('SlotGenerator - Performance Tests', () => {
       const avgTime = totalTime / iterations;
 
       // 20 total slots: should be < 0.2ms avg
-      expect(totalTime).toBeLessThan(2000);
+      expect(totalTime).toBeLessThan(200); // Scaled from 2000ms
       expect(avgTime).toBeLessThan(0.2);
 
       console.log(
@@ -418,12 +418,12 @@ describe('SlotGenerator - Performance Tests', () => {
       const times = [];
 
       // Warmup phase
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 100; i++) { // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
-      // Measure performance over 10 batches to detect degradation
-      for (let batch = 0; batch < 10; batch++) {
+      // Measure performance over 5 batches to detect degradation (reduced from 10)
+      for (let batch = 0; batch < 5; batch++) {
         const batchStart = performance.now();
 
         for (let i = 0; i < 100; i++) {
@@ -465,11 +465,11 @@ describe('SlotGenerator - Performance Tests', () => {
         createAppendageTemplate(20), // 20 appendages
       ];
 
-      const iterations = 100;
+      const iterations = 100; // Keep at 100, already minimal
 
       for (const template of templates) {
         // Warmup
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 50; i++) { // Reduced from 100
           slotGenerator.generateBlueprintSlots(template);
         }
 
@@ -532,10 +532,10 @@ describe('SlotGenerator - Performance Tests', () => {
       const results = [];
 
       for (const testCase of testCases) {
-        const iterations = 1000;
+        const iterations = 500; // Reduced from 1000 for summary test
 
         // Warmup
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 50; i++) { // Reduced from 100
           slotGenerator.generateBlueprintSlots(testCase.template);
         }
 

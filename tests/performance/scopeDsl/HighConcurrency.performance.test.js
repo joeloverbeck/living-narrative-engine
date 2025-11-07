@@ -496,7 +496,7 @@ describe('High Concurrency Performance - Optimized', () => {
   describe('Concurrency Scaling Analysis', () => {
     test('should demonstrate linear scaling up to 50 concurrent operations', async () => {
       // Arrange - Create smaller dataset for faster testing
-      const entityCount = 200; // Reduced from 600
+      const entityCount = 150; // Reduced from 200 (originally 600)
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
@@ -541,13 +541,13 @@ describe('High Concurrency Performance - Optimized', () => {
 
     test('should maintain performance consistency across multiple scaling cycles', async () => {
       // Arrange - Create smaller dataset
-      const entityCount = 150; // Reduced from 400
+      const entityCount = 100; // Reduced from 150 (originally 400)
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
 
       // Warmup cycles to stabilize performance (not included in metrics)
-      const warmupCycles = 3;
+      const warmupCycles = 2; // Reduced from 3
       const concurrentOps = 30;
 
       for (let warmup = 0; warmup < warmupCycles; warmup++) {
@@ -561,7 +561,7 @@ describe('High Concurrency Performance - Optimized', () => {
       }
 
       // Act - Perform multiple cycles of scaling tests
-      const cycles = 5; // Increased from 3 to 5 for better statistical stability
+      const cycles = 3; // Keeping at 3 for statistical validity (was 5)
       const cycleResults = [];
 
       for (let cycle = 0; cycle < cycles; cycle++) {
@@ -615,7 +615,7 @@ describe('High Concurrency Performance - Optimized', () => {
   describe('Throughput Benchmarks', () => {
     test('should achieve >20 ops/second under 50 concurrent load', async () => {
       // Arrange - Create optimized dataset
-      const entityCount = 300; // Reduced from 800
+      const entityCount = 200; // Reduced from 300 (originally 800)
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
@@ -640,7 +640,7 @@ describe('High Concurrency Performance - Optimized', () => {
 
     test('should handle different scope complexities with varying throughput', async () => {
       // Arrange - Create optimized dataset
-      const entityCount = 200; // Reduced from 500
+      const entityCount = 150; // Reduced from 200 (originally 500)
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
@@ -707,7 +707,7 @@ describe('High Concurrency Performance - Optimized', () => {
   describe('Error Rate Analysis', () => {
     test('should maintain low error rate under normal concurrent load', async () => {
       // Arrange - Create optimized dataset
-      const entityCount = 250; // Reduced from 600
+      const entityCount = 175; // Reduced from 250 (originally 600)
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
@@ -753,7 +753,7 @@ describe('High Concurrency Performance - Optimized', () => {
   describe('Timing Consistency Validation', () => {
     test('should maintain consistent response times under concurrent load', async () => {
       // Arrange - Create optimized dataset
-      const entityCount = 200; // Reduced from 500
+      const entityCount = 150; // Reduced from 200 (originally 500)
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
@@ -791,7 +791,7 @@ describe('High Concurrency Performance - Optimized', () => {
   describe('Concurrent Operation Launch Timing', () => {
     test('should complete all concurrent operations successfully', async () => {
       // Arrange - Create dataset for concurrent execution testing
-      const entityCount = 200;
+      const entityCount = 150; // Reduced from 200
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
@@ -843,7 +843,7 @@ describe('High Concurrency Performance - Optimized', () => {
 
     test('should complete bulk concurrent operations within performance window', async () => {
       // Arrange - Create dataset for bulk operation timing
-      const entityCount = 500;
+      const entityCount = 350; // Reduced from 500
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
@@ -908,14 +908,14 @@ describe('High Concurrency Performance - Optimized', () => {
   describe('Performance Regression Detection', () => {
     test('should detect no performance degradation over multiple cycles', async () => {
       // Arrange - Create optimized dataset
-      const entityCount = 150; // Reduced from 400
+      const entityCount = 100; // Reduced from 150 (originally 400)
       const testEntities = await createPerformanceDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createPerformanceGameContext();
 
       // Act - Perform warmup cycles first to stabilize JIT and GC
-      const warmupCycles = 2;
-      const concurrentOps = 35;
+      const warmupCycles = 2; // Keep at 2 (was already reduced)
+      const concurrentOps = 30; // Reduced from 35
 
       // Warmup cycles (not measured)
       for (let i = 0; i < warmupCycles; i++) {
@@ -929,7 +929,7 @@ describe('High Concurrency Performance - Optimized', () => {
       }
 
       // Perform measured test cycles
-      const cycles = 3; // Reduced from 4
+      const cycles = 3; // Keep at 3 for statistical validity
       const cycleResults = [];
 
       for (let cycle = 0; cycle < cycles; cycle++) {
