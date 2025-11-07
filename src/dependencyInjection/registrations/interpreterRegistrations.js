@@ -47,6 +47,23 @@ export function registerInterpreters(container) {
   // ---------------------------------------------------------------------------
   //  OperationRegistry
   // ---------------------------------------------------------------------------
+  /**
+   * Operation Registry Mappings
+   *
+   * Maps operation type strings to handler tokens
+   *
+   * Requirements:
+   * - Operation type must match schema "const" value exactly
+   * - Handler token must be defined in tokens-core.js (without "I" prefix)
+   * - Handler must be registered in operationHandlerRegistrations.js
+   *
+   * Verification:
+   * Run `npm run validate` or `npm run validate:strict` to check consistency
+   *
+   * @see src/dependencyInjection/tokens/tokens-core.js
+   * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js
+   * @see src/utils/preValidationUtils.js (KNOWN_OPERATION_TYPES)
+   */
   registrar.singletonFactory(tokens.OperationRegistry, (c) => {
     const registry = new OperationRegistry({
       logger: c.resolve(tokens.ILogger),
@@ -59,6 +76,8 @@ export function registerInterpreters(container) {
       (...args) =>
         c.resolve(tkn).execute(...args);
 
+    // Operation mappings - keep alphabetically sorted
+    // Format: registry.register('OPERATION_TYPE', bind(tokens.HandlerToken));
     registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
     registry.register(
       'DISPATCH_PERCEPTIBLE_EVENT',

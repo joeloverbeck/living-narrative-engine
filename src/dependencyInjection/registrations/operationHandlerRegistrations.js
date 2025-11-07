@@ -1,10 +1,32 @@
 /**
  * @file Provides registration for operation handler singletons.
+ *
+ * Operation Handler Factory Registrations
+ *
+ * Registers operation handler classes with the DI container using factory pattern
+ *
+ * When adding a new operation handler:
+ * 1. Import the handler class at the top of this file
+ * 2. Add factory entry to handlerFactories array: [token, HandlerClass, factory function]
+ * 3. Ensure token is defined in tokens-core.js (without "I" prefix)
+ * 4. Keep imports and factory entries alphabetically sorted
+ *
+ * Requirements:
+ * - Handler class must extend BaseOperationHandler
+ * - Token must be defined in tokens-core.js (e.g., DrinkFromHandler, not IDrinkFromHandler)
+ * - Handler file must exist in src/logic/operationHandlers/
+ *
+ * Verification:
+ * Run `npm run typecheck` to verify imports and registrations
+ * @see src/dependencyInjection/tokens/tokens-core.js
+ * @see src/logic/operationHandlers/ (handler implementations)
  */
 
 /** @typedef {import('../../utils/registrarHelpers.js').Registrar} Registrar */
 
 import { tokens } from '../tokens.js';
+
+// Import handlers (keep alphabetically sorted)
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
@@ -63,10 +85,14 @@ import jsonLogic from 'json-logic-js';
 /**
  * Registers all operation handlers as singleton factories.
  *
+ * Each entry in handlerFactories is [token, HandlerClass, factoryFunction]
+ * Format: [tokens.HandlerName, HandlerClass, (c, Handler) => new Handler({ deps })]
+ *
  * @param {Registrar} registrar - The registrar used for registration.
  * @returns {void}
  */
 export function registerOperationHandlers(registrar) {
+  // Handler factory entries (keep alphabetically sorted by token name)
   const handlerFactories = [
     [
       tokens.DispatchEventHandler,
