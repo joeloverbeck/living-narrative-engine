@@ -555,7 +555,8 @@ class RecipePatternResolver {
       for (const slotKey of filteredSlotKeys) {
         // Skip if explicitly defined in recipe slots (explicit definitions take precedence)
         if (expandedSlots[slotKey]) {
-          if (hadMatcherAtStart) {
+          // Only log override if pattern still has an active matcher
+          if (hadMatcherAtStart && this.#hasMatcher(pattern)) {
             this.#logger.info(
               `Explicit slot '${slotKey}' overrides Pattern ${patternNumber} (${patternDesc}). This is expected behavior.`
             );
@@ -571,7 +572,8 @@ class RecipePatternResolver {
         }
 
         if (Object.prototype.hasOwnProperty.call(blueprintAdditionalSlots, slotKey)) {
-          if (hadMatcherAtStart) {
+          // Only log override if pattern still has an active matcher
+          if (hadMatcherAtStart && this.#hasMatcher(pattern)) {
             this.#logger.info(
               `Blueprint additionalSlots for slot '${slotKey}' overrides Pattern ${patternNumber} (${patternDesc}).`
             );
