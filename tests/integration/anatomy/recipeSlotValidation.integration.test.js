@@ -225,7 +225,7 @@ describe('Anatomy Recipe Slot Validation Integration', () => {
         'rightArm',
         'hair',
       ]);
-      expect(details.context).toBe('BodyBlueprintFactory.validateRecipeSlots');
+      expect(details.context).toBe('BlueprintValidator.validateRecipeSlots');
     });
   });
 
