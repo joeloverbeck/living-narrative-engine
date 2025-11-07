@@ -1,5 +1,4 @@
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
-import { ValidationError } from '../../../src/errors/validationError.js';
 
 const createLogger = () => ({
   info: jest.fn(),
@@ -8,6 +7,13 @@ const createLogger = () => ({
   debug: jest.fn(),
 });
 
+/**
+ * Loads the RecipePatternResolver with optional mocks
+ *
+ * @param {object} options - Configuration options
+ * @param {boolean} options.mockAssertNonBlankString - Whether to mock assertNonBlankString
+ * @returns {Promise<object>} The resolver class
+ */
 async function loadResolver({ mockAssertNonBlankString = false } = {}) {
   jest.resetModules();
 
@@ -126,7 +132,8 @@ describe('RecipePatternResolver additional coverage', () => {
       partType: 'arm_segment',
       get matchesGroup() {
         accessCount += 1;
-        return accessCount <= 5 ? 'limbSet:arm' : '';
+        // Return '' earlier so validation catches it
+        return accessCount <= 2 ? 'limbSet:arm' : '';
       },
     };
 
