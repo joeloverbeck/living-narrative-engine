@@ -1702,6 +1702,160 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
+      // Species-specific spider entities
+      'anatomy:spider_cephalothorax': {
+        id: 'anatomy:spider_cephalothorax',
+        description: 'Root cephalothorax for an eight-legged spider',
+        components: {
+          'anatomy:part': {
+            subType: 'spider_cephalothorax',
+          },
+          'anatomy:sockets': {
+            sockets: [
+              {
+                id: 'leg_1',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'leg_2',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'leg_3',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'leg_4',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'leg_5',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'leg_6',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'leg_7',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'leg_8',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg',
+              },
+              {
+                id: 'pedipalp_left',
+                orientation: 'left',
+                allowedTypes: ['spider_pedipalp'],
+                nameTpl: '{{orientation}} pedipalp',
+              },
+              {
+                id: 'pedipalp_right',
+                orientation: 'right',
+                allowedTypes: ['spider_pedipalp'],
+                nameTpl: '{{orientation}} pedipalp',
+              },
+              {
+                id: 'abdomen',
+                allowedTypes: ['spider_abdomen'],
+                nameTpl: 'abdomen',
+              },
+              {
+                id: 'spinnerets',
+                allowedTypes: ['spinneret'],
+                nameTpl: 'spinnerets',
+              },
+            ],
+          },
+          'core:name': {
+            text: 'spider cephalothorax',
+          },
+          'descriptors:texture': {
+            texture: 'chitinous',
+          },
+          'descriptors:body_hair': {
+            hairDensity: 'hairy',
+          },
+        },
+      },
+      'anatomy:spider_leg': {
+        id: 'anatomy:spider_leg',
+        description: 'A segmented spider leg',
+        components: {
+          'anatomy:part': {
+            subType: 'spider_leg',
+          },
+          'core:name': {
+            text: 'spider leg',
+          },
+          'descriptors:texture': {
+            texture: 'chitinous',
+          },
+          'descriptors:body_hair': {
+            hairDensity: 'hairy',
+          },
+        },
+      },
+      'anatomy:spider_pedipalp': {
+        id: 'anatomy:spider_pedipalp',
+        description: 'A spider pedipalp for sensory and manipulation',
+        components: {
+          'anatomy:part': {
+            subType: 'spider_pedipalp',
+          },
+          'core:name': {
+            text: 'spider pedipalp',
+          },
+          'descriptors:texture': {
+            texture: 'chitinous',
+          },
+          'descriptors:body_hair': {
+            hairDensity: 'hairy',
+          },
+        },
+      },
+      'anatomy:spider_abdomen': {
+        id: 'anatomy:spider_abdomen',
+        description: 'The bulbous abdomen of a spider',
+        components: {
+          'anatomy:part': {
+            subType: 'spider_abdomen',
+          },
+          'core:name': {
+            text: 'spider abdomen',
+          },
+          'descriptors:texture': {
+            texture: 'ridged',
+          },
+        },
+      },
+      'anatomy:spider_spinneret': {
+        id: 'anatomy:spider_spinneret',
+        description: 'Spider silk-producing organ located on the abdomen',
+        components: {
+          'anatomy:part': {
+            subType: 'spinneret',
+          },
+          'core:name': {
+            text: 'spinneret',
+          },
+          'descriptors:texture': {
+            texture: 'chitinous',
+          },
+          'descriptors:body_hair': {
+            hairDensity: 'hairy',
+          },
+        },
+      },
     });
 
     // Load slot libraries
@@ -1904,6 +2058,51 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
                 idTemplate: 'head',
                 allowedTypes: ['head'],
                 nameTpl: 'head',
+              },
+            },
+          ],
+        },
+      },
+      'anatomy:structure_arachnid_8leg': {
+        id: 'anatomy:structure_arachnid_8leg',
+        description:
+          'Eight-legged arachnid body plan with pedipalps and abdomen attachment',
+        topology: {
+          rootType: 'cephalothorax',
+          limbSets: [
+            {
+              type: 'leg',
+              count: 8,
+              arrangement: 'radial',
+              arrangementHint: 'four_pairs_bilateral',
+              socketPattern: {
+                idTemplate: 'leg_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['spider_leg'],
+                nameTpl: 'leg {{index}}',
+              },
+            },
+          ],
+          appendages: [
+            {
+              type: 'pedipalp',
+              count: 2,
+              attachment: 'anterior',
+              socketPattern: {
+                idTemplate: 'pedipalp_{{index}}',
+                orientationScheme: 'indexed',
+                allowedTypes: ['spider_pedipalp'],
+                nameTpl: 'pedipalp {{index}}',
+              },
+            },
+            {
+              type: 'torso',
+              count: 1,
+              attachment: 'posterior',
+              socketPattern: {
+                idTemplate: 'posterior_torso',
+                allowedTypes: ['spider_abdomen'],
+                nameTpl: 'torso',
               },
             },
           ],
@@ -2128,6 +2327,30 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
               components: ['anatomy:part'],
             },
             optional: true,
+          },
+        },
+      },
+      // Spider blueprint for arachnids
+      'anatomy:giant_spider': {
+        id: 'anatomy:giant_spider',
+        schemaVersion: '2.0',
+        root: 'anatomy:spider_cephalothorax',
+        structureTemplate: 'anatomy:structure_arachnid_8leg',
+        additionalSlots: {
+          venom_gland: {
+            socket: 'venom_gland',
+            requirements: {
+              partType: 'venom_gland',
+              components: ['anatomy:part', 'anatomy:venom'],
+            },
+            optional: true,
+          },
+          spinnerets: {
+            socket: 'spinnerets',
+            requirements: {
+              partType: 'spinneret',
+              components: ['anatomy:part'],
+            },
           },
         },
       },
@@ -2493,6 +2716,68 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           requires: [
             {
               partTypes: ['tentacle', 'ink_reservoir'],
+            },
+          ],
+        },
+      },
+      // Spider recipe
+      'anatomy:giant_forest_spider': {
+        recipeId: 'anatomy:giant_forest_spider',
+        blueprintId: 'anatomy:giant_spider',
+        bodyDescriptors: {
+          build: 'athletic',
+          hairDensity: 'hairy',
+          composition: 'lean',
+        },
+        slots: {
+          spinnerets: {
+            partType: 'spinneret',
+            tags: ['anatomy:part'],
+            properties: {
+              'descriptors:texture': {
+                texture: 'chitinous',
+              },
+              'descriptors:body_hair': {
+                hairDensity: 'hairy',
+              },
+            },
+          },
+        },
+        patterns: [
+          {
+            matchesGroup: 'limbSet:leg',
+            partType: 'spider_leg',
+            tags: ['anatomy:part'],
+            properties: {
+              'descriptors:texture': {
+                texture: 'chitinous',
+              },
+              'descriptors:body_hair': {
+                hairDensity: 'hairy',
+              },
+            },
+          },
+          {
+            matchesGroup: 'appendage:pedipalp',
+            partType: 'spider_pedipalp',
+            tags: ['anatomy:part'],
+            properties: {},
+          },
+          {
+            matchesGroup: 'appendage:torso',
+            partType: 'spider_abdomen',
+            tags: ['anatomy:part'],
+            properties: {
+              'descriptors:texture': {
+                texture: 'ridged',
+              },
+            },
+          },
+        ],
+        constraints: {
+          requires: [
+            {
+              partTypes: ['spider_abdomen', 'spinneret'],
             },
           ],
         },
