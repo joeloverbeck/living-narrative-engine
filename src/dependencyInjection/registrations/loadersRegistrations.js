@@ -105,7 +105,7 @@ import SummaryPhase from '../../loaders/phases/summaryPhase.js';
 // --- Anatomy Validation Imports ---
 import { BlueprintRecipeValidationRule } from '../../anatomy/validation/rules/blueprintRecipeValidationRule.js';
 import SlotGenerator from '../../anatomy/slotGenerator.js';
-import RecipePatternResolver from '../../anatomy/recipePatternResolver.js';
+import RecipePatternResolver from '../../anatomy/recipePatternResolver/patternResolver.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
 import ContentLoadManager from '../../loaders/ContentLoadManager.js';
 import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
