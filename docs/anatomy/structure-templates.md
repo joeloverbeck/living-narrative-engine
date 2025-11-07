@@ -71,8 +71,8 @@ Limb sets define repeated limb structures (legs, arms, wings, tentacles) that at
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
-  "id": "anatomy:structure_spider",
-  "description": "Spider body structure with 8 radially arranged legs",
+  "id": "anatomy:structure_arachnid_8leg",
+  "description": "Eight-legged arachnid body plan with pedipalps and abdomen attachment",
   "topology": {
     "rootType": "cephalothorax",
     "limbSets": [
@@ -80,24 +80,35 @@ Limb sets define repeated limb structures (legs, arms, wings, tentacles) that at
         "type": "leg",
         "count": 8,
         "arrangement": "radial",
+        "arrangementHint": "four_pairs_bilateral",
         "socketPattern": {
           "idTemplate": "leg_{{index}}",
           "orientationScheme": "indexed",
           "allowedTypes": ["spider_leg"],
           "nameTpl": "leg {{index}}"
-        },
-        "arrangementHint": "octagonal_radial"
+        }
       }
     ],
     "appendages": [
       {
-        "type": "abdomen",
+        "type": "pedipalp",
+        "count": 2,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "pedipalp_{{index}}",
+          "orientationScheme": "indexed",
+          "allowedTypes": ["spider_pedipalp"],
+          "nameTpl": "pedipalp {{index}}"
+        }
+      },
+      {
+        "type": "torso",
         "count": 1,
         "attachment": "posterior",
         "socketPattern": {
-          "idTemplate": "abdomen",
+          "idTemplate": "posterior_torso",
           "allowedTypes": ["spider_abdomen"],
-          "nameTpl": "abdomen"
+          "nameTpl": "torso"
         }
       }
     ]
@@ -107,7 +118,8 @@ Limb sets define repeated limb structures (legs, arms, wings, tentacles) that at
 
 This template generates:
 - Socket IDs: `leg_1`, `leg_2`, ... `leg_8` for legs
-- Socket ID: `abdomen` for the abdomen
+- Socket IDs: `pedipalp_1`, `pedipalp_2` for pedipalps
+- Socket ID: `posterior_torso` for the posterior torso/abdomen
 - Each socket specifies allowed part types
 - Auto-naming for attached parts
 
@@ -116,8 +128,8 @@ This template generates:
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
-  "id": "anatomy:structure_dragon",
-  "description": "Dragon with 4 legs and 2 wings",
+  "id": "anatomy:structure_winged_quadruped",
+  "description": "Winged quadruped body plan with four legs, bilateral wings, and axial appendages",
   "topology": {
     "rootType": "torso",
     "limbSets": [
@@ -125,10 +137,11 @@ This template generates:
         "type": "leg",
         "count": 4,
         "arrangement": "quadrupedal",
+        "arrangementHint": "front_rear_pairs",
         "socketPattern": {
           "idTemplate": "leg_{{orientation}}",
           "orientationScheme": "bilateral",
-          "allowedTypes": ["dragon_leg"],
+          "allowedTypes": ["dragon_leg", "reptilian_leg"],
           "nameTpl": "{{orientation}} leg"
         }
       },
@@ -181,8 +194,8 @@ This template generates:
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
-  "id": "anatomy:structure_centaur",
-  "description": "Centaur with humanoid upper body and quadruped lower body",
+  "id": "anatomy:structure_centauroid",
+  "description": "Hybrid centaur body plan with quadruped base and humanoid upper body",
   "topology": {
     "rootType": "torso",
     "limbSets": [
@@ -190,10 +203,11 @@ This template generates:
         "type": "leg",
         "count": 4,
         "arrangement": "quadrupedal",
+        "arrangementHint": "equine_lower_body",
         "socketPattern": {
           "idTemplate": "leg_{{orientation}}",
           "orientationScheme": "bilateral",
-          "allowedTypes": ["horse_leg"],
+          "allowedTypes": ["horse_leg", "equine_leg", "centaur_leg"],
           "nameTpl": "{{orientation}} leg"
         }
       },
@@ -204,19 +218,29 @@ This template generates:
         "socketPattern": {
           "idTemplate": "arm_{{orientation}}",
           "orientationScheme": "bilateral",
-          "allowedTypes": ["human_arm", "humanoid_arm"],
+          "allowedTypes": ["human_arm", "humanoid_arm", "centaur_arm"],
           "nameTpl": "{{orientation}} arm"
         }
       }
     ],
     "appendages": [
       {
+        "type": "upper_torso",
+        "count": 1,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "upper_torso",
+          "allowedTypes": ["human_torso", "humanoid_torso", "centaur_upper_torso"],
+          "nameTpl": "upper torso"
+        }
+      },
+      {
         "type": "head",
         "count": 1,
         "attachment": "anterior",
         "socketPattern": {
           "idTemplate": "head",
-          "allowedTypes": ["human_head", "humanoid_head"],
+          "allowedTypes": ["human_head", "humanoid_head", "centaur_head"],
           "nameTpl": "head"
         }
       },
@@ -227,7 +251,7 @@ This template generates:
         "optional": true,
         "socketPattern": {
           "idTemplate": "tail",
-          "allowedTypes": ["horse_tail"],
+          "allowedTypes": ["horse_tail", "equine_tail"],
           "nameTpl": "tail"
         }
       }
@@ -263,7 +287,7 @@ Appendages define singular or multiple body parts that attach to specific locati
 {
   "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
   "id": "anatomy:structure_octopoid",
-  "description": "Octopoid creature with mantle, head, and 8 tentacles",
+  "description": "Octopoid mantle with radial tentacles and anterior head attachment",
   "topology": {
     "rootType": "mantle",
     "limbSets": [
@@ -274,7 +298,7 @@ Appendages define singular or multiple body parts that attach to specific locati
         "socketPattern": {
           "idTemplate": "tentacle_{{index}}",
           "orientationScheme": "indexed",
-          "allowedTypes": ["octopus_tentacle", "squid_tentacle"],
+          "allowedTypes": ["tentacle"],
           "nameTpl": "tentacle {{index}}"
         },
         "arrangementHint": "octagonal_radial"
@@ -287,18 +311,8 @@ Appendages define singular or multiple body parts that attach to specific locati
         "attachment": "anterior",
         "socketPattern": {
           "idTemplate": "head",
-          "allowedTypes": ["octopus_head", "cephalopod_head"],
+          "allowedTypes": ["head"],
           "nameTpl": "head"
-        }
-      },
-      {
-        "type": "siphon",
-        "count": 1,
-        "attachment": "ventral",
-        "socketPattern": {
-          "idTemplate": "siphon",
-          "allowedTypes": ["cephalopod_siphon"],
-          "nameTpl": "siphon"
         }
       }
     ]
@@ -645,5 +659,5 @@ This generates:
 ## Reference
 
 **Schema File**: `data/schemas/anatomy.structure-template.schema.json`
-**Example Templates**: Coming in future mods
-**Existing Blueprints**: `data/mods/anatomy/blueprints/` (V1 format - for reference only)
+**Example Templates**: `data/mods/anatomy/structure-templates/` (includes structure_arachnid_8leg, structure_centauroid, structure_octopoid, structure_winged_quadruped)
+**Existing Blueprints**: `data/mods/anatomy/blueprints/` (mixed V1 and V2 formats - V2 blueprints use structure templates)
