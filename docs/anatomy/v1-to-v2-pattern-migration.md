@@ -163,7 +163,7 @@ Identify patterns in your explicit slot lists:
       "partType": "spider_leg"
     },
     {
-      "matches": ["abdomen"],
+      "matches": ["posterior_torso"],
       "partType": "spider_abdomen"
     }
   ]
@@ -172,7 +172,7 @@ Identify patterns in your explicit slot lists:
 
 **Analysis**:
 - Pattern 1: 8 legs → likely from `limbSet:leg`
-- Pattern 2: 1 abdomen → likely from `appendage:abdomen`
+- Pattern 2: 1 posterior_torso → likely from `appendage:torso`
 
 ### Step 2: Choose V2 Pattern Type
 
@@ -239,7 +239,7 @@ If test reveals issues:
 ```json
 {
   "recipeId": "anatomy:spider_v1",
-  "blueprintId": "anatomy:spider_common",
+  "blueprintId": "anatomy:giant_spider",
   "slots": {},
   "patterns": [
     {
@@ -248,7 +248,7 @@ If test reveals issues:
       "tags": ["anatomy:part", "anatomy:segmented"]
     },
     {
-      "matches": ["abdomen"],
+      "matches": ["posterior_torso"],
       "partType": "spider_abdomen",
       "tags": ["anatomy:part"]
     }
@@ -260,7 +260,7 @@ If test reveals issues:
 ```json
 {
   "recipeId": "anatomy:spider_v2",
-  "blueprintId": "anatomy:spider_common",
+  "blueprintId": "anatomy:giant_spider",
   "slots": {},
   "patterns": [
     {
@@ -269,7 +269,7 @@ If test reveals issues:
       "tags": ["anatomy:part", "anatomy:segmented"]
     },
     {
-      "matchesGroup": "appendage:abdomen",
+      "matchesGroup": "appendage:torso",
       "partType": "spider_abdomen",
       "tags": ["anatomy:part"]
     }
@@ -470,7 +470,7 @@ Sometimes the best approach combines V2 patterns with explicit slots for excepti
 ```json
 {
   "recipeId": "anatomy:spider_golden",
-  "blueprintId": "anatomy:spider_common",
+  "blueprintId": "anatomy:giant_spider",
   "slots": {
     "leg_1": {
       "partType": "spider_leg_golden",
