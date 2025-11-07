@@ -669,13 +669,14 @@ describe('Dragon Recipe Integration', () => {
 
 ### Technique 3: Enable Debug Logging
 
-```javascript
-// In RecipePatternResolver (development only)
-this.#logger.debug(`Pattern matched ${matchedKeys.length} slots`);
-this.#logger.debug(`Matched keys: ${matchedKeys.join(', ')}`);
-```
+The RecipePatternResolver includes built-in debug logging that shows pattern resolution details. Debug messages include:
+- Pattern validation progress
+- Number of slots matched by each pattern type (e.g., `matchesGroup 'limbSet:leg' resolved to 4 slots`)
+- Exclusion filtering results
 
-**Purpose**: See exactly what slots patterns are matching.
+To see these messages, ensure your logger is configured to show debug-level output.
+
+**Purpose**: See pattern resolution progress and matched slot counts.
 
 ### Technique 4: Schema Validation
 
@@ -739,7 +740,7 @@ npx ajv validate -s data/schemas/anatomy.recipe.schema.json -d data/mods/*/recip
 
 ## Reference
 
-**Implementation**: `/src/anatomy/recipePatternResolver.js`
+**Implementation**: `/src/anatomy/recipePatternResolver/patternResolver.js`
 **Schema**: `/data/schemas/anatomy.recipe.schema.json`
 **Tests**: `/tests/unit/anatomy/recipePatternResolver.test.js`
 
