@@ -437,35 +437,117 @@ npm run update-manifest # Update mod manifests
 npm run validate:body-descriptors  # Validate body descriptor system consistency
 ```
 
-### Adding New Operations
+### Adding New Operations - Complete Checklist
 
 When adding a new operation to the system, follow this checklist to ensure complete integration:
 
-1. **Create operation schema** in `data/schemas/operations/[operationName].schema.json`
-   - Define operation type constant in `allOf` → `properties` → `type` → `const`
-   - Specify parameters and validation rules
-2. **Create operation handler** in `src/logic/operationHandlers/[operationName]Handler.js`
-   - Implement handler class with execute method
-   - Add comprehensive error handling
-3. **Register in DI container**:
-   - Add token in `src/dependencyInjection/tokens/tokens-core.js`
-   - Add factory in `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
-4. **Register in operation registry** in `src/dependencyInjection/registrations/interpreterRegistrations.js`
-   - Map operation type to handler token
-5. **⚠️ CRITICAL: Add to pre-validation whitelist** in `src/utils/preValidationUtils.js`
-   - Add operation type to `KNOWN_OPERATION_TYPES` array
-   - **Failure to do this will cause rule validation failures during mod loading**
-6. **Create tests**:
-   - Unit tests: `tests/unit/logic/operationHandlers/[operationName]Handler.test.js`
-   - Integration tests: `tests/integration/mods/[category]/[operationName]RuleExecution.test.js`
-7. **Run validation**:
-   ```bash
-   npm run test:ci  # Verify all tests pass
-   npx eslint <modified-files>  # Lint changes
-   npm run typecheck  # Type checking
-   ```
+#### Step-by-Step Process
 
-**Common Mistake**: Forgetting step 5 (pre-validation registration) will cause operations to fail validation with "Unknown operation type" errors, even though they're fully implemented. The `operationTypeCompleteness.test.js` integration test will catch this automatically.
+1. **Create operation schema** ✅ Validation: Schema is valid JSON
+   - File: `data/schemas/operations/[operationName].schema.json`
+   - Use `allOf` to extend `../base-operation.schema.json`
+   - Define `type` constant and `parameters`
+   - Verify: `npm run validate` or `npm run validate:strict`
+
+2. **Add schema reference** ✅ Validation: Reference resolves
+   - File: `data/schemas/operation.schema.json` (root schemas directory)
+   - Add `$ref` entry to the `anyOf` array in the `Operation` definition
+   - Keep alphabetically sorted
+   - Verify: `npm run validate` or `npm run validate:strict`
+
+3. **Create operation handler** ✅ Validation: Handler compiles
+   - File: `src/logic/operationHandlers/[operationName]Handler.js`
+   - Extend `BaseOperationHandler`
+   - Implement `execute(context)` method
+   - Add comprehensive error handling
+   - Verify: `npm run typecheck`
+
+4. **Define DI token** ✅ Validation: Token is unique
+   - File: `src/dependencyInjection/tokens/tokens-core.js`
+   - Add `[OperationName]Handler: '[OperationName]Handler'`
+   - Follow naming convention: PascalCase (no "I" prefix for operation handlers)
+   - Verify: `npm run typecheck`
+
+5. **Register handler factory** ✅ Validation: Registration syntax correct
+   - File: `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
+   - Add factory to the `handlerFactories` array with proper dependency injection
+   - Add import statement for the handler class
+   - Verify: `npm run typecheck`
+
+6. **Map operation to handler** ✅ Validation: Type string matches schema
+   - File: `src/dependencyInjection/registrations/interpreterRegistrations.js`
+   - Add `registry.register('[OPERATION_TYPE]', bind(tokens.[OperationName]Handler))`
+   - Ensure type matches schema exactly (use the same string as in schema's `const` field)
+   - Verify: `npm run typecheck` and `npm run test:unit`
+
+7. **⚠️ CRITICAL: Add to pre-validation whitelist** ✅ Validation: Type in whitelist
+   - File: `src/utils/preValidationUtils.js`
+   - Add `'[OPERATION_TYPE]'` to `KNOWN_OPERATION_TYPES` array
+   - Keep alphabetically sorted
+   - **Failure to do this will cause validation failures during mod loading**
+   - Verify: `npm run validate` or `npm run test:ci`
+
+8. **Create tests** ✅ Validation: Tests pass with coverage
+   - Unit: `tests/unit/logic/operationHandlers/[operationName]Handler.test.js`
+   - Integration: `tests/integration/mods/[category]/[operationName]RuleExecution.test.js`
+   - Verify: `npm run test:unit && npm run test:integration`
+
+#### Validation Commands
+
+Run after each step for immediate feedback:
+
+```bash
+# After steps 1-2: Validate schemas and mod structure
+npm run validate           # Basic validation
+npm run validate:strict    # Strict validation with all checks
+
+# After steps 3-6: Type check and compile
+npm run typecheck
+
+# After step 7: Validate operation completeness
+npm run validate           # Will check operation type registration
+npm run test:unit          # Unit tests will catch missing registrations
+
+# After step 8: Run tests
+npm run test:unit
+npm run test:integration
+
+# Final verification: Full test suite
+npm run test:ci           # Runs unit, integration, and e2e tests
+npx eslint <modified-files>  # Lint the modified files
+```
+
+#### Common Pitfalls
+
+❌ **Forgetting pre-validation whitelist** (Step 7)
+- Symptom: "Unknown operation type" error during mod loading
+- Fix: Add to `KNOWN_OPERATION_TYPES` in `preValidationUtils.js`
+
+❌ **Type string mismatch**
+- Symptom: "No handler registered" error at runtime
+- Fix: Ensure type matches exactly in schema, registry, and whitelist
+
+❌ **Missing schema $ref**
+- Symptom: AJV validation fails with "no matching schema"
+- Fix: Add `$ref` to `operation.schema.json`
+
+❌ **Incomplete DI registration**
+- Symptom: "Cannot resolve token" error
+- Fix: Check token defined, factory registered, and operation mapped
+
+#### Quick Reference
+
+| File | Purpose | Pattern |
+|------|---------|---------|
+| `operations/[operation].schema.json` | Structure | `"const": "OPERATION_NAME"` |
+| `operation.schema.json` | Reference | `{ "$ref": "./operations/[operation].schema.json" }` in `anyOf` |
+| `[operation]Handler.js` | Logic | `class extends BaseOperationHandler` |
+| `tokens-core.js` | Token | `[Operation]Handler: '[Operation]Handler'` |
+| `operationHandlerRegistrations.js` | Factory | Factory in `handlerFactories` array |
+| `interpreterRegistrations.js` | Mapping | `registry.register('TYPE', bind(token))` |
+| `preValidationUtils.js` | Whitelist | `'OPERATION_NAME'` in `KNOWN_OPERATION_TYPES` |
+
+**Note**: There is currently no dedicated operation-adding documentation file. Refer to existing operation handlers in `src/logic/operationHandlers/` as examples.
 
 ### Character Builder Tools
 
