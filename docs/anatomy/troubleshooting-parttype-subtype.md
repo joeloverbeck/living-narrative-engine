@@ -88,18 +88,24 @@ This separation allows:
 ```javascript
 // PartSelectionService validation (src/anatomy/partSelectionService.js:271-305)
 
-// Step 1: Check if subType is allowed by socket
-if (!allowedTypes.includes(entity.subType)) {
-  return null; // Entity rejected
+// Step 1: Check if subType is allowed by socket (with wildcard support)
+if (
+  !allowedTypes.includes('*') &&
+  !allowedTypes.includes(anatomyPart.subType)
+) {
+  return false; // Entity rejected
 }
 
 // Step 2: Check if subType matches recipe partType
-if (requirements.partType && entity.subType !== requirements.partType) {
-  return null; // Entity rejected
+if (
+  requirements.partType &&
+  anatomyPart.subType !== requirements.partType
+) {
+  return false; // Entity rejected
 }
 
-// Both checks passed - entity selected
-return entity;
+// Both checks passed - entity is valid candidate
+return true;
 ```
 
 ## Common Mistakes
@@ -216,47 +222,71 @@ Create unit tests to reproduce and verify fixes:
 ```javascript
 describe('PartSelectionService - partType/subType Matching', () => {
   it('should reject entity when subType does not match partType', async () => {
-    const entityDef = {
-      id: 'anatomy:spider_leg',
-      components: {
-        'anatomy:part': {
-          subType: 'leg', // Generic (WRONG)
+    // Create entity definition with generic subType
+    const defs = [
+      {
+        id: 'anatomy:spider_leg',
+        components: {
+          'anatomy:part': {
+            subType: 'leg', // Generic type (WRONG)
+          },
         },
       },
-    };
+    ];
 
+    mockRegistry = createMockDataRegistry(defs);
+    service = new PartSelectionService({
+      dataRegistry: mockRegistry,
+      logger: mockLogger,
+      eventDispatchService: mockDispatchService,
+    });
+
+    // Create requirements with specific partType
     const requirements = {
-      partType: 'spider_leg', // Specific (expected)
+      partType: 'spider_leg', // Expects specific type
       components: ['anatomy:part'],
     };
 
-    const allowedTypes = ['leg']; // Socket allows generic
+    const allowedTypes = ['leg', 'spider_leg'];
 
-    const result = await service.selectPart(requirements, allowedTypes);
-
-    expect(result).toBeNull(); // Should fail validation
+    // Should throw because subType "leg" !== partType "spider_leg"
+    await expect(
+      service.selectPart(requirements, allowedTypes, undefined, Math.random)
+    ).rejects.toThrow('No entity definitions found matching anatomy requirements');
   });
 
   it('should accept entity when subType matches partType', async () => {
-    const entityDef = {
-      id: 'anatomy:spider_leg',
-      components: {
-        'anatomy:part': {
-          subType: 'spider_leg', // Specific (CORRECT)
+    // Create entity definition with specific subType
+    const defs = [
+      {
+        id: 'anatomy:spider_leg',
+        components: {
+          'anatomy:part': {
+            subType: 'spider_leg', // Specific type
+          },
         },
       },
-    };
+    ];
 
+    mockRegistry = createMockDataRegistry(defs);
+    service = new PartSelectionService({
+      dataRegistry: mockRegistry,
+      logger: mockLogger,
+      eventDispatchService: mockDispatchService,
+    });
+
+    // Create requirements with matching partType
     const requirements = {
-      partType: 'spider_leg', // Specific (matches)
+      partType: 'spider_leg', // Must match subType
       components: ['anatomy:part'],
     };
 
-    const allowedTypes = ['spider_leg']; // Socket allows specific
+    const allowedTypes = ['spider_leg'];
 
-    const result = await service.selectPart(requirements, allowedTypes);
+    // Should find matching entity
+    const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
 
-    expect(result).toBe('anatomy:spider_leg'); // Should pass validation
+    expect(result).toBe('anatomy:spider_leg');
   });
 });
 ```
