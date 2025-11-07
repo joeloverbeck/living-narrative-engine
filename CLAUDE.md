@@ -344,7 +344,8 @@ new ModEntityBuilder(); // Missing ID and validation
 ### Content ID Rules
 
 - Format: `modId:identifier` (e.g., `core:actor`)
-- Special cases: `none`, `self` (no namespace required)
+- Special scope names: `none`, `self` (no namespace required for scope DSL)
+- Special entity IDs: `system` (reserved for system-generated events, no entity required)
 - Mod IDs: Alphanumeric + underscore only
 - Always validate IDs with schemas
 

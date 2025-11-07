@@ -54,6 +54,18 @@ export function populateParticipant(
     `🔧 [populateParticipant] Populating ${fieldName} with entityId: ${entityId}`
   );
 
+  // Handle special 'system' token - represents system-generated events
+  if (entityId === 'system') {
+    logger.debug(
+      `Special 'system' token detected for ${fieldName}. Creating minimal context without entity lookup.`
+    );
+    evaluationContext[fieldName] = {
+      id: 'system',
+      components: createComponentAccessor('system', entityManager, logger),
+    };
+    return;
+  }
+
   const isStringIdentifier = typeof entityId === 'string';
   const isNumberIdentifier = typeof entityId === 'number';
   const hasStringValue = isStringIdentifier && entityId.length > 0;

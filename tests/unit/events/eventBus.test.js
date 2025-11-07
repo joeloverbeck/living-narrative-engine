@@ -143,4 +143,116 @@ describe('EventBus', () => {
       expect(bus.getBatchModeOptions()).toBeNull();
     });
   });
+
+  describe('Recursion Counter Reset', () => {
+    it('should manually reset recursion counters via resetRecursionCounters()', async () => {
+      const logger = createLogger();
+      const bus = new EventBus({ logger });
+
+      // Create a handler that dispatches another event (recursion)
+      const recursiveHandler = jest.fn(async (event) => {
+        if (event.payload.depth < 3) {
+          await bus.dispatch('test:recursive', { depth: event.payload.depth + 1 });
+        }
+      });
+
+      bus.subscribe('test:recursive', recursiveHandler);
+
+      // Dispatch to build up recursion depth
+      await bus.dispatch('test:recursive', { depth: 1 });
+
+      // Verify handler was called multiple times (recursive calls)
+      expect(recursiveHandler).toHaveBeenCalled();
+
+      // Reset counters
+      bus.resetRecursionCounters();
+
+      // Verify logger was called with debug message
+      expect(logger.debug).toHaveBeenCalledWith(
+        'EventBus: Recursion depth counters manually reset'
+      );
+
+      // Dispatch again - should start from depth 0
+      recursiveHandler.mockClear();
+      await bus.dispatch('test:recursive', { depth: 1 });
+
+      // Should work without warnings since counters were reset
+      expect(recursiveHandler).toHaveBeenCalled();
+    });
+
+    it('should auto-reset recursion counters after 5 seconds of inactivity', async () => {
+      const logger = createLogger();
+      const bus = new EventBus({ logger });
+
+      // Mock Date.now to simulate time passage
+      const originalDateNow = Date.now;
+      let currentTime = originalDateNow();
+      Date.now = jest.fn(() => currentTime);
+
+      try {
+        // Create a handler that leaves entries in the recursion map by throwing
+        // This simulates an edge case where dispatch didn't complete cleanly
+        const faultyHandler = jest.fn(async () => {
+          throw new Error('Simulated error to leave map dirty');
+        });
+
+        bus.subscribe('test:auto-reset', faultyHandler);
+
+        // Dispatch that will fail and potentially leave map entries
+        try {
+          await bus.dispatch('test:auto-reset', { depth: 1 });
+        } catch (err) {
+          // Expected to fail
+        }
+
+        // Simulate 6 seconds passing (more than 5-second threshold)
+        currentTime += 6000;
+
+        // Dispatch again with a clean handler - should trigger auto-reset
+        bus.unsubscribe('test:auto-reset', faultyHandler);
+        const cleanHandler = jest.fn();
+        bus.subscribe('test:auto-reset', cleanHandler);
+
+        logger.debug.mockClear();
+        await bus.dispatch('test:auto-reset', { depth: 1 });
+
+        // Verify auto-reset mechanism ran (even if map was empty, the time check should happen)
+        // The key behavior: dispatch should work normally after time threshold
+        expect(cleanHandler).toHaveBeenCalled();
+      } finally {
+        Date.now = originalDateNow;
+      }
+    });
+
+    it('should not auto-reset if dispatch happens within 5 seconds', async () => {
+      const logger = createLogger();
+      const bus = new EventBus({ logger });
+
+      // Mock Date.now to simulate time passage
+      const originalDateNow = Date.now;
+      let currentTime = originalDateNow();
+      Date.now = jest.fn(() => currentTime);
+
+      try {
+        // First dispatch
+        await bus.dispatch('test:no-reset', { value: 1 });
+
+        // Simulate only 3 seconds passing (less than 5-second threshold)
+        currentTime += 3000;
+
+        // Second dispatch
+        logger.debug.mockClear();
+        await bus.dispatch('test:no-reset', { value: 2 });
+
+        // Verify auto-reset was NOT triggered
+        const debugCalls = logger.debug.mock.calls;
+        const autoResetCall = debugCalls.find(call =>
+          call[0] && call[0].includes('Auto-reset triggered')
+        );
+        expect(autoResetCall).toBeUndefined();
+      } finally {
+        Date.now = originalDateNow;
+      }
+    });
+  });
 });

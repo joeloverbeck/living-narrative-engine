@@ -1,0 +1,501 @@
+# LLM Invalid Action Index Recovery - Analysis & Recommendations
+
+**Date**: 2025-11-07
+**Issue**: Rare case where competent LLM returns invalid action index, breaking immersion with generic fallback message
+**Current Behavior**: Forces character to say "I encountered an unexpected issue and will wait for a moment."
+
+---
+
+## Executive Summary
+
+When an LLM returns an invalid action index during gameplay, the current fallback mechanism discards all LLM-generated content (speech, thoughts, notes) and replaces it with a generic, immersion-breaking message. This report analyzes the error flow, identifies the root cause as a **data loss architecture problem**, and recommends a minimal-change solution that preserves immersion by rescuing LLM-generated speech while safely executing a fallback action.
+
+**Recommended Solution**: Enhance the validation error to carry LLM data, allowing the fallback factory to preserve character voice while substituting a safe action (`core:wait`).
+
+---
+
+## Problem Analysis
+
+### Error Flow Trace
+
+The error originates from this call chain:
+
+```
+LLMChooser.choose()
+  → LLMResponseProcessor.processResponse() [extracts: index, speech, thoughts, notes]
+    → AbstractDecisionProvider.decide() [has all LLM data]
+      → assertValidActionIndex() [❌ THROWS HERE - data lost]
+        → GenericTurnStrategy.decideAction() [❌ NO access to LLM data]
+          → AIFallbackActionFactory.create() [❌ Generates generic message]
+```
+
+### Critical Data Loss Point
+
+**File**: `src/turns/providers/abstractDecisionProvider.js:73-89`
+
+```javascript
+async decide(actor, context, actions, abortSignal) {
+  // ✅ Has all LLM-generated data
+  const { index, speech, thoughts, notes } = await this.choose(...);
+
+  // ❌ Throws here, losing speech/thoughts/notes
+  await assertValidActionIndex(...);
+
+  // Never reached on error
+  return { chosenIndex: index, speech, thoughts, notes };
+}
+```
+
+**File**: `src/turns/strategies/genericTurnStrategy.js:65-75`
+
+```javascript
+catch (err) {
+  if (!this.fallbackFactory) throw err;
+
+  // ❌ No LLM data available - only error info
+  const fb = this.fallbackFactory.create(err.name, err, actor.id);
+
+  const meta = {
+    speech: fb.speech ?? null,  // Generic fallback message
+    thoughts: null,             // Lost
+    notes: null,                // Lost
+  };
+
+  return { kind: 'fallback', action: fb, extractedData: meta };
+}
+```
+
+### What Gets Lost
+
+When `assertValidActionIndex` throws:
+
+1. **Speech**: LLM's actual character dialogue/narration (often valid and immersive)
+2. **Thoughts**: Internal character reasoning (valuable for consistency)
+3. **Notes**: Metadata for memory system (important for long-term coherence)
+
+Only preserved:
+- Error name/message
+- Actor ID
+- Stack trace
+
+### Current Fallback Behavior
+
+**File**: `src/turns/services/AIFallbackActionFactory.js:32-46`
+
+The factory generates a generic message based on error type:
+
+```javascript
+create(failureContext, error, actorId) {
+  const issue = this.#getIssueFromContext(failureContext);
+
+  return {
+    actionDefinitionId: 'core:wait',
+    speech: `I encountered ${issue} and will wait for a moment.`,
+    primaryTargetId: null,
+  };
+}
+```
+
+**Issues with this approach**:
+- ❌ Breaks character immersion (meta-reference to "issue")
+- ❌ Same generic message for all characters
+- ❌ Discards potentially valid LLM speech
+- ❌ Lost character thoughts/notes hurt memory coherence
+
+---
+
+## Root Cause: Architecture Problem
+
+### Design Issues
+
+1. **Tight Coupling**: `AbstractDecisionProvider.decide()` combines data extraction and validation in a way that makes recovery impossible
+
+2. **No Error Data Preservation**: Validation functions throw standard errors without preserving LLM data
+
+3. **Limited Fallback Context**: `AIFallbackActionFactory.create()` signature only accepts `(failureContext, error, actorId)` - no slot for preserved data
+
+4. **Assumption of Total Failure**: Architecture assumes if validation fails, entire LLM response is invalid (not true for index-only errors)
+
+### Why This Happens Rarely
+
+LLMs typically excel at following structured output formats, especially when schemas are enforced. The JSON schema validation (`LLM_TURN_ACTION_RESPONSE_SCHEMA`) catches most malformed responses. This error occurs when:
+
+1. LLM returns **structurally valid** JSON (passes schema validation)
+2. But `chosenIndex` value is **semantically invalid** (out of bounds)
+
+This is a rare edge case where the LLM:
+- ✅ Followed JSON structure perfectly
+- ✅ Provided valid speech/thoughts/notes
+- ❌ Selected an action index that doesn't exist (off-by-one error, hallucination, etc.)
+
+---
+
+## Recommended Solution: Enhanced Validation Error
+
+### Approach Overview
+
+**Option A: Validation Error Enhancement** (Recommended)
+
+Modify the validation error to carry LLM data through the error handling chain, allowing the fallback factory to preserve character voice while substituting a safe action.
+
+**Why this approach:**
+- ✅ Minimal code changes (5 files modified)
+- ✅ Preserves immersion by using LLM speech
+- ✅ Still executes safe fallback action (`core:wait`)
+- ✅ Maintains all error logging and event dispatch
+- ✅ Backward compatible
+- ✅ No architectural refactoring required
+
+### Implementation Design
+
+#### 1. Create Custom Error Type
+
+**File**: `src/utils/actionIndexValidation.js` (or new file in `src/errors/`)
+
+```javascript
+/**
+ * Error thrown when LLM provides invalid action index but otherwise valid data
+ */
+export class ActionIndexValidationError extends Error {
+  constructor(message, { index, speech, thoughts, notes, actionsLength }) {
+    super(message);
+    this.name = 'ActionIndexValidationError';
+    this.llmData = { index, speech, thoughts, notes };
+    this.context = { actionsLength };
+
+    // Maintain stack trace
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ActionIndexValidationError);
+    }
+  }
+
+  /**
+   * Check if this error has preserved LLM data
+   */
+  hasPreservedData() {
+    return Boolean(this.llmData && (
+      this.llmData.speech ||
+      this.llmData.thoughts ||
+      this.llmData.notes
+    ));
+  }
+}
+```
+
+#### 2. Modify Validation Function
+
+**File**: `src/utils/actionIndexValidation.js:40-65`
+
+```javascript
+import { ActionIndexValidationError } from '../errors/actionIndexValidationError.js';
+
+export async function assertValidActionIndex(
+  chosenIndex,
+  actionsLength,
+  providerName,
+  actorId,
+  dispatcher,
+  logger,
+  debugData = {} // Add parameter to pass LLM data
+) {
+  if (chosenIndex < 1 || chosenIndex > actionsLength) {
+    const message = 'Player chose an index that does not exist for this turn.';
+
+    // Create enhanced error with preserved LLM data
+    const error = new ActionIndexValidationError(message, {
+      index: chosenIndex,
+      actionsLength,
+      speech: debugData.speech,
+      thoughts: debugData.thoughts,
+      notes: debugData.notes,
+    });
+
+    // Existing error dispatch logic
+    await safeDispatchError(dispatcher, message, {
+      decisionProvider: providerName,
+      actorId,
+      chosenIndex,
+      actionsLength,
+      debugData,
+    }, logger);
+
+    throw error;
+  }
+}
+```
+
+#### 3. Pass LLM Data to Validation
+
+**File**: `src/turns/providers/abstractDecisionProvider.js:73-89`
+
+```javascript
+async decide(actor, context, actions, abortSignal) {
+  const result = await this.choose(actor, context, actions, abortSignal);
+  const { index, speech, thoughts, notes } = result;
+
+  // Pass LLM data through to validation function
+  await assertValidActionIndex(
+    index,
+    actions.length,
+    this.name,
+    actor.id,
+    this.#dispatcher,
+    this.#logger,
+    { speech, thoughts, notes } // NEW: Pass data for error preservation
+  );
+
+  return {
+    chosenIndex: index,
+    speech,
+    thoughts,
+    notes,
+  };
+}
+```
+
+#### 4. Update Fallback Factory Signature
+
+**File**: `src/turns/services/AIFallbackActionFactory.js:32-60`
+
+```javascript
+/**
+ * Create fallback action with optional preserved LLM data
+ * @param {string} failureContext - Error context/type
+ * @param {Error} error - Original error
+ * @param {string} actorId - Actor ID
+ * @param {Object} preservedData - Optional LLM data to preserve
+ * @param {string|null} preservedData.speech - LLM-generated speech
+ * @param {string|null} preservedData.thoughts - LLM-generated thoughts
+ * @param {Array|null} preservedData.notes - LLM-generated notes
+ */
+create(failureContext, error, actorId, preservedData = {}) {
+  const issue = this.#getIssueFromContext(failureContext);
+
+  // Use preserved speech if available, otherwise generate fallback
+  const speech = preservedData.speech ||
+    `I encountered ${issue} and will wait for a moment.`;
+
+  this.#logger.info(
+    `AIFallbackActionFactory: Creating fallback for actor ${actorId} ` +
+    `due to ${failureContext}. ` +
+    `Preserved data: ${preservedData.speech ? 'speech' : 'none'}`
+  );
+
+  return {
+    actionDefinitionId: 'core:wait',
+    speech,
+    primaryTargetId: null,
+  };
+}
+```
+
+#### 5. Preserve Data in Strategy Catch Block
+
+**File**: `src/turns/strategies/genericTurnStrategy.js:65-80`
+
+```javascript
+catch (err) {
+  if (!this.fallbackFactory) {
+    throw err;
+  }
+
+  // Extract preserved LLM data if available
+  const preservedData = err.llmData || {};
+
+  const fb = this.fallbackFactory.create(
+    err.name,
+    err,
+    actor.id,
+    preservedData // NEW: Pass preserved data
+  );
+
+  // Use preserved LLM data if available
+  const meta = {
+    speech: preservedData.speech || fb.speech,
+    thoughts: preservedData.thoughts || null,
+    notes: preservedData.notes || null,
+  };
+
+  return {
+    kind: 'fallback',
+    action: fb,
+    extractedData: meta,
+  };
+}
+```
+
+---
+
+## Benefits Analysis
+
+### Immersion Improvement
+
+**Before** (current):
+```
+> "I encountered an unexpected issue and will wait for a moment."
+  [Generic, meta-reference, breaks character voice]
+```
+
+**After** (with preservation):
+```
+> "Perhaps I should take a moment to assess the situation more carefully..."
+  [LLM's actual speech, maintains character voice]
+  [Action: wait - functionally safe]
+  [Thoughts preserved: "This merchant seems suspicious"]
+  [Notes preserved for memory system]
+```
+
+### Technical Benefits
+
+1. **Minimal Changes**: Only 5 files modified, no architectural refactoring
+2. **Backward Compatible**: Works with/without preserved data
+3. **Safe Fallback**: Still uses `core:wait` action (no side effects)
+4. **Error Logging**: All existing error dispatch/logging preserved
+5. **Data Recovery**: Preserves valuable LLM output for memory coherence
+6. **Testable**: Easy to add unit tests for error preservation path
+
+### User Experience
+
+- ✅ Maintains immersion during rare LLM errors
+- ✅ Character voice preserved
+- ✅ Turn continues naturally with safe "wait" action
+- ✅ Memory system receives thoughts/notes (continuity preserved)
+- ✅ No visible "error" message to player
+
+---
+
+## Alternative Approaches Considered
+
+### Option B: Decision Provider Refactor
+
+**Concept**: Split `AbstractDecisionProvider.decide()` into two phases:
+1. Call `choose()` and return all data
+2. Validate index separately with full context
+
+**Pros**:
+- Cleaner separation of concerns
+- More flexible for future validation needs
+
+**Cons**:
+- Requires refactoring base class and all implementations
+- Higher risk of regression
+- More test updates required
+- Doesn't provide significant benefits over Option A
+
+**Verdict**: Rejected - unnecessary complexity for this use case
+
+### Option C: Strategy-Level Recovery
+
+**Concept**: Wrap `decisionProvider.decide()` in try-catch, retry with modified index
+
+**Pros**:
+- Could potentially "fix" the invalid index
+- No changes to validation layer
+
+**Cons**:
+- Risky: Which index to substitute? (1? Last valid?)
+- May execute unintended action
+- Doesn't address root cause (data loss)
+- Complex retry logic
+
+**Verdict**: Rejected - too risky, unpredictable behavior
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Core Changes (Required)
+
+- [ ] Create `ActionIndexValidationError` class
+- [ ] Modify `assertValidActionIndex()` to throw enhanced error
+- [ ] Update `AbstractDecisionProvider.decide()` to pass LLM data
+- [ ] Modify `AIFallbackActionFactory.create()` signature
+- [ ] Update `GenericTurnStrategy` catch block to extract preserved data
+
+### Phase 2: Testing (Required)
+
+- [ ] Unit test: `ActionIndexValidationError` construction and methods
+- [ ] Unit test: `assertValidActionIndex()` preserves data in error
+- [ ] Unit test: `AIFallbackActionFactory` uses preserved speech
+- [ ] Integration test: End-to-end error flow with data preservation
+- [ ] Integration test: Backward compatibility (errors without preserved data)
+
+### Phase 3: Documentation (Recommended)
+
+- [ ] Update `AIFallbackActionFactory.js` JSDoc
+- [ ] Add inline comments explaining preservation mechanism
+- [ ] Update this report with implementation outcomes
+
+### Phase 4: Monitoring (Recommended)
+
+- [ ] Add log statement when preserved data is used
+- [ ] Track frequency of `ActionIndexValidationError` vs generic errors
+- [ ] Monitor if issue rate changes after implementation
+
+---
+
+## Risk Assessment
+
+### Low Risk
+
+1. **Backward Compatible**: If `llmData` is undefined, fallback to existing behavior
+2. **Safe Fallback Action**: `core:wait` has no side effects
+3. **Preserved Error Logging**: All existing error dispatch unchanged
+4. **Limited Scope**: Changes isolated to error handling path
+
+### Potential Issues
+
+1. **Speech Quality**: LLM speech might reference the invalid action
+   - **Mitigation**: Still better than generic message; future enhancement could filter action-specific references
+
+2. **Testing Coverage**: Need thorough tests for preservation path
+   - **Mitigation**: Add comprehensive unit and integration tests
+
+3. **Memory Bloat**: Errors now carry more data
+   - **Mitigation**: Minimal (3 string fields), only for validation errors
+
+---
+
+## Future Enhancements
+
+### Phase 2 Improvements (Post-Implementation)
+
+1. **Intelligent Action Substitution**: Analyze LLM speech to suggest best-fit action instead of always using "wait"
+
+2. **Speech Sanitization**: Remove action-specific references from preserved speech if they mention the invalid action
+
+3. **Telemetry Dashboard**: Track and analyze patterns in invalid action indices to improve prompt engineering
+
+4. **Fallback Speech Generation**: If preserved speech explicitly references invalid action, use LLM to generate corrected speech
+
+5. **User Configuration**: Allow game developers to customize fallback behavior per actor type
+
+---
+
+## Conclusion
+
+The current immersion-breaking fallback behavior stems from an architectural data loss problem where LLM-generated content is discarded during validation failure. The recommended solution—enhancing validation errors to carry preserved data—provides a minimal-risk, high-impact improvement that maintains character immersion while safely handling rare LLM errors.
+
+**Recommendation**: Implement Option A (Enhanced Validation Error) in the next development cycle.
+
+**Expected Outcome**: Players will no longer see meta-error messages; instead, characters will naturally pause with their own voice preserved, maintaining immersion even during edge case failures.
+
+---
+
+## References
+
+### Key Files Analyzed
+
+1. `src/turns/adapters/llmChooser.js` - LLM integration point
+2. `src/turns/services/LLMResponseProcessor.js` - Response parsing
+3. `src/turns/providers/abstractDecisionProvider.js` - Validation layer
+4. `src/turns/strategies/genericTurnStrategy.js` - Error handling
+5. `src/turns/services/AIFallbackActionFactory.js` - Fallback generation
+6. `src/utils/actionIndexValidation.js` - Validation logic
+7. `data/mods/core/actions/wait.action.json` - Fallback action definition
+
+### Related Documentation
+
+- `/docs/testing/mod-testing-guide.md` - Testing patterns
+- `CLAUDE.md` - Project architecture overview
+- Error handling patterns in `src/errors/` directory

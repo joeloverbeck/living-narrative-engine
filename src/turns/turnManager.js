@@ -80,6 +80,8 @@ class TurnManager extends ITurnManager {
   #eventSubscription;
   /** @type {import('../scheduling').IScheduler} */
   #scheduler;
+  /** @type {import('../events/eventBus.js').default | null} */
+  #eventBus = null;
 
   /**
    * Creates an instance of TurnManager.
@@ -105,6 +107,7 @@ class TurnManager extends ITurnManager {
       turnHandlerResolver,
       roundManager,
       scheduler = new RealScheduler(),
+      eventBus = null,
     } = options || {};
     const className = this.constructor.name;
 
@@ -174,6 +177,7 @@ class TurnManager extends ITurnManager {
       logger,
       scheduler
     );
+    this.#eventBus = eventBus;
 
     // --- State Initialization (reset flags) ---
     this.#isRunning = false;
@@ -797,6 +801,12 @@ class TurnManager extends ITurnManager {
           )
         );
       }
+    }
+
+    // Reset recursion counters after turn completes to prevent false warnings
+    // across separate turns separated by time
+    if (this.#eventBus && typeof this.#eventBus.resetRecursionCounters === 'function') {
+      this.#eventBus.resetRecursionCounters();
     }
   }
 

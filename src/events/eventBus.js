@@ -24,6 +24,7 @@ class EventBus extends IEventBus {
   #batchModeTimeoutId = null; // Auto-disable timeout for safety
   #eventChainHistory = new Map(); // Track recent event chains to detect true infinite loops
   #chainHistoryLimit = 10; // Maximum chain history entries per event type
+  #lastDispatchTime = 0; // Track last dispatch time for auto-reset
 
   /**
    * Creates an EventBus instance.
@@ -126,6 +127,21 @@ class EventBus extends IEventBus {
     this.#logger.debug(
       `EventBus: Batch mode disabled for context: ${context}. Recursion depth counters reset.`
     );
+  }
+
+  /**
+   * Resets recursion depth counters for all event types.
+   * 
+   * This method clears the accumulated recursion tracking state, which can build up
+   * during normal gameplay even though events are separated by time. Call this between
+   * game turns or at other logical boundaries to prevent false recursion warnings.
+   * 
+   * @public
+   */
+  resetRecursionCounters() {
+    this.#recursionDepth.clear();
+    this.#handlerExecutionDepth.clear();
+    this.#logger.debug('EventBus: Recursion depth counters manually reset');
   }
 
   /**
@@ -374,6 +390,25 @@ class EventBus extends IEventBus {
     if (!this.#validateEventName(eventName)) {
       return;
     }
+
+    // Time-based auto-reset: Clear recursion counters if no dispatch in 5 seconds
+    // This prevents accumulation across turns during normal gameplay
+    const now = Date.now();
+    const timeSinceLastDispatch = now - this.#lastDispatchTime;
+    const AUTO_RESET_THRESHOLD_MS = 5000;
+
+    if (timeSinceLastDispatch > AUTO_RESET_THRESHOLD_MS) {
+      const hadEntries = this.#recursionDepth.size > 0 || this.#handlerExecutionDepth.size > 0;
+      if (hadEntries) {
+        this.#logger.debug(
+          `EventBus: Auto-reset triggered (${timeSinceLastDispatch}ms since last dispatch). ` +
+          `Clearing recursion counters.`
+        );
+        this.#recursionDepth.clear();
+        this.#handlerExecutionDepth.clear();
+      }
+    }
+    this.#lastDispatchTime = now;
 
     // Check handler execution depth to detect true recursion
     // This distinguishes between concurrent calls (allowed) and recursive calls (limited)
