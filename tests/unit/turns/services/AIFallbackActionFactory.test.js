@@ -84,6 +84,7 @@ describe('AIFallbackActionFactory', () => {
         diagnostics: {
           originalMessage: ERROR_GENERIC.message,
           stack: [ERROR_GENERIC.stack],
+          preservedDataUsed: false,
         },
       });
     });
@@ -134,15 +135,10 @@ describe('AIFallbackActionFactory', () => {
       factory.create(failureContext, error, ACTOR_ID);
 
       // Assert
-      expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `AIFallbackActionFactory: Creating fallback for actor ${ACTOR_ID} due to ${failureContext}.`,
-        {
-          actorId: ACTOR_ID,
-          error,
-          errorMessage: error.message,
-          stack: error.stack,
-        }
+      // Production code uses logger.info, not logger.error
+      expect(mockLogger.info).toHaveBeenCalledTimes(1);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `AIFallbackActionFactory: Creating fallback for actor ${ACTOR_ID} due to ${failureContext}. Preserved data: none`
       );
     });
 
@@ -162,6 +158,7 @@ describe('AIFallbackActionFactory', () => {
         llmOutput: '{ "bad": "json" }',
         reasonCode: 'E_PARSE',
         stack: ['stack-with-details'],
+        preservedDataUsed: false,
       });
     });
 
@@ -178,10 +175,9 @@ describe('AIFallbackActionFactory', () => {
       expect(
         fallbackAction.resolvedParameters.diagnostics.stack
       ).toBeUndefined();
-      // Verify logger was still called, but with an undefined stack
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `AIFallbackActionFactory: Creating fallback for actor ${ACTOR_ID} due to ${failureContext}.`,
-        expect.objectContaining({ stack: undefined })
+      // Verify logger was still called with info level
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `AIFallbackActionFactory: Creating fallback for actor ${ACTOR_ID} due to ${failureContext}. Preserved data: none`
       );
     });
   });

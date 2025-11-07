@@ -141,7 +141,14 @@ describe('EventBus recursion and loop safeguards', () => {
 
     const dateSpy = jest.spyOn(Date, 'now');
     let tick = 0;
-    dateSpy.mockImplementation(() => tick++);
+    // Use smaller increments (0.5ms per call) so 20 events span less than 50ms
+    // With 3 Date.now() calls per dispatch, timestamps will be: 0.5, 2, 3.5, 5, ...
+    // After 20 dispatches, timeSpan ≈ 29ms which is < 50ms threshold
+    dateSpy.mockImplementation(() => {
+      const result = tick;
+      tick += 0.5;
+      return result;
+    });
 
     for (let i = 0; i < 25; i += 1) {
       await bus.dispatch('loop:test');

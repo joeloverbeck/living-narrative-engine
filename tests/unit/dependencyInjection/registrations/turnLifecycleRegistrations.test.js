@@ -135,6 +135,9 @@ describe('registerTurnLifecycle - Unit Tests', () => {
       tokens.ActorTurnHandler,
       () => mockDependencies.actorTurnHandler
     );
+    // Add missing IEventBus registration (required by TurnManager)
+    mockDependencies.eventBus = mock();
+    container.register(tokens.IEventBus, () => mockDependencies.eventBus);
   });
 
   afterEach(() => {
