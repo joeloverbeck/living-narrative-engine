@@ -1,6 +1,22 @@
 /**
- * @file This operation handler determins if a component exists in an entity.
- * @see src/logic/operationHandlers/hasComponentHandler.js
+ * @file Handler for HAS_COMPONENT operation
+ *
+ * Checks whether an entity has a specific component type.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_type, result_variable)
+ * 2. Resolves entity reference to entity ID
+ * 3. Queries entityManager for component existence
+ * 4. Returns boolean result (true/false) in result_variable
+ *
+ * Related files:
+ * @see data/schemas/operations/hasComponent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - HasComponentHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
  */
 
 // --- Type-hints --------------------------------------------------------------

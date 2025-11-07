@@ -1,4 +1,25 @@
-// src/logic/operationHandlers/logHandler.js
+/**
+ * @file Handler for LOG operation
+ *
+ * Outputs debug/diagnostic messages to the logger at specified levels (debug, info, warn, error)
+ * with pre-resolved message content from rule execution context.
+ *
+ * Operation flow:
+ * 1. Validate parameters (message required, optional level defaults to 'info')
+ * 2. Convert pre-resolved message to string representation
+ * 3. Normalize and validate log level (debug/info/warn/error)
+ * 4. Dispatch message to appropriate logger method
+ * 5. Handle logging failures with console fallback
+ *
+ * Related files:
+ * @see data/schemas/operations/log.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - LogHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
+ */
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

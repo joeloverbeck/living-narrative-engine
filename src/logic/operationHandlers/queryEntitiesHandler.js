@@ -1,6 +1,24 @@
 /**
- * @file This operation handler allows modders to retrieve a set of entities from the game based on filters.
- * @see src/logic/operationHandlers/queryEntitiesHandler.js
+ * @file Handler for QUERY_ENTITIES operation
+ *
+ * Retrieves entity IDs matching a set of filters (location, component presence, component data)
+ * with optional result limiting, supporting complex entity queries for rule conditions.
+ *
+ * Operation flow:
+ * 1. Validate parameters (result_variable, filters array, optional limit)
+ * 2. Start with all active entity IDs as candidates
+ * 3. Apply filters sequentially (by_location, with_component, with_component_data)
+ * 4. Apply optional limit to constrain result set size
+ * 5. Store final entity ID array in specified context variable
+ *
+ * Related files:
+ * @see data/schemas/operations/queryEntities.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - QueryEntitiesHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */

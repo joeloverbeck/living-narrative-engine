@@ -1,4 +1,23 @@
-// src/logic/operationHandlers/setVariableHandler.js
+/**
+ * @file Handler for SET_VARIABLE operation
+ *
+ * Sets or updates variables in execution context, with support for literal values and
+ * JsonLogic expressions evaluated against the current evaluation context.
+ *
+ * Operation flow:
+ * 1. Validate parameters (variable_name, value)
+ * 2. Ensure evaluation context exists for variable storage
+ * 3. Detect if value is JsonLogic (plain object) and evaluate if needed
+ * 4. Store final resolved value in executionContext.evaluationContext.context
+ * 5. Handle evaluation errors and undefined values gracefully
+ *
+ * Related files:
+ * @see data/schemas/operations/setVariable.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - SetVariableHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ */
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

@@ -1,7 +1,24 @@
 /**
- * @file Operation handler for establishing closeness relationships when actors sit adjacently
- * @see proximityUtils.js
- * @see closenessCircleService.js
+ * @file Handler for ESTABLISH_SITTING_CLOSENESS operation
+ *
+ * Establishes bidirectional closeness relationships between actors sitting in adjacent furniture spots
+ * (N-1 or N+1) with validation and movement lock updates.
+ *
+ * Operation flow:
+ * 1. Validate parameters (furniture_id, actor_id, spot_index) and component states
+ * 2. Find adjacent occupants using proximity utilities
+ * 3. For each adjacent actor, establish bidirectional closeness relationship
+ * 4. Update movement locks for all affected actors
+ * 5. Validate final state consistency and dispatch success event
+ *
+ * Related files:
+ * @see data/schemas/operations/establishSittingCloseness.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - EstablishSittingClosenessHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

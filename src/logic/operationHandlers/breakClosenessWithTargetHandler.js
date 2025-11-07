@@ -1,11 +1,24 @@
 /**
- * @file Operation handler for breaking closeness relationship between actor and specific target
- * @description Conditionally removes closeness component when partners array becomes empty after removal.
- * This handler ensures symmetric state management: both actor and target end up either with no
- * closeness component (when last partner is removed) or with updated partners list (when other
- * partners remain).
- * @see removeFromClosenessCircleHandler.js
- * @see closenessCircleService.js
+ * @file Handler for BREAK_CLOSENESS_WITH_TARGET operation
+ *
+ * Breaks closeness relationship between actor and specific target with conditional component removal
+ * based on remaining partners. Ensures symmetric bidirectional state management.
+ *
+ * Operation flow:
+ * 1. Validate parameters (actor_id, target_id must be different)
+ * 2. Retrieve current closeness states for both actor and target
+ * 3. Remove target from actor's partners list, conditionally remove/update component
+ * 4. Remove actor from target's partners list, conditionally remove/update component
+ * 5. Dispatch success event and optional result variable
+ *
+ * Related files:
+ * @see data/schemas/operations/breakClosenessWithTarget.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - BreakClosenessWithTargetHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

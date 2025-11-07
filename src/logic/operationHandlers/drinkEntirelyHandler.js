@@ -1,6 +1,24 @@
 /**
- * @file Operation handler for drinking all remaining liquid from a container
- * @see drinkFromHandler.js
+ * @file Handler for DRINK_ENTIRELY operation
+ *
+ * Consumes all remaining liquid from a container in one action.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (actorEntity, containerEntity)
+ * 2. Verifies container has liquid_container and drinkable components
+ * 3. Checks container is not already empty
+ * 4. Consumes all remaining volume (currentVolumeMilliliters)
+ * 5. Sets volume to zero, adds empty component, removes drinkable component
+ * 6. Dispatches items:liquid_consumed_entirely event
+ *
+ * Related files:
+ * @see data/schemas/operations/drinkEntirely.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DrinkEntirelyHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import BaseOperationHandler from './baseOperationHandler.js';

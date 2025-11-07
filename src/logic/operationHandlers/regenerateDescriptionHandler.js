@@ -1,8 +1,26 @@
 // src/logic/operationHandlers/regenerateDescriptionHandler.js
 
 /**
- * @file Operation handler for regenerating entity descriptions using the BodyDescriptionComposer service.
- * Follows the ComponentOperationHandler pattern and integrates with existing project utilities.
+ * @file Handler for REGENERATE_DESCRIPTION operation
+ *
+ * Regenerates entity descriptions using the BodyDescriptionComposer service, updating the
+ * core:description component with freshly composed text based on current entity state.
+ *
+ * Operation flow:
+ * 1. Validate parameters (entity_ref)
+ * 2. Resolve entity reference and retrieve entity instance
+ * 3. Compose new description via BodyDescriptionComposer service
+ * 4. Update core:description component with generated text
+ * 5. Log successful regeneration with description metrics
+ *
+ * Related files:
+ * @see data/schemas/operations/regenerateDescription.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - RegenerateDescriptionHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

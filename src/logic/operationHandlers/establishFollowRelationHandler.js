@@ -1,7 +1,24 @@
 /**
- * @file Handler for ESTABLISH_FOLLOW_RELATION.
- * Validates against follow cycles, updates the follower's `companionship:following`
- * component, and rebuilds the affected leaders' `companionship:leading` caches.
+ * @file Handler for ESTABLISH_FOLLOW_RELATION operation
+ *
+ * Establishes a follow relationship between follower and leader with cycle validation,
+ * updating follower component and rebuilding affected leader caches.
+ *
+ * Operation flow:
+ * 1. Validate parameters (follower_id, leader_id)
+ * 2. Check for circular dependency using wouldCreateCycle utility
+ * 3. Update follower's companionship:following component with new leader_id
+ * 4. Rebuild companionship:leading cache for new leader
+ * 5. Rebuild cache for old leader if follower was previously following someone else
+ *
+ * Related files:
+ * @see data/schemas/operations/establishFollowRelation.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - EstablishFollowRelationHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

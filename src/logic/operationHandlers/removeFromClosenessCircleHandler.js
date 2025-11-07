@@ -1,6 +1,24 @@
 /**
- * @file Handler for REMOVE_FROM_CLOSENESS_CIRCLE.
- * Removes an actor from all partner lists and cleans up closeness components.
+ * @file Handler for REMOVE_FROM_CLOSENESS_CIRCLE operation
+ *
+ * Removes an actor from their closeness circle by updating all partners' lists and conditionally
+ * removing empty closeness components, with automatic movement lock updates.
+ *
+ * Operation flow:
+ * 1. Validate parameters (actor_id, optional result_variable)
+ * 2. Retrieve actor's closeness component and partner list
+ * 3. For each partner, remove actor from their partners list
+ * 4. Remove closeness components that become empty, update others
+ * 5. Unlock movement for all actors who no longer have closeness relationships
+ *
+ * Related files:
+ * @see data/schemas/operations/removeFromClosenessCircle.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - RemoveFromClosenessCircleHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

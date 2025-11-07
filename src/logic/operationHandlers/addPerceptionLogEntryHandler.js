@@ -1,6 +1,24 @@
 /**
- * @file A handler that adds an entry to perception logs
- * @see src/logic/operationHandlers/addPerceptionLogEntryHandler.js
+ * @file Handler for ADD_PERCEPTION_LOG_ENTRY operation
+ *
+ * Adds perception log entries to entities with core:perception_log components, supporting
+ * explicit recipients, exclusion lists, and optimized batch updates for performance.
+ *
+ * Operation flow:
+ * 1. Validate parameters (location_id, entry, optional recipient_ids/excluded_actor_ids)
+ * 2. Determine recipients (explicit list, location broadcast, or location broadcast with exclusions)
+ * 3. Build batch component update specs for all recipients
+ * 4. Execute optimized batch update or fallback to individual updates
+ * 5. Handle maxEntries truncation and log entry deduplication
+ *
+ * Related files:
+ * @see data/schemas/operations/addPerceptionLogEntry.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - AddPerceptionLogEntryHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';

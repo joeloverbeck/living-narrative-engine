@@ -1,8 +1,25 @@
 // src/logic/operationHandlers/sequenceHandler.js
 
 /**
- * @file SequenceHandler - Operation handler for SEQUENCE operations
- * @description Executes a sequence of actions sequentially using the ActionSequence service
+ * @file Handler for SEQUENCE operation
+ *
+ * Executes an ordered sequence of actions using the ActionSequence service, enabling
+ * complex multi-step behaviors within rule definitions.
+ *
+ * Operation flow:
+ * 1. Validate operation parameters (actions array required)
+ * 2. Ensure execution context is valid
+ * 3. Delegate to ActionSequence service for sequential execution
+ * 4. Return success result with count of executed actions
+ * 5. Handle errors from action sequence execution
+ *
+ * Related files:
+ * @see src/dependencyInjection/tokens/tokens-core.js - SequenceHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseService
  */
 
 import { BaseService } from '../../utils/serviceBase.js';

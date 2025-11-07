@@ -1,5 +1,24 @@
 /**
- * @file Handler that locks movement for entities with movement restrictions.
+ * @file Handler for LOCK_MOVEMENT operation
+ *
+ * Prevents entity movement by setting a movement lock flag, supporting both legacy
+ * movement_lock component and anatomy-based mouth engagement systems.
+ *
+ * Operation flow:
+ * 1. Validate parameters (actor_id)
+ * 2. Call updateMovementLock utility with lock=true
+ * 3. Update appropriate component based on entity type (legacy or anatomy-based)
+ * 4. Log successful lock operation
+ * 5. Handle errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/lockMovement.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - LockMovementHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

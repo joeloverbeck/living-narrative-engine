@@ -1,6 +1,23 @@
 /**
- * @file Operation handler for dropping items at a location
- * @see src/logic/operationHandlers/dropItemAtLocationHandler.js
+ * @file Handler for DROP_ITEM_AT_LOCATION operation
+ *
+ * Drops an item from an actor's inventory at a specified location, making it available for pickup.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (actorEntity, itemEntity, locationId)
+ * 2. Retrieves actor's inventory component and verifies item exists
+ * 3. Prepares batch updates: removes item from inventory and sets item position
+ * 4. Applies updates atomically using batchAddComponentsOptimized
+ * 5. Dispatches items:item_dropped event
+ *
+ * Related files:
+ * @see data/schemas/operations/dropItemAtLocation.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DropItemAtLocationHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';

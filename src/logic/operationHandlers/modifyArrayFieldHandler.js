@@ -1,6 +1,23 @@
 /**
- * @file This operation handler modifies the contents of an array field in a specified component.
- * @see src/logic/operationHandlers/modifyArrayFieldHandler.js
+ * @file Handler for MODIFY_ARRAY_FIELD operation
+ *
+ * Modifies an array field within a component using atomic clone-and-replace strategy.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_type, field, mode, value)
+ * 2. Retrieves current component data and clones it
+ * 3. Applies array modification (add, remove, set, filter, etc.) using mode
+ * 4. Replaces entire component with modified version
+ * 5. Returns operation result in result_variable if specified
+ *
+ * Related files:
+ * @see data/schemas/operations/modifyArrayField.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - ModifyArrayFieldHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
  */
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */

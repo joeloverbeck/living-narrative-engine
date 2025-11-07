@@ -1,6 +1,23 @@
 /**
- * @file Operation handler for putting items into containers
- * @see src/logic/operationHandlers/takeFromContainerHandler.js
+ * @file Handler for PUT_IN_CONTAINER operation
+ *
+ * Puts an item from the actor's inventory into a container.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (actorEntity, containerEntity, itemEntity)
+ * 2. Verifies actor has item in inventory
+ * 3. Checks container has capacity for additional item
+ * 4. Removes item from actor's inventory
+ * 5. Adds item to container's contents and dispatches event
+ *
+ * Related files:
+ * @see data/schemas/operations/putInContainer.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - PutInContainerHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';

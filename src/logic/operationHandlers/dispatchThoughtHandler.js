@@ -1,5 +1,24 @@
 /**
- * @file Handler to dispatch the core:display_thought event.
+ * @file Handler for DISPATCH_THOUGHT operation
+ *
+ * Dispatches thought display events to show character internal thoughts in the UI with
+ * optional structured notes for AI memory systems.
+ *
+ * Operation flow:
+ * 1. Validate required parameters (entity_id, thoughts)
+ * 2. Build payload with thoughts content
+ * 3. Add optional structured notes array if provided and non-empty
+ * 4. Dispatch core:display_thought event through event bus
+ * 5. Handle dispatch errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/dispatchThought.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DispatchThoughtHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

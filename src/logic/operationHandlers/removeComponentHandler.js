@@ -1,9 +1,23 @@
-// src/logic/operationHandlers/removeComponentHandler.js
-
-// -----------------------------------------------------------------------------
-//  REMOVE_COMPONENT Handler — Adapted from AddComponentHandler
-//  Removes an existing component from an entity.
-// -----------------------------------------------------------------------------
+/**
+ * @file Handler for REMOVE_COMPONENT operation
+ *
+ * Removes a component instance from an entity.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_type)
+ * 2. Resolves entity reference to entity ID
+ * 3. Calls entityManager.removeComponent to delete the component
+ * 4. Component removal triggers appropriate events through entity manager
+ *
+ * Related files:
+ * @see data/schemas/operations/removeComponent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - RemoveComponentHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
+ */
 
 // --- Type-hints --------------------------------------------------------------
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

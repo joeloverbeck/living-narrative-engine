@@ -1,5 +1,24 @@
 /**
- * @file Implements the MATH operation handler which evaluates mathematical expressions.
+ * @file Handler for MATH operation
+ *
+ * Evaluates recursive mathematical expressions (add, subtract, multiply, divide, modulo)
+ * with support for literal numbers, variable references, and nested expressions.
+ *
+ * Operation flow:
+ * 1. Validate parameters (result_variable, expression object)
+ * 2. Recursively resolve expression tree with variable lookups via json-logic
+ * 3. Apply operators to resolved operands (handles division/modulo by zero)
+ * 4. Store numeric result in specified context variable (or null if evaluation fails)
+ * 5. Log warnings for invalid operators, non-numeric operands, or NaN results
+ *
+ * Related files:
+ * @see data/schemas/operations/math.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - MathHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import jsonLogic from 'json-logic-js';

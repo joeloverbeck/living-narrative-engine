@@ -1,5 +1,23 @@
 /**
- * @file Operation handler for picking up items from a location
+ * @file Handler for PICK_UP_ITEM_FROM_LOCATION operation
+ *
+ * Picks up an item from a location and adds it to the actor's inventory.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (actorEntity, itemEntity)
+ * 2. Retrieves actor's inventory component and verifies capacity
+ * 3. Removes position component from item (making it locationless)
+ * 4. Adds item to actor's inventory array
+ * 5. Dispatches items:item_picked_up event
+ *
+ * Related files:
+ * @see data/schemas/operations/pickUpItemFromLocation.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - PickUpItemFromLocationHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';

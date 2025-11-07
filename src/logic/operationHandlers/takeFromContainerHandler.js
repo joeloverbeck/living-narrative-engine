@@ -1,6 +1,23 @@
 /**
- * @file Operation handler for taking items from containers
- * @see src/logic/operationHandlers/takeFromContainerHandler.js
+ * @file Handler for TAKE_FROM_CONTAINER operation
+ *
+ * Takes an item from a container and adds it to the actor's inventory.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (actorEntity, containerEntity, itemEntity)
+ * 2. Verifies container has the item in its contents
+ * 3. Checks actor's inventory has capacity for additional item
+ * 4. Removes item from container's contents
+ * 5. Adds item to actor's inventory and dispatches event
+ *
+ * Related files:
+ * @see data/schemas/operations/takeFromContainer.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - TakeFromContainerHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';

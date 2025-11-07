@@ -1,6 +1,24 @@
 /**
- * @file A handler that resolves a direction into a target location's instance id.
- * @see src/logic/operationHandlers/checkFollowCycleHandler.js
+ * @file Handler for CHECK_FOLLOW_CYCLE operation
+ *
+ * Validates whether establishing a follow relationship would create a circular dependency
+ * in the follow chain, storing the result in a context variable for conditional logic.
+ *
+ * Operation flow:
+ * 1. Validate parameters (follower_id, leader_id, result_variable)
+ * 2. Use wouldCreateCycle utility to check for circular dependency
+ * 3. Build result object with success status and cycleDetected boolean
+ * 4. Store result in specified context variable
+ * 5. Log cycle detection result for debugging
+ *
+ * Related files:
+ * @see data/schemas/operations/checkFollowCycle.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - CheckFollowCycleHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

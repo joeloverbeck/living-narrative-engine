@@ -1,9 +1,24 @@
 /**
- * @file Operation handler for automatically moving closeness circle partners
- * @description When an entity in a closeness circle moves to a new location, this handler
- * automatically relocates all partners to maintain the closeness circle integrity.
- * @see src/logic/operationHandlers/autoMoveFollowersHandler.js - Reference pattern
- * @see data/mods/positioning/rules/closeness_auto_move.rule.json - Event trigger rule
+ * @file Handler for AUTO_MOVE_CLOSENESS_PARTNERS operation
+ *
+ * Automatically relocates all entities in a closeness circle when one member moves to maintain
+ * the spatial relationship established through proximity interactions (e.g., sitting together).
+ *
+ * Operation flow:
+ * 1. Validate parameters (actor_id, destination_id, optional previous_location_id)
+ * 2. Retrieve closeness component and partners list from actor
+ * 3. For each partner, verify position and location match expectations
+ * 4. Move partner using SYSTEM_MOVE_ENTITY handler
+ * 5. Dispatch entity_moved, entity_exited_location, and entity_entered_location events
+ *
+ * Related files:
+ * @see data/schemas/operations/autoMoveClosenessPartners.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - AutoMoveClosenessPartnersHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

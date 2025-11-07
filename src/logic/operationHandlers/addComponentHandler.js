@@ -1,9 +1,24 @@
-// src/logic/operationHandlers/addComponentHandler.js
-
-// -----------------------------------------------------------------------------
-//  ADD_COMPONENT Handler — Extracted from ModifyComponentHandler
-//  Adds a new component to an entity or replaces an existing one.
-// -----------------------------------------------------------------------------
+/**
+ * @file Handler for ADD_COMPONENT operation
+ *
+ * Adds a new component instance to an entity or replaces an existing component.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_type, value)
+ * 2. Resolves entity reference to entity ID
+ * 3. Validates component value is a non-null object
+ * 4. Applies schema defaults from component definition
+ * 5. Calls entityManager.addComponent to add/replace component
+ *
+ * Related files:
+ * @see data/schemas/operations/addComponent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - AddComponentHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
+ */
 
 // --- Type-hints --------------------------------------------------------------
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
