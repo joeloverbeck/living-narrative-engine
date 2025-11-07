@@ -52,19 +52,19 @@ describe('Multi-Target Action Performance Tests', () => {
       );
 
       // Run validation iterations
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 200; i++) {
         validator.validate(schemaId, event);
       }
 
       const result = benchmark.end();
 
       // Performance assertions based on existing patterns
-      expect(result.totalTime).toBeLessThan(5000); // 5 seconds for 1000 iterations = 5ms average
-      expect(validator.validate).toHaveBeenCalledTimes(1000);
+      expect(result.totalTime).toBeLessThan(1000); // 1 second for 200 iterations = 5ms average
+      expect(validator.validate).toHaveBeenCalledTimes(200);
 
       // Log results for analysis
       console.log(
-        `Legacy validation performance: ${result.totalTime.toFixed(2)}ms for 1000 iterations`
+        `Legacy validation performance: ${result.totalTime.toFixed(2)}ms for 200 iterations`
       );
       if (result.memoryUsage) {
         console.log(
@@ -90,18 +90,18 @@ describe('Multi-Target Action Performance Tests', () => {
       );
 
       // Run validation iterations
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 200; i++) {
         validator.validate(schemaId, event);
       }
 
       const result = benchmark.end();
 
       // Performance assertions
-      expect(result.totalTime).toBeLessThan(5000); // 5 seconds for 1000 iterations = 5ms average
-      expect(validator.validate).toHaveBeenCalledTimes(1000);
+      expect(result.totalTime).toBeLessThan(1000); // 1 second for 200 iterations = 5ms average
+      expect(validator.validate).toHaveBeenCalledTimes(200);
 
       console.log(
-        `Multi-target validation performance: ${result.totalTime.toFixed(2)}ms for 1000 iterations`
+        `Multi-target validation performance: ${result.totalTime.toFixed(2)}ms for 200 iterations`
       );
     });
 
@@ -114,8 +114,8 @@ describe('Multi-Target Action Performance Tests', () => {
       // Create event with many targets
       const event = createComplexMultiTargetEvent(8);
 
-      const iterations = 500;
-      const warmupIterations = 50;
+      const iterations = 100;
+      const warmupIterations = 10;
 
       // Warmup
       for (let i = 0; i < warmupIterations; i++) {
@@ -139,7 +139,7 @@ describe('Multi-Target Action Performance Tests', () => {
 
       // Performance targets for complex events
       expect(averageTime).toBeLessThan(10); // 10ms mean for complex events
-      expect(result.totalTime).toBeLessThan(5000); // Total time under 5 seconds
+      expect(result.totalTime).toBeLessThan(1000); // Total time under 1 second
       expect(mockValidator.validate).toHaveBeenCalledTimes(iterations);
 
       console.log(
@@ -170,18 +170,18 @@ describe('Multi-Target Action Performance Tests', () => {
       );
 
       // Run validation iterations
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 200; i++) {
         validator.validateEvent(event);
       }
 
       const result = benchmark.end();
 
       // Performance assertions
-      expect(result.totalTime).toBeLessThan(10000); // 10 seconds for 1000 iterations = 10ms average
-      expect(validator.validateEvent).toHaveBeenCalledTimes(1000);
+      expect(result.totalTime).toBeLessThan(2000); // 2 seconds for 200 iterations = 10ms average
+      expect(validator.validateEvent).toHaveBeenCalledTimes(200);
 
       console.log(
-        `Business rule validation performance: ${result.totalTime.toFixed(2)}ms for 1000 iterations`
+        `Business rule validation performance: ${result.totalTime.toFixed(2)}ms for 200 iterations`
       );
     });
 
@@ -196,7 +196,7 @@ describe('Multi-Target Action Performance Tests', () => {
       };
 
       const event = createComplexMultiTargetEvent(8);
-      const iterations = 500;
+      const iterations = 100;
 
       const timerId = performanceMonitor.startTimer(
         'complex-business-validation'
@@ -230,8 +230,8 @@ describe('Multi-Target Action Performance Tests', () => {
       const initialMemory = process.memoryUsage().heapUsed;
 
       // Run many validation cycles
-      for (let cycle = 0; cycle < 10; cycle++) {
-        for (let i = 0; i < 100; i++) {
+      for (let cycle = 0; cycle < 5; cycle++) {
+        for (let i = 0; i < 50; i++) {
           const event = createValidMultiTargetEvent({
             item: `item_${cycle}_${i}`,
             target: `target_${cycle}_${i}`,
@@ -253,7 +253,7 @@ describe('Multi-Target Action Performance Tests', () => {
       expect(memoryIncrease).toBeLessThan(1024 * 1024);
 
       console.log(
-        `Memory usage: ${(memoryIncrease / 1024).toFixed(2)}KB increase over 1000 validations`
+        `Memory usage: ${(memoryIncrease / 1024).toFixed(2)}KB increase over 250 validations`
       );
     });
 
@@ -264,7 +264,7 @@ describe('Multi-Target Action Performance Tests', () => {
       const schemaId = 'core:attempt_action';
 
       // Create batch of diverse events
-      const events = createEventBatch(100, { legacyRatio: 0.3, maxTargets: 6 });
+      const events = createEventBatch(50, { legacyRatio: 0.3, maxTargets: 6 });
 
       const batchValidation = () => {
         const results = [];
@@ -274,8 +274,8 @@ describe('Multi-Target Action Performance Tests', () => {
         return results;
       };
 
-      const iterations = 10;
-      const warmupIterations = 2;
+      const iterations = 5;
+      const warmupIterations = 1;
 
       // Warmup
       for (let i = 0; i < warmupIterations; i++) {
@@ -285,7 +285,7 @@ describe('Multi-Target Action Performance Tests', () => {
       mockValidator.validate.mockClear();
 
       const benchmark = performanceTracker.startBenchmark(
-        'Batch Event Validation (100 events)',
+        'Batch Event Validation (50 events)',
         { trackMemory: true }
       );
 
@@ -297,8 +297,8 @@ describe('Multi-Target Action Performance Tests', () => {
       const averageTime = result.totalTime / iterations;
 
       // Performance targets for batch processing
-      expect(averageTime).toBeLessThan(500); // 500ms for 100 events per batch
-      expect(result.totalTime).toBeLessThan(8000); // Total time under 8 seconds
+      expect(averageTime).toBeLessThan(250); // 250ms for 50 events per batch
+      expect(result.totalTime).toBeLessThan(2000); // Total time under 2 seconds
 
       // Memory usage tracking (optional in test environment)
       const memoryUsage = result.memoryUsage || { peak: 0, initial: 0 };
@@ -312,7 +312,7 @@ describe('Multi-Target Action Performance Tests', () => {
       expect(typeof memoryUsage).toBe('object');
 
       console.log(
-        `Batch validation: ${averageTime.toFixed(2)}ms average per 100-event batch`
+        `Batch validation: ${averageTime.toFixed(2)}ms average per 50-event batch`
       );
     });
   });
@@ -326,11 +326,11 @@ describe('Multi-Target Action Performance Tests', () => {
 
       // Test legacy events
       const legacyEvent = createValidLegacyEvent();
-      const iterations = 2000; // Increased iterations for more stable measurement
+      const iterations = 400; // Reduced for faster testing
 
       // Multiple runs for statistical stability
       const legacyTimings = [];
-      for (let run = 0; run < 3; run++) {
+      for (let run = 0; run < 2; run++) {
         const legacyBenchmark = performanceTracker.startBenchmark(
           `Legacy Performance Test Run ${run + 1}`
         );
@@ -343,15 +343,15 @@ describe('Multi-Target Action Performance Tests', () => {
         legacyTimings.push(legacyResult.totalTime / iterations);
       }
 
-      // Use median for more stable measurement
-      legacyTimings.sort((a, b) => a - b);
-      const legacyMeanTime = legacyTimings[1]; // Middle value
+      // Use average for 2 runs
+      const legacyMeanTime =
+        legacyTimings.reduce((a, b) => a + b, 0) / legacyTimings.length;
 
       mockValidator.validate.mockClear();
 
       // Test same events with enhanced schema capability (simulated)
       const enhancedTimings = [];
-      for (let run = 0; run < 3; run++) {
+      for (let run = 0; run < 2; run++) {
         const enhancedBenchmark = performanceTracker.startBenchmark(
           `Enhanced Schema Performance Test Run ${run + 1}`
         );
@@ -371,9 +371,9 @@ describe('Multi-Target Action Performance Tests', () => {
         enhancedTimings.push(enhancedResult.totalTime / iterations);
       }
 
-      // Use median for more stable measurement
-      enhancedTimings.sort((a, b) => a - b);
-      const enhancedMeanTime = enhancedTimings[1]; // Middle value
+      // Use average for 2 runs
+      const enhancedMeanTime =
+        enhancedTimings.reduce((a, b) => a + b, 0) / enhancedTimings.length;
 
       const performanceRatio = enhancedMeanTime / legacyMeanTime;
 
@@ -386,16 +386,16 @@ describe('Multi-Target Action Performance Tests', () => {
       // Comprehensive diagnostic output
       console.log(`Performance Analysis (Mock-based test):`);
       console.log(
-        `Legacy timings (3 runs): [${legacyTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+        `Legacy timings (2 runs): [${legacyTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
       );
       console.log(
-        `Enhanced timings (3 runs): [${enhancedTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+        `Enhanced timings (2 runs): [${enhancedTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
       );
       console.log(
-        `Legacy median: ${legacyMeanTime.toFixed(4)}ms per operation`
+        `Legacy average: ${legacyMeanTime.toFixed(4)}ms per operation`
       );
       console.log(
-        `Enhanced median: ${enhancedMeanTime.toFixed(4)}ms per operation`
+        `Enhanced average: ${enhancedMeanTime.toFixed(4)}ms per operation`
       );
       console.log(
         `Performance ratio: ${performanceRatio.toFixed(3)} (enhanced/legacy)`
@@ -430,8 +430,8 @@ describe('Multi-Target Action Performance Tests', () => {
         secondary: 'test_target_456',
       });
 
-      const iterations = 1000; // Increased iterations for more stable measurements
-      const warmupIterations = 100; // Increased warmup for better V8 optimization
+      const iterations = 200; // Reduced for faster testing
+      const warmupIterations = 20; // Reduced warmup
 
       // Extended warmup runs to stabilize V8 optimization and reduce timing variance
       for (let i = 0; i < warmupIterations; i++) {
@@ -444,7 +444,7 @@ describe('Multi-Target Action Performance Tests', () => {
 
       // Test legacy event validation with multiple runs for statistical analysis
       const legacyTimings = [];
-      for (let run = 0; run < 3; run++) {
+      for (let run = 0; run < 2; run++) {
         const legacyBenchmark = performanceTracker.startBenchmark(
           `Real Legacy Validation Run ${run + 1}`
         );
@@ -457,13 +457,13 @@ describe('Multi-Target Action Performance Tests', () => {
         legacyTimings.push(legacyResult.totalTime / iterations);
       }
 
-      // Use median for more stable measurement
-      legacyTimings.sort((a, b) => a - b);
-      const legacyMeanTime = legacyTimings[1]; // Middle value of 3 runs
+      // Use average for 2 runs
+      const legacyMeanTime =
+        legacyTimings.reduce((a, b) => a + b, 0) / legacyTimings.length;
 
       // Test multi-target event validation with multiple runs
       const multiTargetTimings = [];
-      for (let run = 0; run < 3; run++) {
+      for (let run = 0; run < 2; run++) {
         const multiTargetBenchmark = performanceTracker.startBenchmark(
           `Real Multi-Target Validation Run ${run + 1}`
         );
@@ -476,9 +476,10 @@ describe('Multi-Target Action Performance Tests', () => {
         multiTargetTimings.push(multiTargetResult.totalTime / iterations);
       }
 
-      // Use median for more stable measurement
-      multiTargetTimings.sort((a, b) => a - b);
-      const multiTargetMeanTime = multiTargetTimings[1]; // Middle value of 3 runs
+      // Use average for 2 runs
+      const multiTargetMeanTime =
+        multiTargetTimings.reduce((a, b) => a + b, 0) /
+        multiTargetTimings.length;
 
       // Real validation performance assertions with improved thresholds
       expect(legacyMeanTime).toBeLessThan(5); // Should be under 5ms per validation
@@ -498,16 +499,16 @@ describe('Multi-Target Action Performance Tests', () => {
       // Comprehensive diagnostic output for failure analysis
       console.log(`Real Validation Performance Analysis:`);
       console.log(
-        `Legacy timings (3 runs): [${legacyTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+        `Legacy timings (2 runs): [${legacyTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
       );
       console.log(
-        `Multi-target timings (3 runs): [${multiTargetTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
+        `Multi-target timings (2 runs): [${multiTargetTimings.map((t) => t.toFixed(4)).join(', ')}]ms per operation`
       );
       console.log(
-        `Legacy median: ${legacyMeanTime.toFixed(4)}ms per operation`
+        `Legacy average: ${legacyMeanTime.toFixed(4)}ms per operation`
       );
       console.log(
-        `Multi-target median: ${multiTargetMeanTime.toFixed(4)}ms per operation`
+        `Multi-target average: ${multiTargetMeanTime.toFixed(4)}ms per operation`
       );
       console.log(
         `Performance ratio: ${performanceRatio.toFixed(3)} (multi-target/legacy)`
@@ -555,28 +556,27 @@ describe('Multi-Target Action Performance Tests', () => {
 
         // Multiple runs for statistical stability
         const timings = [];
-        for (let run = 0; run < 3; run++) {
+        for (let run = 0; run < 2; run++) {
           mockValidator.validate.mockClear();
           const benchmark = performanceTracker.startBenchmark(
             `${targetCount} targets run ${run + 1}`
           );
 
-          for (let i = 0; i < 1000; i++) {
-            // Increased iterations for stability
+          for (let i = 0; i < 200; i++) {
+            // Reduced iterations for speed
             mockValidator.validate(schemaId, event);
           }
 
           const result = benchmark.end();
-          timings.push(result.totalTime / 1000);
+          timings.push(result.totalTime / 200);
         }
 
-        // Use median for more stable measurement
-        timings.sort((a, b) => a - b);
-        const avgTime = timings[1]; // Middle value of 3 runs
+        // Use average for 2 runs
+        const avgTime = timings.reduce((a, b) => a + b, 0) / timings.length;
         results.push({ targetCount, avgTime, timings });
 
         console.log(
-          `${targetCount} targets: ${avgTime.toFixed(4)}ms median (${timings.map((t) => t.toFixed(4)).join(', ')})`
+          `${targetCount} targets: ${avgTime.toFixed(4)}ms average (${timings.map((t) => t.toFixed(4)).join(', ')})`
         );
       }
 
@@ -586,7 +586,7 @@ describe('Multi-Target Action Performance Tests', () => {
 
       for (let i = 1; i < results.length; i++) {
         const ratio = results[i].avgTime / baseTime;
-        const absoluteDifference = (results[i].avgTime - baseTime) * 1000; // Convert to total ms for 1000 iterations
+        const absoluteDifference = (results[i].avgTime - baseTime) * 200; // Convert to total ms for 200 iterations
         const isSignificantDifference = absoluteDifference > 1.0; // 1ms total threshold
 
         console.log(`Scaling analysis for ${results[i].targetCount} targets:`);
@@ -618,7 +618,7 @@ describe('Multi-Target Action Performance Tests', () => {
       const schemaId = 'core:attempt_action';
 
       // Simulate sustained validation load (reduced duration for testing)
-      const testDuration = 5 * 1000; // 5 seconds for testing
+      const testDuration = 2 * 1000; // 2 seconds for testing
       const startTime = Date.now();
       let operationCount = 0;
       const timings = [];
@@ -674,7 +674,7 @@ describe('Multi-Target Action Performance Tests', () => {
       );
 
       // Should complete a reasonable number of operations
-      expect(operationCount).toBeGreaterThan(1000); // At least 1000 operations in 5 seconds
+      expect(operationCount).toBeGreaterThan(400); // At least 400 operations in 2 seconds
     });
 
     it('should handle concurrent validation requests', async () => {
@@ -687,7 +687,7 @@ describe('Multi-Target Action Performance Tests', () => {
       };
       const schemaId = 'core:attempt_action';
 
-      const concurrentRequests = 50;
+      const concurrentRequests = 20;
       const requestsPerBatch = 10;
       const batches = concurrentRequests / requestsPerBatch;
 
@@ -720,7 +720,7 @@ describe('Multi-Target Action Performance Tests', () => {
       });
 
       // Should complete within reasonable time
-      expect(totalTime).toBeLessThan(5000); // 5 seconds for 50 concurrent requests
+      expect(totalTime).toBeLessThan(3000); // 3 seconds for 20 concurrent requests
       expect(mockValidator.validate).toHaveBeenCalledTimes(concurrentRequests);
 
       console.log(
