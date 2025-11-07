@@ -103,8 +103,9 @@ export function validateAgainstSchema(
         preValidationSuggestions: preValidationResult.suggestions,
       });
 
-      const baseMessage =
-        failureThrowMessage || `Pre-validation failed for '${fileName}'`;
+      const baseMessage = failureThrowMessage
+        ? `${failureThrowMessage}: ${preValidationResult.error}`
+        : `Pre-validation failed for '${fileName}': ${preValidationResult.error}`;
       const finalMessage = appendErrorDetails
         ? `${baseMessage}\nDetails:\n${preValidationError}`
         : baseMessage;

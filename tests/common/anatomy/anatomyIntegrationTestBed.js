@@ -3,7 +3,7 @@ import EntityManager from '../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { AnatomyGenerationService } from '../../../src/anatomy/anatomyGenerationService.js';
-import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
+import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 import { GraphIntegrityValidator } from '../../../src/anatomy/graphIntegrityValidator.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
 import { RecipeProcessor } from '../../../src/anatomy/recipeProcessor.js';

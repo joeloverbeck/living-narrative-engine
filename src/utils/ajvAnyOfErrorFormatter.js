@@ -35,6 +35,37 @@ function groupErrorsByOperationType(errors) {
 }
 
 /**
+ * Extracts the specific failing data item from the full data using error paths
+ *
+ * @param {any} data - The full data being validated
+ * @param {import('ajv').ErrorObject[]} errors - AJV validation errors
+ * @returns {any} The specific data item that failed validation
+ */
+function extractFailingDataItem(data, errors) {
+  if (!errors || errors.length === 0) return data;
+
+  // Find the first error with an instancePath
+  const errorWithPath = errors.find((e) => e.instancePath);
+  if (!errorWithPath) return data;
+
+  // Parse the instance path (e.g., "/actions/0" => ["actions", "0"])
+  const pathSegments = errorWithPath.instancePath
+    .split('/')
+    .filter((seg) => seg !== '');
+
+  // Navigate to the failing item
+  let current = data;
+  for (const segment of pathSegments) {
+    if (current == null) break;
+    // Handle array indices
+    const index = parseInt(segment, 10);
+    current = isNaN(index) ? current[segment] : current[index];
+  }
+
+  return current || data;
+}
+
+/**
  * Finds the most likely intended operation type based on the actual data
  *
  * @param {any} data - The data being validated
@@ -43,9 +74,12 @@ function groupErrorsByOperationType(errors) {
  * @returns {string|null} The most likely operation type
  */
 function findIntendedOperationType(data, groupedErrors, errors) {
-  // If the data has a type field, that's definitely the intended type
-  if (data?.type && typeof data.type === 'string') {
-    return data.type;
+  // Extract the actual failing operation from the data
+  const failingItem = extractFailingDataItem(data, errors);
+
+  // If the failing item has a type field, that's definitely the intended type
+  if (failingItem?.type && typeof failingItem.type === 'string') {
+    return failingItem.type;
   }
 
   // Otherwise, find the operation type with the fewest/most specific errors
@@ -184,7 +218,7 @@ export function formatAnyOfErrors(errors, data) {
   }
 
   // If we can't determine the intended type, show a summary
-  return formatOperationTypeSummary(groupedErrors, data);
+  return formatOperationTypeSummary(groupedErrors, data, errors);
 }
 
 /**
@@ -251,13 +285,17 @@ function formatStandardErrors(errors) {
  *
  * @param {Map<string, import('ajv').ErrorObject[]>} groupedErrors - Grouped errors
  * @param {any} data - The data being validated
+ * @param {import('ajv').ErrorObject[]} errors - AJV validation errors for extraction
  * @returns {string} Formatted summary
  */
-function formatOperationTypeSummary(groupedErrors, data) {
+function formatOperationTypeSummary(groupedErrors, data, errors) {
   const lines = [];
 
+  // Extract the actual failing item from the full data
+  const failingItem = extractFailingDataItem(data, errors);
+
   // Check if this might be a macro reference formatted incorrectly
-  if (data?.macro && typeof data.macro === 'string') {
+  if (failingItem?.macro && typeof failingItem.macro === 'string') {
     lines.push('Invalid macro reference format detected.');
     lines.push('For macro references, use this format:');
     lines.push('  {"macro": "namespace:macroId"}');
@@ -265,8 +303,8 @@ function formatOperationTypeSummary(groupedErrors, data) {
     return lines.join('\n');
   }
 
-  if (data?.type) {
-    lines.push(`Unknown or invalid operation type: '${data.type}'`);
+  if (failingItem?.type) {
+    lines.push(`Unknown or invalid operation type: '${failingItem.type}'`);
     lines.push('Valid operation types include:');
     const types = Array.from(groupedErrors.keys());
     // Show more types for better debugging

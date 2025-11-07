@@ -72,7 +72,7 @@
     "descriptors:build": {
       "build": "athletic"
     },
-    "descriptors:composition": {
+    "descriptors:body_composition": {
       "composition": "lean"
     }
   }
