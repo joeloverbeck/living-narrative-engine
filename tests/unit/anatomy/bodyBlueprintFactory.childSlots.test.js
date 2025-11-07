@@ -2,7 +2,7 @@
  * @file Test for childSlots support in body blueprint factory
  */
 
-import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory.js';
+import { BodyBlueprintFactory } from '../../../src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 
 describe('BodyBlueprintFactory - Child Slots Support', () => {
   let factory;

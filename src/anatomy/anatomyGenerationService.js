@@ -18,7 +18,7 @@ import { AnatomyErrorHandler } from './orchestration/anatomyErrorHandler.js';
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('./bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
+/** @typedef {import('./bodyBlueprintFactory/bodyBlueprintFactory.js').BodyBlueprintFactory} BodyBlueprintFactory */
 /** @typedef {import('./anatomyDescriptionService.js').AnatomyDescriptionService} AnatomyDescriptionService */
 /** @typedef {import('./bodyGraphService.js').BodyGraphService} BodyGraphService */
 /** @typedef {import('../clothing/services/clothingInstantiationService.js').ClothingInstantiationService} ClothingInstantiationService */
