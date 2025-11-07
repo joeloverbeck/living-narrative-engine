@@ -27,8 +27,8 @@ Defines how limbs are spatially positioned on the body:
 Defines how orientation values are computed for slot IDs:
 - **`bilateral`**: Generates `left`/`right` orientations for paired limbs
 - **`indexed`**: Generates numeric indices (e.g., `tentacle_1`, `tentacle_2`, ..., `tentacle_8`)
-- **`radial`**: (Reserved for future use - currently use `indexed` for radial arrangements)
-- **`custom`**: User-defined orientation values
+- **`radial`**: Generates compass-like orientations for radial arrangements (e.g., for 8 items: `anterior`, `anterior_right`, `right`, `posterior_right`, `posterior`, `posterior_left`, `left`, `anterior_left`)
+- **`custom`**: User-defined orientation values from explicit positions array
 
 ### Typical Combinations
 
@@ -757,8 +757,11 @@ Common issues:
 
 ## References
 
-- **Implementation**: `src/anatomy/recipePatternResolver.js` (property filtering: lines 952-1001, pattern resolution: lines 526-742)
-- **Schema**: `data/schemas/anatomy.recipe.schema.json` (matchesAll definition: lines 300-319, exclude array: lines 347-368)
+- **Implementation**:
+  - Pattern resolution: `src/anatomy/recipePatternResolver/patternResolver.js` (main resolution: lines 285-522)
+  - Property filtering: `src/anatomy/recipePatternResolver/matchers/propertyMatcher.js` (lines 24-73)
+  - Orientation resolution: `src/anatomy/shared/orientationResolver.js` (lines 44-174)
+- **Schema**: `data/schemas/anatomy.recipe.schema.json` (matchesAll definition: lines 303-322, exclude object: lines 350-371)
 - **Examples Directory**: `data/mods/core/recipes/examples/`
 - **Structure Templates**: `docs/anatomy/structure-templates.md`
 - **Blueprint V2**: `docs/anatomy/blueprints-v2.md`
