@@ -1,12 +1,17 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { assertValidActionIndex } from '../../../src/utils/actionIndexUtils.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { ActionIndexValidationError } from '../../../src/errors/actionIndexValidationError.js';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
   __esModule: true,
   safeDispatchError: jest.fn(),
 }));
 
+/**
+ * Creates a mock logger for testing
+ * @returns {object} Mock logger with jest.fn() methods
+ */
 function createLogger() {
   return {
     error: jest.fn(),
@@ -63,5 +68,129 @@ describe('assertValidActionIndex', () => {
     ).resolves.not.toThrow();
 
     expect(safeDispatchError).not.toHaveBeenCalled();
+  });
+
+  describe('LLM Data Preservation', () => {
+    it('should throw ActionIndexValidationError with preserved speech when index is out of bounds', async () => {
+      const debugData = {
+        result: {
+          index: 10,
+          speech: 'I should reconsider my approach...',
+          thoughts: null,
+          notes: null,
+        },
+      };
+
+      await expect(
+        assertValidActionIndex(10, 5, 'LLMChooser', 'actor-1', dispatcher, logger, debugData)
+      ).rejects.toThrow(ActionIndexValidationError);
+
+      // Verify error properties separately to avoid conditional expects
+      const errorPromise = assertValidActionIndex(10, 5, 'LLMChooser', 'actor-1', dispatcher, logger, debugData);
+      await expect(errorPromise).rejects.toMatchObject({
+        llmData: {
+          speech: 'I should reconsider my approach...',
+          thoughts: null,
+          notes: null,
+        },
+        index: 10,
+        actionsLength: 5,
+      });
+    });
+
+    it('should preserve all LLM data when index is invalid', async () => {
+      const debugData = {
+        result: {
+          index: 7,
+          speech: 'Character speech',
+          thoughts: 'Internal thoughts',
+          notes: [{ key: 'memory', value: 'important' }],
+        },
+      };
+
+      await expect(
+        assertValidActionIndex(7, 3, 'LLMChooser', 'actor-2', dispatcher, logger, debugData)
+      ).rejects.toMatchObject({
+        llmData: {
+          speech: 'Character speech',
+          thoughts: 'Internal thoughts',
+          notes: [{ key: 'memory', value: 'important' }],
+        },
+      });
+    });
+
+    it('should handle missing debugData.result gracefully', async () => {
+      const debugData = { someOtherField: 'value' };
+
+      await expect(
+        assertValidActionIndex(10, 5, 'LLMChooser', 'actor-3', dispatcher, logger, debugData)
+      ).rejects.toMatchObject({
+        llmData: {
+          speech: null,
+          thoughts: null,
+          notes: null,
+        },
+      });
+    });
+
+    it('should handle empty debugData object', async () => {
+      await expect(
+        assertValidActionIndex(8, 4, 'LLMChooser', 'actor-4', dispatcher, logger, {})
+      ).rejects.toMatchObject({
+        llmData: {
+          speech: null,
+          thoughts: null,
+          notes: null,
+        },
+      });
+    });
+
+    it('should still dispatch error event with preserved data', async () => {
+      const debugData = {
+        result: {
+          index: 6,
+          speech: 'Preserved speech',
+          thoughts: 'Preserved thoughts',
+          notes: [],
+        },
+      };
+
+      await expect(
+        assertValidActionIndex(6, 2, 'LLMChooser', 'actor-5', dispatcher, logger, debugData)
+      ).rejects.toMatchObject({
+        llmData: {
+          speech: 'Preserved speech',
+        },
+      });
+
+      // Verify error was dispatched (happens before throw)
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        dispatcher,
+        'LLMChooser: invalid chosenIndex (6) for actor actor-5.',
+        { ...debugData, actionsCount: 2 },
+        logger
+      );
+    });
+
+    it('should preserve partial LLM data', async () => {
+      const debugData = {
+        result: {
+          index: 5,
+          speech: null,
+          thoughts: 'Only thoughts here',
+          notes: null,
+        },
+      };
+
+      await expect(
+        assertValidActionIndex(5, 2, 'LLMChooser', 'actor-6', dispatcher, logger, debugData)
+      ).rejects.toMatchObject({
+        llmData: {
+          speech: null,
+          thoughts: 'Only thoughts here',
+          notes: null,
+        },
+      });
+    });
   });
 });
