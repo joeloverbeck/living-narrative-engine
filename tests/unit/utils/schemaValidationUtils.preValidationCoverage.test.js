@@ -49,7 +49,7 @@ describe('validateAgainstSchema pre-validation coverage', () => {
           failureContext: { stage: 'loading' },
         },
       ),
-    ).toThrow("Pre-validation failed for 'rule.json'\nDetails:\nFormatted pre-validation error");
+    ).toThrow("Pre-validation failed for 'rule.json': Unexpected structure\nDetails:\nFormatted pre-validation error");
 
     expect(performSpy).toHaveBeenCalledWith(
       data,
