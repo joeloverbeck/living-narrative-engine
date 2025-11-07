@@ -175,7 +175,9 @@ export function registerTurnLifecycle(container) {
         logger: c.resolve(tokens.ILogger),
         dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         turnHandlerResolver: c.resolve(tokens.TurnHandlerResolver),
-        eventBus: c.resolve(tokens.IEventBus),
+        eventBus: c.isRegistered(tokens.IEventBus)
+          ? c.resolve(tokens.IEventBus)
+          : undefined,
       })
   );
   logger.debug(
