@@ -13,7 +13,7 @@ import { EntityGraphBuilder } from '../../../src/anatomy/entityGraphBuilder.js';
 import { RecipeConstraintEvaluator } from '../../../src/anatomy/recipeConstraintEvaluator.js';
 import SocketGenerator from '../../../src/anatomy/socketGenerator.js';
 import SlotGenerator from '../../../src/anatomy/slotGenerator.js';
-import RecipePatternResolver from '../../../src/anatomy/recipePatternResolver.js';
+import RecipePatternResolver from '../../../src/anatomy/recipePatternResolver/patternResolver.js';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { DescriptionTemplate } from '../../../src/anatomy/templates/descriptionTemplate.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';

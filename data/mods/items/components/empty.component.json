@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "items:empty",
+  "description": "Marker component indicating a liquid container has no remaining liquid. When this component is present, the container cannot be consumed from.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

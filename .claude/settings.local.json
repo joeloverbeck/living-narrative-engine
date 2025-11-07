@@ -602,7 +602,9 @@
       "mcp__morphllm-fast-apply__list_allowed_directories",
       "mcp__morphllm-fast-apply__directory_tree",
       "Bash(netstat:*)",
-      "mcp__serena__check_onboarding_performed"
+      "mcp__serena__check_onboarding_performed",
+      "Bash(do echo -n \"$file: \")",
+      "Bash([ -f \"$file\" ])"
     ],
     "deny": [],
     "ask": []

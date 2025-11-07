@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/drinkEntirely.schema.json",
+  "title": "DRINK_ENTIRELY Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "DRINK_ENTIRELY"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the DRINK_ENTIRELY operation. Consumes all remaining liquid from a container, always resulting in an empty container state.",
+      "properties": {
+        "actorEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the actor drinking from the container"
+        },
+        "containerEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the liquid container being consumed from"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "description": "Optional variable name to store the operation result. Result includes {success: boolean, error?: string, volumeConsumed: number, flavorText?: string}"
+        }
+      },
+      "required": ["actorEntity", "containerEntity"],
+      "additionalProperties": false
+    }
+  }
+}

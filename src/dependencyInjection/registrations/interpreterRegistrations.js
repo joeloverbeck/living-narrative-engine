@@ -192,6 +192,8 @@ export function registerInterpreters(container) {
       'VALIDATE_CONTAINER_CAPACITY',
       bind(tokens.ValidateContainerCapacityHandler)
     );
+    registry.register('DRINK_FROM', bind(tokens.DrinkFromHandler));
+    registry.register('DRINK_ENTIRELY', bind(tokens.DrinkEntirelyHandler));
 
     return registry;
   });

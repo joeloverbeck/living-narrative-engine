@@ -16,6 +16,11 @@
       "items:liquid_container"
     ]
   },
+  "forbidden_components": {
+    "primary": [
+      "items:empty"
+    ]
+  },
   "prerequisites": [],
   "template": "drink from {primary}"
 }
