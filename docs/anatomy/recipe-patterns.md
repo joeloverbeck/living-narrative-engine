@@ -532,11 +532,13 @@ Matches all legs except middle legs.
 
 ## Pattern Precedence
 
-When multiple patterns or slots match the same slot key, priority is:
+When multiple patterns or slots could configure the same slot key, priority is:
 
 1. **Explicit `slots` definition** (highest priority)
-2. **Most specific pattern** (matchesAll > matchesPattern > matchesGroup)
-3. **First matching pattern** (if specificity is equal)
+2. **Blueprint `additionalSlots`** (overrides patterns)
+3. **First matching pattern** (patterns are processed in order)
+
+**Note on Pattern Specificity**: The pattern resolver calculates specificity scores (explicit matches=4, matchesAll=3, matchesPattern=2, matchesGroup=1) for **warning detection only**. These scores identify potential conflicts when patterns of equal specificity overlap, but do not affect which pattern wins. The actual resolution follows first-match-wins after explicit slots and blueprint additionalSlots are checked.
 
 ### Example: Override Pattern for One Slot
 
@@ -957,16 +959,21 @@ Recipe patterns are validated when mods are loaded:
 - **Pattern Syntax**: Ensures exactly one matcher type per pattern
 - **Blueprint Consistency**: Verifies referenced blueprintId exists
 
-**Validation Process** (`src/anatomy/recipePatternResolver.js`):
+**Validation Process** (`src/anatomy/recipePatternResolver/patternResolver.js`):
 ```javascript
 // Pattern resolution happens during recipe processing
-// Zero-match patterns are logged but don't fail validation
-if (resolvedSlots.length === 0) {
-  this.#logger.debug(`Pattern matched zero slots for ${pattern.matchesGroup || pattern.matchesPattern}`);
+// Zero-match patterns (V2 patterns) fail validation with detailed error messages
+if (!usesExplicitMatches && matchedSlotKeys.length === 0) {
+  this.#raiseZeroMatchError({
+    pattern,
+    blueprint,
+    patternIndex: index,
+    slotGroupRef: matchesGroupRef,
+  });
 }
 ```
 
-**Important**: Patterns that match zero slots are currently allowed (logged at debug level). This is intentional to support optional patterns, but can hide configuration errors. Always check logs during development.
+**Important**: V2 patterns (matchesGroup, matchesPattern, matchesAll) that match zero slots will **fail validation** with a ValidationError. The error message includes helpful hints about available slots, orientations, and socket IDs to aid in debugging. V1 patterns (explicit `matches` array) allow empty arrays for backward compatibility.
 
 ### Pattern-Blueprint Synchronization
 
@@ -1054,14 +1061,18 @@ See [Architecture Guide](./architecture.md) for details on the pattern resolutio
 **Cause**: Using multiple matcher types in one pattern or missing required fields.
 **Fix**: Ensure each pattern has exactly one of `matches`, `matchesGroup`, `matchesPattern`, or `matchesAll`.
 
-### Silent Pattern Failures
+### Zero-Match Pattern Errors
 
-**Cause**: Pattern matches zero slots but recipe still loads (logged at debug level only).
+**Cause**: V2 pattern (matchesGroup, matchesPattern, matchesAll) matches zero slots, causing validation to fail.
 **Fix**:
-1. Enable debug logging during development
-2. Check logs for "Pattern matched zero slots" messages
-3. Verify structure template changes haven't broken pattern matching
-4. Consider using `matchesGroup` for resilience against template naming changes
+1. Check the error message for available slot keys, orientations, and socket IDs
+2. Verify the pattern syntax matches the actual blueprint slot structure
+3. For `matchesGroup`: Ensure the structure template has the referenced limb set or appendage type
+4. For `matchesPattern`: Verify wildcard pattern matches actual slot key naming
+5. For `matchesAll`: Check that filter properties match actual slot definitions
+6. Consider using `matchesGroup` for resilience against template naming changes
+
+**Note**: V1 patterns (explicit `matches` arrays) allow empty arrays for backward compatibility and will not fail validation.
 
 ## Related Documentation
 
