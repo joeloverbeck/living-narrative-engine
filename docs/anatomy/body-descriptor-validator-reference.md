@@ -190,8 +190,9 @@ async validateSystemConsistency(options)
 
 **Validation Steps**:
 
-1. Validates formatting configuration
+1. Validates formatting configuration (errors/warnings added to result)
 2. Loads and validates sample recipes (`anatomy:human_male`, `anatomy:human_female`)
+   - Note: Recipe validation errors are added to the **warnings** array, not errors
 3. Reports registered descriptor count
 4. Lists all registered descriptors
 
@@ -470,7 +471,7 @@ describe('Recipe Validation', () => {
       build: 'invalid-value',
     };
 
-    const result = validator.validateRecipeDesciptors(bodyDescriptors);
+    const result = validator.validateRecipeDescriptors(bodyDescriptors);
 
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(1);
