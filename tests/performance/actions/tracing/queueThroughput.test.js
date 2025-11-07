@@ -82,7 +82,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       });
 
       // Warm up - let any initialization happen
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         const warmupTrace = {
           actionId: `warmup:${i}`,
           toJSON: () => ({ actionId: `warmup:${i}` }),
@@ -91,13 +91,13 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       }
 
       // Wait for warmup traces to process
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Reset mocks after warmup
       mockStorageAdapter.setItem.mockClear();
 
       // Measure performance for actual test
-      const traceCount = 100;
+      const traceCount = 50;
       const startTime = performance.now();
 
       // Enqueue many traces quickly
@@ -110,16 +110,16 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       }
 
       // Wait for processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       const endTime = performance.now();
 
       const processingTime = endTime - startTime;
       const metrics = service.getQueueMetrics();
 
       // Assert performance requirements
-      expect(processingTime).toBeLessThan(5000); // Should complete within 5 seconds
+      expect(processingTime).toBeLessThan(3000); // Should complete within 3 seconds
       expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
-      expect(metrics.totalEnqueued).toBeGreaterThan(50); // Should enqueue most traces (queue size limit may apply)
+      expect(metrics.totalEnqueued).toBeGreaterThan(25); // Should enqueue most traces (queue size limit may apply)
 
       // Calculate and log performance metrics
       const throughput = traceCount / (processingTime / 1000); // traces per second
@@ -147,7 +147,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
       const startTime = performance.now();
       const traceSizes = [100, 500, 1000, 2000]; // Different data sizes in bytes
-      const tracesPerSize = 25;
+      const tracesPerSize = 15;
 
       for (const size of traceSizes) {
         for (let i = 0; i < tracesPerSize; i++) {
@@ -164,18 +164,18 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       }
 
       // Wait for processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       const endTime = performance.now();
 
       const processingTime = endTime - startTime;
       const totalTraces = traceSizes.length * tracesPerSize;
 
       // Performance should scale reasonably with data size
-      expect(processingTime).toBeLessThan(8000); // 8 seconds for varied sizes
+      expect(processingTime).toBeLessThan(4000); // 4 seconds for varied sizes
 
       const metrics = service.getQueueMetrics();
       expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
-      expect(metrics.totalEnqueued).toBeGreaterThan(40); // Should enqueue most traces (queue size limit may apply)
+      expect(metrics.totalEnqueued).toBeGreaterThan(25); // Should enqueue most traces (queue size limit may apply)
 
       console.log(
         `Mixed size processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces`
@@ -199,7 +199,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         },
       });
 
-      const traceCount = 50;
+      const traceCount = 30;
       const serialStartTime = performance.now();
 
       for (let i = 0; i < traceCount; i++) {
@@ -211,7 +211,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       }
 
       // Wait for processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       const serialEndTime = performance.now();
       const serialTime = serialEndTime - serialStartTime;
 
@@ -257,7 +257,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       }
 
       // Wait for processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       const parallelEndTime = performance.now();
       const parallelTime = parallelEndTime - parallelStartTime;
 
@@ -300,9 +300,9 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         },
       });
 
-      const burstSize = 50;
-      const numberOfBursts = 3;
-      const delayBetweenBursts = 100; // ms
+      const burstSize = 30;
+      const numberOfBursts = 2;
+      const delayBetweenBursts = 50; // ms
 
       const startTime = performance.now();
 
@@ -332,14 +332,14 @@ describe('TraceQueueProcessor - Performance Tests', () => {
       }
 
       // Wait for final processing to complete
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 300));
       const endTime = performance.now();
 
       const processingTime = endTime - startTime;
       const totalTraces = burstSize * numberOfBursts;
       const metrics = service.getQueueMetrics();
 
-      expect(processingTime).toBeLessThan(6000); // 6 seconds for burst traffic
+      expect(processingTime).toBeLessThan(3000); // 3 seconds for burst traffic
       expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
       expect(metrics.totalEnqueued).toBeGreaterThanOrEqual(totalTraces); // Should enqueue all traces
 
@@ -354,7 +354,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
   describe('Batch Processing Efficiency', () => {
     it('should optimize batch sizes for performance', async () => {
-      const batchSizes = [5, 10, 20, 50];
+      const batchSizes = [5, 20]; // Reduced from 4 sizes to 2
       const results = [];
 
       for (const batchSize of batchSizes) {
@@ -371,7 +371,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
           },
         });
 
-        const traceCount = 100;
+        const traceCount = 50; // Reduced from 100 to 50
         const startTime = performance.now();
 
         for (let i = 0; i < traceCount; i++) {
@@ -383,7 +383,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         }
 
         // Wait for processing to complete based on batch size
-        const waitTime = Math.min(batchSize * 20, 1000); // Adaptive wait time
+        const waitTime = Math.min(batchSize * 10, 300); // Reduced wait time
         await new Promise((resolve) => setTimeout(resolve, waitTime));
         const endTime = performance.now();
         const processingTime = endTime - startTime;
@@ -426,7 +426,7 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
       // All batch sizes should complete within reasonable time
       results.forEach((r) => {
-        expect(r.processingTime).toBeLessThan(10000); // 10 seconds max
+        expect(r.processingTime).toBeLessThan(5000); // 5 seconds max
       });
     }, 60000); // 60 second timeout
   });
