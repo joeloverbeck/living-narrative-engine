@@ -17,6 +17,7 @@ const currentDirPath = dirname(currentFilePath);
 
 /**
  * Creates an AJV instance with loadSchema configured to handle relative references
+ *
  * @returns {Ajv} Configured AJV instance
  */
 function createTestAjv() {
@@ -64,11 +65,12 @@ describe('Schema Compilation', () => {
       const ajv = createTestAjv();
       addFormats(ajv);
 
-      // Load dependencies first
+      // Load dependencies first (json-logic must be loaded before condition-container due to circular reference)
       const dependencies = [
         'common.schema.json',
-        'base-operation.schema.json',
+        'json-logic.schema.json',
         'condition-container.schema.json',
+        'base-operation.schema.json',
       ];
 
       for (const dep of dependencies) {
@@ -115,11 +117,12 @@ describe('Schema Compilation', () => {
       const ajv = createTestAjv();
       addFormats(ajv);
 
-      // Load dependencies
+      // Load dependencies (json-logic must be loaded before condition-container due to circular reference)
       const dependencies = [
         'common.schema.json',
-        'base-operation.schema.json',
+        'json-logic.schema.json',
         'condition-container.schema.json',
+        'base-operation.schema.json',
       ];
 
       for (const dep of dependencies) {
@@ -166,11 +169,12 @@ describe('Schema Compilation', () => {
       const ajv = createTestAjv();
       addFormats(ajv);
 
-      // Load dependencies
+      // Load dependencies (json-logic must be loaded before condition-container due to circular reference)
       const dependencies = [
         'common.schema.json',
-        'base-operation.schema.json',
+        'json-logic.schema.json',
         'condition-container.schema.json',
+        'base-operation.schema.json',
       ];
 
       for (const dep of dependencies) {
@@ -231,14 +235,30 @@ describe('Schema Compilation', () => {
       const ajv = createTestAjv();
       addFormats(ajv);
 
-      // Load condition-container schema (referenced by base-operation.schema.json)
+      // Load all dependencies in correct order
+      const commonPath = join(
+        currentDirPath,
+        '../../../data/schemas/common.schema.json'
+      );
+      const jsonLogicPath = join(
+        currentDirPath,
+        '../../../data/schemas/json-logic.schema.json'
+      );
       const conditionContainerPath = join(
         currentDirPath,
         '../../../data/schemas/condition-container.schema.json'
       );
+
+      const commonContent = readFileSync(commonPath, 'utf-8');
+      const jsonLogicContent = readFileSync(jsonLogicPath, 'utf-8');
       const conditionContent = readFileSync(conditionContainerPath, 'utf-8');
+
+      const commonSchema = JSON.parse(commonContent);
+      const jsonLogicSchema = JSON.parse(jsonLogicContent);
       const conditionSchema = JSON.parse(conditionContent);
 
+      ajv.addSchema(commonSchema, commonSchema.$id);
+      ajv.addSchema(jsonLogicSchema, jsonLogicSchema.$id);
       ajv.addSchema(conditionSchema, conditionSchema.$id);
 
       const validator = ajv.getSchema(conditionSchema.$id);
@@ -254,7 +274,15 @@ describe('Schema Compilation', () => {
       const ajv = createTestAjv();
       addFormats(ajv);
 
-      // Load dependencies in order
+      // Load all dependencies in correct order
+      const commonPath = join(
+        currentDirPath,
+        '../../../data/schemas/common.schema.json'
+      );
+      const jsonLogicPath = join(
+        currentDirPath,
+        '../../../data/schemas/json-logic.schema.json'
+      );
       const conditionContainerPath = join(
         currentDirPath,
         '../../../data/schemas/condition-container.schema.json'
@@ -264,12 +292,18 @@ describe('Schema Compilation', () => {
         '../../../data/schemas/base-operation.schema.json'
       );
 
+      const commonContent = readFileSync(commonPath, 'utf-8');
+      const jsonLogicContent = readFileSync(jsonLogicPath, 'utf-8');
       const conditionContent = readFileSync(conditionContainerPath, 'utf-8');
       const baseContent = readFileSync(baseOperationPath, 'utf-8');
 
+      const commonSchema = JSON.parse(commonContent);
+      const jsonLogicSchema = JSON.parse(jsonLogicContent);
       const conditionSchema = JSON.parse(conditionContent);
       const baseSchema = JSON.parse(baseContent);
 
+      ajv.addSchema(commonSchema, commonSchema.$id);
+      ajv.addSchema(jsonLogicSchema, jsonLogicSchema.$id);
       ajv.addSchema(conditionSchema, conditionSchema.$id);
       ajv.addSchema(baseSchema, baseSchema.$id);
 
