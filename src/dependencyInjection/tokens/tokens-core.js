@@ -8,6 +8,25 @@ import { freeze } from '../../utils/cloneUtils.js';
 /**
  * Core application tokens.
  *
+ * Dependency Injection Tokens
+ *
+ * Tokens for operation handlers follow the pattern:
+ * [OperationName]Handler: '[OperationName]Handler'
+ *
+ * Naming conventions:
+ * - Use PascalCase for operation name
+ * - End with 'Handler'
+ * - Do NOT use 'I' prefix for operation handlers (unlike other service interfaces)
+ * - Example: DrinkFromHandler for DRINK_FROM operation (not IDrinkFromHandler)
+ *
+ * When adding a new operation handler token:
+ * 1. Add token following the pattern above (without "I" prefix)
+ * 2. Keep tokens alphabetically sorted within the operation handlers section
+ * 3. Register handler in operationHandlerRegistrations.js
+ * 4. Map operation in interpreterRegistrations.js
+ *
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js
  * @type {Readonly<Record<string, DiToken>>}
  */
 export const coreTokens = freeze({

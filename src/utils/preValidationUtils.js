@@ -5,8 +5,22 @@
  */
 
 /**
- * Common operation types available in the system
- * This list should be kept in sync with the operation schemas
+ * CRITICAL: Pre-validation whitelist for operation types
+ *
+ * ⚠️ EVERY new operation MUST be added here before validation will pass
+ *
+ * When adding a new operation handler:
+ * 1. Add operation type constant to this array
+ * 2. Ensure it matches the "const" value in your schema exactly
+ * 3. Run `npm run validate` or `npm run validate:strict` to verify consistency
+ *
+ * Common mistake: Forgetting this step causes "Unknown operation type" errors
+ *
+ * Related files:
+ * - data/schemas/operations/[operationName].schema.json (type constant)
+ * - src/dependencyInjection/registrations/interpreterRegistrations.js (registry mapping)
+ *
+ * @see CLAUDE.md "Adding New Operations - Complete Checklist" for complete checklist
  */
 const KNOWN_OPERATION_TYPES = [
   'QUERY_COMPONENT',
