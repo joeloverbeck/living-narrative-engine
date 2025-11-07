@@ -54,11 +54,13 @@ Refactor `bodyBlueprintFactory.js` (759 lines, 52% over limit) into focused, mai
    - Update import from `../bodyBlueprintFactory.js`
    - To: `../bodyBlueprintFactory/bodyBlueprintFactory.js`
 
-3. **src/anatomy/anatomyGenerationService.js** (if it imports bodyBlueprintFactory)
-   - Update import path
+3. **src/anatomy/anatomyGenerationService.js**
+   - Update import from `./bodyBlueprintFactory.js`
+   - To: `./bodyBlueprintFactory/bodyBlueprintFactory.js`
 
-4. **Container/DI Registration Files** (if applicable)
-   - Update registration paths
+4. **src/dependencyInjection/registrations/worldAndEntityRegistrations.js**
+   - Update import from `'../../../anatomy/bodyBlueprintFactory.js'`
+   - To: `'../../../anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js'`
 
 ### Files to Update (Imports Only)
 
@@ -132,13 +134,19 @@ export function detectBlueprintVersion(blueprint) {
 }
 
 /**
- * Loads structure template for V2 blueprints
+ * Loads structure template for V2 blueprints (synchronous via DataRegistry)
  * @param {string} templateId - Template identifier
- * @param {object} dependencies - Required dependencies
+ * @param {object} dataRegistry - DataRegistry instance
+ * @param {object} logger - Logger instance
  * @returns {object} Structure template
+ * @throws {ValidationError} If template not found
  */
-export async function loadStructureTemplate(templateId, dependencies) {
-  // Implementation
+export function loadStructureTemplate(templateId, dataRegistry, logger) {
+  const template = dataRegistry.get('anatomyStructureTemplates', templateId);
+  if (!template) {
+    throw new ValidationError(`Structure template not found: ${templateId}`);
+  }
+  return template;
 }
 ```
 
@@ -211,54 +219,57 @@ npm run test:unit -- tests/unit/anatomy/bodyBlueprintFactory.test.js
 **Action:** Create `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js`
 
 **Extract from bodyBlueprintFactory.js:**
-- V1 slot processing logic (explicit slots)
-- V2 slot generation coordination (templates)
-- Pattern resolution coordination (calls recipePatternResolver)
-- Slot merging and deduplication logic
+- **PRIMARY TARGET:** `#processBlueprintSlots()` method (~240 lines)
+- Slot processing loop and dependency sorting
+- Parent entity resolution logic
+- Equipment slot detection and handling
+- Socket creation and attachment logic
+- Slot requirement merging with recipe requirements
+- Child slot recursive processing
 
 **Module Interface:**
 ```javascript
 /**
- * Resolves slots for V1 blueprints (explicit slot definitions)
- * @param {object} blueprint - V1 blueprint
- * @param {object} recipe - Recipe definition
- * @param {object} dependencies - Required dependencies
- * @returns {array} Resolved slots
+ * Processes blueprint slots to create anatomy structure
+ * Extracted from bodyBlueprintFactory.js #processBlueprintSlots method
+ *
+ * @param {object} blueprint - Blueprint with slots
+ * @param {object} recipe - Processed recipe
+ * @param {object} context - AnatomyGraphContext instance
+ * @param {string} ownerId - Owner entity ID
+ * @param {object} dependencies - Required services
+ * @param {object} dependencies.entityGraphBuilder - Entity graph builder
+ * @param {object} dependencies.partSelectionService - Part selection service
+ * @param {object} dependencies.socketManager - Socket manager
+ * @param {object} dependencies.recipeProcessor - Recipe processor
+ * @param {object} dependencies.logger - Logger instance
+ * @returns {Promise<void>} Processes slots and updates context
  */
-export function resolveV1Slots(blueprint, recipe, dependencies) {
+export async function processBlueprintSlots(blueprint, recipe, context, ownerId, dependencies) {
+  // Implementation - extracts the 240-line #processBlueprintSlots logic
+}
+
+/**
+ * Sorts slots by dependency order (parents before children)
+ * Extracted from bodyBlueprintFactory.js #sortSlotsByDependency
+ *
+ * @param {object} slots - Slots object from blueprint
+ * @returns {Array<[string, object]>} Sorted array of [key, slot] pairs
+ * @throws {ValidationError} If circular dependency detected
+ */
+export function sortSlotsByDependency(slots) {
   // Implementation
 }
 
 /**
- * Resolves slots for V2 blueprints (template-based)
- * @param {object} blueprint - V2 blueprint
- * @param {object} recipe - Recipe definition
- * @param {object} dependencies - Required dependencies (patternResolver, etc.)
- * @returns {array} Generated slots
+ * Determines if a slot is an equipment slot (vs anatomy part slot)
+ * Extracted from bodyBlueprintFactory.js #isEquipmentSlot
+ *
+ * @param {object} slot - Slot definition
+ * @param {object} socket - Socket definition
+ * @returns {boolean} True if equipment slot
  */
-export function resolveV2Slots(blueprint, recipe, dependencies) {
-  // Implementation
-}
-
-/**
- * Merges slots from multiple sources (explicit + patterns)
- * @param {array} slots - Slots to merge
- * @param {object} logger - Logger instance
- * @returns {array} Merged slots without duplicates
- */
-export function mergeSlots(slots, logger) {
-  // Implementation
-}
-
-/**
- * Coordinates pattern resolution with recipePatternResolver
- * @param {array} patterns - Recipe patterns
- * @param {object} blueprint - Blueprint context
- * @param {array} slots - Available slots
- * @param {object} patternResolver - RecipePatternResolver instance
- * @returns {Map} Pattern resolution results
- */
-export function coordinatePatternResolution(patterns, blueprint, slots, patternResolver) {
+export function isEquipmentSlot(slot, socket) {
   // Implementation
 }
 ```
@@ -305,25 +316,52 @@ import {
  * BodyBlueprintFactory - Creates anatomy graphs from blueprints and recipes
  */
 class BodyBlueprintFactory {
+  #entityManager;
+  #dataRegistry;
   #logger;
-  #recipePatternResolver;
+  #eventDispatcher;
+  #eventDispatchService;
+  #recipeProcessor;
+  #partSelectionService;
+  #socketManager;
+  #entityGraphBuilder;
+  #constraintEvaluator;
+  #validator;
   #socketGenerator;
   #slotGenerator;
-  #orientationResolver;
-  // ... other dependencies
+  #recipePatternResolver;
 
   constructor({
+    entityManager,
+    dataRegistry,
     logger,
-    recipePatternResolver,
+    eventDispatcher,
+    eventDispatchService,
+    recipeProcessor,
+    partSelectionService,
+    socketManager,
+    entityGraphBuilder,
+    constraintEvaluator,
+    validator,
     socketGenerator,
     slotGenerator,
-    orientationResolver,
-    // ... other dependencies
+    recipePatternResolver,
   }) {
     // Validate all dependencies
+    this.#entityManager = entityManager;
+    this.#dataRegistry = dataRegistry;
     this.#logger = logger;
+    this.#eventDispatcher = eventDispatcher;
+    this.#eventDispatchService = eventDispatchService;
+    this.#recipeProcessor = recipeProcessor;
+    this.#partSelectionService = partSelectionService;
+    this.#socketManager = socketManager;
+    this.#entityGraphBuilder = entityGraphBuilder;
+    this.#constraintEvaluator = constraintEvaluator;
+    this.#validator = validator;
+    this.#socketGenerator = socketGenerator;
+    this.#slotGenerator = slotGenerator;
     this.#recipePatternResolver = recipePatternResolver;
-    // ... store dependencies
   }
 
   /**
@@ -371,7 +409,7 @@ import BodyBlueprintFactory from '../bodyBlueprintFactory.js';
 import BodyBlueprintFactory from '../bodyBlueprintFactory/bodyBlueprintFactory.js';
 ```
 
-**Action 2:** Update anatomyGenerationService.js import (if applicable)
+**Action 2:** Update anatomyGenerationService.js import
 
 ```javascript
 // Before:
@@ -381,7 +419,17 @@ import BodyBlueprintFactory from './bodyBlueprintFactory.js';
 import BodyBlueprintFactory from './bodyBlueprintFactory/bodyBlueprintFactory.js';
 ```
 
-**Action 3:** Update all test file imports
+**Action 3:** Update worldAndEntityRegistrations.js import
+
+```javascript
+// Before:
+import BodyBlueprintFactory from '../../../anatomy/bodyBlueprintFactory.js';
+
+// After:
+import BodyBlueprintFactory from '../../../anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
+```
+
+**Action 4:** Update all test file imports
 
 **Files to update** (11 files):
 - `tests/unit/anatomy/bodyBlueprintFactory.test.js`
@@ -520,7 +568,8 @@ npm run typecheck
 - [x] bodyBlueprintFactory.js facade created (<400 lines)
 - [x] Original bodyBlueprintFactory.js deleted
 - [x] anatomyGenerationWorkflow.js import updated
-- [x] anatomyGenerationService.js import updated (if applicable)
+- [x] anatomyGenerationService.js import updated
+- [x] worldAndEntityRegistrations.js import updated
 - [x] All 11 test files imports updated
 - [x] All bodyBlueprintFactory unit tests pass
 - [x] All bodyBlueprintFactory integration tests pass
@@ -578,7 +627,8 @@ npm run typecheck
 - [ ] bodyBlueprintFactory.js facade created (<400 lines)
 - [ ] Original bodyBlueprintFactory.js deleted
 - [ ] anatomyGenerationWorkflow.js import updated
-- [ ] anatomyGenerationService.js import updated (if applicable)
+- [ ] anatomyGenerationService.js import updated
+- [ ] worldAndEntityRegistrations.js import updated
 - [ ] All 11 test files imports updated
 - [ ] All bodyBlueprintFactory unit tests pass without modification
 - [ ] ESLint passes on all new files (zero warnings)
@@ -600,6 +650,18 @@ npm run typecheck
 - Pattern resolution must use recipePatternResolver module
 - V1 and V2 logic must remain completely separate
 
+**IMPORTANT - Actual Methods to Refactor:**
+The current implementation has these key private methods (total: 759 lines):
+1. `#validateRecipeSlots(recipe, blueprint)` - ~42 lines (lines 311-352)
+2. `#loadBlueprint(blueprintId)` - ~15 lines (lines 361-376)
+3. `#processV2Blueprint(blueprint)` - ~52 lines (lines 386-437)
+4. `#processBlueprintSlots(blueprint, recipe, context, ownerId)` - ~240 lines (lines 448-688) **MAJOR METHOD**
+5. `#isEquipmentSlot(slot, socket)` - ~32 lines (lines 688-716)
+6. `#sortSlotsByDependency(slots)` - ~32 lines (lines 725-756)
+7. `createAnatomyGraph(blueprintId, recipeId, options)` - Main public method (~159 lines, lines 152-310)
+
+**Key Finding:** `#processBlueprintSlots()` is a massive 240-line method that handles the core slot processing logic. This should be the PRIMARY target for extraction into slotResolutionOrchestrator, not just pattern resolution.
+
 **File Size Verification:**
 After completion, verify all files ≤500 lines:
 ```bash
@@ -614,10 +676,10 @@ wc -l src/anatomy/bodyBlueprintFactory/*.js
 - Total: <1000 lines (well distributed across 4 modules)
 
 **Integration Points:**
-- recipePatternResolver: Used by slotResolutionOrchestrator for V2 pattern matching
-- socketGenerator: Used by facade for socket creation
-- slotGenerator: Used by slotResolutionOrchestrator for slot generation
-- orientationResolver: Used by both SlotGenerator and SocketGenerator (critical!)
+- recipePatternResolver: Used by facade for V2 pattern matching (resolveRecipePatterns)
+- socketGenerator: Used by #processV2Blueprint for socket generation from structure templates
+- slotGenerator: Used by #processV2Blueprint for slot generation from structure templates
+- orientationResolver: Internal dependency of socketGenerator and slotGenerator (NOT a direct dependency of bodyBlueprintFactory)
 
 **Next Steps:**
 After completion, proceed to **ANASYSREF-009-04** to refactor anatomyGenerationWorkflow.
