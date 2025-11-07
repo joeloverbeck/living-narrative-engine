@@ -137,6 +137,9 @@ class AjvSchemaValidator {
               if (fragmentSchema) {
                 return fragmentSchema;
               }
+              // Fragment resolution failed, but return the full schema
+              // and let AJV handle the fragment resolution itself
+              return schemaEnv.schema;
             } else {
               return schemaEnv.schema;
             }

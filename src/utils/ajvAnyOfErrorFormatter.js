@@ -44,8 +44,15 @@ function groupErrorsByOperationType(errors) {
 function extractFailingDataItem(data, errors) {
   if (!errors || errors.length === 0) return data;
 
-  // Find the first error with an instancePath
-  const errorWithPath = errors.find((e) => e.instancePath);
+  // PRIORITY 1: If root data has a type field, it's the operation - return immediately
+  // This prevents over-navigation into nested properties like 'parameters'
+  if (data?.type && typeof data.type === 'string') {
+    return data;
+  }
+
+  // PRIORITY 2: Find the first error with a non-empty instancePath
+  // Note: empty string "" is root level and should be treated as "no path"
+  const errorWithPath = errors.find((e) => e.instancePath && e.instancePath !== '');
   if (!errorWithPath) return data;
 
   // Parse the instance path (e.g., "/actions/0" => ["actions", "0"])
@@ -56,12 +63,13 @@ function extractFailingDataItem(data, errors) {
   // Navigate to the failing item
   let current = data;
   for (const segment of pathSegments) {
-    if (current == null) break;
+    if (current === null || current === undefined) break;
     // Handle array indices
     const index = parseInt(segment, 10);
     current = isNaN(index) ? current[segment] : current[index];
   }
 
+  // If the extracted item doesn't have type context, fall back to root data
   return current || data;
 }
 
