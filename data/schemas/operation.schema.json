@@ -66,6 +66,12 @@
           "$ref": "./operations/dispatchThought.schema.json"
         },
         {
+          "$ref": "./operations/drinkEntirely.schema.json"
+        },
+        {
+          "$ref": "./operations/drinkFrom.schema.json"
+        },
+        {
           "$ref": "./operations/endTurn.schema.json"
         },
         {

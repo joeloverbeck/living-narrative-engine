@@ -13,7 +13,7 @@
         "socketPattern": {
           "idTemplate": "leg_{{orientation}}",
           "orientationScheme": "bilateral",
-          "allowedTypes": ["horse_leg", "equine_leg", "centaur_leg"],
+          "allowedTypes": ["horse_leg", "equine_leg", "centaur_leg", "centaur_leg_front", "centaur_leg_rear"],
           "nameTpl": "{{orientation}} leg"
         }
       },
@@ -24,7 +24,7 @@
         "socketPattern": {
           "idTemplate": "arm_{{orientation}}",
           "orientationScheme": "bilateral",
-          "allowedTypes": ["human_arm", "humanoid_arm", "centaur_arm"],
+          "allowedTypes": ["arm", "human_arm", "humanoid_arm", "centaur_arm"],
           "nameTpl": "{{orientation}} arm"
         }
       }

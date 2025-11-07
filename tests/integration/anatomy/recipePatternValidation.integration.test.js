@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
-import RecipePatternResolver from '../../../src/anatomy/recipePatternResolver.js';
+import RecipePatternResolver from '../../../src/anatomy/recipePatternResolver/patternResolver.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
 
 describe('Recipe Pattern Validation Integration', () => {

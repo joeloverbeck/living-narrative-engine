@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:centaur_upper_torso",
+  "description": "Centaur humanoid upper torso section with muscular build",
+  "components": {
+    "anatomy:part": {
+      "subType": "centaur_upper_torso"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "neck",
+          "allowedTypes": ["head", "neck"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "upper torso"
+    },
+    "descriptors:build": {
+      "build": "muscular"
+    }
+  }
+}

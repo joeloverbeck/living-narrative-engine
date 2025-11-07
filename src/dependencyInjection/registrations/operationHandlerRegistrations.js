@@ -56,6 +56,8 @@ import OpenContainerHandler from '../../logic/operationHandlers/openContainerHan
 import TakeFromContainerHandler from '../../logic/operationHandlers/takeFromContainerHandler.js';
 import PutInContainerHandler from '../../logic/operationHandlers/putInContainerHandler.js';
 import ValidateContainerCapacityHandler from '../../logic/operationHandlers/validateContainerCapacityHandler.js';
+import DrinkFromHandler from '../../logic/operationHandlers/drinkFromHandler.js';
+import DrinkEntirelyHandler from '../../logic/operationHandlers/drinkEntirelyHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -579,6 +581,26 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.ValidateContainerCapacityHandler,
       ValidateContainerCapacityHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DrinkFromHandler,
+      DrinkFromHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DrinkEntirelyHandler,
+      DrinkEntirelyHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

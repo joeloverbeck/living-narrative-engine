@@ -31,10 +31,12 @@
     "rules": [],
     "entities": {
       "definitions": [
+        "centaur_warrior.character.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json"
       ],
       "instances": [
+        "centaur_warrior.character.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json"
       ]

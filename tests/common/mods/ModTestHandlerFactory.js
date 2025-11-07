@@ -28,6 +28,8 @@ import OpenContainerHandler from '../../../src/logic/operationHandlers/openConta
 import TakeFromContainerHandler from '../../../src/logic/operationHandlers/takeFromContainerHandler.js';
 import PutInContainerHandler from '../../../src/logic/operationHandlers/putInContainerHandler.js';
 import ValidateContainerCapacityHandler from '../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
+import DrinkFromHandler from '../../../src/logic/operationHandlers/drinkFromHandler.js';
+import DrinkEntirelyHandler from '../../../src/logic/operationHandlers/drinkEntirelyHandler.js';
 import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
@@ -495,6 +497,16 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
       }),
       PUT_IN_CONTAINER: new PutInContainerHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      DRINK_FROM: new DrinkFromHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      DRINK_ENTIRELY: new DrinkEntirelyHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,

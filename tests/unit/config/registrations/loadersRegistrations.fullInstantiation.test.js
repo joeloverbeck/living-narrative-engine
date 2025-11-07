@@ -186,7 +186,7 @@ describe('registerLoaders full instantiation coverage', () => {
       },
     }));
 
-    jest.doMock('../../../../src/anatomy/recipePatternResolver.js', () => ({
+    jest.doMock('../../../../src/anatomy/recipePatternResolver/patternResolver.js', () => ({
       __esModule: true,
       default: class MockRecipePatternResolver {
         constructor(config) {

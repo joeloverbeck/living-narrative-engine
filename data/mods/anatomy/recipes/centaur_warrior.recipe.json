@@ -12,14 +12,9 @@
     "quiver_mount": {
       "partType": "equipment_mount",
       "tags": [
-        "anatomy:part",
-        "anatomy:rigging"
+        "anatomy:part"
       ],
       "properties": {
-        "anatomy:rigging": {
-          "mountType": "quiver",
-          "loadCapacity": "light"
-        }
       }
     }
   },
@@ -31,14 +26,9 @@
       "partType": "arm",
       "preferId": "anatomy:humanoid_arm_muscular",
       "tags": [
-        "anatomy:part",
-        "anatomy:dexterous"
+        "anatomy:part"
       ],
       "properties": {
-        "anatomy:dexterous": {
-          "gripStrength": "veteran",
-          "weaponDiscipline": "archery"
-        }
       }
     },
     {
@@ -48,14 +38,9 @@
       },
       "partType": "centaur_leg_front",
       "tags": [
-        "anatomy:part",
-        "anatomy:equine"
+        "anatomy:part"
       ],
       "properties": {
-        "anatomy:equine": {
-          "gait": "charge",
-          "hoofType": "reinforced"
-        }
       }
     },
     {
@@ -65,14 +50,9 @@
       },
       "partType": "centaur_leg_rear",
       "tags": [
-        "anatomy:part",
-        "anatomy:equine"
+        "anatomy:part"
       ],
       "properties": {
-        "anatomy:equine": {
-          "gait": "stabilize",
-          "hoofType": "anchored"
-        }
       }
     },
     {
@@ -92,8 +72,7 @@
       "matchesGroup": "appendage:head",
       "partType": "centaur_head",
       "tags": [
-        "anatomy:part",
-        "anatomy:humanoid"
+        "anatomy:part"
       ],
       "properties": {
         "descriptors:hair_style": {
@@ -105,8 +84,7 @@
       "matchesGroup": "appendage:tail",
       "partType": "horse_tail",
       "tags": [
-        "anatomy:part",
-        "anatomy:equine"
+        "anatomy:part"
       ],
       "properties": {
         "descriptors:length_category": {

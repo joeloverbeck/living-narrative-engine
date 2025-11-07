@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:horse_tail",
+  "description": "Equine tail with long flowing hair",
+  "components": {
+    "anatomy:part": {
+      "subType": "horse_tail"
+    },
+    "core:name": {
+      "text": "tail"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
+    }
+  }
+}

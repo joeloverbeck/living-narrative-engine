@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:centaur_leg_rear",
+  "description": "Centaur rear horse leg with hoof",
+  "components": {
+    "anatomy:part": {
+      "subType": "centaur_leg_rear"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "hoof",
+          "allowedTypes": ["hoof", "horse_hoof"],
+          "nameTpl": "hoof"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "rear leg"
+    },
+    "descriptors:build": {
+      "build": "muscular"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

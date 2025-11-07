@@ -214,6 +214,8 @@ export const coreTokens = freeze({
   TakeFromContainerHandler: 'TakeFromContainerHandler',
   PutInContainerHandler: 'PutInContainerHandler',
   ValidateContainerCapacityHandler: 'ValidateContainerCapacityHandler',
+  DrinkFromHandler: 'DrinkFromHandler',
+  DrinkEntirelyHandler: 'DrinkEntirelyHandler',
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',
   ITurnDecisionProvider: 'ITurnDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',

@@ -20,6 +20,8 @@ const OPERATION_SCHEMA_FILES = [
   'dispatchPerceptibleEvent.schema.json',
   'dispatchSpeech.schema.json',
   'dispatchThought.schema.json',
+  'drinkEntirely.schema.json',
+  'drinkFrom.schema.json',
   'dropItemAtLocation.schema.json',
   'endTurn.schema.json',
   'establishFollowRelation.schema.json',

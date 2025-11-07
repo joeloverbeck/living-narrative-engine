@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "patrol:centaur_warrior_instance",
+    "definitionId": "patrol:centaur_warrior"
+}

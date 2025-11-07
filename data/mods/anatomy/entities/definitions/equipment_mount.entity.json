@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:equipment_mount",
+  "description": "Equipment attachment point for carrying gear like quivers",
+  "components": {
+    "anatomy:part": {
+      "subType": "equipment_mount"
+    },
+    "core:name": {
+      "text": "equipment mount"
+    }
+  }
+}

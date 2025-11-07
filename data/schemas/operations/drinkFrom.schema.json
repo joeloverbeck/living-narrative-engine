@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/drinkFrom.schema.json",
+  "title": "DRINK_FROM Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "DRINK_FROM"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the DRINK_FROM operation. Consumes a single serving from a liquid container, tracking volume and managing empty state transitions.",
+      "properties": {
+        "actorEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the actor drinking from the container"
+        },
+        "containerEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the liquid container being consumed from"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "description": "Optional variable name to store the operation result. Result includes {success: boolean, error?: string, volumeConsumed?: number, flavorText?: string}"
+        }
+      },
+      "required": ["actorEntity", "containerEntity"],
+      "additionalProperties": false
+    }
+  }
+}
