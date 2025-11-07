@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:luxury_armchair",
+  "description": "A high-backed luxury armchair with rich burgundy upholstery",
+  "components": {
+    "core:name": {
+      "text": "luxury armchair"
+    },
+    "core:description": {
+      "text": "A commanding high-backed armchair of dark mahogany with deep burgundy velvet upholstery. The carved armrests terminate in lion's paw feet, while the generously padded seat and tall tufted back provide regal comfort. Brass nail head trim and rich wood grain give it an air of authority and timeless elegance."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/luxury_armchair.png",
+      "altText": "High-backed armchair with dark wood frame and burgundy velvet upholstery"
+    },
+    "positioning:allows_sitting": {
+      "spots": [null]
+    },
+    "items:item": {}
+  }
+}

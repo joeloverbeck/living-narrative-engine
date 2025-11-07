@@ -176,7 +176,7 @@ describe('PerceptibleEventSender Integration Tests', () => {
       expect(operation.parameters.location_id).toBe('location:tavern');
       expect(operation.parameters.description_text).toBe('A loud crash echoes from nearby');
       expect(operation.parameters.perception_type).toBe('state_change_observable');
-      expect(operation.parameters.actor_id).toBe('gm');
+      expect(operation.parameters.actor_id).toBe('system');
       expect(operation.parameters.log_entry).toBe(true);
       expect(operation.parameters.contextualData).toEqual({});
     });
