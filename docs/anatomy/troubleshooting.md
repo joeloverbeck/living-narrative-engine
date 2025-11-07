@@ -142,9 +142,9 @@ console.log('Available sockets:', sockets.map(s => s.id));
 // 2. Check clothing slot mappings
 const slotMetadata = await entityManager.getComponentData(
   entityId,
-  'anatomy:clothing_slot_metadata'
+  'clothing:slot_metadata'
 );
-console.log('Clothing slot mappings:', slotMetadata?.clothingSlots);
+console.log('Clothing slot mappings:', slotMetadata?.slotMappings);
 
 // 3. Verify SlotResolver strategies
 // Check SlotResolver service logs for strategy resolution
@@ -179,7 +179,7 @@ await anatomySocketIndex.buildIndex(rootEntityId);
 - Ensure cache coordinator properly registers anatomy caches
 - Socket index auto-builds on first access if missing
 - Invalidate caches when anatomy structure changes
-- See `src/anatomy/services/anatomySocketIndex.js:52-68` for cache registration
+- See `src/anatomy/services/anatomySocketIndex.js:51-68` for cache registration
 
 #### 3. Missing ANATOMY_GENERATED event
 
@@ -203,7 +203,7 @@ await anatomySocketIndex.buildIndex(rootEntityId);
 - Ensure AnatomyGenerationWorkflow receives eventBus dependency
 - Register clothing event subscribers during initialization
 - Check event bus configuration
-- See `src/anatomy/workflows/anatomyGenerationWorkflow.js:187-210` for event dispatch
+- See `src/anatomy/workflows/anatomyGenerationWorkflow.js:187-217` for event dispatch
 
 **Implementation note**: The ANATOMY_GENERATED event is dispatched from `anatomyGenerationWorkflow.js` after successful anatomy generation, including socket information for clothing integration.
 
@@ -221,8 +221,8 @@ await anatomySocketIndex.buildIndex(rootEntityId);
 ```javascript
 // Verify both use OrientationResolver
 // Check imports in:
-// - src/anatomy/slotGenerator.js
-// - src/anatomy/socketGenerator.js
+// - src/anatomy/slotGenerator.js (line 8)
+// - src/anatomy/socketGenerator.js (line 8)
 
 // Test orientation resolution
 import { OrientationResolver } from './src/anatomy/shared/orientationResolver.js';
@@ -327,6 +327,10 @@ Monitor ANATOMY_GENERATED events:
 // - entityId: Owner entity
 // - blueprintId: Blueprint used
 // - sockets: Array of socket objects {id, orientation}
+// - timestamp: Generation timestamp
+// - bodyParts: Array of part entity IDs
+// - partsMap: Object mapping part names to entity IDs
+// - slotEntityMappings: Object mapping slot IDs to entity IDs
 ```
 
 ## Related Documentation
