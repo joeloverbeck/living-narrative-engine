@@ -65,12 +65,23 @@ export class GenericTurnStrategy {
     } catch (err) {
       if (!this.fallbackFactory) throw err;
 
-      const fb = this.fallbackFactory.create(err.name, err, actor.id);
+      // Extract preserved LLM data if available (from ActionIndexValidationError)
+      const preservedData = err.llmData || {};
+
+      const fb = this.fallbackFactory.create(
+        err.name,
+        err,
+        actor.id,
+        preservedData
+      );
+
+      // Use preserved LLM data if available, otherwise fallback values
       const meta = {
-        speech: fb.speech ?? null,
-        thoughts: null,
-        notes: null,
+        speech: preservedData.speech || fb.speech || null,
+        thoughts: preservedData.thoughts || null,
+        notes: preservedData.notes || null,
       };
+
       return { kind: 'fallback', action: fb, extractedData: meta };
     }
   }

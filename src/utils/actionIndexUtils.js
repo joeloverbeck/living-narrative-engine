@@ -1,5 +1,6 @@
 // src/utils/actionIndexUtils.js
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
+import { ActionIndexValidationError } from '../errors/actionIndexValidationError.js';
 
 /**
  * Validates that a chosen action index is an integer within the
@@ -35,12 +36,28 @@ export async function assertValidActionIndex(
   }
 
   if (chosenIndex < 1 || chosenIndex > actionsLength) {
+    const message = 'Player chose an index that does not exist for this turn.';
+
+    // Extract LLM data from debugData.result (current structure)
+    const llmData = debugData.result || {};
+
+    // Create enhanced error with preserved LLM data
+    const error = new ActionIndexValidationError(message, {
+      index: chosenIndex,
+      actionsLength,
+      speech: llmData.speech,
+      thoughts: llmData.thoughts,
+      notes: llmData.notes,
+    });
+
+    // Existing error dispatch logic (unchanged)
     await safeDispatchError(
       dispatcher,
       `${providerName}: invalid chosenIndex (${chosenIndex}) for actor ${actorId}.`,
       { ...debugData, actionsCount: actionsLength },
       logger
     );
-    throw new Error('Player chose an index that does not exist for this turn.');
+
+    throw error;
   }
 }

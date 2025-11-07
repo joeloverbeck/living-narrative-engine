@@ -34,3 +34,6 @@ export * from './modValidationError.js';
 export * from './modSecurityError.js';
 export * from './modCorruptionError.js';
 export * from './modAccessError.js';
+
+// Action validation error classes
+export * from './actionIndexValidationError.js';
