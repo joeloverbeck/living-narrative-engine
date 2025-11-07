@@ -77,14 +77,14 @@ Blueprint V2 introduces `structureTemplate` references for declarative anatomy d
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
-  "id": "anatomy:spider_common",
+  "id": "anatomy:giant_spider",
   "schemaVersion": "2.0",
   "root": "anatomy:spider_cephalothorax",
-  "structureTemplate": "anatomy:structure_spider"
+  "structureTemplate": "anatomy:structure_arachnid_8leg"
 }
 ```
 
-This 6-line blueprint generates all 8 leg sockets plus abdomen socket automatically!
+This 6-line blueprint generates 11 sockets automatically: 8 leg sockets (leg_1 through leg_8), 2 pedipalp sockets (pedipalp_1, pedipalp_2), and 1 posterior torso socket (posterior_torso)!
 
 ## When to Use V2
 
@@ -145,12 +145,12 @@ The `schemaVersion` property controls which features are available:
 
 The `structureTemplate` property references a structure template by ID.
 
-**Format**: Namespaced ID (e.g., `"anatomy:structure_spider"`)
+**Format**: Namespaced ID (e.g., `"anatomy:structure_arachnid_8leg"`)
 
 ```json
 {
   "schemaVersion": "2.0",
-  "structureTemplate": "anatomy:structure_spider"
+  "structureTemplate": "anatomy:structure_arachnid_8leg"
 }
 ```
 
@@ -195,37 +195,38 @@ The `additionalSlots` property allows adding sockets beyond what the template ge
 
 **Format**: Object with slot keys and slot definitions (same format as V1 slots).
 
-### Example: Spider with Venom Glands
+### Example: Spider with Venom Gland and Spinnerets
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
-  "id": "anatomy:venomous_spider",
+  "id": "anatomy:giant_spider",
   "schemaVersion": "2.0",
   "root": "anatomy:spider_cephalothorax",
-  "structureTemplate": "anatomy:structure_spider",
+  "structureTemplate": "anatomy:structure_arachnid_8leg",
   "additionalSlots": {
-    "venom_gland_left": {
-      "socket": "venom_left",
+    "venom_gland": {
+      "socket": "venom_gland",
       "requirements": {
         "partType": "venom_gland",
-        "components": ["anatomy:part"]
+        "components": ["anatomy:part", "anatomy:venom"]
       },
       "optional": true
     },
-    "venom_gland_right": {
-      "socket": "venom_right",
+    "spinnerets": {
+      "socket": "spinnerets",
       "requirements": {
-        "partType": "venom_gland",
+        "partType": "spinneret",
         "components": ["anatomy:part"]
-      },
-      "optional": true
+      }
     }
   }
 }
 ```
 
-The template generates 8 leg sockets + abdomen socket. The `additionalSlots` adds 2 venom gland sockets.
+The template generates 8 leg sockets + 2 pedipalp sockets + 1 posterior torso socket (11 total). The `additionalSlots` adds 2 more sockets: venom gland and spinnerets.
+
+**Actual File**: See `data/mods/anatomy/blueprints/giant_spider.blueprint.json`
 
 ## Clothing Slot Mappings
 
@@ -278,8 +279,8 @@ Create a template that generates these sockets:
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
-  "id": "anatomy:structure_spider",
-  "description": "Spider body structure with 8 legs",
+  "id": "anatomy:structure_arachnid_8leg",
+  "description": "Eight-legged arachnid body plan with pedipalps and abdomen attachment",
   "topology": {
     "rootType": "cephalothorax",
     "limbSets": [
@@ -287,6 +288,7 @@ Create a template that generates these sockets:
         "type": "leg",
         "count": 8,
         "arrangement": "radial",
+        "arrangementHint": "four_pairs_bilateral",
         "socketPattern": {
           "idTemplate": "leg_{{index}}",
           "orientationScheme": "indexed",
@@ -294,10 +296,35 @@ Create a template that generates these sockets:
           "nameTpl": "leg {{index}}"
         }
       }
+    ],
+    "appendages": [
+      {
+        "type": "pedipalp",
+        "count": 2,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "pedipalp_{{index}}",
+          "orientationScheme": "indexed",
+          "allowedTypes": ["spider_pedipalp"],
+          "nameTpl": "pedipalp {{index}}"
+        }
+      },
+      {
+        "type": "torso",
+        "count": 1,
+        "attachment": "posterior",
+        "socketPattern": {
+          "idTemplate": "posterior_torso",
+          "allowedTypes": ["spider_abdomen"],
+          "nameTpl": "torso"
+        }
+      }
     ]
   }
 }
 ```
+
+**Actual File**: See `data/mods/anatomy/structure-templates/structure_arachnid_8leg.structure-template.json`
 
 ### Step 3: Convert Blueprint to V2
 
@@ -307,10 +334,10 @@ Replace manual slots with template reference:
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
-  "id": "anatomy:spider_common",
+  "id": "anatomy:giant_spider",
   "schemaVersion": "2.0",
   "root": "anatomy:spider_cephalothorax",
-  "structureTemplate": "anatomy:structure_spider"
+  "structureTemplate": "anatomy:structure_arachnid_8leg"
 }
 ```
 
@@ -321,14 +348,15 @@ If your V1 blueprint had unique sockets not covered by the template:
 ```json
 {
   "schemaVersion": "2.0",
-  "structureTemplate": "anatomy:structure_spider",
+  "structureTemplate": "anatomy:structure_arachnid_8leg",
   "additionalSlots": {
-    "eyes": {
-      "socket": "eyes",
+    "venom_gland": {
+      "socket": "venom_gland",
       "requirements": {
-        "partType": "spider_eyes",
-        "components": ["anatomy:part"]
-      }
+        "partType": "venom_gland",
+        "components": ["anatomy:part", "anatomy:venom"]
+      },
+      "optional": true
     }
   }
 }
@@ -341,7 +369,7 @@ Copy `clothingSlotMappings` directly (format is identical):
 ```json
 {
   "schemaVersion": "2.0",
-  "structureTemplate": "anatomy:structure_spider",
+  "structureTemplate": "anatomy:structure_arachnid_8leg",
   "clothingSlotMappings": {
     "cephalothorax": {
       "anatomySockets": ["chest", "back"],
@@ -353,7 +381,9 @@ Copy `clothingSlotMappings` directly (format is identical):
 
 ## Complete Migration Example
 
-### Before (V1): Humanoid Dragon
+### Before (V1): Hypothetical Humanoid Dragon
+
+**Note**: This is an illustrative example. The actual codebase uses `anatomy:red_dragon` with `anatomy:structure_winged_quadruped` (a quadruped dragon, not humanoid).
 
 ```json
 {
@@ -430,9 +460,9 @@ Copy `clothingSlotMappings` directly (format is identical):
 **Line count**: ~60 lines
 **Sockets**: 8 manually defined
 
-### After (V2): Same Dragon
+### After (V2): Same Dragon (Hypothetical)
 
-**Structure Template** (`anatomy:structure_humanoid_dragon`):
+**Structure Template** (`anatomy:structure_humanoid_dragon` - hypothetical):
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
@@ -522,6 +552,14 @@ Copy `clothingSlotMappings` directly (format is identical):
 **Sockets**: Same 8 sockets, generated automatically
 **Benefit**: Template can be reused for other dragon species
 
+### Real-World Example: Red Dragon
+
+For an actual implementation, see:
+- **Blueprint**: `data/mods/anatomy/blueprints/red_dragon.blueprint.json`
+- **Template**: `data/mods/anatomy/structure-templates/structure_winged_quadruped.structure-template.json`
+
+The red dragon uses `anatomy:structure_winged_quadruped` which generates a quadruped body plan with 4 legs, 2 wings, head, and tail.
+
 ## Validation Rules
 
 The schema enforces mutual exclusivity between V1 and V2 features:
@@ -539,7 +577,7 @@ Attempting to use V1 features in a V2 blueprint will fail validation:
 // ❌ INVALID - Cannot use slots with V2
 {
   "schemaVersion": "2.0",
-  "structureTemplate": "anatomy:structure_spider",
+  "structureTemplate": "anatomy:structure_arachnid_8leg",
   "slots": {  // ERROR: slots not allowed in V2
     "extra": { /* ... */ }
   }
@@ -552,7 +590,7 @@ Use `additionalSlots` instead:
 // ✅ VALID - Use additionalSlots
 {
   "schemaVersion": "2.0",
-  "structureTemplate": "anatomy:structure_spider",
+  "structureTemplate": "anatomy:structure_arachnid_8leg",
   "additionalSlots": {
     "extra": { /* ... */ }
   }
@@ -584,58 +622,55 @@ Attempting to use V2 features in a V1 blueprint will fail validation:
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
-  "id": "anatomy:spider_garden",
+  "id": "anatomy:giant_spider",
   "schemaVersion": "2.0",
-  "root": "anatomy:spider_cephalothorax_small",
-  "structureTemplate": "anatomy:structure_spider"
+  "root": "anatomy:spider_cephalothorax",
+  "structureTemplate": "anatomy:structure_arachnid_8leg"
 }
 ```
+
+**Actual File**: See `data/mods/anatomy/blueprints/giant_spider.blueprint.json` (includes additional venom gland and spinnerets slots)
 
 ### Example 2: Dragon with Additional Slots
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
-  "id": "anatomy:dragon_elder",
+  "id": "anatomy:red_dragon",
   "schemaVersion": "2.0",
-  "root": "anatomy:dragon_torso_ancient",
-  "structureTemplate": "anatomy:structure_dragon",
+  "root": "anatomy:dragon_torso",
+  "structureTemplate": "anatomy:structure_winged_quadruped",
   "additionalSlots": {
-    "horn_left": {
-      "socket": "horn_left",
+    "fire_gland": {
+      "socket": "fire_gland",
       "requirements": {
-        "partType": "horn",
-        "components": ["anatomy:part"]
+        "partType": "gland",
+        "components": ["anatomy:part", "anatomy:fire_breathing"]
       }
     },
-    "horn_right": {
-      "socket": "horn_right",
+    "treasure_pouch": {
+      "socket": "treasure_pouch",
       "requirements": {
-        "partType": "horn",
-        "components": ["anatomy:part"]
-      }
-    },
-    "crest": {
-      "socket": "crest",
-      "requirements": {
-        "partType": "crest",
+        "partType": "storage_organ",
         "components": ["anatomy:part"]
       },
       "optional": true
     }
   },
   "clothingSlotMappings": {
-    "torso": {
-      "anatomySockets": ["chest", "back"],
-      "allowedLayers": ["armor"]
-    },
-    "head": {
-      "blueprintSlots": ["head"],
+    "saddle": {
+      "anatomySockets": ["back_mount"],
       "allowedLayers": ["armor", "accessory"]
+    },
+    "wing_harness": {
+      "blueprintSlots": ["wing_left", "wing_right"],
+      "allowedLayers": ["base", "outer", "armor"]
     }
   }
 }
 ```
+
+**Actual File**: See `data/mods/anatomy/blueprints/red_dragon.blueprint.json`
 
 ### Example 3: Centaur
 
@@ -645,28 +680,36 @@ Attempting to use V2 features in a V1 blueprint will fail validation:
   "id": "anatomy:centaur_warrior",
   "schemaVersion": "2.0",
   "root": "anatomy:centaur_torso",
-  "structureTemplate": "anatomy:structure_centaur",
+  "structureTemplate": "anatomy:structure_centauroid",
+  "additionalSlots": {
+    "quiver_mount": {
+      "socket": "back_upper",
+      "requirements": {
+        "partType": "equipment_mount",
+        "components": ["anatomy:part"]
+      },
+      "optional": true
+    }
+  },
   "clothingSlotMappings": {
     "torso_upper": {
-      "anatomySockets": ["chest", "upper_back"],
+      "blueprintSlots": ["upper_torso", "arm_left", "arm_right"],
       "allowedLayers": ["base", "outer", "armor"]
     },
-    "torso_lower": {
-      "anatomySockets": ["horse_flank_left", "horse_flank_right"],
-      "allowedLayers": ["armor"]
-    },
-    "hands": {
-      "blueprintSlots": ["left_hand", "right_hand"],
-      "allowedLayers": ["accessory"]
-    },
-    "hooves": {
-      "blueprintSlots": ["leg_left_front", "leg_right_front",
-                         "leg_left_rear", "leg_right_rear"],
-      "allowedLayers": ["armor"]
+    "legs_equine": {
+      "blueprintSlots": [
+        "leg_left_front",
+        "leg_right_front",
+        "leg_left_rear",
+        "leg_right_rear"
+      ],
+      "allowedLayers": ["base", "outer", "armor"]
     }
   }
 }
 ```
+
+**Actual File**: See `data/mods/anatomy/blueprints/centaur_warrior.blueprint.json`
 
 ## Best Practices
 
@@ -684,7 +727,7 @@ V2 shines for creatures with repeating limbs. Don't use V1 just because you're f
 
 // ✅ GOOD: V2 for spider (concise, maintainable)
 "schemaVersion": "2.0",
-"structureTemplate": "anatomy:structure_spider"
+"structureTemplate": "anatomy:structure_arachnid_8leg"
 ```
 
 ### 2. Create Reusable Templates
@@ -692,9 +735,9 @@ V2 shines for creatures with repeating limbs. Don't use V1 just because you're f
 Structure templates should be generic and reusable:
 
 ```json
-// ✅ GOOD: Generic "spider" template
-"id": "anatomy:structure_spider",
-"description": "Spider body structure with 8 legs"
+// ✅ GOOD: Generic "arachnid" template
+"id": "anatomy:structure_arachnid_8leg",
+"description": "Eight-legged arachnid body plan with pedipalps and abdomen attachment"
 
 // ❌ BAD: Over-specific template
 "id": "anatomy:structure_garden_spider_red",
@@ -762,7 +805,7 @@ Once tested, you can replace the V1 version.
 ### Cannot Find Structure Template
 
 **Cause**: Template ID doesn't exist or hasn't been loaded.
-**Fix**: Verify template exists in `data/mods/*/structure-templates/` and is loaded before the blueprint.
+**Fix**: Verify template exists in `data/mods/anatomy/structure-templates/` (or other mod's structure-templates directory) and is loaded before the blueprint.
 
 ## Related Documentation
 
