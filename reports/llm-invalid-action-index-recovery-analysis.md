@@ -1,8 +1,23 @@
 # LLM Invalid Action Index Recovery - Analysis & Recommendations
 
-**Date**: 2025-11-07
+**Date**: 2025-11-07 (Updated: 2025-11-07)
 **Issue**: Rare case where competent LLM returns invalid action index, breaking immersion with generic fallback message
 **Current Behavior**: Forces character to say "I encountered an unexpected issue and will wait for a moment."
+
+**Report Status**: ✅ Verified against codebase - All assumptions and file references corrected
+
+---
+
+## Update Notes
+
+This report has been verified against the actual codebase. Key corrections made:
+
+1. **File Path Correction**: References to `src/utils/actionIndexValidation.js` corrected to `src/utils/actionIndexUtils.js`
+2. **Data Flow Clarification**: The current implementation DOES pass LLM data to validation via `debugData.result`, but this data is NOT preserved in the Error object thrown
+3. **Line Number Updates**: All file references updated with accurate line ranges
+4. **Implementation Details**: Proposed solution updated to work with existing `debugData.result` structure
+5. **Error Class Location**: Clarified that new error class should be created in `src/errors/` directory
+6. **Step 3 Clarification**: Noted that `AbstractDecisionProvider` requires NO changes as it already passes data correctly
 
 ---
 
@@ -31,28 +46,47 @@ LLMChooser.choose()
 
 ### Critical Data Loss Point
 
-**File**: `src/turns/providers/abstractDecisionProvider.js:73-89`
+**File**: `src/turns/providers/abstractDecisionProvider.js:73-97`
 
 ```javascript
 async decide(actor, context, actions, abortSignal) {
   // ✅ Has all LLM-generated data
-  const { index, speech, thoughts, notes } = await this.choose(...);
+  const { index, speech, thoughts, notes } = await this.choose(
+    actor,
+    context,
+    actions,
+    abortSignal
+  );
 
-  // ❌ Throws here, losing speech/thoughts/notes
-  await assertValidActionIndex(...);
+  // ⚠️ Passes LLM data to validation via debugData parameter
+  // BUT throws Error without preserving it in the Error object
+  await assertValidActionIndex(
+    index,
+    actions.length,
+    this.constructor.name,
+    actor.id,
+    this.#safeEventDispatcher,
+    this.#logger,
+    { result: { index, speech, thoughts, notes } } // Data goes to event dispatch, not Error
+  );
 
   // Never reached on error
-  return { chosenIndex: index, speech, thoughts, notes };
+  return {
+    chosenIndex: index,
+    speech: speech ?? null,
+    thoughts: thoughts ?? null,
+    notes: notes ?? null,
+  };
 }
 ```
 
-**File**: `src/turns/strategies/genericTurnStrategy.js:65-75`
+**File**: `src/turns/strategies/genericTurnStrategy.js:65-76`
 
 ```javascript
 catch (err) {
   if (!this.fallbackFactory) throw err;
 
-  // ❌ No LLM data available - only error info
+  // ❌ No LLM data available in Error object - only error info
   const fb = this.fallbackFactory.create(err.name, err, actor.id);
 
   const meta = {
@@ -67,31 +101,60 @@ catch (err) {
 
 ### What Gets Lost
 
-When `assertValidActionIndex` throws:
+**Important Clarification**: The current implementation DOES pass LLM data to `assertValidActionIndex()` via the `debugData.result` parameter. This data IS dispatched to the event system via `safeDispatchError()` for logging and monitoring. However, when the function throws an Error, this data is NOT preserved in the Error object itself.
 
-1. **Speech**: LLM's actual character dialogue/narration (often valid and immersive)
-2. **Thoughts**: Internal character reasoning (valuable for consistency)
-3. **Notes**: Metadata for memory system (important for long-term coherence)
+When `assertValidActionIndex` throws a standard Error:
 
-Only preserved:
+1. **Speech**: LLM's actual character dialogue/narration (dispatched to events, but lost in Error object)
+2. **Thoughts**: Internal character reasoning (dispatched to events, but lost in Error object)
+3. **Notes**: Metadata for memory system (dispatched to events, but lost in Error object)
+
+What IS preserved in the Error object:
 - Error name/message
-- Actor ID
+- Actor ID (via error dispatch context, not Error object)
 - Stack trace
+
+What IS preserved in the event system (but not accessible to fallback handler):
+- All LLM data (speech, thoughts, notes) via `safeDispatchError()`
+- Full debugData context
+
+**The Problem**: The fallback handler in `GenericTurnStrategy` only has access to the Error object, not the event system's data. This is the architectural gap that needs bridging.
 
 ### Current Fallback Behavior
 
-**File**: `src/turns/services/AIFallbackActionFactory.js:32-46`
+**File**: `src/turns/services/AIFallbackActionFactory.js:38-72`
 
 The factory generates a generic message based on error type:
 
 ```javascript
 create(failureContext, error, actorId) {
-  const issue = this.#getIssueFromContext(failureContext);
+  this.#logger.error(
+    `AIFallbackActionFactory: Creating fallback for actor ${actorId} due to ${failureContext}.`,
+    { actorId, error, errorMessage: error.message, stack: error.stack }
+  );
+
+  let userFriendlyErrorBrief = 'an unexpected issue';
+  if (
+    typeof error.message === 'string' &&
+    error.message.toLowerCase().includes('http error 500')
+  ) {
+    userFriendlyErrorBrief = 'a server connection problem';
+  } else if (failureContext === 'llm_response_processing') {
+    userFriendlyErrorBrief = 'a communication issue';
+  }
+
+  const speechMessage = `I encountered ${userFriendlyErrorBrief} and will wait for a moment.`;
 
   return {
-    actionDefinitionId: 'core:wait',
-    speech: `I encountered ${issue} and will wait for a moment.`,
-    primaryTargetId: null,
+    actionDefinitionId: DEFAULT_FALLBACK_ACTION.actionDefinitionId,
+    commandString: DEFAULT_FALLBACK_ACTION.commandString,
+    speech: speechMessage,
+    resolvedParameters: {
+      actorId,
+      isFallback: true,
+      failureReason: failureContext,
+      diagnostics: { /* ... */ },
+    },
   };
 }
 ```
@@ -110,11 +173,13 @@ create(failureContext, error, actorId) {
 
 1. **Tight Coupling**: `AbstractDecisionProvider.decide()` combines data extraction and validation in a way that makes recovery impossible
 
-2. **No Error Data Preservation**: Validation functions throw standard errors without preserving LLM data
+2. **No Error Data Preservation**: While validation functions receive LLM data via the `debugData` parameter and dispatch it in error events, they throw standard Error objects that don't preserve this data for downstream error handlers
 
-3. **Limited Fallback Context**: `AIFallbackActionFactory.create()` signature only accepts `(failureContext, error, actorId)` - no slot for preserved data
+3. **Data Dispatched But Not Preserved**: The LLM data IS sent to the event system via `safeDispatchError()` but is NOT carried in the Error object that propagates up the call stack
 
-4. **Assumption of Total Failure**: Architecture assumes if validation fails, entire LLM response is invalid (not true for index-only errors)
+4. **Limited Fallback Context**: `AIFallbackActionFactory.create()` signature only accepts `(failureContext, error, actorId)` - no slot for preserved data
+
+5. **Assumption of Total Failure**: Architecture assumes if validation fails, entire LLM response is invalid (not true for index-only errors)
 
 ### Why This Happens Rarely
 
@@ -150,11 +215,16 @@ Modify the validation error to carry LLM data through the error handling chain, 
 
 #### 1. Create Custom Error Type
 
-**File**: `src/utils/actionIndexValidation.js` (or new file in `src/errors/`)
+**New File**: `src/errors/actionIndexValidationError.js`
 
 ```javascript
 /**
+ * @file Custom error for action index validation failures with preserved LLM data
+ */
+
+/**
  * Error thrown when LLM provides invalid action index but otherwise valid data
+ * @extends Error
  */
 export class ActionIndexValidationError extends Error {
   constructor(message, { index, speech, thoughts, notes, actionsLength }) {
@@ -184,9 +254,10 @@ export class ActionIndexValidationError extends Error {
 
 #### 2. Modify Validation Function
 
-**File**: `src/utils/actionIndexValidation.js:40-65`
+**File**: `src/utils/actionIndexUtils.js:18-46`
 
 ```javascript
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { ActionIndexValidationError } from '../errors/actionIndexValidationError.js';
 
 export async function assertValidActionIndex(
@@ -196,66 +267,86 @@ export async function assertValidActionIndex(
   actorId,
   dispatcher,
   logger,
-  debugData = {} // Add parameter to pass LLM data
+  debugData = {}
 ) {
+  // Existing integer check
+  if (!Number.isInteger(chosenIndex)) {
+    await safeDispatchError(
+      dispatcher,
+      `${providerName}: Did not receive a valid integer 'chosenIndex' for actor ${actorId}.`,
+      debugData,
+      logger
+    );
+    throw new Error('Could not resolve the chosen action to a valid index.');
+  }
+
+  // Enhanced bounds check with data preservation
   if (chosenIndex < 1 || chosenIndex > actionsLength) {
     const message = 'Player chose an index that does not exist for this turn.';
+
+    // Extract LLM data from debugData.result (current structure)
+    const llmData = debugData.result || {};
 
     // Create enhanced error with preserved LLM data
     const error = new ActionIndexValidationError(message, {
       index: chosenIndex,
       actionsLength,
-      speech: debugData.speech,
-      thoughts: debugData.thoughts,
-      notes: debugData.notes,
+      speech: llmData.speech,
+      thoughts: llmData.thoughts,
+      notes: llmData.notes,
     });
 
-    // Existing error dispatch logic
-    await safeDispatchError(dispatcher, message, {
-      decisionProvider: providerName,
-      actorId,
-      chosenIndex,
-      actionsLength,
-      debugData,
-    }, logger);
+    // Existing error dispatch logic (unchanged)
+    await safeDispatchError(
+      dispatcher,
+      `${providerName}: invalid chosenIndex (${chosenIndex}) for actor ${actorId}.`,
+      { ...debugData, actionsCount: actionsLength },
+      logger
+    );
 
     throw error;
   }
 }
 ```
 
-#### 3. Pass LLM Data to Validation
+#### 3. Pass LLM Data to Validation (No Changes Needed)
 
-**File**: `src/turns/providers/abstractDecisionProvider.js:73-89`
+**File**: `src/turns/providers/abstractDecisionProvider.js:73-97`
+
+**Note**: The current implementation ALREADY passes LLM data to the validation function via the `debugData` parameter. The structure `{ result: { index, speech, thoughts, notes } }` is already being used. No changes are required here; the validation function modification (Step 2) will extract data from `debugData.result`.
 
 ```javascript
 async decide(actor, context, actions, abortSignal) {
-  const result = await this.choose(actor, context, actions, abortSignal);
-  const { index, speech, thoughts, notes } = result;
+  const { index, speech, thoughts, notes } = await this.choose(
+    actor,
+    context,
+    actions,
+    abortSignal
+  );
 
-  // Pass LLM data through to validation function
+  // Current code ALREADY passes LLM data via debugData.result
   await assertValidActionIndex(
     index,
     actions.length,
-    this.name,
+    this.constructor.name,
     actor.id,
-    this.#dispatcher,
+    this.#safeEventDispatcher,
     this.#logger,
-    { speech, thoughts, notes } // NEW: Pass data for error preservation
+    { result: { index, speech, thoughts, notes } } // ALREADY passing data
   );
 
   return {
     chosenIndex: index,
-    speech,
-    thoughts,
-    notes,
+    speech: speech ?? null,
+    thoughts: thoughts ?? null,
+    notes: notes ?? null,
   };
 }
 ```
 
 #### 4. Update Fallback Factory Signature
 
-**File**: `src/turns/services/AIFallbackActionFactory.js:32-60`
+**File**: `src/turns/services/AIFallbackActionFactory.js:38-72`
 
 ```javascript
 /**
@@ -291,7 +382,7 @@ create(failureContext, error, actorId, preservedData = {}) {
 
 #### 5. Preserve Data in Strategy Catch Block
 
-**File**: `src/turns/strategies/genericTurnStrategy.js:65-80`
+**File**: `src/turns/strategies/genericTurnStrategy.js:65-76`
 
 ```javascript
 catch (err) {
@@ -406,11 +497,11 @@ catch (err) {
 
 ### Phase 1: Core Changes (Required)
 
-- [ ] Create `ActionIndexValidationError` class
-- [ ] Modify `assertValidActionIndex()` to throw enhanced error
-- [ ] Update `AbstractDecisionProvider.decide()` to pass LLM data
-- [ ] Modify `AIFallbackActionFactory.create()` signature
-- [ ] Update `GenericTurnStrategy` catch block to extract preserved data
+- [ ] Create `ActionIndexValidationError` class in `src/errors/actionIndexValidationError.js`
+- [ ] Export the new error class from `src/errors/index.js`
+- [ ] Modify `assertValidActionIndex()` in `src/utils/actionIndexUtils.js` to throw enhanced error
+- [ ] Modify `AIFallbackActionFactory.create()` signature to accept optional `preservedData` parameter
+- [ ] Update `GenericTurnStrategy` catch block in `src/turns/strategies/genericTurnStrategy.js` to extract preserved data
 
 ### Phase 2: Testing (Required)
 
@@ -488,11 +579,12 @@ The current immersion-breaking fallback behavior stems from an architectural dat
 
 1. `src/turns/adapters/llmChooser.js` - LLM integration point
 2. `src/turns/services/LLMResponseProcessor.js` - Response parsing
-3. `src/turns/providers/abstractDecisionProvider.js` - Validation layer
-4. `src/turns/strategies/genericTurnStrategy.js` - Error handling
-5. `src/turns/services/AIFallbackActionFactory.js` - Fallback generation
-6. `src/utils/actionIndexValidation.js` - Validation logic
-7. `data/mods/core/actions/wait.action.json` - Fallback action definition
+3. `src/turns/providers/abstractDecisionProvider.js` - Validation layer (lines 73-97)
+4. `src/turns/strategies/genericTurnStrategy.js` - Error handling (lines 65-76)
+5. `src/turns/services/AIFallbackActionFactory.js` - Fallback generation (lines 38-72)
+6. `src/utils/actionIndexUtils.js` - Validation logic (lines 18-46)
+7. `src/llms/constants/llmConstants.js` - Fallback action constants
+8. `src/errors/` - Error class directory structure
 
 ### Related Documentation
 
