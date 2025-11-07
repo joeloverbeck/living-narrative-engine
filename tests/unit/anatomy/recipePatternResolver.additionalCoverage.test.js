@@ -29,7 +29,9 @@ async function loadResolver({ mockAssertNonBlankString = false } = {}) {
     });
   }
 
-  const module = await import('../../../src/anatomy/recipePatternResolver.js');
+  const module = await import(
+    '../../../src/anatomy/recipePatternResolver/patternResolver.js'
+  );
   return module.default;
 }
 

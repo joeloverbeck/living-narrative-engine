@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import RecipePatternResolver from '../../../src/anatomy/recipePatternResolver.js';
+import RecipePatternResolver from '../../../src/anatomy/recipePatternResolver/patternResolver.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
 
 describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => {
