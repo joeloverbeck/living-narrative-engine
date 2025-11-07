@@ -34,7 +34,7 @@ import PartSelectionService from '../../../../src/anatomy/partSelectionService.j
 import { SocketManager } from '../../../../src/anatomy/socketManager.js';
 import { EntityGraphBuilder } from '../../../../src/anatomy/entityGraphBuilder.js';
 import { RecipeConstraintEvaluator } from '../../../../src/anatomy/recipeConstraintEvaluator.js';
-import { BodyBlueprintFactory } from '../../../../src/anatomy/bodyBlueprintFactory.js';
+import { BodyBlueprintFactory } from '../../../../src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js';
 import { BodyGraphService } from '../../../../src/anatomy/bodyGraphService.js';
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 import { AnatomyFormattingService } from '../../../../src/services/anatomyFormattingService.js';

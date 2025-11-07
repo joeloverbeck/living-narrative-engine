@@ -604,7 +604,8 @@
       "Bash(netstat:*)",
       "mcp__serena__check_onboarding_performed",
       "Bash(do echo -n \"$file: \")",
-      "Bash([ -f \"$file\" ])"
+      "Bash([ -f \"$file\" ])",
+      "Bash(NODE_ENV=test npm test:*)"
     ],
     "deny": [],
     "ask": []

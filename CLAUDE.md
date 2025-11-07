@@ -437,6 +437,36 @@ npm run update-manifest # Update mod manifests
 npm run validate:body-descriptors  # Validate body descriptor system consistency
 ```
 
+### Adding New Operations
+
+When adding a new operation to the system, follow this checklist to ensure complete integration:
+
+1. **Create operation schema** in `data/schemas/operations/[operationName].schema.json`
+   - Define operation type constant in `allOf` → `properties` → `type` → `const`
+   - Specify parameters and validation rules
+2. **Create operation handler** in `src/logic/operationHandlers/[operationName]Handler.js`
+   - Implement handler class with execute method
+   - Add comprehensive error handling
+3. **Register in DI container**:
+   - Add token in `src/dependencyInjection/tokens/tokens-core.js`
+   - Add factory in `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
+4. **Register in operation registry** in `src/dependencyInjection/registrations/interpreterRegistrations.js`
+   - Map operation type to handler token
+5. **⚠️ CRITICAL: Add to pre-validation whitelist** in `src/utils/preValidationUtils.js`
+   - Add operation type to `KNOWN_OPERATION_TYPES` array
+   - **Failure to do this will cause rule validation failures during mod loading**
+6. **Create tests**:
+   - Unit tests: `tests/unit/logic/operationHandlers/[operationName]Handler.test.js`
+   - Integration tests: `tests/integration/mods/[category]/[operationName]RuleExecution.test.js`
+7. **Run validation**:
+   ```bash
+   npm run test:ci  # Verify all tests pass
+   npx eslint <modified-files>  # Lint changes
+   npm run typecheck  # Type checking
+   ```
+
+**Common Mistake**: Forgetting step 5 (pre-validation registration) will cause operations to fail validation with "Unknown operation type" errors, even though they're fully implemented. The `operationTypeCompleteness.test.js` integration test will catch this automatically.
+
 ### Character Builder Tools
 
 The project includes several character creation tools accessible from the main index:
