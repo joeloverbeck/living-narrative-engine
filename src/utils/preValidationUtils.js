@@ -24,7 +24,7 @@ import OperationValidationError from '../errors/operationValidationError.js';
  *
  * @see CLAUDE.md "Adding New Operations - Complete Checklist" for complete checklist
  */
-const KNOWN_OPERATION_TYPES = [
+export const KNOWN_OPERATION_TYPES = [
   'QUERY_COMPONENT',
   'QUERY_COMPONENTS',
   'QUERY_LOOKUP',

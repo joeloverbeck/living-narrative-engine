@@ -15,6 +15,7 @@ import {
 import jsonLogic from 'json-logic-js';
 import OperationInterpreter, {
   __internal as operationInterpreterInternals,
+  OperationHandlerNotFoundError,
 } from '../../../src/logic/operationInterpreter.js';
 import * as contextUtils from '../../../src/utils/contextUtils.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
@@ -24,7 +25,10 @@ import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
  * Mock registry and logger
  * ---------------------------------------------------------------------
  */
-const mockRegistry = { getHandler: jest.fn() };
+const mockRegistry = {
+  getHandler: jest.fn(),
+  getRegisteredTypes: jest.fn(),
+};
 const mockLogger = {
   info: jest.fn(),
   warn: jest.fn(),
@@ -50,6 +54,7 @@ const {
   hasValidJsonLogicShape,
   shouldSkipJsonLogicEvaluation,
   JSON_LOGIC_SKIP_PATHS,
+  diagnoseOperationRegistration,
 } = operationInterpreterInternals;
 
 /**
@@ -163,7 +168,13 @@ describe('OperationInterpreter', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRegistry.getHandler.mockReset();
+    mockRegistry.getRegisteredTypes.mockReset();
     mockQueryEntitiesHandler.mockReset();
+    // Set default return value for getRegisteredTypes
+    mockRegistry.getRegisteredTypes.mockReturnValue([
+      'ADD_COMPONENT',
+      'REMOVE_COMPONENT',
+    ]);
     interpreter = new OperationInterpreter({
       logger: mockLogger,
       operationRegistry: mockRegistry,
@@ -213,7 +224,9 @@ describe('OperationInterpreter', () => {
      ─────────────────────────────────────────────────────────────────────── */
   test('execute should call registry.getHandler with trimmed operation type', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
-    interpreter.execute(unknownOperation, mockExecutionContext);
+    expect(() =>
+      interpreter.execute(unknownOperation, mockExecutionContext)
+    ).toThrow(OperationHandlerNotFoundError);
     expect(mockRegistry.getHandler).toHaveBeenCalledTimes(1);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
   });
@@ -571,17 +584,128 @@ describe('OperationInterpreter', () => {
   });
 
   /* ────────────────────────────────────────────────────────────────────────
-     Unknown handler
+     Unknown handler - Enhanced Error Messages
      ─────────────────────────────────────────────────────────────────────── */
-  test('execute should log an error and not throw if getHandler returns undefined', () => {
+  test('execute should throw OperationHandlerNotFoundError when handler not found', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
+    mockRegistry.getRegisteredTypes.mockReturnValue([
+      'ADD_COMPONENT',
+      'REMOVE_COMPONENT',
+    ]);
+
     expect(() =>
       interpreter.execute(unknownOperation, mockExecutionContext)
-    ).not.toThrow();
+    ).toThrow(OperationHandlerNotFoundError);
+
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "UNKNOWN_OP".'
+    expect(mockRegistry.getRegisteredTypes).toHaveBeenCalled();
+  });
+
+  test('enhanced error should contain detailed diagnostic information', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+    mockRegistry.getRegisteredTypes.mockReturnValue([
+      'ADD_COMPONENT',
+      'REMOVE_COMPONENT',
+    ]);
+
+    let caughtError;
+    try {
+      interpreter.execute(unknownOperation, mockExecutionContext);
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(caughtError).toBeDefined();
+    expect(caughtError.message).toContain('No handler registered');
+    expect(caughtError.message).toContain('UNKNOWN_OP');
+    expect(caughtError.message).toContain('Required registrations checklist');
+    expect(caughtError.message).toMatch(/✓|✗/); // Contains check marks
+  });
+
+  test('enhanced error should list currently registered operations', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+    mockRegistry.getRegisteredTypes.mockReturnValue([
+      'ADD_COMPONENT',
+      'REMOVE_COMPONENT',
+    ]);
+
+    let caughtError;
+    try {
+      interpreter.execute(unknownOperation, mockExecutionContext);
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(caughtError).toBeDefined();
+    expect(caughtError.message).toContain('Currently registered operations');
+    expect(caughtError.message).toContain('ADD_COMPONENT');
+    expect(caughtError.message).toContain('REMOVE_COMPONENT');
+  });
+
+  test('enhanced error should provide actionable fix instructions', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+    mockRegistry.getRegisteredTypes.mockReturnValue([
+      'ADD_COMPONENT',
+      'REMOVE_COMPONENT',
+    ]);
+
+    let caughtError;
+    try {
+      interpreter.execute(unknownOperation, mockExecutionContext);
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(caughtError).toBeDefined();
+    expect(caughtError.message).toContain('To fix this:');
+    expect(caughtError.message).toContain(
+      'src/dependencyInjection/registrations/interpreterRegistrations.js'
     );
+    expect(caughtError.message).toContain('UnknownOpHandler'); // Token name
+  });
+
+  test('enhanced error should log diagnostic information', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+    mockRegistry.getRegisteredTypes.mockReturnValue([
+      'ADD_COMPONENT',
+      'REMOVE_COMPONENT',
+    ]);
+
+    try {
+      interpreter.execute(unknownOperation, mockExecutionContext);
+    } catch {
+      // Expected error, continue to check logs
+    }
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'OperationInterpreter: Operation handler not found',
+      expect.objectContaining({
+        operationType: 'UNKNOWN_OP',
+        registeredOperations: 2,
+        diagnostics: expect.objectContaining({
+          inWhitelist: expect.any(Boolean),
+          handlerRegistered: false,
+        }),
+      })
+    );
+  });
+
+  test('enhanced error should truncate long operation lists', () => {
+    mockRegistry.getHandler.mockReturnValue(undefined);
+    const manyOperations = Array.from({ length: 50 }, (_, i) => `OP_${i}`);
+    mockRegistry.getRegisteredTypes.mockReturnValue(manyOperations);
+
+    let caughtError;
+    try {
+      interpreter.execute(unknownOperation, mockExecutionContext);
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(caughtError).toBeDefined();
+    expect(caughtError.message).toContain('50 total');
+    expect(caughtError.message).toContain('... and 40 more');
+    expect(caughtError.message).not.toContain('OP_49'); // Should not show all
   });
 
   /* Invalid operation objects */
@@ -637,11 +761,11 @@ describe('OperationInterpreter', () => {
      ─────────────────────────────────────────────────────────────────────── */
   test('execute should treat IF like any other type (lookup in registry)', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
-    interpreter.execute(ifOperation, mockExecutionContext);
-    expect(mockRegistry.getHandler).toHaveBeenCalledWith('IF');
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'OperationInterpreter: ---> HANDLER NOT FOUND for operation type: "IF".'
+
+    expect(() => interpreter.execute(ifOperation, mockExecutionContext)).toThrow(
+      OperationHandlerNotFoundError
     );
+    expect(mockRegistry.getHandler).toHaveBeenCalledWith('IF');
   });
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -708,5 +832,24 @@ describe('OperationInterpreter internal helpers', () => {
         JSON_LOGIC_SKIP_PATHS
       )
     ).toBe(false);
+  });
+
+  test('diagnoseOperationRegistration checks whitelist and handler registration', () => {
+    // Test with an operation that's in the whitelist
+    const diagnostics1 = diagnoseOperationRegistration('ADD_COMPONENT', true);
+    expect(diagnostics1.inWhitelist).toBe(true);
+    expect(diagnostics1.handlerRegistered).toBe(true);
+    expect(diagnostics1.schemaExists).toBe(null); // Cannot check in browser
+    expect(diagnostics1.tokenDefined).toBe(null); // Cannot check in browser
+
+    // Test with an operation that's not in the whitelist
+    const diagnostics2 = diagnoseOperationRegistration('UNKNOWN_OP', false);
+    expect(diagnostics2.inWhitelist).toBe(false);
+    expect(diagnostics2.handlerRegistered).toBe(false);
+  });
+
+  test('diagnoseOperationRegistration handles errors gracefully', () => {
+    // Should not throw even if something fails internally
+    expect(() => diagnoseOperationRegistration(null, false)).not.toThrow();
   });
 });

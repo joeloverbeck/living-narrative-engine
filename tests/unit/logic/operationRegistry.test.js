@@ -115,4 +115,52 @@ describe('OperationRegistry', () => {
       );
     });
   });
+
+  describe('getRegisteredTypes()', () => {
+    test('returns sorted list of registered operation types', () => {
+      const registry = new OperationRegistry({ logger: mockLogger });
+
+      registry.register('QUERY_COMPONENT', dummyHandler);
+      registry.register('ADD_COMPONENT', dummyHandler);
+      registry.register('REMOVE_COMPONENT', dummyHandler);
+
+      const types = registry.getRegisteredTypes();
+
+      expect(types).toEqual([
+        'ADD_COMPONENT',
+        'QUERY_COMPONENT',
+        'REMOVE_COMPONENT',
+      ]);
+    });
+
+    test('returns empty array when no operations registered', () => {
+      const registry = new OperationRegistry({ logger: mockLogger });
+
+      expect(registry.getRegisteredTypes()).toEqual([]);
+    });
+
+    test('returns sorted list regardless of registration order', () => {
+      const registry = new OperationRegistry({ logger: mockLogger });
+
+      registry.register('Z_OPERATION', dummyHandler);
+      registry.register('A_OPERATION', dummyHandler);
+      registry.register('M_OPERATION', dummyHandler);
+
+      const types = registry.getRegisteredTypes();
+
+      expect(types).toEqual(['A_OPERATION', 'M_OPERATION', 'Z_OPERATION']);
+    });
+
+    test('does not include duplicates after overwrite', () => {
+      const registry = new OperationRegistry({ logger: mockLogger });
+
+      registry.register('TEST', dummyHandler);
+      registry.register('TEST', dummyHandler); // Overwrite
+
+      const types = registry.getRegisteredTypes();
+
+      expect(types).toEqual(['TEST']);
+      expect(types.length).toBe(1);
+    });
+  });
 });

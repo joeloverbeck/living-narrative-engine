@@ -6,6 +6,8 @@
 import { resolvePlaceholders } from '../utils/contextUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { getNormalizedOperationType } from '../utils/operationTypeUtils.js';
+import { KNOWN_OPERATION_TYPES } from '../utils/preValidationUtils.js';
+import OperationHandlerNotFoundError from '../errors/operationHandlerNotFoundError.js';
 import jsonLogic from 'json-logic-js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
@@ -141,15 +143,21 @@ if (
 }
 
 /**
- * Determines whether an object is a JSON Logic expression with a valid operand shape.
+ * Checks if an operator is registered in JSON Logic
  *
- * @param {*} candidate - Value to inspect.
- * @returns {boolean} True when the value should be treated as JSON Logic.
+ * @param {string} operator - The operator name to check
+ * @returns {boolean} True if operator is registered
  */
 function isKnownJsonLogicOperator(operator) {
   return REGISTERED_JSON_LOGIC_OPERATORS.has(operator);
 }
 
+/**
+ * Determines whether an object is a JSON Logic expression with a valid operand shape.
+ *
+ * @param {unknown} candidate - Value to inspect.
+ * @returns {boolean} True when the value should be treated as JSON Logic.
+ */
 function hasValidJsonLogicShape(candidate) {
   if (
     !candidate ||
@@ -231,17 +239,53 @@ function shouldSkipJsonLogicEvaluation(path, skipPaths) {
 }
 
 /**
+ * Performs diagnostic checks on operation registration
+ *
+ * IMPORTANT: This function must be browser-compatible.
+ * Cannot use Node.js modules (fs, path, require).
+ *
+ * @param {string} operationType - Operation type to diagnose
+ * @param {boolean} handlerRegistered - Whether handler is registered in registry
+ * @returns {object} Diagnostic results
+ */
+function diagnoseOperationRegistration(operationType, handlerRegistered) {
+  const diagnostics = {
+    schemaExists: null, // Cannot check in browser
+    schemaReferenced: null, // Cannot check in browser
+    inWhitelist: false,
+    tokenDefined: null, // Cannot check reliably in browser
+    handlerRegistered: false,
+  };
+
+  try {
+    // Check whitelist
+    diagnostics.inWhitelist = KNOWN_OPERATION_TYPES.includes(operationType);
+
+    // Check if handler is registered in the registry
+    diagnostics.handlerRegistered = handlerRegistered;
+
+    // Note: Schema and token checks require file system access and are not
+    // feasible in a browser-compatible implementation. These checks should be
+    // done during build/validation time, not runtime.
+  } catch {
+    // If diagnostics fail, continue with what we have
+  }
+
+  return diagnostics;
+}
+
+/**
  * Recursively evaluate JSON Logic expressions in an object.
  * Detects if a value is a JSON Logic expression (non-empty plain object)
  * and evaluates it using the provided context.
  *
- * @param {*} value - Value to potentially evaluate
+ * @param {unknown} value - Value to potentially evaluate
  * @param {object} evaluationContext - Context data for JSON Logic evaluation
  * @param {ILogger} logger - Logger instance
  * @param {Set<string>} skipKeys - Keys to skip during evaluation
  * @param {Array<Array<string>>} skipEvaluationPaths - Specific key paths where evaluation should not occur.
  * @param {Array<string>} currentPath - Path of keys leading to the current value.
- * @returns {*} Evaluated value
+ * @returns {unknown} Evaluated value
  */
 function evaluateJsonLogicRecursively(
   value,
@@ -252,7 +296,7 @@ function evaluateJsonLogicRecursively(
   currentPath = []
 ) {
   // Skip if value is null or undefined
-  if (value == null) {
+  if (value === null || value === undefined) {
     return value;
   }
 
@@ -271,7 +315,7 @@ function evaluateJsonLogicRecursively(
   }
 
   // Check if this is a plain object that could be JSON Logic
-  if (typeof value === 'object') {
+  if (typeof value === 'object' && value !== null) {
     const keys = Object.keys(value);
 
     // If it's an empty object, return it as-is
@@ -354,8 +398,9 @@ class OperationInterpreter extends BaseService {
   /**
    * Executes one operation.
    *
-   * @param {Operation}      operation
-   * @param {ExecutionContext} executionContext
+   * @param {Operation} operation - The operation to execute
+   * @param {ExecutionContext} executionContext - The execution context
+   * @returns {unknown|void} Result of the operation handler or void if operation is invalid
    */
   execute(operation, executionContext) {
     const opType = getNormalizedOperationType(
@@ -375,10 +420,24 @@ class OperationInterpreter extends BaseService {
     const handler = this.#registry.getHandler(opType);
 
     if (!handler) {
-      this.#logger.error(
-        `---> HANDLER NOT FOUND for operation type: "${opType}".`
+      // Gather diagnostic information
+      const registeredOperations = this.#registry.getRegisteredTypes();
+      const diagnostics = diagnoseOperationRegistration(opType, false);
+
+      // Create detailed error
+      const error = new OperationHandlerNotFoundError(
+        opType,
+        registeredOperations,
+        diagnostics
       );
-      return;
+
+      this.#logger.error('Operation handler not found', {
+        operationType: opType,
+        registeredOperations: registeredOperations.length,
+        diagnostics,
+      });
+
+      throw error;
     }
 
     // -----------------------------------------------------------------------
@@ -473,6 +532,8 @@ export const __internal = Object.freeze({
   hasValidJsonLogicShape,
   shouldSkipJsonLogicEvaluation,
   JSON_LOGIC_SKIP_PATHS,
+  diagnoseOperationRegistration,
 });
 
 export default OperationInterpreter;
+export { OperationHandlerNotFoundError };
