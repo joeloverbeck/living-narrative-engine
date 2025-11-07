@@ -140,6 +140,8 @@ const handlerModuleDefinitions = [
     'ValidateContainerCapacityHandler',
     `${handlerBasePath}/validateContainerCapacityHandler.js`,
   ],
+  ['DrinkFromHandler', `${handlerBasePath}/drinkFromHandler.js`],
+  ['DrinkEntirelyHandler', `${handlerBasePath}/drinkEntirelyHandler.js`],
 ];
 
 const registerHandlerMock = (name, modulePath) => {
@@ -690,6 +692,24 @@ beforeAll(async () => {
     {
       token: tokens.ValidateContainerCapacityHandler,
       handlerName: 'ValidateContainerCapacityHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.DrinkFromHandler,
+      handlerName: 'DrinkFromHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.DrinkEntirelyHandler,
+      handlerName: 'DrinkEntirelyHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },
