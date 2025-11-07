@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["items:inventory"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:sitting_on"]
+  },
   "targets": {
     "primary": {
       "scope": "items:open_containers_at_location",
