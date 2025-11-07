@@ -2,12 +2,24 @@
 
 ## Objective
 
-Complete the refactoring of `recipePatternResolver.js` by extracting validators, utilities, and creating a clean facade that maintains backward compatibility. This finalizes Phase 1, bringing the critical 1195-line file into compliance with the 500-line standard.
+Complete the refactoring of `recipePatternResolver.js` by extracting validators, utilities, and creating a clean facade that maintains backward compatibility. This finalizes Phase 1, bringing the critical **815-line file** into compliance with the 500-line standard.
+
+**IMPORTANT CORRECTIONS** (validated against codebase on 2025-11-07):
+1. ✅ Original file is **815 lines**, not 1195 lines
+2. ✅ Matchers already extracted (groupMatcher: 247 lines, wildcardMatcher: 81 lines, propertyMatcher: 114 lines)
+3. ⚠️ Functions to extract are **private methods** (`#methodName`) - need conversion to standalone functions
+4. ⚠️ Matcher function names are `resolveSlotGroup`, `resolveWildcardPattern`, `resolvePropertyFilter` (NOT resolveMatches*)
+5. ⚠️ `filterSlotsByProperties()` does NOT exist - property filtering already in propertyMatcher.js
+6. ⚠️ bodyBlueprintFactory.js has NO direct import - uses dependency injection only
+7. ✅ DI registration is in `loadersRegistrations.js` (line 108, lines 387-393)
+8. ✅ 3 primary unit test files (21 total files reference RecipePatternResolver)
 
 ## Dependencies
 
 ### Requires
-- **ANASYSREF-009-01** (matchers must be extracted first)
+- **ANASYSREF-009-01** (matchers must be extracted first) - **STATUS: COMPLETED** ✅
+  - Matchers already exist at `src/anatomy/recipePatternResolver/matchers/`
+  - groupMatcher.js (247 lines), wildcardMatcher.js (81 lines), propertyMatcher.js (114 lines)
 
 ### Blocks
 - **ANASYSREF-009-03** (bodyBlueprintFactory depends on completed recipePatternResolver)
@@ -40,10 +52,10 @@ Complete the refactoring of `recipePatternResolver.js` by extracting validators,
    - Pattern type detection utilities
    - Common pattern helper functions
 
-5. **src/anatomy/recipePatternResolver/utils/slotFilterUtils.js** (~100 lines)
-   - Extract `filterSlotsByProperties()` if not already in propertyMatcher
-   - Slot matching helper functions
-   - Common filtering utilities
+5. **src/anatomy/recipePatternResolver/utils/slotFilterUtils.js** (~50 lines)
+   - **CORRECTION**: `filterSlotsByProperties()` does NOT exist in codebase
+   - Property filtering already handled by `resolvePropertyFilter()` in propertyMatcher.js
+   - This module may not be needed or should contain other utility functions
 
 6. **src/anatomy/recipePatternResolver/patternResolver.js** (<300 lines)
    - Main facade orchestrating all modules
@@ -57,11 +69,14 @@ Complete the refactoring of `recipePatternResolver.js` by extracting validators,
    - Backup before deletion for reference
 
 2. **src/anatomy/bodyBlueprintFactory.js**
-   - Update import from `./recipePatternResolver.js`
-   - To: `./recipePatternResolver/patternResolver.js`
+   - **CORRECTION**: No direct import exists - uses JSDoc typedef only
+   - Receives RecipePatternResolver via dependency injection
+   - No changes required to this file
 
-3. **Container/DI Registration Files** (if applicable)
-   - Update registration paths
+3. **src/dependencyInjection/registrations/loadersRegistrations.js**
+   - Update import path from `'../../anatomy/recipePatternResolver.js'` (line 108)
+   - To: `'../../anatomy/recipePatternResolver/patternResolver.js'`
+   - Update registration at lines 387-393
 
 ### Files to Update (Imports Only)
 
@@ -115,9 +130,11 @@ mkdir -p src/anatomy/recipePatternResolver/utils
 **Action:** Create `src/anatomy/recipePatternResolver/validators/patternValidator.js`
 
 **Extract from recipePatternResolver.js:**
-- `validatePatternMutualExclusivity()` function
-- `validateBlueprintVersion()` function
+- `#validatePatternMutualExclusivity()` private method (line 145)
+- `#validateBlueprintVersion()` private method (line 172)
 - Pattern definition validation logic
+
+**IMPORTANT**: These are currently **private methods** - need to convert to standalone exported functions
 
 **Module Interface:**
 ```javascript
@@ -153,8 +170,10 @@ npm run test:unit -- tests/unit/anatomy/recipePatternResolver.validation.test.js
 **Action:** Create `src/anatomy/recipePatternResolver/validators/exclusionValidator.js`
 
 **Extract from recipePatternResolver.js:**
-- `validateExclusions()` function
-- `applyExclusions()` function
+- `#validateExclusions()` private method (line 217)
+- `#applyExclusions()` private method (line 770)
+
+**IMPORTANT**: These are currently **private methods** - need to convert to standalone exported functions
 
 **Module Interface:**
 ```javascript
@@ -190,9 +209,11 @@ npm run test:unit -- tests/unit/anatomy/recipePatternResolver.test.js
 **Action:** Create `src/anatomy/recipePatternResolver/validators/precedenceValidator.js`
 
 **Extract from recipePatternResolver.js:**
-- `validatePatternPrecedence()` function
+- `#validatePatternPrecedence()` private method (line 275)
 - Pattern conflict detection
 - Warning generation logic
+
+**IMPORTANT**: This is currently a **private method** - need to convert to standalone exported function
 
 **Module Interface:**
 ```javascript
@@ -216,9 +237,11 @@ npm run test:unit -- tests/unit/anatomy/recipePatternResolver.test.js
 **Action:** Create `src/anatomy/recipePatternResolver/utils/patternUtils.js`
 
 **Extract from recipePatternResolver.js:**
-- `hasMatcher()` helper function
+- `#hasMatcher()` private method (line 120)
 - Pattern type detection utilities
 - Common pattern helpers
+
+**IMPORTANT**: This is currently a **private method** - need to convert to standalone exported function
 
 **Module Interface:**
 ```javascript
@@ -247,31 +270,23 @@ export function detectMatcherType(pattern) {
 npm run test:unit -- tests/unit/anatomy/recipePatternResolver.test.js
 ```
 
-### Step 6: Extract slotFilterUtils Module
+### Step 6: Extract slotFilterUtils Module (OPTIONAL - MAY SKIP)
 
-**Action:** Create `src/anatomy/recipePatternResolver/utils/slotFilterUtils.js`
+**Action:** Create `src/anatomy/recipePatternResolver/utils/slotFilterUtils.js` (IF NEEDED)
 
-**Extract from recipePatternResolver.js (or propertyMatcher.js if already there):**
-- `filterSlotsByProperties()` function
-- Slot filtering helper functions
+**CORRECTION**: `filterSlotsByProperties()` **does NOT exist** in the codebase. Property-based filtering is already handled by `resolvePropertyFilter()` in `propertyMatcher.js`.
 
-**Module Interface:**
-```javascript
-/**
- * Filters slots by property criteria
- * @param {array} slots - Slots to filter
- * @param {object} filters - Filter criteria
- * @returns {array} Filtered slots
- */
-export function filterSlotsByProperties(slots, filters) {
-  // Implementation
-}
-```
+**Options:**
+1. **SKIP this module entirely** - property filtering already extracted
+2. **Create minimal utility module** - extract other helper functions if found
+3. **Leave as placeholder** - for future slot filtering utilities
 
 **Testing:**
 ```bash
 npm run test:unit -- tests/unit/anatomy/recipePatternResolver.test.js
 ```
+
+**Recommendation**: Review recipePatternResolver.js for other slot-related utilities before creating this module.
 
 ### Step 7: Create patternResolver Facade
 
@@ -285,10 +300,19 @@ npm run test:unit -- tests/unit/anatomy/recipePatternResolver.test.js
  * @file Main facade for recipe pattern resolution
  */
 
-// Import matchers
-import { resolveMatchesGroup } from './matchers/groupMatcher.js';
-import { resolveMatchesPattern } from './matchers/wildcardMatcher.js';
-import { resolveMatchesAll } from './matchers/propertyMatcher.js';
+// Import matchers - CORRECTED FUNCTION NAMES
+import {
+  resolveSlotGroup,
+  validateMatchesGroup
+} from './matchers/groupMatcher.js';
+import {
+  resolveWildcardPattern,
+  validateMatchesPattern
+} from './matchers/wildcardMatcher.js';
+import {
+  resolvePropertyFilter,
+  validateMatchesAll
+} from './matchers/propertyMatcher.js';
 
 // Import validators
 import {
@@ -305,6 +329,9 @@ import {
 
 // Import utilities
 import { hasMatcher } from './utils/patternUtils.js';
+
+// Import dependency utilities
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * RecipePatternResolver - Main class for resolving V2 recipe patterns
@@ -348,15 +375,19 @@ npm run test:unit -- tests/unit/anatomy/recipePatternResolver
 
 ### Step 8: Update Dependent Files
 
-**Action 1:** Update bodyBlueprintFactory.js import
+**Action 1:** Update DI registration in loadersRegistrations.js
+
+**File**: `src/dependencyInjection/registrations/loadersRegistrations.js`
 
 ```javascript
-// Before:
-import RecipePatternResolver from './recipePatternResolver.js';
+// Before (line 108):
+import RecipePatternResolver from '../../anatomy/recipePatternResolver.js';
 
 // After:
-import RecipePatternResolver from './recipePatternResolver/patternResolver.js';
+import RecipePatternResolver from '../../anatomy/recipePatternResolver/patternResolver.js';
 ```
+
+**IMPORTANT**: bodyBlueprintFactory.js has NO direct import to update. It receives RecipePatternResolver via dependency injection.
 
 **Action 2:** Update all test file imports
 
@@ -436,7 +467,12 @@ wc -l src/anatomy/recipePatternResolver/**/*.js
 npm run test:unit -- tests/unit/anatomy/recipePatternResolver
 ```
 
-**Expected:** 20 test files pass with zero modifications to test logic
+**Expected:** 3 primary unit test files pass with zero modifications to test logic
+- `recipePatternResolver.test.js`
+- `recipePatternResolver.validation.test.js`
+- `recipePatternResolver.additionalCoverage.test.js`
+
+**Note**: 21 total test files reference RecipePatternResolver (including integration tests), but only these 3 are primary unit tests.
 
 ### Integration Tests
 
@@ -486,8 +522,8 @@ npm run typecheck
 - [x] patternResolver.js facade (<300 lines)
 - [x] Original recipePatternResolver.js deleted
 - [x] bodyBlueprintFactory.js import updated
-- [x] All 3 test files imports updated
-- [x] All 20 recipePatternResolver unit tests pass
+- [x] All 3 primary test files imports updated
+- [x] All 3 recipePatternResolver unit test files pass (21 total files reference it)
 - [x] Integration tests pass
 - [x] ESLint passes on all new files
 - [x] No breaking changes to public API
@@ -546,8 +582,8 @@ npm run typecheck
 - [ ] patternResolver.js facade created (<300 lines)
 - [ ] Original recipePatternResolver.js deleted
 - [ ] bodyBlueprintFactory.js import updated
-- [ ] All 3 test files imports updated
-- [ ] All 20 recipePatternResolver unit tests pass without modification
+- [ ] All 3 primary test files imports updated
+- [ ] All 3 recipePatternResolver unit test files pass without modification
 - [ ] ESLint passes on all new files (zero warnings)
 - [ ] TypeScript type checking passes
 - [ ] Integration tests pass (bodyBlueprintFactory)
