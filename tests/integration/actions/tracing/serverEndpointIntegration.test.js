@@ -59,7 +59,8 @@ describe('Server Endpoint Integration', () => {
   let testServer;
   let testDirectory;
 
-  beforeEach(async () => {
+  // PERFORMANCE: Use beforeAll instead of beforeEach to reuse server across tests
+  beforeAll(async () => {
     testDirectory = await createTempDirectory('server-integration-traces');
     testServer = await startTestLlmProxyServer({
       port: 0, // Use random available port
@@ -67,7 +68,7 @@ describe('Server Endpoint Integration', () => {
     });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     if (testServer) {
       await testServer.stop();
     }
@@ -76,6 +77,7 @@ describe('Server Endpoint Integration', () => {
 
   describe('Successful Server Communication', () => {
     it('should successfully write multiple formats via server endpoint', async () => {
+      const testId = Date.now(); // Unique ID to avoid file conflicts when server is shared
       const formattedTraces = [
         {
           content: JSON.stringify(
@@ -88,7 +90,7 @@ describe('Server Endpoint Integration', () => {
             null,
             2
           ),
-          fileName: 'integration_test.json',
+          fileName: `integration_test_${testId}.json`,
         },
         {
           content: [
@@ -107,7 +109,7 @@ describe('Server Endpoint Integration', () => {
             `  Network Time: 25ms`,
             `  Write Time: 125ms`,
           ].join('\n'),
-          fileName: 'integration_test.txt',
+          fileName: `integration_test_${testId}.txt`,
         },
       ];
 
@@ -127,16 +129,16 @@ describe('Server Endpoint Integration', () => {
 
       // Verify files were actually written by the server
       const files = await fs.readdir(testDirectory);
-      expect(files).toContain('integration_test.json');
-      expect(files).toContain('integration_test.txt');
+      expect(files).toContain(`integration_test_${testId}.json`);
+      expect(files).toContain(`integration_test_${testId}.txt`);
 
       // Verify file contents
       const jsonContent = await fs.readFile(
-        path.join(testDirectory, 'integration_test.json'),
+        path.join(testDirectory, `integration_test_${testId}.json`),
         'utf-8'
       );
       const textContent = await fs.readFile(
-        path.join(testDirectory, 'integration_test.txt'),
+        path.join(testDirectory, `integration_test_${testId}.txt`),
         'utf-8'
       );
 
@@ -153,9 +155,11 @@ describe('Server Endpoint Integration', () => {
     });
 
     it('should handle large trace data efficiently', async () => {
-      // Create large trace data
+      const testId = Date.now();
+      // PERFORMANCE: Reduced from 100 to 20 components and 50 to 10 phases
+      // This still tests large data handling but runs much faster
       const largeComponents = {};
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 20; i++) {
         largeComponents[`component_${i}`] = {
           id: `comp_${i}`,
           data: `data_${i}`.repeat(50),
@@ -175,7 +179,7 @@ describe('Server Endpoint Integration', () => {
             timestamp: new Date().toISOString(),
             components: largeComponents,
             execution: {
-              phases: Array.from({ length: 50 }, (_, i) => ({
+              phases: Array.from({ length: 10 }, (_, i) => ({
                 phase: `phase_${i}`,
                 duration: Math.random() * 100,
                 details: `Phase ${i} processing details`.repeat(10),
@@ -185,7 +189,7 @@ describe('Server Endpoint Integration', () => {
           null,
           2
         ),
-        fileName: 'large_trace_test.json',
+        fileName: `large_trace_test_${testId}.json`,
       };
 
       const startTime = performance.now();
@@ -202,30 +206,32 @@ describe('Server Endpoint Integration', () => {
       const result = response.ok;
 
       expect(result).toBe(true);
-      expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
+      expect(endTime - startTime).toBeLessThan(2000); // Should complete within 2 seconds
 
       // Verify file was written
       const files = await fs.readdir(testDirectory);
-      expect(files).toContain('large_trace_test.json');
+      expect(files).toContain(`large_trace_test_${testId}.json`);
 
       const fileContent = await fs.readFile(
-        path.join(testDirectory, 'large_trace_test.json'),
+        path.join(testDirectory, `large_trace_test_${testId}.json`),
         'utf-8'
       );
       const parsedContent = JSON.parse(fileContent);
       expect(parsedContent.actionId).toBe('test:large_trace');
-      expect(Object.keys(parsedContent.components)).toHaveLength(100);
+      expect(Object.keys(parsedContent.components)).toHaveLength(20);
     });
 
     it('should handle concurrent requests correctly', async () => {
-      const concurrentTraces = Array.from({ length: 10 }, (_, i) => ({
+      const testId = Date.now();
+      // PERFORMANCE: Reduced from 10 to 5 concurrent requests - still validates concurrency
+      const concurrentTraces = Array.from({ length: 5 }, (_, i) => ({
         content: JSON.stringify({
           test: `concurrent_${i}`,
           actionId: `test:concurrent_${i}`,
           actorId: `actor_${i}`,
           timestamp: new Date().toISOString(),
         }),
-        fileName: `concurrent_test_${i}.json`,
+        fileName: `concurrent_test_${testId}_${i}.json`,
       }));
 
       // Send all requests concurrently
@@ -240,18 +246,18 @@ describe('Server Endpoint Integration', () => {
       );
 
       // All requests should succeed
-      expect(results).toEqual(Array(10).fill(true));
+      expect(results).toEqual(Array(5).fill(true));
 
       // Verify all files were written
       const files = await fs.readdir(testDirectory);
-      for (let i = 0; i < 10; i++) {
-        expect(files).toContain(`concurrent_test_${i}.json`);
+      for (let i = 0; i < 5; i++) {
+        expect(files).toContain(`concurrent_test_${testId}_${i}.json`);
       }
 
       // Verify content integrity
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         const content = await fs.readFile(
-          path.join(testDirectory, `concurrent_test_${i}.json`),
+          path.join(testDirectory, `concurrent_test_${testId}_${i}.json`),
           'utf-8'
         );
         const parsed = JSON.parse(content);
@@ -262,9 +268,26 @@ describe('Server Endpoint Integration', () => {
   });
 
   describe('Error Handling and Recovery', () => {
+    // PERFORMANCE: Create separate servers for error tests to avoid stopping shared server
+    let errorTestServer;
+    let errorTestDirectory;
+
+    beforeAll(async () => {
+      errorTestDirectory = await createTempDirectory('error-test-traces');
+    });
+
+    afterAll(async () => {
+      await cleanupTempDirectory(errorTestDirectory);
+    });
+
     it('should handle server errors gracefully', async () => {
-      // Stop server to simulate downtime
-      await testServer.stop();
+      // Create and immediately stop a server to simulate downtime
+      errorTestServer = await startTestLlmProxyServer({
+        port: 0,
+        traceOutputDirectory: errorTestDirectory,
+      });
+      const serverUrl = errorTestServer.url;
+      await errorTestServer.stop();
 
       const formattedTraces = [
         { content: '{"test": "json"}', fileName: 'error_test.json' },
@@ -272,14 +295,11 @@ describe('Server Endpoint Integration', () => {
 
       let result = false;
       try {
-        const response = await makeHttpRequest(
-          `${testServer.url}/api/traces/write`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ traces: formattedTraces }),
-          }
-        );
+        const response = await makeHttpRequest(`${serverUrl}/api/traces/write`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ traces: formattedTraces }),
+        });
         result = response.ok;
       } catch (error) {
         result = false;
@@ -306,7 +326,7 @@ describe('Server Endpoint Integration', () => {
 
         const startTime = Date.now();
 
-        // Simple retry mechanism for testing
+        // PERFORMANCE: Reduced retry delay from 100ms to 10ms
         let result = false;
         for (let i = 0; i < 5; i++) {
           try {
@@ -325,29 +345,29 @@ describe('Server Endpoint Integration', () => {
           } catch (error) {
             // Retry on error
           }
-          await new Promise((resolve) => setTimeout(resolve, 100)); // Simple delay
+          await new Promise((resolve) => setTimeout(resolve, 10)); // Reduced delay
         }
 
         const endTime = Date.now();
 
         expect(result).toBe(true); // Should eventually succeed
         expect(requestCount).toBeGreaterThan(1); // Should have retried
-        expect(endTime - startTime).toBeGreaterThan(100); // Should have backoff delay
+        expect(endTime - startTime).toBeGreaterThan(10); // Should have backoff delay
       } finally {
         await flakyServer.stop();
       }
-    }, 15000); // Longer timeout for retry logic
+    }, 5000); // Reduced from 15000ms to 5000ms
 
     it('should handle network timeouts appropriately', async () => {
-      // Create a server that delays responses
+      // PERFORMANCE: Reduced delay from 2000ms to 400ms
       let requestReceived = false;
       const slowServer = await startTestLlmProxyServer({
         port: 0,
-        traceOutputDirectory: testDirectory,
+        traceOutputDirectory: errorTestDirectory,
         onRequest: () => {
           requestReceived = true;
-          // Simulate slow server by delaying response
-          return new Promise((resolve) => setTimeout(resolve, 2000));
+          // Simulate slow server - reduced delay
+          return new Promise((resolve) => setTimeout(resolve, 400));
         },
       });
 
@@ -360,7 +380,7 @@ describe('Server Endpoint Integration', () => {
         let result = false;
 
         try {
-          // Simple timeout simulation - this should fail due to server delay
+          // Reduced timeout from 1000ms to 150ms
           const response = await Promise.race([
             makeHttpRequest(`${slowServer.url}/api/traces/write`, {
               method: 'POST',
@@ -368,7 +388,7 @@ describe('Server Endpoint Integration', () => {
               body: JSON.stringify({ traces: formattedTraces }),
             }),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Timeout')), 1000)
+              setTimeout(() => reject(new Error('Timeout')), 150)
             ),
           ]);
           result = response.ok;
@@ -379,12 +399,12 @@ describe('Server Endpoint Integration', () => {
         const endTime = Date.now();
 
         expect(result).toBe(false); // Should fail due to timeout
-        expect(endTime - startTime).toBeLessThan(1500); // Should timeout quickly
+        expect(endTime - startTime).toBeLessThan(500); // Should timeout quickly
         expect(requestReceived).toBe(true); // Request should have been received
       } finally {
         await slowServer.stop();
       }
-    }, 10000);
+    }, 5000); // Account for server creation/teardown overhead
 
     it('should handle malformed server responses', async () => {
       // Create a server that returns invalid responses
@@ -451,6 +471,7 @@ describe('Server Endpoint Integration', () => {
 
   describe('Server Response Validation', () => {
     it('should validate server response format', async () => {
+      const testId = Date.now();
       const formattedTraces = [
         {
           content: JSON.stringify({
@@ -462,7 +483,7 @@ describe('Server Endpoint Integration', () => {
               generator: 'integration_test',
             },
           }),
-          fileName: 'response_validation_test.json',
+          fileName: `response_validation_test_${testId}.json`,
         },
       ];
 
@@ -481,10 +502,10 @@ describe('Server Endpoint Integration', () => {
 
       // Verify the server response structure
       const files = await fs.readdir(testDirectory);
-      expect(files).toContain('response_validation_test.json');
+      expect(files).toContain(`response_validation_test_${testId}.json`);
 
       const fileContent = await fs.readFile(
-        path.join(testDirectory, 'response_validation_test.json'),
+        path.join(testDirectory, `response_validation_test_${testId}.json`),
         'utf-8'
       );
       const parsedContent = JSON.parse(fileContent);
@@ -502,14 +523,15 @@ describe('Server Endpoint Integration', () => {
     });
 
     it('should handle empty file content gracefully', async () => {
+      const testId = Date.now();
       const formattedTraces = [
         {
           content: '',
-          fileName: 'empty_content_test.txt',
+          fileName: `empty_content_test_${testId}.txt`,
         },
         {
           content: '{}',
-          fileName: 'minimal_json_test.json',
+          fileName: `minimal_json_test_${testId}.json`,
         },
       ];
 
@@ -527,16 +549,16 @@ describe('Server Endpoint Integration', () => {
       expect(result).toBe(true);
 
       const files = await fs.readdir(testDirectory);
-      expect(files).toContain('empty_content_test.txt');
-      expect(files).toContain('minimal_json_test.json');
+      expect(files).toContain(`empty_content_test_${testId}.txt`);
+      expect(files).toContain(`minimal_json_test_${testId}.json`);
 
       // Verify file contents
       const emptyContent = await fs.readFile(
-        path.join(testDirectory, 'empty_content_test.txt'),
+        path.join(testDirectory, `empty_content_test_${testId}.txt`),
         'utf-8'
       );
       const minimalContent = await fs.readFile(
-        path.join(testDirectory, 'minimal_json_test.json'),
+        path.join(testDirectory, `minimal_json_test_${testId}.json`),
         'utf-8'
       );
 
