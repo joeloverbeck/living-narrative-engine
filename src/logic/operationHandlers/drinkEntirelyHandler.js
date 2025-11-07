@@ -166,27 +166,10 @@ class DrinkEntirelyHandler extends BaseOperationHandler {
         return { success: false, error: 'Container is empty' };
       }
 
-      // Check co-location
-      const containerPosition = this.#entityManager.getComponentData(
-        containerEntity,
-        POSITION_COMPONENT_ID
-      );
-      if (!containerPosition) {
-        log.warn('Container does not have position component', {
-          containerEntity,
-        });
-        return { success: false, error: 'Container does not have position component' };
-      }
-
-      if (actorPosition.locationId !== containerPosition.locationId) {
-        log.debug('Actor and container are not co-located', {
-          actorEntity,
-          containerEntity,
-          actorLocation: actorPosition.locationId,
-          containerLocation: containerPosition.locationId,
-        });
-        return { success: false, error: 'Actor and container are not co-located' };
-      }
+      // NOTE: Co-location check removed - items in inventory don't have position components.
+      // Items in inventory are always accessible to the actor, so no position check is needed.
+      // This aligns with the ECS architecture where inventory items are locationless.
+      // See: pickUpItemFromLocationHandler.js (removes position when adding to inventory)
 
       // Get current volume (consume all regardless of serving size)
       const volumeConsumed = liquidData.currentVolumeMilliliters || 0;

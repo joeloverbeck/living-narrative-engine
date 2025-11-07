@@ -59,8 +59,7 @@
       "matchesGroup": "appendage:upper_torso",
       "partType": "centaur_upper_torso",
       "tags": [
-        "anatomy:part",
-        "anatomy:humanoid"
+        "anatomy:part"
       ],
       "properties": {
         "descriptors:build": {

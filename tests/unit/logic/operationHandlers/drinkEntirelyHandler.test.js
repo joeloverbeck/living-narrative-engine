@@ -394,54 +394,9 @@ describe('DrinkEntirelyHandler', () => {
       });
     });
 
-    test('fails when container has no position component', async () => {
-      const liquidData = { currentVolumeMilliliters: 500 };
-      const actorPosition = { locationId: 'loc1' };
-
-      em.getComponentData
-        .mockReturnValueOnce(actorPosition)
-        .mockReturnValueOnce(liquidData)
-        .mockReturnValueOnce(null); // no container position
-
-      em.hasComponent
-        .mockReturnValueOnce(true) // drinkable
-        .mockReturnValueOnce(false); // not empty
-
-      const result = await handler.execute({
-        actorEntity: 'actor1',
-        containerEntity: 'bottle1',
-      });
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Container does not have position component',
-      });
-    });
-
-    test('fails when actor and container are not co-located', async () => {
-      const liquidData = { currentVolumeMilliliters: 500 };
-      const actorPosition = { locationId: 'loc1' };
-      const containerPosition = { locationId: 'loc2' };
-
-      em.getComponentData
-        .mockReturnValueOnce(actorPosition)
-        .mockReturnValueOnce(liquidData)
-        .mockReturnValueOnce(containerPosition);
-
-      em.hasComponent
-        .mockReturnValueOnce(true) // drinkable
-        .mockReturnValueOnce(false); // not empty
-
-      const result = await handler.execute({
-        actorEntity: 'actor1',
-        containerEntity: 'bottle1',
-      });
-
-      expect(result).toEqual({
-        success: false,
-        error: 'Actor and container are not co-located',
-      });
-    });
+    // NOTE: Tests for "container has no position" and "not co-located" removed
+    // After fix: inventory items don't have position components, so these checks were removed
+    // See: drinkFromHandler.js for the same fix pattern
 
     test('fails when container has no liquid', async () => {
       const liquidData = {
@@ -477,14 +432,14 @@ describe('DrinkEntirelyHandler', () => {
 
       em.getComponentData
         .mockReturnValueOnce(actorPosition)
-        .mockReturnValueOnce(liquidData)
-        .mockImplementation(() => {
-          throw new Error('Database error');
-        });
+        .mockReturnValueOnce(liquidData);
 
       em.hasComponent
         .mockReturnValueOnce(true) // drinkable
         .mockReturnValueOnce(false); // not empty
+
+      // Make batchAddComponentsOptimized throw an error
+      em.batchAddComponentsOptimized.mockRejectedValueOnce(new Error('Database error'));
 
       const result = await handler.execute({
         actorEntity: 'actor1',

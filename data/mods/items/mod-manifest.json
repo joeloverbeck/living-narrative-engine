@@ -90,7 +90,9 @@
       "item_picked_up.event.json",
       "item_put_in_container.event.json",
       "item_taken_from_container.event.json",
-      "item_transferred.event.json"
+      "item_transferred.event.json",
+      "liquid_consumed.event.json",
+      "liquid_consumed_entirely.event.json"
     ],
     "entities": {
       "definitions": [
