@@ -51,7 +51,7 @@
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Public message visible to all",
+      "comment": "Public message visible to all EXCEPT actor",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.publicMessage}",
@@ -59,7 +59,18 @@
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
         "contextual_data": {
+          "excludedActorIds": ["{event.payload.actorId}"],
           "volumeConsumed": "{context.drinkResult.volumeConsumed}"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.publicMessage}"
         }
       }
     },
