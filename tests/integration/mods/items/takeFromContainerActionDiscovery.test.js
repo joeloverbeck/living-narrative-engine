@@ -215,5 +215,60 @@ describe('items:take_from_container action definition', () => {
 
       expect(takeActions.length).toBeGreaterThan(0);
     });
+
+    it('should NOT appear when actor is sitting on furniture', () => {
+      const room = ModEntityScenarios.createRoom('library', 'Library');
+
+      const armchair = new ModEntityBuilder('armchair1')
+        .withName('armchair')
+        .atLocation('library')
+        .withComponent('items:item', {})
+        .withComponent('positioning:sittable', {
+          spots: [{ entityId: 'reader1', facing: 'forward' }],
+        })
+        .build();
+
+      const actor = new ModEntityBuilder('reader1')
+        .withName('Reader')
+        .atLocation('library')
+        .asActor()
+        .withComponent('items:inventory', {
+          items: [],
+          capacity: { maxWeight: 20, maxItems: 5 },
+        })
+        .withComponent('positioning:sitting_on', {
+          furniture_id: 'armchair1',
+          spot_index: 0,
+        })
+        .build();
+
+      const bookcase = new ModEntityBuilder('bookcase1')
+        .withName('bookcase')
+        .atLocation('library')
+        .withComponent('items:item', {})
+        .withComponent('items:container', {
+          contents: ['book1'],
+          capacity: { maxWeight: 100, maxItems: 50 },
+          isOpen: true,
+          isLocked: false,
+        })
+        .build();
+
+      const book = new ModEntityBuilder('book1')
+        .withName('ancient tome')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .build();
+
+      testFixture.reset([room, armchair, actor, bookcase, book]);
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions('reader1');
+      const takeActions = availableActions.filter(
+        (action) => action.id === ACTION_ID
+      );
+
+      expect(takeActions.length).toBe(0);
+    });
   });
 });
