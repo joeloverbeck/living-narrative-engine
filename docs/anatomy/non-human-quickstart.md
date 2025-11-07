@@ -74,9 +74,12 @@ Structure templates define the body topology. For our spider, we need:
 ```
 
 **What This Does**:
-- Creates 8 leg sockets: `leg_1`, `leg_2`, ... `leg_8`
-- Creates 1 abdomen socket: `abdomen`
+- Creates 8 leg sockets: `leg_1`, `leg_2`, ... `leg_8` (via limbSet)
+- Creates 2 pedipalp sockets: `pedipalp_1`, `pedipalp_2` (via appendages)
+- Creates 1 abdomen/torso socket: `posterior_torso` (via appendages)
 - Each socket knows what part types it accepts
+
+**Note**: The structure template in the anatomy mod uses `type: "torso"` for the abdomen appendage, so the socket will be generated as `posterior_torso` and pattern matching should use `"appendage:torso"` not `"appendage:abdomen"`.
 
 ## Step 2: Create Entity Definitions
 
@@ -84,82 +87,110 @@ Before creating the blueprint, we need entity definitions for the body parts.
 
 ### Root Part: Cephalothorax
 
-**Create**: `data/mods/your_mod/entities/spider_cephalothorax.entity.json`
+**Create**: `data/mods/your_mod/entities/definitions/spider_cephalothorax.entity.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "your_mod:spider_cephalothorax",
-  "components": [
-    {
-      "id": "anatomy:part",
-      "data": {
-        "partType": "cephalothorax",
-        "name": "cephalothorax",
-        "description": "The fused head and thorax of a spider"
-      }
+  "description": "Root cephalothorax for an eight-legged spider",
+  "components": {
+    "anatomy:part": {
+      "subType": "cephalothorax"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "leg_1",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "leg_2",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "leg_3",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "leg_4",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "leg_5",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "leg_6",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "leg_7",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "leg_8",
+          "allowedTypes": ["spider_leg"],
+          "nameTpl": "leg"
+        },
+        {
+          "id": "abdomen",
+          "allowedTypes": ["spider_abdomen"],
+          "nameTpl": "abdomen"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "spider cephalothorax"
     }
-  ],
-  "sockets": {
-    "leg_1": { "allowedTypes": ["spider_leg"] },
-    "leg_2": { "allowedTypes": ["spider_leg"] },
-    "leg_3": { "allowedTypes": ["spider_leg"] },
-    "leg_4": { "allowedTypes": ["spider_leg"] },
-    "leg_5": { "allowedTypes": ["spider_leg"] },
-    "leg_6": { "allowedTypes": ["spider_leg"] },
-    "leg_7": { "allowedTypes": ["spider_leg"] },
-    "leg_8": { "allowedTypes": ["spider_leg"] },
-    "abdomen": { "allowedTypes": ["spider_abdomen"] }
   }
 }
 ```
 
 ### Leg Part
 
-**Create**: `data/mods/your_mod/entities/spider_leg.entity.json`
+**Create**: `data/mods/your_mod/entities/definitions/spider_leg.entity.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "your_mod:spider_leg",
-  "components": [
-    {
-      "id": "anatomy:part",
-      "data": {
-        "partType": "spider_leg",
-        "name": "leg",
-        "description": "A segmented spider leg"
-      }
+  "description": "A segmented spider leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "spider_leg"
     },
-    {
-      "id": "anatomy:segmented",
-      "data": {
-        "segments": 7,
-        "hairDensity": "moderate"
-      }
+    "core:name": {
+      "text": "spider leg"
     }
-  ]
+  }
 }
 ```
 
 ### Abdomen Part
 
-**Create**: `data/mods/your_mod/entities/spider_abdomen.entity.json`
+**Create**: `data/mods/your_mod/entities/definitions/spider_abdomen.entity.json`
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "your_mod:spider_abdomen",
-  "components": [
-    {
-      "id": "anatomy:part",
-      "data": {
-        "partType": "spider_abdomen",
-        "name": "abdomen",
-        "description": "The bulbous abdomen of a spider"
-      }
+  "description": "The bulbous abdomen of a spider",
+  "components": {
+    "anatomy:part": {
+      "subType": "spider_abdomen"
+    },
+    "core:name": {
+      "text": "spider abdomen"
     }
-  ]
+  }
 }
 ```
 
@@ -197,10 +228,10 @@ The recipe specifies what body parts to use for each slot.
     {
       "matchesGroup": "limbSet:leg",
       "partType": "spider_leg",
-      "tags": ["anatomy:part", "anatomy:segmented"]
+      "tags": ["anatomy:part"]
     },
     {
-      "matchesGroup": "appendage:abdomen",
+      "matchesGroup": "appendage:torso",
       "partType": "spider_abdomen",
       "tags": ["anatomy:part"]
     }
@@ -214,7 +245,9 @@ The recipe specifies what body parts to use for each slot.
 
 **What This Does**:
 - `matchesGroup: "limbSet:leg"` matches all 8 leg slots → uses `spider_leg` entity
-- `matchesGroup: "appendage:abdomen"` matches abdomen slot → uses `spider_abdomen` entity
+- `matchesGroup: "appendage:torso"` matches the posterior torso/abdomen slot → uses `spider_abdomen` entity
+
+**Note**: The appendage type in the structure template is `"torso"`, so use `"appendage:torso"` not `"appendage:abdomen"` in your pattern matcher.
 
 ## Step 5: Update Mod Manifest
 
@@ -229,11 +262,14 @@ Add your new files to the mod manifest.
   "version": "1.0.0",
   "name": "Your Mod Name",
   "content": {
-    "entities": [
-      "entities/spider_cephalothorax.entity.json",
-      "entities/spider_leg.entity.json",
-      "entities/spider_abdomen.entity.json"
-    ],
+    "entities": {
+      "definitions": [
+        "entities/definitions/spider_cephalothorax.entity.json",
+        "entities/definitions/spider_leg.entity.json",
+        "entities/definitions/spider_abdomen.entity.json"
+      ],
+      "instances": []
+    },
     "blueprints": [
       "blueprints/spider.blueprint.json"
     ],
@@ -258,23 +294,17 @@ Add your new files to the mod manifest.
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-instance.schema.json",
-  "id": "test_spider_1",
+  "instanceId": "test_spider_1",
   "definitionId": "your_mod:spider_cephalothorax",
-  "components": [
-    {
-      "id": "core:actor",
-      "data": {
-        "name": "Test Spider"
-      }
+  "componentOverrides": {
+    "core:actor": {
+      "name": "Test Spider"
     },
-    {
-      "id": "anatomy:body",
-      "data": {
-        "blueprintId": "your_mod:spider_garden",
-        "recipeId": "your_mod:spider_garden_recipe"
-      }
+    "anatomy:body": {
+      "blueprintId": "your_mod:spider_garden",
+      "recipeId": "your_mod:spider_garden_recipe"
     }
-  ]
+  }
 }
 ```
 
@@ -304,17 +334,21 @@ Add your new files to the mod manifest.
 ```json
 // Template generates: leg_1, leg_2, ...
 // But entity has:
-"sockets": {
-  "left_leg": { /* ... */ },  // ❌ Doesn't match
-  "right_leg": { /* ... */ }
+"anatomy:sockets": {
+  "sockets": [
+    { "id": "left_leg", /* ... */ },  // ❌ Doesn't match
+    { "id": "right_leg", /* ... */ }
+  ]
 }
 ```
 
-**Fix**: Match socket names exactly to template output:
+**Fix**: Match socket IDs exactly to template output:
 ```json
-"sockets": {
-  "leg_1": { /* ... */ },  // ✅ Matches template
-  "leg_2": { /* ... */ }
+"anatomy:sockets": {
+  "sockets": [
+    { "id": "leg_1", /* ... */ },  // ✅ Matches template
+    { "id": "leg_2", /* ... */ }
+  ]
 }
 ```
 
@@ -327,17 +361,17 @@ Add your new files to the mod manifest.
 "patterns": [
   {
     "matchesGroup": "limbSet:leg",
-    "partType": "leg"  // ❌ Entity has partType: "spider_leg"
+    "partType": "leg"  // ❌ Entity has subType: "spider_leg"
   }
 ]
 ```
 
-**Fix**: Match entity's `partType` exactly:
+**Fix**: Match entity's `subType` exactly (the `partType` in recipe patterns must match the `subType` field in the entity's `anatomy:part` component):
 ```json
 "patterns": [
   {
     "matchesGroup": "limbSet:leg",
-    "partType": "spider_leg"  // ✅ Matches entity
+    "partType": "spider_leg"  // ✅ Matches entity's subType
   }
 ]
 ```
@@ -396,12 +430,12 @@ Add your new files to the mod manifest.
 
 **Wrong**:
 ```json
-// Entity doesn't have anatomy:segmented component
+// Entity doesn't have custom component
 "patterns": [
   {
     "matchesGroup": "limbSet:leg",
     "partType": "spider_leg",
-    "tags": ["anatomy:part", "anatomy:segmented"]  // ❌ Entity missing this
+    "tags": ["anatomy:part", "your_mod:venomous"]  // ❌ Entity missing your_mod:venomous
   }
 ]
 ```
@@ -411,10 +445,10 @@ Add your new files to the mod manifest.
 // Option 1: Add to entity
 {
   "id": "your_mod:spider_leg",
-  "components": [
-    { "id": "anatomy:part", "data": { /* ... */ } },
-    { "id": "anatomy:segmented", "data": { /* ... */ } }  // ✅ Added
-  ]
+  "components": {
+    "anatomy:part": { "subType": "spider_leg" },
+    "your_mod:venomous": { "potency": "moderate" }  // ✅ Added
+  }
 }
 
 // Option 2: Remove from recipe
@@ -548,10 +582,13 @@ data/mods/your_mod/
 ├── recipes/
 │   └── spider.recipe.json
 └── entities/
-    ├── spider_cephalothorax.entity.json
-    ├── spider_leg.entity.json
-    └── spider_abdomen.entity.json
+    └── definitions/
+        ├── spider_cephalothorax.entity.json
+        ├── spider_leg.entity.json
+        └── spider_abdomen.entity.json
 ```
+
+**Note**: Entity definitions go in the `entities/definitions/` subdirectory. The mod manifest should reference them as `"entities/definitions/spider_cephalothorax.entity.json"` etc.
 
 ## Tips for Success
 
