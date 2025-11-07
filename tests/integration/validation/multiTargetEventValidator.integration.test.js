@@ -3,7 +3,7 @@
  * @description Tests real-world integration with event system, schema validation, and multi-target pipelines
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import MultiTargetEventValidator from '../../../src/validation/multiTargetEventValidator.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
@@ -47,6 +47,7 @@ describe('MultiTargetEventValidator - Integration Tests', () => {
   afterEach(() => {
     testBed.cleanup();
     validator.resetPerformanceMetrics();
+    jest.restoreAllMocks();
   });
 
   describe('Real Event System Integration', () => {
@@ -410,6 +411,169 @@ describe('MultiTargetEventValidator - Integration Tests', () => {
       expect(validationResult.isValid).toBe(true);
       expect(validationResult.details.hasMultipleTargets).toBe(false);
       expect(validationResult.errors).toHaveLength(0);
+    });
+  });
+
+  describe('Edge Case Coverage', () => {
+    it('should report an error when targets object is empty', () => {
+      const emptyTargetsEvent = {
+        eventName: 'core:attempt_action',
+        actorId: 'player_empty',
+        actionId: 'test:empty_targets',
+        originalInput: 'attempt action with empty targets',
+        targetId: 'primary_target_001',
+        targets: {},
+      };
+
+      const result = validator.validateEvent(emptyTargetsEvent);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('targets object cannot be empty');
+      expect(result.details.consistencyIssues).toContain('targetId_mismatch');
+    });
+
+    it('should warn about invalid entity IDs and duplicate targets', () => {
+      const duplicateTargetsEvent = {
+        eventName: 'core:attempt_action',
+        actorId: 'player_dup',
+        actionId: 'test:duplicate_targets',
+        originalInput: 'attempt action with duplicate targets',
+        targetId: 'invalid id with space',
+        targets: {
+          primary: 'invalid id with space',
+          assistant: 'invalid id with space',
+        },
+      };
+
+      const result = validator.validateEvent(duplicateTargetsEvent);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Target "primary" ID "invalid id with space" should follow entity ID format (letters, numbers, underscore, colon)'
+      );
+      expect(result.warnings).toContain('targets object contains duplicate target IDs');
+      expect(result.details.consistencyIssues).toContain('duplicate_targets');
+    });
+
+    it('should enforce legacy targetId to be string or null', () => {
+      const legacyEvent = {
+        eventName: 'core:attempt_action',
+        actorId: 'legacy_tester',
+        actionId: 'legacy:check',
+        originalInput: 'legacy action with numeric targetId',
+        targetId: 12345,
+      };
+
+      const result = validator.validateEvent(legacyEvent);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Legacy targetId must be a string or null');
+    });
+
+    it('should warn when an event has excessive targets and actor equals the primary target', () => {
+      const largeTargetSet = {
+        eventName: 'core:attempt_action',
+        actorId: 'overloaded_actor',
+        actionId: 'test:large_target_set',
+        originalInput: 'attempt action with many targets',
+        targetId: 'overloaded_actor',
+        targets: {
+          primary: 'overloaded_actor',
+          tool_one: 'entity_tool_1',
+          tool_two: 'entity_tool_2',
+          tool_three: 'entity_tool_3',
+          tool_four: 'entity_tool_4',
+          tool_five: 'entity_tool_5',
+          tool_six: 'entity_tool_6',
+          tool_seven: 'entity_tool_7',
+          tool_eight: 'entity_tool_8',
+          tool_nine: 'entity_tool_9',
+          tool_ten: 'entity_tool_10',
+        },
+      };
+
+      const result = validator.validateEvent(largeTargetSet);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Event has 11 targets - consider if this is necessary for performance'
+      );
+      expect(result.warnings).toContain(
+        'Actor and primary target are the same entity - verify this is intentional'
+      );
+    });
+
+    it('should suggest descriptive target names when using generic keys', () => {
+      const genericTargetsEvent = {
+        eventName: 'core:attempt_action',
+        actorId: 'namer',
+        actionId: 'test:generic_names',
+        originalInput: 'perform action with generic targets',
+        targetId: 'entity:primary',
+        targets: {
+          t1: 'entity:primary',
+          t2: 'entity:secondary',
+        },
+      };
+
+      const result = validator.validateEvent(genericTargetsEvent);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Consider using descriptive target names (e.g., "item", "recipient") instead of generic names'
+      );
+    });
+
+    it('should warn when primary and target refer to the same entity', () => {
+      const overlappingTargetsEvent = {
+        eventName: 'core:attempt_action',
+        actorId: 'player_overlap',
+        actionId: 'test:overlap',
+        originalInput: 'perform action with overlapping targets',
+        targetId: 'entity_overlap',
+        targets: {
+          primary: 'entity_overlap',
+          target: 'entity_overlap',
+        },
+      };
+
+      const result = validator.validateEvent(overlappingTargetsEvent);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'primary and target refer to the same entity - consider using just one'
+      );
+    });
+
+    it('should emit a performance warning when validation takes too long', () => {
+      const warnSpy = jest.spyOn(logger, 'warn');
+      const performanceSpy = jest
+        .spyOn(performance, 'now')
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(25);
+
+      const event = {
+        eventName: 'core:attempt_action',
+        actorId: 'slow_validator',
+        actionId: 'test:performance_warning',
+        originalInput: 'perform action slowly',
+        targetId: 'entity_primary',
+        targets: {
+          primary: 'entity_primary',
+        },
+      };
+
+      const result = validator.validateEvent(event);
+
+      expect(result.isValid).toBe(true);
+      expect(performanceSpy).toHaveBeenCalledTimes(2);
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Multi-target validation took longer than expected',
+        expect.objectContaining({
+          duration: '25.00',
+          target: '< 10ms',
+        })
+      );
     });
   });
 });
