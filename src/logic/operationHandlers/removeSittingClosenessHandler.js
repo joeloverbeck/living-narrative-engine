@@ -1,7 +1,24 @@
 /**
- * @file Operation handler for removing closeness relationships when actors stop sitting adjacently
- * @see proximityUtils.js
- * @see closenessCircleService.js
+ * @file Handler for REMOVE_SITTING_CLOSENESS operation
+ *
+ * Removes sitting-based closeness relationships when actors stand up from furniture, while
+ * preserving manually-established closeness through conservative heuristics.
+ *
+ * Operation flow:
+ * 1. Validate parameters (furniture_id, actor_id, spot_index) and component states
+ * 2. Identify formerly adjacent actors using proximity utilities
+ * 3. Remove sitting-based closeness (adjacent relationships only, preserve manual ones)
+ * 4. Update or remove closeness components based on remaining partners
+ * 5. Update movement locks for all affected actors
+ *
+ * Related files:
+ * @see data/schemas/operations/removeSittingCloseness.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - RemoveSittingClosenessHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

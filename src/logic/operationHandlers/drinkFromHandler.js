@@ -1,6 +1,24 @@
 /**
- * @file Operation handler for drinking a single serving from a liquid container
- * @see takeFromContainerHandler.js
+ * @file Handler for DRINK_FROM operation
+ *
+ * Consumes a single serving from a liquid container, tracking volume and managing empty state.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (actorEntity, containerEntity)
+ * 2. Verifies container has liquid_container and drinkable components
+ * 3. Checks container is not empty and has sufficient volume for serving size
+ * 4. Reduces current volume by serving size, updating liquid_container component
+ * 5. If volume reaches zero, adds empty component and removes drinkable component
+ * 6. Dispatches items:liquid_consumed event
+ *
+ * Related files:
+ * @see data/schemas/operations/drinkFrom.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DrinkFromHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import BaseOperationHandler from './baseOperationHandler.js';

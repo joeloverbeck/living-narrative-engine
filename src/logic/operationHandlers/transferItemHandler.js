@@ -1,6 +1,23 @@
 /**
- * @file Operation handler for transferring items between entity inventories
- * @see src/logic/operationHandlers/transferItemHandler.js
+ * @file Handler for TRANSFER_ITEM operation
+ *
+ * Transfers an item from one entity's inventory to another entity's inventory.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (fromEntity, toEntity, itemEntity)
+ * 2. Verifies source entity has item in inventory
+ * 3. Checks destination entity has inventory capacity
+ * 4. Removes item from source inventory
+ * 5. Adds item to destination inventory and dispatches event
+ *
+ * Related files:
+ * @see data/schemas/operations/transferItem.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - TransferItemHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';

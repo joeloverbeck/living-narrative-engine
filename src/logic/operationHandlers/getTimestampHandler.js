@@ -1,6 +1,24 @@
 /**
- * @file A handler that returns the current timestamp.
- * @see src/logic/operationHandlers/getTimestampHandler.js
+ * @file Handler for GET_TIMESTAMP operation
+ *
+ * Generates current ISO 8601 timestamp and stores it in a context variable for
+ * time-sensitive rule logic and event tracking.
+ *
+ * Operation flow:
+ * 1. Validate parameters (result_variable)
+ * 2. Ensure evaluation context exists
+ * 3. Generate current timestamp using Date().toISOString()
+ * 4. Store timestamp string in specified context variable
+ * 5. Log successful timestamp generation for debugging
+ *
+ * Related files:
+ * @see data/schemas/operations/getTimestamp.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - GetTimestampHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import BaseOperationHandler from './baseOperationHandler.js';

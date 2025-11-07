@@ -1,6 +1,23 @@
 /**
- * @file Operation handler for opening containers with key validation
- * @see src/logic/operationHandlers/openContainerHandler.js
+ * @file Handler for OPEN_CONTAINER operation
+ *
+ * Opens a container entity, handling locked containers with key validation.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (actorEntity, containerEntity)
+ * 2. Checks container has openable and container components
+ * 3. Validates container is not already open
+ * 4. If locked, verifies actor has required key in inventory
+ * 5. Updates openable component to mark as open and dispatches event
+ *
+ * Related files:
+ * @see data/schemas/operations/openContainer.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - OpenContainerHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';

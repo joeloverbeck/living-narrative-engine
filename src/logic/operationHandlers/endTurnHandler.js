@@ -1,6 +1,22 @@
 /**
- * @file Handler that dispatches the core:turn_ended event with a payload
- * describing the outcome of an entity's turn.
+ * @file Handler for END_TURN operation
+ *
+ * Dispatches the core:turn_ended event with a standardized payload describing the
+ * outcome of an entity's turn (success/failure with optional error details).
+ *
+ * Operation flow:
+ * 1. Validate parameters (entityId, success boolean, optional error object)
+ * 2. Build standardized payload with entity ID and success status
+ * 3. Include optional error information if provided
+ * 4. Dispatch core:turn_ended event through safe event dispatcher
+ * 5. Handle async dispatch results and report failures
+ *
+ * Related files:
+ * @see data/schemas/operations/endTurn.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - EndTurnHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

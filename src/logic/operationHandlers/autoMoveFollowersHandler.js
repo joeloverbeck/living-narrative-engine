@@ -1,6 +1,24 @@
 /**
- * @file Handler that automatically moves followers when their leader moves.
- * @see src/logic/operationHandlers/autoMoveFollowersHandler.js
+ * @file Handler for AUTO_MOVE_FOLLOWERS operation
+ *
+ * Automatically relocates followers when their leader moves to a new location, maintaining
+ * the follow relationship and displaying appropriate perceptible events.
+ *
+ * Operation flow:
+ * 1. Validate parameters (leader_id, destination_id)
+ * 2. Retrieve followers list from leader's leading component
+ * 3. For each follower, verify position matches previous location (if specified)
+ * 4. Move follower using SYSTEM_MOVE_ENTITY handler
+ * 5. Dispatch perceptible_event and display_successful_action_result for each follower
+ *
+ * Related files:
+ * @see data/schemas/operations/autoMoveFollowers.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - AutoMoveFollowersHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

@@ -1,5 +1,24 @@
 /**
- * @file Handler to dispatch the core:display_speech event.
+ * @file Handler for DISPATCH_SPEECH operation
+ *
+ * Dispatches speech display events to show character dialogue in the UI with optional
+ * inner thoughts and notes.
+ *
+ * Operation flow:
+ * 1. Validate required parameters (entity_id, speech_content)
+ * 2. Build payload with speech content and optional allow_html flag
+ * 3. Add optional thoughts and notes if provided
+ * 4. Dispatch core:display_speech event through event bus
+ * 5. Handle dispatch errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/dispatchSpeech.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DispatchSpeechHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

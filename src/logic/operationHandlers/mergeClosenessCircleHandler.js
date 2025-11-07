@@ -1,5 +1,24 @@
 /**
- * @file Handler that merges two closeness circles.
+ * @file Handler for MERGE_CLOSENESS_CIRCLE operation
+ *
+ * Merges two separate closeness circles into a single unified circle, updating all affected
+ * entities so each has all other members as partners.
+ *
+ * Operation flow:
+ * 1. Validate parameters (actor_id, target_id, optional result_variable)
+ * 2. Retrieve closeness components for both actor and target
+ * 3. Merge partner lists using closeness circle service
+ * 4. Update closeness component for all members with complete merged partner list
+ * 5. Store merged member IDs in result variable if requested
+ *
+ * Related files:
+ * @see data/schemas/operations/mergeClosenessCircle.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - MergeClosenessCircleHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

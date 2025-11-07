@@ -1,7 +1,24 @@
 /**
- * @file Operation handler for querying lookup table entries from the data registry.
- * @description Retrieves entries from lookup tables defined in mod content and stores them
- * in the execution context for use in rule message generation and logic.
+ * @file Handler for QUERY_LOOKUP operation
+ *
+ * Retrieves entries from lookup tables defined in mod content (e.g., lexicons, mappings) and
+ * stores them in execution context for use in rule message generation and conditional logic.
+ *
+ * Operation flow:
+ * 1. Validate parameters (lookup_id, entry_key, result_variable, optional missing_value)
+ * 2. Retrieve lookup table from data registry by namespaced ID
+ * 3. Check if lookup exists and has entries object
+ * 4. Fetch entry by key or use missing_value fallback
+ * 5. Store retrieved entry or missing_value in specified context variable
+ *
+ * Related files:
+ * @see data/schemas/operations/queryLookup.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - QueryLookupHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

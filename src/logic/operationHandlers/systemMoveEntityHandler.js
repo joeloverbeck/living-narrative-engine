@@ -1,6 +1,24 @@
 /**
- * @file A handler in charge of performing teleport-like moves for entities, without breaking the turn order.
- * @see src/logic/operationHandlers/systemMoveEntityHandler.js
+ * @file Handler for SYSTEM_MOVE_ENTITY operation
+ *
+ * Performs system-level entity teleportation by directly updating position components without
+ * requiring turn order validation or movement restrictions (used for auto-follow, auto-closeness, etc.).
+ *
+ * Operation flow:
+ * 1. Validate parameters (entity_ref, target_location_id)
+ * 2. Resolve entity reference to entity ID
+ * 3. Update core:position component with new location
+ * 4. Dispatch core:entity_moved event with previous and current locations
+ * 5. Handle errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/systemMoveEntity.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - SystemMoveEntityHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

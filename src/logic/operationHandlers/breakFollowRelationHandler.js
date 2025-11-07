@@ -1,7 +1,24 @@
 /**
- * @file Handler for BREAK_FOLLOW_RELATION.
- * Removes a follower's `companionship:following` component and rebuilds the former
- * leader's follower cache.
+ * @file Handler for BREAK_FOLLOW_RELATION operation
+ *
+ * Removes a follower's companionship:following component and rebuilds the former leader's
+ * follower cache to maintain consistency.
+ *
+ * Operation flow:
+ * 1. Validate parameters (follower_id)
+ * 2. Retrieve current following component to get leader_id
+ * 3. Remove companionship:following component from follower
+ * 4. Rebuild former leader's companionship:leading cache if applicable
+ * 5. Handle errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/breakFollowRelation.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - BreakFollowRelationHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

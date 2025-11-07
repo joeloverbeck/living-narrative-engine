@@ -1,4 +1,24 @@
-// src/logic/operationHandlers/dispatchEventHandler.js
+/**
+ * @file Handler for DISPATCH_EVENT operation
+ *
+ * Dispatches custom events through the event bus system with optional payload data.
+ * Supports both ValidatedEventDispatcher and EventBus instances for backward compatibility.
+ *
+ * Operation flow:
+ * 1. Validate parameters (event type and optional payload)
+ * 2. Normalize payload to an object if needed
+ * 3. Detect dispatcher type (ValidatedEventDispatcher vs EventBus)
+ * 4. Dispatch event through appropriate dispatcher method
+ * 5. Log dispatch results and listener count (for EventBus)
+ *
+ * Related files:
+ * @see data/schemas/operations/dispatchEvent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DispatchEventHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ */
+
 // --- JSDoc Imports ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */ // ** Corrected type for 2nd arg **

@@ -1,7 +1,24 @@
 /**
- * @file Handler for REBUILD_LEADER_LIST_CACHE.
- * Rebuilds the 'companionship:leading' component for one or more leaders.
- * @see src/logic/operationHandlers/rebuildLeaderListCacheHandler.js
+ * @file Handler for REBUILD_LEADER_LIST_CACHE operation
+ *
+ * Rebuilds the companionship:leading component cache for one or more leaders by scanning
+ * all entities with companionship:following and aggregating follower lists.
+ *
+ * Operation flow:
+ * 1. Validate parameters (leaderIds array must be non-empty)
+ * 2. Build follower map by scanning all entities with companionship:following
+ * 3. For each leader, retrieve their current follower list from map
+ * 4. Update or remove companionship:leading component based on follower count
+ * 5. Log rebuild statistics for monitoring
+ *
+ * Related files:
+ * @see data/schemas/operations/rebuildLeaderListCache.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - RebuildLeaderListCacheHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 import { isNonBlankString } from '../../utils/textUtils.js';
 

@@ -1,6 +1,22 @@
 /**
- * @file This operation handler modifies an array stored within the rule's execution context.
- * @see src/logic/operationHandlers/modifyContextArrayHandler.js
+ * @file Handler for MODIFY_CONTEXT_ARRAY operation
+ *
+ * Modifies arrays stored in context variables using safe clone-modify-replace pattern,
+ * supporting push, push_unique, pop, and remove_by_value modes.
+ *
+ * Operation flow:
+ * 1. Validate parameters (variable_path, mode, value if required, optional result_variable)
+ * 2. Resolve array from context using dot-separated path (auto-initialize for push modes)
+ * 3. Clone array and apply modification using advancedArrayModify utility
+ * 4. Update context variable with modified array
+ * 5. Optionally store result (popped item for pop mode, modified array otherwise)
+ *
+ * Related files:
+ * @see data/schemas/operations/modifyContextArray.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - ModifyContextArrayHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

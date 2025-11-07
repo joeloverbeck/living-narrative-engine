@@ -1,9 +1,26 @@
 // src/logic/operationHandlers/getNameHandler.js
 
 /**
- * @file Operation handler to fetch an entity's core:name component text.
- * If the component or text field is missing, a provided default value
- * is stored instead.
+ * @file Handler for GET_NAME operation
+ *
+ * Retrieves an entity's core:name component text and stores it in a context variable,
+ * with fallback to default value if component or text field is missing.
+ *
+ * Operation flow:
+ * 1. Validate parameters (entity_ref, result_variable, optional default_value)
+ * 2. Resolve entity reference to entity ID
+ * 3. Retrieve core:name component data
+ * 4. Extract text field or use fallback (default_value or system default)
+ * 5. Store result in specified context variable
+ *
+ * Related files:
+ * @see data/schemas/operations/getName.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - GetNameHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

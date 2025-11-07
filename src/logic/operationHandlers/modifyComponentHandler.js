@@ -1,10 +1,24 @@
-// src/logic/operationHandlers/modifyComponentHandler.js
-
-// -----------------------------------------------------------------------------
-//  MODIFY_COMPONENT Handler — simplified to support ONLY “set” field updates.
-//  Adds no arithmetic; for numeric adjustments use a preceding MATH+SET_VARIABLE
-//  pair, then call MODIFY_COMPONENT with mode "set".
-// ---------------------------------------------------------
+/**
+ * @file Handler for MODIFY_COMPONENT operation
+ *
+ * Modifies a specific field within a component using "set" mode only.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_type, field, mode, value)
+ * 2. Retrieves current component data and deep clones it
+ * 3. Sets field to new value using dot-path notation
+ * 4. Replaces entire component with modified version
+ * 5. For arithmetic operations, use MATH + SET_VARIABLE first
+ *
+ * Related files:
+ * @see data/schemas/operations/modifyComponent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - ModifyComponentHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
+ */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */

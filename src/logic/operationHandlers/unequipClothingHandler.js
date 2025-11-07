@@ -1,5 +1,24 @@
 /**
- * @file Handler for the UNEQUIP_CLOTHING operation, managing removal of equipped clothing items
+ * @file Handler for UNEQUIP_CLOTHING operation
+ *
+ * Manages removal of equipped clothing items using the EquipmentOrchestrator service,
+ * with support for cascade unequipment and configurable item placement destinations.
+ *
+ * Operation flow:
+ * 1. Validate parameters (entity_ref, clothing_item_id, optional cascade_unequip, destination)
+ * 2. Verify entity has clothing:equipment component
+ * 3. Orchestrate unequipment via EquipmentOrchestrator (handles layering rules)
+ * 4. Place unequipped item in inventory or on ground based on destination
+ * 5. Handle errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/unequipClothing.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - UnequipClothingHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

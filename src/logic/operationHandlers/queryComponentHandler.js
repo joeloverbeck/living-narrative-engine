@@ -1,4 +1,23 @@
-// src/logic/operationHandlers/queryComponentHandler.js
+/**
+ * @file Handler for QUERY_COMPONENT operation
+ *
+ * Retrieves component data from an entity and stores it in a context variable.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_type, result_variable)
+ * 2. Resolves entity reference to entity ID
+ * 3. Queries entityManager for component data
+ * 4. Stores component data (or missing_value) in result_variable
+ *
+ * Related files:
+ * @see data/schemas/operations/queryComponent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - QueryComponentHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
+ */
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

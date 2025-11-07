@@ -1,3 +1,25 @@
+/**
+ * @file Handler for HAS_BODY_PART_WITH_COMPONENT_VALUE operation
+ *
+ * Checks if an entity's body has any part with a specific component property value using
+ * the BodyGraphService for graph traversal and value matching.
+ *
+ * Operation flow:
+ * 1. Validate parameters (entityRef, componentId, propertyPath, expectedValue)
+ * 2. Resolve entity reference from execution context
+ * 3. Retrieve anatomy:body component from entity
+ * 4. Query BodyGraphService to check if any part has matching component value
+ * 5. Return boolean result (true if found, false otherwise)
+ *
+ * Related files:
+ * @see src/dependencyInjection/tokens/tokens-core.js - HasBodyPartWithComponentValueHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
+ */
+
 import BaseOperationHandler from './baseOperationHandler.js';
 import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';

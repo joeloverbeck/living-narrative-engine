@@ -1,6 +1,24 @@
 /**
- * @file Executes a set of actions if two entities are in the same location.
- * @see src/logic/operationHandlers/ifCoLocatedHandler.js
+ * @file Handler for IF_CO_LOCATED operation
+ *
+ * Conditional operation that executes different action sequences based on whether two entities
+ * share the same location (co-located check using core:position component).
+ *
+ * Operation flow:
+ * 1. Validate parameters (entity_ref_a, entity_ref_b, then_actions, else_actions)
+ * 2. Resolve entity references to entity IDs
+ * 3. Check if both entities have matching locationId in their position components
+ * 4. Execute then_actions if co-located, else_actions if not
+ * 5. Handle nested operation errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/ifCoLocated.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - IfCoLocatedHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

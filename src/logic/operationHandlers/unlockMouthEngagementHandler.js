@@ -1,6 +1,24 @@
 /**
- * @file Handler that unlocks mouth engagement for entities.
- * @description Handles the UNLOCK_MOUTH_ENGAGEMENT operation for entities
+ * @file Handler for UNLOCK_MOUTH_ENGAGEMENT operation
+ *
+ * Unlocks mouth engagement for entities to restore mouth-based action capabilities,
+ * supporting both legacy mouth_lock component and anatomy-based mouth parts.
+ *
+ * Operation flow:
+ * 1. Validate parameters (actor_id)
+ * 2. Call updateMouthEngagementLock utility with lock=false
+ * 3. Update appropriate components based on entity type (legacy or anatomy)
+ * 4. Dispatch core:mouth_engagement_unlocked event
+ * 5. Log successful unlock operation with affected parts count
+ *
+ * Related files:
+ * @see data/schemas/operations/unlockMouthEngagement.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - UnlockMouthEngagementHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

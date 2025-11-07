@@ -1,9 +1,24 @@
-// src/logic/operationHandlers/atomicModifyComponentHandler.js
-
-// -----------------------------------------------------------------------------
-//  ATOMIC_MODIFY_COMPONENT Handler — Atomic check-and-set operation for components
-//  Combines query and modify into a single atomic operation to prevent race conditions
-// -----------------------------------------------------------------------------
+/**
+ * @file Handler for ATOMIC_MODIFY_COMPONENT operation
+ *
+ * Performs atomic check-and-set operation on component fields to prevent race conditions.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_type, field, expected_value, new_value)
+ * 2. Retrieves current component data
+ * 3. Compares field value against expected_value
+ * 4. Only if match, sets field to new_value and updates component
+ * 5. Returns success/failure result in result_variable
+ *
+ * Related files:
+ * @see data/schemas/operations/atomicModifyComponent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - AtomicModifyComponentHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
+ */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */

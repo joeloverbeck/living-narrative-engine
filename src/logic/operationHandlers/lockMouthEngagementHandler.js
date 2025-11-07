@@ -1,6 +1,24 @@
 /**
- * @file Handler that locks mouth engagement for entities with mouth restrictions.
- * @description Handles the LOCK_MOUTH_ENGAGEMENT operation for entities
+ * @file Handler for LOCK_MOUTH_ENGAGEMENT operation
+ *
+ * Locks mouth engagement for entities to prevent conflicting mouth-based actions,
+ * supporting both legacy mouth_lock component and anatomy-based mouth parts.
+ *
+ * Operation flow:
+ * 1. Validate parameters (actor_id)
+ * 2. Call updateMouthEngagementLock utility with lock=true
+ * 3. Update appropriate components based on entity type (legacy or anatomy)
+ * 4. Log successful lock operation with affected parts count
+ * 5. Handle errors with safe error dispatcher
+ *
+ * Related files:
+ * @see data/schemas/operations/lockMouthEngagement.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - LockMouthEngagementHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

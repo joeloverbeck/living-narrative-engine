@@ -1,6 +1,22 @@
 /**
- * @file Handler that emits a core:perceptible_event with standardized payload
- * structure. Optionally logs the event via AddPerceptionLogEntryHandler.
+ * @file Handler for DISPATCH_PERCEPTIBLE_EVENT operation
+ *
+ * Emits standardized perceptible events (actions/events that can be observed by nearby entities)
+ * with support for explicit recipient/exclusion lists and optional perception log entries.
+ *
+ * Operation flow:
+ * 1. Validate required parameters (location_id, description_text, perception_type, actor_id)
+ * 2. Normalize contextual_data with recipientIds/excludedActorIds (mutually exclusive)
+ * 3. Build standardized payload with timestamp and involved entities
+ * 4. Dispatch core:perceptible_event through event bus
+ * 5. Optionally log entry via AddPerceptionLogEntryHandler if log_entry=true
+ *
+ * Related files:
+ * @see data/schemas/operations/dispatchPerceptibleEvent.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DispatchPerceptibleEventHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
  */
 
 // --- Type Imports -----------------------------------------------------------

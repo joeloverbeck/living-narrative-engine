@@ -1,6 +1,23 @@
 /**
- * @file Operation handler for validating inventory capacity constraints
- * @see src/logic/operationHandlers/validateInventoryCapacityHandler.js
+ * @file Handler for VALIDATE_INVENTORY_CAPACITY operation
+ *
+ * Validates whether adding an item to an entity's inventory would exceed capacity limits.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (targetEntity, itemEntity)
+ * 2. Retrieves inventory component and current items
+ * 3. Gets item weight and calculates total with current inventory
+ * 4. Compares against inventory's max capacity
+ * 5. Returns validation result in specified context variable
+ *
+ * Related files:
+ * @see data/schemas/operations/validateInventoryCapacity.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - ValidateInventoryCapacityHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends BaseOperationHandler
  */
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';

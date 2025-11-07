@@ -1,8 +1,23 @@
-// src/logic/operationHandlers/queryComponentsHandler.js
-
 /**
- * @file Handles the QUERY_COMPONENTS operation which retrieves multiple
- * components from an entity at once.
+ * @file Handler for QUERY_COMPONENTS operation
+ *
+ * Retrieves multiple component types from an entity in a single operation.
+ *
+ * Operation flow:
+ * 1. Validates operation parameters (entity_ref, component_types array, result_variable)
+ * 2. Resolves entity reference to entity ID
+ * 3. Queries entityManager for each component type in array
+ * 4. Stores object map of component data in result_variable
+ * 5. Uses missing_value for any components not found
+ *
+ * Related files:
+ * @see data/schemas/operations/queryComponents.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - QueryComponentsHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
+ *
+ * @extends ComponentOperationHandler
  */
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
