@@ -494,7 +494,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         details: expect.objectContaining({
-          raw: expect.stringContaining('BodyBlueprintFactory.validateRecipeSlots'),
+          raw: expect.stringContaining('BlueprintValidator.validateRecipeSlots'),
         }),
       })
     );
@@ -1116,7 +1116,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
       componentOverrides
     );
     expect(deps.logger.debug).toHaveBeenCalledWith(
-      "BodyBlueprintFactory: Will apply 2 component overrides from recipe slot 'left_arm' during entity creation",
+      "SlotResolutionOrchestrator: Will apply 2 component overrides from recipe slot 'left_arm' during entity creation",
       componentOverrides
     );
   });

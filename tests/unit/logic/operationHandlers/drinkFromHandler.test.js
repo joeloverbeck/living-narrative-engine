@@ -135,10 +135,17 @@ describe('DrinkFromHandler', () => {
         flavorText: 'It tastes refreshing.',
       });
 
-      expect(em.modifyComponent).toHaveBeenCalledWith(
-        'bottle1',
-        LIQUID_CONTAINER_COMPONENT_ID,
-        { currentVolumeMilliliters: 300 }
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            instanceId: 'bottle1',
+            componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
+            componentData: expect.objectContaining({
+              currentVolumeMilliliters: 300
+            })
+          })
+        ]),
+        true
       );
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(LIQUID_CONSUMED_EVENT, {
@@ -200,10 +207,17 @@ describe('DrinkFromHandler', () => {
         DRINKABLE_COMPONENT_ID
       );
 
-      expect(em.modifyComponent).toHaveBeenCalledWith(
-        'bottle1',
-        LIQUID_CONTAINER_COMPONENT_ID,
-        { currentVolumeMilliliters: 0 }
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            instanceId: 'bottle1',
+            componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
+            componentData: expect.objectContaining({
+              currentVolumeMilliliters: 0
+            })
+          })
+        ]),
+        true
       );
     });
 

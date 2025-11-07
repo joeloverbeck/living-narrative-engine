@@ -158,11 +158,18 @@ describe('DrinkEntirelyHandler', () => {
         DRINKABLE_COMPONENT_ID
       );
 
-      // Verify volume set to 0
-      expect(em.modifyComponent).toHaveBeenCalledWith(
-        'bottle1',
-        LIQUID_CONTAINER_COMPONENT_ID,
-        { currentVolumeMilliliters: 0 }
+      // Verify volume set to 0 using batchAddComponentsOptimized
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            instanceId: 'bottle1',
+            componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
+            componentData: expect.objectContaining({
+              currentVolumeMilliliters: 0
+            })
+          })
+        ]),
+        true
       );
 
       // Verify event dispatched

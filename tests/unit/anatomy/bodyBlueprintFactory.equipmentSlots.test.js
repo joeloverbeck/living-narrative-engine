@@ -133,7 +133,7 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
     const result = await factory.createAnatomyGraph(blueprintId, recipeId);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'BodyBlueprintFactory: Skipping equipment slot \'weaponHand\' (socket: grip)',
+      'SlotResolutionOrchestrator: Skipping equipment slot \'weaponHand\' (socket: grip)',
     );
     expect(mockRecipeProcessor.mergeSlotRequirements).not.toHaveBeenCalled();
     expect(mockPartSelectionService.selectPart).not.toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
     const result = await factory.createAnatomyGraph(blueprintId, recipeId);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'BodyBlueprintFactory: Skipping equipment slot \'accessorySlot\' (socket: arm_mount)',
+      'SlotResolutionOrchestrator: Skipping equipment slot \'accessorySlot\' (socket: arm_mount)',
     );
     expect(mockRecipeProcessor.mergeSlotRequirements).not.toHaveBeenCalled();
     expect(mockPartSelectionService.selectPart).not.toHaveBeenCalled();
