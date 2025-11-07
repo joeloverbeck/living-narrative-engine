@@ -633,9 +633,13 @@ Property-based filtering is efficient for most use cases:
 
 ## Reference
 
-**Implementation**: `/src/anatomy/recipePatternResolver.js` (lines 346-395)
-**Schema**: `/data/schemas/anatomy.recipe.schema.json` (lines 299-318)
-**Tests**: `/tests/unit/anatomy/recipePatternResolver.test.js` (lines 445-577)
+**Implementation**:
+- Main resolver: `/src/anatomy/recipePatternResolver/patternResolver.js` (lines 390-399 for matchesAll invocation)
+- Property matcher: `/src/anatomy/recipePatternResolver/matchers/propertyMatcher.js` (lines 24-73 for `resolvePropertyFilter`, lines 85-114 for `validateMatchesAll`)
+
+**Schema**: `/data/schemas/anatomy.recipe.schema.json` (lines 303-322)
+
+**Tests**: `/tests/unit/anatomy/recipePatternResolver.test.js` (lines 635-801, `matchesAll Resolution` test suite)
 
 ## Related Documentation
 
