@@ -90,8 +90,8 @@ Blueprints define the **structure** of anatomy:
 - `SocketGenerator` (`src/anatomy/socketGenerator.js`) - V2 only
 
 **Data Files**:
-- `data/mods/*/anatomy/blueprints/*.blueprint.json`
-- `data/mods/*/anatomy/structure-templates/*.structure-template.json`
+- `data/mods/anatomy/blueprints/*.blueprint.json`
+- `data/mods/anatomy/structure-templates/*.structure-template.json`
 
 ### Recipe System
 
@@ -104,11 +104,12 @@ Recipes define the **content** for anatomy:
 
 **Key Classes**:
 - `RecipeProcessor` (`src/anatomy/recipeProcessor.js`)
-- `RecipePatternResolver` (`src/anatomy/recipePatternResolver.js`)
+- `RecipePatternResolver` (`src/anatomy/recipePatternResolver/patternResolver.js`)
 - `PartSelectionService` (`src/anatomy/partSelectionService.js`)
 
 **Data Files**:
-- `data/mods/*/anatomy/recipes/*.recipe.json`
+- `data/mods/anatomy/recipes/*.recipe.json` (primary location)
+- `data/mods/core/recipes/*.recipe.json` (additional recipes may exist in other mods)
 
 ### Entity Graph
 
@@ -120,7 +121,7 @@ The runtime representation of anatomy:
 
 **Key Classes**:
 - `EntityGraphBuilder` (`src/anatomy/entityGraphBuilder.js`)
-- `BodyGraphService` (`src/anatomy/services/bodyGraphService.js`)
+- `BodyGraphService` (`src/anatomy/bodyGraphService.js`)
 - `AnatomySocketIndex` (`src/anatomy/services/anatomySocketIndex.js`)
 
 ## Generation Pipeline
@@ -225,7 +226,7 @@ const socketId = `leg_${OrientationResolver.resolveOrientation('bilateral', 1, 4
 
 **Event ID**: `ANATOMY_GENERATED`
 
-**Dispatch Location**: `src/anatomy/workflows/anatomyGenerationWorkflow.js:187-210`
+**Dispatch Location**: `src/anatomy/workflows/anatomyGenerationWorkflow.js:197` (within event publishing block at lines 187-217)
 
 **Event Payload**:
 ```javascript
@@ -235,7 +236,11 @@ const socketId = `leg_${OrientationResolver.resolveOrientation('bilateral', 1, 4
   sockets: Array<{         // Available sockets for attachment
     id: string,            // Socket ID (e.g., "leg_left_front")
     orientation: string    // Socket orientation (e.g., "left_front")
-  }>
+  }>,
+  timestamp: number,       // Generation timestamp
+  bodyParts: Array,        // Generated body part entities
+  partsMap: Object,        // Part name to entity ID mapping
+  slotEntityMappings: Object  // Slot to entity mappings
 }
 ```
 
@@ -379,9 +384,11 @@ V2 Blueprint:
 
 ### RecipePatternResolver
 
-**Location**: `src/anatomy/recipePatternResolver.js`
+**Location**: `src/anatomy/recipePatternResolver/patternResolver.js`
 
 **Purpose**: Resolves recipe patterns to blueprint slots
+
+**Note**: RecipePatternResolver has been refactored into a modular architecture with separate matcher, validator, and utility modules within the `recipePatternResolver/` directory.
 
 **Supported Patterns**:
 - `matches`: Explicit slot list (V1)
@@ -647,7 +654,8 @@ const result = validateDescriptorValue('height', 'tall');
 - Stored at `body.descriptors.{schemaProperty}` in anatomy:body component
 
 **Validation**:
-- `BodyDescriptorValidator` class validates recipes against registry
+- `BodyDescriptorValidator` class (`src/anatomy/validators/bodyDescriptorValidator.js`) - System-wide validation with instance methods for comprehensive consistency checks
+- `BodyDescriptorValidator` utilities (`src/anatomy/utils/bodyDescriptorValidator.js`) - Runtime validation helpers used by workflows (imported by AnatomyGenerationWorkflow)
 - CLI tool (`npm run validate:body-descriptors`) checks system consistency
 - Validates: registry completeness, formatting config, recipe descriptors
 
@@ -677,6 +685,10 @@ The registry serves as the source of truth for:
 **Command**: `npm run validate:body-descriptors`
 
 **Location**: `scripts/validate-body-descriptors.js`
+
+**Validator Class**: `src/anatomy/validators/bodyDescriptorValidator.js` (used by CLI script for comprehensive system validation)
+
+**Runtime Validators**: `src/anatomy/utils/bodyDescriptorValidator.js` (utility functions used during anatomy generation)
 
 **Validates**:
 - Registry completeness
