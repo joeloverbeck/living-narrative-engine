@@ -16,9 +16,9 @@ This guide walks you through creating your first non-human creature using the Bl
 - Text editor with JSON support
 
 **Related Documentation**:
-- [Recipe Patterns](./recipe-patterns.md) - Complete pattern matching reference
-- [Common Non-Human Patterns](./common-non-human-patterns.md) - Tested creature patterns
-- [Property-Based Filtering](./property-based-filtering-examples.md) - Advanced filtering techniques
+- [Recipe Pattern Matching](./recipe-pattern-matching.md) - Complete pattern matching reference
+- [Common Creature Patterns](./recipe-pattern-matching.md#part-4-common-creature-patterns) - Tested creature patterns
+- [Pattern Reference](./recipe-pattern-matching.md#part-2-pattern-reference) - Advanced filtering techniques
 
 ## The Workflow
 
@@ -529,9 +529,8 @@ Use the same workflow for:
 
 ## Reference Documentation
 
-- **Structure Templates**: [structure-templates.md](./structure-templates.md) - Detailed template documentation
-- **Blueprint V2**: [blueprints-v2.md](./blueprints-v2.md) - Blueprint features and migration
-- **Recipe Patterns**: [recipe-patterns.md](./recipe-patterns.md) - Pattern matching guide
+- **Blueprints and Templates**: [blueprints-and-templates.md](./blueprints-and-templates.md) - Blueprint V2, structure templates, and migration guide
+- **Recipe Pattern Matching**: [recipe-pattern-matching.md](./recipe-pattern-matching.md) - Pattern matching guide
 - **Anatomy Formatting**: [../mods/anatomy-formatting.md](../mods/anatomy-formatting.md) - Description generation
 
 ## Example: Humanoid Reference

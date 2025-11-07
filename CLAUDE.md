@@ -402,9 +402,7 @@ import {
 - Validates: Registry completeness, formatting config, recipe descriptors
 
 **Documentation**:
-- [Body Descriptor Registry](docs/anatomy/body-descriptor-registry.md) - Full architecture and API
-- [Adding Body Descriptors](docs/anatomy/adding-body-descriptors.md) - Step-by-step guide
-- [Validator Reference](docs/anatomy/body-descriptor-validator-reference.md) - Validator API
+- [Body Descriptors Complete](docs/anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ## 🔄 Development Workflow
 

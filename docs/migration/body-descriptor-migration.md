@@ -47,9 +47,7 @@ npm run validate:body-descriptors
 ```
 
 **Documentation**:
-- [Body Descriptor Registry](../anatomy/body-descriptor-registry.md) - Complete registry architecture
-- [Adding Body Descriptors](../anatomy/adding-body-descriptors.md) - Guide for adding new descriptors
-- [Validator Reference](../anatomy/body-descriptor-validator-reference.md) - Validation tool API
+- [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ## Migration Strategies
 
