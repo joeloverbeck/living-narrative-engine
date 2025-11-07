@@ -1,8 +1,22 @@
 # ANASYSREF-009-04: Extract Workflow Stages from anatomyGenerationWorkflow
 
+## ⚠️ WORKFLOW VALIDATION NOTES
+
+**This workflow has been validated against the actual codebase. Key corrections made:**
+
+1. **Dependencies Corrected**: Removed non-existent dependencies (partSelectionService, socketGenerator, componentMutationService). Added actual dependencies (dataRegistry, eventBus, socketIndex).
+
+2. **Stage Breakdown Corrected**: The bodyBlueprintFactory.createAnatomyGraph() already does blueprint resolution, part selection, AND graph construction. This workflow only handles post-processing.
+
+3. **ANATOMY_GENERATED Event Structure Corrected**: Event includes `timestamp`, `bodyParts`, `partsMap`, `slotEntityMappings` (not `socketIndex`, `clothingInstantiated`, `clothingEntities` as originally assumed).
+
+4. **Method Signature Corrected**: `generate(blueprintId, recipeId, options)` not `generate(entityId, blueprintId, recipeData, options)`.
+
+5. **Actual Stages**: partsMapBuildingStage, slotEntityCreationStage, clothingInstantiationStage, eventPublicationStage (not blueprintResolution, partSelection, graphConstruction as originally assumed).
+
 ## Objective
 
-Refactor `anatomyGenerationWorkflow.js` (649 lines, 30% over limit) by extracting the four major workflow stages into focused modules, creating a clean orchestration pattern that improves maintainability while preserving all functionality including critical ANATOMY_GENERATED event dispatching.
+Refactor `anatomyGenerationWorkflow.js` (649 lines, 30% over limit) by extracting the four major post-processing stages into focused modules, creating a clean orchestration pattern that improves maintainability while preserving all functionality including critical ANATOMY_GENERATED event dispatching.
 
 ## Dependencies
 
@@ -20,27 +34,25 @@ Refactor `anatomyGenerationWorkflow.js` (649 lines, 30% over limit) by extractin
 
 ### Files to Create
 
-1. **src/anatomy/workflows/stages/blueprintResolutionStage.js** (~100 lines)
-   - Blueprint loading coordination
-   - Recipe loading and processing
-   - Blueprint-recipe validation
+**IMPORTANT:** The anatomy graph creation (blueprint resolution, part selection, graph construction) is already done by bodyBlueprintFactory.createAnatomyGraph(). The workflow does NOT do these steps - it only orchestrates post-processing.
 
-2. **src/anatomy/workflows/stages/partSelectionStage.js** (~100 lines)
-   - Part selection coordination
-   - Slot-to-entity mapping
-   - Part assignment validation
+1. **src/anatomy/workflows/stages/partsMapBuildingStage.js** (~80 lines)
+   - Build parts map from generated entities
+   - Update anatomy:body component with structure
+   - Body descriptor validation
 
-3. **src/anatomy/workflows/stages/graphConstructionStage.js** (~150 lines)
-   - Entity graph building
-   - Socket generation coordination
-   - Component updates and relationships
-   - Hierarchical structure creation
+2. **src/anatomy/workflows/stages/slotEntityCreationStage.js** (~150 lines)
+   - Create blueprint slot entities
+   - Build slot entity mappings
+   - Create clothing slot metadata component
 
-4. **src/anatomy/workflows/stages/clothingInstantiationStage.js** (~100 lines)
-   - Clothing metadata creation
-   - Clothing instantiation coordination
-   - Socket index building
-   - Clothing attachment to sockets
+3. **src/anatomy/workflows/stages/clothingInstantiationStage.js** (~100 lines)
+   - Clothing instantiation coordination (if recipe has clothing)
+   - Pass partsMap and slotEntityMappings to clothing service
+
+4. **src/anatomy/workflows/stages/eventPublicationStage.js** (~80 lines)
+   - Publish ANATOMY_GENERATED event (if eventBus and socketIndex available)
+   - Build event payload with all required fields
 
 ### Files to Modify
 
@@ -64,11 +76,24 @@ Refactor `anatomyGenerationWorkflow.js` (649 lines, 30% over limit) by extractin
 src/anatomy/workflows/
 ├── anatomyGenerationWorkflow.js (main coordinator, <350 lines)
 └── stages/
-    ├── blueprintResolutionStage.js (~100 lines)
-    ├── partSelectionStage.js (~100 lines)
-    ├── graphConstructionStage.js (~150 lines)
-    └── clothingInstantiationStage.js (~100 lines)
+    ├── partsMapBuildingStage.js (~80 lines)
+    ├── slotEntityCreationStage.js (~150 lines)
+    ├── clothingInstantiationStage.js (~100 lines)
+    └── eventPublicationStage.js (~80 lines)
 ```
+
+### Current Dependencies (Actual)
+
+The workflow currently uses these dependencies (constructor, lines 48-56):
+- **entityManager** (IEntityManager) - Entity manipulation
+- **dataRegistry** (IDataRegistry) - Data access (recipes, blueprints)
+- **logger** (ILogger) - Logging
+- **bodyBlueprintFactory** (BodyBlueprintFactory) - Graph creation (does blueprint resolution, part selection, graph construction)
+- **clothingInstantiationService** (ClothingInstantiationService) - Optional, clothing instantiation
+- **eventBus** (ISafeEventDispatcher) - Optional, event publishing
+- **socketIndex** (AnatomySocketIndex) - Optional, socket lookup for events
+
+**NOTE:** The workflow does NOT use partSelectionService, socketGenerator, or componentMutationService. Those are used internally by bodyBlueprintFactory.
 
 ## Implementation Steps
 
@@ -81,35 +106,31 @@ mkdir -p src/anatomy/workflows/stages
 
 **Expected Outcome:** Directory created at `src/anatomy/workflows/stages/`
 
-### Step 2: Extract blueprintResolutionStage Module
+### Step 2: Extract partsMapBuildingStage Module
 
-**Action:** Create `src/anatomy/workflows/stages/blueprintResolutionStage.js`
+**Action:** Create `src/anatomy/workflows/stages/partsMapBuildingStage.js`
 
 **Extract from anatomyGenerationWorkflow.js:**
-- Blueprint loading coordination
-- Recipe loading and processing
-- Blueprint-recipe validation
+- Lines 111: #buildPartsMap() method (lines 229-262)
+- Lines 116-121: #updateAnatomyBodyComponent() method (lines 493-538)
 
 **Module Interface:**
 ```javascript
 /**
- * Resolves blueprint and recipe for anatomy generation
+ * Builds parts map and updates anatomy:body component
  * @param {object} context - Generation context
  * @param {object} dependencies - Required services
- * @returns {object} Resolved blueprint and recipe
+ * @returns {object} Parts map
  */
-export async function executeBlueprintResolution(context, dependencies) {
-  const { entityId, blueprintId, recipeData } = context;
-  const { bodyBlueprintFactory, logger } = dependencies;
+export async function executePartsMapBuilding(context, dependencies) {
+  const { graphResult, ownerId, recipeId } = context;
+  const { entityManager, dataRegistry, logger } = dependencies;
 
-  // 1. Load blueprint
-  // 2. Process recipe
-  // 3. Validate blueprint-recipe consistency
+  // 1. Build parts map from graphResult.entities
+  // 2. Update anatomy:body component with structure and descriptors
 
   return {
-    blueprint,
-    recipe,
-    slots // Resolved slots
+    partsMap // Map<string, string>
   };
 }
 ```
@@ -120,87 +141,37 @@ npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow.test
 ```
 
 **Expected Outcome:**
-- Module created (~100 lines)
+- Module created (~80 lines)
 - No syntax errors
 - Tests may fail (expected until refactoring complete)
 
-### Step 3: Extract partSelectionStage Module
+### Step 3: Extract slotEntityCreationStage Module
 
-**Action:** Create `src/anatomy/workflows/stages/partSelectionStage.js`
+**Action:** Create `src/anatomy/workflows/stages/slotEntityCreationStage.js`
 
 **Extract from anatomyGenerationWorkflow.js:**
-- Part selection coordination
-- Slot-to-entity mapping
-- Part assignment validation
+- Lines 127-130: #createBlueprintSlotEntities() method (lines 272-418)
+- Lines 132-136: #buildSlotEntityMappings() method (lines 428-480)
+- Lines 138-139: #createClothingSlotMetadata() method (lines 548-601)
 
 **Module Interface:**
 ```javascript
 /**
- * Executes part selection for all slots
- * @param {object} context - Generation context with blueprint and slots
- * @param {object} dependencies - Required services (partSelectionService, etc.)
- * @returns {Map} Map of slot IDs to selected part entities
+ * Creates blueprint slot entities and mappings
+ * @param {object} context - Generation context
+ * @param {object} dependencies - Required services
+ * @returns {object} Slot entity mappings
  */
-export async function executePartSelection(context, dependencies) {
-  const { blueprint, slots, entityId } = context;
-  const { partSelectionService, logger } = dependencies;
+export async function executeSlotEntityCreation(context, dependencies) {
+  const { blueprintId, graphResult, ownerId } = context;
+  const { entityManager, dataRegistry, logger } = dependencies;
 
-  // 1. Select parts for each slot
-  // 2. Create part entities
-  // 3. Map slots to entities
+  // 1. Create blueprint slot entities (from blueprint.slots)
+  // 2. Build slot entity mappings
+  // 3. Create clothing slot metadata component
 
   return {
-    partEntities, // Map<slotId, entityId>
-    createdEntities // Array of entity IDs
-  };
-}
-```
-
-**Testing:**
-```bash
-npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow.test.js
-```
-
-**Expected Outcome:**
-- Module created (~100 lines)
-- No syntax errors
-
-### Step 4: Extract graphConstructionStage Module
-
-**Action:** Create `src/anatomy/workflows/stages/graphConstructionStage.js`
-
-**Extract from anatomyGenerationWorkflow.js:**
-- Entity graph building
-- Socket generation coordination
-- Component updates (parent-child relationships)
-- Hierarchical structure creation
-
-**Module Interface:**
-```javascript
-/**
- * Constructs the entity graph with sockets and relationships
- * @param {object} context - Generation context with parts and slots
- * @param {object} dependencies - Required services (socketGenerator, componentMutationService, etc.)
- * @returns {object} Constructed graph with sockets
- */
-export async function executeGraphConstruction(context, dependencies) {
-  const { blueprint, slots, partEntities, entityId } = context;
-  const {
-    socketGenerator,
-    componentMutationService,
-    entityManager,
-    logger
-  } = dependencies;
-
-  // 1. Generate sockets for all slots
-  // 2. Create parent-child relationships
-  // 3. Update components with socket references
-  // 4. Build hierarchical structure
-
-  return {
-    sockets, // Array of socket objects
-    socketIndex, // Map for quick socket lookup
-    rootEntityId // Root of the anatomy graph
+    slotEntityMappings // Map<string, string>
   };
 }
 ```
@@ -214,42 +185,77 @@ npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow.test
 - Module created (~150 lines)
 - No syntax errors
 
+### Step 4: Extract eventPublicationStage Module
+
+**Action:** Create `src/anatomy/workflows/stages/eventPublicationStage.js`
+
+**Extract from anatomyGenerationWorkflow.js:**
+- Lines 187-217: Event publication logic
+
+**Module Interface:**
+```javascript
+/**
+ * Publishes ANATOMY_GENERATED event if eventBus and socketIndex available
+ * @param {object} context - Generation context
+ * @param {object} dependencies - Required services
+ * @returns {void}
+ */
+export async function executeEventPublication(context, dependencies) {
+  const { ownerId, blueprintId, graphResult, partsMap, slotEntityMappings } = context;
+  const { eventBus, socketIndex, dataRegistry, logger } = dependencies;
+
+  // Only execute if eventBus and socketIndex are available
+  if (!eventBus || !socketIndex) {
+    return;
+  }
+
+  // 1. Get sockets from socketIndex
+  // 2. Build event payload with all required fields
+  // 3. Dispatch ANATOMY_GENERATED event
+
+  // Event payload: { entityId, blueprintId, sockets, timestamp, bodyParts, partsMap, slotEntityMappings }
+}
+```
+
+**Testing:**
+```bash
+npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow.events.test.js
+```
+
+**Expected Outcome:**
+- Module created (~80 lines)
+- No syntax errors
+
 ### Step 5: Extract clothingInstantiationStage Module
 
 **Action:** Create `src/anatomy/workflows/stages/clothingInstantiationStage.js`
 
 **Extract from anatomyGenerationWorkflow.js:**
-- Clothing metadata creation
-- Clothing instantiation coordination
-- Socket index building
-- Clothing attachment to sockets
+- Lines 142-173: Clothing instantiation logic
 
 **Module Interface:**
 ```javascript
 /**
- * Instantiates clothing if configured
- * @param {object} context - Generation context with sockets and options
+ * Instantiates clothing if configured in recipe
+ * @param {object} context - Generation context
  * @param {object} dependencies - Required services
- * @returns {object} Clothing instantiation results
+ * @returns {object|undefined} Clothing instantiation results or undefined
  */
 export async function executeClothingInstantiation(context, dependencies) {
-  const { sockets, socketIndex, entityId, options } = context;
-  const { clothingInstantiationService, logger } = dependencies;
+  const { ownerId, recipeId, partsMap, slotEntityMappings } = context;
+  const { clothingInstantiationService, dataRegistry, logger } = dependencies;
 
-  // Only execute if instantiateClothing option is true
-  if (!options.instantiateClothing) {
-    return { clothingInstantiated: false };
+  // Only execute if clothingInstantiationService is available
+  if (!clothingInstantiationService) {
+    return undefined;
   }
 
-  // 1. Build socket index
-  // 2. Create clothing metadata
-  // 3. Coordinate clothing instantiation
-  // 4. Attach clothing to sockets
+  // 1. Get recipe from dataRegistry
+  // 2. Check if recipe has clothingEntities
+  // 3. Call clothingInstantiationService.instantiateRecipeClothing()
+  // 4. Return clothingResult (contains instantiated array)
 
-  return {
-    clothingInstantiated: true,
-    clothingEntities // Array of clothing entity IDs
-  };
+  return clothingResult; // { instantiated: [...], ... } or undefined
 }
 ```
 
@@ -270,81 +276,94 @@ npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow.test
 
 1. **Add imports:**
 ```javascript
-import { executeBlueprintResolution } from './stages/blueprintResolutionStage.js';
-import { executePartSelection } from './stages/partSelectionStage.js';
-import { executeGraphConstruction } from './stages/graphConstructionStage.js';
+import { executePartsMapBuilding } from './stages/partsMapBuildingStage.js';
+import { executeSlotEntityCreation } from './stages/slotEntityCreationStage.js';
 import { executeClothingInstantiation } from './stages/clothingInstantiationStage.js';
+import { executeEventPublication } from './stages/eventPublicationStage.js';
 ```
 
 2. **Refactor generate() method:**
 ```javascript
-async generate(entityId, blueprintId, recipeData, options = {}) {
-  try {
-    // Stage 1: Blueprint Resolution
-    const blueprintContext = await executeBlueprintResolution(
-      { entityId, blueprintId, recipeData },
-      this.#getDependencies()
-    );
+async generate(blueprintId, recipeId, options) {
+  const { ownerId } = options;
 
-    // Stage 2: Part Selection
-    const partContext = await executePartSelection(
-      { ...blueprintContext, entityId },
-      this.#getDependencies()
-    );
+  this.#logger.debug(
+    `AnatomyGenerationWorkflow: Starting generate() for entity '${ownerId}' using blueprint '${blueprintId}' and recipe '${recipeId}'`
+  );
 
-    // Stage 3: Graph Construction
-    const graphContext = await executeGraphConstruction(
-      { ...blueprintContext, ...partContext, entityId },
-      this.#getDependencies()
-    );
+  // Step 1: Generate the anatomy graph (blueprint resolution, part selection, graph construction)
+  // This is done by bodyBlueprintFactory - NOT by this workflow
+  const graphResult = await this.#bodyBlueprintFactory.createAnatomyGraph(
+    blueprintId,
+    recipeId,
+    { ownerId }
+  );
 
-    // Stage 4: Clothing Instantiation (optional)
-    const clothingContext = await executeClothingInstantiation(
-      { ...graphContext, entityId, options },
-      this.#getDependencies()
-    );
+  this.#logger.debug(
+    `AnatomyGenerationWorkflow: Generated ${graphResult.entities.length} anatomy parts for entity '${ownerId}'`
+  );
 
-    // Dispatch ANATOMY_GENERATED event (CRITICAL!)
-    this.#eventBus.dispatch({
-      type: 'ANATOMY_GENERATED',
-      payload: {
-        entityId,
-        blueprintId,
-        sockets: graphContext.sockets,
-        socketIndex: graphContext.socketIndex,
-        ...clothingContext
-      }
-    });
+  // Step 2: Build parts map and update anatomy:body component
+  const { partsMap } = await executePartsMapBuilding(
+    { graphResult, ownerId, recipeId },
+    this.#getDependencies()
+  );
 
-    return {
-      success: true,
-      entityId,
-      sockets: graphContext.sockets,
-      ...clothingContext
-    };
-  } catch (error) {
-    // Error handling
+  graphResult.partsMap = partsMap;
+
+  // Step 3: Create blueprint slot entities and mappings
+  const { slotEntityMappings } = await executeSlotEntityCreation(
+    { blueprintId, graphResult, ownerId },
+    this.#getDependencies()
+  );
+
+  // Step 4: Instantiate clothing (optional)
+  const clothingResult = await executeClothingInstantiation(
+    { ownerId, recipeId, partsMap, slotEntityMappings },
+    this.#getDependencies()
+  );
+
+  // Step 5: Publish ANATOMY_GENERATED event (optional)
+  await executeEventPublication(
+    { ownerId, blueprintId, graphResult, partsMap, slotEntityMappings },
+    this.#getDependencies()
+  );
+
+  // Build result
+  const result = {
+    rootId: graphResult.rootId,
+    entities: graphResult.entities,
+    partsMap,
+    slotEntityMappings,
+  };
+
+  if (clothingResult) {
+    result.clothingResult = clothingResult;
   }
+
+  return result;
 }
 
 #getDependencies() {
   return {
-    bodyBlueprintFactory: this.#bodyBlueprintFactory,
-    partSelectionService: this.#partSelectionService,
-    socketGenerator: this.#socketGenerator,
-    componentMutationService: this.#componentMutationService,
     entityManager: this.#entityManager,
+    dataRegistry: this.#dataRegistry,
+    bodyBlueprintFactory: this.#bodyBlueprintFactory,
     clothingInstantiationService: this.#clothingInstantiationService,
+    eventBus: this.#eventBus,
+    socketIndex: this.#socketIndex,
     logger: this.#logger
   };
 }
 ```
 
-3. **Remove extracted stage logic:**
-   - Delete inline blueprint resolution code
-   - Delete inline part selection code
-   - Delete inline graph construction code
-   - Delete inline clothing instantiation code
+3. **Remove extracted private methods:**
+   - Delete #buildPartsMap()
+   - Delete #updateAnatomyBodyComponent()
+   - Delete #createBlueprintSlotEntities()
+   - Delete #buildSlotEntityMappings()
+   - Delete #createClothingSlotMetadata()
+   - Keep validateBodyDescriptors() and validateRecipe() (public methods)
 
 **Testing:**
 ```bash
@@ -352,7 +371,7 @@ npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow
 ```
 
 **Expected Outcome:**
-- File reduced to <350 lines
+- File reduced to <250 lines (much smaller than expected!)
 - Tests should pass
 - No functional changes (behavior identical)
 
@@ -365,18 +384,33 @@ npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow
 npm run test:unit -- tests/unit/anatomy/workflows/anatomyGenerationWorkflow.events.test.js
 ```
 
-**Verify Event Payload Includes:**
-- `entityId`
-- `blueprintId`
-- `sockets` (array of socket objects)
-- `socketIndex` (Map for quick lookup)
-- `clothingInstantiated` (boolean)
-- `clothingEntities` (array, if clothing instantiated)
+**Verify Event Payload Includes (Actual Structure):**
+- `entityId` - The owner entity ID
+- `blueprintId` - The blueprint ID
+- `sockets` - Array of socket objects (from socketIndex.getEntitySockets())
+- `timestamp` - Date.now() timestamp
+- `bodyParts` - Array of entity IDs (graphResult.entities)
+- `partsMap` - Plain object (converted from Map)
+- `slotEntityMappings` - Plain object (converted from Map)
+
+**Event Dispatch Pattern:**
+```javascript
+this.#eventBus.dispatch('ANATOMY_GENERATED', {
+  // event type is first parameter, not in payload
+  entityId: ownerId,
+  blueprintId: blueprintId,
+  sockets: sockets,
+  timestamp: Date.now(),
+  bodyParts: graphResult.entities,
+  partsMap: Object.fromEntries(partsMap),
+  slotEntityMappings: Object.fromEntries(slotEntityMappings),
+})
+```
 
 **Expected Outcome:**
 - Event test passes
 - Event payload structure unchanged
-- Event timing correct (after socket index built, before clothing instantiation)
+- Event only dispatches if both eventBus AND socketIndex are available
 
 ### Step 8: Run Complete Test Suite
 
@@ -407,11 +441,12 @@ wc -l src/anatomy/workflows/stages/*.js
 ```
 
 **Expected Outcome:**
-- anatomyGenerationWorkflow.js: <350 lines (reduced from 649)
-- blueprintResolutionStage.js: ~100 lines
-- partSelectionStage.js: ~100 lines
-- graphConstructionStage.js: ~150 lines
+- anatomyGenerationWorkflow.js: <250 lines (reduced from 649)
+- partsMapBuildingStage.js: ~80 lines
+- slotEntityCreationStage.js: ~150 lines
 - clothingInstantiationStage.js: ~100 lines
+- eventPublicationStage.js: ~80 lines
+- Total: ~660 lines distributed across 5 files (vs 649 in single file)
 
 ## Testing Strategy
 
@@ -469,21 +504,21 @@ npm run typecheck
 
 ## Success Criteria
 
-- [x] Directory structure created
-- [x] blueprintResolutionStage.js created (~100 lines)
-- [x] partSelectionStage.js created (~100 lines)
-- [x] graphConstructionStage.js created (~150 lines)
-- [x] clothingInstantiationStage.js created (~100 lines)
-- [x] anatomyGenerationWorkflow.js refactored (<350 lines)
-- [x] All anatomyGenerationWorkflow unit tests pass
-- [x] Event tests pass (ANATOMY_GENERATED)
-- [x] Integration tests pass (all anatomy generation scenarios)
-- [x] ESLint passes on all modified files
-- [x] No breaking changes to public API
-- [x] Code coverage maintained at 80%+ branches, 90%+ functions/lines
-- [x] ANATOMY_GENERATED event dispatches correctly
-- [x] Socket index builds correctly
-- [x] Clothing integration works (when enabled)
+- [ ] Directory structure created (src/anatomy/workflows/stages/)
+- [ ] partsMapBuildingStage.js created (~80 lines)
+- [ ] slotEntityCreationStage.js created (~150 lines)
+- [ ] clothingInstantiationStage.js created (~100 lines)
+- [ ] eventPublicationStage.js created (~80 lines)
+- [ ] anatomyGenerationWorkflow.js refactored (<250 lines)
+- [ ] All anatomyGenerationWorkflow unit tests pass
+- [ ] Event tests pass (ANATOMY_GENERATED with correct payload structure)
+- [ ] Integration tests pass (all anatomy generation scenarios)
+- [ ] ESLint passes on all modified files
+- [ ] No breaking changes to public API
+- [ ] Code coverage maintained at 80%+ branches, 90%+ functions/lines
+- [ ] ANATOMY_GENERATED event dispatches correctly (only if eventBus and socketIndex available)
+- [ ] Event payload includes: entityId, blueprintId, sockets, timestamp, bodyParts, partsMap, slotEntityMappings
+- [ ] Clothing integration works (when recipe has clothingEntities)
 
 ## Risk Assessment
 
@@ -530,20 +565,17 @@ npm run typecheck
 ## Definition of Done
 
 - [ ] All 4 stage modules created with correct line counts
-- [ ] anatomyGenerationWorkflow.js refactored (<350 lines)
+- [ ] anatomyGenerationWorkflow.js refactored (<250 lines)
 - [ ] All anatomyGenerationWorkflow unit tests pass without modification
-- [ ] Event tests pass (ANATOMY_GENERATED dispatch)
+- [ ] Event tests pass (ANATOMY_GENERATED dispatch with correct payload)
 - [ ] ESLint passes on all modified files (zero warnings)
 - [ ] TypeScript type checking passes
 - [ ] All integration tests pass (anatomy generation scenarios)
-- [ ] Human anatomy generates correctly (V1)
-- [ ] Spider anatomy generates correctly (8 legs)
-- [ ] Dragon anatomy generates correctly (legs + wings + tail)
-- [ ] ANATOMY_GENERATED event dispatches with correct payload
-- [ ] Socket index builds correctly
-- [ ] Clothing integration works (when enabled)
+- [ ] ANATOMY_GENERATED event dispatches with correct payload structure
+- [ ] Event only dispatches when both eventBus AND socketIndex are available
+- [ ] Clothing integration works (when recipe has clothingEntities)
 - [ ] Code coverage maintained at 80%+ branches, 90%+ functions/lines
-- [ ] No breaking changes to public API
+- [ ] No breaking changes to public API (generate signature unchanged)
 - [ ] No performance regression
 - [ ] Git commit created with descriptive message
 - [ ] Ready for ANASYSREF-009-05 (final validation)
@@ -560,24 +592,25 @@ The ANATOMY_GENERATED event is **CRITICAL** for system integration:
 
 **Event Payload Structure (MUST PRESERVE):**
 ```javascript
+// Event dispatch: eventBus.dispatch('ANATOMY_GENERATED', payload)
+// Event type is first parameter, NOT in payload!
 {
-  type: 'ANATOMY_GENERATED',
-  payload: {
-    entityId: string,
-    blueprintId: string,
-    sockets: Array<object>, // Socket objects
-    socketIndex: Map<string, object>, // Socket lookup index
-    clothingInstantiated: boolean,
-    clothingEntities: Array<string> // If clothing instantiated
-  }
+  entityId: string,              // Owner entity ID
+  blueprintId: string,           // Blueprint ID
+  sockets: Array<object>,        // Socket objects from socketIndex
+  timestamp: number,             // Date.now() timestamp
+  bodyParts: Array<string>,      // All entity IDs (graphResult.entities)
+  partsMap: object,              // Plain object (converted from Map)
+  slotEntityMappings: object,    // Plain object (converted from Map)
 }
 ```
 
 **Stage Execution Order (MUST PRESERVE):**
-1. Blueprint Resolution → produces blueprint, recipe, slots
-2. Part Selection → produces part entities
-3. Graph Construction → produces sockets, socket index, relationships
-4. Clothing Instantiation (optional) → produces clothing entities
+1. bodyBlueprintFactory.createAnatomyGraph() → produces entire graph (blueprint resolution, part selection, graph construction all done here!)
+2. Parts Map Building → builds partsMap, updates anatomy:body component
+3. Slot Entity Creation → creates slot entities, builds slot mappings, creates clothing slot metadata
+4. Clothing Instantiation (optional) → instantiates clothing if recipe has clothingEntities
+5. Event Publication (optional) → publishes ANATOMY_GENERATED event if eventBus and socketIndex available
 
 **File Size Verification:**
 After completion, verify all files ≤500 lines:
@@ -587,9 +620,12 @@ wc -l src/anatomy/workflows/stages/*.js
 ```
 
 **Expected:**
-- anatomyGenerationWorkflow.js: <350 lines
-- Each stage module: ≤150 lines
-- Total: <800 lines (well distributed across 5 files)
+- anatomyGenerationWorkflow.js: <250 lines (down from 649)
+- partsMapBuildingStage.js: ~80 lines
+- slotEntityCreationStage.js: ~150 lines
+- clothingInstantiationStage.js: ~100 lines
+- eventPublicationStage.js: ~80 lines
+- Total: ~660 lines (well distributed across 5 files)
 
 **Next Steps:**
 After completion, proceed to **ANASYSREF-009-05** for final validation and documentation.
