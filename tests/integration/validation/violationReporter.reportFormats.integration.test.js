@@ -6,7 +6,11 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
+import { promises as fs } from 'fs';
+import os from 'os';
+import path from 'path';
 import ModCrossReferenceValidator from '../../../cli/validation/modCrossReferenceValidator.js';
+import ManifestFileExistenceValidator from '../../../cli/validation/manifestFileExistenceValidator.js';
 import ViolationReporter from '../../../src/validation/violationReporter.js';
 import { createTestBed } from '../../common/testBed.js';
 
@@ -361,5 +365,162 @@ describe('ViolationReporter multi-format integration', () => {
     expect(() => reporter.generateReport(cloneReport(), 'xml')).toThrow(
       'Unsupported report format: xml'
     );
+  });
+
+  it('summarizes mods without violations with consistent multi-format output', () => {
+    const cleanReport = {
+      modId: 'positioning',
+      hasViolations: false,
+      violations: [],
+      declaredDependencies: ['core'],
+      referencedMods: ['core'],
+      summary: { totalReferences: 2 },
+    };
+
+    const consoleReport = reporter.generateReport(cleanReport, 'console');
+    expect(consoleReport).toContain('✅ No cross-reference violations detected');
+    expect(consoleReport).toContain('References to 1 mods');
+    expect(consoleReport).toContain('  - All references properly declared as dependencies');
+
+    const htmlReport = reporter.generateReport(cleanReport, 'html', {
+      title: 'Clean Report',
+    });
+    expect(htmlReport).toContain('<h3>✅ No violations detected</h3>');
+
+    const markdownReport = reporter.generateReport(cleanReport, 'markdown', {
+      title: 'Clean Report',
+    });
+    expect(markdownReport).toContain('### ✅ No violations detected');
+  });
+
+  it('handles nested cross-reference maps and colorless severity totals', () => {
+    const detailedReport = cloneReport();
+    const nestedSummary = {
+      hasViolations: true,
+      violations: detailedReport.violations.slice(0, 1),
+      missingDependencies: detailedReport.missingDependencies,
+    };
+
+    const crossReferenceMap = new Map([
+      [detailedReport.modId, detailedReport],
+      ['aggregated', { crossReferences: nestedSummary }],
+      ['stale-mod', null],
+    ]);
+
+    const wrapper = { crossReferences: crossReferenceMap };
+
+    const consoleReport = reporter.generateReport(wrapper, 'console', {
+      colors: false,
+      showSuggestions: false,
+    });
+    expect(consoleReport).toContain('Violation Summary by Mod:');
+    expect(consoleReport).toContain('aggregated');
+    expect(consoleReport).toContain('Missing Dependencies');
+
+    const jsonSummary = JSON.parse(
+      reporter.generateReport(crossReferenceMap, 'json')
+    );
+    expect(jsonSummary.summary.totalMods).toBe(crossReferenceMap.size);
+    expect(jsonSummary.summary.totalViolations).toBeGreaterThan(0);
+  });
+
+  it('generates legacy console fallback when severity metadata is suppressed', () => {
+    const detailedReport = cloneReport();
+    const legacyViolations = detailedReport.violations.map(
+      ({
+        severity,
+        suggestedFixes,
+        impact,
+        contextSnippet,
+        metadata,
+        ...rest
+      }) => ({
+        ...rest,
+        file: 'actions/kiss.action.json',
+        suggestedFix: `Add "${rest.referencedMod}" to dependencies in mod-manifest.json`,
+      })
+    );
+
+    const legacyReport = {
+      ...detailedReport,
+      violations: legacyViolations,
+      declaredDependencies: [],
+      referencedMods: [],
+    };
+
+    const severitySpy = jest
+      .spyOn(reporter, '_groupBySeverity')
+      .mockReturnValue(new Map());
+
+    const consoleReport = reporter.generateReport(legacyReport, 'console');
+    expect(consoleReport).toContain('Violations:');
+    expect(consoleReport).toContain('📦 Missing dependency:');
+    expect(consoleReport).toContain('Fix: Add');
+    expect(consoleReport).toContain('(none declared)');
+    expect(consoleReport).toContain('(no external references found)');
+
+    severitySpy.mockRestore();
+  });
+
+  it('produces file existence validation console report for invalid mods', async () => {
+    const tempBaseDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'violation-reporter-')
+    );
+
+    try {
+      const validModPath = path.join(tempBaseDir, 'valid', 'actions');
+      const brokenModActions = path.join(tempBaseDir, 'broken', 'actions');
+      const brokenModRules = path.join(tempBaseDir, 'broken', 'rules');
+
+      await fs.mkdir(validModPath, { recursive: true });
+      await fs.mkdir(brokenModActions, { recursive: true });
+      await fs.mkdir(brokenModRules, { recursive: true });
+
+      await fs.writeFile(path.join(validModPath, 'present.action.json'), '{}');
+      await fs.writeFile(
+        path.join(brokenModActions, 'greet-action.json'),
+        '{}'
+      );
+
+      const manifests = new Map([
+        [
+          'valid',
+          {
+            id: 'valid',
+            content: { actions: ['present.action.json'] },
+          },
+        ],
+        [
+          'broken',
+          {
+            id: 'broken',
+            content: {
+              actions: ['greet_action.json'],
+              rules: ['missing.rule.json'],
+            },
+          },
+        ],
+      ]);
+
+      const fileValidator = new ManifestFileExistenceValidator({
+        logger: mockLogger,
+        modsBasePath: tempBaseDir,
+      });
+
+      const results = await fileValidator.validateAllMods(manifests);
+
+      const consoleReport = reporter.generateReport(
+        { fileExistence: results },
+        'console'
+      );
+
+      expect(consoleReport).toContain('File Existence Validation Report');
+      expect(consoleReport).toContain('❌ Found 2 issues in 1 mod');
+      expect(consoleReport).toContain('greet_action.json');
+      expect(consoleReport).toContain('missing.rule.json');
+      expect(consoleReport).toContain('Fix: Update manifest');
+    } finally {
+      await fs.rm(tempBaseDir, { recursive: true, force: true });
+    }
   });
 });
