@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness", "positioning:facing_away"]
   },
   "forbidden_components": {
-    "actor": ["positioning:biting_neck"]
+    "actor": ["positioning:bending_over", "positioning:biting_neck"]
   },
   "template": "turn around to face {target}",
   "prerequisites": [],

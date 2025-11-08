@@ -17,6 +17,9 @@
     }
   },
   "required_components": {},
+  "forbidden_components": {
+    "actor": ["positioning:bending_over"]
+  },
   "generateCombinations": true,
   "template": "remove {person}'s {item}",
   "prerequisites": [],

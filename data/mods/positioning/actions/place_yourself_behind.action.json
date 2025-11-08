@@ -16,6 +16,7 @@
   "forbidden_components": {
     "actor": [
       "positioning:being_hugged",
+      "positioning:bending_over",
       "positioning:biting_neck",
       "positioning:hugging",
       "positioning:sitting_on",

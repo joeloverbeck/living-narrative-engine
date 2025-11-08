@@ -11,6 +11,7 @@ import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 // Import all the actions that should be forbidden when bending over
 import removeOthersClothingAction from '../../../data/mods/clothing/actions/remove_others_clothing.action.json' assert { type: 'json' };
 import goAction from '../../../data/mods/movement/actions/go.action.json' assert { type: 'json' };
+import followAction from '../../../data/mods/companionship/actions/follow.action.json' assert { type: 'json' };
 import giveItemAction from '../../../data/mods/items/actions/give_item.action.json' assert { type: 'json' };
 import pickUpItemAction from '../../../data/mods/items/actions/pick_up_item.action.json' assert { type: 'json' };
 import placeYourselfBehindAction from '../../../data/mods/positioning/actions/place_yourself_behind.action.json' assert { type: 'json' };
@@ -80,6 +81,42 @@ describe('Bending Over - Forbidden Actions Bug', () => {
       // Currently FAILS - should be 0 but is > 0 (proving the bug)
       // After fix: should be 0
       expect(goActions.length).toBe(0);
+    });
+
+    it('should NOT allow "follow" action when actor is bending over', () => {
+      // Setup: Actor bending over with a potential leader in the room
+      const room = new ModEntityBuilder('test:room').asRoom('Room').build();
+
+      const table = new ModEntityBuilder('test:table')
+        .withName('Table')
+        .atLocation('test:room')
+        .withComponent('core:actor', {})
+        .build();
+
+      const leader = new ModEntityBuilder('test:leader')
+        .withName('Bob')
+        .atLocation('test:room')
+        .asActor()
+        .build();
+
+      const actor = new ModEntityBuilder('test:actor')
+        .withName('Alice')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('positioning:bending_over', { surface_id: 'test:table' })
+        .build();
+
+      testFixture.reset([room, table, leader, actor]);
+      testFixture.testEnv.actionIndex.buildIndex([followAction]);
+
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('test:actor');
+      const followActions = availableActions.filter(
+        (a) => a.id === 'companionship:follow'
+      );
+
+      // Currently FAILS - should be 0 but is > 0 (proving the bug)
+      expect(followActions.length).toBe(0);
     });
   });
 
