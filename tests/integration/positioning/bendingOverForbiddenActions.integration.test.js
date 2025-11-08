@@ -18,6 +18,10 @@ import stepBackAction from '../../../data/mods/positioning/actions/step_back.act
 import turnAroundToFaceAction from '../../../data/mods/positioning/actions/turn_around_to_face.action.json' assert { type: 'json' };
 import fondleBreastsOverClothesAction from '../../../data/mods/sex-breastplay/actions/fondle_breasts_over_clothes.action.json' assert { type: 'json' };
 import fondleBreastsAction from '../../../data/mods/sex-breastplay/actions/fondle_breasts.action.json' assert { type: 'json' };
+import lickBreastsAction from '../../../data/mods/sex-breastplay/actions/lick_breasts.action.json' assert { type: 'json' };
+import suckOnNipplesAction from '../../../data/mods/sex-breastplay/actions/suck_on_nipples.action.json' assert { type: 'json' };
+import nuzzleBareBreastsAction from '../../../data/mods/sex-breastplay/actions/nuzzle_bare_breasts.action.json' assert { type: 'json' };
+import pumpPenisAction from '../../../data/mods/sex-penile-manual/actions/pump_penis.action.json' assert { type: 'json' };
 import slapAction from '../../../data/mods/violence/actions/slap.action.json' assert { type: 'json' };
 import suckerPunchAction from '../../../data/mods/violence/actions/sucker_punch.action.json' assert { type: 'json' };
 
@@ -430,6 +434,174 @@ describe('Bending Over - Forbidden Actions Bug', () => {
 
       // Currently FAILS - should be 0 but is > 0 (proving the bug)
       expect(fondleActions.length).toBe(0);
+    });
+
+    it('should NOT allow "lick_breasts" action when actor is bending over', () => {
+      // Setup: Actor bending over near someone with breasts, close and facing each other
+      const room = new ModEntityBuilder('test:room').asRoom('Room').build();
+
+      const table = new ModEntityBuilder('test:table')
+        .withName('Table')
+        .atLocation('test:room')
+        .withComponent('core:actor', {})
+        .build();
+
+      const target = new ModEntityBuilder('test:target')
+        .withName('Jane')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('anatomy:breasts', {})
+        .withComponent('anatomy:body', {
+          height: 'average',
+          composition: 'organic',
+        })
+        .build();
+
+      const actor = new ModEntityBuilder('test:actor')
+        .withName('Alice')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('positioning:bending_over', { surface_id: 'test:table' })
+        .withComponent('positioning:closeness', { target_id: 'test:target' })
+        .build();
+
+      testFixture.reset([room, table, target, actor]);
+      testFixture.testEnv.actionIndex.buildIndex([lickBreastsAction]);
+
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('test:actor');
+      const lickActions = availableActions.filter(
+        (a) => a.id === 'sex-breastplay:lick_breasts'
+      );
+
+      // Should be 0 after fix
+      expect(lickActions.length).toBe(0);
+    });
+
+    it('should NOT allow "suck_on_nipples" action when actor is bending over', () => {
+      // Setup: Actor bending over near someone with breasts, close and facing each other
+      const room = new ModEntityBuilder('test:room').asRoom('Room').build();
+
+      const table = new ModEntityBuilder('test:table')
+        .withName('Table')
+        .atLocation('test:room')
+        .withComponent('core:actor', {})
+        .build();
+
+      const target = new ModEntityBuilder('test:target')
+        .withName('Jane')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('anatomy:breasts', {})
+        .withComponent('anatomy:body', {
+          height: 'average',
+          composition: 'organic',
+        })
+        .build();
+
+      const actor = new ModEntityBuilder('test:actor')
+        .withName('Alice')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('positioning:bending_over', { surface_id: 'test:table' })
+        .withComponent('positioning:closeness', { target_id: 'test:target' })
+        .build();
+
+      testFixture.reset([room, table, target, actor]);
+      testFixture.testEnv.actionIndex.buildIndex([suckOnNipplesAction]);
+
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('test:actor');
+      const suckActions = availableActions.filter(
+        (a) => a.id === 'sex-breastplay:suck_on_nipples'
+      );
+
+      // Should be 0 after fix
+      expect(suckActions.length).toBe(0);
+    });
+
+    it('should NOT allow "nuzzle_bare_breasts" action when actor is bending over', () => {
+      // Setup: Actor bending over near someone with breasts, close and facing each other
+      const room = new ModEntityBuilder('test:room').asRoom('Room').build();
+
+      const table = new ModEntityBuilder('test:table')
+        .withName('Table')
+        .atLocation('test:room')
+        .withComponent('core:actor', {})
+        .build();
+
+      const target = new ModEntityBuilder('test:target')
+        .withName('Jane')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('anatomy:breasts', {})
+        .withComponent('anatomy:body', {
+          height: 'average',
+          composition: 'organic',
+        })
+        .build();
+
+      const actor = new ModEntityBuilder('test:actor')
+        .withName('Alice')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('positioning:bending_over', { surface_id: 'test:table' })
+        .withComponent('positioning:closeness', { target_id: 'test:target' })
+        .build();
+
+      testFixture.reset([room, table, target, actor]);
+      testFixture.testEnv.actionIndex.buildIndex([nuzzleBareBreastsAction]);
+
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('test:actor');
+      const nuzzleActions = availableActions.filter(
+        (a) => a.id === 'sex-breastplay:nuzzle_bare_breasts'
+      );
+
+      // Should be 0 after fix
+      expect(nuzzleActions.length).toBe(0);
+    });
+
+    it('should NOT allow "pump_penis" action when actor is bending over', () => {
+      // Setup: Actor bending over near someone with penis, close and facing each other
+      const room = new ModEntityBuilder('test:room').asRoom('Room').build();
+
+      const table = new ModEntityBuilder('test:table')
+        .withName('Table')
+        .atLocation('test:room')
+        .withComponent('core:actor', {})
+        .build();
+
+      const target = new ModEntityBuilder('test:target')
+        .withName('Bob')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('anatomy:penis', {})
+        .withComponent('anatomy:body', {
+          height: 'average',
+          composition: 'organic',
+        })
+        .build();
+
+      const actor = new ModEntityBuilder('test:actor')
+        .withName('Alice')
+        .atLocation('test:room')
+        .asActor()
+        .withComponent('positioning:bending_over', { surface_id: 'test:table' })
+        .withComponent('positioning:closeness', { target_id: 'test:target' })
+        .build();
+
+      testFixture.reset([room, table, target, actor]);
+      testFixture.testEnv.actionIndex.buildIndex([pumpPenisAction]);
+
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('test:actor');
+      const pumpActions = availableActions.filter(
+        (a) => a.id === 'sex-penile-manual:pump_penis'
+      );
+
+      // Should be 0 after fix
+      expect(pumpActions.length).toBe(0);
     });
   });
 
