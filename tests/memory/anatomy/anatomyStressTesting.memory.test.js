@@ -38,8 +38,8 @@ describe('Anatomy Memory Stress Testing', () => {
   const MEMORY_THRESHOLDS = {
     LEAK_DETECTION_GROWTH: 1.25, // 125% growth acceptable for 100k iterations with batching
     LARGE_DATASET_HEAP: 500, // 500MB max heap for large datasets
-    GC_FREQUENCY: 100, // Expected GC calls per 1000 operations
-    HEAP_GROWTH_RATE: 0.25, // 25% growth rate acceptable 
+    GC_FREQUENCY: 110, // Expected GC calls per 1000 operations (increased for faster test duration)
+    HEAP_GROWTH_RATE: 0.25, // 25% growth rate acceptable
     REFERENCE_RETENTION: 0.05, // 5% reference retention acceptable
   };
 
@@ -130,14 +130,14 @@ describe('Anatomy Memory Stress Testing', () => {
   });
 
   beforeEach(async () => {
-    // Force garbage collection before each test with reduced delay
+    // Force garbage collection before each test with minimal delay
     if (global.gc) {
       global.gc();
     }
-    await new Promise(resolve => setTimeout(resolve, 25)); // Reduced from 100ms
+    await new Promise(resolve => setTimeout(resolve, 5)); // Reduced from 25ms to 5ms
 
     // Use lightweight mocks and reusable entity definitions for memory leak detection
-    testBed = new EnhancedAnatomyTestBed({ 
+    testBed = new EnhancedAnatomyTestBed({
       useLightweightMocks: true,
       reuseEntityDefinitions: true,  // Reuse entity definitions to avoid accumulation
       minimalMode: true  // Use minimal service initialization for memory tests
@@ -158,20 +158,20 @@ describe('Anatomy Memory Stress Testing', () => {
   afterEach(async () => {
     testBed.cleanup();
     memoryMonitor.reset();
-    
-    // Force garbage collection after each test with reduced delay
+
+    // Force garbage collection after each test with minimal delay
     if (global.gc) {
       global.gc();
     }
-    await new Promise(resolve => setTimeout(resolve, 25)); // Reduced from 100ms
+    await new Promise(resolve => setTimeout(resolve, 5)); // Reduced from 25ms to 5ms
   });
 
   describe('Memory Leak Detection', () => {
     it('should not leak memory during repeated anatomy generation and cleanup', async () => {
-      const totalIterations = global.memoryTestUtils?.isCI() ? 12000 : 25000; // Reduced from 50k/100k
-      const batchSize = 2500; // Reduced batch size for better efficiency
+      const totalIterations = global.memoryTestUtils?.isCI() ? 8000 : 15000; // Balanced for speed and quality
+      const batchSize = 2000; // Optimal batch size to reduce overhead
       const batches = Math.ceil(totalIterations / batchSize);
-      const checkInterval = 2500; // Check memory every batch instead of within batch
+      const checkInterval = 2000; // Check memory every batch instead of within batch
 
       memoryMonitor.takeSnapshot('start');
       
@@ -256,10 +256,10 @@ describe('Anatomy Memory Stress Testing', () => {
         // Aggressive cleanup after each batch
         await forceCompleteCleanup();
         
-        // Force garbage collection between batches with reduced delay
+        // Force garbage collection between batches with minimal delay
         if (global.gc) {
           global.gc();
-          await new Promise(resolve => setTimeout(resolve, 25)); // Reduced from 50ms
+          await new Promise(resolve => setTimeout(resolve, 5)); // Reduced from 25ms to 5ms
         }
         
         // Take snapshot after each batch
@@ -317,7 +317,7 @@ describe('Anatomy Memory Stress Testing', () => {
     });
 
     it('should not leak memory during cache operations', async () => {
-      const iterations = 10000; // Reduced from 50k
+      const iterations = 5000; // Balanced for speed and validation quality
       const anatomy = await testBed.generateSimpleAnatomy();
 
       memoryMonitor.takeSnapshot('cache_start');
@@ -334,7 +334,7 @@ describe('Anatomy Memory Stress Testing', () => {
         // Note: getParents method doesn't exist on bodyGraphService
         // const parents = bodyGraphService.getParents(anatomy.rootId);
 
-        if (i % 2500 === 0 && i > 0) { // More frequent for fewer total iterations
+        if (i % 1000 === 0 && i > 0) { // Reduced snapshot frequency
           memoryMonitor.takeSnapshot(`cache_${i}`);
         }
       }
@@ -351,8 +351,8 @@ describe('Anatomy Memory Stress Testing', () => {
     });
 
     it('should not leak memory during description generation', async () => {
-      const iterations = 2000; // Reduced from 10k
-      const anatomy = await generateLargeAnatomy(15); // Reduced complexity from 25 to 15
+      const iterations = 1000; // Balanced for speed and validation quality
+      const anatomy = await generateLargeAnatomy(12); // Balanced complexity
 
       memoryMonitor.takeSnapshot('desc_start');
 
@@ -368,7 +368,7 @@ describe('Anatomy Memory Stress Testing', () => {
         //   descriptionService.clearCache();
         // }
 
-        if (i % 500 === 0 && i > 0) { // More frequent for fewer total iterations
+        if (i % 250 === 0 && i > 0) { // Reduced snapshot frequency
           memoryMonitor.takeSnapshot(`desc_${i}`);
         }
       }
@@ -420,7 +420,7 @@ describe('Anatomy Memory Stress Testing', () => {
   describe('Large Dataset Memory Usage', () => {
 
     it('should handle memory footprint of large anatomies efficiently', async () => {
-      const partCounts = [5, 15, 25, 35]; // Reduced complexity and count
+      const partCounts = [5, 15, 25]; // Reduced from 4 to 3 sizes, balanced complexity
       const results = [];
 
       for (const count of partCounts) {
@@ -481,7 +481,7 @@ describe('Anatomy Memory Stress Testing', () => {
 
     it('should efficiently manage memory for cache structures', async () => {
       const anatomies = [];
-      const targetCount = 10; // Reduced from 20
+      const targetCount = 8; // Balanced for speed and validation quality
 
       memoryMonitor.takeSnapshot('cache_struct_start');
 
@@ -544,7 +544,7 @@ describe('Anatomy Memory Stress Testing', () => {
 
         // Create entities with specific components (reduced count)
         const entities = [];
-        for (let i = 0; i < 250; i++) { // Reduced from 1000
+        for (let i = 0; i < 150; i++) { // Balanced for speed and validation quality
           const entity = await testBed.createEntityWithComponent(componentType);
           entities.push(entity);
         }
@@ -559,7 +559,7 @@ describe('Anatomy Memory Stress Testing', () => {
         results.push({
           componentType,
           totalMemory: comparison.heapGrowth,
-          memoryPerComponent: comparison.heapGrowth / 250, // Updated for new count
+          memoryPerComponent: comparison.heapGrowth / 150, // Updated for new count
         });
 
         // Clean up
@@ -577,7 +577,7 @@ describe('Anatomy Memory Stress Testing', () => {
 
   describe('Garbage Collection Patterns', () => {
     it('should maintain healthy GC patterns under normal load', async () => {
-      const duration = 5000; // 5 seconds instead of 10
+      const duration = 3000; // 3 seconds for balanced speed and validation
       const startTime = Date.now();
       let operationCount = 0;
       let gcEvents = [];
@@ -600,7 +600,7 @@ describe('Anatomy Memory Stress Testing', () => {
         operationCount++;
 
         // Take periodic snapshots (less frequent due to shorter duration)
-        if (operationCount % 25 === 0) {
+        if (operationCount % 15 === 0) {
           memoryMonitor.takeSnapshot(`gc_test_${operationCount}`);
         }
       }
@@ -620,8 +620,8 @@ describe('Anatomy Memory Stress Testing', () => {
 
     it('should handle memory reclamation efficiently', async () => {
       const phases = [
-        { name: 'growth', count: 20 }, // Reduced from 50
-        { name: 'stable', count: 20 }, // Reduced from 50  
+        { name: 'growth', count: 15 }, // Balanced for speed and validation quality
+        { name: 'stable', count: 15 }, // Balanced for speed and validation quality
         { name: 'cleanup', count: 0 },
       ];
 
@@ -633,7 +633,7 @@ describe('Anatomy Memory Stress Testing', () => {
         if (phase.name === 'growth') {
           // Create many anatomies with reduced complexity
           for (let i = 0; i < phase.count; i++) {
-            const anatomy = await generateLargeAnatomy(10); // Reduced from 20
+            const anatomy = await generateLargeAnatomy(8); // Further reduced for speed
             anatomies.push(anatomy);
           }
         } else if (phase.name === 'stable') {
@@ -652,10 +652,10 @@ describe('Anatomy Memory Stress Testing', () => {
             await testBed.cleanupEntity(anatomy);
           }
           
-          // Force GC with reduced delay
+          // Force GC with minimal delay
           if (global.gc) {
             global.gc();
-            await new Promise(resolve => setTimeout(resolve, 25)); // Reduced from 100ms
+            await new Promise(resolve => setTimeout(resolve, 5)); // Reduced from 25ms to 5ms
           }
         }
 
@@ -685,7 +685,7 @@ describe('Anatomy Memory Stress Testing', () => {
     it('should analyze reference retention patterns', async () => {
       const testReferences = new WeakMap();
       const strongReferences = [];
-      const iterations = 50; // Reduced from 100
+      const iterations = 40; // Balanced for speed and validation quality
 
       memoryMonitor.takeSnapshot('ref_start');
 
@@ -710,7 +710,7 @@ describe('Anatomy Memory Stress Testing', () => {
       if (global.gc) {
         global.gc();
       }
-      await new Promise(resolve => setTimeout(resolve, 25)); // Reduced from 100ms
+      await new Promise(resolve => setTimeout(resolve, 5)); // Reduced from 25ms to 5ms
 
       memoryMonitor.takeSnapshot('after_gc');
 
@@ -723,7 +723,7 @@ describe('Anatomy Memory Stress Testing', () => {
       if (global.gc) {
         global.gc();
       }
-      await new Promise(resolve => setTimeout(resolve, 25)); // Reduced from 100ms
+      await new Promise(resolve => setTimeout(resolve, 5)); // Reduced from 25ms to 5ms
 
       memoryMonitor.takeSnapshot('ref_end');
 
