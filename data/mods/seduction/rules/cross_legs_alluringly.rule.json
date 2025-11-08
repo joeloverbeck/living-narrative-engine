@@ -1,0 +1,64 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "cross_legs_alluringly",
+  "comment": "Handles the 'seduction:cross_legs_alluringly' action. When a seated actor crosses their legs in an alluring manner, this rule processes the gesture and creates a perceptible event for observers in the same location.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "seduction:event-is-action-cross-legs-alluringly"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name for the messages.",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get location for the perceptible event.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Construct the perceptible log message for observers.",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} crosses their legs alluringly."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set the perception type for this self-targeting action.",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_self_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set the location where this action is observable.",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "No target for this self-targeting action.",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": null
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn",
+      "comment": "Log the success message and end the turn."
+    }
+  ]
+}

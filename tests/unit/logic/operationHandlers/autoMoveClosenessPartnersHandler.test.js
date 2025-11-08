@@ -17,6 +17,7 @@ let entityManager;
 let moveHandler;
 let dispatcher;
 let logger;
+let operationInterpreter;
 let handler;
 
 beforeEach(() => {
@@ -25,6 +26,7 @@ beforeEach(() => {
   };
   moveHandler = { execute: jest.fn() };
   dispatcher = { dispatch: jest.fn() };
+  operationInterpreter = { execute: jest.fn().mockResolvedValue({ success: true }) };
   logger = {
     debug: jest.fn(),
     info: jest.fn(),
@@ -37,6 +39,7 @@ beforeEach(() => {
     entityManager,
     systemMoveEntityHandler: moveHandler,
     safeEventDispatcher: dispatcher,
+    operationInterpreter: () => operationInterpreter,
   });
 });
 
@@ -176,11 +179,11 @@ describe('AutoMoveClosenessPartnersHandler.execute - Partner Movement', () => {
       { logger }
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith('core:entity_moved', {
+      eventName: 'core:entity_moved',
       entityId: 'partner1',
       previousLocationId: 'oldLoc',
       currentLocationId: 'dest',
-      movedBy: 'actor1',
-      reason: 'closeness_auto_move',
+      originalCommand: 'system:closeness_auto_move',
     });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'positioning:entity_exited_location',
@@ -288,7 +291,7 @@ describe('AutoMoveClosenessPartnersHandler.execute - Partner Validation', () => 
 
     expect(result.success).toBe(true);
     expect(result.partnersMoved).toBe(0);
-    expect(logger.warn).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('not at expected location'),
       expect.objectContaining({
         partnerId: 'p1',
@@ -421,5 +424,143 @@ describe('AutoMoveClosenessPartnersHandler.execute - Mixed Scenarios', () => {
       { entity_ref: { entityId: 'p3' }, target_location_id: 'dest' },
       { logger }
     );
+  });
+});
+
+describe('AutoMoveClosenessPartnersHandler - Bug Fix Verification', () => {
+  describe('Event validation compliance', () => {
+    test('dispatches core:entity_moved with correct schema-compliant payload', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ partners: ['partner1'] }) // closeness
+        .mockReturnValueOnce({ locationId: 'loc1' }) // partner position
+        .mockReturnValueOnce({ text: 'Partner' }) // partner name
+        .mockReturnValueOnce({ text: 'Actor' }) // actor name
+        .mockReturnValueOnce({ text: 'Destination' }); // destination name
+
+      moveHandler.execute.mockResolvedValue({ success: true });
+
+      await handler.execute(
+        { actor_id: 'actor1', destination_id: 'dest' },
+        { logger }
+      );
+
+      // Verify core:entity_moved event has required fields
+      const entityMovedCall = dispatcher.dispatch.mock.calls.find(
+        call => call[0] === 'core:entity_moved'
+      );
+      expect(entityMovedCall).toBeDefined();
+      expect(entityMovedCall[1]).toMatchObject({
+        eventName: 'core:entity_moved',
+        entityId: 'partner1',
+        previousLocationId: 'loc1',
+        currentLocationId: 'dest',
+        originalCommand: 'system:closeness_auto_move',
+      });
+      // Verify NO extra fields (movedBy, reason)
+      expect(entityMovedCall[1]).not.toHaveProperty('movedBy');
+      expect(entityMovedCall[1]).not.toHaveProperty('reason');
+    });
+  });
+
+  describe('Race condition handling', () => {
+    test('skips partner already at destination (mutual closeness scenario)', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ partners: ['partner1'] }) // closeness
+        .mockReturnValueOnce({ locationId: 'dest' }); // partner already at destination
+
+      const result = await handler.execute(
+        { actor_id: 'actor1', destination_id: 'dest' },
+        { logger }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.partnersMoved).toBe(0);
+      expect(moveHandler.execute).not.toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Partner already at destination'),
+        expect.objectContaining({
+          reason: 'likely_mutual_closeness_race',
+        })
+      );
+    });
+
+    test('skips partner not at expected location (mutual closeness race)', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ partners: ['partner1'] }) // closeness
+        .mockReturnValueOnce({ locationId: 'somewhere_else' }); // partner already moved
+
+      const result = await handler.execute(
+        {
+          actor_id: 'actor1',
+          destination_id: 'dest',
+          previous_location_id: 'original_loc',
+        },
+        { logger }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.partnersMoved).toBe(0);
+      expect(moveHandler.execute).not.toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Partner not at expected location'),
+        expect.objectContaining({
+          reason: 'likely_already_moved_by_mutual_closeness',
+        })
+      );
+    });
+  });
+
+  describe('Perceptible message generation', () => {
+    test('dispatches perceptible event with correct message format', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ partners: ['partner1'] }) // closeness
+        .mockReturnValueOnce({ locationId: 'loc1' }) // partner position
+        .mockReturnValueOnce({ text: 'Partner Name' }) // partner name
+        .mockReturnValueOnce({ text: 'Actor Name' }) // actor name
+        .mockReturnValueOnce({ text: 'Destination Location' }); // destination name
+
+      moveHandler.execute.mockResolvedValue({ success: true });
+
+      await handler.execute(
+        { actor_id: 'actor1', destination_id: 'dest' },
+        { logger }
+      );
+
+      // Verify DISPATCH_PERCEPTIBLE_EVENT operation was called
+      expect(operationInterpreter.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'DISPATCH_PERCEPTIBLE_EVENT',
+          parameters: expect.objectContaining({
+            location_id: 'dest',
+            description_text: 'Partner Name moves with Actor Name to Destination Location.',
+            perception_type: 'character_enter',
+            actor_id: 'partner1',
+            target_id: 'actor1',
+          }),
+        }),
+        { logger }
+      );
+    });
+
+    test('handles missing name components gracefully', async () => {
+      entityManager.getComponentData
+        .mockReturnValueOnce({ partners: ['partner1'] }) // closeness
+        .mockReturnValueOnce({ locationId: 'loc1' }) // partner position
+        .mockReturnValueOnce(null); // missing partner name
+
+      moveHandler.execute.mockResolvedValue({ success: true });
+
+      await handler.execute(
+        { actor_id: 'actor1', destination_id: 'dest' },
+        { logger }
+      );
+
+      // Should still succeed but skip perceptible message
+      expect(operationInterpreter.execute).not.toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Missing name components'),
+        expect.any(Object)
+      );
+    });
   });
 });

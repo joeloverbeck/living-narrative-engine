@@ -1,0 +1,27 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "patrol:red_dragon",
+    "components": {
+        "core:name": {
+            "text": "red dragon"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/red_dragon.png",
+            "altText": "Red dragon"
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "anatomy:body": {
+            "recipeId": "anatomy:red_dragon"
+        },
+        "core:gender": {
+            "value": "male"
+        }
+    }
+}

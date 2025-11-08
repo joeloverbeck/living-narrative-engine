@@ -25,6 +25,7 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../operationInterpreter.js').default} OperationInterpreter */
 
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
@@ -48,6 +49,8 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
   #dispatcher;
   /** @type {BaseOperationHandler} */
   #moveHandler;
+  /** @type {() => OperationInterpreter} */
+  #operationInterpreterResolver;
 
   /**
    * Create a new AutoMoveClosenessPartnersHandler instance.
@@ -57,12 +60,14 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
    * @param {IEntityManager} deps.entityManager - Entity manager for component operations.
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher for error handling.
    * @param {BaseOperationHandler} deps.systemMoveEntityHandler - Handler for SYSTEM_MOVE_ENTITY operations.
+   * @param {() => OperationInterpreter} deps.operationInterpreter - Lazy resolver for operation interpreter.
    */
   constructor({
     logger,
     entityManager,
     safeEventDispatcher,
     systemMoveEntityHandler,
+    operationInterpreter,
   }) {
     super('AutoMoveClosenessPartnersHandler', {
       logger: { value: logger },
@@ -78,10 +83,14 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
         value: systemMoveEntityHandler,
         requiredMethods: ['execute'],
       },
+      operationInterpreter: {
+        value: operationInterpreter,
+      },
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
     this.#moveHandler = systemMoveEntityHandler;
+    this.#operationInterpreterResolver = operationInterpreter;
   }
 
   /**
@@ -246,22 +255,25 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
       return false;
     }
 
-    // If previous location specified, verify partner is actually there
-    if (previousLocationId && position.locationId !== previousLocationId) {
-      logger.warn('Partner not at expected location, skipping', {
-        partnerId,
-        actorId,
-        expectedLocation: previousLocationId,
-        actualLocation: position.locationId,
-      });
-      return false;
-    }
-
-    // Skip if partner already at destination
+    // Skip if partner already at destination (most common in mutual closeness)
     if (position.locationId === destinationId) {
       logger.debug('Partner already at destination, skipping', {
         partnerId,
         destinationId,
+        reason: 'likely_mutual_closeness_race',
+      });
+      return false;
+    }
+
+    // If previous location specified, verify partner is actually there
+    // Note: This can happen in mutual closeness when both actors try to auto-move each other
+    if (previousLocationId && position.locationId !== previousLocationId) {
+      logger.debug('Partner not at expected location, skipping', {
+        partnerId,
+        actorId,
+        expectedLocation: previousLocationId,
+        actualLocation: position.locationId,
+        reason: 'likely_already_moved_by_mutual_closeness',
       });
       return false;
     }
@@ -284,14 +296,23 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
 
       // Dispatch entity_moved event for the partner
       this.#dispatcher.dispatch('core:entity_moved', {
+        eventName: 'core:entity_moved',
         entityId: partnerId,
         previousLocationId: position.locationId,
         currentLocationId: destinationId,
-        movedBy: actorId,
-        reason: 'closeness_auto_move',
+        originalCommand: 'system:closeness_auto_move',
       });
 
       // Dispatch perceptible events
+      await this.#dispatchPerceptibleMessages(
+        partnerId,
+        actorId,
+        position.locationId,
+        destinationId,
+        executionContext
+      );
+
+      // Dispatch location exit/enter events
       this.#dispatcher.dispatch('positioning:entity_exited_location', {
         entityId: partnerId,
         locationId: position.locationId,
@@ -326,6 +347,89 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
       );
 
       return false;
+    }
+  }
+
+  /**
+   * Dispatch perceptible messages for the auto-moved partner.
+   *
+   * @param {string} partnerId - ID of the partner being moved
+   * @param {string} actorId - ID of the actor that initiated movement
+   * @param {string} previousLocationId - Previous location ID
+   * @param {string} destinationId - Destination location ID
+   * @param {ExecutionContext} executionContext - Execution context
+   * @returns {Promise<void>}
+   * @private
+   */
+  async #dispatchPerceptibleMessages(
+    partnerId,
+    actorId,
+    previousLocationId,
+    destinationId,
+    executionContext
+  ) {
+    const logger = this.getLogger(executionContext);
+
+    try {
+      // Get the operation interpreter
+      const interpreter = this.#operationInterpreterResolver();
+      if (!interpreter) {
+        logger.warn('Operation interpreter not available, skipping perceptible messages', {
+          partnerId,
+        });
+        return;
+      }
+
+      // Get entity names for the message
+      const partnerName = this.#entityManager.getComponentData(partnerId, 'core:name');
+      const actorName = this.#entityManager.getComponentData(actorId, 'core:name');
+      const destinationName = this.#entityManager.getComponentData(
+        destinationId,
+        'core:name'
+      );
+
+      if (!partnerName || !actorName || !destinationName) {
+        logger.debug('Missing name components for perceptible message', {
+          hasPartnerName: !!partnerName,
+          hasActorName: !!actorName,
+          hasDestinationName: !!destinationName,
+        });
+        return;
+      }
+
+      const messageText = `${partnerName.text} moves with ${actorName.text} to ${destinationName.text}.`;
+
+      // Dispatch perceptible event to the new location
+      await interpreter.execute(
+        {
+          type: 'DISPATCH_PERCEPTIBLE_EVENT',
+          parameters: {
+            location_id: destinationId,
+            description_text: messageText,
+            perception_type: 'character_enter',
+            actor_id: partnerId,
+            target_id: actorId,
+            involved_entities: [],
+            contextual_data: {
+              initiatorId: actorId,
+              originLocationId: previousLocationId,
+              reason: 'closeness_auto_move',
+            },
+          },
+        },
+        executionContext
+      );
+
+      logger.debug('Dispatched perceptible message for auto-moved partner', {
+        partnerId,
+        message: messageText,
+      });
+    } catch (error) {
+      logger.warn('Failed to dispatch perceptible message for auto-moved partner', {
+        partnerId,
+        error: error.message,
+      });
+      // Don't throw - perceptible messages are non-critical
     }
   }
 }

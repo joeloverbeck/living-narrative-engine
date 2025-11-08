@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "positioning:entity_exited_location",
+  "description": "Dispatched when an entity exits a location due to closeness auto-move.",
+  "payloadSchema": {
+    "title": "Positioning: Entity Exited Location Payload",
+    "description": "Payload for the positioning:entity_exited_location event.",
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the entity that exited the location."
+      },
+      "locationId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the location the entity exited from."
+      },
+      "newLocationId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the new location the entity is moving to."
+      }
+    },
+    "required": ["entityId", "locationId", "newLocationId"],
+    "additionalProperties": false
+  }
+}

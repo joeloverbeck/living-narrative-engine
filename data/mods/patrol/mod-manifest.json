@@ -33,12 +33,14 @@
       "definitions": [
         "centaur_warrior.character.json",
         "giant_forest_spider.character.json",
-        "kraken_elder.character.json"
+        "kraken_elder.character.json",
+        "red_dragon.character.json"
       ],
       "instances": [
         "centaur_warrior.character.json",
         "giant_forest_spider.character.json",
-        "kraken_elder.character.json"
+        "kraken_elder.character.json",
+        "red_dragon.character.json"
       ]
     },
     "events": [],

@@ -23,6 +23,7 @@
   "content": {
     "actions": [
       "brush_hair_back_coyly.action.json",
+      "cross_legs_alluringly.action.json",
       "draw_attention_to_ass.action.json",
       "draw_attention_to_breasts.action.json",
       "grab_crotch_draw_attention.action.json",
@@ -32,6 +33,7 @@
     ],
     "rules": [
       "brush_hair_back_coyly.rule.json",
+      "cross_legs_alluringly.rule.json",
       "draw_attention_to_ass.rule.json",
       "draw_attention_to_breasts.rule.json",
       "grab_crotch_draw_attention.rule.json",
@@ -41,6 +43,7 @@
     ],
     "conditions": [
       "event-is-action-brush-hair-back-coyly.condition.json",
+      "event-is-action-cross-legs-alluringly.condition.json",
       "event-is-action-draw-attention-to-ass.condition.json",
       "event-is-action-draw-attention-to-breasts.condition.json",
       "event-is-action-grab-crotch-draw-attention.condition.json",

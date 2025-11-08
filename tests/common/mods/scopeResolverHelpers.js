@@ -8,6 +8,7 @@ import { promises as fs } from 'fs';
 import { resolve } from 'path';
 import process from 'node:process';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
+import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
 
 /**
  * Resolves an entity reference from a scope context.
@@ -991,20 +992,36 @@ export class ScopeResolverHelpers {
    * Automatically loads the scope file, parses it, creates a resolver,
    * and registers it with the UnifiedScopeResolver.
    *
+   * This method mirrors the complete implementation from ModTestFixture.registerCustomScope(),
+   * including automatic condition loading for scopes that use condition_ref.
+   *
    * @param {object} testEnv - Test environment from createSystemLogicTestEnv()
    * @param {string} modId - The mod containing the scope
    * @param {string} scopeName - The scope name (without .scope extension)
+   * @param {object} [options] - Configuration options
+   * @param {boolean} [options.loadConditions=true] - Whether to automatically load condition dependencies
+   * @param {number} [options.maxDepth=5] - Maximum recursion depth for transitive dependency discovery
    * @returns {Promise<void>}
-   * @throws {Error} If scope file not found or parsing fails
+   * @throws {Error} If scope file not found, parsing fails, or referenced conditions are missing
    * @example
-   * // Register a custom scope
+   * // Register a custom scope (conditions loaded automatically)
    * await ScopeResolverHelpers.registerCustomScope(
    *   testEnv,
    *   'sex-anal-penetration',
    *   'actors_with_exposed_asshole_accessible_from_behind'
    * );
+   *
+   * @example
+   * // Register a scope without loading conditions
+   * await ScopeResolverHelpers.registerCustomScope(
+   *   testEnv,
+   *   'positioning',
+   *   'close_actors',
+   *   { loadConditions: false }
+   * );
    */
-  static async registerCustomScope(testEnv, modId, scopeName) {
+  static async registerCustomScope(testEnv, modId, scopeName, options = {}) {
+    const { loadConditions = true, maxDepth = 5 } = options;
     // Validate inputs
     if (!modId || typeof modId !== 'string') {
       throw new Error('modId must be a non-empty string');
@@ -1051,6 +1068,41 @@ export class ScopeResolverHelpers {
       );
     }
 
+    // Load condition dependencies if requested (mirrors ModTestFixture.registerCustomScope)
+    if (loadConditions) {
+      // Extract condition references from the parsed AST
+      const conditionRefs = ScopeConditionAnalyzer.extractConditionRefs(scopeData);
+
+      if (conditionRefs.size > 0) {
+        // Discover transitive dependencies
+        const allConditions =
+          await ScopeConditionAnalyzer.discoverTransitiveDependencies(
+            Array.from(conditionRefs),
+            ScopeConditionAnalyzer.loadConditionDefinition.bind(
+              ScopeConditionAnalyzer
+            ),
+            maxDepth
+          );
+
+        // Validate conditions exist
+        const validation = await ScopeConditionAnalyzer.validateConditions(
+          allConditions,
+          scopePath
+        );
+
+        if (validation.missing.length > 0) {
+          throw new Error(
+            `Scope "${fullScopeName}" references missing conditions:\n` +
+              validation.missing.map((id) => `  - ${id}`).join('\n') +
+              `\n\nReferenced in: ${scopePath}`
+          );
+        }
+
+        // Load all discovered conditions into the test environment registry
+        await this._loadConditionsIntoRegistry(testEnv, Array.from(allConditions));
+      }
+    }
+
     // Create and register the resolver (note: creates local ScopeEngine instance)
     const { default: ScopeEngine } = await import(
       '../../../src/scopeDsl/engine.js'
@@ -1065,7 +1117,10 @@ export class ScopeResolverHelpers {
       };
 
       try {
-        const result = scopeEngine.resolve(scopeData.ast, context, runtimeCtx);
+        // Extract actorEntity from context - ScopeEngine expects just actorEntity, not full context
+        const actorEntity = context.actorEntity || context.actor || context;
+
+        const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
         return { success: true, value: result };
       } catch (err) {
         return {
@@ -1129,6 +1184,88 @@ export class ScopeResolverHelpers {
         scopeName,
         context
       );
+    };
+  }
+
+  /**
+   * Internal helper to load condition definitions into the test environment's data registry.
+   * Mirrors the logic from ModTestFixture.loadDependencyConditions().
+   *
+   * @private
+   * @param {object} testEnv - Test environment
+   * @param {string[]} conditionIds - Array of condition IDs to load (e.g., ["positioning:actor-facing"])
+   * @returns {Promise<void>}
+   * @throws {Error} If condition files cannot be loaded
+   */
+  static async _loadConditionsIntoRegistry(testEnv, conditionIds) {
+    // Initialize loaded conditions map if not exists
+    if (!testEnv._loadedConditions) {
+      testEnv._loadedConditions = new Map();
+    }
+
+    // Load each condition
+    const loadPromises = conditionIds.map(async (id) => {
+      // Skip if already loaded
+      if (testEnv._loadedConditions.has(id)) {
+        return;
+      }
+
+      // Validate ID format
+      if (typeof id !== 'string' || !id.includes(':')) {
+        throw new Error(
+          `Invalid condition ID format: "${id}". Expected "modId:conditionId"`
+        );
+      }
+
+      const parts = id.split(':');
+      if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        throw new Error(
+          `Invalid condition ID format: "${id}". Expected "modId:conditionId"`
+        );
+      }
+
+      const [modId, conditionName] = parts;
+
+      // Construct file path (absolute path from project root)
+      const conditionPath = resolve(
+        process.cwd(),
+        `data/mods/${modId}/conditions/${conditionName}.condition.json`
+      );
+
+      try {
+        // Read condition file
+        const conditionContent = await fs.readFile(conditionPath, 'utf-8');
+        const conditionDef = JSON.parse(conditionContent);
+
+        // Store for later lookup
+        testEnv._loadedConditions.set(id, conditionDef);
+      } catch (err) {
+        throw new Error(
+          `Failed to load condition "${id}" from ${conditionPath}: ${err.message}`
+        );
+      }
+    });
+
+    // Wait for all conditions to load
+    await Promise.all(loadPromises);
+
+    // Extend the dataRegistry to return loaded conditions
+    // Store original if not already stored
+    if (!testEnv._originalGetConditionDefinition) {
+      testEnv._originalGetConditionDefinition =
+        testEnv.dataRegistry.getConditionDefinition.bind(
+          testEnv.dataRegistry
+        );
+    }
+
+    // Override getConditionDefinition to check loaded conditions first
+    testEnv.dataRegistry.getConditionDefinition = (id) => {
+      // Check if this is one of our loaded conditions
+      if (testEnv._loadedConditions.has(id)) {
+        return testEnv._loadedConditions.get(id);
+      }
+      // Chain to original (may be another extended version or the base implementation)
+      return testEnv._originalGetConditionDefinition(id);
     };
   }
 }

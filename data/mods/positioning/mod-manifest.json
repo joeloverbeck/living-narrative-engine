@@ -137,6 +137,8 @@
       "actor_placed_behind.event.json",
       "actor_turned_back.event.json",
       "closeness_with_target_broken.event.json",
+      "entity_entered_location.event.json",
+      "entity_exited_location.event.json",
       "sitting_closeness_established.event.json"
     ],
     "macros": [],

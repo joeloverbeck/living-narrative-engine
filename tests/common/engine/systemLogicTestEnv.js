@@ -1200,6 +1200,7 @@ export function createRuleTestEnvironment(options) {
     const buildContextForTarget = (resolvedTargets, targetKey, targetDef) => {
       const context = {
         actor: actorContext,
+        actorEntity: actorContext,  // Add actorEntity for ScopeEngine compatibility
         targets: {},
       };
 

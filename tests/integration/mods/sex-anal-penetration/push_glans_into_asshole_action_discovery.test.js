@@ -78,30 +78,37 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
   });
 
   describe('Action discovery scenarios', () => {
-    it('should be discovered when close actors with exposed asshole accessible from behind', () => {
+    it('should be discovered when close actors with exposed asshole accessible from behind', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Make Bob face away from Alice and expose his asshole
-      scenario.target.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.actor.id],
-      };
-      scenario.target.components['anatomy:body_part_types'] = {
-        types: ['asshole'],
-      };
-      scenario.target.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:facing_away',
+        { facing_away_from: [scenario.actor.id] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'anatomy:body_part_types',
+        { types: ['asshole'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       // Alice needs uncovered penis
-      scenario.actor.components['anatomy:body_part_types'] = {
-        types: ['penis'],
-      };
-      scenario.actor.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'anatomy:body_part_types',
+        { types: ['penis'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = actions.map((action) => action.id);
@@ -109,34 +116,41 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       expect(ids).toContain('sex-anal-penetration:push_glans_into_asshole');
     });
 
-    it('should NOT be discovered when actors are not close', () => {
+    it('should NOT be discovered when actors are not close', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Remove closeness components
-      delete scenario.actor.components['positioning:closeness'];
-      delete scenario.target.components['positioning:closeness'];
+      testFixture.testEnv.entityManager.removeComponent(scenario.actor.id, 'positioning:closeness');
+      testFixture.testEnv.entityManager.removeComponent(scenario.target.id, 'positioning:closeness');
 
       // Setup target with exposed asshole facing away
-      scenario.target.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.actor.id],
-      };
-      scenario.target.components['anatomy:body_part_types'] = {
-        types: ['asshole'],
-      };
-      scenario.target.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:facing_away',
+        { facing_away_from: [scenario.actor.id] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'anatomy:body_part_types',
+        { types: ['asshole'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       // Alice has uncovered penis
-      scenario.actor.components['anatomy:body_part_types'] = {
-        types: ['penis'],
-      };
-      scenario.actor.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'anatomy:body_part_types',
+        { types: ['penis'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = actions.map((action) => action.id);
@@ -144,31 +158,38 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       expect(ids).not.toContain('sex-anal-penetration:push_glans_into_asshole');
     });
 
-    it("should NOT be discovered when target's asshole is covered", () => {
+    it("should NOT be discovered when target's asshole is covered", async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Make Bob face away from Alice
-      scenario.target.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.actor.id],
-      };
-      scenario.target.components['anatomy:body_part_types'] = {
-        types: ['asshole'],
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:facing_away',
+        { facing_away_from: [scenario.actor.id] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'anatomy:body_part_types',
+        { types: ['asshole'] }
+      );
       // Cover the asshole socket
-      scenario.target.components['clothing:socket_coverage'] = {
-        sockets: { asshole: { covered: true } },
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'clothing:socket_coverage',
+        { sockets: { asshole: { covered: true } } }
+      );
 
       // Alice has uncovered penis
-      scenario.actor.components['anatomy:body_part_types'] = {
-        types: ['penis'],
-      };
-      scenario.actor.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'anatomy:body_part_types',
+        { types: ['penis'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = actions.map((action) => action.id);
@@ -176,30 +197,37 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       expect(ids).not.toContain('sex-anal-penetration:push_glans_into_asshole');
     });
 
-    it("should NOT be discovered when actor's penis is covered", () => {
+    it("should NOT be discovered when actor's penis is covered", async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Make Bob face away from Alice with exposed asshole
-      scenario.target.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.actor.id],
-      };
-      scenario.target.components['anatomy:body_part_types'] = {
-        types: ['asshole'],
-      };
-      scenario.target.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:facing_away',
+        { facing_away_from: [scenario.actor.id] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'anatomy:body_part_types',
+        { types: ['asshole'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       // Alice has penis but it's covered
-      scenario.actor.components['anatomy:body_part_types'] = {
-        types: ['penis'],
-      };
-      scenario.actor.components['clothing:socket_coverage'] = {
-        sockets: { penis: { covered: true } },
-      };
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'anatomy:body_part_types',
+        { types: ['penis'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'clothing:socket_coverage',
+        { sockets: { penis: { covered: true } } }
+      );
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = actions.map((action) => action.id);
@@ -207,30 +235,37 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       expect(ids).not.toContain('sex-anal-penetration:push_glans_into_asshole');
     });
 
-    it('should NOT be discovered when actor lacks penis anatomy', () => {
+    it('should NOT be discovered when actor lacks penis anatomy', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Make Bob face away from Alice with exposed asshole
-      scenario.target.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.actor.id],
-      };
-      scenario.target.components['anatomy:body_part_types'] = {
-        types: ['asshole'],
-      };
-      scenario.target.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:facing_away',
+        { facing_away_from: [scenario.actor.id] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'anatomy:body_part_types',
+        { types: ['asshole'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       // Alice has no penis
-      scenario.actor.components['anatomy:body_part_types'] = {
-        types: [],
-      };
-      scenario.actor.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'anatomy:body_part_types',
+        { types: [] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = actions.map((action) => action.id);
@@ -238,36 +273,44 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       expect(ids).not.toContain('sex-anal-penetration:push_glans_into_asshole');
     });
 
-    it('should NOT be discovered when actor already has fucking_anally component', () => {
+    it('should NOT be discovered when actor already has fucking_anally component', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Make Bob face away from Alice with exposed asshole
-      scenario.target.components['positioning:facing_away'] = {
-        facing_away_from: [scenario.actor.id],
-      };
-      scenario.target.components['anatomy:body_part_types'] = {
-        types: ['asshole'],
-      };
-      scenario.target.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:facing_away',
+        { facing_away_from: [scenario.actor.id] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'anatomy:body_part_types',
+        { types: ['asshole'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       // Alice has uncovered penis
-      scenario.actor.components['anatomy:body_part_types'] = {
-        types: ['penis'],
-      };
-      scenario.actor.components['clothing:socket_coverage'] = {
-        sockets: {},
-      };
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'anatomy:body_part_types',
+        { types: ['penis'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
 
       // Alice is already fucking someone anally
-      scenario.actor.components['positioning:fucking_anally'] = {
-        being_fucked_entity_id: 'other_entity',
-        initiated: true,
-      };
-
-      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target]);
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'positioning:fucking_anally',
+        { being_fucked_entity_id: 'other_entity', initiated: true }
+      );
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = actions.map((action) => action.id);
