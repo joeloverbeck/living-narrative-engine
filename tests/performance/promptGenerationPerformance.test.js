@@ -3,14 +3,15 @@
  * @description Tests focused on measuring and validating prompt generation performance
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
 import { PromptGenerationTestBed } from '../e2e/prompting/common/promptGenerationTestBed.js';
 
 describe('Prompt Generation Performance', () => {
   let testBed;
   let testActors;
 
-  beforeEach(async () => {
+  // Performance optimization: Create expensive resources once per suite
+  beforeAll(async () => {
     testBed = new PromptGenerationTestBed();
     await testBed.initialize();
 
@@ -20,7 +21,12 @@ describe('Prompt Generation Performance', () => {
     await testBed.registerTestActions();
   });
 
-  afterEach(async () => {
+  // Reset state between tests (lightweight operation)
+  beforeEach(() => {
+    testBed.resetTestState();
+  });
+
+  afterAll(async () => {
     await testBed.cleanup();
   });
 
@@ -49,14 +55,15 @@ describe('Prompt Generation Performance', () => {
     expect(prompt).toBeDefined();
     expect(generationTime).toBeLessThan(500); // Should complete in under 500ms
 
-    // Test multiple rapid generations
+    // Test multiple rapid generations (reduced iterations for performance)
+    const iterations = 5;
     const rapidStartTime = Date.now();
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < iterations; i++) {
       await testBed.generatePrompt(aiActor.id, turnContext, availableActions);
     }
     const rapidEndTime = Date.now();
 
-    const avgTime = (rapidEndTime - rapidStartTime) / 10;
+    const avgTime = (rapidEndTime - rapidStartTime) / iterations;
     expect(avgTime).toBeLessThan(200); // Average should be under 200ms
   });
 

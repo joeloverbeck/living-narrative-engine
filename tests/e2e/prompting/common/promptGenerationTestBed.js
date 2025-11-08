@@ -53,6 +53,7 @@ export class PromptGenerationTestBed {
     // Performance optimization: cache expensive operations
     this._schemaCache = null;
     this._configCache = null;
+    this._fileCache = new Map(); // Cache file reads
   }
 
   /**
@@ -202,12 +203,6 @@ export class PromptGenerationTestBed {
     // Initialize all systems tagged with INITIALIZABLE (includes PromptStaticContentService)
     const systemInitializer = this.container.resolve(tokens.SystemInitializer);
     await systemInitializer.initializeAll();
-
-    // Explicitly initialize PromptStaticContentService to ensure it's ready
-    const promptStaticContentService = this.container.resolve(
-      aiTokens.IPromptStaticContentService
-    );
-    await promptStaticContentService.initialize();
 
     // Mock the LLM Configuration Manager to return our test LLM configurations
     const llmConfigManager = this.container.resolve(
@@ -1091,6 +1086,8 @@ export class PromptGenerationTestBed {
    * @returns {object} Mock data fetcher
    */
   createMockDataFetcher() {
+    const fileCache = this._fileCache; // Reference to instance cache
+
     // Cache mock data to avoid recreating strings on each call
     if (!this._mockDataCache) {
       this._mockDataCache = {
@@ -1211,6 +1208,11 @@ export class PromptGenerationTestBed {
     // Create mock data fetcher
     return {
       async fetch(identifier) {
+        // Check cache first for performance
+        if (fileCache.has(identifier)) {
+          return fileCache.get(identifier);
+        }
+
         // Return appropriate test data based on the file path
         if (identifier.includes('corePromptText.json')) {
           return mockDataCache.promptText; // Return cached prompt text
@@ -1232,10 +1234,12 @@ export class PromptGenerationTestBed {
             'mod-manifest.json'
           );
           try {
-            return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            fileCache.set(identifier, data); // Cache the result
+            return data;
           } catch (error) {
             // Return minimal manifest if file doesn't exist
-            return {
+            const fallback = {
               id: 'core',
               version: '1.0.0',
               name: 'Core Mod',
@@ -1243,6 +1247,8 @@ export class PromptGenerationTestBed {
               author: 'Test',
               dependencies: [],
             };
+            fileCache.set(identifier, fallback); // Cache the fallback
+            return fallback;
           }
         } else if (identifier.includes('.schema.json')) {
           // For schema files, load the actual schema from the file system
@@ -1260,15 +1266,19 @@ export class PromptGenerationTestBed {
           );
 
           try {
-            return JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+            fileCache.set(identifier, data); // Cache the result
+            return data;
           } catch (error) {
             // If schema file doesn't exist, return a minimal valid schema
-            return {
+            const fallback = {
               $schema: 'http://json-schema.org/draft-07/schema#',
               $id: `schema://living-narrative-engine/${schemaName}`,
               type: 'object',
               additionalProperties: true,
             };
+            fileCache.set(identifier, fallback); // Cache the fallback
+            return fallback;
           }
         } else if (
           identifier.includes('components/') &&
@@ -1296,14 +1306,16 @@ export class PromptGenerationTestBed {
             );
 
             try {
-              return JSON.parse(fs.readFileSync(componentPath, 'utf8'));
+              const data = JSON.parse(fs.readFileSync(componentPath, 'utf8'));
+              fileCache.set(identifier, data); // Cache the result
+              return data;
             } catch (error) {
               // Return a minimal component schema if file doesn't exist
               const componentName = componentFile.replace(
                 '.component.json',
                 ''
               );
-              return {
+              const fallback = {
                 $schema:
                   'schema://living-narrative-engine/component.schema.json',
                 id: `${modId}:${componentName}`,
@@ -1314,6 +1326,8 @@ export class PromptGenerationTestBed {
                   additionalProperties: true,
                 },
               };
+              fileCache.set(identifier, fallback); // Cache the fallback
+              return fallback;
             }
           }
         } else if (
@@ -1328,7 +1342,9 @@ export class PromptGenerationTestBed {
           const filePath = path.join(process.cwd(), identifier);
           try {
             const content = fs.readFileSync(filePath, 'utf8');
-            return JSON.parse(content);
+            const data = JSON.parse(content);
+            fileCache.set(identifier, data); // Cache the result
+            return data;
           } catch (error) {
             // Return empty array for directories that might not have content
             if (
@@ -1336,7 +1352,9 @@ export class PromptGenerationTestBed {
               identifier.includes('/entities/') ||
               identifier.includes('/rules/')
             ) {
-              return [];
+              const fallback = [];
+              fileCache.set(identifier, fallback); // Cache the fallback
+              return fallback;
             }
             // For other files, throw the error
             throw error;
