@@ -60,12 +60,12 @@ Handler Execution
 State Mutation + Event Dispatch
 ```
 
-### Seven Registration Points
+### Registration Points
 
 Every operation handler requires updates to these files:
 
 1. `data/schemas/operations/[operationName].schema.json` - Operation schema
-2. `data/schemas/operations/operation.schema.json` - Schema reference
+2. `data/schemas/operation.schema.json` - Schema reference (root schemas directory)
 3. `src/logic/operationHandlers/[operationName]Handler.js` - Handler implementation
 4. `src/dependencyInjection/tokens/tokens-core.js` - DI token
 5. `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Factory registration
@@ -111,8 +111,8 @@ Every operation handler requires updates to these files:
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://living-narrative-engine/schemas/operations/drinkFrom.schema.json",
-  "description": "Schema for DRINK_FROM operation. Handler: src/logic/operationHandlers/drinkFromHandler.js",
+  "$id": "schema://living-narrative-engine/operations/drinkFrom.schema.json",
+  "title": "DRINK_FROM Operation",
   "allOf": [
     {
       "$ref": "../base-operation.schema.json"
@@ -120,42 +120,56 @@ Every operation handler requires updates to these files:
     {
       "properties": {
         "type": {
-          "const": "DRINK_FROM",
-          "description": "Operation type constant - must match exactly in all registration points"
+          "const": "DRINK_FROM"
         },
         "parameters": {
-          "type": "object",
-          "properties": {
-            "drinkableItemId": {
-              "type": "string",
-              "description": "ID of the drinkable item entity"
-            },
-            "consumptionQuantity": {
-              "type": "number",
-              "minimum": 0,
-              "description": "Amount to consume (optional, defaults to 1)"
-            }
-          },
-          "required": ["drinkableItemId"],
-          "additionalProperties": false
+          "$ref": "#/$defs/Parameters"
         }
       }
     }
-  ]
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the DRINK_FROM operation",
+      "properties": {
+        "actorEntity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity ID of the actor drinking"
+        },
+        "containerEntity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity ID of the liquid container"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional variable name to store operation result"
+        }
+      },
+      "required": ["actorEntity", "containerEntity"],
+      "additionalProperties": false
+    }
+  }
 }
 ```
 
 **Key Points**:
-- `$id` must be unique and follow URL pattern
+- `$id` must be unique and follow `schema://living-narrative-engine/operations/[name].schema.json` pattern
+- `title` should match operation type for clarity
 - `type.const` is the operation type - **MUST BE CONSISTENT EVERYWHERE**
 - Use `allOf` to extend `base-operation.schema.json`
-- Define all parameters with descriptions
+- Define parameters in `$defs/Parameters` section
 - Mark required parameters
 - Set `additionalProperties: false` to catch typos
 
 **Validation**:
 ```bash
-npm run validate:schemas
+npm run validate
+# Or for strict validation:
+npm run validate:strict
 ```
 
 **Common Errors**:
@@ -167,40 +181,50 @@ npm run validate:schemas
 
 ### Step 2: Add Schema Reference
 
-**File**: `data/schemas/operations/operation.schema.json`
+**File**: `data/schemas/operation.schema.json` (root schemas directory, NOT in operations/)
 
 **Purpose**: Register schema in the operation union type so AJV can validate it
 
 **Before**:
 ```json
 {
-  "oneOf": [
-    { "$ref": "./addComponent.schema.json" },
-    { "$ref": "./removeComponent.schema.json" }
-  ]
+  "$defs": {
+    "Operation": {
+      "anyOf": [
+        { "$ref": "./operations/addComponent.schema.json" },
+        { "$ref": "./operations/removeComponent.schema.json" }
+      ]
+    }
+  }
 }
 ```
 
 **After**:
 ```json
 {
-  "oneOf": [
-    { "$ref": "./addComponent.schema.json" },
-    { "$ref": "./drinkFrom.schema.json" },
-    { "$ref": "./removeComponent.schema.json" }
-  ]
+  "$defs": {
+    "Operation": {
+      "anyOf": [
+        { "$ref": "./operations/addComponent.schema.json" },
+        { "$ref": "./operations/drinkFrom.schema.json" },
+        { "$ref": "./operations/removeComponent.schema.json" }
+      ]
+    }
+  }
 }
 ```
 
 **Key Points**:
-- Add to `oneOf` array
+- Add to `anyOf` array in the `Operation` definition within `$defs`
 - **Keep alphabetically sorted**
-- Path is relative to this file
+- Path is `./operations/` relative to schema root directory
 - File name must match exactly
 
 **Validation**:
 ```bash
-npm run validate:schemas
+npm run validate
+# Or for strict validation:
+npm run validate:strict
 ```
 
 **Common Errors**:
@@ -221,38 +245,39 @@ npm run validate:schemas
 /**
  * @file Handler for DRINK_FROM operation
  *
- * Processes drinking from a container or drinkable item.
- * Reduces the quantity of liquid and updates actor state.
+ * Consumes a single serving from a liquid container, tracking volume and managing empty state.
  *
- * @see data/schemas/operations/drinkFrom.schema.json
- * @see src/dependencyInjection/tokens/tokens-core.js - IDrinkFromHandler
- * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js
- * @see src/dependencyInjection/registrations/interpreterRegistrations.js
- * @see src/utils/preValidationUtils.js
+ * Related files:
+ * @see data/schemas/operations/drinkFrom.schema.json - Operation schema
+ * @see src/dependencyInjection/tokens/tokens-core.js - DrinkFromHandler token
+ * @see src/dependencyInjection/registrations/operationHandlerRegistrations.js - Handler registration
+ * @see src/dependencyInjection/registrations/interpreterRegistrations.js - Operation mapping
+ * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
  *
  * @extends BaseOperationHandler
  */
 
 import BaseOperationHandler from './baseOperationHandler.js';
-import { validateDependency, assertPresent } from '../utils/dependencyUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 class DrinkFromHandler extends BaseOperationHandler {
-  #componentMutationService;
-  #entityStateQuerier;
+  #entityManager;
+  #dispatcher;
 
-  constructor({ componentMutationService, entityStateQuerier, logger, eventBus }) {
-    super({ logger, eventBus });
-
-    // Validate required dependencies
-    validateDependency(componentMutationService, 'IComponentMutationService', logger, {
-      requiredMethods: ['addComponent', 'removeComponent', 'updateComponent'],
+  constructor({ logger, entityManager, safeEventDispatcher }) {
+    super('DrinkFromHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData', 'hasComponent', 'batchAddComponentsOptimized', 'removeComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
     });
-    validateDependency(entityStateQuerier, 'IEntityStateQuerier', logger, {
-      requiredMethods: ['getEntity', 'hasComponent'],
-    });
-
-    this.#componentMutationService = componentMutationService;
-    this.#entityStateQuerier = entityStateQuerier;
+    this.#entityManager = entityManager;
+    this.#dispatcher = safeEventDispatcher;
   }
 
   async execute(context) {
@@ -260,37 +285,52 @@ class DrinkFromHandler extends BaseOperationHandler {
 
     try {
       // 1. Validate required parameters
-      assertPresent(parameters.drinkableItemId, 'drinkableItemId is required');
+      assertParamsObject(parameters, 'DRINK_FROM');
 
       // 2. Query current state
-      const item = this.#entityStateQuerier.getEntity(parameters.drinkableItemId);
+      const containerData = this.#entityManager.getComponentData(
+        parameters.containerEntity,
+        'items:liquid_container'
+      );
 
-      if (!this.#entityStateQuerier.hasComponent(parameters.drinkableItemId, 'items:drinkable')) {
-        throw new InvalidArgumentError('Item is not drinkable');
+      if (!this.#entityManager.hasComponent(parameters.containerEntity, 'items:drinkable')) {
+        throw new Error('Container is not drinkable');
       }
 
       // 3. Calculate consumption
-      const consumptionQuantity = parameters.consumptionQuantity || 1;
+      const servingSize = containerData?.servingSize || 200;
+      const newVolume = Math.max(0, containerData.currentVolume - servingSize);
 
       // 4. Mutate state
-      await this.#componentMutationService.updateComponent(
-        parameters.drinkableItemId,
-        'items:quantity',
-        (current) => ({
-          ...current,
-          amount: Math.max(0, current.amount - consumptionQuantity),
-        })
-      );
+      const componentsToAdd = [
+        {
+          entityId: parameters.containerEntity,
+          componentType: 'items:liquid_container',
+          data: { ...containerData, currentVolume: newVolume },
+        },
+      ];
+
+      if (newVolume === 0) {
+        componentsToAdd.push({
+          entityId: parameters.containerEntity,
+          componentType: 'items:empty',
+          data: {},
+        });
+        await this.#entityManager.removeComponent(parameters.containerEntity, 'items:drinkable');
+      }
+
+      await this.#entityManager.batchAddComponentsOptimized(componentsToAdd);
 
       // 5. Dispatch success event
-      this.dispatchOperationEvent('DRINK_FROM_COMPLETED', {
-        itemId: parameters.drinkableItemId,
-        quantity: consumptionQuantity,
-        actorId: context.ruleContext.actorId,
+      this.#dispatcher.dispatch({
+        type: 'items:liquid_consumed',
+        actorId: parameters.actorEntity,
+        containerId: parameters.containerEntity,
+        volumeConsumed: servingSize,
       });
 
     } catch (error) {
-      this.handleOperationError(error, 'DRINK_FROM', context);
+      this.logger.error('DRINK_FROM operation failed', { error, parameters });
       throw error;
     }
   }
@@ -302,14 +342,15 @@ export default DrinkFromHandler;
 **Key Points**:
 - Always extend `BaseOperationHandler`
 - Use private fields (`#`) for dependencies
-- Validate dependencies in constructor
+- Pass validation options to `super()` constructor (new pattern)
+- Constructor signature: `{ logger, entityManager, safeEventDispatcher }` (standard dependencies)
 - Follow 5-step execution pattern:
   1. Validate parameters
   2. Query state
   3. Execute business logic
   4. Mutate state
   5. Dispatch events
-- Use `try-catch` with `handleOperationError`
+- Use `try-catch` for error handling
 - Return `void` (state changes happen via mutations)
 
 **Validation**:
@@ -440,7 +481,7 @@ A: Add event type constants to `src/events/eventTypes.js` and dispatch using `di
 | Schema File | camelCase + .schema.json | drinkFrom.schema.json |
 | Handler Class | PascalCase + Handler | DrinkFromHandler |
 | Handler File | camelCase + Handler.js | drinkFromHandler.js |
-| Token Name | I + PascalCase + Handler | IDrinkFromHandler |
+| Token Name | PascalCase + Handler (NO "I" prefix) | DrinkFromHandler |
 
 ## See Also
 
