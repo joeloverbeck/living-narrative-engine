@@ -21,18 +21,9 @@ describe('sex-anal-penetration:insert_finger_into_asshole action discovery', () 
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
     // Load positioning condition needed by the custom scope
-    const positioningCondition = await import('../../../../data/mods/positioning/conditions/actor-in-entity-facing-away.condition.json', {
-      assert: { type: 'json' }
-    });
-
-    // Extend the dataRegistry mock to return the positioning condition
-    const originalGetCondition = testFixture.testEnv.dataRegistry.getConditionDefinition;
-    testFixture.testEnv.dataRegistry.getConditionDefinition = jest.fn((conditionId) => {
-      if (conditionId === 'positioning:actor-in-entity-facing-away') {
-        return positioningCondition.default;
-      }
-      return originalGetCondition(conditionId);
-    });
+    await testFixture.loadDependencyConditions([
+      'positioning:actor-in-entity-facing-away'
+    ]);
 
     // Load and register the sex-anal-penetration mod's own scope
     const scopePath = path.join(

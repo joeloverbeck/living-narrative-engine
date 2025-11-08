@@ -564,7 +564,7 @@ describe('violence:grab_neck - Action Discovery', () => {
 
 ### Overview
 
-When your mod defines custom scopes (`.scope` files) that reference conditions from dependency mods using `condition_ref`, you need to manually set up these dependencies in your tests. This section documents the **current workaround pattern** for testing such scopes until convenience methods are added (see [Future Improvements](#future-improvements)).
+When your mod defines custom scopes (`.scope` files) that reference conditions from dependency mods using `condition_ref`, you can use the `loadDependencyConditions()` convenience method to simplify setup. This section documents both the **new simplified approach** and the legacy manual pattern (see [Future Improvements](#future-improvements)).
 
 The pattern covered here is distinct from the standard scope registration covered in [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes). Standard scopes (positioning, inventory, anatomy) can use `autoRegisterScopes: true`, but custom mod-specific scopes require manual setup.
 
@@ -593,11 +593,63 @@ import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 ```
 
-### Step-by-Step Setup
+### Loading Dependency Conditions (Simplified)
+
+**NEW (Recommended)**: Use the `loadDependencyConditions()` method to load conditions from dependency mods with a single line:
+
+```javascript
+// Load positioning condition needed by the custom scope
+await testFixture.loadDependencyConditions([
+  'positioning:actor-in-entity-facing-away'
+]);
+```
+
+This method replaces the manual 10+ line workaround (Steps 1-2 below) with a single convenience call. It:
+- ✅ Validates condition ID format
+- ✅ Loads condition files from the correct mod directories
+- ✅ Extends the `dataRegistry.getConditionDefinition` mock automatically
+- ✅ Chains properly for multiple calls (additive behavior)
+- ✅ Provides clear error messages when files are not found
+
+**Multiple conditions** can be loaded in a single call:
+
+```javascript
+await testFixture.loadDependencyConditions([
+  'positioning:actor-in-entity-facing-away',
+  'positioning:entity-not-in-facing-away'
+]);
+```
+
+**Multiple calls** are additive:
+
+```javascript
+// First call
+await testFixture.loadDependencyConditions([
+  'positioning:actor-in-entity-facing-away'
+]);
+
+// Later - adds to previously loaded conditions
+await testFixture.loadDependencyConditions([
+  'positioning:entity-not-in-facing-away'
+]);
+```
+
+**When to use this method**:
+- Your custom scope uses `condition_ref` to reference conditions from dependency mods
+- You need to load conditions from mods like `positioning`, `items`, etc.
+- You want to avoid verbose manual mock setup
+
+After loading dependency conditions, proceed to **Step 3** below to register your custom scope.
+
+---
+
+### Step-by-Step Setup (Legacy Pattern)
+
+> **Note**: Steps 1-2 below are replaced by the `loadDependencyConditions()` method above. This legacy pattern is documented for reference and backwards compatibility.
 
 This pattern requires four steps to set up custom scope testing:
 
-#### Step 1: Load Dependency Conditions
+#### Step 1: Load Dependency Conditions (Legacy)
 
 If your custom scope uses `condition_ref` to reference a condition from a dependency mod, you must load that condition file manually:
 
@@ -832,22 +884,28 @@ Custom operators (`hasPartOfType`, `hasClothingInSlot`, etc.) are **automaticall
 
 ### Future Improvements
 
-**This pattern is a temporary workaround**. Future tickets will add convenience methods to reduce boilerplate:
+**Partial implementation complete**. The following improvements reduce setup boilerplate:
 
-- **TESDATREG-002**: Add `ModTestFixture.registerCustomScope()` helper
-- **TESDATREG-004**: Add helper for automatic dependency condition loading
+- ✅ **TESDATREG-002**: `loadDependencyConditions()` method - **IMPLEMENTED** (see [Loading Dependency Conditions](#loading-dependency-conditions-simplified))
+- 🚧 **TESDATREG-004**: Add helper for automatic custom scope registration - **PLANNED**
 
-Once these helpers are implemented, the 4-step manual process will be replaced with simpler calls like:
+The new `loadDependencyConditions()` method eliminates Steps 1-2 of the manual pattern (10+ lines reduced to 1 line):
 
 ```javascript
-// Future API (not yet implemented)
-await testFixture.registerCustomScope(
-  'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind',
-  { dependencies: ['positioning:actor-in-entity-facing-away'] }
-);
+// Current API (Steps 1-2 simplified)
+await testFixture.loadDependencyConditions([
+  'positioning:actor-in-entity-facing-away'
+]);
 ```
 
-Until then, use the manual pattern documented above.
+Future improvements will further simplify custom scope registration (Steps 3-4):
+
+```javascript
+// Future API (not yet implemented - Steps 3-4)
+await testFixture.registerCustomScope(
+  'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind'
+);
+```
 
 ### Action Discovery Troubleshooting Checklist
 

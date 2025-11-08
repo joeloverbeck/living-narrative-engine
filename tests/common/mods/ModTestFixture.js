@@ -1240,6 +1240,12 @@ export class ModActionTestFixture extends BaseModTestFixture {
     this.conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '').replace(/_/g, '-')}`;
 
     /**
+     * Map to track loaded dependency conditions for mock extension.
+     * @private
+     */
+    this._loadedConditions = new Map();
+
+    /**
      * Registry of known scopes and their registration categories.
      * Used for providing helpful error hints when scopes are not registered.
      * @private
@@ -2018,6 +2024,81 @@ beforeEach(async () => {
 📚 Documentation: See docs/testing/scope-resolver-registry.md#creating-custom-scope-resolvers
       `.trim());
     }
+  }
+
+  /**
+   * Loads condition definitions from dependency mods and makes them available
+   * in the test environment's dataRegistry.
+   *
+   * @param {string[]} conditionIds - Array of condition IDs in format "modId:conditionId"
+   * @throws {Error} If condition file cannot be loaded or ID format is invalid
+   * @returns {Promise<void>}
+   *
+   * @example
+   * // Load single condition
+   * await testFixture.loadDependencyConditions([
+   *   'positioning:actor-in-entity-facing-away'
+   * ]);
+   *
+   * @example
+   * // Load multiple conditions (additive)
+   * await testFixture.loadDependencyConditions([
+   *   'positioning:actor-in-entity-facing-away',
+   *   'positioning:entity-not-in-facing-away'
+   * ]);
+   */
+  async loadDependencyConditions(conditionIds) {
+    // Validate input
+    if (!Array.isArray(conditionIds)) {
+      throw new Error('conditionIds must be an array');
+    }
+
+    // Load each condition
+    const loadPromises = conditionIds.map(async (id) => {
+      // Validate ID format
+      if (typeof id !== 'string' || !id.includes(':')) {
+        throw new Error(`Invalid condition ID format: "${id}". Expected "modId:conditionId"`);
+      }
+
+      const parts = id.split(':');
+      if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        throw new Error(`Invalid condition ID format: "${id}". Expected "modId:conditionId"`);
+      }
+
+      const [modId, conditionId] = parts;
+
+      // Construct file path (relative from tests/common/mods/)
+      const conditionPath = `../../../data/mods/${modId}/conditions/${conditionId}.condition.json`;
+
+      try {
+        // Load condition file
+        const conditionModule = await import(conditionPath, { assert: { type: 'json' } });
+        const conditionDef = conditionModule.default;
+
+        // Store for later lookup
+        this._loadedConditions.set(id, conditionDef);
+
+        return { id, conditionDef };
+      } catch (err) {
+        throw new Error(
+          `Failed to load condition "${id}" from ${conditionPath}: ${err.message}`
+        );
+      }
+    });
+
+    // Wait for all conditions to load
+    await Promise.all(loadPromises);
+
+    // Extend the dataRegistry mock
+    const original = this.testEnv.dataRegistry.getConditionDefinition;
+    this.testEnv.dataRegistry.getConditionDefinition = jest.fn((id) => {
+      // Check if this is one of our loaded conditions
+      if (this._loadedConditions.has(id)) {
+        return this._loadedConditions.get(id);
+      }
+      // Chain to original (may be another extended version)
+      return original(id);
+    });
   }
 }
 
