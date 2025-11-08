@@ -116,6 +116,10 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/regenerateDescriptionHandler.js`,
   ],
   [
+    'ResolveDirectionHandler',
+    `${handlerBasePath}/resolveDirectionHandler.js`,
+  ],
+  [
     'AtomicModifyComponentHandler',
     `${handlerBasePath}/atomicModifyComponentHandler.js`,
   ],
@@ -627,6 +631,15 @@ beforeAll(async () => {
           property: 'bodyDescriptionComposer',
           token: BodyDescriptionComposerToken,
         },
+      ],
+    },
+    {
+      token: tokens.ResolveDirectionHandler,
+      handlerName: 'ResolveDirectionHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },
     {
