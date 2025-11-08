@@ -149,6 +149,7 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
       'data/mods/positioning/conditions/entity-kneeling-before-actor.condition.json',
       'data/mods/positioning/conditions/actor-kneeling-before-entity.condition.json',
+      'data/mods/positioning/conditions/entity-is-bending-over.condition.json',
     ];
 
     for (const conditionPath of conditionPaths) {
@@ -305,6 +306,9 @@ describe('Kneeling Position Affection Action Restrictions', () => {
 
   /**
    * Helper to create an actor with required anatomy
+   *
+   * @param entityId
+   * @param actorName
    */
   function createActor(entityId, actorName) {
     const actor = entityManager.createEntity(entityId);
@@ -323,6 +327,9 @@ describe('Kneeling Position Affection Action Restrictions', () => {
   /**
    * Helper to establish closeness between two actors
    * Appends to existing partners if closeness already exists
+   *
+   * @param actor1Id
+   * @param actor2Id
    */
   function establishCloseness(actor1Id, actor2Id) {
     const id1 = actor1Id.id || actor1Id;
@@ -355,6 +362,9 @@ describe('Kneeling Position Affection Action Restrictions', () => {
 
   /**
    * Helper to make an actor kneel before another
+   *
+   * @param kneelerId
+   * @param targetId
    */
   function makeActorKneelBefore(kneelerId, targetId) {
     const kneelingEntityId = kneelerId.id || kneelerId;
@@ -366,6 +376,10 @@ describe('Kneeling Position Affection Action Restrictions', () => {
 
   /**
    * Helper to check if action is available for a specific target
+   *
+   * @param result
+   * @param actionId
+   * @param targetId
    */
   function hasActionForTarget(result, actionId, targetId) {
     if (!result?.actions) return false;

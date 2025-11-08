@@ -71,6 +71,7 @@
       "actor-kneeling-before-entity.condition.json",
       "both-actors-facing-each-other.condition.json",
       "entity-in-facing-away.condition.json",
+      "entity-is-bending-over.condition.json",
       "entity-kneeling-before-actor.condition.json",
       "entity-not-facing-away-from-actor.condition.json",
       "entity-not-in-facing-away.condition.json",
