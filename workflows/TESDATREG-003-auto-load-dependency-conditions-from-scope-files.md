@@ -10,6 +10,42 @@
 
 Enhance `ModTestFixture` to automatically detect and load dependency conditions referenced in custom scope files. When a test loads a custom scope, the system should parse the scope definition, identify all `condition_ref` usage, and automatically load those conditions without requiring developers to manually specify them.
 
+### Important Implementation Notes
+
+**Scope File Format**: Scope files use a custom DSL syntax (e.g., `modId:scopeName := expression`), not JSON. The `parseScopeDefinitions(content, filePath)` function from `src/scopeDsl/scopeDefinitionParser.js` returns a `Map<scopeName, { expr: string, ast: object }>` where:
+- `expr`: The raw DSL expression string
+- `ast`: The parsed Abstract Syntax Tree (AST) object
+
+**AST Structure**: The AST nodes have a `type` property (e.g., `Filter`, `FieldAccess`, `ArrayIteration`) and may contain `logic` or `filter` properties where `condition_ref` entries appear in JSON Logic format.
+
+**Example Scope File**:
+```
+sex-anal-penetration:actors_with_exposed_asshole := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"condition_ref": "positioning:actor-in-entity-facing-away"},
+    {"hasPartOfType": [".", "asshole"]}
+  ]
+}]
+```
+
+**Example Parsed Result**:
+```javascript
+Map {
+  'sex-anal-penetration:actors_with_exposed_asshole' => {
+    expr: 'actor.components.positioning:closeness.partners[][{...}]',
+    ast: {
+      type: 'ArrayIteration',
+      filter: {
+        and: [
+          { condition_ref: 'positioning:actor-in-entity-facing-away' },
+          { hasPartOfType: ['.', 'asshole'] }
+        ]
+      }
+    }
+  }
+}
+```
+
 ## Problem Statement
 
 Even with the `loadDependencyConditions()` method from TESDATREG-002, developers still need to:
@@ -165,15 +201,18 @@ class ScopeConditionAnalyzer {
 class ScopeConditionAnalyzer {
   /**
    * Extracts all condition_ref references from a scope definition.
+   *
+   * @param {object} scopeAst - Parsed scope AST from parseScopeDefinitions (has .ast property)
+   * @returns {Set<string>} Set of condition IDs referenced in the scope
    */
-  static extractConditionRefs(scopeDef) {
+  static extractConditionRefs(scopeAst) {
     const conditionRefs = new Set();
 
-    // Recursive function to walk the scope tree
+    // Recursive function to walk the AST
     const walk = (node) => {
       if (!node || typeof node !== 'object') return;
 
-      // Check if this node is a condition_ref
+      // Check if this node is a condition_ref in the logic/filter
       if (node.condition_ref) {
         conditionRefs.add(node.condition_ref);
         return;
@@ -189,9 +228,16 @@ class ScopeConditionAnalyzer {
       }
     };
 
-    // Start walking from scope definition
-    if (scopeDef.definition) {
-      walk(scopeDef.definition);
+    // Start walking from the AST structure
+    // The scopeAst has { expr: string, ast: object } from parseScopeDefinitions
+    if (scopeAst.ast) {
+      walk(scopeAst.ast);
+    } else if (scopeAst.logic || scopeAst.filter) {
+      // Also handle if passed logic/filter directly
+      walk(scopeAst.logic || scopeAst.filter);
+    } else {
+      // If passed raw AST node
+      walk(scopeAst);
     }
 
     return conditionRefs;
@@ -283,6 +329,9 @@ export default ScopeConditionAnalyzer;
 // In ModTestFixture.js
 
 import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
+import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
+import fs from 'fs';
+import path from 'path';
 
 class ModTestFixture {
   /**
@@ -300,12 +349,24 @@ class ModTestFixture {
       `../../../data/mods/${modId}/scopes/${scopeName}.scope`
     );
 
-    // Parse scope definition
-    const scopeDef = await parseScopeDefinitions(scopePath);
+    // Read and parse scope definition
+    const scopeContent = fs.readFileSync(scopePath, 'utf-8');
+    const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
+
+    // parseScopeDefinitions returns a Map<scopeName, { expr, ast }>
+    const fullScopeName = `${modId}:${scopeName}`;
+    const scopeData = parsedScopes.get(fullScopeName);
+
+    if (!scopeData) {
+      throw new Error(
+        `Scope "${fullScopeName}" not found in file ${scopePath}. ` +
+        `Available scopes: ${Array.from(parsedScopes.keys()).join(', ')}`
+      );
+    }
 
     if (loadConditions) {
-      // Extract condition references from scope
-      const conditionRefs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+      // Extract condition references from the parsed AST
+      const conditionRefs = ScopeConditionAnalyzer.extractConditionRefs(scopeData);
 
       if (conditionRefs.size > 0) {
         // Discover transitive dependencies
@@ -323,7 +384,7 @@ class ModTestFixture {
 
         if (validation.missing.length > 0) {
           throw new Error(
-            `Scope "${modId}:${scopeName}" references missing conditions:\n` +
+            `Scope "${fullScopeName}" references missing conditions:\n` +
             validation.missing.map(id => `  - ${id}`).join('\n') +
             `\n\nReferenced in: ${scopePath}`
           );
@@ -335,16 +396,27 @@ class ModTestFixture {
     }
 
     // Register the scope resolver
-    const scopeId = `${modId}:${scopeName}`;
-    const resolver = (runtimeCtx) => {
-      const scopeAst = scopeDef[scopeName];
-      const context = { actor: runtimeCtx.actor };
-      return this.testEnv.scopeEngine.resolve(scopeAst, context, runtimeCtx);
+    // Create resolver using ScopeEngine to evaluate the AST
+    const scopeEngine = new (require('../../../src/scopeDsl/engine.js').default)();
+    const resolver = (context) => {
+      // Build runtime context
+      const runtimeCtx = {
+        entityManager: this.testEnv.entityManager,
+        jsonLogicEval: this.testEnv.jsonLogic,
+        logger: this.testEnv.logger,
+      };
+
+      // Resolve using the AST
+      const result = scopeEngine.resolve(scopeData.ast, context, runtimeCtx);
+
+      return { success: true, value: result };
     };
 
-    ScopeResolverHelpers._registerResolvers(this.testEnv, {
-      [scopeId]: resolver
-    });
+    ScopeResolverHelpers._registerResolvers(
+      this.testEnv,
+      this.testEnv.entityManager,
+      { [fullScopeName]: resolver }
+    );
   }
 }
 ```
@@ -358,29 +430,36 @@ Create `tests/unit/common/engine/scopeConditionAnalyzer.test.js`:
 ```javascript
 describe('ScopeConditionAnalyzer', () => {
   describe('extractConditionRefs', () => {
-    it('should extract single condition_ref', () => {
-      const scopeDef = {
-        definition: {
-          condition_ref: 'positioning:actor-facing'
+    it('should extract single condition_ref from AST', () => {
+      // Simulating parsed AST structure from parseScopeDefinitions
+      const scopeAst = {
+        ast: {
+          type: 'Filter',
+          logic: {
+            condition_ref: 'positioning:actor-facing'
+          }
         }
       };
 
-      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeAst);
 
       expect(refs).toEqual(new Set(['positioning:actor-facing']));
     });
 
-    it('should extract multiple condition_refs', () => {
-      const scopeDef = {
-        definition: {
-          and: [
-            { condition_ref: 'positioning:actor-facing' },
-            { condition_ref: 'anatomy:has-exposed-part' }
-          ]
+    it('should extract multiple condition_refs from AST', () => {
+      const scopeAst = {
+        ast: {
+          type: 'Filter',
+          logic: {
+            and: [
+              { condition_ref: 'positioning:actor-facing' },
+              { condition_ref: 'anatomy:has-exposed-part' }
+            ]
+          }
         }
       };
 
-      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeAst);
 
       expect(refs).toEqual(new Set([
         'positioning:actor-facing',
@@ -388,22 +467,25 @@ describe('ScopeConditionAnalyzer', () => {
       ]));
     });
 
-    it('should extract nested condition_refs', () => {
-      const scopeDef = {
-        definition: {
-          or: [
-            {
-              and: [
-                { condition_ref: 'positioning:actor-facing' },
-                { condition_ref: 'anatomy:has-part' }
-              ]
-            },
-            { condition_ref: 'positioning:close-actors' }
-          ]
+    it('should extract nested condition_refs from AST', () => {
+      const scopeAst = {
+        ast: {
+          type: 'Filter',
+          logic: {
+            or: [
+              {
+                and: [
+                  { condition_ref: 'positioning:actor-facing' },
+                  { condition_ref: 'anatomy:has-part' }
+                ]
+              },
+              { condition_ref: 'positioning:close-actors' }
+            ]
+          }
         }
       };
 
-      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeAst);
 
       expect(refs).toEqual(new Set([
         'positioning:actor-facing',
@@ -412,45 +494,59 @@ describe('ScopeConditionAnalyzer', () => {
       ]));
     });
 
-    it('should handle scope with no condition_refs', () => {
-      const scopeDef = {
-        definition: {
-          field: 'actor.items[]'
+    it('should handle scope AST with no condition_refs', () => {
+      const scopeAst = {
+        ast: {
+          type: 'FieldAccess',
+          path: 'actor.items[]'
         }
       };
 
-      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeAst);
 
       expect(refs).toEqual(new Set());
     });
 
     it('should deduplicate duplicate condition_refs', () => {
-      const scopeDef = {
-        definition: {
-          and: [
-            { condition_ref: 'positioning:actor-facing' },
-            { condition_ref: 'positioning:actor-facing' }
-          ]
+      const scopeAst = {
+        ast: {
+          type: 'Filter',
+          logic: {
+            and: [
+              { condition_ref: 'positioning:actor-facing' },
+              { condition_ref: 'positioning:actor-facing' }
+            ]
+          }
         }
       };
 
-      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeAst);
 
       expect(refs).toEqual(new Set(['positioning:actor-facing']));
     });
 
-    it('should handle complex real-world scope', () => {
-      // Use actual scope from sex-anal-penetration mod
-      const scopeDef = {
-        actors_with_exposed_asshole_accessible_from_behind: {
-          scope: "close_actors",
+    it('should handle complex real-world scope AST', () => {
+      // Actual AST structure from sex-anal-penetration mod after parsing
+      const scopeAst = {
+        expr: 'actor.components.positioning:closeness.partners[][{...}]',
+        ast: {
+          type: 'ArrayIteration',
+          parent: {
+            type: 'FieldAccess',
+            path: 'actor.components.positioning:closeness.partners'
+          },
           filter: {
             and: [
-              { condition_ref: "positioning:actor-in-entity-facing-away" },
+              {
+                or: [
+                  { condition_ref: 'positioning:actor-in-entity-facing-away' },
+                  { '!!': { var: 'entity.components.positioning:lying_down' } }
+                ]
+              },
               {
                 and: [
-                  { hasPartOfType: [".", "asshole"] },
-                  { not: { isSocketCovered: [".", "asshole"] } }
+                  { hasPartOfType: ['.', 'asshole'] },
+                  { not: { isSocketCovered: ['.', 'asshole'] } }
                 ]
               }
             ]
@@ -458,7 +554,7 @@ describe('ScopeConditionAnalyzer', () => {
         }
       };
 
-      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+      const refs = ScopeConditionAnalyzer.extractConditionRefs(scopeAst);
 
       expect(refs).toContain('positioning:actor-in-entity-facing-away');
     });
@@ -550,53 +646,103 @@ describe('ScopeConditionAnalyzer', () => {
 Create `tests/integration/common/ModTestFixture.autoLoadConditions.integration.test.js`:
 
 ```javascript
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+
 describe('ModTestFixture - Auto-Load Conditions Integration', () => {
+  let testFixture;
+
+  afterEach(() => {
+    if (testFixture) {
+      testFixture.cleanup();
+    }
+  });
+
   it('should auto-load conditions when registering custom scope', async () => {
-    const testFixture = await ModTestFixture.forAction(
+    testFixture = await ModTestFixture.forAction(
       'sex-anal-penetration',
       'sex-anal-penetration:insert_finger_into_asshole'
     );
 
     // This should automatically load positioning:actor-in-entity-facing-away
+    // which is referenced in the scope's condition_ref
     await testFixture.registerCustomScope(
       'sex-anal-penetration',
       'actors_with_exposed_asshole_accessible_from_behind'
     );
 
-    // Verify condition was loaded
+    // Verify condition was loaded by checking the mock was extended
     const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
       'positioning:actor-in-entity-facing-away'
     );
 
     expect(condition).toBeDefined();
     expect(condition.id).toBe('positioning:actor-in-entity-facing-away');
+    expect(condition.logic).toBeDefined();
   });
 
   it('should throw clear error when referenced condition missing', async () => {
-    const testFixture = await ModTestFixture.forAction('test', 'test:action');
+    testFixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
-    // Create a scope that references non-existent condition
-    // (This would need test fixture setup with mock scope file)
+    // Create a temporary scope file that references a non-existent condition
+    // NOTE: In real implementation, this test would need proper test setup
+    // with a mock scope file containing invalid condition_ref
 
     await expect(
-      testFixture.registerCustomScope('test', 'invalid-scope')
-    ).rejects.toThrow(/references missing conditions/);
+      testFixture.registerCustomScope('positioning', 'nonexistent-scope')
+    ).rejects.toThrow(/not found in file|references missing conditions/);
   });
 
   it('should allow disabling auto-load', async () => {
-    const testFixture = await ModTestFixture.forAction('test', 'test:action');
+    testFixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
-    // Should not throw even if conditions missing
+    // With loadConditions: false, should not attempt to load dependency conditions
+    // This test would need proper scope file setup to fully validate
     await expect(
       testFixture.registerCustomScope(
-        'test',
-        'scope-with-missing-deps',
+        'sex-anal-penetration',
+        'actors_with_exposed_asshole_accessible_from_behind',
         { loadConditions: false }
       )
     ).resolves.not.toThrow();
   });
+
+  it('should handle scope with multiple condition_refs', async () => {
+    testFixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+
+    // Register scope that references multiple conditions
+    await testFixture.registerCustomScope(
+      'sex-anal-penetration',
+      'actors_with_exposed_asshole_accessible_from_behind'
+    );
+
+    // Verify all conditions were loaded
+    const condition1 = testFixture.testEnv.dataRegistry.getConditionDefinition(
+      'positioning:actor-in-entity-facing-away'
+    );
+
+    expect(condition1).toBeDefined();
+    // Additional conditions would be tested here if the scope references more
+  });
 });
 ```
+
+**Note on Condition File Structure**: Condition files are JSON with the following structure:
+```json
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "positioning:actor-in-entity-facing-away",
+  "description": "Checks if actor is in entity's facing_away_from array",
+  "logic": {
+    "in": [
+      { "var": "actor.id" },
+      { "var": "entity.components.positioning:facing_away.facing_away_from" }
+    ]
+  }
+}
+```
+
+The `logic` property contains JSON Logic that may itself contain nested `condition_ref` entries, creating transitive dependencies.
 
 ## Performance Considerations
 
