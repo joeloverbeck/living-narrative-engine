@@ -4,6 +4,11 @@
  * the need to manually implement common scope patterns in tests
  */
 
+import { promises as fs } from 'fs';
+import { resolve } from 'path';
+import process from 'node:process';
+import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
+
 /**
  * Resolves an entity reference from a scope context.
  *
@@ -49,7 +54,6 @@ function resolveContextEntity(context, contextSource, entityManager) {
  * and registration methods that bundle multiple related scope resolvers together.
  *
  * @see {@link file://docs/testing/scope-resolver-registry.md} Complete scope registry documentation
- *
  * @example
  * // In test setup:
  * beforeEach(async () => {
@@ -980,6 +984,101 @@ export class ScopeResolverHelpers {
 
     // Register all resolvers
     this._registerResolvers(testEnv, entityManager, resolvers);
+  }
+
+  /**
+   * Convenience method for registering a custom scope without a ModTestFixture instance.
+   * Automatically loads the scope file, parses it, creates a resolver,
+   * and registers it with the UnifiedScopeResolver.
+   *
+   * @param {object} testEnv - Test environment from createSystemLogicTestEnv()
+   * @param {string} modId - The mod containing the scope
+   * @param {string} scopeName - The scope name (without .scope extension)
+   * @returns {Promise<void>}
+   * @throws {Error} If scope file not found or parsing fails
+   * @example
+   * // Register a custom scope
+   * await ScopeResolverHelpers.registerCustomScope(
+   *   testEnv,
+   *   'sex-anal-penetration',
+   *   'actors_with_exposed_asshole_accessible_from_behind'
+   * );
+   */
+  static async registerCustomScope(testEnv, modId, scopeName) {
+    // Validate inputs
+    if (!modId || typeof modId !== 'string') {
+      throw new Error('modId must be a non-empty string');
+    }
+    if (!scopeName || typeof scopeName !== 'string') {
+      throw new Error('scopeName must be a non-empty string');
+    }
+
+    // Construct scope file path
+    const scopePath = resolve(
+      process.cwd(),
+      `data/mods/${modId}/scopes/${scopeName}.scope`
+    );
+
+    // Read scope file
+    let scopeContent;
+    try {
+      scopeContent = await fs.readFile(scopePath, 'utf-8');
+    } catch (err) {
+      throw new Error(
+        `Failed to read scope file at ${scopePath}: ${err.message}`
+      );
+    }
+
+    // Parse scope definitions (returns Map)
+    let parsedScopes;
+    try {
+      parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
+    } catch (err) {
+      throw new Error(
+        `Failed to parse scope file at ${scopePath}: ${err.message}`
+      );
+    }
+
+    // Get scope data (must use full namespaced name)
+    const fullScopeName = `${modId}:${scopeName}`;
+    const scopeData = parsedScopes.get(fullScopeName);
+
+    if (!scopeData) {
+      const availableScopes = Array.from(parsedScopes.keys()).join(', ');
+      throw new Error(
+        `Scope "${fullScopeName}" not found in file ${scopePath}. ` +
+          `Available scopes: ${availableScopes || '(none)'}`
+      );
+    }
+
+    // Create and register the resolver (note: creates local ScopeEngine instance)
+    const { default: ScopeEngine } = await import(
+      '../../../src/scopeDsl/engine.js'
+    );
+    const scopeEngine = new ScopeEngine();
+
+    const resolver = (context) => {
+      const runtimeCtx = {
+        entityManager: testEnv.entityManager,
+        jsonLogicEval: testEnv.jsonLogic,
+        logger: testEnv.logger,
+      };
+
+      try {
+        const result = scopeEngine.resolve(scopeData.ast, context, runtimeCtx);
+        return { success: true, value: result };
+      } catch (err) {
+        return {
+          success: false,
+          error: `Failed to resolve scope "${fullScopeName}": ${err.message}`,
+        };
+      }
+    };
+
+    // Register with proper signature (3 parameters)
+    this._registerResolvers(testEnv, testEnv.entityManager, {
+      [fullScopeName]: resolver,
+    });
   }
 
   /**
