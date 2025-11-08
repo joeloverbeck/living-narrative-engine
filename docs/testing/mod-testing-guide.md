@@ -564,22 +564,155 @@ describe('violence:grab_neck - Action Discovery', () => {
 
 ### Overview
 
-When your mod defines custom scopes (`.scope` files) that reference conditions from dependency mods using `condition_ref`, you can use the `loadDependencyConditions()` convenience method to simplify setup. This section documents both the **new simplified approach** and the legacy manual pattern (see [Future Improvements](#future-improvements)).
+When your mod defines custom scopes (`.scope` files) that reference conditions from dependency mods using `condition_ref`, you can use the **`registerCustomScope()` convenience method** to simplify setup. This method automatically handles scope file loading, parsing, condition discovery, and resolver registration with a single line of code.
 
-The pattern covered here is distinct from the standard scope registration covered in [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes). Standard scopes (positioning, inventory, anatomy) can use `autoRegisterScopes: true`, but custom mod-specific scopes require manual setup.
+The pattern covered here is distinct from the standard scope registration covered in [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes). Standard scopes (positioning, inventory, anatomy) can use `autoRegisterScopes: true`, but custom mod-specific scopes require explicit registration.
 
-### When to Use This Pattern
+### Registering Custom Scopes (Simplified - Recommended)
 
-Use this manual setup pattern when:
+**NEW (Recommended)**: Use the `registerCustomScope()` method to register custom scopes with automatic condition loading:
+
+```javascript
+describe('Action Discovery with Custom Scope', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'sex-anal-penetration',
+      'sex-anal-penetration:insert_finger_into_asshole'
+    );
+
+    // NEW: One line replaces 36+ lines of boilerplate
+    await testFixture.registerCustomScope(
+      'sex-anal-penetration',
+      'actors_with_exposed_asshole_accessible_from_behind'
+    );
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
+  });
+
+  it('should discover action when conditions are met', async () => {
+    // Test implementation
+  });
+});
+```
+
+**What this method does automatically**:
+- ✅ Loads the scope file from `data/mods/{modId}/scopes/{scopeName}.scope`
+- ✅ Parses the scope definitions using `parseScopeDefinitions()`
+- ✅ Extracts condition references from the scope AST
+- ✅ Discovers transitive condition dependencies
+- ✅ Loads all required conditions from dependency mods
+- ✅ Creates a properly-structured resolver function
+- ✅ Registers the resolver with `UnifiedScopeResolver`
+- ✅ Provides clear error messages when scopes or conditions are missing
+
+**Disabling Auto-Loading of Conditions**:
+
+If you need to load conditions manually or your scope doesn't reference any conditions:
+
+```javascript
+await testFixture.registerCustomScope(
+  'my-mod',
+  'my-custom-scope',
+  { loadConditions: false }
+);
+```
+
+**Error Handling**:
+
+The method provides clear, actionable errors:
+
+```javascript
+// File not found error:
+// "Failed to read scope file at data/mods/my-mod/scopes/my-scope.scope: ENOENT..."
+
+// Scope name not found error:
+// "Scope "my-mod:my-scope" not found in file data/mods/my-mod/scopes/my-scope.scope.
+//  Available scopes: my-mod:other_scope, my-mod:another_scope"
+```
+
+**Using the Static Helper** (without ModTestFixture):
+
+If you're not using `ModTestFixture`, you can use the static helper method:
+
+```javascript
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+import { createSystemLogicTestEnv } from '../../../common/engine/systemLogicTestEnv.js';
+
+// Create test environment
+const testEnv = createSystemLogicTestEnv();
+
+// Register custom scope using static helper
+await ScopeResolverHelpers.registerCustomScope(
+  testEnv,
+  'sex-anal-penetration',
+  'actors_with_exposed_asshole_accessible_from_behind'
+);
+```
+
+**Lines Reduced**: This approach reduces custom scope registration from **36+ lines** of boilerplate to **1 line**.
+
+**Before (36 lines)**:
+```javascript
+const scopeDefPath = path.join(
+  __dirname,
+  '../../../data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_accessible_from_behind.scope'
+);
+
+const scopeDef = await parseScopeDefinitions(scopeDefPath);
+
+const scopeId = 'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind';
+const scopeName = 'actors_with_exposed_asshole_accessible_from_behind';
+
+const resolver = (runtimeCtx) => {
+  const scopeAst = scopeDef[scopeName];
+  const context = { actor: runtimeCtx.actor };
+
+  try {
+    return testFixture.testEnv.scopeEngine.resolve(
+      scopeAst,
+      context,
+      runtimeCtx
+    );
+  } catch (err) {
+    testFixture.testEnv.logger.error(
+      `Failed to resolve custom scope "${scopeId}":`,
+      err
+    );
+    throw err;
+  }
+};
+
+ScopeResolverHelpers._registerResolvers(testFixture.testEnv, {
+  [scopeId]: resolver,
+});
+```
+
+**After (1 line)**:
+```javascript
+await testFixture.registerCustomScope(
+  'sex-anal-penetration',
+  'actors_with_exposed_asshole_accessible_from_behind'
+);
+```
+
+### When to Use registerCustomScope()
+
+Use `registerCustomScope()` when:
 
 - ✅ Your mod has custom `.scope` files in `data/mods/your-mod/scopes/`
-- ✅ These scopes use `{"condition_ref": "dependency-mod:condition-id"}`
+- ✅ These scopes use `{"condition_ref": "dependency-mod:condition-id"}` (auto-loaded)
 - ✅ The scopes are mod-specific, not general positioning/inventory/anatomy scopes
 
-**Do NOT use this pattern when**:
+**Do NOT use registerCustomScope() when**:
 
-- ❌ Using standard scopes from positioning/inventory/anatomy mods (use `autoRegisterScopes: true` instead)
+- ❌ Using standard scopes from positioning/inventory/anatomy mods (use `ScopeResolverHelpers.registerPositioningScopes()` etc. instead)
 - ❌ Your mod has no custom scopes
+
+**Prefer registerCustomScope() over the legacy manual pattern** documented below. The manual pattern is kept for reference and backwards compatibility only.
 
 ### Required Imports
 
