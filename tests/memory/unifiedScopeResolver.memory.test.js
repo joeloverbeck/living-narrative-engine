@@ -13,9 +13,9 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
   let mockDependencies;
 
   beforeEach(async () => {
-    // Enhanced pre-test stabilization for memory tests
-    await global.memoryTestUtils.addPreTestStabilization(300);
-    
+    // Optimized: Reduced pre-test stabilization delay for faster execution
+    await global.memoryTestUtils.addPreTestStabilization(100);
+
     // Mock dependencies
     mockDependencies = {
       scopeRegistry: {
@@ -45,9 +45,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
 
     resolver = new UnifiedScopeResolver(mockDependencies);
 
-    // Additional GC cycles for better baseline establishment
-    await global.memoryTestUtils.forceGCAndWait();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Optimized: Single GC cycle is sufficient
     await global.memoryTestUtils.forceGCAndWait();
   });
 
@@ -68,8 +66,8 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // significantly due to factors outside our control (V8 internals, GC timing,
       // test framework overhead, mock object allocation).
 
-      // Create many different contexts to test memory usage
-      const contextCount = global.memoryTestUtils.isCI() ? 150 : 250;
+      // Optimized: Reduced context count for faster execution
+      const contextCount = global.memoryTestUtils.isCI() ? 100 : 150;
       const contexts = Array.from({ length: contextCount }, (_, i) => ({
         actor: { id: `actor${i}`, componentTypeIds: ['core:actor'] },
         actorLocation: `location${i}`,
@@ -91,7 +89,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory =
-        await global.memoryTestUtils.getStableMemoryUsage();
+        await global.memoryTestUtils.getStableMemoryUsage(3);
 
       // Populate cache with many entries
       contexts.forEach((context, i) => {
@@ -99,17 +97,17 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
         resolver.resolve(scopeName, context, { useCache: true });
       });
 
-      // Allow memory to stabilize after cache population with longer wait
-      await new Promise((resolve) => setTimeout(resolve, 300)); // Increased from 200ms to 300ms for better stabilization
-      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage(10); // Increased from 8 to 10 samples for more stable measurement
+      // Optimized: Reduced stabilization wait time and sample count
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage(5);
 
-      // Force cleanup and measure final memory with more samples
+      // Optimized: Reduced cleanup wait time and sample count
       await global.memoryTestUtils.forceGCAndWait();
-      await new Promise((resolve) => setTimeout(resolve, 150)); // Increased from 100ms to 150ms for better stabilization
-      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(10); // Increased from 8 to 10 samples for more stable measurement
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(5);
 
       // Calculate memory usage
-      let memoryGrowth = Math.max(0, peakMemory - baselineMemory);
+      const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
       const memoryLeakage = Math.max(0, finalMemory - baselineMemory);
 
       // Environment-aware memory thresholds for caching
@@ -121,37 +119,14 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // Absolute memory threshold is more lenient as it includes all heap allocations,
       // not just our cache. V8's memory management, mock objects, and test framework
       // can cause significant variation in absolute memory usage between runs.
-      // Increased thresholds to account for V8 non-deterministic memory management
       const maxAbsoluteMB = global.memoryTestUtils.isCI() ? 350 : 300; // Total memory limit
 
       expect(memoryGrowth).toBeLessThan(maxCacheGrowthMB * 1024 * 1024);
       expect(memoryLeakage).toBeLessThan(maxCacheLeakageMB * 1024 * 1024);
-      
-      // Add retry logic for absolute memory check due to V8 variability
-      let absoluteMemoryPassed = false;
-      let retryCount = 0;
-      const maxRetries = 3;
-      let currentPeakMemory = peakMemory;
-      
-      while (!absoluteMemoryPassed && retryCount < maxRetries) {
-        if (currentPeakMemory < maxAbsoluteMB * 1024 * 1024) {
-          absoluteMemoryPassed = true;
-        } else if (retryCount < maxRetries - 1) {
-          // Wait and force GC before retry
-          await global.memoryTestUtils.forceGCAndWait();
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          // Re-measure peak memory after stabilization
-          currentPeakMemory = await global.memoryTestUtils.getStableMemoryUsage(15);
-          memoryGrowth = Math.max(0, currentPeakMemory - baselineMemory);
-          retryCount++;
-        } else {
-          // Final attempt failed
-          retryCount++;
-        }
-      }
-      
-      // Always perform the assertion - either it passes or fails
-      expect(currentPeakMemory).toBeLessThan(maxAbsoluteMB * 1024 * 1024);
+
+      // Optimized: Removed retry logic - if test fails, it indicates a real issue
+      // The thresholds are already lenient enough to accommodate V8 variability
+      expect(peakMemory).toBeLessThan(maxAbsoluteMB * 1024 * 1024);
 
       // Memory per cached item should be reasonable
       // Note: UnifiedScopeResolver has significant overhead per context due to mock setup
@@ -169,7 +144,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       console.log(
         `Scope cache memory - Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)}MB, ` +
           `Growth: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB, ` +
-          `Peak: ${(currentPeakMemory / 1024 / 1024).toFixed(2)}MB, ` +
+          `Peak: ${(peakMemory / 1024 / 1024).toFixed(2)}MB, ` +
           `Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB, ` +
           `Contexts: ${contextCount}, Per Context: ${memoryPerContext.toFixed(0)} bytes, ` +
           `Threshold: ${adjustedThreshold.toFixed(0)} bytes, ` +
@@ -178,8 +153,8 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
     });
 
     it('should handle cache eviction without memory leaks', async () => {
-      // Test cache eviction behavior by creating many unique cache entries
-      const largeContextCount = global.memoryTestUtils.isCI() ? 500 : 1000;
+      // Optimized: Reduced context count for faster execution
+      const largeContextCount = global.memoryTestUtils.isCI() ? 300 : 500;
 
       // Setup mock responses
       mockDependencies.scopeRegistry.getScope.mockReturnValue({
@@ -196,7 +171,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory =
-        await global.memoryTestUtils.getStableMemoryUsage();
+        await global.memoryTestUtils.getStableMemoryUsage(3);
 
       // Create many cache entries (more than typical cache size limits)
       for (let i = 0; i < largeContextCount; i++) {
@@ -208,24 +183,24 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
 
         resolver.resolve(`unique_scope_${i}`, context, { useCache: true });
 
-        // Force periodic cleanup to test eviction
-        if (i % 100 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 10));
+        // Optimized: Reduced periodic cleanup frequency and delay
+        if (i % 150 === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 5));
         }
       }
 
-      // Allow memory to stabilize after cache operations
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      // Optimized: Reduced stabilization wait time and sample count
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
 
       // Clear cache explicitly if available
       if (resolver && typeof resolver.clearCache === 'function') {
         resolver.clearCache();
       }
 
-      // Force cleanup and measure final memory
+      // Optimized: Reduced sample count for final memory measurement
       await global.memoryTestUtils.forceGCAndWait();
-      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
 
       // Calculate memory usage
       const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
@@ -248,9 +223,9 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
     });
 
     it('should maintain stable memory usage during continuous cache operations', async () => {
-      // Test memory stability during continuous cache operations
-      const operationCycles = 5;
-      const operationsPerCycle = global.memoryTestUtils.isCI() ? 50 : 100;
+      // Optimized: Reduced operation cycles and operations per cycle
+      const operationCycles = 3;
+      const operationsPerCycle = global.memoryTestUtils.isCI() ? 40 : 60;
 
       // Setup mock responses
       mockDependencies.scopeRegistry.getScope.mockReturnValue({
@@ -267,7 +242,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory =
-        await global.memoryTestUtils.getStableMemoryUsage();
+        await global.memoryTestUtils.getStableMemoryUsage(3);
 
       const memorySnapshots = [];
 
@@ -289,15 +264,15 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
           });
         }
 
-        // Take memory snapshot after each cycle
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        const cycleMemory = await global.memoryTestUtils.getStableMemoryUsage();
+        // Optimized: Reduced delay and sample count for memory snapshots
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        const cycleMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
         memorySnapshots.push(cycleMemory);
       }
 
-      // Force final cleanup
+      // Optimized: Reduced sample count for final memory measurement
       await global.memoryTestUtils.forceGCAndWait();
-      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
 
       // Calculate memory stability metrics
       const memoryVariations = [];

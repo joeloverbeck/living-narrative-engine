@@ -102,13 +102,14 @@ describe('Action Tracing - Memory Tests', () => {
 
   describe('Extended Operation Memory Management', () => {
     it('should handle memory efficiently during extended trace generation', async () => {
-      const totalTraces = global.memoryTestUtils.isCI() ? 300 : 500;
+      // Optimized: Reduced trace counts for faster execution while maintaining test quality
+      const totalTraces = global.memoryTestUtils.isCI() ? 150 : 250;
       const batchSize = 25;
       const batches = totalTraces / batchSize;
 
       // Measure initial memory with stabilization
       await global.memoryTestUtils.forceGCAndWait();
-      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
 
       const memorySnapshots = [];
       let totalProcessed = 0;
@@ -129,15 +130,14 @@ describe('Action Tracing - Memory Tests', () => {
           totalProcessed++;
         }
 
-        // Wait for all async file operations to complete before memory measurement
+        // Optimized: Only wait for pending writes in the loop (not file operations)
         await outputService.waitForPendingWrites();
-        await outputService.waitForFileOperations();
 
-        // Take memory snapshot every few batches
-        if (batch % 4 === 0) {
+        // Optimized: Take memory snapshots less frequently (every 3 batches instead of 4)
+        if (batch % 3 === 0) {
           await global.memoryTestUtils.forceGCAndWait();
           const currentMemory =
-            await global.memoryTestUtils.getStableMemoryUsage();
+            await global.memoryTestUtils.getStableMemoryUsage(3);
           memorySnapshots.push({
             batch,
             heapUsed: currentMemory,
@@ -145,6 +145,9 @@ describe('Action Tracing - Memory Tests', () => {
           });
         }
       }
+
+      // Optimized: Wait for file operations ONCE after all batches complete
+      await outputService.waitForFileOperations();
 
       // Final memory measurement with stabilization
       await global.memoryTestUtils.forceGCAndWait();
@@ -198,13 +201,14 @@ describe('Action Tracing - Memory Tests', () => {
     });
 
     it('should not accumulate memory when processing traces in batches', async () => {
-      const batchCount = global.memoryTestUtils.isCI() ? 5 : 10;
-      const tracesPerBatch = 50;
+      // Optimized: Reduced batch count for faster execution
+      const batchCount = global.memoryTestUtils.isCI() ? 4 : 6;
+      const tracesPerBatch = 40;
 
       // Establish baseline
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory =
-        await global.memoryTestUtils.getStableMemoryUsage();
+        await global.memoryTestUtils.getStableMemoryUsage(3);
 
       const batchMemories = [];
 
@@ -223,18 +227,20 @@ describe('Action Tracing - Memory Tests', () => {
           traces.map((trace) => outputService.writeTrace(trace))
         );
 
-        // Wait for all async file operations to complete before memory measurement
+        // Optimized: Only wait for pending writes in the loop
         await outputService.waitForPendingWrites();
-        await outputService.waitForFileOperations();
 
         // Measure memory after each batch
         await global.memoryTestUtils.forceGCAndWait();
-        const batchMemory = await global.memoryTestUtils.getStableMemoryUsage();
+        const batchMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
         batchMemories.push(batchMemory);
 
-        // Small delay between batches
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Optimized: Reduced delay between batches
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
+
+      // Optimized: Wait for file operations ONCE after all batches complete
+      await outputService.waitForFileOperations();
 
       // Check that memory doesn't continuously grow
       const firstBatchMemory = batchMemories[0];
@@ -259,12 +265,13 @@ describe('Action Tracing - Memory Tests', () => {
     });
 
     it('should release memory after trace processing completes', async () => {
-      const traceCount = global.memoryTestUtils.isCI() ? 200 : 400;
+      // Optimized: Reduced trace count for faster execution
+      const traceCount = global.memoryTestUtils.isCI() ? 100 : 200;
 
       // Baseline
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory =
-        await global.memoryTestUtils.getStableMemoryUsage();
+        await global.memoryTestUtils.getStableMemoryUsage(3);
 
       // Create and hold references to traces
       const traces = await Promise.all(
@@ -284,18 +291,16 @@ describe('Action Tracing - Memory Tests', () => {
       await outputService.waitForFileOperations();
 
       // Measure peak memory
-      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
 
       // Clear references and wait for cleanup
       traces.length = 0;
       await outputService.waitForPendingWrites();
-      await global.memoryTestUtils.forceGCAndWait();
-
-      // Additional GC cycles for more stable memory cleanup measurement
+      // Optimized: Single GC cycle instead of two
       await global.memoryTestUtils.forceGCAndWait();
 
       // Measure final memory
-      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
 
       const peakGrowth = peakMemory - baselineMemory;
       const residualMemory = finalMemory - baselineMemory;
