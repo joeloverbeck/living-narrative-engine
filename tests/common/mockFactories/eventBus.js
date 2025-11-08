@@ -37,7 +37,7 @@ export function createEventBus({ captureEvents = false } = {}) {
 
       // Process listeners asynchronously to handle async event handlers
       let validationPassed = true;
-      const listenerPromises = listeners.map(async (h) => {
+      const listenerPromises = listeners.map(async (h, index) => {
         try {
           // Pass full event object to match real EventBus behavior
           // Await the handler in case it's async (like SystemLogicInterpreter)

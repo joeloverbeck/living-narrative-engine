@@ -605,7 +605,8 @@
       "mcp__serena__check_onboarding_performed",
       "Bash(do echo -n \"$file: \")",
       "Bash([ -f \"$file\" ])",
-      "Bash(NODE_ENV=test npm test:*)"
+      "Bash(NODE_ENV=test npm test:*)",
+      "Bash(timeout 10 node:*)"
     ],
     "deny": [],
     "ask": []

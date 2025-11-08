@@ -83,8 +83,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct number of handlers (9 standard operations)
-      expect(Object.keys(handlers)).toHaveLength(9);
+      // Verify correct number of handlers (11 standard operations including FOR_EACH and IF)
+      expect(Object.keys(handlers)).toHaveLength(11);
     });
 
     it('should throw error when entityManager is missing', () => {
@@ -240,8 +240,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct number of handlers (9 standard + 1 QUERY_LOOKUP + 1 ADD_COMPONENT)
-      expect(Object.keys(handlers)).toHaveLength(11);
+      // Verify correct number of handlers (11 standard + 1 QUERY_LOOKUP + 1 ADD_COMPONENT)
+      expect(Object.keys(handlers)).toHaveLength(13);
     });
 
     it('should configure ADD_COMPONENT handler correctly', () => {
@@ -288,6 +288,8 @@ describe('ModTestHandlerFactory', () => {
         'END_TURN',
         'SET_VARIABLE',
         'LOG_MESSAGE',
+        'FOR_EACH',
+        'IF',
         'QUERY_LOOKUP',
         'ADD_COMPONENT',
         'REMOVE_COMPONENT',
@@ -298,7 +300,7 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      expect(Object.keys(handlers)).toHaveLength(12);
+      expect(Object.keys(handlers)).toHaveLength(14);
     });
 
     it('should configure mutation handlers with executable methods', () => {
@@ -428,8 +430,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct total number of handlers (9 standard + 1 QUERY_LOOKUP + 10 positioning)
-      expect(Object.keys(handlers)).toHaveLength(20);
+      // Verify correct total number of handlers (11 standard + 1 QUERY_LOOKUP + 11 positioning)
+      expect(Object.keys(handlers)).toHaveLength(23);
     });
 
     it('should configure all handlers with execute functions', () => {
@@ -638,8 +640,8 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeDefined();
       expect(handlers.BREAK_CLOSENESS_WITH_TARGET).toBeDefined();
 
-      // Should have 9 standard + 1 QUERY_LOOKUP + 10 positioning-specific handlers
-      expect(Object.keys(handlers)).toHaveLength(20);
+      // Should have 11 standard + 1 QUERY_LOOKUP + 11 positioning-specific handlers
+      expect(Object.keys(handlers)).toHaveLength(23);
     });
 
     it('should return createHandlersWithComponentMutations for affection', () => {
@@ -649,7 +651,7 @@ describe('ModTestHandlerFactory', () => {
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
-      expect(Object.keys(handlers)).toHaveLength(12);
+      expect(Object.keys(handlers)).toHaveLength(14);
     });
 
     it('should return createStandardHandlers for other categories', () => {
@@ -670,7 +672,7 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers.MODIFY_COMPONENT).toBeUndefined();
         expect(handlers.ATOMIC_MODIFY_COMPONENT).toBeUndefined();
 
-        expect(Object.keys(handlers)).toHaveLength(10); // 9 standard + QUERY_LOOKUP handlers
+        expect(Object.keys(handlers)).toHaveLength(12); // 11 standard + QUERY_LOOKUP handlers
       });
     });
 
@@ -681,7 +683,7 @@ describe('ModTestHandlerFactory', () => {
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
-      expect(Object.keys(handlers)).toHaveLength(12);
+      expect(Object.keys(handlers)).toHaveLength(14);
     });
 
     it('should return createStandardHandlers for unknown categories', () => {
@@ -695,7 +697,7 @@ describe('ModTestHandlerFactory', () => {
         // Unknown categories get standard handlers without positioning-specific ones
         expect(handlers.ADD_COMPONENT).toBeUndefined();
         expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeUndefined();
-        expect(Object.keys(handlers)).toHaveLength(10); // 9 standard + QUERY_LOOKUP handlers
+        expect(Object.keys(handlers)).toHaveLength(12); // 11 standard + QUERY_LOOKUP handlers
       });
     });
 

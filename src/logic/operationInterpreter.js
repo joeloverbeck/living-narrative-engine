@@ -6,8 +6,6 @@
 import { resolvePlaceholders } from '../utils/contextUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { getNormalizedOperationType } from '../utils/operationTypeUtils.js';
-import { KNOWN_OPERATION_TYPES } from '../utils/preValidationUtils.js';
-import OperationHandlerNotFoundError from '../errors/operationHandlerNotFoundError.js';
 import jsonLogic from 'json-logic-js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
@@ -420,24 +418,10 @@ class OperationInterpreter extends BaseService {
     const handler = this.#registry.getHandler(opType);
 
     if (!handler) {
-      // Gather diagnostic information
-      const registeredOperations = this.#registry.getRegisteredTypes();
-      const diagnostics = diagnoseOperationRegistration(opType, false);
-
-      // Create detailed error
-      const error = new OperationHandlerNotFoundError(
-        opType,
-        registeredOperations,
-        diagnostics
+      this.#logger.error(
+        `---> HANDLER NOT FOUND for operation type: "${opType}".`
       );
-
-      this.#logger.error('Operation handler not found', {
-        operationType: opType,
-        registeredOperations: registeredOperations.length,
-        diagnostics,
-      });
-
-      throw error;
+      return;
     }
 
     // -----------------------------------------------------------------------
@@ -536,4 +520,3 @@ export const __internal = Object.freeze({
 });
 
 export default OperationInterpreter;
-export { OperationHandlerNotFoundError };

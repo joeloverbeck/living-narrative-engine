@@ -106,6 +106,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:material': { material: 'cotton' },
     'core:mouth_engagement': { locked: false },
     'core:gender': { value: 'male' },
+    'core:participation': { participating: true },
   };
 
   /** @type {Record<string, unknown>} */
@@ -153,9 +154,11 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:material': { material: 'invalid_material_not_in_enum' },
     'core:mouth_engagement': { locked: 'not-a-boolean' },
     'core:gender': {},
+    'core:participation': {}, // Missing required 'participating' field
   };
 
   Object.entries(validators).forEach(([id, validate]) => {
+    // eslint-disable-next-line jest/valid-title
     describe(id, () => {
       test('✓ valid payload', () => {
         const payload = validPayloads[id];

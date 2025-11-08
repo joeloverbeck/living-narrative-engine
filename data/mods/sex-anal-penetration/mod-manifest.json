@@ -35,7 +35,7 @@
       "handle_tease_asshole_with_glans.rule.json"
     ],
     "scopes": [
-      "actors_with_exposed_asshole_facing_away.scope"
+      "actors_with_exposed_asshole_accessible_from_behind.scope"
     ],
     "components": [],
     "events": [],

@@ -243,9 +243,9 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('LOCK_MOVEMENT');
       expect(handlers).toHaveProperty('UNLOCK_MOVEMENT');
 
-      // Violence uses perception logging handler set (20 handlers)
-      // Includes BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, and QUERY_LOOKUP
-      expect(Object.keys(handlers)).toHaveLength(20);
+      // Violence uses perception logging handler set (21 handlers)
+      // Includes BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, QUERY_LOOKUP, and REGENERATE_DESCRIPTION
+      expect(Object.keys(handlers)).toHaveLength(21);
     });
 
     it('should validate violence category entity patterns', () => {
@@ -511,11 +511,11 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('END_TURN');
 
-      // Positioning uses extended handler set with perception logging (20 handlers instead of 10)
+      // Positioning uses extended handler set with perception logging (21 handlers instead of 10)
       // Includes: 10 standard (with QUERY_LOOKUP) + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
       // LOCK_MOVEMENT, UNLOCK_MOVEMENT, MODIFY_ARRAY_FIELD, MODIFY_COMPONENT,
-      // ATOMIC_MODIFY_COMPONENT, BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE
-      expect(Object.keys(handlers)).toHaveLength(20);
+      // ATOMIC_MODIFY_COMPONENT, BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, REGENERATE_DESCRIPTION
+      expect(Object.keys(handlers)).toHaveLength(21);
 
       // Verify ADD_COMPONENT is functional
       expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
@@ -707,7 +707,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       const expectedHandlerConfig = {
         exercise: { handlerCount: 10, hasAddComponent: false }, // +1 for QUERY_LOOKUP
-        violence: { handlerCount: 20, hasAddComponent: true }, // +1 for QUERY_LOOKUP
+        violence: { handlerCount: 21, hasAddComponent: true }, // +1 for QUERY_LOOKUP, +1 for REGENERATE_DESCRIPTION
         sex: { handlerCount: 12, hasAddComponent: true }, // +1 for QUERY_LOOKUP
         affection: { handlerCount: 12, hasAddComponent: true }, // +1 for QUERY_LOOKUP
       };
@@ -722,8 +722,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         }
       );
 
-      // Positioning should have 20 handlers (includes ADD_COMPONENT, perception logging handlers, BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, and QUERY_LOOKUP)
-      expect(factoryResults.positioning.handlerCount).toBe(20);
+      // Positioning should have 21 handlers (includes ADD_COMPONENT, perception logging handlers, BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, QUERY_LOOKUP, and REGENERATE_DESCRIPTION)
+      expect(factoryResults.positioning.handlerCount).toBe(21);
       expect(factoryResults.positioning.hasAddComponent).toBe(true);
       expect(factoryResults.positioning.commonHandlers).toBe(true);
     });

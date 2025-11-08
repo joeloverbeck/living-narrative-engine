@@ -142,6 +142,8 @@ const handlerModuleDefinitions = [
   ],
   ['DrinkFromHandler', `${handlerBasePath}/drinkFromHandler.js`],
   ['DrinkEntirelyHandler', `${handlerBasePath}/drinkEntirelyHandler.js`],
+  ['ForEachHandler', `${handlerBasePath}/forEachHandler.js`],
+  ['IfHandler', `${handlerBasePath}/ifHandler.js`],
 ];
 
 const registerHandlerMock = (name, modulePath) => {
@@ -316,6 +318,15 @@ beforeAll(async () => {
       ],
     },
     {
+      token: tokens.ForEachHandler,
+      handlerName: 'ForEachHandler',
+      dependencies: [
+        { property: 'operationInterpreter', token: OperationInterpreterToken, isLazy: true },
+        { property: 'jsonLogic', token: JsonLogicEvaluationServiceToken },
+        { property: 'logger', token: ILogger },
+      ],
+    },
+    {
       token: tokens.SystemMoveEntityHandler,
       handlerName: 'SystemMoveEntityHandler',
       dependencies: [
@@ -327,6 +338,15 @@ beforeAll(async () => {
     {
       token: IMoveEntityHandlerToken,
       factoryResultToken: SystemMoveEntityHandlerToken,
+    },
+    {
+      token: tokens.IfHandler,
+      handlerName: 'IfHandler',
+      dependencies: [
+        { property: 'operationInterpreter', token: OperationInterpreterToken, isLazy: true },
+        { property: 'jsonLogic', token: JsonLogicEvaluationServiceToken },
+        { property: 'logger', token: ILogger },
+      ],
     },
     {
       token: tokens.GetTimestampHandler,
@@ -440,7 +460,7 @@ beforeAll(async () => {
       dependencies: [
         { property: 'entityManager', token: IEntityManager },
         { property: 'logger', token: ILogger },
-        { property: 'operationInterpreter', token: OperationInterpreterToken },
+        { property: 'operationInterpreter', token: OperationInterpreterToken, isLazy: true },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },
@@ -786,10 +806,16 @@ describe('registerOperationHandlers', () => {
 
         const [handlerInstance] = handlerStats.instances;
         const config = handlerInstance.config;
-        expectation.dependencies.forEach(({ property, token }) => {
+        expectation.dependencies.forEach(({ property, token, isLazy }) => {
           expect(config).toHaveProperty(property);
           if (token === JSON_LOGIC_SENTINEL) {
             expect(config[property]).toBe(jsonLogic);
+          } else if (isLazy) {
+            // For lazy resolvers, verify it's a function
+            expect(typeof config[property]).toBe('function');
+            // Verify it resolves correctly when called
+            const resolved = config[property]();
+            expect(resolved).toBe(getDependencyInstance(token));
           } else {
             const dependencyInstance = getDependencyInstance(token);
             expect(config[property]).toBe(dependencyInstance);
@@ -797,7 +823,7 @@ describe('registerOperationHandlers', () => {
         });
 
         const expectedTokens = expectation.dependencies
-          .filter(({ token }) => token !== JSON_LOGIC_SENTINEL)
+          .filter(({ token, isLazy }) => token !== JSON_LOGIC_SENTINEL && !isLazy)
           .map(({ token }) => token);
         expect(newResolveCalls.map(([token]) => token)).toEqual(
           expectedTokens

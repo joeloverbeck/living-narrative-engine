@@ -22,6 +22,8 @@ import {
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import { setupEntityCacheInvalidation } from '../../../src/scopeDsl/core/entityHelpers.js';
+import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
+import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
 
 /**
  * Creates base services needed for rule engine tests.
@@ -182,6 +184,29 @@ export function createBaseRuleEnvironment({
       logger: testLogger,
       operationRegistry,
     });
+
+    // Register IF and FOR_EACH handlers after operationInterpreter is created
+    // These handlers need operationInterpreter and jsonLogic, which creates a circular dependency
+    // if they're created in the initial createHandlers call
+    // Use lazy resolution to avoid circular dependency
+    const ifHandler = new IfHandler({
+      operationInterpreter: () => operationInterpreter,
+      jsonLogic,
+      logger: testLogger,
+    });
+    const forEachHandler = new ForEachHandler({
+      operationInterpreter: () => operationInterpreter,
+      jsonLogic,
+      logger: testLogger,
+    });
+
+    operationRegistry.register('IF', ifHandler.execute.bind(ifHandler));
+    operationRegistry.register('FOR_EACH', forEachHandler.execute.bind(forEachHandler));
+
+    // Store these handlers in the handlers object for consistency
+    handlers.IF = ifHandler;
+    handlers.FOR_EACH = forEachHandler;
+
     // Create the bodyGraphService mock that actually checks entity components
     const getDescendantPartIds = (rootId) => {
       const visited = new Set();

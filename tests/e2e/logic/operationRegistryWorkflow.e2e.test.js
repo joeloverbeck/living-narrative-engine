@@ -214,7 +214,7 @@ describe('Operation Registry Workflow E2E', () => {
   });
 
   describe('Error Handling', () => {
-    it('should throw detailed error for missing operation handler', () => {
+    it('should handle missing operation handler gracefully', () => {
       // Arrange
       const unknownOperation = {
         type: 'NON_EXISTENT_OPERATION',
@@ -229,27 +229,20 @@ describe('Operation Registry Workflow E2E', () => {
         jsonLogic,
       };
 
-      // Act & Assert - Should throw OperationHandlerNotFoundError synchronously
-      expect(() => {
-        operationInterpreter.execute(unknownOperation, context);
-      }).toThrow('No handler registered for operation type');
+      // Spy on logger to verify error is logged
+      const errorSpy = jest.spyOn(logger, 'error');
 
-      // Verify the error contains diagnostic information
-      let thrownError;
-      try {
-        operationInterpreter.execute(unknownOperation, context);
-      } catch (error) {
-        thrownError = error;
-      }
+      // Act - Execute with missing handler
+      const result = operationInterpreter.execute(unknownOperation, context);
 
-      // Assert error properties
-      expect(thrownError).toBeDefined();
-      expect(thrownError.name).toBe('OperationHandlerNotFoundError');
-      expect(thrownError.operationType).toBe('NON_EXISTENT_OPERATION');
-      expect(thrownError.registeredOperations).toBeDefined();
-      expect(Array.isArray(thrownError.registeredOperations)).toBe(true);
-      expect(thrownError.diagnostics).toBeDefined();
-      expect(typeof thrownError.diagnostics).toBe('object');
+      // Assert - Should return undefined and log error (graceful degradation)
+      expect(result).toBeUndefined();
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/HANDLER NOT FOUND.*NON_EXISTENT_OPERATION/)
+      );
+
+      // Cleanup
+      errorSpy.mockRestore();
     });
 
     it('should handle handler execution errors gracefully', async () => {

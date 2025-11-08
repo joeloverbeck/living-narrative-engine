@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:participation",
+  "description": "Controls whether an actor participates in turn-based gameplay, affecting LLM API calls and action execution.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "participating": {
+        "type": "boolean",
+        "default": true,
+        "description": "When true, actor participates in turns. When false, actor is skipped and no LLM API calls are made."
+      }
+    },
+    "required": ["participating"],
+    "additionalProperties": false
+  }
+}

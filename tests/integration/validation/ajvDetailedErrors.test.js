@@ -85,12 +85,13 @@ describe('AJV Detailed Error Analysis for Drinking Rules', () => {
         const hasType = operation.type !== undefined && operation.type !== '';
         const hasParameters = operation.parameters !== undefined;
         const typeInWhitelist = [
-          'DRINK_FROM',
-          'QUERY_COMPONENT',
-          'GET_NAME',
-          'SET_VARIABLE',
+          'DISPATCH_EVENT',
           'DISPATCH_PERCEPTIBLE_EVENT',
+          'DRINK_FROM',
           'END_TURN',
+          'GET_NAME',
+          'QUERY_COMPONENT',
+          'SET_VARIABLE',
         ].includes(operation.type);
 
         return {
@@ -171,12 +172,13 @@ describe('AJV Detailed Error Analysis for Drinking Rules', () => {
         const hasType = operation.type !== undefined && operation.type !== '';
         const hasParameters = operation.parameters !== undefined;
         const typeInWhitelist = [
-          'DRINK_ENTIRELY',
-          'QUERY_COMPONENT',
-          'GET_NAME',
-          'SET_VARIABLE',
+          'DISPATCH_EVENT',
           'DISPATCH_PERCEPTIBLE_EVENT',
+          'DRINK_ENTIRELY',
           'END_TURN',
+          'GET_NAME',
+          'QUERY_COMPONENT',
+          'SET_VARIABLE',
         ].includes(operation.type);
 
         return {

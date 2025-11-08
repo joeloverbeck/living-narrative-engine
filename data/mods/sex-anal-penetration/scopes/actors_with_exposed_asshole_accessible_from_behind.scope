@@ -1,0 +1,20 @@
+// Scope for actors with exposed asshole accessible from behind (facing away or lying down)
+// Combines positioning validation (facing_away OR lying_down) with anatomy and clothing checks
+// Used by actions that require the actor to be behind someone with exposed asshole anatomy
+// Note: asshole is both the body part type and socket ID
+sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {
+      "and": [
+        {"hasPartOfType": [".", "asshole"]},
+        {"not": {"isSocketCovered": [".", "asshole"]}}
+      ]
+    },
+    {
+      "or": [
+        {"condition_ref": "positioning:actor-in-entity-facing-away"},
+        {"!!": {"var": "entity.components.positioning:lying_down"}}
+      ]
+    }
+  ]
+}]

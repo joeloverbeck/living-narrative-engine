@@ -1,0 +1,144 @@
+/**
+ * Actor Participation Control Panel Styles
+ * Widget for toggling actor participation in turn-based gameplay
+ */
+
+/* Widget Container - follows existing widget patterns */
+#actor-participation-widget {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--panel-bg-color);
+  border: 1px solid var(--panel-border-color);
+  border-radius: var(--border-radius-standard);
+}
+
+#actor-participation-widget h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-text-color);
+  border-bottom: 1px solid var(--panel-border-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+/* Actor List Container */
+.actor-participation-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  max-height: 300px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+}
+
+/* Individual Actor Items */
+.actor-participation-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.actor-participation-item:hover {
+  background-color: var(--secondary-bg-color);
+}
+
+/* Checkbox Styling */
+.actor-participation-toggle {
+  cursor: pointer;
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--accent-color-primary);
+  flex-shrink: 0;
+}
+
+.actor-participation-toggle:focus {
+  outline: 2px solid var(--accent-color-primary);
+  outline-offset: 2px;
+}
+
+/* Label Styling */
+.actor-participation-item label {
+  cursor: pointer;
+  user-select: none;
+  flex: 1;
+  font-size: 0.9375rem;
+  color: var(--primary-text-color);
+  font-family: var(--font-ui);
+}
+
+/* Empty State Message */
+.empty-list-message {
+  color: var(--secondary-text-color);
+  font-style: italic;
+  padding: var(--spacing-md) var(--spacing-sm);
+  text-align: center;
+  font-size: var(--font-size-small);
+  margin: 0;
+}
+
+/* Status Message Area */
+.status-message-area {
+  min-height: 1.5rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-small);
+  border-radius: var(--border-radius-sm);
+  transition: opacity 0.3s ease;
+  margin-top: var(--spacing-sm);
+}
+
+.status-message-area:empty {
+  display: none;
+}
+
+.status-message-area.success {
+  background: var(--secondary-bg-color);
+  color: var(--success-text-color);
+  border: 1px solid var(--success-text-color);
+}
+
+.status-message-area.error {
+  background: var(--error-bg-color);
+  color: var(--error-text-color);
+  border: 1px solid var(--error-text-color);
+}
+
+/* Accessibility - Focus Visible */
+#actor-participation-widget *:focus-visible {
+  outline: 2px solid var(--accent-color-primary);
+  outline-offset: 2px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  #actor-participation-widget {
+    padding: var(--spacing-sm);
+  }
+
+  #actor-participation-widget h3 {
+    font-size: 1rem;
+  }
+
+  .actor-participation-item label {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #actor-participation-widget {
+    padding: var(--spacing-xs);
+  }
+
+  .actor-participation-list {
+    gap: var(--spacing-xs);
+  }
+
+  .actor-participation-item {
+    padding: var(--spacing-xs);
+  }
+}

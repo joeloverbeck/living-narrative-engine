@@ -9,6 +9,7 @@ export const PLAYER_TYPE_COMPONENT_ID = 'core:player_type';
 export const ACTOR_COMPONENT_ID = 'core:actor';
 export const CURRENT_ACTOR_COMPONENT_ID = 'core:current_actor';
 export const POSITION_COMPONENT_ID = 'core:position';
+export const PARTICIPATION_COMPONENT_ID = 'core:participation';
 export const EXITS_COMPONENT_ID = 'movement:exits';
 export const PERCEPTION_LOG_COMPONENT_ID = 'core:perception_log';
 
