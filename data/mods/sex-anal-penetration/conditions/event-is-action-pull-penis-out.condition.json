@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-anal-penetration:event-is-action-pull-penis-out",
+  "description": "Checks if the event is an attempt_action event for pull_penis_out",
+  "logic": {
+    "and": [
+      { "==": [{ "var": "event.type" }, "core:attempt_action"] },
+      { "==": [{ "var": "event.payload.actionId" }, "sex-anal-penetration:pull_penis_out"] }
+    ]
+  }
+}
