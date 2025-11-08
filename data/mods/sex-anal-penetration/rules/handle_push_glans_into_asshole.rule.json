@@ -1,0 +1,233 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_push_glans_into_asshole",
+  "comment": "Handles the 'sex-anal-penetration:push_glans_into_asshole' action. Cleans up existing anal sex state, adds reciprocal fucking_anally/being_fucked_anally components, dispatches descriptive text, and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "sex-anal-penetration:event-is-action-push-glans-into-asshole"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENTS",
+      "parameters": {
+        "entity_ref": "actor",
+        "pairs": [
+          {
+            "component_type": "positioning:fucking_anally",
+            "result_variable": "actorExistingFuckingAnallyComponent"
+          },
+          {
+            "component_type": "positioning:being_fucked_anally",
+            "result_variable": "actorExistingBeingFuckedAnallyComponent"
+          }
+        ]
+      }
+    },
+    {
+      "type": "QUERY_COMPONENTS",
+      "parameters": {
+        "entity_ref": "primary",
+        "pairs": [
+          {
+            "component_type": "positioning:fucking_anally",
+            "result_variable": "primaryExistingFuckingAnallyComponent"
+          },
+          {
+            "component_type": "positioning:being_fucked_anally",
+            "result_variable": "primaryExistingBeingFuckedAnallyComponent"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "var": "context.actorExistingFuckingAnallyComponent"
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.actorExistingFuckingAnallyComponent.being_fucked_entity_id}",
+              "component_type": "positioning:being_fucked_anally"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "var": "context.actorExistingBeingFuckedAnallyComponent"
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.actorExistingBeingFuckedAnallyComponent.fucking_entity_id}",
+              "component_type": "positioning:fucking_anally"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "var": "context.primaryExistingFuckingAnallyComponent"
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.primaryExistingFuckingAnallyComponent.being_fucked_entity_id}",
+              "component_type": "positioning:being_fucked_anally"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "parameters": {
+        "condition": {
+          "var": "context.primaryExistingBeingFuckedAnallyComponent"
+        },
+        "then_actions": [
+          {
+            "type": "REMOVE_COMPONENT",
+            "parameters": {
+              "entity_ref": "{context.primaryExistingBeingFuckedAnallyComponent.fucking_entity_id}",
+              "component_type": "positioning:fucking_anally"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:fucking_anally"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:being_fucked_anally"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "positioning:fucking_anally"
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "positioning:being_fucked_anally"
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:fucking_anally",
+        "value": {
+          "being_fucked_entity_id": "{event.payload.primaryId}",
+          "initiated": true
+        }
+      }
+    },
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entity_ref": "primary",
+        "component_type": "positioning:being_fucked_anally",
+        "value": {
+          "fucking_entity_id": "{event.payload.actorId}",
+          "consented": true
+        }
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": {
+        "entity_ref": "actor"
+      }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": {
+        "entity_ref": "primary"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} pushes their glans against {context.primaryName}'s asshole until the sphincter opens up and the glans pops inside."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "actorId",
+        "value": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}
