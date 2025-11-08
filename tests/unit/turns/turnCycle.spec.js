@@ -2,6 +2,7 @@ import TurnCycle from '../../../src/turns/turnCycle.js';
 
 describe('TurnCycle', () => {
   let mockService;
+  let mockEntityManager;
   let mockLogger;
   let turnCycle;
 
@@ -10,13 +11,18 @@ describe('TurnCycle', () => {
       isEmpty: jest.fn(),
       getNextEntity: jest.fn(),
       clearCurrentRound: jest.fn(),
+      getCurrentOrder: jest.fn().mockReturnValue([]),
+    };
+    mockEntityManager = {
+      getComponentData: jest.fn(),
+      getEntityInstance: jest.fn(),
     };
     mockLogger = {
       debug: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
     };
-    turnCycle = new TurnCycle(mockService, mockLogger);
+    turnCycle = new TurnCycle(mockService, mockEntityManager, mockLogger);
   });
 
   describe('constructor', () => {
@@ -40,6 +46,8 @@ describe('TurnCycle', () => {
       const mockEntity = { id: 'test-entity' };
       mockService.isEmpty.mockResolvedValue(false);
       mockService.getNextEntity.mockResolvedValue(mockEntity);
+      mockService.getCurrentOrder.mockReturnValue([mockEntity]);
+      mockEntityManager.getComponentData.mockReturnValue({ participating: true });
 
       const result = await turnCycle.nextActor();
 
@@ -59,6 +67,7 @@ describe('TurnCycle', () => {
     it('should log and propagate errors from getNextEntity', async () => {
       const error = new Error('Next entity failure');
       mockService.isEmpty.mockResolvedValue(false);
+      mockService.getCurrentOrder.mockReturnValue([{ id: 'test' }]);
       mockService.getNextEntity.mockRejectedValue(error);
 
       await expect(turnCycle.nextActor()).rejects.toThrow('Next entity failure');
