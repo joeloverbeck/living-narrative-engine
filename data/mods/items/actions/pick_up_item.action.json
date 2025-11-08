@@ -13,6 +13,9 @@
   "required_components": {
     "actor": ["items:inventory"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:bending_over"]
+  },
   "prerequisites": [],
   "template": "pick up {item}",
   "visual": {
