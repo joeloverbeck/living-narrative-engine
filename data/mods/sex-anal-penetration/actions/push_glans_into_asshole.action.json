@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-anal-penetration:push_glans_into_asshole",
+  "name": "Push Glans Into Asshole",
+  "description": "Push your glans against the target's asshole until the sphincter opens up and the glans pops inside, initiating anal sex.",
+  "targets": {
+    "primary": {
+      "scope": "sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind",
+      "placeholder": "primary",
+      "description": "Person to penetrate anally from behind"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:fucking_anally"]
+  },
+  "template": "push your glans into {primary}'s asshole",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "penis"]
+      },
+      "failure_message": "You need a penis to perform this action."
+    },
+    {
+      "logic": {
+        "not": {
+          "isSocketCovered": ["actor", "penis"]
+        }
+      },
+      "failure_message": "Your penis must be uncovered to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#053b3f",
+    "textColor": "#e0f7f9",
+    "hoverBackgroundColor": "#075055",
+    "hoverTextColor": "#f1feff"
+  }
+}
