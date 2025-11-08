@@ -26,13 +26,19 @@
   ],
   "content": {
     "actions": [
-      "tease_asshole_with_glans.action.json"
+      "tease_asshole_with_glans.action.json",
+      "insert_finger_into_asshole.action.json",
+      "insert_multiple_fingers_into_asshole.action.json"
     ],
     "conditions": [
-      "event-is-action-tease-asshole-with-glans.condition.json"
+      "event-is-action-tease-asshole-with-glans.condition.json",
+      "event-is-action-insert-finger-into-asshole.condition.json",
+      "event-is-action-insert-multiple-fingers-into-asshole.condition.json"
     ],
     "rules": [
-      "handle_tease_asshole_with_glans.rule.json"
+      "handle_tease_asshole_with_glans.rule.json",
+      "handle_insert_finger_into_asshole.rule.json",
+      "handle_insert_multiple_fingers_into_asshole.rule.json"
     ],
     "scopes": [
       "actors_with_exposed_asshole_accessible_from_behind.scope"

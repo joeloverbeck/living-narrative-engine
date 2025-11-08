@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-anal-penetration:event-is-action-insert-finger-into-asshole",
+  "description": "Checks if the triggering event is for the 'sex-anal-penetration:insert_finger_into_asshole' action.",
+  "logic": {
+    "==": [
+      {"var": "event.payload.actionId"},
+      "sex-anal-penetration:insert_finger_into_asshole"
+    ]
+  }
+}
