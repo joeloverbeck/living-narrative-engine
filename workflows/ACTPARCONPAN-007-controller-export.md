@@ -15,8 +15,8 @@ Export the `ActorParticipationController` from the `domUI` module index to make 
 ### Export Addition
 - [ ] Open `src/domUI/index.js`
 - [ ] Add export statement for `ActorParticipationController`
-- [ ] Maintain alphabetical ordering of exports
-- [ ] Verify correct relative path to controller file
+- [ ] Place export in the appropriate functional group (Controllers section, near `ProcessingIndicatorController`)
+- [ ] Verify correct relative path to controller file (`./actorParticipationController.js`)
 
 ### Verification
 - [ ] Verify export syntax is correct
@@ -28,17 +28,29 @@ Export the `ActorParticipationController` from the `domUI` module index to make 
 
 ## Code Changes Template
 ```javascript
-// Add to src/domUI/index.js (maintain alphabetical order)
+// Add to src/domUI/index.js (near line 40, in Controllers section)
+// Place after ProcessingIndicatorController or create a new Controllers section
 
+// Controllers
+export { ProcessingIndicatorController } from './processingIndicatorController.js';
 export { default as ActorParticipationController } from './actorParticipationController.js';
-// ... existing exports ...
 ```
+
+**Note**: The domUI index.js uses functional grouping (not alphabetical ordering). The file is organized as:
+- Interfaces and base classes
+- Concrete classes and utilities
+- Renderers and state controllers
+- Modals & UI Components
+- Engine UI Management
+- Controllers (ProcessingIndicatorController, ActorParticipationController)
+- Entity Lifecycle Monitor
+- Facade
 
 ## Acceptance Criteria
 - [ ] Controller exported from `src/domUI/index.js`
-- [ ] Export follows project conventions (default export pattern)
-- [ ] Exports remain in alphabetical order
-- [ ] Import path is correct
+- [ ] Export follows project conventions (default export pattern: `export { default as ClassName }`)
+- [ ] Export placed in appropriate functional group (Controllers section)
+- [ ] Import path is correct (`./actorParticipationController.js`)
 - [ ] No ESLint errors
 - [ ] TypeScript type checking passes
 
@@ -49,9 +61,13 @@ export { default as ActorParticipationController } from './actorParticipationCon
    ```javascript
    import { ActorParticipationController } from './src/domUI/index.js';
    ```
-4. Check alphabetical ordering against other exports in the file
+4. Verify export is in the Controllers section (near `ProcessingIndicatorController`)
+5. Confirm the export pattern matches other default exports in the file
 
 ## Notes
 - This is a simple export addition following existing module patterns
 - Critical for dependency injection in next phase
 - Ensures controller is accessible via the `domUI` module barrel export
+- **Important**: The domUI index.js uses functional grouping, NOT alphabetical ordering
+- The export should be placed in the Controllers section alongside `ProcessingIndicatorController`
+- The controller uses `export default`, so the import pattern is `export { default as ClassName }`
