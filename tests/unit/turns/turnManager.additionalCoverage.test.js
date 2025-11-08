@@ -1058,5 +1058,114 @@ describeTurnManagerSuite(
         await drainTimersAndMicrotasks(2);
       }
     );
+
+    test('calls eventBus.resetRecursionCounters after turn completion when eventBus is provided', async () => {
+      const mockEventBus = {
+        resetRecursionCounters: jest.fn(),
+      };
+
+      // Create a new test bed with eventBus override
+      const { createTurnManagerTestBed } = await import('../../common/turns/turnManagerTestBed.js');
+      const bed = createTurnManagerTestBed({
+        turnManagerOptions: { eventBus: mockEventBus },
+      });
+      bed.initializeDefaultMocks();
+
+      const { turnOrderService, turnHandlerResolver, dispatcher } = bed.mocks;
+
+      // Set up the actor and handler
+      const actor = createMockEntity('eventbus-actor', {
+        isActor: true,
+        isPlayer: false,
+      });
+      bed.setActiveEntities(actor);
+
+      turnOrderService.isEmpty
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      turnOrderService.getNextEntity
+        .mockReturnValueOnce(actor)
+        .mockReturnValue(null);
+
+      const handler = {
+        startTurn: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+      };
+      turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
+
+      // Start the manager and advance turn
+      await bed.turnManager.start();
+      await drainTimersAndMicrotasks(4);
+
+      mockEventBus.resetRecursionCounters.mockClear();
+
+      // Trigger turn end
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: actor.id,
+        success: true,
+      });
+      await drainTimersAndMicrotasks(4);
+
+      // Verify resetRecursionCounters was called
+      expect(mockEventBus.resetRecursionCounters).toHaveBeenCalled();
+
+      await bed.turnManager.stop();
+    });
+
+    test('handles eventBus without resetRecursionCounters method', async () => {
+      const mockEventBusWithoutMethod = {
+        someOtherMethod: jest.fn(),
+      };
+
+      // Create a new test bed with eventBus override
+      const { createTurnManagerTestBed } = await import('../../common/turns/turnManagerTestBed.js');
+      const bed = createTurnManagerTestBed({
+        turnManagerOptions: { eventBus: mockEventBusWithoutMethod },
+      });
+      bed.initializeDefaultMocks();
+
+      const { turnOrderService, turnHandlerResolver, dispatcher, logger } =
+        bed.mocks;
+
+      // Set up the actor and handler
+      const actor = createMockEntity('eventbus-no-method-actor', {
+        isActor: true,
+        isPlayer: false,
+      });
+      bed.setActiveEntities(actor);
+
+      turnOrderService.isEmpty
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      turnOrderService.getNextEntity
+        .mockReturnValueOnce(actor)
+        .mockReturnValue(null);
+
+      const handler = {
+        startTurn: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+      };
+      turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
+
+      logger.error.mockClear();
+
+      // Start the manager and advance turn
+      await bed.turnManager.start();
+      await drainTimersAndMicrotasks(4);
+
+      // Trigger turn end
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: actor.id,
+        success: true,
+      });
+      await drainTimersAndMicrotasks(4);
+
+      // Verify no errors were thrown - the conditional check should prevent calling the method
+      expect(logger.error).not.toHaveBeenCalledWith(
+        expect.stringContaining('resetRecursionCounters')
+      );
+
+      await bed.turnManager.stop();
+    });
   }
 );
