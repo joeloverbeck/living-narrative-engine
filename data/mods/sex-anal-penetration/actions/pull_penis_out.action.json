@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-anal-penetration:pull_penis_out",
+  "name": "Pull Penis Out",
+  "description": "Slowly withdraw your penis from your partner's anus, ending the anal penetration interaction.",
+  "targets": {
+    "primary": {
+      "scope": "sex-anal-penetration:actor_being_fucked_anally_by_me",
+      "placeholder": "primary",
+      "description": "Partner you are currently penetrating"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:fucking_anally", "positioning:closeness"]
+  },
+  "forbidden_components": {},
+  "template": "pull your penis out of {primary}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#053b3f",
+    "textColor": "#e0f7f9",
+    "hoverBackgroundColor": "#075055",
+    "hoverTextColor": "#f1feff"
+  }
+}
