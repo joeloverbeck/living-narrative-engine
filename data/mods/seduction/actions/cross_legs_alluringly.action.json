@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "seduction:cross_legs_alluringly",
+  "name": "Cross Legs Alluringly",
+  "description": "Cross your legs in a slow, deliberate motion that draws attention and creates an alluring pose. This gesture emphasizes grace and confidence while seated.",
+  "targets": "none",
+  "required_components": {
+    "actor": ["positioning:sitting_on"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:hugging",
+      "positioning:doing_complex_performance"
+    ]
+  },
+  "template": "cross your legs alluringly",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "leg"]
+      },
+      "failure_message": "You need legs to cross them."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#f57f17",
+    "textColor": "#000000",
+    "hoverBackgroundColor": "#f9a825",
+    "hoverTextColor": "#212121"
+  }
+}

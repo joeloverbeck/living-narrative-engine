@@ -169,8 +169,7 @@
       "kraken.recipe.json",
       "octopus.recipe.json",
       "red_dragon.recipe.json",
-      "squid.recipe.json",
-      "venomous_cave_spider.recipe.json"
+      "squid.recipe.json"
     ],
     "anatomyFormatting": [
       "default.json"

@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "seduction:event-is-action-cross-legs-alluringly",
+  "description": "Checks if the event is an attempt to perform the 'seduction:cross_legs_alluringly' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "seduction:cross_legs_alluringly"
+    ]
+  }
+}

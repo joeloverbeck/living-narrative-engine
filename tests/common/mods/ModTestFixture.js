@@ -2247,8 +2247,11 @@ beforeEach(async () => {
       };
 
       try {
+        // Extract actorEntity from context - ScopeEngine expects just actorEntity, not full context
+        const actorEntity = context.actorEntity || context.actor || context;
+
         // Resolve using the AST
-        const result = scopeEngine.resolve(scopeData.ast, context, runtimeCtx);
+        const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
 
         return { success: true, value: result };
       } catch (err) {

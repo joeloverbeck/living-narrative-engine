@@ -3,9 +3,7 @@
   "recipeId": "anatomy:red_dragon",
   "blueprintId": "anatomy:red_dragon",
   "bodyDescriptors": {
-    "build": "hulking",
-    "composition": "average",
-    "hairDensity": "hairless"
+    "build": "hulking"
   },
   "slots": {
     "head": {
@@ -20,19 +18,6 @@
           "length": "long"
         }
       }
-    },
-    "fire_gland": {
-      "partType": "fire_gland",
-      "tags": [
-        "anatomy:part",
-        "anatomy:fire_breathing"
-      ],
-      "properties": {
-        "anatomy:fire_breathing": {
-          "intensity": "inferno",
-          "sprayPattern": "cone"
-        }
-      }
     }
   },
   "patterns": [
@@ -40,51 +25,25 @@
       "matchesPattern": "leg_*_front",
       "partType": "dragon_leg",
       "tags": [
-        "anatomy:part",
-        "anatomy:scaled",
-        "anatomy:clawed"
+        "anatomy:part"
       ],
-      "properties": {
-        "anatomy:scaled": {
-          "color": "crimson",
-          "sheen": "molten"
-        },
-        "anatomy:clawed": {
-          "style": "razor",
-          "count": 4
-        }
-      }
+      "properties": {}
     },
     {
       "matchesPattern": "leg_*_rear",
       "partType": "dragon_leg",
       "tags": [
-        "anatomy:part",
-        "anatomy:scaled",
-        "anatomy:powerful"
+        "anatomy:part"
       ],
-      "properties": {
-        "anatomy:scaled": {
-          "color": "crimson",
-          "pattern": "ridged"
-        },
-        "anatomy:powerful": {
-          "drive": "sprinter"
-        }
-      }
+      "properties": {}
     },
     {
       "matchesGroup": "limbSet:wing",
       "partType": "dragon_wing",
       "tags": [
-        "anatomy:part",
-        "anatomy:scaled",
-        "anatomy:membranous"
+        "anatomy:part"
       ],
       "properties": {
-        "anatomy:scaled": {
-          "color": "crimson"
-        },
         "descriptors:length_category": {
           "length": "vast"
         }
@@ -94,21 +53,15 @@
       "matchesGroup": "appendage:tail",
       "partType": "dragon_tail",
       "tags": [
-        "anatomy:part",
-        "anatomy:spiked"
+        "anatomy:part"
       ],
-      "properties": {
-        "anatomy:spiked": {
-          "tip": "barbed"
-        }
-      }
+      "properties": {}
     }
   ],
   "constraints": {
     "requires": [
       {
         "partTypes": [
-          "fire_gland",
           "dragon_wing"
         ]
       }

@@ -408,6 +408,7 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           systemMoveEntityHandler: c.resolve(tokens.SystemMoveEntityHandler),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          operationInterpreter: () => c.resolve(tokens.OperationInterpreter),
         }),
     ],
     [
