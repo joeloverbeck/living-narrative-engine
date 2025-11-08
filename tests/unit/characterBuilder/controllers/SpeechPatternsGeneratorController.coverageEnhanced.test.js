@@ -218,11 +218,12 @@ const enterCharacterDefinition = async ({
   const textarea = document.getElementById('character-definition');
   textarea.value = JSON.stringify(characterData);
   textarea.dispatchEvent(new Event('blur', { bubbles: true }));
-  await flushMicrotasks();
 
-  const results = validatorInstance?.validateInput?.mock?.results;
-  if (results?.length) {
-    const latestCall = results[results.length - 1];
+  if (validatorInstance?.validateInput) {
+    const latestCall =
+      validatorInstance.validateInput.mock.results[
+        validatorInstance.validateInput.mock.results.length - 1
+      ];
     await latestCall?.value;
   }
 
@@ -232,7 +233,7 @@ const enterCharacterDefinition = async ({
 const waitForValidationAndGeneration = async ({
   characterData,
   validatorInstance,
-  waitMs = 400,
+  waitMs = 0,
 }) => {
   const textarea = document.getElementById('character-definition');
   const generateBtn = document.getElementById('generate-btn');
@@ -253,7 +254,11 @@ const waitForValidationAndGeneration = async ({
 
   expect(generateBtn.disabled).toBe(false);
   generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
-  await new Promise((resolve) => setTimeout(resolve, waitMs));
+
+  if (waitMs > 0) {
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+
   await flushMicrotasks();
 };
 
@@ -529,6 +534,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
   });
 
   it('runs the full generation workflow with enhanced validation, progress updates, and rich export options', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies({
       withDisplayEnhancer: true,
     });
@@ -625,11 +632,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       quality: { overallScore: 0.92 },
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Heroic Traveler' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     expect(validatorInstance.validateInput).toHaveBeenCalled();
     expect(mocks.speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalled();
@@ -682,9 +691,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(global.URL.createObjectURL).toHaveBeenCalled();
     expect(document.getElementById('screen-reader-announcement').textContent)
       .toContain('Speech patterns exported as');
+
+    jest.useRealTimers();
   });
 
   it('adds medium confidence styling to the progress bar during mid-stage updates', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies();
 
     mocks.speechPatternsGenerator.generateSpeechPatterns.mockImplementation(
@@ -728,17 +741,23 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       quality: { overallScore: 0.9 },
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Deliberate Strategist' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     const progressBar = document.getElementById('progress-bar');
     expect(progressBar.classList.contains('medium-confidence')).toBe(true);
+
+    jest.useRealTimers();
   });
 
   it('falls back to text export when no display enhancer is provided', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies();
 
     mocks.speechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
@@ -766,11 +785,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       quality: { overallScore: 0.88 },
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Fallback Hero' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     expect(validatorInstance.validateInput).toHaveBeenCalled();
     const exportTrigger = document.getElementById('export-btn');
@@ -796,9 +817,12 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(anchorClicks).toContain('clicked');
 
     document.createElement.mockRestore();
+    jest.useRealTimers();
   });
 
   it('uses a generic fallback filename when generated patterns omit character name', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies();
 
     mocks.speechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
@@ -824,11 +848,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       quality: { overallScore: 0.9 },
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Nameless Hero' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     const appendSpy = jest.spyOn(document.body, 'appendChild');
 
@@ -849,10 +875,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       );
     } finally {
       appendSpy.mockRestore();
+      jest.useRealTimers();
     }
   });
 
   it('handles generation errors and supports retrying the workflow', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies({
       withDisplayEnhancer: true,
     });
@@ -913,11 +942,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       quality: { overallScore: 0.85 },
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Resilient Hero' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     expect(validatorInstance.validateInput).toHaveBeenCalled();
     expect(document.getElementById('error-message').textContent).toContain(
@@ -929,7 +960,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     document
       .getElementById('retry-btn')
       .dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    await jest.advanceTimersByTimeAsync(500);
     await flushMicrotasks();
 
     expect(
@@ -937,9 +969,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     ).toHaveBeenCalledTimes(2);
     expect(document.getElementById('speech-patterns-container').innerHTML)
       .toContain('Speaks softly when delivering difficult news');
+
+    jest.useRealTimers();
   });
 
   it('announces minute-level time estimates for low and high confidence stages', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies();
 
     const controller = createControllerInstance(dependencies);
@@ -992,7 +1028,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       .getElementById('generate-btn')
       .dispatchEvent(new Event('click', { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await jest.advanceTimersByTimeAsync(300);
     await flushMicrotasks();
 
     expect(typeof capturedProgress).toBe('function');
@@ -1001,12 +1037,10 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
 
     capturedProgress(0);
     await flushMicrotasks();
-    await flushMicrotasks();
 
     expect(timeEstimate.textContent).toMatch(/\d+-\d+ minutes remaining/);
 
     capturedProgress(100);
-    await flushMicrotasks();
     await flushMicrotasks();
 
     expect(timeEstimate.textContent).toMatch(/About \d+ minute/);
@@ -1023,7 +1057,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     });
 
     await flushMicrotasks();
-    await flushMicrotasks();
+
+    jest.useRealTimers();
   });
 
   it('formats high-confidence short estimates with an "about" message', () => {
@@ -1083,6 +1118,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
   });
 
   it('drops will-change optimization after pattern animation completes', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies();
 
     const controller = createControllerInstance(dependencies);
@@ -1109,20 +1146,26 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       generatedAt: new Date('2024-01-05T00:00:00Z').toISOString(),
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Animated Hero' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     const pattern = document.querySelector('.speech-pattern-item');
     expect(pattern.style.willChange).toBe('transform, opacity');
 
     pattern.dispatchEvent(new Event('animationend'));
     expect(pattern.style.willChange).toBe('auto');
+
+    jest.useRealTimers();
   });
 
   it('uses enhancer export text when template remains default', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies({
       withDisplayEnhancer: true,
     });
@@ -1188,11 +1231,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       generatedAt: new Date('2024-01-06T00:00:00Z').toISOString(),
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Template Hero' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     const exportFormat = document.getElementById('export-format');
     exportFormat.value = 'txt';
@@ -1219,9 +1264,12 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(blobContent).toBe('Enhanced export text');
 
     document.createElement.mockRestore();
+    jest.useRealTimers();
   });
 
   it('reports export failures and surfaces message in error state', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies({
       withDisplayEnhancer: true,
     });
@@ -1288,11 +1336,13 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       generatedAt: new Date('2024-01-07T00:00:00Z').toISOString(),
     });
 
-    await waitForValidationAndGeneration({
+    const generationPromise = waitForValidationAndGeneration({
       characterData: createValidCharacterData({ text: 'Export Failure Hero' }),
       validatorInstance,
-      mocks,
     });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
 
     document
       .getElementById('export-btn')
@@ -1305,6 +1355,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(document.getElementById('error-message').textContent).toBe(
       'Failed to export speech patterns'
     );
+
+    jest.useRealTimers();
   });
 
   it('clear-all shortcut and escape key abort active generation flows', async () => {
@@ -1356,7 +1408,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
         .getElementById('generate-btn')
         .dispatchEvent(new Event('click', { bubbles: true }));
 
-      await jest.advanceTimersByTimeAsync(200);
+      await jest.advanceTimersByTimeAsync(300);
       await flushMicrotasks();
 
       expect(abortControllers).toHaveLength(1);
@@ -1381,8 +1433,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
         generatedAt: new Date('2024-01-08T00:00:00Z').toISOString(),
       });
 
+      await jest.advanceTimersByTimeAsync(500);
       await flushMicrotasks();
-      await jest.advanceTimersByTimeAsync(400);
 
       await enterCharacterDefinition({
         characterData: createValidCharacterData({ text: 'Escape Hero' }),
@@ -1390,7 +1442,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       });
 
       let resolveSecondGeneration;
-      mocks.speechPatternsGenerator.generateSpeechPatterns.mockImplementationOnce(
+      mocks.speechPatternsGenerator.generateSpeechPatterns.mockImplementation(
         () =>
           new Promise((resolve) => {
             resolveSecondGeneration = resolve;
@@ -1401,7 +1453,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
         .getElementById('generate-btn')
         .dispatchEvent(new Event('click', { bubbles: true }));
 
-      await jest.advanceTimersByTimeAsync(200);
+      await jest.advanceTimersByTimeAsync(300);
+      await flushMicrotasks();
 
       expect(abortControllers).toHaveLength(2);
 
@@ -1423,7 +1476,6 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
       });
 
       await flushMicrotasks();
-      await jest.advanceTimersByTimeAsync(400);
 
     } finally {
       global.AbortController = OriginalAbortController;
@@ -1454,6 +1506,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
   ])(
     'maps %p to descriptive error output',
     async (errorLike, expectedMessage) => {
+      jest.useFakeTimers();
+
       const { dependencies, mocks } = createDependencies();
 
       const controller = createControllerInstance(dependencies);
@@ -1472,15 +1526,19 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
         errorLike
       );
 
-      await waitForValidationAndGeneration({
+      const generationPromise = waitForValidationAndGeneration({
         characterData: createValidCharacterData({ text: 'Error Hero' }),
         validatorInstance,
-        mocks,
       });
+
+      await jest.advanceTimersByTimeAsync(500);
+      await generationPromise;
 
       expect(document.getElementById('error-message').textContent).toBe(
         expectedMessage
       );
+
+      jest.useRealTimers();
     }
   );
 
@@ -1581,6 +1639,8 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
   });
 
   it('keyboard shortcuts trigger generation and export actions', async () => {
+    jest.useFakeTimers();
+
     const { dependencies, mocks } = createDependencies({
       withDisplayEnhancer: true,
     });
@@ -1663,7 +1723,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     });
     document.body.dispatchEvent(enterEvent);
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await jest.advanceTimersByTimeAsync(500);
     await flushMicrotasks();
 
     expect(enterEvent.preventDefault).toHaveBeenCalled();
@@ -1695,6 +1755,7 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(global.Blob).toHaveBeenCalled();
 
     document.createElement.mockRestore();
+    jest.useRealTimers();
   });
 
   it('populates export controls via display enhancer and toggles template visibility', async () => {
