@@ -122,14 +122,27 @@ describe('insert_finger_into_asshole Action Discovery', () => {
 
 ### Implementation Location
 
-Add the method to the `ModTestFixture` class around line 450 (after `executeAction` method).
+Add the method to the `ModActionTestFixture` class before line 2073 (before the end of the class, after the `testRuleDoesNotTrigger` method).
+
+**Note**: `ModTestFixture` is a static factory class. The instance method should be added to `ModActionTestFixture` which extends `BaseModTestFixture`.
 
 ### Implementation Approach
 
 ```javascript
-class ModTestFixture {
-  #loadedConditions = new Map(); // Track loaded conditions for error messages
+// Add to ModActionTestFixture class (extends BaseModTestFixture)
+export class ModActionTestFixture extends BaseModTestFixture {
+  #loadedConditions; // Declare private field
 
+  // Modify constructor to initialize the private field:
+  constructor(modId, actionId, ruleFile, conditionFile, options = {}) {
+    super(modId, options);
+    // ... existing constructor code (actionId, ruleFile, conditionFile, etc.) ...
+
+    // Add this initialization at the end of the constructor:
+    this.#loadedConditions = new Map(); // Track loaded conditions for error messages
+  }
+
+  // Add new method before the end of the class (before line 2073):
   /**
    * Loads condition definitions from dependency mods and makes them available
    * in the test environment's dataRegistry.
@@ -149,7 +162,7 @@ class ModTestFixture {
 
       const [modId, conditionId] = id.split(':');
 
-      // Construct file path
+      // Construct file path (relative from tests/common/mods/)
       const conditionPath = `../../../../data/mods/${modId}/conditions/${conditionId}.condition.json`;
 
       try {
@@ -232,28 +245,28 @@ Create `tests/unit/common/mods/ModTestFixture.loadDependencyConditions.test.js`:
 describe('ModTestFixture - loadDependencyConditions', () => {
   describe('Input Validation', () => {
     it('should throw when conditionIds is not an array', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
       await expect(
         fixture.loadDependencyConditions('not-array')
       ).rejects.toThrow('conditionIds must be an array');
     });
 
     it('should throw when condition ID is missing colon', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
       await expect(
         fixture.loadDependencyConditions(['invalid-format'])
       ).rejects.toThrow('Invalid condition ID format');
     });
 
     it('should throw when condition ID has empty modId', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
       await expect(
         fixture.loadDependencyConditions([':condition'])
       ).rejects.toThrow('Invalid condition ID format');
     });
 
     it('should throw when condition ID has empty conditionId', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
       await expect(
         fixture.loadDependencyConditions(['mod:'])
       ).rejects.toThrow('Invalid condition ID format');
@@ -262,7 +275,7 @@ describe('ModTestFixture - loadDependencyConditions', () => {
 
   describe('Condition Loading', () => {
     it('should load valid condition from dependency mod', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
       await fixture.loadDependencyConditions([
         'positioning:actor-in-entity-facing-away'
@@ -277,7 +290,7 @@ describe('ModTestFixture - loadDependencyConditions', () => {
     });
 
     it('should throw clear error when condition file not found', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
       await expect(
         fixture.loadDependencyConditions(['positioning:nonexistent'])
@@ -285,7 +298,7 @@ describe('ModTestFixture - loadDependencyConditions', () => {
     });
 
     it('should load multiple conditions at once', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
       await fixture.loadDependencyConditions([
         'positioning:actor-in-entity-facing-away',
@@ -306,7 +319,7 @@ describe('ModTestFixture - loadDependencyConditions', () => {
 
   describe('Additive Behavior', () => {
     it('should allow multiple calls to loadDependencyConditions', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
       // First call
       await fixture.loadDependencyConditions([
@@ -331,7 +344,7 @@ describe('ModTestFixture - loadDependencyConditions', () => {
     });
 
     it('should handle loading same condition twice (idempotent)', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
       await fixture.loadDependencyConditions([
         'positioning:actor-in-entity-facing-away'
@@ -348,7 +361,7 @@ describe('ModTestFixture - loadDependencyConditions', () => {
 
   describe('Mock Chaining', () => {
     it('should chain to original getConditionDefinition for unknown IDs', async () => {
-      const fixture = await ModTestFixture.forAction('test', 'test:action');
+      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
 
       // Set up original mock behavior
       const originalMock = fixture.testEnv.dataRegistry.getConditionDefinition;
@@ -399,10 +412,10 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     // ... rest of test setup and execution ...
 
     // Should successfully discover action
-    const actions = await testFixture.discoverAvailableActions(actorId);
+    const actions = testFixture.discoverActions(actorId);
     expect(actions).toContainEqual(
       expect.objectContaining({
-        actionId: 'sex-anal-penetration:insert_finger_into_asshole'
+        id: 'sex-anal-penetration:insert_finger_into_asshole'
       })
     );
   });
@@ -478,8 +491,8 @@ None
 
 ## Implementation Checklist
 
-- [ ] Add private field `#loadedConditions` to ModTestFixture
-- [ ] Implement `loadDependencyConditions()` method
+- [ ] Add private field `#loadedConditions` to ModActionTestFixture constructor
+- [ ] Implement `loadDependencyConditions()` method in ModActionTestFixture
 - [ ] Add input validation for conditionIds array
 - [ ] Add condition ID format validation
 - [ ] Implement file path construction logic
