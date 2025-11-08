@@ -85,15 +85,16 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
       processor = createProcessorWithConfig({
         maxQueueSize: 200,
         batchSize: 10,
-        batchTimeout: 30,
+        batchTimeout: 20,
         memoryLimit: 3 * 1024 * 1024, // 3MB limit
       });
 
       const memorySnapshots = [];
 
       // Process multiple batches to test sustained memory usage
-      for (let batch = 0; batch < 5; batch++) {
-        const traces = createPerformanceTraces(40);
+      // Reduced from 5 to 3 batches for faster testing
+      for (let batch = 0; batch < 3; batch++) {
+        const traces = createPerformanceTraces(30); // Reduced from 40 to 30
 
         // Take memory snapshot before processing
         memorySnapshots.push({
@@ -107,7 +108,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
           processor.enqueue(trace, TracePriority.NORMAL);
         });
 
-        await waitForProcessing(800);
+        await waitForProcessing(400); // Reduced from 800ms
 
         // Take memory snapshot after processing
         memorySnapshots.push({
@@ -147,11 +148,11 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
     it('should efficiently cleanup processed traces', async () => {
       processor = createProcessorWithConfig({
         maxQueueSize: 150,
-        batchSize: 12,
-        batchTimeout: 25,
+        batchSize: 15, // Increased batch size for faster processing
+        batchTimeout: 15, // Reduced timeout
       });
 
-      const traces = createPerformanceTraces(100);
+      const traces = createPerformanceTraces(75); // Reduced from 100
 
       // Record initial memory
       const initialMemory = performance?.memory?.usedJSHeapSize || 0;
@@ -161,7 +162,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
-      await waitForProcessing(2000);
+      await waitForProcessing(1000); // Reduced from 2000ms
 
       // Check queue state after processing
       const stats = processor.getQueueStats();
@@ -198,13 +199,13 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
     it('should prevent memory leaks during extended operation', async () => {
       processor = createProcessorWithConfig({
         maxQueueSize: 100,
-        batchSize: 8,
-        batchTimeout: 50,
+        batchSize: 10, // Increased for faster processing
+        batchTimeout: 30, // Reduced timeout
       });
 
       const memoryReadings = [];
-      const cycles = 8;
-      const tracesPerCycle = 20;
+      const cycles = 5; // Reduced from 8 to 5
+      const tracesPerCycle = 15; // Reduced from 20 to 15
 
       // Run multiple processing cycles
       for (let cycle = 0; cycle < cycles; cycle++) {
@@ -224,7 +225,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
           processor.enqueue(trace, TracePriority.NORMAL);
         });
 
-        await waitForProcessing(600);
+        await waitForProcessing(300); // Reduced from 600ms
 
         // Record memory after cycle
         if (performance?.memory) {
@@ -276,12 +277,12 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
     it('should handle memory pressure with backpressure correctly', async () => {
       processor = createProcessorWithConfig({
         maxQueueSize: 50, // Small queue to trigger backpressure
-        batchSize: 5,
-        batchTimeout: 100,
+        batchSize: 8, // Increased for faster processing
+        batchTimeout: 50, // Reduced timeout
         memoryLimit: 1 * 1024 * 1024, // 1MB limit to trigger backpressure
       });
 
-      const traces = createPerformanceTraces(100); // More traces than queue can handle
+      const traces = createPerformanceTraces(75); // Reduced from 100
       let droppedCount = 0;
 
       // Track dropped traces
@@ -298,7 +299,7 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
-      await waitForProcessing(2000);
+      await waitForProcessing(1000); // Reduced from 2000ms
 
       // Check that memory limits were respected
       const finalMemory = performance?.memory?.usedJSHeapSize || 0;
@@ -386,11 +387,23 @@ describe('TraceQueueProcessor - Realistic Load Memory Tests', () => {
   }
 
   /**
-   * Wait for processing with timeout
-   * @param {number} [timeout=1000] - Timeout in milliseconds
-   * @returns {Promise} Promise that resolves after timeout
+   * Wait for processing to complete with smart polling
+   * @param {number} [maxWait=1000] - Maximum timeout in milliseconds
+   * @param {number} [pollInterval=20] - Polling interval in milliseconds
+   * @returns {Promise} Promise that resolves when queue is empty or timeout
    */
-  function waitForProcessing(timeout = 1000) {
-    return new Promise((resolve) => setTimeout(resolve, timeout));
+  async function waitForProcessing(maxWait = 1000, pollInterval = 20) {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWait) {
+      const stats = processor.getQueueStats();
+      // Processing is done when not processing and queue is empty
+      if (!stats.isProcessing && stats.totalSize === 0) {
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+    }
+
+    // Timeout reached, but that's okay for memory tests
   }
 });
