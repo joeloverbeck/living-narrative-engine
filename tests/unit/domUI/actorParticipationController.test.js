@@ -236,6 +236,26 @@ describe('ActorParticipationController', () => {
         expect.any(Error)
       );
     });
+
+    it('should log error and re-throw when initialization fails critically', () => {
+      // Make eventBus.subscribe throw an error during initialization
+      mockEventBus.subscribe.mockImplementation(() => {
+        throw new Error('Event bus subscription failed');
+      });
+
+      controller = new ActorParticipationController({
+        eventBus: mockEventBus,
+        documentContext: mockDocumentContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+      });
+
+      expect(() => controller.initialize()).toThrow('Event bus subscription failed');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Failed to initialize',
+        expect.any(Error)
+      );
+    });
   });
 
   describe('Element Caching', () => {
@@ -576,6 +596,32 @@ describe('ActorParticipationController', () => {
       controller.initialize();
 
       expect(mockLogger.debug).toHaveBeenCalledWith('[ActorParticipation] Loaded 0 actors');
+    });
+
+    it('should fallback to entity ID when name component has no text', () => {
+      const mockEntity = {
+        id: 'actor-fallback-123',
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === NAME_COMPONENT_ID) {
+            return { text: '' }; // Empty text
+          }
+          return null;
+        }),
+      };
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([mockEntity]);
+
+      controller = new ActorParticipationController({
+        eventBus: mockEventBus,
+        documentContext: mockDocumentContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+      });
+
+      controller.initialize();
+
+      const label = mockDocument.querySelector('label');
+      expect(label.textContent).toBe('actor-fallback-123');
     });
   });
 
@@ -1105,6 +1151,54 @@ describe('ActorParticipationController', () => {
 
       jest.useRealTimers();
     });
+
+    it('should warn when status element is missing', async () => {
+      // Create DOM without status element
+      const partialHtml = `
+        <div id="actor-participation-widget">
+          <div id="actor-participation-list-container"></div>
+        </div>
+      `;
+      const partialDom = new JSDOM(partialHtml, { runScripts: 'dangerously', pretendToBeVisual: true });
+      const partialDocumentContext = new DocumentContext(partialDom.window.document, partialDom.window);
+
+      const mockEntity = {
+        id: 'actor-1',
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === NAME_COMPONENT_ID) return { text: 'Alice' };
+          return null;
+        }),
+      };
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([mockEntity]);
+
+      controller = new ActorParticipationController({
+        eventBus: mockEventBus,
+        documentContext: partialDocumentContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+      });
+
+      controller.initialize();
+
+      // Trigger a participation toggle to call #showStatus
+      const checkbox = partialDom.window.document.querySelector('input[type="checkbox"]');
+      checkbox.checked = false;
+
+      const changeEvent = new partialDom.window.Event('change', { bubbles: true });
+      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      checkbox.dispatchEvent(changeEvent);
+
+      // Wait for async operations
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ActorParticipation] Cannot show status: status element not found'
+      );
+
+      partialDom.window.close();
+    });
+
   });
 
   describe('Cleanup', () => {
@@ -1212,6 +1306,81 @@ describe('ActorParticipationController', () => {
         controller.cleanup();
         controller.cleanup();
       }).not.toThrow();
+    });
+
+    it('should handle errors during cleanup gracefully', () => {
+      // Make unsubscribe throw an error
+      mockEventBus.unsubscribe.mockImplementation(() => {
+        throw new Error('Unsubscribe failed');
+      });
+
+      controller = new ActorParticipationController({
+        eventBus: mockEventBus,
+        documentContext: mockDocumentContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+      });
+
+      controller.initialize();
+
+      // Cleanup should catch the error and not throw
+      expect(() => controller.cleanup()).not.toThrow();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Error during cleanup',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle timeout firing after failed cleanup', async () => {
+      jest.useFakeTimers();
+
+      const mockEntity = {
+        id: 'actor-1',
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === NAME_COMPONENT_ID) return { text: 'Alice' };
+          return null;
+        }),
+      };
+
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([mockEntity]);
+
+      controller = new ActorParticipationController({
+        eventBus: mockEventBus,
+        documentContext: mockDocumentContext,
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+      });
+
+      controller.initialize();
+
+      // Trigger status message to create timeout
+      const checkbox = mockDocument.querySelector('input[type="checkbox"]');
+      checkbox.checked = false;
+      const changeEvent = new dom.window.Event('change', { bubbles: true });
+      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      checkbox.dispatchEvent(changeEvent);
+
+      await Promise.resolve();
+
+      // Override clearTimeout to throw an error, simulating a cleanup failure
+      const originalClearTimeout = global.clearTimeout;
+      global.clearTimeout = jest.fn(() => {
+        throw new Error('clearTimeout failed');
+      });
+
+      // Now call cleanup - it will fail to clear the timeout but set element to null
+      controller.cleanup();
+
+      // Restore clearTimeout
+      global.clearTimeout = originalClearTimeout;
+
+      // Now advance timers - the timeout will fire with null status element
+      jest.advanceTimersByTime(3000);
+
+      // Should not throw because of the defensive check at line 375
+      expect(() => jest.runAllTimers()).not.toThrow();
+
+      jest.useRealTimers();
     });
   });
 
