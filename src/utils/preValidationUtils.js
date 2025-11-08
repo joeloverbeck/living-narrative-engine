@@ -84,37 +84,111 @@ export const KNOWN_OPERATION_TYPES = [
 ];
 
 /**
- * Validates operation type against whitelist
+ * Detailed operation validation result
+ *
+ * This is a browser-safe validation result that indicates what SHOULD exist
+ * based on naming conventions, without performing filesystem checks.
+ *
+ * @typedef {object} ValidationResult
+ * @property {boolean} isValid - Overall validation status (true if in whitelist)
+ * @property {object} checks - Individual check results
+ * @property {boolean} checks.inWhitelist - Type is in KNOWN_OPERATION_TYPES
+ * @property {boolean} checks.expectedSchemaPath - Expected schema file path (informational)
+ * @property {boolean} checks.expectedTokenName - Expected DI token name (informational)
+ * @property {boolean} checks.expectedHandlerClass - Expected handler class name (informational)
+ * @property {string[]} missingRegistrations - List of registration types that may be missing
+ * @property {string} operationType - The operation type that was validated
+ * @property {object} expectedPaths - Expected file paths and names (for error messages)
+ * @property {string} expectedPaths.schemaFile - Expected schema file path
+ * @property {string} expectedPaths.tokenName - Expected token name
+ * @property {string} expectedPaths.handlerClass - Expected handler class name
+ */
+
+/**
+ * Validates operation type and returns detailed results
+ *
+ * Browser-safe validation that checks the whitelist and provides detailed
+ * information about expected registrations without filesystem access.
  *
  * Performs validation:
  * 1. Checks if type is in KNOWN_OPERATION_TYPES whitelist
- * 2. Provides detailed error messages with actionable guidance
+ * 2. Calculates expected paths/names for all registration points
+ * 3. Returns detailed results for error reporting
  *
  * Note: This function runs in both Node.js and browser contexts,
- * so it cannot perform file system checks. The error message includes
- * guidance for all potential missing registrations based on the whitelist check.
+ * so it cannot perform file system checks. The result includes
+ * expected paths/names based on naming conventions only.
  *
  * @param {string} operationType - The operation type to validate
- * @param {ILogger} logger - Logger instance
- * @throws {OperationValidationError} If operation is not in whitelist
+ * @param {object} logger - Logger instance with debug, warn, error methods
+ * @param {object} options - Validation options
+ * @param {boolean} options.throwOnError - Throw error if validation fails (default: true)
+ * @returns {ValidationResult} Detailed validation result
+ * @throws {OperationValidationError} If validation fails and throwOnError is true
  */
-export function validateOperationType(operationType, logger) {
-  // Check whitelist
-  if (!KNOWN_OPERATION_TYPES.includes(operationType)) {
-    // Assume all registration types might be missing since we can't check file system
-    const missingRegistrations = ['whitelist', 'schema', 'reference'];
+export function validateOperationType(operationType, logger, options = {}) {
+  const { throwOnError = true } = options;
 
-    const error = new OperationValidationError(operationType, missingRegistrations);
-    logger.error('Operation validation failed', {
+  // Calculate expected paths and names (browser-safe, no filesystem access)
+  const expectedPaths = {
+    schemaFile: `data/schemas/operations/${toSchemaFileName(operationType)}`,
+    tokenName: toTokenName(operationType),
+    handlerClass: toHandlerClassName(operationType),
+  };
+
+  // Check whitelist (the only actual validation we can do browser-safe)
+  const inWhitelist = KNOWN_OPERATION_TYPES.includes(operationType);
+
+  // Build checks object (informational only, except for whitelist)
+  const checks = {
+    inWhitelist,
+    expectedSchemaPath: expectedPaths.schemaFile,
+    expectedTokenName: expectedPaths.tokenName,
+    expectedHandlerClass: expectedPaths.handlerClass,
+  };
+
+  // Determine missing registrations
+  const missingRegistrations = [];
+  if (!inWhitelist) {
+    // If not in whitelist, assume all registrations might be missing
+    // (we can't verify without filesystem access)
+    missingRegistrations.push('whitelist', 'schema', 'reference', 'token', 'handler', 'mapping');
+  }
+
+  // Build result
+  const result = {
+    isValid: inWhitelist,
+    checks,
+    missingRegistrations,
+    operationType,
+    expectedPaths,
+  };
+
+  // Log results
+  if (result.isValid) {
+    logger.debug('Operation type validation passed', {
+      operationType,
+      expectedPaths,
+    });
+  } else {
+    logger.warn('Operation validation failed', {
       operationType,
       missingRegistrations,
+      expectedPaths,
+    });
+  }
+
+  // Throw error if requested and validation failed
+  if (!result.isValid && throwOnError) {
+    const error = new OperationValidationError(operationType, missingRegistrations);
+    logger.error('Operation validation error', {
+      operationType,
       errorMessage: error.message,
     });
     throw error;
   }
 
-  // Validation passed
-  logger.debug('Operation type validation passed', { operationType });
+  return result;
 }
 
 /**
@@ -418,10 +492,10 @@ export function validateAllOperations(
  * Validates rule-specific structure
  *
  * @param {any} ruleData - The rule data to validate
- * @param {string} filePath - File path for error context
+ * @param {string} _filePath - File path for error context (unused but kept for API compatibility)
  * @returns {PreValidationResult} Validation result
  */
-export function validateRuleStructure(ruleData, filePath = 'unknown') {
+export function validateRuleStructure(ruleData, _filePath = 'unknown') {
   if (!ruleData || typeof ruleData !== 'object') {
     return {
       isValid: false,
@@ -479,7 +553,7 @@ export function validateRuleStructure(ruleData, filePath = 'unknown') {
  *
  * @param {any} data - Data to validate
  * @param {string} schemaId - Schema ID being validated against
- * @param {string} [filePath] - File path for error context
+ * @param {string} filePath - File path for error context
  * @returns {PreValidationResult} Validation result
  */
 export function performPreValidation(data, schemaId, filePath = 'unknown') {
@@ -497,10 +571,10 @@ export function performPreValidation(data, schemaId, filePath = 'unknown') {
  *
  * @param {PreValidationResult} result - Pre-validation result
  * @param {string} fileName - File name for context
- * @param {string} schemaId - Schema ID for context
+ * @param {string} _schemaId - Schema ID for context (unused but kept for API compatibility)
  * @returns {string} Formatted error message
  */
-export function formatPreValidationError(result, fileName, schemaId) {
+export function formatPreValidationError(result, fileName, _schemaId) {
   if (result.isValid) {
     return 'No pre-validation errors';
   }
@@ -519,4 +593,64 @@ export function formatPreValidationError(result, fileName, schemaId) {
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Converts operation type to expected schema file name
+ *
+ * Browser-safe helper that converts operation type constant to camelCase schema file name.
+ * Does not check if file exists - only performs naming convention conversion.
+ *
+ * Examples:
+ * - ADD_COMPONENT -> addComponent.schema.json
+ * - VALIDATE_INVENTORY_CAPACITY -> validateInventoryCapacity.schema.json
+ *
+ * @param {string} operationType - Operation type constant (e.g., 'ADD_COMPONENT')
+ * @returns {string} Expected schema file name
+ */
+export function toSchemaFileName(operationType) {
+  return operationType.toLowerCase().split('_').map((word, idx) =>
+    idx === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join('') + '.schema.json';
+}
+
+/**
+ * Converts operation type to expected DI token name
+ *
+ * Browser-safe helper that converts operation type constant to PascalCase token name.
+ * Does not check if token exists - only performs naming convention conversion.
+ *
+ * NOTE: Operation handlers DO NOT use "I" prefix (unlike other service interfaces).
+ * This matches the convention in tokens-core.js.
+ *
+ * Examples:
+ * - ADD_COMPONENT -> AddComponentHandler
+ * - VALIDATE_INVENTORY_CAPACITY -> ValidateInventoryCapacityHandler
+ *
+ * @param {string} operationType - Operation type constant (e.g., 'ADD_COMPONENT')
+ * @returns {string} Expected DI token name (without "I" prefix)
+ */
+export function toTokenName(operationType) {
+  // NO "I" prefix for operation handlers (see tokens-core.js convention)
+  return operationType.split('_').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join('') + 'Handler';
+}
+
+/**
+ * Converts operation type to expected handler class name
+ *
+ * Browser-safe helper that converts operation type constant to expected handler class name.
+ * For operation handlers, the class name matches the token name (no "I" prefix).
+ *
+ * Examples:
+ * - ADD_COMPONENT -> AddComponentHandler
+ * - VALIDATE_INVENTORY_CAPACITY -> ValidateInventoryCapacityHandler
+ *
+ * @param {string} operationType - Operation type constant (e.g., 'ADD_COMPONENT')
+ * @returns {string} Expected handler class name
+ */
+export function toHandlerClassName(operationType) {
+  // Handler class name is the same as token name for operation handlers
+  return toTokenName(operationType);
 }

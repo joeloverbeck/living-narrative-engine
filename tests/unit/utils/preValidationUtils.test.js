@@ -796,10 +796,10 @@ describe('preValidationUtils', () => {
       }).toThrow(OperationValidationError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Operation validation failed',
+        'Operation validation error',
         expect.objectContaining({
           operationType: 'UNKNOWN_OP',
-          missingRegistrations: ['whitelist', 'schema', 'reference'],
+          errorMessage: expect.stringContaining('UNKNOWN_OP'),
         })
       );
     });
@@ -842,7 +842,15 @@ describe('preValidationUtils', () => {
         caughtError = err;
       }
       expect(caughtError).toBeInstanceOf(OperationValidationError);
-      expect(caughtError.missingRegistrations).toEqual(['whitelist', 'schema', 'reference']);
+      // Enhanced implementation returns all potential missing registrations
+      expect(caughtError.missingRegistrations).toEqual([
+        'whitelist',
+        'schema',
+        'reference',
+        'token',
+        'handler',
+        'mapping',
+      ]);
     });
 
     it('should have correct error name', () => {
