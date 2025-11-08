@@ -99,6 +99,18 @@ class OperationRegistry extends BaseService {
 
     return handler;
   }
+
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Get all registered operation types as a sorted array.
+   *
+   * @returns {string[]} Array of registered operation type identifiers, sorted
+   * alphabetically.
+   */
+  getRegisteredTypes() {
+    return Array.from(this.#registry.keys()).sort();
+  }
 }
 
 export default OperationRegistry;
