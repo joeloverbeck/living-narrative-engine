@@ -401,6 +401,28 @@ Mix matcher usage with targeted entity inspections; for example, call `fixture.e
 
 Actions that use scopes from dependency mods (e.g., `positioning:close_actors`, `positioning:furniture_actor_sitting_on`) require scope registration in tests. While the production engine auto-loads scope definitions from `.scope` files, **ModTestFixture does not automatically load scopes from dependency mods**.
 
+> **✨ NEW: Unified Scope Registration System (2025-11-08)**
+>
+> A new unified `TestScopeResolverRegistry` system is now available for managing test scope resolvers. This system provides:
+> - **Auto-discovery** of scopes from mod directories
+> - **Centralized management** of all test scope resolvers
+> - **Better error messages** when scopes are missing
+> - **Dependency tracking** and validation
+>
+> **Quick Start:**
+> ```javascript
+> // NEW unified pattern (recommended for new tests)
+> await testEnv.scopeResolverRegistry.discoverAndRegister(['positioning', 'inventory']);
+>
+> // Or use ModTestFixture's autoRegisterScopes option
+> const fixture = await ModTestFixture.forAction('mod', 'action', null, null, {
+>   autoRegisterScopes: true,
+>   scopeCategories: ['positioning', 'inventory']
+> });
+> ```
+>
+> The old `ScopeResolverHelpers` API still works for backward compatibility. See the [Migration Guide](./test-scope-resolver-registry-migration-guide.md) for details.
+
 #### Why Scope Registration is Required
 
 The test environment is isolated and doesn't load all mod dependencies by default. When your action uses a scope like `positioning:close_actors`, you must register the scope resolver in your test setup.
