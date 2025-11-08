@@ -560,6 +560,295 @@ describe('violence:grab_neck - Action Discovery', () => {
 
 **Impact**: This approach reduces scope configuration from 40+ lines of manual implementation to 1-5 lines of helper calls.
 
+## Testing Custom Mod-Specific Scopes
+
+### Overview
+
+When your mod defines custom scopes (`.scope` files) that reference conditions from dependency mods using `condition_ref`, you need to manually set up these dependencies in your tests. This section documents the **current workaround pattern** for testing such scopes until convenience methods are added (see [Future Improvements](#future-improvements)).
+
+The pattern covered here is distinct from the standard scope registration covered in [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes). Standard scopes (positioning, inventory, anatomy) can use `autoRegisterScopes: true`, but custom mod-specific scopes require manual setup.
+
+### When to Use This Pattern
+
+Use this manual setup pattern when:
+
+- ✅ Your mod has custom `.scope` files in `data/mods/your-mod/scopes/`
+- ✅ These scopes use `{"condition_ref": "dependency-mod:condition-id"}`
+- ✅ The scopes are mod-specific, not general positioning/inventory/anatomy scopes
+
+**Do NOT use this pattern when**:
+
+- ❌ Using standard scopes from positioning/inventory/anatomy mods (use `autoRegisterScopes: true` instead)
+- ❌ Your mod has no custom scopes
+
+### Required Imports
+
+Before implementing this pattern, ensure you have the following imports in your test file:
+
+```javascript
+import fs from 'fs';
+import path from 'path';
+import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
+import ScopeEngine from '../../../../src/scopeDsl/engine.js';
+import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
+```
+
+### Step-by-Step Setup
+
+This pattern requires four steps to set up custom scope testing:
+
+#### Step 1: Load Dependency Conditions
+
+If your custom scope uses `condition_ref` to reference a condition from a dependency mod, you must load that condition file manually:
+
+```javascript
+// Load the positioning condition needed by the custom scope
+const positioningCondition = await import(
+  '../../../../data/mods/positioning/conditions/actor-in-entity-facing-away.condition.json',
+  { assert: { type: 'json' } }
+);
+```
+
+#### Step 2: Extend dataRegistry Mock
+
+Extend the `dataRegistry.getConditionDefinition` mock to return the dependency condition when requested:
+
+```javascript
+// Save reference to original mock
+const originalGetCondition = testFixture.testEnv.dataRegistry.getConditionDefinition;
+
+// Extend mock to handle dependency conditions
+testFixture.testEnv.dataRegistry.getConditionDefinition = jest.fn((conditionId) => {
+  if (conditionId === 'positioning:actor-in-entity-facing-away') {
+    return positioningCondition.default;
+  }
+  // Fall back to original mock for other conditions
+  return originalGetCondition(conditionId);
+});
+```
+
+**Key Points**:
+- Keep a reference to the original mock function
+- Return the imported condition's `.default` property
+- Fall back to the original mock for conditions not explicitly handled
+
+#### Step 3: Load and Parse Custom Scope
+
+Load your mod's custom scope file and parse it using `parseScopeDefinitions`:
+
+```javascript
+// Build path to your mod's custom scope file
+const scopePath = path.join(
+  process.cwd(),
+  'data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_accessible_from_behind.scope'
+);
+
+// Read and parse the scope file
+const scopeContent = fs.readFileSync(scopePath, 'utf-8');
+const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
+```
+
+**Notes**:
+- `parseScopeDefinitions()` returns a Map of scope names to AST objects
+- The scope file path is used for error reporting
+
+#### Step 4: Create ScopeEngine and Register Resolver
+
+Create a new `ScopeEngine` instance and register a resolver function for each parsed scope:
+
+```javascript
+// Create new ScopeEngine instance
+const scopeEngine = new ScopeEngine();
+
+// Register resolver for each parsed scope
+for (const [scopeName, scopeAst] of parsedScopes) {
+  const scopeResolver = (context) => {
+    // Build runtime context with required services
+    const runtimeCtx = {
+      entityManager: testFixture.testEnv.entityManager,
+      jsonLogicEval: testFixture.testEnv.jsonLogic,
+      logger: testFixture.testEnv.logger,
+    };
+
+    // Resolve the scope using the engine
+    const result = scopeEngine.resolve(scopeAst, context, runtimeCtx);
+
+    // Return in expected format for ScopeResolverHelpers
+    return { success: true, value: result };
+  };
+
+  // Register the resolver
+  ScopeResolverHelpers._registerResolvers(
+    testFixture.testEnv,
+    testFixture.testEnv.entityManager,
+    { [scopeName]: scopeResolver }
+  );
+}
+```
+
+**Important Details**:
+- Create a **new** `ScopeEngine` instance (don't try to access an existing one)
+- The resolver must return `{ success: true, value: result }`
+- `context` parameter contains actor/entity properties (e.g., `{ actor: { id: 'actor-id' } }`)
+- `runtimeCtx` must include `entityManager`, `jsonLogicEval`, and `logger`
+
+### Complete Working Example
+
+See the full implementation in:
+- **File**: `tests/integration/mods/sex-anal-penetration/insert_finger_into_asshole_action_discovery.test.js`
+- **Lines**: 23-69
+
+This test demonstrates all four steps working together to test an action that uses a custom scope with dependency condition references.
+
+### Code Comment Template
+
+When implementing this pattern, document the dependencies your action uses:
+
+```javascript
+/**
+ * This action uses custom scopes that reference:
+ * - positioning:actor-in-entity-facing-away (condition) - must be loaded manually
+ * - positioning:close_actors (scope) - auto-registered with autoRegisterScopes
+ *
+ * Manual scope setup required for mod-specific scope:
+ * - sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind
+ */
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('sex-anal-penetration', 'insert_finger_into_asshole');
+
+  // Auto-register standard positioning scopes
+  ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+
+  // Manual setup for custom scope (see steps 1-4 above)
+  // ...
+});
+```
+
+### Pattern Comparison Table
+
+| Scenario | Method | Setup Required |
+|----------|--------|----------------|
+| Standard positioning scopes | `autoRegisterScopes: true, scopeCategories: ['positioning']` | None - automatic |
+| Custom mod scopes (no dependency conditions) | Manual registration | Load scope file, register resolver (steps 3-4) |
+| Custom mod scopes (with dependency conditions) | Manual registration + mock extension | Load condition, extend mock, load scope, register resolver (steps 1-4) |
+| Mixed standard + custom scopes | Combine both approaches | `autoRegisterScopes: true` + manual setup for custom scopes |
+
+### Key Implementation Details
+
+#### ScopeEngine Pattern
+
+The manual pattern creates a **new** `ScopeEngine` instance rather than accessing an existing one:
+
+```javascript
+const scopeEngine = new ScopeEngine();
+```
+
+**ScopeEngine.resolve() signature**:
+```javascript
+scopeEngine.resolve(ast, context, runtimeCtx, trace = null)
+```
+
+**Parameters**:
+1. `ast` - Parsed scope AST from `parseScopeDefinitions()`
+2. `context` - Context object with actor/entity properties (e.g., `{ actor: { id: 'actor-id' } }`)
+3. `runtimeCtx` - Runtime context with `{ entityManager, jsonLogicEval, logger }`
+4. `trace` - Optional trace context for debugging (defaults to `null`)
+
+**Resolver wrapper**:
+The resolver function wraps `scopeEngine.resolve()` and returns the expected format:
+```javascript
+const scopeResolver = (context) => {
+  const result = scopeEngine.resolve(scopeAst, context, runtimeCtx);
+  return { success: true, value: result };
+};
+```
+
+#### Custom Operators Auto-Registration
+
+Custom operators (`hasPartOfType`, `hasClothingInSlot`, etc.) are **automatically registered** during fixture initialization:
+
+- Registration happens in the DI initialization via `JsonLogicCustomOperators` service
+- In ModTestFixture tests, this occurs automatically during `ModTestFixture.forAction()` call
+- **No manual registration needed** in tests
+
+**If you see "hasPartOfType is not a function" errors**: This is NOT an issue with ModTestFixture—the custom operators register automatically. Check that your test fixture is initialized properly.
+
+### Troubleshooting
+
+#### "Resolver for scope X not found"
+
+**Cause**: Forgot to register the custom scope
+
+**Solution**: Follow steps 3-4 to load and register your custom scope
+
+#### "Condition Y is undefined"
+
+**Cause**: Forgot to load the dependency condition that your scope references via `condition_ref`
+
+**Solution**: Follow steps 1-2 to load the condition and extend the `dataRegistry.getConditionDefinition` mock
+
+#### "hasPartOfType is not a function"
+
+**Cause**: This is NOT an issue with ModTestFixture. Custom operators auto-register during fixture initialization.
+
+**Solution**:
+- Verify fixture is initialized: `testFixture = await ModTestFixture.forAction(...)`
+- Check that you're using the fixture's test environment services
+- Ensure `jsonLogicEval` in `runtimeCtx` is from `testFixture.testEnv.jsonLogic`
+
+#### "Cannot read property 'default' of undefined"
+
+**Cause**: Import statement is incorrect or condition file doesn't exist
+
+**Solution**:
+- Verify the condition file path is correct
+- Use `assert: { type: 'json' }` in the import statement
+- Check that the file exists at the specified path
+
+### Best Practices
+
+1. **Document dependencies clearly**: Use the code comment template to explain what conditions and scopes your test requires
+
+2. **Keep scope setup in beforeEach**: Don't scatter setup across multiple test functions
+
+3. **Use descriptive variable names**: Name condition imports clearly (e.g., `positioningCondition`, `anatomyCondition`)
+
+4. **Test the setup**: Verify your custom scope works with a simple test before writing complex assertions
+
+5. **Clean up**: The fixture's `cleanup()` method handles teardown, so no manual cleanup is needed
+
+### Cross-References
+
+**Helper files and utilities**:
+- `tests/common/mods/scopeResolverHelpers.js` - Available helper methods and `_registerResolvers()`
+- `tests/integration/mods/sex-anal-penetration/insert_finger_into_asshole_action_discovery.test.js` - Complete working example
+- `src/scopeDsl/engine.js` - ScopeEngine API reference
+- `src/scopeDsl/scopeDefinitionParser.js` - `parseScopeDefinitions()` function
+- `src/logic/jsonLogicCustomOperators.js` - Custom operator auto-registration
+
+**Related documentation**:
+- [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes) - Standard scope registration
+- [ScopeResolverHelpers Registry](./scope-resolver-registry.md) - Available scope factory methods
+
+### Future Improvements
+
+**This pattern is a temporary workaround**. Future tickets will add convenience methods to reduce boilerplate:
+
+- **TESDATREG-002**: Add `ModTestFixture.registerCustomScope()` helper
+- **TESDATREG-004**: Add helper for automatic dependency condition loading
+
+Once these helpers are implemented, the 4-step manual process will be replaced with simpler calls like:
+
+```javascript
+// Future API (not yet implemented)
+await testFixture.registerCustomScope(
+  'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind',
+  { dependencies: ['positioning:actor-in-entity-facing-away'] }
+);
+```
+
+Until then, use the manual pattern documented above.
+
 ### Action Discovery Troubleshooting Checklist
 
 If your action is not being discovered (`availableActions` returns empty array `[]`), follow this systematic checklist:
