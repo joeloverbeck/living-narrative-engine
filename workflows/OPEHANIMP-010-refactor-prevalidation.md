@@ -4,6 +4,7 @@
 **Effort**: Medium
 **Phase**: 2 (Week 3-4)
 **Dependencies**: OPEHANIMP-004, OPEHANIMP-008
+**Status**: ⚠️ BLOCKED - Requires architectural decision on browser/Node.js context
 
 ## Objective
 
@@ -13,15 +14,45 @@ Refactor the pre-validation system to perform comprehensive checks beyond just t
 
 Current pre-validation only checks if an operation type is in `KNOWN_OPERATION_TYPES`. This ticket extends pre-validation to check all registration points and provide comprehensive diagnostics, similar to the build-time validation but at runtime with operation-specific context.
 
+## ⚠️ CRITICAL BLOCKER
+
+**Issue**: The current `preValidationUtils.js` explicitly states at lines 93-95:
+```javascript
+// Note: This function runs in both Node.js and browser contexts,
+// so it cannot perform file system checks.
+```
+
+**Impact**: The proposed refactor assumes file system access via Node.js `fs` module to check:
+- Schema file existence
+- Schema references in operation.schema.json
+- Token definitions in tokens-core.js
+
+**Decision Required**:
+- Option A: Split validation into browser-safe and Node.js-only versions
+- Option B: Keep pre-validation browser-safe and rely on build-time validation (OPEHANIMP-008)
+- Option C: Move comprehensive checks to a separate build-time/test-time tool
+
+**Recommended**: Option B - Keep pre-validation lightweight and browser-safe, use build-time validation for comprehensive checks.
+
+Until this architectural decision is made, this workflow is **ON HOLD**.
+
 ## Requirements
 
-### 1. Enhanced Pre-validation Function
+### 1. Enhanced Pre-validation Function (IF IMPLEMENTED)
 
 **File**: `src/utils/preValidationUtils.js`
 
-Transform from simple whitelist check to comprehensive validation:
+⚠️ **NOTE**: This implementation assumes Node.js-only context. See blocker section above.
+
+**Current Reality**:
+- File runs in both browser and Node.js contexts
+- Cannot use `fs` module for file system checks
+- Current implementation only validates against `KNOWN_OPERATION_TYPES` whitelist
+
+**Proposed Enhancement** (requires architectural decision):
 
 ```javascript
+// ⚠️ WARNING: This will break browser compatibility
 import fs from 'fs';
 import path from 'path';
 import OperationValidationError from '../errors/operationValidationError.js';
@@ -29,9 +60,11 @@ import OperationValidationError from '../errors/operationValidationError.js';
 /**
  * CRITICAL: Pre-validation whitelist for operation types
  * [... existing documentation ...]
+ *
+ * NOTE: Current production version includes SEQUENCE (added in recent implementation)
  */
 const KNOWN_OPERATION_TYPES = [
-  // ... existing types
+  // ... existing types including SEQUENCE at line 83
 ];
 
 /**
@@ -103,10 +136,13 @@ export function validateOperationType(operationType, logger, options = {}) {
 
   // Check 3: Schema referenced in operation.schema.json
   try {
-    const operationSchemaPath = path.join(process.cwd(), 'data/schemas/operations/operation.schema.json');
+    // ✅ CORRECTED: Actual path is data/schemas/operation.schema.json (no "operations" subdirectory)
+    const operationSchemaPath = path.join(process.cwd(), 'data/schemas/operation.schema.json');
     const operationSchema = JSON.parse(fs.readFileSync(operationSchemaPath, 'utf8'));
 
-    checks.schemaReferenced = operationSchema.oneOf?.some(ref =>
+    // ✅ CORRECTED: Schema uses "anyOf" not "oneOf" (see operation.schema.json line 37)
+    // Must check within $defs.Operation.anyOf array
+    checks.schemaReferenced = operationSchema.$defs?.Operation?.anyOf?.some(ref =>
       ref.$ref?.includes(schemaFileName)
     ) || false;
 
@@ -231,9 +267,14 @@ function toSchemaFileName(operationType) {
 
 /**
  * Helper: Convert operation type to token name
+ *
+ * ✅ CORRECTED: Operation handlers DO NOT use "I" prefix
+ * See tokens-core.js lines 14-20 for naming convention
+ * Example: ADD_COMPONENT -> AddComponentHandler (not IAddComponentHandler)
  */
 function toTokenName(operationType) {
-  return 'I' + operationType.split('_').map(word =>
+  // NO "I" prefix for operation handlers
+  return operationType.split('_').map(word =>
     word.charAt(0) + word.slice(1).toLowerCase()
   ).join('') + 'Handler';
 }
@@ -248,11 +289,18 @@ export {
 };
 ```
 
-### 2. Update OperationValidationError
+### 2. Update OperationValidationError (IF NEEDED)
 
 **File**: `src/errors/operationValidationError.js`
 
-Enhance to handle multiple check types:
+**Current Status**:
+- File already exists with inline schema file naming logic (lines 69-71, 81-83)
+- Currently handles 'whitelist', 'schema', and 'reference' missing registration types
+- Token naming logic not currently included
+
+**Note**: The current implementation already includes helper logic inline. Adding separate helper functions would duplicate code. Consider refactoring existing inline logic into helpers only if comprehensive validation is implemented.
+
+**Proposed Enhancement** (if comprehensive validation is implemented):
 
 ```javascript
 /**
@@ -291,10 +339,12 @@ function formatValidationError(operationType, missingRegistrations) {
     const schemaFileName = toSchemaFileName(operationType);
     lines.push('');
     lines.push('  ⚠️  SCHEMA NOT REFERENCED IN operation.schema.json');
-    lines.push('  File: data/schemas/operations/operation.schema.json');
-    lines.push('  Location: oneOf array');
+    // ✅ CORRECTED: Actual path (no "operations" subdirectory)
+    lines.push('  File: data/schemas/operation.schema.json');
+    // ✅ CORRECTED: Uses "anyOf" not "oneOf", within $defs.Operation
+    lines.push('  Location: $defs.Operation.anyOf array');
     lines.push('  Action: Add $ref entry (keep alphabetically sorted)');
-    lines.push(`  Code to add: { "$ref": "./${schemaFileName}" },`);
+    lines.push(`  Code to add: { "$ref": "./operations/${schemaFileName}" },`);
   }
 
   if (missingRegistrations.includes('token')) {
@@ -309,7 +359,8 @@ function formatValidationError(operationType, missingRegistrations) {
 
   if (missingRegistrations.includes('handler')) {
     const tokenName = toTokenName(operationType);
-    const handlerClassName = tokenName.substring(1); // Remove 'I'
+    // ✅ CORRECTED: No "I" prefix to remove since operation handlers don't use it
+    const handlerClassName = tokenName; // Same as token name
     lines.push('');
     lines.push('  ⚠️  HANDLER NOT REGISTERED');
     lines.push('  File: src/dependencyInjection/registrations/operationHandlerRegistrations.js');
@@ -340,8 +391,9 @@ function toSchemaFileName(operationType) {
   ).join('') + '.schema.json';
 }
 
+// ✅ CORRECTED: NO "I" prefix for operation handlers
 function toTokenName(operationType) {
-  return 'I' + operationType.split('_').map(word =>
+  return operationType.split('_').map(word =>
     word.charAt(0) + word.slice(1).toLowerCase()
   ).join('') + 'Handler';
 }
@@ -349,7 +401,32 @@ function toTokenName(operationType) {
 
 ### 3. Integration with Mod Loading
 
-Update mod loading to use enhanced validation:
+**Current Status**: ✅ Already Integrated
+
+The pre-validation system is already integrated into the validation flow via `schemaValidationUtils.js` at line 87:
+
+```javascript
+// src/utils/schemaValidationUtils.js line 85-120
+// Perform pre-validation checks to catch common issues before running full AJV validation
+if (!skipPreValidation) {
+  const preValidationResult = performPreValidation(data, schemaId, filePath);
+
+  if (!preValidationResult.isValid) {
+    // Pre-validation failed - provide specific, actionable error
+    const fileName = filePath ? filePath.split('/').pop() : 'unknown file';
+    const preValidationError = formatPreValidationError(
+      preValidationResult,
+      fileName,
+      schemaId
+    );
+    // ... error handling
+  }
+}
+```
+
+This is called during mod loading whenever schema validation occurs, providing early error detection before AJV validation runs.
+
+**Proposed Enhancement** (if comprehensive validation is implemented):
 
 ```javascript
 // In mod loading code
@@ -471,3 +548,62 @@ describe('validateOperationType - Comprehensive Checks', () => {
 - Error messages guide to specific fixes
 - Performance impact <100ms per validation
 - Integration with mod loading improves error messages
+
+---
+
+## ✅ Corrections Applied to This Workflow (2025-11-08)
+
+This workflow has been updated to correct the following discrepancies with the actual production code:
+
+### Critical Issues Fixed:
+
+1. **❌ BLOCKER - File System Access**
+   - **Original Assumption**: Can use Node.js `fs` module
+   - **Reality**: Code runs in both browser and Node.js contexts, cannot use file system
+   - **Action**: Added blocker section, marked workflow as ON HOLD
+   - **Reference**: `preValidationUtils.js` lines 93-95
+
+2. **Token Naming Convention**
+   - **Original**: Used "I" prefix like `IAddComponentHandler`
+   - **Corrected**: NO "I" prefix - should be `AddComponentHandler`
+   - **Reference**: `tokens-core.js` lines 14-20
+
+### Path and Structure Fixes:
+
+3. **Schema File Path**
+   - **Original**: `data/schemas/operations/operation.schema.json`
+   - **Corrected**: `data/schemas/operation.schema.json` (no "operations" subdirectory)
+   - **Reference**: Actual file location
+
+4. **Schema Structure**
+   - **Original**: Checked `oneOf` array
+   - **Corrected**: Uses `anyOf` within `$defs.Operation.anyOf`
+   - **Reference**: `operation.schema.json` line 37
+
+### Implementation Status Updates:
+
+5. **Integration Already Exists**
+   - **Status**: Pre-validation already integrated via `schemaValidationUtils.js` line 87
+   - **Action**: Added "Current Status" section noting existing integration
+   - **Reference**: `schemaValidationUtils.js` lines 85-120
+
+6. **OperationValidationError Status**
+   - **Status**: File exists with inline schema naming logic (lines 69-71, 81-83)
+   - **Action**: Added note about avoiding code duplication
+   - **Reference**: `operationValidationError.js`
+
+7. **Missing Operation Type**
+   - **Note**: Current production includes `SEQUENCE` operation (line 83 in `KNOWN_OPERATION_TYPES`)
+   - **Action**: Added note in code comments
+   - **Reference**: `preValidationUtils.js` line 83
+
+### Code Example Corrections:
+
+All code examples in this workflow have been updated with:
+- ✅ markers indicating corrected code
+- Inline comments explaining the corrections
+- References to actual file locations and line numbers
+
+### Recommendation:
+
+This workflow should remain **ON HOLD** until an architectural decision is made about browser/Node.js context separation. Consider implementing Option B (keep pre-validation browser-safe, use build-time validation for comprehensive checks via OPEHANIMP-008).
