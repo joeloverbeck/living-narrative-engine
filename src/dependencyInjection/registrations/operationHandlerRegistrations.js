@@ -40,7 +40,9 @@ import QueryLookupHandler from '../../logic/operationHandlers/queryLookupHandler
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
 import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
+import ForEachHandler from '../../logic/operationHandlers/forEachHandler.js';
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
+import IfHandler from '../../logic/operationHandlers/ifHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler.js';
@@ -218,6 +220,16 @@ export function registerOperationHandlers(registrar) {
         }),
     ],
     [
+      tokens.ForEachHandler,
+      ForEachHandler,
+      (c, Handler) =>
+        new Handler({
+          operationInterpreter: () => c.resolve(tokens.OperationInterpreter),
+          jsonLogic: c.resolve(tokens.JsonLogicEvaluationService),
+          logger: c.resolve(tokens.ILogger),
+        }),
+    ],
+    [
       tokens.SystemMoveEntityHandler,
       SystemMoveEntityHandler,
       (c, Handler) =>
@@ -231,6 +243,16 @@ export function registerOperationHandlers(registrar) {
       tokens.IMoveEntityHandler,
       SystemMoveEntityHandler,
       (c) => c.resolve(tokens.SystemMoveEntityHandler),
+    ],
+    [
+      tokens.IfHandler,
+      IfHandler,
+      (c, Handler) =>
+        new Handler({
+          operationInterpreter: () => c.resolve(tokens.OperationInterpreter),
+          jsonLogic: c.resolve(tokens.JsonLogicEvaluationService),
+          logger: c.resolve(tokens.ILogger),
+        }),
     ],
     [
       tokens.GetTimestampHandler,
@@ -352,7 +374,7 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
-          operationInterpreter: c.resolve(tokens.OperationInterpreter),
+          operationInterpreter: () => c.resolve(tokens.OperationInterpreter),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],

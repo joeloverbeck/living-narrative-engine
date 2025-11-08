@@ -1,7 +1,7 @@
 /**
  * @file Integration tests for sex-anal-penetration:tease_asshole_with_glans action discovery
- * @description Tests that the actors_with_exposed_asshole_facing_away scope properly filters
- * actors based on asshole socket coverage, facing direction, and closeness
+ * @description Tests that the actors_with_exposed_asshole_accessible_from_behind scope properly filters
+ * actors based on asshole socket coverage, positioning (facing away OR lying down), and closeness
  */
 
 import {
@@ -27,13 +27,13 @@ import {
   createTargetResolutionServiceWithMocks,
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
-import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
+// import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import {createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import {
-  createMockMultiTargetResolutionStage,
+  // createMockMultiTargetResolutionStage,
   createEmptyMockMultiTargetResolutionStage,
 } from '../../common/mocks/mockMultiTargetResolutionStage.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
@@ -44,7 +44,7 @@ import path from 'path';
 const assholeScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_facing_away.scope'
+    '../../../data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_accessible_from_behind.scope'
   ),
   'utf8'
 );
@@ -64,7 +64,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
   let jsonLogicCustomOperators;
   let mockBodyGraphService;
   let safeEventDispatcher;
-  let multiTargetResolutionStage;
+  // let multiTargetResolutionStage;
   let prerequisiteEvaluationService;
   let targetResolutionService;
   let gameDataRepository;
@@ -118,18 +118,18 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 
     // Parse and register the scope
-    const parser = new DefaultDslParser({ logger });
+    // const parser = new DefaultDslParser({ logger });
     const scopeDefinitions = parseScopeDefinitions(
       assholeScopeContent,
-      'actors_with_exposed_asshole_facing_away.scope'
+      'actors_with_exposed_asshole_accessible_from_behind.scope'
     );
 
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex-anal-penetration:actors_with_exposed_asshole_facing_away': scopeDefinitions.get(
-        'sex-anal-penetration:actors_with_exposed_asshole_facing_away'
+      'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind': scopeDefinitions.get(
+        'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind'
       ),
     });
 
@@ -137,7 +137,7 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
     
     // Mock prerequisite evaluation to check for penis
     prerequisiteEvaluationService = {
-      evaluate: jest.fn().mockImplementation((prerequisites, actionDef, actor, trace) => {
+      evaluate: jest.fn().mockImplementation((prerequisites, actionDef, actor) => {
         // Check if the actor has a penis for this specific action
         if (actionDef.id === 'sex-anal-penetration:tease_asshole_with_glans' && prerequisites) {
           // Check if actor has penis using the hasPartOfType operator
@@ -173,11 +173,15 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
       },
     });
 
-    // Default to normal mock - individual tests can override
-    multiTargetResolutionStage = createMockMultiTargetResolutionStage();
+    // Default to normal mock - individual tests can override (unused in this test file)
+    // multiTargetResolutionStage = createMockMultiTargetResolutionStage();
   });
 
   // Helper to create action discovery service with custom mock
+  /**
+   *
+   * @param shouldFindActions
+   */
   function createActionDiscoveryService(shouldFindActions = true) {
     // For this test, we need a custom mock that actually checks the scope
     const stage = shouldFindActions
@@ -201,14 +205,19 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
                 entity: target1,
               };
               
-              // Evaluate the full scope logic for the action
+              // Evaluate the full scope logic for the action (updated with OR for lying_down)
               const fullScopeLogic = {
                 and: [
-                  { condition_ref: 'positioning:actor-in-entity-facing-away' },
                   {
                     and: [
                       { hasPartOfType: ['.', 'asshole'] },
                       { not: { isSocketCovered: ['.', 'asshole'] } }
+                    ]
+                  },
+                  {
+                    or: [
+                      { condition_ref: 'positioning:actor-in-entity-facing-away' },
+                      { '!!': { var: 'entity.components.positioning:lying_down' } }
                     ]
                   }
                 ]
@@ -272,7 +281,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
           .fn()
-          .mockImplementation((actor, trace) => {
+          .mockImplementation((actor) => {
             // Return the action only if the actor has the required components
             const allActions = gameDataRepository.getAllActionDefinitions();
             
@@ -329,9 +338,14 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
   });
 
   describe('socket coverage and positioning tests', () => {
+    /**
+     *
+     * @param config
+     */
     function setupEntities(config = {}) {
       const {
         targetFacingAway = true,
+        targetLyingDown = false,
         targetHasAsshole = true,
         assholeCovered = false,
         actorHasPenis = true,
@@ -362,6 +376,11 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
             'positioning:facing_away': {
               facing_away_from: targetFacingAway ? ['actor1'] : [],
             },
+            ...(targetLyingDown && {
+              'positioning:lying_down': {
+                furniture_id: 'bed1',
+              },
+            }),
             ...(targetHasAsshole && {
               'anatomy:body': {
                 body: {
@@ -713,6 +732,102 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );
       expect(teaseActions).toHaveLength(0);
+    });
+
+    // NEW TEST CASES FOR LYING_DOWN POSITION
+    it('should discover action when target is lying down with exposed asshole', async () => {
+      // Arrange - target lying down, has asshole, not covered, actor has penis
+      setupEntities({
+        targetFacingAway: false,  // Not facing away
+        targetLyingDown: true,     // But IS lying down
+        targetHasAsshole: true,
+        assholeCovered: false,
+        actorHasPenis: true,
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert - action SHOULD be available when target is lying down
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(1);
+      expect(teaseActions[0].params.targetId).toBe('target1');
+    });
+
+    it('should not discover action when target lying down has covered asshole', async () => {
+      // Arrange - target lying down but wearing torso_lower clothing
+      setupEntities({
+        targetFacingAway: false,  // Not facing away
+        targetLyingDown: true,     // IS lying down
+        targetHasAsshole: true,
+        assholeCovered: true,      // But asshole is covered
+        actorHasPenis: true,
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert - action should NOT be available when asshole is covered
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(0);
+    });
+
+    it('should discover action when target is both facing away AND lying down (regression test)', async () => {
+      // Edge case: both positioning conditions are true
+      setupEntities({
+        targetFacingAway: true,   // Facing away
+        targetLyingDown: true,    // AND lying down
+        targetHasAsshole: true,
+        assholeCovered: false,
+        actorHasPenis: true,
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert - action SHOULD be available (OR logic satisfied by both conditions)
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(1);
+      expect(teaseActions[0].params.targetId).toBe('target1');
+    });
+
+    it('should still discover action with facing_away alone (backward compatibility)', async () => {
+      // Regression test: ensure original behavior (facing_away only) still works
+      setupEntities({
+        targetFacingAway: true,   // Original condition
+        targetLyingDown: false,   // Not using new condition
+        targetHasAsshole: true,
+        assholeCovered: false,
+        actorHasPenis: true,
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert - action SHOULD still be available (backward compatibility preserved)
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(1);
+      expect(teaseActions[0].params.targetId).toBe('target1');
     });
   });
 });

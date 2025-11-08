@@ -36,6 +36,8 @@ import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/u
 import BreakClosenessWithTargetHandler from '../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
+import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
+import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
@@ -148,6 +150,16 @@ export class ModTestHandlerFactory {
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
       LOG_MESSAGE: new LogHandler({ logger }),
+      FOR_EACH: new ForEachHandler({
+        operationInterpreter: () => ({ execute: jest.fn() }),
+        jsonLogic: { evaluate: jest.fn((rule, data) => data) },
+        logger,
+      }),
+      IF: new IfHandler({
+        operationInterpreter: () => ({ execute: jest.fn() }),
+        jsonLogic: { evaluate: jest.fn((rule, data) => data) },
+        logger,
+      }),
     };
 
     // Add QUERY_LOOKUP handler if dataRegistry is provided
@@ -683,6 +695,13 @@ export class ModTestHandlerFactory {
       }),
     };
 
+    // Create a mock body description composer for testing
+    const bodyDescriptionComposer = {
+      composeDescription: jest.fn(
+        async (entity) => `Description for ${entity.id}`
+      ),
+    };
+
     return {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
@@ -737,6 +756,12 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
         closenessCircleService,
+      }),
+      REGENERATE_DESCRIPTION: new RegenerateDescriptionHandler({
+        entityManager,
+        bodyDescriptionComposer,
+        logger,
+        safeEventDispatcher: safeDispatcher,
       }),
     };
   }

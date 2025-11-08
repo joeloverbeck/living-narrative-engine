@@ -1,6 +1,27 @@
 {
   "defaultConfigId": "claude-sonnet-4.5",
   "configs": {
+    "kimi-k2-thinking": {
+      "configId": "kimi-k2-thinking",
+      "displayName": "Kimi K2 Thinking (OpenRouter - Tool Calling)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "moonshotai/kimi-k2-thinking",
+      "apiType": "openrouter",
+      "jsonOutputStrategy": {
+        "method": "openrouter_tool_calling",
+        "toolName": "function_call"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 262144
+    },
     "deepseek-v3.2-exp": {
       "configId": "deepseek-v3.2-exp",
       "displayName": "DeepSeek V3.2 Exp (OpenRouter - Tool Calling)",

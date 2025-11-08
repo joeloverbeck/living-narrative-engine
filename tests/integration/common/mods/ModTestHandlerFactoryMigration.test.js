@@ -35,6 +35,7 @@ import AtomicModifyComponentHandler from '../../../../src/logic/operationHandler
 import BreakClosenessWithTargetHandler from '../../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import MergeClosenessCircleHandler from '../../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import QueryLookupHandler from '../../../../src/logic/operationHandlers/queryLookupHandler.js';
+import RegenerateDescriptionHandler from '../../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
@@ -279,6 +280,14 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         logger,
         safeEventDispatcher: safeDispatcher,
         closenessCircleService,
+      }),
+      REGENERATE_DESCRIPTION: new RegenerateDescriptionHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        bodyDescriptionComposer: {
+          composeDescription: jest.fn(() => 'Test description'),
+        },
       }),
     };
   }

@@ -95,6 +95,8 @@ export function registerInterpreters(container) {
     registry.register('QUERY_ENTITIES', bind(tokens.QueryEntitiesHandler));
     registry.register('SET_VARIABLE', bind(tokens.SetVariableHandler));
     registry.register('END_TURN', bind(tokens.EndTurnHandler));
+    registry.register('FOR_EACH', bind(tokens.ForEachHandler));
+    registry.register('IF', bind(tokens.IfHandler));
     registry.register(
       'SYSTEM_MOVE_ENTITY',
       bind(tokens.SystemMoveEntityHandler)

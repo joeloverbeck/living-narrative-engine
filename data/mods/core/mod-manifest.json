@@ -29,6 +29,7 @@
       "name.component.json",
       "notes.component.json",
       "owned_by.component.json",
+      "participation.component.json",
       "perception_log.component.json",
       "personality.component.json",
       "player.component.json",

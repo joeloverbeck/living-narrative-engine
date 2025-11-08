@@ -314,7 +314,6 @@ class SystemLogicInterpreter extends BaseService {
       );
       return;
     }
-
     // Keep original format for tests
     this.#logger.debug(
       `Received event: ${event.type}. Found ${rules.length} potential rule(s).`,
