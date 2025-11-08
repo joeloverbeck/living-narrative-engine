@@ -2227,12 +2227,23 @@ beforeEach(async () => {
     );
     const scopeEngine = new ScopeEngine();
 
+    // Capture testEnv reference for use in resolver closure
+    const testEnv = this.testEnv;
+
     const resolver = (context) => {
-      // Build runtime context for scope resolution
+      // Build runtime context with getters for dynamic access
+      // This ensures the resolver always uses the current entity manager,
+      // even after reset() replaces it
       const runtimeCtx = {
-        entityManager: this.testEnv.entityManager,
-        jsonLogicEval: this.testEnv.jsonLogic,
-        logger: this.testEnv.logger,
+        get entityManager() {
+          return testEnv.entityManager;
+        },
+        get jsonLogicEval() {
+          return testEnv.jsonLogic;
+        },
+        get logger() {
+          return testEnv.logger;
+        },
       };
 
       try {

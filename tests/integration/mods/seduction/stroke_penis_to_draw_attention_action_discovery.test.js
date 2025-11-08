@@ -177,7 +177,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
     it('keeps seduction self-targeting defaults', () => {
       expect(strokePenisToDrawAttentionAction.targets).toBe('none');
       expect(strokePenisToDrawAttentionAction.forbidden_components).toEqual({
-        actor: ['positioning:hugging', 'positioning:receiving_blowjob'],
+        actor: ['positioning:hugging', 'positioning:receiving_blowjob', 'positioning:fucking_anally'],
       });
     });
   });
@@ -241,6 +241,29 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
           strokePenisToDrawAttentionAction.prerequisites,
           strokePenisToDrawAttentionAction,
           testFixture.entityManager.getEntityInstance(actorId)
+        );
+      expect(prerequisitesPassed).toBe(true);
+
+      const actions = testFixture.discoverActions(actorId);
+
+      expect(actions).not.toHaveAction(ACTION_ID);
+    });
+
+    it('should NOT appear when actor has fucking_anally component', () => {
+      const { actorId } = loadScenario(testFixture);
+
+      // Add fucking_anally component to the actor
+      const actor = testFixture.entityManager.getEntityInstance(actorId);
+      actor.components['positioning:fucking_anally'] = {
+        being_fucked_entity_id: 'other_entity',
+        initiated: true,
+      };
+
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          strokePenisToDrawAttentionAction.prerequisites,
+          strokePenisToDrawAttentionAction,
+          actor
         );
       expect(prerequisitesPassed).toBe(true);
 

@@ -5,6 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import lieDownAction from '../../../../data/mods/positioning/actions/lie_down.action.json';
 
 describe('positioning:lie_down action discovery', () => {
@@ -42,6 +43,7 @@ describe('positioning:lie_down action discovery', () => {
         'positioning:bending_over',
         'positioning:kneeling_before',
         'positioning:lying_down',
+        'positioning:fucking_anally',
       ]);
     });
 
@@ -145,6 +147,30 @@ describe('positioning:lie_down action discovery', () => {
       //
       // This demonstrates the multiple target resolution behavior
       expect(true).toBe(true);
+    });
+
+    it('should NOT appear when actor has fucking_anally component', () => {
+      const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+
+      // Alice is actively fucking someone anally
+      scenario.actor.components['positioning:fucking_anally'] = {
+        being_fucked_entity_id: 'other_entity',
+        initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      const bed = new ModEntityBuilder('bed1')
+        .withName('Bed')
+        .atLocation(room.id)
+        .withComponent('positioning:allows_lying_on', {})
+        .build();
+
+      testFixture.reset([room, bed, scenario.actor]);
+
+      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = actions.map((action) => action.id);
+
+      expect(ids).not.toContain('positioning:lie_down');
     });
   });
 });
