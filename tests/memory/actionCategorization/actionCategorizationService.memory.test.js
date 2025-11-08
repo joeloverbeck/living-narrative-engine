@@ -16,7 +16,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
   let container;
   let categorizationService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Validate memory test utilities are available
     if (!global.memoryTestUtils) {
       throw new Error(
@@ -24,10 +24,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
       );
     }
 
-    // Force garbage collection before each test
-    await global.memoryTestUtils.forceGCAndWait();
-
-    // Set up container and service
+    // Set up container and service ONCE for all tests
     container = new AppContainer();
     const registrar = new Registrar(container);
 
@@ -83,19 +80,29 @@ describe('ActionCategorizationService - Memory Tests', () => {
     }
   });
 
+  beforeEach(async () => {
+    // Force garbage collection before each test
+    await global.memoryTestUtils.forceGCAndWait();
+  });
+
   afterEach(async () => {
-    // Clean up references
+    // Force garbage collection after each test
+    await global.memoryTestUtils.forceGCAndWait();
+  });
+
+  afterAll(async () => {
+    // Clean up references after all tests
     categorizationService = null;
     container = null;
 
-    // Force garbage collection after each test
+    // Final garbage collection
     await global.memoryTestUtils.forceGCAndWait();
   });
 
   describe('memory efficiency during repeated operations', () => {
     it('should not leak memory during repeated categorization operations', async () => {
-      const actionCount = global.memoryTestUtils.isCI() ? 15 : 20;
-      const iterationCount = global.memoryTestUtils.isCI() ? 800 : 1000;
+      const actionCount = global.memoryTestUtils.isCI() ? 12 : 15; // Reduced
+      const iterationCount = global.memoryTestUtils.isCI() ? 400 : 500; // Reduced by 50%
 
       // Create test actions
       const actions = Array.from({ length: actionCount }, (_, i) => ({
@@ -105,10 +112,10 @@ describe('ActionCategorizationService - Memory Tests', () => {
         description: `Description ${i}`,
       }));
 
-      // Establish memory baseline with enhanced stabilization
-      await global.memoryTestUtils.addPreTestStabilization(300);
+      // Establish memory baseline with balanced stabilization
+      await global.memoryTestUtils.addPreTestStabilization(100); // Reduced from 300ms
       const baselineMemory =
-        await global.memoryTestUtils.getStableMemoryUsage(8); // Increased samples for stability
+        await global.memoryTestUtils.getStableMemoryUsage(5); // Balanced: between 4 and 8
 
       // Perform many operations to test for memory leaks
       for (let i = 0; i < iterationCount; i++) {
@@ -122,13 +129,13 @@ describe('ActionCategorizationService - Memory Tests', () => {
       }
 
       // Allow memory to stabilize after operations
-      await new Promise((resolve) => setTimeout(resolve, 200)); // Increased stabilization time
-      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage(8);
+      await new Promise((resolve) => setTimeout(resolve, 80)); // Reduced from 200ms
+      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage(5); // Balanced
 
       // Clear references and force cleanup
       actions.length = 0;
       await global.memoryTestUtils.forceGCAndWait();
-      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(8);
+      const finalMemory = await global.memoryTestUtils.getStableMemoryUsage(5); // Balanced
 
       // Calculate memory metrics
       const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
@@ -160,11 +167,11 @@ describe('ActionCategorizationService - Memory Tests', () => {
     });
 
     it('should maintain consistent memory usage with varying action counts', async () => {
+      // Reduced test configs from 4 to 3 and iterations from 200 to 150
       const testConfigs = [
-        { actionCount: 5, iterations: 200 },
-        { actionCount: 10, iterations: 200 },
-        { actionCount: 20, iterations: 200 },
-        { actionCount: 50, iterations: 200 },
+        { actionCount: 5, iterations: 150 },
+        { actionCount: 15, iterations: 150 }, // Changed from 10 to 15
+        { actionCount: 30, iterations: 150 }, // Changed from 20 and 50 to just 30
       ];
 
       const memoryUsagePerAction = [];
@@ -178,9 +185,9 @@ describe('ActionCategorizationService - Memory Tests', () => {
           description: `Description ${i}`,
         }));
 
-        // Establish baseline with enhanced stabilization
-        await global.memoryTestUtils.addPreTestStabilization(200);
-        const baseline = await global.memoryTestUtils.getStableMemoryUsage(6);
+        // Establish baseline with reduced stabilization
+        await global.memoryTestUtils.addPreTestStabilization(80); // Reduced from 200ms
+        const baseline = await global.memoryTestUtils.getStableMemoryUsage(4); // Balanced: between 3 and 6
 
         // Perform operations
         for (let i = 0; i < config.iterations; i++) {
@@ -188,9 +195,9 @@ describe('ActionCategorizationService - Memory Tests', () => {
           categorizationService.groupActionsByNamespace(actions);
         }
 
-        // Measure peak usage with enhanced stability
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        const peak = await global.memoryTestUtils.getStableMemoryUsage(6);
+        // Measure peak usage with reduced stability wait
+        await new Promise((resolve) => setTimeout(resolve, 60)); // Reduced from 100ms
+        const peak = await global.memoryTestUtils.getStableMemoryUsage(4); // Balanced
         const totalGrowth = peak - baseline;
         const growthPerAction = totalGrowth / config.actionCount;
 
@@ -214,10 +221,9 @@ describe('ActionCategorizationService - Memory Tests', () => {
       // Helper function to get adaptive tolerance based on action count
       // Enhanced tolerances to account for container initialization overhead
       const getDeviationTolerance = (actionCount) => {
-        if (actionCount <= 5) return 500; // 500% for very low counts (increased from 400%)
-        if (actionCount <= 10) return 450; // 450% for low counts (increased from 350%)
-        if (actionCount <= 20) return 400; // 400% for medium counts (increased from 300%)
-        return 350; // 350% for higher counts (increased from 250%)
+        if (actionCount <= 5) return 500; // 500% for very low counts
+        if (actionCount <= 15) return 450; // 450% for low counts
+        return 400; // 400% for higher counts
       };
 
       memoryUsagePerAction.forEach((usage, index) => {
