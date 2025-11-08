@@ -171,7 +171,7 @@ class TurnManager extends ITurnManager {
     this.#scheduler = scheduler;
     this.#roundManager =
       roundManager || new RoundManager(turnOrderService, entityManager, logger);
-    this.#turnCycle = new TurnCycle(turnOrderService, logger);
+    this.#turnCycle = new TurnCycle(turnOrderService, entityManager, logger);
     this.#eventSubscription = new TurnEventSubscription(
       dispatcher,
       logger,

@@ -70,6 +70,7 @@ const TurnManagerFactoryMixin = createServiceFactoryMixin(
         getNextEntity: jest.fn(),
         startNewRound: jest.fn(),
         clearCurrentRound: jest.fn(),
+        getCurrentOrder: jest.fn().mockReturnValue([]),
       },
     turnHandlerResolver: () =>
       overrides.turnHandlerResolver ?? { resolveHandler: jest.fn() },
