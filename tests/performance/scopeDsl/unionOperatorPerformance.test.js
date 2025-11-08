@@ -65,6 +65,11 @@ describe('Union Operator Performance', () => {
       debug: jest.fn(),
     };
 
+    // Create a simple jsonLogicEval mock
+    const jsonLogicEval = {
+      evaluate: jest.fn(),
+    };
+
     // Create a simple component registry
     const componentRegistry = {
       getEntitiesWithComponent: jest.fn((componentId) => {
@@ -128,6 +133,7 @@ describe('Union Operator Performance', () => {
 
     runtimeCtx = {
       entityManager: mockEntityManager,
+      jsonLogicEval,
       componentRegistry,
       logger,
     };

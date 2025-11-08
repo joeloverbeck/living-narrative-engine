@@ -23,6 +23,9 @@ describe('Error Message Validation Performance', () => {
           getComponentData: jest.fn(() => ({})),
           getEntityInstance: jest.fn(() => actorEntity),
         },
+        jsonLogicEval: {
+          evaluate: jest.fn(() => true),
+        },
         logger: { debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
       };
 

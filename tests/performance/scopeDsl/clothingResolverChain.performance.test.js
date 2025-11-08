@@ -48,7 +48,20 @@ describe('Clothing Resolver Chain Performance', () => {
       },
     };
 
+    // Create mock entity manager
+    const mockEntityManager = {
+      getEntity: (id) => mockRuntimeContext.entities?.[id],
+      getEntityInstance: (id) => mockRuntimeContext.entities?.[id],
+    };
+
+    // Create mock jsonLogicEval
+    const mockJsonLogicEval = {
+      evaluate: () => true,
+    };
+
     mockRuntimeContext = {
+      entityManager: mockEntityManager,
+      jsonLogicEval: mockJsonLogicEval,
       entities: {
         leather_jacket_001: {
           id: 'leather_jacket_001',

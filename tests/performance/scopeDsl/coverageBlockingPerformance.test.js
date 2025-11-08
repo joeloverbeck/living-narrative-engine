@@ -34,6 +34,7 @@ const targetTopMostTorsoLowerNoAccessoriesScopeContent = fs.readFileSync(
 describe('Coverage Blocking Performance Benchmarks', () => {
   let entityManager;
   let logger;
+  let jsonLogicEval;
   let scopeRegistry;
   let scopeEngine;
   let entitiesGateway;
@@ -98,6 +99,10 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       error: jest.fn(),
     };
 
+    jsonLogicEval = {
+      evaluate: jest.fn(),
+    };
+
     entityManager = new SimpleEntityManager([]);
     
     // Create entities gateway
@@ -142,6 +147,8 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       const actorEntity = entityManager.getEntityInstance(entityId);
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         entitiesGateway,
       };
 
@@ -192,6 +199,8 @@ describe('Coverage Blocking Performance Benchmarks', () => {
         const actorEntity = entityManager.getEntityInstance(entityId);
         const runtimeCtx = {
           entityManager,
+          jsonLogicEval,
+          logger,
           entitiesGateway,
         };
 
@@ -272,6 +281,8 @@ describe('Coverage Blocking Performance Benchmarks', () => {
         const actorEntity = entityManager.getEntityInstance(entityId);
         const runtimeCtx = {
           entityManager,
+          jsonLogicEval,
+          logger,
           entitiesGateway,
         };
         
@@ -311,6 +322,8 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       const actorEntity = entityManager.getEntityInstance(entityId);
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         entitiesGateway,
       };
 
