@@ -27,6 +27,7 @@ class ActorParticipationController {
   #actorParticipationStatus;
   #boundHandleToggle;
   #gameReadyHandler;
+  #statusTimeout = null;
   // Will be read in ACTPARCONPAN-006 when implementing participation toggle updates
   // eslint-disable-next-line no-unused-private-class-members
   #actors = [];
@@ -51,7 +52,7 @@ class ActorParticipationController {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntitiesWithComponent'],
+      requiredMethods: ['getEntitiesWithComponent', 'addComponent'],
     });
 
     this.#eventBus = eventBus;
@@ -166,17 +167,75 @@ class ActorParticipationController {
 
   /**
    * Handle participation toggle events from checkboxes
-   * Placeholder - will be implemented in ACTPARCONPAN-006 to handle component updates
+   * Updates participation component and provides UI feedback
    *
    * @param {Event} event - The change event from the checkbox
    * @private
    */
-  #handleParticipationToggle(event) {
-    if (event.target && event.target.type === 'checkbox') {
-      this.#logger.debug('[ActorParticipation] Participation toggle event received - handler will be implemented in ACTPARCONPAN-006', {
-        checked: event.target.checked,
-        actorId: event.target.dataset?.actorId,
-      });
+  async #handleParticipationToggle(event) {
+    const checkbox = event.target;
+
+    // Validate event target
+    if (checkbox.tagName !== 'INPUT' || checkbox.type !== 'checkbox') {
+      return; // Not a checkbox, ignore
+    }
+
+    const actorId = checkbox.dataset.actorId;
+    const newParticipationState = checkbox.checked;
+
+    if (!actorId) {
+      this.#logger.warn('[ActorParticipation] Checkbox missing data-actor-id attribute');
+      return;
+    }
+
+    this.#logger.debug(`[ActorParticipation] Toggling participation for actor ${actorId} to ${newParticipationState}`);
+
+    try {
+      const success = await this.#updateParticipation(actorId, newParticipationState);
+      if (success) {
+        const statusMessage = newParticipationState
+          ? `Enabled participation for ${actorId}`
+          : `Disabled participation for ${actorId}`;
+        this.#showStatus(statusMessage, 'success');
+      } else {
+        throw new Error('Failed to update participation component');
+      }
+    } catch (err) {
+      this.#logger.error(`[ActorParticipation] Error updating participation for actor ${actorId}`, err);
+      // Revert checkbox state
+      checkbox.checked = !newParticipationState;
+      this.#showStatus('Error updating participation', 'error');
+    }
+  }
+
+  /**
+   * Update the participation component for an actor
+   * Uses addComponent which handles both adding new and updating existing components
+   *
+   * @param {string} actorId - The entity ID of the actor
+   * @param {boolean} participating - The new participation state
+   * @returns {Promise<boolean>} True if update succeeded, false otherwise
+   * @private
+   */
+  async #updateParticipation(actorId, participating) {
+    try {
+      // addComponent() handles both adding new components and updating existing ones
+      const success = await this.#entityManager.addComponent(
+        actorId,
+        PARTICIPATION_COMPONENT_ID,
+        { participating }
+      );
+
+      if (success) {
+        this.#logger.info(`[ActorParticipation] Updated participation for actor ${actorId} to ${participating}`);
+        return true;
+      }
+
+      this.#logger.warn(`[ActorParticipation] Failed to update participation component for actor ${actorId}`);
+      return false;
+    } catch (err) {
+      this.#logger.error(`[ActorParticipation] Error updating participation component for actor ${actorId}`, err);
+      return false;
     }
   }
 
@@ -288,6 +347,42 @@ class ActorParticipationController {
   }
 
   /**
+   * Display a status message with auto-clear functionality
+   * Shows success or error messages that automatically clear after 3 seconds
+   *
+   * @param {string} message - The message to display
+   * @param {string} type - The message type ('success' or 'error')
+   * @private
+   */
+  #showStatus(message, type = 'success') {
+    if (!this.#actorParticipationStatus) {
+      this.#logger.warn('[ActorParticipation] Cannot show status: status element not found');
+      return;
+    }
+
+    // Clear any existing timeout
+    if (this.#statusTimeout) {
+      clearTimeout(this.#statusTimeout);
+      this.#statusTimeout = null;
+    }
+
+    // Update status text and class
+    this.#actorParticipationStatus.textContent = message;
+    this.#actorParticipationStatus.className = `status-message status-${type}`;
+
+    // Auto-clear after 3 seconds
+    this.#statusTimeout = setTimeout(() => {
+      if (this.#actorParticipationStatus) {
+        this.#actorParticipationStatus.textContent = '';
+        this.#actorParticipationStatus.className = 'status-message';
+      }
+      this.#statusTimeout = null;
+    }, 3000);
+
+    this.#logger.debug(`[ActorParticipation] Displayed status: ${message} (${type})`);
+  }
+
+  /**
    * Refresh the actor participation panel
    * Reloads actors from entity manager and re-renders the list
    * Can be called externally when actor data changes
@@ -305,6 +400,12 @@ class ActorParticipationController {
   cleanup() {
     try {
       this.#logger.info('[ActorParticipation] Cleaning up...');
+
+      // Clear status timeout
+      if (this.#statusTimeout) {
+        clearTimeout(this.#statusTimeout);
+        this.#statusTimeout = null;
+      }
 
       // Unsubscribe from event bus
       if (this.#gameReadyHandler) {
