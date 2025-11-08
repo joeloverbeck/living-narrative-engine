@@ -23,27 +23,56 @@ Integrate parameter validation into `ScopeEngine.resolve()` to fail fast with cl
 ### File to Modify
 - **Path**: `src/scopeDsl/engine.js`
 - **Method**: `resolve(ast, actorEntity, runtimeCtx, trace = null)`
-- **Location**: Around line 289
+- **Location**: Line 290
+
+### Current Code Structure
+
+The `resolve()` method currently has the following structure:
+```javascript
+resolve(ast, actorEntity, runtimeCtx, trace = null) {
+  const source = 'ScopeEngine';
+
+  // TEMPORARY DIAGNOSTIC: Log scope resolution entry (lines 293-315)
+  const logger = runtimeCtx?.logger;
+  if (logger && typeof logger.debug === 'function') {
+    logger.debug('[DIAGNOSTIC] ScopeEngine.resolve called:', { ... });
+  } else if (typeof console !== 'undefined' && typeof console.debug === 'function') {
+    console.debug('[DIAGNOSTIC] ScopeEngine.resolve called:', { ... });
+  }
+
+  trace?.addLog('step', 'Starting scope resolution.', source, { ast });
+  // ... rest of method
+}
+```
+
+**Important**: There is existing diagnostic logging code (lines 293-315) marked as "TEMPORARY DIAGNOSTIC". This code attempts to use `runtimeCtx?.logger`, which means validation must happen BEFORE this diagnostic code to ensure fail-fast behavior.
 
 ### Integration Pattern
 
+Add validation as the **very first statements** in the method, before any other code:
+
 ```javascript
 resolve(ast, actorEntity, runtimeCtx, trace = null) {
-  // ADD VALIDATION - Fail fast with clear errors
+  // ADD VALIDATION - Fail fast with clear errors BEFORE any other code
   ParameterValidator.validateAST(ast, 'ScopeEngine.resolve');
   ParameterValidator.validateActorEntity(actorEntity, 'ScopeEngine.resolve');
   ParameterValidator.validateRuntimeContext(runtimeCtx, 'ScopeEngine.resolve');
 
-  // Continue with existing logic
-  const ctx = {
-    actorEntity,
-    runtimeCtx,
-    trace,
-    // ...
-  };
+  // Existing code continues unchanged
+  const source = 'ScopeEngine';
+
+  // TEMPORARY DIAGNOSTIC: Log scope resolution entry
+  const logger = runtimeCtx?.logger;
+  // ... rest of diagnostic logging unchanged
+
   // ... rest of method unchanged
 }
 ```
+
+**Rationale**: Validation must precede all other code (including diagnostics) to ensure:
+1. Fail-fast behavior - invalid parameters are caught immediately
+2. Safe access - the diagnostic code uses `runtimeCtx?.logger`, which relies on runtimeCtx being valid
+3. Clear error messages - users get validation errors before any processing begins
 
 ### Import Statement
 
@@ -54,11 +83,11 @@ import { ParameterValidator } from './core/parameterValidator.js';
 ## Acceptance Criteria
 
 - ✅ Import `ParameterValidator` at top of file
-- ✅ Validation calls added as first statements in `resolve()`
+- ✅ Validation calls added as the **very first statements** in `resolve()` (before `const source = 'ScopeEngine';`)
 - ✅ Validation order: AST → actorEntity → runtimeCtx
-- ✅ All three validations called before any processing
-- ✅ No changes to existing logic after validation
-- ✅ ParameterValidationError propagates to caller
+- ✅ All three validations called before the existing diagnostic logging code
+- ✅ No changes to existing logic after validation (diagnostic logging, trace calls, etc. remain unchanged)
+- ✅ ParameterValidationError propagates to caller without being caught
 - ✅ Source location in errors is "ScopeEngine.resolve"
 
 ## Testing Requirements
@@ -116,6 +145,8 @@ it('should handle missing actorEntity', () => {
   }).toThrow(ParameterValidationError); // Update to expect new error type
 });
 ```
+
+**Note**: The existing diagnostic logging code (lines 293-315) will continue to work after validation is added, since the validation ensures that `runtimeCtx` is valid before the diagnostic code attempts to access `runtimeCtx?.logger`.
 
 ## Rollback Plan
 
