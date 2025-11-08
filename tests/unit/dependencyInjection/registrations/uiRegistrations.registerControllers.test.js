@@ -398,14 +398,15 @@ describe('registerControllers', () => {
   it('should register all controllers', () => {
     registerControllers(mockRegistrar, mockLogger);
 
-    // Count total registrations (6 controllers)
-    expect(mockRegisterWithLog).toHaveBeenCalledTimes(6);
+    // Count total registrations (7 controllers)
+    expect(mockRegisterWithLog).toHaveBeenCalledTimes(7);
 
     // Verify all tokens were registered
     const registeredTokens = mockRegisterWithLog.mock.calls.map(
       (call) => call[1]
     );
     expect(registeredTokens).toContain(tokens.InputStateController);
+    expect(registeredTokens).toContain(tokens.ActorParticipationController);
     expect(registeredTokens).toContain(tokens.PerceptibleEventSenderController);
     expect(registeredTokens).toContain(tokens.ProcessingIndicatorController);
     expect(registeredTokens).toContain(tokens.VisualizerState);
