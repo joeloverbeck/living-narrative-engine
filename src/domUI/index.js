@@ -38,6 +38,7 @@ export * from './engineUIManager.js'; // Assuming this file exists and exports r
 
 // *** ADDED: Export the new ProcessingIndicatorController ***
 export { ProcessingIndicatorController } from './processingIndicatorController.js';
+export { default as ActorParticipationController } from './actorParticipationController.js';
 
 // Entity Lifecycle Monitor
 export { EntityLifecycleMonitor } from './entityLifecycleMonitor.js';
