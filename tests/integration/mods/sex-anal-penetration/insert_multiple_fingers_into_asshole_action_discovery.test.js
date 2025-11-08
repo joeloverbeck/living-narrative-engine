@@ -4,10 +4,6 @@ import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import '../../../common/mods/domainMatchers.js';
 import insertMultipleFingersIntoAssholeActionJson from '../../../../data/mods/sex-anal-penetration/actions/insert_multiple_fingers_into_asshole.action.json' assert { type: 'json' };
-import fs from 'fs';
-import path from 'path';
-import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
-import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 
 describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action discovery', () => {
   let testFixture;
@@ -20,44 +16,12 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
     testFixture.testEnv.actionIndex.buildIndex([insertMultipleFingersIntoAssholeActionJson]);
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
-    // Load positioning condition needed by the custom scope
-    await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
-    ]);
-
-    // Load and register the sex-anal-penetration mod's own scope
-    const scopePath = path.join(
-      process.cwd(),
-      'data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_accessible_from_behind.scope'
+    // Register the sex-anal-penetration mod's custom scope
+    // This automatically loads dependency conditions like positioning:actor-in-entity-facing-away
+    await testFixture.registerCustomScope(
+      'sex-anal-penetration',
+      'actors_with_exposed_asshole_accessible_from_behind'
     );
-    const scopeContent = fs.readFileSync(scopePath, 'utf-8');
-    const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
-
-    // Register the mod's scope using ScopeEngine
-    const scopeEngine = new ScopeEngine();
-
-    for (const [scopeName, scopeAst] of parsedScopes) {
-      const scopeResolver = (context) => {
-        // Build runtime context with jsonLogicEval
-        const runtimeCtx = {
-          entityManager: testFixture.testEnv.entityManager,
-          jsonLogicEval: testFixture.testEnv.jsonLogic,
-          logger: testFixture.testEnv.logger,
-        };
-
-        // Pass the full context to scopeEngine.resolve - it expects context with actor/entity properties
-        // The scope DSL starts with "actor.", so it needs context.actor to be defined
-        const result = scopeEngine.resolve(scopeAst, context, runtimeCtx);
-
-        // Return in the expected format for ScopeResolverHelpers
-        return { success: true, value: result };
-      };
-      ScopeResolverHelpers._registerResolvers(
-        testFixture.testEnv,
-        testFixture.testEnv.entityManager,
-        { [scopeName]: scopeResolver }
-      );
-    }
   });
 
   afterEach(() => {
