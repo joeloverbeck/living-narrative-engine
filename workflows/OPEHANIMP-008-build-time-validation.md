@@ -22,6 +22,36 @@ A build-time validation script will:
 - Prevent broken code from being committed
 - Serve as documentation of what's registered
 
+## Actual Codebase Structure (Validated 2025-11-08)
+
+Based on analysis of the current codebase, the operation handler system has the following structure:
+
+**Schema Organization**:
+- Main schema: `data/schemas/operation.schema.json` (NOT in operations/ subdirectory)
+- Operation schemas: `data/schemas/operations/*.schema.json`
+- Schema uses `anyOf` array within `$defs.Operation` (NOT `oneOf`)
+
+**Token Naming Convention**:
+- Operation handler tokens: `[OperationName]Handler` (e.g., `DrinkFromHandler`)
+- **NO "I" prefix** for operation handlers (unlike service interfaces like `ILogger`)
+- Explicitly documented in `tokens-core.js` lines 14-20
+
+**DI Registration Pattern**:
+- Handler registrations use `handlerFactories` array in `operationHandlerRegistrations.js`
+- Format: `[token, HandlerClass, factoryFunction]`
+- NOT direct `container.register()` calls
+
+**Operation Registry Mapping**:
+- Uses `registry.register()` calls within `OperationRegistry` factory
+- NOT `registerOperation()` calls
+- Located in `interpreterRegistrations.js`
+
+**Special Cases**:
+- Some operations in `KNOWN_OPERATION_TYPES` don't have schema files:
+  - `HAS_BODY_PART_WITH_COMPONENT_VALUE` (may be legacy or special-case)
+  - `SEQUENCE` (may be a meta-operation)
+- Validation script should handle these gracefully
+
 ## Requirements
 
 ### 1. Validation Script
@@ -32,42 +62,44 @@ A build-time validation script will:
 
 1. **Schema Files Check**
    - Scan `data/schemas/operations/*.schema.json`
-   - Exclude `operation.schema.json` and `base-operation.schema.json`
-   - Extract operation type from each schema
+   - Exclude `base-operation.schema.json` and `nested-operation.schema.json`
+   - Extract operation type from each schema (`allOf[1].properties.type.const`)
 
 2. **Schema References Check**
-   - Read `operation.schema.json`
-   - Verify each operation schema is referenced in `oneOf` array
+   - Read `data/schemas/operation.schema.json` (root schemas directory, NOT in operations/)
+   - Verify each operation schema is referenced in `anyOf` array within `$defs.Operation`
    - Report any orphaned schema files
 
 3. **Pre-validation Whitelist Check**
-   - Read `preValidationUtils.js`
+   - Read `src/utils/preValidationUtils.js`
    - Extract `KNOWN_OPERATION_TYPES` array
    - Verify all operation types from schemas are in whitelist
    - Report missing entries
+   - **Note**: Whitelist may contain entries without schemas (e.g., SEQUENCE, HAS_BODY_PART_WITH_COMPONENT_VALUE) - these are valid
 
 4. **DI Token Definitions Check**
-   - Read `tokens-core.js`
-   - Extract all handler tokens
+   - Read `src/dependencyInjection/tokens/tokens-core.js`
+   - Extract all handler tokens from `coreTokens` object
    - Verify token exists for each operation
-   - Check naming convention (I[OperationName]Handler)
+   - Check naming convention ([OperationName]Handler - NO "I" prefix for operation handlers)
 
 5. **Handler Factory Registrations Check**
-   - Read `operationHandlerRegistrations.js`
-   - Extract all `container.register()` calls
-   - Verify each operation has handler registered
-   - Check imports exist
+   - Read `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
+   - Extract all entries from `handlerFactories` array (format: [token, HandlerClass, factory])
+   - Verify each operation has handler registered in the array
+   - Check imports exist for all handler classes
 
 6. **Operation Registry Mappings Check**
-   - Read `interpreterRegistrations.js`
-   - Extract all `registerOperation()` calls
+   - Read `src/dependencyInjection/registrations/interpreterRegistrations.js`
+   - Extract all `registry.register()` calls within the OperationRegistry factory
    - Verify each operation type is mapped to a token
-   - Check token names match
+   - Check token names match exactly
 
 7. **Handler File Existence Check**
-   - Verify handler file exists for each operation
-   - Check file naming convention matches
+   - Verify handler file exists at `src/logic/operationHandlers/[operationName]Handler.js`
+   - Check file naming convention: camelCase + Handler.js (e.g., `drinkFromHandler.js`)
    - Report missing files
+   - Skip special operations without schemas (SEQUENCE, HAS_BODY_PART_WITH_COMPONENT_VALUE)
 
 8. **Naming Consistency Check**
    - Verify operation type in schema matches everywhere
@@ -162,8 +194,8 @@ $ npm run validate:operations
      Fix: Add 'DRINK_ENTIRELY' to KNOWN_OPERATION_TYPES array
      File: src/utils/preValidationUtils.js
 
-  ❌ Token IDrinkFromHandler not defined for operation DRINK_FROM (tokens-core.js)
-     Fix: Add IDrinkFromHandler: 'IDrinkFromHandler' to tokens object
+  ❌ Token DrinkFromHandler not defined for operation DRINK_FROM (tokens-core.js)
+     Fix: Add DrinkFromHandler: 'DrinkFromHandler' to coreTokens object (NO "I" prefix)
      File: src/dependencyInjection/tokens/tokens-core.js
 
   ❌ Handler file drinkFromHandler.js not found for operation DRINK_FROM
@@ -269,13 +301,17 @@ if (errors.length > 0) {
 // Helper functions
 function scanOperationSchemas() {
   const schemaFiles = glob.sync('data/schemas/operations/*.schema.json')
-    .filter(f => !f.endsWith('operation.schema.json') && !f.endsWith('base-operation.schema.json'));
+    .filter(f =>
+      !f.endsWith('base-operation.schema.json') &&
+      !f.endsWith('nested-operation.schema.json')
+    );
 
   const operations = [];
 
   for (const schemaFile of schemaFiles) {
     try {
       const schema = JSON.parse(fs.readFileSync(schemaFile, 'utf8'));
+      // Extract operation type from allOf[1].properties.type.const
       const operationType = schema.allOf?.[1]?.properties?.type?.const;
 
       if (operationType) {
@@ -297,10 +333,11 @@ function scanOperationSchemas() {
 
 function checkSchemaReferences(operations) {
   try {
-    const operationSchemaPath = 'data/schemas/operations/operation.schema.json';
+    const operationSchemaPath = 'data/schemas/operation.schema.json';
     const operationSchema = JSON.parse(fs.readFileSync(operationSchemaPath, 'utf8'));
 
-    const referencedSchemas = operationSchema.oneOf?.map(ref =>
+    // Schema uses anyOf within $defs.Operation
+    const referencedSchemas = operationSchema.$defs?.Operation?.anyOf?.map(ref =>
       path.basename(ref.$ref)
     ) || [];
 
@@ -310,8 +347,8 @@ function checkSchemaReferences(operations) {
       if (!referencedSchemas.includes(op.schemaFile)) {
         errors.push(
           `❌ Schema ${op.schemaFile} not referenced in operation.schema.json\n` +
-          `   Fix: Add { "$ref": "./${op.schemaFile}" } to oneOf array\n` +
-          `   File: data/schemas/operations/operation.schema.json`
+          `   Fix: Add { "$ref": "./operations/${op.schemaFile}" } to anyOf array in $defs.Operation\n` +
+          `   File: data/schemas/operation.schema.json`
         );
       }
     }
@@ -354,8 +391,13 @@ function checkPreValidationWhitelist(operations) {
 
 // ... Implement remaining check functions ...
 
+/**
+ * Convert operation type to token name
+ * IMPORTANT: Operation handler tokens do NOT use "I" prefix (unlike service interfaces)
+ * @example 'DRINK_FROM' -> 'DrinkFromHandler'
+ */
 function toTokenName(operationType) {
-  return 'I' + operationType
+  return operationType
     .split('_')
     .map(word => word.charAt(0) + word.slice(1).toLowerCase())
     .join('') + 'Handler';
