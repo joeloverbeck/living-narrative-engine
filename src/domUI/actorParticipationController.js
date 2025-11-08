@@ -7,10 +7,11 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { ENGINE_READY_UI } from '../constants/eventIds.js';
-// PARTICIPATION_COMPONENT_ID will be used in ACTPARCONPAN-005 for actor loading
-// Imported here to establish the dependency early
-// eslint-disable-next-line no-unused-vars
-import { PARTICIPATION_COMPONENT_ID } from '../constants/componentIds.js';
+import {
+  ACTOR_COMPONENT_ID,
+  NAME_COMPONENT_ID,
+  PARTICIPATION_COMPONENT_ID,
+} from '../constants/componentIds.js';
 
 /**
  * Controller for the actor participation panel
@@ -20,14 +21,15 @@ class ActorParticipationController {
   #eventBus;
   #documentContext;
   #logger;
-  // Will be used in ACTPARCONPAN-005 to load actors with participation component
-  // eslint-disable-next-line no-unused-private-class-members
   #entityManager;
   #actorParticipationWidget;
   #actorParticipationList;
   #actorParticipationStatus;
   #boundHandleToggle;
   #gameReadyHandler;
+  // Will be read in ACTPARCONPAN-006 when implementing participation toggle updates
+  // eslint-disable-next-line no-unused-private-class-members
+  #actors = [];
 
   /**
    * Creates a new ActorParticipationController
@@ -70,6 +72,16 @@ class ActorParticipationController {
       this.#cacheElements();
       this.#attachEventListeners();
       this.#subscribeToGameEvents();
+
+      // Defensive loading: try to load actors immediately if they're already available
+      try {
+        const actors = this.#loadActors();
+        this.#renderActorList(actors);
+        this.#logger.debug('[ActorParticipation] Defensive actor loading succeeded');
+      } catch (err) {
+        this.#logger.debug('[ActorParticipation] Defensive actor loading failed (expected if actors not yet loaded)', err);
+      }
+
       this.#logger.info('[ActorParticipation] Initialization complete');
     } catch (err) {
       this.#logger.error('[ActorParticipation] Failed to initialize', err);
@@ -138,12 +150,18 @@ class ActorParticipationController {
 
   /**
    * Handle the ENGINE_READY_UI event
-   * Placeholder - will be implemented in ACTPARCONPAN-005 to load actors
+   * Loads actors from entity manager and renders the participation list
    *
    * @private
    */
   #handleGameReady() {
-    this.#logger.info('[ActorParticipation] ✓ ENGINE_READY_UI event received - actor loading will be implemented in ACTPARCONPAN-005');
+    try {
+      this.#logger.info('[ActorParticipation] Loading actors for participation panel');
+      const actors = this.#loadActors();
+      this.#renderActorList(actors);
+    } catch (err) {
+      this.#logger.error('[ActorParticipation] Failed to load actors', err);
+    }
   }
 
   /**
@@ -160,6 +178,124 @@ class ActorParticipationController {
         actorId: event.target.dataset?.actorId,
       });
     }
+  }
+
+  /**
+   * Load actors from entity manager
+   * Queries for all entities with the actor component and builds actor data objects
+   *
+   * @returns {Array} Array of actor data objects { id, name, participating }
+   * @private
+   */
+  #loadActors() {
+    // Use getEntitiesWithComponent - returns Entity[] already filtered
+    const actorEntities = this.#entityManager.getEntitiesWithComponent(ACTOR_COMPONENT_ID);
+
+    const actors = actorEntities.map((entity) => {
+      // Get name from core:name component (has 'text' property)
+      const nameData = entity.getComponentData(NAME_COMPONENT_ID);
+
+      // Get participation from core:participation component (has 'participating' property)
+      const participationData = entity.getComponentData(PARTICIPATION_COMPONENT_ID);
+
+      return {
+        id: entity.id,
+        name: nameData?.text || entity.id, // Fallback to entity ID
+        participating: participationData?.participating ?? true,
+      };
+    });
+
+    // Sort alphabetically by name
+    actors.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Store actors for future reference
+    this.#actors = actors;
+
+    this.#logger.debug(`[ActorParticipation] Loaded ${actors.length} actors`);
+    return actors;
+  }
+
+  /**
+   * Render the actor list UI
+   * Clears existing content and renders either the actor list or empty state
+   *
+   * @param {Array} actors - Array of actor data objects
+   * @private
+   */
+  #renderActorList(actors) {
+    if (!this.#actorParticipationList) {
+      this.#logger.warn('[ActorParticipation] Cannot render actors: list container not found');
+      return;
+    }
+
+    // Clear existing content
+    this.#actorParticipationList.innerHTML = '';
+
+    if (actors.length === 0) {
+      this.#renderEmpty();
+      return;
+    }
+
+    // Create and append actor items
+    actors.forEach((actor) => {
+      const listItem = this.#createActorListItem(actor);
+      this.#actorParticipationList.appendChild(listItem);
+    });
+
+    this.#logger.info(`[ActorParticipation] Rendered ${actors.length} actors in participation panel`);
+  }
+
+  /**
+   * Create a list item element for an actor
+   * Builds the checkbox and label structure for the actor
+   *
+   * @param {object} actor - Actor data object { id, name, participating }
+   * @returns {HTMLElement} The actor list item container
+   * @private
+   */
+  #createActorListItem(actor) {
+    const container = this.#documentContext.create('div');
+    container.className = 'actor-participation-item';
+
+    const checkbox = this.#documentContext.create('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `actor-participation-${actor.id}`;
+    checkbox.checked = actor.participating;
+    checkbox.dataset.actorId = actor.id;
+
+    const label = this.#documentContext.create('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = actor.name;
+
+    container.appendChild(checkbox);
+    container.appendChild(label);
+
+    return container;
+  }
+
+  /**
+   * Render the empty state message
+   * Displays a message when no actors are available
+   *
+   * @private
+   */
+  #renderEmpty() {
+    const emptyMessage = this.#documentContext.create('p');
+    emptyMessage.className = 'empty-list-message';
+    emptyMessage.textContent = 'No actors found';
+    this.#actorParticipationList.appendChild(emptyMessage);
+    this.#logger.debug('[ActorParticipation] Rendered empty actor list message');
+  }
+
+  /**
+   * Refresh the actor participation panel
+   * Reloads actors from entity manager and re-renders the list
+   * Can be called externally when actor data changes
+   */
+  refresh() {
+    this.#logger.info('[ActorParticipation] Refreshing actor participation panel');
+    const actors = this.#loadActors();
+    this.#renderActorList(actors);
   }
 
   /**
