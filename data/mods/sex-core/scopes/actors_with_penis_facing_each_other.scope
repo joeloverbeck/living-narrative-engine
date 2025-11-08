@@ -4,6 +4,7 @@ sex-core:actors_with_penis_facing_each_other := actor.components.positioning:clo
   "and": [
     {"hasPartOfType": [".", "penis"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},
+    {"!": {"condition_ref": "positioning:entity-in-facing-away"}},
     {"not": {"isSocketCovered": [".", "penis"]}},
     {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
     {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
