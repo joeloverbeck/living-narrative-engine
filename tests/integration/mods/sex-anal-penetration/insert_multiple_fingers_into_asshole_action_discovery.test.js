@@ -8,7 +8,6 @@ import fs from 'fs';
 import path from 'path';
 import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
-import actorInEntityFacingAwayCondition from '../../../../data/mods/positioning/conditions/actor-in-entity-facing-away.condition.json' assert { type: 'json' };
 
 describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action discovery', () => {
   let testFixture;
@@ -21,8 +20,19 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
     testFixture.testEnv.actionIndex.buildIndex([insertMultipleFingersIntoAssholeActionJson]);
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
-    // Load the positioning condition required by the scope
-    testFixture.testEnv.dataRegistry.add('condition', actorInEntityFacingAwayCondition);
+    // Load positioning condition needed by the custom scope
+    const positioningCondition = await import('../../../../data/mods/positioning/conditions/actor-in-entity-facing-away.condition.json', {
+      assert: { type: 'json' }
+    });
+
+    // Extend the dataRegistry mock to return the positioning condition
+    const originalGetCondition = testFixture.testEnv.dataRegistry.getConditionDefinition;
+    testFixture.testEnv.dataRegistry.getConditionDefinition = jest.fn((conditionId) => {
+      if (conditionId === 'positioning:actor-in-entity-facing-away') {
+        return positioningCondition.default;
+      }
+      return originalGetCondition(conditionId);
+    });
 
     // Load and register the sex-anal-penetration mod's own scope
     const scopePath = path.join(
@@ -44,10 +54,9 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
           logger: testFixture.testEnv.logger,
         };
 
-        // Extract actor entity from context
-        const actorEntity = context.actor || context.entity;
-
-        const result = scopeEngine.resolve(scopeAst, actorEntity, runtimeCtx);
+        // Pass the full context to scopeEngine.resolve - it expects context with actor/entity properties
+        // The scope DSL starts with "actor.", so it needs context.actor to be defined
+        const result = scopeEngine.resolve(scopeAst, context, runtimeCtx);
 
         // Return in the expected format for ScopeResolverHelpers
         return { success: true, value: result };
