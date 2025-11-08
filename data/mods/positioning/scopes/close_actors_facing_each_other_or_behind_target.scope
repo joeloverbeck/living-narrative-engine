@@ -1,5 +1,6 @@
 // Scope for actors in closeness who are either facing each other OR actor is behind the target
 // Excludes scenarios where either actor is kneeling before the other (incompatible vertical positioning)
+// Excludes scenarios where the target is bending over (incompatible with push/turn actions)
 // Used by actions that can work from either face-to-face or behind positions without anatomy requirements
 positioning:close_actors_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
   "and": [
@@ -10,6 +11,7 @@ positioning:close_actors_facing_each_other_or_behind_target := actor.components.
       ]
     },
     {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},
-    {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}}
+    {"!": {"condition_ref": "positioning:actor-kneeling-before-entity"}},
+    {"!": {"condition_ref": "positioning:entity-is-bending-over"}}
   ]
 }]
