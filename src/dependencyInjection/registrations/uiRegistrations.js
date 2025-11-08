@@ -15,6 +15,7 @@ import AlertRouter from '../../alerting/alertRouter.js';
 
 // --- NEW DOM UI Component Imports ---
 import {
+  ActorParticipationController,
   SpeechBubbleRenderer,
   TitleRenderer,
   InputStateController,
@@ -385,6 +386,20 @@ export function registerControllers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         inputElement: c.resolve(tokens.inputElement),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
+    tokens.ActorParticipationController,
+    (c) =>
+      new ActorParticipationController({
+        eventBus: c.resolve(tokens.ISafeEventDispatcher),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
       }),
     { lifecycle: 'singletonFactory' },
     logger
