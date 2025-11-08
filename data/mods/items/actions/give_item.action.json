@@ -7,6 +7,9 @@
   "required_components": {
     "actor": ["items:inventory"]
   },
+  "forbidden_components": {
+    "actor": ["positioning:bending_over"]
+  },
   "targets": {
     "primary": {
       "scope": "positioning:close_actors",
