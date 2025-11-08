@@ -135,18 +135,29 @@ describe('Tease Asshole With Glans Action Discovery Integration Tests', () => {
 
     scopeEngine = new ScopeEngine();
     
-    // Mock prerequisite evaluation to check for penis
+    // Mock prerequisite evaluation to check for penis AND penis uncovered
     prerequisiteEvaluationService = {
       evaluate: jest.fn().mockImplementation((prerequisites, actionDef, actor) => {
-        // Check if the actor has a penis for this specific action
+        // Check if the actor has a penis and it's uncovered for this specific action
         if (actionDef.id === 'sex-anal-penetration:tease_asshole_with_glans' && prerequisites) {
+          const context = { actor };
+
           // Check if actor has penis using the hasPartOfType operator
           const hasPartOfTypeLogic = { hasPartOfType: ['actor', 'penis'] };
-          const context = { actor };
           const hasPenis = jsonLogicEval.evaluate(hasPartOfTypeLogic, context);
-          return hasPenis;
+
+          if (!hasPenis) {
+            return false;
+          }
+
+          // Check if penis is uncovered using the isSocketCovered operator
+          const isSocketCoveredLogic = { isSocketCovered: ['actor', 'penis'] };
+          const isPenisCovered = jsonLogicEval.evaluate(isSocketCoveredLogic, context);
+
+          // Action requires penis to be NOT covered
+          return !isPenisCovered;
         }
-        
+
         return true;
       }),
     };
@@ -349,6 +360,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         targetHasAsshole = true,
         assholeCovered = false,
         actorHasPenis = true,
+        actorPenisCovered = false,
       } = config;
 
       const entities = [
@@ -362,6 +374,36 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
               'anatomy:body': {
                 body: {
                   root: 'groin1',
+                },
+              },
+            }),
+            // Add clothing components for actor penis coverage
+            ...(actorPenisCovered && {
+              'clothing:equipment': {
+                equipped: {
+                  torso_lower: {
+                    base: ['pants_item'],
+                  },
+                },
+              },
+              'clothing:slot_metadata': {
+                slotMappings: {
+                  torso_lower: {
+                    coveredSockets: [
+                      'left_hip',
+                      'right_hip',
+                      'waist_front',
+                      'waist_back',
+                      'pubic_hair',
+                      'penis',
+                      'left_testicle',
+                      'right_testicle',
+                      'vagina',
+                      'asshole',
+                      'left_ass',
+                      'right_ass'
+                    ],
+                  },
                 },
               },
             }),
@@ -823,6 +865,85 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       });
 
       // Assert - action SHOULD still be available (backward compatibility preserved)
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(1);
+      expect(teaseActions[0].params.targetId).toBe('target1');
+    });
+
+    // NEW TEST CASES FOR ACTOR'S PENIS COVERAGE
+    it('should not discover action when actor wears underwear covering penis (underwear layer)', async () => {
+      // Test validates the fix for the bug where action was available
+      // even when actor wore underwear covering their penis
+
+      // Arrange - actor wearing underwear in torso_lower
+      setupEntities({
+        targetFacingAway: true,
+        targetHasAsshole: true,
+        assholeCovered: false,
+        actorHasPenis: true,
+        actorPenisCovered: true,  // Actor wears underwear
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert - action should NOT be available when actor's penis is covered
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(0);
+    });
+
+    it('should not discover action when actor wears pants covering penis (base layer)', async () => {
+      // Test with base layer specifically (pants)
+
+      // Arrange - actor wearing pants (base layer)
+      setupEntities({
+        targetFacingAway: true,
+        targetHasAsshole: true,
+        assholeCovered: false,
+        actorHasPenis: true,
+        actorPenisCovered: true,  // Actor wears pants
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert - action should NOT be available when actor's penis is covered by pants
+      const teaseActions = result.actions.filter(
+        (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
+      );
+      expect(teaseActions).toHaveLength(0);
+    });
+
+    it('should discover action when both actor penis uncovered AND target asshole uncovered (regression test for fix)', async () => {
+      // Regression test to ensure the fix works correctly:
+      // Action should be available when BOTH conditions are met
+
+      // Arrange - both actor and target fully uncovered
+      setupEntities({
+        targetFacingAway: true,
+        targetHasAsshole: true,
+        assholeCovered: false,      // Target's asshole uncovered
+        actorHasPenis: true,
+        actorPenisCovered: false,   // Actor's penis uncovered
+      });
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance('actor1');
+      const result = await actionDiscoveryService.getValidActions(actorEntity, {
+        jsonLogicEval,
+      });
+
+      // Assert - action SHOULD be available when both are uncovered
       const teaseActions = result.actions.filter(
         (action) => action.id === 'sex-anal-penetration:tease_asshole_with_glans'
       );

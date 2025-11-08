@@ -20,6 +20,14 @@
         "hasPartOfType": ["actor", "penis"]
       },
       "failure_message": "You need a penis to perform this action."
+    },
+    {
+      "logic": {
+        "not": {
+          "isSocketCovered": ["actor", "penis"]
+        }
+      },
+      "failure_message": "Your penis must be uncovered to perform this action."
     }
   ],
   "visual": {
