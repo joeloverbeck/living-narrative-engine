@@ -10,17 +10,33 @@
 
 Design and implement a unified scope registration system that consolidates all scope registration logic into a single, well-defined contract. This system should provide clear interfaces for scope resolver implementations, automatically detect and load scopes from `.scope` files, and eliminate the fragmented registration patterns currently spread across multiple helper methods.
 
+### Important Note: Relationship to Existing Production Code
+
+**Production Code:**
+- `src/scopeDsl/scopeRegistry.js` - Stores scope **definitions** (ASTs) loaded from mod files
+- `src/actions/scopes/unifiedScopeResolver.js` - Uses ScopeRegistry to resolve scopes at runtime
+- Both are part of the production system for managing scope definitions
+
+**This Proposal (Test Infrastructure):**
+- Creates a test-helper registry for scope **resolver functions** (not definitions)
+- Lives in `tests/common/` for test infrastructure
+- Complements (not replaces) the production ScopeRegistry
+- Used exclusively by test helpers like `ScopeResolverHelpers` and `ModTestFixture`
+
+The two registries serve different purposes:
+- **Production ScopeRegistry**: Stores parsed scope DSL definitions (`.scope` files)
+- **Test Resolver Registry (new)**: Stores JavaScript resolver functions for common test patterns
+
 ## Problem Statement
 
 Currently, scope registration is fragmented across multiple systems:
 
-1. **Standard scopes** use `autoRegisterScopes` with category-specific helpers:
-   - `ScopeResolverHelpers.registerPositioningScopes()`
-   - `ScopeResolverHelpers.registerInventoryScopes()`
-   - `ScopeResolverHelpers.registerAnatomyScopes()`
-   - `ScopeResolverHelpers.registerItemsScopes()`
+1. **Standard scopes** use category-specific helper methods:
+   - `ScopeResolverHelpers.registerPositioningScopes(testEnv)`
+   - `ScopeResolverHelpers.registerInventoryScopes(testEnv)` (handles both inventory and items scopes)
+   - `ScopeResolverHelpers.registerAnatomyScopes(testEnv)`
 
-2. **Custom scopes** use manual registration (or `registerCustomScope()` from TESDATREG-004)
+2. **Custom scopes** use the recently added `ScopeResolverHelpers.registerCustomScope(testEnv, modId, scopeName)` from TESDATREG-004 (implemented in commit 1fca47f)
 
 3. **No clear contract** for what a scope resolver should implement
 
@@ -37,36 +53,39 @@ This fragmentation leads to:
 
 ## Success Criteria
 
-- [ ] Unified `ScopeRegistry` class implemented
-- [ ] Clear `IScopeResolver` interface defined
+- [ ] Unified `TestScopeResolverRegistry` class implemented (test infrastructure)
+- [ ] Clear `IScopeResolver` interface defined (test contract)
 - [ ] Automatic scope discovery from mod directories
-- [ ] Centralized registration mechanism
+- [ ] Centralized registration mechanism for test resolver functions
 - [ ] Support for declarative scope registration (configuration-based)
-- [ ] Migration path from current helper methods
+- [ ] Migration path from current helper methods (`ScopeResolverHelpers.register*Scopes()`)
 - [ ] Backwards compatibility with existing tests
-- [ ] Performance: Registering 50 scopes < 300ms
+- [ ] Performance: Registering 50 test resolvers < 300ms
 - [ ] Comprehensive unit test coverage (95%+)
 - [ ] Integration tests with real mod data
-- [ ] Architecture documentation updated
+- [ ] Architecture documentation updated (clarifying test vs. production registries)
 - [ ] Migration guide for developers
 
 ## Proposed Architecture
 
-### Core Components
+### Core Components (Test Infrastructure)
+
+**Note:** This architecture is for test infrastructure in `tests/common/`, separate from production code.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│              ScopeRegistry                          │
-│  - Central registry of all scope resolvers         │
+│     TestScopeResolverRegistry (Test Helper)         │
+│  - Central registry of scope resolver functions    │
 │  - Auto-discovery from mod directories             │
 │  - Registration lifecycle management               │
+│  - Lives in tests/common/engine/                   │
 └──────────────────┬──────────────────────────────────┘
                    │
                    │ uses
                    ▼
 ┌─────────────────────────────────────────────────────┐
-│         IScopeResolver Interface                    │
-│  - Standard contract for resolvers                 │
+│      IScopeResolver Interface (Test Contract)       │
+│  - Standard contract for test resolvers            │
 │  - resolve(context, runtimeCtx) method             │
 │  - metadata (name, category, dependencies)         │
 └──────────────────┬──────────────────────────────────┘
@@ -74,11 +93,18 @@ This fragmentation leads to:
                    │ implemented by
                    ▼
 ┌─────────────────────────────────────────────────────┐
-│         Concrete Resolver Implementations           │
-│  - PositioningResolver                             │
-│  - InventoryResolver                               │
-│  - AnatomyResolver                                 │
+│      Concrete Resolver Implementations (Tests)      │
+│  - PositioningResolver (wraps positioning scopes)  │
+│  - InventoryResolver (wraps inventory/items scopes)│
+│  - AnatomyResolver (wraps anatomy scopes)          │
 │  - CustomScopeResolver (from .scope files)         │
+└─────────────────────────────────────────────────────┘
+
+Production Code (existing, not modified by this proposal):
+┌─────────────────────────────────────────────────────┐
+│     ScopeRegistry (src/scopeDsl/scopeRegistry.js)   │
+│  - Stores scope definitions (ASTs)                 │
+│  - Used by UnifiedScopeResolver at runtime         │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -128,13 +154,14 @@ interface IScopeResolver {
 }
 ```
 
-### Registry API
+### Registry API (Test Infrastructure)
 
 ```javascript
 /**
- * Central registry for all scope resolvers.
+ * Central registry for test scope resolver functions.
+ * Lives in tests/common/engine/
  */
-class ScopeRegistry {
+class TestScopeResolverRegistry {
   /**
    * Registers a scope resolver.
    *
@@ -242,10 +269,13 @@ await scopeRegistry.discoverAndRegister(['positioning', 'inventory', 'my-mod']);
 
 ### Files to Create
 
-1. **`tests/common/engine/scopeRegistry.js`**
-   - Central registry implementation
-   - Auto-discovery logic
-   - Validation
+**Note:** All files are in `tests/common/engine/` (test infrastructure), NOT in `src/` (production code). The naming should avoid confusion with the existing production `ScopeRegistry`.
+
+1. **`tests/common/engine/testScopeResolverRegistry.js`** (or `scopeResolverRegistry.js`)
+   - Central registry implementation for test resolver functions
+   - Auto-discovery logic for creating resolvers from `.scope` files
+   - Validation of resolver implementations
+   - **Key difference from production**: Stores JavaScript functions, not scope definitions
 
 2. **`tests/common/engine/baseScopeResolver.js`**
    - Base class for resolver implementations
@@ -253,13 +283,14 @@ await scopeRegistry.discoverAndRegister(['positioning', 'inventory', 'my-mod']);
    - Error handling patterns
 
 3. **`tests/common/engine/scopeResolverFactory.js`**
-   - Factory for creating resolvers from `.scope` files
+   - Factory for creating resolver functions from `.scope` files
+   - Wraps scope DSL parsing into callable test functions
    - Handles AST parsing and wrapper creation
 
 4. **`tests/common/engine/scopeDiscoveryService.js`**
    - Scans mod directories for scope files
    - Reads scope configuration files
-   - Builds resolver instances
+   - Builds resolver function instances for testing
 
 ### Files to Modify
 
@@ -295,7 +326,7 @@ await scopeRegistry.discoverAndRegister(['positioning', 'inventory', 'my-mod']);
 #### Phase 3: Migration (Week 2)
 
 1. Migrate `ScopeResolverHelpers` to use registry
-2. Migrate `ModTestFixture.autoRegisterScopes` to use registry
+2. Migrate `ModTestFixture._registerScopeCategories()` (used by the `autoRegisterScopes` option) to use registry
 3. Add backwards compatibility layer
 4. Create migration guide
 5. Update documentation
@@ -310,15 +341,20 @@ await scopeRegistry.discoverAndRegister(['positioning', 'inventory', 'my-mod']);
 
 ## Detailed Implementation
 
-### ScopeRegistry Class
+### Test Scope Resolver Registry Class
 
 ```javascript
-// tests/common/engine/scopeRegistry.js
+// tests/common/engine/testScopeResolverRegistry.js
+// OR tests/common/engine/scopeResolverRegistry.js
+// (Naming to be finalized to avoid confusion with production ScopeRegistry)
 
 /**
- * Central registry for all scope resolvers.
+ * Central registry for test scope resolver functions.
+ *
+ * Note: This is separate from the production ScopeRegistry (src/scopeDsl/scopeRegistry.js).
+ * Production registry stores scope definitions (ASTs), this stores JavaScript resolver functions.
  */
-class ScopeRegistry {
+class TestScopeResolverRegistry {
   #resolvers = new Map(); // scopeId -> IScopeResolver
   #categoriesIndex = new Map(); // category -> Set<scopeId>
   #logger;
@@ -521,7 +557,7 @@ class ScopeRegistry {
   }
 }
 
-export default ScopeRegistry;
+export default TestScopeResolverRegistry;
 ```
 
 ### BaseScopeResolver Class
@@ -599,7 +635,7 @@ export default BaseScopeResolver;
 
 ### Unit Tests
 
-1. **`tests/unit/common/engine/scopeRegistry.test.js`**
+1. **`tests/unit/common/engine/testScopeResolverRegistry.test.js`** (or `scopeResolverRegistry.test.js`)
    - Registry registration
    - Duplicate detection
    - Category indexing
@@ -622,14 +658,16 @@ export default BaseScopeResolver;
 
 ### Integration Tests
 
-1. **`tests/integration/common/scopeRegistry.integration.test.js`**
+1. **`tests/integration/common/testScopeResolverRegistry.integration.test.js`** (or `scopeResolverRegistry.integration.test.js`)
    - Auto-discovery with real mod data
-   - End-to-end scope registration and resolution
+   - End-to-end scope resolver registration and resolution
    - Performance testing
+   - Verify no conflicts with production ScopeRegistry
 
-2. **`tests/integration/common/scopeRegistryMigration.integration.test.js`**
+2. **`tests/integration/common/scopeResolverRegistryMigration.integration.test.js`**
    - Backwards compatibility with existing tests
-   - Migration from helper methods
+   - Migration from helper methods (registerPositioningScopes, etc.)
+   - Verify ModTestFixture.autoRegisterScopes option still works
 
 ## Migration Strategy
 
@@ -638,11 +676,19 @@ export default BaseScopeResolver;
 Maintain existing APIs while adding new ones:
 
 ```javascript
-// Old API (still works)
+// Current API (still works) - Direct helper methods
 ScopeResolverHelpers.registerPositioningScopes(testEnv);
+ScopeResolverHelpers.registerInventoryScopes(testEnv);
+ScopeResolverHelpers.registerAnatomyScopes(testEnv);
 
-// New API (recommended)
-await testEnv.scopeRegistry.discoverAndRegister(['positioning']);
+// Current API (still works) - Auto-registration via ModTestFixture option
+const fixture = await ModTestFixture.forAction('mod', 'action', null, null, {
+  autoRegisterScopes: true,
+  scopeCategories: ['positioning', 'inventory']
+});
+
+// New API (recommended after migration)
+await testEnv.scopeResolverRegistry.discoverAndRegister(['positioning', 'inventory']);
 ```
 
 ### Deprecation Path
@@ -654,33 +700,47 @@ await testEnv.scopeRegistry.discoverAndRegister(['positioning']);
 
 ### Migration Guide
 
-Create `docs/testing/scope-registry-migration-guide.md`:
+Create `docs/testing/test-scope-resolver-registry-migration-guide.md`:
 
 ```markdown
-# Migrating to Unified Scope Registry
+# Migrating to Unified Test Scope Resolver Registry
+
+**Important:** This guide is for test infrastructure only. The production `ScopeRegistry`
+(`src/scopeDsl/scopeRegistry.js`) remains unchanged and serves a different purpose
+(storing scope definitions, not resolver functions).
 
 ## Quick Migration
 
-### Before
+### Before (Current API)
 ```javascript
+// Direct registration
 ScopeResolverHelpers.registerPositioningScopes(testEnv);
 ScopeResolverHelpers.registerInventoryScopes(testEnv);
+ScopeResolverHelpers.registerAnatomyScopes(testEnv);
+
+// Or via ModTestFixture
+const fixture = await ModTestFixture.forAction('mod', 'action', null, null, {
+  autoRegisterScopes: true,
+  scopeCategories: ['positioning', 'inventory']
+});
 ```
 
-### After
+### After (New Unified API)
 ```javascript
-await testEnv.scopeRegistry.discoverAndRegister([
-  'positioning',
-  'inventory'
-], { categories: ['positioning', 'inventory'] });
+// Unified registry approach
+await testEnv.scopeResolverRegistry.discoverAndRegister(
+  ['positioning', 'inventory', 'anatomy'],
+  { categories: ['positioning', 'inventory', 'anatomy'] }
+);
 ```
 
 ## Benefits
-- Automatic discovery of scope files
-- Centralized registration
+- Automatic discovery of scope files from mods
+- Centralized registration of test resolver functions
 - Better error messages
 - Dependency validation
 - Performance improvements
+- Single source of truth for test scope resolvers
 ```
 
 ## Performance Targets
@@ -692,32 +752,36 @@ await testEnv.scopeRegistry.discoverAndRegister([
 
 ## Documentation Updates
 
-1. **Create**: `docs/testing/scope-registry-architecture.md`
-   - System architecture
-   - Interface contracts
+1. **Create**: `docs/testing/test-scope-resolver-registry-architecture.md`
+   - Test infrastructure architecture (clearly separate from production)
+   - Interface contracts for test resolvers
    - Extension points
+   - Relationship to production ScopeRegistry
 
 2. **Update**: `docs/testing/mod-testing-guide.md`
    - Replace manual patterns with registry usage
    - Show auto-discovery examples
+   - Clarify distinction between test helpers and production code
 
-3. **Create**: `docs/testing/scope-registry-migration-guide.md`
+3. **Create**: `docs/testing/test-scope-resolver-registry-migration-guide.md`
    - Migration instructions
    - Before/after examples
+   - Clear warnings about test-only infrastructure
 
 ## Acceptance Tests
 
-- [ ] ScopeRegistry implements all specified methods
-- [ ] IScopeResolver interface is enforced
+- [ ] TestScopeResolverRegistry implements all specified methods
+- [ ] IScopeResolver interface (test contract) is enforced
 - [ ] Automatic discovery works with real mod data
 - [ ] Category indexing works correctly
 - [ ] Dependency validation prevents issues
-- [ ] Backwards compatibility maintained
+- [ ] Backwards compatibility maintained with current `ScopeResolverHelpers` methods
+- [ ] No conflicts with production ScopeRegistry (src/scopeDsl/scopeRegistry.js)
 - [ ] Migration guide is comprehensive
-- [ ] Performance targets met
+- [ ] Performance targets met (50 test resolvers < 300ms)
 - [ ] Unit tests achieve 95%+ coverage
 - [ ] Integration tests cover all major use cases
-- [ ] Documentation is complete and accurate
+- [ ] Documentation clearly distinguishes test vs. production registries
 - [ ] All existing tests still pass
 
 ## Dependencies
@@ -737,14 +801,15 @@ await testEnv.scopeRegistry.discoverAndRegister([
 
 ## Implementation Checklist
 
-### Phase 1: Core Registry
-- [ ] Define IScopeResolver interface
-- [ ] Implement ScopeRegistry class
+### Phase 1: Core Registry (Test Infrastructure)
+- [ ] Define IScopeResolver interface (test contract)
+- [ ] Implement TestScopeResolverRegistry class in tests/common/engine/
 - [ ] Implement BaseScopeResolver base class
 - [ ] Add resolver validation
 - [ ] Add category indexing
 - [ ] Create unit tests for registry
 - [ ] Achieve 95%+ coverage
+- [ ] Document relationship to production ScopeRegistry
 
 ### Phase 2: Auto-Discovery
 - [ ] Implement ScopeDiscoveryService
@@ -773,8 +838,36 @@ await testEnv.scopeRegistry.discoverAndRegister([
 
 ## Notes
 
-- This is a significant architectural change
+- This is a significant architectural change **for test infrastructure only**
 - Should be implemented incrementally with backwards compatibility
 - Focus on developer experience and clear error messages
 - Extensive testing required due to widespread impact
 - Consider feedback from early adopters before finalizing API
+- **Critical:** Avoid naming conflicts with production `ScopeRegistry`
+
+## Corrections Made to This Workflow (2025-11-08)
+
+This workflow was analyzed and corrected to align with actual production code. Key corrections:
+
+1. **Line 21**: Changed `registerItemsScopes()` → `registerInventoryScopes()` (correct method name)
+2. **Line 23**: Clarified that `registerCustomScope()` is from TESDATREG-004 (commit 1fca47f)
+3. **Line 298**: Changed "ModTestFixture.autoRegisterScopes" → "ModTestFixture._registerScopeCategories() (used by autoRegisterScopes option)"
+4. **Throughout**: Added critical distinction between:
+   - **Production ScopeRegistry** (`src/scopeDsl/scopeRegistry.js`) - stores scope definitions
+   - **Test Resolver Registry** (proposed, `tests/common/engine/`) - stores test resolver functions
+5. **Class naming**: Changed `ScopeRegistry` → `TestScopeResolverRegistry` to avoid confusion
+6. **Architecture section**: Added explicit relationship diagram showing production vs. test components
+7. **Success criteria**: Clarified this is test infrastructure, not production code
+8. **Documentation**: Updated all file paths and naming to reflect test-only nature
+
+### Verified Against Production Code
+
+- ✅ `ScopeResolverHelpers.registerPositioningScopes(testEnv)` exists
+- ✅ `ScopeResolverHelpers.registerInventoryScopes(testEnv)` exists (handles items too)
+- ✅ `ScopeResolverHelpers.registerAnatomyScopes(testEnv)` exists
+- ✅ `ScopeResolverHelpers.registerCustomScope(testEnv, modId, scopeName)` exists (TESDATREG-004)
+- ❌ `ScopeResolverHelpers.registerItemsScopes()` does NOT exist (corrected)
+- ✅ `ModTestFixture` has `autoRegisterScopes` option (boolean), not a method
+- ✅ `ModTestFixture._registerScopeCategories()` private method exists
+- ✅ Production `ScopeRegistry` exists at `src/scopeDsl/scopeRegistry.js`
+- ✅ Production `UnifiedScopeResolver` exists at `src/actions/scopes/unifiedScopeResolver.js`
