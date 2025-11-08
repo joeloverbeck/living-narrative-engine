@@ -976,6 +976,7 @@ export function createBaseRuleEnvironment({
  */
 export function resetRuleEnvironment(env, newEntities = []) {
   env.cleanup();
+
   const clonedEntities = newEntities.map((e) => deepClone(e));
   const newEnv = env.initializeEnv(clonedEntities);
   env.entityManager = newEnv.entityManager;
@@ -983,6 +984,9 @@ export function resetRuleEnvironment(env, newEntities = []) {
   env.operationInterpreter = newEnv.operationInterpreter;
   env.systemLogicInterpreter = newEnv.systemLogicInterpreter;
   env.actionIndex = newEnv.actionIndex;
+  // NOTE: Do NOT update unifiedScopeResolver here - it has custom scope overrides
+  // that must persist across resets. The overridden resolveSync method uses a getter
+  // to dynamically access testEnv.entityManager, so it will use the new entity manager.
 
   // Clear the event bus events array if it has a _clearHandlers method
   if (env.eventBus && typeof env.eventBus._clearHandlers === 'function') {

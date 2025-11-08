@@ -154,5 +154,34 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
 
       expect(ids).not.toContain('sex-anal-penetration:insert_multiple_fingers_into_asshole');
     });
+
+    it('should NOT be discovered when actor has fucking_anally component', () => {
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      // Make Bob face away from Alice with exposed asshole
+      scenario.target.components['positioning:facing_away'] = {
+        facing_away_from: [scenario.actor.id],
+      };
+      scenario.target.components['anatomy:body_part_types'] = {
+        types: ['asshole'],
+      };
+      scenario.target.components['clothing:socket_coverage'] = {
+        sockets: {},
+      };
+
+      // Alice is actively fucking someone anally
+      scenario.actor.components['positioning:fucking_anally'] = {
+        being_fucked_entity_id: 'other_entity',
+        initiated: true,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = actions.map((action) => action.id);
+
+      expect(ids).not.toContain('sex-anal-penetration:insert_multiple_fingers_into_asshole');
+    });
   });
 });
