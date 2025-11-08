@@ -86,8 +86,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       // Exercise category should NOT have ADD_COMPONENT
       expect(handlers).not.toHaveProperty('ADD_COMPONENT');
 
-      // Verify handler count matches standard pattern (includes QUERY_LOOKUP)
-      expect(Object.keys(handlers)).toHaveLength(10);
+      // Verify handler count matches standard pattern (includes QUERY_LOOKUP, FOR_EACH, IF)
+      expect(Object.keys(handlers)).toHaveLength(12);
     });
 
     it('should validate exercise category entity patterns', () => {
@@ -243,9 +243,9 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('LOCK_MOVEMENT');
       expect(handlers).toHaveProperty('UNLOCK_MOVEMENT');
 
-      // Violence uses perception logging handler set (21 handlers)
-      // Includes BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, QUERY_LOOKUP, and REGENERATE_DESCRIPTION
-      expect(Object.keys(handlers)).toHaveLength(21);
+      // Violence uses perception logging handler set (23 handlers)
+      // Includes BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, QUERY_LOOKUP, REGENERATE_DESCRIPTION, FOR_EACH, and IF
+      expect(Object.keys(handlers)).toHaveLength(23);
     });
 
     it('should validate violence category entity patterns', () => {
@@ -329,8 +329,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('ADD_COMPONENT');
       expect(handlers).toHaveProperty('REMOVE_COMPONENT');
 
-      // Component mutations set includes QUERY_LOOKUP (12 handlers total)
-      expect(Object.keys(handlers)).toHaveLength(12);
+      // Component mutations set includes QUERY_LOOKUP, FOR_EACH, IF (14 handlers total)
+      expect(Object.keys(handlers)).toHaveLength(14);
     });
 
     it('should validate affection category entity patterns', () => {
@@ -421,8 +421,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('ADD_COMPONENT');
       expect(handlers).toHaveProperty('REMOVE_COMPONENT');
 
-      // Component mutations set includes QUERY_LOOKUP (12 handlers total)
-      expect(Object.keys(handlers)).toHaveLength(12);
+      // Component mutations set includes QUERY_LOOKUP, FOR_EACH, IF (14 handlers total)
+      expect(Object.keys(handlers)).toHaveLength(14);
     });
 
     it('should validate sex category entity patterns', () => {
@@ -511,11 +511,11 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('END_TURN');
 
-      // Positioning uses extended handler set with perception logging (21 handlers instead of 10)
-      // Includes: 10 standard (with QUERY_LOOKUP) + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
+      // Positioning uses extended handler set with perception logging (23 handlers instead of 12)
+      // Includes: 12 standard (with QUERY_LOOKUP, FOR_EACH, IF) + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
       // LOCK_MOVEMENT, UNLOCK_MOVEMENT, MODIFY_ARRAY_FIELD, MODIFY_COMPONENT,
       // ATOMIC_MODIFY_COMPONENT, BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, REGENERATE_DESCRIPTION
-      expect(Object.keys(handlers)).toHaveLength(21);
+      expect(Object.keys(handlers)).toHaveLength(23);
 
       // Verify ADD_COMPONENT is functional
       expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
@@ -706,10 +706,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       });
 
       const expectedHandlerConfig = {
-        exercise: { handlerCount: 10, hasAddComponent: false }, // +1 for QUERY_LOOKUP
-        violence: { handlerCount: 21, hasAddComponent: true }, // +1 for QUERY_LOOKUP, +1 for REGENERATE_DESCRIPTION
-        sex: { handlerCount: 12, hasAddComponent: true }, // +1 for QUERY_LOOKUP
-        affection: { handlerCount: 12, hasAddComponent: true }, // +1 for QUERY_LOOKUP
+        exercise: { handlerCount: 12, hasAddComponent: false }, // +3 for QUERY_LOOKUP, FOR_EACH, IF
+        violence: { handlerCount: 23, hasAddComponent: true }, // +3 for QUERY_LOOKUP, FOR_EACH, IF, +1 for REGENERATE_DESCRIPTION
+        sex: { handlerCount: 14, hasAddComponent: true }, // +3 for QUERY_LOOKUP, FOR_EACH, IF
+        affection: { handlerCount: 14, hasAddComponent: true }, // +3 for QUERY_LOOKUP, FOR_EACH, IF
       };
 
       Object.entries(expectedHandlerConfig).forEach(
@@ -722,8 +722,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         }
       );
 
-      // Positioning should have 21 handlers (includes ADD_COMPONENT, perception logging handlers, BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, QUERY_LOOKUP, and REGENERATE_DESCRIPTION)
-      expect(factoryResults.positioning.handlerCount).toBe(21);
+      // Positioning should have 23 handlers (includes ADD_COMPONENT, perception logging handlers, BREAK_CLOSENESS_WITH_TARGET, MERGE_CLOSENESS_CIRCLE, QUERY_LOOKUP, REGENERATE_DESCRIPTION, FOR_EACH, and IF)
+      expect(factoryResults.positioning.handlerCount).toBe(23);
       expect(factoryResults.positioning.hasAddComponent).toBe(true);
       expect(factoryResults.positioning.commonHandlers).toBe(true);
     });
@@ -930,8 +930,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
 
-        // Unknown categories should default to standard handlers (10 handlers including QUERY_LOOKUP)
-        expect(Object.keys(handlers)).toHaveLength(10);
+        // Unknown categories should default to standard handlers (12 handlers including QUERY_LOOKUP, FOR_EACH, IF)
+        expect(Object.keys(handlers)).toHaveLength(12);
         expect(handlers).not.toHaveProperty('ADD_COMPONENT');
 
         // Should have all standard handlers
@@ -958,7 +958,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
         const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
         expect(handlers).toBeDefined();
-        expect(Object.keys(handlers)).toHaveLength(10); // Default to standard handlers (including QUERY_LOOKUP)
+        expect(Object.keys(handlers)).toHaveLength(12); // Default to standard handlers (including QUERY_LOOKUP, FOR_EACH, IF)
       });
     });
   });

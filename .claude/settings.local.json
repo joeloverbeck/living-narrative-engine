@@ -606,7 +606,8 @@
       "Bash(do echo -n \"$file: \")",
       "Bash([ -f \"$file\" ])",
       "Bash(NODE_ENV=test npm test:*)",
-      "Bash(timeout 10 node:*)"
+      "Bash(timeout 10 node:*)",
+      "Bash(NODE_ENV=test npm run test:single:*)"
     ],
     "deny": [],
     "ask": []

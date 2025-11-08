@@ -36,6 +36,8 @@ import BreakClosenessWithTargetHandler from '../../../../src/logic/operationHand
 import MergeClosenessCircleHandler from '../../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import QueryLookupHandler from '../../../../src/logic/operationHandlers/queryLookupHandler.js';
 import RegenerateDescriptionHandler from '../../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
+import ForEachHandler from '../../../../src/logic/operationHandlers/forEachHandler.js';
+import IfHandler from '../../../../src/logic/operationHandlers/ifHandler.js';
 import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
@@ -128,6 +130,16 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
       LOG_MESSAGE: new LogHandler({ logger }),
+      FOR_EACH: new ForEachHandler({
+        operationInterpreter: () => ({ execute: jest.fn() }),
+        jsonLogic: { evaluate: jest.fn((rule, data) => data) },
+        logger,
+      }),
+      IF: new IfHandler({
+        operationInterpreter: () => ({ execute: jest.fn() }),
+        jsonLogic: { evaluate: jest.fn((rule, data) => data) },
+        logger,
+      }),
     };
 
     // Add QUERY_LOOKUP handler if gameDataRepository is provided
@@ -641,8 +653,8 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         logger
       );
 
-      // Factory should create exactly 9 standard handlers
-      expect(Object.keys(factoryHandlers)).toHaveLength(9);
+      // Factory should create exactly 11 standard handlers (including FOR_EACH and IF)
+      expect(Object.keys(factoryHandlers)).toHaveLength(11);
 
       // Each handler should be properly configured
       Object.values(factoryHandlers).forEach((handler) => {
