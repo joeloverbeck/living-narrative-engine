@@ -24,14 +24,14 @@ Configure dependency injection for `ActorParticipationController` by defining th
 - [ ] Maintain alphabetical ordering of imports
 
 ### Factory Registration
-- [ ] Add controller factory to `registerUIDependencies()` function
+- [ ] Add controller factory to `registerControllers()` function in `uiRegistrations.js`
 - [ ] Configure factory with required dependencies:
-  - `eventBus` (tokens.IEventBus)
+  - `eventBus` (tokens.ISafeEventDispatcher) **[CORRECTED: was IEventBus]**
   - `documentContext` (tokens.IDocumentContext)
   - `logger` (tokens.ILogger)
   - `entityManager` (tokens.IEntityManager)
-- [ ] Use singleton lifecycle (default behavior)
-- [ ] Maintain alphabetical ordering in registrations
+- [ ] Use `registerWithLog` helper with singletonFactory lifecycle
+- [ ] Maintain alphabetical ordering in registrations (after InputStateController, before PerceptibleEventSenderController)
 
 ## Files Modified
 - `src/dependencyInjection/tokens/tokens-ui.js`
@@ -50,32 +50,24 @@ export const tokens = {
 
 ### uiRegistrations.js
 ```javascript
-// Add import (maintain alphabetical order)
+// Add import at top with other controller imports (around line 43)
 import { ActorParticipationController } from '../../domUI/index.js';
 
-// In registerUIDependencies function, add to container.register() calls:
-container.register(
+// In registerControllers function (around line 378), add registration:
+// Position: After InputStateController, before PerceptibleEventSenderController
+registerWithLog(
+  registrar,
   tokens.ActorParticipationController,
-  asClass(ActorParticipationController).singleton()
+  (c) =>
+    new ActorParticipationController({
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),  // CORRECTED: was IEventBus
+      documentContext: c.resolve(tokens.IDocumentContext),
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+    }),
+  { lifecycle: 'singletonFactory' },
+  logger
 );
-
-// Or if using factory pattern:
-container.register(tokens.ActorParticipationController, {
-  resolve: (c) => {
-    const eventBus = c.resolve(tokens.IEventBus);
-    const documentContext = c.resolve(tokens.IDocumentContext);
-    const logger = c.resolve(tokens.ILogger);
-    const entityManager = c.resolve(tokens.IEntityManager);
-
-    return new ActorParticipationController({
-      eventBus,
-      documentContext,
-      logger,
-      entityManager,
-    });
-  },
-  lifetime: 'singleton',
-});
 ```
 
 ## Acceptance Criteria
@@ -103,7 +95,10 @@ container.register(tokens.ActorParticipationController, {
    ```
 
 ## Notes
-- Follow existing DI patterns in the project (check other controller registrations)
-- Ensure all dependency tokens are imported from `tokens-core.js` if needed
+- Follow existing DI patterns in the project (check other controller registrations in `registerControllers()`)
+- Use `ISafeEventDispatcher` not `IEventBus` - the controller validates against ISafeEventDispatcher interface
+- All dependency tokens are available from the merged `tokens` object imported from `../tokens.js`
+- Use `registerWithLog` helper for consistent logging (from `../../utils/registrarHelpers.js`)
 - Singleton lifecycle is appropriate for UI controllers
-- The controller will be initialized in the bootstrapper (next ticket)
+- The controller will be initialized in the bootstrapper (next ticket: ACTPARCONPAN-009)
+- Pattern reference: See `PerceptibleEventSenderController` registration (lines 393-406) for similar controller with same dependencies

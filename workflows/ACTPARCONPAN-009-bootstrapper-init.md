@@ -43,24 +43,27 @@ Configure controller initialization in the application bootstrapper, ensuring it
 
 ### initActorParticipationController.js
 ```javascript
-/**
- * @file Initialization helper for ActorParticipationController
- */
+// src/bootstrapper/stages/auxiliary/initActorParticipationController.js
 
-import { resolveAndInitialize } from '../../utils/resolveAndInitialize.js';
-import { tokens } from '../../../dependencyInjection/tokens/tokens-ui.js';
+import { resolveAndInitialize } from '../../../utils/bootstrapperHelpers.js';
+import './typedefs.js';
+/** @typedef {import('./typedefs.js').AuxHelperDeps} AuxHelperDeps */
 
 /**
- * Initialize the actor participation controller
- * @param {Object} container - DI container
- * @param {Object} logger - Logger instance
- * @returns {Object} Initialized controller instance
+ * Resolves and initializes the ActorParticipationController service.
+ *
+ * @param {AuxHelperDeps} deps - Contains DI container, logger, and token map.
+ * @returns {Promise<{success: boolean, error?: Error}>} Result of initialization.
  */
-export function initActorParticipationController(container, logger) {
+export async function initActorParticipationController({
+  container,
+  logger,
+  tokens,
+}) {
   return resolveAndInitialize(
     container,
     tokens.ActorParticipationController,
-    'ActorParticipationController',
+    'initialize',  // CORRECTED: method name not token name
     logger
   );
 }
@@ -75,15 +78,53 @@ export { initActorParticipationController } from './initActorParticipationContro
 
 ### initializeAuxiliaryServicesStage.js
 ```javascript
-// Add import (maintain alphabetical order)
-import { initActorParticipationController } from './auxiliary/index.js';
+// Add import with other auxiliary imports (around line 4-13)
+import {
+  initEngineUIManager,
+  initSaveGameUI,
+  initLoadGameUI,
+  initLlmSelectionModal,
+  initCurrentTurnActorRenderer,
+  initSpeechBubbleRenderer,
+  initProcessingIndicatorController,
+  initCriticalLogNotifier,
+  initActorParticipationController,  // ADD THIS
+  initPerceptibleEventSenderController,
+} from './auxiliary/index.js';
 
-// In the initialization sequence array, add BEFORE initPerceptibleEventSenderController:
-const initializationSequence = [
+// In the serviceInitializers array (around line 122), add BEFORE PerceptibleEventSenderController:
+const serviceInitializers = [
   // ... existing initializers ...
-  { name: 'ActorParticipationController', fn: initActorParticipationController },
-  { name: 'PerceptibleEventSenderController', fn: initPerceptibleEventSenderController },
-  // ... remaining initializers ...
+  [
+    'CriticalLogNotifier',
+    () =>
+      initCriticalLogNotifier({
+        container,
+        gameEngine,
+        logger,
+        tokens,
+      }),
+  ],
+  [
+    'ActorParticipationController',  // ADD THIS ENTRY
+    () =>
+      initActorParticipationController({
+        container,
+        gameEngine,
+        logger,
+        tokens,
+      }),
+  ],
+  [
+    'PerceptibleEventSenderController',
+    () =>
+      initPerceptibleEventSenderController({
+        container,
+        gameEngine,
+        logger,
+        tokens,
+      }),
+  ],
 ];
 ```
 
@@ -108,8 +149,10 @@ const initializationSequence = [
 6. Confirm ENGINE_READY_UI event subscription works
 
 ## Notes
-- Use `resolveAndInitialize` helper for consistent initialization pattern
+- Use `resolveAndInitialize` helper for consistent initialization pattern (see initPerceptibleEventSenderController.js)
 - Positioning before PerceptibleEventSenderController ensures proper initialization order
-- Logger instance should be passed through for consistent logging
-- Check existing auxiliary service initializers for reference patterns
-- The controller will automatically subscribe to ENGINE_READY_UI during construction
+- Init functions receive `{ container, gameEngine, logger, tokens }` as deps object
+- The third parameter to `resolveAndInitialize` is the method name ('initialize'), not the token name
+- Function must be async since `resolveAndInitialize` returns a Promise
+- Check initPerceptibleEventSenderController.js for reference pattern (identical structure)
+- The controller will subscribe to ENGINE_READY_UI during `initialize()` method call
