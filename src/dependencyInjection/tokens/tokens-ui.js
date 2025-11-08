@@ -36,6 +36,7 @@ export const uiTokens = freeze({
   ProcessingIndicatorController: 'ProcessingIndicatorController',
   ChatAlertRenderer: 'ChatAlertRenderer',
   ActionResultRenderer: 'ActionResultRenderer',
+  ActorParticipationController: 'ActorParticipationController',
   EntityLifecycleMonitor: 'EntityLifecycleMonitor',
   VisualizerState: 'VisualizerState',
   AnatomyLoadingDetector: 'AnatomyLoadingDetector',
