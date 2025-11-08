@@ -5,10 +5,17 @@
 **Timeline**: Mid-term (Next Sprint)
 **Effort**: Medium (1-2 days)
 **Related Report**: reports/test-dataregistry-scope-dsl-issues.md
+**Status**: PARTIALLY IMPLEMENTED - Core method exists, needs unit tests and static helper
 
 ## Overview
 
-Add a convenience method to simplify custom scope registration in tests. Currently, registering a custom mod-specific scope requires 30+ lines of boilerplate code involving manual file loading, AST parsing, resolver function creation, and registration. This ticket provides a one-line method that handles all these steps automatically.
+**UPDATE**: The core `registerCustomScope()` method has already been implemented in ModActionTestFixture (lines 2141-2257 of tests/common/mods/ModTestFixture.js). This ticket now focuses on:
+1. Adding comprehensive unit tests for the existing implementation
+2. Adding static helper method to ScopeResolverHelpers
+3. Updating documentation
+4. Refactoring remaining test files to use the method
+
+Original goal: Add a convenience method to simplify custom scope registration in tests. Currently, registering a custom mod-specific scope requires 30+ lines of boilerplate code involving manual file loading, AST parsing, resolver function creation, and registration. This ticket provides a one-line method that handles all these steps automatically.
 
 ## Problem Statement
 
@@ -63,18 +70,23 @@ ScopeResolverHelpers._registerResolvers(testFixture.testEnv, {
 
 ## Success Criteria
 
-- [ ] New method `registerCustomScope()` added to ModTestFixture
-- [ ] Method accepts mod ID and scope name (simple API)
-- [ ] Method constructs correct file path automatically
-- [ ] Method parses scope file and extracts AST
-- [ ] Method creates properly-structured resolver function
-- [ ] Method registers resolver with ScopeEngine
-- [ ] Method handles errors with clear messages (file not found, parse errors)
-- [ ] Method is tested with unit tests (90%+ coverage)
-- [ ] Method is tested with integration tests using real scope files
-- [ ] Method optionally auto-loads dependency conditions (from TESDATREG-003)
+**Already Implemented:**
+- [x] Method `registerCustomScope()` added to ModActionTestFixture (lines 2141-2257)
+- [x] Method accepts mod ID and scope name (simple API)
+- [x] Method constructs correct file path automatically
+- [x] Method parses scope file and extracts AST
+- [x] Method creates properly-structured resolver function
+- [x] Method registers resolver with UnifiedScopeResolver via ScopeResolverHelpers
+- [x] Method handles errors with clear messages (file not found, parse errors)
+- [x] Method tested with integration tests using real scope files (tests/integration/common/ModTestFixture.autoLoadConditions.integration.test.js)
+- [x] Method auto-loads dependency conditions (from TESDATREG-003)
+- [x] Some existing tests refactored to use method (insert_finger_into_asshole, insert_multiple_fingers_into_asshole, push_glans_into_asshole)
+
+**Still Needed:**
+- [ ] Add comprehensive unit tests (90%+ coverage) for registerCustomScope method
+- [ ] Add static `registerCustomScope()` helper to ScopeResolverHelpers class
 - [ ] Documentation updated in mod-testing-guide.md
-- [ ] Existing tests refactored to use new method
+- [ ] Remaining tests refactored to use new method (if any exist)
 
 ## Proposed API
 
@@ -170,183 +182,194 @@ describe('insert_finger_into_asshole Action Discovery', () => {
 ### Files to Modify
 
 1. **Primary**: `tests/common/mods/ModTestFixture.js`
-   - Add `registerCustomScope()` method
+   - ✅ ALREADY DONE: `registerCustomScope()` method exists (lines 2141-2257)
+   - Location: ModActionTestFixture class
 
 2. **Secondary**: `tests/common/mods/scopeResolverHelpers.js`
-   - Add static `registerCustomScope()` helper method
+   - ⚠️ TODO: Add static `registerCustomScope()` helper method
+
+3. **Testing**: `tests/unit/common/mods/ModTestFixture.registerCustomScope.test.js`
+   - ⚠️ TODO: Create comprehensive unit test file
+
+4. **Documentation**: `docs/testing/mod-testing-guide.md`
+   - ⚠️ TODO: Document the registerCustomScope API
 
 ### Implementation Approach
 
-#### In ModTestFixture.js
+#### In ModTestFixture.js (ALREADY IMPLEMENTED)
+
+**ACTUAL IMPLEMENTATION** (already exists at lines 2141-2257):
 
 ```javascript
-import path from 'path';
-import { parseScopeDefinitions } from '../../../src/scopeDsl/parseScopeDefinitions.js';
-import ScopeResolverHelpers from './scopeResolverHelpers.js';
-import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js'; // From TESDATREG-003
+// Correct imports that are actually used:
+import { promises as fs } from 'fs';
+import { resolve } from 'path';
+import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';  // Note: scopeDefinitionParser.js, not parseScopeDefinitions.js
+import { ScopeResolverHelpers } from './scopeResolverHelpers.js';
+import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
 
-class ModTestFixture {
+// Actual implementation is in ModActionTestFixture class (lines 2141-2257)
+// Key differences from workflow proposal:
+//
+// 1. File reading: Must read file first, then parse
+//    ACTUAL: const scopeContent = await fs.readFile(scopePath, 'utf-8');
+//            const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
+//    PROPOSED (WRONG): const scopeDef = await parseScopeDefinitions(scopePath);
+//
+// 2. Return type: parseScopeDefinitions returns a Map, not an object
+//    ACTUAL: parsedScopes.get(fullScopeName)
+//    PROPOSED (WRONG): scopeDef[scopeName]
+//
+// 3. Scope name: Must use full namespaced name
+//    ACTUAL: const fullScopeName = `${modId}:${scopeName}`;
+//            const scopeData = parsedScopes.get(fullScopeName);
+//    PROPOSED (WRONG): scopeDef[scopeName]
+//
+// 4. Scope resolution: Creates local ScopeEngine instance
+//    ACTUAL: const { default: ScopeEngine } = await import('../../../src/scopeDsl/engine.js');
+//            const scopeEngine = new ScopeEngine();
+//            const result = scopeEngine.resolve(scopeData.ast, context, runtimeCtx);
+//    PROPOSED (WRONG): this.testEnv.scopeEngine.resolve(scopeAst, context, runtimeCtx);
+//
+// 5. _registerResolvers signature: Takes 3 parameters
+//    ACTUAL: ScopeResolverHelpers._registerResolvers(this.testEnv, this.testEnv.entityManager, { [fullScopeName]: resolver });
+//    PROPOSED (WRONG): ScopeResolverHelpers._registerResolvers(this.testEnv, { [scopeId]: resolver });
+//
+// 6. Path construction: Uses process.cwd() and resolve()
+//    ACTUAL: const scopePath = resolve(process.cwd(), `data/mods/${modId}/scopes/${scopeName}.scope`);
+//    PROPOSED (WRONG): path.join(__dirname, `../../../data/mods/${modId}/scopes/${scopeName}.scope`)
+//
+// The actual implementation is correct and working. See tests/common/mods/ModTestFixture.js lines 2141-2257.
+```
+
+#### In scopeResolverHelpers.js (TODO - NOT YET IMPLEMENTED)
+
+**STATUS**: This static helper method does NOT exist yet and needs to be added.
+
+**PROPOSED IMPLEMENTATION** (based on actual codebase patterns):
+
+```javascript
+import { promises as fs } from 'fs';
+import { resolve } from 'path';
+import process from 'node:process';
+import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
+
+export class ScopeResolverHelpers {
+  // ... existing methods ...
+
   /**
-   * Registers a custom scope from the specified mod for use in tests.
+   * Convenience method for registering a custom scope without a ModTestFixture instance.
+   *
+   * @param {object} testEnv - Test environment from createSystemLogicTestEnv()
+   * @param {string} modId - The mod containing the scope
+   * @param {string} scopeName - The scope name (without .scope extension)
+   * @returns {Promise<void>}
+   * @throws {Error} If scope file not found or parsing fails
    */
-  async registerCustomScope(modId, scopeName, options = {}) {
-    const {
-      loadConditions = true,
-      maxDepth = 5,
-    } = options;
-
+  static async registerCustomScope(testEnv, modId, scopeName) {
     // Validate inputs
-    if (typeof modId !== 'string' || modId.trim() === '') {
+    if (!modId || typeof modId !== 'string') {
       throw new Error('modId must be a non-empty string');
     }
-    if (typeof scopeName !== 'string' || scopeName.trim() === '') {
+    if (!scopeName || typeof scopeName !== 'string') {
       throw new Error('scopeName must be a non-empty string');
     }
 
     // Construct scope file path
-    const scopePath = path.join(
-      __dirname,
-      `../../../data/mods/${modId}/scopes/${scopeName}.scope`
+    const scopePath = resolve(
+      process.cwd(),
+      `data/mods/${modId}/scopes/${scopeName}.scope`
     );
 
-    // Parse scope definition
-    let scopeDef;
+    // Read scope file
+    let scopeContent;
     try {
-      scopeDef = await parseScopeDefinitions(scopePath);
+      scopeContent = await fs.readFile(scopePath, 'utf-8');
     } catch (err) {
       throw new Error(
-        `Failed to load scope file for "${modId}:${scopeName}" from ${scopePath}: ${err.message}\n\n` +
-        `Verify that:\n` +
-        `  1. The mod ID "${modId}" is correct\n` +
-        `  2. The scope file exists at: data/mods/${modId}/scopes/${scopeName}.scope\n` +
-        `  3. The scope file is valid JSON`
+        `Failed to read scope file at ${scopePath}: ${err.message}`
       );
     }
 
-    // Verify scope name exists in parsed definition
-    if (!scopeDef[scopeName]) {
-      const availableScopes = Object.keys(scopeDef).join(', ');
+    // Parse scope definitions (returns Map)
+    let parsedScopes;
+    try {
+      parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
+    } catch (err) {
       throw new Error(
-        `Scope "${scopeName}" not found in ${scopePath}.\n` +
+        `Failed to parse scope file at ${scopePath}: ${err.message}`
+      );
+    }
+
+    // Get scope data (must use full namespaced name)
+    const fullScopeName = `${modId}:${scopeName}`;
+    const scopeData = parsedScopes.get(fullScopeName);
+
+    if (!scopeData) {
+      const availableScopes = Array.from(parsedScopes.keys()).join(', ');
+      throw new Error(
+        `Scope "${fullScopeName}" not found in file ${scopePath}. ` +
         `Available scopes: ${availableScopes || '(none)'}`
       );
     }
 
-    // Auto-load dependency conditions if enabled (from TESDATREG-003)
-    if (loadConditions) {
-      const conditionRefs = ScopeConditionAnalyzer.extractConditionRefs(scopeDef);
+    // Create and register the resolver (note: creates local ScopeEngine instance)
+    const { default: ScopeEngine } = await import(
+      '../../../src/scopeDsl/engine.js'
+    );
+    const scopeEngine = new ScopeEngine();
 
-      if (conditionRefs.size > 0) {
-        const allConditions = await ScopeConditionAnalyzer.discoverTransitiveDependencies(
-          Array.from(conditionRefs),
-          ScopeConditionAnalyzer.loadConditionDefinition.bind(ScopeConditionAnalyzer),
-          maxDepth
-        );
-
-        const validation = await ScopeConditionAnalyzer.validateConditions(
-          allConditions,
-          scopePath
-        );
-
-        if (validation.missing.length > 0) {
-          throw new Error(
-            `Scope "${modId}:${scopeName}" references missing conditions:\n` +
-            validation.missing.map(id => `  - ${id}`).join('\n') +
-            `\n\nReferenced in: ${scopePath}`
-          );
-        }
-
-        await this.loadDependencyConditions(Array.from(allConditions));
-      }
-    }
-
-    // Create and register the resolver
-    const scopeId = `${modId}:${scopeName}`;
-    const scopeAst = scopeDef[scopeName];
-
-    const resolver = (runtimeCtx) => {
-      // Build context with actor
-      const context = { actor: runtimeCtx.actor };
+    const resolver = (context) => {
+      const runtimeCtx = {
+        entityManager: testEnv.entityManager,
+        jsonLogicEval: testEnv.jsonLogic,
+        logger: testEnv.logger,
+      };
 
       try {
-        return this.testEnv.scopeEngine.resolve(scopeAst, context, runtimeCtx);
+        const result = scopeEngine.resolve(scopeData.ast, context, runtimeCtx);
+        return { success: true, value: result };
       } catch (err) {
-        this.testEnv.logger.error(
-          `Failed to resolve custom scope "${scopeId}":`,
-          err
-        );
-        throw new Error(
-          `Scope resolution failed for "${scopeId}": ${err.message}`
-        );
+        return {
+          success: false,
+          error: `Failed to resolve scope "${fullScopeName}": ${err.message}`,
+        };
       }
     };
 
-    // Register with ScopeEngine
-    ScopeResolverHelpers._registerResolvers(this.testEnv, {
-      [scopeId]: resolver,
-    });
-
-    this.testEnv.logger.info(
-      `Registered custom scope: ${scopeId}` +
-      (loadConditions ? ` (with ${conditionRefs?.size || 0} dependency conditions)` : '')
-    );
-  }
-}
-```
-
-#### In scopeResolverHelpers.js
-
-```javascript
-import path from 'path';
-import { parseScopeDefinitions } from '../../../src/scopeDsl/parseScopeDefinitions.js';
-
-class ScopeResolverHelpers {
-  /**
-   * Convenience method for registering a custom scope.
-   */
-  static async registerCustomScope(testEnv, modId, scopeName) {
-    // Construct scope file path
-    const scopePath = path.join(
-      __dirname,
-      `../../../data/mods/${modId}/scopes/${scopeName}.scope`
-    );
-
-    // Parse scope definition
-    const scopeDef = await parseScopeDefinitions(scopePath);
-
-    if (!scopeDef[scopeName]) {
-      const availableScopes = Object.keys(scopeDef).join(', ');
-      throw new Error(
-        `Scope "${scopeName}" not found in ${scopePath}.\n` +
-        `Available scopes: ${availableScopes || '(none)'}`
-      );
-    }
-
-    // Create and register the resolver
-    const scopeId = `${modId}:${scopeName}`;
-    const scopeAst = scopeDef[scopeName];
-
-    const resolver = (runtimeCtx) => {
-      const context = { actor: runtimeCtx.actor };
-
-      try {
-        return testEnv.scopeEngine.resolve(scopeAst, context, runtimeCtx);
-      } catch (err) {
-        testEnv.logger.error(`Failed to resolve custom scope "${scopeId}":`, err);
-        throw err;
-      }
-    };
-
-    this._registerResolvers(testEnv, {
-      [scopeId]: resolver,
+    // Register with proper signature (3 parameters)
+    this._registerResolvers(testEnv, testEnv.entityManager, {
+      [fullScopeName]: resolver,
     });
   }
 }
 ```
+
+**IMPLEMENTATION NOTES**:
+- Must mirror the actual implementation in ModActionTestFixture
+- parseScopeDefinitions takes (content, filePath), not just filePath
+- Returns a Map, access with .get(fullScopeName)
+- fullScopeName must include mod prefix: `${modId}:${scopeName}`
+- _registerResolvers takes 3 params: (testEnv, entityManager, resolvers)
+- Creates local ScopeEngine instance via dynamic import
 
 ## Testing Requirements
 
-### Unit Tests
+### Integration Tests (ALREADY EXIST)
+
+**STATUS**: Integration tests already exist at:
+- `tests/integration/common/ModTestFixture.autoLoadConditions.integration.test.js`
+
+These tests cover:
+- Auto-loading conditions when registering custom scope
+- Error handling for missing scope files
+- Error handling for scope name not found in file
+- Disabling auto-load with `loadConditions: false` option
+- Handling scopes with multiple condition_refs
+
+### Unit Tests (TODO - STILL NEEDED)
+
+**STATUS**: No unit tests exist yet. Must create comprehensive unit test file.
 
 Create `tests/unit/common/mods/ModTestFixture.registerCustomScope.test.js`:
 
@@ -498,88 +521,64 @@ describe('ModTestFixture - registerCustomScope', () => {
 });
 ```
 
-### Integration Tests
+### Additional Integration Test Scenarios (OPTIONAL)
 
-Create `tests/integration/common/ModTestFixture.registerCustomScope.integration.test.js`:
+**STATUS**: Basic integration tests exist. Could add more comprehensive scenarios if needed.
+
+**ALREADY TESTED** in existing files:
+- `tests/integration/mods/sex-anal-penetration/insert_finger_into_asshole_action_discovery.test.js`
+- `tests/integration/mods/sex-anal-penetration/insert_multiple_fingers_into_asshole_action_discovery.test.js`
+- `tests/integration/mods/sex-anal-penetration/push_glans_into_asshole_action_discovery.test.js`
+
+These files demonstrate real-world usage of `registerCustomScope()` in action discovery tests.
+
+**OPTIONAL ADDITION**: Test for ScopeResolverHelpers static method (when implemented):
 
 ```javascript
-describe('ModTestFixture - registerCustomScope Integration', () => {
-  it('should work end-to-end with real custom scope', async () => {
-    const testFixture = await ModTestFixture.forAction(
-      'sex-anal-penetration',
-      'sex-anal-penetration:insert_finger_into_asshole'
-    );
+// Add to tests/integration/common/ModTestFixture.autoLoadConditions.integration.test.js
 
-    // Register custom scope with auto-load
-    await testFixture.registerCustomScope(
-      'sex-anal-penetration',
-      'actors_with_exposed_asshole_accessible_from_behind'
-    );
+it('should work with ScopeResolverHelpers static method', async () => {
+  const testEnv = createSystemLogicTestEnv();
 
-    // Create test scenario
-    const scenario = testFixture.createStandardActorTarget();
+  // Use static helper (once implemented)
+  await ScopeResolverHelpers.registerCustomScope(
+    testEnv,
+    'sex-dry-intimacy',
+    'actors_with_exposed_ass_facing_away'
+  );
 
-    // Set up positioning so scope resolves correctly
-    testFixture.testEnv.componentMutationService.addComponents(
-      scenario.target.id,
-      [
-        { type: 'positioning:actor_position', data: { x: 5, y: 5, z: 0, facing: 0 } },
-        { type: 'anatomy:body', data: { parts: [{ type: 'asshole' }] } },
-      ]
-    );
+  // Verify scope was registered
+  const fullScopeName = 'sex-dry-intimacy:actors_with_exposed_ass_facing_away';
 
-    testFixture.testEnv.componentMutationService.addComponents(
-      scenario.actor.id,
-      [
-        { type: 'positioning:actor_position', data: { x: 6, y: 5, z: 0, facing: 180 } },
-      ]
-    );
-
-    // Execute action discovery
-    const actions = await testFixture.discoverAvailableActions(scenario.actor.id);
-
-    // Should discover the action
-    expect(actions).toContainEqual(
-      expect.objectContaining({
-        actionId: 'sex-anal-penetration:insert_finger_into_asshole',
-      })
-    );
-  });
-
-  it('should work with ScopeResolverHelpers static method', async () => {
-    const testEnv = createSystemLogicTestEnv();
-
-    // Use static helper
-    await ScopeResolverHelpers.registerCustomScope(
-      testEnv,
-      'sex-anal-penetration',
-      'actors_with_exposed_asshole_accessible_from_behind'
-    );
-
-    // Verify scope is registered
-    const scopeId = 'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind';
-    expect(testEnv.scopeEngine.resolvers.has(scopeId)).toBe(true);
-  });
+  // Note: testEnv uses unifiedScopeResolver, not scopeEngine
+  // Verification would need to check if resolver was registered via _registeredResolvers
+  expect(testEnv._registeredResolvers.has(fullScopeName)).toBe(true);
 });
 ```
 
 ## Edge Cases to Handle
 
-1. **Scope file doesn't exist**: Clear error with correct path
-2. **Scope name not in file**: List available scopes in error
-3. **Invalid JSON in scope file**: JSON parse error with file path
-4. **Scope references missing conditions**: Error from TESDATREG-003 validation
-5. **Scope has syntax errors**: AST parsing error with context
-6. **Empty scope file**: Error indicating no scopes found
-7. **Multiple scopes in same file**: Successfully extract the requested one
-8. **Scope already registered**: Idempotent (re-registration should work)
+**STATUS**: All edge cases are already handled in the existing implementation.
+
+1. ✅ **Scope file doesn't exist**: Clear error with correct path (implemented)
+2. ✅ **Scope name not in file**: List available scopes in error (implemented)
+3. ✅ **Invalid scope file**: Parse error with file path (implemented)
+4. ✅ **Scope references missing conditions**: Error from TESDATREG-003 validation (implemented)
+5. ✅ **Scope has syntax errors**: AST parsing error with context (implemented via parseScopeDefinitions)
+6. ✅ **Empty scope file**: Error indicating no scopes found (handled by parseScopeDefinitions)
+7. ✅ **Multiple scopes in same file**: Successfully extracts the requested one (implemented)
+8. ✅ **Scope already registered**: Idempotent - re-registration works (implemented)
 
 ## Refactoring Impact
 
-After implementing this ticket, update existing tests:
+**STATUS**: Most refactoring is already complete.
 
-1. `tests/integration/mods/sex-anal-penetration/insert_finger_into_asshole_action_discovery.test.js`
-2. `tests/integration/mods/sex-anal-penetration/insert_multiple_fingers_into_asshole_action_discovery.test.js`
+**ALREADY REFACTORED** (using registerCustomScope):
+1. ✅ `tests/integration/mods/sex-anal-penetration/insert_finger_into_asshole_action_discovery.test.js`
+2. ✅ `tests/integration/mods/sex-anal-penetration/insert_multiple_fingers_into_asshole_action_discovery.test.js`
+3. ✅ `tests/integration/mods/sex-anal-penetration/push_glans_into_asshole_action_discovery.test.js`
+
+**TODO**: Check if any other tests need refactoring (search for manual scope registration patterns)
 
 ### Before (36 lines)
 
@@ -643,33 +642,36 @@ Update `docs/testing/mod-testing-guide.md`:
 
 ## Acceptance Tests
 
-- [ ] Method validates modId is non-empty string
-- [ ] Method validates scopeName is non-empty string
-- [ ] Method constructs correct file path
-- [ ] Method loads and parses scope file
-- [ ] Method throws clear error when file not found
-- [ ] Method throws clear error when scope name not in file
-- [ ] Method lists available scopes in error messages
-- [ ] Method creates working resolver function
-- [ ] Method registers resolver with ScopeEngine
-- [ ] Method auto-loads dependency conditions by default
-- [ ] Method respects loadConditions: false option
-- [ ] Method handles scopes with no conditions
-- [ ] Static helper method works without ModTestFixture
+**Core Method (COMPLETE):**
+- [x] Method validates modId is non-empty string
+- [x] Method validates scopeName is non-empty string
+- [x] Method constructs correct file path
+- [x] Method loads and parses scope file
+- [x] Method throws clear error when file not found
+- [x] Method throws clear error when scope name not in file
+- [x] Method lists available scopes in error messages
+- [x] Method creates working resolver function
+- [x] Method registers resolver with UnifiedScopeResolver
+- [x] Method auto-loads dependency conditions by default
+- [x] Method respects loadConditions: false option
+- [x] Method handles scopes with no conditions
+- [x] Integration tests work with real scope files
+- [x] Existing tests successfully refactored (3 files)
+- [x] No performance regression (registration is fast)
+
+**Still Needed:**
+- [ ] Static helper method works without ModTestFixture (ScopeResolverHelpers.registerCustomScope)
 - [ ] Unit tests achieve 90%+ coverage
-- [ ] Integration tests work with real scope files
-- [ ] Existing tests successfully refactored
 - [ ] Documentation is comprehensive and accurate
-- [ ] No performance regression (registration < 100ms)
 
 ## Dependencies
 
-- **TESDATREG-002**: Required (provides `loadDependencyConditions()`)
-- **TESDATREG-003**: Optional but recommended (provides auto-loading logic)
+- **TESDATREG-002**: ✅ COMPLETE (provides `loadDependencyConditions()`)
+- **TESDATREG-003**: ✅ COMPLETE (provides auto-loading logic - already integrated)
 
 ## Blockers
 
-None (can proceed after TESDATREG-002)
+None - core implementation is complete. Remaining work is independent.
 
 ## Related Tickets
 
@@ -679,24 +681,27 @@ None (can proceed after TESDATREG-002)
 
 ## Implementation Checklist
 
-- [ ] Add `registerCustomScope()` method to ModTestFixture
-- [ ] Implement input validation (modId, scopeName)
-- [ ] Implement file path construction
-- [ ] Implement scope file loading and parsing
-- [ ] Implement error handling for file not found
-- [ ] Implement error handling for scope name not found
-- [ ] Implement resolver function creation
-- [ ] Integrate auto-loading of conditions (if TESDATREG-003 done)
-- [ ] Implement resolver registration with ScopeEngine
-- [ ] Add static method to ScopeResolverHelpers
-- [ ] Add informative error messages
-- [ ] Add logging for successful registration
-- [ ] Create unit test file with 15+ test cases
-- [ ] Create integration test file with real scope
-- [ ] Achieve 90%+ code coverage
-- [ ] Refactor 2 existing test files
-- [ ] Update documentation
-- [ ] Add JSDoc comments to methods
-- [ ] Run full test suite
-- [ ] Run `npm run typecheck`
+**Core Implementation (COMPLETE):**
+- [x] Add `registerCustomScope()` method to ModActionTestFixture (lines 2141-2257)
+- [x] Implement input validation (modId, scopeName)
+- [x] Implement file path construction
+- [x] Implement scope file loading and parsing
+- [x] Implement error handling for file not found
+- [x] Implement error handling for scope name not found
+- [x] Implement resolver function creation
+- [x] Integrate auto-loading of conditions (TESDATREG-003)
+- [x] Implement resolver registration with UnifiedScopeResolver
+- [x] Add informative error messages
+- [x] Create integration test file with real scope (ModTestFixture.autoLoadConditions.integration.test.js)
+- [x] Refactor 3 existing test files (insert_finger, insert_multiple_fingers, push_glans)
+- [x] Add JSDoc comments to methods
+
+**Remaining Tasks:**
+- [ ] Add static `registerCustomScope()` method to ScopeResolverHelpers class
+- [ ] Create unit test file: `tests/unit/common/mods/ModTestFixture.registerCustomScope.test.js` with 15+ test cases
+- [ ] Achieve 90%+ code coverage for registerCustomScope method
+- [ ] Update documentation: `docs/testing/mod-testing-guide.md`
+- [ ] Search for and refactor any remaining manual scope registration patterns
+- [ ] Run full test suite after adding unit tests
+- [ ] Run `npm run typecheck` on modified files
 - [ ] Run `npx eslint` on modified files
