@@ -13,20 +13,20 @@ Implement the participation toggle event handler, component updates via entity m
 ## Detailed Tasks
 
 ### Toggle Handler Implementation
-- [ ] Replace `#handleParticipationToggle(event)` placeholder
+- [ ] Update entityManager dependency validation to include `addComponent` method
+- [ ] Replace `#handleParticipationToggle(event)` placeholder (make it async)
 - [ ] Extract checkbox element from event target
 - [ ] Validate event target is a checkbox
 - [ ] Extract actor ID from `dataset.actorId`
 - [ ] Extract new participation state from `checked` property
-- [ ] Call component update logic
+- [ ] Await component update logic
 - [ ] Add comprehensive error handling
 
 ### Component Update Logic
-- [ ] Implement `#updateParticipation(actorId, participating)` private method
+- [ ] Implement `#updateParticipation(actorId, participating)` private method (async)
 - [ ] Validate actorId exists
-- [ ] Check if actor has participation component
-- [ ] If component exists, update via `entityManager.setComponentData()`
-- [ ] If component doesn't exist, add it via `entityManager.addComponent()`
+- [ ] Update/add participation component via `entityManager.addComponent()` (handles both cases)
+- [ ] Await the async operation
 - [ ] Log successful update with actor ID and state
 - [ ] Return success/failure boolean
 
@@ -56,11 +56,16 @@ Implement the participation toggle event handler, component updates via entity m
 
 ## Code Changes Template
 ```javascript
+// Update entityManager dependency validation in constructor
+validateDependency(entityManager, 'IEntityManager', logger, {
+  requiredMethods: ['getEntitiesWithComponent', 'addComponent'],
+});
+
 // Add private field for timeout
 #statusTimeout = null;
 
 // Replace #handleParticipationToggle placeholder
-#handleParticipationToggle(event) {
+async #handleParticipationToggle(event) {
   const checkbox = event.target;
 
   // Validate event target
@@ -72,14 +77,14 @@ Implement the participation toggle event handler, component updates via entity m
   const newParticipationState = checkbox.checked;
 
   if (!actorId) {
-    this.#logger.warn('Checkbox missing data-actor-id attribute');
+    this.#logger.warn('[ActorParticipation] Checkbox missing data-actor-id attribute');
     return;
   }
 
-  this.#logger.debug(`Toggling participation for actor ${actorId} to ${newParticipationState}`);
+  this.#logger.debug(`[ActorParticipation] Toggling participation for actor ${actorId} to ${newParticipationState}`);
 
   try {
-    const success = this.#updateParticipation(actorId, newParticipationState);
+    const success = await this.#updateParticipation(actorId, newParticipationState);
     if (success) {
       const statusMessage = newParticipationState
         ? `Enabled participation for ${actorId}`
@@ -89,42 +94,38 @@ Implement the participation toggle event handler, component updates via entity m
       throw new Error('Failed to update participation component');
     }
   } catch (err) {
-    this.#logger.error(`Error updating participation for actor ${actorId}`, err);
+    this.#logger.error(`[ActorParticipation] Error updating participation for actor ${actorId}`, err);
     // Revert checkbox state
     checkbox.checked = !newParticipationState;
     this.#showStatus('Error updating participation', 'error');
   }
 }
 
-#updateParticipation(actorId, participating) {
+async #updateParticipation(actorId, participating) {
   try {
-    // Check if participation component exists
-    const hasComponent = this.#entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID);
+    // addComponent() handles both adding new components and updating existing ones
+    const success = await this.#entityManager.addComponent(
+      actorId,
+      PARTICIPATION_COMPONENT_ID,
+      { participating }
+    );
 
-    if (hasComponent) {
-      // Update existing component
-      this.#entityManager.setComponentData(actorId, PARTICIPATION_COMPONENT_ID, {
-        participating,
-      });
-    } else {
-      // Add new component with participation state
-      this.#entityManager.addComponent(actorId, {
-        id: PARTICIPATION_COMPONENT_ID,
-        dataSchema: { participating },
-      });
+    if (success) {
+      this.#logger.info(`[ActorParticipation] Updated participation for actor ${actorId} to ${participating}`);
+      return true;
     }
 
-    this.#logger.info(`Updated participation for actor ${actorId} to ${participating}`);
-    return true;
+    this.#logger.warn(`[ActorParticipation] Failed to update participation component for actor ${actorId}`);
+    return false;
   } catch (err) {
-    this.#logger.error(`Failed to update participation component for actor ${actorId}`, err);
+    this.#logger.error(`[ActorParticipation] Error updating participation component for actor ${actorId}`, err);
     return false;
   }
 }
 
 #showStatus(message, type = 'success') {
   if (!this.#actorParticipationStatus) {
-    this.#logger.warn('Cannot show status: status element not found');
+    this.#logger.warn('[ActorParticipation] Cannot show status: status element not found');
     return;
   }
 
@@ -147,33 +148,58 @@ Implement the participation toggle event handler, component updates via entity m
     this.#statusTimeout = null;
   }, 3000);
 
-  this.#logger.debug(`Displayed status: ${message} (${type})`);
+  this.#logger.debug(`[ActorParticipation] Displayed status: ${message} (${type})`);
 }
 
 // Update cleanup() to clear status timeout
 cleanup() {
-  this.#logger.info('Cleaning up ActorParticipationController');
+  try {
+    this.#logger.info('[ActorParticipation] Cleaning up...');
 
-  // Clear status timeout
-  if (this.#statusTimeout) {
-    clearTimeout(this.#statusTimeout);
-    this.#statusTimeout = null;
+    // Clear status timeout
+    if (this.#statusTimeout) {
+      clearTimeout(this.#statusTimeout);
+      this.#statusTimeout = null;
+    }
+
+    // Unsubscribe from event bus
+    if (this.#gameReadyHandler) {
+      this.#eventBus.unsubscribe(ENGINE_READY_UI, this.#gameReadyHandler);
+      this.#gameReadyHandler = null;
+      this.#logger.debug('[ActorParticipation] Unsubscribed from game events');
+    }
+
+    // Remove DOM event listeners
+    if (this.#actorParticipationList && this.#boundHandleToggle) {
+      this.#actorParticipationList.removeEventListener('change', this.#boundHandleToggle);
+    }
+
+    // Clear references
+    this.#actorParticipationWidget = null;
+    this.#actorParticipationList = null;
+    this.#actorParticipationStatus = null;
+    this.#boundHandleToggle = null;
+
+    this.#logger.debug('[ActorParticipation] Cleanup complete');
+  } catch (err) {
+    this.#logger.error('[ActorParticipation] Error during cleanup', err);
   }
-
-  // ... existing cleanup code ...
 }
 ```
 
 ## Acceptance Criteria
 - [ ] Toggle handler validates event target is a checkbox
+- [ ] Toggle handler is async and awaits component updates
 - [ ] Actor ID extracted from `data-actor-id` attribute
 - [ ] Participation state extracted from checkbox `checked` property
-- [ ] Component update handles both existing and new participation components
-- [ ] `setComponentData()` used for updates, `addComponent()` for new components
+- [ ] Component update uses `addComponent()` which handles both adding and updating
+- [ ] `addComponent()` is called with correct signature: `(actorId, componentTypeId, componentData)`
+- [ ] Component update is async and properly awaited
 - [ ] Status messages displayed with success/error styling
 - [ ] Status auto-clears after 3 seconds
 - [ ] Error handling reverts checkbox state on failure
 - [ ] Timeout cleared properly in cleanup
+- [ ] All logging uses `[ActorParticipation]` prefix for consistency
 - [ ] All code follows project conventions
 - [ ] No ESLint errors
 
@@ -190,5 +216,9 @@ cleanup() {
 - Use `dataset.actorId` for clean attribute access
 - Checkbox state reversion prevents UI inconsistency on errors
 - Auto-clear timeout improves UX (status doesn't linger)
-- Handle both component creation and update scenarios
+- `addComponent()` automatically handles both adding new and updating existing components
+- No need to check `hasComponent()` before calling `addComponent()`
+- Method signature: `entityManager.addComponent(instanceId, componentTypeId, componentData)`
+- Method is async and must be awaited
+- Use `[ActorParticipation]` logging prefix for consistency with existing code
 - Defensive checks for missing elements and attributes
