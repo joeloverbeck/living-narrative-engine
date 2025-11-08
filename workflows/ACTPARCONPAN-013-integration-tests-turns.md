@@ -14,40 +14,47 @@ Create integration tests that verify the turn order system correctly skips non-p
 
 ### Test File Setup
 - [ ] Create `tests/integration/turns/participationTurnOrder.test.js`
-- [ ] Import test utilities and turn order components
-- [ ] Set up real entity manager and turn queue
-- [ ] Create test bed for turn system integration
+- [ ] Import `TurnOrderService` from `src/turns/order/turnOrderService.js`
+- [ ] Import `TurnCycle` from `src/turns/turnCycle.js`
+- [ ] Import `SimpleEntityManager` from `tests/common/entities/simpleEntityManager.js`
+- [ ] Import mock factories from `tests/common/mockFactories/index.js`
+- [ ] Import component IDs from `src/constants/componentIds.js`
+- [ ] Set up real service instances (not mocked) for integration testing
 
 ### Turn Skip Tests
-- [ ] Test turn queue skips actor with `participating: false`
-- [ ] Test turn queue processes actor with `participating: true`
-- [ ] Test turn queue defaults to `true` when component missing
+- [ ] Test `TurnCycle.nextActor()` skips actors with `participating: false`
+- [ ] Test `TurnCycle.nextActor()` processes actors with `participating: true`
+- [ ] Test defaults to `participating: true` when component missing
 - [ ] Test multiple actors with mixed participation states
-- [ ] Test turn queue advances correctly after skipping
+- [ ] Test turn progression continues correctly after skipping non-participating actors
+- [ ] Use `TurnOrderService.startNewRound()` to initialize turn order
 
 ### Edge Case Tests
 - [ ] Test all actors non-participating scenario
-- [ ] Test `getNextActor()` returns null when no actors participating
-- [ ] Test mixed participation state: some true, some false, some undefined
+- [ ] Test `TurnCycle.nextActor()` returns null when no actors participating
+- [ ] Verify warning is logged when no participating actors found
+- [ ] Test mixed participation states: some true, some false, some without component
 - [ ] Test single participating actor among many disabled
-- [ ] Test participation toggle mid-turn-cycle
+- [ ] Test empty turn queue (returns null gracefully)
 
 ### Turn Progression Tests
-- [ ] Test full turn cycle with participation filtering
-- [ ] Test turn order maintained after skipping actors
-- [ ] Test initiative/priority preserved with participation filter
-- [ ] Test turn wrapping (end of queue) with disabled actors
+- [ ] Test full turn cycle with participation filtering via `TurnCycle`
+- [ ] Test turn order maintained after skipping non-participating actors
+- [ ] Verify actors are returned in correct order (FIFO round-robin)
+- [ ] Test queue exhaustion (no automatic wrapping - returns null when empty)
 
 ### LLM API Call Prevention Tests
-- [ ] Test LLM service not called for non-participating actors
-- [ ] Mock LLM service and verify call count
-- [ ] Test participating actors still trigger LLM calls
-- [ ] Test cost optimization: disabled actors reduce API calls
+- [ ] Verify `TurnCycle.nextActor()` skips non-participating actors (preventing LLM calls)
+- [ ] Test that only participating actors are returned from turn cycle
+- [ ] Verify participation component data structure is correct
+- [ ] Test actor list filtering: collect all returned actors and verify non-participating excluded
+- [ ] Note: LLM calls happen at higher layer; this tests the filtering mechanism
 
 ### Infinite Loop Prevention Tests
-- [ ] Test max attempts limit prevents infinite loop
-- [ ] Test safety check activates when all actors disabled
-- [ ] Test warning logged when no participating actors found
+- [ ] Verify `TurnCycle.nextActor()` has max attempts limit (50 or queue size)
+- [ ] Test safety check prevents infinite loop when all actors disabled
+- [ ] Verify warning is logged via `mockLogger.warn` when no participating actors found
+- [ ] Test returns null (not infinite loop) when all actors non-participating
 
 ## Files Created
 - `tests/integration/turns/participationTurnOrder.test.js`
@@ -55,152 +62,176 @@ Create integration tests that verify the turn order system correctly skips non-p
 ## Test Template Structure
 ```javascript
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { createTestBed } from '../../common/testBed.js';
-import { ACTOR_COMPONENT_ID, PARTICIPATION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
+import TurnCycle from '../../../src/turns/turnCycle.js';
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
+import {
+  ACTOR_COMPONENT_ID,
+  NAME_COMPONENT_ID,
+  PARTICIPATION_COMPONENT_ID,
+} from '../../../src/constants/componentIds.js';
 
 describe('Turn Order - Participation Integration', () => {
-  let testBed;
+  let turnOrderService;
+  let turnCycle;
   let entityManager;
-  let turnQueue; // Actual turn queue instance
-  let mockLLMService;
+  let mockLogger;
 
   beforeEach(() => {
-    testBed = createTestBed();
-    entityManager = testBed.entityManager;
-    turnQueue = testBed.turnQueue; // Or resolve from DI container
-
-    // Mock LLM service to verify calls
-    mockLLMService = {
-      generateResponse: jest.fn(() => Promise.resolve({ content: 'test response' })),
-    };
+    // Create real service instances for integration testing
+    mockLogger = createMockLogger();
+    turnOrderService = new TurnOrderService({ logger: mockLogger });
+    entityManager = new SimpleEntityManager();
+    turnCycle = new TurnCycle(turnOrderService, entityManager, mockLogger);
   });
 
   afterEach(() => {
-    testBed.cleanup();
     jest.clearAllMocks();
   });
 
-  function createTestActor(id, name, participating) {
-    const actor = testBed.createEntity(id);
-    entityManager.addComponent(actor, {
-      id: ACTOR_COMPONENT_ID,
-      dataSchema: { name },
-    });
+  /**
+   * Helper to create a test actor with components
+   * @param {string} id - Entity ID
+   * @param {string} name - Actor name
+   * @param {boolean|null} participating - Participation state (null = no component)
+   * @returns {Promise<object>} Entity object with id
+   */
+  async function createTestActor(id, name, participating) {
+    // Add actor component
+    await entityManager.addComponent(id, ACTOR_COMPONENT_ID, {});
+    await entityManager.addComponent(id, NAME_COMPONENT_ID, { text: name });
 
-    if (participating !== undefined) {
-      entityManager.addComponent(actor, {
-        id: PARTICIPATION_COMPONENT_ID,
-        dataSchema: { participating },
+    // Add participation component if specified
+    if (participating !== null && participating !== undefined) {
+      await entityManager.addComponent(id, PARTICIPATION_COMPONENT_ID, {
+        participating,
       });
     }
 
-    return actor;
+    // Return entity object (SimpleEntityManager returns { id })
+    return { id };
   }
 
   describe('Turn Skip Behavior', () => {
-    it('should skip actors with participating: false', () => {
-      const actor1 = createTestActor('actor1', 'Hero', true);
-      const actor2 = createTestActor('actor2', 'Villain', false);
-      const actor3 = createTestActor('actor3', 'Sidekick', true);
+    it('should skip actors with participating: false', async () => {
+      const actor1 = await createTestActor('actor1', 'Hero', true);
+      const actor2 = await createTestActor('actor2', 'Villain', false);
+      const actor3 = await createTestActor('actor3', 'Sidekick', true);
 
-      // Add to turn queue
-      turnQueue.addActor(actor1);
-      turnQueue.addActor(actor2);
-      turnQueue.addActor(actor3);
+      // Start round with all actors
+      const entities = [actor1, actor2, actor3];
+      turnOrderService.startNewRound(entities, 'round-robin');
 
-      // Get next actors
-      const first = turnQueue.getNextActor();
-      expect(first).toBe(actor1);
+      // Get next actors via TurnCycle (handles participation filtering)
+      const first = await turnCycle.nextActor();
+      expect(first?.id).toBe('actor1');
 
-      const second = turnQueue.getNextActor();
-      expect(second).toBe(actor3); // actor2 skipped
+      const second = await turnCycle.nextActor();
+      expect(second?.id).toBe('actor3'); // actor2 skipped
 
-      const third = turnQueue.getNextActor();
-      expect(third).toBe(actor1); // Wrapped around
+      const third = await turnCycle.nextActor();
+      expect(third).toBeNull(); // Queue exhausted (no wrapping in TurnOrderService)
     });
 
-    it('should process actors with participating: true normally', () => {
-      const actor1 = createTestActor('actor1', 'Hero', true);
-      const actor2 = createTestActor('actor2', 'Ally', true);
+    it('should process actors with participating: true normally', async () => {
+      const actor1 = await createTestActor('actor1', 'Hero', true);
+      const actor2 = await createTestActor('actor2', 'Ally', true);
 
-      turnQueue.addActor(actor1);
-      turnQueue.addActor(actor2);
+      turnOrderService.startNewRound([actor1, actor2], 'round-robin');
 
-      const first = turnQueue.getNextActor();
-      expect(first).toBe(actor1);
+      const first = await turnCycle.nextActor();
+      expect(first?.id).toBe('actor1');
 
-      const second = turnQueue.getNextActor();
-      expect(second).toBe(actor2);
+      const second = await turnCycle.nextActor();
+      expect(second?.id).toBe('actor2');
     });
 
-    it('should default to participating: true when component missing', () => {
-      const actor1 = createTestActor('actor1', 'Hero', undefined); // No component
+    it('should default to participating: true when component missing', async () => {
+      const actor1 = await createTestActor('actor1', 'Hero', null); // No component
 
-      turnQueue.addActor(actor1);
+      turnOrderService.startNewRound([actor1], 'round-robin');
 
-      const next = turnQueue.getNextActor();
-      expect(next).toBe(actor1); // Not skipped
+      const next = await turnCycle.nextActor();
+      expect(next?.id).toBe('actor1'); // Not skipped (defaults to true)
     });
   });
 
   describe('Edge Cases', () => {
-    it('should return null when all actors are non-participating', () => {
-      const actor1 = createTestActor('actor1', 'Disabled1', false);
-      const actor2 = createTestActor('actor2', 'Disabled2', false);
+    it('should return null when all actors are non-participating', async () => {
+      const actor1 = await createTestActor('actor1', 'Disabled1', false);
+      const actor2 = await createTestActor('actor2', 'Disabled2', false);
 
-      turnQueue.addActor(actor1);
-      turnQueue.addActor(actor2);
+      turnOrderService.startNewRound([actor1, actor2], 'round-robin');
 
-      const next = turnQueue.getNextActor();
+      const next = await turnCycle.nextActor();
+      expect(next).toBeNull();
+
+      // Verify warning was logged about no participating actors
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('No participating actors found')
+      );
+    });
+
+    it('should handle empty turn queue gracefully', async () => {
+      const next = await turnCycle.nextActor();
       expect(next).toBeNull();
     });
 
-    it('should handle empty turn queue gracefully', () => {
-      const next = turnQueue.getNextActor();
-      expect(next).toBeNull();
-    });
+    it('should maintain turn order with mixed participation states', async () => {
+      const actor1 = await createTestActor('actor1', 'Active', true);
+      const actor2 = await createTestActor('actor2', 'Inactive', false);
+      const actor3 = await createTestActor('actor3', 'NoComponent', null);
+      const actor4 = await createTestActor('actor4', 'Active2', true);
 
-    it('should maintain turn order with mixed participation states', () => {
-      const actor1 = createTestActor('actor1', 'Active', true);
-      const actor2 = createTestActor('actor2', 'Inactive', false);
-      const actor3 = createTestActor('actor3', 'NoComponent', undefined);
-      const actor4 = createTestActor('actor4', 'Active2', true);
+      turnOrderService.startNewRound(
+        [actor1, actor2, actor3, actor4],
+        'round-robin'
+      );
 
-      turnQueue.addActor(actor1);
-      turnQueue.addActor(actor2);
-      turnQueue.addActor(actor3);
-      turnQueue.addActor(actor4);
+      const first = await turnCycle.nextActor();
+      expect(first?.id).toBe('actor1');
 
-      expect(turnQueue.getNextActor()).toBe(actor1);
-      expect(turnQueue.getNextActor()).toBe(actor3); // actor2 skipped
-      expect(turnQueue.getNextActor()).toBe(actor4);
+      const second = await turnCycle.nextActor();
+      expect(second?.id).toBe('actor3'); // actor2 skipped
+
+      const third = await turnCycle.nextActor();
+      expect(third?.id).toBe('actor4');
     });
   });
 
   describe('LLM API Call Prevention', () => {
-    it('should not call LLM service for non-participating actors', async () => {
-      const actor1 = createTestActor('actor1', 'Hero', true);
-      const actor2 = createTestActor('actor2', 'Villain', false);
+    it('should verify turn cycle skips non-participating actors', async () => {
+      const actor1 = await createTestActor('actor1', 'Hero', true);
+      const actor2 = await createTestActor('actor2', 'Villain', false);
+      const actor3 = await createTestActor('actor3', 'Sidekick', true);
 
-      turnQueue.addActor(actor1);
-      turnQueue.addActor(actor2);
+      turnOrderService.startNewRound([actor1, actor2, actor3], 'round-robin');
 
-      // Process full turn cycle
-      await testBed.processTurn(mockLLMService); // actor1
-      await testBed.processTurn(mockLLMService); // actor2 skipped, back to actor1
+      // Verify only participating actors are returned
+      const turns = [];
+      let actor = await turnCycle.nextActor();
+      while (actor) {
+        turns.push(actor.id);
+        actor = await turnCycle.nextActor();
+      }
 
-      // LLM service should only be called for actor1 (twice)
-      expect(mockLLMService.generateResponse).toHaveBeenCalledTimes(2);
+      expect(turns).toEqual(['actor1', 'actor3']); // actor2 excluded
+      expect(turns).not.toContain('actor2');
     });
 
-    it('should still call LLM service for participating actors', async () => {
-      const actor1 = createTestActor('actor1', 'Hero', true);
+    it('should verify participation component data structure', async () => {
+      const actorId = 'actor1';
+      await createTestActor(actorId, 'Hero', false);
 
-      turnQueue.addActor(actor1);
+      // Verify component data is stored correctly
+      const participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
 
-      await testBed.processTurn(mockLLMService);
-
-      expect(mockLLMService.generateResponse).toHaveBeenCalledTimes(1);
+      expect(participation).toEqual({ participating: false });
+      expect(typeof participation.participating).toBe('boolean');
     });
   });
 
@@ -226,8 +257,12 @@ describe('Turn Order - Participation Integration', () => {
 5. Manual test: Disable actors and observe turn skipping in real gameplay
 
 ## Notes
-- Use real turn queue implementation for accurate integration testing
-- Mock LLM service to verify API call prevention
-- Test both happy path and edge cases thoroughly
-- Verify backward compatibility (actors without participation component)
-- Test turn wrapping and queue exhaustion scenarios
+- **Use real implementations** for integration testing: `TurnOrderService`, `TurnCycle`, `SimpleEntityManager`
+- **TurnCycle wraps TurnOrderService**: `TurnCycle.nextActor()` handles participation filtering
+- **Component data structure**: `entityManager.addComponent(entityId, componentId, data)` - 3 parameters
+- **Data access**: `entityManager.getComponentData(entityId, componentId)` returns data directly (no `dataSchema` wrapper)
+- **Access pattern**: `data.participating` (not `data.dataSchema.participating`)
+- **Default behavior**: Missing participation component defaults to `true` (backward compatibility)
+- **Reference**: See `tests/integration/domUI/actorParticipationIntegration.test.js` for similar patterns
+- **TurnOrderService API**: Uses `startNewRound(entities, strategy)`, `getNextEntity()`, not `addActor()`
+- **No automatic wrapping**: Queue returns null when exhausted (no circular turn order)
