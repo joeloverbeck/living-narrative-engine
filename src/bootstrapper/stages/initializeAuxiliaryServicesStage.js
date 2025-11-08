@@ -10,6 +10,7 @@ import {
   initSpeechBubbleRenderer,
   initProcessingIndicatorController,
   initCriticalLogNotifier,
+  initActorParticipationController,
   initPerceptibleEventSenderController,
 } from './auxiliary/index.js';
 import { setupEntityCacheInvalidation } from '../../scopeDsl/core/entityHelpers.js';
@@ -114,6 +115,16 @@ export async function initializeAuxiliaryServicesStage(
       'CriticalLogNotifier',
       () =>
         initCriticalLogNotifier({
+          container,
+          gameEngine,
+          logger,
+          tokens,
+        }),
+    ],
+    [
+      'ActorParticipationController',
+      () =>
+        initActorParticipationController({
           container,
           gameEngine,
           logger,
