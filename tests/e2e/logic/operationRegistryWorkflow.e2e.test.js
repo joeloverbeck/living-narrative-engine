@@ -214,7 +214,7 @@ describe('Operation Registry Workflow E2E', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle missing operation handler gracefully', async () => {
+    it('should throw detailed error for missing operation handler', () => {
       // Arrange
       const unknownOperation = {
         type: 'NON_EXISTENT_OPERATION',
@@ -229,14 +229,27 @@ describe('Operation Registry Workflow E2E', () => {
         jsonLogic,
       };
 
-      // Act - Should not throw, but logs error
-      const result = await operationInterpreter.execute(
-        unknownOperation,
-        context
-      );
+      // Act & Assert - Should throw OperationHandlerNotFoundError synchronously
+      expect(() => {
+        operationInterpreter.execute(unknownOperation, context);
+      }).toThrow('No handler registered for operation type');
 
-      // Assert - Should return undefined without throwing
-      expect(result).toBeUndefined();
+      // Verify the error contains diagnostic information
+      let thrownError;
+      try {
+        operationInterpreter.execute(unknownOperation, context);
+      } catch (error) {
+        thrownError = error;
+      }
+
+      // Assert error properties
+      expect(thrownError).toBeDefined();
+      expect(thrownError.name).toBe('OperationHandlerNotFoundError');
+      expect(thrownError.operationType).toBe('NON_EXISTENT_OPERATION');
+      expect(thrownError.registeredOperations).toBeDefined();
+      expect(Array.isArray(thrownError.registeredOperations)).toBe(true);
+      expect(thrownError.diagnostics).toBeDefined();
+      expect(typeof thrownError.diagnostics).toBe('object');
     });
 
     it('should handle handler execution errors gracefully', async () => {
