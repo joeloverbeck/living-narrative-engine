@@ -23,7 +23,7 @@ Configure controller initialization in the application bootstrapper, ensuring it
 ### Auxiliary Index Export
 - [ ] Open `src/bootstrapper/stages/auxiliary/index.js`
 - [ ] Add export for `initActorParticipationController`
-- [ ] Maintain alphabetical ordering
+- [ ] Add at the end of the exports list (exports are currently NOT alphabetically ordered)
 
 ### Stage Integration
 - [ ] Open `src/bootstrapper/stages/initializeAuxiliaryServicesStage.js`
@@ -52,11 +52,12 @@ import './typedefs.js';
 /**
  * Resolves and initializes the ActorParticipationController service.
  *
- * @param {AuxHelperDeps} deps - Contains DI container, logger, and token map.
+ * @param {AuxHelperDeps} deps - Contains DI container, gameEngine, logger, and token map.
  * @returns {Promise<{success: boolean, error?: Error}>} Result of initialization.
  */
 export async function initActorParticipationController({
   container,
+  // gameEngine is passed but not used by this initializer
   logger,
   tokens,
 }) {
@@ -71,9 +72,9 @@ export async function initActorParticipationController({
 
 ### auxiliary/index.js
 ```javascript
-// Add export (maintain alphabetical order)
-export { initActorParticipationController } from './initActorParticipationController.js';
+// Add export at the end (exports are currently NOT alphabetically ordered)
 // ... existing exports ...
+export { initActorParticipationController } from './initActorParticipationController.js';
 ```
 
 ### initializeAuxiliaryServicesStage.js
@@ -92,7 +93,7 @@ import {
   initPerceptibleEventSenderController,
 } from './auxiliary/index.js';
 
-// In the serviceInitializers array (around line 122), add BEFORE PerceptibleEventSenderController:
+// In the serviceInitializers array (after CriticalLogNotifier, around line 122), add BEFORE PerceptibleEventSenderController:
 const serviceInitializers = [
   // ... existing initializers ...
   [
@@ -151,8 +152,10 @@ const serviceInitializers = [
 ## Notes
 - Use `resolveAndInitialize` helper for consistent initialization pattern (see initPerceptibleEventSenderController.js)
 - Positioning before PerceptibleEventSenderController ensures proper initialization order
-- Init functions receive `{ container, gameEngine, logger, tokens }` as deps object
+- Init functions receive `{ container, gameEngine, logger, tokens }` as deps object (gameEngine may not be destructured if not needed)
 - The third parameter to `resolveAndInitialize` is the method name ('initialize'), not the token name
 - Function must be async since `resolveAndInitialize` returns a Promise
 - Check initPerceptibleEventSenderController.js for reference pattern (identical structure)
 - The controller will subscribe to ENGINE_READY_UI during `initialize()` method call
+- ActorParticipationController.initialize() method exists at src/domUI/actorParticipationController.js:70
+- Token ActorParticipationController is defined in src/dependencyInjection/tokens/tokens-ui.js:39
