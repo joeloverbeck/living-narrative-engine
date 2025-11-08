@@ -37,6 +37,7 @@ export const RUB_PENIS_AGAINST_PENIS_ROOM_ID = 'room1';
  * @property {boolean} [coverActorPenis=false] - Whether the actor's penis socket is covered by clothing.
  * @property {boolean} [coverTargetPenis=false] - Whether the target's penis socket is covered by clothing.
  * @property {boolean} [targetFacingAway=false] - Whether the target faces away from the actor.
+ * @property {boolean} [actorFacingAway=false] - Whether the actor faces away from the target.
  */
 
 /**
@@ -58,6 +59,7 @@ export function buildRubPenisAgainstPenisScenario(options = {}) {
     coverActorPenis = false,
     coverTargetPenis = false,
     targetFacingAway = false,
+    actorFacingAway = false,
   } = options;
 
   const actorGroinId = includeActorPenis
@@ -93,6 +95,12 @@ export function buildRubPenisAgainstPenisScenario(options = {}) {
   if (targetFacingAway) {
     targetBuilder.withComponent('positioning:facing_away', {
       facing_away_from: [RUB_PENIS_AGAINST_PENIS_ACTOR_ID],
+    });
+  }
+
+  if (actorFacingAway) {
+    actorBuilder.withComponent('positioning:facing_away', {
+      facing_away_from: [RUB_PENIS_AGAINST_PENIS_PRIMARY_ID],
     });
   }
 
@@ -244,6 +252,16 @@ export function installPenisFacingEachOtherScopeOverride(testFixture) {
           : [];
 
         if (facingAwayFrom.includes(actorId)) {
+          return false;
+        }
+
+        const actorFacingAwayFrom = Array.isArray(
+          actor.components?.['positioning:facing_away']?.facing_away_from
+        )
+          ? actor.components['positioning:facing_away'].facing_away_from
+          : [];
+
+        if (actorFacingAwayFrom.includes(partnerId)) {
           return false;
         }
 

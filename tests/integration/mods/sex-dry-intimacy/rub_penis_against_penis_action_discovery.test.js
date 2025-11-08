@@ -10,14 +10,12 @@ import {
   buildRubPenisAgainstPenisScenario,
   RUB_PENIS_AGAINST_PENIS_ACTION_ID,
   RUB_PENIS_AGAINST_PENIS_ACTOR_ID,
-  RUB_PENIS_AGAINST_PENIS_PRIMARY_ID,
   installPenisFacingEachOtherScopeOverride,
 } from '../../../common/mods/sex-dry-intimacy/rubPenisAgainstPenisFixtures.js';
 import rubPenisAgainstPenisAction from '../../../../data/mods/sex-dry-intimacy/actions/rub_penis_against_penis.action.json';
 
 const ACTION_ID = RUB_PENIS_AGAINST_PENIS_ACTION_ID;
 const ACTOR_ID = RUB_PENIS_AGAINST_PENIS_ACTOR_ID;
-const PRIMARY_ID = RUB_PENIS_AGAINST_PENIS_PRIMARY_ID;
 
 /**
  * @description Registers the rub penis against penis action for discovery.
@@ -135,6 +133,17 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
 
   it('does not appear when the target faces away from the actor', async () => {
     const { entities } = buildRubPenisAgainstPenisScenario({ targetFacingAway: true });
+    testFixture.reset(entities);
+    configureActionDiscovery(testFixture);
+
+    const actions = await testFixture.discoverActions(ACTOR_ID);
+    const discovered = actions.find((action) => action.id === ACTION_ID);
+
+    expect(discovered).toBeUndefined();
+  });
+
+  it('does not appear when the actor faces away from the target', async () => {
+    const { entities } = buildRubPenisAgainstPenisScenario({ actorFacingAway: true });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
