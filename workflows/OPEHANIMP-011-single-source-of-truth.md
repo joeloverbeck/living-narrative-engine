@@ -18,6 +18,32 @@ Currently, operation metadata is scattered across 7+ files with manual synchroni
 - Provide clear documentation
 - Simplify adding new operations
 
+### Current Codebase Conventions
+
+**IMPORTANT: Operation Handler Token Naming**
+
+The codebase uses a specific naming convention for operation handler tokens that differs from other service interfaces:
+
+- **Operation Handlers**: Use `[OperationName]Handler` pattern (NO "I" prefix)
+  - Examples: `DrinkFromHandler`, `AddComponentHandler`, `DrinkEntirelyHandler`
+
+- **Other Service Interfaces**: Use `I[ServiceName]` pattern (WITH "I" prefix)
+  - Examples: `ILogger`, `IEntityManager`, `ISafeEventDispatcher`
+
+This convention is documented in:
+- `src/dependencyInjection/tokens/tokens-core.js` (lines 13-20)
+- `src/utils/preValidationUtils.js` (lines 623-632)
+- `CLAUDE.md` "Adding New Operations" section
+
+**Event Patterns**
+
+Handlers typically dispatch domain-specific events (not generic success/failure):
+- `items:liquid_consumed` (DrinkFromHandler)
+- `items:liquid_consumed_entirely` (DrinkEntirelyHandler)
+- `core:component_added` (dispatched by EntityManager, not AddComponentHandler)
+
+Handlers use `ISafeEventDispatcher` for error events only.
+
 ## Requirements
 
 ### 1. Research Phase
@@ -33,31 +59,36 @@ export const OPERATION_DEFINITIONS = {
   DRINK_FROM: {
     type: 'DRINK_FROM',
     handlerClass: 'DrinkFromHandler',
-    handlerToken: 'IDrinkFromHandler',
+    handlerToken: 'DrinkFromHandler', // NOTE: No "I" prefix for operation handlers
     schemaPath: 'data/schemas/operations/drinkFrom.schema.json',
     category: 'items',
     description: 'Drink from a container or drinkable item',
     dependencies: [
-      'IComponentMutationService',
-      'IEntityStateQuerier',
+      'ILogger',
+      'IEntityManager',
+      'ISafeEventDispatcher',
     ],
     events: {
-      success: 'DRINK_FROM_COMPLETED',
-      failure: 'DRINK_FROM_FAILED',
+      dispatches: ['items:liquid_consumed'], // Domain event, not success/failure pattern
     },
     parameters: [
       {
-        name: 'drinkableItemId',
+        name: 'actorEntity',
         type: 'string',
         required: true,
-        description: 'ID of the drinkable item',
+        description: 'Entity ID of the actor drinking from the container',
       },
       {
-        name: 'consumptionQuantity',
-        type: 'number',
+        name: 'containerEntity',
+        type: 'string',
+        required: true,
+        description: 'Entity ID of the liquid container being consumed from',
+      },
+      {
+        name: 'result_variable',
+        type: 'string',
         required: false,
-        default: 1,
-        description: 'Amount to consume',
+        description: 'Optional variable name to store operation result',
       },
     ],
   },
@@ -65,24 +96,36 @@ export const OPERATION_DEFINITIONS = {
   DRINK_ENTIRELY: {
     type: 'DRINK_ENTIRELY',
     handlerClass: 'DrinkEntirelyHandler',
-    handlerToken: 'IDrinkEntirelyHandler',
+    handlerToken: 'DrinkEntirelyHandler', // NOTE: No "I" prefix for operation handlers
     schemaPath: 'data/schemas/operations/drinkEntirely.schema.json',
     category: 'items',
     description: 'Drink all remaining liquid from an item',
     dependencies: [
-      'IComponentMutationService',
-      'IEntityStateQuerier',
+      'ILogger',
+      'IEntityManager',
+      'ISafeEventDispatcher',
     ],
     events: {
-      success: 'DRINK_ENTIRELY_COMPLETED',
-      failure: 'DRINK_ENTIRELY_FAILED',
+      dispatches: ['items:liquid_consumed_entirely'], // Domain event, not success/failure pattern
     },
     parameters: [
       {
-        name: 'drinkableItemId',
+        name: 'actorEntity',
         type: 'string',
         required: true,
-        description: 'ID of the drinkable item',
+        description: 'Entity ID of the actor drinking from the container',
+      },
+      {
+        name: 'containerEntity',
+        type: 'string',
+        required: true,
+        description: 'Entity ID of the liquid container being consumed from',
+      },
+      {
+        name: 'result_variable',
+        type: 'string',
+        required: false,
+        description: 'Optional variable name to store operation result',
       },
     ],
   },
@@ -121,18 +164,18 @@ Enhance schemas with metadata, generate everything else:
   "description": "Drink from a container or drinkable item",
   "meta": {
     "handlerClass": "DrinkFromHandler",
+    "handlerToken": "DrinkFromHandler",
     "category": "items",
     "dependencies": [
-      "IComponentMutationService",
-      "IEntityStateQuerier",
-      "IInventoryService"
+      "ILogger",
+      "IEntityManager",
+      "ISafeEventDispatcher"
     ],
     "events": {
-      "success": "DRINK_FROM_COMPLETED",
-      "failure": "DRINK_FROM_FAILED"
+      "dispatches": ["items:liquid_consumed"]
     },
-    "stateQueries": ["items:drinkable", "items:quantity"],
-    "stateMutations": ["items:quantity"]
+    "stateQueries": ["items:liquid_container", "items:drinkable"],
+    "stateMutations": ["items:liquid_container"]
   },
   "allOf": [...]
 }
@@ -162,14 +205,19 @@ Use TypeScript decorators and metadata:
 ```typescript
 @OperationHandler({
   type: 'DRINK_FROM',
+  token: 'DrinkFromHandler', // No "I" prefix for operation handlers
   category: 'items',
   description: 'Drink from a container or drinkable item',
+  events: {
+    dispatches: ['items:liquid_consumed']
+  }
 })
 export class DrinkFromHandler extends BaseOperationHandler {
-  @Inject() componentMutationService: IComponentMutationService;
-  @Inject() entityStateQuerier: IEntityStateQuerier;
+  @Inject() logger: ILogger;
+  @Inject() entityManager: IEntityManager;
+  @Inject() safeEventDispatcher: ISafeEventDispatcher;
 
-  async execute(context: OperationContext): Promise<void> {
+  async execute(params: DrinkFromParams, context: ExecutionContext): Promise<DrinkFromResult> {
     // Implementation
   }
 }
@@ -238,14 +286,13 @@ Implement a proof-of-concept for the recommended approach.
  * @typedef {Object} OperationDefinition
  * @property {string} type - Operation type constant (UPPER_SNAKE_CASE)
  * @property {string} handlerClass - Handler class name (PascalCase)
- * @property {string} handlerToken - DI token name (I + PascalCase + Handler)
+ * @property {string} handlerToken - DI token name (PascalCase + Handler, NO "I" prefix)
  * @property {string} schemaPath - Path to operation schema
  * @property {string} category - Operation category (items, positioning, etc.)
  * @property {string} description - Human-readable description
- * @property {string[]} dependencies - Required DI dependencies
- * @property {Object} events - Event types dispatched
- * @property {string} events.success - Success event type
- * @property {string} events.failure - Failure event type
+ * @property {string[]} dependencies - Required DI dependencies (use "I" prefix for services, not for operation handlers)
+ * @property {Object} events - Events dispatched by handler
+ * @property {string[]} events.dispatches - Domain event IDs dispatched (e.g., 'items:liquid_consumed')
  * @property {Array<Object>} parameters - Operation parameters
  */
 
@@ -253,19 +300,25 @@ export const OPERATION_DEFINITIONS = {
   ADD_COMPONENT: {
     type: 'ADD_COMPONENT',
     handlerClass: 'AddComponentHandler',
-    handlerToken: 'IAddComponentHandler',
+    handlerToken: 'AddComponentHandler', // NOTE: No "I" prefix for operation handlers
     schemaPath: 'data/schemas/operations/addComponent.schema.json',
     category: 'core',
     description: 'Add a component to an entity',
-    dependencies: ['IComponentMutationService'],
+    dependencies: [
+      'ILogger',
+      'IEntityManager',
+      'ISafeEventDispatcher',
+      'IGameDataRepository', // Optional dependency
+    ],
     events: {
-      success: 'COMPONENT_ADDED',
-      failure: 'ADD_COMPONENT_FAILED',
+      // EntityManager dispatches core:component_added via internal systems
+      // Handler itself doesn't dispatch success/failure events
+      dispatches: [], // Dispatches errors via ISafeEventDispatcher only
     },
     parameters: [
-      { name: 'entityId', type: 'string', required: true },
-      { name: 'componentType', type: 'string', required: true },
-      { name: 'componentData', type: 'object', required: true },
+      { name: 'entity_ref', type: 'string|object', required: true, description: 'Reference to the entity (actor/target/entityId)' },
+      { name: 'component_type', type: 'string', required: true, description: 'Namespaced component type ID' },
+      { name: 'value', type: 'object', required: true, description: 'Component data object' },
     ],
   },
 
@@ -323,6 +376,8 @@ export const KNOWN_OPERATION_TYPES = Object.keys(OPERATION_DEFINITIONS).sort();
  */
 export const generateTokens = () => {
   return Object.values(OPERATION_DEFINITIONS).reduce((acc, def) => {
+    // NOTE: Operation handler tokens do NOT use "I" prefix
+    // Pattern: [OperationName]Handler (e.g., DrinkFromHandler, not IDrinkFromHandler)
     acc[def.handlerToken] = def.handlerToken;
     return acc;
   }, {});
