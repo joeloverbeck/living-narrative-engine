@@ -20,6 +20,7 @@ import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
 import createClothingStepResolver from './nodes/clothingStepResolver.js';
 import createSlotAccessResolver from './nodes/slotAccessResolver.js';
 import createScopeReferenceResolver from './nodes/scopeReferenceResolver.js';
+import { ParameterValidator } from './core/parameterValidator.js';
 import { tokens } from '../dependencyInjection/tokens.js';
 
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
@@ -288,6 +289,11 @@ class ScopeEngine extends IScopeEngine {
    * @throws {ScopeCycleError} When a cycle is detected
    */
   resolve(ast, actorEntity, runtimeCtx, trace = null) {
+    // Validate parameters - Fail fast with clear errors BEFORE any other code
+    ParameterValidator.validateAST(ast, 'ScopeEngine.resolve');
+    ParameterValidator.validateActorEntity(actorEntity, 'ScopeEngine.resolve');
+    ParameterValidator.validateRuntimeContext(runtimeCtx, 'ScopeEngine.resolve');
+
     const source = 'ScopeEngine';
 
     // TEMPORARY DIAGNOSTIC: Log scope resolution entry
