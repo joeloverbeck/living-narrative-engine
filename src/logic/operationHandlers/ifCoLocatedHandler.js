@@ -36,8 +36,8 @@ import BaseOperationHandler from './baseOperationHandler.js';
 class IfCoLocatedHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
   #entityManager;
-  /** @type {OperationInterpreter} */
-  #opInterpreter;
+  /** @type {() => OperationInterpreter} */
+  #opInterpreterResolver;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
 
@@ -45,7 +45,7 @@ class IfCoLocatedHandler extends BaseOperationHandler {
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {EntityManager} deps.entityManager
-   * @param {OperationInterpreter} deps.operationInterpreter
+   * @param {() => OperationInterpreter} deps.operationInterpreter - Lazy resolver for interpreter
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    */
   constructor({
@@ -62,7 +62,12 @@ class IfCoLocatedHandler extends BaseOperationHandler {
       },
       operationInterpreter: {
         value: operationInterpreter,
-        requiredMethods: ['execute'],
+        validator: (val) => {
+          const isFunction = typeof val === 'function';
+          const isObject = typeof val === 'object' && typeof val.execute === 'function';
+          return isFunction || isObject;
+        },
+        errorMessage: 'IfCoLocatedHandler requires operationInterpreter to be either a resolver function or an object with execute() method.',
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -70,7 +75,9 @@ class IfCoLocatedHandler extends BaseOperationHandler {
       },
     });
     this.#entityManager = entityManager;
-    this.#opInterpreter = operationInterpreter;
+    // Normalize to always use a resolver function
+    const isFunction = typeof operationInterpreter === 'function';
+    this.#opInterpreterResolver = isFunction ? operationInterpreter : () => operationInterpreter;
     this.#dispatcher = safeEventDispatcher;
   }
 
@@ -169,9 +176,11 @@ class IfCoLocatedHandler extends BaseOperationHandler {
    */
   async #runActions(actions, executionContext) {
     if (!Array.isArray(actions)) return;
+    // Resolve the operation interpreter when needed
+    const opInterpreter = this.#opInterpreterResolver();
     for (const op of actions) {
       try {
-        await this.#opInterpreter.execute(op, executionContext);
+        await opInterpreter.execute(op, executionContext);
       } catch (err) {
         safeDispatchError(
           this.#dispatcher,
