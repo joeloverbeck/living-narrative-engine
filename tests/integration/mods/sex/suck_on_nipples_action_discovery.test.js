@@ -76,6 +76,7 @@ describe('sex-breastplay:suck_on_nipples action discovery', () => {
       ]);
       expect(suckOnNipplesAction.forbidden_components.actor).toEqual([
         'positioning:giving_blowjob',
+        'positioning:bending_over',
       ]);
 
       expect(suckOnNipplesAction.visual).toEqual({

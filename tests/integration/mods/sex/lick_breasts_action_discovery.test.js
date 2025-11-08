@@ -72,6 +72,7 @@ describe('sex-breastplay:lick_breasts action discovery', () => {
       ]);
       expect(lickBreastsAction.forbidden_components.actor).toEqual([
         'positioning:giving_blowjob',
+        'positioning:bending_over',
       ]);
 
       expect(lickBreastsAction.visual).toEqual({
