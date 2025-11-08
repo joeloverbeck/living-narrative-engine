@@ -10,6 +10,7 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
 import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
+import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
 import { createMockSpatialIndexManager } from '../../common/mockFactories/index.js';
 
 // Mock dependencies
@@ -1444,6 +1445,228 @@ describe('ScopeEngine', () => {
       expect(
         resolvers[3].canResolve({ type: 'Step', field: 'some_random_field' })
       ).toBe(true);
+    });
+  });
+
+  describe('Parameter Validation', () => {
+    let engine;
+    let validActorEntity;
+    let validRuntimeCtx;
+    let validAST;
+
+    beforeEach(() => {
+      engine = new ScopeEngine({ maxDepth: 10, spatialIndexManager: mockSpatialIndexManager });
+
+      validActorEntity = {
+        id: 'actor-123',
+        components: {},
+      };
+
+      validRuntimeCtx = {
+        entityManager: mockEntityManager,
+        jsonLogicEval: mockJsonLogicEval,
+        logger: mockLogger,
+      };
+
+      validAST = {
+        type: 'Source',
+        kind: 'self',
+      };
+    });
+
+    describe('Invalid AST Tests', () => {
+      it('should throw ParameterValidationError for undefined AST', () => {
+        expect(() => {
+          engine.resolve(undefined, validActorEntity, validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(undefined, validActorEntity, validRuntimeCtx);
+        }).toThrow(/ScopeEngine\.resolve.*AST must be an object/);
+      });
+
+      it('should throw ParameterValidationError for null AST', () => {
+        expect(() => {
+          engine.resolve(null, validActorEntity, validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(null, validActorEntity, validRuntimeCtx);
+        }).toThrow(/ScopeEngine\.resolve.*AST must be an object/);
+      });
+
+      it('should throw ParameterValidationError for AST without type property', () => {
+        const invalidAST = { kind: 'self' }; // Missing 'type'
+
+        expect(() => {
+          engine.resolve(invalidAST, validActorEntity, validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(invalidAST, validActorEntity, validRuntimeCtx);
+        }).toThrow(/ScopeEngine\.resolve.*AST must have a 'type' property/);
+      });
+    });
+
+    describe('Invalid actorEntity Tests', () => {
+      it('should throw ParameterValidationError for undefined actorEntity', () => {
+        expect(() => {
+          engine.resolve(validAST, undefined, validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, undefined, validRuntimeCtx);
+        }).toThrow(/ScopeEngine\.resolve.*actorEntity must be an object/);
+      });
+
+      it('should throw ParameterValidationError for primitive actorEntity', () => {
+        expect(() => {
+          engine.resolve(validAST, 'actor-123', validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, 'actor-123', validRuntimeCtx);
+        }).toThrow(/ScopeEngine\.resolve.*actorEntity must be an object/);
+      });
+
+      it('should throw ParameterValidationError for object without id', () => {
+        const invalidEntity = { components: {} }; // Missing 'id'
+
+        expect(() => {
+          engine.resolve(validAST, invalidEntity, validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, invalidEntity, validRuntimeCtx);
+        }).toThrow(/ScopeEngine\.resolve.*actorEntity must have an 'id' property/);
+      });
+
+      it('should detect and hint for context object (action pipeline)', () => {
+        const contextObject = {
+          actor: { id: 'actor-123' },
+          targets: { primary: { id: 'target-456' } },
+        };
+
+        expect(() => {
+          engine.resolve(validAST, contextObject, validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, contextObject, validRuntimeCtx);
+        }).toThrow(/action pipeline context object/);
+      });
+
+      it('should detect and hint for context object (scope resolution)', () => {
+        const contextObject = {
+          runtimeCtx: validRuntimeCtx,
+          dispatcher: {},
+        };
+
+        expect(() => {
+          engine.resolve(validAST, contextObject, validRuntimeCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, contextObject, validRuntimeCtx);
+        }).toThrow(/scope resolution context object/);
+      });
+    });
+
+    describe('Invalid runtimeCtx Tests', () => {
+      it('should throw ParameterValidationError for undefined runtimeCtx', () => {
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, undefined);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, undefined);
+        }).toThrow(/ScopeEngine\.resolve.*runtimeCtx must be an object/);
+      });
+
+      it('should throw ParameterValidationError for missing entityManager', () => {
+        const invalidCtx = {
+          jsonLogicEval: mockJsonLogicEval,
+          logger: mockLogger,
+        };
+
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, invalidCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, invalidCtx);
+        }).toThrow(/ScopeEngine\.resolve.*missing required services.*entityManager/);
+      });
+
+      it('should throw ParameterValidationError for missing jsonLogicEval', () => {
+        const invalidCtx = {
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+        };
+
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, invalidCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, invalidCtx);
+        }).toThrow(/ScopeEngine\.resolve.*missing required services.*jsonLogicEval/);
+      });
+
+      it('should throw ParameterValidationError for missing logger', () => {
+        const invalidCtx = {
+          entityManager: mockEntityManager,
+          jsonLogicEval: mockJsonLogicEval,
+        };
+
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, invalidCtx);
+        }).toThrow(ParameterValidationError);
+
+        expect(() => {
+          engine.resolve(validAST, validActorEntity, invalidCtx);
+        }).toThrow(/ScopeEngine\.resolve.*missing required services.*logger/);
+      });
+    });
+
+    describe('Error Message Tests', () => {
+      it('should include "ScopeEngine.resolve" in error message', () => {
+        expect(() => {
+          engine.resolve(null, validActorEntity, validRuntimeCtx);
+        }).toThrow(/ScopeEngine\.resolve/);
+      });
+
+      it('should throw ParameterValidationError type', () => {
+        try {
+          engine.resolve(null, validActorEntity, validRuntimeCtx);
+          fail('Should have thrown ParameterValidationError');
+        } catch (error) {
+          expect(error).toBeInstanceOf(ParameterValidationError);
+        }
+      });
+
+      it('should include context with expected/received information', () => {
+        try {
+          engine.resolve(null, validActorEntity, validRuntimeCtx);
+          fail('Should have thrown ParameterValidationError');
+        } catch (error) {
+          expect(error.context).toBeDefined();
+          expect(error.context.expected).toBeDefined();
+          expect(error.context.received).toBeDefined();
+        }
+      });
+    });
+
+    describe('Valid Parameters Test', () => {
+      it('should proceed normally with all valid parameters', () => {
+        // Mock the entity manager to return a valid set
+        mockEntityManager.getEntityInstance.mockReturnValue(validActorEntity);
+
+        const result = engine.resolve(validAST, validActorEntity, validRuntimeCtx);
+
+        // Should return a Set
+        expect(result).toBeInstanceOf(Set);
+      });
     });
   });
 });
