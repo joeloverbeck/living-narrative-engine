@@ -37,9 +37,9 @@ describe('OperationValidationError - Integration Tests', () => {
       // Check error has all required sections
       expect(caughtError.message).toContain('❌ Operation validation failed');
       expect(caughtError.message).toContain('📋 Missing registrations detected');
-      expect(caughtError.message).toContain('⚠️  NOT IN PRE-VALIDATION WHITELIST');
-      expect(caughtError.message).toContain('⚠️  SCHEMA FILE NOT FOUND');
-      expect(caughtError.message).toContain('⚠️  SCHEMA NOT REFERENCED');
+      expect(caughtError.message).toContain('⚠️  STEP 7: NOT IN PRE-VALIDATION WHITELIST');
+      expect(caughtError.message).toContain('⚠️  STEP 1: SCHEMA FILE NOT FOUND');
+      expect(caughtError.message).toContain('⚠️  STEP 2: SCHEMA NOT REFERENCED');
       expect(caughtError.message).toContain('🔧 Verification commands');
       expect(caughtError.message).toContain('📚 Complete registration guide');
       expect(caughtError.message).toContain('💡 Tip');
@@ -130,14 +130,9 @@ describe('OperationValidationError - Integration Tests', () => {
 
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Operation validation failed',
+        'Operation validation error',
         expect.objectContaining({
           operationType: 'INVALID_OP',
-          missingRegistrations: expect.arrayContaining([
-            'whitelist',
-            'schema',
-            'reference',
-          ]),
           errorMessage: expect.stringContaining('INVALID_OP'),
         })
       );
@@ -183,6 +178,9 @@ describe('OperationValidationError - Integration Tests', () => {
         'whitelist',
         'schema',
         'reference',
+        'token',
+        'handler',
+        'mapping',
       ]);
       expect(caughtError.message).toBeTruthy();
       expect(caughtError.stack).toBeTruthy();

@@ -131,7 +131,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         100
       );
 
-      // Realistic performance threshold: should average under 20ms per creation (8 handlers + validation overhead)
+      // Realistic performance threshold: should average under 20ms per creation (11 handlers + validation overhead)
       expect(results.averageTime).toBeLessThan(20);
 
       // Should not have any extremely slow outliers (allow for CI/CD variability)
@@ -153,7 +153,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         100
       );
 
-      // Should be only slightly slower than standard handlers due to additional handler (9 vs 8 handlers)
+      // Should be only slightly slower than standard handlers due to additional handler (12 vs 11 handlers)
       expect(results.averageTime).toBeLessThan(25);
       expect(results.maxTime).toBeLessThan(120);
 
@@ -259,9 +259,9 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         );
       }
 
-      // Each handler set should have exactly 9 handlers
+      // Each handler set should have exactly 11 handlers
       handlers.forEach((handlerSet) => {
-        expect(Object.keys(handlerSet)).toHaveLength(9);
+        expect(Object.keys(handlerSet)).toHaveLength(11);
       });
 
       // Verify that handlers are properly instantiated (not sharing references inappropriately)
@@ -401,7 +401,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
       // All results should be valid
       results.forEach(({ handlers }) => {
-        expect(Object.keys(handlers)).toHaveLength(9);
+        expect(Object.keys(handlers)).toHaveLength(11);
       });
     });
   });

@@ -322,9 +322,10 @@ function checkOperationMappings(operations) {
 
     // Extract operation type -> token mappings
     // Look for pattern: registry.register('OPERATION_TYPE', bind(tokens.HandlerToken))
+    // Pattern must handle both single-line and multi-line formats
     const mappedOperations = new Map();
     const mappingMatches = interpreterContent.matchAll(
-      /registry\.register\(['"]([A-Z_]+)['"],\s*bind\(tokens\.(\w+Handler)\)/g
+      /registry\.register\(\s*['"]([A-Z_]+)['"]\s*,\s*bind\(tokens\.(\w+Handler)\)/gs
     );
 
     for (const match of mappingMatches) {
@@ -402,7 +403,6 @@ function checkNamingConsistency(operations) {
 
   for (const op of operations) {
     const expectedToken = toTokenName(op.type);
-    const expectedFileName = toHandlerFileName(op.type);
     const expectedSchemaFile = toSchemaFileName(op.type);
 
     // Check schema file naming
@@ -416,11 +416,14 @@ function checkNamingConsistency(operations) {
     }
 
     // Check for "I" prefix in token name (operation handlers should NOT have it)
-    if (expectedToken.startsWith('I')) {
+    // Pattern: I + uppercase letter (e.g., IEntityManager, ILogger)
+    // Should NOT flag: IfHandler, IfCoLocatedHandler (legitimate operation names)
+    if (/^I[A-Z]/.test(expectedToken)) {
       errors.push(
         `❌ Token ${expectedToken} should NOT have "I" prefix\n` +
         `   Operation handler tokens do not use "I" prefix (unlike service interfaces)\n` +
-        `   Expected format: [OperationName]Handler (e.g., DrinkFromHandler)`
+        `   Expected format: [OperationName]Handler (e.g., DrinkFromHandler)\n` +
+        `   Current: ${expectedToken} → Suggested: ${expectedToken.substring(1)}`
       );
       inconsistencies++;
     }

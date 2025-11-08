@@ -160,6 +160,9 @@ jest.mock('../../../src/bootstrapper/stages/auxiliary/index.js', () => {
       'ProcessingIndicatorController'
     ),
     initCriticalLogNotifier: makeInitializer('CriticalLogNotifier'),
+    initActorParticipationController: makeInitializer(
+      'ActorParticipationController'
+    ),
     initPerceptibleEventSenderController: makeInitializer(
       'PerceptibleEventSenderController'
     ),

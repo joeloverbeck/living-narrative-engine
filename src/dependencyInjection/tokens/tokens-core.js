@@ -225,6 +225,7 @@ export const coreTokens = freeze({
   UnlockMovementHandler: 'UnlockMovementHandler',
   UnlockMouthEngagementHandler: 'UnlockMouthEngagementHandler',
   RegenerateDescriptionHandler: 'RegenerateDescriptionHandler',
+  ResolveDirectionHandler: 'ResolveDirectionHandler',
   AtomicModifyComponentHandler: 'AtomicModifyComponentHandler',
   SequenceHandler: 'SequenceHandler',
   TransferItemHandler: 'TransferItemHandler',

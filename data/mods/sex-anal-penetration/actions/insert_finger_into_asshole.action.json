@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-anal-penetration:insert_finger_into_asshole",
+  "name": "Insert Finger into Asshole",
+  "description": "Insert one finger into the target's asshole to loosen it up.",
+  "targets": {
+    "primary": {
+      "scope": "sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind",
+      "placeholder": "primary",
+      "description": "Person to finger from behind"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "template": "insert one finger into {primary}'s asshole",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#053b3f",
+    "textColor": "#e0f7f9",
+    "hoverBackgroundColor": "#075055",
+    "hoverTextColor": "#f1feff"
+  }
+}
