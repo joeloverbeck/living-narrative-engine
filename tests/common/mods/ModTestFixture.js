@@ -28,6 +28,8 @@ import {
   ActionValidationError,
 } from './actionExecutionValidator.js';
 import { ScopeResolverHelpers } from './scopeResolverHelpers.js';
+import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
+import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 
 const localRequire = createRequire(import.meta.url);
 
@@ -2099,6 +2101,159 @@ beforeEach(async () => {
       // Chain to original (may be another extended version)
       return original(id);
     });
+  }
+
+  /**
+   * Registers a custom scope from the specified mod and automatically loads
+   * all dependency conditions referenced in the scope definition.
+   *
+   * This method:
+   * 1. Loads and parses the scope definition file
+   * 2. Extracts all condition_ref references from the scope AST
+   * 3. Discovers transitive condition dependencies
+   * 4. Validates all conditions exist
+   * 5. Loads all conditions via loadDependencyConditions()
+   * 6. Registers the scope resolver with the test environment
+   *
+   * @param {string} modId - The mod containing the scope (e.g., 'positioning', 'sex-anal-penetration')
+   * @param {string} scopeName - The scope name without .scope extension (e.g., 'actors_with_exposed_asshole')
+   * @param {object} [options] - Optional configuration
+   * @param {boolean} [options.loadConditions=true] - Whether to auto-load conditions
+   * @param {number} [options.maxDepth=5] - Max recursion depth for transitive dependencies
+   * @returns {Promise<void>}
+   * @throws {Error} If scope file not found, conditions missing, or parsing fails
+   *
+   * @example
+   * // Auto-loads positioning:actor-in-entity-facing-away and other dependencies
+   * await testFixture.registerCustomScope(
+   *   'sex-anal-penetration',
+   *   'actors_with_exposed_asshole_accessible_from_behind'
+   * );
+   *
+   * @example
+   * // Disable auto-loading if needed
+   * await testFixture.registerCustomScope(
+   *   'my-mod',
+   *   'my-scope',
+   *   { loadConditions: false }
+   * );
+   */
+  async registerCustomScope(modId, scopeName, options = {}) {
+    const { loadConditions = true, maxDepth = 5 } = options;
+
+    // Validate inputs
+    if (!modId || typeof modId !== 'string') {
+      throw new Error('modId must be a non-empty string');
+    }
+    if (!scopeName || typeof scopeName !== 'string') {
+      throw new Error('scopeName must be a non-empty string');
+    }
+
+    // Construct scope file path (relative from tests/common/mods/)
+    const scopePath = resolve(
+      process.cwd(),
+      `data/mods/${modId}/scopes/${scopeName}.scope`
+    );
+
+    // Read and parse scope definition
+    let scopeContent;
+    try {
+      scopeContent = await fs.readFile(scopePath, 'utf-8');
+    } catch (err) {
+      throw new Error(
+        `Failed to read scope file at ${scopePath}: ${err.message}`
+      );
+    }
+
+    let parsedScopes;
+    try {
+      parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
+    } catch (err) {
+      throw new Error(
+        `Failed to parse scope file at ${scopePath}: ${err.message}`
+      );
+    }
+
+    // parseScopeDefinitions returns a Map<scopeName, { expr, ast }>
+    const fullScopeName = `${modId}:${scopeName}`;
+    const scopeData = parsedScopes.get(fullScopeName);
+
+    if (!scopeData) {
+      const availableScopes = Array.from(parsedScopes.keys()).join(', ');
+      throw new Error(
+        `Scope "${fullScopeName}" not found in file ${scopePath}. ` +
+          `Available scopes: ${availableScopes || '(none)'}`
+      );
+    }
+
+    if (loadConditions) {
+      // Extract condition references from the parsed AST
+      const conditionRefs = ScopeConditionAnalyzer.extractConditionRefs(scopeData);
+
+      if (conditionRefs.size > 0) {
+        // Discover transitive dependencies
+        const allConditions =
+          await ScopeConditionAnalyzer.discoverTransitiveDependencies(
+            Array.from(conditionRefs),
+            ScopeConditionAnalyzer.loadConditionDefinition.bind(
+              ScopeConditionAnalyzer
+            ),
+            maxDepth
+          );
+
+        // Validate conditions exist
+        const validation = await ScopeConditionAnalyzer.validateConditions(
+          allConditions,
+          scopePath
+        );
+
+        if (validation.missing.length > 0) {
+          throw new Error(
+            `Scope "${fullScopeName}" references missing conditions:\n` +
+              validation.missing.map((id) => `  - ${id}`).join('\n') +
+              `\n\nReferenced in: ${scopePath}`
+          );
+        }
+
+        // Load all discovered conditions
+        await this.loadDependencyConditions(Array.from(allConditions));
+      }
+    }
+
+    // Register the scope resolver
+    // We need to create a resolver function that uses the scope engine
+    const { default: ScopeEngine } = await import(
+      '../../../src/scopeDsl/engine.js'
+    );
+    const scopeEngine = new ScopeEngine();
+
+    const resolver = (context) => {
+      // Build runtime context for scope resolution
+      const runtimeCtx = {
+        entityManager: this.testEnv.entityManager,
+        jsonLogicEval: this.testEnv.jsonLogic,
+        logger: this.testEnv.logger,
+      };
+
+      try {
+        // Resolve using the AST
+        const result = scopeEngine.resolve(scopeData.ast, context, runtimeCtx);
+
+        return { success: true, value: result };
+      } catch (err) {
+        return {
+          success: false,
+          error: `Failed to resolve scope "${fullScopeName}": ${err.message}`,
+        };
+      }
+    };
+
+    // Register with ScopeResolverHelpers
+    ScopeResolverHelpers._registerResolvers(
+      this.testEnv,
+      this.testEnv.entityManager,
+      { [fullScopeName]: resolver }
+    );
   }
 }
 
