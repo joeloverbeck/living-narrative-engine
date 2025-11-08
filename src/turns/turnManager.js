@@ -763,14 +763,9 @@ class TurnManager extends ITurnManager {
           stack: dispatchError?.stack,
         })
       )
-      .then(
-        () => {
-          scheduleAdvanceTurn();
-        },
-        () => {
-          scheduleAdvanceTurn();
-        }
-      );
+      .then(() => {
+        scheduleAdvanceTurn();
+      });
 
     this.#logger.debug(
       `Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Advancing turn...`
