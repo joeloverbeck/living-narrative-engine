@@ -2,6 +2,8 @@
  * @file Validation report with structured results
  */
 
+import { ReportFormatter } from './ReportFormatter.js';
+
 /**
  * Validation report with structured results
  */
@@ -227,5 +229,14 @@ export class ValidationReport {
    */
   toJSON() {
     return this.#results;
+  }
+
+  /**
+   * Get formatter for multiple output formats
+   *
+   * @returns {ReportFormatter} Report formatter instance
+   */
+  formatter() {
+    return new ReportFormatter(this);
   }
 }
