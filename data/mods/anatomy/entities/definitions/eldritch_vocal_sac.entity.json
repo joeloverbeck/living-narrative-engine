@@ -13,7 +13,7 @@
       "texture": "translucent"
     },
     "descriptors:animation": {
-      "animation": "rhythmic-pulsation"
+      "animation": "pulsating"
     },
     "descriptors:color_extended": {
       "color": "pale-pink-internal-organs-visible"
