@@ -580,10 +580,10 @@ class RecipePreflightValidator {
               ...(pattern.tags || []),
               ...(blueprintSlot.requirements?.components || []),
             ],
-            properties: {
-              ...(pattern.properties || {}),
-              ...(blueprintSlot.requirements?.properties || {}),
-            },
+            properties: this.#mergePropertyRequirements(
+              pattern.properties || {},
+              blueprintSlot.requirements?.properties || {}
+            ),
           };
 
           // Find matching entities
@@ -724,6 +724,43 @@ class RecipePreflightValidator {
     }
 
     return true;
+  }
+
+  /**
+   * Deep merge property requirements from pattern and blueprint
+   * Ensures that both sets of constraints are preserved when they target the same component
+   *
+   * @param {object} patternProperties - Property requirements from pattern
+   * @param {object} blueprintProperties - Property requirements from blueprint slot
+   * @returns {object} Merged property requirements with all constraints
+   * @example
+   * // Pattern requires: descriptors:venom.potency === 'high'
+   * // Blueprint requires: descriptors:venom.color === 'green'
+   * // Result: descriptors:venom must have both potency='high' AND color='green'
+   * const merged = this.#mergePropertyRequirements(
+   *   { "descriptors:venom": { "potency": "high" } },
+   *   { "descriptors:venom": { "color": "green" } }
+   * );
+   * // => { "descriptors:venom": { "potency": "high", "color": "green" } }
+   */
+  #mergePropertyRequirements(patternProperties, blueprintProperties) {
+    const merged = { ...patternProperties };
+
+    // Deep merge blueprint properties into pattern properties
+    for (const [componentId, blueprintProps] of Object.entries(blueprintProperties)) {
+      if (merged[componentId]) {
+        // Component exists in both - merge the property constraints
+        merged[componentId] = {
+          ...merged[componentId],
+          ...blueprintProps,
+        };
+      } else {
+        // Component only in blueprint - add it
+        merged[componentId] = { ...blueprintProps };
+      }
+    }
+
+    return merged;
   }
 
   /**
