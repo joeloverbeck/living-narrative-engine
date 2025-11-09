@@ -68,6 +68,9 @@ describe('Movement While Close - Integration', () => {
       entityManager: mockEntityManager,
       systemMoveEntityHandler: mockMoveHandler,
       safeEventDispatcher: mockEventDispatcher,
+      operationInterpreter: () => {
+        throw new Error('operationInterpreter should not be called in this test');
+      },
     });
   });
 
@@ -201,11 +204,11 @@ describe('Movement While Close - Integration', () => {
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:entity_moved',
         expect.objectContaining({
+          eventName: 'core:entity_moved',
           entityId: partnerId,
           currentLocationId: newLocation,
           previousLocationId: oldLocation,
-          movedBy: actorId,
-          reason: 'closeness_auto_move',
+          originalCommand: 'system:closeness_auto_move',
         })
       );
     });

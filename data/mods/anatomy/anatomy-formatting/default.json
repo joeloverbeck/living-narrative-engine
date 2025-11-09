@@ -34,6 +34,11 @@
     "tail",
     "horse_tail",
     "wing",
+    "dragon_head",
+    "dragon_torso",
+    "dragon_leg",
+    "dragon_wing",
+    "dragon_tail",
     "spider_cephalothorax",
     "spider_leg",
     "spider_abdomen",
@@ -60,7 +65,9 @@
     "ass_cheek",
     "tentacle",
     "spider_leg",
-    "spider_pedipalp"
+    "spider_pedipalp",
+    "dragon_leg",
+    "dragon_wing"
   ],
   "irregularPlurals": {
     "foot": "feet",

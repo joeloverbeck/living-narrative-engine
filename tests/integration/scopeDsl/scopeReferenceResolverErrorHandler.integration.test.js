@@ -2,6 +2,8 @@ import { describe, expect, it, beforeEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 describe('ScopeReferenceResolver Error Handler Integration', () => {
   let testBed;
@@ -24,6 +26,19 @@ describe('ScopeReferenceResolver Error Handler Integration', () => {
       getErrorBuffer: testBed.createMock('getErrorBuffer', [], () => []),
     };
 
+    const mockLogger = createMockLogger();
+    const jsonLogicEval = new JsonLogicEvaluationService({
+      entityManager: {
+        getEntities: () => [],
+        getEntitiesWithComponent: () => [],
+        hasComponent: () => false,
+        getComponentData: () => null,
+        getEntity: () => null,
+        getEntityInstance: () => null,
+      },
+      logger: mockLogger,
+    });
+
     // Create mock runtime context with complete entity manager
     runtimeContext = {
       entityManager: {
@@ -34,6 +49,8 @@ describe('ScopeReferenceResolver Error Handler Integration', () => {
         getEntity: () => null,
         getEntityInstance: () => null,
       },
+      jsonLogicEval,
+      logger: mockLogger,
       location: { id: 'test-location' },
       // Add required services for other resolvers
       spatialIndexManager: {
@@ -105,18 +122,14 @@ describe('ScopeReferenceResolver Error Handler Integration', () => {
       const ast = { type: 'ScopeReference', scopeId: 'test:scope' };
       const actorEntity = null; // Missing actor
 
-      const result = scopeEngine.resolve(ast, actorEntity, runtimeContext);
+      // With new parameter validation, this throws immediately (fail-fast)
+      // The validation error is thrown before ScopeReferenceResolver can handle it
+      expect(() => {
+        scopeEngine.resolve(ast, actorEntity, runtimeContext);
+      }).toThrow(/actorEntity must be an object/);
 
-      expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(0);
-      expect(errorHandler.handleError).toHaveBeenCalledWith(
-        'ScopeReferenceResolver: actorEntity is missing from context',
-        expect.objectContaining({
-          requestedScope: 'test:scope',
-        }),
-        'ScopeReferenceResolver',
-        ErrorCodes.MISSING_ACTOR
-      );
+      // Parameter validation errors bypass the error handler - they throw immediately
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
     });
 
     it('should handle successful scope resolution through ScopeEngine', () => {

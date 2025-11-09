@@ -112,9 +112,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       // Resolve the scope for Layla as target
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player, // Player is the actor
         target: laylaAgirre, // Layla is the target
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -173,9 +174,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       // Resolve the scope
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: laylaAgirre,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -304,9 +306,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       // Resolve the scope
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: target,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -374,9 +377,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       // Resolve the scope
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: target,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -441,9 +445,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: target,
-        logicEval: jsonLogicEval,
         location: null,
       };
 

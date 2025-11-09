@@ -6,13 +6,6 @@
     "anatomy:part": {
       "subType": "head"
     },
-    "anatomy:sensory": {
-      "vision": true,
-      "smell": true,
-      "touch": true,
-      "acuity": "abyssal",
-      "echolocation": true
-    },
     "core:name": {
       "text": "kraken head"
     },

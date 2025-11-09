@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import createScopeEngine from '../../../src/scopeDsl/engine.js';
 import createDefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
 
 describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
   let engine;
@@ -236,6 +237,7 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
           return expr;
         },
       },
+      logger: createMockLogger(),
     };
   });
 

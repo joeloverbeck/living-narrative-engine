@@ -150,6 +150,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         jsonLogicEval,
         entityManager,
+        logger,
       });
 
       // Assert
@@ -209,6 +210,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         jsonLogicEval,
         entityManager,
+        logger,
       });
 
       // Assert
@@ -266,6 +268,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         jsonLogicEval,
         entityManager,
+        logger,
       });
 
       // Assert
@@ -321,6 +324,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         jsonLogicEval,
         entityManager,
+        logger,
       });
 
       // Assert
@@ -385,6 +389,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         jsonLogicEval,
         entityManager,
+        logger,
       });
 
       // Assert - should not include targetId since actor is kneeling before otherTargetId
@@ -464,6 +469,7 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         jsonLogicEval,
         entityManager,
+        logger,
       });
 
       // Assert - only target1 should be in result since actor is kneeling before target1

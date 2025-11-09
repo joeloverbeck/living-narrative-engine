@@ -16,11 +16,8 @@
     "components": [
       "blueprintSlot.component.json",
       "body.component.json",
-      "crushing.component.json",
-      "ink_reservoir.component.json",
       "joint.component.json",
       "part.component.json",
-      "sensory.component.json",
       "sockets.component.json"
     ],
     "entities": {

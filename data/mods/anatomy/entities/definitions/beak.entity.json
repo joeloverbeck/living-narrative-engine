@@ -6,9 +6,6 @@
     "anatomy:part": {
       "subType": "beak"
     },
-    "anatomy:crushing": {
-      "biteForce": "titanic"
-    },
     "core:name": {
       "text": "beak"
     },

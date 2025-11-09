@@ -243,11 +243,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
     expect(partComponent).toBeDefined();
     expect(partComponent.subType).toBe('head'); // Generic, not "kraken_head"
 
-    // Verify kraken-specific sensory component exists
-    const sensoryComponent = headEntity.getComponentData('anatomy:sensory');
-    expect(sensoryComponent).toBeDefined();
-    expect(sensoryComponent.acuity).toBe('abyssal');
-    expect(sensoryComponent.echolocation).toBe(true);
+    // Sensory component no longer exists - removed as part of entity-only approach
   });
 
   it('should generate unique tentacle instances', async () => {

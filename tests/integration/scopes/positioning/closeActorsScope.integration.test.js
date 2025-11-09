@@ -10,12 +10,14 @@ import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import { parseDslExpression } from '../../../../src/scopeDsl/parser/parser.js';
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import { addMockAstsToScopes } from '../../../common/scopeDsl/mockAstGenerator.js';
+import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 
 describe('positioning:close_actors scope integration', () => {
   let entityManager;
   let scopeEngine;
   let scopeRegistry;
   let logger;
+  let jsonLogicEval;
 
   beforeEach(() => {
     // Initialize test environment
@@ -75,8 +77,10 @@ describe('positioning:close_actors scope integration', () => {
       ]);
 
       const actor1 = entityManager.getEntityInstance('test-actor-1');
+      jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
         logger,
       };
 
@@ -104,8 +108,10 @@ describe('positioning:close_actors scope integration', () => {
       ]);
 
       const loneActor = entityManager.getEntityInstance('lone-actor');
+      jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
         logger,
       };
 
@@ -130,8 +136,10 @@ describe('positioning:close_actors scope integration', () => {
 
       const actorWithoutCloseness =
         entityManager.getEntityInstance('no-closeness');
+      jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
         logger,
       };
 
@@ -195,8 +203,10 @@ describe('positioning:close_actors scope integration', () => {
       ]);
 
       const mainActor = entityManager.getEntityInstance('main-actor');
+      jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
         logger,
       };
 
@@ -250,8 +260,10 @@ describe('positioning:close_actors scope integration', () => {
 
       entityManager = new SimpleEntityManager(entities);
       const mainActor = entityManager.getEntityInstance('main');
+      jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
         logger,
       };
 
@@ -291,8 +303,10 @@ describe('positioning:close_actors scope integration', () => {
 
       const actor1 = entityManager.getEntityInstance('circular-1');
       const actor2 = entityManager.getEntityInstance('circular-2');
+      jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
         logger,
       };
 

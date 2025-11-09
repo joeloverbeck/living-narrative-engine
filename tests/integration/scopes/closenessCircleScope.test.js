@@ -9,15 +9,18 @@ import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 describe('Closeness Circle Scope Resolution', () => {
   let scopeEngine;
   let scopeRegistry;
   let entityManager;
   let logger;
+  let jsonLogicEval;
 
   beforeEach(() => {
     logger = new ConsoleLogger('ERROR'); // Change to ERROR to reduce noise
+    jsonLogicEval = new JsonLogicEvaluationService({ logger });
 
     // Create entity manager with test entities
     entityManager = new SimpleEntityManager([
@@ -82,6 +85,7 @@ describe('Closeness Circle Scope Resolution', () => {
     const actor1 = entityManager.getEntityInstance('actor1');
     const runtimeCtx = {
       entityManager,
+      jsonLogicEval,
       logger,
     };
 
@@ -101,6 +105,7 @@ describe('Closeness Circle Scope Resolution', () => {
     const actor4 = entityManager.getEntityInstance('actor4');
     const runtimeCtx = {
       entityManager,
+      jsonLogicEval,
       logger,
     };
 
@@ -131,6 +136,7 @@ describe('Closeness Circle Scope Resolution', () => {
     const actor5 = entityManager.getEntityInstance('actor5');
     const runtimeCtx = {
       entityManager,
+      jsonLogicEval,
       logger,
     };
 
@@ -169,6 +175,7 @@ describe('Closeness Circle Scope Resolution', () => {
     const actor6 = entityManager.getEntityInstance('actor6');
     const runtimeCtx = {
       entityManager,
+      jsonLogicEval,
       logger,
     };
 

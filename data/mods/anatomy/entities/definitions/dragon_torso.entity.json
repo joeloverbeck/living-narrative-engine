@@ -58,6 +58,12 @@
     },
     "core:name": {
       "text": "dragon torso"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

@@ -156,9 +156,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: target,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -236,9 +237,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: target,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -356,9 +358,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: entity,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -393,9 +396,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: entity,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -429,9 +433,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: entity,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -519,9 +524,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: entity,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -582,9 +588,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: entity,
-        logicEval: jsonLogicEval,
         location: null,
       };
 
@@ -673,9 +680,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create runtime context
       const runtimeCtx = {
         entityManager,
+        jsonLogicEval,
+        logger,
         actorEntity: player,
         target: entity,
-        logicEval: jsonLogicEval,
         location: null,
       };
 

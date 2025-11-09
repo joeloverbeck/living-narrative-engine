@@ -3,21 +3,15 @@
   "recipeId": "anatomy:red_dragon",
   "blueprintId": "anatomy:red_dragon",
   "bodyDescriptors": {
-    "build": "hulking"
+    "build": "hulking",
+    "skinColor": "crimson"
   },
   "slots": {
     "head": {
       "partType": "dragon_head",
       "tags": [
-        "anatomy:part",
-        "anatomy:horned"
-      ],
-      "properties": {
-        "anatomy:horned": {
-          "style": "crown",
-          "length": "long"
-        }
-      }
+        "anatomy:part"
+      ]
     }
   },
   "patterns": [
@@ -45,7 +39,7 @@
       ],
       "properties": {
         "descriptors:length_category": {
-          "length": "vast"
+          "length": "immense"
         }
       }
     },
@@ -62,7 +56,8 @@
     "requires": [
       {
         "partTypes": [
-          "dragon_wing"
+          "dragon_wing",
+          "dragon_tail"
         ]
       }
     ]

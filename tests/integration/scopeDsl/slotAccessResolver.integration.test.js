@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { DefaultDslParser } from '../../../src/scopeDsl/parser/defaultDslParser.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
 
 describe('SlotAccessResolver Enhanced Integration Tests', () => {
   let engine;
@@ -79,6 +80,7 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
       jsonLogicEval: {
         evaluate: jest.fn().mockReturnValue(true),
       },
+      logger: createMockLogger(),
     };
 
     // Create mock ClothingAccessibilityService after mockRuntimeContext is defined

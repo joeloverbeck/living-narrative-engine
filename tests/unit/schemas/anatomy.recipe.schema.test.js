@@ -1286,7 +1286,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
           {
             matchesGroup: 'appendage:pedipalp',
             partType: 'pedipalp',
-            tags: ['anatomy:sensory'],
+            tags: ['anatomy:part'],
           },
         ],
       };

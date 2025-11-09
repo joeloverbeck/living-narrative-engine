@@ -6,10 +6,6 @@
     "anatomy:part": {
       "subType": "ink_reservoir"
     },
-    "anatomy:ink_reservoir": {
-      "capacity": "massive",
-      "pressure": "high"
-    },
     "core:name": {
       "text": "ink reservoir"
     },

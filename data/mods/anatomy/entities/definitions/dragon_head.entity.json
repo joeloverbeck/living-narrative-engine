@@ -8,6 +8,15 @@
     },
     "core:name": {
       "text": "dragon head"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:color_basic": {
+      "color": "red"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

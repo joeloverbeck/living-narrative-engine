@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
 import { createEntityInstance } from '../../common/entities/entityFactories.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 describe('Scope DSL - Union Operator Integration', () => {
   let engine;
@@ -78,9 +79,15 @@ describe('Scope DSL - Union Operator Integration', () => {
       }),
     };
 
+    const jsonLogicEval = new JsonLogicEvaluationService({
+      entityManager,
+      logger,
+    });
+
     runtimeCtx = {
       entityManager,
       componentRegistry,
+      jsonLogicEval,
       logger,
     };
   });

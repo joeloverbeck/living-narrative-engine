@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
 
 describe('Clothing Resolver Chain Integration', () => {
   let engine;
@@ -131,6 +132,7 @@ describe('Clothing Resolver Chain Integration', () => {
       jsonLogicEval: {
         evaluate: jest.fn().mockReturnValue(true),
       },
+      logger: createMockLogger(),
       container: mockContainer,
     };
   });
