@@ -1107,4 +1107,57 @@ describe('LoggerStrategy near-complete coverage', () => {
       })
     ).not.toThrow();
   });
+
+  it('detects mode from process.env even when globalThis.process is unavailable', () => {
+    // This test simulates bundler environments (Webpack, Vite, esbuild) where
+    // process is polyfilled as a local variable but not attached to globalThis
+    const previousDebugMode = process.env.DEBUG_LOG_MODE;
+    const previousJestWorker = process.env.JEST_WORKER_ID;
+    const previousNodeEnv = process.env.NODE_ENV;
+
+    // Save and remove globalThis.process if it exists
+    const originalGlobalProcess = globalThis.process;
+    let hadGlobalProcess = false;
+    if ('process' in globalThis) {
+      hadGlobalProcess = true;
+      delete globalThis.process;
+    }
+
+    try {
+      // Set up environment for production mode
+      delete process.env.DEBUG_LOG_MODE;
+      delete process.env.JEST_WORKER_ID;
+      process.env.NODE_ENV = 'production';
+
+      // Create strategy - should detect production mode even without globalThis.process
+      const strategy = createStrategy();
+
+      // Verify it detected production mode from process.env.NODE_ENV
+      expect(strategy.getMode()).toBe(LoggerMode.PRODUCTION);
+    } finally {
+      // Restore environment variables
+      if (previousDebugMode === undefined) {
+        delete process.env.DEBUG_LOG_MODE;
+      } else {
+        process.env.DEBUG_LOG_MODE = previousDebugMode;
+      }
+
+      if (previousJestWorker === undefined) {
+        delete process.env.JEST_WORKER_ID;
+      } else {
+        process.env.JEST_WORKER_ID = previousJestWorker;
+      }
+
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousNodeEnv;
+      }
+
+      // Restore globalThis.process if it was there before
+      if (hadGlobalProcess) {
+        globalThis.process = originalGlobalProcess;
+      }
+    }
+  });
 });
