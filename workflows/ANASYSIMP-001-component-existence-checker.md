@@ -40,21 +40,27 @@ Implement component existence validation that runs after schema validation durin
 
 ```javascript
 /**
- * Validates that all components referenced in the recipe exist in the component registry
+ * Validates that all components referenced in the recipe exist in the data registry
  * @param {Object} recipe - The recipe to validate
- * @param {Object} componentRegistry - Registry of loaded components
+ * @param {IDataRegistry} dataRegistry - Registry of loaded game data
  * @returns {Array<Object>} Array of errors found
  */
-function validateComponentExistence(recipe, componentRegistry) {
+function validateComponentExistence(recipe, dataRegistry) {
   const errors = [];
+
+  // Helper function to check component existence
+  const componentExists = (componentId) => {
+    return dataRegistry.get('components', componentId) !== undefined;
+  };
 
   // Check slot component requirements
   for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
+    // Check tags
     for (const componentId of slot.tags || []) {
-      if (!componentRegistry.has(componentId)) {
+      if (!componentExists(componentId)) {
         errors.push({
           type: 'COMPONENT_NOT_FOUND',
-          location: { type: 'slot', name: slotName },
+          location: { type: 'slot', name: slotName, field: 'tags' },
           componentId: componentId,
           message: `Component '${componentId}' does not exist`,
           fix: `Create component at data/mods/*/components/${componentId.split(':')[1]}.component.json`,
@@ -63,9 +69,23 @@ function validateComponentExistence(recipe, componentRegistry) {
       }
     }
 
-    // Check slot property components
+    // Check notTags
+    for (const componentId of slot.notTags || []) {
+      if (!componentExists(componentId)) {
+        errors.push({
+          type: 'COMPONENT_NOT_FOUND',
+          location: { type: 'slot', name: slotName, field: 'notTags' },
+          componentId: componentId,
+          message: `Component '${componentId}' does not exist`,
+          fix: `Create component at data/mods/*/components/${componentId.split(':')[1]}.component.json`,
+          severity: 'error',
+        });
+      }
+    }
+
+    // Check slot property components (keys are component IDs)
     for (const componentId of Object.keys(slot.properties || {})) {
-      if (!componentRegistry.has(componentId)) {
+      if (!componentExists(componentId)) {
         errors.push({
           type: 'COMPONENT_NOT_FOUND',
           location: { type: 'slot', name: slotName, context: 'properties' },
@@ -80,13 +100,17 @@ function validateComponentExistence(recipe, componentRegistry) {
 
   // Check pattern component requirements
   for (const pattern of recipe.patterns || []) {
-    const patternId = pattern.matchesPattern || pattern.matchesGroup || 'unknown';
+    // Determine pattern identifier (supports v1 and v2 patterns)
+    const patternId = pattern.matchesPattern || pattern.matchesGroup ||
+                      (pattern.matches ? pattern.matches.join(',') : null) ||
+                      (pattern.matchesAll ? 'matchesAll' : 'unknown');
 
+    // Check tags
     for (const componentId of pattern.tags || []) {
-      if (!componentRegistry.has(componentId)) {
+      if (!componentExists(componentId)) {
         errors.push({
           type: 'COMPONENT_NOT_FOUND',
-          location: { type: 'pattern', name: patternId },
+          location: { type: 'pattern', name: patternId, field: 'tags' },
           componentId: componentId,
           message: `Component '${componentId}' does not exist`,
           fix: `Create component at data/mods/*/components/${componentId.split(':')[1]}.component.json`,
@@ -95,9 +119,23 @@ function validateComponentExistence(recipe, componentRegistry) {
       }
     }
 
-    // Check pattern property components
+    // Check notTags
+    for (const componentId of pattern.notTags || []) {
+      if (!componentExists(componentId)) {
+        errors.push({
+          type: 'COMPONENT_NOT_FOUND',
+          location: { type: 'pattern', name: patternId, field: 'notTags' },
+          componentId: componentId,
+          message: `Component '${componentId}' does not exist`,
+          fix: `Create component at data/mods/*/components/${componentId.split(':')[1]}.component.json`,
+          severity: 'error',
+        });
+      }
+    }
+
+    // Check pattern property components (keys are component IDs)
     for (const componentId of Object.keys(pattern.properties || {})) {
-      if (!componentRegistry.has(componentId)) {
+      if (!componentExists(componentId)) {
         errors.push({
           type: 'COMPONENT_NOT_FOUND',
           location: { type: 'pattern', name: patternId, context: 'properties' },
@@ -110,52 +148,106 @@ function validateComponentExistence(recipe, componentRegistry) {
     }
   }
 
+  // Check constraint component requirements
+  if (recipe.constraints) {
+    // Check requires constraints
+    for (const [index, requireGroup] of (recipe.constraints.requires || []).entries()) {
+      for (const componentId of requireGroup.components || []) {
+        if (!componentExists(componentId)) {
+          errors.push({
+            type: 'COMPONENT_NOT_FOUND',
+            location: { type: 'constraint', name: 'requires', index, field: 'components' },
+            componentId: componentId,
+            message: `Component '${componentId}' does not exist`,
+            fix: `Create component at data/mods/*/components/${componentId.split(':')[1]}.component.json`,
+            severity: 'error',
+          });
+        }
+      }
+    }
+
+    // Check excludes constraints
+    for (const [index, excludeGroup] of (recipe.constraints.excludes || []).entries()) {
+      for (const componentId of excludeGroup.components || []) {
+        if (!componentExists(componentId)) {
+          errors.push({
+            type: 'COMPONENT_NOT_FOUND',
+            location: { type: 'constraint', name: 'excludes', index, field: 'components' },
+            componentId: componentId,
+            message: `Component '${componentId}' does not exist`,
+            fix: `Create component at data/mods/*/components/${componentId.split(':')[1]}.component.json`,
+            severity: 'error',
+          });
+        }
+      }
+    }
+  }
+
   return errors;
 }
 ```
 
 ### Integration Points
 
-1. **Recipe Loader Hook**
-   - File: `src/loaders/recipeLoader.js` or similar
-   - Hook: After schema validation, before storing in registry
-   - Action: Run component existence check, throw on errors
+1. **Validation Phase Integration**
+   - File: `src/loaders/phases/anatomyValidationPhase.js`
+   - Pattern: Chain of Responsibility (ValidationRuleChain)
+   - Hook: Validation runs AFTER content loading phase
+   - Existing: `BlueprintRecipeValidationRule` validates blueprint-recipe relationships
+   - New: Add `ComponentExistenceValidationRule` to the validation chain
+   - Action: Validation errors are logged but don't halt loading (development mode)
 
-2. **Component Registry Access**
-   - File: `src/entities/componentRegistry.js` or similar
-   - Method: `has(componentId)` - Check if component exists
-   - Method: `get(componentId)` - Retrieve component metadata (for future use)
+2. **Data Registry Access**
+   - File: `src/data/inMemoryDataRegistry.js` - Core storage implementation
+   - Wrapper: `src/data/gameDataRepository.js` - Facade with typed getters
+   - Method: `dataRegistry.get('components', componentId)` - Returns component or undefined
+   - Alternative: `gameDataRepository.getComponentDefinition(componentId)` - Returns component or null
+   - Storage Key: Components stored under type `'components'`
+   - Component ID Format: Namespaced (e.g., `'anatomy:part'`, `'anatomy:horned'`)
 
 3. **Error Reporting**
-   - Format errors for developer consumption
-   - Include recipe file path in error context
+   - Format errors for developer consumption via `LoadTimeValidationContext`
+   - Include recipe ID and file context in error messages
+   - Use structured error objects with type, location, severity
    - Suggest example component files for reference
+   - Log warnings for non-blocking issues
 
 ### File Structure
 
 ```
 src/anatomy/validation/
-├── componentExistenceValidator.js  # Main validator
-└── validationErrors.js             # Error class definitions
+├── rules/
+│   ├── blueprintRecipeValidationRule.js          # Existing: Blueprint-recipe validation
+│   └── componentExistenceValidationRule.js       # New: Component existence validation
+├── validationRuleChain.js                        # Existing: Chain of Responsibility
+└── loadTimeValidationContext.js                  # Existing: Validation context
 
-tests/unit/anatomy/validation/
-└── componentExistenceValidator.test.js
+src/loaders/phases/
+└── anatomyValidationPhase.js                     # Update: Add new rule to chain
+
+tests/unit/anatomy/validation/rules/
+└── componentExistenceValidationRule.test.js      # Unit tests for validation logic
 
 tests/integration/anatomy/validation/
-└── recipeLoadValidation.integration.test.js
+└── componentExistenceValidation.integration.test.js  # Integration tests with registry
 ```
 
 ## Acceptance Criteria
 
-- [ ] Validator detects missing components in recipe slots
-- [ ] Validator detects missing components in recipe patterns
-- [ ] Validator detects missing components in slot properties
-- [ ] Validator detects missing components in pattern properties
-- [ ] Errors include component ID, location (slot/pattern name), and fix suggestion
+- [ ] Validator detects missing components in recipe slot `tags`
+- [ ] Validator detects missing components in recipe slot `notTags`
+- [ ] Validator detects missing components in recipe slot `properties` (component ID keys)
+- [ ] Validator detects missing components in recipe pattern `tags`
+- [ ] Validator detects missing components in recipe pattern `notTags`
+- [ ] Validator detects missing components in recipe pattern `properties` (component ID keys)
+- [ ] Validator detects missing components in `constraints.requires[].components`
+- [ ] Validator detects missing components in `constraints.excludes[].components`
+- [ ] Validator supports all pattern types (v1 `matches`, v2 `matchesPattern`, `matchesGroup`, `matchesAll`)
+- [ ] Errors include component ID, location (slot/pattern/constraint), field, and fix suggestion
 - [ ] Errors include file path suggestion for component creation
-- [ ] Recipe load fails when critical components are missing
+- [ ] Validation results are logged but don't halt loading (development mode)
 - [ ] Error messages are clear and actionable
-- [ ] Validator integrates with recipe load pipeline
+- [ ] Validator integrates with `AnatomyValidationPhase` via validation chain
 - [ ] All existing recipes pass validation (no false positives)
 
 ## Testing Requirements
@@ -163,37 +255,58 @@ tests/integration/anatomy/validation/
 ### Unit Tests
 
 1. **Basic Component Detection**
-   - Recipe with missing component in slot tags
-   - Recipe with missing component in pattern tags
-   - Recipe with missing component in slot properties
-   - Recipe with missing component in pattern properties
+   - Recipe with missing component in slot `tags`
+   - Recipe with missing component in slot `notTags`
+   - Recipe with missing component in slot `properties` (component ID key)
+   - Recipe with missing component in pattern `tags`
+   - Recipe with missing component in pattern `notTags`
+   - Recipe with missing component in pattern `properties` (component ID key)
+   - Recipe with missing component in `constraints.requires[].components`
+   - Recipe with missing component in `constraints.excludes[].components`
    - Recipe with all components present (no errors)
 
-2. **Error Message Format**
+2. **Pattern Type Support**
+   - V1 pattern with `matches` array
+   - V2 pattern with `matchesPattern` (wildcard)
+   - V2 pattern with `matchesGroup` (slot group selector)
+   - V2 pattern with `matchesAll` (property-based matching)
+   - Pattern identifier correctly included in error location
+
+3. **Error Message Format**
    - Error includes component ID
-   - Error includes location context
+   - Error includes location context (type, name, field, index where applicable)
    - Error includes fix suggestion
    - Error includes severity level
 
-3. **Edge Cases**
+4. **Edge Cases**
    - Recipe with no slots (empty slots object)
    - Recipe with no patterns (empty patterns array)
-   - Recipe with empty tags array
+   - Recipe with no constraints
+   - Recipe with empty tags/notTags arrays
    - Recipe with empty properties object
+   - Recipe with empty constraints.requires/excludes
    - Component ID with namespace (e.g., "anatomy:horned")
-   - Component ID without namespace (invalid, should error)
+   - Component ID without namespace (should still validate against registry)
 
 ### Integration Tests
 
-1. **Recipe Load Pipeline**
-   - Load recipe with missing component → should fail
-   - Load recipe with all components → should succeed
-   - Error thrown during load includes recipe file path
+1. **Validation Phase Integration**
+   - Load recipe with missing component → validation logs errors
+   - Load recipe with all components → validation passes
+   - Validation errors include recipe ID and context
+   - Validation results attached to load context
 
-2. **Real Component Registry**
-   - Test against actual component registry
-   - Verify registry.has() calls work correctly
-   - Test with multiple mods loaded
+2. **Real Data Registry**
+   - Test against actual `InMemoryDataRegistry` instance
+   - Verify `dataRegistry.get('components', id)` calls work correctly
+   - Test with multiple mods loaded (component namespace resolution)
+   - Test component lookup with fully qualified IDs (e.g., `'anatomy:part'`)
+
+3. **Validation Rule Chain**
+   - `ComponentExistenceValidationRule` integrates with `ValidationRuleChain`
+   - Rule receives `LoadTimeValidationContext` with blueprints and recipes
+   - Rule adds issues to validation context
+   - Issues are categorized by severity (error vs warning)
 
 ## Documentation Requirements
 
@@ -218,30 +331,103 @@ tests/integration/anatomy/validation/
 
 ## Implementation Notes
 
-### Component Registry Access
+### Data Registry Access
 
-The validator needs access to the component registry. Depending on the current architecture:
+The validator needs access to the data registry for component lookups. The system uses dependency injection:
 
-1. **If registry is global/singleton:**
-   ```javascript
-   import { componentRegistry } from '../entities/componentRegistry.js';
-   ```
+```javascript
+/**
+ * Validation rule for checking component existence
+ * Implements the validation rule interface for use with ValidationRuleChain
+ */
+class ComponentExistenceValidationRule {
+  #dataRegistry;
+  #logger;
 
-2. **If registry is dependency-injected:**
-   ```javascript
-   class ComponentExistenceValidator {
-     constructor({ componentRegistry }) {
-       this.#componentRegistry = componentRegistry;
-     }
-   }
-   ```
+  /**
+   * @param {object} deps
+   * @param {IDataRegistry} deps.dataRegistry - Registry with component definitions
+   * @param {ILogger} deps.logger - Logger instance
+   */
+  constructor({ dataRegistry, logger }) {
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['get', 'getAll'],
+    });
+    validateDependency(logger, 'ILogger', logger, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+
+    this.#dataRegistry = dataRegistry;
+    this.#logger = logger;
+  }
+
+  /**
+   * Executes validation rule
+   * @param {LoadTimeValidationContext} context - Validation context
+   * @returns {Promise<void>}
+   */
+  async execute(context) {
+    const recipes = context.getRecipes();
+
+    for (const [recipeId, recipe] of Object.entries(recipes)) {
+      const errors = this.#validateComponentExistence(recipe);
+
+      for (const error of errors) {
+        context.addIssue({
+          recipeId,
+          ...error,
+        });
+      }
+    }
+  }
+
+  #validateComponentExistence(recipe) {
+    // Core validation logic here
+    // Returns array of error objects
+  }
+}
+```
+
+### Registry Lookup Pattern
+
+```javascript
+// Check if component exists in registry
+const componentExists = (componentId) => {
+  return this.#dataRegistry.get('components', componentId) !== undefined;
+};
+
+// Alternative using GameDataRepository
+const componentExists = (componentId) => {
+  return this.#gameDataRepository.getComponentDefinition(componentId) !== null;
+};
+```
+
+### Recipe File Location
+
+Recipes are stored in the following structure:
+```
+data/mods/
+├── anatomy/
+│   └── recipes/
+│       ├── human_female.recipe.json
+│       ├── red_dragon.recipe.json
+│       └── ...
+└── core/
+    └── recipes/
+        └── examples/
+            └── ...
+```
+
+Loaded by: `src/loaders/anatomyRecipeLoader.js`
+Stored as: Type `'anatomyRecipes'` in data registry
 
 ### Error Message Template
 
 ```
 [ERROR] Component 'anatomy:horned' not found
 
-Context:  Recipe 'red_dragon.recipe.json', Slot 'head'
+Recipe:   anatomy:red_dragon (data/mods/anatomy/recipes/red_dragon.recipe.json)
+Location: Slot 'head', field 'tags'
 Problem:  Component 'anatomy:horned' does not exist in the component registry
 Impact:   Head slot cannot be processed, anatomy generation will fail
 Fix:      Create component at: data/mods/anatomy/components/horned.component.json
@@ -251,20 +437,27 @@ Example Component Structure:
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "anatomy:horned",
   "description": "Marks an anatomy part as having horns",
-  "dataSchema": { ... }
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
 }
 
 References:
   - docs/anatomy/components.md
+  - data/mods/anatomy/components/part.component.json (similar example)
   - data/mods/anatomy/components/scaled.component.json (similar example)
 ```
 
 ### Performance Considerations
 
-- Validation runs once per recipe at load time
-- Component registry lookups are O(1) with Map/Set
-- Expected recipe size: 10-50 component references
+- Validation runs once per recipe during the anatomy validation phase (after content loading)
+- Component registry lookups are O(1) with Map internal storage
+- Expected recipe size: 10-50 component references across slots, patterns, and constraints
 - Performance impact: negligible (<5ms per recipe)
+- Validation phase is non-blocking: errors are logged but don't halt application startup
+- All validation happens synchronously in a single phase
 
 ## Success Metrics
 
