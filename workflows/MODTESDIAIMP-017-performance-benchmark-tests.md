@@ -25,9 +25,15 @@ Create comprehensive performance benchmark tests to validate that scope resoluti
 **File**: `tests/performance/scopeDsl/performanceMetrics.performance.test.js` (new)
 
 ### Supporting Files
-- `tests/performance/scopeDsl/tracerOverhead.performance.test.js` (from MODTESDIAIMP-012)
+- `tests/performance/scopeDsl/tracerOverhead.performance.test.js` (existing reference implementation)
 
 ## Test Specifications
+
+> **Setup Requirements**: All test suites share common setup:
+> - Use `ModTestFixture.forAction()` to create test fixture
+> - Register required scopes using `await testFixture.registerCustomScope()`
+> - Call `testFixture.cleanup()` in `afterEach` to clean up resources
+> - Use `testFixture.discoverActions()` for action discovery (not `testEnv.getAvailableActions()`)
 
 ### Suite 1: Timing Accuracy
 
@@ -40,6 +46,9 @@ describe('Performance Metrics - Timing Accuracy', () => {
       'positioning',
       'positioning:sit_down'
     );
+
+    // Register scopes needed for action discovery
+    await testFixture.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
@@ -52,7 +61,7 @@ describe('Performance Metrics - Timing Accuracy', () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
     const wallClockStart = performance.now();
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
     const wallClockEnd = performance.now();
     const wallClockDuration = wallClockEnd - wallClockStart;
 
@@ -70,7 +79,7 @@ describe('Performance Metrics - Timing Accuracy', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -89,7 +98,7 @@ describe('Performance Metrics - Timing Accuracy', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -113,7 +122,7 @@ describe('Performance Metrics - Overhead', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -128,7 +137,7 @@ describe('Performance Metrics - Overhead', () => {
     // Benchmark without tracing
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.discoverActions(scenario.actor.id);
     }
     const duration1 = performance.now() - start1;
 
@@ -136,7 +145,7 @@ describe('Performance Metrics - Overhead', () => {
     testFixture.scopeTracer.disable();
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.discoverActions(scenario.actor.id);
     }
     const duration2 = performance.now() - start2;
 
@@ -148,9 +157,10 @@ describe('Performance Metrics - Overhead', () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
     // Baseline: disabled
+    testFixture.scopeTracer.disable();
     const start1 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.discoverActions(scenario.actor.id);
     }
     const duration1 = performance.now() - start1;
 
@@ -158,13 +168,15 @@ describe('Performance Metrics - Overhead', () => {
     testFixture.enableScopeTracing();
     const start2 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.discoverActions(scenario.actor.id);
       testFixture.clearScopeTrace();
     }
     const duration2 = performance.now() - start2;
 
     const overhead = ((duration2 - duration1) / duration1) * 100;
-    expect(overhead).toBeLessThan(40); // Less than 40% overhead with full tracing
+    // Tracing overhead of 350% is acceptable for detailed debugging features
+    // This aligns with tracerOverhead.performance.test.js implementation
+    expect(overhead).toBeLessThan(350); // Less than 350% overhead with tracing
   });
 });
 ```
@@ -177,7 +189,7 @@ describe('Performance Metrics - Calculations', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -198,7 +210,7 @@ describe('Performance Metrics - Calculations', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -219,7 +231,7 @@ describe('Performance Metrics - Calculations', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -247,12 +259,12 @@ describe('Performance Metrics - Regression Detection', () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
     // Baseline measurement
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
     const baselineMetrics = testFixture.getScopePerformanceMetrics();
     testFixture.clearScopeTrace();
 
     // Second measurement (should be similar)
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
     const secondMetrics = testFixture.getScopePerformanceMetrics();
 
     // Durations should be within reasonable variance (±50%)
@@ -267,7 +279,7 @@ describe('Performance Metrics - Regression Detection', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -279,7 +291,7 @@ describe('Performance Metrics - Regression Detection', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -301,7 +313,7 @@ describe('Performance Metrics - Formatted Output', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const start = performance.now();
     const formatted = testFixture.getScopeTraceWithPerformance();
@@ -317,7 +329,7 @@ describe('Performance Metrics - Formatted Output', () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
 
     const formatted = testFixture.getScopeTraceWithPerformance();
 
@@ -338,7 +350,7 @@ describe('Performance Metrics - Formatted Output', () => {
 
 ### Overhead Validation
 - ✅ < 5% overhead when disabled
-- ✅ < 40% overhead when enabled
+- ✅ < 350% overhead when enabled (detailed debugging features)
 - ✅ Overhead calculation reasonable
 
 ### Metric Calculations
@@ -397,6 +409,40 @@ Performance Summary:
 Regression Check: PASS (variance: 8.3%)
 ```
 
+## Implementation Notes
+
+### Key Corrections from Code Review
+
+1. **Action Discovery Method**: Use `testFixture.discoverActions()` instead of `testEnv.getAvailableActions()` - the former provides hints and strict validation
+
+2. **Scope Registration**: Use `await testFixture.registerCustomScope('positioning', 'close_actors')` to register scopes needed for testing
+
+3. **Overhead Tolerance**: Updated from 40% to 350% based on actual implementation in `tracerOverhead.performance.test.js` - this aligns with acceptable overhead for detailed debugging features
+
+4. **Test Pattern**: Follow the pattern in `tests/performance/scopeDsl/tracerOverhead.performance.test.js` for consistency
+
+### API Reference
+
+**ModTestFixture Methods**:
+- `testFixture.enableScopeTracing()` - Enable scope tracing
+- `testFixture.scopeTracer.disable()` - Disable tracer
+- `testFixture.getScopePerformanceMetrics()` - Get performance metrics object
+- `testFixture.getScopeTraceWithPerformance()` - Get formatted trace with performance
+- `testFixture.clearScopeTrace()` - Clear trace data
+- `testFixture.discoverActions(actorId)` - Discover available actions
+- `testFixture.createCloseActors(names, options)` - Create close actors scenario
+
+**ScopeEvaluationTracer Metrics Structure**:
+```javascript
+{
+  totalDuration: number,
+  resolverStats: [{ resolver, totalTime, percentage, stepCount, averageTime }],
+  filterEvaluation: { count, totalTime, averageTime, percentage },
+  slowestOperations: { steps: [], filters: [] },
+  overhead: { tracingTime, percentage }
+}
+```
+
 ## References
 
 - **Spec Section**: 7.4 Performance Profiling (lines 2538-2604)
@@ -404,3 +450,8 @@ Regression Check: PASS (variance: 8.3%)
 - **Related Tickets**:
   - MODTESDIAIMP-016 (Performance metrics implementation)
   - MODTESDIAIMP-012 (Tracer overhead tests)
+- **Reference Implementation**: `tests/performance/scopeDsl/tracerOverhead.performance.test.js`
+- **Documentation**:
+  - [Mod Testing Guide](../docs/testing/mod-testing-guide.md)
+  - [Scope Resolver Registry](../docs/testing/scope-resolver-registry.md)
+  - [ScopeDSL README](../docs/scopeDsl/README.md)
