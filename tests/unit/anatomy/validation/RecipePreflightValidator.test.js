@@ -1,0 +1,554 @@
+/**
+ * @file Unit tests for RecipePreflightValidator
+ */
+
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
+
+describe('RecipePreflightValidator', () => {
+  let validator;
+  let mockLogger;
+  let mockDataRegistry;
+  let mockAnatomyBlueprintRepository;
+  let mockSchemaValidator;
+
+  beforeEach(() => {
+    mockLogger = {
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+      debug: () => {},
+    };
+
+    mockDataRegistry = {
+      get: () => undefined,
+      getAll: () => ({}),
+    };
+
+    mockAnatomyBlueprintRepository = {
+      getBlueprint: async () => null,
+      getRecipe: async () => null,
+    };
+
+    mockSchemaValidator = {
+      validate: () => ({ isValid: true, errors: [] }),
+    };
+
+    validator = new RecipePreflightValidator({
+      dataRegistry: mockDataRegistry,
+      anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+      schemaValidator: mockSchemaValidator,
+      logger: mockLogger,
+    });
+  });
+
+  describe('Constructor', () => {
+    it('should create instance with valid dependencies', () => {
+      expect(validator).toBeDefined();
+    });
+
+    it('should throw error when dataRegistry is missing required methods', () => {
+      expect(
+        () =>
+          new RecipePreflightValidator({
+            dataRegistry: {},
+            anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+            schemaValidator: mockSchemaValidator,
+            logger: mockLogger,
+          })
+      ).toThrow();
+    });
+
+    it('should throw error when anatomyBlueprintRepository is missing required methods', () => {
+      expect(
+        () =>
+          new RecipePreflightValidator({
+            dataRegistry: mockDataRegistry,
+            anatomyBlueprintRepository: {},
+            schemaValidator: mockSchemaValidator,
+            logger: mockLogger,
+          })
+      ).toThrow();
+    });
+
+    it('should throw error when schemaValidator is missing required methods', () => {
+      expect(
+        () =>
+          new RecipePreflightValidator({
+            dataRegistry: mockDataRegistry,
+            anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+            schemaValidator: {},
+            logger: mockLogger,
+          })
+      ).toThrow();
+    });
+  });
+
+  describe('validate', () => {
+    it('should return ValidationReport instance', async () => {
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report).toBeInstanceOf(ValidationReport);
+    });
+
+    it('should include recipe metadata in report', async () => {
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        recipePath: 'data/mods/test/recipes/recipe.json',
+      });
+
+      expect(report.summary.recipeId).toBe('test:recipe');
+      expect(report.summary.recipePath).toBe('data/mods/test/recipes/recipe.json');
+      expect(report.summary.timestamp).toBeDefined();
+    });
+
+    it('should pass validation when all checks succeed', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(true);
+      expect(report.errors.length).toBe(0);
+    });
+
+    it('should fail validation when blueprint does not exist', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => null;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(false);
+      expect(report.errors.length).toBeGreaterThan(0);
+      expect(report.errors[0].type).toBe('BLUEPRINT_NOT_FOUND');
+    });
+
+    it('should collect multiple errors when failFast is false', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => null;
+      mockDataRegistry.get = (type, id) => {
+        // Return undefined for all components to trigger errors
+        return undefined;
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: ['test:component1'],
+            properties: {},
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, { failFast: false });
+
+      expect(report.isValid).toBe(false);
+      expect(report.errors.length).toBeGreaterThan(1);
+    });
+
+    it('should stop after first error when failFast is true', async () => {
+      mockDataRegistry.get = () => undefined;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: ['test:component1'],
+            properties: {},
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, { failFast: true });
+
+      expect(report.isValid).toBe(false);
+    });
+
+    it('should skip pattern validation when skipPatternValidation is true', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matches: ['test:pattern'],
+            tags: [],
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipPatternValidation: true,
+      });
+
+      const passedChecks = report.toJSON().passed;
+      const hasPatternCheck = passedChecks.some(
+        (check) => check.check === 'pattern_matching'
+      );
+      expect(hasPatternCheck).toBe(false);
+    });
+
+    it('should skip descriptor checks when skipDescriptorChecks is true', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: ['test:component1'],
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+      });
+
+      const passedChecks = report.toJSON().passed;
+      const hasDescriptorCheck = passedChecks.some(
+        (check) => check.check === 'descriptor_coverage'
+      );
+      expect(hasDescriptorCheck).toBe(false);
+    });
+
+    it('should add suggestions when slots have no descriptor components', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = () => ({ id: 'test:component1' });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: ['test:component1'],
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.hasSuggestions).toBe(true);
+      expect(report.suggestions.length).toBeGreaterThan(0);
+      expect(report.suggestions[0].type).toBe('MISSING_DESCRIPTORS');
+    });
+
+    it('should not add suggestions when slots have descriptor components', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = () => ({ id: 'descriptors:size_category' });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: ['descriptors:size_category'],
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.hasSuggestions).toBe(false);
+    });
+
+    it('should handle validation errors gracefully', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => {
+        throw new Error('Test error');
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(false);
+      expect(report.errors.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Component existence validation', () => {
+    it('should pass when all component references exist', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async (blueprintId) => {
+        if (blueprintId === 'test:blueprint') {
+          return {
+            id: 'test:blueprint',
+            root: 'test:root',
+            structureTemplate: 'test:template',
+          };
+        }
+        return null;
+      };
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components') {
+          return {
+            id,
+            dataSchema: {
+              type: 'object',
+              properties: {
+                value: { type: 'string' },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: ['test:component1'],
+            properties: {
+              'test:component2': { value: 'test' },
+            },
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(true);
+    });
+
+    it('should fail when component references do not exist', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = () => undefined;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: ['test:component1'],
+            properties: {},
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(false);
+      expect(report.errors.some((e) => e.type === 'COMPONENT_NOT_FOUND')).toBe(
+        true
+      );
+    });
+  });
+
+  describe('Property schema validation', () => {
+    it('should pass when property values match schemas', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components') {
+          return {
+            id,
+            dataSchema: {
+              type: 'object',
+              properties: {
+                value: { type: 'string' },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockSchemaValidator.validate = () => ({
+        isValid: true,
+        errors: [],
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: [],
+            properties: {
+              'test:component1': { value: 'test' },
+            },
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(true);
+    });
+  });
+
+  describe('Socket/slot compatibility', () => {
+    it('should pass when blueprint exists', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      const passedChecks = report.toJSON().passed;
+      const hasSocketCheck = passedChecks.some(
+        (check) => check.check === 'socket_slot_compatibility'
+      );
+      expect(hasSocketCheck).toBe(true);
+    });
+
+    it('should skip when blueprint does not exist', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => null;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      const passedChecks = report.toJSON().passed;
+      const hasSocketCheck = passedChecks.some(
+        (check) => check.check === 'socket_slot_compatibility'
+      );
+      expect(hasSocketCheck).toBe(false);
+    });
+  });
+
+  describe('Pattern matching', () => {
+    it('should pass when no patterns exist', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      const passedChecks = report.toJSON().passed;
+      const patternCheck = passedChecks.find(
+        (check) => check.check === 'pattern_matching'
+      );
+      expect(patternCheck).toBeDefined();
+      expect(patternCheck.message).toContain('No patterns');
+    });
+
+    it('should validate patterns when they exist', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matches: ['test:pattern'],
+            tags: [],
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe);
+
+      const passedChecks = report.toJSON().passed;
+      const patternCheck = passedChecks.find(
+        (check) => check.check === 'pattern_matching'
+      );
+      expect(patternCheck).toBeDefined();
+      expect(patternCheck.message).toContain('1 pattern(s)');
+    });
+  });
+});
