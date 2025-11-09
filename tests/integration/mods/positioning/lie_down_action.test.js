@@ -273,6 +273,134 @@ describe('positioning:lie_down action rule execution', () => {
     });
   });
 
+  describe('Closeness establishment', () => {
+    it('should establish closeness circle when two actors lie on same bed', async () => {
+      const bed = new ModEntityBuilder('test:bed1')
+        .withName('King Bed')
+        .atLocation('bedroom')
+        .withComponent('positioning:allows_lying_on', {})
+        .build();
+
+      const alice = new ModEntityBuilder('test:alice')
+        .withName('Alice')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const bob = new ModEntityBuilder('test:bob')
+        .withName('Bob')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const room = new ModEntityBuilder('bedroom').asRoom('Bedroom').build();
+
+      testFixture.reset([room, alice, bob, bed]);
+
+      // Act: Both lie down on same bed
+      await testFixture.executeAction('test:alice', 'test:bed1');
+      await testFixture.executeAction('test:bob', 'test:bed1');
+
+      // Assert: Both actors should be in closeness circle
+      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
+
+      expect(aliceEntity.components['positioning:closeness']).toBeDefined();
+      expect(bobEntity.components['positioning:closeness']).toBeDefined();
+      expect(aliceEntity.components['positioning:closeness'].partners).toContain('test:bob');
+      expect(bobEntity.components['positioning:closeness'].partners).toContain('test:alice');
+    });
+
+    it('should establish closeness for all actors on same bed', async () => {
+      const bed = new ModEntityBuilder('test:bed1')
+        .withName('Super King Bed')
+        .atLocation('bedroom')
+        .withComponent('positioning:allows_lying_on', {})
+        .build();
+
+      const alice = new ModEntityBuilder('test:alice')
+        .withName('Alice')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const bob = new ModEntityBuilder('test:bob')
+        .withName('Bob')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const carol = new ModEntityBuilder('test:carol')
+        .withName('Carol')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const room = new ModEntityBuilder('bedroom').asRoom('Bedroom').build();
+
+      testFixture.reset([room, alice, bob, carol, bed]);
+
+      // Act: All three lie down on same bed
+      await testFixture.executeAction('test:alice', 'test:bed1');
+      await testFixture.executeAction('test:bob', 'test:bed1');
+      await testFixture.executeAction('test:carol', 'test:bed1');
+
+      // Assert: All should be in closeness with each other
+      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
+      const carolEntity = testFixture.entityManager.getEntityInstance('test:carol');
+
+      expect(aliceEntity.components['positioning:closeness'].partners).toContain('test:bob');
+      expect(aliceEntity.components['positioning:closeness'].partners).toContain('test:carol');
+      expect(bobEntity.components['positioning:closeness'].partners).toContain('test:alice');
+      expect(bobEntity.components['positioning:closeness'].partners).toContain('test:carol');
+      expect(carolEntity.components['positioning:closeness'].partners).toContain('test:alice');
+      expect(carolEntity.components['positioning:closeness'].partners).toContain('test:bob');
+    });
+
+    it('should not establish closeness when actors are on different beds', async () => {
+      const bed1 = new ModEntityBuilder('test:bed1')
+        .withName('Bed 1')
+        .atLocation('bedroom')
+        .withComponent('positioning:allows_lying_on', {})
+        .build();
+
+      const bed2 = new ModEntityBuilder('test:bed2')
+        .withName('Bed 2')
+        .atLocation('bedroom')
+        .withComponent('positioning:allows_lying_on', {})
+        .build();
+
+      const alice = new ModEntityBuilder('test:alice')
+        .withName('Alice')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const bob = new ModEntityBuilder('test:bob')
+        .withName('Bob')
+        .atLocation('bedroom')
+        .asActor()
+        .build();
+
+      const room = new ModEntityBuilder('bedroom').asRoom('Bedroom').build();
+
+      testFixture.reset([room, alice, bob, bed1, bed2]);
+
+      // Act: Alice and Bob lie on different beds
+      await testFixture.executeAction('test:alice', 'test:bed1');
+      await testFixture.executeAction('test:bob', 'test:bed2');
+
+      // Assert: They should NOT be in closeness circle
+      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
+
+      // Closeness component should not exist since they're alone on their respective beds
+      expect(aliceEntity.components['positioning:closeness']).toBeUndefined();
+      expect(bobEntity.components['positioning:closeness']).toBeUndefined();
+    });
+  });
+
   describe('Component validation', () => {
     it('should match the expected lying_down component schema', () => {
       expect(lyingDownComponent.id).toBe('positioning:lying_down');

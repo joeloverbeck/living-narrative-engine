@@ -156,6 +156,10 @@ export function registerInterpreters(container) {
       bind(tokens.EstablishSittingClosenessHandler)
     );
     registry.register(
+      'ESTABLISH_LYING_CLOSENESS',
+      bind(tokens.EstablishLyingClosenessHandler)
+    );
+    registry.register(
       'REMOVE_SITTING_CLOSENESS',
       bind(tokens.RemoveSittingClosenessHandler)
     );

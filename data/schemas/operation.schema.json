@@ -162,6 +162,9 @@
           "$ref": "./operations/establishSittingCloseness.schema.json"
         },
         {
+          "$ref": "./operations/establishLyingCloseness.schema.json"
+        },
+        {
           "$ref": "./operations/removeSittingCloseness.schema.json"
         },
         {
