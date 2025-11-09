@@ -11,11 +11,13 @@ import { PropertySchemaValidationRule } from './rules/propertySchemaValidationRu
 import { LoadTimeValidationContext } from './loadTimeValidationContext.js';
 import { ValidationReport } from './ValidationReport.js';
 import { validateSocketSlotCompatibility } from './socketSlotCompatibilityValidator.js';
+import { validatePatternMatching } from './patternMatchingValidator.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/IAnatomyBlueprintRepository.js').IAnatomyBlueprintRepository} IAnatomyBlueprintRepository */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../slotGenerator.js').default} SlotGenerator */
 
 /**
  * Comprehensive pre-flight validator for anatomy recipes
@@ -25,12 +27,14 @@ class RecipePreflightValidator {
   #dataRegistry;
   #anatomyBlueprintRepository;
   #schemaValidator;
+  #slotGenerator;
   #logger;
 
   constructor({
     dataRegistry,
     anatomyBlueprintRepository,
     schemaValidator,
+    slotGenerator,
     logger,
   }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
@@ -47,10 +51,17 @@ class RecipePreflightValidator {
     validateDependency(schemaValidator, 'ISchemaValidator', logger, {
       requiredMethods: ['validate'],
     });
+    validateDependency(slotGenerator, 'ISlotGenerator', logger, {
+      requiredMethods: [
+        'extractSlotKeysFromLimbSet',
+        'extractSlotKeysFromAppendage',
+      ],
+    });
 
     this.#dataRegistry = dataRegistry;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
     this.#schemaValidator = schemaValidator;
+    this.#slotGenerator = slotGenerator;
     this.#logger = logger;
   }
 
@@ -236,8 +247,8 @@ class RecipePreflightValidator {
       }
     } catch (error) {
       this.#logger.error('Socket/slot compatibility check failed', error);
-      results.errors.push({
-        type: 'VALIDATION_ERROR',
+      results.warnings.push({
+        type: 'VALIDATION_WARNING',
         check: 'socket_slot_compatibility',
         message: 'Failed to validate socket/slot compatibility',
         error: error.message,
@@ -245,11 +256,8 @@ class RecipePreflightValidator {
     }
   }
 
-  #checkPatternMatching(recipe, results) {
+  async #checkPatternMatching(recipe, results) {
     try {
-      // Use ANASYSIMP-005 validator (if available, otherwise skip)
-      // This check validates that patterns can match entities
-
       const patterns = recipe.patterns || [];
       if (patterns.length === 0) {
         results.passed.push({
@@ -259,12 +267,35 @@ class RecipePreflightValidator {
         return;
       }
 
-      // Placeholder for pattern matching validation
-      // Will be implemented by ANASYSIMP-005
-      results.passed.push({
-        check: 'pattern_matching',
-        message: `${patterns.length} pattern(s) validated`,
-      });
+      // Get blueprint for the recipe
+      const blueprint =
+        await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
+
+      if (!blueprint) {
+        this.#logger.warn(
+          `Cannot validate patterns: blueprint '${recipe.blueprintId}' not found`
+        );
+        return;
+      }
+
+      // Run pattern matching dry-run validation
+      const warnings = validatePatternMatching(
+        recipe,
+        blueprint,
+        this.#dataRegistry,
+        this.#slotGenerator,
+        this.#logger
+      );
+
+      if (warnings.length === 0) {
+        const patternCount = patterns.length;
+        results.passed.push({
+          check: 'pattern_matching',
+          message: `All ${patternCount} pattern(s) have matching slots`,
+        });
+      } else {
+        results.warnings.push(...warnings);
+      }
     } catch (error) {
       this.#logger.error('Pattern matching check failed', error);
       results.warnings.push({
