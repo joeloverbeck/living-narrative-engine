@@ -4,6 +4,7 @@
  */
 
 import IScopeRegistry from '../interfaces/IScopeRegistry.js';
+import { ScopeResolutionError } from './errors/scopeResolutionError.js';
 
 class ScopeRegistry extends IScopeRegistry {
   constructor() {
@@ -67,6 +68,43 @@ class ScopeRegistry extends IScopeRegistry {
     }
 
     return this._scopes.get(name) || null;
+  }
+
+  /**
+   * Get a scope definition by name, throwing if not found
+   *
+   * @param {string} name - Scope name
+   * @returns {object} Scope definition
+   * @throws {ScopeResolutionError} If scope not found
+   */
+  getScopeOrThrow(name) {
+    const scopeData = this.getScope(name); // Uses existing getScope logic
+
+    if (!scopeData) {
+      const registeredScopes = this.getAllScopeNames();
+      const suggestions = registeredScopes.slice(0, 5);
+
+      throw new ScopeResolutionError(
+        `Scope "${name}" not found`,
+        {
+          scopeName: name,
+          phase: 'scope lookup',
+          parameters: {
+            requestedScope: name,
+            totalRegisteredScopes: registeredScopes.length,
+          },
+          hint: 'Check that the scope is registered and the name is correct',
+          suggestion: suggestions.length > 0
+            ? `Available scopes (first ${suggestions.length}): ${suggestions.join(', ')}`
+            : 'No scopes are currently registered',
+          example: registeredScopes.length > 0
+            ? `Example: scopeRegistry.getScope('${registeredScopes[0]}')`
+            : undefined,
+        }
+      );
+    }
+
+    return scopeData;
   }
 
   /**

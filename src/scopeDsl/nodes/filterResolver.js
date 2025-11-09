@@ -10,6 +10,7 @@ import {
 } from '../core/entityHelpers.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ErrorCodes } from '../constants/errorCodes.js';
+import { ScopeResolutionError } from '../errors/scopeResolutionError.js';
 
 /**
  * @typedef {object} LocationProvider
@@ -219,8 +220,9 @@ export default function createFilterResolver({
           }
         } else {
           // Handle single items (entity IDs or objects)
+          let evalCtx = null; // Declare outside try block so it's available in catch
           try {
-            const evalCtx = createEvaluationContext(
+            evalCtx = createEvaluationContext(
               item,
               actorEntity,
               entitiesGateway,
@@ -262,15 +264,30 @@ export default function createFilterResolver({
               error.message &&
               error.message.includes('Could not resolve condition_ref')
             ) {
+              // Wrap with ScopeResolutionError for better context
+              const wrappedError = new ScopeResolutionError(
+                'Filter logic evaluation failed',
+                {
+                  phase: 'filter evaluation',
+                  parameters: {
+                    entityId: typeof item === 'string' ? item : item?.id,
+                    filterLogic: node.logic,
+                    contextKeys: evalCtx ? Object.keys(evalCtx) : [],
+                  },
+                  hint: 'Check that JSON Logic expression is valid and context has required fields',
+                  originalError: error,
+                }
+              );
+
               if (errorHandler) {
                 errorHandler.handleError(
-                  error,
+                  wrappedError,
                   ctx,
                   'FilterResolver',
                   ErrorCodes.RESOLUTION_FAILED_GENERIC
                 );
               } else {
-                throw error;
+                throw wrappedError;
               }
             }
             // Handle other errors gracefully - continue processing other items
