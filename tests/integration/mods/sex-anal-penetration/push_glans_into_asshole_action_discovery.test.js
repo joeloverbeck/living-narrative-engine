@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import '../../../common/mods/domainMatchers.js';
 import pushGlansIntoAssholeActionJson from '../../../../data/mods/sex-anal-penetration/actions/push_glans_into_asshole.action.json' assert { type: 'json' };
@@ -52,9 +51,9 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
       });
     });
 
-    it('should forbid positioning:fucking_anally component on actor', () => {
+    it('should forbid positioning:fucking_anally and positioning:fucking_vaginally components on actor', () => {
       expect(pushGlansIntoAssholeActionJson.forbidden_components).toEqual({
-        actor: ['positioning:fucking_anally'],
+        actor: ['positioning:fucking_anally', 'positioning:fucking_vaginally'],
       });
     });
 
@@ -310,6 +309,51 @@ describe('sex-anal-penetration:push_glans_into_asshole - Action Discovery', () =
         scenario.actor.id,
         'positioning:fucking_anally',
         { being_fucked_entity_id: 'other_entity', initiated: true }
+      );
+
+      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const ids = actions.map((action) => action.id);
+
+      expect(ids).not.toContain('sex-anal-penetration:push_glans_into_asshole');
+    });
+
+    it('should NOT be discovered when actor already has fucking_vaginally component', async () => {
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      // Make Bob face away from Alice with exposed asshole
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'positioning:facing_away',
+        { facing_away_from: [scenario.actor.id] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'anatomy:body_part_types',
+        { types: ['asshole'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.target.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
+
+      // Alice has uncovered penis
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'anatomy:body_part_types',
+        { types: ['penis'] }
+      );
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'clothing:socket_coverage',
+        { sockets: {} }
+      );
+
+      // Alice is already fucking someone vaginally (cannot use same penis for anal)
+      testFixture.testEnv.entityManager.addComponent(
+        scenario.actor.id,
+        'positioning:fucking_vaginally',
+        { targetId: 'other_entity' }
       );
 
       const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
