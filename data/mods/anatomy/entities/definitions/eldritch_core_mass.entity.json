@@ -1,0 +1,298 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_core_mass",
+  "description": "Central bulbous mass of The Writhing Observer - a pulsating core of impossible flesh",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_core"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "tentacle_1",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_2",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_3",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_4",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_5",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_6",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_7",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_8",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_9",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_10",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_sensory"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_11",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_feeding"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "tentacle_12",
+          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_feeding"],
+          "nameTpl": "tentacle"
+        },
+        {
+          "id": "vestigial_arm_1",
+          "allowedTypes": ["eldritch_vestigial_arm"],
+          "nameTpl": "vestigial arm"
+        },
+        {
+          "id": "vestigial_arm_2",
+          "allowedTypes": ["eldritch_vestigial_arm"],
+          "nameTpl": "vestigial arm"
+        },
+        {
+          "id": "vestigial_arm_3",
+          "allowedTypes": ["eldritch_vestigial_arm"],
+          "nameTpl": "vestigial arm"
+        },
+        {
+          "id": "vestigial_arm_4",
+          "allowedTypes": ["eldritch_vestigial_arm"],
+          "nameTpl": "vestigial arm"
+        },
+        {
+          "id": "vestigial_arm_5",
+          "allowedTypes": ["eldritch_vestigial_arm"],
+          "nameTpl": "vestigial arm"
+        },
+        {
+          "id": "vestigial_arm_6",
+          "allowedTypes": ["eldritch_vestigial_arm"],
+          "nameTpl": "vestigial arm"
+        },
+        {
+          "id": "wing_1",
+          "allowedTypes": ["eldritch_membrane_wing"],
+          "nameTpl": "membrane wing"
+        },
+        {
+          "id": "wing_2",
+          "allowedTypes": ["eldritch_membrane_wing"],
+          "nameTpl": "membrane wing"
+        },
+        {
+          "id": "wing_3",
+          "allowedTypes": ["eldritch_membrane_wing"],
+          "nameTpl": "membrane wing"
+        },
+        {
+          "id": "wing_4",
+          "allowedTypes": ["eldritch_membrane_wing"],
+          "nameTpl": "membrane wing"
+        },
+        {
+          "id": "eye_stalk_1",
+          "allowedTypes": ["eldritch_compound_eye_stalk"],
+          "nameTpl": "eye stalk"
+        },
+        {
+          "id": "eye_stalk_2",
+          "allowedTypes": ["eldritch_compound_eye_stalk"],
+          "nameTpl": "eye stalk"
+        },
+        {
+          "id": "eye_stalk_3",
+          "allowedTypes": ["eldritch_compound_eye_stalk"],
+          "nameTpl": "eye stalk"
+        },
+        {
+          "id": "mouth_1",
+          "allowedTypes": ["eldritch_lamprey_mouth"],
+          "nameTpl": "lamprey mouth"
+        },
+        {
+          "id": "mouth_2",
+          "allowedTypes": ["eldritch_lamprey_mouth"],
+          "nameTpl": "lamprey mouth"
+        },
+        {
+          "id": "mouth_3",
+          "allowedTypes": ["eldritch_lamprey_mouth"],
+          "nameTpl": "lamprey mouth"
+        },
+        {
+          "id": "mouth_4",
+          "allowedTypes": ["eldritch_vertical_maw"],
+          "nameTpl": "vertical maw"
+        },
+        {
+          "id": "mouth_5",
+          "allowedTypes": ["eldritch_speaking_orifice"],
+          "nameTpl": "speaking orifice"
+        },
+        {
+          "id": "sensory_stalk_1",
+          "allowedTypes": ["eldritch_sensory_stalk"],
+          "nameTpl": "sensory stalk"
+        },
+        {
+          "id": "sensory_stalk_2",
+          "allowedTypes": ["eldritch_sensory_stalk"],
+          "nameTpl": "sensory stalk"
+        },
+        {
+          "id": "sensory_stalk_3",
+          "allowedTypes": ["eldritch_sensory_stalk"],
+          "nameTpl": "sensory stalk"
+        },
+        {
+          "id": "sensory_stalk_4",
+          "allowedTypes": ["eldritch_sensory_stalk"],
+          "nameTpl": "sensory stalk"
+        },
+        {
+          "id": "sensory_stalk_5",
+          "allowedTypes": ["eldritch_sensory_stalk"],
+          "nameTpl": "sensory stalk"
+        },
+        {
+          "id": "sensory_stalk_6",
+          "allowedTypes": ["eldritch_sensory_stalk"],
+          "nameTpl": "sensory stalk"
+        },
+        {
+          "id": "central_eye",
+          "allowedTypes": ["eldritch_baleful_eye"],
+          "nameTpl": "central baleful eye"
+        },
+        {
+          "id": "surface_eye_1",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_2",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_3",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_4",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_5",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_6",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_7",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_8",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_9",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_10",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_11",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "surface_eye_12",
+          "allowedTypes": ["eldritch_surface_eye"],
+          "nameTpl": "surface eye"
+        },
+        {
+          "id": "vocal_sac_1",
+          "allowedTypes": ["eldritch_vocal_sac"],
+          "nameTpl": "vocal sac"
+        },
+        {
+          "id": "vocal_sac_2",
+          "allowedTypes": ["eldritch_vocal_sac"],
+          "nameTpl": "vocal sac"
+        },
+        {
+          "id": "vocal_sac_3",
+          "allowedTypes": ["eldritch_vocal_sac"],
+          "nameTpl": "vocal sac"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "writhing core mass"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:texture": {
+      "texture": "translucent-slick"
+    },
+    "descriptors:color_extended": {
+      "color": "sickly-gray-green"
+    },
+    "descriptors:animation": {
+      "animation": "pulsating-morphing"
+    },
+    "descriptors:luminosity": {
+      "luminosity": "bioluminescent-veins"
+    },
+    "descriptors:secretion": {
+      "secretion": "viscous-slime"
+    },
+    "descriptors:temperature": {
+      "temperature": "unnaturally-warm"
+    }
+  }
+}

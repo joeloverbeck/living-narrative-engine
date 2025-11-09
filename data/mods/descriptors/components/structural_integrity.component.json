@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:structural_integrity",
+  "description": "Describes the structural strength and integrity of a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "integrity": {
+        "type": "string",
+        "description": "The structural integrity level",
+        "enum": [
+          "fragile",
+          "normal",
+          "reinforced",
+          "regenerative",
+          "insufficient-for-flight"
+        ],
+        "default": "normal"
+      }
+    },
+    "required": ["integrity"],
+    "additionalProperties": false
+  }
+}

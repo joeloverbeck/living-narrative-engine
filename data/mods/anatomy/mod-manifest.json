@@ -25,6 +25,21 @@
         "beak.entity.json",
         "blueprint_slot.entity.json",
         "centaur_head.entity.json",
+        "eldritch_baleful_eye.entity.json",
+        "eldritch_compound_eye_stalk.entity.json",
+        "eldritch_core_mass.entity.json",
+        "eldritch_lamprey_mouth.entity.json",
+        "eldritch_malformed_hand.entity.json",
+        "eldritch_membrane_wing.entity.json",
+        "eldritch_sensory_stalk.entity.json",
+        "eldritch_speaking_orifice.entity.json",
+        "eldritch_surface_eye.entity.json",
+        "eldritch_tentacle_feeding.entity.json",
+        "eldritch_tentacle_large.entity.json",
+        "eldritch_tentacle_sensory.entity.json",
+        "eldritch_vertical_maw.entity.json",
+        "eldritch_vestigial_arm.entity.json",
+        "eldritch_vocal_sac.entity.json",
         "centaur_leg_front.entity.json",
         "centaur_leg_rear.entity.json",
         "centaur_torso.entity.json",
@@ -153,7 +168,8 @@
       "human_futa.blueprint.json",
       "human_male.blueprint.json",
       "kraken.blueprint.json",
-      "red_dragon.blueprint.json"
+      "red_dragon.blueprint.json",
+      "writhing_observer.blueprint.json"
     ],
     "recipes": [
       "centaur_warrior.recipe.json",
@@ -162,7 +178,8 @@
       "human_futa.recipe.json",
       "human_male.recipe.json",
       "kraken.recipe.json",
-      "red_dragon.recipe.json"
+      "red_dragon.recipe.json",
+      "writhing_observer.recipe.json"
     ],
     "anatomyFormatting": [
       "default.json"
@@ -185,6 +202,7 @@
     "structure-templates": [
       "structure_arachnid_8leg.structure-template.json",
       "structure_centauroid.structure-template.json",
+      "structure_eldritch_abomination.structure-template.json",
       "structure_octopoid.structure-template.json",
       "structure_winged_quadruped.structure-template.json"
     ]

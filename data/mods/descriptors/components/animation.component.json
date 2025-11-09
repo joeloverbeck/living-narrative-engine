@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:animation",
+  "description": "Describes the movement or animation characteristics of a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "animation": {
+        "type": "string",
+        "description": "The animation or movement pattern",
+        "enum": [
+          "static",
+          "pulsating",
+          "pulsating-morphing",
+          "unblinking",
+          "unblinking-independent-motion",
+          "involuntary-twitching",
+          "constantly-drooling",
+          "slowly-gaping",
+          "rhythmic-pulsation"
+        ],
+        "default": "static"
+      }
+    },
+    "required": ["animation"],
+    "additionalProperties": false
+  }
+}

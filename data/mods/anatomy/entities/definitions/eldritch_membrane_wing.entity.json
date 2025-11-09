@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_membrane_wing",
+  "description": "Translucent veined membrane wing displaying bioluminescent patterns",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_membrane_wing"
+    },
+    "core:name": {
+      "text": "membrane wing"
+    },
+    "descriptors:texture": {
+      "texture": "translucent-veined"
+    },
+    "descriptors:color_extended": {
+      "color": "iridescent-blue-green"
+    },
+    "descriptors:luminosity": {
+      "luminosity": "bioluminescent-patterns"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:structural_integrity": {
+      "integrity": "insufficient-for-flight"
+    }
+  }
+}

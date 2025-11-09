@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:luminosity",
+  "description": "Describes the light-emitting or glowing properties of a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "luminosity": {
+        "type": "string",
+        "description": "The luminosity or light-emission characteristic",
+        "enum": [
+          "none",
+          "faint-glow",
+          "phosphorescent",
+          "bioluminescent-veins",
+          "bioluminescent-patterns"
+        ],
+        "default": "none"
+      }
+    },
+    "required": ["luminosity"],
+    "additionalProperties": false
+  }
+}

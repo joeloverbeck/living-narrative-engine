@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:effect",
+  "description": "Describes special psychological or physical effects caused by a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "effect": {
+        "type": "string",
+        "description": "The special effect produced",
+        "enum": [
+          "none",
+          "madness-inducing",
+          "maddening-sounds",
+          "disorientation-nausea",
+          "paralyzing-fear"
+        ],
+        "default": "none"
+      }
+    },
+    "required": ["effect"],
+    "additionalProperties": false
+  }
+}

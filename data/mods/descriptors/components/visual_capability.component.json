@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:visual_capability",
+  "description": "Describes the visual sensing capabilities of a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "capability": {
+        "type": "string",
+        "description": "The visual capability",
+        "enum": [
+          "normal",
+          "compound-multidirectional",
+          "360-degree-vision",
+          "telescopic",
+          "thermal"
+        ],
+        "default": "normal"
+      }
+    },
+    "required": ["capability"],
+    "additionalProperties": false
+  }
+}

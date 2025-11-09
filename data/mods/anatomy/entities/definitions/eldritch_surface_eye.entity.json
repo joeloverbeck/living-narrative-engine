@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_surface_eye",
+  "description": "Humanoid eye embedded in the surface of the core mass",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_eye"
+    },
+    "core:name": {
+      "text": "surface eye"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:color_extended": {
+      "color": "varied-human-colors"
+    },
+    "descriptors:animation": {
+      "animation": "unblinking-independent-motion"
+    },
+    "descriptors:luminosity": {
+      "luminosity": "faint-glow"
+    }
+  }
+}

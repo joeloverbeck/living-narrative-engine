@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:deformity",
+  "description": "Describes abnormal or malformed characteristics of a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "deformity": {
+        "type": "string",
+        "description": "The type of deformity or abnormality",
+        "enum": [
+          "none",
+          "twisted-joints",
+          "extra-joints",
+          "fused-segments",
+          "asymmetric"
+        ],
+        "default": "none"
+      }
+    },
+    "required": ["deformity"],
+    "additionalProperties": false
+  }
+}

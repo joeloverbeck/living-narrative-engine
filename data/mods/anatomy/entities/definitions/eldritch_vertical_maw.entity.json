@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_vertical_maw",
+  "description": "Vertical splitting maw that bisects the central mass",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_mouth"
+    },
+    "core:name": {
+      "text": "vertical maw"
+    },
+    "descriptors:texture": {
+      "texture": "serrated-edges"
+    },
+    "descriptors:size_category": {
+      "size": "enormous"
+    },
+    "descriptors:secretion": {
+      "secretion": "viscous-digestive-fluid"
+    },
+    "descriptors:animation": {
+      "animation": "slowly-gaping"
+    }
+  }
+}
