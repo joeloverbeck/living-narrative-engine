@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ScopeContextBuilder } from '../../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
+import { ServiceError } from '../../../../../src/actions/pipeline/services/base/ServiceError.js';
 import TargetContextBuilder from '../../../../../src/scopeDsl/utils/targetContextBuilder.js';
 import { createMockLogger } from '../../../../common/mockFactories/loggerMocks.js';
 import { createMockEntityManager } from '../../../../common/mockFactories/entities.js';
@@ -153,11 +154,13 @@ describe('ScopeContextBuilder Integration Tests', () => {
       });
 
       resolvedTargets = {
-        primary: {
-          id: 'target-1',
-          displayName: 'Primary Target',
-          entity: primaryTarget,
-        },
+        primary: [
+          {
+            id: 'target-1',
+            displayName: 'Primary Target',
+            entity: primaryTarget,
+          },
+        ],
       };
 
       targetDef.contextFrom = 'primary';
@@ -173,7 +176,78 @@ describe('ScopeContextBuilder Integration Tests', () => {
       expect(result).toHaveProperty('actor');
       expect(result).toHaveProperty('location');
       expect(result).toHaveProperty('targets');
-      expect(result.targets.primary.id).toBe('target-1');
+      expect(result.targets.primary[0].id).toBe('target-1');
+      expect(result.target.id).toBe('target-1');
+    });
+  });
+
+  describe('buildDependentContext integration', () => {
+    it('should build dependent context successfully when target exists', () => {
+      const actionContext = {
+        location: { id: 'location-456' },
+      };
+
+      const baseContext = scopeContextBuilder.buildInitialContext(
+        mockActor,
+        actionContext
+      );
+
+      const primaryEntity = {
+        id: 'target-1',
+        getAllComponents: jest.fn().mockReturnValue({
+          'core:name': { displayName: 'Primary Target' },
+        }),
+      };
+
+      mockEntityManager.getEntityInstance.mockImplementation((id) => {
+        if (id === 'actor-123') return mockActor;
+        if (id === 'location-456') return mockLocation;
+        if (id === 'target-1') return primaryEntity;
+        return null;
+      });
+
+      const resolvedTargets = {
+        primary: [
+          {
+            id: 'target-1',
+            displayName: 'Primary Target',
+          },
+        ],
+      };
+
+      const result = scopeContextBuilder.buildDependentContext(
+        baseContext,
+        'primary',
+        resolvedTargets
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.context.targets.primary[0].id).toBe('target-1');
+      expect(result.context.target.id).toBe('target-1');
+    });
+  });
+
+  describe('addResolvedTarget integration', () => {
+    it('should add targets to context built from real collaborators', () => {
+      const actionContext = {
+        location: { id: 'location-456' },
+      };
+
+      const baseContext = scopeContextBuilder.buildInitialContext(
+        mockActor,
+        actionContext
+      );
+
+      const updatedContext = scopeContextBuilder.addResolvedTarget(
+        baseContext,
+        'primary',
+        { id: 'target-1', displayName: 'Primary Target' }
+      );
+
+      expect(updatedContext.targets.primary).toEqual({
+        id: 'target-1',
+        displayName: 'Primary Target',
+      });
     });
   });
 
@@ -314,6 +388,36 @@ describe('ScopeContextBuilder Integration Tests', () => {
       expect(validation.errors).toContain('Context target missing id field');
       expect(validation.warnings).toContain('Context missing location field');
     });
+
+    it('should fail validation when context is null', () => {
+      const validation = scopeContextBuilder.validateContext(null);
+
+      expect(validation.success).toBe(false);
+      expect(validation.errors).toEqual(['Context must be a non-null object']);
+      expect(validation.warnings).toEqual([]);
+    });
+
+    it('should flag missing actor field', () => {
+      const validation = scopeContextBuilder.validateContext({});
+
+      expect(validation.success).toBe(false);
+      expect(validation.errors).toContain('Context missing required actor field');
+    });
+
+    it('should warn when target is missing components', () => {
+      const context = {
+        actor: { id: 'actor-123' },
+        location: { id: 'location-456' },
+        target: { id: 'target-1' },
+      };
+
+      const validation = scopeContextBuilder.validateContext(context);
+
+      expect(validation.success).toBe(true);
+      expect(validation.warnings).toContain(
+        'Context target missing components field'
+      );
+    });
   });
 
   describe('error propagation integration', () => {
@@ -381,6 +485,22 @@ describe('ScopeContextBuilder Integration Tests', () => {
       expect(merged.location.id).toBe('location-456');
       expect(merged.targets.item1.id).toBe('item-1');
       expect(merged.customData).toBe('test-value');
+    });
+
+    it('should throw when contexts is not an array', () => {
+      expect(() => scopeContextBuilder.mergeContexts('not-an-array')).toThrow(
+        ServiceError
+      );
+    });
+
+    it('should return empty object when contexts array is empty', () => {
+      const merged = scopeContextBuilder.mergeContexts([]);
+
+      expect(merged).toEqual({});
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('ScopeContextBuilder: mergeContexts'),
+        expect.objectContaining({ contextCount: 0, result: 'empty' })
+      );
     });
   });
 
