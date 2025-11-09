@@ -31,7 +31,8 @@
       "suckle_testicle_lying_close.action.json",
       "suckle_testicle_sitting_close.action.json",
       "take_penis_in_mouth.action.json",
-      "take_penis_in_mouth_kneeling.action.json"
+      "take_penis_in_mouth_kneeling.action.json",
+      "take_penis_in_mouth_lying_close.action.json"
     ],
     "conditions": [
       "event-is-action-breathe-teasingly-on-penis-lying-close.condition.json",
@@ -55,6 +56,7 @@
       "event-is-action-suckle-testicle-sitting-close.condition.json",
       "event-is-action-suckle-testicle.condition.json",
       "event-is-action-take-penis-in-mouth-kneeling.condition.json",
+      "event-is-action-take-penis-in-mouth-lying-close.condition.json",
       "event-is-action-take-penis-in-mouth.condition.json"
     ],
     "rules": [
@@ -79,7 +81,8 @@
       "handle_suckle_testicle_lying_close.rule.json",
       "handle_suckle_testicle_sitting_close.rule.json",
       "handle_take_penis_in_mouth.rule.json",
-      "handle_take_penis_in_mouth_kneeling.rule.json"
+      "handle_take_penis_in_mouth_kneeling.rule.json",
+      "handle_take_penis_in_mouth_lying_close.rule.json"
     ],
     "scopes": [
       "actor_giving_blowjob_to_me.scope",
