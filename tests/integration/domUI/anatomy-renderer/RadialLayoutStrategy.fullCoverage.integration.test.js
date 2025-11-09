@@ -93,7 +93,7 @@ describe('RadialLayoutStrategy integration coverage', () => {
     const firstChild = nodes.get('child-0');
     expect(firstChild).toBeDefined();
 
-    // With high-degree node handling (24 children >= 10 threshold):
+    // With high-degree node handling (24+ children >= 10 threshold):
     // The radius is increased to prevent overlap of many children
     // baseRadius (120) * depth (1) * crowdingFactor * highDegreeMultiplier (1.8)
     // For high-degree nodes, expect significantly larger radius than base calculation
@@ -104,14 +104,24 @@ describe('RadialLayoutStrategy integration coverage', () => {
     // (exact value depends on internal calculation)
     expect(firstChild.radius).toBeCloseTo(675, 0);
 
-    // Dynamic minimum angle for 24 children: 2π / 24 ≈ 0.262
-    // This is less than configured minAngle (0.45), so 0.45 should be used
-    expect(firstChild.angleEnd - firstChild.angleStart).toBeGreaterThanOrEqual(0.45);
+    // Note: The duplicate edge causes child-0 to appear twice in the children array
+    // So the effective child count is 25 (24 unique children + 1 duplicate)
+    const effectiveChildCount = childCount + 1; // +1 for duplicate edge
 
+    // Dynamic minimum angle calculation:
+    // - Configured minAngle is 0.45
+    // - With 25 edges: maxAnglePerChild = 2π / 25 ≈ 0.251
+    // - The angle is clamped to prevent wrap-around: Math.min(0.45, 0.251) = 0.251
+    // This ensures all children fit within 2π without overlap
+    const expectedAnglePerChild = (2 * Math.PI) / effectiveChildCount;
+    expect(firstChild.angleEnd - firstChild.angleStart).toBeCloseTo(expectedAnglePerChild, 5);
+
+    // All children should have approximately equal angles to fit within 2π
     const angles = Array.from(nodes.values())
       .filter((node) => node.depth === 1)
       .map((node) => node.angleEnd - node.angleStart);
-    expect(Math.min(...angles)).toBeGreaterThanOrEqual(0.45 - 1e-6);
+    expect(Math.min(...angles)).toBeCloseTo(expectedAnglePerChild, 5);
+    expect(Math.max(...angles)).toBeCloseTo(expectedAnglePerChild, 5);
   });
 
   it('handles cyclical graphs without infinite recursion', () => {
