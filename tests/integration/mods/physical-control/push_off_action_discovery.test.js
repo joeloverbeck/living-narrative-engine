@@ -111,6 +111,7 @@ describe('physical-control:push_off action discovery', () => {
         'positioning:straddling_waist',
         'positioning:hugging',
         'positioning:being_hugged',
+        'positioning:lying_down',
       ]);
       expect(pushOffAction.forbidden_components.primary).toEqual([
         'positioning:sitting_on',

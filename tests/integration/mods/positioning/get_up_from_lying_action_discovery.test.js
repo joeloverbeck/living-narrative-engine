@@ -35,9 +35,11 @@ describe('positioning:get_up_from_lying action discovery', () => {
       expect(getUpFromLyingAction.template).toBe('get up from {target}');
     });
 
-    it('should have no forbidden components', () => {
+    it('should forbid being_fucked_vaginally component', () => {
       expect(getUpFromLyingAction.forbidden_components).toBeDefined();
-      expect(getUpFromLyingAction.forbidden_components.actor).toEqual([]);
+      expect(getUpFromLyingAction.forbidden_components.actor).toEqual([
+        'positioning:being_fucked_vaginally'
+      ]);
     });
   });
 

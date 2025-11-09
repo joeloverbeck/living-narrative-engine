@@ -108,7 +108,7 @@ class RecipePreflightValidator {
 
     // 5. Pattern Matching Dry-Run (Warning - P1)
     if (!options.skipPatternValidation) {
-      this.#checkPatternMatching(recipe, results);
+      await this.#checkPatternMatching(recipe, results);
     }
 
     // 6. Descriptor Coverage (Suggestion - P1)

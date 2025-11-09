@@ -224,20 +224,10 @@ describe('Complete Lying Workflow', () => {
       const sitFixture = await ModTestFixture.forAction('positioning', 'sit_down');
       sitFixture.reset([room, actor, bed, chair]);
 
-      // Act: Try to sit (should be blocked due to lying_down component)
-      const result = await sitFixture.executeAction('test:actor1', 'test:chair1');
-
-      // Assert: Action should be blocked (if the action doesn't have forbidden component checks yet, it may succeed)
-      // This test documents the expected behavior even if not yet fully implemented
-      if (result && typeof result === 'object' && 'blocked' in result) {
-        expect(result.blocked).toBe(true);
-        expect(result.reason).toContain('lying_down');
-      } else {
-        // TODO: sit_down action needs forbidden component check for lying_down
-        // For now, just verify the actor still has lying_down component (action didn't remove it)
-        const actorAfter = sitFixture.entityManager.getEntityInstance('test:actor1');
-        expect(actorAfter.components['positioning:lying_down']).toBeDefined();
-      }
+      // Act & Assert: Try to sit (should throw ActionValidationError due to lying_down forbidden component)
+      await expect(
+        sitFixture.executeAction('test:actor1', 'test:chair1')
+      ).rejects.toThrow('ACTION EXECUTION VALIDATION FAILED');
 
       sitFixture.cleanup();
     });
@@ -269,18 +259,10 @@ describe('Complete Lying Workflow', () => {
       const bendFixture = await ModTestFixture.forAction('positioning', 'bend_over');
       bendFixture.reset([room, actor, bed, counter]);
 
-      // Act: Try to bend (should be blocked due to lying_down component)
-      const result = await bendFixture.executeAction('test:actor1', 'test:counter1');
-
-      // Assert: Action should be blocked
-      if (result && typeof result === 'object' && 'blocked' in result) {
-        expect(result.blocked).toBe(true);
-        expect(result.reason).toContain('lying_down');
-      } else {
-        // TODO: bend_over action needs forbidden component check for lying_down
-        const actorAfter = bendFixture.entityManager.getEntityInstance('test:actor1');
-        expect(actorAfter.components['positioning:lying_down']).toBeDefined();
-      }
+      // Act & Assert: Try to bend (should throw ActionValidationError due to lying_down forbidden component)
+      await expect(
+        bendFixture.executeAction('test:actor1', 'test:counter1')
+      ).rejects.toThrow('ACTION EXECUTION VALIDATION FAILED');
 
       bendFixture.cleanup();
     });

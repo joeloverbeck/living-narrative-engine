@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-vaginal-penetration:event-is-action-pull-penis-out-of-vagina",
+  "description": "Checks if the event attempts the 'sex-vaginal-penetration:pull_penis_out_of_vagina' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex-vaginal-penetration:pull_penis_out_of_vagina"
+    ]
+  }
+}

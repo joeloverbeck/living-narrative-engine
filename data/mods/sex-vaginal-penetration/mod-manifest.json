@@ -28,6 +28,7 @@
     "actions": [
       "insert_penis_into_vagina.action.json",
       "insert_primary_penis_into_your_vagina.action.json",
+      "pull_penis_out_of_vagina.action.json",
       "ride_penis_greedily.action.json",
       "slide_penis_along_labia.action.json",
       "straddling_penis_milking.action.json"
@@ -35,6 +36,7 @@
     "conditions": [
       "event-is-action-insert-penis-into-vagina.condition.json",
       "event-is-action-insert-primary-penis-into-your-vagina.condition.json",
+      "event-is-action-pull-penis-out-of-vagina.condition.json",
       "event-is-action-ride-penis-greedily.condition.json",
       "event-is-action-slide-penis-along-labia.condition.json",
       "event-is-action-straddling-penis-milking.condition.json"
@@ -42,11 +44,13 @@
     "rules": [
       "handle_insert_penis_into_vagina.rule.json",
       "handle_insert_primary_penis_into_your_vagina.rule.json",
+      "handle_pull_penis_out_of_vagina.rule.json",
       "handle_ride_penis_greedily.rule.json",
       "handle_slide_penis_along_labia.rule.json",
       "handle_straddling_penis_milking.rule.json"
     ],
     "scopes": [
+      "actors_being_fucked_vaginally_by_me.scope",
       "actors_with_uncovered_penis_facing_each_other_or_target_facing_away.scope",
       "actors_with_uncovered_vagina_facing_each_other_or_target_facing_away.scope"
     ],
