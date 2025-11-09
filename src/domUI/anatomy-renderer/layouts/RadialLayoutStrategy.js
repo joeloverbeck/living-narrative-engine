@@ -280,8 +280,15 @@ class RadialLayoutStrategy {
       const childAngleRange =
         (child.leafCount / totalLeaves) * parentAngleRange;
 
-      // Enforce minimum angle to prevent overlap
-      const actualAngleRange = Math.max(childAngleRange, dynamicMinAngle);
+      // Calculate the maximum angle available per child to prevent wrap-around
+      const maxAnglePerChild = parentAngleRange / children.length;
+
+      // Enforce minimum angle to prevent overlap, but clamp to available space
+      // to ensure children get unique positions within the parent's range
+      const actualAngleRange = Math.max(
+        childAngleRange,
+        Math.min(dynamicMinAngle, maxAnglePerChild)
+      );
 
       // Position at center of allocated range
       const childAngle = currentAngle + actualAngleRange / 2;
