@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:sensory_capability",
+  "description": "Describes the non-visual sensory capabilities of a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "capability": {
+        "type": "string",
+        "description": "The sensory capability",
+        "enum": [
+          "normal",
+          "chemoreceptive",
+          "electromagnetic",
+          "pressure-sensitive",
+          "thermal"
+        ],
+        "default": "normal"
+      }
+    },
+    "required": ["capability"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_vocal_sac",
+  "description": "Pulsating translucent chamber emitting subsonic frequencies",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_organ"
+    },
+    "core:name": {
+      "text": "vocal sac"
+    },
+    "descriptors:texture": {
+      "texture": "translucent"
+    },
+    "descriptors:animation": {
+      "animation": "rhythmic-pulsation"
+    },
+    "descriptors:color_extended": {
+      "color": "pale-pink-internal-organs-visible"
+    },
+    "descriptors:acoustic_property": {
+      "property": "subsonic-emission"
+    },
+    "descriptors:effect": {
+      "effect": "disorientation-nausea"
+    }
+  }
+}

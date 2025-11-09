@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_malformed_hand",
+  "description": "Grotesque hand with wrong number of digits and malformed joints",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_hand"
+    },
+    "core:name": {
+      "text": "malformed hand"
+    },
+    "descriptors:digit_count": {
+      "count": "abnormal"
+    },
+    "descriptors:texture": {
+      "texture": "webbed-clawed"
+    },
+    "descriptors:color_extended": {
+      "color": "mottled-gray"
+    },
+    "descriptors:deformity": {
+      "deformity": "extra-joints"
+    }
+  }
+}

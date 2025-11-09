@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_sensory_stalk",
+  "description": "Retractable stalk with cluster of compound eyes providing omnidirectional vision",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_sensory_appendage"
+    },
+    "core:name": {
+      "text": "sensory stalk"
+    },
+    "descriptors:length_category": {
+      "length": "medium"
+    },
+    "descriptors:flexibility": {
+      "flexibility": "retractable"
+    },
+    "descriptors:texture": {
+      "texture": "smooth-segmented"
+    },
+    "descriptors:visual_capability": {
+      "capability": "360-degree-vision"
+    }
+  }
+}

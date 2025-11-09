@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_baleful_eye",
+  "description": "Massive central eye with pupil-less amber iris that induces madness",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_eye"
+    },
+    "core:name": {
+      "text": "baleful eye"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:color_extended": {
+      "color": "pupil-less-amber"
+    },
+    "descriptors:luminosity": {
+      "luminosity": "phosphorescent"
+    },
+    "descriptors:animation": {
+      "animation": "unblinking"
+    },
+    "descriptors:effect": {
+      "effect": "madness-inducing"
+    }
+  }
+}

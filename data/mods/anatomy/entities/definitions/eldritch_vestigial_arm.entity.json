@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:eldritch_vestigial_arm",
+  "description": "Atrophied humanoid arm twisted at impossible angles",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_vestigial_arm"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "malformed_hand",
+          "allowedTypes": ["eldritch_malformed_hand"],
+          "nameTpl": "malformed hand"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "vestigial arm"
+    },
+    "descriptors:build": {
+      "build": "atrophied"
+    },
+    "descriptors:texture": {
+      "texture": "pale-clammy"
+    },
+    "descriptors:color_extended": {
+      "color": "corpse-pale"
+    },
+    "descriptors:deformity": {
+      "deformity": "twisted-joints"
+    },
+    "descriptors:animation": {
+      "animation": "involuntary-twitching"
+    }
+  }
+}

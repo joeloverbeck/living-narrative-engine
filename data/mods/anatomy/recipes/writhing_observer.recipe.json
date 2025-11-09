@@ -1,0 +1,349 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:writhing_observer",
+  "blueprintId": "anatomy:writhing_observer",
+  "bodyDescriptors": {
+    "build": "hulking",
+    "hairDensity": "hairless",
+    "height": "gigantic",
+    "skinColor": "translucent-gray",
+    "smell": "putrid"
+  },
+  "slots": {
+    "central_baleful_eye": {
+      "partType": "eldritch_baleful_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:size_category": {
+          "size": "massive"
+        },
+        "descriptors:color_extended": {
+          "color": "pupil-less-amber"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "phosphorescent"
+        }
+      }
+    },
+    "vocal_sac_1": {
+      "partType": "eldritch_vocal_sac",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "translucent"
+        },
+        "descriptors:animation": {
+          "animation": "pulsating"
+        }
+      }
+    },
+    "vocal_sac_2": {
+      "partType": "eldritch_vocal_sac",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "translucent"
+        },
+        "descriptors:animation": {
+          "animation": "pulsating"
+        }
+      }
+    },
+    "vocal_sac_3": {
+      "partType": "eldritch_vocal_sac",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "translucent"
+        },
+        "descriptors:animation": {
+          "animation": "pulsating"
+        }
+      }
+    },
+    "surface_eye_1": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_2": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_3": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_4": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_5": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_6": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_7": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_8": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_9": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_10": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_11": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    },
+    "surface_eye_12": {
+      "partType": "eldritch_surface_eye",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "varied-human-colors"
+        },
+        "descriptors:animation": {
+          "animation": "unblinking"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "faint-glow"
+        }
+      }
+    }
+  },
+  "patterns": [
+    {
+      "matchesAll": {
+        "slotType": "tentacle"
+      },
+      "partType": "eldritch_tentacle",
+      "preferId": "anatomy:eldritch_tentacle_large",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "suckered"
+        },
+        "descriptors:secretion": {
+          "secretion": "acidic-mucus"
+        },
+        "descriptors:length_category": {
+          "length": "extremely-long"
+        }
+      }
+    },
+    {
+      "matchesGroup": "limbSet:vestigial_arm",
+      "partType": "eldritch_vestigial_arm",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:build": {
+          "build": "slim"
+        },
+        "descriptors:deformity": {
+          "deformity": "twisted-joints"
+        },
+        "descriptors:texture": {
+          "texture": "pale-clammy"
+        }
+      }
+    },
+    {
+      "matchesGroup": "limbSet:membrane_wing",
+      "partType": "eldritch_membrane_wing",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "translucent-veined"
+        },
+        "descriptors:luminosity": {
+          "luminosity": "bioluminescent-patterns"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:eye_stalk",
+      "partType": "eldritch_compound_eye_stalk",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "faceted"
+        },
+        "descriptors:color_extended": {
+          "color": "iridescent-green"
+        },
+        "descriptors:flexibility": {
+          "flexibility": "highly-flexible"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:mouth",
+      "partType": "eldritch_lamprey_mouth",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:texture": {
+          "texture": "concentric-teeth"
+        },
+        "descriptors:secretion": {
+          "secretion": "corrosive-saliva"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:sensory_stalk",
+      "partType": "eldritch_sensory_stalk",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:length_category": {
+          "length": "average"
+        },
+        "descriptors:flexibility": {
+          "flexibility": "retractable"
+        }
+      }
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": [
+          "eldritch_tentacle",
+          "eldritch_baleful_eye",
+          "eldritch_vestigial_arm",
+          "eldritch_vocal_sac"
+        ]
+      }
+    ]
+  }
+}

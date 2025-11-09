@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:flexibility",
+  "description": "Describes the range of motion and flexibility of a body part",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "flexibility": {
+        "type": "string",
+        "description": "The flexibility or range of motion",
+        "enum": [
+          "rigid",
+          "average",
+          "highly-flexible",
+          "extremely-flexible",
+          "retractable"
+        ],
+        "default": "average"
+      }
+    },
+    "required": ["flexibility"],
+    "additionalProperties": false
+  }
+}
