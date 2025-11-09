@@ -25,6 +25,8 @@ Create a comprehensive filter clause analyzer that recursively breaks down JSON 
 ### File Location
 - **Path**: `src/scopeDsl/analysis/filterClauseAnalyzer.js`
 - **New File**: Yes
+- **New Directory**: `src/scopeDsl/analysis/` (create if doesn't exist)
+- **Integration Target**: `src/scopeDsl/nodes/filterResolver.js` (factory function, not a class)
 
 ### Class Structure
 
@@ -178,8 +180,28 @@ static analyzeFilter(logic, evalContext, logicEval) {
     case 'condition_ref':
       return `condition reference "${args}"`;
 
+    // Custom anatomy operators
+    case 'hasPartWithComponentValue':
+    case 'hasPartOfType':
+    case 'hasPartOfTypeWithComponentValue':
+      return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+
+    // Custom clothing operators
+    case 'hasClothingInSlot':
+    case 'hasClothingInSlotLayer':
+    case 'isSocketCovered':
+      return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+
+    // Custom positioning operators
+    case 'hasSittingSpaceToRight':
+    case 'canScootCloser':
+    case 'isClosestLeftOccupant':
+    case 'isClosestRightOccupant':
+      return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+
     default:
-      return `${operator} operation`;
+      // Generic description for any other operator
+      return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
   }
 }
 ```
@@ -245,11 +267,15 @@ static analyzeFilter(logic, evalContext, logicEval) {
 - ✅ Shows variable paths
 
 ### Operator Support
-- ✅ Logical: `and`, `or`, `!`
+- ✅ Logical: `and`, `or`, `!`, `not`
 - ✅ Comparison: `==`, `!=`, `>`, `>=`, `<`, `<=`
 - ✅ Membership: `in`
-- ✅ Custom: `condition_ref`
-- ✅ Variables: `var`
+- ✅ Special operators: `condition_ref`, `var`
+- ✅ Custom anatomy operators: `hasPartWithComponentValue`, `hasPartOfType`, etc.
+- ✅ Custom clothing operators: `hasClothingInSlot`, `hasClothingInSlotLayer`, `isSocketCovered`
+- ✅ Custom positioning operators: `hasSittingSpaceToRight`, `canScootCloser`, etc.
+
+**Note**: All custom operators are registered via `JsonLogicEvaluationService.addOperation()` and should be treated uniformly by the analyzer. See `src/logic/jsonLogicCustomOperators.js` for the full list.
 
 ### Description Quality
 - ✅ Human-readable clause descriptions
@@ -303,7 +329,10 @@ describe('FilterClauseAnalyzer', () => {
 
   describe('Custom operators', () => {
     it('should handle condition_ref operator')
-    it('should describe custom operators')
+    it('should handle anatomy operators (hasPartWithComponentValue, etc.)')
+    it('should handle clothing operators (hasClothingInSlot, etc.)')
+    it('should handle positioning operators (hasSittingSpaceToRight, etc.)')
+    it('should provide generic descriptions for unknown operators')
   });
 
   describe('Edge cases', () => {
@@ -324,15 +353,21 @@ describe('FilterClauseAnalyzer', () => {
 ## Integration Points
 
 Will be integrated into:
-- `FilterResolver.resolve()` (MODTESDIAIMP-014)
-- `ScopeEvaluationTracer.logFilterEvaluation()` (MODTESDIAIMP-014)
+- `createFilterResolver()` factory function in `src/scopeDsl/nodes/filterResolver.js` (MODTESDIAIMP-014)
+  - The factory returns an object with a `resolve()` method that will call `FilterClauseAnalyzer.analyzeFilter()`
+  - Integration point: Line ~240-250 where `tracer.logFilterEvaluation()` is called
+  - The breakdown result will be passed as the 5th parameter to `logFilterEvaluation()`
+- `ScopeEvaluationTracer` in `tests/common/mods/scopeEvaluationTracer.js` (already supports breakdown parameter)
+  - The tracer is passed through context (`ctx.tracer`) and accessed via `tracer?.isEnabled()`
+  - Line 89: `logFilterEvaluation(entityId, logic, result, evalContext, breakdown = null)` ✅ Already has parameter!
 - Test diagnostics output (MODTESDIAIMP-015)
 
 ## Example Usage
 
 ```javascript
 import { FilterClauseAnalyzer } from './analysis/filterClauseAnalyzer.js';
-import jsonLogic from 'json-logic-js';
+// Note: In production, logicEval is JsonLogicEvaluationService instance
+// In tests, you can use the instance from the test bed or mock it
 
 const logic = {
   and: [
@@ -346,10 +381,11 @@ const evalContext = {
   level: 3,
 };
 
+// logicEval is a JsonLogicEvaluationService instance with evaluate() method
 const analysis = FilterClauseAnalyzer.analyzeFilter(
   logic,
   evalContext,
-  jsonLogic
+  logicEval
 );
 
 console.log(analysis);
@@ -378,10 +414,41 @@ console.log(analysis);
 // }
 ```
 
+## Architecture Notes
+
+### Production vs Test Code Separation
+
+**FilterClauseAnalyzer** (this ticket):
+- Location: `src/scopeDsl/analysis/` (production code)
+- Purpose: Pure utility for analyzing JSON Logic expressions
+- No dependencies on test utilities
+- Can be used by both production and test code
+
+**Integration Points**:
+1. **Production**: `src/scopeDsl/nodes/filterResolver.js`
+   - Factory function that creates a filter resolver
+   - Returns object with `canResolve()` and `resolve()` methods
+   - `resolve()` will optionally call `FilterClauseAnalyzer.analyzeFilter()` when tracer enabled
+   - Line ~245: `tracer.logFilterEvaluation(entityId, node.logic, evalResult, evalCtx, breakdown)`
+
+2. **Test Utility**: `tests/common/mods/scopeEvaluationTracer.js`
+   - Test-only class for debugging scope resolution
+   - Already has `breakdown` parameter in `logFilterEvaluation()` method
+   - Formats and displays the breakdown in trace output
+
+### Data Flow
+```
+FilterResolver.resolve()
+  → logicEval.evaluate(logic, context)  [existing]
+  → FilterClauseAnalyzer.analyzeFilter(logic, context, logicEval)  [NEW]
+  → tracer.logFilterEvaluation(..., breakdown)  [existing, now passes breakdown]
+  → ScopeEvaluationTracer stores & formats breakdown  [existing capability]
+```
+
 ## Performance Considerations
 
 - Recursive analysis adds overhead (~10-20%)
-- Only analyze when tracer enabled
+- Only analyze when tracer enabled (controlled by `tracer?.isEnabled()`)
 - Cache operator descriptions
 - Limit recursion depth if needed
 - Optimize value formatting
@@ -393,3 +460,43 @@ console.log(analysis);
 - **Related Tickets**:
   - MODTESDIAIMP-014 (Integration into FilterResolver)
   - MODTESDIAIMP-015 (Filter breakdown tests)
+
+## Assumptions Validated & Corrected
+
+### ✅ Correct Assumptions
+1. **logicEval.evaluate()** - Correct! The JsonLogicEvaluationService has an `evaluate()` method
+2. **Tracer signature** - Correct! `logFilterEvaluation(entityId, logic, result, evalContext, breakdown = null)` already has breakdown parameter
+3. **JSON Logic operators** - Correct! Standard operators (and, or, ==, etc.) work as expected
+4. **Recursive analysis structure** - Correct! The breakdown structure matches what's needed
+
+### 🔧 Corrected Assumptions
+1. **FilterResolver architecture**:
+   - ❌ Was: "FilterResolver.resolve()" (implied class)
+   - ✅ Now: `createFilterResolver()` factory function that returns object with `resolve()` method
+   - Location: `src/scopeDsl/nodes/filterResolver.js`
+
+2. **ScopeEvaluationTracer location**:
+   - ❌ Was: Implied production code
+   - ✅ Now: Test utility in `tests/common/mods/scopeEvaluationTracer.js`
+   - Already supports breakdown parameter - no changes needed!
+
+3. **condition_ref handling**:
+   - ❌ Was: Treated as special syntax
+   - ✅ Now: Regular JSON Logic operator registered via `addOperation()`
+   - Should be treated like other custom operators
+
+4. **logicEval parameter**:
+   - ❌ Was: Using `jsonLogic` directly from json-logic-js
+   - ✅ Now: `JsonLogicEvaluationService` instance that wraps json-logic-js
+   - Adds custom operators and condition_ref resolution
+
+5. **Integration approach**:
+   - ❌ Was: Not clear how tracer is accessed
+   - ✅ Now: Tracer passed via `ctx.tracer`, accessed with `tracer?.isEnabled()`
+   - Integration point: Line ~245 in filterResolver.js
+
+### 📝 Additional Clarifications
+- Custom operators (anatomy, clothing, positioning) are all registered via `JsonLogicEvaluationService.addOperation()`
+- All custom operators should get generic descriptions: `operatorName(arg1, arg2, ...)`
+- The analyzer should handle any operator, not just a predefined list
+- Performance impact only when tracer is enabled via `tracer?.isEnabled()`
