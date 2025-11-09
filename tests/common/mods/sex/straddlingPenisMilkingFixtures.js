@@ -38,8 +38,8 @@ export const STRADDLING_MILKING_PRIMARY_ID = 'marcus';
  */
 export const STRADDLING_MILKING_ROOM_ID = 'velvet_suite';
 
-const PENIS_SCOPE_NAME =
-  'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away';
+const FUCKING_ME_SCOPE_NAME =
+  'sex-vaginal-penetration:actors_fucking_me_vaginally';
 
 /**
  * @typedef {object} StraddlingMilkingScenarioOptions
@@ -53,7 +53,7 @@ const PENIS_SCOPE_NAME =
  * @property {boolean} [includeVagina=true] - Whether to include a vagina anatomy part for the actor.
  * @property {boolean} [actorSitting=false] - Whether the actor has the sitting component applied.
  * @property {boolean} [actorBeingFucked=true] - Whether the actor already has the penetration state component.
- * @property {boolean} [primaryAlreadyFucking=false] - Whether the partner already has the penetration component applied.
+ * @property {boolean} [primaryAlreadyFucking=true] - Whether the partner already has the penetration component applied.
  */
 
 /**
@@ -72,7 +72,7 @@ export function buildStraddlingMilkingScenario(options = {}) {
     includeVagina = true,
     actorSitting = false,
     actorBeingFucked = true,
-    primaryAlreadyFucking = false,
+    primaryAlreadyFucking = true,
   } = options;
 
   const room = new ModEntityBuilder(STRADDLING_MILKING_ROOM_ID)
@@ -254,91 +254,12 @@ export function buildRidePenisGreedilyScenario(options = {}) {
 }
 
 /**
- * @description Determines whether a clothing socket is covered on an entity.
- * @param {object} entity - Entity instance to inspect.
- * @param {string} socketName - Anatomy socket identifier.
- * @returns {boolean} True if the socket is covered by any equipped clothing.
- */
-function isSocketCovered(entity, socketName) {
-  const equipment = entity?.components?.['clothing:equipment']?.equipped;
-  const slotMetadata =
-    entity?.components?.['clothing:slot_metadata']?.slotMappings;
-
-  if (!equipment || !slotMetadata) {
-    return false;
-  }
-
-  return Object.entries(slotMetadata).some(([slotName, metadata]) => {
-    if (!metadata?.coveredSockets?.includes(socketName)) {
-      return false;
-    }
-
-    const slotLayers = equipment[slotName];
-    if (!slotLayers) {
-      return false;
-    }
-
-    return Object.values(slotLayers).some(
-      (items) => Array.isArray(items) && items.length > 0
-    );
-  });
-}
-
-/**
- * @description Traverses anatomy to determine whether an entity possesses a penis.
- * @param {object} testFixture - Active mod test fixture.
- * @param {string} entityId - Identifier of the entity to inspect.
- * @returns {boolean} True if the entity has a penis body part.
- */
-function entityHasPenis(testFixture, entityId) {
-  const entity = testFixture.entityManager.getEntityInstance(entityId);
-  const bodyComponent = entity?.components?.['anatomy:body'];
-  const rootId = bodyComponent?.body?.root;
-
-  if (!rootId) {
-    return false;
-  }
-
-  const visited = new Set();
-  const stack = [rootId];
-
-  while (stack.length > 0) {
-    const partId = stack.pop();
-    if (visited.has(partId)) {
-      continue;
-    }
-    visited.add(partId);
-
-    const partEntity = testFixture.entityManager.getEntityInstance(partId);
-    const anatomyPart = partEntity?.components?.['anatomy:part'];
-
-    if (!anatomyPart) {
-      continue;
-    }
-
-    if (anatomyPart.subType === 'penis') {
-      return true;
-    }
-
-    if (Array.isArray(anatomyPart.children)) {
-      anatomyPart.children.forEach((childId) => {
-        if (!visited.has(childId)) {
-          stack.push(childId);
-        }
-      });
-    }
-  }
-
-  return false;
-}
-
-/**
  * @description Resolves the uncovered penis scope using the active fixture state.
  * @param {object} testFixture - Active mod test fixture.
  * @param {object} context - Scope resolution context supplied by the engine.
  * @returns {{ success: boolean, value: Set<string> }} Resolution outcome.
  */
-function resolveUncoveredPenisScope(testFixture, context) {
+function resolveActorsFuckingMeVaginallyScope(testFixture, context) {
   const actorId = context?.actor?.id;
 
   if (!actorId) {
@@ -346,16 +267,19 @@ function resolveUncoveredPenisScope(testFixture, context) {
   }
 
   const actorEntity = testFixture.entityManager.getEntityInstance(actorId);
+  const beingFuckedComponent =
+    actorEntity?.components?.['positioning:being_fucked_vaginally'];
+
+  if (!beingFuckedComponent) {
+    return { success: true, value: new Set() };
+  }
+
   const closeness = actorEntity?.components?.['positioning:closeness'];
   const partners = Array.isArray(closeness?.partners) ? closeness.partners : [];
 
   if (partners.length === 0) {
     return { success: true, value: new Set() };
   }
-
-  const actorFacingAway =
-    actorEntity?.components?.['positioning:facing_away']?.facing_away_from ||
-    [];
 
   const validPartners = partners.filter((partnerId) => {
     const partner = testFixture.entityManager.getEntityInstance(partnerId);
@@ -364,23 +288,18 @@ function resolveUncoveredPenisScope(testFixture, context) {
       return false;
     }
 
-    if (!entityHasPenis(testFixture, partnerId)) {
+    const fuckingComponent =
+      partner.components?.['positioning:fucking_vaginally'];
+
+    if (!fuckingComponent) {
       return false;
     }
 
-    if (isSocketCovered(partner, 'penis')) {
+    if (fuckingComponent.targetId !== actorId) {
       return false;
     }
 
-    const partnerFacingAway =
-      partner.components?.['positioning:facing_away']?.facing_away_from || [];
-
-    const facingEachOther =
-      !partnerFacingAway.includes(actorId) &&
-      !actorFacingAway.includes(partnerId);
-    const actorBehindTarget = partnerFacingAway.includes(actorId);
-
-    if (!facingEachOther && !actorBehindTarget) {
+    if (beingFuckedComponent.actorId !== partnerId) {
       return false;
     }
 
@@ -400,8 +319,8 @@ export function installStraddlingMilkingScopeOverrides(testFixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    if (scopeName === PENIS_SCOPE_NAME) {
-      return resolveUncoveredPenisScope(testFixture, context);
+    if (scopeName === FUCKING_ME_SCOPE_NAME) {
+      return resolveActorsFuckingMeVaginallyScope(testFixture, context);
     }
 
     return originalResolveSync(scopeName, context);

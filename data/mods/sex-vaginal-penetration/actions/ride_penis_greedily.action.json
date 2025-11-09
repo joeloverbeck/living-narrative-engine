@@ -5,7 +5,7 @@
   "description": "While straddling your partner's waist, bounce greedily on their penis with eager hunger.",
   "targets": {
     "primary": {
-      "scope": "sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away",
+      "scope": "sex-vaginal-penetration:actors_fucking_me_vaginally",
       "placeholder": "primary",
       "description": "Partner with an uncovered penis positioned for vaginal intimacy"
     }
@@ -13,7 +13,6 @@
   "required_components": {
     "actor": [
       "positioning:closeness",
-      "positioning:straddling_waist",
       "positioning:being_fucked_vaginally"
     ]
   },
