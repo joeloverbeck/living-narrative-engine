@@ -464,4 +464,329 @@ describe('MultiTargetActionFormatter comprehensive integration suite', () => {
     );
     expect(observedSupports.size).toBe(2);
   });
+
+  it('surfaces unexpected errors when resolved target access fails', () => {
+    const actionDefinition = {
+      id: 'integration:unexpected-throw',
+      template: '{primary} engages {secondary}',
+      targets: {
+        primary: {},
+        secondary: {},
+      },
+    };
+
+    const resolvedTargets = {};
+    Object.defineProperty(resolvedTargets, 'primary', {
+      enumerable: true,
+      get() {
+        throw new Error('access failure');
+      },
+    });
+    Object.defineProperty(resolvedTargets, 'secondary', {
+      enumerable: true,
+      value: [
+        {
+          id: 'secondary-1',
+          displayName: 'Vanguard',
+        },
+      ],
+    });
+
+    const result = formatter.formatMultiTarget(
+      actionDefinition,
+      resolvedTargets,
+      entityManager,
+      { logger },
+      { targetDefinitions: actionDefinition.targets }
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('Multi-target formatting failed: access failure');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error in multi-target formatting:',
+      expect.any(Error)
+    );
+  });
+
+  it('warns and blocks formatting when target arrays contain undefined entries', () => {
+    const actionDefinition = {
+      id: 'integration:undefined-target',
+      template: '{primary} secures {secondary}',
+      targets: {
+        primary: { placeholder: 'hero' },
+        secondary: {},
+      },
+    };
+
+    const sparsePrimaryTargets = {
+      length: 1,
+      0: undefined,
+      some: () => false,
+    };
+
+    const resolvedTargets = {
+      primary: sparsePrimaryTargets,
+      secondary: [
+        {
+          id: 'support-1',
+          displayName: 'Shield Unit',
+        },
+      ],
+    };
+
+    const outcome = formatter.formatMultiTarget(
+      actionDefinition,
+      resolvedTargets,
+      entityManager,
+      { logger },
+      { targetDefinitions: actionDefinition.targets }
+    );
+
+    expect(outcome.ok).toBe(false);
+    expect(outcome.error).toContain('unresolved placeholders');
+    expect(logger.warn).toHaveBeenCalledWith(
+      'No target found in non-empty array for key: primary'
+    );
+  });
+
+  it('normalizes complex placeholder resolutions including alias fallbacks and dot paths', () => {
+    const actionDefinition = {
+      id: 'integration:placeholder-normalization',
+      template: [
+        '{hero}',
+        '{primary}',
+        '{primary.name}',
+        '{primary.displayName}',
+        '{primary.id}',
+        '{person}',
+        '{secondary}',
+        '{secondary.alias}',
+        '{secondary.metadata.owner}',
+        '{secondary.missingProp}',
+        '{secondary.extra}',
+        '{secondary.}',
+      ].join(' '),
+      targets: {
+        primary: { placeholder: 'hero' },
+        secondary: {},
+      },
+    };
+
+    const resolvedTargets = {
+      primary: [
+        {
+          id: 'hero-1',
+          displayName: { label: 'Commander Lira' },
+        },
+      ],
+      secondary: [
+        {
+          id: 'artifact-1',
+          displayName: 'Ancient Map',
+          alias: '',
+          metadata: { owner: 'Commander Lira' },
+          extra: { nested: true },
+        },
+      ],
+    };
+
+    const output = formatter.formatMultiTarget(
+      actionDefinition,
+      resolvedTargets,
+      entityManager,
+      { logger },
+      { targetDefinitions: actionDefinition.targets }
+    );
+
+    expect(output.ok).toBe(true);
+    expect(output.value).toContain('[object Object]');
+    expect(output.value).toContain('Ancient Map');
+    expect(output.value).toContain('hero-1');
+    expect(output.value).toContain('Commander Lira');
+  });
+
+  it('supports templates that only use dot notation placeholders without fallback names', () => {
+    const actionDefinition = {
+      id: 'integration:dot-only',
+      template:
+        '{primary.id}:{secondary.displayName}:{secondary.metadata.rank}:{tertiary.id}',
+      targets: {
+        primary: {},
+        secondary: {},
+        tertiary: {},
+      },
+    };
+
+    const resolvedTargets = {
+      primary: [
+        {
+          id: 'primary-1',
+          displayName: 'Scout One',
+        },
+      ],
+      secondary: [
+        {
+          id: 'secondary-1',
+          displayName: 'Analyst Two',
+          metadata: { rank: 'Lieutenant' },
+        },
+      ],
+      tertiary: [
+        {
+          id: 'tertiary-9',
+          displayName: 'Watcher Nine',
+        },
+      ],
+    };
+
+    const outcome = formatter.formatMultiTarget(
+      actionDefinition,
+      resolvedTargets,
+      entityManager,
+      { logger },
+      { targetDefinitions: actionDefinition.targets }
+    );
+
+    expect(outcome).toEqual({
+      ok: true,
+      value: 'primary-1:Analyst Two:Lieutenant:tertiary-9',
+    });
+  });
+
+  it('returns empty combinations when dependent targets lack a primary anchor', () => {
+    const actionDefinition = {
+      id: 'integration:no-primary-anchor',
+      template: '{dependentA} coordinates with {dependentB}',
+      targets: {
+        dependentA: { optional: true },
+        dependentB: { optional: true },
+      },
+      generateCombinations: true,
+    };
+
+    const resolvedTargets = {
+      dependentA: [
+        {
+          id: 'dep-a1',
+          displayName: 'Guide North',
+          contextFromId: 'primary-unknown',
+        },
+      ],
+      dependentB: [
+        {
+          id: 'dep-b1',
+          displayName: 'Guide South',
+          contextFromId: 'primary-unknown',
+        },
+      ],
+    };
+
+    const outcome = formatter.formatMultiTarget(
+      actionDefinition,
+      resolvedTargets,
+      entityManager,
+      { logger },
+      { targetDefinitions: actionDefinition.targets }
+    );
+
+    expect(outcome.ok).toBe(true);
+    expect(outcome.value).toEqual([]);
+  });
+
+  it('avoids generating cartesian products when filtered target arrays are empty', () => {
+    const actionDefinition = {
+      id: 'integration:filtered-cartesian',
+      template: '{primary} escorts {secondary}',
+      targets: {
+        primary: { optional: true },
+        secondary: { optional: true },
+      },
+      generateCombinations: true,
+    };
+
+    const sparseSecondaryTargets = {
+      length: 1,
+      0: null,
+      some: () => false,
+      filter: () => [],
+    };
+
+    const resolvedTargets = {
+      primary: [
+        {
+          id: 'primary-9',
+          displayName: 'Captain Rune',
+        },
+      ],
+      secondary: sparseSecondaryTargets,
+    };
+
+    const outcome = formatter.formatMultiTarget(
+      actionDefinition,
+      resolvedTargets,
+      entityManager,
+      { logger },
+      { targetDefinitions: actionDefinition.targets }
+    );
+
+    expect(outcome.ok).toBe(true);
+    expect(outcome.value).toEqual([]);
+  });
+
+  it('warns when independent combination targets are malformed arrays', () => {
+    const actionDefinition = {
+      id: 'integration:malformed-independent',
+      template: '{primary} teams with {support} to secure {loot}',
+      targets: {
+        primary: { optional: true },
+        support: { optional: true },
+        loot: { optional: true },
+      },
+      generateCombinations: true,
+    };
+
+    const malformedLoot = {
+      length: 1,
+      0: 'contraband-cache',
+      some: () => false,
+      every: () => false,
+    };
+
+    const resolvedTargets = {
+      primary: [
+        {
+          id: 'primary-4',
+          displayName: 'Sentinel Gage',
+        },
+      ],
+      support: [
+        {
+          id: 'support-ctx',
+          displayName: 'Shield Wall',
+          contextFromId: 'primary-4',
+        },
+        {
+          id: 'support-free',
+          displayName: 'Floating Escort',
+        },
+      ],
+      loot: malformedLoot,
+    };
+
+    const outcome = formatter.formatMultiTarget(
+      actionDefinition,
+      resolvedTargets,
+      entityManager,
+      { logger },
+      { targetDefinitions: actionDefinition.targets }
+    );
+
+    expect(outcome.ok).toBe(true);
+    expect(Array.isArray(outcome.value)).toBe(true);
+    expect(outcome.value).toHaveLength(0);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "MultiTargetActionFormatter: targets for key 'loot' is not an array",
+      expect.objectContaining({ key: 'loot' })
+    );
+  });
 });
