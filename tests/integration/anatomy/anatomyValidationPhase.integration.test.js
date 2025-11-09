@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyValidationPhase from '../../../src/loaders/phases/anatomyValidationPhase.js';
 import { BlueprintRecipeValidationRule } from '../../../src/anatomy/validation/rules/blueprintRecipeValidationRule.js';
 import { ComponentExistenceValidationRule } from '../../../src/anatomy/validation/rules/componentExistenceValidationRule.js';
+import { PropertySchemaValidationRule } from '../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
 import { createTestBed } from '../../common/testBed.js';
 
 describe('AnatomyValidationPhase Integration', () => {
@@ -15,8 +16,10 @@ describe('AnatomyValidationPhase Integration', () => {
   let mockRecipePatternResolver;
   let mockSafeEventDispatcher;
   let mockDataRegistry;
+  let mockSchemaValidator;
   let blueprintRecipeValidationRule;
   let componentExistenceValidationRule;
+  let propertySchemaValidationRule;
   let validationPhase;
 
   beforeEach(() => {
@@ -34,8 +37,13 @@ describe('AnatomyValidationPhase Integration', () => {
 
     mockDataRegistry = testBed.createMock('dataRegistry', ['get', 'getAll']);
 
+    mockSchemaValidator = testBed.createMock('schemaValidator', ['validate']);
+
     // Mock all components exist by default
     mockDataRegistry.get.mockReturnValue({ id: 'mock-component' });
+
+    // Mock schema validation to pass by default
+    mockSchemaValidator.validate.mockReturnValue({ valid: true });
 
     blueprintRecipeValidationRule = new BlueprintRecipeValidationRule({
       logger: mockLogger,
@@ -48,10 +56,17 @@ describe('AnatomyValidationPhase Integration', () => {
       dataRegistry: mockDataRegistry,
     });
 
+    propertySchemaValidationRule = new PropertySchemaValidationRule({
+      logger: mockLogger,
+      dataRegistry: mockDataRegistry,
+      schemaValidator: mockSchemaValidator,
+    });
+
     validationPhase = new AnatomyValidationPhase({
       logger: mockLogger,
       blueprintRecipeValidationRule,
       componentExistenceValidationRule,
+      propertySchemaValidationRule,
     });
   });
 

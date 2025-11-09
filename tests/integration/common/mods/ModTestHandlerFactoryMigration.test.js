@@ -33,6 +33,7 @@ import ModifyArrayFieldHandler from '../../../../src/logic/operationHandlers/mod
 import ModifyComponentHandler from '../../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import AtomicModifyComponentHandler from '../../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import BreakClosenessWithTargetHandler from '../../../../src/logic/operationHandlers/breakClosenessWithTargetHandler.js';
+import EstablishLyingClosenessHandler from '../../../../src/logic/operationHandlers/establishLyingClosenessHandler.js';
 import MergeClosenessCircleHandler from '../../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import QueryLookupHandler from '../../../../src/logic/operationHandlers/queryLookupHandler.js';
 import RegenerateDescriptionHandler from '../../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
@@ -286,6 +287,12 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         closenessCircleService: {
           repair: jest.fn(),
         },
+      }),
+      ESTABLISH_LYING_CLOSENESS: new EstablishLyingClosenessHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        closenessCircleService,
       }),
       MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
         entityManager,

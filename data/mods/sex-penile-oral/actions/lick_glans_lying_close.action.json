@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:lick_glans_lying_close",
+  "name": "Lick glans (lying close)",
+  "description": "Lick a partner's glans while both are lying close together. Requires both participants to be lying down with mutual closeness. The partner must have an exposed penis.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_lying_close_with_uncovered_penis",
+      "placeholder": "primary",
+      "description": "Partner lying close with an exposed penis"
+    }
+  },
+  "template": "lick {primary}'s glans",
+  "prerequisites": [],
+  "required_components": {
+    "actor": ["positioning:lying_down", "positioning:closeness"],
+    "primary": ["positioning:lying_down", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}

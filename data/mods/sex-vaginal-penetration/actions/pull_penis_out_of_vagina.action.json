@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-vaginal-penetration:pull_penis_out_of_vagina",
+  "name": "Pull Penis Out of Vagina",
+  "description": "Withdraw your penis from your partner's vagina, ending the vaginal penetration.",
+  "targets": {
+    "primary": {
+      "scope": "sex-vaginal-penetration:actors_being_fucked_vaginally_by_me",
+      "placeholder": "primary",
+      "description": "Partner whose vagina you are currently penetrating"
+    }
+  },
+  "required_components": {
+    "actor": [
+      "positioning:closeness",
+      "positioning:fucking_vaginally"
+    ]
+  },
+  "template": "pull your penis out of {primary}'s vagina",
+  "prerequisites": [
+    {
+      "logic": {
+        "hasPartOfType": ["actor", "penis"]
+      },
+      "failure_message": "You need a penis to perform this action."
+    },
+    {
+      "logic": {
+        "not": {
+          "isSocketCovered": ["actor", "penis"]
+        }
+      },
+      "failure_message": "Your penis must be uncovered to perform this action."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#6c0f36",
+    "textColor": "#ffe6ef",
+    "hoverBackgroundColor": "#861445",
+    "hoverTextColor": "#fff2f7"
+  }
+}
