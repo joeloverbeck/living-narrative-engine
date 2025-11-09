@@ -512,7 +512,7 @@ class RecipePreflightValidator {
           `RecipePreflightValidator: Loading structure template '${blueprint.structureTemplate}'`
         );
         const structureTemplate = this.#dataRegistry.get(
-          'structure-templates',
+          'anatomyStructureTemplates',
           blueprint.structureTemplate
         );
         if (structureTemplate) {
