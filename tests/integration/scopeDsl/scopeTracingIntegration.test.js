@@ -42,12 +42,13 @@ describe('Scope Tracing Integration', () => {
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      testFixture.testEnv.unifiedScopeResolver.resolveSync(
+      const resolveResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
+
       const sourceSteps = trace.steps.filter(
         (s) => s.type === 'RESOLVER_STEP' && s.resolver === 'SourceResolver'
       );
@@ -56,9 +57,11 @@ describe('Scope Tracing Integration', () => {
     });
 
     it('should capture StepResolver step', async () => {
-      testFixture.enableScopeTracing();
-
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      await testFixture.registerCustomScope('positioning', 'close_actors');
+
+      testFixture.enableScopeTracing();
 
       // Resolve scope with step operations
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
@@ -66,7 +69,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -78,9 +81,11 @@ describe('Scope Tracing Integration', () => {
     });
 
     it('should capture FilterResolver step', async () => {
-      testFixture.enableScopeTracing();
-
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      await testFixture.registerCustomScope('positioning', 'close_actors');
+
+      testFixture.enableScopeTracing();
 
       // Resolve scope with filter operations
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
@@ -88,7 +93,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -100,9 +105,11 @@ describe('Scope Tracing Integration', () => {
     });
 
     it('should capture filter evaluations per entity', async () => {
-      testFixture.enableScopeTracing();
-
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      await testFixture.registerCustomScope('positioning', 'close_actors');
+
+      testFixture.enableScopeTracing();
 
       // Resolve scope to trigger filter evaluations
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
@@ -110,7 +117,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const filterEvals = testFixture.getFilterBreakdown();
@@ -122,16 +129,18 @@ describe('Scope Tracing Integration', () => {
     });
 
     it('should capture complete resolver chain', async () => {
-      testFixture.enableScopeTracing();
-
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      await testFixture.registerCustomScope('positioning', 'close_actors');
+
+      testFixture.enableScopeTracing();
 
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -162,7 +171,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -180,7 +189,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -199,7 +208,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -218,7 +227,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -242,7 +251,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -271,7 +280,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -293,7 +302,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -318,7 +327,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -350,7 +359,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const formatted = testFixture.getScopeTrace();
@@ -369,7 +378,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const formatted = testFixture.getScopeTrace();
@@ -393,7 +402,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const formatted = testFixture.getScopeTrace();
@@ -415,7 +424,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const formatted = testFixture.getScopeTrace();
@@ -434,7 +443,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const formatted = testFixture.getScopeTrace();
@@ -456,7 +465,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       const formatted = testFixture.getScopeTrace();
@@ -496,7 +505,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:actors_im_facing_away_from',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTrace();
@@ -533,7 +542,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:actors_im_facing_away_from',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -555,7 +564,7 @@ describe('Scope Tracing Integration', () => {
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:actors_im_facing_away_from',
-        { actorEntity }
+        actorEntity
       );
 
       const formatted = testFixture.getScopeTrace();
@@ -577,7 +586,7 @@ describe('Scope Tracing Integration', () => {
       // This should work correctly
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:actors_im_facing_away_from',
-        { actorEntity }
+        actorEntity
       );
 
       const trace = testFixture.getScopeTraceData();
@@ -608,15 +617,18 @@ describe('Scope Tracing Integration', () => {
     });
 
     it('should clear trace data', async () => {
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      await testFixture.registerCustomScope('positioning', 'close_actors');
+
       testFixture.enableScopeTracing();
 
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
 
       let trace = testFixture.getScopeTraceData();

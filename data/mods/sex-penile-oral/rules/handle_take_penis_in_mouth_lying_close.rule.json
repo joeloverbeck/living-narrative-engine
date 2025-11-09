@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "sex-penile-oral:handle_take_penis_in_mouth_lying_close",
+  "rule_id": "handle_take_penis_in_mouth_lying_close",
   "comment": "Handles the 'sex-penile-oral:take_penis_in_mouth_lying_close' action. Cleans up existing blowjob state, adds reciprocal giving/receiving components, dispatches descriptive text, regenerates descriptions, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": { "condition_ref": "sex-penile-oral:event-is-action-take-penis-in-mouth-lying-close" },
