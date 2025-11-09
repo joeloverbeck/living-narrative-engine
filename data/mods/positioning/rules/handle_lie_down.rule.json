@@ -48,6 +48,15 @@
       }
     },
     {
+      "type": "ESTABLISH_LYING_CLOSENESS",
+      "comment": "Automatically establish closeness with all other actors lying on the same furniture",
+      "parameters": {
+        "furniture_id": "{event.payload.targetId}",
+        "actor_id": "{event.payload.actorId}",
+        "result_variable": "closenessEstablished"
+      }
+    },
+    {
       "type": "REGENERATE_DESCRIPTION",
       "parameters": { "entity_ref": "actor" }
     },
