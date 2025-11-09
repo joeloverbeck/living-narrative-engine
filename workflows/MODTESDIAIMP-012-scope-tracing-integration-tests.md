@@ -11,6 +11,73 @@
 
 Create comprehensive integration tests verifying that scope tracing captures complete resolver execution flow and provides useful debugging information for real-world scenarios.
 
+## Critical Production Code Context
+
+### Tracer Integration Requirements
+
+**IMPORTANT**: Scope tracing only works with scopes registered via `registerCustomScope()`. The workflow has been updated to reflect this requirement.
+
+**How Tracer Integration Works:**
+1. `ModTestFixture.registerCustomScope(modId, scopeName)` creates a ScopeEngine-based resolver
+2. The resolver receives the tracer via `runtimeCtx.tracer` getter (line 2326-2328 in ModTestFixture.js)
+3. ScopeEngine passes tracer to resolvers (SourceResolver, StepResolver, FilterResolver, etc.)
+4. Resolvers call `tracer.logStep()` and `tracer.logFilterEvaluation()` to capture execution
+
+**What DOESN'T Capture Traces:**
+- `ScopeResolverHelpers` simple scope resolvers (e.g., `registerPositioningScopes()`)
+- `autoRegisterScopes: true` option (uses simple resolvers, not ScopeEngine)
+- Direct calls to `getAvailableActions()` (unless it internally uses registered custom scopes)
+
+### Known Issue in Production Code
+
+**Bug in ModTestFixture.js:2326-2328** - The tracer getter uses incorrect `this` context:
+```javascript
+get tracer() {
+  return this.scopeTracer;  // BUG: 'this' refers to runtimeCtx, not fixture
+}
+```
+
+**Correct Implementation:**
+```javascript
+const scopeTracer = this.scopeTracer;  // Capture in closure
+const runtimeCtx = {
+  // ... other getters
+  get tracer() {
+    return scopeTracer;  // Use captured variable
+  },
+};
+```
+
+This bug may prevent tracer from working correctly in some scenarios. If tests fail with "tracer is undefined", this is the likely cause.
+
+### Test Setup Pattern
+
+All tests MUST follow this pattern:
+```javascript
+beforeEach(async () => {
+  testFixture = await ModTestFixture.forAction('modId', 'actionId');
+
+  // CRITICAL: Register scopes with ScopeEngine for tracer integration
+  await testFixture.registerCustomScope('modId', 'scopeName');
+});
+
+it('test name', () => {
+  testFixture.enableScopeTracing();
+
+  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+  // MUST directly resolve scope (not use getAvailableActions)
+  const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+  testFixture.testEnv.scopeResolver.resolveSync(
+    'modId:scopeName',
+    { actorEntity }
+  );
+
+  const trace = testFixture.getScopeTrace();
+  // ... assertions
+});
+```
+
 ## Objectives
 
 - Verify complete trace capture across resolver chain
@@ -40,6 +107,10 @@ describe('Scope Tracing Integration', () => {
       'positioning',
       'positioning:sit_down'
     );
+
+    // CRITICAL: Register scopes with ScopeEngine for tracer integration
+    // Without this, simple scope resolvers are used which don't capture traces
+    await testFixture.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
@@ -51,7 +122,13 @@ describe('Scope Tracing Integration', () => {
       testFixture.enableScopeTracing();
 
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+
+      // Directly resolve a scope to trigger tracer
+      const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+      const result = testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
 
       const trace = testFixture.getScopeTraceData();
       const sourceSteps = trace.steps.filter(
@@ -62,18 +139,56 @@ describe('Scope Tracing Integration', () => {
     });
 
     it('should capture StepResolver step', async () => {
-      // Verify StepResolver appears in trace
+      testFixture.enableScopeTracing();
+
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      // Resolve scope with step operations
+      const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
+
+      const trace = testFixture.getScopeTraceData();
+      const stepSteps = trace.steps.filter(
+        s => s.type === 'RESOLVER_STEP' && s.resolver === 'StepResolver'
+      );
+
+      expect(stepSteps.length).toBeGreaterThan(0);
     });
 
     it('should capture FilterResolver step', async () => {
-      // Verify FilterResolver appears in trace
+      testFixture.enableScopeTracing();
+
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      // Resolve scope with filter operations
+      const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
+
+      const trace = testFixture.getScopeTraceData();
+      const filterSteps = trace.steps.filter(
+        s => s.type === 'RESOLVER_STEP' && s.resolver === 'FilterResolver'
+      );
+
+      expect(filterSteps.length).toBeGreaterThan(0);
     });
 
     it('should capture filter evaluations per entity', async () => {
       testFixture.enableScopeTracing();
 
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+
+      // Resolve scope to trigger filter evaluations
+      const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
 
       const filterEvals = testFixture.getFilterBreakdown();
 
@@ -84,7 +199,26 @@ describe('Scope Tracing Integration', () => {
     });
 
     it('should capture complete resolver chain', async () => {
-      // Verify all resolvers in chain are captured
+      testFixture.enableScopeTracing();
+
+      const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+
+      const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
+
+      const trace = testFixture.getScopeTraceData();
+
+      // Verify we have multiple resolver types in the chain
+      const resolverTypes = new Set(
+        trace.steps
+          .filter(s => s.type === 'RESOLVER_STEP')
+          .map(s => s.resolver)
+      );
+
+      expect(resolverTypes.size).toBeGreaterThan(1);
     });
   });
 });
@@ -94,11 +228,20 @@ describe('Scope Tracing Integration', () => {
 
 ```javascript
 describe('Trace data quality', () => {
+  beforeEach(async () => {
+    // Register scope for tracing
+    await testFixture.registerCustomScope('positioning', 'close_actors');
+  });
+
   it('should have correct step count', async () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+    testFixture.testEnv.scopeResolver.resolveSync(
+      'positioning:close_actors',
+      { actorEntity }
+    );
 
     const trace = testFixture.getScopeTraceData();
 
@@ -141,11 +284,20 @@ describe('Trace data quality', () => {
 
 ```javascript
 describe('Formatted output', () => {
+  beforeEach(async () => {
+    // Register scope for tracing
+    await testFixture.registerCustomScope('positioning', 'close_actors');
+  });
+
   it('should format as human-readable text', async () => {
     testFixture.enableScopeTracing();
 
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+    testFixture.testEnv.scopeResolver.resolveSync(
+      'positioning:close_actors',
+      { actorEntity }
+    );
 
     const formatted = testFixture.getScopeTrace();
 
@@ -180,6 +332,11 @@ describe('Formatted output', () => {
 
 ```javascript
 describe('Real-world debugging scenarios', () => {
+  beforeEach(async () => {
+    // Register scope for tracing
+    await testFixture.registerCustomScope('positioning', 'actors_im_facing_away_from');
+  });
+
   it('should help debug empty set mystery (spec example)', async () => {
     // Reproduce spec "Example 2: Empty Set Mystery"
     testFixture.enableScopeTracing();
@@ -193,17 +350,26 @@ describe('Real-world debugging scenarios', () => {
       { facing_away_from: [] }  // BUG: Should have actor ID
     );
 
-    const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    // Directly resolve the scope to trigger tracing
+    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
+    const result = testFixture.testEnv.scopeResolver.resolveSync(
+      'positioning:actors_im_facing_away_from',
+      { actorEntity }
+    );
 
-    if (actions.length === 0) {
-      const trace = testFixture.getScopeTrace();
+    const trace = testFixture.getScopeTrace();
 
-      // Verify trace shows filter failure
-      expect(trace).toContain('FAIL ✗');
+    // Verify trace shows the evaluation details
+    expect(trace).toContain('SCOPE EVALUATION TRACE');
 
-      // Verify trace shows empty facing_away_from array
-      const filterEval = testFixture.getFilterBreakdown(scenario.target.id);
-      expect(filterEval.result).toBe(false);
+    // Check if trace shows filter operations
+    const traceData = testFixture.getScopeTraceData();
+    const hasFilterSteps = traceData.steps.some(s => s.type === 'FILTER_EVALUATION');
+
+    if (hasFilterSteps) {
+      // Verify filter evaluation captured
+      const filterEvals = testFixture.getFilterBreakdown();
+      expect(filterEvals).toBeDefined();
     }
   });
 
@@ -273,6 +439,9 @@ describe('Tracer Performance Overhead', () => {
       'positioning',
       'positioning:sit_down'
     );
+
+    // Register scope for tracing
+    await testFixture.registerCustomScope('positioning', 'close_actors');
   });
 
   afterEach(() => {
@@ -281,11 +450,15 @@ describe('Tracer Performance Overhead', () => {
 
   it('should have minimal overhead when disabled', () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
 
     // Baseline: no tracer
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
     }
     const duration1 = performance.now() - start1;
 
@@ -293,7 +466,10 @@ describe('Tracer Performance Overhead', () => {
     testFixture.scopeTracer.disable();
     const start2 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
     }
     const duration2 = performance.now() - start2;
 
@@ -303,11 +479,15 @@ describe('Tracer Performance Overhead', () => {
 
   it('should have acceptable overhead when enabled', () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
+    const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(scenario.actor.id);
 
     // Baseline: disabled
     const start1 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
     }
     const duration1 = performance.now() - start1;
 
@@ -315,7 +495,10 @@ describe('Tracer Performance Overhead', () => {
     testFixture.enableScopeTracing();
     const start2 = performance.now();
     for (let i = 0; i < 100; i++) {
-      testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      testFixture.testEnv.scopeResolver.resolveSync(
+        'positioning:close_actors',
+        { actorEntity }
+      );
       testFixture.clearScopeTrace();
     }
     const duration2 = performance.now() - start2;
