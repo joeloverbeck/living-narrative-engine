@@ -86,14 +86,28 @@ describe('RecipePreflightValidator - Integration', () => {
         },
       });
 
+      // Add entity definition for head slot to pass part availability check
+      dataRegistry.store('entityDefinitions', 'test:head_entity', {
+        id: 'test:head_entity',
+        components: {
+          'anatomy:part': {
+            subType: 'head',
+          },
+          'test:component1': { value: 'test' },
+          'descriptors:size_category': { size: 'medium' },
+        },
+      });
+
       const recipe = {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         slots: {
           head: {
+            partType: 'head',
             tags: ['test:component1', 'descriptors:size_category'],
             properties: {
               'test:component1': { value: 'test' },
+              'descriptors:size_category': { size: 'medium' },
             },
           },
         },
@@ -183,11 +197,23 @@ describe('RecipePreflightValidator - Integration', () => {
         },
       });
 
+      // Add entity definition for head slot (no descriptors to trigger suggestion)
+      dataRegistry.store('entityDefinitions', 'test:head_entity', {
+        id: 'test:head_entity',
+        components: {
+          'anatomy:part': {
+            subType: 'head',
+          },
+          'test:component1': { value: 'test' },
+        },
+      });
+
       const recipe = {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         slots: {
           head: {
+            partType: 'head',
             tags: ['test:component1'],
             properties: {},
           },
@@ -284,12 +310,14 @@ describe('RecipePreflightValidator - Integration', () => {
         blueprintId: 'test:blueprint',
         slots: {
           head: {
+            partType: 'head',
             tags: ['test:missing_component1'],
             properties: {
               'test:missing_component2': { value: 'test' },
             },
           },
           torso: {
+            partType: 'torso',
             tags: ['test:missing_component3'],
             properties: {},
           },
@@ -300,10 +328,19 @@ describe('RecipePreflightValidator - Integration', () => {
       const report = await validator.validate(recipe, { failFast: false });
 
       expect(report.isValid).toBe(false);
-      expect(report.errors.length).toBe(3);
-      expect(
-        report.errors.every((e) => e.type === 'COMPONENT_NOT_FOUND')
-      ).toBe(true);
+      // 3 COMPONENT_NOT_FOUND errors + 2 PART_UNAVAILABLE errors (for head and torso slots)
+      expect(report.errors.length).toBe(5);
+
+      // Verify we have both types of errors
+      const componentErrors = report.errors.filter(
+        (e) => e.type === 'COMPONENT_NOT_FOUND'
+      );
+      const partErrors = report.errors.filter(
+        (e) => e.type === 'PART_UNAVAILABLE'
+      );
+
+      expect(componentErrors.length).toBe(3);
+      expect(partErrors.length).toBe(2);
     });
 
     it('should validate patterns in recipe', async () => {
@@ -351,18 +388,32 @@ describe('RecipePreflightValidator - Integration', () => {
         },
       });
 
+      // Add entity definition for pattern slot
+      dataRegistry.store('entityDefinitions', 'test:pattern_entity', {
+        id: 'test:pattern_entity',
+        components: {
+          'anatomy:part': {
+            subType: 'test_part',
+          },
+          'test:pattern_component': { value: 'pattern' },
+          'descriptors:size_category': { size: 'medium' },
+        },
+      });
+
       const recipe = {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         slots: {
           // Add a slot that matches the pattern
           'test:entity_pattern': {
+            partType: 'test_part',
             tags: ['test:pattern_component', 'descriptors:size_category'],
             properties: {},
           },
         },
         patterns: [
           {
+            partType: 'test_part',
             matches: ['test:entity_pattern'],
             tags: ['test:pattern_component', 'descriptors:size_category'],
             properties: {},
@@ -388,11 +439,12 @@ describe('RecipePreflightValidator - Integration', () => {
       // Either pattern check passed OR pattern warnings were generated
       expect(patternCheck || patternWarning).toBeDefined();
 
-      if (patternCheck) {
-        expect(patternCheck.message).toContain('pattern(s)');
-      } else if (patternWarning) {
-        expect(patternWarning.type).toBe('NO_MATCHING_SLOTS');
-      }
+      // Verify the message or type based on which path was taken
+      const hasValidPatternCheck =
+        patternCheck && patternCheck.message.includes('pattern(s)');
+      const hasValidWarning = patternWarning && patternWarning.type === 'NO_MATCHING_SLOTS';
+
+      expect(hasValidPatternCheck || hasValidWarning).toBe(true);
     });
 
     it('should provide detailed error messages for debugging', async () => {
@@ -455,11 +507,24 @@ describe('RecipePreflightValidator - Integration', () => {
         },
       });
 
+      // Add entity definition for torso slot with required components
+      dataRegistry.store('entityDefinitions', 'core:torso_part', {
+        id: 'core:torso_part',
+        components: {
+          'anatomy:part': {
+            subType: 'torso',
+          },
+          'core:actor': { name: 'Human' },
+          'core:anatomy': { type: 'humanoid' },
+        },
+      });
+
       const recipe = {
         recipeId: 'core:human',
         blueprintId: 'core:humanoid',
         slots: {
           torso: {
+            partType: 'torso',
             tags: ['core:actor', 'core:anatomy'],
             properties: {},
           },
@@ -507,11 +572,26 @@ describe('RecipePreflightValidator - Integration', () => {
         },
       });
 
+      // Add entity definition for body slot with valid property
+      dataRegistry.store('entityDefinitions', 'test:body_entity', {
+        id: 'test:body_entity',
+        components: {
+          'anatomy:part': {
+            subType: 'body',
+          },
+          'test:size': {
+            height: 180,
+            width: 60,
+          },
+        },
+      });
+
       const recipe = {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         slots: {
           body: {
+            partType: 'body',
             tags: [],
             properties: {
               'test:size': {
