@@ -257,6 +257,16 @@ Entity Definition (*.entity.json)
 
 ## Implementation Plan
 
+### Anatomy System Architecture Reference
+
+This implementation follows the Living Narrative Engine's anatomy system architecture documented in `docs/anatomy/`:
+
+- **Blueprint V2 System**: Template-based anatomy generation (see `docs/anatomy/blueprints-and-templates.md`)
+- **Body Descriptor Registry**: Centralized body-level descriptor management (see `docs/anatomy/body-descriptors-complete.md`)
+- **Two-Tier Descriptor System**:
+  1. **Body-level descriptors**: Applied to entire entity via `bodyDescriptors` in recipe (height, build, skinColor, etc.)
+  2. **Part-level descriptors**: Applied to individual body parts via component properties (luminosity, texture, etc.)
+
 ### Required Files
 
 #### 1. Structure Template
@@ -333,7 +343,7 @@ Entity Definition (*.entity.json)
       {
         "type": "sensory_stalk",
         "count": 6,
-        "attachment": "distributed",
+        "attachment": "custom",
         "socketPattern": {
           "idTemplate": "sensory_stalk_{{index}}",
           "orientationScheme": "indexed",
@@ -483,9 +493,8 @@ Entity Definition (*.entity.json)
   "blueprintId": "anatomy:writhing_observer",
   "bodyDescriptors": {
     "build": "hulking",
-    "composition": "grotesque",
     "hairDensity": "hairless",
-    "height": "massive",
+    "height": "gigantic",
     "skinColor": "translucent-gray",
     "smell": "putrid"
   },
@@ -1434,9 +1443,11 @@ All body part entity definitions will follow this structure and reside in `data/
 
 ---
 
-## New Descriptor Components Required
+## New Part-Level Descriptor Components Required
 
-The following new descriptor components would need to be created to support The Writhing Observer:
+**IMPORTANT DISTINCTION**: These are **part-level descriptor components** (applied to individual body parts), NOT body-level descriptors (which are in bodyDescriptors and managed by the Body Descriptor Registry in `src/anatomy/registries/bodyDescriptorRegistry.js`).
+
+The following new part-level descriptor components would need to be created to support The Writhing Observer's individual body parts:
 
 ### 1. descriptors:luminosity
 **File**: `data/mods/anatomy/components/descriptors/luminosity.component.json`
@@ -1574,22 +1585,32 @@ Properties:
 
 ---
 
-## Body Descriptor Extensions
+## Body Descriptor Status
 
-The following values need to be added to existing body descriptor enums:
+Analysis of the creature's body descriptors against the current system:
 
-### bodyDescriptors.composition
-- Add: `"grotesque"` - Unnatural tissue composition
+### Used Body Descriptors in Recipe
 
-### bodyDescriptors.skinColor
-- Add: `"translucent-gray"` - See-through grayish
-- Add: `"sickly-gray-green"` - Diseased coloration
+The recipe uses these body descriptors with the following validation status:
 
-### bodyDescriptors.smell
-- Add: `"putrid"` - Rotting stench
+- **height**: `"gigantic"` ✅ VALID - Matches enum value from registry
+- **skinColor**: `"translucent-gray"` ✅ VALID - Free-form descriptor (any string accepted)
+- **build**: `"hulking"` ✅ VALID - Matches enum value from registry
+- **hairDensity**: `"hairless"` ✅ VALID - Matches enum value from registry
+- **smell**: `"putrid"` ✅ VALID - Free-form descriptor (any string accepted)
 
-### bodyDescriptors.height
-- Already has `"massive"` ✓
+### Body Descriptors NOT Used
+
+The following descriptor was considered but NOT used:
+
+- **composition**: Cannot use `"grotesque"` as it's not a valid enum value. Current valid values: underweight, lean, average, soft, chubby, overweight, obese.
+  - The creature's grotesque nature is instead conveyed through part-level descriptors and free-form fields (skinColor, smell, texture descriptors on individual parts)
+
+### Notes on Body Descriptor System
+
+- **Enumerated descriptors** (height, build, composition, hairDensity): Must use pre-defined values from `src/anatomy/registries/bodyDescriptorRegistry.js`
+- **Free-form descriptors** (skinColor, smell): Accept any string value, allowing creative descriptions
+- **Adding new enum values**: Requires following the Body Descriptor Registry process (see `docs/anatomy/body-descriptors-complete.md`)
 
 ---
 
@@ -1739,6 +1760,85 @@ The Writhing Observer represents a lovecraftian horror that pushes the boundarie
 4. **Existential Horror**: Non-Euclidean form, otherworldly presence
 
 This design demonstrates the flexibility and power of the Living Narrative Engine's anatomy system to create truly alien and horrifying entities that can serve as memorable adversaries or narrative focal points in cosmic horror scenarios.
+
+---
+
+## Specification Corrections Log
+
+This section documents corrections made to align the specification with the actual Living Narrative Engine anatomy system implementation.
+
+### Corrections Made (2025-11-09)
+
+#### 1. Body Descriptor Values in Recipe (Line 484-490)
+
+**Issue**: Recipe used invalid body descriptor enum values
+- `height: "massive"` → Changed to `"gigantic"` (valid enum value)
+- `composition: "grotesque"` → Removed (not a valid enum value)
+
+**Rationale**: The Body Descriptor Registry (`src/anatomy/registries/bodyDescriptorRegistry.js`) defines valid values for enumerated descriptors:
+- `height`: Must be one of: gigantic, very-tall, tall, average, short, petite, tiny
+- `composition`: Must be one of: underweight, lean, average, soft, chubby, overweight, obese
+
+Free-form descriptors (`skinColor`, `smell`) correctly used arbitrary values as intended.
+
+#### 2. Body Descriptor Extensions Section (Lines 1577-1601)
+
+**Issue**: Section incorrectly suggested adding values to existing enum descriptors without following the proper process.
+
+**Correction**: Rewrote section as "Body Descriptor Status" to:
+- Document which body descriptors are valid/invalid
+- Explain the distinction between enumerated vs. free-form descriptors
+- Reference the proper Body Descriptor Registry process for adding new values
+- Note that `composition: "grotesque"` cannot be used without system changes
+
+#### 3. New Descriptor Components Section (Lines 1437-1440)
+
+**Issue**: Section title and content did not clearly distinguish between:
+- Body-level descriptors (managed by Body Descriptor Registry)
+- Part-level descriptor components (applied to individual body parts)
+
+**Correction**:
+- Retitled to "New Part-Level Descriptor Components Required"
+- Added clarifying note explaining the distinction between the two descriptor systems
+- Referenced proper documentation (`docs/anatomy/body-descriptors-complete.md`)
+
+#### 4. Structure Template Attachment Value (Line 346)
+
+**Issue**: Used `"attachment": "distributed"` which is not a valid enum value.
+
+**Correction**: Changed to `"attachment": "custom"` (valid enum value)
+
+**Rationale**: The structure template schema (`data/schemas/anatomy.structure-template.schema.json`) defines valid attachment values as:
+- `anterior`, `posterior`, `dorsal`, `ventral`, `lateral`, `custom`
+
+The value "custom" is appropriate for distributed/scattered appendages.
+
+#### 5. Added Anatomy System Architecture Reference (Lines 260-268)
+
+**Addition**: Added section at start of Implementation Plan referencing:
+- Blueprint V2 System documentation
+- Body Descriptor Registry documentation
+- Explanation of two-tier descriptor system (body-level vs. part-level)
+
+**Rationale**: Provides implementers with proper context and documentation references.
+
+### Validation Status
+
+After corrections:
+- ✅ Recipe body descriptors use only valid enum values or free-form strings
+- ✅ Structure template uses only valid attachment enum values
+- ✅ Documentation references correct anatomy system architecture
+- ✅ Clear distinction between body-level and part-level descriptors
+- ✅ All JSON examples conform to schemas
+
+### Implementation Notes
+
+Implementers should:
+1. Verify all body descriptor values against `src/anatomy/registries/bodyDescriptorRegistry.js`
+2. Follow Body Descriptor Registry process if new body-level descriptors are needed
+3. Create part-level descriptor components as standard component JSON files
+4. Use only valid structure template enum values per schemas
+5. Reference documentation in `docs/anatomy/` for guidance
 
 ---
 
