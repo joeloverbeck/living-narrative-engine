@@ -48,6 +48,15 @@
     "tentacle",
     "ink_reservoir",
     "beak",
+    "eldritch_baleful_eye",
+    "eldritch_vocal_sac",
+    "eldritch_surface_eye",
+    "eldritch_tentacle",
+    "eldritch_vestigial_arm",
+    "eldritch_membrane_wing",
+    "eldritch_compound_eye_stalk",
+    "eldritch_lamprey_mouth",
+    "eldritch_sensory_stalk",
     "equipment_mount",
     "equipment",
     "activity"
@@ -67,7 +76,15 @@
     "spider_leg",
     "spider_pedipalp",
     "dragon_leg",
-    "dragon_wing"
+    "dragon_wing",
+    "eldritch_surface_eye",
+    "eldritch_vocal_sac",
+    "eldritch_tentacle",
+    "eldritch_vestigial_arm",
+    "eldritch_membrane_wing",
+    "eldritch_compound_eye_stalk",
+    "eldritch_lamprey_mouth",
+    "eldritch_sensory_stalk"
   ],
   "irregularPlurals": {
     "foot": "feet",
@@ -92,7 +109,16 @@
     "descriptors:embellishment",
     "descriptors:firmness",
     "descriptors:projection",
-    "descriptors:build"
+    "descriptors:build",
+    "descriptors:luminosity",
+    "descriptors:animation",
+    "descriptors:effect",
+    "descriptors:secretion",
+    "descriptors:flexibility",
+    "descriptors:deformity",
+    "descriptors:structural_integrity",
+    "descriptors:visual_capability",
+    "descriptors:acoustic_property"
   ],
   "descriptorValueKeys": [
     "value",
@@ -108,7 +134,16 @@
     "weight",
     "composition",
     "density",
-    "projection"
+    "projection",
+    "luminosity",
+    "animation",
+    "effect",
+    "secretion",
+    "flexibility",
+    "deformity",
+    "integrity",
+    "capability",
+    "property"
   ],
   "equipmentIntegration": {
     "enabled": true,
