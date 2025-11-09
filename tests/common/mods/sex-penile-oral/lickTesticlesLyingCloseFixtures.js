@@ -181,7 +181,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
         return { success: true, value: new Set() };
       }
 
-      const actorEntity = testFixture.entityManager.getEntity(actorId);
+      const actorEntity = testFixture.entityManager.getEntityInstance(actorId);
 
       // Get actor's lying position
       const actorLying = actorEntity?.components['positioning:lying_down'];
@@ -197,7 +197,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
 
       // Filter partners by criteria
       const validPartners = actorCloseness.partners.filter((partnerId) => {
-        const partnerEntity = testFixture.entityManager.getEntity(partnerId);
+        const partnerEntity = testFixture.entityManager.getEntityInstance(partnerId);
         if (!partnerEntity) return false;
 
         // Check lying position
