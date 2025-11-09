@@ -15,6 +15,46 @@ From the anatomy system improvements analysis, the core issue is that recipes pa
 - **All Creatures:** Consistent pattern of late-stage validation failures
 - **Time Lost:** 3-6 hours per recipe due to trial-and-error debugging
 
+## Architecture Alignment Notes
+
+**This workflow has been updated to align with the actual production codebase architecture:**
+
+### Key Architecture Patterns
+
+1. **Unified Data Registry Pattern**
+   - The project uses a single `IDataRegistry` for all data types (components, recipes, blueprints)
+   - Access pattern: `dataRegistry.get(type, id)` where type is 'components', 'anatomyRecipes', 'anatomyBlueprints', etc.
+   - No separate component/entity/blueprint registry interfaces exist
+
+2. **Validation Rule Pattern**
+   - Existing validation uses `ValidationRule` base class with `validate(context)` method
+   - `LoadTimeValidationContext` wraps blueprints and recipes for validation
+   - `ValidationRuleChain` orchestrates multiple rules in sequence
+   - Rules return arrays of issues with severity levels (error, warning)
+
+3. **Repository Pattern for Blueprints**
+   - `AnatomyBlueprintRepository` wraps `IDataRegistry` for anatomy-specific access
+   - All methods are async: `getBlueprint(id)`, `getRecipe(id)`, `getBlueprintByRecipeId(id)`
+   - Returns `Promise<object|null>`
+
+4. **Schema Validation Pattern**
+   - Uses `ISchemaValidator` interface (not raw AJV)
+   - Method: `validate(schemaId, data)` returns `{isValid, errors}`
+   - PropertySchemaValidationRule creates internal AJV instance as fallback
+
+5. **Existing Validation Infrastructure**
+   - Directory `src/anatomy/validation/` already exists with complete validation system
+   - `ComponentExistenceValidationRule` and `PropertySchemaValidationRule` already implemented
+   - `AnatomyValidationPhase` runs validation during mod loading (phase-based system)
+
+### Integration Approach
+
+This validator will:
+- Reuse existing validation rules (ComponentExistenceValidationRule, PropertySchemaValidationRule)
+- Create new orchestrator class (RecipePreflightValidator) that wraps these rules
+- Provide a unified ValidationReport for better UX
+- Be usable standalone (for CLI tools) or integrated into loading phase
+
 ## Problem Statement
 
 The current validation pipeline has a critical gap:
@@ -56,31 +96,52 @@ Recipe Load ──▶ Schema Validation ──▶ Pre-flight Validation ──�
 
 ```javascript
 /**
+ * @file Comprehensive pre-flight validator for anatomy recipes
+ * @see ../validation/rules/componentExistenceValidationRule.js
+ * @see ../validation/rules/propertySchemaValidationRule.js
+ * @see ../validation/loadTimeValidationContext.js
+ */
+
+import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { ComponentExistenceValidationRule } from '../validation/rules/componentExistenceValidationRule.js';
+import { PropertySchemaValidationRule } from '../validation/rules/propertySchemaValidationRule.js';
+import { LoadTimeValidationContext } from '../validation/loadTimeValidationContext.js';
+
+/** @typedef {import('../../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../../interfaces/IAnatomyBlueprintRepository.js').IAnatomyBlueprintRepository} IAnatomyBlueprintRepository */
+/** @typedef {import('../../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
+
+/**
  * Comprehensive pre-flight validator for anatomy recipes
  * Orchestrates multiple validation checks and produces unified report
  */
 class RecipePreflightValidator {
-  #componentRegistry;
-  #entityRegistry;
-  #blueprintRegistry;
-  #ajv;
+  #dataRegistry;
+  #entityManager;
+  #anatomyBlueprintRepository;
+  #schemaValidator;
   #logger;
 
-  constructor({ componentRegistry, entityRegistry, blueprintRegistry, ajv, logger }) {
-    validateDependency(componentRegistry, 'IComponentRegistry', logger, {
-      requiredMethods: ['has', 'get'],
+  constructor({ dataRegistry, entityManager, anatomyBlueprintRepository, schemaValidator, logger }) {
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['get', 'getAll'],
     });
-    validateDependency(entityRegistry, 'IEntityRegistry', logger, {
-      requiredMethods: ['findMatching', 'get'],
+    validateDependency(entityManager, 'IEntityManager', logger, {
+      requiredMethods: ['findEntities', 'getEntityInstance'],
     });
-    validateDependency(blueprintRegistry, 'IBlueprintRegistry', logger, {
-      requiredMethods: ['get'],
+    validateDependency(anatomyBlueprintRepository, 'IAnatomyBlueprintRepository', logger, {
+      requiredMethods: ['getBlueprint', 'getRecipe'],
+    });
+    validateDependency(schemaValidator, 'ISchemaValidator', logger, {
+      requiredMethods: ['validate'],
     });
 
-    this.#componentRegistry = componentRegistry;
-    this.#entityRegistry = entityRegistry;
-    this.#blueprintRegistry = blueprintRegistry;
-    this.#ajv = ajv;
+    this.#dataRegistry = dataRegistry;
+    this.#entityManager = entityManager;
+    this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
+    this.#schemaValidator = schemaValidator;
     this.#logger = logger;
   }
 
@@ -88,9 +149,9 @@ class RecipePreflightValidator {
    * Validates a recipe with all pre-flight checks
    * @param {Object} recipe - Recipe to validate
    * @param {Object} options - Validation options
-   * @returns {ValidationReport} Comprehensive validation report
+   * @returns {Promise<ValidationReport>} Comprehensive validation report
    */
-  validate(recipe, options = {}) {
+  async validate(recipe, options = {}) {
     const results = {
       recipeId: recipe.recipeId,
       recipePath: options.recipePath,
@@ -102,26 +163,26 @@ class RecipePreflightValidator {
     };
 
     // Run all validation checks
-    this.#runValidationChecks(recipe, results, options);
+    await this.#runValidationChecks(recipe, results, options);
 
     return new ValidationReport(results);
   }
 
-  #runValidationChecks(recipe, results, options) {
+  async #runValidationChecks(recipe, results, options) {
     // 1. Component Existence (Critical - P0)
-    this.#checkComponentExistence(recipe, results);
+    await this.#checkComponentExistence(recipe, results);
 
     // 2. Property Schemas (Critical - P0)
     if (results.errors.length === 0 || !options.failFast) {
-      this.#checkPropertySchemas(recipe, results);
+      await this.#checkPropertySchemas(recipe, results);
     }
 
     // 3. Blueprint Validation (Critical - P0)
-    this.#checkBlueprintExists(recipe, results);
+    await this.#checkBlueprintExists(recipe, results);
 
     // 4. Socket/Slot Compatibility (Critical - P0)
     if (this.#blueprintExists(results)) {
-      this.#checkSocketSlotCompatibility(recipe, results);
+      await this.#checkSocketSlotCompatibility(recipe, results);
     }
 
     // 5. Pattern Matching Dry-Run (Warning - P1)
@@ -135,10 +196,22 @@ class RecipePreflightValidator {
     }
   }
 
-  #checkComponentExistence(recipe, results) {
+  async #checkComponentExistence(recipe, results) {
     try {
-      // Use ANASYSIMP-001 validator
-      const errors = validateComponentExistence(recipe, this.#componentRegistry);
+      // Use ComponentExistenceValidationRule from ANASYSIMP-001
+      const componentRule = new ComponentExistenceValidationRule({
+        logger: this.#logger,
+        dataRegistry: this.#dataRegistry,
+      });
+
+      // Create context with just this recipe
+      const context = new LoadTimeValidationContext({
+        blueprints: {},
+        recipes: { [recipe.recipeId]: recipe },
+      });
+
+      const issues = await componentRule.validate(context);
+      const errors = issues.filter(i => i.severity === 'error');
 
       if (errors.length === 0) {
         results.passed.push({
@@ -159,10 +232,23 @@ class RecipePreflightValidator {
     }
   }
 
-  #checkPropertySchemas(recipe, results) {
+  async #checkPropertySchemas(recipe, results) {
     try {
-      // Use ANASYSIMP-002 validator
-      const errors = validatePropertySchemas(recipe, this.#componentRegistry, this.#ajv);
+      // Use PropertySchemaValidationRule from ANASYSIMP-002
+      const propertyRule = new PropertySchemaValidationRule({
+        logger: this.#logger,
+        dataRegistry: this.#dataRegistry,
+        schemaValidator: this.#schemaValidator,
+      });
+
+      // Create context with just this recipe
+      const context = new LoadTimeValidationContext({
+        blueprints: {},
+        recipes: { [recipe.recipeId]: recipe },
+      });
+
+      const issues = await propertyRule.validate(context);
+      const errors = issues.filter(i => i.severity === 'error');
 
       if (errors.length === 0) {
         results.passed.push({
@@ -183,9 +269,9 @@ class RecipePreflightValidator {
     }
   }
 
-  #checkBlueprintExists(recipe, results) {
+  async #checkBlueprintExists(recipe, results) {
     try {
-      const blueprint = this.#blueprintRegistry.get(recipe.blueprintId);
+      const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
 
       if (!blueprint) {
         results.errors.push({
@@ -217,12 +303,12 @@ class RecipePreflightValidator {
     }
   }
 
-  #checkSocketSlotCompatibility(recipe, results) {
+  async #checkSocketSlotCompatibility(recipe, results) {
     try {
       // Use ANASYSIMP-004 validator (if available, otherwise skip)
       // This check validates that blueprint's additionalSlots reference valid sockets
 
-      const blueprint = this.#blueprintRegistry.get(recipe.blueprintId);
+      const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
       if (!blueprint) return; // Already caught by blueprint check
 
       // Placeholder for socket/slot validation
@@ -539,66 +625,102 @@ class ValidationReport {
 }
 ```
 
-### Integration with Recipe Loader
+### Integration Options
+
+**The validator can be integrated in two ways:**
+
+#### Option 1: Standalone CLI Tool (Recommended for ANASYSIMP-009)
 
 ```javascript
-// In recipe loader
-async function loadRecipe(recipePath) {
-  // 1. Load JSON file
-  const recipeData = await readJSON(recipePath);
+// CLI tool usage
+import { RecipePreflightValidator } from './src/anatomy/validation/RecipePreflightValidator.js';
 
-  // 2. Schema validation (existing)
-  await validateRecipeSchema(recipeData);
+const validator = new RecipePreflightValidator({
+  dataRegistry,
+  entityManager,
+  anatomyBlueprintRepository,
+  schemaValidator,
+  logger,
+});
 
-  // 3. Pre-flight validation (NEW)
-  const validator = container.resolve('IRecipePreflightValidator');
-  const report = validator.validate(recipeData, { recipePath });
+const recipe = await loadRecipeFile(recipePath);
+const report = await validator.validate(recipe, { recipePath });
 
-  if (!report.isValid) {
-    logger.error('Recipe pre-flight validation failed');
-    logger.error(report.toString());
+console.log(report.toString()); // Pretty console output
 
-    throw new RecipeValidationError(
-      `Recipe validation failed for '${recipeData.recipeId}'`,
-      { report }
-    );
-  }
-
-  if (report.hasWarnings) {
-    logger.warn('Recipe validation warnings:');
-    logger.warn(report.toString());
-  }
-
-  // 4. Store in registry
-  recipeRegistry.register(recipeData);
-
-  return recipeData;
+if (!report.isValid) {
+  process.exit(1);
 }
 ```
 
+#### Option 2: Integration with AnatomyValidationPhase (Future Enhancement)
+
+**Current System:**
+- `AnatomyValidationPhase` runs after all content is loaded
+- Uses `ValidationRuleChain` to orchestrate rules
+- Currently logs errors but doesn't halt loading
+
+**Potential Enhancement:**
+```javascript
+// In AnatomyValidationPhase.execute()
+async execute(ctx) {
+  // ... existing code ...
+
+  // Option A: Add RecipePreflightValidator as additional check
+  const validator = this.#recipePreflightValidator;
+  const recipes = this.#extractRecipes(ctx);
+
+  for (const [recipeId, recipe] of Object.entries(recipes)) {
+    const report = await validator.validate(recipe);
+
+    if (!report.isValid) {
+      // Aggregate errors into validation context
+      validationContext.addIssues(report.errors);
+    }
+  }
+
+  // Option B: Keep existing phase-based approach and use RecipePreflightValidator
+  // only for CLI tooling (recommended to avoid duplication)
+}
+```
+
+**Recommendation:** Use standalone for CLI tools (ANASYSIMP-009). The existing `AnatomyValidationPhase` already provides load-time validation using the same underlying rules.
+
 ### File Structure
+
+**Note:** The `src/anatomy/validation/` directory and validation infrastructure already exist. This task extends the existing system.
 
 ```
 src/anatomy/validation/
-├── RecipePreflightValidator.js      # Main orchestrator
-├── ValidationReport.js               # Report class
-├── componentExistenceValidator.js    # From ANASYSIMP-001
-├── propertySchemaValidator.js        # From ANASYSIMP-002
-└── validationErrors.js               # Error classes
+├── rules/
+│   ├── componentExistenceValidationRule.js    # ✅ Already exists (ANASYSIMP-001)
+│   ├── propertySchemaValidationRule.js        # ✅ Already exists (ANASYSIMP-002)
+│   └── blueprintRecipeValidationRule.js       # ✅ Already exists
+├── loadTimeValidationContext.js               # ✅ Already exists
+├── validationContext.js                       # ✅ Already exists
+├── validationRule.js                          # ✅ Already exists (base class)
+├── validationRuleChain.js                     # ✅ Already exists
+├── RecipePreflightValidator.js                # 🆕 NEW - Main orchestrator
+└── ValidationReport.js                        # 🆕 NEW - Report class
 
 src/dependencyInjection/tokens/
-└── tokens-anatomy.js                 # Add IRecipePreflightValidator
+└── tokens-core.js                             # ✏️ MODIFY - Add IRecipePreflightValidator token
 
 src/dependencyInjection/registrations/
-└── anatomyRegistrations.js           # Register validator
+└── loadersRegistrations.js                    # ✏️ MODIFY - Register validator (anatomy-related registrations)
 
 tests/unit/anatomy/validation/
-├── RecipePreflightValidator.test.js
-└── ValidationReport.test.js
+├── RecipePreflightValidator.test.js           # 🆕 NEW
+└── ValidationReport.test.js                   # 🆕 NEW
 
 tests/integration/anatomy/validation/
-└── recipePreflightValidation.integration.test.js
+└── recipePreflightValidation.integration.test.js  # 🆕 NEW
 ```
+
+**Legend:**
+- ✅ Already exists (no changes needed)
+- 🆕 NEW - New file to create
+- ✏️ MODIFY - Existing file to modify
 
 ## Acceptance Criteria
 
@@ -681,22 +803,58 @@ tests/integration/anatomy/validation/
 
 ## Dependencies
 
-**Required:**
-- Component registry (IComponentRegistry)
-- Entity registry (IEntityRegistry)
-- Blueprint registry (IBlueprintRegistry)
-- AJV instance
-- Logger (ILogger)
+### Required Services (via DI)
 
-**Depends On:**
-- ANASYSIMP-001 (Component Existence Checker) - MUST be complete
-- ANASYSIMP-002 (Property Schema Validator) - MUST be complete
+**All services are available through the existing DI container:**
 
-**Optional Integration:**
+- **IDataRegistry** - Centralized data storage (components, recipes, blueprints)
+  - Methods: `get(type, id)`, `getAll(type)`
+  - Implementation: `InMemoryDataRegistry`
+  - Already registered in DI container
+
+- **IEntityManager** - Entity instance management (runtime entities)
+  - Methods: `findEntities(query)`, `getEntityInstance(instanceId)`
+  - Already registered in DI container
+  - Note: Used for pattern matching validation (ANASYSIMP-005)
+
+- **IAnatomyBlueprintRepository** - Blueprint/recipe access wrapper
+  - Methods: `getBlueprint(blueprintId)`, `getRecipe(recipeId)`, `getBlueprintByRecipeId(recipeId)`
+  - Implementation: `AnatomyBlueprintRepository`
+  - All methods return `Promise<object|null>`
+  - Already registered in DI container
+
+- **ISchemaValidator** - JSON schema validation
+  - Methods: `validate(schemaId, data)` → `{isValid, errors}`
+  - Implementation: AJV-based validator
+  - Already registered in DI container
+
+- **ILogger** - Logging service
+  - Methods: `info`, `warn`, `error`, `debug`
+  - Already registered in DI container
+
+### Depends On (Validation Rules)
+
+**These are already implemented and available:**
+
+- ✅ **ComponentExistenceValidationRule** (ANASYSIMP-001) - COMPLETE
+  - Location: `src/anatomy/validation/rules/componentExistenceValidationRule.js`
+  - Validates component references in recipes
+
+- ✅ **PropertySchemaValidationRule** (ANASYSIMP-002) - COMPLETE
+  - Location: `src/anatomy/validation/rules/propertySchemaValidationRule.js`
+  - Validates property values against component dataSchemas
+
+- ✅ **LoadTimeValidationContext** - COMPLETE
+  - Location: `src/anatomy/validation/loadTimeValidationContext.js`
+  - Context object for passing data to validation rules
+
+### Optional Future Integration
+
 - ANASYSIMP-004 (Socket/Slot Compatibility) - will integrate when available
 - ANASYSIMP-005 (Pattern Matching Dry-Run) - will integrate when available
 
-**Blocks:**
+### Blocks
+
 - ANASYSIMP-009 (Recipe Validation CLI Tool) - uses this as core validator
 
 ## Implementation Notes
@@ -740,9 +898,54 @@ New validators can be added easily:
 - **Coverage:** All critical validation types implemented
 - **Time Savings:** 2-3 hours per recipe (eliminated runtime debugging cycles)
 
+## Corrections Made (Architecture Alignment)
+
+**This workflow was updated on 2025-11-09 to align with production codebase. Key corrections:**
+
+1. **Registry Pattern:**
+   - ❌ BEFORE: Assumed separate `IComponentRegistry`, `IEntityRegistry`, `IBlueprintRegistry`
+   - ✅ AFTER: Uses unified `IDataRegistry` with type-based access pattern
+
+2. **Blueprint Access:**
+   - ❌ BEFORE: Assumed synchronous `blueprintRegistry.get(id)`
+   - ✅ AFTER: Uses async `anatomyBlueprintRepository.getBlueprint(id)`
+
+3. **Validation Pattern:**
+   - ❌ BEFORE: Assumed standalone validator functions
+   - ✅ AFTER: Reuses existing `ValidationRule` classes with `validate(context)` pattern
+
+4. **Schema Validation:**
+   - ❌ BEFORE: Assumed raw AJV instance dependency
+   - ✅ AFTER: Uses `ISchemaValidator` interface
+
+5. **File Structure:**
+   - ❌ BEFORE: Assumed new directory structure
+   - ✅ AFTER: Extends existing `src/anatomy/validation/` with new orchestrator
+
+6. **Integration:**
+   - ❌ BEFORE: Assumed integration with recipe loader
+   - ✅ AFTER: Standalone validator for CLI tools, reusing existing phase-based validation
+
+7. **DI Tokens:**
+   - ❌ BEFORE: Assumed new `tokens-anatomy.js` file
+   - ✅ AFTER: Uses existing `tokens-core.js` for anatomy-related tokens
+
+8. **Method Signatures:**
+   - ❌ BEFORE: Synchronous `validate()` method
+   - ✅ AFTER: Async `validate()` method to support repository calls
+
+**All corrections maintain the original intent while aligning with established patterns.**
+
 ## References
 
 - **Report Section:** Category 1: Validation Enhancements → Recommendation 1.1
 - **Report Pages:** Lines 403-442
-- **Depends On:** ANASYSIMP-001, ANASYSIMP-002
+- **Depends On:** ANASYSIMP-001 (✅ Complete), ANASYSIMP-002 (✅ Complete)
 - **Integrates With:** ANASYSIMP-004, ANASYSIMP-005
+- **Production Code Reviewed:**
+  - `src/anatomy/validation/rules/componentExistenceValidationRule.js`
+  - `src/anatomy/validation/rules/propertySchemaValidationRule.js`
+  - `src/anatomy/repositories/anatomyBlueprintRepository.js`
+  - `src/loaders/phases/anatomyValidationPhase.js`
+  - `src/data/inMemoryDataRegistry.js`
+  - `src/interfaces/IDataRegistry.js`, `IEntityManager.js`, `IAnatomyBlueprintRepository.js`
