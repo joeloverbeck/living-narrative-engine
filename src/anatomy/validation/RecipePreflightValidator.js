@@ -10,6 +10,7 @@ import { ComponentExistenceValidationRule } from './rules/componentExistenceVali
 import { PropertySchemaValidationRule } from './rules/propertySchemaValidationRule.js';
 import { LoadTimeValidationContext } from './loadTimeValidationContext.js';
 import { ValidationReport } from './ValidationReport.js';
+import { validateSocketSlotCompatibility } from './socketSlotCompatibilityValidator.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/IAnatomyBlueprintRepository.js').IAnatomyBlueprintRepository} IAnatomyBlueprintRepository */
@@ -215,25 +216,30 @@ class RecipePreflightValidator {
 
   async #checkSocketSlotCompatibility(recipe, results) {
     try {
-      // Use ANASYSIMP-004 validator (if available, otherwise skip)
-      // This check validates that blueprint's additionalSlots reference valid sockets
-
       const blueprint =
         await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
       if (!blueprint) return; // Already caught by blueprint check
 
-      // Placeholder for socket/slot validation
-      // Will be implemented by ANASYSIMP-004
-      results.passed.push({
-        check: 'socket_slot_compatibility',
-        message: 'Socket/slot compatibility check passed',
-      });
+      const errors = await validateSocketSlotCompatibility(
+        blueprint,
+        this.#dataRegistry
+      );
+
+      if (errors.length === 0) {
+        const socketCount = this.#countAdditionalSlots(blueprint);
+        results.passed.push({
+          check: 'socket_slot_compatibility',
+          message: `All ${socketCount} additionalSlot socket references valid`,
+        });
+      } else {
+        results.errors.push(...errors);
+      }
     } catch (error) {
       this.#logger.error('Socket/slot compatibility check failed', error);
-      results.warnings.push({
-        type: 'VALIDATION_WARNING',
+      results.errors.push({
+        type: 'VALIDATION_ERROR',
         check: 'socket_slot_compatibility',
-        message: 'Socket/slot compatibility check failed',
+        message: 'Failed to validate socket/slot compatibility',
         error: error.message,
       });
     }
@@ -343,6 +349,10 @@ class RecipePreflightValidator {
     }
 
     return count;
+  }
+
+  #countAdditionalSlots(blueprint) {
+    return Object.keys(blueprint.additionalSlots || {}).length;
   }
 }
 
