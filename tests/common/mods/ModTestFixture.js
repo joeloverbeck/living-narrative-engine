@@ -2128,12 +2128,19 @@ export class ModActionTestFixture extends BaseModTestFixture {
     let scopeName = null;
     const targets = this._actionDefinition.targets;
     if (targets) {
-      if (targets.primary?.scope) {
-        scopeName = targets.primary.scope;
-      } else if (targets.secondary?.scope) {
-        scopeName = targets.secondary.scope;
-      } else if (targets.tertiary?.scope) {
-        scopeName = targets.tertiary.scope;
+      // Handle new object format with primary/secondary/tertiary
+      if (typeof targets === 'object' && !Array.isArray(targets)) {
+        if (targets.primary?.scope) {
+          scopeName = targets.primary.scope;
+        } else if (targets.secondary?.scope) {
+          scopeName = targets.secondary.scope;
+        } else if (targets.tertiary?.scope) {
+          scopeName = targets.tertiary.scope;
+        }
+      }
+      // Handle old string format (e.g., "positioning:available_furniture")
+      else if (typeof targets === 'string') {
+        scopeName = targets;
       }
     }
 
