@@ -505,6 +505,42 @@ class RecipePreflightValidator {
       const errors = [];
       let totalSlotsChecked = 0;
 
+      // Load structure template and generate sockets if blueprint uses one
+      let generatedSockets = {};
+      if (blueprint.structureTemplate) {
+        this.#logger.info(
+          `RecipePreflightValidator: Loading structure template '${blueprint.structureTemplate}'`
+        );
+        const structureTemplate = this.#dataRegistry.get(
+          'structure-templates',
+          blueprint.structureTemplate
+        );
+        if (structureTemplate) {
+          this.#logger.info(
+            `RecipePreflightValidator: Structure template found, generating sockets`
+          );
+          // Dynamically import SocketGenerator to generate sockets
+          const { default: SocketGenerator } = await import(
+            '../socketGenerator.js'
+          );
+          const socketGenerator = new SocketGenerator({ logger: this.#logger });
+          const sockets = socketGenerator.generateSockets(structureTemplate);
+
+          this.#logger.info(
+            `RecipePreflightValidator: Generated ${sockets.length} sockets from structure template`
+          );
+
+          // Build socket lookup map by socket id
+          for (const socket of sockets) {
+            generatedSockets[socket.id] = socket;
+          }
+        } else {
+          this.#logger.warn(
+            `RecipePreflightValidator: Structure template '${blueprint.structureTemplate}' not found in data registry`
+          );
+        }
+      }
+
       // For each pattern, find slots it matches and validate entity availability
       for (let patternIndex = 0; patternIndex < patterns.length; patternIndex++) {
         const pattern = patterns[patternIndex];
@@ -528,9 +564,13 @@ class RecipePreflightValidator {
           totalSlotsChecked++;
 
           // Get the socket requirements for this slot
-          const blueprintSlot = blueprint.slots?.[slotKey];
+          // Check both blueprint.slots and generated sockets from structure template
+          const blueprintSlot = blueprint.slots?.[slotKey] || generatedSockets[slotKey];
           if (!blueprintSlot) {
-            // Slot doesn't exist in blueprint (shouldn't happen, but be defensive)
+            // Slot doesn't exist in blueprint or generated sockets
+            this.#logger.warn(
+              `RecipePreflightValidator: Slot '${slotKey}' matched by pattern but not found in blueprint or structure template`
+            );
             continue;
           }
 
