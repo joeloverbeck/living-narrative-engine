@@ -422,6 +422,70 @@ describe('FilterClauseAnalyzer', () => {
     });
   });
 
+  describe('Array literal handling', () => {
+    it('should treat array literals as values, not operators', () => {
+      const logic = { in: [{ var: 'status' }, ['active', 'pending', 'approved']] };
+      const context = { status: 'active' };
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.result).toBe(true);
+      expect(result.breakdown.operator).toBe('in');
+      expect(result.breakdown.children).toHaveLength(2);
+
+      // Second child should be the array literal treated as a value
+      const arrayNode = result.breakdown.children[1];
+      expect(arrayNode.type).toBe('value');
+      expect(arrayNode.value).toEqual(['active', 'pending', 'approved']);
+      expect(arrayNode.path).toEqual([1]);
+    });
+
+    it('should preserve entire array, not just first element', () => {
+      const logic = { in: ['test', ['option1', 'option2', 'option3', 'option4']] };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      const arrayNode = result.breakdown.children[1];
+      expect(arrayNode.type).toBe('value');
+      expect(arrayNode.value).toHaveLength(4);
+      expect(arrayNode.value).toEqual(['option1', 'option2', 'option3', 'option4']);
+    });
+
+    it('should handle empty arrays as values', () => {
+      const logic = { in: ['value', []] };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      const arrayNode = result.breakdown.children[1];
+      expect(arrayNode.type).toBe('value');
+      expect(arrayNode.value).toEqual([]);
+    });
+
+    it('should handle nested arrays as values', () => {
+      const logic = { '==': [{ var: 'data' }, [['nested'], ['arrays']]] };
+      const context = { data: [['nested'], ['arrays']] };
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      const arrayNode = result.breakdown.children[1];
+      expect(arrayNode.type).toBe('value');
+      expect(arrayNode.value).toEqual([['nested'], ['arrays']]);
+    });
+
+    it('should handle arrays with mixed types as values', () => {
+      const logic = { in: ['test', ['string', 123, true, null]] };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      const arrayNode = result.breakdown.children[1];
+      expect(arrayNode.type).toBe('value');
+      expect(arrayNode.value).toEqual(['string', 123, true, null]);
+    });
+  });
+
   describe('Edge cases', () => {
     it('should handle null/undefined logic', () => {
       const result1 = FilterClauseAnalyzer.analyzeFilter(null, {}, mockLogicEval);

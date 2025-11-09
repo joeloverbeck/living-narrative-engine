@@ -65,8 +65,8 @@ export class FilterClauseAnalyzer {
    * @returns {object} Node analysis result
    */
   static #analyzeNode(node, evalContext, logicEval, path) {
-    if (typeof node !== 'object' || node === null) {
-      // Primitive value
+    if (typeof node !== 'object' || node === null || Array.isArray(node)) {
+      // Primitive value or array literal
       return {
         type: 'value',
         value: node,
