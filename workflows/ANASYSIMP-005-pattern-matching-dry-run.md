@@ -28,11 +28,14 @@ Recipe patterns define requirements for entity selection. However:
 ## Solution Overview
 
 Implement pattern matching dry-run validation that runs at load time. The validator should:
-1. Run part selection logic without actual instantiation
-2. Report patterns with zero matching entities as warnings
-3. Identify which requirements are blocking matches
-4. Suggest entities that partially match (almost-matches)
+1. Run slot matching logic without actual blueprint processing
+2. Report patterns with zero matching slots as warnings
+3. Identify which matcher criteria are blocking matches
+4. Suggest available slots that partially match pattern criteria
 5. Provide clear remediation guidance
+
+**IMPORTANT CLARIFICATION:**
+Patterns in the anatomy system match **SLOTS** (blueprint slot keys), not entity definitions. Pattern resolution occurs during blueprint processing where patterns use matchers (`matchesGroup`, `matchesPattern`, `matchesAll`) to identify which slots from the blueprint's structure template should receive the pattern's part requirements (partType, tags, properties).
 
 ## Implementation Details
 
@@ -40,30 +43,32 @@ Implement pattern matching dry-run validation that runs at load time. The valida
 
 ```javascript
 /**
- * Validates that recipe patterns have matching entities (dry-run)
+ * Validates that recipe patterns have matching slots (dry-run)
  * @param {Object} recipe - Recipe to validate
- * @param {Object} entityRegistry - Registry of loaded entities
+ * @param {Object} blueprint - Blueprint with slots from structure template
+ * @param {Object} dataRegistry - Data registry for structure templates
+ * @param {Object} slotGenerator - SlotGenerator for extracting slot keys from limbSets/appendages
  * @returns {Array<Object>} Array of warnings for zero-match patterns
  */
-function validatePatternMatching(recipe, entityRegistry) {
+function validatePatternMatching(recipe, blueprint, dataRegistry, slotGenerator) {
   const warnings = [];
 
   for (const pattern of recipe.patterns || []) {
-    const patternId = pattern.matchesPattern || pattern.matchesGroup || 'unknown';
+    const patternDesc = getPatternDescription(pattern);
 
-    // Run pattern matching (dry-run, no instantiation)
-    const result = findMatchingEntities(pattern, entityRegistry);
+    // Run slot matching (dry-run, no blueprint processing)
+    const result = findMatchingSlots(pattern, blueprint, dataRegistry, slotGenerator);
 
     if (result.matches.length === 0) {
       warnings.push({
-        type: 'NO_MATCHING_ENTITIES',
-        location: { type: 'pattern', name: patternId },
+        type: 'NO_MATCHING_SLOTS',
+        location: { type: 'pattern', description: patternDesc },
         pattern: pattern,
-        requirements: extractRequirements(pattern),
-        almostMatches: result.almostMatches,
-        message: `Pattern '${patternId}' has no matching entities`,
-        reason: identifyBlockingRequirement(pattern, result.almostMatches),
-        fix: suggestPatternFix(pattern, result.almostMatches),
+        matcher: extractMatcherInfo(pattern),
+        availableSlots: result.availableSlots,
+        message: `Pattern ${patternDesc} has no matching slots`,
+        reason: identifyBlockingMatcher(pattern, result),
+        fix: suggestPatternFix(pattern, result),
         severity: 'warning',
       });
     } else {
@@ -75,227 +80,284 @@ function validatePatternMatching(recipe, entityRegistry) {
 }
 
 /**
- * Finds entities matching pattern requirements
- * @param {Object} pattern - Pattern definition
- * @param {Object} entityRegistry - Entity registry
- * @returns {Object} Match results with almostMatches
+ * Finds slots matching pattern matchers
+ * @param {Object} pattern - Pattern definition (v1 or v2)
+ * @param {Object} blueprint - Blueprint with slots
+ * @param {Object} dataRegistry - Data registry for structure templates
+ * @param {Object} slotGenerator - SlotGenerator instance
+ * @returns {Object} Match results with available slots info
  */
-function findMatchingEntities(pattern, entityRegistry) {
-  const requirements = {
-    partType: pattern.partType,
-    components: pattern.tags || [],
-    properties: pattern.properties || {},
-  };
-
+function findMatchingSlots(pattern, blueprint, dataRegistry, slotGenerator) {
   const matches = [];
-  const almostMatches = [];
+  const blueprintSlots = blueprint.slots || {};
+  const blueprintSlotKeys = Object.keys(blueprintSlots);
 
-  for (const entity of entityRegistry.getAllEntities()) {
-    const matchResult = checkEntityMatch(entity, requirements);
-
-    if (matchResult.isFullMatch) {
-      matches.push(entity);
-    } else if (matchResult.isPartialMatch) {
-      almostMatches.push({
-        entity: entity,
-        matchScore: matchResult.score,
-        missingRequirements: matchResult.missing,
-        extraComponents: matchResult.extra,
-      });
+  // V1 pattern: explicit matches array
+  if (Array.isArray(pattern.matches)) {
+    for (const slotKey of pattern.matches) {
+      if (blueprintSlots[slotKey]) {
+        matches.push(slotKey);
+      }
     }
+    return {
+      matches,
+      availableSlots: blueprintSlotKeys,
+      matcherType: 'v1_explicit',
+    };
   }
 
-  // Sort almost-matches by score (closest matches first)
-  almostMatches.sort((a, b) => b.matchScore - a.matchScore);
-
-  return { matches, almostMatches: almostMatches.slice(0, 5) }; // Top 5
-}
-
-/**
- * Checks if entity matches pattern requirements
- * @param {Object} entity - Entity definition
- * @param {Object} requirements - Pattern requirements
- * @returns {Object} Match result with score and missing requirements
- */
-function checkEntityMatch(entity, requirements) {
-  const result = {
-    isFullMatch: true,
-    isPartialMatch: false,
-    score: 0,
-    missing: [],
-    extra: [],
-  };
-
-  // Check partType
-  const entityPartType = entity.components?.['anatomy:part']?.subType;
-
-  if (requirements.partType && entityPartType !== requirements.partType) {
-    result.isFullMatch = false;
-    result.missing.push({
-      type: 'partType',
-      expected: requirements.partType,
-      actual: entityPartType,
-    });
-  } else if (requirements.partType) {
-    result.score += 40; // partType is critical
-  }
-
-  // Check required components
-  for (const requiredComponent of requirements.components) {
-    if (!entity.components?.[requiredComponent]) {
-      result.isFullMatch = false;
-      result.missing.push({
-        type: 'component',
-        componentId: requiredComponent,
-      });
-    } else {
-      result.score += 20; // Each component match
+  // V2 pattern: matchesGroup (limbSet:leg, appendage:tail)
+  if (pattern.matchesGroup) {
+    try {
+      const deps = { dataRegistry, slotGenerator, logger: console };
+      const resolvedSlots = resolveSlotGroup(
+        pattern.matchesGroup,
+        blueprint,
+        {},
+        deps
+      );
+      matches.push(...resolvedSlots);
+    } catch (error) {
+      // Group resolution failed
     }
+    return {
+      matches,
+      availableSlots: blueprintSlotKeys,
+      matcherType: 'matchesGroup',
+      matcherValue: pattern.matchesGroup,
+    };
   }
 
-  // Check property values
-  for (const [componentId, expectedProps] of Object.entries(requirements.properties)) {
-    const actualProps = entity.components?.[componentId];
-
-    if (!actualProps) {
-      result.isFullMatch = false;
-      result.missing.push({
-        type: 'component',
-        componentId: componentId,
-        reason: 'component_missing',
-      });
-      continue;
-    }
-
-    const propMismatches = checkPropertiesMatch(expectedProps, actualProps);
-
-    if (propMismatches.length > 0) {
-      result.isFullMatch = false;
-      result.missing.push({
-        type: 'properties',
-        componentId: componentId,
-        mismatches: propMismatches,
-      });
-    } else {
-      result.score += 10; // Property match
-    }
+  // V2 pattern: matchesPattern (wildcard: leg_*, *_left)
+  if (pattern.matchesPattern !== undefined) {
+    const matchedSlots = resolveWildcardPattern(
+      pattern.matchesPattern,
+      blueprintSlotKeys
+    );
+    matches.push(...matchedSlots);
+    return {
+      matches,
+      availableSlots: blueprintSlotKeys,
+      matcherType: 'matchesPattern',
+      matcherValue: pattern.matchesPattern,
+    };
   }
 
-  // Determine if partial match
-  if (!result.isFullMatch && result.score > 0) {
-    result.isPartialMatch = true;
+  // V2 pattern: matchesAll (property filter)
+  if (pattern.matchesAll) {
+    const matchedSlots = resolvePropertyFilter(
+      pattern.matchesAll,
+      blueprintSlots
+    );
+    matches.push(...matchedSlots);
+    return {
+      matches,
+      availableSlots: blueprintSlotKeys,
+      matcherType: 'matchesAll',
+      matcherValue: pattern.matchesAll,
+    };
   }
 
-  return result;
-}
-
-/**
- * Checks if actual properties match expected properties
- * @param {Object} expected - Expected property values
- * @param {Object} actual - Actual property values
- * @returns {Array<Object>} Array of mismatches
- */
-function checkPropertiesMatch(expected, actual) {
-  const mismatches = [];
-
-  for (const [key, expectedValue] of Object.entries(expected)) {
-    const actualValue = actual[key];
-
-    if (JSON.stringify(expectedValue) !== JSON.stringify(actualValue)) {
-      mismatches.push({
-        property: key,
-        expected: expectedValue,
-        actual: actualValue,
-      });
-    }
-  }
-
-  return mismatches;
-}
-
-/**
- * Extracts pattern requirements for display
- * @param {Object} pattern - Pattern definition
- * @returns {Object} Formatted requirements
- */
-function extractRequirements(pattern) {
+  // No recognized matcher
   return {
-    partType: pattern.partType || 'any',
-    components: pattern.tags || [],
-    properties: pattern.properties || {},
-    count: Object.keys(pattern).length,
+    matches: [],
+    availableSlots: blueprintSlotKeys,
+    matcherType: 'none',
   };
 }
 
 /**
- * Identifies which requirement is blocking matches
+ * Helper to get pattern description for logging
  * @param {Object} pattern - Pattern definition
- * @param {Array} almostMatches - Almost-matching entities
- * @returns {string} Description of blocking requirement
+ * @returns {string} Human-readable pattern description
  */
-function identifyBlockingRequirement(pattern, almostMatches) {
-  if (almostMatches.length === 0) {
-    return 'No entities found with matching partType';
+function getPatternDescription(pattern) {
+  if (pattern.matchesGroup) return `matchesGroup '${pattern.matchesGroup}'`;
+  if (pattern.matchesPattern !== undefined) return `matchesPattern '${pattern.matchesPattern}'`;
+  if (pattern.matchesAll) return `matchesAll ${JSON.stringify(pattern.matchesAll)}`;
+  if (Array.isArray(pattern.matches)) return `explicit matches [${pattern.matches.join(', ')}]`;
+  return 'no matcher defined';
+}
+
+/**
+ * Resolves slot group to slot keys (simplified from recipePatternResolver)
+ * @param {string} groupRef - Group reference (e.g., 'limbSet:leg')
+ * @param {Object} blueprint - Blueprint with structureTemplate
+ * @param {Object} context - Resolution context
+ * @param {Object} deps - Dependencies (dataRegistry, slotGenerator, logger)
+ * @returns {string[]} Matched slot keys
+ */
+function resolveSlotGroup(groupRef, blueprint, context, deps) {
+  const [groupType, groupId] = groupRef.split(':');
+  const structureTemplateId = blueprint.structureTemplate;
+
+  if (!structureTemplateId) {
+    throw new Error(`Blueprint missing structureTemplate for group ${groupRef}`);
   }
 
-  const topMatch = almostMatches[0];
-  const missing = topMatch.missingRequirements;
-
-  if (missing.length === 0) {
-    return 'Unknown blocking requirement';
+  const template = deps.dataRegistry.get('structureTemplates', structureTemplateId);
+  if (!template) {
+    throw new Error(`Structure template '${structureTemplateId}' not found`);
   }
 
-  const first = missing[0];
-
-  if (first.type === 'partType') {
-    return `No entities with partType '${first.expected}'`;
+  if (groupType === 'limbSet') {
+    const limbSet = template.topology?.limbSets?.find(ls => ls.type === groupId);
+    if (!limbSet) return [];
+    return deps.slotGenerator.extractSlotKeysFromLimbSet(limbSet);
   }
 
-  if (first.type === 'component') {
-    return `Entities missing required component '${first.componentId}'`;
+  if (groupType === 'appendage') {
+    const appendage = template.topology?.appendages?.find(a => a.type === groupId);
+    if (!appendage) return [];
+    return deps.slotGenerator.extractSlotKeysFromAppendage(appendage);
   }
 
-  if (first.type === 'properties') {
-    const mismatch = first.mismatches[0];
-    return `Component '${first.componentId}' property '${mismatch.property}' has value '${mismatch.actual}' but pattern requires '${mismatch.expected}'`;
+  return [];
+}
+
+/**
+ * Resolves wildcard pattern to matching slot keys
+ * @param {string} pattern - Wildcard pattern (e.g., 'leg_*', '*_left')
+ * @param {string[]} slotKeys - Available slot keys
+ * @returns {string[]} Matched slot keys
+ */
+function resolveWildcardPattern(pattern, slotKeys) {
+  // Convert wildcard pattern to regex
+  const regexPattern = pattern.replace(/\*/g, '.*');
+  const regex = new RegExp(`^${regexPattern}$`);
+
+  return slotKeys.filter(key => regex.test(key));
+}
+
+/**
+ * Resolves property filter to matching slot keys
+ * @param {Object} filter - Property filter object
+ * @param {Object} slots - Blueprint slots object
+ * @returns {string[]} Matched slot keys
+ */
+function resolvePropertyFilter(filter, slots) {
+  const matches = [];
+
+  for (const [slotKey, slotDef] of Object.entries(slots)) {
+    let isMatch = true;
+
+    if (filter.slotType && slotDef.slotType !== filter.slotType) {
+      isMatch = false;
+    }
+
+    if (filter.orientation) {
+      const orientPattern = filter.orientation.replace(/\*/g, '.*');
+      const orientRegex = new RegExp(`^${orientPattern}$`);
+      if (!orientRegex.test(slotDef.orientation || '')) {
+        isMatch = false;
+      }
+    }
+
+    if (filter.socketId && slotDef.socket !== filter.socketId) {
+      isMatch = false;
+    }
+
+    if (isMatch) {
+      matches.push(slotKey);
+    }
   }
 
-  return 'Multiple requirements not met';
+  return matches;
+}
+
+/**
+ * Extracts matcher information for display
+ * @param {Object} pattern - Pattern definition
+ * @returns {Object} Formatted matcher info
+ */
+function extractMatcherInfo(pattern) {
+  if (pattern.matchesGroup) {
+    return { type: 'matchesGroup', value: pattern.matchesGroup };
+  }
+  if (pattern.matchesPattern !== undefined) {
+    return { type: 'matchesPattern', value: pattern.matchesPattern };
+  }
+  if (pattern.matchesAll) {
+    return { type: 'matchesAll', value: pattern.matchesAll };
+  }
+  if (Array.isArray(pattern.matches)) {
+    return { type: 'v1_explicit', value: pattern.matches };
+  }
+  return { type: 'none', value: null };
+}
+
+/**
+ * Identifies which matcher is blocking slot matches
+ * @param {Object} pattern - Pattern definition
+ * @param {Object} result - Match result from findMatchingSlots
+ * @returns {string} Description of blocking matcher
+ */
+function identifyBlockingMatcher(pattern, result) {
+  const { matcherType, matcherValue, availableSlots } = result;
+
+  if (matcherType === 'none') {
+    return 'No matcher defined (requires matchesGroup, matchesPattern, matchesAll, or matches array)';
+  }
+
+  if (matcherType === 'matchesGroup') {
+    return `Slot group '${matcherValue}' not found in blueprint's structure template or produced 0 slots`;
+  }
+
+  if (matcherType === 'matchesPattern') {
+    if (availableSlots.length === 0) {
+      return `Blueprint has no slots defined`;
+    }
+    return `Pattern '${matcherValue}' does not match any of ${availableSlots.length} available slot keys`;
+  }
+
+  if (matcherType === 'matchesAll') {
+    const filterStr = JSON.stringify(matcherValue);
+    return `Property filter ${filterStr} does not match any blueprint slots`;
+  }
+
+  if (matcherType === 'v1_explicit') {
+    return `None of the explicit slot keys ${JSON.stringify(matcherValue)} exist in blueprint`;
+  }
+
+  return 'Unknown matcher blocking issue';
 }
 
 /**
  * Suggests how to fix pattern matching issue
  * @param {Object} pattern - Pattern definition
- * @param {Array} almostMatches - Almost-matching entities
+ * @param {Object} result - Match result from findMatchingSlots
  * @returns {string} Fix suggestion
  */
-function suggestPatternFix(pattern, almostMatches) {
-  if (almostMatches.length === 0) {
-    return `Create entity with partType '${pattern.partType}' or adjust pattern requirements`;
+function suggestPatternFix(pattern, result) {
+  const { matcherType, matcherValue, availableSlots } = result;
+
+  if (matcherType === 'none') {
+    return 'Add a matcher property: matchesGroup (e.g., "limbSet:leg"), matchesPattern (e.g., "leg_*"), matchesAll, or matches array';
   }
 
-  const topMatch = almostMatches[0];
-  const entity = topMatch.entity;
-  const missing = topMatch.missingRequirements[0];
-
-  if (!missing) {
-    return 'Entity almost matches - review pattern requirements';
+  if (matcherType === 'matchesGroup') {
+    const [groupType, groupId] = matcherValue.split(':');
+    return `Add ${groupType} with type '${groupId}' to the blueprint's structure template topology, or use a different slot group`;
   }
 
-  if (missing.type === 'component') {
-    return `Add component '${missing.componentId}' to entity '${entity.id}' at ${entity.filePath}`;
+  if (matcherType === 'matchesPattern') {
+    if (availableSlots.length === 0) {
+      return 'Blueprint has no slots - verify blueprint has structureTemplate with limbSets/appendages';
+    }
+    const suggestions = availableSlots.slice(0, 5).join(', ');
+    return `Adjust pattern to match available slots. Available: ${suggestions}${availableSlots.length > 5 ? '...' : ''}`;
   }
 
-  if (missing.type === 'properties') {
-    const mismatch = missing.mismatches[0];
-    return `Change ${entity.id}.${missing.componentId}.${mismatch.property} from '${mismatch.actual}' to '${mismatch.expected}'`;
+  if (matcherType === 'matchesAll') {
+    return `Adjust property filter criteria or add slots to blueprint that match the filter`;
   }
 
-  if (missing.type === 'partType') {
-    return `Entity '${entity.id}' has partType '${missing.actual}', pattern requires '${missing.expected}'`;
+  if (matcherType === 'v1_explicit') {
+    const available = availableSlots.slice(0, 5).join(', ');
+    return `Update matches array to use existing slot keys. Available: ${available}${availableSlots.length > 5 ? '...' : ''}`;
   }
 
-  return 'Adjust pattern requirements or create new entity';
+  return 'Adjust pattern matcher or update blueprint structure';
 }
 ```
 
@@ -303,15 +365,31 @@ function suggestPatternFix(pattern, almostMatches) {
 
 ```javascript
 // In RecipePreflightValidator (ANASYSIMP-003)
-#checkPatternMatching(recipe, results) {
+async #checkPatternMatching(recipe, results) {
   try {
-    const warnings = validatePatternMatching(recipe, this.#entityRegistry);
+    // Get blueprint for the recipe
+    const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
+
+    if (!blueprint) {
+      this.#logger.warn(`Cannot validate patterns: blueprint '${recipe.blueprintId}' not found`);
+      return;
+    }
+
+    // Need SlotGenerator instance - retrieve from DI container
+    const slotGenerator = this.#slotGenerator; // Assume injected dependency
+
+    const warnings = validatePatternMatching(
+      recipe,
+      blueprint,
+      this.#dataRegistry,
+      slotGenerator
+    );
 
     if (warnings.length === 0) {
       const patternCount = (recipe.patterns || []).length;
       results.passed.push({
         check: 'pattern_matching',
-        message: `All ${patternCount} pattern(s) have matching entities`,
+        message: `All ${patternCount} pattern(s) have matching slots`,
       });
     } else {
       results.warnings.push(...warnings);
@@ -325,6 +403,21 @@ function suggestPatternFix(pattern, almostMatches) {
       error: error.message,
     });
   }
+}
+```
+
+**Required Dependency Updates:**
+```javascript
+// RecipePreflightValidator constructor needs SlotGenerator
+constructor({
+  dataRegistry,
+  anatomyBlueprintRepository,
+  schemaValidator,
+  slotGenerator,  // NEW: Add SlotGenerator dependency
+  logger,
+}) {
+  // ... existing validation ...
+  this.#slotGenerator = slotGenerator;
 }
 ```
 
@@ -346,14 +439,15 @@ tests/integration/anatomy/validation/
 
 ## Acceptance Criteria
 
-- [ ] Validator performs dry-run of pattern matching
-- [ ] Validator detects patterns with zero matching entities
-- [ ] Warnings include pattern ID and requirements
-- [ ] Warnings identify blocking requirement
-- [ ] Warnings suggest almost-matching entities (top 5)
-- [ ] Warnings include fix suggestions
-- [ ] Almost-match scoring prioritizes partType > components > properties
+- [ ] Validator performs dry-run of slot matching using pattern matchers
+- [ ] Validator detects patterns with zero matching slots
+- [ ] Warnings include pattern description and matcher type/value
+- [ ] Warnings identify which matcher is blocking matches
+- [ ] Warnings list available blueprint slots (for context)
+- [ ] Warnings include actionable fix suggestions
+- [ ] Supports all pattern types: v1 (matches array), matchesGroup, matchesPattern, matchesAll
 - [ ] Integration with ANASYSIMP-003 pre-flight validator works correctly
+- [ ] RecipePreflightValidator receives SlotGenerator dependency
 - [ ] Patterns with matches do not generate warnings
 - [ ] All existing recipes pass validation (warnings acceptable for known issues)
 
@@ -361,75 +455,89 @@ tests/integration/anatomy/validation/
 
 ### Unit Tests
 
-1. **Entity Matching**
-   - Entity with exact match → isFullMatch = true
-   - Entity with partType mismatch → missing includes partType
-   - Entity missing component → missing includes component
-   - Entity with property mismatch → missing includes properties
-   - Entity with partial match → isPartialMatch = true
+1. **Slot Matching - V1 Patterns**
+   - Explicit matches with all slots existing → matches found
+   - Explicit matches with missing slots → zero matches, warning
+   - Empty matches array → zero matches
 
-2. **Match Scoring**
-   - Exact match: high score
-   - partType + components: medium score
-   - Components only: lower score
-   - Scoring prioritizes critical requirements
+2. **Slot Matching - matchesGroup**
+   - Valid limbSet reference → resolves to slot keys
+   - Valid appendage reference → resolves to slot keys
+   - Non-existent slot group → zero matches, warning
+   - Blueprint without structureTemplate → error/warning
 
-3. **Pattern Validation**
-   - Pattern with no matches → warning generated
-   - Pattern with matches → no warning
-   - Pattern with almost-matches → suggests closest
+3. **Slot Matching - matchesPattern**
+   - Wildcard pattern matching slots → matches found
+   - Wildcard pattern with no matches → warning
+   - Complex patterns (`*_left`, `leg_*_front`) → correct matching
 
-4. **Blocking Requirement Detection**
-   - No matches → "No entities with partType"
-   - Missing component → identifies component
-   - Property mismatch → identifies property and values
+4. **Slot Matching - matchesAll**
+   - Property filter matching slots → matches found
+   - Property filter with no matches → warning
+   - Multiple property criteria → correct filtering
 
-5. **Fix Suggestions**
-   - No almost-matches → suggest creating entity
-   - Missing component → suggest adding to entity
-   - Property mismatch → suggest changing value
-   - partType mismatch → explain incompatibility
+5. **Matcher Detection**
+   - Pattern without matcher → "no matcher" warning
+   - Pattern with invalid matcher → appropriate error
 
-6. **Edge Cases**
+6. **Fix Suggestions**
+   - matchesGroup failure → suggest adding to structure template
+   - matchesPattern failure → list available slots
+   - matchesAll failure → suggest adjusting filter
+   - No matcher → suggest adding matcher
+
+7. **Edge Cases**
    - Recipe with no patterns → no warnings
-   - Pattern with no requirements → matches all
-   - Entity registry empty → all patterns warn
+   - Blueprint with no slots → all patterns warn
+   - Pattern with exclusions → validates post-exclusion matches
 
 ### Integration Tests
 
-1. **Real Entity Registry**
-   - Test with actual entity definitions
-   - Verify pattern matching logic works correctly
-   - Test with complex property requirements
+1. **Real Blueprint & Structure Template Integration**
+   - Test with actual blueprint and structure template definitions
+   - Verify slot group resolution works correctly
+   - Test with complex blueprint topologies (multiple limbSets, appendages)
 
 2. **Pre-flight Integration**
    - Pattern warnings appear in validation report
    - Warnings don't block recipe load (only errors do)
    - Passed patterns tracked correctly
+   - SlotGenerator dependency properly injected
 
 3. **Multi-Pattern Scenarios**
    - Multiple patterns, some match → only non-matching warn
    - All patterns match → no warnings
    - No patterns match → all warn with suggestions
+   - Mix of v1 and v2 patterns → all validated correctly
+
+4. **Existing Recipe Validation**
+   - Test all recipes in data/mods/anatomy/recipes/
+   - Verify known working recipes pass validation
+   - Document any expected warnings from legacy patterns
 
 ## Documentation Requirements
 
 - [ ] Add JSDoc comments to validation functions
-- [ ] Document pattern matching in validation workflow docs
+- [ ] Document slot matching validation in validation workflow docs
 - [ ] Add example warnings to common errors catalog
 - [ ] Update recipe creation checklist with pattern validation guidance
-- [ ] Document almost-match scoring algorithm
+- [ ] Document pattern matcher types (v1, matchesGroup, matchesPattern, matchesAll)
+- [ ] Add troubleshooting guide for common zero-match scenarios
 
 ## Dependencies
 
 **Required:**
-- Entity registry with `getAllEntities()` method
+- `IDataRegistry` - Access to structure templates and blueprints
+- `IAnatomyBlueprintRepository` - Retrieve blueprint for recipe
+- `SlotGenerator` - Extract slot keys from limbSets/appendages
+- `ILogger` - Logging
 
 **Depends On:**
 - None (independent validator)
 
 **Integrates With:**
 - ANASYSIMP-003 (Pre-flight Recipe Validator) - uses this
+- Existing RecipePatternResolver logic for matcher functions
 
 **Blocks:**
 - None (optional validation feature)
@@ -444,62 +552,72 @@ Pattern matching issues are **warnings**, not errors, because:
 - Zero matches may be temporary during development
 - Should inform but not block recipe loading
 
-### Almost-Match Algorithm
+### Slot Matching Algorithm
 
-The scoring system prioritizes:
-1. **partType** (40 points) - Most critical requirement
-2. **Components** (20 points each) - Required functionality
-3. **Properties** (10 points each) - Fine-tuning
+The validation performs a dry-run of pattern resolution using the same logic as RecipePatternResolver:
 
-This ensures suggestions show entities that need minimal changes.
+1. **V1 Patterns** - Check if explicit slot keys exist in blueprint
+2. **matchesGroup** - Resolve slot group from structure template topology
+3. **matchesPattern** - Apply wildcard matching against blueprint slot keys
+4. **matchesAll** - Filter blueprint slots by property criteria
+
+This ensures validation mirrors actual runtime behavior.
 
 ### Performance Considerations
 
-- Dry-run doesn't instantiate entities (lightweight)
-- Entity registry iteration: O(n) where n = total entities
-- Pattern matching: O(p * n) where p = patterns, n = entities
-- Expected: 5-10 patterns, 50-200 entities
-- Performance impact: ~20-50ms per recipe
+- Dry-run doesn't process blueprint or generate entities (lightweight)
+- Slot matching: O(p * s) where p = patterns, s = blueprint slots
+- Structure template resolution: O(g) where g = slot groups (limbSets + appendages)
+- Expected: 5-10 patterns, 10-50 slots per blueprint
+- Performance impact: ~5-15ms per recipe
 - Acceptable for load-time validation
+- Can be skipped with `skipPatternValidation` option
 
 ### Error Message Template
 
 ```
-[WARNING] Pattern has no matching entities
+[WARNING] Pattern has no matching slots
 
-Context:  Recipe 'red_dragon.recipe.json', Pattern 'limbSet:wing'
-Problem:  No entities found matching pattern requirements
-Impact:   Wing slots will not be generated
-Fix:      Add component to entity or adjust pattern requirements
+Context:  Recipe 'anatomy:red_dragon', Pattern matchesGroup 'limbSet:wing'
+Problem:  No slots found matching pattern matcher
+Impact:   Pattern will not create any slot definitions
+Fix:      Add limbSet to structure template or adjust pattern matcher
 
-Pattern Requirements:
-  - Part Type: dragon_wing
-  - Required Components: [anatomy:part, descriptors:length_category]
-  - Required Properties: {
-      "descriptors:length_category": { "length": "immense" }
-    }
+Pattern Matcher:
+  - Type: matchesGroup
+  - Value: limbSet:wing
+  - Blueprint: anatomy:red_dragon (references structureTemplate 'dragon_quadruped')
 
-Almost Matches (closest first):
-  1. anatomy:dragon_wing (Score: 60/100)
-     Missing: descriptors:length_category component
-     Fix: Add to data/mods/anatomy/entities/definitions/dragon_wing.entity.json:
-          {
-            "descriptors:length_category": { "length": "immense" }
-          }
+Available Slots in Blueprint:
+  - head, neck, torso, leg_left_front, leg_right_front, leg_left_rear, leg_right_rear, tail
 
-  2. anatomy:bird_wing (Score: 40/100)
-     Missing: partType mismatch (bird_wing vs dragon_wing)
-     Fix: Create new dragon_wing entity or adjust pattern
+Diagnosis:
+  Slot group 'limbSet:wing' not found in structure template 'dragon_quadruped' topology.
+  The structure template has limbSets: [leg], appendages: [tail]
 
-Suggestion: Add descriptor component to dragon_wing entity
+Suggestions:
+  1. Add a limbSet with type 'wing' to the structure template topology:
+     {
+       "type": "wing",
+       "count": 2,
+       "socketPattern": "wing_{{orientation}}",
+       "arrangement": "bilateral"
+     }
+
+  2. OR use a different pattern matcher for existing slots:
+     - matchesPattern: "wing_*" (if wing slots exist)
+     - matchesAll: { "slotType": "wing" }
+
+  3. OR remove this pattern from the recipe if wings are not needed
 ```
 
 ## Success Metrics
 
-- **Warning Detection:** 100% of zero-match patterns detected
-- **False Positives:** <10% (some patterns intentionally have no matches)
-- **Suggestion Quality:** >80% of top suggestions are actionable
-- **Time Savings:** 15-30 minutes per pattern issue (eliminated console log hunting)
+- **Warning Detection:** 100% of zero-match patterns detected at load time
+- **False Positives:** <5% (patterns without matchers are valid warnings)
+- **Actionable Suggestions:** >90% of suggestions provide clear fix guidance
+- **Time Savings:** 10-20 minutes per pattern issue (early detection vs. runtime debugging)
+- **Developer Experience:** Pattern issues visible in console during recipe load, not hidden in debug logs
 
 ## References
 
