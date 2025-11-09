@@ -534,12 +534,18 @@ class RecipePreflightValidator {
             continue;
           }
 
-          // Build combined requirements: pattern requirements + socket allowed types
+          // Build combined requirements: pattern requirements + socket allowed types + blueprint slot requirements
           const combinedRequirements = {
             partType: pattern.partType,
             allowedTypes: blueprintSlot.allowedTypes || ['*'],
-            tags: pattern.tags || [],
-            properties: pattern.properties || {},
+            tags: [
+              ...(pattern.tags || []),
+              ...(blueprintSlot.requirements?.components || []),
+            ],
+            properties: {
+              ...(pattern.properties || {}),
+              ...(blueprintSlot.requirements?.properties || {}),
+            },
           };
 
           // Find matching entities
@@ -564,14 +570,16 @@ class RecipePreflightValidator {
                 patternIndex,
                 partType: pattern.partType,
                 allowedTypes: blueprintSlot.allowedTypes,
-                requiredTags: pattern.tags || [],
-                requiredProperties: Object.keys(pattern.properties || {}),
+                requiredTags: combinedRequirements.tags,
+                requiredProperties: Object.keys(combinedRequirements.properties),
                 totalEntitiesChecked: allEntityDefs.length,
+                blueprintRequiredComponents: blueprintSlot.requirements?.components || [],
+                blueprintRequiredProperties: Object.keys(blueprintSlot.requirements?.properties || {}),
               },
               fix: `Create an entity definition in data/mods/anatomy/entities/definitions/ with:\n` +
                 `  - anatomy:part component with subType: "${pattern.partType}"\n` +
-                `  - Required tags: ${JSON.stringify(pattern.tags || [])}\n` +
-                `  - Required property components: ${JSON.stringify(Object.keys(pattern.properties || {}))}`,
+                `  - Required tags (pattern + blueprint): ${JSON.stringify(combinedRequirements.tags)}\n` +
+                `  - Required property components: ${JSON.stringify(Object.keys(combinedRequirements.properties))}`,
             });
           }
         }
