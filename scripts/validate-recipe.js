@@ -16,10 +16,9 @@ import chalk from 'chalk';
 import { promises as fs } from 'fs';
 import path from 'path';
 import RecipePreflightValidator from '../src/anatomy/validation/RecipePreflightValidator.js';
-import InMemoryDataRegistry from '../src/data/inMemoryDataRegistry.js';
-import AnatomyBlueprintRepository from '../src/anatomy/repositories/anatomyBlueprintRepository.js';
-import AjvSchemaValidator from '../src/validation/ajvSchemaValidator.js';
-import SlotGenerator from '../src/anatomy/slotGenerator.js';
+import AppContainer from '../src/dependencyInjection/appContainer.js';
+import { configureMinimalContainer } from '../src/dependencyInjection/minimalContainerConfig.js';
+import { tokens } from '../src/dependencyInjection/tokens.js';
 
 /**
  * Load a recipe file from disk
@@ -41,40 +40,96 @@ async function loadRecipeFile(recipePath) {
 }
 
 /**
- * Creates minimal validation context without full app load
- * Loads only the registries and services needed for validation
+ * Creates validation context with full mod loading
+ * Loads mods and all required services for validation
  *
+ * @param {boolean} verbose - Whether to show verbose output
  * @returns {Promise<object>} Validation dependencies
  */
-async function createMinimalContext() {
-  const logger = {
-    info: () => {}, // Silent in normal mode
-    warn: (msg) => console.warn(chalk.yellow(`⚠️  ${msg}`)),
-    error: (msg, err) => console.error(chalk.red(`❌ ${msg}`), err || ''),
-    debug: () => {}, // Silent debug
-  };
+async function createValidationContext(verbose = false) {
+  // Create and configure container
+  const container = new AppContainer();
+  await configureMinimalContainer(container);
 
-  // Create data registry (empty for Phase 1)
-  const dataRegistry = new InMemoryDataRegistry({ logger });
+  // Override data fetchers for CLI environment
+  const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
+  const NodeTextDataFetcher = (await import('./utils/nodeTextDataFetcher.js')).default;
+  container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
+  container.register(tokens.ITextDataFetcher, () => new NodeTextDataFetcher());
 
-  // Create anatomy blueprint repository
-  const anatomyBlueprintRepository = new AnatomyBlueprintRepository({
-    logger,
-    dataRegistry,
-  });
+  // Resolve core services
+  const dataRegistry = container.resolve(tokens.IDataRegistry);
+  const anatomyBlueprintRepository = container.resolve(tokens.IAnatomyBlueprintRepository);
+  const schemaValidator = container.resolve(tokens.ISchemaValidator);
+  const slotGenerator = container.resolve(tokens.ISlotGenerator);
 
-  // Create schema validator
-  const schemaValidator = new AjvSchemaValidator({ logger });
+  // Load mods
+  if (verbose) {
+    console.log(chalk.blue('📚 Loading mods...'));
+  }
 
-  // Create slot generator
-  const slotGenerator = new SlotGenerator({ logger });
+  try {
+    // Load only essential mods for recipe validation
+    // These mods contain the core components and anatomy system
+    const essentialMods = [
+      'core',
+      'descriptors',
+      'anatomy',
+    ];
+
+    if (verbose) {
+      console.log(chalk.blue(`   Loading ${essentialMods.length} essential mods: ${essentialMods.join(', ')}`));
+    }
+
+    // Manually run only the necessary phases to avoid GameConfigPhase
+    // which would override our mod list with game.json
+    const { createLoadContext } = await import('../src/loaders/LoadContext.js');
+
+    // Create load context
+    let context = createLoadContext({
+      worldName: 'recipe-validation',
+      requestedMods: essentialMods,
+      registry: dataRegistry,
+    });
+
+    // Execute only the phases we need
+    const schemaPhase = container.resolve(tokens.SchemaPhase);
+    const manifestPhase = container.resolve(tokens.ManifestPhase);
+    const contentPhase = container.resolve(tokens.ContentPhase);
+
+    if (verbose) {
+      console.log(chalk.blue('   Running SchemaPhase...'));
+    }
+    context = await schemaPhase.execute(context);
+
+    if (verbose) {
+      console.log(chalk.blue('   Running ManifestPhase...'));
+    }
+    context = await manifestPhase.execute(context);
+
+    if (verbose) {
+      console.log(chalk.blue('   Running ContentPhase...'));
+    }
+    context = await contentPhase.execute(context);
+
+    if (verbose) {
+      console.log(chalk.green(`✅ Loaded ${context.finalModOrder.length} mods successfully`));
+    }
+  } catch (error) {
+    throw new Error(`Failed to load mods: ${error.message}`);
+  }
 
   return {
     dataRegistry,
     anatomyBlueprintRepository,
     schemaValidator,
     slotGenerator,
-    logger,
+    logger: {
+      info: verbose ? (msg) => console.log(chalk.blue(msg)) : () => {},
+      warn: (msg) => console.warn(chalk.yellow(`⚠️  ${msg}`)),
+      error: (msg, err) => console.error(chalk.red(`❌ ${msg}`), err || ''),
+      debug: verbose ? (msg) => console.log(chalk.gray(msg)) : () => {},
+    },
   };
 }
 
@@ -120,12 +175,12 @@ program
         process.exit(1);
       }
 
-      // Load minimal context (registries only)
+      // Load validation context (with mod loading)
       if (options.verbose) {
-        console.log(chalk.blue('\n🔧 Creating validation context...\n'));
+        console.log(chalk.blue('\n🔧 Creating validation context and loading mods...\n'));
       }
 
-      const context = await createMinimalContext();
+      const context = await createValidationContext(options.verbose);
       const validator = new RecipePreflightValidator(context);
       const results = [];
 
