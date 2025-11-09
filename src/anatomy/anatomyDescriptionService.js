@@ -54,7 +54,7 @@ export class AnatomyDescriptionService {
           bodyEntity.id,
           bodyDescription
         );
-        this.descriptionPersistenceService.updateMultipleDescriptions(
+        await this.descriptionPersistenceService.updateMultipleDescriptions(
           partDescriptions
         );
       }

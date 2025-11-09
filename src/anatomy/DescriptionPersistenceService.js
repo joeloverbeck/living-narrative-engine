@@ -67,21 +67,47 @@ export class DescriptionPersistenceService {
 
   /**
    * Update descriptions for multiple entities
+   * Uses batch component addition to avoid deep event recursion chains
    *
    * @param {Map<string, string>} descriptionsMap - Map of entityId to description
-   * @returns {{successful: number, failed: string[]}} Update results
+   * @returns {Promise<{successful: number, failed: string[]}>} Update results
    */
-  updateMultipleDescriptions(descriptionsMap) {
-    let successful = 0;
-    const failed = [];
-
+  async updateMultipleDescriptions(descriptionsMap) {
+    // Convert descriptions map to component specs for batch operation
+    const componentSpecs = [];
     for (const [entityId, description] of descriptionsMap) {
-      if (this.updateDescription(entityId, description)) {
-        successful++;
-      } else {
-        failed.push(entityId);
+      // Verify entity exists before adding to batch
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      if (!entity) {
+        this.#logger.warn(
+          `DescriptionPersistenceService: Entity '${entityId}' not found, skipping in batch`
+        );
+        continue;
       }
+
+      componentSpecs.push({
+        instanceId: entityId,
+        componentTypeId: DESCRIPTION_COMPONENT_ID,
+        componentData: { text: description },
+      });
     }
+
+    // Early return if no valid component specs
+    if (componentSpecs.length === 0) {
+      this.#logger.info(
+        `DescriptionPersistenceService: Updated 0 descriptions, 0 failed`
+      );
+      return { successful: 0, failed: [] };
+    }
+
+    // Use optimized batch addition to avoid recursion warnings
+    const { results, errors } = await this.#entityManager.batchAddComponentsOptimized(
+      componentSpecs,
+      true // Emit single batch event instead of individual events
+    );
+
+    const successful = results.length;
+    const failed = errors.map((e) => e.spec.instanceId);
 
     this.#logger.info(
       `DescriptionPersistenceService: Updated ${successful} descriptions, ${failed.length} failed`
