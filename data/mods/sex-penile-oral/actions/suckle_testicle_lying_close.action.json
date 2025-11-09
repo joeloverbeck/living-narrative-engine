@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:suckle_testicle_lying_close",
+  "name": "Suckle Testicle (Lying Close)",
+  "description": "Suckle on a partner's testicle while both are lying close together. Requires both participants to be lying down on the same furniture with mutual closeness. The partner must have at least one exposed testicle.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_lying_close_with_uncovered_testicle",
+      "placeholder": "primary",
+      "description": "Partner lying close with exposed testicles"
+    }
+  },
+  "template": "suckle on {primary}'s testicle",
+  "prerequisites": [],
+  "required_components": {
+    "actor": ["positioning:lying_down", "positioning:closeness"],
+    "primary": ["positioning:lying_down", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
