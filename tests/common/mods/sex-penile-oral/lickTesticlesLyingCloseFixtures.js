@@ -42,100 +42,113 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   const rightTesticleId = 'body-part-nolan-right-testicle';
   const clothingId = 'clothing-underwear';
 
-  const entities = {
-    [actorId]: {
-      id: actorId,
-      components: {
-        'core:name': { name: 'Ava' },
-        'core:position': { locationId: roomId },
-        ...(includeActorLying && {
-          'positioning:lying_down': {
-            furniture_id: bedId,
-            state: 'lying_on_back',
-          },
-        }),
-        ...(includeCloseness && {
-          'positioning:closeness': { partners: [primaryId] },
-        }),
-        ...(actorGivingBlowjob && {
-          'positioning:giving_blowjob': { target_id: primaryId },
-        }),
-      },
-    },
-    [primaryId]: {
-      id: primaryId,
-      components: {
-        'core:name': { name: 'Nolan' },
-        'core:position': { locationId: roomId },
-        'anatomy:body': {
-          slots: {
-            left_testicle: {
-              part_id: leftTesticleId,
-              ...(coverLeftTesticle && { covered_by: [clothingId] }),
-            },
-            right_testicle: {
-              part_id: rightTesticleId,
-              ...(coverRightTesticle && { covered_by: [clothingId] }),
-            },
-          },
+  // Build room
+  const room = new ModEntityBuilder(roomId).withName('Bedroom').asRoom('Bedroom').build();
+
+  // Build furniture
+  const bed = new ModEntityBuilder(bedId)
+    .withName('Bed')
+    .atLocation(roomId)
+    .withLocationComponent(roomId)
+    .withComponent('positioning:allows_lying', {})
+    .build();
+
+  const secondBed = useDifferentFurniture
+    ? new ModEntityBuilder(secondBedId)
+        .withName('Second Bed')
+        .atLocation(roomId)
+        .withLocationComponent(roomId)
+        .withComponent('positioning:allows_lying', {})
+        .build()
+    : null;
+
+  // Build actor
+  const actorBuilder = new ModEntityBuilder(actorId)
+    .withName('Ava')
+    .atLocation(roomId)
+    .withLocationComponent(roomId)
+    .asActor();
+
+  if (includeActorLying) {
+    actorBuilder.withComponent('positioning:lying_down', {
+      furniture_id: bedId,
+      state: 'lying_on_back',
+    });
+  }
+
+  if (includeCloseness) {
+    actorBuilder.closeToEntity(primaryId);
+  }
+
+  if (actorGivingBlowjob) {
+    actorBuilder.withComponent('positioning:giving_blowjob', { target_id: primaryId });
+  }
+
+  const actor = actorBuilder.build();
+
+  // Build primary with anatomy
+  const primaryBuilder = new ModEntityBuilder(primaryId)
+    .withName('Nolan')
+    .atLocation(roomId)
+    .withLocationComponent(roomId)
+    .asActor()
+    .withComponent('anatomy:body', {
+      slots: {
+        left_testicle: {
+          part_id: leftTesticleId,
+          ...(coverLeftTesticle && { covered_by: [clothingId] }),
         },
-        ...(includePrimaryLying && {
-          'positioning:lying_down': {
-            furniture_id: useDifferentFurniture ? secondBedId : bedId,
-            state: 'lying_on_back',
-          },
-        }),
-        ...(includeCloseness && {
-          'positioning:closeness': { partners: [actorId] },
-        }),
-        ...(targetFuckingActor && {
-          'positioning:fucking_vaginally': { targetId: actorId },
-        }),
-      },
-    },
-    [roomId]: {
-      id: roomId,
-      components: {
-        'core:name': { name: 'Bedroom' },
-      },
-    },
-    [bedId]: {
-      id: bedId,
-      components: {
-        'core:name': { name: 'Bed' },
-        'furniture:allows_lying': {},
-      },
-    },
-    ...(useDifferentFurniture && {
-      [secondBedId]: {
-        id: secondBedId,
-        components: {
-          'core:name': { name: 'Second Bed' },
-          'furniture:allows_lying': {},
+        right_testicle: {
+          part_id: rightTesticleId,
+          ...(coverRightTesticle && { covered_by: [clothingId] }),
         },
       },
-    }),
-    [leftTesticleId]: {
-      id: leftTesticleId,
-      components: {
-        'anatomy:body_part': { type: 'testicle' },
-      },
-    },
-    [rightTesticleId]: {
-      id: rightTesticleId,
-      components: {
-        'anatomy:body_part': { type: 'testicle' },
-      },
-    },
-    ...((coverLeftTesticle || coverRightTesticle) && {
-      [clothingId]: {
-        id: clothingId,
-        components: {
-          'items:clothing': { slot: 'groin' },
-        },
-      },
-    }),
-  };
+    });
+
+  if (includePrimaryLying) {
+    primaryBuilder.withComponent('positioning:lying_down', {
+      furniture_id: useDifferentFurniture ? secondBedId : bedId,
+      state: 'lying_on_back',
+    });
+  }
+
+  if (includeCloseness) {
+    primaryBuilder.closeToEntity(actorId);
+  }
+
+  if (targetFuckingActor) {
+    primaryBuilder.withComponent('positioning:fucking_vaginally', { targetId: actorId });
+  }
+
+  const primary = primaryBuilder.build();
+
+  // Build body parts
+  const leftTesticle = new ModEntityBuilder(leftTesticleId)
+    .withComponent('anatomy:body_part', { type: 'testicle' })
+    .build();
+
+  const rightTesticle = new ModEntityBuilder(rightTesticleId)
+    .withComponent('anatomy:body_part', { type: 'testicle' })
+    .build();
+
+  // Build clothing if needed
+  const clothing =
+    coverLeftTesticle || coverRightTesticle
+      ? new ModEntityBuilder(clothingId)
+          .withComponent('items:clothing', { slot: 'groin' })
+          .build()
+      : null;
+
+  const entities = [
+    room,
+    bed,
+    ...(secondBed ? [secondBed] : []),
+    actor,
+    primary,
+    leftTesticle,
+    rightTesticle,
+    ...(clothing ? [clothing] : []),
+  ];
 
   return {
     entities,
@@ -157,22 +170,30 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
  * @returns {Function} Cleanup function to restore original scope resolver
  */
 export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
-  const originalResolver = testFixture.testEnv.scopeResolver.resolve.bind(
-    testFixture.testEnv.scopeResolver
-  );
+  const resolver = testFixture.testEnv.unifiedScopeResolver;
+  const originalResolveSync = resolver.resolveSync.bind(resolver);
 
-  testFixture.testEnv.scopeResolver.resolve = (scopeId, context) => {
-    if (scopeId === 'sex-core:actors_lying_close_with_uncovered_testicle') {
-      const { actor } = context;
-      const actorEntity = testFixture.entityManager.getEntity(actor);
+  resolver.resolveSync = (scopeName, context) => {
+    if (scopeName === 'sex-core:actors_lying_close_with_uncovered_testicle') {
+      const actorId = context?.actor?.id;
+
+      if (!actorId) {
+        return { success: true, value: new Set() };
+      }
+
+      const actorEntity = testFixture.entityManager.getEntity(actorId);
 
       // Get actor's lying position
       const actorLying = actorEntity?.components['positioning:lying_down'];
-      if (!actorLying) return [];
+      if (!actorLying) {
+        return { success: true, value: new Set() };
+      }
 
       // Get actor's closeness partners
       const actorCloseness = actorEntity?.components['positioning:closeness'];
-      if (!actorCloseness?.partners) return [];
+      if (!actorCloseness?.partners) {
+        return { success: true, value: new Set() };
+      }
 
       // Filter partners by criteria
       const validPartners = actorCloseness.partners.filter((partnerId) => {
@@ -188,7 +209,7 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
 
         // Check mutual closeness
         const partnerCloseness = partnerEntity.components['positioning:closeness'];
-        if (!partnerCloseness?.partners?.includes(actor)) return false;
+        if (!partnerCloseness?.partners?.includes(actorId)) return false;
 
         // Check for testicle anatomy
         const partnerBody = partnerEntity.components['anatomy:body'];
@@ -212,19 +233,19 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
 
         // Check not currently fucking actor vaginally
         const fuckingVaginally = partnerEntity.components['positioning:fucking_vaginally'];
-        if (fuckingVaginally?.targetId === actor) return false;
+        if (fuckingVaginally?.targetId === actorId) return false;
 
         return true;
       });
 
-      return validPartners;
+      return { success: true, value: new Set(validPartners) };
     }
 
-    return originalResolver(scopeId, context);
+    return originalResolveSync(scopeName, context);
   };
 
   // Return cleanup function
   return () => {
-    testFixture.testEnv.scopeResolver.resolve = originalResolver;
+    resolver.resolveSync = originalResolveSync;
   };
 }
