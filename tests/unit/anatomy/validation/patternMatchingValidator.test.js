@@ -13,6 +13,7 @@ import {
   identifyBlockingMatcher,
   suggestPatternFix,
 } from '../../../../src/anatomy/validation/patternMatchingValidator.js';
+import * as groupMatcher from '../../../../src/anatomy/recipePatternResolver/matchers/groupMatcher.js';
 
 describe('Pattern Matching Validator - Unit Tests', () => {
   let mockLogger;
@@ -341,6 +342,44 @@ describe('Pattern Matching Validator - Unit Tests', () => {
 
       expect(result.matches).toEqual([]);
       expect(result.matcherType).toBe('matchesGroup');
+    });
+
+    it('should log debug message when slot group resolution throws', () => {
+      const pattern = {
+        matchesGroup: 'limbSet:leg',
+        partType: 'leg',
+      };
+      const blueprint = {
+        id: 'test:blueprint',
+        structureTemplate: 'test:structure',
+        slots: {},
+      };
+
+      const error = new Error('resolution failed');
+      const spy = jest
+        .spyOn(groupMatcher, 'resolveSlotGroup')
+        .mockImplementation(() => {
+          throw error;
+        });
+
+      const result = findMatchingSlots(
+        pattern,
+        blueprint,
+        mockDataRegistry,
+        mockSlotGenerator,
+        mockLogger
+      );
+
+      expect(result).toMatchObject({
+        matches: [],
+        matcherType: 'matchesGroup',
+        matcherValue: 'limbSet:leg',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "matchesGroup 'limbSet:leg' resolution failed: resolution failed"
+      );
+
+      spy.mockRestore();
     });
   });
 
@@ -742,6 +781,53 @@ describe('Pattern Matching Validator - Unit Tests', () => {
 
       expect(reason).toContain('Blueprint has no slots');
     });
+
+    it('should identify property filter mismatch', () => {
+      const pattern = { matchesAll: { slotType: 'wing' } };
+      const result = {
+        matcherType: 'matchesAll',
+        matcherValue: { slotType: 'wing' },
+        matches: [],
+        availableSlots: ['leg_1'],
+      };
+      const blueprint = { id: 'test:blueprint' };
+
+      const reason = identifyBlockingMatcher(pattern, result, blueprint);
+
+      expect(reason).toContain('Property filter');
+      expect(reason).toContain('slotType');
+    });
+
+    it('should identify missing explicit slot keys', () => {
+      const pattern = { matches: ['wing_left'] };
+      const result = {
+        matcherType: 'v1_explicit',
+        matcherValue: ['wing_left'],
+        matches: [],
+        availableSlots: ['leg_1'],
+      };
+      const blueprint = { id: 'test:blueprint' };
+
+      const reason = identifyBlockingMatcher(pattern, result, blueprint);
+
+      expect(reason).toContain('explicit slot keys');
+      expect(reason).toContain('wing_left');
+    });
+
+    it('should handle unknown matcher type', () => {
+      const pattern = { partType: 'leg' };
+      const result = {
+        matcherType: 'mystery_type',
+        matcherValue: 'mystery',
+        matches: [],
+        availableSlots: [],
+      };
+      const blueprint = { id: 'test:blueprint' };
+
+      const reason = identifyBlockingMatcher(pattern, result, blueprint);
+
+      expect(reason).toBe('Unknown matcher blocking issue');
+    });
   });
 
   describe('suggestPatternFix', () => {
@@ -807,6 +893,53 @@ describe('Pattern Matching Validator - Unit Tests', () => {
 
       expect(fix).toContain('Blueprint has no slots');
       expect(fix).toContain('structureTemplate');
+    });
+
+    it('should suggest adjusting property filter or blueprint for matchesAll', () => {
+      const pattern = { matchesAll: { slotType: 'wing' } };
+      const result = {
+        matcherType: 'matchesAll',
+        matcherValue: { slotType: 'wing' },
+        matches: [],
+        availableSlots: ['leg_left'],
+      };
+      const blueprint = { id: 'test:blueprint' };
+
+      const fix = suggestPatternFix(pattern, result, blueprint);
+
+      expect(fix).toContain('Adjust property filter criteria');
+      expect(fix).toContain('match the filter');
+    });
+
+    it('should suggest updating explicit matches array', () => {
+      const pattern = { matches: ['wing_left'] };
+      const result = {
+        matcherType: 'v1_explicit',
+        matcherValue: ['wing_left'],
+        matches: [],
+        availableSlots: ['leg_left', 'leg_right', 'arm_left', 'arm_right'],
+      };
+      const blueprint = { id: 'test:blueprint' };
+
+      const fix = suggestPatternFix(pattern, result, blueprint);
+
+      expect(fix).toContain('Update matches array');
+      expect(fix).toContain('leg_left');
+    });
+
+    it('should handle unknown matcher types with generic guidance', () => {
+      const pattern = { partType: 'leg' };
+      const result = {
+        matcherType: 'unexpected',
+        matcherValue: 'value',
+        matches: [],
+        availableSlots: ['leg_left'],
+      };
+      const blueprint = { id: 'test:blueprint' };
+
+      const fix = suggestPatternFix(pattern, result, blueprint);
+
+      expect(fix).toBe('Adjust pattern matcher or update blueprint structure');
     });
   });
 });
