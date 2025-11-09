@@ -3,7 +3,6 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import '../../../common/mods/domainMatchers.js';
 import {
   buildPenetrationScenario,
-  installPullOutScopeOverride,
   ACTION_ID,
 } from '../../../common/mods/sex-vaginal-penetration/pullPenisOutOfVaginaFixtures.js';
 import pullPenisOutOfVaginaAction from '../../../../data/mods/sex-vaginal-penetration/actions/pull_penis_out_of_vagina.action.json' assert { type: 'json' };
@@ -11,7 +10,6 @@ import pullPenisOutOfVaginaAction from '../../../../data/mods/sex-vaginal-penetr
 
 describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Discovery', () => {
   let testFixture;
-  let restoreScopeResolver;
 
   function configureActionDiscovery() {
     testFixture.testEnv.actionIndex.buildIndex([pullPenisOutOfVaginaAction]);
@@ -22,15 +20,11 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Discovery', 
       'sex-vaginal-penetration',
       ACTION_ID
     );
-    restoreScopeResolver = installPullOutScopeOverride(testFixture);
+    // Removed: restoreScopeResolver = installPullOutScopeOverride(testFixture);
+    // Now uses real scope loading from disk to catch scope resolution bugs
   });
 
   afterEach(() => {
-    if (restoreScopeResolver) {
-      restoreScopeResolver();
-      restoreScopeResolver = null;
-    }
-
     if (testFixture) {
       testFixture.cleanup();
       testFixture = null;

@@ -3,9 +3,9 @@
 sex-vaginal-penetration:actors_being_fucked_vaginally_by_me := actor.components.positioning:closeness.partners[][
   {
     "and": [
-      {"hasComponent": [".", "positioning:being_fucked_vaginally"]},
+      {"!!": {"var": "entity.components.positioning:being_fucked_vaginally"}},
       {"==": [
-        {"var": "components.positioning:being_fucked_vaginally.actorId"},
+        {"var": "entity.components.positioning:being_fucked_vaginally.actorId"},
         {"var": "actor.id"}
       ]}
     ]
