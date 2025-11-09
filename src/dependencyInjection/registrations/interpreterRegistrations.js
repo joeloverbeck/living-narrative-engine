@@ -164,6 +164,10 @@ export function registerInterpreters(container) {
       bind(tokens.RemoveSittingClosenessHandler)
     );
     registry.register(
+      'REMOVE_LYING_CLOSENESS',
+      bind(tokens.RemoveLyingClosenessHandler)
+    );
+    registry.register(
       'BREAK_CLOSENESS_WITH_TARGET',
       bind(tokens.BreakClosenessWithTargetHandler)
     );

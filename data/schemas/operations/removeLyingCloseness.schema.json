@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/removeLyingCloseness.schema.json",
+  "title": "REMOVE_LYING_CLOSENESS Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "REMOVE_LYING_CLOSENESS"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for removing closeness when actors no longer lie on the same furniture",
+      "properties": {
+        "furniture_id": {
+          "description": "The furniture entity where the actor was lying",
+          "type": "string",
+          "minLength": 1
+        },
+        "actor_id": {
+          "description": "The actor who stood up and may lose closeness relationships",
+          "type": "string",
+          "minLength": 1
+        },
+        "result_variable": {
+          "description": "Optional variable name to store operation result for rule conditions",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["furniture_id", "actor_id"],
+      "additionalProperties": false
+    }
+  }
+}

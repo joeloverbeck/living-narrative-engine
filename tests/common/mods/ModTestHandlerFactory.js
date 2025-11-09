@@ -682,6 +682,23 @@ export class ModTestHandlerFactory {
       };
     }
 
+    // Ensure entityManager has getEntitiesWithComponent for EstablishLyingClosenessHandler
+    if (typeof entityManager.getEntitiesWithComponent !== 'function') {
+      entityManager.getEntitiesWithComponent = (componentId) => {
+        // Find all entities with the given component
+        const entityIds = entityManager.getEntityIds();
+        const entitiesWithComponent = [];
+
+        for (const entityId of entityIds) {
+          if (entityManager.hasComponent(entityId, componentId)) {
+            entitiesWithComponent.push(entityId);
+          }
+        }
+
+        return entitiesWithComponent;
+      };
+    }
+
     const baseHandlers = this.createStandardHandlers(
       entityManager,
       eventBus,

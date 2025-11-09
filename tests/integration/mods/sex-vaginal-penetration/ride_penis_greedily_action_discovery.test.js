@@ -60,7 +60,7 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
       expect(ridePenisGreedilyAction.required_components.actor).toEqual([
         'positioning:closeness',
         'positioning:straddling_waist',
-        'sex-core:being_fucked_vaginally',
+        'positioning:being_fucked_vaginally',
       ]);
       expect(ridePenisGreedilyAction.forbidden_components.actor).toEqual([
         'positioning:sitting_on',

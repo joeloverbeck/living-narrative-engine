@@ -86,13 +86,13 @@ describe('sex-vaginal-penetration:ride_penis_greedily action integration', () =>
 
     const actorComponent = testFixture.entityManager.getComponentData(
       STRADDLING_MILKING_ACTOR_ID,
-      'sex-core:being_fucked_vaginally'
+      'positioning:being_fucked_vaginally'
     );
     expect(actorComponent).toEqual({ actorId: STRADDLING_MILKING_PRIMARY_ID });
 
     const primaryComponent = testFixture.entityManager.getComponentData(
       STRADDLING_MILKING_PRIMARY_ID,
-      'sex-core:fucking_vaginally'
+      'positioning:fucking_vaginally'
     );
     expect(primaryComponent).toEqual({ targetId: STRADDLING_MILKING_ACTOR_ID });
   });
@@ -110,20 +110,20 @@ describe('sex-vaginal-penetration:ride_penis_greedily action integration', () =>
     const componentEvents = testFixture.events.filter(
       (event) =>
         event.eventType === 'core:component_added' &&
-        (event.payload?.componentTypeId === 'sex-core:being_fucked_vaginally' ||
-          event.payload?.componentTypeId === 'sex-core:fucking_vaginally')
+        (event.payload?.componentTypeId === 'positioning:being_fucked_vaginally' ||
+          event.payload?.componentTypeId === 'positioning:fucking_vaginally')
     );
     expect(componentEvents).toHaveLength(0);
 
     const actorComponent = testFixture.entityManager.getComponentData(
       STRADDLING_MILKING_ACTOR_ID,
-      'sex-core:being_fucked_vaginally'
+      'positioning:being_fucked_vaginally'
     );
     expect(actorComponent).toEqual({ actorId: STRADDLING_MILKING_PRIMARY_ID });
 
     const primaryComponent = testFixture.entityManager.getComponentData(
       STRADDLING_MILKING_PRIMARY_ID,
-      'sex-core:fucking_vaginally'
+      'positioning:fucking_vaginally'
     );
     expect(primaryComponent).toEqual({ targetId: STRADDLING_MILKING_ACTOR_ID });
   });

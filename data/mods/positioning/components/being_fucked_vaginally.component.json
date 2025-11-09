@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "sex-core:being_fucked_vaginally",
+  "id": "positioning:being_fucked_vaginally",
   "name": "Being Fucked Vaginally",
   "description": "Marks a target who is currently being vaginally penetrated by another actor.",
   "dataSchema": {

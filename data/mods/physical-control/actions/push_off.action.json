@@ -12,7 +12,8 @@
       "positioning:biting_neck",
       "positioning:straddling_waist",
       "positioning:hugging",
-      "positioning:being_hugged"
+      "positioning:being_hugged",
+      "positioning:lying_down"
     ],
     "primary": ["positioning:sitting_on"]
   },

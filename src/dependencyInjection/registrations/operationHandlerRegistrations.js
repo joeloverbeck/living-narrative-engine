@@ -63,6 +63,7 @@ import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/remo
 import EstablishSittingClosenessHandler from '../../logic/operationHandlers/establishSittingClosenessHandler.js';
 import EstablishLyingClosenessHandler from '../../logic/operationHandlers/establishLyingClosenessHandler.js';
 import RemoveSittingClosenessHandler from '../../logic/operationHandlers/removeSittingClosenessHandler.js';
+import RemoveLyingClosenessHandler from '../../logic/operationHandlers/removeLyingClosenessHandler.js';
 import BreakClosenessWithTargetHandler from '../../logic/operationHandlers/breakClosenessWithTargetHandler.js';
 import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/hasBodyPartWithComponentValueHandler.js';
 import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothingHandler.js';
@@ -459,6 +460,17 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.RemoveSittingClosenessHandler,
       RemoveSittingClosenessHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          closenessCircleService: c.resolve(tokens.ClosenessCircleService),
+        }),
+    ],
+    [
+      tokens.RemoveLyingClosenessHandler,
+      RemoveLyingClosenessHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

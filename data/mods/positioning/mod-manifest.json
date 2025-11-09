@@ -23,6 +23,7 @@
       "allows_sitting.component.json",
       "being_bitten_in_neck.component.json",
       "being_fucked_anally.component.json",
+      "being_fucked_vaginally.component.json",
       "being_hugged.component.json",
       "bending_over.component.json",
       "biting_neck.component.json",
@@ -30,6 +31,7 @@
       "doing_complex_performance.component.json",
       "facing_away.component.json",
       "fucking_anally.component.json",
+      "fucking_vaginally.component.json",
       "giving_blowjob.component.json",
       "hugging.component.json",
       "kneeling_before.component.json",
@@ -139,6 +141,7 @@
       "closeness_with_target_broken.event.json",
       "entity_entered_location.event.json",
       "entity_exited_location.event.json",
+      "lying_closeness_established.event.json",
       "sitting_closeness_established.event.json"
     ],
     "macros": [],

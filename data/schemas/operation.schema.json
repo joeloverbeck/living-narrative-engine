@@ -168,6 +168,9 @@
           "$ref": "./operations/removeSittingCloseness.schema.json"
         },
         {
+          "$ref": "./operations/removeLyingCloseness.schema.json"
+        },
+        {
           "$ref": "./operations/breakClosenessWithTarget.schema.json"
         },
         {

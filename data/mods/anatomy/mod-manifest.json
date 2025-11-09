@@ -162,11 +162,8 @@
       "human_female.recipe.json",
       "human_futa.recipe.json",
       "human_male.recipe.json",
-      "ice_dragon.recipe.json",
       "kraken.recipe.json",
-      "octopus.recipe.json",
-      "red_dragon.recipe.json",
-      "squid.recipe.json"
+      "red_dragon.recipe.json"
     ],
     "anatomyFormatting": [
       "default.json"
