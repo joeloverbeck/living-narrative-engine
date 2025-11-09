@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:take_penis_in_mouth_lying_close",
+  "name": "Take Penis In Mouth (Lying Close)",
+  "description": "Take your partner's penis in your mouth while both are lying close together, initiating oral sex. Requires both participants to be lying down with mutual closeness. The partner must have an exposed penis.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_lying_close_with_uncovered_penis",
+      "placeholder": "primary",
+      "description": "Partner lying close with an exposed penis"
+    }
+  },
+  "template": "take {primary}'s cock in your mouth",
+  "prerequisites": [],
+  "required_components": {
+    "actor": ["positioning:lying_down", "positioning:closeness"],
+    "primary": ["positioning:lying_down", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}
