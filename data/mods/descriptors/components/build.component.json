@@ -9,6 +9,7 @@
         "type": "string",
         "description": "The body build type",
         "enum": [
+          "atrophied",
           "skinny",
           "slim",
           "lissom",

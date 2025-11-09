@@ -14,7 +14,7 @@ describe('LoadResultAggregator utility', () => {
     aggregator.aggregate({ count: 2, overrides: 1, errors: 0 }, 'actions');
 
     expect(aggregator.getModResults()).toEqual({
-      actions: { count: 2, overrides: 1, errors: 0 },
+      actions: { count: 2, overrides: 1, errors: 0, failures: [] },
     });
 
     // Original totals object should remain unchanged (immutable behavior)
@@ -22,7 +22,7 @@ describe('LoadResultAggregator utility', () => {
 
     // Updated totals should be accessible via getTotalCounts()
     expect(aggregator.getTotalCounts()).toEqual({
-      actions: { count: 2, overrides: 1, errors: 0 },
+      actions: { count: 2, overrides: 1, errors: 0, failures: [] },
     });
   });
 
@@ -30,7 +30,7 @@ describe('LoadResultAggregator utility', () => {
     aggregator.aggregate(null, 'rules');
 
     expect(aggregator.getModResults()).toEqual({
-      rules: { count: 0, overrides: 0, errors: 0 },
+      rules: { count: 0, overrides: 0, errors: 0, failures: [] },
     });
 
     // Original totals object should remain unchanged (immutable behavior)
@@ -38,7 +38,7 @@ describe('LoadResultAggregator utility', () => {
 
     // Updated totals should be accessible via getTotalCounts()
     expect(aggregator.getTotalCounts()).toEqual({
-      rules: { count: 0, overrides: 0, errors: 0 },
+      rules: { count: 0, overrides: 0, errors: 0, failures: [] },
     });
   });
 

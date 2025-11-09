@@ -17,6 +17,7 @@ export function mergeTotals(mainTotals, updatedTotals) {
       count: counts.count ?? 0,
       overrides: counts.overrides ?? 0,
       errors: counts.errors ?? 0,
+      failures: counts.failures ?? [],
     };
   }
   return merged;
