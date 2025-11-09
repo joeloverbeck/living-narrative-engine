@@ -94,12 +94,10 @@ describe('Tracer Performance Overhead', () => {
 
     console.log('Baseline: ' + duration1.toFixed(2) + 'ms, With tracer enabled: ' + duration2.toFixed(2) + 'ms');
 
-    // Increased tolerance to 400% to account for CI environment variability
-    // JIT optimization, GC timing, CPU scheduling, and cache effects can cause
-    // overhead measurements to vary significantly (observed 76-326% range)
-    // This test primarily ensures no catastrophic performance regression (>5x slower)
-    // while allowing for normal CI variability
-    expect(overhead).toBeLessThan(400); // Less than 400% overhead with tracing
+    // Tracing overhead of 350% is acceptable for detailed debugging features
+    // This aligns with pipelineTracingIntegration.performance.test.js which allows 350% overhead
+    // The tracer performs: Set serialization, metadata capture, timestamp recording per node
+    expect(overhead).toBeLessThan(350); // Less than 350% overhead with tracing
   });
 
   it('should not leak memory with repeated tracing', () => {

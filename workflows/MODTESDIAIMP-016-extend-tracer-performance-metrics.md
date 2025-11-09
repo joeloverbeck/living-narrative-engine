@@ -26,6 +26,19 @@ Extend ScopeEvaluationTracer with detailed performance timing metrics, enabling 
 - **Path**: `tests/common/mods/scopeEvaluationTracer.js`
 - **Class**: `ScopeEvaluationTracer`
 
+### Implementation Notes
+
+**Timing Strategy:**
+- Current implementation uses `Date.now()` for timestamps (millisecond precision)
+- This workflow introduces `performance.now()` for duration measurements (microsecond precision)
+- **Mixed approach**: Use `performance.now()` for performance metrics (high-resolution), keep `Date.now()` for step timestamps (consistency)
+- Rationale: Performance metrics need high precision to measure sub-millisecond operations; timestamps just need to be consistent
+
+**Serialization:**
+- Current implementation uses `#serializeValue()` for all values
+- Logic, context, and breakdown are stored directly without additional serialization
+- This workflow maintains this pattern (no new serialization methods needed)
+
 ### New Private Fields
 
 ```javascript
@@ -87,14 +100,14 @@ logStep(resolverName, operation, input, output, details = {}) {
   });
 
   this.#steps.push({
-    timestamp: stepEndTime,
+    timestamp: Date.now(),  // KEEP: Use Date.now() for consistency with existing implementation
     type: 'RESOLVER_STEP',
     resolver: resolverName,
     operation,
     input: serializedInput,
     output: serializedOutput,
     details,
-    duration: stepDuration,  // ADD: duration in milliseconds
+    duration: stepDuration,  // ADD: duration in milliseconds (high-resolution via performance.now())
   });
 }
 ```
@@ -115,11 +128,8 @@ logFilterEvaluation(entityId, logic, result, evalContext, breakdown = null) {
 
   const evalStartTime = performance.now();
 
-  // Measure serialization time
-  const serializedLogic = this.#serializeValue(logic);
-  const serializedContext = this.#serializeObject(evalContext);
-  const serializedBreakdown = breakdown ? this.#serializeBreakdown(breakdown) : null;
-
+  // No serialization needed - current implementation stores logic, context, and breakdown directly
+  // Only measure the timing overhead itself
   const evalEndTime = performance.now();
   const evalDuration = evalEndTime - evalStartTime;
 
@@ -131,14 +141,14 @@ logFilterEvaluation(entityId, logic, result, evalContext, breakdown = null) {
   });
 
   this.#steps.push({
-    timestamp: evalEndTime,
+    timestamp: Date.now(),  // KEEP: Use Date.now() for consistency with existing implementation
     type: 'FILTER_EVALUATION',
     entityId,
-    logic: serializedLogic,
+    logic,  // Store directly (current implementation)
     result,
-    context: serializedContext,
-    breakdown: serializedBreakdown,
-    duration: evalDuration,  // ADD: duration in milliseconds
+    context: evalContext,  // Store directly (current implementation)
+    breakdown,  // Store directly (current implementation)
+    duration: evalDuration,  // ADD: duration in milliseconds (high-resolution via performance.now())
   });
 }
 ```
@@ -233,10 +243,13 @@ getPerformanceMetrics() {
 
 ### Enhance format() Method
 
+**BREAKING CHANGE**: This adds an options parameter to the existing `format()` method (currently has no parameters).
+
 ```javascript
 /**
  * Format trace with optional performance focus
  * @param {object} options - Formatting options
+ * @param {boolean} options.performanceFocus - Enable performance-focused output
  * @returns {string} Formatted trace
  */
 format(options = {}) {
@@ -292,8 +305,8 @@ format(options = {}) {
         output += ` (${step.duration.toFixed(2)}ms)`;
       }
       output += '\n';
-      output += `   Input: ${this.#formatValue(step.input)}\n`;
-      output += `   Output: ${this.#formatValue(step.output)}\n\n`;
+      output += `   Input: ${this.#formatSerializedValue(step.input)}\n`;
+      output += `   Output: ${this.#formatSerializedValue(step.output)}\n\n`;
       stepNumber++;
     } else if (step.type === 'FILTER_EVALUATION') {
       output += `   Entity: ${step.entityId}`;
@@ -315,7 +328,7 @@ format(options = {}) {
   const summary = this.#calculateSummary();
   output += '='.repeat(80) + '\n';
   output += `Summary: ${summary.totalSteps} steps, ${summary.duration}ms, `;
-  output += `Final size: ${summary.finalOutput?.size ?? 0}\n`;
+  output += `Final size: ${summary.finalOutputSize}\n`;
 
   return output;
 }

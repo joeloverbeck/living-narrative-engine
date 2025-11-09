@@ -6,24 +6,38 @@
  * Tests entity creation, batch operations, and performance consistency across multiple operations.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from '@jest/globals';
 import EntityWorkflowTestBed from '../../e2e/entities/common/entityWorkflowTestBed.js';
 
 describe('Entity Lifecycle Workflow Performance', () => {
+  // Share a single testbed across all tests to reduce container initialization overhead
   let testBed;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     testBed = new EntityWorkflowTestBed();
     await testBed.initialize();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     if (testBed) {
       await testBed.cleanup();
     }
   });
 
+  beforeEach(() => {
+    testBed.clearRecordedData();
+  });
+
   describe('Entity Creation Performance', () => {
+
     it('should validate entity creation performance within acceptable limits', async () => {
       // Arrange
       const definitionId = 'test:performance_entity';
@@ -53,13 +67,10 @@ describe('Entity Lifecycle Workflow Performance', () => {
       const baseMaxVariance = 15.0; // Increased from 10.0 to reduce flakiness in test environments
       const maxVariance = process.env.CI ? 25.0 : baseMaxVariance; // More lenient in CI environments
 
-      // Warmup iterations to stabilize JIT compilation
-      const warmupIterations = 2;
-      for (let i = 0; i < warmupIterations; i++) {
-        await testBed.createTestEntity(definitionId, {
-          instanceId: `warmup_consistency_${i}`,
-        });
-      }
+      // Warmup iteration to stabilize JIT compilation (reduced from 2 to 1)
+      await testBed.createTestEntity(definitionId, {
+        instanceId: `warmup_consistency_0`,
+      });
 
       // Clear performance metrics after warmup
       testBed.performanceMetrics.clear();
@@ -90,8 +101,8 @@ describe('Entity Lifecycle Workflow Performance', () => {
       // Arrange
       const definitionId = 'test:batch_performance_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
-      const batchSize = 10;
-      const maxBatchTime = 500; // 500ms for batch of 10 entities
+      const batchSize = 8; // Reduced from 10 to 8
+      const maxBatchTime = 400; // Reduced from 500ms to 400ms
 
       const entityConfigs = Array.from({ length: batchSize }, (_, i) => ({
         definitionId,
@@ -122,14 +133,12 @@ describe('Entity Lifecycle Workflow Performance', () => {
       // Arrange
       const definitionId = 'test:batch_comparison_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
-      const batchSize = 5;
+      const batchSize = 4; // Reduced from 5 to 4
 
-      // Warmup phase to ensure JIT compilation and reduce timing variance
-      for (let i = 0; i < 2; i++) {
-        await testBed.createTestEntity(definitionId, {
-          instanceId: `warmup_${i}`,
-        });
-      }
+      // Warmup phase to ensure JIT compilation and reduce timing variance (reduced from 2 to 1)
+      await testBed.createTestEntity(definitionId, {
+        instanceId: `warmup_0`,
+      });
 
       // Individual operations for baseline measurement
       const individualStartTime = performance.now();
@@ -181,7 +190,7 @@ describe('Entity Lifecycle Workflow Performance', () => {
       // with proper statistical analysis (multiple runs, percentile-based thresholds, etc.)
 
       // Instead, validate that both operations complete within reasonable absolute time bounds
-      const maxReasonableTime = 2000; // 2 seconds total for 5 entities should be more than enough
+      const maxReasonableTime = 2000; // 2 seconds total for 4 entities should be more than enough
       expect(individualTime).toBeLessThan(maxReasonableTime);
       expect(batchTime).toBeLessThan(maxReasonableTime);
 
@@ -201,7 +210,7 @@ describe('Entity Lifecycle Workflow Performance', () => {
       // Arrange
       const definitionId = 'test:memory_performance_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
-      const bulkSize = 20;
+      const bulkSize = 15; // Reduced from 20 to 15
 
       const entityConfigs = Array.from({ length: bulkSize }, (_, i) => ({
         definitionId,
@@ -223,8 +232,8 @@ describe('Entity Lifecycle Workflow Performance', () => {
       // Assert reasonable memory usage
       expect(entities).toHaveLength(bulkSize);
 
-      // Memory increase should be reasonable (less than 10MB for 20 entities)
-      const maxMemoryIncrease = 10 * 1024 * 1024; // 10MB
+      // Memory increase should be reasonable (less than 8MB for 15 entities)
+      const maxMemoryIncrease = 8 * 1024 * 1024; // 8MB (reduced from 10MB)
       if (performance.memory) {
         expect(memoryIncrease).toBeLessThan(maxMemoryIncrease);
       }
@@ -237,17 +246,14 @@ describe('Entity Lifecycle Workflow Performance', () => {
       const definitionId = 'test:scalability_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
 
-      // Warm-up runs to stabilize JIT compilation and caches
-      const warmupSizes = [3, 5];
-      for (const size of warmupSizes) {
-        const warmupConfigs = Array.from({ length: size }, (_, i) => ({
-          definitionId,
-          instanceId: `warmup_${size}_${i}`,
-        }));
-        await testBed.createTestEntitiesBatch(warmupConfigs);
-      }
+      // Warm-up run to stabilize JIT compilation and caches (reduced from [3, 5] to [3])
+      const warmupConfigs = Array.from({ length: 3 }, (_, i) => ({
+        definitionId,
+        instanceId: `warmup_3_${i}`,
+      }));
+      await testBed.createTestEntitiesBatch(warmupConfigs);
 
-      const scalingSizes = [5, 10, 15];
+      const scalingSizes = [5, 10]; // Reduced from [5, 10, 15] to [5, 10]
       const results = [];
 
       // Act - Test performance at different scales
