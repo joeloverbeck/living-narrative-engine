@@ -142,8 +142,8 @@ class ComponentNotFoundError extends AnatomyError {
         '}',
       ],
       references: [
-        'docs/anatomy/components.md',
-        'data/mods/anatomy/components/scaled.component.json (example)',
+        'docs/anatomy/anatomy-system-guide.md',
+        'data/mods/anatomy/components/part.component.json (example)',
       ],
     });
 
@@ -201,16 +201,17 @@ class SocketNotFoundError extends AnatomyError {
     const fixes = [
       `Option 1: Add socket to root entity`,
       `  File: ${entityPath}`,
-      `  Add to anatomy:sockets.sockets:`,
+      `  Add to anatomy:sockets.sockets array:`,
       '  {',
       `    "id": "${socketId}",`,
-      '    "type": "attachment",',
-      '    "capacity": 1',
+      '    "allowedTypes": ["part_type_here"],',
+      '    "orientation": "mid",',
+      '    "nameTpl": "{{type}}"',
       '  }',
       '',
       `Option 2: Use existing socket`,
       `  Available sockets: [${availableSockets.join(', ')}]`,
-      `  Update blueprint additionalSlots.${slotName}.socket`,
+      `  Update blueprint slots.${slotName}.socket`,
     ];
 
     super({
@@ -219,8 +220,9 @@ class SocketNotFoundError extends AnatomyError {
       impact: `Slot processing will fail during anatomy generation`,
       fix: fixes,
       references: [
-        'docs/anatomy/blueprints.md',
-        'docs/anatomy/sockets.md',
+        'docs/anatomy/blueprints-and-templates.md',
+        'docs/anatomy/anatomy-system-guide.md',
+        'data/mods/anatomy/components/sockets.component.json (schema)',
       ],
     });
 
@@ -250,11 +252,12 @@ class RecipeValidationError extends AnatomyError {
         `Errors: ${errorCount}`,
         `Warnings: ${warningCount}`,
         '',
-        'Run: npm run validate:recipe <recipe-path> for detailed report',
+        'Check RecipePreflightValidator for validation logic',
       ],
       references: [
-        'docs/anatomy/validation-workflow.md',
-        'docs/anatomy/common-errors.md',
+        'docs/anatomy/troubleshooting.md',
+        'docs/anatomy/anatomy-system-guide.md',
+        'src/anatomy/validation/RecipePreflightValidator.js',
       ],
     });
 
@@ -293,24 +296,29 @@ function createError(type, data) {
 ### Integration with Validators
 
 ```javascript
-// In componentExistenceValidator.js (ANASYSIMP-001)
-function validateComponentExistence(recipe, componentRegistry) {
-  const errors = [];
+// In componentExistenceValidationRule.js
+// Actual implementation from src/anatomy/validation/rules/componentExistenceValidationRule.js
+#validateRecipeComponents(recipe) {
+  const issues = [];
+  const componentExists = (componentId) =>
+    this.#dataRegistry.get('components', componentId) !== undefined;
 
+  // Check slot component requirements
   for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
+    // Check tags
     for (const componentId of slot.tags || []) {
-      if (!componentRegistry.has(componentId)) {
-        errors.push(createError('COMPONENT_NOT_FOUND', {
+      if (!componentExists(componentId)) {
+        issues.push(createError('COMPONENT_NOT_FOUND', {
           recipeId: recipe.recipeId,
           location: { type: 'slot', name: slotName },
           componentId: componentId,
-          recipePath: recipe.filePath,
+          recipePath: recipe.recipePath, // Note: added during validation, not in recipe JSON
         }));
       }
     }
   }
 
-  return errors;
+  return issues;
 }
 ```
 
@@ -386,7 +394,16 @@ tests/integration/anatomy/errors/
 ## Dependencies
 
 **Required:** None (standalone error framework)
-**Integrates With:** All validators (ANASYSIMP-001 through ANASYSIMP-006)
+**Integrates With:** Existing validation rules:
+- `componentExistenceValidationRule.js` - Component existence checks
+- `propertySchemaValidationRule.js` - Property schema validation
+- `blueprintRecipeValidationRule.js` - Blueprint-recipe compatibility
+- `socketLimitRule.js` - Socket capacity validation
+- `cycleDetectionRule.js` - Anatomy graph cycle detection
+- `jointConsistencyRule.js` - Joint connection validation
+- `orphanDetectionRule.js` - Orphaned part detection
+- `partTypeCompatibilityRule.js` - Part type compatibility checks
+- `recipeConstraintRule.js` - Recipe constraint evaluation
 
 ## Success Metrics
 
