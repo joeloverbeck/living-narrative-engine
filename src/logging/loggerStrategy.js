@@ -176,7 +176,21 @@ class LoggerStrategy {
       return explicitMode;
     }
 
-    const processRef = globalThis?.process;
+    // Get process reference - try direct access first (works with bundler polyfills),
+    // then fall back to globalThis.process
+    let processRef;
+    try {
+      // eslint-disable-next-line no-undef
+      if (typeof process !== 'undefined') {
+        // eslint-disable-next-line no-undef
+        processRef = process;
+      }
+    } catch (e) {
+      // In some strict mode environments, accessing undefined variables may throw
+    }
+    if (!processRef) {
+      processRef = globalThis?.process;
+    }
 
     // Priority 2: Environment variable DEBUG_LOG_MODE
     const rawEnvMode = processRef?.env?.DEBUG_LOG_MODE;
