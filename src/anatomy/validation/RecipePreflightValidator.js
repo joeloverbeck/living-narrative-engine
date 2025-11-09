@@ -124,7 +124,13 @@ class RecipePreflightValidator {
       await this.#checkPartAvailability(recipe, results);
     }
 
-    // 8. Entity Definition Load Failures (Critical - P0)
+    // 8. Generated Slot Part Availability (Critical - P0)
+    // Check that entity definitions exist for ALL slots that patterns will match
+    if (!options.skipGeneratedSlotChecks && this.#blueprintExists(results)) {
+      await this.#checkGeneratedSlotPartAvailability(recipe, results);
+    }
+
+    // 9. Entity Definition Load Failures (Critical - P0)
     // This check runs last to provide context for missing entity definitions
     if (!options.skipLoadFailureChecks) {
       this.#checkEntityDefinitionLoadFailures(results);
@@ -468,6 +474,227 @@ class RecipePreflightValidator {
     }
 
     return matches;
+  }
+
+  /**
+   * Validates that entity definitions exist for all slots that patterns will match
+   * This is critical because patterns dynamically match slots from the blueprint,
+   * and we need to ensure parts are available for each matched slot.
+   *
+   * @param {object} recipe - Recipe to validate
+   * @param {object} results - Validation results object
+   */
+  async #checkGeneratedSlotPartAvailability(recipe, results) {
+    try {
+      const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(
+        recipe.blueprintId
+      );
+
+      if (!blueprint) {
+        // Blueprint check already failed, skip this check
+        return;
+      }
+
+      const patterns = recipe.patterns || [];
+      if (patterns.length === 0) {
+        // No patterns to check
+        return;
+      }
+
+      const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+      const errors = [];
+      let totalSlotsChecked = 0;
+
+      // For each pattern, find slots it matches and validate entity availability
+      for (let patternIndex = 0; patternIndex < patterns.length; patternIndex++) {
+        const pattern = patterns[patternIndex];
+
+        // Get all slots this pattern will match
+        const { findMatchingSlots } = await import(
+          './patternMatchingValidator.js'
+        );
+        const matchResult = findMatchingSlots(
+          pattern,
+          blueprint,
+          this.#dataRegistry,
+          this.#slotGenerator,
+          this.#logger
+        );
+
+        const matchedSlots = matchResult.matches;
+
+        // For each matched slot, verify entity definitions exist
+        for (const slotKey of matchedSlots) {
+          totalSlotsChecked++;
+
+          // Get the socket requirements for this slot
+          const blueprintSlot = blueprint.slots?.[slotKey];
+          if (!blueprintSlot) {
+            // Slot doesn't exist in blueprint (shouldn't happen, but be defensive)
+            continue;
+          }
+
+          // Build combined requirements: pattern requirements + socket allowed types
+          const combinedRequirements = {
+            partType: pattern.partType,
+            allowedTypes: blueprintSlot.allowedTypes || ['*'],
+            tags: pattern.tags || [],
+            properties: pattern.properties || {},
+          };
+
+          // Find matching entities
+          const matchingEntities = this.#findMatchingEntitiesForSlot(
+            combinedRequirements,
+            allEntityDefs
+          );
+
+          if (matchingEntities.length === 0) {
+            errors.push({
+              type: 'GENERATED_SLOT_PART_UNAVAILABLE',
+              severity: 'error',
+              location: {
+                type: 'generated_slot',
+                slotKey,
+                patternIndex,
+                pattern: this.#getPatternDescription(pattern),
+              },
+              message: `No entity definitions found for generated slot '${slotKey}' (matched by pattern ${patternIndex})`,
+              details: {
+                slotKey,
+                patternIndex,
+                partType: pattern.partType,
+                allowedTypes: blueprintSlot.allowedTypes,
+                requiredTags: pattern.tags || [],
+                requiredProperties: Object.keys(pattern.properties || {}),
+                totalEntitiesChecked: allEntityDefs.length,
+              },
+              fix: `Create an entity definition in data/mods/anatomy/entities/definitions/ with:\n` +
+                `  - anatomy:part component with subType: "${pattern.partType}"\n` +
+                `  - Required tags: ${JSON.stringify(pattern.tags || [])}\n` +
+                `  - Required property components: ${JSON.stringify(Object.keys(pattern.properties || {}))}`,
+            });
+          }
+        }
+      }
+
+      if (errors.length === 0) {
+        results.passed.push({
+          check: 'generated_slot_part_availability',
+          message: `All ${totalSlotsChecked} generated slot(s) from patterns have matching entity definitions`,
+        });
+      } else {
+        results.errors.push(...errors);
+      }
+    } catch (error) {
+      this.#logger.error('Generated slot part availability check failed', error);
+      results.errors.push({
+        type: 'VALIDATION_ERROR',
+        check: 'generated_slot_part_availability',
+        message: 'Failed to validate generated slot part availability',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Find matching entities for a slot with combined requirements
+   * Similar to #findMatchingEntities but also checks allowedTypes
+   *
+   * @param {object} requirements - Combined requirements
+   * @param {Array} allEntityDefs - All entity definitions
+   * @returns {Array<string>} Matching entity IDs
+   */
+  #findMatchingEntitiesForSlot(requirements, allEntityDefs) {
+    const matches = [];
+    const { partType, allowedTypes, tags, properties } = requirements;
+
+    for (const entityDef of allEntityDefs) {
+      // Check if entity has anatomy:part component with matching subType
+      const anatomyPart = entityDef.components?.['anatomy:part'];
+      if (!anatomyPart) {
+        continue;
+      }
+
+      // Check partType requirement
+      if (partType && anatomyPart.subType !== partType) {
+        continue;
+      }
+
+      // Check if subType is in allowedTypes (unless allowedTypes includes '*')
+      if (
+        allowedTypes &&
+        !allowedTypes.includes('*') &&
+        !allowedTypes.includes(anatomyPart.subType)
+      ) {
+        continue;
+      }
+
+      // Check if entity has all required tags (components)
+      const hasAllTags = tags.every(
+        (tag) => entityDef.components?.[tag] !== undefined
+      );
+      if (!hasAllTags) {
+        continue;
+      }
+
+      // Check if entity properties match required property VALUES
+      // Properties is an object like { "descriptors:build": { "build": "slim" } }
+      if (!this.#matchesPropertyValues(entityDef, properties)) {
+        continue;
+      }
+
+      matches.push(entityDef.id);
+    }
+
+    return matches;
+  }
+
+  /**
+   * Checks if entity definition matches property value requirements
+   * Mimics the production code's #matchesProperties method
+   *
+   * @param {object} entityDef - Entity definition
+   * @param {object} propertyRequirements - Required property components with values
+   * @returns {boolean} True if all property values match
+   */
+  #matchesPropertyValues(entityDef, propertyRequirements) {
+    if (!propertyRequirements || typeof propertyRequirements !== 'object') {
+      return true;
+    }
+
+    for (const [componentId, requiredProps] of Object.entries(
+      propertyRequirements
+    )) {
+      const component = entityDef.components?.[componentId];
+      if (!component) {
+        return false;
+      }
+
+      for (const [propKey, propValue] of Object.entries(requiredProps)) {
+        if (component[propKey] !== propValue) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Get a human-readable description of a pattern
+   *
+   * @param {object} pattern - Pattern definition
+   * @returns {string} Pattern description
+   */
+  #getPatternDescription(pattern) {
+    if (pattern.matchesGroup) return `matchesGroup '${pattern.matchesGroup}'`;
+    if (pattern.matchesPattern !== undefined)
+      return `matchesPattern '${pattern.matchesPattern}'`;
+    if (pattern.matchesAll)
+      return `matchesAll ${JSON.stringify(pattern.matchesAll)}`;
+    if (Array.isArray(pattern.matches))
+      return `explicit [${pattern.matches.join(', ')}]`;
+    return 'unknown pattern';
   }
 
   #blueprintExists(results) {
