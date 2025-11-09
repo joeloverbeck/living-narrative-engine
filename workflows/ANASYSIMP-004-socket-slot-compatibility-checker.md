@@ -45,14 +45,14 @@ Implement socket/slot compatibility validation that runs at recipe/blueprint loa
 /**
  * Validates that blueprint additionalSlots reference valid sockets on root entity
  * @param {Object} blueprint - Blueprint to validate
- * @param {Object} entityRegistry - Registry of loaded entities
- * @returns {Array<Object>} Array of errors found
+ * @param {Object} dataRegistry - Data registry with entity definitions
+ * @returns {Promise<Array<Object>>} Array of errors found
  */
-function validateSocketSlotCompatibility(blueprint, entityRegistry) {
+async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
   const errors = [];
 
   // Check if root entity exists
-  const rootEntity = entityRegistry.get(blueprint.root);
+  const rootEntity = dataRegistry.getEntityDefinition(blueprint.root);
 
   if (!rootEntity) {
     errors.push({
@@ -92,7 +92,7 @@ function validateSocketSlotCompatibility(blueprint, entityRegistry) {
         rootEntityId: blueprint.root,
         availableSockets: Array.from(sockets.keys()),
         message: `Socket '${slot.socket}' not found on root entity '${blueprint.root}'`,
-        fix: suggestSocketFix(slot.socket, sockets, blueprint.root, rootEntity.filePath),
+        fix: suggestSocketFix(slot.socket, sockets, blueprint.root, rootEntity._sourceFile),
         severity: 'error',
       });
     }
@@ -132,9 +132,10 @@ function extractSocketsFromEntity(entity) {
     if (socket.id) {
       socketsMap.set(socket.id, {
         id: socket.id,
-        type: socket.type || 'unknown',
-        capacity: socket.capacity,
-        description: socket.description,
+        orientation: socket.orientation,
+        allowedTypes: socket.allowedTypes || [],
+        nameTpl: socket.nameTpl,
+        index: socket.index,
       });
     }
   }
@@ -147,12 +148,12 @@ function extractSocketsFromEntity(entity) {
  * @param {string} requestedSocket - Socket ID that was requested
  * @param {Map} availableSockets - Available sockets on entity
  * @param {string} rootEntityId - Root entity ID
- * @param {string} entityFilePath - Path to entity file
+ * @param {string} entitySourceFile - Source filename of entity
  * @returns {string} Fix suggestion
  */
-function suggestSocketFix(requestedSocket, availableSockets, rootEntityId, entityFilePath) {
+function suggestSocketFix(requestedSocket, availableSockets, rootEntityId, entitySourceFile) {
   if (availableSockets.size === 0) {
-    return `Root entity has no sockets. Add anatomy:sockets component to ${entityFilePath}`;
+    return `Root entity has no sockets. Add anatomy:sockets component to entity file: ${entitySourceFile}`;
   }
 
   const socketList = Array.from(availableSockets.keys());
@@ -164,7 +165,7 @@ function suggestSocketFix(requestedSocket, availableSockets, rootEntityId, entit
     return `Socket '${requestedSocket}' not found. Did you mean '${similar}'? Available: [${socketList.join(', ')}]`;
   }
 
-  return `Add socket '${requestedSocket}' to ${entityFilePath} or use one of: [${socketList.join(', ')}]`;
+  return `Add socket '${requestedSocket}' to entity file '${entitySourceFile}' or use one of: [${socketList.join(', ')}]`;
 }
 
 /**
@@ -248,12 +249,12 @@ function levenshteinDistance(a, b) {
 
 ```javascript
 // In RecipePreflightValidator (ANASYSIMP-003)
-#checkSocketSlotCompatibility(recipe, results) {
+async #checkSocketSlotCompatibility(recipe, results) {
   try {
-    const blueprint = this.#blueprintRegistry.get(recipe.blueprintId);
+    const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
     if (!blueprint) return; // Already caught by blueprint check
 
-    const errors = validateSocketSlotCompatibility(blueprint, this.#entityRegistry);
+    const errors = await validateSocketSlotCompatibility(blueprint, this.#dataRegistry);
 
     if (errors.length === 0) {
       const socketCount = this.#countAdditionalSlots(blueprint);
@@ -318,7 +319,7 @@ tests/integration/anatomy/validation/
    - Entity with anatomy:sockets → extracts all sockets
    - Entity without anatomy:sockets → returns empty map
    - Entity with empty sockets array → returns empty map
-   - Socket data includes id, type, capacity
+   - Socket data includes id, orientation, allowedTypes, nameTpl, index
 
 3. **Socket Reference Validation**
    - additionalSlot with valid socket → no error
@@ -371,8 +372,8 @@ tests/integration/anatomy/validation/
 ## Dependencies
 
 **Required:**
-- Entity registry with `get(entityId)` method
-- Blueprint registry with `get(blueprintId)` method
+- Data registry with `getEntityDefinition(entityId)` method (or `get('entityDefinitions', entityId)`)
+- Anatomy blueprint repository with `getBlueprint(blueprintId)` async method
 
 **Depends On:**
 - None (independent validator)
@@ -393,20 +394,29 @@ tests/integration/anatomy/validation/
     "sockets": [
       {
         "id": "head",
-        "type": "attachment",
-        "capacity": 1,
-        "description": "Head attachment point"
+        "orientation": "upper",
+        "allowedTypes": ["head", "neck"],
+        "nameTpl": "{{type}}"
       },
       {
         "id": "fire_gland",
-        "type": "internal",
-        "capacity": 1,
-        "description": "Internal fire gland"
+        "allowedTypes": ["internal_organ"],
+        "nameTpl": "{{type}}",
+        "index": 1
       }
     ]
   }
 }
 ```
+
+**Note**: Socket properties are:
+- `id` (required): Unique identifier for the socket
+- `orientation` (optional): Spatial orientation (left, right, front, back, etc.)
+- `allowedTypes` (required): Array of part types that can attach
+- `nameTpl` (optional): Template for auto-naming attached parts
+- `index` (optional): Sequential index for template substitution
+
+**IMPORTANT**: Sockets do NOT have `type`, `capacity`, or `description` properties in the actual implementation.
 
 ### Error Message Template
 
@@ -438,8 +448,8 @@ Suggestion: Add to dragon_torso.entity.json:
       ...existing sockets...,
       {
         "id": "fire_gland",
-        "type": "internal",
-        "capacity": 1
+        "allowedTypes": ["internal_organ"],
+        "nameTpl": "{{type}}"
       }
     ]
   }
