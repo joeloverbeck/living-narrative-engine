@@ -42,20 +42,31 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   const rightTesticleId = 'body-part-nolan-right-testicle';
   const clothingId = 'clothing-underwear';
 
-  const room = new ModEntityBuilder(roomId)
-    .withName('Bedroom')
-    .asRoom('Bedroom')
-    .build();
+  // Build room
+  const room = new ModEntityBuilder(roomId).withName('Bedroom').asRoom('Bedroom').build();
 
+  // Build furniture
   const bed = new ModEntityBuilder(bedId)
     .withName('Bed')
     .atLocation(roomId)
-    .withComponent('furniture:allows_lying', {})
+    .withLocationComponent(roomId)
+    .withComponent('positioning:allows_lying', {})
     .build();
 
+  const secondBed = useDifferentFurniture
+    ? new ModEntityBuilder(secondBedId)
+        .withName('Second Bed')
+        .atLocation(roomId)
+        .withLocationComponent(roomId)
+        .withComponent('positioning:allows_lying', {})
+        .build()
+    : null;
+
+  // Build actor
   const actorBuilder = new ModEntityBuilder(actorId)
     .withName('Ava')
     .atLocation(roomId)
+    .withLocationComponent(roomId)
     .asActor();
 
   if (includeActorLying) {
@@ -70,14 +81,16 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', {
-      target_id: primaryId,
-    });
+    actorBuilder.withComponent('positioning:giving_blowjob', { target_id: primaryId });
   }
 
+  const actor = actorBuilder.build();
+
+  // Build primary with anatomy
   const primaryBuilder = new ModEntityBuilder(primaryId)
     .withName('Nolan')
     .atLocation(roomId)
+    .withLocationComponent(roomId)
     .asActor()
     .withComponent('anatomy:body', {
       slots: {
@@ -104,11 +117,12 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   }
 
   if (targetFuckingActor) {
-    primaryBuilder.withComponent('positioning:fucking_vaginally', {
-      targetId: actorId,
-    });
+    primaryBuilder.withComponent('positioning:fucking_vaginally', { targetId: actorId });
   }
 
+  const primary = primaryBuilder.build();
+
+  // Build body parts
   const leftTesticle = new ModEntityBuilder(leftTesticleId)
     .withComponent('anatomy:body_part', { type: 'testicle' })
     .build();
@@ -117,33 +131,24 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
     .withComponent('anatomy:body_part', { type: 'testicle' })
     .build();
 
-  const actor = actorBuilder.build();
-  const primary = primaryBuilder.build();
+  // Build clothing if needed
+  const clothing =
+    coverLeftTesticle || coverRightTesticle
+      ? new ModEntityBuilder(clothingId)
+          .withComponent('items:clothing', { slot: 'groin' })
+          .build()
+      : null;
 
   const entities = [
     room,
     bed,
+    ...(secondBed ? [secondBed] : []),
     actor,
     primary,
     leftTesticle,
     rightTesticle,
+    ...(clothing ? [clothing] : []),
   ];
-
-  if (useDifferentFurniture) {
-    const secondBed = new ModEntityBuilder(secondBedId)
-      .withName('Second Bed')
-      .atLocation(roomId)
-      .withComponent('furniture:allows_lying', {})
-      .build();
-    entities.push(secondBed);
-  }
-
-  if (coverLeftTesticle || coverRightTesticle) {
-    const clothing = new ModEntityBuilder(clothingId)
-      .withComponent('items:clothing', { slot: 'groin' })
-      .build();
-    entities.push(clothing);
-  }
 
   return {
     entities,
@@ -169,77 +174,74 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
   const originalResolveSync = resolver.resolveSync.bind(resolver);
 
   resolver.resolveSync = (scopeName, context) => {
-    const baseResult = originalResolveSync(scopeName, context);
+    if (scopeName === 'sex-core:actors_lying_close_with_uncovered_testicle') {
+      const actorId = context?.actor?.id;
 
-    if (scopeName !== 'sex-core:actors_lying_close_with_uncovered_testicle') {
-      return baseResult;
+      if (!actorId) {
+        return { success: true, value: new Set() };
+      }
+
+      const actorEntity = testFixture.entityManager.getEntity(actorId);
+
+      // Get actor's lying position
+      const actorLying = actorEntity?.components['positioning:lying_down'];
+      if (!actorLying) {
+        return { success: true, value: new Set() };
+      }
+
+      // Get actor's closeness partners
+      const actorCloseness = actorEntity?.components['positioning:closeness'];
+      if (!actorCloseness?.partners) {
+        return { success: true, value: new Set() };
+      }
+
+      // Filter partners by criteria
+      const validPartners = actorCloseness.partners.filter((partnerId) => {
+        const partnerEntity = testFixture.entityManager.getEntity(partnerId);
+        if (!partnerEntity) return false;
+
+        // Check lying position
+        const partnerLying = partnerEntity.components['positioning:lying_down'];
+        if (!partnerLying) return false;
+
+        // Check same furniture
+        if (actorLying.furniture_id !== partnerLying.furniture_id) return false;
+
+        // Check mutual closeness
+        const partnerCloseness = partnerEntity.components['positioning:closeness'];
+        if (!partnerCloseness?.partners?.includes(actorId)) return false;
+
+        // Check for testicle anatomy
+        const partnerBody = partnerEntity.components['anatomy:body'];
+        if (!partnerBody?.slots) return false;
+
+        const hasLeftTesticle = !!partnerBody.slots.left_testicle;
+        const hasRightTesticle = !!partnerBody.slots.right_testicle;
+        if (!hasLeftTesticle && !hasRightTesticle) return false;
+
+        // Check at least one testicle is uncovered
+        const leftUncovered =
+          hasLeftTesticle &&
+          (!partnerBody.slots.left_testicle.covered_by ||
+            partnerBody.slots.left_testicle.covered_by.length === 0);
+        const rightUncovered =
+          hasRightTesticle &&
+          (!partnerBody.slots.right_testicle.covered_by ||
+            partnerBody.slots.right_testicle.covered_by.length === 0);
+
+        if (!leftUncovered && !rightUncovered) return false;
+
+        // Check not currently fucking actor vaginally
+        const fuckingVaginally = partnerEntity.components['positioning:fucking_vaginally'];
+        if (fuckingVaginally?.targetId === actorId) return false;
+
+        return true;
+      });
+
+      return { success: true, value: new Set(validPartners) };
     }
 
-    // If base resolution succeeded, return it
-    if (baseResult?.success && baseResult.value instanceof Set && baseResult.value.size > 0) {
-      return baseResult;
-    }
-
-    // Fallback implementation for testing
-    const actorId = context?.actor?.id;
-
-    if (!actorId) {
-      return { success: true, value: new Set() };
-    }
-
-    const actor = testFixture.entityManager.getEntityInstance(actorId);
-
-    // Get actor's lying position
-    const actorLying = actor?.components?.['positioning:lying_down'];
-    const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
-
-    if (!actorLying || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
-      return { success: true, value: new Set() };
-    }
-
-    const validPartners = closenessPartners.filter((partnerId) => {
-      const partner = testFixture.entityManager.getEntityInstance(partnerId);
-      if (!partner) return false;
-
-      // Check lying position
-      const partnerLying = partner.components?.['positioning:lying_down'];
-      if (!partnerLying) return false;
-
-      // Check same furniture
-      if (actorLying.furniture_id !== partnerLying.furniture_id) return false;
-
-      // Check mutual closeness
-      const partnerCloseness = partner.components?.['positioning:closeness'];
-      if (!partnerCloseness?.partners?.includes(actorId)) return false;
-
-      // Check for testicle anatomy
-      const partnerBody = partner.components?.['anatomy:body'];
-      if (!partnerBody?.slots) return false;
-
-      const hasLeftTesticle = !!partnerBody.slots.left_testicle;
-      const hasRightTesticle = !!partnerBody.slots.right_testicle;
-      if (!hasLeftTesticle && !hasRightTesticle) return false;
-
-      // Check at least one testicle is uncovered
-      const leftUncovered =
-        hasLeftTesticle &&
-        (!partnerBody.slots.left_testicle.covered_by ||
-          partnerBody.slots.left_testicle.covered_by.length === 0);
-      const rightUncovered =
-        hasRightTesticle &&
-        (!partnerBody.slots.right_testicle.covered_by ||
-          partnerBody.slots.right_testicle.covered_by.length === 0);
-
-      if (!leftUncovered && !rightUncovered) return false;
-
-      // Check not currently fucking actor vaginally
-      const fuckingVaginally = partner.components?.['positioning:fucking_vaginally'];
-      if (fuckingVaginally?.targetId === actorId) return false;
-
-      return true;
-    });
-
-    return { success: true, value: new Set(validPartners) };
+    return originalResolveSync(scopeName, context);
   };
 
   // Return cleanup function

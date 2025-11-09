@@ -420,9 +420,6 @@ describe('Entity Lifecycle E2E Workflow', () => {
         instanceId: 'lifecycle_tracking_001',
       });
 
-      // Add small delay to ensure different timestamps
-      await new Promise((resolve) => setTimeout(resolve, 1));
-
       await testBed.removeTestEntity(entity.id);
 
       // Assert complete lifecycle was tracked
@@ -439,8 +436,11 @@ describe('Entity Lifecycle E2E Workflow', () => {
       expect(createEvents).toHaveLength(1);
       expect(removeEvents).toHaveLength(1);
 
-      // Events should be in correct chronological order
-      expect(createEvents[0].timestamp).toBeLessThan(removeEvents[0].timestamp);
+      // Events should be in correct sequence order (timestamp precision may be
+      // insufficient for very fast operations on modern hardware)
+      const createIndex = entityEvents.indexOf(createEvents[0]);
+      const removeIndex = entityEvents.indexOf(removeEvents[0]);
+      expect(createIndex).toBeLessThan(removeIndex);
 
       // Event data should be consistent
       expect(createEvents[0].entityId).toBe(entity.id);
