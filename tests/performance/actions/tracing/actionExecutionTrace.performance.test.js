@@ -4,7 +4,7 @@
  * @see src/actions/tracing/actionExecutionTrace.js
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { ActionExecutionTrace } from '../../../../src/actions/tracing/actionExecutionTrace.js';
 
 describe('ActionExecutionTrace - Performance Tests', () => {
