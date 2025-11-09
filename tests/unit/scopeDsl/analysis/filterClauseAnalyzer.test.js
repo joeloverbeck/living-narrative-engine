@@ -249,6 +249,21 @@ describe('FilterClauseAnalyzer', () => {
       expect(result.breakdown.operator).toBe('not');
       expect(result.description).toContain('NOT');
     });
+
+    it('should handle not operator with primitive arguments', () => {
+      const logic = { '!': 'unexpected truthy value' };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.result).toBe(false);
+      expect(result.breakdown.operator).toBe('!');
+      expect(result.breakdown.children[0]).toMatchObject({
+        type: 'value',
+        value: 'unexpected truthy value',
+      });
+      expect(result.description).toBe('NOT (unexpected truthy value)');
+    });
   });
 
   describe('Variable handling', () => {
@@ -296,6 +311,22 @@ describe('FilterClauseAnalyzer', () => {
 
       const varNode = result.breakdown.children[0];
       expect(varNode.path).toEqual([0]);
+    });
+
+    it('should describe standalone variable clauses', () => {
+      const logic = { var: 'type' };
+      const context = { type: 'actor' };
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.result).toBe('actor');
+      expect(result.breakdown).toMatchObject({
+        type: 'variable',
+        operator: 'var',
+        varName: 'type',
+        value: 'actor',
+      });
+      expect(result.description).toBe('variable "type"');
     });
   });
 
@@ -389,6 +420,15 @@ describe('FilterClauseAnalyzer', () => {
       expect(result.description).toContain('"actor"');
     });
 
+    it('should format anatomy operators with scalar arguments', () => {
+      const logic = { hasPartOfType: 'torso' };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.description).toBe('hasPartOfType("torso")');
+    });
+
     it('should handle clothing operators', () => {
       const logic = { hasClothingInSlot: ['entity', 'torso'] };
       const context = {};
@@ -400,6 +440,15 @@ describe('FilterClauseAnalyzer', () => {
       expect(result.description).toContain('"torso"');
     });
 
+    it('should format clothing operators with scalar arguments', () => {
+      const logic = { isSocketCovered: 'torso' };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.description).toBe('isSocketCovered("torso")');
+    });
+
     it('should handle positioning operators', () => {
       const logic = { hasSittingSpaceToRight: ['actor', 'target', 1] };
       const context = {};
@@ -408,6 +457,15 @@ describe('FilterClauseAnalyzer', () => {
 
       expect(result.description).toContain('hasSittingSpaceToRight');
       expect(result.description).toContain('"actor"');
+    });
+
+    it('should format positioning operators with scalar arguments', () => {
+      const logic = { canScootCloser: 'actor' };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.description).toBe('canScootCloser("actor")');
     });
 
     it('should provide generic descriptions for unknown operators', () => {
@@ -574,6 +632,34 @@ describe('FilterClauseAnalyzer', () => {
       expect(result.description).toContain('"a"');
       expect(result.description).toContain('"b"');
       expect(result.description).toContain('"c"');
+    });
+
+    it('should format condition references within values', () => {
+      const logic = {
+        in: [
+          'value',
+          [{ condition_ref: 'core:is_actor' }],
+        ],
+      };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.description).toContain('condition_ref("core:is_actor")');
+    });
+
+    it('should stringify object values for descriptions', () => {
+      const logic = {
+        in: [
+          'value',
+          [{ foo: 'bar', count: 3 }],
+        ],
+      };
+      const context = {};
+
+      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+
+      expect(result.description).toContain('{"foo":"bar","count":3}');
     });
 
     it('should format values correctly - var references', () => {
