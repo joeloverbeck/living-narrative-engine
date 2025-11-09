@@ -130,11 +130,20 @@ export function createBaseRuleEnvironment({
           }),
           getComponentDefinition: jest.fn().mockReturnValue(null),
           get: jest.fn().mockImplementation((type, id) => {
-            if (type === 'macros') {
-              return macros[id] || undefined;
+            // Handle two-parameter calls: get(type, id)
+            if (id !== undefined) {
+              if (type === 'macros') {
+                return macros[id] || undefined;
+              }
+              if (type === 'lookups') {
+                return lookups[id] || undefined;
+              }
+              return undefined;
             }
-            if (type === 'lookups') {
-              return lookups[id] || undefined;
+            // Handle single-parameter calls: get(scopeName) for backward compatibility
+            // Check if this is a scope name
+            if (typeof type === 'string' && scopes[type]) {
+              return scopes[type];
             }
             return undefined;
           }),
@@ -892,6 +901,45 @@ export function createBaseRuleEnvironment({
         // Handle other scopes or return empty set
         if (scopeName === 'none' || scopeName === 'self') {
           return { success: true, value: new Set([scopeName]) };
+        }
+
+        // Check if scope is loaded from file in scopes object
+        if (scopes && scopes[scopeName]) {
+          // Use scope engine to evaluate the loaded scope
+          const { ScopeEngine } = require('../../../src/scopeDsl/engine.js');
+          const scopeEngine = new ScopeEngine();
+
+          try {
+            // Get actor entity from context
+            const actorId = context?.actor?.id || context;
+            const actorEntity = entityManager.getEntityInstance(actorId);
+
+            if (!actorEntity) {
+              return { success: true, value: new Set() };
+            }
+
+            // Create runtime context
+            const runtimeCtx = {
+              entityManager,
+              logger: testLogger,
+              jsonLogicEval: jsonLogic,
+            };
+
+            // Resolve the scope using the engine
+            const result = scopeEngine.resolve(
+              scopes[scopeName].ast,
+              actorEntity,
+              runtimeCtx
+            );
+
+            return {
+              success: true,
+              value: result instanceof Set ? result : new Set(Array.isArray(result) ? result : [result])
+            };
+          } catch (error) {
+            testLogger.warn(`Failed to evaluate scope ${scopeName}: ${error.message}`);
+            return { success: true, value: new Set() };
+          }
         }
 
         // Unknown scope - return empty set
