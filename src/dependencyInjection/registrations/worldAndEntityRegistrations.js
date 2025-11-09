@@ -75,6 +75,7 @@ import { EquipmentOrchestrator } from '../../clothing/orchestration/equipmentOrc
 import { ClothingManagementService } from '../../clothing/services/clothingManagementService.js';
 import { ClothingAccessibilityService } from '../../clothing/services/clothingAccessibilityService.js';
 import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBlueprintRepository.js';
+import RecipePreflightValidator from '../../anatomy/validation/RecipePreflightValidator.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
@@ -797,6 +798,21 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.IAnatomyBlueprintRepository
+    )}.`
+  );
+
+  // Register RecipePreflightValidator
+  registrar.singletonFactory(tokens.IRecipePreflightValidator, (c) => {
+    return new RecipePreflightValidator({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.IRecipePreflightValidator
     )}.`
   );
 
