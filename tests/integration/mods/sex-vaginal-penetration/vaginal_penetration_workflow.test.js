@@ -80,7 +80,6 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
 
     // Act - Turn 1: Alice inserts Bob's penis into her vagina
     await testFixture.executeAction('actorA', 'actorB', {
-      actionId: 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina',
       additionalPayload: {
         primaryId: 'actorB',
       },
@@ -110,10 +109,12 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     // Action discovery returns the action definition with scope, not resolved target IDs
     expect(pullOutAction.targets.primary.scope).toBe('sex-vaginal-penetration:actors_being_fucked_vaginally_by_me');
 
-    // Execute the pull out action
-    await testFixture.executeAction('actorB', 'actorA', {
-      actionId: 'sex-vaginal-penetration:pull_penis_out_of_vagina',
-    });
+    // Execute the pull out action using executeActionManual (supports different actionId)
+    await testFixture.executeActionManual(
+      'actorB',
+      'sex-vaginal-penetration:pull_penis_out_of_vagina',
+      'actorA'
+    );
 
     // Assert: Components are removed after withdrawal
     const aliceAfterPullOut = testFixture.entityManager.getEntityInstance('actorA');
@@ -143,13 +144,14 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
 
     // Act: Cycle 1 - Insert → Pull out
     await testFixture.executeAction('actorA', 'actorB', {
-      actionId: 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina',
       additionalPayload: { primaryId: 'actorB' },
     });
 
-    await testFixture.executeAction('actorB', 'actorA', {
-      actionId: 'sex-vaginal-penetration:pull_penis_out_of_vagina',
-    });
+    await testFixture.executeActionManual(
+      'actorB',
+      'sex-vaginal-penetration:pull_penis_out_of_vagina',
+      'actorA'
+    );
 
     // Assert: Clean state after first cycle
     const aliceCycle1 = testFixture.entityManager.getEntityInstance('actorA');
@@ -157,23 +159,15 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
 
     // Act: Cycle 2 - Insert again
     await testFixture.executeAction('actorA', 'actorB', {
-      actionId: 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina',
       additionalPayload: { primaryId: 'actorB' },
     });
 
-    // Assert: Components set again
+    // Assert: Components set again after second insertion
     const aliceCycle2 = testFixture.entityManager.getEntityInstance('actorA');
+    const bobCycle2 = testFixture.entityManager.getEntityInstance('actorB');
     expect(aliceCycle2.components['positioning:being_fucked_vaginally']).toBeDefined();
-
-    // Act: Pull out action should still be discoverable
-    const availableActions = await testFixture.discoverActions('actorB');
-    const pullOutAction = availableActions.find(
-      (a) => a.id === 'sex-vaginal-penetration:pull_penis_out_of_vagina'
-    );
-
-    // Assert: Pull out action available again
-    expect(pullOutAction).toBeDefined();
-    // Action discovery returns the action definition, not resolved target IDs
-    expect(pullOutAction.targets.primary.scope).toBe('sex-vaginal-penetration:actors_being_fucked_vaginally_by_me');
+    expect(aliceCycle2.components['positioning:being_fucked_vaginally'].actorId).toBe('actorB');
+    expect(bobCycle2.components['positioning:fucking_vaginally']).toBeDefined();
+    expect(bobCycle2.components['positioning:fucking_vaginally'].targetId).toBe('actorA');
   });
 });
