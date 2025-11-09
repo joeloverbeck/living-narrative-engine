@@ -33,19 +33,15 @@ describe('Scope Tracing Integration', () => {
 
       testFixture.enableScopeTracing();
 
-      // TODO: Currently failing due to parameter validation issue in custom scope resolver
-      // The custom scope is registered correctly, but the actorEntity parameter validation
-      // in ModTestFixture.js:2339 is rejecting the context object.
-      // Investigation needed: Why does ParameterValidator.validateActorEntity fail when
-      // passed { actorEntity: { id: 'actor1' } }?
-
       // Verify the custom scope was registered
       expect(testFixture.testEnv._registeredResolvers).toBeDefined();
       expect(testFixture.testEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
 
       // Directly resolve a scope to trigger tracer
-      // Create a minimal actorEntity for scope resolution
-      const actorEntity = { id: scenario.actor.id };
+      // Get the full entity instance from the entity manager
+      const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
+        scenario.actor.id
+      );
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
         { actorEntity }
