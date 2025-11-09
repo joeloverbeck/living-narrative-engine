@@ -11,6 +11,7 @@ import {
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ErrorCodes } from '../constants/errorCodes.js';
 import { ScopeResolutionError } from '../errors/scopeResolutionError.js';
+import { FilterClauseAnalyzer } from '../analysis/filterClauseAnalyzer.js';
 
 /**
  * @typedef {object} LocationProvider
@@ -242,11 +243,20 @@ export default function createFilterResolver({
             // ADD: Log to tracer (in addition to existing trace logging)
             if (tracer?.isEnabled()) {
               const entityId = typeof item === 'string' ? item : item?.id;
+
+              // Analyze filter breakdown for detailed clause-level diagnostics
+              const analysis = FilterClauseAnalyzer.analyzeFilter(
+                node.logic,
+                evalCtx,
+                logicEval
+              );
+
               tracer.logFilterEvaluation(
                 entityId,
                 node.logic,
                 evalResult,
-                evalCtx
+                evalCtx,
+                analysis.breakdown
               );
             }
 

@@ -1215,20 +1215,62 @@ class BaseModTestFixture {
   }
 
   /**
-   * Get filter breakdown for last evaluation
+   * Get filter breakdown for last evaluation with enhanced clause analysis.
    *
    * @param {string} entityId - Optional entity ID to filter by
-   * @returns {object|Array} Filter breakdown
+   * @returns {object|Array|null} Filter breakdown with clause analysis
    */
   getFilterBreakdown(entityId = null) {
     const trace = this.scopeTracer.getTrace();
     const filterEvals = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
 
     if (entityId) {
-      return filterEvals.find(e => e.entityId === entityId);
+      const found = filterEvals.find(e => e.entityId === entityId);
+      return found ? {
+        ...found,
+        hasBreakdown: !!found.breakdown,
+        clauses: found.breakdown ? this.#extractClauses(found.breakdown) : [],
+      } : null;
     }
 
-    return filterEvals;
+    return filterEvals.map(e => ({
+      entityId: e.entityId,
+      result: e.result,
+      logic: e.logic,
+      hasBreakdown: !!e.breakdown,
+      clauses: e.breakdown ? this.#extractClauses(e.breakdown) : [],
+    }));
+  }
+
+  /**
+   * Extract clauses from FilterClauseAnalyzer breakdown tree.
+   * Recursively walks the tree and collects operator nodes.
+   *
+   * @private
+   * @param {object} breakdown - FilterClauseAnalyzer breakdown node
+   * @param {Array} clauses - Accumulator for clause objects
+   * @returns {Array} Array of clause objects with operator, result, description
+   */
+  #extractClauses(breakdown, clauses = []) {
+    if (!breakdown || typeof breakdown !== 'object') {
+      return clauses;
+    }
+
+    if (breakdown.type === 'operator') {
+      clauses.push({
+        operator: breakdown.operator,
+        result: breakdown.result,
+        description: breakdown.description,
+      });
+
+      if (breakdown.children && Array.isArray(breakdown.children)) {
+        for (const child of breakdown.children) {
+          this.#extractClauses(child, clauses);
+        }
+      }
+    }
+
+    return clauses;
   }
 
   /**

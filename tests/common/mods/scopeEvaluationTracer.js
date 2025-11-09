@@ -341,6 +341,7 @@ export class ScopeEvaluationTracer {
 
   /**
    * Format a breakdown object recursively.
+   * Handles both FilterClauseAnalyzer breakdowns and generic objects.
    *
    * @private
    * @param {object} breakdown - Breakdown object.
@@ -351,18 +352,60 @@ export class ScopeEvaluationTracer {
     const lines = [];
     const prefix = ' '.repeat(indent);
 
-    if (typeof breakdown === 'object' && breakdown !== null) {
-      for (const [key, value] of Object.entries(breakdown)) {
-        if (typeof value === 'boolean') {
-          const symbol = value ? '✓' : '✗';
-          lines.push(`${prefix}${symbol} ${key}`);
-        } else if (typeof value === 'object') {
-          lines.push(`${prefix}${key}:`);
-          lines.push(...this.#formatBreakdown(value, indent + 2));
-        } else {
-          lines.push(`${prefix}${key}: ${value}`);
+    if (typeof breakdown !== 'object' || breakdown === null) {
+      return lines;
+    }
+
+    // Check if this is a FilterClauseAnalyzer breakdown structure
+    if (breakdown.type && ['operator', 'variable', 'value'].includes(breakdown.type)) {
+      return this.#formatFilterClauseBreakdown(breakdown, indent);
+    }
+
+    // Generic object formatting (fallback for other breakdown types)
+    for (const [key, value] of Object.entries(breakdown)) {
+      if (typeof value === 'boolean') {
+        const symbol = value ? '✓' : '✗';
+        lines.push(`${prefix}${symbol} ${key}`);
+      } else if (typeof value === 'object') {
+        lines.push(`${prefix}${key}:`);
+        lines.push(...this.#formatBreakdown(value, indent + 2));
+      } else {
+        lines.push(`${prefix}${key}: ${value}`);
+      }
+    }
+
+    return lines;
+  }
+
+  /**
+   * Format a FilterClauseAnalyzer breakdown tree.
+   * Shows operators with ✓/✗ symbols and recursively formats children.
+   *
+   * @private
+   * @param {object} breakdown - FilterClauseAnalyzer breakdown node.
+   * @param {number} indent - Current indentation level.
+   * @returns {Array<string>} Formatted lines.
+   */
+  #formatFilterClauseBreakdown(breakdown, indent = 0) {
+    const lines = [];
+    const prefix = ' '.repeat(indent);
+
+    if (breakdown.type === 'operator') {
+      const symbol = breakdown.result ? '✓' : '✗';
+      lines.push(`${prefix}${symbol} ${breakdown.operator}: ${breakdown.description}`);
+
+      if (breakdown.children && Array.isArray(breakdown.children)) {
+        for (const child of breakdown.children) {
+          lines.push(...this.#formatFilterClauseBreakdown(child, indent + 2));
         }
       }
+    } else if (breakdown.type === 'variable') {
+      lines.push(`${prefix}  ${breakdown.description}`);
+    } else if (breakdown.type === 'value') {
+      const valueStr = typeof breakdown.value === 'string'
+        ? `"${breakdown.value}"`
+        : String(breakdown.value);
+      lines.push(`${prefix}  value: ${valueStr}`);
     }
 
     return lines;
