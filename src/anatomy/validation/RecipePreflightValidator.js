@@ -445,7 +445,7 @@ class RecipePreflightValidator {
     const matches = [];
     const requiredPartType = slotOrPattern.partType;
     const requiredTags = slotOrPattern.tags || [];
-    const requiredProperties = Object.keys(slotOrPattern.properties || {});
+    const requiredPropertyValues = slotOrPattern.properties || {};
 
     for (const entityDef of allEntityDefs) {
       // Check if entity has anatomy:part component with matching subType
@@ -462,11 +462,9 @@ class RecipePreflightValidator {
         continue;
       }
 
-      // Check if entity has all required property components
-      const hasAllProperties = requiredProperties.every(
-        (prop) => entityDef.components?.[prop] !== undefined
-      );
-      if (!hasAllProperties) {
+      // Check if entity property VALUES match required property values
+      // This mirrors the runtime behavior in partSelectionService.js #matchesProperties
+      if (!this.#matchesPropertyValues(entityDef, requiredPropertyValues)) {
         continue;
       }
 

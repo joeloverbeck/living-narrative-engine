@@ -875,6 +875,150 @@ describe('RecipePreflightValidator', () => {
         ])
       );
     });
+
+    it('should report errors when entity property values do not match recipe requirements', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'entity:surface_eye',
+              components: {
+                'anatomy:part': { subType: 'eldritch_surface_eye' },
+                'anatomy:part': {},
+                'descriptors:animation': {
+                  animation: 'unblinking-independent-motion', // Does NOT match recipe requirement
+                },
+                'descriptors:luminosity': {
+                  luminosity: 'faint-glow', // Matches
+                },
+              },
+            },
+          ];
+        }
+        return [];
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          surface_eye_1: {
+            partType: 'eldritch_surface_eye',
+            tags: ['anatomy:part'],
+            properties: {
+              'descriptors:animation': {
+                animation: 'unblinking', // Requires exact match
+              },
+              'descriptors:luminosity': {
+                luminosity: 'faint-glow',
+              },
+            },
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+      });
+
+      // Should fail because property value doesn't match
+      expect(report.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'PART_UNAVAILABLE',
+            location: { type: 'slot', name: 'surface_eye_1' },
+            message: expect.stringContaining("No entity definitions found for slot 'surface_eye_1'"),
+          }),
+        ])
+      );
+    });
+
+    it('should pass when entity property values exactly match recipe requirements', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'entity:surface_eye',
+              components: {
+                'anatomy:part': { subType: 'eldritch_surface_eye' },
+                'descriptors:animation': {
+                  animation: 'unblinking', // Exact match
+                },
+                'descriptors:luminosity': {
+                  luminosity: 'faint-glow', // Exact match
+                },
+              },
+            },
+          ];
+        }
+        return [];
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          surface_eye_1: {
+            partType: 'eldritch_surface_eye',
+            tags: ['anatomy:part'],
+            properties: {
+              'descriptors:animation': {
+                animation: 'unblinking',
+              },
+              'descriptors:luminosity': {
+                luminosity: 'faint-glow',
+              },
+            },
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+      });
+
+      // Should pass because property values match exactly
+      expect(report.isValid).toBe(true);
+      expect(report.errors.filter(e => e.type === 'PART_UNAVAILABLE')).toHaveLength(0);
+    });
   });
 
   describe('Error handling', () => {
