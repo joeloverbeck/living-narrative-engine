@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex-penile-oral:breathe_teasingly_on_penis_lying_close",
+  "name": "Breathe Teasingly on Penis (Lying Close)",
+  "description": "Breathe teasingly on your partner's exposed penis while lying down close together on shared furniture.",
+  "targets": {
+    "primary": {
+      "scope": "sex-core:actors_lying_close_with_uncovered_penis",
+      "placeholder": "primary",
+      "description": "Partner lying close with an exposed penis"
+    }
+  },
+  "required_components": {
+    "actor": ["positioning:lying_down", "positioning:closeness"],
+    "primary": ["positioning:lying_down", "positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:giving_blowjob"]
+  },
+  "template": "breathe teasingly on {primary}'s penis",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#2a1a5e",
+    "textColor": "#ede7f6",
+    "hoverBackgroundColor": "#372483",
+    "hoverTextColor": "#ffffff"
+  }
+}

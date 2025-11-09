@@ -11,6 +11,7 @@
   "content": {
     "actions": [
       "breathe_teasingly_on_penis.action.json",
+      "breathe_teasingly_on_penis_lying_close.action.json",
       "breathe_teasingly_on_penis_sitting_close.action.json",
       "ejaculate_in_mouth.action.json",
       "guide_blowjob_with_hand.action.json",
@@ -31,6 +32,7 @@
       "take_penis_in_mouth_kneeling.action.json"
     ],
     "conditions": [
+      "event-is-action-breathe-teasingly-on-penis-lying-close.condition.json",
       "event-is-action-breathe-teasingly-on-penis-sitting-close.condition.json",
       "event-is-action-breathe-teasingly-on-penis.condition.json",
       "event-is-action-ejaculate-in-mouth.condition.json",
@@ -53,6 +55,7 @@
     ],
     "rules": [
       "handle_breathe_teasingly_on_penis.rule.json",
+      "handle_breathe_teasingly_on_penis_lying_close.rule.json",
       "handle_breathe_teasingly_on_penis_sitting_close.rule.json",
       "handle_ejaculate_in_mouth.rule.json",
       "handle_guide_blowjob_with_hand.rule.json",

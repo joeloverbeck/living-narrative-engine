@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex-penile-oral:event-is-action-breathe-teasingly-on-penis-lying-close",
+  "description": "Checks if the triggering event is for the 'sex-penile-oral:breathe_teasingly_on_penis_lying_close' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex-penile-oral:breathe_teasingly_on_penis_lying_close"
+    ]
+  }
+}
