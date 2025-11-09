@@ -31,7 +31,8 @@
       "pull_penis_out_of_vagina.action.json",
       "ride_penis_greedily.action.json",
       "slide_penis_along_labia.action.json",
-      "straddling_penis_milking.action.json"
+      "straddling_penis_milking.action.json",
+      "thrust_penis_slowly_and_tenderly.action.json"
     ],
     "conditions": [
       "event-is-action-insert-penis-into-vagina.condition.json",
@@ -39,7 +40,8 @@
       "event-is-action-pull-penis-out-of-vagina.condition.json",
       "event-is-action-ride-penis-greedily.condition.json",
       "event-is-action-slide-penis-along-labia.condition.json",
-      "event-is-action-straddling-penis-milking.condition.json"
+      "event-is-action-straddling-penis-milking.condition.json",
+      "event-is-action-thrust-penis-slowly-and-tenderly.condition.json"
     ],
     "rules": [
       "handle_insert_penis_into_vagina.rule.json",
@@ -47,7 +49,8 @@
       "handle_pull_penis_out_of_vagina.rule.json",
       "handle_ride_penis_greedily.rule.json",
       "handle_slide_penis_along_labia.rule.json",
-      "handle_straddling_penis_milking.rule.json"
+      "handle_straddling_penis_milking.rule.json",
+      "handle_thrust_penis_slowly_and_tenderly.rule.json"
     ],
     "scopes": [
       "actors_being_fucked_vaginally_by_me.scope",
