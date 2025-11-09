@@ -1,0 +1,30 @@
+// Scope for lying-down partners sharing the same furniture where the target has uncovered testicles
+// Used by actions requiring both actors to be lying down close together with exposed testicles
+// Excludes targets who are currently fucking the actor to prevent impossible positioning
+sex-core:actors_lying_close_with_uncovered_testicle := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"!!": {"var": "entity.components.positioning:lying_down"}},
+    {"!!": {"var": "actor.components.positioning:lying_down"}},
+    {
+      "==": [
+        {"var": "actor.components.positioning:lying_down.furniture_id"},
+        {"var": "entity.components.positioning:lying_down.furniture_id"}
+      ]
+    },
+    {"hasPartOfType": [".", "testicle"]},
+    {
+      "or": [
+        {"not": {"isSocketCovered": [".", "left_testicle"]}},
+        {"not": {"isSocketCovered": [".", "right_testicle"]}}
+      ]
+    },
+    {
+      "not": {
+        "and": [
+          {"!!": {"var": "entity.components.positioning:fucking_vaginally"}},
+          {"==": [{"var": "entity.components.positioning:fucking_vaginally.targetId"}, {"var": "actor.id"}]}
+        ]
+      }
+    }
+  ]
+}]
