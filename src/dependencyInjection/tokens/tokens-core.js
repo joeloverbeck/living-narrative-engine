@@ -256,6 +256,7 @@ export const coreTokens = freeze({
   SummaryPhase: 'SummaryPhase',
   BlueprintRecipeValidationRule: 'BlueprintRecipeValidationRule',
   ComponentExistenceValidationRule: 'ComponentExistenceValidationRule',
+  PropertySchemaValidationRule: 'PropertySchemaValidationRule',
   ScopeEngine: 'ScopeEngine',
   DslParser: 'DslParser',
   TraceContextFactory: 'TraceContextFactory',

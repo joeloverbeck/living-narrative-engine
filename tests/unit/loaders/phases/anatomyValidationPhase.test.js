@@ -21,9 +21,25 @@ describe('AnatomyValidationPhase', () => {
     ]);
     mockValidationRule.ruleId = 'blueprint-recipe-coverage';
 
+    // Create mock component existence validation rule
+    const mockComponentExistenceRule = testBed.createMock(
+      'componentExistenceValidationRule',
+      ['ruleId', 'shouldApply', 'validate']
+    );
+    mockComponentExistenceRule.ruleId = 'component-existence';
+
+    // Create mock property schema validation rule
+    const mockPropertySchemaRule = testBed.createMock(
+      'propertySchemaValidationRule',
+      ['ruleId', 'shouldApply', 'validate']
+    );
+    mockPropertySchemaRule.ruleId = 'property-schema-validation';
+
     validationPhase = new AnatomyValidationPhase({
       logger: mockLogger,
       blueprintRecipeValidationRule: mockValidationRule,
+      componentExistenceValidationRule: mockComponentExistenceRule,
+      propertySchemaValidationRule: mockPropertySchemaRule,
     });
   });
 

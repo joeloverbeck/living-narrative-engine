@@ -14,6 +14,7 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../anatomy/validation/rules/blueprintRecipeValidationRule.js').BlueprintRecipeValidationRule} BlueprintRecipeValidationRule */
 /** @typedef {import('../../anatomy/validation/rules/componentExistenceValidationRule.js').ComponentExistenceValidationRule} ComponentExistenceValidationRule */
+/** @typedef {import('../../anatomy/validation/rules/propertySchemaValidationRule.js').PropertySchemaValidationRule} PropertySchemaValidationRule */
 
 /**
  * Phase that validates anatomy blueprints and recipes after content loading
@@ -22,6 +23,7 @@ export default class AnatomyValidationPhase extends LoaderPhase {
   #logger;
   #blueprintRecipeValidationRule;
   #componentExistenceValidationRule;
+  #propertySchemaValidationRule;
 
   /**
    * Creates a new anatomy validation phase
@@ -30,11 +32,13 @@ export default class AnatomyValidationPhase extends LoaderPhase {
    * @param {ILogger} params.logger - Logger instance
    * @param {BlueprintRecipeValidationRule} params.blueprintRecipeValidationRule - Blueprint recipe validation rule
    * @param {ComponentExistenceValidationRule} params.componentExistenceValidationRule - Component existence validation rule
+   * @param {PropertySchemaValidationRule} params.propertySchemaValidationRule - Property schema validation rule
    */
   constructor({
     logger,
     blueprintRecipeValidationRule,
     componentExistenceValidationRule,
+    propertySchemaValidationRule,
   }) {
     super('anatomy-validation');
 
@@ -46,6 +50,7 @@ export default class AnatomyValidationPhase extends LoaderPhase {
     this.#blueprintRecipeValidationRule = blueprintRecipeValidationRule;
     this.#componentExistenceValidationRule =
       componentExistenceValidationRule;
+    this.#propertySchemaValidationRule = propertySchemaValidationRule;
   }
 
   /**
@@ -81,8 +86,11 @@ export default class AnatomyValidationPhase extends LoaderPhase {
     const validationChain = new ValidationRuleChain({ logger: this.#logger });
 
     // Add validation rules in order of execution
-    // Component existence must be checked first to ensure referenced components exist
+    // 1. Component existence must be checked first to ensure referenced components exist
     validationChain.addRule(this.#componentExistenceValidationRule);
+    // 2. Property schema validation validates that property values match component dataSchemas
+    validationChain.addRule(this.#propertySchemaValidationRule);
+    // 3. Blueprint-recipe validation checks structural compatibility
     validationChain.addRule(this.#blueprintRecipeValidationRule);
 
     await validationChain.execute(validationContext);
