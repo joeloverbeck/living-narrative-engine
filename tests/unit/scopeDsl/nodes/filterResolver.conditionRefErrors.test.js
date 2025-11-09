@@ -80,7 +80,7 @@ describe('filterResolver condition_ref error handling', () => {
     expect(errorHandler.handleError).toHaveBeenCalledTimes(1);
     const [handledError, handledCtx, resolverName, code] = errorHandler.handleError.mock.calls[0];
     expect(handledError).toBeInstanceOf(Error);
-    expect(handledError.message).toContain('Could not resolve condition_ref');
+    expect(handledError.message).toContain('Filter logic evaluation failed');
     expect(handledCtx).toBe(ctx);
     expect(resolverName).toBe('FilterResolver');
     expect(code).toBe(ErrorCodes.RESOLUTION_FAILED_GENERIC);
@@ -92,7 +92,7 @@ describe('filterResolver condition_ref error handling', () => {
     const ctx = createCommonContext();
 
     expect(() => resolver.resolve(baseNode, ctx)).toThrow(
-      /Could not resolve condition_ref: missing predicate/
+      /Filter logic evaluation failed/
     );
     expect(deps.logicEval.evaluate).toHaveBeenCalledTimes(1);
   });

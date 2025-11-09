@@ -465,6 +465,6 @@ describe('filterResolver integration coverage', () => {
           runtimeCtx,
         },
       ),
-    ).toThrow(/Could not resolve condition_ref/);
+    ).toThrow(/Filter logic evaluation failed/);
   });
 });

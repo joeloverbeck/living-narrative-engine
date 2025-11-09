@@ -30,6 +30,7 @@ import {
 import { ScopeResolverHelpers } from './scopeResolverHelpers.js';
 import { ParameterValidator } from '../../../src/scopeDsl/core/parameterValidator.js';
 import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
+import { ScopeResolutionError } from '../../../src/scopeDsl/errors/scopeResolutionError.js';
 import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 
@@ -2266,18 +2267,52 @@ beforeEach(async () => {
 
         return { success: true, value: result };
       } catch (err) {
+        // Wrap with enhanced context
         if (err instanceof ParameterValidationError) {
-          // Enhanced error with full context for test debugging
+          const wrappedError = new ScopeResolutionError(
+            'Invalid parameter passed to scope resolver',
+            {
+              scopeName: fullScopeName,
+              phase: 'parameter extraction',
+              parameters: {
+                contextType: typeof context,
+                hasActorEntity: !!context.actorEntity,
+                hasActor: !!context.actor,
+                extractedType: typeof actorEntity,
+              },
+              expected: 'Entity instance with id property',
+              received: 'Full context object with actor, targets properties',
+              hint: 'Extract actorEntity from context before passing to ScopeEngine.resolve()',
+              suggestion: 'Use: const actorEntity = context.actorEntity || context.actor',
+              example:
+                'const actorEntity = context.actorEntity || context.actor;\n' +
+                'const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);',
+              originalError: err,
+            }
+          );
+
           return {
             success: false,
-            error: err.toString(),
-            context: err.context,
+            error: wrappedError.toString(),
+            context: wrappedError.context,
           };
         }
 
+        // Wrap other errors with scope context
+        const wrappedError = new ScopeResolutionError(
+          `Failed to resolve scope "${fullScopeName}"`,
+          {
+            scopeName: fullScopeName,
+            phase: 'scope resolution',
+            hint: 'Check scope definition and entity components',
+            originalError: err,
+          }
+        );
+
         return {
           success: false,
-          error: `Failed to resolve scope "${fullScopeName}": ${err.message}`,
+          error: wrappedError.toString(),
+          context: wrappedError.context,
         };
       }
     };
