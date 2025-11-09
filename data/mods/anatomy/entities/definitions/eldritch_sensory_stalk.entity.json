@@ -4,7 +4,7 @@
   "description": "Retractable stalk with cluster of compound eyes providing omnidirectional vision",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_sensory_appendage"
+      "subType": "eldritch_sensory_stalk"
     },
     "core:name": {
       "text": "sensory stalk"

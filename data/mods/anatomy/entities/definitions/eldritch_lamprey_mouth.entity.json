@@ -4,7 +4,7 @@
   "description": "Circular mouth with concentric rings of sharp teeth",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_mouth"
+      "subType": "eldritch_lamprey_mouth"
     },
     "core:name": {
       "text": "lamprey mouth"

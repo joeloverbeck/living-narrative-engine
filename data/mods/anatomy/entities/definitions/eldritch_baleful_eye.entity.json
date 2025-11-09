@@ -4,7 +4,7 @@
   "description": "Massive central eye with pupil-less amber iris that induces madness",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_eye"
+      "subType": "eldritch_baleful_eye"
     },
     "core:name": {
       "text": "baleful eye"
