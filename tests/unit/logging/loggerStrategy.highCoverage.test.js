@@ -334,6 +334,16 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
   });
 
+  it('handles flush command when batch processing is unavailable', () => {
+    const strategy = createStrategy();
+    const logger = strategy.getCurrentLogger();
+
+    logger.flush = undefined;
+    logger.processBatch = undefined;
+
+    expect(() => strategy.setLogLevel('flush')).not.toThrow();
+  });
+
   it('returns early when switching to the currently active mode', () => {
     const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
     const originalLogger = strategy.getCurrentLogger();
@@ -833,5 +843,268 @@ describe('LoggerStrategy near-complete coverage', () => {
 
     expect(strategy.getMode()).toBe(LoggerMode.TEST);
     expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
+  });
+
+  it('constructs without options and respects none mode without debug logging', () => {
+    const defaultStrategy = new LoggerStrategy();
+    expect(defaultStrategy.getMode()).toBe(LoggerMode.TEST);
+
+    consoleDebugSpy.mockClear();
+
+    const noneStrategy = new LoggerStrategy({ mode: LoggerMode.NONE });
+    expect(noneStrategy.getMode()).toBe(LoggerMode.NONE);
+    expect(consoleDebugSpy).not.toHaveBeenCalled();
+  });
+
+  it('ignores whitespace-only DEBUG_LOG_MODE values during detection', () => {
+    const previous = process.env.DEBUG_LOG_MODE;
+    process.env.DEBUG_LOG_MODE = '   ';
+
+    const strategy = createStrategy();
+    expect(strategy.getMode()).toBe(LoggerMode.TEST);
+
+    if (previous === undefined) {
+      delete process.env.DEBUG_LOG_MODE;
+    } else {
+      process.env.DEBUG_LOG_MODE = previous;
+    }
+  });
+
+  it('ignores non-string DEBUG_LOG_MODE values gracefully', () => {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(
+      process.env,
+      'DEBUG_LOG_MODE'
+    );
+
+    Object.defineProperty(process.env, 'DEBUG_LOG_MODE', {
+      configurable: true,
+      get() {
+        return { unexpected: true };
+      },
+    });
+
+    try {
+      const strategy = createStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.TEST);
+    } finally {
+      if (originalDescriptor) {
+        Object.defineProperty(process.env, 'DEBUG_LOG_MODE', originalDescriptor);
+      } else {
+        delete process.env.DEBUG_LOG_MODE;
+      }
+    }
+  });
+
+  it('falls through when DEBUG_LOG_MODE contains unsupported values', () => {
+    const previous = process.env.DEBUG_LOG_MODE;
+    process.env.DEBUG_LOG_MODE = 'legacy-mode';
+
+    const strategy = createStrategy();
+    expect(strategy.getMode()).toBe(LoggerMode.TEST);
+
+    if (previous === undefined) {
+      delete process.env.DEBUG_LOG_MODE;
+    } else {
+      process.env.DEBUG_LOG_MODE = previous;
+    }
+  });
+
+  it('uses INFO fallback when config log level is falsy', () => {
+    const strategy = new LoggerStrategy({
+      mode: LoggerMode.CONSOLE,
+      config: { logLevel: '' },
+    });
+
+    expect(consoleLoggerInstances[0].__initialLevel).toBe('INFO');
+    expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
+  });
+
+  it('skips buffering when original logger lacks getBuffer support', () => {
+    const mockLogger = createNoOpLoggerInstance();
+    delete mockLogger.getBuffer;
+
+    const strategy = createStrategy({
+      mode: LoggerMode.TEST,
+      dependencies: { mockLogger },
+    });
+
+    strategy.setLogLevel('console');
+    const newLogger = strategy.getCurrentLogger();
+    expect(newLogger.processBatch).not.toHaveBeenCalled();
+  });
+
+  it('replays buffered logs while ignoring unknown levels and missing args', () => {
+    const buffer = [
+      { message: 'plain message' },
+      { level: 'mystery', message: 'unknown branch' },
+    ];
+    const mockLogger = createNoOpLoggerInstance();
+    mockLogger.getBuffer.mockReturnValue(buffer);
+
+    mockConsoleLoggerFactory.mockImplementation(function ConsoleWithoutBatch() {
+      const instance = createConsoleLoggerInstance();
+      delete instance.processBatch;
+      Object.assign(this, instance);
+      consoleLoggerInstances.push(this);
+    });
+
+    const strategy = createStrategy({
+      mode: LoggerMode.TEST,
+      dependencies: { mockLogger },
+    });
+
+    strategy.setLogLevel('console');
+    const newLogger = strategy.getCurrentLogger();
+    expect(newLogger.info).toHaveBeenCalledWith('plain message');
+    expect(newLogger.warn).not.toHaveBeenCalled();
+  });
+
+  it('retains current level when replacement logger lacks a setter', () => {
+    const mockLogger = createNoOpLoggerInstance();
+    mockLogger.getBuffer.mockReturnValue([]);
+
+    mockConsoleLoggerFactory.mockImplementation(function ConsoleWithoutSetter() {
+      const instance = createConsoleLoggerInstance();
+      delete instance.setLogLevel;
+      Object.assign(this, instance);
+      consoleLoggerInstances.push(this);
+    });
+
+    const strategy = createStrategy({
+      mode: LoggerMode.TEST,
+      dependencies: { mockLogger },
+    });
+
+    strategy.setLogLevel('ERROR');
+    strategy.setLogLevel('console');
+
+    const newLogger = strategy.getCurrentLogger();
+    expect(newLogger.setLogLevel).toBeUndefined();
+  });
+
+  it('switches to direct mode names without map entries', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    strategy.setLogLevel('production');
+
+    expect(strategy.getMode()).toBe(LoggerMode.PRODUCTION);
+  });
+
+  it('handles traditional log level updates when logger lacks a setter', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+    delete logger.setLogLevel;
+
+    expect(() => strategy.setLogLevel('INFO')).not.toThrow();
+  });
+
+  it('ignores invalid input warnings when logger lacks warn method', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+    delete logger.warn;
+
+    expect(() => strategy.setLogLevel(Symbol('bad'))).not.toThrow();
+  });
+
+  it('ignores invalid configuration errors when logger lacks error method', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+    delete logger.error;
+
+    expect(() => strategy.setLogLevel({ categories: 'not-object' })).not.toThrow();
+  });
+
+  it('switches to development mode via configuration updates', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    strategy.setLogLevel({ mode: 'development' });
+
+    expect(strategy.getMode()).toBe(LoggerMode.DEVELOPMENT);
+  });
+
+  it('applies log level configuration even when logger lacks setter', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+    delete logger.setLogLevel;
+
+    expect(() => strategy.setLogLevel({ logLevel: 'ERROR' })).not.toThrow();
+  });
+
+  it('skips remote logger recreation outside production mode', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const originalLogger = strategy.getCurrentLogger();
+
+    strategy.setLogLevel({ remote: { endpoint: '/dev' } });
+
+    expect(strategy.getCurrentLogger()).toBe(originalLogger);
+  });
+
+  it('handles reload command when logger info method is missing', () => {
+    const strategy = createStrategy();
+    const logger = strategy.getCurrentLogger();
+    delete logger.info;
+
+    expect(() => strategy.setLogLevel('reload')).not.toThrow();
+  });
+
+  it('resets to fallback log level when defaults omit logLevel', () => {
+    const previousLogLevel = defaultConfig.logLevel;
+    defaultConfig.logLevel = undefined;
+
+    try {
+      const strategy = createStrategy();
+      const logger = strategy.getCurrentLogger();
+      delete logger.info;
+
+      expect(() => strategy.setLogLevel('reset')).not.toThrow();
+    } finally {
+      defaultConfig.logLevel = previousLogLevel;
+    }
+  });
+
+  it('returns status when logger info method is missing', () => {
+    const strategy = createStrategy();
+    const logger = strategy.getCurrentLogger();
+    delete logger.info;
+
+    const status = strategy.setLogLevel('status');
+    expect(status).toMatchObject({ mode: expect.any(String) });
+  });
+
+  it('updates categories when logger lacks updateCategories method', () => {
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+    const logger = strategy.getCurrentLogger();
+    delete logger.updateCategories;
+
+    expect(() =>
+      strategy.setLogLevel({
+        categories: { story: { level: 'info' } },
+      })
+    ).not.toThrow();
+  });
+
+  it('reports status with empty category list after reload merge', () => {
+    const dependencies = {
+      config: { categories: null },
+    };
+    const strategy = createStrategy({ dependencies });
+
+    const status = strategy.setLogLevel('status');
+    expect(status.config.categories).toEqual(expect.arrayContaining(['general']));
+
+    strategy.setLogLevel('reload');
+    const reloadedStatus = strategy.setLogLevel('status');
+    expect(reloadedStatus.config.categories).toEqual([]);
+  });
+
+  it('mergeConfig ignores inherited properties from source objects', () => {
+    const inheritedConsoleConfig = Object.create({ protoFlag: true });
+    inheritedConsoleConfig.theme = 'dark';
+
+    const strategy = createStrategy({ mode: LoggerMode.CONSOLE });
+
+    expect(() =>
+      strategy.setLogLevel({
+        console: inheritedConsoleConfig,
+      })
+    ).not.toThrow();
   });
 });

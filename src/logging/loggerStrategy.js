@@ -170,59 +170,49 @@ class LoggerStrategy {
    * @param {object} [config] - Configuration object
    * @returns {string} The determined logger mode
    */
-  #detectMode(explicitMode, config = {}) {
+  #detectMode(explicitMode, config) {
     // Priority 1: Explicit mode parameter
     if (explicitMode && Object.values(LoggerMode).includes(explicitMode)) {
       return explicitMode;
     }
 
+    const processRef = globalThis?.process;
+
     // Priority 2: Environment variable DEBUG_LOG_MODE
-    // eslint-disable-next-line no-undef
-    if (typeof process !== 'undefined' && process.env?.DEBUG_LOG_MODE) {
-      // eslint-disable-next-line no-undef
-      const rawEnvMode = process.env.DEBUG_LOG_MODE;
-      const envMode =
-        typeof rawEnvMode === 'string' ? rawEnvMode.trim().toLowerCase() : '';
-      if (envMode && Object.values(LoggerMode).includes(envMode)) {
+    const rawEnvMode = processRef?.env?.DEBUG_LOG_MODE;
+    if (typeof rawEnvMode === 'string') {
+      const envMode = rawEnvMode.trim().toLowerCase();
+      if (!envMode) {
+        // Continue to other detection strategies when the env flag is empty
+      } else if (Object.values(LoggerMode).includes(envMode)) {
         return envMode;
       }
     }
 
     // Priority 3: Config file mode
-    if (config.mode) {
-      const normalizedConfigMode =
-        typeof config.mode === 'string'
-          ? config.mode.trim().toLowerCase()
-          : config.mode;
-      if (
-        typeof normalizedConfigMode === 'string' &&
-        Object.values(LoggerMode).includes(normalizedConfigMode)
-      ) {
-        return normalizedConfigMode;
-      }
+    const normalizedConfigMode =
+      typeof config?.mode === 'string' ? config.mode.trim().toLowerCase() : '';
+    if (
+      normalizedConfigMode &&
+      Object.values(LoggerMode).includes(normalizedConfigMode)
+    ) {
+      return normalizedConfigMode;
     }
 
     // Priority 4: NODE_ENV mapping or JEST_WORKER_ID detection
-    if (typeof process !== 'undefined') {
-      // Check for Jest test environment first (JEST_WORKER_ID is always set in Jest)
-      // eslint-disable-next-line no-undef
-      if (process.env?.JEST_WORKER_ID !== undefined) {
-        return LoggerMode.TEST;
-      }
+    if (processRef?.env?.JEST_WORKER_ID !== undefined) {
+      return LoggerMode.TEST;
+    }
 
-      // Then check NODE_ENV
-      // eslint-disable-next-line no-undef
-      if (process.env?.NODE_ENV) {
-        // eslint-disable-next-line no-undef
-        const nodeEnv = process.env.NODE_ENV.toLowerCase();
-        switch (nodeEnv) {
-          case 'test':
-            return LoggerMode.TEST;
-          case 'production':
-            return LoggerMode.PRODUCTION;
-          case 'development':
-            return LoggerMode.DEVELOPMENT;
-        }
+    const nodeEnv = processRef?.env?.NODE_ENV;
+    if (typeof nodeEnv === 'string') {
+      switch (nodeEnv.toLowerCase()) {
+        case 'test':
+          return LoggerMode.TEST;
+        case 'production':
+          return LoggerMode.PRODUCTION;
+        case 'development':
+          return LoggerMode.DEVELOPMENT;
       }
     }
 
@@ -794,9 +784,7 @@ class LoggerStrategy {
     // Apply mode change if specified
     if (config.mode && config.mode !== this.#mode) {
       const targetMode = MODE_SWITCH_MAP[config.mode] || config.mode;
-      if (Object.values(LoggerMode).includes(targetMode)) {
-        this.#switchMode(targetMode);
-      }
+      this.#switchMode(targetMode);
     }
 
     // Apply category updates
@@ -873,7 +861,10 @@ class LoggerStrategy {
         // Force any pending logs to be processed
         if (typeof this.#logger.flush === 'function') {
           this.#logger.flush();
-        } else if (typeof this.#logger.processBatch === 'function') {
+          break;
+        }
+
+        if (typeof this.#logger.processBatch === 'function') {
           this.#logger.processBatch([]);
         }
         break;
