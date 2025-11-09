@@ -11,6 +11,38 @@
 
 Create comprehensive test suites for parameter validation to ensure 100% coverage of validation logic and verify correct error messages with context.
 
+## Production Code Assumptions (Verified)
+
+### ParameterValidationError Class
+- **Location**: `src/scopeDsl/errors/parameterValidationError.js`
+- **Extends**: `BaseError` (not `TypeError` directly)
+- **Properties**: message, context (with expected, received, hint, example fields)
+- **Methods**: `toString()`, `toJSON()`, `getSeverity()`, `isRecoverable()`
+- **Status**: ✅ Implemented and working
+
+### ParameterValidator Class
+- **Location**: `src/scopeDsl/core/parameterValidator.js`
+- **Static Methods**:
+  - `validateActorEntity(value, source)` - Validates entity instances
+  - `validateRuntimeContext(value, source)` - Validates runtime context
+  - `validateAST(value, source)` - Validates AST nodes
+- **Key Behaviors**:
+  - ✅ Checks for action context objects (actor/targets properties)
+  - ✅ Checks for scope context objects (runtimeCtx/dispatcher properties)
+  - ✅ Only `entityManager` is required in runtimeCtx (jsonLogicEval and logger are optional)
+  - ✅ AST validation checks for `type` property (not `kind`)
+  - ✅ Detects "undefined" string as invalid entity id
+- **Status**: ✅ Implemented and working
+
+### Integration Points
+- **ScopeEngine.resolve()**: ✅ Uses all three validation methods at entry point
+- **FilterResolver**: ❌ Does NOT use ParameterValidator
+- **SourceResolver**: ❌ Does NOT use ParameterValidator
+- **StepResolver**: ❌ Does NOT use ParameterValidator
+- **Custom Scope Resolvers**: ❌ Do NOT use ParameterValidator
+
+**Architecture**: Single entry point validation at ScopeEngine.resolve() - fail-fast approach.
+
 ## Objectives
 
 - Achieve 100% coverage of ParameterValidator class
@@ -21,13 +53,39 @@ Create comprehensive test suites for parameter validation to ensure 100% coverag
 ## Test Files
 
 ### 1. ParameterValidationError Tests
-**File**: `tests/unit/scopeDsl/core/parameterValidationError.test.js` (new)
+**File**: `tests/unit/scopeDsl/errors/parameterValidationError.test.js` (✅ already exists - needs review and enhancement)
 
 ### 2. ParameterValidator Tests
-**File**: `tests/unit/scopeDsl/core/parameterValidator.test.js` (new)
+**File**: `tests/unit/scopeDsl/core/parameterValidator.test.js` (✅ already exists - needs corrections)
+
+**⚠️ KNOWN ISSUES IN EXISTING TESTS**:
+1. Lines 354-410: Tests expect jsonLogicEval and logger to be required, but production code only requires entityManager
+2. These tests will FAIL when run because they expect errors that won't be thrown
+3. Need to replace these with tests that verify jsonLogicEval and logger are OPTIONAL
 
 ### 3. Integration Tests
-**File**: `tests/integration/scopeDsl/parameterValidationIntegration.test.js` (new)
+**File**: `tests/integration/scopeDsl/parameterValidationIntegration.test.js` (❌ does not exist - needs creation)
+
+## Issues to Fix in Existing Tests
+
+### ParameterValidator Test Issues (tests/unit/scopeDsl/core/parameterValidator.test.js)
+
+**Lines 354-370**: `should fail for missing jsonLogicEval`
+- ❌ INCORRECT: Test expects validation to fail when jsonLogicEval is missing
+- ✅ CORRECT: jsonLogicEval is OPTIONAL, validation should PASS
+
+**Lines 373-390**: `should fail for missing logger`
+- ❌ INCORRECT: Test expects validation to fail when logger is missing
+- ✅ CORRECT: logger is OPTIONAL, validation should PASS
+
+**Lines 392-410**: `should fail for missing multiple services`
+- ❌ INCORRECT: Test expects validation to fail for missing jsonLogicEval and logger
+- ✅ CORRECT: Only entityManager is required, validation should PASS if entityManager present
+
+**Recommended Fix**: Replace these three tests with:
+- `should pass when jsonLogicEval is missing (optional service)`
+- `should pass when logger is missing (optional service)`
+- `should pass when both optional services are missing`
 
 ## Test Specifications
 
@@ -120,8 +178,11 @@ describe('ParameterValidator', () => {
 
   describe('validateRuntimeContext', () => {
     describe('valid cases', () => {
-      it('should pass for complete runtimeCtx')
+      it('should pass for runtimeCtx with entityManager only (minimum required)')
+      it('should pass for complete runtimeCtx with all optional services')
       it('should allow extra properties')
+      it('should pass when jsonLogicEval is missing (optional)')
+      it('should pass when logger is missing (optional)')
     });
 
     describe('invalid type', () => {
@@ -130,25 +191,26 @@ describe('ParameterValidator', () => {
       it('should throw for primitive')
     });
 
-    describe('missing services', () => {
-      it('should throw for missing entityManager')
-      it('should throw for missing jsonLogicEval')
-      it('should throw for missing logger')
-      it('should throw for missing multiple services')
-      it('should list all missing services in error')
+    describe('missing critical services', () => {
+      it('should throw for missing entityManager (ONLY critical service)')
+      it('should list missing critical service in error')
     });
 
     describe('error messages', () => {
       it('should include source location')
       it('should include missing service names')
       it('should provide example runtimeCtx')
+      it('should clarify entityManager is required, others optional')
     });
   });
 
   describe('validateAST', () => {
     describe('valid cases', () => {
-      it('should pass for object with kind')
-      it('should allow extra properties')
+      it('should pass for object with type property')
+      it('should pass for Source node with both type and kind')
+      it('should pass for Filter node with type property')
+      it('should pass for Union node with type property')
+      it('should allow extra properties beyond type')
     });
 
     describe('invalid type', () => {
@@ -157,13 +219,15 @@ describe('ParameterValidator', () => {
       it('should throw for primitive')
     });
 
-    describe('missing kind', () => {
-      it('should throw for object without kind')
+    describe('missing type property', () => {
+      it('should throw for object without type property')
+      it('should throw for object with only kind property (missing type)')
     });
 
     describe('error messages', () => {
       it('should include source location')
-      it('should indicate kind is required')
+      it('should indicate type property is required for resolver dispatch')
+      it('should list valid AST node types in hint')
     });
   });
 });
@@ -171,42 +235,47 @@ describe('ParameterValidator', () => {
 
 ### Suite 3: Integration Tests
 
+**⚠️ CURRENT STATE**: Parameter validation only occurs in ScopeEngine.resolve(). Individual resolvers (FilterResolver, SourceResolver, etc.) do not perform parameter validation themselves.
+
 ```javascript
 describe('Parameter Validation Integration', () => {
-  describe('ScopeEngine validation', () => {
-    it('should validate AST at entry point')
-    it('should validate actorEntity at entry point')
-    it('should validate runtimeCtx at entry point')
-    it('should propagate ParameterValidationError')
-    it('should include "ScopeEngine.resolve" in error')
+  describe('ScopeEngine validation (primary entry point)', () => {
+    it('should validate AST at entry point before resolution')
+    it('should validate actorEntity at entry point before resolution')
+    it('should validate runtimeCtx at entry point before resolution')
+    it('should propagate ParameterValidationError unchanged')
+    it('should include "ScopeEngine.resolve" in error source')
+    it('should fail fast before calling any resolvers')
   });
 
-  describe('FilterResolver validation', () => {
-    it('should validate actorEntity')
-    it('should include "FilterResolver.resolve" in error')
-  });
-
-  describe('SourceResolver validation', () => {
-    it('should validate actorEntity')
-    it('should include "SourceResolver.resolve" in error')
-  });
-
-  describe('Custom scope resolver validation', () => {
-    it('should validate extracted actorEntity')
-    it('should detect context object')
-    it('should return error with context')
-    it('should include "CustomScopeResolver" in error')
+  describe('Validation failure scenarios', () => {
+    it('should catch invalid AST before parsing')
+    it('should catch missing actorEntity.id before resolution')
+    it('should catch action context passed as actorEntity')
+    it('should catch scope context passed as actorEntity')
+    it('should catch missing entityManager in runtimeCtx')
+    it('should catch "undefined" string as entity id')
   });
 
   describe('End-to-end validation flow', () => {
-    it('should catch invalid params at appropriate layer')
+    it('should catch invalid params at ScopeEngine layer (fail-fast)')
     it('should maintain error context through call stack')
-    it('should provide actionable error messages')
+    it('should provide actionable error messages with hints')
+    it('should provide code examples in error output')
   });
 
   describe('Error recovery', () => {
     it('should allow retry after fixing parameters')
     it('should not corrupt state on validation failure')
+    it('should maintain clean error state after failed validation')
+  });
+
+  describe('Resolver integration (no direct validation)', () => {
+    it('should receive pre-validated parameters from ScopeEngine')
+    it('should not re-validate parameters in FilterResolver')
+    it('should not re-validate parameters in SourceResolver')
+    it('should not re-validate parameters in StepResolver')
+    it('should rely on ScopeEngine validation as single entry point')
   });
 });
 ```
@@ -262,7 +331,26 @@ Add test examples to:
 
 - **Spec Section**: 7. Testing Strategy (lines 2236-2303, 2406-2466)
 - **Related Tickets**:
-  - MODTESDIAIMP-001 (ParameterValidationError implementation)
-  - MODTESDIAIMP-002 (ParameterValidator implementation)
-  - MODTESDIAIMP-003 (ScopeEngine integration)
-  - MODTESDIAIMP-004 (Resolver integration)
+  - MODTESDIAIMP-001 (ParameterValidationError implementation) ✅ Complete
+  - MODTESDIAIMP-002 (ParameterValidator implementation) ✅ Complete
+  - MODTESDIAIMP-003 (ScopeEngine integration) ✅ Complete
+  - MODTESDIAIMP-004 (Resolver integration) ⚠️ Different from spec - validation only in ScopeEngine
+
+## Summary of Corrections Made
+
+### Major Discrepancies Fixed
+
+1. **File Paths**: Corrected ParameterValidationError test path from `core/` to `errors/` subdirectory
+2. **Test Status**: Marked existing tests as "already exists" instead of "new"
+3. **Runtime Context Validation**: Corrected assumption that jsonLogicEval and logger are required (they're optional, only entityManager is required)
+4. **AST Validation**: Corrected assumption about `kind` property - actual validation checks for `type` property
+5. **Integration Points**: Removed incorrect assumptions about FilterResolver and SourceResolver using validation - only ScopeEngine validates parameters
+6. **Test Issues**: Documented three failing tests that need correction (lines 354-410 in parameterValidator.test.js)
+
+### Workflow Now Reflects Reality
+
+- ✅ Production code locations verified
+- ✅ Validation behavior documented accurately
+- ✅ Integration architecture clarified (single entry point)
+- ✅ Test corrections needed are clearly marked
+- ✅ All assumptions verified against actual code
