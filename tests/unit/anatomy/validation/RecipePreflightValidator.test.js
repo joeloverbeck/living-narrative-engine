@@ -12,6 +12,7 @@ describe('RecipePreflightValidator', () => {
   let mockDataRegistry;
   let mockAnatomyBlueprintRepository;
   let mockSchemaValidator;
+  let mockSlotGenerator;
 
   beforeEach(() => {
     mockLogger = {
@@ -35,10 +36,16 @@ describe('RecipePreflightValidator', () => {
       validate: () => ({ isValid: true, errors: [] }),
     };
 
+    mockSlotGenerator = {
+      extractSlotKeysFromLimbSet: () => [],
+      extractSlotKeysFromAppendage: () => [],
+    };
+
     validator = new RecipePreflightValidator({
       dataRegistry: mockDataRegistry,
       anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
       schemaValidator: mockSchemaValidator,
+      slotGenerator: mockSlotGenerator,
       logger: mockLogger,
     });
   });
@@ -55,6 +62,7 @@ describe('RecipePreflightValidator', () => {
             dataRegistry: {},
             anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
             schemaValidator: mockSchemaValidator,
+            slotGenerator: mockSlotGenerator,
             logger: mockLogger,
           })
       ).toThrow();
@@ -67,6 +75,7 @@ describe('RecipePreflightValidator', () => {
             dataRegistry: mockDataRegistry,
             anatomyBlueprintRepository: {},
             schemaValidator: mockSchemaValidator,
+            slotGenerator: mockSlotGenerator,
             logger: mockLogger,
           })
       ).toThrow();
@@ -79,6 +88,7 @@ describe('RecipePreflightValidator', () => {
             dataRegistry: mockDataRegistry,
             anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
             schemaValidator: {},
+            slotGenerator: mockSlotGenerator,
             logger: mockLogger,
           })
       ).toThrow();
@@ -121,7 +131,15 @@ describe('RecipePreflightValidator', () => {
         id: 'test:blueprint',
         root: 'test:root',
         structureTemplate: 'test:template',
+        additionalSlots: {},
       });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
+        }
+        return undefined;
+      };
 
       const recipe = {
         recipeId: 'test:recipe',
@@ -336,6 +354,7 @@ describe('RecipePreflightValidator', () => {
             id: 'test:blueprint',
             root: 'test:root',
             structureTemplate: 'test:template',
+            additionalSlots: {},
           };
         }
         return null;
@@ -352,6 +371,9 @@ describe('RecipePreflightValidator', () => {
               },
             },
           };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
         }
         return undefined;
       };
@@ -411,6 +433,7 @@ describe('RecipePreflightValidator', () => {
         id: 'test:blueprint',
         root: 'test:root',
         structureTemplate: 'test:template',
+        additionalSlots: {},
       });
 
       mockDataRegistry.get = (type, id) => {
@@ -424,6 +447,9 @@ describe('RecipePreflightValidator', () => {
               },
             },
           };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
         }
         return undefined;
       };
@@ -512,7 +538,15 @@ describe('RecipePreflightValidator', () => {
         id: 'test:blueprint',
         root: 'test:root',
         structureTemplate: 'test:template',
+        additionalSlots: {},
       });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
+        }
+        return undefined;
+      };
 
       const recipe = {
         recipeId: 'test:recipe',
@@ -580,6 +614,12 @@ describe('RecipePreflightValidator', () => {
         id: 'test:blueprint',
         root: 'test:root',
         structureTemplate: 'test:template',
+        slots: {
+          'test:pattern': {
+            socket: 'test:pattern',
+            requirements: { partType: 'test' },
+          },
+        },
       });
 
       const recipe = {
@@ -616,9 +656,25 @@ describe('RecipePreflightValidator', () => {
             id: 'test:blueprint',
             root: 'test:root',
             structureTemplate: 'test:template',
+            additionalSlots: {},
+          };
+        }
+        if (callCount === 2) {
+          return {
+            id: 'test:blueprint',
+            root: 'test:root',
+            structureTemplate: 'test:template',
+            additionalSlots: {},
           };
         }
         throw new Error('Blueprint fetch error');
+      };
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          throw new Error('Entity fetch error');
+        }
+        return undefined;
       };
 
       const originalError = mockLogger.error;

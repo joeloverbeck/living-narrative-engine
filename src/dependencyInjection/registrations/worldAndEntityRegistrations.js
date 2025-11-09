@@ -808,6 +808,7 @@ export function registerWorldAndEntity(container) {
       dataRegistry: c.resolve(tokens.IDataRegistry),
       anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
       schemaValidator: c.resolve(tokens.ISchemaValidator),
+      slotGenerator: c.resolve(tokens.ISlotGenerator),
     });
   });
   logger.debug(
