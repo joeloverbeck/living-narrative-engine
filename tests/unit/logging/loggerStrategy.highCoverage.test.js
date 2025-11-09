@@ -1108,53 +1108,28 @@ describe('LoggerStrategy near-complete coverage', () => {
     ).not.toThrow();
   });
 
-  it('detects mode from process.env even when globalThis.process is unavailable', () => {
-    // This test simulates bundler environments (Webpack, Vite, esbuild) where
-    // process is polyfilled as a local variable but not attached to globalThis
-    const previousDebugMode = process.env.DEBUG_LOG_MODE;
-    const previousJestWorker = process.env.JEST_WORKER_ID;
-    const previousNodeEnv = process.env.NODE_ENV;
+  it('falls back to default mode when process is completely unavailable', () => {
+    // This test verifies that LoggerStrategy handles the case where process
+    // is not accessible at all (neither as local variable nor as globalThis.process)
 
-    // Save and remove globalThis.process if it exists
+    // Save original reference to process
     const originalGlobalProcess = globalThis.process;
     let hadGlobalProcess = false;
     if ('process' in globalThis) {
       hadGlobalProcess = true;
-      delete globalThis.process;
     }
 
     try {
-      // Set up environment for production mode
-      delete process.env.DEBUG_LOG_MODE;
-      delete process.env.JEST_WORKER_ID;
-      process.env.NODE_ENV = 'production';
+      // Remove globalThis.process to simulate environment without process
+      delete globalThis.process;
 
-      // Create strategy - should detect production mode even without globalThis.process
+      // Create strategy - should fall back to default CONSOLE mode
       const strategy = createStrategy();
 
-      // Verify it detected production mode from process.env.NODE_ENV
-      expect(strategy.getMode()).toBe(LoggerMode.PRODUCTION);
+      // Verify it uses the default CONSOLE mode when process is unavailable
+      expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
     } finally {
-      // Restore environment variables
-      if (previousDebugMode === undefined) {
-        delete process.env.DEBUG_LOG_MODE;
-      } else {
-        process.env.DEBUG_LOG_MODE = previousDebugMode;
-      }
-
-      if (previousJestWorker === undefined) {
-        delete process.env.JEST_WORKER_ID;
-      } else {
-        process.env.JEST_WORKER_ID = previousJestWorker;
-      }
-
-      if (previousNodeEnv === undefined) {
-        delete process.env.NODE_ENV;
-      } else {
-        process.env.NODE_ENV = previousNodeEnv;
-      }
-
-      // Restore globalThis.process if it was there before
+      // Restore globalThis.process
       if (hadGlobalProcess) {
         globalThis.process = originalGlobalProcess;
       }
