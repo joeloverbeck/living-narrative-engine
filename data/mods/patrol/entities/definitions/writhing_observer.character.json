@@ -1,0 +1,27 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "patrol:writhing_observer",
+    "components": {
+        "core:name": {
+            "text": "writhing observer"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/writhing_observer.png",
+            "altText": "Writhing observer"
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "anatomy:body": {
+            "recipeId": "anatomy:writhing_observer"
+        },
+        "core:gender": {
+            "value": "male"
+        }
+    }
+}

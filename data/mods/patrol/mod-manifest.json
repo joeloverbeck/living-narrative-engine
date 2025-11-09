@@ -34,13 +34,15 @@
         "centaur_warrior.character.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json",
-        "red_dragon.character.json"
+        "red_dragon.character.json",
+        "writhing_observer.character.json"
       ],
       "instances": [
         "centaur_warrior.character.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json",
-        "red_dragon.character.json"
+        "red_dragon.character.json",
+        "writhing_observer.character.json"
       ]
     },
     "events": [],
