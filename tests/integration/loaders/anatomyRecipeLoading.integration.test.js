@@ -42,7 +42,7 @@ describe('Anatomy Recipe Loading Integration', () => {
       const recipeFiles = [
         'human_male.recipe.json',
         'human_female.recipe.json',
-        'gorgeous_milf.recipe.json',
+        'human_futa.recipe.json',
       ];
 
       recipeFiles.forEach((filename) => {

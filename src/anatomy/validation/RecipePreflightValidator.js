@@ -115,6 +115,11 @@ class RecipePreflightValidator {
     if (!options.skipDescriptorChecks) {
       this.#checkDescriptorCoverage(recipe, results);
     }
+
+    // 7. Part Availability (Critical - P0)
+    if (!options.skipPartAvailabilityChecks) {
+      await this.#checkPartAvailability(recipe, results);
+    }
   }
 
   async #checkComponentExistence(recipe, results) {
@@ -315,14 +320,16 @@ class RecipePreflightValidator {
       const suggestions = [];
 
       for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
-        const hasDescriptors = this.#hasDescriptorComponents(slot.tags || []);
+        const hasDescriptors = this.#hasDescriptorComponents(
+          Object.keys(slot.properties || {})
+        );
 
         if (!hasDescriptors) {
           suggestions.push({
             type: 'MISSING_DESCRIPTORS',
             location: { type: 'slot', name: slotName },
             message: `Slot '${slotName}' may not appear in descriptions`,
-            reason: 'No descriptor components in tags',
+            reason: 'No descriptor components in properties',
             suggestion:
               'Add descriptor components (descriptors:size_category, descriptors:texture, etc.)',
             impact: 'Part will be excluded from anatomy description',
@@ -346,6 +353,112 @@ class RecipePreflightValidator {
 
   #hasDescriptorComponents(tags) {
     return tags.some((tag) => tag.startsWith('descriptors:'));
+  }
+
+  async #checkPartAvailability(recipe, results) {
+    try {
+      const errors = [];
+      const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+
+      // Check slots
+      for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
+        const matchingEntities = this.#findMatchingEntities(
+          slot,
+          allEntityDefs
+        );
+
+        if (matchingEntities.length === 0) {
+          errors.push({
+            type: 'PART_UNAVAILABLE',
+            severity: 'error',
+            location: { type: 'slot', name: slotName },
+            message: `No entity definitions found for slot '${slotName}'`,
+            details: {
+              partType: slot.partType,
+              requiredTags: slot.tags || [],
+              requiredProperties: Object.keys(slot.properties || {}),
+              totalEntitiesChecked: allEntityDefs.length,
+            },
+          });
+        }
+      }
+
+      // Check patterns
+      for (let i = 0; i < (recipe.patterns || []).length; i++) {
+        const pattern = recipe.patterns[i];
+        const matchingEntities = this.#findMatchingEntities(
+          pattern,
+          allEntityDefs
+        );
+
+        if (matchingEntities.length === 0) {
+          errors.push({
+            type: 'PART_UNAVAILABLE',
+            severity: 'error',
+            location: { type: 'pattern', index: i },
+            message: `No entity definitions found for pattern ${i}`,
+            details: {
+              partType: pattern.partType,
+              requiredTags: pattern.tags || [],
+              requiredProperties: Object.keys(pattern.properties || {}),
+              totalEntitiesChecked: allEntityDefs.length,
+            },
+          });
+        }
+      }
+
+      if (errors.length === 0) {
+        results.passed.push({
+          check: 'part_availability',
+          message: 'All slots and patterns have matching entity definitions',
+        });
+      } else {
+        results.errors.push(...errors);
+      }
+    } catch (error) {
+      this.#logger.error('Part availability check failed', error);
+      results.errors.push({
+        type: 'VALIDATION_ERROR',
+        check: 'part_availability',
+        message: 'Failed to validate part availability',
+        error: error.message,
+      });
+    }
+  }
+
+  #findMatchingEntities(slotOrPattern, allEntityDefs) {
+    const matches = [];
+    const requiredPartType = slotOrPattern.partType;
+    const requiredTags = slotOrPattern.tags || [];
+    const requiredProperties = Object.keys(slotOrPattern.properties || {});
+
+    for (const entityDef of allEntityDefs) {
+      // Check if entity has anatomy:part component with matching subType
+      const anatomyPart = entityDef.components?.['anatomy:part'];
+      if (!anatomyPart || anatomyPart.subType !== requiredPartType) {
+        continue;
+      }
+
+      // Check if entity has all required tags (components)
+      const hasAllTags = requiredTags.every(
+        (tag) => entityDef.components?.[tag] !== undefined
+      );
+      if (!hasAllTags) {
+        continue;
+      }
+
+      // Check if entity has all required property components
+      const hasAllProperties = requiredProperties.every(
+        (prop) => entityDef.components?.[prop] !== undefined
+      );
+      if (!hasAllProperties) {
+        continue;
+      }
+
+      matches.push(entityDef.id);
+    }
+
+    return matches;
   }
 
   #blueprintExists(results) {
