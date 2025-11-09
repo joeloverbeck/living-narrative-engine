@@ -202,6 +202,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
       const runtimeCtx = {
         entityManager,
         jsonLogicEval, // Add JSON Logic evaluator for filter evaluation
+        logger, // Add logger for diagnostics
         location: { id: 'p_erotica:park_instance' }, // Add current location for scope resolution
       };
 
@@ -255,6 +256,7 @@ describe('Park Bench Real Scope DSL Debug', () => {
       const runtimeCtx = {
         entityManager,
         jsonLogicEval, // Add JSON Logic evaluator for filter evaluation
+        logger, // Add logger for diagnostics
         location: { id: 'p_erotica:park_instance' }, // Add current location for scope resolution
       };
 

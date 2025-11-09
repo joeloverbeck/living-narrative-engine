@@ -60,16 +60,18 @@ describe('FilterResolver Error Handling Integration', () => {
       const runtimeCtx = {
         entityManager: mockEntityManager,
         jsonLogicEval: mockJsonLogicEval,
+        logger: mockLogger,
       };
 
+      // With new parameter validation, this throws immediately (fail-fast)
+      // The error is thrown before it can be buffered by the error handler
       expect(() => {
         scopeEngine.resolve(ast, null, runtimeCtx);
-      }).toThrow();
+      }).toThrow(/actorEntity must be an object/);
 
+      // Parameter validation errors are not buffered - they throw immediately
       const errors = errorHandler.getErrorBuffer();
-      expect(errors.length).toBeGreaterThan(0);
-      // The error should be categorized appropriately
-      expect(errors[0].category).toMatch(/resolution_failure|missing_context/);
+      expect(errors.length).toBe(0);
     });
 
     it('should handle missing runtime context', () => {
@@ -96,6 +98,7 @@ describe('FilterResolver Error Handling Integration', () => {
       const runtimeCtx = {
         entityManager: mockEntityManager,
         jsonLogicEval: mockJsonLogicEval,
+        logger: mockLogger,
       };
 
       // This should not throw, but may return empty results
@@ -261,6 +264,7 @@ describe('FilterResolver Error Handling Integration', () => {
     runtimeCtx: {
       entityManager: mockEntityManager,
       jsonLogicEval: mockJsonLogicEval,
+      logger: mockLogger,
       location: { id: 'location1' },
     },
   });

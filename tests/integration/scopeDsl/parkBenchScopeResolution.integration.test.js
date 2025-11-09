@@ -9,6 +9,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 import { createEntityInstance } from '../../common/entities/entityFactories.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 describe('Park Bench Scope Resolution Integration', () => {
   let entityManager;
@@ -16,6 +17,7 @@ describe('Park Bench Scope Resolution Integration', () => {
   let gateway;
   let mockLogger;
   let mockLocationProvider;
+  let jsonLogicEval;
 
   beforeEach(() => {
     // Create real logger with addLog method for trace support
@@ -26,6 +28,9 @@ describe('Park Bench Scope Resolution Integration', () => {
       error: jest.fn(),
       addLog: jest.fn(),
     };
+
+    // Create JSON Logic evaluator
+    jsonLogicEval = new JsonLogicEvaluationService({ logger: mockLogger });
 
     // Create entity manager
     entityManager = new SimpleEntityManager();
@@ -137,6 +142,8 @@ describe('Park Bench Scope Resolution Integration', () => {
     // Create runtime context needed by scope engine
     const runtimeCtx = {
       entityManager: entityManager,
+      jsonLogicEval: jsonLogicEval,
+      logger: mockLogger,
       location: { id: 'test:park_location' },
     };
 

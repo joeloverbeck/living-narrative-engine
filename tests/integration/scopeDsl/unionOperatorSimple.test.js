@@ -1,11 +1,17 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
+import { createMockLogger } from '../../common/mockFactories/index.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 describe('Scope DSL - Pipe Union Operator Simple Integration', () => {
   let engine;
+  let logger;
+  let jsonLogicEval;
 
   beforeEach(() => {
+    logger = createMockLogger();
+    jsonLogicEval = new JsonLogicEvaluationService({ logger });
     engine = new ScopeEngine();
   });
 
@@ -79,6 +85,8 @@ describe('Scope DSL - Pipe Union Operator Simple Integration', () => {
       componentRegistry: {
         getEntitiesWithComponent: jest.fn(),
       },
+      jsonLogicEval,
+      logger,
     };
 
     // Parse and resolve a simple union
@@ -103,6 +111,8 @@ describe('Scope DSL - Pipe Union Operator Simple Integration', () => {
         getComponentData: jest.fn(),
         getEntitiesWithComponent: jest.fn(),
       },
+      jsonLogicEval,
+      logger,
     };
 
     const ast = parseDslExpression('actor | location');

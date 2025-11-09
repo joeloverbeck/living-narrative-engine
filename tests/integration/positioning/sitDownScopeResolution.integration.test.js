@@ -127,6 +127,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
         entityManager: entityManager,
         registry: registry,
         jsonLogicEval: jsonLogicEval,
+        logger: mockLogger,
       };
 
       // Parse the scope expression with filtering
@@ -228,6 +229,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
         entityManager: entityManager,
         registry: registry,
         jsonLogicEval: jsonLogicEval,
+        logger: mockLogger,
       });
 
       // Should find no entities since they're at different locations
@@ -308,6 +310,7 @@ describe('Sit Down Scope Resolution - Integration', () => {
         entityManager: entityManager,
         registry: registry,
         jsonLogicEval: jsonLogicEval,
+        logger: mockLogger,
       });
 
       // Should find only the available bench

@@ -12,14 +12,9 @@
       "partType": "dragon_head",
       "tags": [
         "anatomy:part",
-        "anatomy:horned",
         "anatomy:ice_aligned"
       ],
       "properties": {
-        "anatomy:horned": {
-          "style": "swept",
-          "length": "long"
-        },
         "anatomy:ice_aligned": {
           "frostAura": "glacial"
         }

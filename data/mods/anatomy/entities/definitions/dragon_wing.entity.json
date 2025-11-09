@@ -8,6 +8,9 @@
     },
     "core:name": {
       "text": "dragon wing"
+    },
+    "descriptors:length_category": {
+      "length": "immense"
     }
   }
 }

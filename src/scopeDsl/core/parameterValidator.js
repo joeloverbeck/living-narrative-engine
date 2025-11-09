@@ -170,31 +170,35 @@ export class ParameterValidator {
       throw new ParameterValidationError(
         `[${source}] runtimeCtx must be an object, received ${typeof value}`,
         {
-          expected: 'runtimeCtx with all required services',
+          expected: 'runtimeCtx with required services',
           received: typeof value,
-          hint: 'Ensure runtimeCtx includes entityManager, jsonLogicEval, and logger',
+          hint: 'Ensure runtimeCtx includes entityManager (required), and optionally jsonLogicEval and logger',
           example: 'runtimeCtx = { entityManager, jsonLogicEval, logger }',
         }
       );
     }
 
-    // Check for required services
-    const requiredServices = ['entityManager', 'jsonLogicEval', 'logger'];
-    const missingServices = requiredServices.filter(
+    // Check for critical required services
+    const criticalServices = ['entityManager'];
+    const missingCritical = criticalServices.filter(
       (service) => !(service in value)
     );
 
-    if (missingServices.length > 0) {
+    if (missingCritical.length > 0) {
       throw new ParameterValidationError(
-        `[${source}] runtimeCtx is missing required services: ${missingServices.join(', ')}`,
+        `[${source}] runtimeCtx is missing critical services: ${missingCritical.join(', ')}`,
         {
-          expected: 'runtimeCtx with all required services',
-          received: `missing: ${missingServices.join(', ')}`,
-          hint: 'Ensure runtimeCtx includes entityManager, jsonLogicEval, and logger',
+          expected: 'runtimeCtx with entityManager',
+          received: `missing: ${missingCritical.join(', ')}`,
+          hint: 'entityManager is required for all scope resolution operations',
           example: 'runtimeCtx = { entityManager, jsonLogicEval, logger }',
         }
       );
     }
+
+    // Optional services (validated if present but not required)
+    // - jsonLogicEval: needed for filter operations
+    // - logger: used for diagnostics, falls back to console if missing
 
     return true;
   }

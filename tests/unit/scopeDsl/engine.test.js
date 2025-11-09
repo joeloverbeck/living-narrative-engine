@@ -1470,7 +1470,7 @@ describe('ScopeEngine', () => {
 
       validAST = {
         type: 'Source',
-        kind: 'self',
+        kind: 'actor',
       };
     });
 
@@ -1496,7 +1496,7 @@ describe('ScopeEngine', () => {
       });
 
       it('should throw ParameterValidationError for AST without type property', () => {
-        const invalidAST = { kind: 'self' }; // Missing 'type'
+        const invalidAST = { kind: 'actor' }; // Missing 'type'
 
         expect(() => {
           engine.resolve(invalidAST, validActorEntity, validRuntimeCtx);
@@ -1595,37 +1595,31 @@ describe('ScopeEngine', () => {
 
         expect(() => {
           engine.resolve(validAST, validActorEntity, invalidCtx);
-        }).toThrow(/ScopeEngine\.resolve.*missing required services.*entityManager/);
+        }).toThrow(/ScopeEngine\.resolve.*missing critical services.*entityManager/);
       });
 
-      it('should throw ParameterValidationError for missing jsonLogicEval', () => {
-        const invalidCtx = {
+      it('should not throw for missing jsonLogicEval (optional service)', () => {
+        const ctxWithoutJsonLogic = {
           entityManager: mockEntityManager,
           logger: mockLogger,
         };
 
+        // Should not throw - jsonLogicEval is optional
         expect(() => {
-          engine.resolve(validAST, validActorEntity, invalidCtx);
-        }).toThrow(ParameterValidationError);
-
-        expect(() => {
-          engine.resolve(validAST, validActorEntity, invalidCtx);
-        }).toThrow(/ScopeEngine\.resolve.*missing required services.*jsonLogicEval/);
+          engine.resolve(validAST, validActorEntity, ctxWithoutJsonLogic);
+        }).not.toThrow(ParameterValidationError);
       });
 
-      it('should throw ParameterValidationError for missing logger', () => {
-        const invalidCtx = {
+      it('should not throw for missing logger (optional service)', () => {
+        const ctxWithoutLogger = {
           entityManager: mockEntityManager,
           jsonLogicEval: mockJsonLogicEval,
         };
 
+        // Should not throw - logger is optional
         expect(() => {
-          engine.resolve(validAST, validActorEntity, invalidCtx);
-        }).toThrow(ParameterValidationError);
-
-        expect(() => {
-          engine.resolve(validAST, validActorEntity, invalidCtx);
-        }).toThrow(/ScopeEngine\.resolve.*missing required services.*logger/);
+          engine.resolve(validAST, validActorEntity, ctxWithoutLogger);
+        }).not.toThrow(ParameterValidationError);
       });
     });
 

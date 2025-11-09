@@ -88,6 +88,7 @@ describe('ScopeDsl Error Handling Integration - Complete Pipeline', () => {
     runtimeCtx = {
       entityManager: mockEntityManager,
       jsonLogicEval: mockJsonLogicEval,
+      logger: mockLogger,
       location: { id: 'location1' },
     };
   });
@@ -544,13 +545,13 @@ describe('ScopeDsl Error Handling Integration - Complete Pipeline', () => {
       const emptyScope = 'actor';
       const ast = parseDslExpression(emptyScope);
 
-      // With null actor
+      // With null actor - parameter validation now throws immediately (fail-fast)
       expect(() => {
         scopeEngine.resolve(ast, null, runtimeCtx);
-      }).toThrow(ScopeDslError);
+      }).toThrow(/actorEntity must be an object/);
 
-      const errors = errorHandler.getErrorBuffer();
-      expect(errors[errors.length - 1].code).toBe(ErrorCodes.MISSING_ACTOR);
+      // Parameter validation errors are not buffered - they throw before error handler can catch
+      // So we don't expect MISSING_ACTOR in the buffer for this case
     });
 
     it('should handle deeply nested errors without stack overflow', () => {

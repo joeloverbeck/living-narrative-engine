@@ -153,6 +153,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,
         jsonLogicEval,
+        logger,
       });
 
       // Assert
@@ -209,6 +210,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,
         jsonLogicEval,
+        logger,
       });
 
       // Assert
@@ -267,6 +269,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,
         jsonLogicEval,
+        logger,
       });
 
       // Assert
@@ -317,6 +320,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,
         jsonLogicEval,
+        logger,
       });
 
       // Assert

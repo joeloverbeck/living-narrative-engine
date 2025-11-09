@@ -948,41 +948,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           required: ['shape'],
         },
       },
-      'anatomy:sensory': {
-        id: 'anatomy:sensory',
-        description: 'Sensory capabilities component',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            acuity: { type: 'string' },
-            echolocation: { type: 'boolean' },
-            vision: { type: 'boolean' },
-            smell: { type: 'boolean' },
-            touch: { type: 'boolean' },
-          },
-        },
-      },
-      'anatomy:crushing': {
-        id: 'anatomy:crushing',
-        description: 'Crushing/biting capability component',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            biteForce: { type: 'string' },
-          },
-        },
-      },
-      'anatomy:ink_reservoir': {
-        id: 'anatomy:ink_reservoir',
-        description: 'Ink reservoir capability component',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            capacity: { type: 'string' },
-            pressure: { type: 'string' },
-          },
-        },
-      },
     });
 
     // Load anatomy entity definitions
@@ -1633,9 +1598,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           'anatomy:part': {
             subType: 'beak',
           },
-          'anatomy:crushing': {
-            biteForce: 'moderate',
-          },
           'core:name': {
             text: 'beak',
           },
@@ -1647,10 +1609,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         components: {
           'anatomy:part': {
             subType: 'ink_reservoir',
-          },
-          'anatomy:ink_reservoir': {
-            capacity: 'moderate',
-            pressure: 'medium',
           },
           'core:name': {
             text: 'ink reservoir',
@@ -1664,11 +1622,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           'anatomy:part': {
             subType: 'head',
           },
-          'anatomy:sensory': {
-            vision: true,
-            smell: true,
-            touch: true,
-          },
           'core:name': {
             text: 'head',
           },
@@ -1680,13 +1633,6 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         components: {
           'anatomy:part': {
             subType: 'head',
-          },
-          'anatomy:sensory': {
-            vision: true,
-            smell: true,
-            touch: true,
-            acuity: 'abyssal',
-            echolocation: true,
           },
           'core:name': {
             text: 'kraken head',
@@ -2588,11 +2534,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
           ink_sac: {
             partType: 'ink_reservoir',
-            tags: ['anatomy:part', 'anatomy:ink_reservoir'],
+            tags: ['anatomy:part'],
           },
           beak: {
             partType: 'beak',
-            tags: ['anatomy:part', 'anatomy:crushing'],
+            tags: ['anatomy:part'],
           },
         },
         patterns: [
@@ -2621,13 +2567,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matchesGroup: 'appendage:head',
             partType: 'head',
-            tags: ['anatomy:part', 'anatomy:sensory'],
-            properties: {
-              'anatomy:sensory': {
-                acuity: 'abyssal',
-                echolocation: true,
-              },
-            },
+            tags: ['anatomy:part'],
           },
         ],
         constraints: {
@@ -2652,11 +2592,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
           ink_sac: {
             partType: 'ink_reservoir',
-            tags: ['anatomy:part', 'anatomy:ink_reservoir'],
+            tags: ['anatomy:part'],
           },
           beak: {
             partType: 'beak',
-            tags: ['anatomy:part', 'anatomy:crushing'],
+            tags: ['anatomy:part'],
           },
         },
         patterns: [
@@ -2668,7 +2608,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matchesGroup: 'appendage:head',
             partType: 'head',
-            tags: ['anatomy:part', 'anatomy:sensory'],
+            tags: ['anatomy:part'],
           },
         ],
         constraints: {
@@ -2693,11 +2633,11 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
           ink_sac: {
             partType: 'ink_reservoir',
-            tags: ['anatomy:part', 'anatomy:ink_reservoir'],
+            tags: ['anatomy:part'],
           },
           beak: {
             partType: 'beak',
-            tags: ['anatomy:part', 'anatomy:crushing'],
+            tags: ['anatomy:part'],
           },
         },
         patterns: [
@@ -2709,7 +2649,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matchesGroup: 'appendage:head',
             partType: 'head',
-            tags: ['anatomy:part', 'anatomy:sensory'],
+            tags: ['anatomy:part'],
           },
         ],
         constraints: {

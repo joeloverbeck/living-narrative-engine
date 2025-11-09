@@ -137,15 +137,17 @@ export class PartSelectionService {
       const isKrakenTentacle = entityDef.id === 'anatomy:kraken_tentacle';
       const isGenericTentacle = entityDef.id === 'anatomy:tentacle';
       const isGenericMantle = entityDef.id === 'anatomy:mantle';
+      const isDragonWing = entityDef.id === 'anatomy:dragon_wing';
 
       // Log diagnostic entities BEFORE validation
-      if (isGenericTentacle || isGenericMantle) {
+      if (isGenericTentacle || isGenericMantle || isDragonWing) {
         console.log(`🔍 PartSelectionService: Checking ${entityDef.id} against requirements`);
         console.log('  allowedTypes:', allowedTypes);
         console.log('  requirements:', requirements);
         console.log('  hasAnatomyPart:', !!entityDef.components?.['anatomy:part']);
         console.log('  subType:', entityDef.components?.['anatomy:part']?.subType);
         console.log('  allComponents:', Object.keys(entityDef.components || {}));
+        console.log('  recipeSlot.tags:', recipeSlot?.tags);
       }
       if (isKrakenHead) {
         this.#logger.info(
@@ -181,7 +183,7 @@ export class PartSelectionService {
         )
       ) {
         // Log SUCCESS for diagnostic entities
-        if (isGenericTentacle || isGenericMantle) {
+        if (isGenericTentacle || isGenericMantle || isDragonWing) {
           console.log(`✅ PartSelectionService: ${entityDef.id} PASSED all validation checks`);
         }
         if (isKrakenHead) {
@@ -197,7 +199,7 @@ export class PartSelectionService {
         candidates.push(entityDef.id);
       } else {
         // Log FAILURE for diagnostic entities
-        if (isGenericTentacle || isGenericMantle) {
+        if (isGenericTentacle || isGenericMantle || isDragonWing) {
           console.log(`❌ PartSelectionService: ${entityDef.id} FAILED validation (see detailed failure reason above)`);
         }
         if (isKrakenHead) {
@@ -387,7 +389,14 @@ export class PartSelectionService {
 
       // Check recipe slot properties (selection criteria)
       if (recipeSlot.properties && Object.keys(recipeSlot.properties).length > 0) {
+        const isDragonWing = entityDef.id === 'anatomy:dragon_wing';
         if (!this.#matchesProperties(entityDef, recipeSlot.properties)) {
+          if (isDragonWing) {
+            console.log(`❌ ${entityDef.id} FAILED - properties don't match recipe slot requirements`);
+            console.log('  recipeProperties:', recipeSlot.properties);
+            console.log('  entityComponents:', Object.keys(entityDef.components));
+            console.log('  componentDetails:', entityDef.components);
+          }
           if (this.#logger && this.#logger.debug) {
             this.#logger.debug(
               `Entity ${entityDef.id} filtered out - properties don't match recipe slot requirements`,

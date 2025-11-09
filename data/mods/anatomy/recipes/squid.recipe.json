@@ -28,27 +28,14 @@
     "ink_sac": {
       "partType": "ink_reservoir",
       "tags": [
-        "anatomy:part",
-        "anatomy:ink_reservoir"
-      ],
-      "properties": {
-        "anatomy:ink_reservoir": {
-          "capacity": "small",
-          "pressure": "low"
-        }
-      }
+        "anatomy:part"
+      ]
     },
     "beak": {
       "partType": "beak",
       "tags": [
-        "anatomy:part",
-        "anatomy:crushing"
-      ],
-      "properties": {
-        "anatomy:crushing": {
-          "biteForce": "moderate"
-        }
-      }
+        "anatomy:part"
+      ]
     }
   },
   "patterns": [
@@ -80,15 +67,8 @@
       "matchesGroup": "appendage:head",
       "partType": "head",
       "tags": [
-        "anatomy:part",
-        "anatomy:sensory"
-      ],
-      "properties": {
-        "anatomy:sensory": {
-          "acuity": "keen",
-          "echolocation": false
-        }
-      }
+        "anatomy:part"
+      ]
     }
   ],
   "constraints": {

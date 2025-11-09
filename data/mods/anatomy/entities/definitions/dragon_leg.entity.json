@@ -8,6 +8,12 @@
     },
     "core:name": {
       "text": "dragon leg"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }

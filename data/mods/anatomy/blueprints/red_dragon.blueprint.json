@@ -4,23 +4,6 @@
   "schemaVersion": "2.0",
   "root": "anatomy:dragon_torso",
   "structureTemplate": "anatomy:structure_winged_quadruped",
-  "additionalSlots": {
-    "fire_gland": {
-      "socket": "fire_gland",
-      "requirements": {
-        "partType": "gland",
-        "components": ["anatomy:part", "anatomy:fire_breathing"]
-      }
-    },
-    "treasure_pouch": {
-      "socket": "treasure_pouch",
-      "requirements": {
-        "partType": "storage_organ",
-        "components": ["anatomy:part"]
-      },
-      "optional": true
-    }
-  },
   "clothingSlotMappings": {
     "saddle": {
       "anatomySockets": ["back_mount"],

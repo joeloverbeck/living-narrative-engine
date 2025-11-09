@@ -8,6 +8,15 @@
     },
     "core:name": {
       "text": "dragon tail"
+    },
+    "descriptors:size_category": {
+      "size": "huge"
+    },
+    "descriptors:length_category": {
+      "length": "very-long"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
     }
   }
 }
