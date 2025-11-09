@@ -4,7 +4,7 @@
   "description": "Humanoid eye embedded in the surface of the core mass",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_eye"
+      "subType": "eldritch_surface_eye"
     },
     "core:name": {
       "text": "surface eye"

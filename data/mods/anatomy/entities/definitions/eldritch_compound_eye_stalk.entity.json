@@ -4,7 +4,7 @@
   "description": "Flexible stalk topped with insectoid compound eye cluster",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_eye_stalk"
+      "subType": "eldritch_compound_eye_stalk"
     },
     "core:name": {
       "text": "compound eye stalk"

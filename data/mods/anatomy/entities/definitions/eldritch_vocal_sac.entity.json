@@ -4,7 +4,7 @@
   "description": "Pulsating translucent chamber emitting subsonic frequencies",
   "components": {
     "anatomy:part": {
-      "subType": "eldritch_organ"
+      "subType": "eldritch_vocal_sac"
     },
     "core:name": {
       "text": "vocal sac"
