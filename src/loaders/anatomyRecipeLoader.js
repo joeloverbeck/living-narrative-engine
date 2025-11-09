@@ -189,6 +189,7 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
 
   /**
    * Validates that the provided constraint array (components/partTypes) is well formed.
+   * Enhanced with business rule explanations and examples for better error messages.
    *
    * @param {unknown} value - The value to validate.
    * @param {'requires' | 'excludes'} constraintType - The constraint type for error messages.
@@ -210,8 +211,27 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
     }
 
     if (value.length < 2) {
+      // Enhanced error with business rule explanation
+      const businessRule =
+        constraintType === 'requires'
+          ? 'Co-presence constraints ensure multiple part types or components exist together (e.g., wings require tail for balance)'
+          : 'Mutual exclusion constraints prevent incompatible parts from coexisting (e.g., gills vs lungs)';
+
+      const example =
+        constraintType === 'requires'
+          ? field === 'partTypes'
+            ? `{ "partTypes": ["dragon_wing", "dragon_tail"] }`
+            : `{ "components": ["anatomy:wing", "anatomy:arm_socket"] }`
+          : field === 'partTypes'
+            ? `{ "partTypes": ["gills", "lungs"] }`
+            : `{ "components": ["anatomy:gills", "anatomy:lungs"] }`;
+
       throw new ValidationError(
-        `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'. '${field}' must contain at least 2 items.`
+        `Invalid '${constraintType}' group at index ${index} in recipe '${filename}' from mod '${modId}'.\n` +
+          `  '${field}' must contain at least 2 items.\n\n` +
+          `  Business Rule: ${businessRule}\n` +
+          `  Example: ${example}\n` +
+          `  Current: ${JSON.stringify(value)}`
       );
     }
 

@@ -43,7 +43,6 @@ jest.mock('../../../src/anatomy/validators/bodyDescriptorValidator.js', () => ({
 
 import { processAndStoreItem } from '../../../src/loaders/helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../../../src/utils/idUtils.js';
-import { BodyDescriptorValidator } from '../../../src/anatomy/validators/bodyDescriptorValidator.js';
 
 describe('AnatomyRecipeLoader._processFetchedItem', () => {
   let loader;
@@ -241,6 +240,275 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
     expect(() =>
       loader._validateConstraints(constraints, 'core', 'file')
     ).toThrow(/must contain at least 2 items/);
+  });
+
+  describe('Enhanced Constraint Error Messages', () => {
+    describe('Requires Constraints', () => {
+      it('includes business rule explanation for requires partTypes', () => {
+        const constraints = {
+          requires: [{ partTypes: ['single-part'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(
+          expect.objectContaining({
+            message: expect.stringMatching(/Business Rule:/),
+          })
+        );
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Co-presence constraints ensure multiple part types or components exist together/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/wings require tail for balance/);
+      });
+
+      it('includes example for requires partTypes', () => {
+        const constraints = {
+          requires: [{ partTypes: ['single-part'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Example:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/"partTypes": \["dragon_wing", "dragon_tail"\]/);
+      });
+
+      it('includes current invalid value for requires partTypes', () => {
+        const constraints = {
+          requires: [{ partTypes: ['single-part'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Current:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/\["single-part"\]/);
+      });
+
+      it('includes business rule explanation for requires components', () => {
+        const constraints = {
+          requires: [{ components: ['anatomy:single'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Business Rule:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Co-presence constraints ensure multiple part types or components exist together/);
+      });
+
+      it('includes example for requires components', () => {
+        const constraints = {
+          requires: [{ components: ['anatomy:single'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Example:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/"components": \["anatomy:wing", "anatomy:arm_socket"\]/);
+      });
+
+      it('includes current invalid value for requires components', () => {
+        const constraints = {
+          requires: [{ components: ['anatomy:single'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Current:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/\["anatomy:single"\]/);
+      });
+
+      it('includes all context fields (mod, file, index, field, type)', () => {
+        const constraints = {
+          requires: [{ partTypes: ['single'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+        ).toThrow(/test-mod/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+        ).toThrow(/dragon.recipe.json/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+        ).toThrow(/index 0/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+        ).toThrow(/'partTypes'/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+        ).toThrow(/'requires'/);
+      });
+    });
+
+    describe('Excludes Constraints', () => {
+      it('includes business rule explanation for excludes partTypes', () => {
+        const constraints = {
+          excludes: [{ partTypes: ['single-part'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Business Rule:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Mutual exclusion constraints prevent incompatible parts from coexisting/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/gills vs lungs/);
+      });
+
+      it('includes example for excludes partTypes', () => {
+        const constraints = {
+          excludes: [{ partTypes: ['single-part'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Example:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/"partTypes": \["gills", "lungs"\]/);
+      });
+
+      it('includes current invalid value for excludes partTypes', () => {
+        const constraints = {
+          excludes: [{ partTypes: ['single-part'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Current:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/\["single-part"\]/);
+      });
+
+      it('includes business rule explanation for excludes components', () => {
+        const constraints = {
+          excludes: [{ components: ['anatomy:single'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Business Rule:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Mutual exclusion constraints prevent incompatible parts from coexisting/);
+      });
+
+      it('includes example for excludes components', () => {
+        const constraints = {
+          excludes: [{ components: ['anatomy:single'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Example:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/"components": \["anatomy:gills", "anatomy:lungs"\]/);
+      });
+
+      it('includes current invalid value for excludes components', () => {
+        const constraints = {
+          excludes: [{ components: ['anatomy:single'] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Current:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/\["anatomy:single"\]/);
+      });
+    });
+
+    describe('Empty Arrays', () => {
+      it('throws enhanced error for empty requires partTypes array', () => {
+        const constraints = {
+          requires: [{ partTypes: [] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Business Rule:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Example:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Current: \[\]/);
+      });
+
+      it('throws enhanced error for empty excludes components array', () => {
+        const constraints = {
+          excludes: [{ components: [] }],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Business Rule:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Example:/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/Current: \[\]/);
+      });
+    });
+
+    describe('Multiple Constraint Groups', () => {
+      it('reports correct index for second constraint group', () => {
+        const constraints = {
+          requires: [
+            { partTypes: ['valid1', 'valid2'] },
+            { partTypes: ['invalid-single'] },
+          ],
+        };
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/index 1/);
+
+        expect(() =>
+          loader._validateConstraints(constraints, 'core', 'test.recipe.json')
+        ).toThrow(/\["invalid-single"\]/);
+      });
+    });
   });
 
   it('throws when components is not declared as an array', () => {
