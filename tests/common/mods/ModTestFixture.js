@@ -1215,6 +1215,24 @@ class BaseModTestFixture {
   }
 
   /**
+   * Get performance metrics from tracer
+   *
+   * @returns {object|null} Performance metrics
+   */
+  getScopePerformanceMetrics() {
+    return this.scopeTracer.getPerformanceMetrics();
+  }
+
+  /**
+   * Get formatted trace with performance focus
+   *
+   * @returns {string} Performance-focused trace
+   */
+  getScopeTraceWithPerformance() {
+    return this.scopeTracer.format({ performanceFocus: true });
+  }
+
+  /**
    * Get filter breakdown for last evaluation with enhanced clause analysis.
    *
    * @param {string} entityId - Optional entity ID to filter by

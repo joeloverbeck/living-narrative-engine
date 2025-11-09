@@ -22,18 +22,25 @@ export class ScopeEvaluationTracer {
     this.#enabled = false;
     this.#steps = [];
     this.#startTime = null;
+    this.#performanceMetrics = {
+      resolverTimes: new Map(),
+      stepTimes: [],
+      filterEvalTimes: [],
+    };
   }
 
   #enabled;
   #steps;
   #startTime;
+  #performanceMetrics;
 
   /**
-   * Enable tracing and reset start time.
+   * Enable tracing and reset metrics.
    */
   enable() {
     this.#enabled = true;
-    this.#startTime = Date.now();
+    this.#startTime = performance.now();
+    this.clear();
   }
 
   /**
@@ -53,7 +60,7 @@ export class ScopeEvaluationTracer {
   }
 
   /**
-   * Log a resolver execution step.
+   * Log a resolver execution step with timing.
    *
    * @param {string} resolverName - Name of the resolver (e.g., 'SourceResolver').
    * @param {string} operation - Description of the operation (e.g., "resolve(kind='actor')").
@@ -66,19 +73,38 @@ export class ScopeEvaluationTracer {
       return;
     }
 
+    const stepStartTime = performance.now();
+
+    // Measure serialization time (part of step overhead)
+    const serializedInput = this.#serializeValue(input);
+    const serializedOutput = this.#serializeValue(output);
+
+    const stepEndTime = performance.now();
+    const stepDuration = stepEndTime - stepStartTime;
+
+    // Update performance metrics
+    const currentTotal = this.#performanceMetrics.resolverTimes.get(resolverName) || 0;
+    this.#performanceMetrics.resolverTimes.set(resolverName, currentTotal + stepDuration);
+    this.#performanceMetrics.stepTimes.push({
+      resolver: resolverName,
+      duration: stepDuration,
+      timestamp: stepEndTime,
+    });
+
     this.#steps.push({
       timestamp: Date.now(),
       type: 'RESOLVER_STEP',
       resolver: resolverName,
       operation,
-      input: this.#serializeValue(input),
-      output: this.#serializeValue(output),
+      input: serializedInput,
+      output: serializedOutput,
       details,
+      duration: stepDuration,
     });
   }
 
   /**
-   * Log a filter evaluation for a specific entity.
+   * Log a filter evaluation for a specific entity with timing.
    *
    * @param {string} entityId - ID of the entity being evaluated.
    * @param {object} logic - JSON Logic object used for filtering.
@@ -91,6 +117,20 @@ export class ScopeEvaluationTracer {
       return;
     }
 
+    const evalStartTime = performance.now();
+
+    // No serialization needed - current implementation stores logic, context, and breakdown directly
+    // Only measure the timing overhead itself
+    const evalEndTime = performance.now();
+    const evalDuration = evalEndTime - evalStartTime;
+
+    // Track filter eval time
+    this.#performanceMetrics.filterEvalTimes.push({
+      entityId,
+      duration: evalDuration,
+      timestamp: evalEndTime,
+    });
+
     this.#steps.push({
       timestamp: Date.now(),
       type: 'FILTER_EVALUATION',
@@ -99,6 +139,7 @@ export class ScopeEvaluationTracer {
       result,
       context: evalContext,
       breakdown,
+      duration: evalDuration,
     });
   }
 
@@ -141,11 +182,101 @@ export class ScopeEvaluationTracer {
   }
 
   /**
+   * Calculate performance metrics summary.
+   *
+   * @returns {object|null} Performance summary or null if no data available.
+   */
+  getPerformanceMetrics() {
+    if (!this.#enabled && this.#steps.length === 0) {
+      return null;
+    }
+
+    const endTime = performance.now();
+    const totalDuration = endTime - this.#startTime;
+
+    // Calculate per-resolver timing
+    const resolverStats = [];
+    for (const [resolver, time] of this.#performanceMetrics.resolverTimes) {
+      resolverStats.push({
+        resolver,
+        totalTime: time,
+        percentage: (time / totalDuration) * 100,
+        stepCount: this.#performanceMetrics.stepTimes.filter(
+          s => s.resolver === resolver
+        ).length,
+        averageTime: time / this.#performanceMetrics.stepTimes.filter(
+          s => s.resolver === resolver
+        ).length,
+      });
+    }
+
+    // Sort by total time (slowest first)
+    resolverStats.sort((a, b) => b.totalTime - a.totalTime);
+
+    // Calculate filter evaluation stats
+    const filterEvalCount = this.#performanceMetrics.filterEvalTimes.length;
+    const totalFilterTime = this.#performanceMetrics.filterEvalTimes.reduce(
+      (sum, f) => sum + f.duration,
+      0
+    );
+
+    // Identify slowest operations
+    const slowestSteps = [...this.#performanceMetrics.stepTimes]
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 5);
+
+    const slowestFilters = [...this.#performanceMetrics.filterEvalTimes]
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 5);
+
+    return {
+      totalDuration,
+      resolverStats,
+      filterEvaluation: {
+        count: filterEvalCount,
+        totalTime: totalFilterTime,
+        averageTime: filterEvalCount > 0 ? totalFilterTime / filterEvalCount : 0,
+        percentage: (totalFilterTime / totalDuration) * 100,
+      },
+      slowestOperations: {
+        steps: slowestSteps,
+        filters: slowestFilters,
+      },
+      overhead: {
+        tracingTime: this.#calculateTracingOverhead(),
+        percentage: (this.#calculateTracingOverhead() / totalDuration) * 100,
+      },
+    };
+  }
+
+  /**
+   * Calculate tracing overhead (serialization time).
+   *
+   * @private
+   * @returns {number} Total overhead in milliseconds.
+   */
+  #calculateTracingOverhead() {
+    // Sum of all step durations (includes serialization overhead)
+    const stepOverhead = this.#performanceMetrics.stepTimes.reduce(
+      (sum, s) => sum + s.duration,
+      0
+    );
+    const filterOverhead = this.#performanceMetrics.filterEvalTimes.reduce(
+      (sum, f) => sum + f.duration,
+      0
+    );
+    return stepOverhead + filterOverhead;
+  }
+
+  /**
    * Get human-readable formatted output.
    *
+   * @param {object} [options] - Formatting options.
+   * @param {boolean} [options.performanceFocus] - Enable performance-focused output.
    * @returns {string} Formatted trace output.
    */
-  format() {
+  format(options = {}) {
+    const { performanceFocus = false } = options;
     if (this.#steps.length === 0) {
       return 'SCOPE EVALUATION TRACE:\n' +
         '================================================================================\n' +
@@ -158,6 +289,45 @@ export class ScopeEvaluationTracer {
     lines.push('================================================================================');
     lines.push('');
 
+    if (performanceFocus) {
+      // Performance-focused output
+      const metrics = this.getPerformanceMetrics();
+
+      lines.push('📊 PERFORMANCE METRICS:');
+      lines.push('');
+
+      lines.push('Resolver Timing:');
+      metrics.resolverStats.forEach(stat => {
+        const resolverPadded = stat.resolver.padEnd(20);
+        const timePart = `${stat.totalTime.toFixed(2)}ms`;
+        const percentPart = `(${stat.percentage.toFixed(1)}%)`;
+        const detailsPart = `[${stat.stepCount} steps, avg: ${stat.averageTime.toFixed(2)}ms]`;
+        lines.push(`  ${resolverPadded} ${timePart} ${percentPart} ${detailsPart}`);
+      });
+
+      lines.push('');
+      lines.push('Filter Evaluation:');
+      lines.push(`  Count: ${metrics.filterEvaluation.count}`);
+      lines.push(`  Total Time: ${metrics.filterEvaluation.totalTime.toFixed(2)}ms`);
+      lines.push(`  Average: ${metrics.filterEvaluation.averageTime.toFixed(2)}ms`);
+      lines.push(`  Percentage: ${metrics.filterEvaluation.percentage.toFixed(1)}%`);
+
+      if (metrics.slowestOperations.steps.length > 0) {
+        lines.push('');
+        lines.push('Slowest Operations:');
+        metrics.slowestOperations.steps.slice(0, 3).forEach((step, i) => {
+          lines.push(`  ${i + 1}. ${step.resolver}: ${step.duration.toFixed(2)}ms`);
+        });
+      }
+
+      lines.push('');
+      lines.push('Tracing Overhead:');
+      lines.push(`  Time: ${metrics.overhead.tracingTime.toFixed(2)}ms`);
+      lines.push(`  Percentage: ${metrics.overhead.percentage.toFixed(1)}%`);
+
+      lines.push('');
+    }
+
     let stepNumber = 1;
     let currentFilterStepNumber = null;
     const filterEvaluations = [];
@@ -168,14 +338,19 @@ export class ScopeEvaluationTracer {
         if (filterEvaluations.length > 0) {
           lines.push(...this.#formatFilterEvaluations(
             currentFilterStepNumber,
-            filterEvaluations
+            filterEvaluations,
+            performanceFocus
           ));
           filterEvaluations.length = 0;
           stepNumber++;
         }
 
         // Format resolver step
-        lines.push(`${stepNumber}. [${step.resolver}] ${step.operation}`);
+        const stepHeader = `${stepNumber}. [${step.resolver}] ${step.operation}`;
+        const stepDuration = performanceFocus && step.duration !== undefined
+          ? ` (${step.duration.toFixed(2)}ms)`
+          : '';
+        lines.push(stepHeader + stepDuration);
         lines.push(`   Input: ${this.#formatSerializedValue(step.input)}`);
         lines.push(`   Output: ${this.#formatSerializedValue(step.output)}`);
         lines.push('');
@@ -191,7 +366,8 @@ export class ScopeEvaluationTracer {
         if (filterEvaluations.length > 0) {
           lines.push(...this.#formatFilterEvaluations(
             currentFilterStepNumber,
-            filterEvaluations
+            filterEvaluations,
+            performanceFocus
           ));
           filterEvaluations.length = 0;
           stepNumber++;
@@ -212,7 +388,8 @@ export class ScopeEvaluationTracer {
     if (filterEvaluations.length > 0) {
       lines.push(...this.#formatFilterEvaluations(
         currentFilterStepNumber,
-        filterEvaluations
+        filterEvaluations,
+        performanceFocus
       ));
     }
 
@@ -230,7 +407,12 @@ export class ScopeEvaluationTracer {
    */
   clear() {
     this.#steps = [];
-    this.#startTime = this.#enabled ? Date.now() : null;
+    this.#startTime = this.#enabled ? performance.now() : null;
+    this.#performanceMetrics = {
+      resolverTimes: new Map(),
+      stepTimes: [],
+      filterEvalTimes: [],
+    };
   }
 
   /**
@@ -307,9 +489,10 @@ export class ScopeEvaluationTracer {
    * @private
    * @param {number} stepNumber - Step number to display.
    * @param {Array} evaluations - Array of filter evaluation steps.
+   * @param {boolean} performanceFocus - Whether to include performance info.
    * @returns {Array<string>} Formatted lines.
    */
-  #formatFilterEvaluations(stepNumber, evaluations) {
+  #formatFilterEvaluations(stepNumber, evaluations, performanceFocus = false) {
     const lines = [];
     lines.push(`${stepNumber}. [FilterResolver] Evaluating ${evaluations.length} entit${evaluations.length !== 1 ? 'ies' : 'y'}`);
     lines.push('');
@@ -319,7 +502,11 @@ export class ScopeEvaluationTracer {
       const symbol = evaluation.result ? '✓' : '✗';
       const status = evaluation.result ? 'PASS' : 'FAIL';
 
-      lines.push(`   Entity: ${evaluation.entityId}`);
+      const entityHeader = `   Entity: ${evaluation.entityId}`;
+      const evalDuration = performanceFocus && evaluation.duration !== undefined
+        ? ` (${evaluation.duration.toFixed(2)}ms)`
+        : '';
+      lines.push(entityHeader + evalDuration);
       lines.push(`   Result: ${status} ${symbol}`);
 
       if (evaluation.breakdown) {
@@ -435,7 +622,7 @@ export class ScopeEvaluationTracer {
       }
     }
 
-    const duration = this.#startTime ? Date.now() - this.#startTime : 0;
+    const duration = this.#startTime ? performance.now() - this.#startTime : 0;
 
     return {
       totalSteps: this.#steps.length,
