@@ -22,6 +22,10 @@ describe('ReportFormatter', () => {
           componentId: 'test:missing',
           location: { type: 'slot', name: 'test_slot' },
           fix: 'Add component definition',
+          suggestion: 'Consider alternative component',
+          context: {
+            location: { type: 'context-slot', name: 'nested_test_slot' },
+          },
         },
       ],
       warnings: [
@@ -100,6 +104,8 @@ describe('ReportFormatter', () => {
       expect(html).toContain('Component not found');
       expect(html).toContain('test:missing');
       expect(html).toContain('Add component definition');
+      expect(html).toContain('nested_test_slot');
+      expect(html).toContain('Consider alternative component');
     });
 
     it('should include warnings section in HTML', () => {
@@ -168,6 +174,8 @@ describe('ReportFormatter', () => {
       expect(md).toContain('## ✗ Errors');
       expect(md).toContain('### Error 1');
       expect(md).toContain('Component not found');
+      expect(md).toContain("- **Location:** context-slot 'nested_test_slot'");
+      expect(md).toContain('- **Suggestion:** Consider alternative component');
     });
 
     it('should include warnings section in Markdown', () => {
