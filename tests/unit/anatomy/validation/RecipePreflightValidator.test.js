@@ -155,7 +155,7 @@ describe('RecipePreflightValidator', () => {
 
     it('should collect multiple errors when failFast is false', async () => {
       mockAnatomyBlueprintRepository.getBlueprint = async () => null;
-      mockDataRegistry.get = (type, id) => {
+      mockDataRegistry.get = () => {
         // Return undefined for all components to trigger errors
         return undefined;
       };
@@ -451,6 +451,59 @@ describe('RecipePreflightValidator', () => {
 
       expect(report.isValid).toBe(true);
     });
+
+    it('should fail when property values do not match schemas', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components') {
+          return {
+            id,
+            dataSchema: {
+              type: 'object',
+              properties: {
+                value: { type: 'string' },
+              },
+              required: ['value'],
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockSchemaValidator.validate = () => {
+        // Return validation failure
+        return {
+          isValid: false,
+          errors: [{ message: 'Missing required property: value' }],
+        };
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            tags: [],
+            properties: {
+              'test:component1': {}, // Missing required 'value' property
+            },
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(false);
+      expect(
+        report.errors.some((e) => e.type === 'INVALID_PROPERTY_VALUE')
+      ).toBe(true);
+    });
   });
 
   describe('Socket/slot compatibility', () => {
@@ -549,6 +602,138 @@ describe('RecipePreflightValidator', () => {
       );
       expect(patternCheck).toBeDefined();
       expect(patternCheck.message).toContain('1 pattern(s)');
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle socket/slot compatibility check throwing an error', async () => {
+      // First getBlueprint call should succeed, second should throw
+      let callCount = 0;
+      mockAnatomyBlueprintRepository.getBlueprint = async () => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            id: 'test:blueprint',
+            root: 'test:root',
+            structureTemplate: 'test:template',
+          };
+        }
+        throw new Error('Blueprint fetch error');
+      };
+
+      const originalError = mockLogger.error;
+      let errorLogged = false;
+      mockLogger.error = (message, error) => {
+        if (message === 'Socket/slot compatibility check failed') {
+          errorLogged = true;
+        }
+        originalError.call(mockLogger, message, error);
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(errorLogged).toBe(true);
+      expect(
+        report.warnings.some(
+          (w) => w.check === 'socket_slot_compatibility'
+        )
+      ).toBe(true);
+
+      // Restore
+      mockLogger.error = originalError;
+    });
+
+    it('should handle pattern matching check throwing an error', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const originalError = mockLogger.error;
+      let errorLogged = false;
+      mockLogger.error = (message, error) => {
+        if (message === 'Pattern matching check failed') {
+          errorLogged = true;
+        }
+        originalError.call(mockLogger, message, error);
+      };
+
+      // Create a recipe with patterns that will cause an error when accessed
+      const recipe = new Proxy(
+        {
+          recipeId: 'test:recipe',
+          blueprintId: 'test:blueprint',
+          slots: {},
+        },
+        {
+          get(target, prop) {
+            if (prop === 'patterns') {
+              throw new Error('Pattern access error');
+            }
+            return target[prop];
+          },
+        }
+      );
+
+      const report = await validator.validate(recipe);
+
+      expect(errorLogged).toBe(true);
+      expect(
+        report.warnings.some((w) => w.check === 'pattern_matching')
+      ).toBe(true);
+
+      // Restore
+      mockLogger.error = originalError;
+    });
+
+    it('should handle descriptor coverage check throwing an error', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      const originalError = mockLogger.error;
+      let errorLogged = false;
+      mockLogger.error = (message, error) => {
+        if (message === 'Descriptor coverage check failed') {
+          errorLogged = true;
+        }
+        originalError.call(mockLogger, message, error);
+      };
+
+      // Create a recipe with slots that will cause an error when accessed
+      const recipe = new Proxy(
+        {
+          recipeId: 'test:recipe',
+          blueprintId: 'test:blueprint',
+          patterns: [],
+        },
+        {
+          get(target, prop) {
+            if (prop === 'slots') {
+              throw new Error('Slots access error');
+            }
+            return target[prop];
+          },
+        }
+      );
+
+      await validator.validate(recipe);
+
+      // Error is logged but not added to report (it's optional)
+      expect(errorLogged).toBe(true);
+
+      // Restore
+      mockLogger.error = originalError;
     });
   });
 });
