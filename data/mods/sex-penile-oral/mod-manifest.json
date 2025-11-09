@@ -28,6 +28,7 @@
       "suck_penis_hard.action.json",
       "suck_penis_slowly.action.json",
       "suckle_testicle.action.json",
+      "suckle_testicle_lying_close.action.json",
       "suckle_testicle_sitting_close.action.json",
       "take_penis_in_mouth.action.json",
       "take_penis_in_mouth_kneeling.action.json"
@@ -50,6 +51,7 @@
       "event-is-action-pull-penis-out-of-mouth.condition.json",
       "event-is-action-suck-penis-hard.condition.json",
       "event-is-action-suck-penis-slowly.condition.json",
+      "event-is-action-suckle-testicle-lying-close.condition.json",
       "event-is-action-suckle-testicle-sitting-close.condition.json",
       "event-is-action-suckle-testicle.condition.json",
       "event-is-action-take-penis-in-mouth-kneeling.condition.json",
@@ -74,6 +76,7 @@
       "handle_suck_penis_hard.rule.json",
       "handle_suck_penis_slowly.rule.json",
       "handle_suckle_testicle.rule.json",
+      "handle_suckle_testicle_lying_close.rule.json",
       "handle_suckle_testicle_sitting_close.rule.json",
       "handle_take_penis_in_mouth.rule.json",
       "handle_take_penis_in_mouth_kneeling.rule.json"
