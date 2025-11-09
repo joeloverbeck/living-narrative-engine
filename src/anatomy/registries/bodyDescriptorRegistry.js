@@ -44,7 +44,7 @@ export const BODY_DESCRIPTOR_REGISTRY = {
     displayLabel: 'Height',
     displayKey: 'height', // Matches schema property (no conversion needed)
     dataPath: 'body.descriptors.height',
-    validValues: ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'],
+    validValues: ['microscopic', 'minuscule', 'tiny', 'petite', 'short', 'average', 'tall', 'very-tall', 'gigantic', 'colossal', 'titanic'],
     displayOrder: 10,
     extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.height,
     formatter: (value) => `Height: ${value}`,
@@ -66,7 +66,7 @@ export const BODY_DESCRIPTOR_REGISTRY = {
     displayLabel: 'Build',
     displayKey: 'build',
     dataPath: 'body.descriptors.build',
-    validValues: ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'],
+    validValues: ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky', 'frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'],
     displayOrder: 30,
     extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.build,
     formatter: (value) => `Build: ${value}`,
@@ -77,7 +77,7 @@ export const BODY_DESCRIPTOR_REGISTRY = {
     displayLabel: 'Body composition',
     displayKey: 'body_composition', // snake_case in formatting config
     dataPath: 'body.descriptors.composition',
-    validValues: ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'],
+    validValues: ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese', 'atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated', 'wasted', 'desiccated', 'bloated', 'rotting'],
     displayOrder: 40,
     extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.composition,
     formatter: (value) => `Body composition: ${value}`,

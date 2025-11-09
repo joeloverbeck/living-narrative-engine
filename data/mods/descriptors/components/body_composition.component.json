@@ -15,7 +15,16 @@
           "soft",
           "chubby",
           "overweight",
-          "obese"
+          "obese",
+          "atrophied",
+          "emaciated",
+          "skeletal",
+          "malnourished",
+          "dehydrated",
+          "wasted",
+          "desiccated",
+          "bloated",
+          "rotting"
         ],
         "default": "average"
       }

@@ -13,7 +13,15 @@
           "normal",
           "reinforced",
           "regenerative",
-          "insufficient-for-flight"
+          "insufficient-for-flight",
+          "brittle",
+          "calcified",
+          "ossified",
+          "cartilaginous",
+          "chitinous",
+          "crystalline",
+          "gelatinous",
+          "ethereal"
         ],
         "default": "normal"
       }

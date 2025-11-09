@@ -13,7 +13,16 @@
           "twisted-joints",
           "extra-joints",
           "fused-segments",
-          "asymmetric"
+          "asymmetric",
+          "atrophied",
+          "withered",
+          "vestigial",
+          "hypertrophied",
+          "necrotic",
+          "gangrenous",
+          "malformed",
+          "bifurcated",
+          "supernumerary"
         ],
         "default": "none"
       }

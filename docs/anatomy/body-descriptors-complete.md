@@ -72,14 +72,137 @@ The registry currently defines 6 body descriptors:
 
 | Descriptor | Display Order | Valid Values | Type |
 |-----------|--------------|--------------|------|
-| height | 10 | gigantic, very-tall, tall, average, short, petite, tiny | Enumerated |
+| height | 10 | microscopic, minuscule, tiny, petite, short, average, tall, very-tall, gigantic, colossal, titanic | Enumerated |
 | skinColor | 20 | *any string* | Free-form |
-| build | 30 | skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky | Enumerated |
-| composition | 40 | underweight, lean, average, soft, chubby, overweight, obese | Enumerated |
+| build | 30 | skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky, frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky | Enumerated |
+| composition | 40 | underweight, lean, average, soft, chubby, overweight, obese, atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting | Enumerated |
 | hairDensity | 50 | hairless, sparse, light, moderate, hairy, very-hairy | Enumerated |
 | smell | 60 | *any string* | Free-form |
 
 **Next Available Display Order**: 70
+
+### Enhanced Body Descriptors (v1.2.0)
+
+The body descriptor system was significantly enhanced to support horror, fantasy, and medical use cases. This expansion was driven by modder feedback requesting more expressive vocabulary for non-standard entities.
+
+#### Enhanced Descriptors Summary
+
+**composition** (16 values, +9 new):
+- **Original** (7): underweight, lean, average, soft, chubby, overweight, obese
+- **New Horror/Medical** (9): atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting
+
+**build** (20 values, +9 new):
+- **Original** (11): skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky
+- **New Extreme/Fantasy** (9): frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky
+
+**height** (11 values, +4 new):
+- **Original** (7): gigantic, very-tall, tall, average, short, petite, tiny
+- **New Extreme** (4): colossal, titanic (giants/kaiju), minuscule, microscopic (fairies/magical)
+
+#### New Descriptor Values Reference
+
+##### Composition Enhancements
+
+- **atrophied**: Wasted muscles, severe muscle loss (vestigial limbs, horror entities)
+- **emaciated**: Extreme thinness from starvation (survivors, undead)
+- **skeletal**: Visible bones, skin stretched over skeleton (undead, horror)
+- **malnourished**: Insufficient nutrition (realistic scenarios, disease)
+- **dehydrated**: Severe fluid loss (desert environments, medical)
+- **wasted**: General wasting away (disease, horror)
+- **desiccated**: Dried out, mummified (ancient undead, desert creatures)
+- **bloated**: Abnormal swelling (disease, eldritch horrors)
+- **rotting**: Decomposing flesh (zombies, undead)
+
+##### Build Enhancements
+
+- **frail**: Weak, delicate build (elderly, sick characters)
+- **gaunt**: Extremely thin and angular (starvation, horror)
+- **skeletal**: Bones visible through skin (undead, extreme starvation)
+- **atrophied**: Wasted muscles (vestigial limbs, horror arms)
+- **cadaverous**: Corpse-like build (undead, extremely ill)
+- **massive**: Extremely large build (giants, ogres, large monsters)
+- **willowy**: Slender and graceful (elves, dancers, fey creatures)
+- **barrel-chested**: Wide torso (warriors, dwarves, strongmen)
+- **lanky**: Tall and thin with long limbs (gangly characters)
+
+##### Height Enhancements
+
+- **colossal**: Larger than gigantic (giants, kaiju, massive creatures)
+- **titanic**: Largest size (titans, colossal beings)
+- **minuscule**: Smaller than tiny (fairies, pixies, small fey)
+- **microscopic**: Impossibly small (magical creatures, elementals)
+
+#### Use Cases
+
+**Horror/Undead Entities**:
+```javascript
+{
+  bodyDescriptors: {
+    composition: 'rotting',
+    build: 'skeletal',
+    height: 'tall',
+    skinColor: 'corpse-gray'
+  }
+}
+```
+
+**Eldritch Abominations**:
+```javascript
+{
+  bodyDescriptors: {
+    composition: 'bloated',
+    build: 'massive',
+    height: 'colossal',
+    skinColor: 'translucent-gray'
+  }
+}
+```
+
+**Starving Survivors**:
+```javascript
+{
+  bodyDescriptors: {
+    composition: 'emaciated',
+    build: 'gaunt',
+    height: 'average',
+    skinColor: 'sallow'
+  }
+}
+```
+
+**Fairy Creatures**:
+```javascript
+{
+  bodyDescriptors: {
+    composition: 'lean',
+    build: 'willowy',
+    height: 'minuscule',
+    skinColor: 'luminescent'
+  }
+}
+```
+
+**Giants/Titans**:
+```javascript
+{
+  bodyDescriptors: {
+    composition: 'overweight',
+    build: 'massive',
+    height: 'titanic',
+    skinColor: 'stone-gray'
+  }
+}
+```
+
+#### Part-Level Descriptor Enhancements
+
+In addition to body-level descriptors, part-level descriptors were also enhanced:
+
+**deformity** (+9 values): atrophied, withered, vestigial, hypertrophied, necrotic, gangrenous, malformed, bifurcated, supernumerary
+
+**structural_integrity** (+8 values): brittle, calcified, ossified, cartilaginous, chitinous, crystalline, gelatinous, ethereal
+
+These enhancements allow for more detailed and expressive anatomical descriptions at both the body and part levels.
 
 ### Integration Points
 

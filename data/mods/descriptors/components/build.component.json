@@ -9,7 +9,6 @@
         "type": "string",
         "description": "The body build type",
         "enum": [
-          "atrophied",
           "skinny",
           "slim",
           "lissom",
@@ -20,7 +19,16 @@
           "thick",
           "muscular",
           "hulking",
-          "stocky"
+          "stocky",
+          "frail",
+          "gaunt",
+          "skeletal",
+          "atrophied",
+          "cadaverous",
+          "massive",
+          "willowy",
+          "barrel-chested",
+          "lanky"
         ],
         "default": "average"
       }
