@@ -22,70 +22,188 @@ Integrate scope evaluation tracer into `ScopeEngine` and scope resolvers to capt
 
 ## Implementation Details
 
+### Architecture Overview
+
+**Important**: The ScopeEngine uses a **dispatcher pattern**, not direct method dispatch:
+
+- **ScopeEngine** does NOT have a `dispatch()` method
+- Instead, `_ensureInitialized()` creates a **dispatcher object** via `createDispatcher(resolvers)`
+- The dispatcher is a simple routing mechanism with a `resolve(node, ctx)` method
+- Resolvers are **factory functions** (not classes) stored in an array
+- The dispatcher finds the appropriate resolver using `canResolve(node)` and calls its `resolve()` method
+- **Tracing must be added in `_resolveWithDepthAndCycleChecking()`**, which is the actual execution point
+
 ### Files to Modify
 
 1. **ScopeEngine** - `src/scopeDsl/engine.js`
 2. **FilterResolver** - `src/scopeDsl/nodes/filterResolver.js`
-3. **SourceResolver** - `src/scopeDsl/nodes/sourceResolver.js`
-4. **StepResolver** - `src/scopeDsl/nodes/stepResolver.js`
+3. **SourceResolver** - `src/scopeDsl/nodes/sourceResolver.js` (already has trace support)
+4. **StepResolver** - `src/scopeDsl/nodes/stepResolver.js` (already has trace helpers)
 
 ### 1. ScopeEngine.resolve() - Add Tracer to Context
 
 **File**: `src/scopeDsl/engine.js`
 **Method**: `resolve(ast, actorEntity, runtimeCtx, trace = null)`
 
+**Current Implementation**: The context is created within `resolve()` and passed to `_resolveWithDepthAndCycleChecking()`.
+
 ```javascript
 resolve(ast, actorEntity, runtimeCtx, trace = null) {
-  // ...existing validation...
+  // ...existing validation and initialization...
 
+  // Create resolution context for resolvers with wrapped dispatcher
   const ctx = {
     actorEntity,
     runtimeCtx,
     trace,
-    tracer: runtimeCtx.tracer, // ADD: tracer from runtimeCtx
-    // ...existing context properties...
+    tracer: runtimeCtx?.tracer, // ADD: Extract tracer from runtimeCtx
+    dispatcher: {
+      resolve: (node, innerCtx) =>
+        this._resolveWithDepthAndCycleChecking(
+          node,
+          innerCtx,
+          dispatcher,
+          cycleDetector,
+          depthGuard
+        ),
+    },
+    depth: 0,
+    cycleDetector,
+    depthGuard,
   };
 
-  const result = this.dispatch(ast, ctx);
+  const result = this._resolveWithDepthAndCycleChecking(
+    ast,
+    ctx,
+    dispatcher,
+    cycleDetector,
+    depthGuard
+  );
+
   return result;
 }
 ```
 
-### 2. ScopeEngine.dispatch() - Log Resolver Steps
+### 2. ScopeEngine._resolveWithDepthAndCycleChecking() - Log Resolver Steps
 
 **File**: `src/scopeDsl/engine.js`
-**Method**: `dispatch(node, ctx)`
+**Method**: `_resolveWithDepthAndCycleChecking(node, ctx, dispatcher, cycleDetector, depthGuard)`
+
+**Current Implementation**: This is the actual execution point where the dispatcher resolves nodes. The dispatcher is a separate object created by `createDispatcher(resolvers)` in `_ensureInitialized()`.
+
+**Note**: ScopeEngine does NOT have a `dispatch()` method. The `dispatcher` is a separate object with a `resolve()` method.
 
 ```javascript
-dispatch(node, ctx) {
-  const { kind } = node;
-  const resolver = this.#resolvers.get(kind);
+_resolveWithDepthAndCycleChecking(
+  node,
+  ctx,
+  dispatcher,
+  cycleDetector,
+  depthGuard
+) {
+  // ...existing depth and cycle checking...
 
-  if (!resolver) {
-    throw new Error(`No resolver for node kind: ${kind}`);
+  try {
+    // Create new context with incremented depth and wrapped dispatcher
+    const newCtx = {
+      ...ctx,
+      depth: ctx.depth + 1,
+      dispatcher: {
+        resolve: (innerNode, innerCtx) => {
+          const mergedCtx = this.contextMerger.merge(ctx, innerCtx);
+          return this._resolveWithDepthAndCycleChecking(
+            innerNode,
+            mergedCtx,
+            dispatcher,
+            cycleDetector,
+            depthGuard
+          );
+        },
+      },
+    };
+
+    // ADD: Tracer integration - Log BEFORE resolution
+    const tracer = ctx.tracer || newCtx.tracer;
+    if (tracer?.isEnabled()) {
+      const input = ctx.currentSet || new Set([ctx.actorEntity.id]);
+
+      // Execute resolution
+      const result = dispatcher.resolve(node, newCtx);
+
+      // Build resolver name from node type
+      // Note: The dispatcher (created by createDispatcher) doesn't expose its resolvers,
+      // so we build the name from the node type instead
+      const resolverName = this._getResolverNameFromNode(node);
+
+      // Log step to tracer after resolution
+      const operation = this._buildOperationDescription(node);
+      tracer.logStep(
+        resolverName,
+        operation,
+        input,
+        result,
+        { node }
+      );
+
+      return result;
+    }
+
+    // Normal execution without tracing
+    return dispatcher.resolve(node, newCtx);
+  } finally {
+    cycleDetector.leave();
   }
+}
 
-  // ADD: Tracer integration
-  if (ctx.tracer?.isEnabled()) {
-    const input = ctx.currentSet || ctx.actorEntity;
-    const resolverName = resolver.constructor.name;
-
-    const result = resolver.resolve(node, ctx);
-
-    // Log step to tracer after resolution
-    ctx.tracer.logStep(
-      resolverName,
-      `resolve(kind='${kind}')`,
-      input,
-      result,
-      { node }
-    );
-
-    return result;
+/**
+ * Get resolver name from node type.
+ * Maps node types to their corresponding resolver names.
+ * @private
+ */
+_getResolverNameFromNode(node) {
+  switch (node.type) {
+    case 'Source':
+      return 'SourceResolver';
+    case 'Step':
+      // Check if it's a clothing-specific step
+      if (node.field === 'items_in_slot' || node.field === 'slot_accessibility') {
+        return node.field === 'items_in_slot' ? 'SlotAccessResolver' : 'ClothingStepResolver';
+      }
+      return 'StepResolver';
+    case 'Filter':
+      return 'FilterResolver';
+    case 'Union':
+      return 'UnionResolver';
+    case 'ArrayIterationStep':
+      return 'ArrayIterationResolver';
+    case 'ScopeReference':
+      return 'ScopeReferenceResolver';
+    default:
+      return 'UnknownResolver';
   }
+}
 
-  // Normal execution without tracing
-  return resolver.resolve(node, ctx);
+/**
+ * Build a human-readable operation description from a node.
+ * @private
+ */
+_buildOperationDescription(node) {
+  switch (node.type) {
+    case 'Source':
+      return `resolve(kind='${node.kind}'${node.param ? `, param='${node.param}'` : ''})`;
+    case 'Step':
+      return `resolve(field='${node.field}')`;
+    case 'Filter':
+      return 'resolve(filter)';
+    case 'Union':
+      return 'resolve(union)';
+    case 'ArrayIterationStep':
+      return 'resolve(array iteration)';
+    case 'ScopeReference':
+      return `resolve(scopeRef='${node.scopeId}')`;
+    default:
+      return `resolve(type='${node.type}')`;
+  }
 }
 ```
 
@@ -94,37 +212,80 @@ dispatch(node, ctx) {
 **File**: `src/scopeDsl/nodes/filterResolver.js`
 **Method**: `resolve(node, ctx)`
 
+**Current Implementation**: FilterResolver is a factory function (not a class), created by `createFilterResolver()`.
+
+**Note**: The tracer needs to be extracted from `ctx` and checked for each entity evaluation.
+
 ```javascript
 resolve(node, ctx) {
-  const { actorEntity, dispatcher, trace, tracer } = ctx; // ADD: extract tracer
+  const { actorEntity, dispatcher, trace } = ctx;
+  const tracer = ctx.tracer; // ADD: Extract tracer from context
+  const logger = ctx?.runtimeCtx?.logger || null;
 
-  // ...existing validation...
+  // ...existing validation and preprocessing...
 
   const result = new Set();
+  const filterEvaluations = []; // Existing trace collection
 
-  for (const item of currentSet) {
-    const entityId = typeof item === 'string' ? item : item?.id;
+  for (const item of parentResult) {
+    // ...skip null/undefined items...
 
-    // ...build evalCtx...
+    if (Array.isArray(item)) {
+      // ...handle array elements...
+    } else {
+      // Handle single items (entity IDs or objects)
+      let evalCtx = null;
+      try {
+        evalCtx = createEvaluationContext(
+          item,
+          actorEntity,
+          entitiesGateway,
+          locationProvider,
+          trace,
+          ctx.runtimeCtx,
+          processedActor
+        );
 
-    const passedFilter = logicEval.evaluate(node.logic, evalCtx);
+        if (!evalCtx) {
+          continue;
+        }
 
-    // ADD: Log to tracer
-    if (tracer?.isEnabled()) {
-      tracer.logFilterEvaluation(
-        entityId,
-        node.logic,
-        passedFilter,
-        evalCtx
-      );
+        const evalResult = logicEval.evaluate(node.logic, evalCtx);
+
+        // ADD: Log to tracer (in addition to existing trace logging)
+        if (tracer?.isEnabled()) {
+          const entityId = typeof item === 'string' ? item : item?.id;
+          tracer.logFilterEvaluation(
+            entityId,
+            node.logic,
+            evalResult,
+            evalCtx
+          );
+        }
+
+        // Existing trace capture (keep this)
+        if (trace) {
+          const itemEntity =
+            typeof item === 'string' ? entitiesGateway.getEntityInstance(item) : item;
+          filterEvaluations.push({
+            entityId: typeof item === 'string' ? item : item?.id,
+            passedFilter: evalResult,
+            evaluationContext: {
+              // ...existing context details...
+            },
+          });
+        }
+
+        if (evalResult) {
+          result.add(item);
+        }
+      } catch (error) {
+        // ...existing error handling...
+      }
     }
-
-    if (passedFilter) {
-      result.add(item);
-    }
-
-    // ...existing trace logging...
   }
+
+  // ...existing trace logging...
 
   return result;
 }
@@ -132,24 +293,30 @@ resolve(node, ctx) {
 
 ### 4. SourceResolver.resolve() - Already Captured
 
-**Note**: SourceResolver steps are already captured by ScopeEngine.dispatch().
+**Note**: SourceResolver steps are already captured by `ScopeEngine._resolveWithDepthAndCycleChecking()`.
 No additional logging needed unless specific detail required.
+
+**Current Implementation**: SourceResolver already has trace logging when `trace` is provided in context.
 
 ### 5. StepResolver.resolve() - Already Captured
 
-**Note**: StepResolver steps are already captured by ScopeEngine.dispatch().
+**Note**: StepResolver steps are already captured by `ScopeEngine._resolveWithDepthAndCycleChecking()`.
 No additional logging needed unless specific detail required.
+
+**Current Implementation**: StepResolver has minimal trace logging via `logStepResolution()` helper (currently no-op).
 
 ## Acceptance Criteria
 
 ### ScopeEngine
-- ✅ Tracer extracted from `runtimeCtx`
-- ✅ Tracer passed in context to resolvers
-- ✅ `dispatch()` logs resolver steps when enabled
-- ✅ Input/output captured for each resolver
-- ✅ Resolver name included in log
-- ✅ No logging when tracer disabled
+- ✅ Tracer extracted from `runtimeCtx` and added to context in `resolve()`
+- ✅ Tracer passed in context to all resolvers
+- ✅ `_resolveWithDepthAndCycleChecking()` logs resolver steps when tracer enabled
+- ✅ Input/output captured for each resolver execution
+- ✅ Resolver name correctly identified via `_getResolverNameFromNode()` helper
+- ✅ No logging when tracer disabled or not present
 - ✅ Minimal overhead when disabled (< 5%)
+- ✅ Helper method `_getResolverNameFromNode()` maps node types to resolver names
+- ✅ Helper method `_buildOperationDescription()` creates human-readable operation strings
 
 ### FilterResolver
 - ✅ Tracer extracted from context
@@ -180,19 +347,43 @@ describe('ScopeEngine - Tracer Integration', () => {
   describe('Tracer in context', () => {
     it('should pass tracer from runtimeCtx to context')
     it('should work when tracer is undefined')
+    it('should work when runtimeCtx does not have tracer')
   });
 
-  describe('Dispatch logging', () => {
+  describe('Resolution logging', () => {
     it('should log resolver step when tracer enabled')
     it('should not log when tracer disabled')
-    it('should include resolver name')
-    it('should include input/output')
+    it('should include correct resolver name')
+    it('should include input/output sets')
     it('should include node in details')
+    it('should build correct operation description for Source nodes')
+    it('should build correct operation description for Step nodes')
+    it('should build correct operation description for Filter nodes')
+  });
+
+  describe('Helper method: _getResolverNameFromNode', () => {
+    it('should return "SourceResolver" for Source nodes')
+    it('should return "StepResolver" for Step nodes')
+    it('should return "SlotAccessResolver" for items_in_slot field')
+    it('should return "ClothingStepResolver" for slot_accessibility field')
+    it('should return "FilterResolver" for Filter nodes')
+    it('should return "UnionResolver" for Union nodes')
+    it('should return "ArrayIterationResolver" for ArrayIterationStep nodes')
+    it('should return "ScopeReferenceResolver" for ScopeReference nodes')
+    it('should return "UnknownResolver" for unknown node types')
+  });
+
+  describe('Helper method: _buildOperationDescription', () => {
+    it('should format Source nodes with kind and param')
+    it('should format Step nodes with field name')
+    it('should format Filter, Union, ArrayIteration nodes')
+    it('should format ScopeReference nodes with scopeId')
   });
 
   describe('Performance', () => {
     it('should have minimal overhead when disabled')
     it('should not call logStep when disabled')
+    it('should not call logStep when tracer is undefined')
   });
 });
 ```
@@ -317,6 +508,40 @@ SCOPE EVALUATION TRACE:
 Summary: 3 steps, 12ms, Final size: 1
 ```
 
+## Key Corrections from Codebase Analysis
+
+This workflow has been updated to reflect the actual production code structure:
+
+### ✅ **Corrected Assumptions**
+
+1. **ScopeEngine Architecture**:
+   - ❌ OLD: "ScopeEngine has a `dispatch()` method"
+   - ✅ NEW: "ScopeEngine uses `_resolveWithDepthAndCycleChecking()` which calls a separate `dispatcher` object"
+
+2. **Dispatcher Pattern**:
+   - ❌ OLD: "Resolvers stored in `this.#resolvers` Map"
+   - ✅ NEW: "Dispatcher is created by `createDispatcher(resolvers)` with resolvers in an array"
+
+3. **Resolver Implementation**:
+   - ❌ OLD: "Resolvers are classes with constructor.name"
+   - ✅ NEW: "Resolvers are factory functions returning objects with `canResolve()` and `resolve()` methods"
+
+4. **Resolver Name Resolution**:
+   - ❌ OLD: "Extract resolver name from `resolver.constructor.name`"
+   - ✅ NEW: "Map node type to resolver name via `_getResolverNameFromNode()` helper"
+
+5. **Integration Point**:
+   - ❌ OLD: "Add tracing in `ScopeEngine.dispatch()`"
+   - ✅ NEW: "Add tracing in `ScopeEngine._resolveWithDepthAndCycleChecking()`"
+
+### 📋 **Implementation Changes**
+
+- Added `_getResolverNameFromNode()` helper to map node types to resolver names
+- Added `_buildOperationDescription()` helper to format operation strings
+- Updated context creation in `resolve()` to include `tracer: runtimeCtx?.tracer`
+- Modified `_resolveWithDepthAndCycleChecking()` to log steps when tracer is enabled
+- FilterResolver extracts tracer from context and logs individual entity evaluations
+
 ## References
 
 - **Spec Section**: 3.3 Integration with ScopeEngine (lines 1079-1131)
@@ -325,3 +550,10 @@ Summary: 3 steps, 12ms, Final size: 1
   - MODTESDIAIMP-009 (ScopeEvaluationTracer class)
   - MODTESDIAIMP-010 (ModTestFixture integration)
   - MODTESDIAIMP-012 (Integration tests)
+- **Codebase Files Analyzed**:
+  - `src/scopeDsl/engine.js` (ScopeEngine implementation)
+  - `src/scopeDsl/nodes/dispatcher.js` (Dispatcher factory)
+  - `src/scopeDsl/nodes/filterResolver.js` (FilterResolver factory)
+  - `src/scopeDsl/nodes/sourceResolver.js` (SourceResolver factory)
+  - `src/scopeDsl/nodes/stepResolver.js` (StepResolver factory)
+  - `tests/common/mods/scopeEvaluationTracer.js` (Tracer class)
