@@ -2,9 +2,13 @@
  * @file Unit tests for RecipePreflightValidator
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
+import * as patternMatchingValidator from '../../../../src/anatomy/validation/patternMatchingValidator.js';
+import * as socketSlotCompatibilityValidator from '../../../../src/anatomy/validation/socketSlotCompatibilityValidator.js';
+import { ComponentExistenceValidationRule } from '../../../../src/anatomy/validation/rules/componentExistenceValidationRule.js';
+import { PropertySchemaValidationRule } from '../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
 
 describe('RecipePreflightValidator', () => {
   let validator;
@@ -16,29 +20,29 @@ describe('RecipePreflightValidator', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: () => {},
-      warn: () => {},
-      error: () => {},
-      debug: () => {},
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
     };
 
     mockDataRegistry = {
-      get: () => undefined,
-      getAll: () => [],
+      get: jest.fn(() => undefined),
+      getAll: jest.fn(() => []),
     };
 
     mockAnatomyBlueprintRepository = {
-      getBlueprint: async () => null,
-      getRecipe: async () => null,
+      getBlueprint: jest.fn(async () => null),
+      getRecipe: jest.fn(async () => null),
     };
 
     mockSchemaValidator = {
-      validate: () => ({ isValid: true, errors: [] }),
+      validate: jest.fn(() => ({ isValid: true, errors: [] })),
     };
 
     mockSlotGenerator = {
-      extractSlotKeysFromLimbSet: () => [],
-      extractSlotKeysFromAppendage: () => [],
+      extractSlotKeysFromLimbSet: jest.fn(() => []),
+      extractSlotKeysFromAppendage: jest.fn(() => []),
     };
 
     validator = new RecipePreflightValidator({
@@ -48,6 +52,10 @@ describe('RecipePreflightValidator', () => {
       slotGenerator: mockSlotGenerator,
       logger: mockLogger,
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Constructor', () => {
@@ -244,6 +252,86 @@ describe('RecipePreflightValidator', () => {
         (check) => check.check === 'pattern_matching'
       );
       expect(hasPatternCheck).toBe(false);
+    });
+
+    it('should warn when pattern matching blueprint is missing', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => null);
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'missing:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matches: ['slot1'],
+          },
+        ],
+      };
+
+      await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Cannot validate patterns: blueprint 'missing:blueprint' not found"
+      );
+    });
+
+    it('should include pattern warnings when pattern matching reports issues', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const patternWarning = {
+        type: 'NO_MATCHING_SLOTS',
+        check: 'pattern_matching',
+        message: 'Pattern has no matches',
+      };
+
+      jest
+        .spyOn(patternMatchingValidator, 'validatePatternMatching')
+        .mockReturnValue([patternWarning]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        slots: { slot1: {} },
+        additionalSlots: {},
+      }));
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matches: ['slot1'],
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+      });
+
+      expect(patternMatchingValidator.validatePatternMatching).toHaveBeenCalled();
+      expect(report.warnings).toContainEqual(patternWarning);
     });
 
     it('should skip descriptor checks when skipDescriptorChecks is true', async () => {
@@ -694,6 +782,98 @@ describe('RecipePreflightValidator', () => {
       );
       expect(patternCheck).toBeDefined();
       expect(patternCheck.message).toContain('1 pattern(s)');
+    });
+  });
+
+  describe('Part availability validation', () => {
+    it('should report errors when no entities satisfy slot or pattern requirements', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'entity:wrongPartType',
+              components: {
+                'anatomy:part': { subType: 'leg' },
+                'component:tag': {},
+                'component:prop': {},
+              },
+            },
+            {
+              id: 'entity:missingTag',
+              components: {
+                'anatomy:part': { subType: 'arm' },
+                'component:prop': {},
+              },
+            },
+            {
+              id: 'entity:missingProperty',
+              components: {
+                'anatomy:part': { subType: 'arm' },
+                'component:tag': {},
+              },
+            },
+          ];
+        }
+        return [];
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            partType: 'arm',
+            tags: ['component:tag'],
+            properties: {
+              'component:prop': {},
+            },
+          },
+        },
+        patterns: [
+          {
+            partType: 'arm',
+            tags: ['component:tag'],
+            properties: {
+              'component:prop': {},
+            },
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+      });
+
+      expect(report.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'PART_UNAVAILABLE',
+            location: { type: 'slot', name: 'slot1' },
+          }),
+          expect.objectContaining({
+            type: 'PART_UNAVAILABLE',
+            location: { type: 'pattern', index: 0 },
+          }),
+        ])
+      );
     });
   });
 
