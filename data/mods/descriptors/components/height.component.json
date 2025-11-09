@@ -9,6 +9,8 @@
         "type": "string",
         "description": "The height category",
         "enum": [
+          "microscopic",
+          "minuscule",
           "tiny",
           "petite",
           "short",

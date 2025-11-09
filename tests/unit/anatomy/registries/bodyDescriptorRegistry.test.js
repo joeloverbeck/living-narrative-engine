@@ -79,13 +79,17 @@ describe('bodyDescriptorRegistry', () => {
       it('should have all valid values', () => {
         const height = BODY_DESCRIPTOR_REGISTRY.height;
         expect(height.validValues).toEqual([
-          'gigantic',
-          'very-tall',
-          'tall',
-          'average',
-          'short',
-          'petite',
+          'microscopic',
+          'minuscule',
           'tiny',
+          'petite',
+          'short',
+          'average',
+          'tall',
+          'very-tall',
+          'gigantic',
+          'colossal',
+          'titanic',
         ]);
       });
 
@@ -158,6 +162,15 @@ describe('bodyDescriptorRegistry', () => {
           'muscular',
           'hulking',
           'stocky',
+          'frail',
+          'gaunt',
+          'skeletal',
+          'atrophied',
+          'cadaverous',
+          'massive',
+          'willowy',
+          'barrel-chested',
+          'lanky',
         ]);
       });
 
@@ -196,6 +209,15 @@ describe('bodyDescriptorRegistry', () => {
           'chubby',
           'overweight',
           'obese',
+          'atrophied',
+          'emaciated',
+          'skeletal',
+          'malnourished',
+          'dehydrated',
+          'wasted',
+          'desiccated',
+          'bloated',
+          'rotting',
         ]);
       });
 
@@ -450,7 +472,7 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid height values', () => {
-        const validHeights = ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'];
+        const validHeights = ['microscopic', 'minuscule', 'tiny', 'petite', 'short', 'average', 'tall', 'very-tall', 'gigantic', 'colossal', 'titanic'];
         for (const value of validHeights) {
           const result = validateDescriptorValue('height', value);
           expect(result.valid).toBe(true);
@@ -463,7 +485,7 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid build values', () => {
-        const validBuilds = ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'];
+        const validBuilds = ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky', 'frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'];
         for (const value of validBuilds) {
           const result = validateDescriptorValue('build', value);
           expect(result.valid).toBe(true);
@@ -476,7 +498,7 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid composition values', () => {
-        const validCompositions = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
+        const validCompositions = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese', 'atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated', 'wasted', 'desiccated', 'bloated', 'rotting'];
         for (const value of validCompositions) {
           const result = validateDescriptorValue('composition', value);
           expect(result.valid).toBe(true);
@@ -571,6 +593,222 @@ describe('bodyDescriptorRegistry', () => {
         expect(result.error).toContain('invalid-build');
         expect(result.error).toContain('build');
         expect(result.error).toContain('Expected one of:');
+      });
+    });
+  });
+
+  describe('Enhanced Body Descriptors (v1.2.0)', () => {
+    describe('composition descriptor - Horror/Medical values', () => {
+      it('should include new horror/medical values', () => {
+        const metadata = getDescriptorMetadata('composition');
+        expect(metadata.validValues).toContain('atrophied');
+        expect(metadata.validValues).toContain('emaciated');
+        expect(metadata.validValues).toContain('skeletal');
+        expect(metadata.validValues).toContain('malnourished');
+        expect(metadata.validValues).toContain('dehydrated');
+        expect(metadata.validValues).toContain('wasted');
+        expect(metadata.validValues).toContain('desiccated');
+        expect(metadata.validValues).toContain('bloated');
+        expect(metadata.validValues).toContain('rotting');
+      });
+
+      it('should validate atrophied as valid value', () => {
+        const result = validateDescriptorValue('composition', 'atrophied');
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      it('should validate all new composition values', () => {
+        const newValues = ['atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated', 'wasted', 'desiccated', 'bloated', 'rotting'];
+        for (const value of newValues) {
+          const result = validateDescriptorValue('composition', value);
+          expect(result.valid).toBe(true);
+          expect(result.error).toBeUndefined();
+        }
+      });
+
+      it('should format new composition values correctly', () => {
+        const composition = BODY_DESCRIPTOR_REGISTRY.composition;
+        expect(composition.formatter('atrophied')).toBe('Body composition: atrophied');
+        expect(composition.formatter('skeletal')).toBe('Body composition: skeletal');
+        expect(composition.formatter('rotting')).toBe('Body composition: rotting');
+      });
+    });
+
+    describe('build descriptor - Extreme physique values', () => {
+      it('should include new extreme physique values', () => {
+        const metadata = getDescriptorMetadata('build');
+        expect(metadata.validValues).toContain('frail');
+        expect(metadata.validValues).toContain('gaunt');
+        expect(metadata.validValues).toContain('skeletal');
+        expect(metadata.validValues).toContain('atrophied');
+        expect(metadata.validValues).toContain('cadaverous');
+        expect(metadata.validValues).toContain('massive');
+        expect(metadata.validValues).toContain('willowy');
+        expect(metadata.validValues).toContain('barrel-chested');
+        expect(metadata.validValues).toContain('lanky');
+      });
+
+      it('should validate atrophied build for vestigial limbs', () => {
+        const result = validateDescriptorValue('build', 'atrophied');
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      it('should validate all new build values', () => {
+        const newValues = ['frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'];
+        for (const value of newValues) {
+          const result = validateDescriptorValue('build', value);
+          expect(result.valid).toBe(true);
+          expect(result.error).toBeUndefined();
+        }
+      });
+
+      it('should format new build values correctly', () => {
+        const build = BODY_DESCRIPTOR_REGISTRY.build;
+        expect(build.formatter('atrophied')).toBe('Build: atrophied');
+        expect(build.formatter('skeletal')).toBe('Build: skeletal');
+        expect(build.formatter('massive')).toBe('Build: massive');
+      });
+    });
+
+    describe('height descriptor - Extreme size values', () => {
+      it('should include synchronized component values (colossal, titanic)', () => {
+        const metadata = getDescriptorMetadata('height');
+        expect(metadata.validValues).toContain('colossal');
+        expect(metadata.validValues).toContain('titanic');
+      });
+
+      it('should include new very small values', () => {
+        const metadata = getDescriptorMetadata('height');
+        expect(metadata.validValues).toContain('minuscule');
+        expect(metadata.validValues).toContain('microscopic');
+      });
+
+      it('should validate all new height values', () => {
+        const newValues = ['colossal', 'titanic', 'minuscule', 'microscopic'];
+        for (const value of newValues) {
+          const result = validateDescriptorValue('height', value);
+          expect(result.valid).toBe(true);
+          expect(result.error).toBeUndefined();
+        }
+      });
+
+      it('should format new height values correctly', () => {
+        const height = BODY_DESCRIPTOR_REGISTRY.height;
+        expect(height.formatter('colossal')).toBe('Height: colossal');
+        expect(height.formatter('titanic')).toBe('Height: titanic');
+        expect(height.formatter('minuscule')).toBe('Height: minuscule');
+        expect(height.formatter('microscopic')).toBe('Height: microscopic');
+      });
+
+      it('should maintain proper size ordering', () => {
+        const height = BODY_DESCRIPTOR_REGISTRY.height;
+        const sizes = height.validValues;
+
+        // Verify smallest to largest ordering
+        expect(sizes.indexOf('microscopic')).toBeLessThan(sizes.indexOf('minuscule'));
+        expect(sizes.indexOf('minuscule')).toBeLessThan(sizes.indexOf('tiny'));
+        expect(sizes.indexOf('tiny')).toBeLessThan(sizes.indexOf('petite'));
+        expect(sizes.indexOf('petite')).toBeLessThan(sizes.indexOf('short'));
+        expect(sizes.indexOf('short')).toBeLessThan(sizes.indexOf('average'));
+        expect(sizes.indexOf('average')).toBeLessThan(sizes.indexOf('tall'));
+        expect(sizes.indexOf('tall')).toBeLessThan(sizes.indexOf('very-tall'));
+        expect(sizes.indexOf('very-tall')).toBeLessThan(sizes.indexOf('gigantic'));
+        expect(sizes.indexOf('gigantic')).toBeLessThan(sizes.indexOf('colossal'));
+        expect(sizes.indexOf('colossal')).toBeLessThan(sizes.indexOf('titanic'));
+      });
+    });
+
+    describe('Horror entity use case - Writhing Observer', () => {
+      it('should support atrophied composition for horror entities', () => {
+        const result = validateDescriptorValue('composition', 'atrophied');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support skeletal build for undead', () => {
+        const result = validateDescriptorValue('build', 'skeletal');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support rotting composition for undead', () => {
+        const result = validateDescriptorValue('composition', 'rotting');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support colossal height for kaiju', () => {
+        const result = validateDescriptorValue('height', 'colossal');
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('Fantasy entity use cases', () => {
+      it('should support willowy build for elves', () => {
+        const result = validateDescriptorValue('build', 'willowy');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support minuscule height for fairies', () => {
+        const result = validateDescriptorValue('height', 'minuscule');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support barrel-chested build for dwarves', () => {
+        const result = validateDescriptorValue('build', 'barrel-chested');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support titanic height for titans', () => {
+        const result = validateDescriptorValue('height', 'titanic');
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('Medical/Realistic use cases', () => {
+      it('should support malnourished composition', () => {
+        const result = validateDescriptorValue('composition', 'malnourished');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support dehydrated composition', () => {
+        const result = validateDescriptorValue('composition', 'dehydrated');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support frail build for elderly', () => {
+        const result = validateDescriptorValue('build', 'frail');
+        expect(result.valid).toBe(true);
+      });
+
+      it('should support gaunt build for starvation', () => {
+        const result = validateDescriptorValue('build', 'gaunt');
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('Backward compatibility', () => {
+      it('should still support all original composition values', () => {
+        const originalValues = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
+        for (const value of originalValues) {
+          const result = validateDescriptorValue('composition', value);
+          expect(result.valid).toBe(true);
+        }
+      });
+
+      it('should still support all original build values', () => {
+        const originalValues = ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'];
+        for (const value of originalValues) {
+          const result = validateDescriptorValue('build', value);
+          expect(result.valid).toBe(true);
+        }
+      });
+
+      it('should still support all original height values', () => {
+        const originalValues = ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'];
+        for (const value of originalValues) {
+          const result = validateDescriptorValue('height', value);
+          expect(result.valid).toBe(true);
+        }
       });
     });
   });
