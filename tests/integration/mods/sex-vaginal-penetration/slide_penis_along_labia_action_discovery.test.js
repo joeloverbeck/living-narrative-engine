@@ -599,4 +599,25 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () 
 
     expect(foundAction).toBeUndefined();
   });
+
+  it('does not appear when the actor is receiving a blowjob', async () => {
+    const entities = buildScenario();
+
+    // Add receiving_blowjob component to the actor
+    const actorEntity = entities.find(e => e.id === 'alice');
+    actorEntity.components['positioning:receiving_blowjob'] = {
+      giving_entity_id: 'beth',
+      consented: true
+    };
+
+    testFixture.reset(entities);
+    configureActionDiscovery();
+
+    const actions = await testFixture.discoverActions('alice');
+    const foundAction = actions.find(
+      (action) => action.id === 'sex-vaginal-penetration:slide_penis_along_labia'
+    );
+
+    expect(foundAction).toBeUndefined();
+  });
 });

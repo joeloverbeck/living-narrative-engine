@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:fucking_vaginally"],
+    "actor": ["positioning:fucking_vaginally", "positioning:receiving_blowjob"],
     "primary": ["positioning:sitting_on"]
   },
   "template": "slide your penis along {target}'s labia",
