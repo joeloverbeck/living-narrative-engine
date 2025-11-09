@@ -6,6 +6,7 @@
 
 import { ValidationRule } from '../validationRule.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { createError } from '../../errors/index.js';
 
 /** @typedef {import('../loadTimeValidationContext.js').LoadTimeValidationContext} LoadTimeValidationContext */
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
@@ -79,7 +80,9 @@ export class ComponentExistenceValidationRule extends ValidationRule {
     const recipes = context.getRecipes();
 
     for (const [recipeId, recipe] of Object.entries(recipes)) {
-      const recipeIssues = this.#validateRecipeComponents(recipe);
+      // Get recipePath from options if available (added during validation, not in recipe JSON)
+      const recipePath = recipe.recipePath || null;
+      const recipeIssues = this.#validateRecipeComponents(recipe, recipeId, recipePath);
 
       // Add recipe context to each issue
       for (const issue of recipeIssues) {
@@ -140,9 +143,11 @@ export class ComponentExistenceValidationRule extends ValidationRule {
    *
    * @private
    * @param {object} recipe - Recipe definition
+   * @param {string} recipeId - Recipe ID
+   * @param {string} [recipePath] - Optional recipe file path
    * @returns {Array} Array of issues found
    */
-  #validateRecipeComponents(recipe) {
+  #validateRecipeComponents(recipe, recipeId, recipePath = null) {
     const issues = [];
     const componentExists = (componentId) =>
       this.#dataRegistry.get('components', componentId) !== undefined;
@@ -157,7 +162,10 @@ export class ComponentExistenceValidationRule extends ValidationRule {
               componentId,
               'slot',
               slotName,
-              'tags'
+              'tags',
+              undefined,
+              recipeId,
+              recipePath
             )
           );
         }
@@ -171,7 +179,10 @@ export class ComponentExistenceValidationRule extends ValidationRule {
               componentId,
               'slot',
               slotName,
-              'notTags'
+              'notTags',
+              undefined,
+              recipeId,
+              recipePath
             )
           );
         }
@@ -185,7 +196,10 @@ export class ComponentExistenceValidationRule extends ValidationRule {
               componentId,
               'slot',
               slotName,
-              'properties'
+              'properties',
+              undefined,
+              recipeId,
+              recipePath
             )
           );
         }
@@ -210,7 +224,9 @@ export class ComponentExistenceValidationRule extends ValidationRule {
               'pattern',
               patternId,
               'tags',
-              index
+              index,
+              recipeId,
+              recipePath
             )
           );
         }
@@ -225,7 +241,9 @@ export class ComponentExistenceValidationRule extends ValidationRule {
               'pattern',
               patternId,
               'notTags',
-              index
+              index,
+              recipeId,
+              recipePath
             )
           );
         }
@@ -240,7 +258,9 @@ export class ComponentExistenceValidationRule extends ValidationRule {
               'pattern',
               patternId,
               'properties',
-              index
+              index,
+              recipeId,
+              recipePath
             )
           );
         }
@@ -261,7 +281,9 @@ export class ComponentExistenceValidationRule extends ValidationRule {
                 'constraint',
                 'requires',
                 'components',
-                index
+                index,
+                recipeId,
+                recipePath
               )
             );
           }
@@ -280,7 +302,9 @@ export class ComponentExistenceValidationRule extends ValidationRule {
                 'constraint',
                 'excludes',
                 'components',
-                index
+                index,
+                recipeId,
+                recipePath
               )
             );
           }
@@ -300,19 +324,36 @@ export class ComponentExistenceValidationRule extends ValidationRule {
    * @param {string} locationName - Name/identifier of the location
    * @param {string} field - Field name where component was referenced
    * @param {number} [index] - Optional index for arrays
-   * @returns {object} Validation issue object
+   * @param {string} [recipeId] - Recipe ID (added in validate method)
+   * @param {string} [recipePath] - Recipe file path (if available)
+   * @returns {object} Validation issue object with enhanced error
    */
   #createMissingComponentError(
     componentId,
     locationType,
     locationName,
     field,
-    index
+    index,
+    recipeId = null,
+    recipePath = null
   ) {
     const componentName = componentId.split(':')[1] || componentId;
     const modNamespace = componentId.includes(':')
       ? componentId.split(':')[0]
       : '*';
+
+    // Create enhanced error for detailed error reporting
+    const enhancedError = recipeId
+      ? createError('COMPONENT_NOT_FOUND', {
+          recipeId,
+          location: {
+            type: locationType,
+            name: locationName,
+          },
+          componentId,
+          recipePath,
+        })
+      : null;
 
     return {
       severity: 'error',
@@ -329,6 +370,8 @@ export class ComponentExistenceValidationRule extends ValidationRule {
           ...(index !== undefined && { index }),
         },
       },
+      // Attach enhanced error for better error reporting
+      enhancedError,
     };
   }
 }
