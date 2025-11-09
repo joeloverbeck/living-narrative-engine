@@ -56,6 +56,7 @@ export const BREATHE_TEASINGLY_ON_PENIS_LYING_CLOSE_FURNITURE_ID_ALT = 'bed2';
  * @property {boolean} [includePrimaryLying=true] - Whether the primary should have a lying_down component.
  * @property {boolean} [includeCloseness=true] - Whether both actors should have closeness toward each other.
  * @property {boolean} [useDifferentFurniture=false] - Whether the primary should lie on different furniture.
+ * @property {boolean} [targetFuckingActorVaginally=false] - Whether the target has fucking_vaginally component referencing actor.
  */
 
 /**
@@ -79,6 +80,7 @@ export function buildBreatheTeasinglyOnPenisLyingCloseScenario(options = {}) {
     includePrimaryLying = true,
     includeCloseness = true,
     useDifferentFurniture = false,
+    targetFuckingActorVaginally = false,
   } = options;
 
   const ACTOR_ID = BREATHE_TEASINGLY_ON_PENIS_LYING_CLOSE_ACTOR_ID;
@@ -148,6 +150,12 @@ export function buildBreatheTeasinglyOnPenisLyingCloseScenario(options = {}) {
 
   if (includeCloseness) {
     primaryBuilder.closeToEntity(ACTOR_ID);
+  }
+
+  if (targetFuckingActorVaginally) {
+    primaryBuilder.withComponent('positioning:fucking_vaginally', {
+      targetId: ACTOR_ID,
+    });
   }
 
   if (coverPrimaryPenis) {
@@ -273,6 +281,12 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
         );
 
         if (penisCovered) {
+          return false;
+        }
+
+        // Check if partner is fucking the actor vaginally
+        const partnerFuckingVaginally = partner.components?.['positioning:fucking_vaginally'];
+        if (partnerFuckingVaginally && partnerFuckingVaginally.targetId === actorId) {
           return false;
         }
 
