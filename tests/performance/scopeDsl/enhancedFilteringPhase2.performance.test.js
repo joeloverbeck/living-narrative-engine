@@ -20,6 +20,15 @@ describe('Enhanced Filtering Phase 2 - Performance Tests', () => {
 
     // Create mock runtime context with entityManager
     mockRuntimeContext = {
+      jsonLogicEval: {
+        evaluate: jest.fn(() => true),
+      },
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
       entityManager: {
         getComponentData: jest.fn((entityId, componentId) => {
           if (
