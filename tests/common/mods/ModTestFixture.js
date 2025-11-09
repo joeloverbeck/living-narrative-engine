@@ -28,6 +28,8 @@ import {
   ActionValidationError,
 } from './actionExecutionValidator.js';
 import { ScopeResolverHelpers } from './scopeResolverHelpers.js';
+import { ParameterValidator } from '../../../src/scopeDsl/core/parameterValidator.js';
+import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
 import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 
@@ -2248,13 +2250,31 @@ beforeEach(async () => {
 
       try {
         // Extract actorEntity from context - ScopeEngine expects just actorEntity, not full context
+        // But validate the context BEFORE extraction to catch common mistakes
         const actorEntity = context.actorEntity || context.actor || context;
+
+        // Validate the ORIGINAL context (not the extracted actorEntity) to detect
+        // common mistakes like passing action context or scope context
+        // This provides better error messages for test development
+        ParameterValidator.validateActorEntity(
+          context,
+          `CustomScopeResolver[${fullScopeName}]`
+        );
 
         // Resolve using the AST
         const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
 
         return { success: true, value: result };
       } catch (err) {
+        if (err instanceof ParameterValidationError) {
+          // Enhanced error with full context for test debugging
+          return {
+            success: false,
+            error: err.toString(),
+            context: err.context,
+          };
+        }
+
         return {
           success: false,
           error: `Failed to resolve scope "${fullScopeName}": ${err.message}`,
