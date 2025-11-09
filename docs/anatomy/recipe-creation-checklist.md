@@ -122,11 +122,10 @@ This checklist provides a step-by-step guide for creating anatomy recipes, from 
     "id": "anatomy:part_name",
     "components": {
       "anatomy:part": {
-        "subType": "leg",  // Must match blueprint requirements
-        "partType": "spider_leg"  // Specific part type
+        "subType": "leg"  // Must match blueprint requirements
       },
       "core:name": {
-        "name": "spider leg"
+        "text": "spider leg"
       }
     }
   }
