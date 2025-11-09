@@ -2,11 +2,17 @@
 
 ## Executive Summary
 
-This document explores the implementation of Goal-Oriented Action Planning (GOAP) for AI agents in the Living Narrative Engine. GOAP provides a more strategic, goal-driven approach to AI decision-making compared to the current LLM-based system, enabling agents to plan sequences of actions to achieve specific world states.
+This document explores the implementation of Goal-Oriented Action Planning (GOAP) for non-sentient AI agents in the Living Narrative Engine. GOAP provides a strategic, goal-driven approach for creatures that don't warrant LLM-based decision making (cats, monsters, goblins, etc.), enabling them to plan sequences of actions to achieve specific world states.
 
 **Current Status:** Placeholder implementation exists (`GoapDecisionProvider`) that selects the first available action.
 
-**Primary Goal:** Implement full GOAP system with backward-chaining A* planner, effects-based action modeling, and goal-driven decision making.
+**Primary Goal:** Implement full GOAP system with backward-chaining A* planner, effects-based action modeling for world-state-changing actions only, and goal-driven decision making.
+
+**Important Scope Clarifications:**
+- **Target Audience:** Non-sentient creatures only (cats, monsters, goblins). Sentient NPCs use LLM-based decision making.
+- **Effects Scope:** Only actions that change world state (add/remove/modify components, create/destroy entities). Not all ~1000+ actions need effects.
+- **Effects Purpose:** Used ONLY for planning (future world state for A*), NOT for actual execution. Once GOAP selects an action, it executes normally through existing action/rule system.
+- **Action Validation:** Already handled by existing forbidden_components, required_components, and prerequisites system. GOAP doesn't need separate precondition validation.
 
 ---
 
@@ -84,11 +90,17 @@ The engine has a sophisticated action discovery system:
 
 ### What's Missing
 
-1. **Action Effects Definitions**: Actions don't declare their state-changing effects
+1. **Action Effects Definitions**: State-changing actions (~100-200, not all ~1000+) don't declare their effects for planning
 2. **GOAP Planner**: No backward-chaining planner implementation
-3. **Effects DSL**: No DSL for expressing action effects
+3. **Effects DSL**: No DSL for expressing planning-only effects (world state changes, not execution logic)
 4. **Heuristic Functions**: No cost estimation for A* search
-5. **Plan Execution**: No system to execute multi-step plans
+5. **Plan Management**: No system to cache and validate multi-step plans
+
+**Important Note on Scope:**
+- Effects only needed for actions that change world state: add/remove/modify components, create/destroy entities
+- Excludes narrative actions (speech, thought), perceptual actions (look, listen), and non-state-changing actions
+- Estimated ~100-200 actions need effects, not all ~1000+
+- Effects are planning metadata, not execution code (no duplication with rules)
 
 ---
 
@@ -138,18 +150,26 @@ Execute: First action (lie_down)
 
 ### Why GOAP?
 
-**Advantages over LLM:**
-- Deterministic, predictable behavior
-- Faster execution (no API calls)
-- Clear goal-directed behavior
-- Lower cost (no LLM tokens)
-- Better for simple NPCs (guards, vendors, workers)
+**Use Case:** Non-sentient creatures in scenarios where LLMs are inappropriate or wasteful.
 
-**Disadvantages:**
-- Less creative/emergent behavior
-- Requires manual effect definitions
-- Limited to predefined goals
-- Can't handle narrative nuance
+**Example Scenarios:**
+- Dungeon runs where every goblin needs tactical AI
+- Cat NPCs pursuing simple goals (find food, sleep, play)
+- Monster behavior in combat scenarios
+- Wildlife and creature encounters
+
+**Advantages for Non-Sentient Creatures:**
+- Deterministic, predictable behavior suitable for simple creatures
+- Faster execution (no API calls)
+- Clear goal-directed behavior without narrative overhead
+- Lower cost (no LLM tokens)
+- Strategic planning for tactical scenarios
+
+**Why Not LLM for These Creatures:**
+- Overkill for non-sentient behavior
+- Expensive for large numbers (e.g., 20 goblins in dungeon)
+- Don't need narrative nuance or creativity
+- Predictable behavior is actually desirable
 
 ---
 
@@ -192,19 +212,28 @@ Execute: First action (lie_down)
    │   - Evaluate all goals' relevance conditions
    │   - Pick highest priority where relevance = true
    │
+   ├─> Action Discovery: Get available actions
+   │   - Existing system handles forbidden_components, required_components, prerequisites
+   │   - Filter to only actions with effects (state-changing actions)
+   │   - GOAP doesn't need separate validation (already handled)
+   │
    ├─> GOAP Planner: Find action sequence to achieve goal
-   │   - A* backward chaining from goalState
-   │   - Filter actions with effects (state-changing only)
-   │   - Build plan using action effects/preconditions
+   │   - A* backward chaining from goalState using effects
+   │   - Effects used ONLY for planning, not execution
+   │   - Build hypothetical future world states
    │
    ├─> Plan Validation: Check if plan is still valid
    │   - Verify current state matches plan assumptions
    │   - Replan if world state changed
    │
    └─> Action Execution: Execute first action in plan
-       - Standard action pipeline
+       - Uses NORMAL action/rule system (not effects)
+       - Rule operations execute as usual
+       - Effects were only for planning, not execution
        - Store remaining plan for next turn
 ```
+
+**Key Distinction:** Effects describe state changes for planning purposes only. Actual execution uses the existing action → rule → operation handlers flow. This prevents duplication and ensures consistency.
 
 ---
 
@@ -212,11 +241,12 @@ Execute: First action (lie_down)
 
 ### Design Principles
 
-1. **Reuse Existing Infrastructure**: Build on operation handlers, not replace them
-2. **Similar to ScopeDSL**: Familiar syntax for modders
-3. **Declarative**: Describe what changes, not how
-4. **Composable**: Support sequences, conditionals, loops
-5. **Analyzable**: Planner can reason about effects statically
+1. **Planning Metadata Only**: Effects describe state changes for planner, not execution logic
+2. **Reuse Existing Validation**: Leverage forbidden_components, required_components, prerequisites (no duplicate preconditions)
+3. **World State Changes Only**: Only component and entity changes (no events, no perceptual side effects)
+4. **Similar to Operation Handlers**: Map cleanly to existing operations (ADD_COMPONENT, REMOVE_COMPONENT, etc.)
+5. **Declarative**: Describe what changes in world state, not how or why
+6. **Analyzable**: Planner can reason about effects statically to build hypothetical future states
 
 ### Proposed Syntax
 
@@ -226,26 +256,27 @@ Execute: First action (lie_down)
 // File: data/mods/positioning/effects/sit_down.effects
 
 sit_down(actor, target) := {
-  // Preconditions (for planner)
-  requires {
-    not hasComponent(actor, "positioning:sitting_on");
-    not hasComponent(actor, "positioning:lying_down");
-    hasComponent(target, "positioning:allows_sitting");
-    hasAvailableSpot(target);
-  }
+  // NOTE: No preconditions here - already handled by:
+  // - Action forbidden_components (positioning:sitting_on, positioning:lying_down)
+  // - Action required_components (target: positioning:allows_sitting)
+  // - Action prerequisites (availableSpot check via JSON Logic)
 
-  // Effects (for planner to reason backward)
+  // Effects (for planner to reason backward about future world state)
   effects {
+    // World state changes only
     addComponent(actor, "positioning:sitting_on", {
       furniture_id: target.id,
-      spot_index: allocateSpot(target)
+      spot_index: allocateSpot(target)  // Hypothetical allocation for planning
     });
 
-    lockMovement(actor);
+    // Movement lock is a component change
+    addComponent(actor, "positioning:movement_locked");
 
-    // Conditional effect
+    // Conditional effect based on world state
     if adjacentActors(actor, target).length > 0 {
-      establishSittingCloseness(actor, target);
+      addComponent(actor, "positioning:sitting_close_to", {
+        target_id: target.id
+      });
     }
   }
 
@@ -254,18 +285,19 @@ sit_down(actor, target) := {
 }
 ```
 
+**Note on Execution:** When GOAP selects this action, the actual execution uses the existing rule:
+- Rule matches on action event
+- Operations execute (ADD_COMPONENT, ESTABLISH_SITTING_CLOSENESS, etc.)
+- Events dispatch normally (ACTOR_SAT_DOWN, etc.)
+- Effects above are ONLY for planning, not execution
+
 #### Option B: Declarative JSON-Like DSL
 
 ```
 // File: data/mods/positioning/effects/sit_down.effects
 
 sit_down(actor, target) := {
-  preconditions: [
-    not component(actor, "positioning:sitting_on"),
-    not component(actor, "positioning:lying_down"),
-    component(target, "positioning:allows_sitting"),
-    availableSpot(target)
-  ],
+  // No preconditions section - reuse existing action validation
 
   effects: [
     add component(actor, "positioning:sitting_on") {
@@ -273,10 +305,12 @@ sit_down(actor, target) := {
       spot_index: allocateSpot(target)
     },
 
-    lock movement(actor),
+    add component(actor, "positioning:movement_locked"),
 
     when adjacentActors(actor, target).length > 0:
-      establish closeness(actor, target, "sitting")
+      add component(actor, "positioning:sitting_close_to") {
+        target_id: target.id
+      }
   ],
 
   cost: 1.0
@@ -291,38 +325,36 @@ sit_down(actor, target) := {
   "id": "positioning:sit_down",
   "name": "Sit down",
   "targets": "positioning:available_furniture",
+  "forbidden_components": ["positioning:sitting_on", "positioning:lying_down"],
+  "required_components": { "target": ["positioning:allows_sitting"] },
+  "prerequisites": { /* existing JSON Logic for availableSpot */ },
 
-  // NEW: Effects definition
-  "effects": {
-    "preconditions": [
-      { "not": [{ "hasComponent": ["actor", "positioning:sitting_on"] }] },
-      { "not": [{ "hasComponent": ["actor", "positioning:lying_down"] }] },
-      { "hasComponent": ["target", "positioning:allows_sitting"] },
-      { "availableSpot": ["target"] }
-    ],
+  // NEW: Effects definition for GOAP planning only
+  "planningEffects": {
     "effects": [
       {
         "operation": "ADD_COMPONENT",
-        "params": {
-          "entity": "actor",
-          "component": "positioning:sitting_on",
-          "data": {
-            "furniture_id": { "ref": "target.id" },
-            "spot_index": { "fn": "allocateSpot", "args": ["target"] }
-          }
+        "entity": "actor",
+        "component": "positioning:sitting_on",
+        "data": {
+          "furniture_id": { "ref": "target.id" },
+          "spot_index": { "hypothetical": "allocateSpot" }
         }
       },
       {
-        "operation": "LOCK_MOVEMENT",
-        "params": { "entity": "actor" }
+        "operation": "ADD_COMPONENT",
+        "entity": "actor",
+        "component": "positioning:movement_locked"
       },
       {
         "operation": "CONDITIONAL",
         "condition": { ">": [{ "fn": "adjacentActors.length", "args": ["actor", "target"] }, 0] },
         "then": [
           {
-            "operation": "ESTABLISH_SITTING_CLOSENESS",
-            "params": { "actor": "actor", "target": "target" }
+            "operation": "ADD_COMPONENT",
+            "entity": "actor",
+            "component": "positioning:sitting_close_to",
+            "data": { "target_id": { "ref": "target.id" } }
           }
         ]
       }
@@ -332,54 +364,54 @@ sit_down(actor, target) := {
 }
 ```
 
+**Note:** `planningEffects` is separate from action validation and rule execution. It's metadata for GOAP planner to simulate future world states.
+
 ### DSL Features Breakdown
 
-#### 1. Preconditions
+#### 1. No Separate Preconditions
 
-Express what must be true before action can execute:
+**Important:** Effects DSL doesn't need preconditions because existing action system already handles validation:
 
-```
-requires {
-  not hasComponent(actor, "positioning:sitting_on");
-  component(target, "positioning:allows_sitting").spots.some(spot => spot == null);
-  actor.position.locationId == target.position.locationId;
-}
-```
+- **forbidden_components**: List of components that prevent action execution
+- **required_components**: Components required on actor/target for action to be available
+- **prerequisites**: JSON Logic conditions that must be true
 
-Maps to existing: Action `prerequisites` + `required_components` + `forbidden_components`
+The planner can read these existing fields to determine action applicability. No duplication needed.
 
-#### 2. Effects
+#### 2. Effects (World State Changes Only)
 
-Describe state changes:
+Describe state changes for planning (NOT execution):
 
 ```
 effects {
-  // Component manipulation
+  // Component manipulation (world state changes)
   addComponent(actor, "positioning:sitting_on", { ... });
   removeComponent(actor, "positioning:standing");
   modifyComponent(actor, "core:stats", { energy: -10 });
 
-  // Complex operations
-  lockMovement(actor);
-  establishCloseness(actor, target, "sitting");
-  transferItem(actor, target, item);
+  // Component-based operations (translate to component changes)
+  addComponent(actor, "positioning:movement_locked");  // Instead of lockMovement()
+  addComponent(actor, "positioning:sitting_close_to", { target_id: target.id });  // Instead of establishCloseness()
+  // Item transfer = remove from actor inventory, add to target inventory
 
-  // Events
-  dispatchEvent("ACTOR_SAT_DOWN", { actor, furniture: target });
-
-  // Conditionals
+  // Conditionals (for state-dependent effects)
   if condition {
     ...effects
   }
 
-  // Loops
+  // Loops (for bulk state changes)
   forEach actor in actors_nearby {
-    establishCloseness(self, actor, "proximity");
+    addComponent(actor, "positioning:proximity", { ... });
   }
 }
 ```
 
-Maps to: Operation handlers in `src/logic/operationHandlers/`
+**What NOT to include:**
+- Events (DISPATCH_EVENT, DISPATCH_PERCEPTIBLE_EVENT) - execution concern, not planning
+- Narrative effects (speech, thoughts) - not world state changes
+- Side effects (logging, notifications) - execution concerns
+
+Maps to: Component changes that operation handlers will execute via rules
 
 #### 3. Special Functions
 
@@ -511,31 +543,31 @@ cost: {
    - Integrate with planner
    - Plan caching and revalidation
 
-2. **Effects for Core Actions** (1-2 weeks)
-   - Define effects for ~50 core actions:
-     - Movement: go, teleport
-     - Positioning: sit_down, stand_up, lie_down, get_up
-     - Items: pick_up, drop, give, take
-     - Clothing: remove_clothing, remove_others_clothing
-     - Intimacy: kiss, hug, touch
-     - Combat: attack, defend
+2. **Creature-Specific Action Sets** (1-2 weeks)
+   - Define action sets for creature types:
+     - Cat: move_to, jump_on, scratch, eat, sleep, play
+     - Goblin: move, attack, flee, hide, pick_up_weapon, flank
+     - Monster: move, attack, roar, chase, patrol
+   - ~20-30 core actions per creature type
+   - Focus on state-changing tactical actions
 
 3. **Debugging and Visualization** (1 week)
    - Plan visualization in dev console
-   - Planner diagnostics
+   - Planner diagnostics (why this plan?)
    - Goal/action logging
+   - State diff visualization
 
 4. **Documentation** (1 week)
-   - Effects DSL guide
+   - Effects auto-generation guide
    - GOAP system overview
-   - Goal creation guide
+   - Goal creation guide for creatures
    - Examples and patterns
 
 #### Deliverables:
 - Full GOAP system integrated
-- 50+ actions with effects
+- Creature-specific action sets with auto-generated effects
 - Developer documentation
-- Example goals and NPCs
+- Example goals for cats, goblins, monsters
 
 ### Phase 4: Advanced Features (4-6 weeks, Optional)
 
@@ -591,9 +623,10 @@ cost: {
 - Just need to add effects
 
 #### 3. **Clean Separation** ✅
-- Effects only needed for state-changing actions
-- Non-state actions (speech, thought) automatically filtered
-- Clear distinction between narrative and mechanical actions
+- Effects only needed for world-state-changing actions (~100-200, not all ~1000+)
+- Non-state actions (speech, thought, perception) automatically filtered
+- Clear distinction between planning metadata and execution logic
+- Effects never execute - only used by planner to simulate future states
 
 #### 4. **Familiar Patterns** ✅
 - Similar to ScopeDSL (modders already know it)
@@ -631,18 +664,18 @@ cost: {
 - Limited to predefined goals
 - Mechanical behavior vs. character-driven
 
-#### 4. **Dual Definition Problem** ⚠️
-- Actions defined in two places:
-  - Rules (actual execution)
-  - Effects (planner's model)
-- Risk of desync
-- Double the work for modders
+#### 4. **Additional Metadata Requirement** ⚠️
+- Actions need planning effects in addition to rules
+- Effects must accurately reflect rule operations (but don't execute)
+- Risk of desync if rule changes but effects don't update
+- Additional work for modders (~100-200 actions need effects)
+- Mitigated by: Effects are simpler than rules (only component changes), validation tools can check consistency
 
-#### 5. **Action Coverage Challenge** ⚠️
-- Need effects for hundreds of actions
-- Not all actions map cleanly to state changes
-- Complex actions (e.g., "fondle breasts") hard to model
-- What about emergent/narrative actions?
+#### 5. **Action Coverage Scope** ⚠️
+- Need effects for ~100-200 state-changing actions (not all ~1000+)
+- Only world-state changes need effects (component/entity operations)
+- Narrative actions (fondle, caress, etc.) excluded - GOAP creatures don't need these
+- Challenge: Identifying which actions non-sentient creatures actually need
 
 #### 6. **Goal Definition Complexity** ⚠️
 - Goals need careful design
@@ -676,51 +709,46 @@ cost: {
 
 ## Alternative Approaches
 
-### Alternative 1: Simplified Utility-Based AI (Recommended)
+### Alternative 1: Utility-Based AI (NOT Recommended for This Project)
 
 **Concept:** Instead of full GOAP, use utility-based selection.
 
-#### How it works:
+#### Why NOT Recommended:
+
+The existing action validation system (forbidden_components, required_components, prerequisites) already filters out invalid actions. Utility-based AI typically adds preconditions like "only consider if character is standing" to limit the action space, but this project already has that filtering built-in.
+
+**Challenges:**
+- Utility scores would need preconditions that duplicate existing validation
+- Existing system already provides pre-filtered valid actions to decision provider
+- Adding utility scores doesn't solve the multi-step planning problem
+- For non-sentient creatures (cats, goblins), reactive selection isn't strategic enough
+
+#### How it would work (if implemented):
 ```javascript
 // Each action has a utility function
 {
   "id": "positioning:sit_down",
   "utility": {
-    // Higher score = more likely to pick
     "base": 10,
     "factors": [
       { "condition": "actor.energy < 50", "score": 20 },
-      { "condition": "furniture_available", "score": 10 },
-      { "condition": "actor.standing", "score": 5 }
+      // But this requires checking if standing, which existing validation already does
     ]
   }
 }
 
 // At decision time:
-1. Filter available actions (prerequisites, components)
-2. Calculate utility score for each
-3. Pick highest scoring action (with randomness)
-4. Execute immediately
+1. Get available actions (already filtered by existing system)
+2. Calculate utility score for remaining actions
+3. Pick highest scoring action
+4. Execute immediately (no planning)
 ```
 
-#### Pros:
-- **Much simpler** than GOAP (1-2 months vs 5-8 months)
-- **No DSL needed** (just JSON utility scores)
-- **No planning** (immediate action selection)
-- **Easier to tune** (adjust scores)
-- **Still goal-directed** (utility reflects goals)
-
-#### Cons:
-- **No multi-step planning**
-- **Reactive, not proactive**
-- **Can't solve complex puzzles**
-- **May get stuck in local maxima**
-
-#### When to use:
-- Simple NPCs (guards, vendors, workers)
-- Background characters
-- Reactive AI
-- Budget/time constrained
+#### Why GOAP is better for this project:
+- Existing validation handles action filtering automatically
+- GOAP provides multi-step planning for strategic behavior (goblins, monsters)
+- No duplicate precondition logic needed
+- More appropriate for tactical scenarios (dungeon runs)
 
 ### Alternative 2: Behavior Trees
 
@@ -856,70 +884,102 @@ Pattern: "Sitting near attractive person"
 
 ## Technical Challenges
 
-### Challenge 1: Effects vs. Rules Synchronization
+### Challenge 1: Effects vs. Rules Consistency
 
-**Problem:** Actions defined in two places (rules + effects) can desync.
+**Problem:** Effects (planning metadata) must accurately reflect what rules do, but they're defined separately.
+
+**Important Context:**
+- Effects are NOT execution code - they're planning metadata
+- Rules remain the single source of truth for execution
+- Effects describe what the planner should expect, not how to execute
+- Desync means planner makes bad plans, not execution errors
 
 **Solutions:**
 
-#### Option A: Generate Effects from Rules
+#### Option A: Auto-Generate Effects from Rules (Recommended)
 ```javascript
-// Analyze rule JSON, extract effects automatically
+// Analyze rule operations, extract state-changing effects automatically
 function extractEffects(rule) {
   const effects = [];
-  for (const operation of rule.actions) {
-    if (isStateChanging(operation)) {
+  for (const operation of rule.operations) {
+    if (isWorldStateChanging(operation)) {
+      // Map operation to planning effect
       effects.push(operationToEffect(operation));
     }
   }
   return effects;
 }
+
+// State-changing operations:
+// ADD_COMPONENT, REMOVE_COMPONENT, MODIFY_COMPONENT,
+// CREATE_ENTITY, DESTROY_ENTITY
+// Skip: DISPATCH_EVENT, DISPATCH_PERCEPTIBLE_EVENT (not world state)
 ```
 
-**Pros:** Single source of truth
-**Cons:** Complex analysis, may miss conditional effects
+**Pros:**
+- Single source of truth (rules)
+- No desync possible
+- Automatic updates when rules change
+- Less work for modders
 
-#### Option B: Generate Rules from Effects
+**Cons:**
+- Complex analysis for conditional operations
+- May need manual overrides for complex effects
+
+#### Option B: Manual Effects with Validation
 ```javascript
-// Effects are canonical, rules generated
-const rule = compileEffects(effectsDSL);
-```
-
-**Pros:** Clean, declarative
-**Cons:** Loss of rule flexibility, complex compiler
-
-#### Option C: Validation Tool
-```javascript
-// Tool to detect desync
+// Tool to detect desync between effects and rules
 npm run validate:effects
-// Checks: Do effects match rule operations?
+// Checks: Do effects accurately reflect rule operations?
+// Compares component changes in rules vs. declared effects
 // Warns if discrepancies found
 ```
 
-**Pros:** Keeps both, catches errors
-**Cons:** Manual sync still required
+**Pros:**
+- Full control over effects
+- Can optimize planning representation
 
-**Recommendation:** Start with Option C (validation), move to Option B (effects canonical) long-term.
+**Cons:**
+- Manual sync required
+- Risk of desync
 
-### Challenge 2: Action State Space Explosion
+**Recommendation:** Option A (auto-generation) for most actions, Option B (manual) for complex cases with validation tool.
 
-**Problem:** With 1000+ actions, A* search is slow.
+### Challenge 2: Action State Space Management
+
+**Problem:** Even with ~100-200 state-changing actions, A* search can be slow without filtering.
+
+**Important Context:**
+- Only ~100-200 actions need effects (state-changing only)
+- Existing action discovery already filters by forbidden_components, required_components, prerequisites
+- GOAP planner receives pre-filtered valid actions (major optimization)
 
 **Solutions:**
 
-#### 1. Action Filtering
+#### 1. Leverage Existing Action Filtering
 ```javascript
-// Only consider relevant actions
-function filterActions(currentState, goal) {
+// Get actions already filtered by action discovery system
+const validActions = await actionDiscovery.getAvailableActions(actor);
+
+// Further filter to only state-changing actions (those with effects)
+const plannable = validActions.filter(action => action.effects);
+
+// Already filtered by:
+// - forbidden_components (can't have)
+// - required_components (must have)
+// - prerequisites (JSON Logic conditions)
+// - target availability (scope queries)
+
+// Result: Small set of actually executable actions (~10-30 typically)
+```
+
+#### 2. Additional GOAP-Specific Filtering
+```javascript
+// Further filter by goal relevance
+function filterByGoal(actions, currentState, goal) {
   return actions.filter(action => {
-    // Must have effects
-    if (!action.effects) return false;
-
-    // Must be applicable (preconditions might be satisfiable)
-    if (!couldEverApply(action, goal)) return false;
-
-    // Must contribute to goal
-    if (!effectsProgressTowardGoal(action, goal)) return false;
+    // Must contribute to goal (effects move toward goal state)
+    if (!effectsProgressTowardGoal(action.effects, goal)) return false;
 
     return true;
   });
@@ -1084,16 +1144,22 @@ async function decideAction(actor, context) {
 // src/data/providers/availableActionsProvider.js
 
 async function getAvailableActions(actor) {
-  const allActions = await actionDiscovery.discover(actor);
+  // Action discovery already filters by:
+  // - forbidden_components
+  // - required_components
+  // - prerequisites
+  // - target availability
+  const validActions = await actionDiscovery.discover(actor);
 
   const playerType = determineSpecificPlayerType(actor);
 
   if (playerType === 'goap') {
-    // Filter to only actions with effects
-    return allActions.filter(action => action.effects);
+    // Further filter to only state-changing actions (those with planning effects)
+    // Effects are metadata for planning, not execution
+    return validActions.filter(action => action.planningEffects);
   }
 
-  return allActions;
+  return validActions;
 }
 ```
 
@@ -1231,263 +1297,304 @@ if (!plan) {
 
 ## Recommendations
 
-### Tier 1: Do This (High Value, Lower Cost)
+### Tier 1: Incremental GOAP Implementation (Recommended)
 
-#### 1. **Start with Utility-Based AI** (Alternative 1)
+#### 1. **Start with Effects Auto-Generation**
 
-**Why:** 10x simpler than GOAP, delivers 80% of value.
+**Why:** Simplest way to create planning metadata without manual work.
 
 **Implementation (1-2 months):**
-1. Add `utility` field to action schema
-2. Implement utility calculator
-3. Implement utility-based decision provider
-4. Define utilities for 50 core actions
+1. Implement effects analyzer that reads rule operations
+2. Auto-generate planning effects from state-changing operations
+3. Focus on ~100-200 core state-changing actions
+4. Validate generated effects
 
 **Example:**
-```json
+```javascript
+// Rule has: ADD_COMPONENT, REMOVE_COMPONENT operations
+// Auto-generate:
 {
-  "id": "positioning:sit_down",
-  "utility": {
-    "base": 10,
-    "modifiers": [
-      { "if": { "<": ["actor.energy", 50] }, "add": 20 },
-      { "if": { "hasComponent": ["actor", "positioning:standing"] }, "add": 5 }
+  "planningEffects": {
+    "effects": [
+      { "operation": "ADD_COMPONENT", ... },
+      { "operation": "REMOVE_COMPONENT", ... }
     ]
   }
 }
 ```
 
 **Benefits:**
-- Quick to implement
-- Easy to tune
-- No DSL needed
-- Good for 80% of NPCs
+- No manual effect authoring needed
+- Single source of truth (rules)
+- Automatic updates when rules change
+- Ensures consistency
 
-#### 2. **Goal System without Planning**
+#### 2. **Goal System with Action Selection**
 
-**Why:** Goals are useful even without planning.
+**Why:** Goals direct behavior even without full planning initially.
 
 **Implementation (2-3 weeks):**
 1. Use existing goal loader
 2. Implement goal selection (priority + relevance)
-3. Goals influence utility scores
-4. No planning, just goal-directed utility
+3. Simple greedy action selection toward goals
+4. Foundation for full GOAP planner
 
 **Example:**
 ```javascript
-// Goal: "be_well_rested"
+// Goal: "find_food"
 goal: {
   priority: 80,
-  relevance: { "<": ["actor.energy", 70] },
-  goalState: { ">=": ["actor.energy", 90] }
+  relevance: { "<": ["actor.hunger", 30] },
+  goalState: { "hasComponent": ["actor", "core:has_food"] }
 }
 
-// Actions that progress toward goal get utility boost
-action: "sit_down"
-  utility: base + (contributes_to_goal ? 15 : 0)
+// Pick action whose effects move closest to goal state
 ```
 
-#### 3. **Effects as Documentation Only**
+#### 3. **Simple GOAP Planner (One-Step)**
 
-**Why:** Document action effects for future planning.
+**Why:** Validate planning infrastructure before full A* implementation.
 
 **Implementation (1 month):**
-1. Define effects DSL (simple JSON format)
-2. Add effects to 50 core actions
-3. Don't use for planning yet, just documentation
-4. Validate that effects match rules
+1. Implement single-step planner (no backward chaining yet)
+2. Pick action whose effects best match goal
+3. Test with simple goals (find item, move to location)
+4. Validate effects system works
 
 **Benefits:**
-- Prepares for future GOAP
-- Improves action understanding
-- Validates consistency
-- Low risk
+- Tests planning infrastructure
+- Simpler than full A*
+- Still useful for basic creatures
+- Foundation for full planner
 
-### Tier 2: Consider This (Medium Value, Medium Cost)
+### Tier 2: Full Multi-Step GOAP Planner
 
-#### 4. **Simplified GOAP for Specific Domains**
+#### 4. **A* Backward-Chaining Planner**
 
-**Why:** Full GOAP is overkill, but domain-specific planning is useful.
+**Why:** Enables true multi-step planning for tactical scenarios.
 
 **Implementation (2-3 months):**
-1. Pick one domain (e.g., "intimacy" or "items")
-2. Implement mini-GOAP for that domain only
-3. Limited action set (~20 actions)
-4. Simple preconditions/effects
-5. Learn lessons before expanding
-
-**Example Domain: "Intimacy"**
-- Goal: "fucking_vaginally"
-- Actions: remove_clothing, lie_down, move_close, touch, insert
-- ~10 actions, ~5 goals
-- Manageable scope
-
-#### 5. **Hybrid LLM + Utility**
-
-**Why:** Best of both worlds.
-
-**Implementation (2 months):**
-1. LLM generates high-level goal/intention
-2. Utility-based AI picks action to advance goal
-3. Combine creativity with efficiency
+1. Implement A* search with backward chaining
+2. Use auto-generated effects from Tier 1
+3. Heuristic function (relaxed planning graph)
+4. Plan caching and validation
 
 **Example:**
 ```javascript
-// LLM call (once per 5-10 turns)
-goal = await llm.generateGoal(actor, context);
-// "I want to get closer to Sarah"
+// Goal: "has_food"
+// Current: No food, in bedroom, kitchen has food
 
-// Map to utility boost
-utilitiesBoost = {
-  "move_closer_to_sarah": +20,
-  "sit_near_sarah": +15,
-  "make_eye_contact_sarah": +10
-};
-
-// Pick action with boosted utilities (no LLM call)
-action = pickByUtility(actions, utilitiesBoost);
+// Plan:
+1. move_to(kitchen)  // Gets actor to kitchen
+2. pick_up(food)     // Adds food to inventory
+// Achieves goal: actor.inventory.includes(food)
 ```
 
-### Tier 3: Future Consideration (High Value, High Cost)
+**Benefits:**
+- Multi-step strategic behavior
+- Suitable for dungeon runs, combat scenarios
+- Goblins, monsters can plan tactically
 
-#### 6. **Full GOAP System**
+#### 5. **Domain-Specific Optimization**
 
-**Why:** Maximum flexibility, true goal-directed planning.
+**Why:** Optimize planning for specific creature types.
 
-**When:** After Tier 1 & 2 prove insufficient.
+**Implementation (1-2 months):**
+1. Creature-specific action sets (cat actions, goblin actions, monster actions)
+2. Domain-specific heuristics
+3. Goal templates per creature type
 
-**Implementation (5-8 months):**
-- Full effects DSL
-- A* planner with backward chaining
-- Effects for 200+ actions
-- Goal library
-- Debugging tools
+**Example:**
+```javascript
+// Cat creature: Limited to cat-appropriate actions
+plannable_actions = [
+  "move_to", "jump_on", "scratch", "meow",
+  "eat_food", "sleep_on", "play_with"
+];
 
-**Prerequisites:**
-1. Tier 1 (Utility AI) implemented and working
-2. Clear use cases where utility AI fails
-3. 6+ months development time available
-4. Dedicated developer for GOAP
+// Goblin creature: Combat and tactical actions
+plannable_actions = [
+  "move_to", "attack", "flee", "hide", "pick_up_weapon",
+  "call_for_help", "flank_target"
+];
+```
 
-**Red Flags (Don't Do It If):**
-- You don't have 6 months
-- Utility AI is "good enough"
-- Limited modder adoption expected
-- Performance is critical
+### Tier 3: Advanced Features (Optional)
 
-### Tier 4: Don't Do This (Low Value or Too High Cost)
+#### 6. **Hierarchical Planning**
 
-#### 7. **Behavior Trees**
+**Why:** Further optimization for complex multi-step plans.
 
-**Why:** Worse than utility AI for your use case (less flexible, more authoring).
+**Implementation (2-3 months):**
+- Abstract high-level actions
+- Multi-level planning (strategic → tactical)
+- Plan refinement
 
-#### 8. **HTN Planning**
+**Example:**
+```javascript
+// High-level: "acquire_weapon"
+// Decomposes to: move_to(armory) → pick_up(sword)
 
-**Why:** Similar complexity to GOAP, less flexible.
+// High-level: "defeat_enemy"
+// Decomposes to: acquire_weapon → move_to(enemy) → attack(enemy)
+```
 
-#### 9. **Effects DSL with Custom Syntax**
+#### 7. **Multi-Agent Coordination**
 
-**Why:** Prefer JSON-based effects (easier tooling, familiar).
+**Why:** Enable pack tactics for creatures.
+
+**Implementation (2-3 months):**
+- Shared goals for groups (pack of wolves, goblin squad)
+- Resource coordination (don't all target same enemy)
+- Cooperative planning
+
+**Example:**
+```javascript
+// Goblin squad shares goal: "defeat_party"
+// Planner assigns roles: flanker, tank, archer
+// Coordinates to surround targets
+```
+
+### What NOT to Implement
+
+#### ❌ **Utility-Based AI**
+**Why:** Existing validation system already handles action filtering. Utility would duplicate preconditions that forbidden_components/required_components/prerequisites already provide. GOAP planning is better fit for non-sentient tactical behavior.
+
+#### ❌ **Behavior Trees**
+**Why:** Less flexible than GOAP, more manual authoring, doesn't provide planning capabilities.
+
+#### ❌ **HTN Planning**
+**Why:** Similar complexity to GOAP but less flexible, requires more manual task decomposition.
+
+#### ❌ **Custom Effects DSL Syntax**
+**Why:** JSON-based effects are simpler, more familiar to modders, better tooling support. Can use existing JSON schemas and validation.
 
 ---
 
 ## Recommended Implementation Roadmap
 
-### Phase 1: Utility-Based AI (Month 1-2)
+### Phase 1: Effects Auto-Generation (Month 1-2)
 
 ```
-Week 1-2: Design & Schema
-  - Design utility system
-  - Update action schema with utility field
-  - Create utility calculator design
+Week 1-2: Effects Analyzer Design
+  - Design rule analyzer to extract state-changing operations
+  - Identify operation types to convert (ADD/REMOVE/MODIFY_COMPONENT, etc.)
+  - Plan effects schema format
 
 Week 3-4: Implementation
-  - Implement utility calculator
-  - Implement UtilityDecisionProvider
-  - Integration with turn system
+  - Implement rule operation analyzer
+  - Implement effects generator
+  - Map operations to planning effects
+  - Handle conditional operations
 
-Week 5-6: Content & Testing
-  - Define utilities for 50 core actions
-  - Testing and tuning
+Week 5-6: Content Generation & Validation
+  - Auto-generate effects for ~100-200 state-changing actions
+  - Validate generated effects
+  - Manual review and adjustments
+  - Create validation tool
+
+Week 7-8: Testing & Documentation
+  - Test generated effects accuracy
   - Performance profiling
-
-Week 7-8: Documentation & Polish
-  - Modder documentation
-  - Examples and patterns
-  - Bug fixes
+  - Documentation for modders
+  - Examples
 ```
 
 **Deliverables:**
-- Utility-based AI system
-- 50 actions with utilities
+- Effects auto-generation system
+- ~100-200 actions with auto-generated planning effects
+- Validation tool
 - Documentation
-- Working GOAP agents (using utility AI)
 
-### Phase 2: Goal System (Month 3)
+### Phase 2: Goal System & Simple Planner (Month 3-4)
 
 ```
 Week 9-10: Goal Integration
-  - Implement goal selection
-  - Goal-influenced utilities
-  - Goal system testing
+  - Implement goal selection (priority + relevance)
+  - Goal state evaluation
+  - Goal caching
 
-Week 11-12: Goal Content
-  - Define 10 core goals
-  - Test with different agent personalities
-  - Tune goal priorities
+Week 11-12: Simple One-Step Planner
+  - Implement greedy action selection toward goals
+  - Match action effects to goal state
+  - Distance heuristic (how close effects move to goal)
+
+Week 13-14: Testing
+  - Test with simple goals (find_food, move_to_location)
+  - Validate effects system works correctly
+  - Test with cat/creature behaviors
+
+Week 15-16: Content & Polish
+  - Define 10 core goals for creatures
+  - Creature-specific goal templates
+  - Documentation
 ```
 
 **Deliverables:**
-- Goal system working
-- 10 example goals
-- Goal → utility influence
+- Goal selection system
+- Simple one-step planner
+- 10 example goals for non-sentient creatures
+- Working GOAP agents with basic planning
 
-### Phase 3: Effects Documentation (Month 4)
+### Phase 3: Full A* Planner (Month 5-7)
 
 ```
-Week 13-14: Effects Schema
-  - Design simple JSON effects format
-  - Create effects schema
-  - Validation system
+Week 17-18: A* Core Implementation
+  - Implement A* search algorithm
+  - Backward chaining from goals
+  - Priority queue for open set
 
-Week 15-16: Effects Content
-  - Document effects for 50 actions
-  - Validation tool to check effects vs rules
-  - Fix any inconsistencies found
+Week 19-20: Heuristic & State Management
+  - Relaxed planning graph heuristic
+  - World state representation
+  - State hashing and comparison
+
+Week 21-22: Plan Management
+  - Plan caching
+  - Plan validation (detect invalidation)
+  - Replanning triggers
+
+Week 23-24: Integration & Testing
+  - Integrate with existing decision provider
+  - Multi-step plan execution
+  - Testing with complex scenarios
+
+Week 25-28: Optimization & Polish
+  - Performance optimization
+  - Action filtering improvements
+  - Domain-specific optimizations
+  - Debugging tools and visualization
 ```
 
 **Deliverables:**
-- Effects format defined
-- 50 actions documented
-- Validation tool
+- Full A* backward-chaining planner
+- Plan caching and validation
+- Multi-step plans working
+- Performance optimized for real-time use
 
-### Phase 4: Evaluation (Month 5)
-
-```
-Week 17-18: Testing & Feedback
-  - Real-world testing with GOAP agents
-  - Gather modder feedback
-  - Performance analysis
-
-Week 19-20: Decision Point
-  - Does utility AI meet needs? → Ship it!
-  - Need real planning? → Start GOAP Phase 5
-  - Hybrid approach? → Implement Tier 2 options
-```
-
-**Decision Criteria:**
-- ✅ Ship utility AI if: Agents behave well enough, modders happy, performance good
-- ⚠️ Consider GOAP if: Agents get stuck, can't achieve complex goals, behavior too random
-- 🔄 Hybrid if: Need creativity + planning, LLM + utility isn't enough
-
-### Optional Phase 5: Full GOAP (Month 6-12, if needed)
+### Phase 4: Advanced Features (Month 8-10, Optional)
 
 ```
-Month 6-7: Effects DSL & Compiler
-Month 8-9: GOAP Planner Core
-Month 10-11: Integration & Content
-Month 12: Polish & Optimization
+Month 8: Domain-Specific Optimization
+  - Creature-type-specific action sets
+  - Optimized heuristics per creature type
+  - Goal templates
+
+Month 9: Hierarchical Planning
+  - Abstract high-level actions
+  - Plan refinement
+  - Multi-level planning
+
+Month 10: Multi-Agent Coordination
+  - Shared goals for groups
+  - Cooperative planning
+  - Pack tactics
 ```
+
+**Deliverables:**
+- Optimized for different creature types
+- Advanced planning features
+- Multi-agent coordination
 
 ---
 
@@ -1495,55 +1602,83 @@ Month 12: Polish & Optimization
 
 ### Summary of Analysis
 
-The proposed GOAP implementation would provide true goal-directed planning for AI agents, but at significant cost (5-8 months development). The core idea of using effects DSL + backward-chaining planner is sound and builds well on existing infrastructure.
+The proposed GOAP implementation would provide true goal-directed planning for non-sentient AI agents (cats, monsters, goblins). The implementation leverages existing infrastructure effectively and addresses the specific need for tactical, multi-step planning in scenarios like dungeon runs.
 
 ### Key Insights
 
-1. **Your existing action discovery is excellent** - This is a huge advantage
-2. **Operation handlers are perfect for effects** - Reuse them, don't duplicate
-3. **GOAP is probably overkill** - Utility-based AI delivers most value for less cost
-4. **Incremental approach is best** - Start simple, add complexity if needed
-5. **Effects as documentation is valuable** - Even without planning
+1. **Existing action validation is a major advantage** - forbidden_components, required_components, and prerequisites already filter invalid actions, eliminating need for duplicate precondition logic
+2. **Auto-generated effects from rules** - Single source of truth, no manual duplication, automatic consistency
+3. **Effects are planning metadata only** - Never execute, only used by planner to simulate future world states
+4. **Limited scope to world-state changes** - Only ~100-200 actions need effects (component/entity operations), not all ~1000+ actions
+5. **GOAP is the right fit** - Non-sentient creatures need strategic planning for tactical scenarios, not reactive utility-based selection
 
 ### Final Recommendation
 
-**Implement utility-based AI first (Tier 1), then reassess.**
+**Implement GOAP incrementally with auto-generated effects (Tier 1 → Tier 2 → Tier 3).**
 
-**Why:**
-- 10x faster to implement (1-2 months vs 5-8 months)
-- 80% of the value
-- Lower risk
-- Easier to maintain
-- Can always add GOAP later if needed
+**Why GOAP is Right for This Project:**
+- Non-sentient creatures (goblins, monsters, cats) need strategic behavior
+- Tactical scenarios (dungeon runs) require multi-step planning
+- Existing validation system eliminates need for utility-based approach
+- Auto-generation from rules ensures consistency without manual work
 
 **Path Forward:**
 
 ```
-1. Month 1-2: Implement utility-based AI
-2. Month 3: Add goal system (utility modulation)
-3. Month 4: Document effects (for future)
-4. Month 5: Evaluate and decide next steps
-   ├─ Utility AI sufficient? → Ship it!
-   ├─ Need planning? → Implement simplified GOAP for one domain
-   └─ Need creativity? → Add LLM hybrid
+1. Month 1-2: Auto-generate effects from rules
+   - Analyze rule operations
+   - Extract state-changing effects
+   - Validate ~100-200 actions
+
+2. Month 3-4: Goal system + simple one-step planner
+   - Goal selection
+   - Greedy action selection toward goals
+   - Test with basic creature behaviors
+
+3. Month 5-7: Full A* backward-chaining planner
+   - Multi-step planning
+   - Plan caching and validation
+   - Tactical dungeon scenarios
+
+4. Month 8-10: Advanced features (optional)
+   - Domain-specific optimization
+   - Hierarchical planning
+   - Multi-agent coordination
 ```
 
-**Only implement full GOAP if:**
-- Utility AI proves insufficient (test it first!)
-- You have 6+ months to invest
-- You have concrete use cases requiring multi-step planning
-- You're prepared for the maintenance burden
+**Why NOT Utility-Based AI:**
+- Existing forbidden_components/required_components/prerequisites already filter actions
+- Utility requires duplicate precondition logic that's already handled
+- Doesn't provide multi-step planning needed for tactical scenarios
+- Reactive selection insufficient for strategic creature behavior
 
-### My Preference
+### Implementation Priority
 
-If I were implementing this, I would:
+**High Priority (Core GOAP):**
+1. Effects auto-generation from rules
+2. Goal selection system
+3. A* backward-chaining planner
+4. Plan caching and validation
 
-1. **Immediate:** Utility-based AI with goals (2-3 months)
-2. **Next:** Hybrid LLM + utility for interesting NPCs (1 month)
-3. **Future:** Simplified domain-specific GOAP for items/positioning (2-3 months)
-4. **Maybe:** Full GOAP only if clear need emerges (6 months)
+**Medium Priority (Optimization):**
+5. Domain-specific creature action sets
+6. Performance optimization
+7. Debugging and visualization tools
 
-This approach delivers value quickly, reduces risk, and keeps options open for future expansion.
+**Low Priority (Advanced):**
+8. Hierarchical planning
+9. Multi-agent coordination
+10. Advanced heuristics
+
+### Success Criteria
+
+GOAP implementation is successful if:
+- ✅ Goblins in dungeon runs exhibit strategic, multi-step behavior
+- ✅ Cats pursue goals naturally (find food, sleep, play)
+- ✅ Monsters make tactical decisions in combat
+- ✅ Planning completes within performance budget (< 200ms for medium plans)
+- ✅ Effects accurately reflect rule behavior (validation passes)
+- ✅ System scales to 20+ GOAP creatures simultaneously
 
 ---
 
@@ -1591,101 +1726,119 @@ Path := Identifier ("." Identifier)*
 Value := Number | String | Boolean | Object | Array
 ```
 
-### Appendix B: Example Action Effects
+### Appendix B: Example Action Effects (Auto-Generated from Rules)
 
 #### Example 1: Simple Action (sit_down)
 
-```
-sit_down(actor, target) := {
-  requires {
-    not hasComponent(actor, "positioning:sitting_on");
-    hasComponent(target, "positioning:allows_sitting");
-    availableSpot(target);
+```json
+// Auto-generated from rule operations
+{
+  "id": "positioning:sit_down",
+  "planningEffects": {
+    "effects": [
+      {
+        "operation": "ADD_COMPONENT",
+        "entity": "actor",
+        "component": "positioning:sitting_on",
+        "data": {
+          "furniture_id": { "ref": "target.id" },
+          "spot_index": { "hypothetical": "allocateSpot" }
+        }
+      },
+      {
+        "operation": "ADD_COMPONENT",
+        "entity": "actor",
+        "component": "positioning:movement_locked"
+      },
+      {
+        "operation": "CONDITIONAL",
+        "condition": { ">": [{ "fn": "adjacentActors.length" }, 0] },
+        "then": [
+          {
+            "operation": "ADD_COMPONENT",
+            "entity": "actor",
+            "component": "positioning:sitting_close_to",
+            "data": { "target_id": { "ref": "target.id" } }
+          }
+        ]
+      }
+    ],
+    "cost": 1.0
   }
-
-  effects {
-    addComponent(actor, "positioning:sitting_on", {
-      furniture_id: target.id,
-      spot_index: allocateSpot(target)
-    });
-    lockMovement(actor);
-  }
-
-  cost: 1.0;
 }
 ```
 
-#### Example 2: Complex Action (remove_others_clothing)
+**Note:** Preconditions come from action's forbidden_components, required_components, and prerequisites. Events (ACTOR_SAT_DOWN) are execution concerns, not planning, so excluded from effects.
 
-```
-remove_others_clothing(actor, target, clothing) := {
-  requires {
-    hasComponent(target, "clothing:wearing_clothing");
-    target.clothing.items.includes(clothing);
-    closeness(actor, target) == "close";
-    not hasComponent(actor, "positioning:hands_restrained");
+#### Example 2: Item Transfer (pick_up_item)
+
+```json
+// Auto-generated from rule operations
+{
+  "id": "items:pick_up_item",
+  "planningEffects": {
+    "effects": [
+      {
+        "operation": "REMOVE_COMPONENT",
+        "entity": "target",
+        "component": "items:at_location"
+      },
+      {
+        "operation": "ADD_COMPONENT",
+        "entity": "actor",
+        "component": "items:in_inventory",
+        "data": {
+          "item_id": { "ref": "target.id" }
+        }
+      },
+      {
+        "operation": "MODIFY_COMPONENT",
+        "entity": "actor",
+        "component": "core:inventory",
+        "updates": {
+          "weight": { "add": { "ref": "target.weight" } }
+        }
+      }
+    ],
+    "cost": 1.0
   }
+}
+```
 
-  effects {
-    removeComponent(target, clothing);
-    addComponent(target, "core:recent_clothing_removal", {
-      clothing_id: clothing.id,
-      removed_by: actor.id,
-      timestamp: now()
-    });
+**Note:** Effects describe world state changes only. Execution uses normal rule → operations flow, which includes event dispatching, validation, etc.
 
-    // Conditional effect
-    if clothing.layer == "underwear" {
-      addComponent(target, "intimacy:feeling_exposed");
+#### Example 3: Movement (move_to_location)
+
+```json
+// Auto-generated from rule operations
+{
+  "id": "movement:move_to",
+  "planningEffects": {
+    "effects": [
+      {
+        "operation": "MODIFY_COMPONENT",
+        "entity": "actor",
+        "component": "core:position",
+        "updates": {
+          "locationId": { "ref": "target.id" }
+        }
+      }
+    ],
+    "cost": {
+      "base": 1.0,
+      "factors": [
+        {
+          "fn": "distance",
+          "args": ["actor.position", "target.position"],
+          "multiplier": 0.1
+        }
+      ]
     }
-
-    // Event
-    dispatchEvent("CLOTHING_REMOVED", {
-      actor: actor.id,
-      target: target.id,
-      clothing: clothing.id
-    });
   }
-
-  cost: 1.5;
 }
 ```
 
-#### Example 3: Multi-Target Action (give_item)
-
-```
-give_item(actor, target, item) := {
-  requires {
-    hasComponent(actor, "core:inventory");
-    actor.inventory.items.includes(item);
-    not hasComponent(item, "items:equipped");
-    hasComponent(target, "core:inventory");
-    target.inventory.capacity > target.inventory.items.length;
-    closeness(actor, target) == "close";
-  }
-
-  effects {
-    // Remove from actor
-    removeComponent(actor, item);
-    modifyComponent(actor, "core:inventory", {
-      items: actor.inventory.items.filter(i => i != item)
-    });
-
-    // Add to target
-    addComponent(target, item);
-    modifyComponent(target, "core:inventory", {
-      items: [...target.inventory.items, item]
-    });
-
-    // Relationship boost
-    modifyComponent(target, "relationships:affection", {
-      [actor.id]: target.relationships[actor.id] + 5
-    });
-  }
-
-  cost: 1.0;
-}
-```
+**Note:** Cost can be dynamic based on world state (distance in this case). Planner uses this to prefer shorter paths.
 
 ### Appendix C: Comparison Table
 
