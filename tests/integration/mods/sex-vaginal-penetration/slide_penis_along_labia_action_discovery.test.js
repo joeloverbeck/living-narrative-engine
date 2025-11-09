@@ -210,7 +210,7 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action discovery', () 
     }
 
     if (actorFuckingVaginally) {
-      actorBuilder.withComponent('sex-core:fucking_vaginally', { targetId: 'beth' });
+      actorBuilder.withComponent('positioning:fucking_vaginally', { targetId: 'beth' });
     }
 
     if (actorKneeling) {

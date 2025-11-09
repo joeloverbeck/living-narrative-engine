@@ -89,8 +89,16 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/establishSittingClosenessHandler.js`,
   ],
   [
+    'EstablishLyingClosenessHandler',
+    `${handlerBasePath}/establishLyingClosenessHandler.js`,
+  ],
+  [
     'RemoveSittingClosenessHandler',
     `${handlerBasePath}/removeSittingClosenessHandler.js`,
+  ],
+  [
+    'RemoveLyingClosenessHandler',
+    `${handlerBasePath}/removeLyingClosenessHandler.js`,
   ],
   [
     'BreakClosenessWithTargetHandler',
@@ -536,8 +544,34 @@ beforeAll(async () => {
       ],
     },
     {
+      token: tokens.EstablishLyingClosenessHandler,
+      handlerName: 'EstablishLyingClosenessHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'closenessCircleService',
+          token: ClosenessCircleServiceToken,
+        },
+      ],
+    },
+    {
       token: tokens.RemoveSittingClosenessHandler,
       handlerName: 'RemoveSittingClosenessHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'closenessCircleService',
+          token: ClosenessCircleServiceToken,
+        },
+      ],
+    },
+    {
+      token: tokens.RemoveLyingClosenessHandler,
+      handlerName: 'RemoveLyingClosenessHandler',
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },

@@ -93,12 +93,41 @@ export class ComponentExistenceValidationRule extends ValidationRule {
       }
     }
 
-    // Log summary
+    // Log summary with detailed component information
     if (issues.length > 0) {
       const errors = issues.filter((i) => i.severity === 'error');
       this.#logger.warn(
         `Component existence validation found ${errors.length} missing component(s)`
       );
+
+      // Log detailed information about missing components
+      const missingComponents = new Set(
+        errors.map((e) => e.context.componentId)
+      );
+      this.#logger.warn(
+        `Missing components: ${Array.from(missingComponents).join(', ')}`
+      );
+
+      // Log registry state for debugging
+      const allComponents = this.#dataRegistry.getAll('components');
+      this.#logger.debug(
+        `Component registry contains ${Object.keys(allComponents).length} components`
+      );
+      this.#logger.debug(
+        `First 10 registered components: ${Object.keys(allComponents).slice(0, 10).join(', ')}`
+      );
+
+      // Log sample of validation errors for debugging
+      const sampleSize = Math.min(5, errors.length);
+      this.#logger.warn(
+        `Sample validation errors (first ${sampleSize} of ${errors.length}):`
+      );
+      for (let i = 0; i < sampleSize; i++) {
+        const error = errors[i];
+        this.#logger.warn(
+          `  - ${error.message} (in ${error.context.recipeId}, ${error.context.location.type}:${error.context.location.name})`
+        );
+      }
     } else {
       this.#logger.debug('Component existence validation passed');
     }

@@ -16,6 +16,9 @@ describe('ComponentExistenceValidationRule', () => {
     // Create mock data registry
     mockDataRegistry = testBed.createMock('dataRegistry', ['get', 'getAll']);
 
+    // Configure getAll to return empty object by default to prevent TypeError
+    mockDataRegistry.getAll.mockReturnValue({});
+
     validationRule = new ComponentExistenceValidationRule({
       logger: mockLogger,
       dataRegistry: mockDataRegistry,

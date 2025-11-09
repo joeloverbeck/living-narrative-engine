@@ -114,13 +114,13 @@ export function buildStraddlingMilkingScenario(options = {}) {
   }
 
   if (actorBeingFucked) {
-    actorBuilder.withComponent('sex-core:being_fucked_vaginally', {
+    actorBuilder.withComponent('positioning:being_fucked_vaginally', {
       actorId: STRADDLING_MILKING_PRIMARY_ID,
     });
   }
 
   if (primaryAlreadyFucking) {
-    primaryBuilder.withComponent('sex-core:fucking_vaginally', {
+    primaryBuilder.withComponent('positioning:fucking_vaginally', {
       targetId: STRADDLING_MILKING_ACTOR_ID,
     });
   }

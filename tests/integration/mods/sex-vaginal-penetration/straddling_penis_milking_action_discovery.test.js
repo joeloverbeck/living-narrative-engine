@@ -58,7 +58,7 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       expect(straddlingMilkingAction.required_components.actor).toEqual([
         'positioning:closeness',
         'positioning:straddling_waist',
-        'sex-core:being_fucked_vaginally',
+        'positioning:being_fucked_vaginally',
       ]);
       expect(straddlingMilkingAction.forbidden_components.actor).toEqual([
         'positioning:sitting_on',

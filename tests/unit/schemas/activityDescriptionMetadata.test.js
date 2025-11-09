@@ -397,7 +397,7 @@ describe('Activity Description Metadata Schema', () => {
         'core:actor',
         'kissing:kissing',
         'positioning:kneeling_before',
-        'sex-core:fucking_vaginally',
+        'positioning:fucking_vaginally',
       ];
 
       validIds.forEach((id) => {

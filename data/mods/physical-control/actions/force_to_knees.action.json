@@ -19,7 +19,8 @@
       "positioning:kneeling_before",
       "positioning:straddling_waist",
       "positioning:hugging",
-      "positioning:being_hugged"
+      "positioning:being_hugged",
+      "positioning:lying_down"
     ],
     "primary": ["positioning:kneeling_before", "positioning:sitting_on"]
   },

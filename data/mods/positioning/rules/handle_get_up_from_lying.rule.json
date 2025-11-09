@@ -51,6 +51,15 @@
             }
           },
           {
+            "type": "REMOVE_LYING_CLOSENESS",
+            "comment": "Remove automatic closeness based on lying proximity",
+            "parameters": {
+              "furniture_id": "{event.payload.targetId}",
+              "actor_id": "{event.payload.actorId}",
+              "result_variable": "closenessRemoved"
+            }
+          },
+          {
             "type": "REMOVE_COMPONENT",
             "comment": "Remove lying_down from actor",
             "parameters": {

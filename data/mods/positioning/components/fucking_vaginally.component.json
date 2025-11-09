@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "sex-core:fucking_vaginally",
+  "id": "positioning:fucking_vaginally",
   "name": "Fucking Vaginally",
   "description": "Marks an actor who is actively penetrating a partner's vagina.",
   "dataSchema": {

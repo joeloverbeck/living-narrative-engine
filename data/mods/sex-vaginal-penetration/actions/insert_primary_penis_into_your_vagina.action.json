@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["sex-core:being_fucked_vaginally", "positioning:sitting_on"],
+    "actor": ["positioning:being_fucked_vaginally", "positioning:sitting_on"],
     "primary": []
   },
   "template": "insert {primary}'s penis into your vagina",

@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["sex-core:being_fucked_vaginally"]
+    "actor": ["positioning:being_fucked_vaginally"]
   },
   "template": "fondle {target}'s penis",
   "prerequisites": [],
