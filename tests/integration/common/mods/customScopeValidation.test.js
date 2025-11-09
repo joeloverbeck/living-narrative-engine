@@ -41,7 +41,7 @@ describe('Custom Scope Validation - Integration Tests', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
       expect(result.error).toContain('action pipeline context object');
-      expect(result.error).toContain('actor/targets');
+      expect(result.error).toContain('instead of entity instance');
       expect(result.error).toContain('CustomScopeResolver[positioning:available_furniture]');
     });
 
@@ -67,7 +67,7 @@ describe('Custom Scope Validation - Integration Tests', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
-      expect(result.error).toContain('scope context');
+      expect(result.error).toContain('scope resolution context');
       expect(result.error).toContain('CustomScopeResolver[positioning:available_furniture]');
     });
 
