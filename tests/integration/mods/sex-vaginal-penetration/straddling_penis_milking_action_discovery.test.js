@@ -1,7 +1,7 @@
 /**
  * @file Integration tests for sex-vaginal-penetration:straddling_penis_milking action discovery.
  * @description Verifies target scope resolution, component requirements, and prerequisite gating
- * for the straddling penis milking invitation.
+ * for the straddling penis milking invitation while the actor is being vaginally penetrated.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -50,14 +50,13 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       expect(straddlingMilkingAction.id).toBe(ACTION_ID);
       expect(straddlingMilkingAction.template).toBe("milk {primary}'s penis slowly");
       expect(straddlingMilkingAction.targets.primary.scope).toBe(
-        'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away'
+        'sex-vaginal-penetration:actors_fucking_me_vaginally'
       );
     });
 
     it('requires active vaginal penetration posture and forbids seating conflicts', () => {
       expect(straddlingMilkingAction.required_components.actor).toEqual([
         'positioning:closeness',
-        'positioning:straddling_waist',
         'positioning:being_fucked_vaginally',
       ]);
       expect(straddlingMilkingAction.forbidden_components.actor).toEqual([
@@ -80,7 +79,7 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
   });
 
   describe('Action discovery scenarios', () => {
-    it('appears when the actor straddles a partner with an uncovered penis', async () => {
+    it('appears when the actor is being vaginally penetrated by the partner', async () => {
       const entities = buildStraddlingMilkingScenario();
       testFixture.reset(entities);
       configureActionDiscovery();
@@ -101,7 +100,7 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       expect(discovered).toBeDefined();
     });
 
-    it('appears when the partner faces away but remains straddled', async () => {
+    it('appears when the partner faces away but maintains penetration', async () => {
       const entities = buildStraddlingMilkingScenario({ targetFacingAway: true });
       testFixture.reset(entities);
       configureActionDiscovery();
@@ -112,11 +111,8 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       expect(discovered).toBeDefined();
     });
 
-    it('remains available when penetration state components already exist', async () => {
-      const entities = buildStraddlingMilkingScenario({
-        actorBeingFucked: true,
-        primaryAlreadyFucking: true,
-      });
+    it('remains available even when the actor is not straddling the partner', async () => {
+      const entities = buildStraddlingMilkingScenario({ includeStraddling: false });
       testFixture.reset(entities);
       configureActionDiscovery();
 
@@ -137,8 +133,10 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       expect(discovered).toBeUndefined();
     });
 
-    it('does not appear when the actor is not straddling the partner', async () => {
-      const entities = buildStraddlingMilkingScenario({ includeStraddling: false });
+    it('does not appear when the partner lacks the vaginal fucking state', async () => {
+      const entities = buildStraddlingMilkingScenario({
+        primaryAlreadyFucking: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
@@ -202,7 +200,10 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
     });
 
     it('does not appear when the partner penis is covered', async () => {
-      const entities = buildStraddlingMilkingScenario({ coverPenis: true });
+      const entities = buildStraddlingMilkingScenario({
+        coverPenis: true,
+        primaryAlreadyFucking: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
@@ -213,7 +214,10 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
     });
 
     it('does not appear when the partner lacks a penis', async () => {
-      const entities = buildStraddlingMilkingScenario({ includePenis: false });
+      const entities = buildStraddlingMilkingScenario({
+        includePenis: false,
+        primaryAlreadyFucking: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 

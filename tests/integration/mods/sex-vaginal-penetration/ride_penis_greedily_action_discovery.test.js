@@ -1,7 +1,7 @@
 /**
  * @file Integration tests for sex-vaginal-penetration:ride_penis_greedily action discovery.
  * @description Verifies greedy riding action metadata, scope resolution, component requirements,
- * and prerequisite gating while the actor straddles an uncovered penis.
+ * and prerequisite gating while the actor is being vaginally penetrated by a partner.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -52,14 +52,13 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
         "ride {primary}'s penis greedily"
       );
       expect(ridePenisGreedilyAction.targets.primary.scope).toBe(
-        'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away'
+        'sex-vaginal-penetration:actors_fucking_me_vaginally'
       );
     });
 
     it('requires active vaginal penetration posture and forbids seating conflicts', () => {
       expect(ridePenisGreedilyAction.required_components.actor).toEqual([
         'positioning:closeness',
-        'positioning:straddling_waist',
         'positioning:being_fucked_vaginally',
       ]);
       expect(ridePenisGreedilyAction.forbidden_components.actor).toEqual([
@@ -83,7 +82,7 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
   });
 
   describe('Action discovery scenarios', () => {
-    it('appears when the actor straddles a partner with an uncovered penis', async () => {
+    it('appears when the actor is being vaginally penetrated by the partner', async () => {
       const entities = buildRidePenisGreedilyScenario();
       testFixture.reset(entities);
       configureActionDiscovery();
@@ -107,7 +106,7 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
       expect(discovered).toBeDefined();
     });
 
-    it('appears when the partner faces away but remains straddled', async () => {
+    it('appears when the partner faces away but maintains penetration', async () => {
       const entities = buildRidePenisGreedilyScenario({
         targetFacingAway: true,
       });
@@ -122,10 +121,9 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
       expect(discovered).toBeDefined();
     });
 
-    it('remains available when penetration state components already exist', async () => {
+    it('remains available even when the actor is not straddling the partner', async () => {
       const entities = buildRidePenisGreedilyScenario({
-        actorBeingFucked: true,
-        primaryAlreadyFucking: true,
+        includeStraddling: false,
       });
       testFixture.reset(entities);
       configureActionDiscovery();
@@ -153,9 +151,9 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
       expect(discovered).toBeUndefined();
     });
 
-    it('does not appear when the actor is not straddling the partner', async () => {
+    it('does not appear when the partner lacks the vaginal fucking state', async () => {
       const entities = buildRidePenisGreedilyScenario({
-        includeStraddling: false,
+        primaryAlreadyFucking: false,
       });
       testFixture.reset(entities);
       configureActionDiscovery();
@@ -230,7 +228,10 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
     });
 
     it('does not appear when the partner penis is covered', async () => {
-      const entities = buildRidePenisGreedilyScenario({ coverPenis: true });
+      const entities = buildRidePenisGreedilyScenario({
+        coverPenis: true,
+        primaryAlreadyFucking: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
@@ -243,7 +244,10 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
     });
 
     it('does not appear when the partner lacks a penis', async () => {
-      const entities = buildRidePenisGreedilyScenario({ includePenis: false });
+      const entities = buildRidePenisGreedilyScenario({
+        includePenis: false,
+        primaryAlreadyFucking: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
