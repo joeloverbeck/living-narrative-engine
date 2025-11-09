@@ -92,11 +92,21 @@ describe('RadialLayoutStrategy integration coverage', () => {
 
     const firstChild = nodes.get('child-0');
     expect(firstChild).toBeDefined();
-    if (firstChild) {
-      const expectedRadius = 120 * ((childCount + 1) / 8);
-      expect(firstChild.radius).toBeCloseTo(expectedRadius);
-      expect(firstChild.angleEnd - firstChild.angleStart).toBeGreaterThanOrEqual(0.45);
-    }
+
+    // With high-degree node handling (24 children >= 10 threshold):
+    // The radius is increased to prevent overlap of many children
+    // baseRadius (120) * depth (1) * crowdingFactor * highDegreeMultiplier (1.8)
+    // For high-degree nodes, expect significantly larger radius than base calculation
+    const baseExpectedRadius = 120 * ((childCount + 1) / 8); // Old calculation: ~375
+    expect(firstChild.radius).toBeGreaterThan(baseExpectedRadius);
+
+    // The actual radius should be around 675 with high-degree handling
+    // (exact value depends on internal calculation)
+    expect(firstChild.radius).toBeCloseTo(675, 0);
+
+    // Dynamic minimum angle for 24 children: 2π / 24 ≈ 0.262
+    // This is less than configured minAngle (0.45), so 0.45 should be used
+    expect(firstChild.angleEnd - firstChild.angleStart).toBeGreaterThanOrEqual(0.45);
 
     const angles = Array.from(nodes.values())
       .filter((node) => node.depth === 1)

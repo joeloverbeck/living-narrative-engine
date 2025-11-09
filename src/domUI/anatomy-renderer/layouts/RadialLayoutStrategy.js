@@ -27,8 +27,10 @@ class RadialLayoutStrategy {
       centerX: 600,
       centerY: 400,
       baseRadius: 150,
-      minAngle: Math.PI / 10, // 18 degrees minimum
+      minAngle: Math.PI / 10, // 18 degrees minimum (base value)
       crowdingFactor: 8, // Node count threshold for spacing adjustment
+      highDegreeThreshold: 10, // Nodes with more than this many children use special layout
+      highDegreeRadiusMultiplier: 1.8, // Extra radius multiplier for high-degree nodes
     };
     this.#requiredSpace = { width: 1200, height: 800 };
   }
@@ -115,6 +117,8 @@ class RadialLayoutStrategy {
    * @param {number} [options.baseRadius] - Base radius for each depth level
    * @param {number} [options.minAngle] - Minimum angle between nodes
    * @param {number} [options.crowdingFactor] - Node count threshold for spacing
+   * @param {number} [options.highDegreeThreshold] - Number of children to trigger high-degree layout
+   * @param {number} [options.highDegreeRadiusMultiplier] - Radius multiplier for high-degree nodes
    */
   configure(options) {
     Object.assign(this.#options, options);
@@ -239,11 +243,26 @@ class RadialLayoutStrategy {
     const children = this.#getDirectChildren(parent.id, nodes, edges);
     if (children.length === 0) return;
 
-    // Calculate radius for this depth level
-    const radius = this.#calculateMinimumRadius(
+    // Detect high-degree nodes (many children)
+    const isHighDegree = children.length >= this.#options.highDegreeThreshold;
+
+    // Calculate radius for this depth level with special handling for high-degree nodes
+    let radius = this.#calculateMinimumRadius(
       parent.depth + 1,
       children.length
     );
+
+    // For high-degree nodes, increase radius to prevent overlap
+    if (isHighDegree) {
+      radius *= this.#options.highDegreeRadiusMultiplier;
+      this.#logger.debug(
+        `RadialLayoutStrategy: High-degree node detected - ${children.length} children, using increased radius ${radius.toFixed(2)}`
+      );
+    }
+
+    // Calculate dynamic minimum angle based on number of children
+    // More children = larger minimum angle to prevent overlap
+    const dynamicMinAngle = this.#calculateDynamicMinAngle(children.length);
 
     // Calculate angle range for each child based on leaf count
     const parentAngleRange = parent.angleEnd - parent.angleStart;
@@ -262,10 +281,7 @@ class RadialLayoutStrategy {
         (child.leafCount / totalLeaves) * parentAngleRange;
 
       // Enforce minimum angle to prevent overlap
-      const actualAngleRange = Math.max(
-        childAngleRange,
-        this.#options.minAngle
-      );
+      const actualAngleRange = Math.max(childAngleRange, dynamicMinAngle);
 
       // Position at center of allocated range
       const childAngle = currentAngle + actualAngleRange / 2;
@@ -307,6 +323,33 @@ class RadialLayoutStrategy {
       nodeCount / this.#options.crowdingFactor
     );
     return this.#options.baseRadius * depth * crowdingFactor;
+  }
+
+  /**
+   * Calculate dynamic minimum angle based on number of children
+   * Ensures nodes don't overlap even with many children
+   *
+   * @private
+   * @param {number} childCount - Number of child nodes
+   * @returns {number} Minimum angle in radians
+   */
+  #calculateDynamicMinAngle(childCount) {
+    // Base minimum angle from options
+    const baseMinAngle = this.#options.minAngle;
+
+    // For high-degree nodes, calculate angle needed to distribute evenly
+    // in a full circle with some spacing
+    if (childCount >= this.#options.highDegreeThreshold) {
+      // Full circle (2π) divided by number of children gives even distribution
+      const evenDistributionAngle = (2 * Math.PI) / childCount;
+
+      // Use the larger of base angle or even distribution angle
+      // This ensures we have enough space even for many children
+      return Math.max(baseMinAngle, evenDistributionAngle);
+    }
+
+    // For normal node counts, use the base minimum angle
+    return baseMinAngle;
   }
 
   /**
