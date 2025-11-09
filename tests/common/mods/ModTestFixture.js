@@ -33,6 +33,7 @@ import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameter
 import { ScopeResolutionError } from '../../../src/scopeDsl/errors/scopeResolutionError.js';
 import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
+import { ScopeEvaluationTracer } from './scopeEvaluationTracer.js';
 
 const localRequire = createRequire(import.meta.url);
 
@@ -748,6 +749,7 @@ class BaseModTestFixture {
     this.options = options;
     this.testEnv = null;
     this.diagnostics = null; // Will be created on demand
+    this.scopeTracer = new ScopeEvaluationTracer();
   }
 
   /**
@@ -1168,8 +1170,82 @@ class BaseModTestFixture {
    */
   cleanup() {
     this.disableDiagnostics();
+
+    // Clear tracer to prevent memory leaks
+    if (this.scopeTracer) {
+      this.scopeTracer.clear();
+      this.scopeTracer.disable();
+    }
+
     if (this.testEnv) {
       this.testEnv.cleanup();
+    }
+  }
+
+  /**
+   * Enable scope evaluation tracing
+   * @returns {void}
+   */
+  enableScopeTracing() {
+    this.scopeTracer.enable();
+  }
+
+  /**
+   * Disable scope evaluation tracing
+   * @returns {void}
+   */
+  disableScopeTracing() {
+    this.scopeTracer.disable();
+  }
+
+  /**
+   * Get formatted scope trace output
+   * @returns {string} Human-readable trace
+   */
+  getScopeTrace() {
+    return this.scopeTracer.format();
+  }
+
+  /**
+   * Get raw scope trace data
+   * @returns {object} Trace data structure
+   */
+  getScopeTraceData() {
+    return this.scopeTracer.getTrace();
+  }
+
+  /**
+   * Get filter breakdown for last evaluation
+   * @param {string} entityId - Optional entity ID to filter by
+   * @returns {object|Array} Filter breakdown
+   */
+  getFilterBreakdown(entityId = null) {
+    const trace = this.scopeTracer.getTrace();
+    const filterEvals = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+
+    if (entityId) {
+      return filterEvals.find(e => e.entityId === entityId);
+    }
+
+    return filterEvals;
+  }
+
+  /**
+   * Clear scope trace data
+   * @returns {void}
+   */
+  clearScopeTrace() {
+    this.scopeTracer.clear();
+  }
+
+  /**
+   * Enable tracing if condition is true
+   * @param {boolean} condition - Enable condition
+   * @returns {void}
+   */
+  enableScopeTracingIf(condition) {
+    if (condition) {
+      this.scopeTracer.enable();
     }
   }
 
@@ -2246,6 +2322,9 @@ beforeEach(async () => {
         },
         get logger() {
           return testEnv.logger;
+        },
+        get tracer() {
+          return this.scopeTracer;
         },
       };
 
