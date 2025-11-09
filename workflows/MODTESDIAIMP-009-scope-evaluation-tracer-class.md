@@ -11,6 +11,8 @@
 
 Create a comprehensive scope evaluation tracer that captures step-by-step resolver execution, filter evaluations per entity, and provides formatted trace output for debugging scope resolution issues.
 
+**Note**: This ticket creates the tracer class only. Integration into the scope resolution system (ScopeEngine and resolvers) will be handled in future tickets (MODTESDIAIMP-010, MODTESDIAIMP-011).
+
 ## Objectives
 
 - Capture resolver execution flow with input/output
@@ -19,6 +21,26 @@ Create a comprehensive scope evaluation tracer that captures step-by-step resolv
 - Provide formatted human-readable trace output
 - Include summary statistics
 - Support raw data access for programmatic analysis
+
+## Current Scope Resolution Architecture
+
+Before implementing the tracer, understand the current architecture:
+
+- **ScopeEngine** (`src/scopeDsl/engine.js`):
+  - Main class that extends `IScopeEngine`
+  - Public method: `resolve(ast, actorEntity, runtimeCtx, trace)`
+  - Internal: Creates a `dispatcher` object using `createDispatcher()` from `src/scopeDsl/nodes/dispatcher.js`
+  - NO `dispatch()` method currently exists (will be added in MODTESDIAIMP-011)
+
+- **Resolvers** (`src/scopeDsl/nodes/`):
+  - Implemented as factory functions (not classes): `createSourceResolver()`, `createFilterResolver()`, `createStepResolver()`, etc.
+  - Each factory returns an object with `canResolve(node)` and `resolve(node, ctx)` methods
+  - Factory functions are called: `createFilterResolver`, `createSourceResolver`, `createStepResolver`, `createUnionResolver`, `createArrayIterationResolver`, `createClothingStepResolver`, `createSlotAccessResolver`, `createScopeReferenceResolver`
+
+- **Dispatcher** (`src/scopeDsl/nodes/dispatcher.js`):
+  - Internal implementation detail (not directly exposed)
+  - Created by `createDispatcher(resolvers)`
+  - Returns object with `resolve(node, ctx)` method that routes to appropriate resolver
 
 ## Implementation Details
 
@@ -240,11 +262,15 @@ describe('ScopeEvaluationTracer', () => {
 
 ## Integration Points
 
-Will be integrated into:
+Will be integrated into (in future tickets):
 - `ModTestFixture` API (MODTESDIAIMP-010)
-- `ScopeEngine.dispatch()` (MODTESDIAIMP-011)
-- `FilterResolver.resolve()` (MODTESDIAIMP-011)
-- Other resolvers as needed (MODTESDIAIMP-011)
+- `ScopeEngine` - via new `dispatch()` method to be added (MODTESDIAIMP-011)
+  - Note: Current implementation uses internal `dispatcher.resolve()` - a `dispatch()` method will be added to ScopeEngine
+- Resolver factory functions in `src/scopeDsl/nodes/` (MODTESDIAIMP-011):
+  - `createFilterResolver()` - returns filter resolver with `resolve()` method
+  - `createSourceResolver()` - returns source resolver with `resolve()` method
+  - `createStepResolver()` - returns step resolver with `resolve()` method
+  - Other resolvers as needed
 
 ## Example Usage
 
