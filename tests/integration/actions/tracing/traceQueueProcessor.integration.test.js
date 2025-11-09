@@ -17,6 +17,10 @@ import ConsoleLogger, {
 import { ActionExecutionTrace } from '../../../../src/actions/tracing/actionExecutionTrace.js';
 import ActionTraceFilter from '../../../../src/actions/tracing/actionTraceFilter.js';
 import ActionAwareStructuredTrace from '../../../../src/actions/tracing/actionAwareStructuredTrace.js';
+import {
+  NamingStrategy,
+  TimestampFormat,
+} from '../../../../src/actions/tracing/traceIdGenerator.js';
 
 /**
  * Helper that creates a unique IndexedDB storage adapter for each test.
@@ -66,6 +70,61 @@ class FlakyIndexedDBAdapter extends IndexedDBStorageAdapter {
       throw new Error('Simulated storage failure');
     }
     return super.setItem(key, value);
+  }
+}
+
+class RetryThenSuccessAdapter extends IndexedDBStorageAdapter {
+  constructor(options) {
+    super(options);
+    this.attempts = 0;
+  }
+
+  async setItem(key, value) {
+    this.attempts += 1;
+    if (this.attempts === 1) {
+      throw new Error('Temporary storage failure');
+    }
+    return super.setItem(key, value);
+  }
+}
+
+class ShutdownAwareIndexedDBAdapter extends IndexedDBStorageAdapter {
+  constructor(options) {
+    super(options);
+    this.beforeFailure = null;
+    this._failureTriggered = false;
+  }
+
+  async setItem(key, value) {
+    if (!this._failureTriggered) {
+      this._failureTriggered = true;
+      if (this.beforeFailure) {
+        await this.beforeFailure();
+      }
+      throw new Error('Simulated failure during shutdown');
+    }
+    return super.setItem(key, value);
+  }
+}
+
+class FailingGetIndexedDBAdapter extends IndexedDBStorageAdapter {
+  constructor(options) {
+    super(options);
+    this.failOnNextGet = false;
+  }
+
+  async getItem(key) {
+    if (this.failOnNextGet) {
+      this.failOnNextGet = false;
+      throw new Error('Forced read failure');
+    }
+    return super.getItem(key);
+  }
+}
+
+class ThrowingWaitTimerService extends TestTimerService {
+  async waitForCompletion() {
+    throw new Error('waitForCompletion forced failure');
   }
 }
 
@@ -302,6 +361,14 @@ describe('TraceQueueProcessor integration', () => {
         actionId: 'normal:two',
         payload: 'y'.repeat(150),
       };
+      const additionalLowPriority = {
+        actionId: 'normal:four',
+        payload: 'z'.repeat(120),
+      };
+      const extraLowPriority = {
+        actionId: 'normal:five',
+        payload: 'w'.repeat(120),
+      };
       const circularTrace = { actionId: 'normal:three' };
       circularTrace.self = circularTrace;
 
@@ -309,6 +376,8 @@ describe('TraceQueueProcessor integration', () => {
 
       expect(processor.enqueue(largeTrace, TracePriority.NORMAL)).toBe(true);
       expect(processor.enqueue(anotherLargeTrace, TracePriority.LOW)).toBe(true);
+      expect(processor.enqueue(additionalLowPriority, TracePriority.LOW)).toBe(true);
+      expect(processor.enqueue(extraLowPriority, TracePriority.LOW)).toBe(true);
       expect(processor.enqueue(circularTrace, TracePriority.HIGH)).toBe(false);
 
       // No processing triggered yet - shutdown will flush remaining items
@@ -394,8 +463,9 @@ describe('TraceQueueProcessor integration', () => {
   });
 
   it('opens the circuit breaker after repeated permanent failures and blocks new enqueues', async () => {
+    const breakerLogger = new ConsoleLogger(LogLevel.DEBUG);
     const failureAdapterInfo = await createStorageAdapter(
-      logger,
+      breakerLogger,
       FlakyIndexedDBAdapter,
       {
         alwaysFail: true,
@@ -407,7 +477,7 @@ describe('TraceQueueProcessor integration', () => {
     const breakerEventBus = { dispatch: jest.fn() };
     const breaker = new TraceQueueProcessor({
       storageAdapter: failureAdapterInfo.adapter,
-      logger,
+      logger: breakerLogger,
       eventBus: breakerEventBus,
       timerService: breakerTimer,
       config: {
@@ -420,6 +490,7 @@ describe('TraceQueueProcessor integration', () => {
       },
     });
 
+    const infoSpy = jest.spyOn(breakerLogger, 'info');
     try {
       for (let i = 0; i < 10; i += 1) {
         expect(
@@ -439,8 +510,248 @@ describe('TraceQueueProcessor integration', () => {
         TracePriority.NORMAL
       );
       expect(enqueueAfterBreaker).toBe(false);
+
+      const wasOpen = breaker.resetCircuitBreaker();
+      expect(wasOpen).toBe(true);
+      expect(infoSpy).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Circuit breaker closed'
+      );
     } finally {
+      infoSpy.mockRestore();
       await breaker.shutdown();
     }
+  });
+
+  it('allows manual batch control, dedupes processed traces, and rotates storage when limits are exceeded', async () => {
+    const manualLogger = new ConsoleLogger(LogLevel.DEBUG);
+    const { adapter, dbName } = await createStorageAdapter(manualLogger);
+    activeDatabases.push(dbName);
+
+    const manualTimer = new TestTimerService();
+    const manualEventBus = { dispatch: jest.fn() };
+
+    let currentTime = 10_000;
+    const dateSpy = jest
+      .spyOn(Date, 'now')
+      .mockImplementation(() => currentTime);
+
+    const processor = new TraceQueueProcessor({
+      storageAdapter: adapter,
+      logger: manualLogger,
+      eventBus: manualEventBus,
+      timerService: manualTimer,
+      config: {
+        batchSize: 5,
+        batchTimeout: 5,
+        storageKey: 'manual-traces',
+        enableParallelProcessing: false,
+        maxStoredTraces: 1,
+      },
+      namingOptions: {
+        strategy: NamingStrategy.TIMESTAMP_FIRST,
+        timestampFormat: TimestampFormat.UNIX,
+        includeHash: false,
+      },
+    });
+
+    let isShutdown = false;
+
+    try {
+      await processor.processNextBatch();
+
+      const structured = buildStructuredTrace();
+      currentTime = 11_000;
+      structured.captureActionData('component_filtering', 'movement:go', {
+        passed: true,
+        sequence: 1,
+      });
+      currentTime = 13_000;
+      structured.captureActionData('resolution', 'movement:go', {
+        outcome: 'success',
+        sequence: 2,
+      });
+
+      currentTime = 15_000;
+      expect(processor.enqueue(structured, TracePriority.HIGH)).toBe(true);
+      await processor.processNextBatch();
+
+      let stored = await adapter.getItem('manual-traces');
+      expect(stored).toHaveLength(1);
+      expect(
+        stored[0].data.actions['movement:go'].stageOrder
+      ).toEqual(['component_filtering', 'resolution']);
+      expect(
+        stored[0].data.actions['movement:go'].totalDuration
+      ).toBeGreaterThanOrEqual(0);
+
+      currentTime = 15_000;
+      expect(processor.enqueue(structured, TracePriority.HIGH)).toBe(true);
+      await processor.processNextBatch();
+
+      stored = await adapter.getItem('manual-traces');
+      expect(stored).toHaveLength(1);
+
+      currentTime = 20_000;
+      const fallback = { actionId: 'fallback:trace', details: { foo: 'bar' } };
+      expect(processor.enqueue(fallback, TracePriority.LOW)).toBe(true);
+      await processor.processNextBatch();
+
+      stored = await adapter.getItem('manual-traces');
+      expect(stored).toHaveLength(1);
+      expect(stored[0].priority).toBe(TracePriority.LOW);
+
+      const metrics = processor.getMetrics();
+      expect(metrics.totalProcessed).toBe(2);
+      expect(manualEventBus.dispatch).toHaveBeenCalledWith(
+        QUEUE_EVENTS.BATCH_PROCESSED,
+        expect.objectContaining({ batchSize: expect.any(Number) })
+      );
+
+      await processor.shutdown();
+      isShutdown = true;
+
+      await processor.processNextBatch();
+    } finally {
+      dateSpy.mockRestore();
+      if (!isShutdown) {
+        await processor.shutdown();
+      }
+    }
+  });
+
+  it('stops scheduling retries once shutdown begins during a failure', async () => {
+    const shutdownLogger = new ConsoleLogger(LogLevel.DEBUG);
+    const { adapter, dbName } = await createStorageAdapter(
+      shutdownLogger,
+      ShutdownAwareIndexedDBAdapter
+    );
+    activeDatabases.push(dbName);
+
+    const timer = new TestTimerService();
+    const eventBus = { dispatch: jest.fn() };
+
+    const processor = new TraceQueueProcessor({
+      storageAdapter: adapter,
+      logger: shutdownLogger,
+      eventBus,
+      timerService: timer,
+      config: {
+        batchSize: 1,
+        batchTimeout: 5,
+        maxRetries: 2,
+        storageKey: 'shutdown-failure',
+        enableParallelProcessing: false,
+        maxStoredTraces: 5,
+      },
+    });
+
+    adapter.beforeFailure = async () => {
+      await processor.shutdown();
+    };
+
+    const trace = buildExecutionTrace();
+    expect(processor.enqueue(trace, TracePriority.NORMAL)).toBe(true);
+
+    await processor.processNextBatch();
+
+    const metrics = processor.getMetrics();
+    expect(metrics.totalProcessed).toBe(0);
+    const stats = processor.getQueueStats();
+    expect(stats.totalSize).toBe(0);
+  });
+
+  it('cancels scheduled retries when shutdown happens before retry execution', async () => {
+    const retryLogger = new ConsoleLogger(LogLevel.DEBUG);
+    const { adapter, dbName } = await createStorageAdapter(
+      retryLogger,
+      RetryThenSuccessAdapter
+    );
+    activeDatabases.push(dbName);
+
+    const timer = new TestTimerService();
+    const eventBus = { dispatch: jest.fn() };
+
+    const processor = new TraceQueueProcessor({
+      storageAdapter: adapter,
+      logger: retryLogger,
+      eventBus,
+      timerService: timer,
+      config: {
+        batchSize: 1,
+        batchTimeout: 5,
+        maxRetries: 2,
+        storageKey: 'shutdown-retry',
+        enableParallelProcessing: false,
+        maxStoredTraces: 5,
+      },
+    });
+
+    const trace = buildExecutionTrace();
+    expect(processor.enqueue(trace, TracePriority.NORMAL)).toBe(true);
+
+    await processor.processNextBatch();
+    expect(timer.hasPending()).toBe(true);
+
+    await processor.shutdown();
+
+    await timer.triggerAll();
+
+    const stats = processor.getQueueStats();
+    expect(stats.totalSize).toBe(0);
+    expect(adapter.attempts).toBe(1);
+  });
+
+  it('handles shutdown fallback persistence when timers fail and storage read errors occur', async () => {
+    const shutdownLogger = new ConsoleLogger(LogLevel.DEBUG);
+    const { adapter, dbName } = await createStorageAdapter(
+      shutdownLogger,
+      FailingGetIndexedDBAdapter
+    );
+    activeDatabases.push(dbName);
+
+    const timer = new ThrowingWaitTimerService();
+    const eventBus = { dispatch: jest.fn() };
+
+    const processor = new TraceQueueProcessor({
+      storageAdapter: adapter,
+      logger: shutdownLogger,
+      eventBus,
+      timerService: timer,
+      config: {
+        batchSize: 5,
+        batchTimeout: 50,
+        storageKey: 'shutdown-fallback',
+        enableParallelProcessing: false,
+        maxStoredTraces: 3,
+      },
+    });
+
+    const warnSpy = jest.spyOn(shutdownLogger, 'warn');
+    const debugSpy = jest.spyOn(shutdownLogger, 'debug');
+
+    const firstTrace = { actionId: 'queued:one', payload: { value: 1 } };
+    const secondTrace = { actionId: 'queued:two', payload: { value: 2 } };
+
+    expect(processor.enqueue(firstTrace, TracePriority.NORMAL)).toBe(true);
+    expect(processor.enqueue(secondTrace, TracePriority.HIGH)).toBe(true);
+
+    adapter.failOnNextGet = true;
+
+    await processor.shutdown();
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      'TraceQueueProcessor: Error waiting for timer completion',
+      expect.any(Error)
+    );
+
+    expect(debugSpy).toHaveBeenCalledWith(
+      'TraceQueueProcessor: Could not read existing traces during shutdown'
+    );
+
+    const stored = await adapter.getItem('shutdown-fallback');
+    expect(stored).toHaveLength(2);
+
+    warnSpy.mockRestore();
+    debugSpy.mockRestore();
   });
 });
