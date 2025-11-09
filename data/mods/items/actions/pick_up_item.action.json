@@ -14,7 +14,7 @@
     "actor": ["items:inventory"]
   },
   "forbidden_components": {
-    "actor": ["positioning:bending_over"]
+    "actor": ["positioning:bending_over", "positioning:being_fucked_vaginally"]
   },
   "prerequisites": [],
   "template": "pick up {item}",
