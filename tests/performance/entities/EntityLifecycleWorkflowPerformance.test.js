@@ -11,7 +11,6 @@ import {
   it,
   expect,
   beforeEach,
-  afterEach,
   beforeAll,
   afterAll,
 } from '@jest/globals';
