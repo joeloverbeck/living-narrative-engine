@@ -35,7 +35,7 @@ describe('Tracer Performance Overhead', () => {
     for (let i = 0; i < 1000; i++) {
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
     }
     const duration1 = performance.now() - start1;
@@ -46,7 +46,7 @@ describe('Tracer Performance Overhead', () => {
     for (let i = 0; i < 1000; i++) {
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
     }
     const duration2 = performance.now() - start2;
@@ -71,7 +71,7 @@ describe('Tracer Performance Overhead', () => {
     for (let i = 0; i < 100; i++) {
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
     }
     const duration1 = performance.now() - start1;
@@ -82,7 +82,7 @@ describe('Tracer Performance Overhead', () => {
     for (let i = 0; i < 100; i++) {
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
       testFixture.clearScopeTrace();
     }
@@ -109,7 +109,7 @@ describe('Tracer Performance Overhead', () => {
     for (let i = 0; i < 1000; i++) {
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
         'positioning:close_actors',
-        { actorEntity }
+        actorEntity
       );
       testFixture.clearScopeTrace();
     }
@@ -132,7 +132,7 @@ describe('Tracer Performance Overhead', () => {
     const start = performance.now();
     testFixture.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
-      { actorEntity }
+      actorEntity
     );
     const duration = performance.now() - start;
 
@@ -155,11 +155,11 @@ describe('Tracer Performance Overhead', () => {
     );
 
     testFixture.enableScopeTracing();
-    
+
     // Generate trace data
     testFixture.testEnv.unifiedScopeResolver.resolveSync(
       'positioning:close_actors',
-      { actorEntity }
+      actorEntity
     );
 
     // Measure formatting performance

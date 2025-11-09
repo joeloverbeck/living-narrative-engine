@@ -2319,17 +2319,17 @@ beforeEach(async () => {
       };
 
       try {
-        // Extract actorEntity from context - ScopeEngine expects just actorEntity, not full context
-        // But validate the context BEFORE extraction to catch common mistakes
-        const actorEntity = context.actorEntity || context.actor || context;
-
-        // Validate the ORIGINAL context (not the extracted actorEntity) to detect
-        // common mistakes like passing action context or scope context
-        // This provides better error messages for test development
+        // VALIDATE FIRST: Check the raw context parameter BEFORE extraction
+        // This ensures we can detect action pipeline context objects ({actor, targets})
+        // or scope resolution context objects ({runtimeCtx, dispatcher})
         ParameterValidator.validateActorEntity(
           context,
           `CustomScopeResolver[${fullScopeName}]`
         );
+
+        // EXTRACT SECOND: After validation passes, extract actorEntity
+        // ScopeEngine expects just actorEntity, not full context
+        const actorEntity = context.actorEntity || context.actor || context;
 
         // Resolve using the AST
         const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);

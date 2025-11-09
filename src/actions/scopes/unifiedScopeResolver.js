@@ -486,6 +486,28 @@ export class UnifiedScopeResolver {
   }
 
   /**
+   * Synchronous wrapper around resolve() for backward compatibility with tests.
+   * Unwraps ActionResult and returns the Set directly or throws on error.
+   *
+   * @param {string} scopeName - The scope name to resolve
+   * @param {ScopeResolutionContext} context - Resolution context
+   * @param {object} [options] - Optional resolution options
+   * @returns {Set<string>} Set of resolved entity IDs
+   * @throws {Error} If resolution fails
+   */
+  resolveSync(scopeName, context, options = {}) {
+    const result = this.resolve(scopeName, context, options);
+
+    if (!result.success) {
+      // Extract error message from ActionResult
+      const errorMessage = result.errors?.[0]?.message || 'Scope resolution failed';
+      throw new Error(errorMessage);
+    }
+
+    return result.value;
+  }
+
+  /**
    * Parses the AST for a scope definition.
    *
    * @param {object} scopeDefinition - The scope definition
@@ -618,6 +640,7 @@ export class UnifiedScopeResolver {
       actor: actorEntity,
       location: context.actorLocation,
       container: this.#container, // Add container for service resolution
+      tracer: context.tracer, // Add tracer for scope evaluation tracing
     };
 
     // Add target context if available

@@ -5,6 +5,7 @@
  * @description AST walker/query engine that resolves Scope-DSL expressions to sets of entity IDs
  */
 
+
 import ScopeDepthError from '../errors/scopeDepthError.js';
 import ScopeCycleError from '../errors/scopeCycleError.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
@@ -434,6 +435,7 @@ class ScopeEngine extends IScopeEngine {
 
       // Tracer integration - Log BEFORE and AFTER resolution
       const tracer = ctx.tracer || newCtx.tracer;
+
       if (tracer?.isEnabled()) {
         const input = ctx.currentSet || new Set([ctx.actorEntity.id]);
 
