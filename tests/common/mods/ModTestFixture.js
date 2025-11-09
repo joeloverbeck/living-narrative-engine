@@ -120,18 +120,16 @@ export class ModTestFixture {
    * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
    * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
    * @param {object} [options] - Configuration options
-   * @param {boolean} [options.autoRegisterScopes=false] - Auto-register dependency mod scopes
-   * @param {string[]} [options.scopeCategories=['positioning']] - Which scope categories to register (positioning, inventory, items, anatomy)
+   * @param {boolean} [options.autoRegisterScopes] - Auto-register dependency mod scopes
+   * @param {string[]} [options.scopeCategories] - Which scope categories to register (positioning, inventory, items, anatomy)
    * @param {Array<string>} [options.supportingActions] - Additional action IDs whose rules
    *   and conditions should be loaded into the environment for multi-action workflows
    * @returns {Promise<ModActionTestFixture>} Configured test fixture for the action
    * @throws {Error} If auto-loading fails when files are not provided
-   *
    * @example
    * // Manual scope registration (backward compatible)
    * const fixture = await ModTestFixture.forAction('violence', 'violence:grab_neck');
    * ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
-   *
    * @example
    * // Auto-register positioning scopes (auto-loading rule/condition files)
    * const fixture = await ModTestFixture.forAction(
@@ -141,7 +139,6 @@ export class ModTestFixture {
    *   null,
    *   { autoRegisterScopes: true }
    * );
-   *
    * @example
    * // Auto-register multiple scope categories
    * const fixture = await ModTestFixture.forAction(
@@ -1133,7 +1130,6 @@ class BaseModTestFixture {
    * @param {string} config.id - Entity ID
    * @param {object} config.components - Components to add to the entity
    * @returns {object} Built entity object
-   *
    * @example
    * const entity = testFixture.createEntity({
    *   id: 'actor1',
@@ -1184,6 +1180,7 @@ class BaseModTestFixture {
 
   /**
    * Enable scope evaluation tracing
+   *
    * @returns {void}
    */
   enableScopeTracing() {
@@ -1192,6 +1189,7 @@ class BaseModTestFixture {
 
   /**
    * Disable scope evaluation tracing
+   *
    * @returns {void}
    */
   disableScopeTracing() {
@@ -1200,6 +1198,7 @@ class BaseModTestFixture {
 
   /**
    * Get formatted scope trace output
+   *
    * @returns {string} Human-readable trace
    */
   getScopeTrace() {
@@ -1208,6 +1207,7 @@ class BaseModTestFixture {
 
   /**
    * Get raw scope trace data
+   *
    * @returns {object} Trace data structure
    */
   getScopeTraceData() {
@@ -1216,6 +1216,7 @@ class BaseModTestFixture {
 
   /**
    * Get filter breakdown for last evaluation
+   *
    * @param {string} entityId - Optional entity ID to filter by
    * @returns {object|Array} Filter breakdown
    */
@@ -1232,6 +1233,7 @@ class BaseModTestFixture {
 
   /**
    * Clear scope trace data
+   *
    * @returns {void}
    */
   clearScopeTrace() {
@@ -1240,6 +1242,7 @@ class BaseModTestFixture {
 
   /**
    * Enable tracing if condition is true
+   *
    * @param {boolean} condition - Enable condition
    * @returns {void}
    */
@@ -1322,6 +1325,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
     /**
      * Map to track loaded dependency conditions for mock extension.
+     *
      * @private
      */
     this._loadedConditions = new Map();
@@ -1329,6 +1333,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
     /**
      * Registry of known scopes and their registration categories.
      * Used for providing helpful error hints when scopes are not registered.
+     *
      * @private
      */
     this._knownScopes = {
@@ -1372,6 +1377,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
     /**
      * Flag to suppress action discovery hints.
+     *
      * @private
      */
     this._suppressHints = false;
@@ -1487,7 +1493,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a configurable sitting arrangement and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSittingArrangement
    * @returns {object} Scenario details including room, furniture, and actors
    */
@@ -1499,7 +1504,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a two-actor sitting pair scenario and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSittingPair
    * @returns {object} Scenario details including seated actors and furniture
    */
@@ -1511,7 +1515,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a solo sitting scenario and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSoloSitting
    * @returns {object} Scenario details including the seated actor and furniture
    */
@@ -1523,7 +1526,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates an inventory loadout scenario and hydrates the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createInventoryLoadout
    * @returns {object} Scenario details including room, actor, and inventory items
    */
@@ -1535,7 +1537,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a scenario with items on the ground and optional actor context.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createItemsOnGround
    * @returns {object} Scenario details including room, items, and optional actor references
    */
@@ -1547,7 +1548,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a container with contents and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createContainerWithContents
    * @returns {object} Scenario details including room, container, and contents
    */
@@ -1559,7 +1559,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a giver/receiver transfer scenario for inventory actions.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createInventoryTransfer
    * @returns {object} Scenario details including room, actors, and transfer item references
    */
@@ -1571,7 +1570,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates an actor ready to drop an inventory item and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createDropItemScenario
    * @returns {object} Scenario details including room, actor, and item references
    */
@@ -1583,7 +1581,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a pickup scenario with a ground item and hydrates the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createPickupScenario
    * @returns {object} Scenario details including room, actor, and ground item
    */
@@ -1595,7 +1592,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates an actor and container pair for open container workflows and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createOpenContainerScenario
    * @returns {object} Scenario details including room, actor, container, and optional key references
    */
@@ -1607,7 +1603,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a put-in-container scenario and hydrates the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createPutInContainerScenario
    * @returns {object} Scenario details including room, actor, container, and held item references
    */
@@ -1619,7 +1614,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a seated plus standing arrangement and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createStandingNearSitting
    * @returns {object} Scenario details including seated and standing actors
    */
@@ -1631,7 +1625,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a scenario with actors on separate furniture entities and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createSeparateFurnitureArrangement
    * @returns {object} Scenario details including multiple furniture entities
    */
@@ -1643,7 +1636,6 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * @description Creates a seated actor with kneeling companions and loads it into the fixture.
-   *
    * @param {object} [options] - Scenario overrides forwarded to ModEntityScenarios.createKneelingBeforeSitting
    * @returns {object} Scenario details including seated and kneeling actors
    */
@@ -2114,13 +2106,11 @@ beforeEach(async () => {
    * @param {string[]} conditionIds - Array of condition IDs in format "modId:conditionId"
    * @throws {Error} If condition file cannot be loaded or ID format is invalid
    * @returns {Promise<void>}
-   *
    * @example
    * // Load single condition
    * await testFixture.loadDependencyConditions([
    *   'positioning:actor-in-entity-facing-away'
    * ]);
-   *
    * @example
    * // Load multiple conditions (additive)
    * await testFixture.loadDependencyConditions([
@@ -2197,18 +2187,16 @@ beforeEach(async () => {
    * @param {string} modId - The mod containing the scope (e.g., 'positioning', 'sex-anal-penetration')
    * @param {string} scopeName - The scope name without .scope extension (e.g., 'actors_with_exposed_asshole')
    * @param {object} [options] - Optional configuration
-   * @param {boolean} [options.loadConditions=true] - Whether to auto-load conditions
-   * @param {number} [options.maxDepth=5] - Max recursion depth for transitive dependencies
+   * @param {boolean} [options.loadConditions] - Whether to auto-load conditions
+   * @param {number} [options.maxDepth] - Max recursion depth for transitive dependencies
    * @returns {Promise<void>}
    * @throws {Error} If scope file not found, conditions missing, or parsing fails
-   *
    * @example
    * // Auto-loads positioning:actor-in-entity-facing-away and other dependencies
    * await testFixture.registerCustomScope(
    *   'sex-anal-penetration',
    *   'actors_with_exposed_asshole_accessible_from_behind'
    * );
-   *
    * @example
    * // Disable auto-loading if needed
    * await testFixture.registerCustomScope(
@@ -2308,6 +2296,8 @@ beforeEach(async () => {
 
     // Capture testEnv reference for use in resolver closure
     const testEnv = this.testEnv;
+    // Capture scopeTracer reference for use in resolver closure
+    const scopeTracer = this.scopeTracer;
 
     const resolver = (context) => {
       // Build runtime context with getters for dynamic access
@@ -2324,7 +2314,7 @@ beforeEach(async () => {
           return testEnv.logger;
         },
         get tracer() {
-          return this.scopeTracer;
+          return scopeTracer;
         },
       };
 
