@@ -83,6 +83,7 @@ export default function createFilterResolver({
      */
     resolve(node, ctx) {
       const { actorEntity, dispatcher, trace } = ctx;
+      const tracer = ctx.tracer; // ADD: Extract tracer from context
       const logger = ctx?.runtimeCtx?.logger || null;
 
       // Check if we have a cached processed actor from previous iterations
@@ -237,6 +238,17 @@ export default function createFilterResolver({
             }
 
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
+
+            // ADD: Log to tracer (in addition to existing trace logging)
+            if (tracer?.isEnabled()) {
+              const entityId = typeof item === 'string' ? item : item?.id;
+              tracer.logFilterEvaluation(
+                entityId,
+                node.logic,
+                evalResult,
+                evalCtx
+              );
+            }
 
             // Capture detailed evaluation data for tracing
             if (trace) {

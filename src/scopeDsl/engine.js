@@ -335,6 +335,7 @@ class ScopeEngine extends IScopeEngine {
       actorEntity,
       runtimeCtx,
       trace,
+      tracer: runtimeCtx?.tracer, // ADD: Extract tracer from runtimeCtx
       dispatcher: {
         resolve: (node, innerCtx) =>
           this._resolveWithDepthAndCycleChecking(
@@ -431,11 +432,92 @@ class ScopeEngine extends IScopeEngine {
         },
       };
 
-      // Use dispatcher to resolve
+      // Tracer integration - Log BEFORE and AFTER resolution
+      const tracer = ctx.tracer || newCtx.tracer;
+      if (tracer?.isEnabled()) {
+        const input = ctx.currentSet || new Set([ctx.actorEntity.id]);
+
+        // Execute resolution
+        const result = dispatcher.resolve(node, newCtx);
+
+        // Build resolver name from node type
+        const resolverName = this._getResolverNameFromNode(node);
+
+        // Log step to tracer after resolution
+        const operation = this._buildOperationDescription(node);
+        tracer.logStep(
+          resolverName,
+          operation,
+          input,
+          result,
+          { node }
+        );
+
+        return result;
+      }
+
+      // Normal execution without tracing
       return dispatcher.resolve(node, newCtx);
     } finally {
       // Always leave cycle detection
       cycleDetector.leave();
+    }
+  }
+
+  /**
+   * Get resolver name from node type.
+   * Maps node types to their corresponding resolver names.
+   *
+   * @private
+   * @param {object} node - AST node
+   * @returns {string} Resolver name
+   */
+  _getResolverNameFromNode(node) {
+    switch (node.type) {
+      case 'Source':
+        return 'SourceResolver';
+      case 'Step':
+        // Check if it's a clothing-specific step
+        if (node.field === 'items_in_slot' || node.field === 'slot_accessibility') {
+          return node.field === 'items_in_slot' ? 'SlotAccessResolver' : 'ClothingStepResolver';
+        }
+        return 'StepResolver';
+      case 'Filter':
+        return 'FilterResolver';
+      case 'Union':
+        return 'UnionResolver';
+      case 'ArrayIterationStep':
+        return 'ArrayIterationResolver';
+      case 'ScopeReference':
+        return 'ScopeReferenceResolver';
+      default:
+        return 'UnknownResolver';
+    }
+  }
+
+  /**
+   * Build a human-readable operation description from a node.
+   *
+   * @private
+   * @param {object} node - AST node
+   * @returns {string} Operation description
+   */
+  _buildOperationDescription(node) {
+    switch (node.type) {
+      case 'Source':
+        return `resolve(kind='${node.kind}'${node.param ? `, param='${node.param}'` : ''})`;
+      case 'Step':
+        return `resolve(field='${node.field}')`;
+      case 'Filter':
+        return 'resolve(filter)';
+      case 'Union':
+        return 'resolve(union)';
+      case 'ArrayIterationStep':
+        return 'resolve(array iteration)';
+      case 'ScopeReference':
+        return `resolve(scopeRef='${node.scopeId}')`;
+      default:
+        return `resolve(type='${node.type}')`;
     }
   }
 }
