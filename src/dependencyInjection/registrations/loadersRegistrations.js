@@ -104,6 +104,7 @@ import SummaryPhase from '../../loaders/phases/summaryPhase.js';
 
 // --- Anatomy Validation Imports ---
 import { BlueprintRecipeValidationRule } from '../../anatomy/validation/rules/blueprintRecipeValidationRule.js';
+import { ComponentExistenceValidationRule } from '../../anatomy/validation/rules/componentExistenceValidationRule.js';
 import SlotGenerator from '../../anatomy/slotGenerator.js';
 import RecipePatternResolver from '../../anatomy/recipePatternResolver/patternResolver.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
@@ -402,6 +403,15 @@ export async function registerLoaders(container) {
       })
   );
 
+  registrar.singletonFactory(
+    tokens.ComponentExistenceValidationRule,
+    (c) =>
+      new ComponentExistenceValidationRule({
+        logger: c.resolve(tokens.ILogger),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+      })
+  );
+
   // === New: Loading Phases ===
   registrar.singletonFactory(
     tokens.SchemaPhase,
@@ -448,6 +458,9 @@ export async function registerLoaders(container) {
         logger: c.resolve(tokens.ILogger),
         blueprintRecipeValidationRule: c.resolve(
           tokens.BlueprintRecipeValidationRule
+        ),
+        componentExistenceValidationRule: c.resolve(
+          tokens.ComponentExistenceValidationRule
         ),
       })
   );

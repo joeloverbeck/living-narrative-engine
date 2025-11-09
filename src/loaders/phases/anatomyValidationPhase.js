@@ -13,20 +13,29 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
 /** @typedef {import('../LoadContext.js').LoadContext} LoadContext */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../anatomy/validation/rules/blueprintRecipeValidationRule.js').BlueprintRecipeValidationRule} BlueprintRecipeValidationRule */
+/** @typedef {import('../../anatomy/validation/rules/componentExistenceValidationRule.js').ComponentExistenceValidationRule} ComponentExistenceValidationRule */
 
 /**
  * Phase that validates anatomy blueprints and recipes after content loading
  */
 export default class AnatomyValidationPhase extends LoaderPhase {
   #logger;
-  #validationRule;
+  #blueprintRecipeValidationRule;
+  #componentExistenceValidationRule;
 
   /**
-   * @param {object} params
-   * @param {ILogger} params.logger
-   * @param {BlueprintRecipeValidationRule} params.blueprintRecipeValidationRule
+   * Creates a new anatomy validation phase
+   *
+   * @param {object} params - Constructor parameters
+   * @param {ILogger} params.logger - Logger instance
+   * @param {BlueprintRecipeValidationRule} params.blueprintRecipeValidationRule - Blueprint recipe validation rule
+   * @param {ComponentExistenceValidationRule} params.componentExistenceValidationRule - Component existence validation rule
    */
-  constructor({ logger, blueprintRecipeValidationRule }) {
+  constructor({
+    logger,
+    blueprintRecipeValidationRule,
+    componentExistenceValidationRule,
+  }) {
     super('anatomy-validation');
 
     validateDependency(logger, 'ILogger', logger, {
@@ -34,7 +43,9 @@ export default class AnatomyValidationPhase extends LoaderPhase {
     });
 
     this.#logger = logger;
-    this.#validationRule = blueprintRecipeValidationRule;
+    this.#blueprintRecipeValidationRule = blueprintRecipeValidationRule;
+    this.#componentExistenceValidationRule =
+      componentExistenceValidationRule;
   }
 
   /**
@@ -68,7 +79,11 @@ export default class AnatomyValidationPhase extends LoaderPhase {
 
     // Execute validation using Chain of Responsibility pattern
     const validationChain = new ValidationRuleChain({ logger: this.#logger });
-    validationChain.addRule(this.#validationRule);
+
+    // Add validation rules in order of execution
+    // Component existence must be checked first to ensure referenced components exist
+    validationChain.addRule(this.#componentExistenceValidationRule);
+    validationChain.addRule(this.#blueprintRecipeValidationRule);
 
     await validationChain.execute(validationContext);
 

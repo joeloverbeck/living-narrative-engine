@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyValidationPhase from '../../../src/loaders/phases/anatomyValidationPhase.js';
 import { BlueprintRecipeValidationRule } from '../../../src/anatomy/validation/rules/blueprintRecipeValidationRule.js';
+import { ComponentExistenceValidationRule } from '../../../src/anatomy/validation/rules/componentExistenceValidationRule.js';
 import { createTestBed } from '../../common/testBed.js';
 
 describe('AnatomyValidationPhase Integration', () => {
@@ -13,7 +14,9 @@ describe('AnatomyValidationPhase Integration', () => {
   let mockLogger;
   let mockRecipePatternResolver;
   let mockSafeEventDispatcher;
-  let validationRule;
+  let mockDataRegistry;
+  let blueprintRecipeValidationRule;
+  let componentExistenceValidationRule;
   let validationPhase;
 
   beforeEach(() => {
@@ -29,15 +32,26 @@ describe('AnatomyValidationPhase Integration', () => {
       'dispatch',
     ]);
 
-    validationRule = new BlueprintRecipeValidationRule({
+    mockDataRegistry = testBed.createMock('dataRegistry', ['get', 'getAll']);
+
+    // Mock all components exist by default
+    mockDataRegistry.get.mockReturnValue({ id: 'mock-component' });
+
+    blueprintRecipeValidationRule = new BlueprintRecipeValidationRule({
       logger: mockLogger,
       recipePatternResolver: mockRecipePatternResolver,
       safeEventDispatcher: mockSafeEventDispatcher,
     });
 
+    componentExistenceValidationRule = new ComponentExistenceValidationRule({
+      logger: mockLogger,
+      dataRegistry: mockDataRegistry,
+    });
+
     validationPhase = new AnatomyValidationPhase({
       logger: mockLogger,
-      blueprintRecipeValidationRule: validationRule,
+      blueprintRecipeValidationRule,
+      componentExistenceValidationRule,
     });
   });
 
