@@ -244,9 +244,7 @@
   },
   "patterns": [
     {
-      "matchesAll": {
-        "slotType": "tentacle"
-      },
+      "matchesGroup": "limbSet:tentacle",
       "partType": "eldritch_tentacle",
       "preferId": "anatomy:eldritch_tentacle_large",
       "tags": ["anatomy:part"],
