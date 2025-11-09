@@ -412,9 +412,10 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
       ]);
     });
 
-    it('should forbid actors already penetrating vaginally', () => {
+    it('should forbid actors already penetrating vaginally or receiving blowjob', () => {
       expect(insertPenisIntoVaginaAction.forbidden_components.actor).toEqual([
         'positioning:fucking_vaginally',
+        'positioning:receiving_blowjob',
       ]);
     });
 
@@ -572,6 +573,27 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action discovery', ()
 
     it('does not appear when the actor lacks a penis', async () => {
       const entities = buildScenario({ includePenis: false });
+      testFixture.reset(entities);
+      configureActionDiscovery();
+
+      const actions = await testFixture.discoverActions('alice');
+      const foundAction = actions.find(
+        (action) => action.id === 'sex-vaginal-penetration:insert_penis_into_vagina'
+      );
+
+      expect(foundAction).toBeUndefined();
+    });
+
+    it('does not appear when the actor is receiving a blowjob', async () => {
+      const entities = buildScenario();
+
+      // Add receiving_blowjob component to the actor
+      const actorEntity = entities.find(e => e.id === 'alice');
+      actorEntity.components['positioning:receiving_blowjob'] = {
+        giving_entity_id: 'beth',
+        consented: true
+      };
+
       testFixture.reset(entities);
       configureActionDiscovery();
 
