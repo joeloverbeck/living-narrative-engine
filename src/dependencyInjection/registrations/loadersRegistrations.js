@@ -105,6 +105,7 @@ import SummaryPhase from '../../loaders/phases/summaryPhase.js';
 // --- Anatomy Validation Imports ---
 import { BlueprintRecipeValidationRule } from '../../anatomy/validation/rules/blueprintRecipeValidationRule.js';
 import { ComponentExistenceValidationRule } from '../../anatomy/validation/rules/componentExistenceValidationRule.js';
+import { PropertySchemaValidationRule } from '../../anatomy/validation/rules/propertySchemaValidationRule.js';
 import SlotGenerator from '../../anatomy/slotGenerator.js';
 import RecipePatternResolver from '../../anatomy/recipePatternResolver/patternResolver.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
@@ -412,6 +413,16 @@ export async function registerLoaders(container) {
       })
   );
 
+  registrar.singletonFactory(
+    tokens.PropertySchemaValidationRule,
+    (c) =>
+      new PropertySchemaValidationRule({
+        logger: c.resolve(tokens.ILogger),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+      })
+  );
+
   // === New: Loading Phases ===
   registrar.singletonFactory(
     tokens.SchemaPhase,
@@ -461,6 +472,9 @@ export async function registerLoaders(container) {
         ),
         componentExistenceValidationRule: c.resolve(
           tokens.ComponentExistenceValidationRule
+        ),
+        propertySchemaValidationRule: c.resolve(
+          tokens.PropertySchemaValidationRule
         ),
       })
   );
