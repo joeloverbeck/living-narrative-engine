@@ -121,19 +121,19 @@ describe('Anatomy Loader Path Resolution', () => {
         id: 'anatomy',
         version: '1.0.0',
         content: {
-          recipes: ['gorgeous_milf.recipe.json'],
+          recipes: ['human_female.recipe.json'],
         },
       };
 
       const mockRecipeData = {
         $schema: 'schema://living-narrative-engine/anatomy.recipe.schema.json',
-        recipeId: 'anatomy:gorgeous_milf',
-        blueprintId: 'anatomy:gorgeous_milf',
+        recipeId: 'anatomy:human_female',
+        blueprintId: 'anatomy:human_female',
         slots: {},
       };
 
       mockPathResolver.resolveModContentPath.mockReturnValue(
-        './data/mods/anatomy/recipes/gorgeous_milf.recipe.json'
+        './data/mods/anatomy/recipes/human_female.recipe.json'
       );
       mockDataFetcher.fetch.mockResolvedValue(mockRecipeData);
       mockDataRegistry.set.mockReturnValue(true);
@@ -147,7 +147,7 @@ describe('Anatomy Loader Path Resolution', () => {
       );
 
       expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
-        './data/mods/anatomy/recipes/gorgeous_milf.recipe.json'
+        './data/mods/anatomy/recipes/human_female.recipe.json'
       );
 
       expect(mockDataFetcher.fetch).not.toHaveBeenCalledWith(

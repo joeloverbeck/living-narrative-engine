@@ -70,85 +70,6 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
     ],
   };
 
-  const mockGorgeousMilfRecipe = {
-    recipeId: 'anatomy:gorgeous_milf',
-    blueprintId: 'anatomy:human_female',
-    slots: {
-      torso: {
-        partType: 'torso',
-        preferId: 'anatomy:human_female_torso',
-      },
-      head: {
-        partType: 'head',
-        preferId: 'anatomy:humanoid_head',
-      },
-      hair: {
-        partType: 'hair',
-        preferId: 'anatomy:human_hair_raven',
-        properties: {
-          'descriptors:color_extended': {
-            color: 'raven-black',
-          },
-          'descriptors:length_hair': {
-            length: 'long',
-          },
-          'descriptors:hair_style': {
-            style: 'straight',
-          },
-        },
-      },
-    },
-    patterns: [
-      {
-        matches: ['left_eye', 'right_eye'],
-        partType: 'eye',
-        preferId: 'anatomy:human_eye_cobalt',
-        properties: {
-          'descriptors:color_extended': {
-            color: 'cobalt',
-          },
-          'descriptors:shape_eye': {
-            shape: 'almond',
-          },
-        },
-      },
-      {
-        matches: ['left_arm', 'right_arm'],
-        partType: 'arm',
-        preferId: 'anatomy:humanoid_arm',
-      },
-      {
-        matches: ['left_leg', 'right_leg'],
-        partType: 'leg',
-        preferId: 'anatomy:human_leg_shapely',
-        properties: {
-          'descriptors:length_category': {
-            length: 'long',
-          },
-          'descriptors:build': {
-            build: 'shapely',
-          },
-        },
-      },
-      {
-        matches: ['left_breast', 'right_breast'],
-        partType: 'breast',
-        preferId: 'anatomy:human_breast_d_cup',
-        properties: {
-          'descriptors:size_specific': {
-            size: 'D-cup',
-          },
-          'descriptors:weight_feel': {
-            weight: 'meaty',
-          },
-          'descriptors:firmness': {
-            firmness: 'soft',
-          },
-        },
-      },
-    ],
-  };
-
   beforeEach(() => {
     testBed = new AnatomyIntegrationTestBed();
     factory = testBed.bodyBlueprintFactory;
@@ -476,7 +397,7 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
       expect(result.rootId).toBe('torso-1');
     });
 
-    it('should use female torso override from gorgeous_milf recipe', async () => {
+    it('should use female torso override from human_female recipe', async () => {
       const blueprint = {
         id: 'anatomy:human_female',
         root: 'anatomy:default_torso', // Different from recipe
@@ -505,8 +426,8 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
       testBed.registry.get.mockImplementation((registry, id) => {
         if (registry === 'anatomyBlueprints' && id === 'anatomy:human_female')
           return blueprint;
-        if (registry === 'anatomyRecipes' && id === 'anatomy:gorgeous_milf')
-          return mockGorgeousMilfRecipe;
+        if (registry === 'anatomyRecipes' && id === 'anatomy:human_female')
+          return mockHumanFemaleRecipe;
         if (
           registry === 'entityDefinitions' &&
           id === 'anatomy:human_female_torso'
@@ -542,7 +463,7 @@ describe('BodyBlueprintFactory - Torso Override Integration', () => {
 
       const result = await factory.createAnatomyGraph(
         'anatomy:human_female',
-        'anatomy:gorgeous_milf'
+        'anatomy:human_female'
       );
 
       expect(testBed.entityManager.createEntityInstance).toHaveBeenCalledWith(

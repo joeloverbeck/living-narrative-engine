@@ -11,20 +11,23 @@
       "partType": "dragon_head",
       "tags": [
         "anatomy:part"
-      ]
+      ],
+      "properties": {
+        "descriptors:size_category": {
+          "size": "massive"
+        },
+        "descriptors:color_extended": {
+          "color": "crimson"
+        },
+        "descriptors:texture": {
+          "texture": "scaled"
+        }
+      }
     }
   },
   "patterns": [
     {
-      "matchesPattern": "leg_*_front",
-      "partType": "dragon_leg",
-      "tags": [
-        "anatomy:part"
-      ],
-      "properties": {}
-    },
-    {
-      "matchesPattern": "leg_*_rear",
+      "matchesGroup": "limbSet:leg",
       "partType": "dragon_leg",
       "tags": [
         "anatomy:part"

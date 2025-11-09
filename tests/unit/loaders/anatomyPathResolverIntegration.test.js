@@ -45,12 +45,12 @@ describe('Anatomy Path Resolver Integration', () => {
       const recipePath = pathResolver.resolveModContentPath(
         'anatomy',
         'recipes',
-        'gorgeous_milf.recipe.json'
+        'human_female.recipe.json'
       );
 
       expect(recipePath).not.toContain('anatomy/anatomy');
       expect(recipePath).toBe(
-        './data/mods/anatomy/recipes/gorgeous_milf.recipe.json'
+        './data/mods/anatomy/recipes/human_female.recipe.json'
       );
 
       const blueprintPath = pathResolver.resolveModContentPath(

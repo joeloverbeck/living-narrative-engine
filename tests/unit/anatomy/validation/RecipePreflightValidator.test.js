@@ -24,7 +24,7 @@ describe('RecipePreflightValidator', () => {
 
     mockDataRegistry = {
       get: () => undefined,
-      getAll: () => ({}),
+      getAll: () => [],
     };
 
     mockAnatomyBlueprintRepository = {
@@ -311,12 +311,31 @@ describe('RecipePreflightValidator', () => {
 
       mockDataRegistry.get = () => ({ id: 'descriptors:size_category' });
 
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'test:entity',
+              components: {
+                'anatomy:part': { subType: 'test_part' },
+                'descriptors:size_category': { size: 'large' },
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
       const recipe = {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         slots: {
           slot1: {
+            partType: 'test_part',
             tags: ['descriptors:size_category'],
+            properties: {
+              'descriptors:size_category': { size: 'large' },
+            },
           },
         },
         patterns: [],
@@ -378,11 +397,28 @@ describe('RecipePreflightValidator', () => {
         return undefined;
       };
 
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'test:entity',
+              components: {
+                'anatomy:part': { subType: 'test_part' },
+                'test:component1': {},
+                'test:component2': { value: 'test' },
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
       const recipe = {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         slots: {
           slot1: {
+            partType: 'test_part',
             tags: ['test:component1'],
             properties: {
               'test:component2': { value: 'test' },
@@ -459,11 +495,27 @@ describe('RecipePreflightValidator', () => {
         errors: [],
       });
 
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'test:entity',
+              components: {
+                'anatomy:part': { subType: 'test_part' },
+                'test:component1': { value: 'test' },
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
       const recipe = {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         slots: {
           slot1: {
+            partType: 'test_part',
             tags: [],
             properties: {
               'test:component1': { value: 'test' },
