@@ -240,11 +240,9 @@ describe('Union Operator Performance', () => {
         const exceedsAbsolute =
           currentTimePerItem - baselineTimePerItem > absoluteThreshold;
 
-        if (exceedsRatio && exceedsAbsolute) {
-          expect(currentTimePerItem).toBeLessThan(
-            baselineTimePerItem * ratioThreshold,
-          );
-        }
+        // Only fail if both thresholds are exceeded (ratio AND absolute)
+        const shouldFail = exceedsRatio && exceedsAbsolute;
+        expect(shouldFail).toBe(false);
       }
     });
   });
@@ -317,9 +315,8 @@ describe('Union Operator Performance', () => {
         const absoluteDifference = actualTimePerUnion - baselineTimePerUnion;
 
         // Fail only if both ratio exceeds 2x AND absolute difference > 1ms
-        if (actualTimePerUnion > expectedThreshold && absoluteDifference > 1) {
-          expect(actualTimePerUnion).toBeLessThan(expectedThreshold);
-        }
+        const shouldFail = actualTimePerUnion > expectedThreshold && absoluteDifference > 1;
+        expect(shouldFail).toBe(false);
       }
     });
 
