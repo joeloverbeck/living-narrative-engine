@@ -119,4 +119,31 @@ describe('sex-penile-oral:breathe_teasingly_on_penis_lying_close action discover
 
     expect(discovered).toBeUndefined();
   });
+
+  it('does not appear when the target is fucking the actor vaginally', async () => {
+    const { entities } = buildBreatheTeasinglyOnPenisLyingCloseScenario({
+      targetFuckingActorVaginally: true,
+    });
+    testFixture.reset(entities);
+    configureActionDiscovery(testFixture);
+
+    const actions = await testFixture.discoverActions(ACTOR_ID);
+    const discovered = actions.find((action) => action.id === ACTION_ID);
+
+    expect(discovered).toBeUndefined();
+  });
+
+  it('appears when both participants have being_fucked_vaginally but by different actors', async () => {
+    // This test ensures the fix doesn't prevent the action from appearing
+    // when the target has being_fucked_vaginally component but is NOT fucking the actor
+    const { entities } = buildBreatheTeasinglyOnPenisLyingCloseScenario();
+    testFixture.reset(entities);
+    configureActionDiscovery(testFixture);
+
+    const actions = await testFixture.discoverActions(ACTOR_ID);
+    const discovered = actions.find((action) => action.id === ACTION_ID);
+
+    expect(discovered).toBeDefined();
+    expect(discovered.template).toBe("breathe teasingly on {primary}'s penis");
+  });
 });

@@ -8,7 +8,7 @@
     "actor": ["positioning:lying_down"]
   },
   "forbidden_components": {
-    "actor": []
+    "actor": ["positioning:being_fucked_vaginally"]
   },
   "template": "get up from {target}",
   "prerequisites": [],

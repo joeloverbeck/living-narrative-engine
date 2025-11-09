@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:fucking_anally"]
+    "actor": ["positioning:fucking_anally", "positioning:fucking_vaginally"]
   },
   "template": "tease {primary}'s asshole with your glans",
   "prerequisites": [

@@ -14,7 +14,7 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["positioning:fucking_anally"]
+    "actor": ["positioning:fucking_anally", "positioning:fucking_vaginally"]
   },
   "template": "push your glans into {primary}'s asshole",
   "prerequisites": [
