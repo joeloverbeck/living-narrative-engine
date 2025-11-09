@@ -24,6 +24,7 @@ import { expandMacros } from '../../../src/utils/macroUtils.js';
 import { setupEntityCacheInvalidation } from '../../../src/scopeDsl/core/entityHelpers.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
 
 /**
  * Creates base services needed for rule engine tests.
@@ -906,7 +907,6 @@ export function createBaseRuleEnvironment({
         // Check if scope is loaded from file in scopes object
         if (scopes && scopes[scopeName]) {
           // Use scope engine to evaluate the loaded scope
-          const { ScopeEngine } = require('../../../src/scopeDsl/engine.js');
           const scopeEngine = new ScopeEngine();
 
           try {
