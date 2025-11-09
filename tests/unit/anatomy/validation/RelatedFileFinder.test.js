@@ -172,6 +172,58 @@ describe('RelatedFileFinder', () => {
       expect(files.components).toContain('data/mods/core/components/warning_component.component.json');
       expect(files.components).toContain('data/mods/core/components/suggestion_component.component.json');
     });
+
+    it('should ignore blueprint identifiers without namespace separators', () => {
+      mockReportData.errors = [
+        {
+          blueprintId: 'invalidBlueprint',
+        },
+      ];
+      report = new ValidationReport(mockReportData);
+      const files = RelatedFileFinder.extractFiles(report);
+
+      expect(files.blueprints).toEqual([]);
+    });
+
+    it('should ignore component identifiers without namespace separators', () => {
+      mockReportData.errors = [
+        {
+          componentId: 'invalidComponent',
+        },
+      ];
+      report = new ValidationReport(mockReportData);
+      const files = RelatedFileFinder.extractFiles(report);
+
+      expect(files.components).toEqual([]);
+    });
+
+    it('should skip adding paths when messages do not contain recognized patterns', () => {
+      mockReportData.errors = [
+        {
+          fix: 'Please review the component definition',
+        },
+      ];
+      report = new ValidationReport(mockReportData);
+      const files = RelatedFileFinder.extractFiles(report);
+
+      expect(files.blueprints).toEqual([]);
+      expect(files.components).toEqual([]);
+      expect(files.other).toEqual([]);
+      expect(files.total).toBe(1);
+    });
+
+    it('should categorize unmatched json paths into the other collection', () => {
+      mockReportData.errors = [
+        {
+          suggestion: 'See additional info at data/mods/test/misc/settings.json',
+        },
+      ];
+      report = new ValidationReport(mockReportData);
+      const files = RelatedFileFinder.extractFiles(report);
+
+      expect(files.other).toEqual(['data/mods/test/misc/settings.json']);
+      expect(files.total).toBe(2);
+    });
   });
 
   describe('formatFileList', () => {
