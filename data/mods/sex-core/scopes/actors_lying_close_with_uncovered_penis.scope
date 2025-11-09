@@ -1,5 +1,6 @@
 // Scope for lying-down partners sharing the same furniture where the target has an uncovered penis
 // Used by actions requiring both actors to be lying down close together with exposed anatomy
+// Excludes targets who are currently fucking the actor vaginally (to prevent impossible positioning)
 sex-core:actors_lying_close_with_uncovered_penis := actor.components.positioning:closeness.partners[][{
   "and": [
     {"!!": {"var": "entity.components.positioning:lying_down"}},
@@ -11,6 +12,14 @@ sex-core:actors_lying_close_with_uncovered_penis := actor.components.positioning
       ]
     },
     {"hasPartOfType": [".", "penis"]},
-    {"not": {"isSocketCovered": [".", "penis"]}}
+    {"not": {"isSocketCovered": [".", "penis"]}},
+    {
+      "not": {
+        "and": [
+          {"!!": {"var": "entity.components.positioning:fucking_vaginally"}},
+          {"==": [{"var": "entity.components.positioning:fucking_vaginally.targetId"}, {"var": "actor.id"}]}
+        ]
+      }
+    }
   ]
 }]
