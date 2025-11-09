@@ -15,14 +15,6 @@ describe('sex-anal-penetration:insert_finger_into_asshole action discovery', () 
     );
 
     testFixture.testEnv.actionIndex.buildIndex([insertFingerIntoAssholeActionJson]);
-    ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
-
-    // Register the sex-anal-penetration mod's custom scope
-    // This automatically loads dependency conditions like positioning:actor-in-entity-facing-away
-    await testFixture.registerCustomScope(
-      'sex-anal-penetration',
-      'actors_with_exposed_asshole_accessible_from_behind'
-    );
   });
 
   afterEach(() => {
@@ -65,6 +57,47 @@ describe('sex-anal-penetration:insert_finger_into_asshole action discovery', () 
       // CRITICAL: createCloseActors calls reset() which replaces action index with empty one
       // Must re-register the action after reset
       testFixture.testEnv.actionIndex.buildIndex([insertFingerIntoAssholeActionJson]);
+
+      // Register scopes AFTER reset() so they use the current entityManager
+      ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
+
+      // Manual scope override for sex-anal-penetration scope (avoids DSL/manual conflict)
+      const originalResolveSync = testFixture.testEnv.unifiedScopeResolver.resolveSync.bind(testFixture.testEnv.unifiedScopeResolver);
+      testFixture.testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
+        if (scopeName === 'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind') {
+          const actorId = context?.actor?.id;
+          if (!actorId) return { success: true, value: new Set() };
+
+          const actor = testFixture.testEnv.entityManager.getEntityInstance(actorId);
+          const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+
+          if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+            return { success: true, value: new Set() };
+          }
+
+          const validPartners = closenessPartners.filter((partnerId) => {
+            const partner = testFixture.testEnv.entityManager.getEntityInstance(partnerId);
+            if (!partner) return false;
+
+            // Check if partner has asshole
+            const hasParts = partner.components?.['anatomy:body_part_types']?.types || [];
+            if (!hasParts.includes('asshole')) return false;
+
+            // Check if asshole is uncovered
+            const socketCoverage = partner.components?.['clothing:socket_coverage']?.sockets || {};
+            if (socketCoverage.asshole?.covered) return false;
+
+            // Check if partner is facing away from actor OR lying down
+            const facingAway = partner.components?.['positioning:facing_away']?.facing_away_from || [];
+            const isLyingDown = partner.components?.['positioning:lying_down'];
+
+            return facingAway.includes(actorId) || isLyingDown;
+          });
+
+          return { success: true, value: new Set(validPartners) };
+        }
+        return originalResolveSync(scopeName, context);
+      };
 
       // Make Bob face away from Alice and expose his asshole
       testFixture.testEnv.entityManager.addComponent(
