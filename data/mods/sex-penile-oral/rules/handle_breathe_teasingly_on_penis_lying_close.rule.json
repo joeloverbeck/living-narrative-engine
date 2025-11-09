@@ -1,0 +1,63 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_breathe_teasingly_on_penis_lying_close",
+  "comment": "Handles the 'sex-penile-oral:breathe_teasingly_on_penis_lying_close' action. Dispatches descriptive text and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "sex-penile-oral:event-is-action-breathe-teasingly-on-penis-lying-close"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "primaryName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} moves their head to {context.primaryName}'s crotch and breathes teasingly on {context.primaryName}'s penis, the hot breath ghosting against the delicate skin."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "actorId",
+        "value": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}

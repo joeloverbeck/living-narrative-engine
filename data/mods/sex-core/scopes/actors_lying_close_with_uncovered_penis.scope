@@ -1,0 +1,16 @@
+// Scope for lying-down partners sharing the same furniture where the target has an uncovered penis
+// Used by actions requiring both actors to be lying down close together with exposed anatomy
+sex-core:actors_lying_close_with_uncovered_penis := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"!!": {"var": "entity.components.positioning:lying_down"}},
+    {"!!": {"var": "actor.components.positioning:lying_down"}},
+    {
+      "==": [
+        {"var": "actor.components.positioning:lying_down.furniture_id"},
+        {"var": "entity.components.positioning:lying_down.furniture_id"}
+      ]
+    },
+    {"hasPartOfType": [".", "penis"]},
+    {"not": {"isSocketCovered": [".", "penis"]}}
+  ]
+}]
