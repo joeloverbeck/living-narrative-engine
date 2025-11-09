@@ -6,6 +6,8 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { ScopeResolutionError } from '../../../src/scopeDsl/errors/scopeResolutionError.js';
+import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import createFilterResolver from '../../../src/scopeDsl/nodes/filterResolver.js';
 
 describe('Error Wrapping Integration', () => {
@@ -444,6 +446,419 @@ describe('Error Wrapping Integration', () => {
       expect(error.context.hint).toBe('Test hint');
       expect(error.context.suggestion).toBe('Test suggestion');
       expect(error.context.example).toBe('Test example');
+    });
+  });
+
+  describe('Parameter Validation Error Wrapping (Direct ScopeEngine Testing)', () => {
+    let scopeEngine;
+    let mockEntityManager;
+    let mockLogger;
+    let runtimeCtx;
+
+    beforeEach(() => {
+      scopeEngine = new ScopeEngine();
+
+      mockEntityManager = {
+        getEntity: (id) => ({ id, components: {} }),
+        getEntities: () => [],
+        hasComponent: () => false,
+        getComponentData: () => null,
+      };
+
+      mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      runtimeCtx = {
+        entityManager: mockEntityManager,
+        logger: mockLogger,
+      };
+    });
+
+    it('should throw ParameterValidationError when actorEntity is invalid', () => {
+      const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+      const invalidActorEntity = { name: 'Test' }; // Missing 'id' property
+
+      expect(() => {
+        scopeEngine.resolve(validAST, invalidActorEntity, runtimeCtx);
+      }).toThrow(ParameterValidationError);
+    });
+
+    it('should include helpful context in ParameterValidationError', () => {
+      const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+      const invalidActorEntity = undefined;
+
+      let caughtError;
+      try {
+        scopeEngine.resolve(validAST, invalidActorEntity, runtimeCtx);
+      } catch (err) {
+        caughtError = err;
+      }
+
+      expect(caughtError).toBeInstanceOf(ParameterValidationError);
+      expect(caughtError.context.expected).toBeDefined();
+      expect(caughtError.context.received).toBeDefined();
+      expect(caughtError.context.hint).toBeDefined();
+    });
+
+    it('should preserve error chain in validation errors', () => {
+      const invalidAST = null;
+      const actorEntity = { id: 'actor1' };
+
+      let caughtError;
+      try {
+        scopeEngine.resolve(invalidAST, actorEntity, runtimeCtx);
+      } catch (err) {
+        caughtError = err;
+      }
+
+      expect(caughtError).toBeInstanceOf(ParameterValidationError);
+      expect(caughtError.stack).toBeDefined();
+      expect(caughtError.message).toBeTruthy();
+    });
+
+    it('should detect when actorEntity has missing id property', () => {
+      const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+      const invalidActorEntity = { components: {} }; // Missing id
+
+      let caughtError;
+      try {
+        scopeEngine.resolve(validAST, invalidActorEntity, runtimeCtx);
+      } catch (err) {
+        caughtError = err;
+      }
+
+      expect(caughtError).toBeInstanceOf(ParameterValidationError);
+      expect(caughtError.message).toContain('id');
+      expect(caughtError.context.hint).toBeDefined();
+      expect(caughtError.context.example).toBeDefined();
+    });
+
+    it('should detect when runtimeCtx is missing entityManager', () => {
+      const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+      const actorEntity = { id: 'actor1' };
+      const incompleteRuntimeCtx = {
+        logger: mockLogger,
+        // Missing entityManager
+      };
+
+      let caughtError;
+      try {
+        scopeEngine.resolve(validAST, actorEntity, incompleteRuntimeCtx);
+      } catch (err) {
+        caughtError = err;
+      }
+
+      expect(caughtError).toBeInstanceOf(ParameterValidationError);
+      expect(caughtError.message).toContain('entityManager');
+      expect(caughtError.context.hint).toBeDefined();
+    });
+
+    it('should detect when AST is missing type property', () => {
+      const invalidAST = { name: 'self' }; // Missing type
+      const actorEntity = { id: 'actor1' };
+
+      let caughtError;
+      try {
+        scopeEngine.resolve(invalidAST, actorEntity, runtimeCtx);
+      } catch (err) {
+        caughtError = err;
+      }
+
+      expect(caughtError).toBeInstanceOf(ParameterValidationError);
+      expect(caughtError.message).toContain('type');
+      expect(caughtError.context.hint).toBeDefined();
+    });
+  });
+
+  describe('Real-World Error Scenarios', () => {
+    describe('Context object passed to resolve (common mistake)', () => {
+      it('should detect when full action context is passed instead of actorEntity', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+
+        // Common mistake: passing full context instead of actorEntity
+        const wrongContext = {
+          actor: { id: 'actor1' },
+          targets: [{ id: 'target1' }],
+        };
+
+        const runtimeCtx = {
+          entityManager: {
+            getEntity: (id) => ({ id, components: {} }),
+            getEntities: () => [],
+          },
+          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+        };
+
+        let caughtError;
+        try {
+          // Wrong: passing wrongContext as actorEntity
+          scopeEngine.resolve(validAST, wrongContext, runtimeCtx);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ParameterValidationError);
+        expect(caughtError.message).toContain('action pipeline context');
+        expect(caughtError.context.hint).toBeDefined();
+        expect(caughtError.context.example).toBeDefined();
+      });
+
+      it('should detect when scope resolution context is passed instead of actorEntity', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+
+        // Common mistake: passing scope resolution context instead of actorEntity
+        const wrongContext = {
+          runtimeCtx: {},
+          dispatcher: {},
+          actorEntity: { id: 'actor1' },
+        };
+
+        const runtimeCtx = {
+          entityManager: {
+            getEntity: (id) => ({ id, components: {} }),
+            getEntities: () => [],
+          },
+          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+        };
+
+        let caughtError;
+        try {
+          // Wrong: passing wrongContext as actorEntity
+          scopeEngine.resolve(validAST, wrongContext, runtimeCtx);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ParameterValidationError);
+        expect(caughtError.message).toContain('scope resolution context');
+        expect(caughtError.context.hint).toBeDefined();
+        expect(caughtError.context.example).toBeDefined();
+      });
+    });
+
+    describe('Scope not found (typo scenario)', () => {
+      it('should suggest similar scope names when typo detected', () => {
+        const registry = new ScopeRegistry();
+        registry.initialize({
+          'positioning:close_actors': { expr: 'close', ast: { type: 'Source', name: 'close' } },
+        });
+
+        let caughtError;
+        try {
+          // Typo: "clsoe" instead of "close"
+          registry.getScopeOrThrow('positioning:clsoe_actors');
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ScopeResolutionError);
+        expect(caughtError.context.suggestion).toContain('Available scopes');
+        expect(caughtError.context.hint).toBeDefined();
+      });
+
+      it('should provide list of available scopes when scope is not found', () => {
+        const registry = new ScopeRegistry();
+        registry.initialize({
+          'positioning:close_actors': { expr: 'close', ast: { type: 'Source', name: 'close' } },
+          'positioning:nearby_actors': { expr: 'nearby', ast: { type: 'Source', name: 'nearby' } },
+        });
+
+        let caughtError;
+        try {
+          // Non-existent scope
+          registry.getScopeOrThrow('positioning:far_actors');
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ScopeResolutionError);
+        expect(caughtError.context.suggestion).toBeDefined();
+        expect(caughtError.context.example).toContain('positioning:close_actors');
+      });
+    });
+
+    describe('Missing runtime services', () => {
+      it('should explain when entityManager is missing from runtimeCtx', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+        const actorEntity = { id: 'actor1' };
+
+        // Missing entityManager
+        const incompleteRuntimeCtx = {
+          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+        };
+
+        let caughtError;
+        try {
+          scopeEngine.resolve(validAST, actorEntity, incompleteRuntimeCtx);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ParameterValidationError);
+        expect(caughtError.message).toContain('entityManager');
+        expect(caughtError.context.hint).toBeDefined();
+        expect(caughtError.context.expected).toContain('entityManager');
+      });
+
+      it('should explain when runtimeCtx is null or undefined', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+        const actorEntity = { id: 'actor1' };
+
+        let caughtError;
+        try {
+          scopeEngine.resolve(validAST, actorEntity, null);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ParameterValidationError);
+        expect(caughtError.message).toContain('must be an object');
+        expect(caughtError.context.hint).toBeDefined();
+        expect(caughtError.context.example).toBeDefined();
+      });
+    });
+
+    describe('Invalid entity structure', () => {
+      it('should detect when entity id is empty string', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+        const invalidEntity = { id: '' }; // Empty id
+
+        const runtimeCtx = {
+          entityManager: {
+            getEntity: (id) => ({ id, components: {} }),
+            getEntities: () => [],
+          },
+          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+        };
+
+        let caughtError;
+        try {
+          scopeEngine.resolve(validAST, invalidEntity, runtimeCtx);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ParameterValidationError);
+        expect(caughtError.message).toContain('empty string');
+        expect(caughtError.context.hint).toBeDefined();
+      });
+
+      it('should detect when entity id is the string "undefined"', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+        const invalidEntity = { id: 'undefined' }; // String "undefined"
+
+        const runtimeCtx = {
+          entityManager: {
+            getEntity: (id) => ({ id, components: {} }),
+            getEntities: () => [],
+          },
+          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+        };
+
+        let caughtError;
+        try {
+          scopeEngine.resolve(validAST, invalidEntity, runtimeCtx);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ParameterValidationError);
+        expect(caughtError.message).toContain('"undefined"');
+        expect(caughtError.context.hint).toContain('error in entity creation');
+      });
+
+      it('should detect when entity id is not a string', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+        const invalidEntity = { id: 123 }; // Number instead of string
+
+        const runtimeCtx = {
+          entityManager: {
+            getEntity: (id) => ({ id, components: {} }),
+            getEntities: () => [],
+          },
+          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+        };
+
+        let caughtError;
+        try {
+          scopeEngine.resolve(validAST, invalidEntity, runtimeCtx);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        expect(caughtError).toBeInstanceOf(ParameterValidationError);
+        expect(caughtError.message).toContain('must be a string');
+        expect(caughtError.context.received).toContain('number');
+      });
+    });
+
+    describe('Error message formatting and quality', () => {
+      it('should provide actionable error messages with all context sections', () => {
+        const registry = new ScopeRegistry();
+        registry.initialize({
+          'core:items': { expr: 'items', ast: { type: 'Source', name: 'items' } },
+          'positioning:close_actors': { expr: 'close', ast: { type: 'Source', name: 'close' } },
+        });
+
+        let caughtError;
+        try {
+          registry.getScopeOrThrow('unknown:missing_scope');
+        } catch (err) {
+          caughtError = err;
+        }
+
+        const formatted = caughtError.toString();
+        // Verify formatting includes all key sections
+        expect(formatted).toContain('ScopeResolutionError:');
+        expect(formatted).toContain('Scope: unknown:missing_scope');
+        expect(formatted).toContain('Phase: scope lookup');
+        expect(formatted).toContain('💡 Hint:');
+        expect(formatted).toContain('Suggestion:');
+        expect(formatted).toContain('Example:');
+
+        // Verify actionable content
+        expect(caughtError.context.hint).toContain('registered');
+        expect(caughtError.context.example).toContain('core:items');
+      });
+
+      it('should include helpful hints for common mistakes', () => {
+        const scopeEngine = new ScopeEngine();
+        const validAST = { type: 'Source', kind: 'builtin', name: 'self' };
+        const wrongContext = { actor: { id: 'actor1' } }; // Common mistake
+
+        const runtimeCtx = {
+          entityManager: {
+            getEntity: (id) => ({ id, components: {} }),
+            getEntities: () => [],
+          },
+          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+        };
+
+        let caughtError;
+        try {
+          scopeEngine.resolve(validAST, wrongContext, runtimeCtx);
+        } catch (err) {
+          caughtError = err;
+        }
+
+        // Verify hint specifically addresses the common mistake
+        expect(caughtError.context.hint).toContain('entity instance');
+        expect(caughtError.context.hint).toContain('action context');
+
+        // Verify example shows correct usage
+        expect(caughtError.context.example).toContain('entityManager.getEntity');
+      });
     });
   });
 });
