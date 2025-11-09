@@ -768,6 +768,9 @@ class BaseModTestFixture {
     // Load lookup definitions for the mod to support QUERY_LOOKUP operations
     const lookups = await this.loadLookupDefinitions();
 
+    // Load scope definitions for the mod to enable scope resolution
+    const scopes = await this.loadScopeDefinitions();
+
     const supportingActions = Array.isArray(this.options.supportingActions)
       ? this.options.supportingActions
           .filter((actionId) => typeof actionId === 'string')
@@ -981,6 +984,7 @@ class BaseModTestFixture {
       conditions,  // Pass conditions map instead of dataRegistry
       macros,  // Pass macros for expansion
       lookups,  // Pass lookups for QUERY_LOOKUP operations
+      scopes,  // Pass scopes for scope resolution
     });
   }
 
@@ -1072,6 +1076,53 @@ class BaseModTestFixture {
       return lookupMap;
     } catch (error) {
       // If the lookups directory doesn't exist or can't be read, return empty object
+      return {};
+    }
+  }
+
+  /**
+   * Loads all scope definitions from the mod's scopes directory.
+   *
+   * @returns {Promise<object>} Object mapping scope names to scope definitions
+   */
+  async loadScopeDefinitions() {
+    const scopesDir = resolve(`data/mods/${this.modId}/scopes`);
+
+    try {
+      const files = await fs.readdir(scopesDir);
+
+      const scopeFiles = files.filter(f => f.endsWith('.scope'));
+
+      const allScopes = {};
+
+      for (const file of scopeFiles) {
+        try {
+          const filePath = resolve(scopesDir, file);
+          const content = await fs.readFile(filePath, 'utf8');
+
+          // Parse scope definition using scopeDefinitionParser
+          const parsedScopes = parseScopeDefinitions(content, filePath);
+
+          // parseScopeDefinitions returns a Map<scopeName, { expr, ast }>
+          // Convert to object format expected by dataRegistry
+          for (const [scopeName, scopeData] of parsedScopes.entries()) {
+            allScopes[scopeName] = {
+              name: scopeName,
+              expr: scopeData.expr,
+              ast: scopeData.ast,
+              source: 'file',
+              filePath,
+            };
+          }
+        } catch (error) {
+          // Silently skip files that can't be loaded
+          continue;
+        }
+      }
+
+      return allScopes;
+    } catch (error) {
+      // If the scopes directory doesn't exist or can't be read, return empty object
       return {};
     }
   }
@@ -2073,8 +2124,18 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
     const actionId = this._actionDefinition.id;
 
-    // Extract scope name from action definition
-    const scopeName = this._actionDefinition.targets;
+    // Extract scope name from action definition (check primary, secondary, tertiary targets)
+    let scopeName = null;
+    const targets = this._actionDefinition.targets;
+    if (targets) {
+      if (targets.primary?.scope) {
+        scopeName = targets.primary.scope;
+      } else if (targets.secondary?.scope) {
+        scopeName = targets.secondary.scope;
+      } else if (targets.tertiary?.scope) {
+        scopeName = targets.tertiary.scope;
+      }
+    }
 
     // Only provide hint if action uses a scope
     if (!scopeName) {
