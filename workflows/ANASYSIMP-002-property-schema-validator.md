@@ -10,6 +10,14 @@
 
 From the anatomy system improvements analysis, recipe properties can use invalid enum values that pass schema validation but fail at runtime. This was a consistent issue across 75% of all anatomy recipes tested.
 
+**Architecture Notes (Updated based on actual codebase):**
+- Recipes are loaded by `AnatomyRecipeLoader` (not a generic `recipeLoader`)
+- Components are stored in `InMemoryDataRegistry` implementing `IDataRegistry` (not a dedicated `componentRegistry`)
+- Component definitions include `dataSchema` but NOT `filePath` (derive path from component ID)
+- Validation follows Chain of Responsibility pattern via `AnatomyValidationPhase`
+- New validator should be a `ValidationRule` subclass, not a standalone function
+- Integration point: Add rule to validation chain after `ComponentExistenceValidationRule`
+
 **Example Error from Red Dragon:**
 ```
 Error Round 3: "Runtime component validation failed for 'anatomy:dragon_wing'.
@@ -42,248 +50,362 @@ Implement property schema validation that runs at recipe load time. The validato
 ### Core Validation Function
 
 ```javascript
-import Ajv from 'ajv';
+import { ValidationRule } from '../validationRule.js';
+import { validateDependency } from '../../../utils/dependencyUtils.js';
 
 /**
  * Validates that recipe property values match component dataSchemas
- * @param {Object} recipe - The recipe to validate
- * @param {Object} componentRegistry - Registry of loaded components with schemas
- * @param {Object} ajv - AJV instance for schema validation
- * @returns {Array<Object>} Array of errors found
+ *
+ * @extends ValidationRule
  */
-function validatePropertySchemas(recipe, componentRegistry, ajv) {
-  const errors = [];
+class PropertySchemaValidationRule extends ValidationRule {
+  #logger;
+  #dataRegistry;
+  #schemaValidator;
 
-  // Validate slot properties
-  for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
-    for (const [componentId, properties] of Object.entries(slot.properties || {})) {
-      const component = componentRegistry.get(componentId);
+  constructor({ logger, dataRegistry, schemaValidator }) {
+    super();
 
-      if (!component) {
-        // Component existence is validated by ANASYSIMP-001
-        // Skip validation if component doesn't exist
-        continue;
-      }
+    validateDependency(logger, 'ILogger', logger, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['get', 'getAll'],
+    });
+    validateDependency(schemaValidator, 'ISchemaValidator', logger, {
+      requiredMethods: ['validate'],
+    });
 
-      const schemaErrors = validateComponentProperties(
-        componentId,
-        properties,
-        component.dataSchema,
-        ajv
-      );
+    this.#logger = logger;
+    this.#dataRegistry = dataRegistry;
+    this.#schemaValidator = schemaValidator;
+  }
 
-      if (schemaErrors.length > 0) {
-        errors.push({
-          type: 'INVALID_PROPERTY_VALUE',
-          location: { type: 'slot', name: slotName },
-          componentId: componentId,
-          properties: properties,
-          schemaErrors: schemaErrors,
-          schemaPath: component.filePath,
-          severity: 'error',
+  get ruleId() {
+    return 'property-schema-validation';
+  }
+
+  get ruleName() {
+    return 'Property Schema Validation';
+  }
+
+  shouldApply(context) {
+    return context.hasRecipes();
+  }
+
+  async validate(context) {
+    const issues = [];
+    const recipes = context.getRecipes();
+
+    for (const [recipeId, recipe] of Object.entries(recipes)) {
+      const recipeIssues = this.#validateRecipeProperties(recipe);
+
+      // Add recipe context to each issue
+      for (const issue of recipeIssues) {
+        issues.push({
+          ...issue,
+          context: {
+            ...issue.context,
+            recipeId,
+          },
         });
       }
     }
-  }
 
-  // Validate pattern properties
-  for (const pattern of recipe.patterns || []) {
-    const patternId = pattern.matchesPattern || pattern.matchesGroup || 'unknown';
-
-    for (const [componentId, properties] of Object.entries(pattern.properties || {})) {
-      const component = componentRegistry.get(componentId);
-
-      if (!component) {
-        continue; // Caught by component existence validator
-      }
-
-      const schemaErrors = validateComponentProperties(
-        componentId,
-        properties,
-        component.dataSchema,
-        ajv
+    // Log summary
+    if (issues.length > 0) {
+      const errors = issues.filter((i) => i.severity === 'error');
+      this.#logger.warn(
+        `Property schema validation found ${errors.length} invalid property value(s)`
       );
-
-      if (schemaErrors.length > 0) {
-        errors.push({
-          type: 'INVALID_PROPERTY_VALUE',
-          location: { type: 'pattern', name: patternId },
-          componentId: componentId,
-          properties: properties,
-          schemaErrors: schemaErrors,
-          schemaPath: component.filePath,
-          severity: 'error',
-        });
-      }
+    } else {
+      this.#logger.debug('Property schema validation passed');
     }
+
+    return issues;
   }
 
-  return errors;
-}
+  #validateRecipeProperties(recipe) {
+    const issues = [];
 
-/**
- * Validates a property object against a component's dataSchema
- * @param {string} componentId - Component identifier
- * @param {Object} properties - Property values to validate
- * @param {Object} dataSchema - Component dataSchema
- * @param {Object} ajv - AJV instance
- * @returns {Array<Object>} Array of formatted validation errors
- */
-function validateComponentProperties(componentId, properties, dataSchema, ajv) {
-  const errors = [];
+    // Validate slot properties
+    for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
+      for (const [componentId, properties] of Object.entries(slot.properties || {})) {
+        const component = this.#dataRegistry.get('components', componentId);
 
-  const valid = ajv.validate(dataSchema, properties);
+        if (!component) {
+          // Component existence is validated by ComponentExistenceValidationRule
+          // Skip validation if component doesn't exist
+          continue;
+        }
 
-  if (!valid && ajv.errors) {
-    for (const error of ajv.errors) {
-      errors.push(formatPropertyError(componentId, properties, error, dataSchema));
-    }
-  }
-
-  return errors;
-}
-
-/**
- * Formats AJV error with context and suggestions
- * @param {string} componentId - Component identifier
- * @param {Object} properties - Property values
- * @param {Object} ajvError - AJV error object
- * @param {Object} dataSchema - Component dataSchema
- * @returns {Object} Formatted error object
- */
-function formatPropertyError(componentId, properties, ajvError, dataSchema) {
-  const propertyPath = ajvError.instancePath.replace(/^\//, '');
-  const propertyName = propertyPath || ajvError.params.missingProperty;
-
-  const error = {
-    property: propertyName,
-    message: ajvError.message,
-    currentValue: getPropertyValue(properties, propertyPath),
-  };
-
-  // Add enum suggestions for enum validation failures
-  if (ajvError.keyword === 'enum' && ajvError.params.allowedValues) {
-    error.validValues = ajvError.params.allowedValues;
-    error.suggestion = suggestClosestValue(
-      error.currentValue,
-      ajvError.params.allowedValues
-    );
-  }
-
-  // Add type information for type validation failures
-  if (ajvError.keyword === 'type') {
-    error.expectedType = ajvError.params.type;
-    error.actualType = typeof error.currentValue;
-  }
-
-  // Add required field information
-  if (ajvError.keyword === 'required') {
-    error.missingField = ajvError.params.missingProperty;
-  }
-
-  return error;
-}
-
-/**
- * Gets a nested property value from an object using a path
- * @param {Object} obj - Object to search
- * @param {string} path - Property path (e.g., "color.primary")
- * @returns {*} Property value
- */
-function getPropertyValue(obj, path) {
-  if (!path) return obj;
-  return path.split('/').reduce((current, key) => current?.[key], obj);
-}
-
-/**
- * Suggests the closest matching value from a list of valid values
- * @param {*} value - Invalid value
- * @param {Array} validValues - List of valid values
- * @returns {*} Closest matching valid value
- */
-function suggestClosestValue(value, validValues) {
-  if (typeof value !== 'string') return validValues[0];
-
-  // Simple string similarity: find shortest edit distance
-  let closest = validValues[0];
-  let minDistance = Infinity;
-
-  for (const valid of validValues) {
-    const distance = levenshteinDistance(value.toLowerCase(), valid.toLowerCase());
-    if (distance < minDistance) {
-      minDistance = distance;
-      closest = valid;
-    }
-  }
-
-  return closest;
-}
-
-/**
- * Calculates Levenshtein distance between two strings
- * @param {string} a - First string
- * @param {string} b - Second string
- * @returns {number} Edit distance
- */
-function levenshteinDistance(a, b) {
-  const matrix = [];
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+        const schemaErrors = this.#validateComponentProperties(
+          componentId,
+          properties,
+          component.dataSchema
         );
+
+        if (schemaErrors.length > 0) {
+          issues.push({
+            type: 'INVALID_PROPERTY_VALUE',
+            location: { type: 'slot', name: slotName },
+            componentId: componentId,
+            properties: properties,
+            schemaErrors: schemaErrors,
+            componentSource: this.#deriveComponentSource(componentId),
+            severity: 'error',
+          });
+        }
       }
     }
+
+    // Validate pattern properties
+    for (const [index, pattern] of (recipe.patterns || []).entries()) {
+      const patternId = pattern.matchesPattern || pattern.matchesGroup || `pattern-${index}`;
+
+      for (const [componentId, properties] of Object.entries(pattern.properties || {})) {
+        const component = this.#dataRegistry.get('components', componentId);
+
+        if (!component) {
+          continue; // Caught by component existence validator
+        }
+
+        const schemaErrors = this.#validateComponentProperties(
+          componentId,
+          properties,
+          component.dataSchema
+        );
+
+        if (schemaErrors.length > 0) {
+          issues.push({
+            type: 'INVALID_PROPERTY_VALUE',
+            location: { type: 'pattern', name: patternId, index },
+            componentId: componentId,
+            properties: properties,
+            schemaErrors: schemaErrors,
+            componentSource: this.#deriveComponentSource(componentId),
+            severity: 'error',
+          });
+        }
+      }
+    }
+
+    return issues;
   }
 
-  return matrix[b.length][a.length];
+  /**
+   * Derives the component source file path from the component ID
+   * Format: data/mods/{modId}/components/{componentName}.component.json
+   */
+  #deriveComponentSource(componentId) {
+    const [modId, componentName] = componentId.split(':');
+    return `data/mods/${modId}/components/${componentName}.component.json`;
+  }
+
+  /**
+   * Validates a property object against a component's dataSchema
+   * @param {string} componentId - Component identifier
+   * @param {Object} properties - Property values to validate
+   * @param {Object} dataSchema - Component dataSchema
+   * @returns {Array<Object>} Array of formatted validation errors
+   */
+  #validateComponentProperties(componentId, properties, dataSchema) {
+    const errors = [];
+
+    // Temporarily add the dataSchema to validator if not already registered
+    // This allows validation without pre-registering all component schemas
+    const schemaId = `temp:${componentId}:dataSchema`;
+
+    // Note: In practice, component dataSchemas are already registered during component loading
+    // This is a fallback for edge cases
+    try {
+      // Use the schema validator to validate properties against dataSchema
+      // The schemaValidator expects a schemaId, but we have an inline schema
+      // We'll use AJV's compile method via the validator if available
+      const result = this.#schemaValidator.validate(schemaId, properties);
+
+      if (!result.isValid && result.errors) {
+        for (const error of result.errors) {
+          errors.push(this.#formatPropertyError(componentId, properties, error, dataSchema));
+        }
+      }
+    } catch (schemaNotFoundError) {
+      // If schema isn't registered, validate inline
+      // This requires direct access to AJV which may need refactoring
+      this.#logger.warn(
+        `Component '${componentId}' dataSchema not registered. Inline validation needed.`
+      );
+      // TODO: Consider adding inline schema validation support to ISchemaValidator
+    }
+
+    return errors;
+  }
+
+  /**
+   * Formats AJV error with context and suggestions
+   * @param {string} componentId - Component identifier
+   * @param {Object} properties - Property values
+   * @param {Object} ajvError - AJV error object
+   * @param {Object} dataSchema - Component dataSchema
+   * @returns {Object} Formatted error object
+   */
+  #formatPropertyError(componentId, properties, ajvError, dataSchema) {
+    const propertyPath = ajvError.instancePath.replace(/^\//, '');
+    const propertyName = propertyPath || ajvError.params.missingProperty;
+
+    const error = {
+      property: propertyName,
+      message: ajvError.message,
+      currentValue: this.#getPropertyValue(properties, propertyPath),
+    };
+
+    // Add enum suggestions for enum validation failures
+    if (ajvError.keyword === 'enum' && ajvError.params.allowedValues) {
+      error.validValues = ajvError.params.allowedValues;
+      error.suggestion = this.#suggestClosestValue(
+        error.currentValue,
+        ajvError.params.allowedValues
+      );
+    }
+
+    // Add type information for type validation failures
+    if (ajvError.keyword === 'type') {
+      error.expectedType = ajvError.params.type;
+      error.actualType = typeof error.currentValue;
+    }
+
+    // Add required field information
+    if (ajvError.keyword === 'required') {
+      error.missingField = ajvError.params.missingProperty;
+    }
+
+    return error;
+  }
+
+  /**
+   * Gets a nested property value from an object using a path
+   * @param {Object} obj - Object to search
+   * @param {string} path - Property path (e.g., "color.primary")
+   * @returns {*} Property value
+   */
+  #getPropertyValue(obj, path) {
+    if (!path) return obj;
+    return path.split('/').reduce((current, key) => current?.[key], obj);
+  }
+
+  /**
+   * Suggests the closest matching value from a list of valid values
+   * @param {*} value - Invalid value
+   * @param {Array} validValues - List of valid values
+   * @returns {*} Closest matching valid value
+   */
+  #suggestClosestValue(value, validValues) {
+    if (typeof value !== 'string') return validValues[0];
+
+    // Simple string similarity: find shortest edit distance
+    let closest = validValues[0];
+    let minDistance = Infinity;
+
+    for (const valid of validValues) {
+      const distance = this.#levenshteinDistance(value.toLowerCase(), valid.toLowerCase());
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = valid;
+      }
+    }
+
+    return closest;
+  }
+
+  /**
+   * Calculates Levenshtein distance between two strings
+   * @param {string} a - First string
+   * @param {string} b - Second string
+   * @returns {number} Edit distance
+   */
+  #levenshteinDistance(a, b) {
+    const matrix = [];
+
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+
+    return matrix[b.length][a.length];
+  }
 }
+
+export { PropertySchemaValidationRule };
 ```
 
 ### Integration Points
 
-1. **Recipe Loader Hook**
-   - File: `src/loaders/recipeLoader.js`
+1. **Anatomy Validation Phase**
+   - File: `src/loaders/phases/anatomyValidationPhase.js`
+   - Pattern: Add as new validation rule in the Chain of Responsibility
    - Hook: After component existence validation
-   - Action: Run property schema validation, throw on errors
+   - Action: Run property schema validation, add issues to context
 
-2. **Component Registry Access**
-   - File: `src/entities/componentRegistry.js`
-   - Method: `get(componentId)` - Retrieve component with dataSchema and filePath
+2. **Data Registry Access**
+   - File: `src/data/inMemoryDataRegistry.js` (implements `IDataRegistry`)
+   - Method: `get('components', componentId)` - Retrieve component definition with dataSchema
+   - Note: Registry does NOT store file paths - component source location must be derived from component ID
 
 3. **AJV Instance**
-   - Use existing AJV instance from schema validator
-   - File: `src/validation/ajvSchemaValidator.js`
+   - Use existing AJV instance via dependency injection
+   - File: `src/validation/ajvSchemaValidator.js` (implements `ISchemaValidator`)
+   - Access: Inject `ISchemaValidator` dependency into validation rule constructor
 
 ### File Structure
 
 ```
-src/anatomy/validation/
-├── propertySchemaValidator.js  # Main validator
-├── propertyErrorFormatter.js   # Error formatting utilities
-└── validationErrors.js         # Error class definitions
+src/anatomy/validation/rules/
+└── propertySchemaValidationRule.js  # New validation rule (extends ValidationRule)
 
-tests/unit/anatomy/validation/
-├── propertySchemaValidator.test.js
-└── propertyErrorFormatter.test.js
+src/anatomy/validation/
+└── propertyErrorFormatter.js        # Error formatting utilities (if needed)
+
+tests/unit/anatomy/validation/rules/
+└── propertySchemaValidationRule.test.js
 
 tests/integration/anatomy/validation/
-└── propertyValidation.integration.test.js
+└── propertySchemaValidation.integration.test.js
 ```
+
+**Note:** Follow the existing validation rule pattern:
+- Extend `ValidationRule` base class (`src/anatomy/validation/validationRule.js`)
+- Implement `ruleId` getter (e.g., 'property-schema-validation')
+- Implement `ruleName` getter (e.g., 'Property Schema Validation')
+- Implement `shouldApply(context)` method
+- Implement `validate(context)` method returning array of issues
+- Use dependency injection for `logger`, `dataRegistry`, and `schemaValidator`
+- Add rule to `AnatomyValidationPhase` after `ComponentExistenceValidationRule`
+
+**Integration Steps:**
+1. Create `PropertySchemaValidationRule` class in `src/anatomy/validation/rules/`
+2. Register rule in DI container (add to anatomy validation registrations)
+3. Inject into `AnatomyValidationPhase` constructor
+4. Add to validation chain: `validationChain.addRule(this.#propertySchemaValidationRule);`
+
+**Reference Implementation:**
+See `ComponentExistenceValidationRule` (`src/anatomy/validation/rules/componentExistenceValidationRule.js`) for pattern to follow.
 
 ## Acceptance Criteria
 
@@ -378,15 +500,25 @@ tests/integration/anatomy/validation/
 
 ## Implementation Notes
 
-### Component Registry Requirements
+### Data Registry Requirements
 
-Components in the registry must provide:
+Components in the data registry are stored and retrieved as follows:
 ```javascript
-{
+// Storage (handled by ComponentLoader during mod loading)
+dataRegistry.store('components', 'anatomy:horned', {
   id: 'anatomy:horned',
   dataSchema: { /* AJV-compatible JSON Schema */ },
-  filePath: 'data/mods/anatomy/components/horned.component.json'
-}
+  description: '...',
+  // Note: filePath is NOT stored - derive from component ID
+});
+
+// Retrieval (in validation rule)
+const component = dataRegistry.get('components', 'anatomy:horned');
+// Returns: { id: 'anatomy:horned', dataSchema: {...}, ... }
+
+// Derive file path from component ID when needed for error messages
+const [modId, componentName] = component.id.split(':');
+const filePath = `data/mods/${modId}/components/${componentName}.component.json`;
 ```
 
 ### Error Message Template
@@ -394,10 +526,11 @@ Components in the registry must provide:
 ```
 [ERROR] Invalid component property value
 
-Context:  Recipe 'red_dragon.recipe.json', Slot 'head', Component 'anatomy:horned'
-Problem:  Property 'length' has invalid value 'vast'
-Impact:   Runtime validation will fail when entity is instantiated
-Fix:      Change property value to valid enum option
+Recipe:    anatomy:red_dragon (red_dragon.recipe.json)
+Location:  Slot 'head'
+Component: anatomy:horned
+Property:  'length'
+Problem:   Invalid enum value 'vast'
 
 Current Value:  "vast"
 Valid Values:   ["short", "medium", "long"]
@@ -405,27 +538,48 @@ Suggestion:     "long" (closest match)
 
 Component Schema: data/mods/anatomy/components/horned.component.json
 
-Example Fix:
+Example Fix in red_dragon.recipe.json:
 {
-  "properties": {
-    "anatomy:horned": {
-      "style": "crown",
-      "length": "long"  // ← Changed from "vast"
+  "slots": {
+    "head": {
+      "properties": {
+        "anatomy:horned": {
+          "style": "crown",
+          "length": "long"  // ← Changed from "vast"
+        }
+      }
     }
   }
 }
+
+Impact: Runtime validation will fail when entity is instantiated if not fixed.
 ```
 
-### AJV Integration
+**Note:** Component schema path is derived from component ID, not stored in registry.
 
-The validator reuses the existing AJV instance to ensure consistent validation:
+### Schema Validator Integration
+
+The validation rule uses the `ISchemaValidator` interface via dependency injection:
 ```javascript
-import { ajv } from '../validation/ajvSchemaValidator.js';
-
-function validatePropertySchemas(recipe, componentRegistry) {
-  return validatePropertySchemasWithAjv(recipe, componentRegistry, ajv);
+// In validation rule constructor
+constructor({ logger, dataRegistry, schemaValidator }) {
+  validateDependency(schemaValidator, 'ISchemaValidator', logger, {
+    requiredMethods: ['validate'],
+  });
+  this.#schemaValidator = schemaValidator;
 }
+
+// During validation
+const result = this.#schemaValidator.validate(schemaId, properties);
 ```
+
+**Important Note on Component DataSchemas:**
+Component dataSchemas are automatically registered during mod loading by `ComponentLoader`:
+- File: `src/loaders/componentLoader.js:75-78`
+- Schema ID format: `{modId}:{componentId}:dataSchema`
+- Example: `descriptors:length_category` dataSchema is registered as schema ID
+
+However, the current implementation may need to handle cases where dataSchemas are stored as inline schemas within component definitions rather than pre-registered schema IDs. Consider adding support for inline schema validation to `ISchemaValidator` or compiling schemas on-demand during validation.
 
 ### Performance Considerations
 
