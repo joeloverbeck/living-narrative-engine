@@ -1,78 +1,70 @@
-# MODTESDIAIMP-004: Integrate Parameter Validation into Resolvers and Test Fixtures
+# MODTESDIAIMP-004: Integrate Parameter Validation into Test Fixtures
 
 **Phase**: 1 - Parameter Validation
-**Priority**: 🔴 Critical
-**Estimated Effort**: 3 hours
-**Dependencies**: MODTESDIAIMP-001, MODTESDIAIMP-002
+**Priority**: 🟡 Medium (reduced from Critical - production code already validates)
+**Estimated Effort**: 1.5 hours (reduced from 3 hours)
+**Dependencies**: MODTESDIAIMP-001, MODTESDIAIMP-002, MODTESDIAIMP-003
+
+**⚠️ SCOPE REDUCED**: Original plan included production resolvers, but code analysis revealed they already have validation. Now focusing only on test helpers for better error messages.
 
 ---
 
 ## Overview
 
-Integrate parameter validation into scope resolvers (FilterResolver, SourceResolver) and test fixture custom scope registration to ensure consistent validation across the scope resolution system.
+⚠️ **UPDATED AFTER CODE ANALYSIS**: This workflow has been revised based on actual production code analysis.
+
+**Key Finding**: FilterResolver and SourceResolver already have comprehensive validation built-in (lines 93-138 and 75-109 respectively). Additionally, ScopeEngine.resolve() validates all parameters (AST, actorEntity, runtimeCtx) at lines 293-295 using ParameterValidator.
+
+**Revised Scope**: Focus on test fixture helpers (ModTestFixture and ScopeResolverHelpers) where adding ParameterValidator can provide better error context BEFORE calling ScopeEngine.resolve().
 
 ## Objectives
 
-- Add validation to FilterResolver.resolve()
-- Add validation to SourceResolver.resolve()
-- Add validation to ModTestFixture custom scope resolver wrapper
-- Add validation to ScopeResolverHelpers.registerCustomScope()
-- Ensure consistent error messages across all entry points
+- ~~Add validation to FilterResolver.resolve()~~ **REMOVED** - Already has comprehensive validation
+- ~~Add validation to SourceResolver.resolve()~~ **REMOVED** - Already has comprehensive validation
+- Add validation to ModTestFixture custom scope resolver wrapper for better error context
+- Add validation to ScopeResolverHelpers.registerCustomScope() for better error context
+- Provide helpful error messages when test fixtures are passed incorrect parameters
 
 ## Implementation Details
 
 ### Files to Modify
 
-1. **FilterResolver** - `src/scopeDsl/nodes/filterResolver.js`
-2. **SourceResolver** - `src/scopeDsl/nodes/sourceResolver.js`
-3. **ModTestFixture** - `tests/common/mods/ModTestFixture.js`
-4. **ScopeResolverHelpers** - `tests/common/mods/scopeResolverHelpers.js`
+1. ~~**FilterResolver** - `src/scopeDsl/nodes/filterResolver.js`~~ **REMOVED** - Already validated
+2. ~~**SourceResolver** - `src/scopeDsl/nodes/sourceResolver.js`~~ **REMOVED** - Already validated
+3. **ModTestFixture** - `tests/common/mods/ModTestFixture.js` (line 2233-2263)
+4. **ScopeResolverHelpers** - `tests/common/mods/scopeResolverHelpers.js` (line 1112-1131)
 
-### 1. FilterResolver Integration
+### ~~1. FilterResolver Integration~~ **REMOVED**
 
-**File**: `src/scopeDsl/nodes/filterResolver.js`
-**Method**: `resolve(node, ctx)` (around line 78)
+**Reason**: FilterResolver already has comprehensive validation at lines 93-138 in `src/scopeDsl/nodes/filterResolver.js`:
+- Validates actorEntity is not undefined (lines 93-108)
+- Validates actorEntity.id is valid string (lines 111-138)
+- Detects spread issues and provides helpful error messages
+- Uses errorHandler pattern for centralized error management
 
-```javascript
-import { ParameterValidator } from '../core/parameterValidator.js';
+**No changes needed** - existing validation is more thorough than ParameterValidator.
 
-resolve(node, ctx) {
-  const { actorEntity, dispatcher, trace } = ctx;
+### ~~2. SourceResolver Integration~~ **REMOVED**
 
-  // ADD VALIDATION
-  ParameterValidator.validateActorEntity(actorEntity, 'FilterResolver.resolve');
+**Reason**: SourceResolver already has comprehensive validation at lines 75-109 in `src/scopeDsl/nodes/sourceResolver.js`:
+- Validates actorEntity exists (lines 75-91)
+- Validates actorEntity.id is valid string (lines 93-109)
+- Uses errorHandler pattern for centralized error management
 
-  // Continue with existing logic
-  // ...
-}
-```
+**No changes needed** - existing validation is sufficient.
 
-### 2. SourceResolver Integration
-
-**File**: `src/scopeDsl/nodes/sourceResolver.js`
-**Method**: `resolve(node, ctx)` (around line 71)
-
-```javascript
-import { ParameterValidator } from '../core/parameterValidator.js';
-
-resolve(node, ctx) {
-  const { actorEntity, trace } = ctx;
-
-  // ADD VALIDATION
-  ParameterValidator.validateActorEntity(actorEntity, 'SourceResolver.resolve');
-
-  // Continue with existing logic
-  // ...
-}
-```
-
-### 3. ModTestFixture Custom Scope Resolver
+### 1. ModTestFixture Custom Scope Resolver
 
 **File**: `tests/common/mods/ModTestFixture.js`
-**Location**: Around line 2233 (custom resolver function)
+**Location**: Line 2233-2263 (custom resolver function in `registerCustomScope` method)
+
+**Current State**: The resolver calls `scopeEngine.resolve()` which already validates actorEntity (via ParameterValidator at ScopeEngine.resolve:293-295).
+
+**Enhancement Goal**: Add validation BEFORE the scopeEngine call to provide better error context in test fixtures with more helpful error messages specific to the test context.
 
 ```javascript
 import { ParameterValidator } from '../../../src/scopeDsl/core/parameterValidator.js';
+import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
 
 const resolver = (context) => {
   const runtimeCtx = {
@@ -85,14 +77,16 @@ const resolver = (context) => {
     // Extract actorEntity from context
     const actorEntity = context.actorEntity || context.actor || context;
 
-    // ADD VALIDATION - will throw ParameterValidationError if wrong type
-    ParameterValidator.validateActorEntity(actorEntity, 'CustomScopeResolver');
+    // ADD VALIDATION - Provides better error context in test environment
+    // Note: ScopeEngine.resolve() also validates, but this catches errors earlier
+    // with test-specific context
+    ParameterValidator.validateActorEntity(actorEntity, `CustomScopeResolver[${fullScopeName}]`);
 
     const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
     return { success: true, value: result };
   } catch (err) {
     if (err instanceof ParameterValidationError) {
-      // Enhanced error with context
+      // Enhanced error with full context for test debugging
       return {
         success: false,
         error: err.toString(),
@@ -108,114 +102,185 @@ const resolver = (context) => {
 };
 ```
 
-### 4. ScopeResolverHelpers Integration
+### 2. ScopeResolverHelpers Integration
 
 **File**: `tests/common/mods/scopeResolverHelpers.js`
-**Function**: `registerCustomScope()` (similar pattern to ModTestFixture)
+**Location**: Line 1112-1131 (resolver function in `registerCustomScope` static method)
+
+**Current State**: The resolver calls `scopeEngine.resolve()` which already validates actorEntity.
+
+**Enhancement Goal**: Add validation BEFORE the scopeEngine call, mirroring ModTestFixture pattern for consistency.
 
 ```javascript
 import { ParameterValidator } from '../../../src/scopeDsl/core/parameterValidator.js';
+import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
 
-// Add validation in custom resolver wrapper
-// Similar pattern to ModTestFixture above
+const resolver = (context) => {
+  const runtimeCtx = {
+    entityManager: testEnv.entityManager,
+    jsonLogicEval: testEnv.jsonLogic,
+    logger: testEnv.logger,
+  };
+
+  try {
+    // Extract actorEntity from context
+    const actorEntity = context.actorEntity || context.actor || context;
+
+    // ADD VALIDATION - Provides better error context in test environment
+    ParameterValidator.validateActorEntity(actorEntity, `ScopeResolverHelpers.registerCustomScope[${fullScopeName}]`);
+
+    const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
+    return { success: true, value: result };
+  } catch (err) {
+    if (err instanceof ParameterValidationError) {
+      // Enhanced error with full context for test debugging
+      return {
+        success: false,
+        error: err.toString(),
+        context: err.context,
+      };
+    }
+
+    return {
+      success: false,
+      error: `Failed to resolve scope "${fullScopeName}": ${err.message}`,
+    };
+  }
+};
 ```
 
 ## Acceptance Criteria
 
-### FilterResolver
-- ✅ Import ParameterValidator
-- ✅ Validate actorEntity at method start
-- ✅ Source location is "FilterResolver.resolve"
-- ✅ Existing logic unchanged
+### ~~FilterResolver~~ **REMOVED**
+- N/A - Already has comprehensive validation
 
-### SourceResolver
-- ✅ Import ParameterValidator
-- ✅ Validate actorEntity at method start
-- ✅ Source location is "SourceResolver.resolve"
-- ✅ Existing logic unchanged
+### ~~SourceResolver~~ **REMOVED**
+- N/A - Already has comprehensive validation
 
 ### ModTestFixture
-- ✅ Import ParameterValidator
-- ✅ Validate extracted actorEntity
-- ✅ Catch ParameterValidationError separately
-- ✅ Return error with context for validation failures
-- ✅ Source location is "CustomScopeResolver"
+- ✅ Import ParameterValidator and ParameterValidationError
+- ✅ Validate extracted actorEntity BEFORE scopeEngine.resolve() call
+- ✅ Catch ParameterValidationError separately for better error messages
+- ✅ Return error with full context for validation failures
+- ✅ Source location includes scope name: `CustomScopeResolver[${fullScopeName}]`
+- ✅ Existing logic unchanged
 
 ### ScopeResolverHelpers
-- ✅ Import ParameterValidator
-- ✅ Validate in custom scope wrapper
+- ✅ Import ParameterValidator and ParameterValidationError
+- ✅ Validate in custom scope wrapper BEFORE scopeEngine.resolve() call
 - ✅ Consistent error handling with ModTestFixture
+- ✅ Source location includes scope name: `ScopeResolverHelpers.registerCustomScope[${fullScopeName}]`
+- ✅ Existing logic unchanged
 
 ## Testing Requirements
 
 ### Unit Tests
 
-**1. FilterResolver Tests** (`tests/unit/scopeDsl/nodes/filterResolver.test.js`)
-- Throw error for invalid actorEntity
-- Throw error for context object
-- Error message includes "FilterResolver.resolve"
+**~~1. FilterResolver Tests~~** **REMOVED**
+- N/A - FilterResolver already has validation tests
 
-**2. SourceResolver Tests** (`tests/unit/scopeDsl/nodes/sourceResolver.test.js`)
-- Throw error for invalid actorEntity
-- Throw error for context object
-- Error message includes "SourceResolver.resolve"
+**~~2. SourceResolver Tests~~** **REMOVED**
+- N/A - SourceResolver already has validation tests
 
-**3. ModTestFixture Tests** (modify existing test file)
-- Custom scope resolver detects context object
-- Error includes helpful hint
-- Error context accessible in result
+**1. ModTestFixture Tests** (`tests/unit/common/mods/ModTestFixture.test.js` or new test file)
+- Custom scope resolver validates actorEntity before ScopeEngine call
+- Custom scope resolver detects context object (with actor/targets properties)
+- Custom scope resolver detects scope context (with runtimeCtx/dispatcher properties)
+- Error includes helpful hint with expected vs received
+- Error context accessible in result.context
+- Error message includes scope name in source location
+- Validation happens BEFORE ScopeEngine.resolve() is called (can verify with spy)
 
 ### Integration Tests
 
-**Test File**: `tests/integration/scopeDsl/parameterValidationIntegration.test.js` (new)
+**Test File**: `tests/integration/common/mods/customScopeValidation.test.js` (new) or add to existing integration tests
 
-1. **End-to-End Validation Flow**
-   - Test passes through ScopeEngine → Resolver chain
-   - Verify validation catches errors at appropriate layer
-   - Verify error messages maintained through call stack
+1. **ModTestFixture Custom Scope Validation**
+   - Test ModTestFixture.registerCustomScope() with invalid actorEntity
+   - Test with context object (has actor/targets) - should fail with helpful message
+   - Test with scope context (has runtimeCtx/dispatcher) - should fail with helpful message
+   - Verify error includes scope name in source location
+   - Verify error.context includes expected/received/hint/example
+   - Verify validation fails BEFORE ScopeEngine.resolve() is invoked
 
-2. **Custom Scope Resolver Validation**
-   - Test ModTestFixture.registerCustomScope() with invalid params
-   - Verify error includes "CustomScopeResolver" source
-   - Verify context object detection works
+2. **ScopeResolverHelpers Custom Scope Validation**
+   - Test ScopeResolverHelpers.registerCustomScope() with invalid actorEntity
+   - Verify consistent error handling with ModTestFixture
+   - Verify error includes scope name in source location
 
 ## Migration Guide
 
 ### For Existing Tests
 
-Most tests won't require changes as they already pass valid parameters.
+**No migration needed** - This workflow only adds validation to test helpers (ModTestFixture and ScopeResolverHelpers), not production code.
 
-Tests that **need updates**:
+Existing tests using these helpers won't be affected because:
+1. They already pass valid actorEntity parameters
+2. The validation only triggers on invalid parameters
+3. The enhancement provides better error messages if tests ARE passing wrong parameters
+
+### For New Tests
+
+When writing new tests with custom scopes, if you encounter validation errors:
+
 ```javascript
-// Before: Tests that intentionally pass invalid params
-it('handles missing actorEntity', () => {
-  const result = filterResolver.resolve(node, { actorEntity: undefined });
-  // ... expect some error
+// ❌ Wrong: Passing action context instead of entity
+const result = await fixture.resolveCustomScope('my:scope', {
+  actor: actorEntity,
+  targets: { primary: targetEntity }
 });
 
-// After: Update to expect ParameterValidationError
-it('handles missing actorEntity', () => {
-  expect(() => {
-    filterResolver.resolve(node, { actorEntity: undefined });
-  }).toThrow(ParameterValidationError);
+// ✅ Correct: Pass entity directly
+const result = await fixture.resolveCustomScope('my:scope', {
+  actorEntity: actorEntity
 });
 ```
 
 ## Performance Impact
 
-- **Per-resolver overhead**: < 0.05ms
-- **Total impact**: Negligible compared to scope evaluation
-- **Benefit**: Prevents expensive evaluation on invalid input
+**Production Code**: No performance impact - no changes to production resolvers.
+
+**Test Code**:
+- **Per-validation overhead**: < 0.05ms (only in test fixtures)
+- **Impact**: Negligible - tests already call ScopeEngine.resolve() which validates
+- **Benefit**: Better error messages during test development/debugging
+- **Note**: Validation happens twice (test fixture + ScopeEngine), but only for test code
 
 ## References
 
 - **Spec Section**: 3.1 Integration Points (lines 472-553)
 - **Related Files**:
-  - `src/scopeDsl/nodes/filterResolver.js`
-  - `src/scopeDsl/nodes/sourceResolver.js`
-  - `tests/common/mods/ModTestFixture.js`
-  - `tests/common/mods/scopeResolverHelpers.js`
+  - ~~`src/scopeDsl/nodes/filterResolver.js`~~ - Already has validation (lines 93-138)
+  - ~~`src/scopeDsl/nodes/sourceResolver.js`~~ - Already has validation (lines 75-109)
+  - `src/scopeDsl/engine.js` - Already validates at entry point (lines 293-295)
+  - `src/scopeDsl/core/parameterValidator.js` - Parameter validation logic
+  - `src/scopeDsl/errors/parameterValidationError.js` - Error class
+  - `tests/common/mods/ModTestFixture.js` - Test fixture to enhance (lines 2233-2263)
+  - `tests/common/mods/scopeResolverHelpers.js` - Test helper to enhance (lines 1112-1131)
 - **Related Tickets**:
-  - MODTESDIAIMP-001 (ParameterValidationError)
-  - MODTESDIAIMP-002 (ParameterValidator)
-  - MODTESDIAIMP-003 (ScopeEngine integration)
+  - MODTESDIAIMP-001 (ParameterValidationError) - ✅ Complete
+  - MODTESDIAIMP-002 (ParameterValidator) - ✅ Complete
+  - MODTESDIAIMP-003 (ScopeEngine integration) - ✅ Complete
+
+## Summary of Changes from Original Workflow
+
+This workflow was significantly revised after analyzing the production code:
+
+### What Changed
+1. **Removed FilterResolver integration** - Already has comprehensive validation
+2. **Removed SourceResolver integration** - Already has comprehensive validation
+3. **Narrowed scope** - Focus only on test fixtures for better error messages
+4. **Updated rationale** - Clarified that ScopeEngine already validates at entry point
+
+### Why These Changes
+- **Production code already validates**: ScopeEngine.resolve() validates all parameters (lines 293-295)
+- **Resolvers have custom validation**: FilterResolver and SourceResolver have their own validation with errorHandler
+- **Avoid redundancy**: Adding ParameterValidator to resolvers would duplicate existing validation
+- **Test-focused enhancement**: Test fixtures benefit from early validation with better context
+
+### Value Proposition
+Instead of adding redundant validation to production code, we enhance test fixtures to provide:
+- Better error messages during test development
+- Earlier failure detection in test context
+- Consistent error format across test helpers
+- Helpful hints when tests pass wrong parameters
