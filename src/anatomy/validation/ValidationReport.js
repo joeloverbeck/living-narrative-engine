@@ -156,11 +156,25 @@ export class ValidationReport {
     lines.push(`\n  [ERROR] ${error.message}`);
 
     if (error.location) {
-      lines.push(`  Location: ${error.location.type} '${error.location.name}'`);
+      if (error.location.file) {
+        lines.push(`  Location: ${error.location.type} '${error.location.file}'`);
+      } else if (error.location.name) {
+        lines.push(`  Location: ${error.location.type} '${error.location.name}'`);
+      }
     }
 
     if (error.componentId) {
       lines.push(`  Component: ${error.componentId}`);
+    }
+
+    // Enhanced details for entity load failures
+    if (error.type === 'ENTITY_LOAD_FAILURE' && error.details) {
+      if (error.details.failedComponents) {
+        lines.push(`  Failed Components: ${error.details.failedComponents.join(', ')}`);
+      }
+      if (error.details.error) {
+        lines.push(`  Error Details: ${error.details.error}`);
+      }
     }
 
     if (error.fix) {

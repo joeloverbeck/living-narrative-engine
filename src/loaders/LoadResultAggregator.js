@@ -14,6 +14,7 @@ import { deepClone } from '../utils/cloneUtils.js';
  * @property {number} count - Number of items successfully loaded.
  * @property {number} overrides - Number of items that replaced existing items.
  * @property {number} errors - Number of errors encountered.
+ * @property {Array<{file:string,error:any}>} [failures] - Optional array of failed items with details.
  */
 
 /**
@@ -81,17 +82,23 @@ export class LoadResultAggregator {
             count: result.count || 0,
             overrides: result.overrides || 0,
             errors: result.errors || 0,
+            failures: result.failures || [],
           }
-        : { count: 0, overrides: 0, errors: 0 };
+        : { count: 0, overrides: 0, errors: 0, failures: [] };
 
     this.#modResults[registryKey] = res;
 
     if (!this.#totalCounts[registryKey]) {
-      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0 };
+      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0, failures: [] };
     }
     this.#totalCounts[registryKey].count += res.count;
     this.#totalCounts[registryKey].overrides += res.overrides;
     this.#totalCounts[registryKey].errors += res.errors;
+    // Accumulate failures from all mods
+    this.#totalCounts[registryKey].failures = [
+      ...(this.#totalCounts[registryKey].failures || []),
+      ...res.failures,
+    ];
   }
 
   /**
@@ -102,12 +109,12 @@ export class LoadResultAggregator {
    */
   recordFailure(registryKey) {
     if (!this.#modResults[registryKey]) {
-      this.#modResults[registryKey] = { count: 0, overrides: 0, errors: 0 };
+      this.#modResults[registryKey] = { count: 0, overrides: 0, errors: 0, failures: [] };
     }
     this.#modResults[registryKey].errors += 1;
 
     if (!this.#totalCounts[registryKey]) {
-      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0 };
+      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0, failures: [] };
     }
     this.#totalCounts[registryKey].errors += 1;
   }

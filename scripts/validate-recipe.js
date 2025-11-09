@@ -115,22 +115,24 @@ async function createValidationContext(verbose = false) {
     if (verbose) {
       console.log(chalk.green(`✅ Loaded ${context.finalModOrder.length} mods successfully`));
     }
+
+    // Return context along with services
+    return {
+      dataRegistry,
+      anatomyBlueprintRepository,
+      schemaValidator,
+      slotGenerator,
+      loadFailures: context.totals, // Include load failures from totals
+      logger: {
+        info: verbose ? (msg) => console.log(chalk.blue(msg)) : () => {},
+        warn: (msg) => console.warn(chalk.yellow(`⚠️  ${msg}`)),
+        error: (msg, err) => console.error(chalk.red(`❌ ${msg}`), err || ''),
+        debug: verbose ? (msg) => console.log(chalk.gray(msg)) : () => {},
+      },
+    };
   } catch (error) {
     throw new Error(`Failed to load mods: ${error.message}`);
   }
-
-  return {
-    dataRegistry,
-    anatomyBlueprintRepository,
-    schemaValidator,
-    slotGenerator,
-    logger: {
-      info: verbose ? (msg) => console.log(chalk.blue(msg)) : () => {},
-      warn: (msg) => console.warn(chalk.yellow(`⚠️  ${msg}`)),
-      error: (msg, err) => console.error(chalk.red(`❌ ${msg}`), err || ''),
-      debug: verbose ? (msg) => console.log(chalk.gray(msg)) : () => {},
-    },
-  };
 }
 
 /**

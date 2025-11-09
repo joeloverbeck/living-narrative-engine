@@ -29,6 +29,7 @@ class RecipePreflightValidator {
   #schemaValidator;
   #slotGenerator;
   #logger;
+  #loadFailures;
 
   constructor({
     dataRegistry,
@@ -36,6 +37,7 @@ class RecipePreflightValidator {
     schemaValidator,
     slotGenerator,
     logger,
+    loadFailures = {},
   }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['get', 'getAll'],
@@ -63,6 +65,7 @@ class RecipePreflightValidator {
     this.#schemaValidator = schemaValidator;
     this.#slotGenerator = slotGenerator;
     this.#logger = logger;
+    this.#loadFailures = loadFailures;
   }
 
   /**
@@ -119,6 +122,12 @@ class RecipePreflightValidator {
     // 7. Part Availability (Critical - P0)
     if (!options.skipPartAvailabilityChecks) {
       await this.#checkPartAvailability(recipe, results);
+    }
+
+    // 8. Entity Definition Load Failures (Critical - P0)
+    // This check runs last to provide context for missing entity definitions
+    if (!options.skipLoadFailureChecks) {
+      this.#checkEntityDefinitionLoadFailures(results);
     }
   }
 
@@ -497,6 +506,120 @@ class RecipePreflightValidator {
 
   #countAdditionalSlots(blueprint) {
     return Object.keys(blueprint.additionalSlots || {}).length;
+  }
+
+  /**
+   * Check for entity definition load failures and provide detailed diagnostics
+   * This helps explain why entity definitions are missing from the registry
+   *
+   * @param {object} results - Validation results object
+   */
+  #checkEntityDefinitionLoadFailures(results) {
+    try {
+      const entityDefFailures = this.#loadFailures?.entityDefinitions?.failures || [];
+
+      if (entityDefFailures.length === 0) {
+        return; // No failures to report
+      }
+
+      // Parse failures to extract detailed error information
+      for (const failure of entityDefFailures) {
+        const filename = failure.file;
+        const error = failure.error;
+
+        // Extract entity ID from filename (e.g., 'foo.entity.json' -> likely 'anatomy:foo')
+        const baseId = filename.replace('.entity.json', '');
+
+        // Try to parse error message for component validation failures
+        const componentValidationMatch = error?.message?.match(
+          /Invalid components: \[(.*?)\]/
+        );
+
+        if (componentValidationMatch) {
+          const failedComponents = componentValidationMatch[1].split(', ');
+
+          // Try to extract more details about the validation errors
+          const validationDetails = this.#extractComponentValidationDetails(
+            error,
+            failedComponents
+          );
+
+          results.errors.push({
+            type: 'ENTITY_LOAD_FAILURE',
+            severity: 'error',
+            location: { type: 'entity_definition', file: filename },
+            message: `Entity definition '${baseId}' failed to load due to component validation errors`,
+            details: {
+              file: filename,
+              failedComponents,
+              error: error.message,
+              validationDetails,
+            },
+            fix: validationDetails.length > 0
+              ? `Fix validation errors:\n    ${validationDetails.map(d => `${d.component}: ${d.issue}`).join('\n    ')}`
+              : `Check component values in ${filename} for: ${failedComponents.join(', ')}`,
+          });
+        } else {
+          // Generic load failure
+          results.errors.push({
+            type: 'ENTITY_LOAD_FAILURE',
+            severity: 'error',
+            location: { type: 'entity_definition', file: filename },
+            message: `Entity definition '${baseId}' failed to load`,
+            details: {
+              file: filename,
+              error: error?.message || String(error),
+            },
+            fix: `Review ${filename} for validation errors`,
+          });
+        }
+      }
+
+      this.#logger.debug(
+        `RecipePreflightValidator: Found ${entityDefFailures.length} entity definition load failures`
+      );
+    } catch (error) {
+      this.#logger.error('Entity definition load failure check failed', error);
+      // Don't add to results - this is a diagnostic check
+    }
+  }
+
+  /**
+   * Extract detailed component validation information from error
+   *
+   * @param {Error} error - Error object
+   * @param {string[]} failedComponents - List of failed component IDs
+   * @returns {Array<{component: string, issue: string}>} Validation details
+   */
+  #extractComponentValidationDetails(error, failedComponents) {
+    const details = [];
+
+    // The error message may contain schema validation details
+    // Try to extract enum mismatches, which are common
+    const errorString = error?.message || '';
+
+    for (const componentId of failedComponents) {
+      // Look for schema validation errors in the error message
+      // Common pattern: "data/propertyName must be equal to one of the allowed values"
+      const enumErrorMatch = errorString.match(
+        new RegExp(`data/(\\w+) must be equal to one of the allowed values`, 'i')
+      );
+
+      if (enumErrorMatch) {
+        details.push({
+          component: componentId,
+          issue: `Property '${enumErrorMatch[1]}' has an invalid value. Check allowed enum values in the component schema.`,
+        });
+      } else {
+        // Generic validation failure
+        details.push({
+          component: componentId,
+          issue: 'Component validation failed. Check schema requirements.',
+        });
+      }
+    }
+
+    return details;
   }
 }
 
