@@ -2,8 +2,33 @@
 
 **Phase**: 4 - Filter Clause Breakdown
 **Priority**: 🟡 High
-**Estimated Effort**: 3 hours
-**Dependencies**: MODTESDIAIMP-013, MODTESDIAIMP-009, MODTESDIAIMP-011
+**Estimated Effort**: 2-3 hours (reduced from 3 hours based on analysis)
+**Dependencies**: MODTESDIAIMP-013 (✅ FilterClauseAnalyzer exists), MODTESDIAIMP-009 (✅ ScopeEvaluationTracer exists), MODTESDIAIMP-011 (✅ tracer integration exists)
+
+**Status**: 🔍 Workflow validated and corrected against production code (2025-11-09)
+
+---
+
+## Analysis Summary (2025-11-09)
+
+This workflow has been validated against the actual codebase. Key findings:
+
+### ✅ Already Implemented (No Work Needed)
+1. **ScopeEvaluationTracer.logFilterEvaluation()** - Already accepts `breakdown = null` parameter (line 89)
+2. **Tracer context passing** - Tracer is already passed via `runtimeCtx.tracer` to scope engine (line 339 of engine.js)
+3. **FilterResolver tracer extraction** - Already extracts tracer from context (line 86 of filterResolver.js)
+4. **FilterClauseAnalyzer** - Class exists with correct API at `src/scopeDsl/analysis/filterClauseAnalyzer.js`
+5. **ModTestFixture.scopeTracer** - Property exists and is initialized (line 749)
+6. **Basic getFilterBreakdown()** - Method exists (line 1223) but needs enhancement
+
+### ⚠️ Work Required (Actual Implementation)
+1. **FilterResolver**: Add FilterClauseAnalyzer import and pass breakdown to tracer (lines 240-251)
+2. **ScopeEvaluationTracer**: Add breakdown formatting in `#formatFilterEvaluations()` (lines 319-329)
+3. **ModTestFixture**: Enhance `getFilterBreakdown()` to add `hasBreakdown` and `clauses` fields (lines 1223-1232)
+
+### Effort Adjustment
+- **Original estimate**: 3 hours
+- **Revised estimate**: 2-3 hours (30-40% of infrastructure already exists)
 
 ---
 
@@ -30,7 +55,11 @@ Integrate FilterClauseAnalyzer into FilterResolver and ScopeEvaluationTracer to 
 
 **File**: `src/scopeDsl/nodes/filterResolver.js`
 
+**Current State**: The tracer is ALREADY being extracted from context (line 86) and `logFilterEvaluation()` is ALREADY being called (lines 243-250), but WITHOUT the breakdown parameter.
+
 #### Import FilterClauseAnalyzer
+
+**Status**: ✅ READY - The import path is correct and the class exists.
 
 ```javascript
 import { FilterClauseAnalyzer } from '../analysis/filterClauseAnalyzer.js';
@@ -38,51 +67,54 @@ import { FilterClauseAnalyzer } from '../analysis/filterClauseAnalyzer.js';
 
 #### Modify resolve() Method
 
+**Location**: Lines 240-251 (around the existing `tracer.logFilterEvaluation()` call)
+
+**Key Changes**:
+1. Add FilterClauseAnalyzer import at top of file
+2. Analyze breakdown BEFORE calling `tracer.logFilterEvaluation()`
+3. Pass breakdown as 5th parameter to `tracer.logFilterEvaluation()`
+
+**Actual Implementation Context** (lines 240-251):
 ```javascript
-resolve(node, ctx) {
-  const { actorEntity, dispatcher, trace, tracer } = ctx;
+// CURRENT CODE (needs modification):
+const evalResult = logicEval.evaluate(node.logic, evalCtx);
 
-  // ...existing validation and setup...
+// ADD: Log to tracer (in addition to existing trace logging)
+if (tracer?.isEnabled()) {
+  const entityId = typeof item === 'string' ? item : item?.id;
+  tracer.logFilterEvaluation(
+    entityId,
+    node.logic,
+    evalResult,
+    evalCtx
+    // MISSING: breakdown parameter should be added here
+  );
+}
+```
 
-  const result = new Set();
+**Required Changes**:
+```javascript
+const evalResult = logicEval.evaluate(node.logic, evalCtx);
 
-  for (const item of currentSet) {
-    const entityId = typeof item === 'string' ? item : item?.id;
+// MODIFY: Analyze filter breakdown if tracer enabled
+if (tracer?.isEnabled()) {
+  const entityId = typeof item === 'string' ? item : item?.id;
 
-    // Build evaluation context
-    const evalCtx = this.#buildEvalContext(node, ctx, entityId);
+  // ADD: Analyze breakdown before logging
+  const analysis = FilterClauseAnalyzer.analyzeFilter(
+    node.logic,
+    evalCtx,
+    logicEval
+  );
 
-    // Evaluate filter
-    const passedFilter = logicEval.evaluate(node.logic, evalCtx);
-
-    // ADD: Analyze filter breakdown if tracer enabled
-    let breakdown = null;
-    if (tracer?.isEnabled()) {
-      const analysis = FilterClauseAnalyzer.analyzeFilter(
-        node.logic,
-        evalCtx,
-        logicEval
-      );
-      breakdown = analysis.breakdown;
-
-      // Log with breakdown
-      tracer.logFilterEvaluation(
-        entityId,
-        node.logic,
-        passedFilter,
-        evalCtx,
-        breakdown
-      );
-    }
-
-    if (passedFilter) {
-      result.add(item);
-    }
-
-    // ...existing trace logging...
-  }
-
-  return result;
+  // MODIFY: Pass breakdown as 5th parameter
+  tracer.logFilterEvaluation(
+    entityId,
+    node.logic,
+    evalResult,
+    evalCtx,
+    analysis.breakdown  // ADD this parameter
+  );
 }
 ```
 
@@ -90,34 +122,40 @@ resolve(node, ctx) {
 
 **File**: `tests/common/mods/scopeEvaluationTracer.js`
 
+**Current State**: The signature ALREADY includes `breakdown = null` parameter (line 89). The method ALREADY stores breakdown in steps (line 101).
+
 #### Update logFilterEvaluation Signature
 
+**Status**: ✅ ALREADY CORRECT - No changes needed to method signature or basic storage.
+
+**Current Implementation** (lines 89-103):
 ```javascript
-/**
- * Log filter evaluation for an entity
- * @param {string} entityId - Entity being evaluated
- * @param {object} logic - JSON Logic expression
- * @param {boolean} result - Pass/fail result
- * @param {object} evalContext - Evaluation context
- * @param {object|null} breakdown - Clause breakdown analysis
- */
 logFilterEvaluation(entityId, logic, result, evalContext, breakdown = null) {
-  if (!this.#enabled) return;
+  if (!this.#enabled) {
+    return;
+  }
 
   this.#steps.push({
     timestamp: Date.now(),
     type: 'FILTER_EVALUATION',
     entityId,
-    logic: this.#serializeValue(logic),
+    logic,
     result,
-    context: this.#serializeObject(evalContext),
-    breakdown: breakdown ? this.#serializeBreakdown(breakdown) : null,
+    context: evalContext,
+    breakdown,  // ✅ ALREADY storing breakdown
   });
 }
 ```
 
+**Note**: The actual code stores raw values (not serialized). Serialization happens in the `#serializeValue()` method used by tracer internally for Set/Array types, but breakdown is stored as-is.
+
 #### Add Breakdown Serialization
 
+**Status**: ⚠️ OPTIONAL - Current code stores breakdown as-is. Serialization may be needed if breakdown contains circular references or needs normalization.
+
+**Recommendation**: Start without serialization since FilterClauseAnalyzer already produces JSON-safe output. Add serialization only if needed during testing.
+
+**If serialization is needed** (add after line 278):
 ```javascript
 /**
  * Serialize filter breakdown for storage
@@ -139,9 +177,9 @@ logFilterEvaluation(entityId, logic, result, evalContext, breakdown = null) {
     );
   } else if (breakdown.type === 'variable') {
     serialized.varName = breakdown.varName;
-    serialized.value = this.#serializeValue(breakdown.value);
+    serialized.value = breakdown.value; // Already primitive from FilterClauseAnalyzer
   } else if (breakdown.type === 'value') {
-    serialized.value = this.#serializeValue(breakdown.value);
+    serialized.value = breakdown.value; // Already primitive
   }
 
   return serialized;
@@ -150,74 +188,84 @@ logFilterEvaluation(entityId, logic, result, evalContext, breakdown = null) {
 
 #### Enhance Formatted Output
 
+**Status**: ⚠️ NEEDS MODIFICATION - Current `format()` method (lines 148-224) already has sophisticated filter evaluation formatting but does NOT include breakdown tree.
+
+**Current Implementation** (lines 162-217):
+The tracer already:
+- Groups filter evaluations properly (lines 184-188)
+- Formats pass/fail with symbols (line 320)
+- Has a sophisticated `#formatFilterEvaluations()` helper (lines 312-339)
+
+**What needs to be added**:
+- Integration of breakdown tree into `#formatFilterEvaluations()` method
+- New `#formatBreakdown()` helper method
+
+**Location to modify**: Lines 319-329 in `#formatFilterEvaluations()` method
+
+**Required Changes**:
 ```javascript
-format() {
-  if (this.#steps.length === 0) {
-    return 'No trace data available';
+// IN #formatFilterEvaluations() method (around line 319):
+for (const evaluation of evaluations) {
+  const symbol = evaluation.result ? '✓' : '✗';
+  const status = evaluation.result ? 'PASS' : 'FAIL';
+
+  lines.push(`   Entity: ${evaluation.entityId}`);
+  lines.push(`   Result: ${status} ${symbol}`);
+
+  // ADD: Format breakdown if available
+  if (evaluation.breakdown) {
+    lines.push('   Breakdown:');
+    lines.push(...this.#formatBreakdown(evaluation.breakdown, 5));
   }
 
-  let output = 'SCOPE EVALUATION TRACE:\n';
-  output += '='.repeat(80) + '\n\n';
-
-  let stepNumber = 1;
-
-  for (const step of this.#steps) {
-    if (step.type === 'RESOLVER_STEP') {
-      output += `${stepNumber}. [${step.resolver}] ${step.operation}\n`;
-      output += `   Input: ${this.#formatValue(step.input)}\n`;
-      output += `   Output: ${this.#formatValue(step.output)}\n\n`;
-      stepNumber++;
-    } else if (step.type === 'FILTER_EVALUATION') {
-      // Group filter evaluations by parent resolver step
-      // Don't increment stepNumber for individual evaluations
-      output += `   Entity: ${step.entityId}\n`;
-      output += `   Result: ${step.result ? 'PASS ✓' : 'FAIL ✗'}\n`;
-
-      // ADD: Format breakdown if available
-      if (step.breakdown) {
-        output += this.#formatBreakdown(step.breakdown, '   ');
-      }
-
-      output += '\n';
-    }
-  }
-
-  // Summary section
-  const summary = this.#calculateSummary();
-  output += '='.repeat(80) + '\n';
-  output += `Summary: ${summary.totalSteps} steps, ${summary.duration}ms, `;
-  output += `Final size: ${summary.finalOutput?.size ?? 0}\n`;
-
-  return output;
+  lines.push('');
 }
 ```
 
 #### Add Breakdown Formatting
 
+**Status**: ✅ NEW METHOD NEEDED - Add after line 368 (after `#formatBreakdown()` definition that already exists)
+
+**Note**: There is ALREADY a `#formatBreakdown()` method (lines 350-368) but it's generic. We need to enhance it or add a specialized version for filter breakdowns.
+
+**Current `#formatBreakdown()`** (lines 350-368):
+- Takes a breakdown object and recursively formats it
+- Uses indentation
+- Handles boolean values with ✓/✗ symbols
+
+**Recommendation**: The current implementation may already work! Test it first before adding a new method.
+
+**If enhancement needed**:
 ```javascript
 /**
- * Format filter breakdown tree
+ * Format filter breakdown tree for display
  * @private
+ * @param {object} breakdown - FilterClauseAnalyzer breakdown tree
+ * @param {number} indent - Indentation level (number of spaces)
+ * @returns {Array<string>} Formatted lines
  */
-#formatBreakdown(breakdown, indent = '') {
-  let output = '';
+#formatFilterBreakdown(breakdown, indent = 0) {
+  const lines = [];
+  const prefix = ' '.repeat(indent);
 
-  if (!breakdown) return output;
+  if (!breakdown) return lines;
 
   if (breakdown.type === 'operator') {
     const symbol = breakdown.result ? '✓' : '✗';
-    output += `${indent}${symbol} ${breakdown.operator}\n`;
+    lines.push(`${prefix}${symbol} ${breakdown.operator}: ${breakdown.description}`);
 
     if (breakdown.children) {
       for (const child of breakdown.children) {
-        output += this.#formatBreakdown(child, indent + '  ');
+        lines.push(...this.#formatFilterBreakdown(child, indent + 2));
       }
     }
   } else if (breakdown.type === 'variable') {
-    output += `${indent}  var("${breakdown.varName}") = ${this.#formatValue(breakdown.value)}\n`;
+    lines.push(`${prefix}  ${breakdown.description}`);
+  } else if (breakdown.type === 'value') {
+    lines.push(`${prefix}  value: ${breakdown.value}`);
   }
 
-  return output;
+  return lines;
 }
 ```
 
@@ -225,8 +273,27 @@ format() {
 
 **File**: `tests/common/mods/ModTestFixture.js`
 
+**Current State**: The `getFilterBreakdown()` method EXISTS (line 1223) but is SIMPLE - it just returns raw filter evaluations without enhanced structure.
+
 #### Update getFilterBreakdown Method
 
+**Status**: ⚠️ NEEDS ENHANCEMENT - Current method (lines 1223-1232) returns raw data. Need to add enhanced structure.
+
+**Current Implementation** (lines 1223-1232):
+```javascript
+getFilterBreakdown(entityId = null) {
+  const trace = this.scopeTracer.getTrace();
+  const filterEvals = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+
+  if (entityId) {
+    return filterEvals.find(e => e.entityId === entityId);
+  }
+
+  return filterEvals;
+}
+```
+
+**Required Enhancement** (replace lines 1223-1232):
 ```javascript
 /**
  * Get filter breakdown for last evaluation
@@ -279,29 +346,36 @@ getFilterBreakdown(entityId = null) {
 
 ## Acceptance Criteria
 
-### FilterResolver
-- ✅ FilterClauseAnalyzer imported
-- ✅ Breakdown analysis performed when tracer enabled
-- ✅ Breakdown passed to tracer.logFilterEvaluation()
-- ✅ No performance impact when tracer disabled
+### FilterResolver (`src/scopeDsl/nodes/filterResolver.js`)
+- ✅ **VERIFY**: FilterClauseAnalyzer imported at top of file
+- ✅ **MODIFY**: Breakdown analysis performed when tracer enabled (lines 240-251)
+- ✅ **MODIFY**: Breakdown passed as 5th parameter to `tracer.logFilterEvaluation()`
+- ✅ **VERIFY**: No performance impact when tracer disabled (analysis only happens inside `if (tracer?.isEnabled())` block)
 
-### ScopeEvaluationTracer
-- ✅ logFilterEvaluation() accepts breakdown parameter
-- ✅ Breakdown serialized and stored in steps
-- ✅ format() output includes breakdown tree
-- ✅ Breakdown formatted with ✓/✗ symbols
-- ✅ Indentation shows tree structure
+### ScopeEvaluationTracer (`tests/common/mods/scopeEvaluationTracer.js`)
+- ✅ **ALREADY DONE**: `logFilterEvaluation()` accepts breakdown parameter (line 89)
+- ✅ **ALREADY DONE**: Breakdown stored in steps (line 101)
+- ⚠️ **MODIFY**: `format()` output includes breakdown tree (lines 319-329 in `#formatFilterEvaluations()`)
+- ⚠️ **ADD**: Breakdown formatted with ✓/✗ symbols (use existing or add new `#formatFilterBreakdown()` method)
+- ⚠️ **ADD**: Indentation shows tree structure (recursive formatting)
 
-### ModTestFixture
-- ✅ getFilterBreakdown() returns clause analysis
-- ✅ hasBreakdown flag indicates availability
-- ✅ clauses array extracted from tree
-- ✅ Entity filtering works correctly
+### ModTestFixture (`tests/common/mods/ModTestFixture.js`)
+- ✅ **ALREADY EXISTS**: `getFilterBreakdown()` method (line 1223)
+- ⚠️ **ENHANCE**: Add `hasBreakdown` flag to return value
+- ⚠️ **ENHANCE**: Add `clauses` array extracted from tree
+- ⚠️ **ADD**: New `#extractClauses()` private method
+- ✅ **VERIFY**: Entity filtering works correctly after changes
 
 ### Backward Compatibility
-- ✅ Works when breakdown is null
-- ✅ Existing tests continue to pass
-- ✅ Formatted output readable without breakdown
+- ✅ **VERIFY**: Works when breakdown is null (tracer stores null safely)
+- ✅ **VERIFY**: Existing tests continue to pass (breakdown is optional parameter)
+- ✅ **VERIFY**: Formatted output readable without breakdown (only shows when present)
+
+### Validation Checklist
+1. Run existing tracer tests: `NODE_ENV=test npx jest tests/unit/common/mods/scopeEvaluationTracer --no-coverage`
+2. Run existing ModTestFixture tests: `NODE_ENV=test npx jest tests/unit/common/mods/ModTestFixture.tracer --no-coverage`
+3. Run scope tracing integration tests: `NODE_ENV=test npx jest tests/integration/scopeDsl/scopeTracingIntegration --no-coverage`
+4. Verify no regressions in filter resolver tests: `NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/filterResolver --no-coverage`
 
 ## Testing Requirements
 
@@ -441,12 +515,70 @@ Clauses:
     ✗ component_present: Component "positioning:sitting" is present
 ```
 
+## Implementation Recommendations
+
+### Development Sequence
+1. **Start with FilterResolver** (30 min)
+   - Add import for FilterClauseAnalyzer
+   - Modify lines 240-251 to analyze and pass breakdown
+   - Test with existing unit tests
+
+2. **Enhance ScopeEvaluationTracer** (45 min)
+   - Test if existing `#formatBreakdown()` (lines 350-368) works with FilterClauseAnalyzer output
+   - If not, add specialized `#formatFilterBreakdown()` method
+   - Modify `#formatFilterEvaluations()` to include breakdown (lines 319-329)
+   - Test with manual trace output
+
+3. **Update ModTestFixture** (30 min)
+   - Replace `getFilterBreakdown()` method (lines 1223-1232)
+   - Add `#extractClauses()` private helper
+   - Test with integration tests
+
+4. **Validation** (30-45 min)
+   - Run all validation checklist items
+   - Verify backward compatibility
+   - Test with actual mod tests
+
+### Key Technical Notes
+
+1. **Performance**: Breakdown analysis only occurs when tracer is enabled, ensuring zero overhead in production
+2. **Serialization**: May not be needed - test without it first since FilterClauseAnalyzer produces JSON-safe output
+3. **Formatting**: Existing `#formatBreakdown()` in tracer may already work - test before adding new method
+4. **Context Flow**: Tracer flows through: `ModTestFixture.scopeTracer` → `runtimeCtx.tracer` → `ctx.tracer` → `FilterResolver`
+
+### Potential Issues to Watch
+
+1. **Circular References**: FilterClauseAnalyzer should produce clean objects, but verify during testing
+2. **Large Breakdowns**: Deep filter trees may produce verbose output - consider truncation in formatting
+3. **Null Handling**: Ensure all code paths handle `breakdown = null` gracefully
+4. **Type Safety**: Verify breakdown structure matches expectations in `#extractClauses()`
+
 ## References
 
 - **Spec Section**: 4.2 Integration with FilterResolver (lines 1487-1545)
 - **Spec Section**: 4.3 Integration with Tracer (lines 1547-1607)
 - **Related Tickets**:
-  - MODTESDIAIMP-013 (FilterClauseAnalyzer class)
-  - MODTESDIAIMP-015 (Filter breakdown tests)
-  - MODTESDIAIMP-009 (ScopeEvaluationTracer)
-  - MODTESDIAIMP-011 (Tracer integration)
+  - MODTESDIAIMP-013 (✅ FilterClauseAnalyzer class - COMPLETED)
+  - MODTESDIAIMP-015 (Filter breakdown tests - PENDING)
+  - MODTESDIAIMP-009 (✅ ScopeEvaluationTracer - COMPLETED)
+  - MODTESDIAIMP-011 (✅ Tracer integration - COMPLETED)
+
+## Key Corrections Made (2025-11-09)
+
+### Infrastructure Already Present
+- ScopeEvaluationTracer accepts and stores breakdown parameter ✅
+- Tracer is passed through runtimeCtx to resolvers ✅
+- FilterResolver already extracts and uses tracer ✅
+- FilterClauseAnalyzer class fully implemented ✅
+- ModTestFixture has scopeTracer and getFilterBreakdown() ✅
+
+### Work Actually Required
+1. Import FilterClauseAnalyzer in FilterResolver
+2. Call FilterClauseAnalyzer.analyzeFilter() before logging
+3. Pass breakdown as 5th parameter to tracer.logFilterEvaluation()
+4. Add breakdown formatting to ScopeEvaluationTracer
+5. Enhance ModTestFixture.getFilterBreakdown() with hasBreakdown and clauses
+
+### Estimate Adjustment
+- **Before analysis**: 3 hours (assumed infrastructure needed building)
+- **After analysis**: 2-3 hours (30-40% of infrastructure already complete)
