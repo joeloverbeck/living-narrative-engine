@@ -242,38 +242,24 @@ describe('ScopeEngine helper methods', () => {
   });
 
   describe('resolve instrumentation and cycle detection', () => {
-    it('falls back to console.debug when logger diagnostics are unavailable', () => {
+    it('properly delegates to dispatcher with wrapped context', () => {
       const actor = { id: 'actor-1' };
       const dispatcherResolve = jest.fn(() => new Set(['actor-1']));
       const ensureInitializedSpy = jest
         .spyOn(engine, '_ensureInitialized')
         .mockReturnValue({ resolve: dispatcherResolve });
 
-      const originalDebug = console.debug;
-      const debugSpy = jest.fn();
-      console.debug = debugSpy;
+      const result = engine.resolve(
+        { type: 'Source', kind: 'actor' },
+        actor,
+        runtimeCtx
+      );
 
-      try {
-        const result = engine.resolve(
-          { type: 'Source', kind: 'actor' },
-          actor,
-          runtimeCtx
-        );
+      expect(result).toEqual(new Set(['actor-1']));
+      expect(ensureInitializedSpy).toHaveBeenCalledWith(runtimeCtx);
+      expect(dispatcherResolve).toHaveBeenCalled();
 
-        expect(result).toEqual(new Set(['actor-1']));
-        expect(debugSpy).toHaveBeenCalledWith(
-          '[DIAGNOSTIC] ScopeEngine.resolve called:',
-          expect.objectContaining({
-            astType: 'Source',
-            hasRuntimeCtx: true,
-            actorId: 'actor-1',
-          })
-        );
-        expect(dispatcherResolve).toHaveBeenCalled();
-      } finally {
-        console.debug = originalDebug;
-        ensureInitializedSpy.mockRestore();
-      }
+      ensureInitializedSpy.mockRestore();
     });
 
     it('uses scope reference keys when resolving nested scopes', () => {
