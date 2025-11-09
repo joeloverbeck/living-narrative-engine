@@ -55,9 +55,15 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
 
   beforeEach(async () => {
     // Use forAction for generic fixture initialization
+    // Include pull_penis_out_of_vagina as a supporting action so its rule is loaded
     testFixture = await ModTestFixture.forAction(
       'sex-vaginal-penetration',
-      'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+      'sex-vaginal-penetration:insert_primary_penis_into_your_vagina',
+      null,
+      null,
+      {
+        supportingActions: ['sex-vaginal-penetration:pull_penis_out_of_vagina']
+      }
     );
   });
 
@@ -101,7 +107,8 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     expect(pullOutAction).toBeDefined();
     expect(pullOutAction.targets).toBeDefined();
     expect(pullOutAction.targets.primary).toBeDefined();
-    expect(pullOutAction.targets.primary).toContain('actorA');
+    // Action discovery returns the action definition with scope, not resolved target IDs
+    expect(pullOutAction.targets.primary.scope).toBe('sex-vaginal-penetration:actors_being_fucked_vaginally_by_me');
 
     // Execute the pull out action
     await testFixture.executeAction('actorB', 'actorA', {
@@ -166,6 +173,7 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
 
     // Assert: Pull out action available again
     expect(pullOutAction).toBeDefined();
-    expect(pullOutAction.targets.primary).toContain('actorA');
+    // Action discovery returns the action definition, not resolved target IDs
+    expect(pullOutAction.targets.primary.scope).toBe('sex-vaginal-penetration:actors_being_fucked_vaginally_by_me');
   });
 });
