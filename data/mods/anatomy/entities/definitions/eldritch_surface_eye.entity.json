@@ -16,7 +16,7 @@
       "color": "varied-human-colors"
     },
     "descriptors:animation": {
-      "animation": "unblinking-independent-motion"
+      "animation": "unblinking"
     },
     "descriptors:luminosity": {
       "luminosity": "faint-glow"
