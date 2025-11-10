@@ -441,7 +441,7 @@ export function createBaseRuleEnvironment({
           }
 
           // Find all entities with positioning:allows_bending_over in the same location
-          const allEntities = Array.from(entityManager.entities.values());
+          const allEntities = Array.from(entityManager.entities);
           const availableSurfaces = allEntities.filter(entity => {
             const hasBendingComponent = entity.components?.['positioning:allows_bending_over'];
             const entityPosition = entity.components?.['core:position'];

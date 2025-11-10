@@ -38,7 +38,7 @@ describe('Park Bench Scope Resolution Integration', () => {
     // Create gateway manually like other integration tests
     gateway = {
       getEntityInstance: (id) => entityManager.getEntityInstance(id),
-      getEntities: () => Array.from(entityManager.entities.values()),
+      getEntities: () => Array.from(entityManager.entities),
       getEntitiesWithComponent: (componentTypeId) => {
         // Use the SimpleEntityManager method which handles Entity instances properly
         return entityManager.getEntitiesWithComponent(componentTypeId);

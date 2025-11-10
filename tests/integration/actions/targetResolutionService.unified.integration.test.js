@@ -17,12 +17,12 @@ import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
  */
 class TestEntityManager extends SimpleEntityManager {
   getAllComponentTypesForEntity(entityId) {
-    const entity = this.entities.get(entityId);
+    const entity = this.entitiesMap.get(entityId);
     return entity ? Object.keys(entity.components) : [];
   }
 
   getEntities() {
-    return Array.from(this.entities.values()).map((entity) => ({
+    return Array.from(this.entities).map((entity) => ({
       id: entity.id,
       components: entity.components,
     }));
@@ -30,7 +30,7 @@ class TestEntityManager extends SimpleEntityManager {
 
   getEntitiesWithComponent(componentId) {
     const matches = [];
-    for (const entity of this.entities.values()) {
+    for (const entity of this.entitiesMap.values()) {
       if (Object.prototype.hasOwnProperty.call(entity.components, componentId)) {
         matches.push({ id: entity.id, components: entity.components });
       }
@@ -87,7 +87,7 @@ class TestScopeEngine {
         const locationId = runtimeCtx.location;
         const matches = [];
 
-        for (const entity of this.entityManager.entities.values()) {
+        for (const entity of this.entityManager.entitiesMap.values()) {
           const entityLocation = entity.components['core:position']?.locationId;
           if (entityLocation === locationId) {
             if (!includeSelf && entity.id === actor.id) {

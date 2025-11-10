@@ -63,7 +63,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         return entity ? entity.hasComponent(componentType) : false;
       },
       getEntities: () => {
-        return Array.from(entityManager.entities.values());
+        return Array.from(entityManager.entities);
       }
     };
 
@@ -191,7 +191,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       const context = {
         actor: testActor,
         location: null,
-        allEntities: Array.from(entityManager.entities.values()),
+        allEntities: Array.from(entityManager.entities),
       };
       
       const result = await actionDiscoveryService.getValidActions(testActor, context);
@@ -253,7 +253,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       const context = {
         actor: dynamicActor,
         location: null,
-        allEntities: Array.from(entityManager.entities.values()),
+        allEntities: Array.from(entityManager.entities),
       };
       let result = await actionDiscoveryService.getValidActions(dynamicActor, context);
       let actions = result.actions || result.validActions || [];
@@ -325,7 +325,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       const context = {
         actor: multiActor,
         location: null,
-        allEntities: Array.from(entityManager.entities.values()),
+        allEntities: Array.from(entityManager.entities),
       };
       const result = await actionDiscoveryService.getValidActions(multiActor, context);
       const actions = result.actions || result.validActions || [];
@@ -386,7 +386,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       const context = {
         actor: nocovActor,
         location: null,
-        allEntities: Array.from(entityManager.entities.values()),
+        allEntities: Array.from(entityManager.entities),
       };
       const result = await actionDiscoveryService.getValidActions(nocovActor, context);
       const actions = result.actions || result.validActions || [];
@@ -411,7 +411,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       const context = {
         actor: emptyActor,
         location: null,
-        allEntities: Array.from(entityManager.entities.values()),
+        allEntities: Array.from(entityManager.entities),
       };
       const result = await actionDiscoveryService.getValidActions(emptyActor, context);
       const actions = result.actions || result.validActions || [];
@@ -467,7 +467,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       const context = {
         actor: partialActor,
         location: null,
-        allEntities: Array.from(entityManager.entities.values()),
+        allEntities: Array.from(entityManager.entities),
       };
       const result = await actionDiscoveryService.getValidActions(partialActor, context);
       const actions = result.actions || result.validActions || [];
@@ -524,7 +524,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       const context = {
         actor: prereqActor,
         location: null,
-        allEntities: Array.from(entityManager.entities.values()),
+        allEntities: Array.from(entityManager.entities),
       };
       let result = await actionDiscoveryService.getValidActions(prereqActor, context);
       let actions = result.actions || result.validActions || [];

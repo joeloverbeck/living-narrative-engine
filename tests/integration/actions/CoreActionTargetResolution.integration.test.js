@@ -415,7 +415,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -471,7 +471,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -516,7 +516,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -561,7 +561,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -616,7 +616,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -684,7 +684,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -730,7 +730,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -767,7 +767,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     const result = await actionDiscoveryService.getValidActions(
@@ -804,7 +804,7 @@ describe('Core Action Target Resolution Integration', () => {
     const context = {
       jsonLogicEval,
       location: entityManager.getEntityInstance('test-location-x'),
-      allEntities: Array.from(entityManager.entities.values()),
+      allEntities: Array.from(entityManager.entities),
     };
 
     // Measure resolution time

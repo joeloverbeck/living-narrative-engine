@@ -373,7 +373,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           }
         }
 
-        const currentEntities = Array.from(entityManager.entities.values()).map(
+        const currentEntities = Array.from(entityManager.entities).map(
           (e) => ({ id: e.id, components: e.components })
         );
         currentEntities.push({
@@ -673,7 +673,7 @@ describe('Anatomy Generation with Clothing Integration', () => {
           }
         }
 
-        const currentEntities = Array.from(entityManager.entities.values()).map(
+        const currentEntities = Array.from(entityManager.entities).map(
           (e) => ({ id: e.id, components: e.components })
         );
         currentEntities.push({
