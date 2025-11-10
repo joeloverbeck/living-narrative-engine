@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "descriptors:texture-validation-example",
+  "id": "descriptors:texture-with-validation",
   "description": "Example component showing validationRules usage for texture descriptors",
   "dataSchema": {
     "type": "object",
