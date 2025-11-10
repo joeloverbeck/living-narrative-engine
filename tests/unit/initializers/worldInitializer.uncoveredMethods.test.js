@@ -54,6 +54,7 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
       createEntityInstance: jest.fn(),
       batchCreateEntities: jest.fn(),
       hasBatchSupport: jest.fn().mockReturnValue(true),
+      getAllComponents: jest.fn(),
     };
 
     mockWorldContext = {};
@@ -459,6 +460,64 @@ describe('WorldInitializer - Uncovered Methods Coverage', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'WorldInitializer: Failed to create entity in batch: test:instance0',
         unknownError
+      );
+    });
+  });
+
+  describe('park bench debugging telemetry - #createInstance (Lines 715-744)', () => {
+    it('logs detailed component information for the park bench instance', async () => {
+      const worldName = 'p_erotica:world';
+      const parkBenchInstanceId = 'p_erotica:park_bench_instance';
+      const componentOverrides = {
+        'core:position': { x: 42, y: 13 },
+        'positioning:allows_sitting': { spots: [1, 2, 3] },
+      };
+
+      mockRepository.getWorld.mockReturnValue({
+        instances: [{ instanceId: parkBenchInstanceId }],
+      });
+      mockRepository.getEntityInstanceDefinition.mockReturnValue({
+        definitionId: 'definitions:park_bench',
+        componentOverrides,
+      });
+
+      mockEntityManager.createEntityInstance.mockResolvedValue({
+        id: 'entity:park-bench',
+        instanceId: parkBenchInstanceId,
+        definitionId: 'definitions:park_bench',
+      });
+
+      const componentSnapshot = {
+        'core:position': { x: 42, y: 13 },
+        'positioning:allows_sitting': { spots: [1, 2, 3] },
+        'aesthetics:color': { value: 'mahogany' },
+      };
+      mockEntityManager.getAllComponents.mockReturnValue(componentSnapshot);
+
+      await worldInitializer.initializeWorldEntities(worldName);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `[DEBUG] Creating park bench instance with definitionId: definitions:park_bench, overrides:`,
+        JSON.stringify(componentOverrides, null, 2)
+      );
+
+      expect(mockEntityManager.getAllComponents).toHaveBeenCalledWith(
+        parkBenchInstanceId
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `[DEBUG] Park bench created successfully. Components:`,
+        expect.stringContaining('"core:position"')
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `[DEBUG] Park bench position:`,
+        expect.stringContaining('"x": 42')
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `[DEBUG] Park bench sitting spots:`,
+        expect.stringContaining('"spots"')
       );
     });
   });
