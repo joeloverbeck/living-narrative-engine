@@ -387,66 +387,74 @@ function toHaveComponentData(received, componentType, expectedData) {
 }
 
 /**
- * Checks if discovered actions array contains a specific action
+ * Checks if an action array contains a specific action with optional property matching
  *
- * @param {Array} received - Actions array from discoverActions
- * @param {string} expectedActionId - Action ID to find (e.g., 'patrol:travel_through_dimensions')
- * @param {object} [options] - Optional match criteria
- * @param {string} [options.primaryTargetId] - Expected primary target ID
+ * @param {Array} received - Actions array
+ * @param {string} actionId - Action ID to find
+ * @param {object} [properties] - Optional properties to match (e.g., {primaryTargetId: 'entity1'})
  * @returns {{pass: boolean, message: Function}} Jest matcher result
- * @example expect(actions).toContainAction('patrol:travel_through_dimensions')
- * @example expect(actions).toContainAction('patrol:travel_through_dimensions', { primaryTargetId: 'dimension-1' })
+ * @example expect(actions).toContainAction('items:give_item', { primaryTargetId: 'item1' })
  */
-function toContainAction(received, expectedActionId, options = {}) {
+function toContainAction(received, actionId, properties = {}) {
   const { printReceived, printExpected, matcherHint } = this.utils;
 
   if (!Array.isArray(received)) {
     throw new Error('toContainAction: received must be an actions array');
   }
 
-  const { primaryTargetId } = options;
+  const matchingActions = received.filter((action) => action.id === actionId);
 
-  // Find matching actions
-  let matchingActions = received.filter((action) => action.id === expectedActionId);
-
-  // If primaryTargetId is specified, further filter by target
-  if (primaryTargetId !== undefined && matchingActions.length > 0) {
-    matchingActions = matchingActions.filter(
-      (action) => action.primaryTargetId === primaryTargetId
-    );
-  }
-
-  const pass = matchingActions.length > 0;
-
-  if (pass) {
+  if (matchingActions.length === 0) {
     return {
       message: () =>
-        matcherHint('.not.toContainAction', 'actions', printExpected(expectedActionId)) +
+        matcherHint('.toContainAction', 'actions', printExpected(actionId)) +
         '\n\n' +
-        'Expected actions NOT to contain:\n' +
-        `  ${printExpected(expectedActionId)}\n` +
-        (primaryTargetId ? `  with primaryTargetId: ${printExpected(primaryTargetId)}\n` : '') +
-        '\nBut it was found in the actions array',
+        `Expected actions array to contain action ${printExpected(actionId)}\n` +
+        `But it was not found\n\n` +
+        `Actions in array: ${printReceived(received.map((a) => a.id))}`,
+      pass: false,
+    };
+  }
+
+  // If no properties specified, just check for existence
+  if (Object.keys(properties).length === 0) {
+    return {
+      message: () =>
+        matcherHint('.not.toContainAction', 'actions', printExpected(actionId)) +
+        '\n\n' +
+        `Expected actions array NOT to contain action ${printExpected(actionId)}\n` +
+        `But it was found`,
       pass: true,
     };
   }
 
-  // Build detailed failure message
-  const actionIds = received.map((a) => a.id);
-  const failureDetails =
-    '\nExpected action: ' +
-    printExpected(expectedActionId) +
-    (primaryTargetId ? `\nWith primaryTargetId: ${printExpected(primaryTargetId)}` : '') +
-    '\n\nAvailable actions: ' +
-    printReceived(actionIds.length > 0 ? actionIds.join(', ') : '(none)') +
-    '\n';
+  // Check if any matching action has the specified properties
+  const actionWithProperties = matchingActions.find((action) => {
+    return Object.keys(properties).every((key) => {
+      return this.equals(action[key], properties[key]);
+    });
+  });
+
+  if (actionWithProperties) {
+    return {
+      message: () =>
+        matcherHint('.not.toContainAction', 'actions', '') +
+        '\n\n' +
+        `Expected actions array NOT to contain action ${printExpected(actionId)} with properties:\n` +
+        `  ${printExpected(properties)}\n` +
+        `But it was found`,
+      pass: true,
+    };
+  }
 
   return {
     message: () =>
-      matcherHint('.toContainAction', 'actions', printExpected(expectedActionId)) +
+      matcherHint('.toContainAction', 'actions', '') +
       '\n\n' +
-      'Expected actions to contain:' +
-      failureDetails,
+      `Expected actions array to contain action ${printExpected(actionId)} with properties:\n` +
+      `  ${printExpected(properties)}\n` +
+      `But no matching action was found\n\n` +
+      `Matching actions found: ${printReceived(matchingActions.map((a) => ({ id: a.id, ...Object.fromEntries(Object.keys(properties).map((k) => [k, a[k]])) })))}`,
     pass: false,
   };
 }

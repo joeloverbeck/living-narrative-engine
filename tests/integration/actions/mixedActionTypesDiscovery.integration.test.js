@@ -4,7 +4,7 @@
  * discovered and have correct structure when available simultaneously in the same pipeline.
  *
  * Test Strategy - Uses items mod exclusively:
- * - Single-target actions: examine_item, drop_item, pick_up_item, open_container
+ * - Single-target actions: examine_owned_item, drop_item, pick_up_item, open_container
  * - Multi-target actions: give_item, take_from_container
  *
  * Bug scenario: When both action types are available, the pipeline may fall back to
@@ -30,11 +30,11 @@ describe('Mixed Action Types Discovery - Integration', () => {
   beforeEach(async () => {
     // Create a test fixture for the items mod
     // This mod contains both single-target and multi-target actions:
-    // - Single-target: examine_item, drop_item, pick_up_item, open_container
+    // - Single-target: examine_owned_item, drop_item, pick_up_item, open_container
     // - Multi-target: give_item, take_from_container
     testFixture = await ModTestFixture.forAction(
       'items',
-      'items:examine_item'
+      'items:examine_owned_item'
     );
 
     // Use specific entity IDs for action discovery
@@ -172,18 +172,18 @@ describe('Mixed Action Types Discovery - Integration', () => {
     it('should discover single-target and multi-target actions when conditions are met', async () => {
       // Debug: Check loaded action definitions
       const actionRepository = testFixture.testEnv.actionRepository;
-      const examineAction = actionRepository ? actionRepository.getActionDefinition('items:examine_item') : null;
+      const examineAction = actionRepository ? actionRepository.getActionDefinition('items:examine_owned_item') : null;
 
       console.log('\n=== ACTION DEFINITION DEBUG ===');
       console.log('Action repository exists:', !!actionRepository);
-      console.log('examine_item definition exists:', !!examineAction);
+      console.log('examine_owned_item definition exists:', !!examineAction);
       if (examineAction) {
-        console.log('examine_item targets:', examineAction.targets);
-        console.log('examine_item required_components:', examineAction.required_components);
-        console.log('examine_item forbidden_components:', examineAction.forbidden_components);
-        console.log('examine_item prerequisites:', examineAction.prerequisites);
+        console.log('examine_owned_item targets:', examineAction.targets);
+        console.log('examine_owned_item required_components:', examineAction.required_components);
+        console.log('examine_owned_item forbidden_components:', examineAction.forbidden_components);
+        console.log('examine_owned_item prerequisites:', examineAction.prerequisites);
       } else {
-        console.log('examine_item action definition NOT LOADED');
+        console.log('examine_owned_item action definition NOT LOADED');
         if (actionRepository) {
           const allActions = actionRepository.getAllActionDefinitions();
           console.log('All loaded actions:', allActions.map(a => a.id));
@@ -201,18 +201,18 @@ describe('Mixed Action Types Discovery - Integration', () => {
       console.log('DEBUG discovered actions:', actionIds);
 
       // Should have both single-target and multi-target action types
-      expect(actionIds).toContain('items:examine_item'); // Single-target
+      expect(actionIds).toContain('items:examine_owned_item'); // Single-target
       expect(actionIds).toContain('items:give_item'); // Multi-target
       expect(actionIds).toContain('items:take_from_container'); // Multi-target
 
       // Count each action type
       const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_item'
+        (a) => a.id === 'items:examine_owned_item'
       );
 
       // Debug: Check examine_item action structure after discovery
-      console.log('\n=== EXAMINE_ITEM AFTER DISCOVERY ===');
-      console.log('examine_item count:', examineActions.length);
+      console.log('\n=== EXAMINE_OWNED_ITEM AFTER DISCOVERY ===');
+      console.log('examine_owned_item count:', examineActions.length);
       if (examineActions.length > 0) {
         const examineAction = examineActions[0];
         console.log('Has targets object:', !!examineAction.targets);
@@ -221,7 +221,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
         console.log('targets.primary.scope:', examineAction.targets?.primary?.scope);
         console.log('Template:', examineAction.template);
       } else {
-        console.log('examine_item NOT FOUND in discovered actions');
+        console.log('examine_owned_item NOT FOUND in discovered actions');
       }
       const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
@@ -233,33 +233,33 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(takeActions.length).toBeGreaterThan(0);
 
       console.log('✅ All action types discovered successfully');
-      console.log(`  - examine_item (single-target): ${examineActions.length}`);
+      console.log(`  - examine_owned_item (single-target): ${examineActions.length}`);
       console.log(`  - give_item (multi-target): ${giveActions.length}`);
       console.log(
         `  - take_from_container (multi-target): ${takeActions.length}`
       );
     });
 
-    it('should have examine_item action definition in mixed action context', async () => {
+    it('should have examine_owned_item action definition in mixed action context', async () => {
       const actions = testFixture.discoverActions(actorId);
 
       expect(Array.isArray(actions)).toBe(true);
 
       const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_item'
+        (a) => a.id === 'items:examine_owned_item'
       );
 
       expect(examineActions.length).toBeGreaterThan(0);
 
       // Check action definition properties (unformatted actions)
       for (const action of examineActions) {
-        expect(action.id).toBe('items:examine_item');
+        expect(action.id).toBe('items:examine_owned_item');
         expect(action.template).toBeDefined();
         expect(action.template).toBe('examine {item}');
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined();
 
-        console.log(`  ✅ examine_item action definition found`);
+        console.log(`  ✅ examine_owned_item action definition found`);
       }
     });
 
@@ -316,7 +316,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       // Check for duplicates in each action type
-      const actionTypes = ['items:examine_item', 'items:give_item', 'items:take_from_container'];
+      const actionTypes = ['items:examine_owned_item', 'items:give_item', 'items:take_from_container'];
 
       for (const actionType of actionTypes) {
         const typeActions = actions.filter((a) => a.id === actionType);
@@ -434,7 +434,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_item'
+        (a) => a.id === 'items:examine_owned_item'
       );
       const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
@@ -448,9 +448,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       // Examine actions should have proper structure
       for (const action of examineActions) {
-        expect(action.id).toBe('items:examine_item');
+        expect(action.id).toBe('items:examine_owned_item');
         expect(action.template).toBe('examine {item}');
-        console.log(`  ✅ Single-target only: examine_item found`);
+        console.log(`  ✅ Single-target only: examine_owned_item found`);
       }
     });
 
@@ -466,7 +466,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_item'
+        (a) => a.id === 'items:examine_owned_item'
       );
       const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
@@ -550,7 +550,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const examineActions = actions.filter(
-        (a) => a.id === 'items:examine_item'
+        (a) => a.id === 'items:examine_owned_item'
       );
       const giveActions = actions.filter((a) => a.id === 'items:give_item');
       const takeActions = actions.filter(
@@ -638,7 +638,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       const relevantActions = actions.filter(
         (a) =>
-          a.id === 'items:examine_item' ||
+          a.id === 'items:examine_owned_item' ||
           a.id === 'items:give_item' ||
           a.id === 'items:take_from_container'
       );
@@ -651,7 +651,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
         expect(action.template).toBeDefined();
 
         // Templates should use proper placeholder syntax
-        if (action.id === 'items:examine_item') {
+        if (action.id === 'items:examine_owned_item') {
           expect(action.template).toBe('examine {item}');
         } else if (action.id === 'items:give_item') {
           expect(action.template).toBe('give {item} to {recipient}');
@@ -669,7 +669,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const actionTypes = [
-        'items:examine_item',
+        'items:examine_owned_item',
         'items:give_item',
         'items:take_from_container',
       ];

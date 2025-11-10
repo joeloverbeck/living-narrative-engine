@@ -119,7 +119,10 @@ describe('RecipePreflightValidator - Integration', () => {
       expect(report).toBeInstanceOf(ValidationReport);
       expect(report.isValid).toBe(true);
       expect(report.errors.length).toBe(0);
-      expect(report.warnings.length).toBe(0);
+
+      // The recipe is not referenced by any entity, so expect the RECIPE_UNUSED warning
+      expect(report.warnings.length).toBe(1);
+      expect(report.warnings[0].type).toBe('RECIPE_UNUSED');
       expect(report.hasSuggestions).toBe(false);
     });
 

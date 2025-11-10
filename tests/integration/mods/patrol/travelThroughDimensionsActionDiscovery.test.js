@@ -60,7 +60,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       });
 
       // Add exit with blocker to perimeter
-      fixture.modifyComponent(perimeterId, 'movement:exits', [
+      await await fixture.modifyComponent(perimeterId, 'movement:exits', [
         {
           direction: 'through the dimensional rift',
           target: dimensionId,
@@ -96,7 +96,7 @@ describe('travel_through_dimensions Action Discovery', () => {
     });
 
     it('should NOT discover travel_through_dimensions for humans', async () => {
-      const { perimeterId } = createDimensionalScenario(fixture);
+      const { perimeterId } = await createDimensionalScenario(fixture);
 
       // Create human without dimensional travel component
       const humanId = fixture.createEntity({
@@ -144,7 +144,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       });
 
       // Add unblocked exit
-      fixture.modifyComponent(locationId, 'movement:exits', [
+      await fixture.modifyComponent(locationId, 'movement:exits', [
         {
           direction: 'north',
           target: targetId,
@@ -180,7 +180,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
   describe('Go Action Exclusion', () => {
     it('should NOT discover go action for dimensional exits', async () => {
-      const { perimeterId, dimensionId } = createDimensionalScenario(fixture);
+      const { perimeterId, dimensionId } = await createDimensionalScenario(fixture);
 
       const humanId = fixture.createEntity({
         id: 'test-human-go-exclusion',
@@ -206,7 +206,7 @@ describe('travel_through_dimensions Action Discovery', () => {
     });
 
     it('should still discover go action for unblocked exits', async () => {
-      const scenario = createMixedExitScenario(fixture);
+      const scenario = await createMixedExitScenario(fixture);
 
       const actions = await fixture.discoverActions(scenario.humanId);
 
@@ -227,7 +227,7 @@ describe('travel_through_dimensions Action Discovery', () => {
  * @param {object} fixture - Test fixture instance
  * @returns {object} Scenario with perimeterId, dimensionId, and blockerId
  */
-function createDimensionalScenario(fixture) {
+async function createDimensionalScenario(fixture) {
   const perimeterId = fixture.createEntity({
     id: 'helper-perimeter',
     name: 'perimeter of rip in reality',
@@ -246,7 +246,7 @@ function createDimensionalScenario(fixture) {
     components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
   });
 
-  fixture.modifyComponent(perimeterId, 'movement:exits', [
+  await fixture.modifyComponent(perimeterId, 'movement:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,
@@ -263,7 +263,7 @@ function createDimensionalScenario(fixture) {
  * @param {object} fixture - Test fixture instance
  * @returns {object} Scenario with locations and actors
  */
-function createMixedExitScenario(fixture) {
+async function createMixedExitScenario(fixture) {
   const startLocationId = fixture.createEntity({
     id: 'helper-start',
     name: 'start location',
@@ -288,7 +288,7 @@ function createMixedExitScenario(fixture) {
     components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
   });
 
-  fixture.modifyComponent(startLocationId, 'movement:exits', [
+  await fixture.modifyComponent(startLocationId, 'movement:exits', [
     {
       direction: 'north',
       target: normalRoomId,
