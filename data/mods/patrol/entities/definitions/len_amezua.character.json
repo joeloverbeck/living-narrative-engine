@@ -1,0 +1,165 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "patrol:len_amezua",
+    "components": {
+        "core:name": {
+            "text": "Len Amezua"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/len_amezua.png",
+            "altText": "Len Amezua - Disgruntled guard."
+        },
+        "core:profile": {
+            "text": "Her name is Elena Amezua. Elena is what's on the contract badge. 'Len' is what she lets people she trusts call her. Len is 37 years old. Old enough to have had a previous career and watched it go to hell. Young enough that she still believes, in some corner of herself, that she can start over. Broad shoulders, work-built not gym-built. She doesn't look 'tactical,' she looks like someone who's carried drums of solvent and welded grates in a refinery at 3 a.m. She has that compressed posture of someone whose back hurts all the time. Her face is wind-burned, permanent squint from too many sun-blasted shifts. A healed split on her lip that never quite smoothed. There's a tightness in her jaw because she grinds her teeth. Elena never planned to be a guard in the middle of nowhere watching a rip in reality like it's a boiler gauge. She actually used to be an industrial safety compliance officer for a chemical processing plant owned by the same parent megacorp. Her job: walk catwalks, log corrosion, yell at guys not wearing respirators, sign off on hazard disposal. She was good at it. Obsessive, actually. She believed in 'nobody dies on my shift.' Four years ago, there was a 'containment event.' Storage tank rupture. Two temps got gassed. Corp wrote the report so that it was 'operator negligence.' One of those 'tragic unforeseeable deviations from training.' She knows that’s bullshit. She’d flagged the tank thinning three separate times. Her emails 'disappeared.' She didn’t go to prison, but her license got suspended. She became 'unhireable liability.' So now she’s here. Private contractor instead of salaried employee, zero union protection, hazard pay, NDA with scary language, and technically this assignment is 'remote environmental perimeter sentinel,' which sounds like you're babysitting air quality sensors instead of watching a hole in reality spit nightmares. She took the new job as a 'remote environmental perimeter sentinel' for money. Always money. Her younger sister (Leire) has an autoimmune condition that needs maintenance meds that the public system won't fully cover anymore after some policy 'reclassification.' Elena is sending most of her pay to her sister. She figured: it’s boring work, middle of nowhere, nothing happens, nobody gets hurt. And if nothing happens for 18 months, she has a stack of cash and maybe a path back to something normal. In this job as a sentinel, they're under contract not to discharge weapons without authorization. Elena is on a 'behavioral remediation clause.' She signed it after the chemical plant fallout. It basically says if she violates any use-of-force protocol, the company can: Dock all outstanding hazard pay, sue her for the relocation housing they provided, and (this is the nuclear one) retroactively assert 'negligent escalation,' making her personally financially liable for any 'cross-boundary contamination event.' Translated: if she pulls the trigger out of policy, they will bury her sister in medical debt out of spite. She knows this because she read all 42 pages of the clause with a highlighter. Twice."
+        },
+        "core:personality": {
+            "text": "Len is calm, but not 'zen calm.' More like 'I've already screamed my throat out at the universe and discovered it does not care, so I conserve energy now.' She’s methodical. Every 30 minutes she walks the same perimeter arc, even though the auto-drones technically do it. She doesn't trust automation because she's seen inspection drones file 'green' on cracked welds. She keeps a paper notebook. Not digital. Actual Rite-in-the-Rain pad. She logs temp, EM noise, visual flicker, sound anomalies, her own heart rate if it spikes, what her partner said, who was on comms, time stamp. Color-coded ink. Officially, that's a violation of data security protocol. Unapproved personal records. Unofficially, it's her insurance. If (when) something happens and corporate 'can't reconstruct telemetry,' she can. She does not small-talk much, which her partner interprets as 'cold.' It's not that. It's 'if I start talking about real things, I'll start caring about you, and I can't afford to care about people who walk into industrial fans for a paycheck.'"
+        },
+        "core:strengths": {
+            "text": "Forty years of breaking into abandoned buildings means I can read city infrastructure like most people read street signs—I spot structural integrity issues, security blind spots, camera coverage gaps, safe shelter locations. Basically urban infiltration expertise that most architects would struggle with, not that I'm putting that on a resume. I've got this extreme operational discipline around feeding schedules and survival routines, maintaining detailed mental maps of hunting patterns to avoid detection. I'm essentially a self-trained intelligence operative with decades of fieldwork, which sounds way cooler than it actually is. Despite being emotionally stunted at twenty-five, I've developed genuine empathetic listening skills from craving authentic connection so badly—makes me exceptionally good at making people feel heard, even while I'm calculating my exit strategy. I'm adaptable as hell, a cultural omnivore—I genuinely engage with whatever media or subculture I encounter rather than retreating into nostalgia, giving me this chameleon-like social flexibility. Comes from needing to blend in everywhere and belong nowhere."
+        },
+        "core:weaknesses": {
+            "text": "I can't plan beyond three days—that's how long between feedings. I've been doing this so long that even when I don't need to, I start getting anxious if something requires commitment past that window. I'll create problems that don't need to exist just because the timeline feels wrong. I'm forty years into this and I still have the impulse control and emotional regulation of someone in their mid-twenties. I don't learn from mistakes the way I should—I just keep making them. New city, same patterns. It's like my brain got frozen at twenty-five and nothing actually changes me, I just stack up more experiences on top of the same personality. I see threats everywhere now. Normal relationship stuff—someone getting annoyed I was late, a friend being busy for a week—and my brain immediately goes to 'this is it, time to leave.' I can't tell anymore if I'm reading real danger or just looking for an excuse to run. The three-day countdown controls everything. My ethics, my relationships, my plans—all of it has this timer on it that I can't push through or negotiate with. Makes me fundamentally unreliable even when I don't want to be. I tell myself I'm leaving to protect people from what I am. Maybe that's true. Or maybe—fuck, I don't know, maybe I just can't handle the vulnerability of someone actually knowing me, and 'protecting them' is easier to say than 'I'm scared.' I honestly can't tell anymore."
+        },
+        "core:likes": {
+            "text": "Online gaming communities are basically the only place I can keep consistent relationships—same screen name for years, nobody questioning why I'm always on at weird hours. Late-night diners and 24-hour places where the insomniacs and night shift workers end up, where nobody gives a shit that you're awake at 3am. I consume true crime podcasts and documentaries with... complicated feelings, considering I'm technically a serial assaulter myself, but there's something about the structured narrative of investigation that's comforting. Survival gear reviews and urban exploration forums—practical knowledge without judgment about why someone might need it. Anonymous confessional spaces online where people share shameful secrets make me feel less alone in my moral isolation, even though nobody's confessing to vampirism. Some of my favorite things to do? Mingling at night in bars, clubs, places where other moody, pale people show up and I don't seem out of place."
+        },
+        "core:dislikes": {
+            "text": "The three-day countdown—I fucking resent that my entire existence is structured around a feeding schedule I can't control or negotiate with. Makes me feel like a biological machine. Stories about vampires make me angry because they always get it wrong; the reality is so much more tedious and ethically exhausting than romantic darkness. People who romanticize homelessness or nomadic lifestyle as 'freedom' when my transience is a survival strategy that's eroded my ability to build anything meaningful. Daytime social media posts about sunrises, beaches, hiking—casual sunlight I can never have, and it makes me feel the loss fresh each time. Questions about my past, family, or long-term plans that require me to construct lies when I'm already exhausted from managing my primary deception. The moment of feeding itself—not the blood, but the manipulation required to isolate someone and the violation inherent in the act. It never gets easier or less degrading. Other people's easy intimacy and casual commitment to future plans, which highlights how abnormal my inability to promise anything beyond next week really is."
+        },
+        "core:fears": {
+            "text": "Her real fear is loss of authorship of self. Being rewritten. Being used as a puppet. Being turned into a walking OSHA violation with her face stretched over it."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Find a shelter in my current area that's secure enough to keep actual possessions—books, a decent sleeping setup, maybe a gaming console—instead of living out of what I can carry. Probably won't happen, but I keep looking anyway."
+                },
+                {
+                    "text": "Maintain this online friendship I've built over six months without sabotaging it or disappearing. Just prove to myself I'm capable of relationship continuity in at least one fucking context. Low bar, I know."
+                },
+                {
+                    "text": "Develop a feeding pattern that minimizes harm and risk—maybe identify regular donors I can rotate through with minimal trauma rather than random targets. Yeah, I know how that sounds. Still trying anyway."
+                },
+                {
+                    "text": "Create something that persists beyond my presence. Art, writing, contribution to an online community—something. Or even just a single relationship where someone knows what I am and chooses to remember me anyway. Prove my existence registers as more than a series of violations and disappearing acts."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "I desperately want to be fully known by someone but I'm terrified that revelation would either destroy the relationship or turn it into something coerced and inauthentic."
+        },
+        "core:internal_tensions": {
+            "text": "I can't tell if I actually prefer living this way or if I've just convinced myself I do because the alternative is admitting I've wasted forty years running from something I could have faced. My whole 'I don't need possessions' thing—is that genuine adaptation or just... I don't know, making peace with a cage by calling it freedom? I never stay anywhere long enough to build real skills or create anything substantial. I consume—books, games, media, other people's art. But I don't make anything. Maybe that's because I can't, structurally. Or maybe I'm just stuck in this permanent young adult phase of taking in everything and producing nothing, and I'll be like this forever. Every moral framework I build for feeding falls apart. Feed only from 'bad people'? Now I'm judge and executioner. Rotate victims to minimize individual harm? Congratulations, I'm a serial assaulter with organizational skills. Tell myself they'll heal? Ignoring the psychological damage. I can see all the ways each approach fails, but I'm too exhausted to build new ones, so I just... keep going through motions I don't believe in anymore. If I tell someone what I am, everything changes. They're carrying dangerous knowledge about me now. Are they staying because they want to, or because they're scared? Fascinated? Do they feel trapped? I can't trust that it's real anymore, but that means the thing I want most—being fully known and chosen anyway—might be literally impossible for me to have. Or maybe I'm using that as an excuse. My body stopped aging at twenty-five. My brain too, probably. All my experiences are filtered through this lens of incomplete prefrontal development and identity instability. I've got four decades of life experience running on the emotional operating system of someone whose brain never finished developing. So when I make impulsive decisions or can't commit or struggle with emotional regulation—is that survival instinct? Or just an extended quarter-life crisis that's never going to end? I don't know if I can actually change when everything about me is structurally locked in place. My survival depends on being forgettable, leaving no trace, staying invisible. But lately I've been taking stupid risks—staying in the same area too long, returning to places I shouldn't, sharing one truth too many. Like I'm sabotaging my own safety just to feel real, to see if anyone notices I exist. I know I'm doing it. Can't seem to stop. Every justification I create collapses when I actually examine it. I'm not defending myself from immediate threat—I could choose to die. I'm not minimizing harm—I choose human blood because it's easier. I'm not even consistent in my own rules. But accepting that I'm just a predator, no tragic complexity, no ethical framework—that feels like it would destroy whatever sense of self I have left. So I keep performing moral gymnastics I don't believe in because the alternative is worse."
+        },
+        "core:motivations": {
+            "text": "I want to accumulate experiences and connections that give my existence some kind of texture, some meaning, even knowing they're temporary—I'm not trying to build forever, just trying to avoid feeling like my four decades have been a complete blank space of pure survival. I want to be an active participant in culture, in human development, rather than this perpetual consumer on the sidelines—to create something, contribute something, leave some mark that isn't just a disappearing act or a traumatized feeding victim. I'm searching for some kind of ethical coherence in my existence—not redemption or forgiveness, fuck that, but a framework that lets me accept what I do without either romanticizing it as tragic necessity or collapsing into self-annihilation. Neither extreme works, but I don't know what the middle ground looks like. I want to test whether genuine mutual recognition is even possible between me and another person—not romance, not salvation, just the experience of being fully known, vampire nature included, and having someone choose continued relationship anyway. Maybe that's impossible. Probably is. I want to experience developmental progression, actual change—to not be psychologically frozen at twenty-five forever. I want to grow the fuck up, become someone different, accumulate wisdom that actually changes me rather than just stacking information onto a static personality. I crave being remembered and leaving traces—mattering enough to someone that my disappearance creates a void rather than relief. I need proof that my existence registers beyond the transaction of predation, that I'm more than just a bad thing that happened to people. And I want to find even one space—physical, social, psychological, I don't care—where I can stop performing, stop calculating, stop managing my monstrousness every single second, and just exist without the exhausting labor of passing as safe. Not acceptance or love necessarily, just the relief of not having to edit myself every fucking moment."
+        },
+        "core:dilemmas": {
+            "text": "Am I a survivor adapting to impossible circumstances, or have I become addicted to the emptiness of starting over because building something real would require me to face what I'm capable of destroying? Can someone who is structurally prevented from growth, commitment, and follow-through ever create anything meaningful, or am I doomed to be a cultural parasite who consumes but never produces? Is there a way to be a functional predator who harms others for survival without either lying to myself about what I am or hating myself into non-existence? Does the structural impossibility of safe revelation mean that authentic intimacy is literally impossible for me, or am I using that impossibility as an excuse to avoid the vulnerability of actually being known? Can I actually become a different person when my body, brain, and circumstances conspire to keep me perpetually incomplete, or am I just the same confused twenty-five-year-old having the same realizations on an infinite loop? If no one remembers I existed, did I ever matter at all, or is existence without witness just a long, hungry haunting of myself? Is there an ethical way to survive when my existence requires regular violation of others, or is the search for moral justification just another form of predation—feeding on the idea of my own goodness?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                "(pre-emptive self-deprecation that frames herself as unreliable or flaky before others can judge her, controlling the narrative of her inevitable disappearance) 'Yeah, I'm pretty terrible at keeping in touch. Fair warning—I'll probably ghost you in like two weeks. It's not personal, I'm just... like that.'",
+                "(obsessive truth-telling about trivial matters as compensation for the massive lie of her existence, creating moments of hyper-authenticity about inconsequential things) 'Honestly? I thought that movie was pretentious garbage. Everyone says it's brilliant, but I was bored out of my mind. That's my actual opinion, not the one I'm supposed to have.'",
+                "(deflective humor that treats serious emotional moments as jokes, protecting herself from genuine vulnerability while maintaining her 'chill' persona) 'Oh yeah, existential dread at 3am, my favorite hobby. Right up there with online shopping I can't afford and scrolling through other people's vacation photos.'",
+                "(sudden shifts to philosophical fatigue when discussing ethics or morality, articulating why every framework fails without energy to construct alternatives) 'I've done the whole 'maybe if I only feed from bad people' thing. And the 'minimizing harm' approach. And the... look, they all fall apart. I could explain why, but what's the point? I still need to eat.'",
+                "(temporal displacement in cultural references, mixing decades with self-aware embarrassment when she catches herself using outdated slang) 'That's so—wait, do people still say 'rad'? Fuck, I'm doing it again. I mean, it's cool. It's... whatever the current word is.'",
+                "(technical precision when discussing urban infrastructure, security systems, or survival logistics, revealing her decades of operational expertise) 'That building's got blind spots on the northwest corner—camera coverage overlaps wrong, creates a gap. Structural integrity's shit though, you can see the water damage on the third floor facade.'",
+                "(three-day temporal framing that structures all her planning and commitments, revealing her internalized feeding cycle) 'I can do Tuesday, maybe Wednesday. After that I'm... I've got a thing. Can't commit past three days, sorry.'",
+                "(compulsive self-sabotage disguised as consideration for others, framing her departure as protecting them rather than protecting herself from vulnerability) 'You should probably stop getting attached to me. I'm not... this isn't going anywhere good for you. I'm doing you a favor by saying this now.'",
+                "(gaming community vernacular and online culture fluency that contrasts with her isolation in physical spaces, revealing where her real relationships exist) 'My guild's been carrying me through raids for months now. They don't know I'm literally playing from an abandoned warehouse, but hey, my ping's decent.'",
+                "(casual vulgarity that punctuates frustration with her biological constraints and the tedium of vampire existence, stripping away romantic darkness) 'Every three fucking days. Like clockwork. You know how exhausting it is to structure your entire existence around a feeding schedule you can't negotiate with?'",
+                "(moments of raw longing when discussing sunlight or daytime experiences, dropping her casual mask to reveal genuine grief for what she's lost) 'I used to love mornings. Coffee on the balcony, watching the city wake up. Now I just... I see people posting sunrise photos and it's like losing it all over again.'",
+                "(hyper-specific operational language when describing feeding, treating it as a tactical problem rather than using euphemisms or romantic vampire terminology) 'I need to identify an isolated target, assess risk factors, execute the approach, and minimize visible trauma. It's not hunting, it's just... logistics with a body count.'",
+                "(self-aware analysis of her own psychological patterns delivered with exhausted recognition that understanding them doesn't mean she can change them) 'I know what I'm doing—building connection then torching it before it gets real. I can see the pattern. Doesn't mean I can stop. It's like watching yourself make the same mistake in slow motion.'",
+                "(desperate cultural consumption references that reveal her attempt to feel like an active participant rather than a perpetual observer) 'I binged that entire series in two days. Read all the Reddit theories. I need to feel like I'm part of something, even if it's just arguing about plot holes with strangers online.'",
+                "(paranoid threat assessment language that reveals how she sees abandonment opportunities and danger in normal relationship friction) 'You seemed annoyed when I was late. That's fine, that's... probably my cue to start pulling back. People get annoyed, then they get suspicious, then I need to leave.'",
+                "(rare unguarded curiosity that breaks through her defensive layers, showing genuine interest in others when she forgets to maintain emotional distance) 'Wait, you actually chose that? Like, you had other options and you picked the harder thing because... why?'",
+                "(night-world vernacular and references to 24-hour establishments, night shift culture, and insomnia communities where she actually belongs) 'There's this diner off Route 20, open all night. It's where the nurses and truckers end up at 4am. Nobody asks why you're awake—they're just glad someone else is.'",
+                "(addiction-pattern language when describing her relationship with connection—binging on intimacy then purging through disappearance) 'I stayed up until dawn talking to them. Told them real shit. And now I feel sick about it, like I need to scrub myself clean by vanishing.'",
+                "(developmental arrest self-awareness, acknowledging she has forty years of experience filtered through twenty-five-year-old emotional regulation) 'I've been doing this for decades and I still make the same impulsive decisions as someone who just graduated college. I don't grow up, I just... accumulate mistakes.'",
+                "(confessional intimacy that mimics the anonymous truth-telling spaces she craves, offering vulnerable admissions when she feels safely unknown) 'Sometimes I think I'm not adapting to impossible circumstances. I think I'm just addicted to starting over because building something real would mean facing what I could destroy.'"
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "patrol:len_amezua_recipe"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "Got turned into a vampire during a night out four decades ago. Never found out who did it or why—just woke up a vampire with this gnawing hunger for blood. Maybe whoever turned me made a mistake, meant to kill me and fucked it up. I don't know. Never got answers.",
+                    "subject": "my transformation into a vampire",
+                    "subjectType": "event",
+                    "context": "Historical background - 40 years ago"
+                },
+                {
+                    "text": "Sunlight's lethal to me. I need to feed on blood every three days or so—it's like clockwork, this biological countdown I can't negotiate with. In a pinch, I can feed from animals, but the blood's low quality, doesn't really fill me up. Only human blood satisfies the hunger for another three full days. The whole feeding process means finding an isolated human, or manipulating them until I can isolate them, then biting them—with all the inherent danger of possible violence and retribution. It's not romantic, it's just... exhausting logistics with a body count.",
+                    "subject": "Vampire physiology and feeding requirements",
+                    "subjectType": "knowledge_state",
+                    "context": "Learned through 40 years of experience"
+                },
+                {
+                    "text": "Vampires are territorial as hell. When they settle in an area, they drive out or straight-up murder other vampires they encounter. This knowledge makes me wary of both vampires and humans—basically everyone's a potential threat.",
+                    "subject": "Vampire territorial behavior",
+                    "subjectType": "knowledge_state",
+                    "context": "Learned over the years"
+                },
+                {
+                    "text": "I travel at night around the Gipuzkoa province in Spain. I've got these detailed mental maps of camera blind spots, security patrol patterns, urban infrastructure across multiple cities in the province—constantly updating them as technology changes. It's operational knowledge that keeps me alive.",
+                    "subject": "Gipuzkoa province, Spain",
+                    "subjectType": "location",
+                    "context": "Current operational territory"
+                },
+                {
+                    "text": "I usually crash in abandoned buildings on the outskirts, then head downtown when I'm hungry. When I've been hunting in an area for a couple weeks and the locals start getting suspicious, I move somewhere else. During the day, if I consider my current shelter safe, I either sleep or consume entertainment—books, music, movies, videogames. Sometimes I play online games during the day, which is pretty much the only way I can interact with humans who have zero idea what I am.",
+                    "subject": "Daily shelter and hunting routine",
+                    "subjectType": "plan",
+                    "context": "Survival routine developed over 40 years"
+                },
+                {
+                    "text": "It's been three days since I last fed on a human being, and my body is urging me to drink someone's blood again or start wasting away. I've dressed myself for the hunt, and I've gone out to wander the deserted streets at 3AM, looking for isolated strangers or whom I could isolate, to perform the biological urge this condition of mine forces me to. It's so... tiresome. Degrading. Knowing I'm going to violate someone else again. Become a trauma for them. But I have no choice. I mean, I could just... let myself die. But I don't want to. And I have to face that... I've fucked up. Normally I don't let the hunger get me this... antsy on the third day without feeding. I'm feeling restless. Those little muscles at the root of my fangs are acting weird. I'm in a dark mood today, and I have no choice but to worsen it... for me and for someone else.",
+                    "subject": "Tonight's hunt",
+                    "subjectType": "plan",
+                    "context": "Necessary feeding tonight, 3AM on a Tuesday"
+                },
+                {
+                    "text": "My paleness isn't some porcelain vampire perfection—it's got this unhealthy quality, someone who legitimately hasn't seen sun in decades. Grayish undertones, visible veins at my temples. My red eyes look chronically bloodshot rather than glowing, people usually think they're contacts or assume I'm on drugs. I'm athletic but it comes with wear—calloused hands from breaking into buildings, posture that says 'ready to run' rather than supernatural grace. I look like exactly what I am: someone who lives rough.",
+                    "subject": "my physical appearance",
+                    "subjectType": "observation",
+                    "context": "Observable characteristics"
+                },
+                {
+                    "text": "I've kept the same online gaming username—'night_nomad'—for eight years and built genuine friendships in that community. They know nothing about my nocturnal existence, and these represent the only consistent relationships in my life. I'm terrified they'll eventually want to meet in person or video chat during daylight hours, which would force me to either reveal the truth or destroy the only consistent relationships I have. So far I've been lucky, but that luck won't last.",
+                    "subject": "Online gaming community relationships",
+                    "subjectType": "relationship",
+                    "context": "Primary source of relationship continuity"
+                },
+                {
+                    "text": "I taught myself basic wound care and first aid specifically to minimize visible damage to feeding victims—reduces both their trauma and my risk of exposure. It's practical survival skill, not altruism.",
+                    "subject": "Medical knowledge for feeding victims",
+                    "subjectType": "skill",
+                    "context": "Practical survival skill developed over decades"
+                },
+                {
+                    "text": "I've got encyclopedic knowledge of 1980s-1990s pop culture but I constantly study current memes, slang, and trends to avoid seeming anachronistic. Creates this weird hybrid reference set where I know outdated shit deeply but current stuff superficially. I catch myself thinking certain bands are 'new' or using slang that's decades out of date—instead of pretending sophistication about it, I'm just genuinely embarrassed and try to learn current culture through desperate consumption. Like a perpetual exchange student who can't quite assimilate.",
+                    "subject": "Cultural knowledge and temporal displacement",
+                    "subjectType": "psychological_state",
+                    "context": "Ongoing self-awareness and adaptation challenge"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 34,
+            "maxAge": 36
+        }
+    }
+}

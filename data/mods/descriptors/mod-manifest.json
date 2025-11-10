@@ -19,6 +19,7 @@
       "digit_count.component.json",
       "effect.component.json",
       "embellishment.component.json",
+      "facial_aesthetic.component.json",
       "facial_hair.component.json",
       "firmness.component.json",
       "flexibility.component.json",
