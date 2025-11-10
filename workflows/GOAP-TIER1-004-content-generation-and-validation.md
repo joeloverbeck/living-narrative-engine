@@ -5,6 +5,35 @@
 **Status:** Not Started
 **Dependencies:** GOAP-TIER1-002, GOAP-TIER1-003
 
+**Last Validated:** 2025-11-10
+**Validation Status:** ✅ All assumptions validated against codebase
+
+## Validation Summary
+
+This workflow has been validated against the actual codebase. Key corrections made:
+
+1. **Dependency Injection**:
+   - ✅ Uses `AppContainer` and `configureMinimalContainer` (not `createContainer`)
+   - ✅ Tokens imported from `src/dependencyInjection/tokens.js` (includes all token groups)
+   - ✅ Token names verified: `IEffectsGenerator`, `IEffectsValidator`, `IEffectsAnalyzer`
+
+2. **Data Access**:
+   - ✅ Uses `IDataRegistry` with `get(type, id)` and `getAll(type)` methods
+   - ✅ No separate `IActionLoader` or `IRuleLoader` - unified registry approach
+   - ✅ Actions accessed via: `dataRegistry.get('actions', actionId)`
+   - ✅ Rules accessed via: `dataRegistry.get('rules', ruleId)`
+
+3. **CLI Setup**:
+   - ✅ Requires `NodeDataFetcher` override for file system access
+   - ✅ Requires `SchemaPhase` for schema loading
+   - ✅ Requires `ModsPhase` for mod data loading (CRITICAL)
+   - ✅ Uses `createLoadContext` for initialization
+
+4. **File Structure**:
+   - ✅ Action files location: `data/mods/{modId}/actions/{actionName}.action.json`
+   - ✅ Action files currently don't have `planningEffects` field (will be added)
+   - ✅ Rule naming convention: `{modId}:handle_{actionName}`
+
 ## Overview
 
 Create CLI tools and scripts for generating planning effects for all actions and validating the generated effects. This includes generating effects for 100-200 actions across all mods and ensuring consistency between effects and rules.
@@ -35,34 +64,55 @@ Create CLI tools and scripts for generating planning effects for all actions and
  *   npm run generate:effects -- --action=positioning:sit_down
  */
 
-import { createContainer } from '../src/dependencyInjection/containerFactory.js';
-import { goapTokens } from '../src/dependencyInjection/tokens/tokens-goap.js';
-import { tokens } from '../src/dependencyInjection/tokens/tokens-core.js';
+import AppContainer from '../src/dependencyInjection/appContainer.js';
+import { configureMinimalContainer } from '../src/dependencyInjection/minimalContainerConfig.js';
+import { tokens } from '../src/dependencyInjection/tokens.js';
+import { createLoadContext } from '../src/loaders/LoadContext.js';
 import fs from 'fs/promises';
 import path from 'path';
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const container = createContainer();
+
+  // Create and configure container
+  const container = new AppContainer();
+  await configureMinimalContainer(container);
+
+  // Override data fetcher for Node.js environment
+  const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
+  container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
 
   const logger = container.resolve(tokens.ILogger);
-  const effectsGenerator = container.resolve(goapTokens.IEffectsGenerator);
-  const modsLoader = container.resolve(tokens.IModsLoader);
+  const effectsGenerator = container.resolve(tokens.IEffectsGenerator);
+  const dataRegistry = container.resolve(tokens.IDataRegistry);
+  const schemaPhase = container.resolve(tokens.SchemaPhase);
 
   try {
-    // Load mods
-    logger.info('Loading mods...');
-    await modsLoader.load();
+    // Load schemas
+    logger.info('📚 Loading schemas...');
+    const loadContext = createLoadContext({
+      worldName: 'effects-generation',
+      requestedMods: args.mods || [],
+      registry: dataRegistry
+    });
+    await schemaPhase.execute(loadContext);
+    logger.info('✅ Schemas loaded');
+
+    // Load mod data
+    logger.info('📦 Loading mod data...');
+    const modsPhase = container.resolve(tokens.ModsPhase);
+    await modsPhase.execute(loadContext);
+    logger.info('✅ Mod data loaded');
 
     if (args.action) {
       // Generate for single action
       await generateForAction(args.action, effectsGenerator, logger);
     } else if (args.mod) {
       // Generate for single mod
-      await generateForMod(args.mod, effectsGenerator, logger);
+      await generateForMod(args.mod, effectsGenerator, dataRegistry, logger);
     } else {
       // Generate for all mods
-      await generateForAllMods(effectsGenerator, modsLoader, logger);
+      await generateForAllMods(effectsGenerator, dataRegistry, logger);
     }
 
     logger.info('✓ Effects generation complete');
@@ -89,10 +139,10 @@ async function generateForAction(actionId, effectsGenerator, logger) {
   }
 }
 
-async function generateForMod(modId, effectsGenerator, logger) {
+async function generateForMod(modId, effectsGenerator, dataRegistry, logger) {
   logger.info(`Generating effects for mod: ${modId}`);
 
-  const effectsMap = await effectsGenerator.generateForMod(modId);
+  const effectsMap = effectsGenerator.generateForMod(modId);
 
   logger.info(`Generated effects for ${effectsMap.size} actions`);
 
@@ -102,15 +152,24 @@ async function generateForMod(modId, effectsGenerator, logger) {
   }
 }
 
-async function generateForAllMods(effectsGenerator, modsLoader, logger) {
+async function generateForAllMods(effectsGenerator, dataRegistry, logger) {
   logger.info('Generating effects for all mods...');
 
-  const modIds = modsLoader.getLoadedModIds();
+  // Get all actions from registry
+  const allActions = dataRegistry.getAll('actions');
+
+  // Extract unique mod IDs
+  const modIds = new Set(
+    allActions
+      .map(action => action.id?.split(':')[0])
+      .filter(Boolean)
+  );
+
   let totalActions = 0;
 
   for (const modId of modIds) {
     try {
-      const effectsMap = await effectsGenerator.generateForMod(modId);
+      const effectsMap = effectsGenerator.generateForMod(modId);
       totalActions += effectsMap.size;
 
       // Write effects to action files
@@ -122,7 +181,7 @@ async function generateForAllMods(effectsGenerator, modsLoader, logger) {
     }
   }
 
-  logger.info(`Generated effects for ${totalActions} actions across ${modIds.length} mods`);
+  logger.info(`Generated effects for ${totalActions} actions across ${modIds.size} mods`);
 }
 
 async function writeEffectsToAction(actionId, effects, logger) {
@@ -193,23 +252,44 @@ main();
  *   npm run validate:effects -- --report=effects-validation.json
  */
 
-import { createContainer } from '../src/dependencyInjection/containerFactory.js';
-import { goapTokens } from '../src/dependencyInjection/tokens/tokens-goap.js';
-import { tokens } from '../src/dependencyInjection/tokens/tokens-core.js';
+import AppContainer from '../src/dependencyInjection/appContainer.js';
+import { configureMinimalContainer } from '../src/dependencyInjection/minimalContainerConfig.js';
+import { tokens } from '../src/dependencyInjection/tokens.js';
+import { createLoadContext } from '../src/loaders/LoadContext.js';
 import fs from 'fs/promises';
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const container = createContainer();
+
+  // Create and configure container
+  const container = new AppContainer();
+  await configureMinimalContainer(container);
+
+  // Override data fetcher for Node.js environment
+  const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
+  container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
 
   const logger = container.resolve(tokens.ILogger);
-  const effectsValidator = container.resolve(goapTokens.IEffectsValidator);
-  const modsLoader = container.resolve(tokens.IModsLoader);
+  const effectsValidator = container.resolve(tokens.IEffectsValidator);
+  const dataRegistry = container.resolve(tokens.IDataRegistry);
+  const schemaPhase = container.resolve(tokens.SchemaPhase);
 
   try {
-    // Load mods
-    logger.info('Loading mods...');
-    await modsLoader.load();
+    // Load schemas
+    logger.info('📚 Loading schemas...');
+    const loadContext = createLoadContext({
+      worldName: 'effects-validation',
+      requestedMods: args.mods || [],
+      registry: dataRegistry
+    });
+    await schemaPhase.execute(loadContext);
+    logger.info('✅ Schemas loaded');
+
+    // Load mod data
+    logger.info('📦 Loading mod data...');
+    const modsPhase = container.resolve(tokens.ModsPhase);
+    await modsPhase.execute(loadContext);
+    logger.info('✅ Mod data loaded');
 
     let results;
 
@@ -315,27 +395,22 @@ import { string } from '../../utils/validationCore.js';
 class EffectsValidator {
   #logger;
   #effectsAnalyzer;
-  #actionLoader;
-  #ruleLoader;
+  #dataRegistry;
 
-  constructor({ logger, effectsAnalyzer, actionLoader, ruleLoader }) {
+  constructor({ logger, effectsAnalyzer, dataRegistry }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug']
     });
     validateDependency(effectsAnalyzer, 'IEffectsAnalyzer', logger, {
       requiredMethods: ['analyzeRule']
     });
-    validateDependency(actionLoader, 'IActionLoader', logger, {
-      requiredMethods: ['getAction', 'getActions']
-    });
-    validateDependency(ruleLoader, 'IRuleLoader', logger, {
-      requiredMethods: ['getRule', 'getRules']
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['get', 'getAll']
     });
 
     this.#logger = logger;
     this.#effectsAnalyzer = effectsAnalyzer;
-    this.#actionLoader = actionLoader;
-    this.#ruleLoader = ruleLoader;
+    this.#dataRegistry = dataRegistry;
   }
 
   /**
@@ -353,7 +428,7 @@ class EffectsValidator {
       }
     };
 
-    const actions = await this.#actionLoader.getAllActions();
+    const actions = this.#dataRegistry.getAll('actions');
 
     for (const action of actions) {
       const result = await this.validateAction(action.id);
@@ -386,7 +461,8 @@ class EffectsValidator {
       }
     };
 
-    const actions = await this.#actionLoader.getActions(modId);
+    const allActions = this.#dataRegistry.getAll('actions');
+    const actions = allActions.filter(action => action.id?.startsWith(`${modId}:`));
 
     for (const action of actions) {
       const result = await this.validateAction(action.id);
@@ -417,8 +493,8 @@ class EffectsValidator {
     };
 
     try {
-      // Get action
-      const action = await this.#actionLoader.getAction(actionId);
+      // Get action from registry
+      const action = this.#dataRegistry.get('actions', actionId);
       if (!action) {
         result.valid = false;
         result.errors.push({ message: 'Action not found' });
@@ -432,7 +508,7 @@ class EffectsValidator {
       }
 
       // Get rule(s)
-      const rules = await this.#findRulesForAction(actionId);
+      const rules = this.#findRulesForAction(actionId);
       if (rules.length === 0) {
         result.warnings.push({ message: 'No rules found for action' });
         return result;
@@ -466,12 +542,12 @@ class EffectsValidator {
 
   // Private helper methods
 
-  async #findRulesForAction(actionId) {
+  #findRulesForAction(actionId) {
     const [modId, actionName] = actionId.split(':');
     const ruleId = `${modId}:handle_${actionName}`;
 
     try {
-      const rule = await this.#ruleLoader.getRule(ruleId);
+      const rule = this.#dataRegistry.get('rules', ruleId);
       return rule ? [rule] : [];
     } catch (error) {
       return [];
@@ -543,12 +619,76 @@ Add npm scripts:
 
 - [ ] `scripts/generateEffects.js`
 - [ ] `scripts/validateEffects.js`
+- [ ] `scripts/utils/nodeDataFetcher.js` (if not exists - check `scripts/validateMods.js` for reference)
 - [ ] `src/goap/validation/effectsValidator.js`
 
 ## Files to Update
 
 - [ ] `package.json` - Add npm scripts
 - [ ] `src/dependencyInjection/registrations/goapRegistrations.js` - Register EffectsValidator
+- [ ] `src/dependencyInjection/tokens/tokens-goap.js` - Ensure IEffectsValidator token exists (already exists)
+
+## Important Implementation Notes
+
+### CLI Container Setup
+
+The scripts use the standard CLI container pattern used by other scripts in the codebase:
+
+1. **Container Creation**: Use `AppContainer` and `configureMinimalContainer`
+2. **Data Fetcher**: Override with `NodeDataFetcher` for file system access
+3. **Schema Loading**: Use `SchemaPhase` and `createLoadContext` to load schemas
+4. **Data Access**: Use `IDataRegistry` with `get(type, id)` and `getAll(type)` methods
+
+### Data Registry Usage
+
+- Actions: `dataRegistry.get('actions', actionId)` or `dataRegistry.getAll('actions')`
+- Rules: `dataRegistry.get('rules', ruleId)` or `dataRegistry.getAll('rules')`
+- The registry is populated by the loading phases
+
+**CRITICAL**: After loading schemas, you must also load the actual mod data:
+
+```javascript
+// After schemaPhase.execute(loadContext)
+
+// Load mod data (actions, rules, components, etc.)
+const modsPhase = container.resolve(tokens.ModsPhase);
+await modsPhase.execute(loadContext);
+```
+
+Without this step, the data registry will be empty and no actions/rules will be found.
+
+**Note on requestedMods**: The `createLoadContext` requires a `requestedMods` array. For scripts that need to load all mods:
+- Either read from `game.json` (like the main app does)
+- Or pass an empty array and let the system load all available mods
+- Or specify mods explicitly via command-line args
+
+### Action File Structure
+
+Currently, action files don't have a `planningEffects` field. The generation script will:
+1. Read the existing action JSON
+2. Add the `planningEffects` field
+3. Write back with proper formatting
+
+Example action structure after generation:
+```json
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "positioning:sit_down",
+  "name": "Sit down",
+  "description": "Sit down on available furniture",
+  "targets": "positioning:available_furniture",
+  "planningEffects": {
+    "effects": [
+      {
+        "operation": "ADD_COMPONENT",
+        "entity": "actor",
+        "component": "positioning:sitting_on",
+        "data": { "furniture": "target" }
+      }
+    ]
+  }
+}
+```
 
 ## Testing Requirements
 
