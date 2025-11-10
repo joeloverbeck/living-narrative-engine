@@ -146,7 +146,8 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @returns {boolean} Result of the rule evaluation.
    */
   _executeJsonLogic(logic, context) {
-    return this.#jsonLogicEvaluationService.evaluate(logic, context);
+    const result = this.#jsonLogicEvaluationService.evaluate(logic, context);
+    return result;
   }
 
   /**
