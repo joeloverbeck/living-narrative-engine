@@ -608,7 +608,7 @@ describe('Bending Over System Integration', () => {
       });
       // Update sofa spots
       // Directly update the sitting data by modifying the entity
-      const sofaEntity = testEnv.entityManager.entities.get(sofa);
+      const sofaEntity = testEnv.entityManager.entitiesMap.get(sofa);
       if (sofaEntity && sofaEntity.components['positioning:allows_sitting']) {
         sofaEntity.components['positioning:allows_sitting'].spots[0] = sitter;
       }
