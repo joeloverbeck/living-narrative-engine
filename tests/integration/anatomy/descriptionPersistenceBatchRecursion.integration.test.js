@@ -155,7 +155,8 @@ describe('DescriptionPersistenceService - Batch Operation Recursion Prevention',
 
       // Only the valid entities should succeed
       expect(result.successful).toBe(10);
-      expect(result.failed).toEqual([]);
+      // The non-existent entities should be in the failed array
+      expect(result.failed).toEqual(['non_existent_1', 'non_existent_2', 'non_existent_3']);
 
       // Verify batch operation was used for the valid updates
       expect(batchAddSpy).toHaveBeenCalledTimes(1);
