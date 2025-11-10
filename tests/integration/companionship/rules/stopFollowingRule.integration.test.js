@@ -53,11 +53,11 @@ const makeStubRebuild = (em) => ({
   execute({ leaderIds }) {
     for (const lid of leaderIds) {
       const followers = [];
-      for (const [id, ent] of em.entities) {
+      for (const [id, ent] of em.entitiesMap) {
         const f = ent.components[FOLLOWING_COMPONENT_ID];
         if (f?.leaderId === lid) followers.push(id);
       }
-      const leader = em.entities.get(lid);
+      const leader = em.entitiesMap.get(lid);
       if (leader) {
         leader.components[LEADING_COMPONENT_ID] = { followers };
       }
