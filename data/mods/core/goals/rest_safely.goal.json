@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../schemas/goal.schema.json",
+  "id": "core:rest_safely",
+  "description": "Actor needs to rest when tired",
+  "priority": 60,
+  "relevance": {
+    "and": [
+      { ">=": [{ "var": "actor.components.core:actor" }, null] },
+      { "<": [{ "var": "actor.components.core:energy.value" }, 40] }
+    ]
+  },
+  "goalState": {
+    "and": [
+      { ">=": [{ "var": "actor.components.positioning:lying_down" }, null] },
+      { ">=": [{ "var": "actor.components.core:energy.value" }, 80] }
+    ]
+  }
+}
