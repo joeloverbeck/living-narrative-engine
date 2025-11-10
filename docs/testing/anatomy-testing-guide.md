@@ -800,6 +800,61 @@ it('should attach clothing to anatomy sockets', async () => {
 });
 ```
 
+## Testing Targetless Actions with Anatomy Prerequisites
+
+Actions with `targets: "none"` can still evaluate prerequisites that reference the actor's anatomy or components. The test environment automatically creates actor context for prerequisite evaluation even when no targets are present.
+
+### Quick Example
+
+```javascript
+it('should evaluate anatomy prerequisites for targetless action', async () => {
+  // Create actor with anatomy parts as separate entities
+  const actorId = 'actor-1';
+  const torsoId = `${actorId}_torso`;
+  const breastId = `${actorId}_breast`;
+
+  const actor = new ModEntityBuilder(actorId)
+    .withName('Test Actor')
+    .asActor()
+    .atLocation('test-room')
+    .withLocationComponent('test-room')
+    .withBody(torsoId) // Links to root anatomy part
+    .build();
+
+  const torso = new ModEntityBuilder(torsoId)
+    .asBodyPart({ parent: null, children: [breastId], subType: 'torso' })
+    .build();
+
+  const breast = new ModEntityBuilder(breastId)
+    .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+    .build();
+
+  // Other actor required for hasOtherActorsAtLocation prerequisite
+  const otherActor = new ModEntityBuilder('other-actor')
+    .asActor()
+    .atLocation('test-room')
+    .withLocationComponent('test-room')
+    .build();
+
+  fixture.reset([actor, torso, breast, otherActor]);
+
+  const actions = fixture.discoverActions(actorId);
+  expect(actions).toContainEqual(
+    expect.objectContaining({ id: 'seduction:squeeze_breasts_draw_attention' })
+  );
+});
+```
+
+### Key Points
+
+- **Anatomy Structure**: Body parts are separate entities, not nested in `anatomy:body`
+- **anatomy:body Component**: Only contains `{ body: { root: 'entity-id' } }`
+- **hasPartOfType Operator**: Checks the `subType` field in `anatomy:part` component
+- **ModEntityBuilder.asBodyPart()**: Use to create anatomy part entities
+- **Actor Context**: Created automatically even when `targets: "none"`
+
+For complete patterns and examples, see [Targetless Action Patterns](./targetless-action-patterns.md).
+
 ## Best Practices
 
 ### 1. Test Isolation
