@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:facial_aesthetic",
+  "description": "Describes the overall aesthetic quality or attractiveness of a face",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "string",
+        "description": "The facial aesthetic quality",
+        "enum": [
+          "beautiful",
+          "attractive",
+          "pretty",
+          "handsome",
+          "cute",
+          "pleasant",
+          "plain",
+          "unremarkable",
+          "homely",
+          "unattractive",
+          "hideous",
+          "grotesque"
+        ]
+      }
+    },
+    "required": ["value"],
+    "additionalProperties": false
+  }
+}
