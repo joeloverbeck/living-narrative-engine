@@ -134,7 +134,7 @@ class EffectsValidator {
       // Analyze rules to generate expected effects
       const expectedEffects = [];
       for (const rule of rules) {
-        const analyzed = this.#effectsAnalyzer.analyzeRule(rule);
+        const analyzed = this.#effectsAnalyzer.analyzeRule(rule.id);
         expectedEffects.push(...analyzed.effects);
       }
 
