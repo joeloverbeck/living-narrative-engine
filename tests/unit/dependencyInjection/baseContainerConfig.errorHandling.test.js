@@ -24,6 +24,8 @@ const registrationModulePaths = {
     '../../../src/dependencyInjection/registrations/commandAndActionRegistrations.js',
   registerInterpreters:
     '../../../src/dependencyInjection/registrations/interpreterRegistrations.js',
+  registerGoapServices:
+    '../../../src/dependencyInjection/registrations/goapRegistrations.js',
   registerEventBusAdapters:
     '../../../src/dependencyInjection/registrations/eventBusAdapterRegistrations.js',
   registerInitializers:
@@ -128,6 +130,10 @@ const failureScenarios = [
   {
     key: 'registerInterpreters',
     messagePrefix: 'Failed to register interpreters',
+  },
+  {
+    key: 'registerGoapServices',
+    messagePrefix: 'Failed to register GOAP services',
   },
   {
     key: 'registerActionCategorization',
