@@ -50,6 +50,8 @@
         "combat_effect",
         "container_open_failed",
         "container_opened",
+        "dimensional_arrival",
+        "dimensional_departure",
         "error",
         "item_drop",
         "item_dropped",
