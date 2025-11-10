@@ -526,9 +526,12 @@ describe('RadialLayoutStrategy', () => {
 
       expect(bigBranchAngleRange).toBeGreaterThan(smallBranchAngleRange);
 
-      // Should be proportional to leaf counts (5:1)
+      // With 2 children, maxAnglePerChild = π
+      // bigBranch would get (5/6)*2π = 5.236 rad, but is clamped to π = 3.142 rad
+      // smallBranch gets (1/6)*2π = 1.047 rad (under the limit)
+      // Ratio is now 3.142 / 1.047 ≈ 3:1 (clamped to prevent overflow)
       const ratio = bigBranchAngleRange / smallBranchAngleRange;
-      expect(ratio).toBeCloseTo(5, 0); // Allow some deviation due to minimum angle
+      expect(ratio).toBeCloseTo(3, 0); // Clamped by maxAnglePerChild constraint
     });
 
     it('should update required space with padding', () => {
