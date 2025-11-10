@@ -75,6 +75,8 @@ export class DescriptionPersistenceService {
   async updateMultipleDescriptions(descriptionsMap) {
     // Convert descriptions map to component specs for batch operation
     const componentSpecs = [];
+    const failed = [];
+
     for (const [entityId, description] of descriptionsMap) {
       // Verify entity exists before adding to batch
       const entity = this.#entityManager.getEntityInstance(entityId);
@@ -82,6 +84,7 @@ export class DescriptionPersistenceService {
         this.#logger.warn(
           `DescriptionPersistenceService: Entity '${entityId}' not found, skipping in batch`
         );
+        failed.push(entityId);
         continue;
       }
 
@@ -95,9 +98,9 @@ export class DescriptionPersistenceService {
     // Early return if no valid component specs
     if (componentSpecs.length === 0) {
       this.#logger.info(
-        `DescriptionPersistenceService: Updated 0 descriptions, 0 failed`
+        `DescriptionPersistenceService: Updated 0 descriptions, ${failed.length} failed`
       );
-      return { successful: 0, failed: [] };
+      return { successful: 0, failed };
     }
 
     // Use optimized batch addition to avoid recursion warnings
@@ -107,13 +110,15 @@ export class DescriptionPersistenceService {
     );
 
     const successful = results.length;
-    const failed = errors.map((e) => e.spec.instanceId);
+    // Combine non-existent entities with batch operation failures
+    const batchFailed = errors.map((e) => e.spec.instanceId);
+    const allFailed = [...failed, ...batchFailed];
 
     this.#logger.info(
-      `DescriptionPersistenceService: Updated ${successful} descriptions, ${failed.length} failed`
+      `DescriptionPersistenceService: Updated ${successful} descriptions, ${allFailed.length} failed`
     );
 
-    return { successful, failed };
+    return { successful, failed: allFailed };
   }
 
   /**
