@@ -1,0 +1,73 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_jot_down_notes",
+  "comment": "Handles jot_down_notes action with simple messaging (no content modification)",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "items:event-is-action-jot-down-notes"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get notebook name",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "notebookName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position for logging",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Prepare message for both perceptible and success events",
+      "parameters": {
+        "variable_name": "actionMessage",
+        "value": "{context.actorName} jots down notes on {context.notebookName}."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Public observation of writing",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actionMessage}",
+        "perception_type": "notes_jotted",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message to UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actionMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after jotting notes",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}
