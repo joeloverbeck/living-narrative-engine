@@ -1,17 +1,92 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createTestBed } from '../../common/testBed.js';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import GoalManager from '../../../src/goap/goals/goalManager.js';
+import GoalStateEvaluator from '../../../src/goap/goals/goalStateEvaluator.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import { createComponentAccessor } from '../../../src/logic/componentAccessor.js';
 
 describe('Goal Selection - Integration', () => {
-  let testBed;
   let goalManager;
   let entityManager;
   let gameDataRepository;
+  let mockLogger;
+  let goalStateEvaluator;
+  let jsonLogicEvaluator;
+  let entities;
 
   beforeEach(() => {
-    testBed = createTestBed();
-    goalManager = testBed.container.resolve('IGoalManager');
-    entityManager = testBed.container.resolve('IEntityManager');
-    gameDataRepository = testBed.container.resolve('IGameDataRepository');
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn()
+    };
+
+    gameDataRepository = {
+      getAllGoalDefinitions: jest.fn().mockReturnValue([]),
+      getGoalDefinition: jest.fn(),
+      getConditionDefinition: jest.fn()
+    };
+
+    // In-memory entity storage
+    entities = new Map();
+
+    // Mock entity manager
+    entityManager = {
+      createEntity: jest.fn().mockImplementation(() => {
+        const id = `entity-${entities.size + 1}`;
+        entities.set(id, { id, components: {} });
+        return id;
+      }),
+      addComponent: jest.fn().mockImplementation((entityId, componentId, data) => {
+        const entity = entities.get(entityId);
+        if (entity) {
+          entity.components[componentId] = data || {};
+        }
+      }),
+      getEntityInstance: jest.fn().mockImplementation((entityId) => {
+        const entity = entities.get(entityId);
+        if (!entity) return undefined;
+        // Return entity with component accessor proxy
+        return {
+          id: entity.id,
+          components: createComponentAccessor(entityId, entityManager, mockLogger)
+        };
+      }),
+      hasComponent: jest.fn().mockImplementation((entityId, componentId) => {
+        const entity = entities.get(entityId);
+        return entity && entity.components[componentId] !== undefined;
+      }),
+      getComponentData: jest.fn().mockImplementation((entityId, componentId) => {
+        const entity = entities.get(entityId);
+        return entity ? entity.components[componentId] : undefined;
+      }),
+      getAllComponentTypesForEntity: jest.fn().mockImplementation((entityId) => {
+        const entity = entities.get(entityId);
+        return entity ? Object.keys(entity.components) : [];
+      })
+    };
+
+    // Create JSON Logic evaluator
+    jsonLogicEvaluator = new JsonLogicEvaluationService({
+      logger: mockLogger,
+      gameDataRepository
+    });
+
+    // Create goal state evaluator
+    goalStateEvaluator = new GoalStateEvaluator({
+      logger: mockLogger,
+      jsonLogicEvaluator,
+      entityManager
+    });
+
+    // Create goal manager
+    goalManager = new GoalManager({
+      logger: mockLogger,
+      gameDataRepository,
+      goalStateEvaluator,
+      jsonLogicEvaluator,
+      entityManager
+    });
   });
 
   describe('selectGoal for cat actor (hungry)', () => {
@@ -29,24 +104,23 @@ describe('Goal Selection - Integration', () => {
         priority: 80,
         relevance: {
           and: [
-            { '>=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
             { '<': [{ var: 'actor.components.core:hunger.value' }, 30] }
           ]
         },
         goalState: {
-          '>=': [{ var: 'actor.components.items:has_food' }, null]
+          '!=': [{ var: 'actor.components.items:has_food' }, null]
         }
       };
 
-      testBed.mockService('IGameDataRepository', {
-        getAllGoalDefinitions: () => [findFoodGoal]
-      });
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue([findFoodGoal]);
 
       // Act
       const selectedGoal = goalManager.selectGoal(catId, context);
 
       // Assert
       expect(selectedGoal).toBeDefined();
+      expect(selectedGoal).not.toBeNull();
       expect(selectedGoal.id).toBe('core:find_food');
       expect(selectedGoal.priority).toBe(80);
     });
@@ -64,18 +138,16 @@ describe('Goal Selection - Integration', () => {
         priority: 80,
         relevance: {
           and: [
-            { '>=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
             { '<': [{ var: 'actor.components.core:hunger.value' }, 30] }
           ]
         },
         goalState: {
-          '>=': [{ var: 'actor.components.items:has_food' }, null]
+          '!=': [{ var: 'actor.components.items:has_food' }, null]
         }
       };
 
-      testBed.mockService('IGameDataRepository', {
-        getAllGoalDefinitions: () => [findFoodGoal]
-      });
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue([findFoodGoal]);
 
       // Act
       const selectedGoal = goalManager.selectGoal(catId, context);
@@ -99,21 +171,19 @@ describe('Goal Selection - Integration', () => {
         priority: 60,
         relevance: {
           and: [
-            { '>=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
             { '<': [{ var: 'actor.components.core:energy.value' }, 40] }
           ]
         },
         goalState: {
           and: [
-            { '>=': [{ var: 'actor.components.positioning:lying_down' }, null] },
+            { '!=': [{ var: 'actor.components.positioning:lying_down' }, null] },
             { '>=': [{ var: 'actor.components.core:energy.value' }, 80] }
           ]
         }
       };
 
-      testBed.mockService('IGameDataRepository', {
-        getAllGoalDefinitions: () => [restGoal]
-      });
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue([restGoal]);
 
       // Act
       const selectedGoal = goalManager.selectGoal(catId, context);
@@ -140,8 +210,8 @@ describe('Goal Selection - Integration', () => {
         priority: 90,
         relevance: {
           and: [
-            { '>=': [{ var: 'actor.components.core:actor' }, null] },
-            { '>=': [{ var: 'actor.components.combat:in_combat' }, null] },
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.combat:in_combat' }, null] },
             { '>': [{ var: 'actor.components.core:health.value' }, 20] }
           ]
         },
@@ -150,9 +220,7 @@ describe('Goal Selection - Integration', () => {
         }
       };
 
-      testBed.mockService('IGameDataRepository', {
-        getAllGoalDefinitions: () => [defeatEnemyGoal]
-      });
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue([defeatEnemyGoal]);
 
       // Act
       const selectedGoal = goalManager.selectGoal(goblinId, context);
@@ -179,18 +247,16 @@ describe('Goal Selection - Integration', () => {
         priority: 80,
         relevance: {
           and: [
-            { '>=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
             { '<': [{ var: 'actor.components.core:hunger.value' }, 30] }
           ]
         },
         goalState: {
-          '>=': [{ var: 'actor.components.items:has_food' }, null]
+          '!=': [{ var: 'actor.components.items:has_food' }, null]
         }
       };
 
-      testBed.mockService('IGameDataRepository', {
-        getAllGoalDefinitions: () => [findFoodGoal]
-      });
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue([findFoodGoal]);
 
       // Act
       const selectedGoal = goalManager.selectGoal(actorId, context);
@@ -218,12 +284,12 @@ describe('Goal Selection - Integration', () => {
           priority: 80,
           relevance: {
             and: [
-              { '>=': [{ var: 'actor.components.core:actor' }, null] },
+              { '!=': [{ var: 'actor.components.core:actor' }, null] },
               { '<': [{ var: 'actor.components.core:hunger.value' }, 30] }
             ]
           },
           goalState: {
-            '>=': [{ var: 'actor.components.items:has_food' }, null]
+            '!=': [{ var: 'actor.components.items:has_food' }, null]
           }
         },
         {
@@ -231,12 +297,12 @@ describe('Goal Selection - Integration', () => {
           priority: 60,
           relevance: {
             and: [
-              { '>=': [{ var: 'actor.components.core:actor' }, null] },
+              { '!=': [{ var: 'actor.components.core:actor' }, null] },
               { '<': [{ var: 'actor.components.core:energy.value' }, 40] }
             ]
           },
           goalState: {
-            '>=': [{ var: 'actor.components.positioning:lying_down' }, null]
+            '!=': [{ var: 'actor.components.positioning:lying_down' }, null]
           }
         },
         {
@@ -244,8 +310,8 @@ describe('Goal Selection - Integration', () => {
           priority: 90,
           relevance: {
             and: [
-              { '>=': [{ var: 'actor.components.core:actor' }, null] },
-              { '>=': [{ var: 'actor.components.combat:in_combat' }, null] }
+              { '!=': [{ var: 'actor.components.core:actor' }, null] },
+              { '!=': [{ var: 'actor.components.combat:in_combat' }, null] }
             ]
           },
           goalState: {
@@ -254,9 +320,7 @@ describe('Goal Selection - Integration', () => {
         }
       ];
 
-      testBed.mockService('IGameDataRepository', {
-        getAllGoalDefinitions: () => goals
-      });
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue(goals);
 
       // Act
       const selectedGoal = goalManager.selectGoal(actorId, context);
