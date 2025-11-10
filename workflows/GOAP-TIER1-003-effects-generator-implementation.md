@@ -18,6 +18,23 @@ Implement the EffectsGenerator class that orchestrates the generation of plannin
 5. Implement effects injection into action definitions
 6. Integrate with action loader
 
+## Important Implementation Notes
+
+### Production Code Context
+
+1. **EffectsAnalyzer Already Exists**: The EffectsAnalyzer class is already implemented in `src/goap/analysis/effectsAnalyzer.js` with the following interface:
+   - Constructor: `{ logger, dataRegistry }`
+   - Method: `analyzeRule(ruleId)` - takes a rule ID string, not a rule object
+   - Method: `isWorldStateChanging(operation)` - checks if operation changes world state
+
+2. **Data Access Pattern**: Loaders (RuleLoader, ActionLoader) are only used during mod loading to populate the DataRegistry. All runtime data access goes through DataRegistry:
+   - Rules: `dataRegistry.get('rules', ruleId)` or `dataRegistry.getAll('rules')`
+   - Actions: `dataRegistry.get('actions', actionId)` or `dataRegistry.getAll('actions')`
+
+3. **Macro Expansion**: Rule macros are already expanded during mod loading by RuleLoader (see `src/loaders/ruleLoader.js` line 103-126). The EffectsAnalyzer receives rules with macros already expanded. Runtime placeholders like `{var: "itemId"}` or `{param: "targetId"}` cannot be resolved during analysis and should be preserved as parameterized values (e.g., `"{itemId}"`).
+
+4. **Schema Validator Signature**: The AjvSchemaValidator.validate method signature is `validate(schemaId, data)`, NOT `validate(data, schemaId)`. It returns `{ isValid, errors }`.
+
 ## Technical Details
 
 ### 1. EffectsGenerator Class
@@ -39,23 +56,20 @@ import { string } from '../../utils/validationCore.js';
 class EffectsGenerator {
   #logger;
   #effectsAnalyzer;
-  #ruleLoader;
-  #actionLoader;
+  #dataRegistry;
   #schemaValidator;
 
   /**
    * @param {Object} params - Dependencies
    * @param {Object} params.logger - Logger instance
    * @param {Object} params.effectsAnalyzer - Effects analyzer service
-   * @param {Object} params.ruleLoader - Rule loader service
-   * @param {Object} params.actionLoader - Action loader service
+   * @param {Object} params.dataRegistry - Data registry for accessing rules and actions
    * @param {Object} params.schemaValidator - Schema validator service
    */
   constructor({
     logger,
     effectsAnalyzer,
-    ruleLoader,
-    actionLoader,
+    dataRegistry,
     schemaValidator
   }) {
     validateDependency(logger, 'ILogger', logger, {
@@ -64,11 +78,8 @@ class EffectsGenerator {
     validateDependency(effectsAnalyzer, 'IEffectsAnalyzer', logger, {
       requiredMethods: ['analyzeRule', 'isWorldStateChanging']
     });
-    validateDependency(ruleLoader, 'IRuleLoader', logger, {
-      requiredMethods: ['getRule', 'getRules']
-    });
-    validateDependency(actionLoader, 'IActionLoader', logger, {
-      requiredMethods: ['getAction', 'getActions']
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['get', 'getAll']
     });
     validateDependency(schemaValidator, 'IAjvSchemaValidator', logger, {
       requiredMethods: ['validate']
@@ -76,23 +87,24 @@ class EffectsGenerator {
 
     this.#logger = logger;
     this.#effectsAnalyzer = effectsAnalyzer;
-    this.#ruleLoader = ruleLoader;
-    this.#actionLoader = actionLoader;
+    this.#dataRegistry = dataRegistry;
     this.#schemaValidator = schemaValidator;
   }
 
   /**
    * Generates planning effects for all actions in a mod
    * @param {string} modId - Mod identifier
-   * @returns {Promise<Map<string, Object>>} Map of actionId -> effects
+   * @returns {Map<string, Object>} Map of actionId -> effects
    */
-  async generateForMod(modId) {
+  generateForMod(modId) {
     string.assertNonBlank(modId, 'modId', 'generateForMod', this.#logger);
 
     this.#logger.info(`Generating effects for mod: ${modId}`);
 
     try {
-      const actions = await this.#actionLoader.getActions(modId);
+      // Get all actions and filter by modId
+      const allActions = this.#dataRegistry.getAll('actions');
+      const actions = allActions.filter(action => action.id?.startsWith(`${modId}:`));
       const effectsMap = new Map();
       let successCount = 0;
       let failureCount = 0;
@@ -131,22 +143,22 @@ class EffectsGenerator {
   /**
    * Generates planning effects for a specific action
    * @param {string} actionId - Full action ID (mod:action)
-   * @returns {Promise<Object>} Planning effects
+   * @returns {Object} Planning effects
    */
-  async generateForAction(actionId) {
+  generateForAction(actionId) {
     string.assertNonBlank(actionId, 'actionId', 'generateForAction', this.#logger);
 
     this.#logger.debug(`Generating effects for action: ${actionId}`);
 
     try {
       // Step 1: Get action definition
-      const action = await this.#actionLoader.getAction(actionId);
+      const action = this.#dataRegistry.get('actions', actionId);
       if (!action) {
         throw new Error(`Action not found: ${actionId}`);
       }
 
       // Step 2: Find corresponding rule(s)
-      const rules = await this.#findRulesForAction(actionId);
+      const rules = this.#findRulesForAction(actionId);
       if (rules.length === 0) {
         this.#logger.warn(`No rules found for action: ${actionId}`);
         return null;
@@ -158,7 +170,8 @@ class EffectsGenerator {
 
       for (const rule of rules) {
         try {
-          const analyzed = this.#effectsAnalyzer.analyzeRule(rule);
+          // Note: analyzeRule takes ruleId (string), not rule object
+          const analyzed = this.#effectsAnalyzer.analyzeRule(rule.id);
 
           // Merge effects
           allEffects.push(...analyzed.effects);
@@ -218,12 +231,14 @@ class EffectsGenerator {
 
     try {
       // Validate against schema
+      // Note: validate signature is validate(schemaId, data)
       const schemaValidation = this.#schemaValidator.validate(
-        effects,
-        'schema://living-narrative-engine/planning-effects.schema.json'
+        'schema://living-narrative-engine/planning-effects.schema.json',
+        effects
       );
 
-      if (!schemaValidation.valid) {
+      // Note: schemaValidator returns { isValid, errors }
+      if (!schemaValidation.isValid) {
         result.valid = false;
         result.errors.push({
           type: 'schema',
@@ -283,9 +298,9 @@ class EffectsGenerator {
   /**
    * Injects planning effects into action definitions
    * @param {Map<string, Object>} effectsMap - Map of actionId -> effects
-   * @returns {Promise<number>} Number of actions updated
+   * @returns {number} Number of actions updated
    */
-  async injectEffects(effectsMap) {
+  injectEffects(effectsMap) {
     assertPresent(effectsMap, 'Effects map is required');
 
     this.#logger.info(`Injecting effects into ${effectsMap.size} actions`);
@@ -294,7 +309,7 @@ class EffectsGenerator {
 
     for (const [actionId, effects] of effectsMap.entries()) {
       try {
-        const action = await this.#actionLoader.getAction(actionId);
+        const action = this.#dataRegistry.get('actions', actionId);
         if (!action) {
           this.#logger.warn(`Action not found for injection: ${actionId}`);
           continue;
@@ -321,31 +336,32 @@ class EffectsGenerator {
   /**
    * Finds rules associated with an action
    * @param {string} actionId - Full action ID
-   * @returns {Promise<Array<Object>>} List of rules
+   * @returns {Array<Object>} List of rules
    * @private
    */
-  async #findRulesForAction(actionId) {
+  #findRulesForAction(actionId) {
     // Rules are typically named: handle_<action_name>
     // Example: positioning:sit_down -> positioning:handle_sit_down
 
     const [modId, actionName] = actionId.split(':');
     const ruleId = `${modId}:handle_${actionName}`;
 
-    try {
-      const rule = await this.#ruleLoader.getRule(ruleId);
-      return rule ? [rule] : [];
-    } catch (error) {
-      // Rule not found with standard naming, try alternative patterns
-      this.#logger.debug(`Rule not found with standard naming: ${ruleId}`);
-
-      // Try finding rules that reference this action in their event conditions
-      const allRules = await this.#ruleLoader.getRules(modId);
-      const matchingRules = allRules.filter(rule =>
-        this.#ruleReferencesAction(rule, actionId)
-      );
-
-      return matchingRules;
+    // Try to get rule with standard naming convention
+    const rule = this.#dataRegistry.get('rules', ruleId);
+    if (rule) {
+      return [rule];
     }
+
+    // Rule not found with standard naming, try alternative patterns
+    this.#logger.debug(`Rule not found with standard naming: ${ruleId}`);
+
+    // Try finding rules that reference this action in their event conditions
+    const allRules = this.#dataRegistry.getAll('rules');
+    const matchingRules = allRules.filter(r =>
+      r.id?.startsWith(`${modId}:`) && this.#ruleReferencesAction(r, actionId)
+    );
+
+    return matchingRules;
   }
 
   /**
@@ -451,12 +467,37 @@ Validation Tests:
 - ✅ Clear error messages for debugging
 - ✅ Integration with action loader works
 
+## Integration with Dependency Injection
+
+The EffectsGenerator will be registered in the DI container using tokens from `src/dependencyInjection/tokens/tokens-goap.js`:
+
+**Dependencies Required:**
+- `ILogger` - from core tokens
+- `IEffectsAnalyzer` - from goapTokens (already implemented)
+- `IDataRegistry` - from core tokens (for accessing rules and actions)
+- `IAjvSchemaValidator` - from core tokens (for validating generated effects)
+
+**Registration Example:**
+```javascript
+// In src/dependencyInjection/registrations/goapRegistrations.js
+container.register(goapTokens.IEffectsGenerator, EffectsGenerator, {
+  dependencies: {
+    logger: coreTokens.ILogger,
+    effectsAnalyzer: goapTokens.IEffectsAnalyzer,
+    dataRegistry: coreTokens.IDataRegistry,
+    schemaValidator: coreTokens.IAjvSchemaValidator
+  }
+});
+```
+
 ## Notes
 
-- **Rule Discovery:** May need to refine rule-finding heuristics
+- **Rule Discovery:** May need to refine rule-finding heuristics based on actual mod patterns
 - **Multiple Rules:** Some actions may have multiple rules (success/failure paths)
 - **Effect Merging:** When multiple rules exist, merge their effects intelligently
 - **Validation:** Should provide actionable feedback for fixing issues
+- **Macro Handling:** Macros are already expanded by RuleLoader; EffectsGenerator only needs to handle runtime placeholders
+- **DataRegistry Access:** All data access is synchronous via DataRegistry (no async/await needed for data retrieval)
 
 ## Related Tickets
 
