@@ -88,6 +88,16 @@ function loadScenario(
     );
   }
 
+  // Always create a target actor at the same location (required for hasOtherActorsAtLocation prerequisite)
+  entities.push(
+    new ModEntityBuilder('target1')
+      .withName('Observer')
+      .atLocation('room1')
+      .withLocationComponent('room1')
+      .asActor()
+      .build()
+  );
+
   fixture.reset(entities);
   fixture.testEnv.actionIndex.buildIndex([strokePenisDrawAttentionAction]);
 

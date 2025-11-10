@@ -52,7 +52,7 @@ describe('Seduction Mod: Draw Attention to Breasts Action', () => {
 
     it('should have prerequisites for breasts and upper torso clothing', () => {
       validatePrerequisites(drawAttentionToBreastsAction.prerequisites, {
-        count: 2,
+        count: 3,
       });
     });
   });
@@ -115,19 +115,34 @@ describe('Seduction Mod: Draw Attention to Breasts Action', () => {
       ]);
     });
 
+    it('should require other actors at location', () => {
+      const otherActorsPrerequisite =
+        drawAttentionToBreastsAction.prerequisites[2];
+      expect(
+        otherActorsPrerequisite.logic.hasOtherActorsAtLocation
+      ).toBeDefined();
+      expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
+        'actor',
+      ]);
+    });
+
     it('should have meaningful failure messages', () => {
       const breastFailure =
         drawAttentionToBreastsAction.prerequisites[0].failure_message;
       const clothingFailure =
         drawAttentionToBreastsAction.prerequisites[1].failure_message;
+      const otherActorsFailure =
+        drawAttentionToBreastsAction.prerequisites[2].failure_message;
 
       expect(breastFailure).toContain('breasts');
       expect(clothingFailure).toContain('clothing');
       expect(clothingFailure).toContain('upper torso');
+      expect(otherActorsFailure).toContain('nobody here');
 
       // Messages should be descriptive and user-friendly
       expect(breastFailure.length).toBeGreaterThan(20);
       expect(clothingFailure.length).toBeGreaterThan(20);
+      expect(otherActorsFailure.length).toBeGreaterThan(20);
     });
   });
 });

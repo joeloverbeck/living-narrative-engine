@@ -59,7 +59,7 @@ describe('seduction:draw_attention_to_ass action discovery', () => {
 
     it('should have prerequisites for ass_cheek and torso_lower clothing', () => {
       expect(drawAttentionToAssAction.prerequisites).toBeDefined();
-      expect(drawAttentionToAssAction.prerequisites.length).toBe(2);
+      expect(drawAttentionToAssAction.prerequisites.length).toBe(3);
 
       const bodyPartPrereq = drawAttentionToAssAction.prerequisites[0];
       expect(bodyPartPrereq.logic.hasPartOfType).toEqual(['actor', 'ass_cheek']);
@@ -68,6 +68,11 @@ describe('seduction:draw_attention_to_ass action discovery', () => {
       expect(clothingPrereq.logic.hasClothingInSlot).toEqual([
         'actor',
         'torso_lower',
+      ]);
+
+      const otherActorsPrereq = drawAttentionToAssAction.prerequisites[2];
+      expect(otherActorsPrereq.logic.hasOtherActorsAtLocation).toEqual([
+        'actor',
       ]);
     });
   });
@@ -122,6 +127,13 @@ describe('seduction:draw_attention_to_ass action discovery', () => {
       const clothingPrereq = drawAttentionToAssAction.prerequisites[1];
       expect(clothingPrereq.failure_message).toBe(
         'You need to be wearing clothing on your lower torso to draw attention to your ass.'
+      );
+    });
+
+    it('should validate other actors at location requirement', () => {
+      const otherActorsPrereq = drawAttentionToAssAction.prerequisites[2];
+      expect(otherActorsPrereq.failure_message).toBe(
+        'There is nobody here to draw attention from.'
       );
     });
   });

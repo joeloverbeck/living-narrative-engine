@@ -105,16 +105,15 @@ function loadScenario(
     );
   }
 
-  if (includeHugging) {
-    entities.push(
-      new ModEntityBuilder(TARGET_ID)
-        .withName('Observer')
-        .atLocation(ROOM_ID)
-        .withLocationComponent(ROOM_ID)
-        .asActor()
-        .build()
-    );
-  }
+  // Always create a target actor at the same location (required for hasOtherActorsAtLocation prerequisite)
+  entities.push(
+    new ModEntityBuilder(TARGET_ID)
+      .withName('Observer')
+      .atLocation(ROOM_ID)
+      .withLocationComponent(ROOM_ID)
+      .asActor()
+      .build()
+  );
 
   fixture.reset(entities);
   fixture.testEnv.actionIndex.buildIndex([strokePenisToDrawAttentionAction]);

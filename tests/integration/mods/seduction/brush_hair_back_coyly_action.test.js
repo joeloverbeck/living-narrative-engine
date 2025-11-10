@@ -53,7 +53,7 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
     // eslint-disable-next-line jest/expect-expect -- validatePrerequisites contains assertions
     it('should have prerequisite for hair', () => {
       validatePrerequisites(brushHairBackCoylyAction.prerequisites, {
-        count: 1,
+        count: 2,
       });
     });
   });
@@ -98,10 +98,23 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
       expect(hairPrerequisite.logic.hasPartOfType).toEqual(['actor', 'hair']);
     });
 
+    it('should require other actors at location', () => {
+      const otherActorsPrerequisite = brushHairBackCoylyAction.prerequisites[1];
+      expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toBeDefined();
+      expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
+        'actor',
+      ]);
+    });
+
     it('should have meaningful failure message', () => {
       const hairFailure = brushHairBackCoylyAction.prerequisites[0].failure_message;
+      const otherActorsFailure =
+        brushHairBackCoylyAction.prerequisites[1].failure_message;
+
       expect(hairFailure).toContain('hair');
       expect(hairFailure.length).toBeGreaterThan(20);
+      expect(otherActorsFailure).toContain('nobody here');
+      expect(otherActorsFailure.length).toBeGreaterThan(20);
     });
   });
 });
