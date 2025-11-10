@@ -26,6 +26,8 @@ Extend the component schema definition to support an optional `validationRules` 
 
 **File to Update:** `data/schemas/component.schema.json`
 
+**Current Schema Structure Note:** The existing `component.schema.json` uses `$ref` references to `common.schema.json` for shared definitions like `$schema`, `id`, and `description`. The `validationRules` property should be added as a new direct property definition (not a reference) since it's specific to component schemas.
+
 Add the following property definition to the component schema:
 
 ```json
@@ -98,7 +100,7 @@ Add the following property definition to the component schema:
       "additionalProperties": false
     }
   },
-  "required": ["$schema", "id", "dataSchema"]
+  "required": ["id", "description", "dataSchema"]
 }
 ```
 
@@ -108,11 +110,13 @@ Add the following property definition to the component schema:
 
 Create an example showing the enhanced schema:
 
+**Note:** The example below uses a simplified enum for clarity. The actual `texture.component.json` in the descriptors mod contains 47 enum values. Choose an appropriate subset or use the full enum based on implementation needs.
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "descriptors:texture",
-  "description": "Describes the surface texture of an object",
+  "id": "descriptors:texture-validation-example",
+  "description": "Example component showing validationRules usage for texture descriptors",
   "dataSchema": {
     "type": "object",
     "properties": {
@@ -155,13 +159,16 @@ Create a test schema validation scenario to ensure:
 ## Files to Update
 
 - [ ] `data/schemas/component.schema.json` - Add `validationRules` property definition
-- [ ] `docs/schemas/component-schema-spec.md` - Document new property (if exists)
+
+**Note:** There is no `docs/schemas/component-schema-spec.md` file in the codebase. The `docs/schemas/` directory does not exist. Documentation updates should focus on inline schema descriptions and validation-workflow.md if needed.
 
 ## Testing Requirements
 
 ### Unit Tests
 
-**File:** `tests/unit/validation/componentSchemaValidation.test.js`
+**File to Create:** `tests/unit/validation/componentSchemaValidation.test.js`
+
+**Note:** This test file does not currently exist and needs to be created as part of this ticket.
 
 Test cases:
 - Schema with valid `validationRules` passes validation
@@ -175,7 +182,9 @@ Test cases:
 
 ### Integration Tests
 
-**File:** `tests/integration/validation/componentSchemaExtension.integration.test.js`
+**File to Create:** `tests/integration/validation/componentSchemaExtension.integration.test.js`
+
+**Note:** This test file does not currently exist and needs to be created as part of this ticket.
 
 Test cases:
 - Load existing component schemas (should all still validate)
@@ -194,7 +203,7 @@ Test cases:
 - [ ] Schema validation tests pass
 - [ ] Integration tests verify backward compatibility
 - [ ] No breaking changes to existing schemas
-- [ ] ESLint passes on any modified JS files
+- [ ] ESLint passes on any modified files: `npx eslint <modified-files>`
 - [ ] TypeScript type checking passes
 
 ## Validation Commands
@@ -217,7 +226,7 @@ npm run test:ci
 
 ## Success Metrics
 
-- ✅ All 100+ existing component schemas validate without changes
+- ✅ All 124 existing component schemas validate without changes
 - ✅ New `validationRules` property accepts valid configurations
 - ✅ Invalid `validationRules` configurations are rejected
 - ✅ Schema remains backward compatible
