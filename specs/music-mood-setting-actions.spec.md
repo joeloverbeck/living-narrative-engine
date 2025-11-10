@@ -31,7 +31,7 @@ Building on the music mod's component infrastructure (defined in `specs/music-mo
 
 - `specs/music-mod.spec.md` - Core music component definitions
 - `specs/lookups-content-type-infrastructure.spec.md` - Lookup system infrastructure
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity for music mod
+- `docs/mods/mod-color-schemes.md` - Visual identity for music mod
 
 ## 2. Mood Taxonomy
 
@@ -1199,7 +1199,7 @@ Enable multiple musicians to coordinate moods:
 
 - `specs/music-mod.spec.md` - Core music component definitions
 - `specs/lookups-content-type-infrastructure.spec.md` - Lookup system
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity
+- `docs/mods/mod-color-schemes.md` - Visual identity
 
 ### 14.2 Related Documentation
 

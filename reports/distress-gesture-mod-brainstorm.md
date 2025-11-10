@@ -31,10 +31,10 @@
 
 | Priority | Palette | Spec Section | Rationale |
 | --- | --- | --- | --- |
-| Primary | **Dark Red Alert** | 6.2 | Conveys urgent emotional strain and high-stakes pleading, reinforcing the distress theme while remaining WCAG AAA compliant.【F:specs/wcag-compliant-color-combinations.spec.md†L303-L337】 |
-| Secondary | **Obsidian Frost** | 11.7 | Offers a contrasting, numbed visual option for actions that depict internalized despair or withdrawn coping, also AAA compliant.【F:specs/wcag-compliant-color-combinations.spec.md†L655-L668】 |
+| Primary | **Dark Red Alert** | 6.2 | Conveys urgent emotional strain and high-stakes pleading, reinforcing the distress theme while remaining WCAG AAA compliant.【F:docs/mods/mod-color-schemes.md†L303-L337】 |
+| Secondary | **Obsidian Frost** | 11.7 | Offers a contrasting, numbed visual option for actions that depict internalized despair or withdrawn coping, also AAA compliant.【F:docs/mods/mod-color-schemes.md†L655-L668】 |
 
-Both palettes are currently unassigned, so the new mod can adopt them without conflicts while signaling distinct emotional contexts within the UI.【F:specs/wcag-compliant-color-combinations.spec.md†L44-L337】【F:specs/wcag-compliant-color-combinations.spec.md†L655-L668】
+Both palettes are currently unassigned, so the new mod can adopt them without conflicts while signaling distinct emotional contexts within the UI.【F:docs/mods/mod-color-schemes.md†L44-L337】【F:docs/mods/mod-color-schemes.md†L655-L668】
 
 ## Suggested Next Steps
 1. Validate naming preference with narrative stakeholders, selecting one theme to guide action phrasing and descriptors.

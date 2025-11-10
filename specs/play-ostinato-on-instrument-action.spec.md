@@ -46,7 +46,7 @@ An **ostinato** is a musical motif or phrase that persistently repeats in the sa
 - `specs/music-mood-setting-actions.spec.md` - Mood-setting actions and mood_lexicon lookup
 - `specs/play-phrase-on-instrument-action.spec.md` - General phrase-playing action
 - `specs/lookups-content-type-infrastructure.spec.md` - Lookup system infrastructure
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity for music mod
+- `docs/mods/mod-color-schemes.md` - Visual identity for music mod
 
 ## 2. Action Definition
 

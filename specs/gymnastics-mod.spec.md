@@ -177,6 +177,6 @@ Coverage thresholds can be ignored per project guidance, but all new tests must 
 ## Next Steps
 
 1. Implement the component, actions, conditions, and rules per the file layout above.
-2. Update `specs/wcag-compliant-color-combinations.spec.md` to reflect Journey Cobalt's new assignment (already captured alongside this spec update).
+2. Update `docs/mods/mod-color-schemes.md` to reflect Journey Cobalt's new assignment (already captured alongside this spec update).
 3. Build the gymnastics-specific integration tests covering discoverability and rule output.
 4. Validate contrast compliance and run `npm run validate` before submission.

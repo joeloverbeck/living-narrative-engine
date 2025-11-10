@@ -4,7 +4,7 @@
 
 Introduce the distress mod's first multi-target gesture by adapting the caressing mod's `adjust_clothing` structure to convey a desperate cling to a companion's upper torso garment. Mirror the multi-target layout, closeness-driven targeting, and rule orchestration shown in the caressing implementation so the new distress content remains compatible with the engine's action pipeline. 【F:data/mods/caressing/actions/adjust_clothing.action.json†L2-L39】【F:data/mods/caressing/rules/adjust_clothing.rule.json†L2-L69】
 
-The distress mod already declares the `clothing` dependency and documents the Obsidian Frost secondary palette; reuse that palette so the new action aligns with existing visual plans. 【F:data/mods/distress/mod-manifest.json†L9-L32】【F:data/mods/distress/README.md†L1-L13】 The WCAG palette spec lists Obsidian Frost (11.7) as the combination assigned to distress gestures—apply the same colors to the new action's `visual` block. 【F:specs/wcag-compliant-color-combinations.spec.md†L660-L670】
+The distress mod already declares the `clothing` dependency and documents the Obsidian Frost secondary palette; reuse that palette so the new action aligns with existing visual plans. 【F:data/mods/distress/mod-manifest.json†L9-L32】【F:data/mods/distress/README.md†L1-L13】 The WCAG palette spec lists Obsidian Frost (11.7) as the combination assigned to distress gestures—apply the same colors to the new action's `visual` block. 【F:docs/mods/mod-color-schemes.md†L660-L670】
 
 ## Scope Requirements
 
@@ -23,7 +23,7 @@ Add `data/mods/distress/actions/clutch_onto_upper_clothing.action.json` using th
 - `required_components.actor`: `["positioning:closeness"]`. 【F:data/mods/caressing/actions/adjust_clothing.action.json†L20-L22】
 - `forbidden_components`: Empty objects for all entity keys (no forbidden components for this action).
 - `prerequisites`: `[]` (omit the redundant closeness prerequisite from the reference action).
-- `visual`: Obsidian Frost palette — background `#0b132b`, text `#f2f4f8`, hover background `#1c2541`, hover text `#e0e7ff`. 【F:specs/wcag-compliant-color-combinations.spec.md†L660-L670】
+- `visual`: Obsidian Frost palette — background `#0b132b`, text `#f2f4f8`, hover background `#1c2541`, hover text `#e0e7ff`. 【F:docs/mods/mod-color-schemes.md†L660-L670】
 
 Add the new action path to `content.actions` in the distress manifest. 【F:data/mods/distress/mod-manifest.json†L27-L31】
 

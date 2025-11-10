@@ -34,7 +34,7 @@ Building on the music mood-setting actions defined in `specs/music-mood-setting-
 - `specs/music-mod.spec.md` - Core music component definitions
 - `specs/music-mood-setting-actions.spec.md` - Mood-setting actions and mood_lexicon lookup
 - `specs/lookups-content-type-infrastructure.spec.md` - Lookup system infrastructure
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity for music mod
+- `docs/mods/mod-color-schemes.md` - Visual identity for music mod
 
 ## 2. Scope Definition
 
