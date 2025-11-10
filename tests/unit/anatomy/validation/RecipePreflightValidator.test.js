@@ -43,6 +43,7 @@ describe('RecipePreflightValidator', () => {
     mockSlotGenerator = {
       extractSlotKeysFromLimbSet: jest.fn(() => []),
       extractSlotKeysFromAppendage: jest.fn(() => []),
+      generateBlueprintSlots: jest.fn(() => ({})),
     };
 
     validator = new RecipePreflightValidator({
@@ -901,7 +902,6 @@ describe('RecipePreflightValidator', () => {
               id: 'entity:surface_eye',
               components: {
                 'anatomy:part': { subType: 'eldritch_surface_eye' },
-                'anatomy:part': {},
                 'descriptors:animation': {
                   animation: 'unblinking-independent-motion', // Does NOT match recipe requirement
                 },
@@ -1166,6 +1166,353 @@ describe('RecipePreflightValidator', () => {
 
       // Restore
       mockLogger.error = originalError;
+    });
+  });
+
+  describe('Blueprint Processing (#ensureBlueprintProcessed)', () => {
+    it('should process V2 blueprint with structure template', async () => {
+      const structureTemplate = {
+        id: 'test:template',
+        topology: {
+          limbSets: [
+            {
+              type: 'leg',
+              count: 4,
+              arrangement: 'quadrupedal',
+              socketPattern: {
+                idTemplate: 'leg_{{orientation}}',
+                orientationScheme: 'bilateral',
+                allowedTypes: ['leg'],
+              },
+            },
+          ],
+          appendages: [],
+        },
+      };
+
+      const rawBlueprint = {
+        id: 'test:blueprint',
+        schemaVersion: '2.0',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {
+          arm_left: {
+            socket: 'arm_left',
+            requirements: { partType: 'arm', components: ['anatomy:part'] },
+          },
+        },
+      };
+
+      // Mock entity definitions for part availability checks
+      const mockEntityDefs = [
+        {
+          id: 'test:leg_part',
+          components: {
+            'anatomy:part': { subType: 'front_leg' },
+          },
+        },
+        {
+          id: 'test:arm_part',
+          components: {
+            'anatomy:part': { subType: 'arm' },
+          },
+        },
+      ];
+
+      mockDataRegistry.get = jest.fn((type, id) => {
+        if (type === 'anatomyStructureTemplates' && id === 'test:template') {
+          return structureTemplate;
+        }
+        return undefined;
+      });
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return mockEntityDefs;
+        }
+        return [];
+      });
+
+      mockSlotGenerator.generateBlueprintSlots = jest.fn(() => ({
+        leg_left_front: {
+          socket: 'leg_left_front',
+          orientation: 'left_front',
+          requirements: { partType: 'leg', components: ['anatomy:part'] },
+        },
+        leg_right_front: {
+          socket: 'leg_right_front',
+          orientation: 'right_front',
+          requirements: { partType: 'leg', components: ['anatomy:part'] },
+        },
+        leg_left_rear: {
+          socket: 'leg_left_rear',
+          orientation: 'left_rear',
+          requirements: { partType: 'leg', components: ['anatomy:part'] },
+        },
+        leg_right_rear: {
+          socket: 'leg_right_rear',
+          orientation: 'right_rear',
+          requirements: { partType: 'leg', components: ['anatomy:part'] },
+        },
+      }));
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => rawBlueprint;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matchesAll: { slotType: 'leg', orientation: '*_front' },
+            partType: 'front_leg',
+            tags: ['anatomy:part'],
+            properties: {},
+          },
+          {
+            matchesAll: { slotType: 'arm' },
+            partType: 'arm',
+            tags: ['anatomy:part'],
+            properties: {},
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should pass pattern matching now that slots are generated and merged
+      expect(report.isValid).toBe(true);
+      expect(report.warnings).toHaveLength(0);
+      expect(
+        report.passed.some((p) => p.check === 'pattern_matching')
+      ).toBe(true);
+    });
+
+    it('should handle V1 blueprints without processing', async () => {
+      const v1Blueprint = {
+        id: 'test:blueprint_v1',
+        root: 'test:root',
+        slots: {
+          leg_1: {
+            socket: 'leg_1',
+            requirements: { partType: 'leg', components: ['anatomy:part'] },
+          },
+        },
+      };
+
+      const mockEntityDefs = [
+        {
+          id: 'test:leg_part',
+          components: {
+            'anatomy:part': { subType: 'leg' },
+          },
+        },
+      ];
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return mockEntityDefs;
+        }
+        return [];
+      });
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => v1Blueprint;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint_v1',
+        slots: {},
+        patterns: [
+          {
+            matchesAll: { slotType: 'leg' },
+            partType: 'leg',
+            tags: ['anatomy:part'],
+            properties: {},
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should validate without processing since it's V1
+      expect(report.isValid).toBe(true);
+      expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
+    });
+
+    it('should handle missing structure template gracefully', async () => {
+      const rawBlueprint = {
+        id: 'test:blueprint',
+        schemaVersion: '2.0',
+        structureTemplate: 'test:missing_template',
+        additionalSlots: {
+          arm_left: {
+            socket: 'arm_left',
+            requirements: { partType: 'arm', components: ['anatomy:part'] },
+          },
+        },
+      };
+
+      mockDataRegistry.get = jest.fn(() => undefined); // Template not found
+      mockAnatomyBlueprintRepository.getBlueprint = async () => rawBlueprint;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        patterns: [
+          {
+            matchesAll: { slotType: 'arm' },
+            partType: 'arm',
+            tags: ['anatomy:part'],
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should warn about missing template but continue with raw blueprint
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Structure template')
+      );
+      // Pattern should fail since slots aren't generated
+      expect(report.warnings.length).toBeGreaterThan(0);
+    });
+
+    it('should merge additionalSlots with generated slots (additionalSlots precedence)', async () => {
+      const structureTemplate = {
+        id: 'test:template',
+        topology: {
+          limbSets: [],
+          appendages: [
+            {
+              type: 'head',
+              count: 1,
+              socketPattern: {
+                idTemplate: 'head',
+                allowedTypes: ['head'],
+              },
+            },
+          ],
+        },
+      };
+
+      const rawBlueprint = {
+        id: 'test:blueprint',
+        schemaVersion: '2.0',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {
+          head: {
+            socket: 'head',
+            requirements: {
+              partType: 'custom_head', // Override
+              components: ['anatomy:part', 'anatomy:special'],
+            },
+          },
+        },
+      };
+
+      const mockEntityDefs = [
+        {
+          id: 'test:custom_head_part',
+          components: {
+            'anatomy:part': { subType: 'custom_head' },
+            'anatomy:special': {},
+          },
+        },
+      ];
+
+      mockDataRegistry.get = jest.fn(() => structureTemplate);
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return mockEntityDefs;
+        }
+        return [];
+      });
+
+      mockSlotGenerator.generateBlueprintSlots = jest.fn(() => ({
+        head: {
+          socket: 'head',
+          requirements: { partType: 'head', components: ['anatomy:part'] },
+        },
+      }));
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => rawBlueprint;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matchesAll: { slotType: 'custom_head' }, // Should match the override
+            partType: 'custom_head',
+            tags: ['anatomy:part'],
+            properties: {},
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Pattern should match because additionalSlots overrides generated slot
+      expect(report.isValid).toBe(true);
+      expect(report.warnings).toHaveLength(0);
+    });
+
+    it('should avoid reprocessing already-processed blueprints', async () => {
+      const processedBlueprint = {
+        id: 'test:blueprint',
+        schemaVersion: '2.0',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        slots: {
+          leg_1: { socket: 'leg_1', requirements: { partType: 'leg', components: ['anatomy:part'] } },
+        },
+        _generatedSockets: true, // Already processed marker
+      };
+
+      const mockEntityDefs = [
+        {
+          id: 'test:leg_part',
+          components: {
+            'anatomy:part': { subType: 'leg' },
+          },
+        },
+      ];
+
+      // Reset mock counters
+      mockSlotGenerator.generateBlueprintSlots.mockClear();
+      mockDataRegistry.get.mockClear();
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return mockEntityDefs;
+        }
+        return [];
+      });
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => processedBlueprint;
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matchesAll: { slotType: 'leg' },
+            partType: 'leg',
+            tags: ['anatomy:part'],
+            properties: {},
+          },
+        ],
+      };
+
+      await validator.validate(recipe);
+
+      // Should not call slot generator since blueprint is already processed
+      expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
+      // get() might be called for other purposes, so we just verify generateBlueprintSlots wasn't called
     });
   });
 });
