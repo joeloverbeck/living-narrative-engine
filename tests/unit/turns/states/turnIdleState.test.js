@@ -116,6 +116,27 @@ describe('TurnIdleState.startTurn', () => {
     expect(handler._resetTurnStateAndResources).toHaveBeenCalledTimes(1);
     expect(handler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
   });
+
+  it('recovers when transition to awaiting input fails', async () => {
+    const actor = makeActor('actor-transition');
+    const transitionError = new Error('transition boom');
+    const ctx = buildCtx(actor);
+    ctx.requestAwaitingInputStateTransition.mockRejectedValueOnce(transitionError);
+    const handler = buildHandler(ctx);
+    const idle = new TurnIdleState(handler);
+    const stateName = idle.getStateName();
+
+    await expect(idle.startTurn(handler, actor)).rejects.toThrow(transitionError);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      `TurnIdleState: Failed to transition to AwaitingActorDecisionState for ${actor.id}. Error: ${transitionError.message}`,
+      transitionError
+    );
+    expect(handler._resetTurnStateAndResources).toHaveBeenCalledWith(
+      `transition-fail-${stateName}`
+    );
+    expect(handler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('TurnIdleState “idle passthrough” methods', () => {
