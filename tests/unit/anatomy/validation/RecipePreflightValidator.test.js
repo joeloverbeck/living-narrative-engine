@@ -1180,6 +1180,96 @@ describe('RecipePreflightValidator', () => {
       ).toHaveLength(0);
     });
 
+    it('should ignore entity definitions without anatomy parts when matching generated slots', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const blueprint = {
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+        slots: {
+          wing_socket: {
+            allowedTypes: ['*'],
+            requirements: {
+              components: [],
+              properties: {},
+            },
+          },
+        },
+      };
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest
+        .fn()
+        .mockResolvedValue(blueprint);
+
+      const entityDefs = [
+        {
+          id: 'entity:noAnatomyPart',
+          components: {
+            'component:flavor': {},
+          },
+        },
+        {
+          id: 'entity:matchingWing',
+          components: {
+            'anatomy:part': { subType: 'wing' },
+          },
+        },
+      ];
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return entityDefs;
+        }
+        return [];
+      });
+
+      jest
+        .spyOn(patternMatchingValidator, 'findMatchingSlots')
+        .mockReturnValue({ matches: ['wing_socket'], availableSlots: ['wing_socket'] });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matches: ['wing_socket'],
+            partType: 'wing',
+            tags: [],
+            properties: {},
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipLoadFailureChecks: true,
+      });
+
+      const generatedErrors = report.errors.filter(
+        (error) => error.type === 'GENERATED_SLOT_PART_UNAVAILABLE'
+      );
+      expect(generatedErrors).toHaveLength(0);
+
+      const success = report.passed.find(
+        (entry) => entry.check === 'generated_slot_part_availability'
+      );
+      expect(success).toBeDefined();
+      expect(success.message).toContain('1 generated slot');
+    });
+
     it('should report detailed errors with merged requirements when generated slots lack entities', async () => {
       jest
         .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
@@ -1558,6 +1648,10 @@ describe('RecipePreflightValidator', () => {
               file: 'anatomy/entities/torso.entity.json',
               error: new Error('Unexpected end of JSON input'),
             },
+            {
+              file: 'anatomy/entities/claw.entity.json',
+              error: new Error('Invalid components: [component:gamma]'),
+            },
           ],
         },
       };
@@ -1597,7 +1691,7 @@ describe('RecipePreflightValidator', () => {
       const loadErrors = report.errors.filter(
         (error) => error.type === 'ENTITY_LOAD_FAILURE'
       );
-      expect(loadErrors).toHaveLength(2);
+      expect(loadErrors).toHaveLength(3);
 
       const detailedError = loadErrors.find((error) =>
         error.details.failedComponents?.includes('component:alpha')
@@ -1619,8 +1713,93 @@ describe('RecipePreflightValidator', () => {
       expect(genericError).toBeDefined();
       expect(genericError.fix).toContain('Review');
 
+      const fallbackDetailError = loadErrors.find((error) =>
+        error.details.failedComponents?.includes('component:gamma')
+      );
+      expect(fallbackDetailError).toBeDefined();
+      expect(fallbackDetailError.details.validationDetails).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            component: 'component:gamma',
+            issue: expect.stringContaining('Component validation failed'),
+          }),
+        ])
+      );
+      expect(fallbackDetailError.fix).toContain('component:gamma');
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Found 2 entity definition load failures')
+        expect.stringContaining('Found 3 entity definition load failures')
+      );
+    });
+
+    it('should log an error when load failure diagnostics throw', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const throwingLoadFailures = new Proxy(
+        {},
+        {
+          get(_, prop) {
+            if (prop === 'entityDefinitions') {
+              throw new Error('Registry unavailable');
+            }
+            return undefined;
+          },
+        }
+      );
+
+      const capturingLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      const validatorWithThrowingLoadFailures = new RecipePreflightValidator({
+        dataRegistry: mockDataRegistry,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        schemaValidator: mockSchemaValidator,
+        slotGenerator: mockSlotGenerator,
+        logger: capturingLogger,
+        loadFailures: throwingLoadFailures,
+      });
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest
+        .fn()
+        .mockResolvedValue({
+          id: 'test:blueprint',
+          root: 'test:root',
+          structureTemplate: null,
+          additionalSlots: {},
+          slots: {},
+        });
+
+      mockDataRegistry.getAll = jest.fn(() => []);
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      await validatorWithThrowingLoadFailures.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+      });
+
+      expect(capturingLogger.error).toHaveBeenCalledWith(
+        'Entity definition load failure check failed',
+        expect.any(Error)
       );
     });
   });
