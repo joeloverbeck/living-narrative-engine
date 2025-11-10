@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/planning-effects.schema.json",
+  "title": "Planning Effects",
+  "description": "Planning metadata for GOAP planner (not execution code)",
+  "type": "object",
+  "properties": {
+    "effects": {
+      "type": "array",
+      "description": "List of world state changes for planning",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/definitions/addComponentEffect" },
+          { "$ref": "#/definitions/removeComponentEffect" },
+          { "$ref": "#/definitions/modifyComponentEffect" },
+          { "$ref": "#/definitions/conditionalEffect" }
+        ]
+      }
+    },
+    "cost": {
+      "description": "Planning cost (default 1.0)",
+      "oneOf": [
+        { "type": "number", "minimum": 0 },
+        { "$ref": "#/definitions/dynamicCost" }
+      ]
+    },
+    "abstractPreconditions": {
+      "type": "object",
+      "description": "Abstract precondition functions used in conditional effects (optional)",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": { "type": "string" },
+          "parameters": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "simulationFunction": { "type": "string" }
+        },
+        "required": ["description", "parameters", "simulationFunction"]
+      }
+    }
+  },
+  "required": ["effects"],
+  "additionalProperties": false,
+  "definitions": {
+    "addComponentEffect": {
+      "type": "object",
+      "properties": {
+        "operation": { "const": "ADD_COMPONENT" },
+        "entity": { "type": "string", "enum": ["actor", "target", "tertiary_target"] },
+        "component": { "type": "string", "pattern": "^[a-z0-9_]+:[a-z0-9_]+$" },
+        "data": { "type": "object" }
+      },
+      "required": ["operation", "entity", "component"]
+    },
+    "removeComponentEffect": {
+      "type": "object",
+      "properties": {
+        "operation": { "const": "REMOVE_COMPONENT" },
+        "entity": { "type": "string", "enum": ["actor", "target", "tertiary_target"] },
+        "component": { "type": "string", "pattern": "^[a-z0-9_]+:[a-z0-9_]+$" }
+      },
+      "required": ["operation", "entity", "component"]
+    },
+    "modifyComponentEffect": {
+      "type": "object",
+      "properties": {
+        "operation": { "const": "MODIFY_COMPONENT" },
+        "entity": { "type": "string", "enum": ["actor", "target", "tertiary_target"] },
+        "component": { "type": "string", "pattern": "^[a-z0-9_]+:[a-z0-9_]+$" },
+        "updates": { "type": "object" }
+      },
+      "required": ["operation", "entity", "component", "updates"]
+    },
+    "conditionalEffect": {
+      "type": "object",
+      "properties": {
+        "operation": { "const": "CONDITIONAL" },
+        "condition": { "type": "object", "description": "JSON Logic condition" },
+        "then": { "type": "array" }
+      },
+      "required": ["operation", "condition", "then"]
+    },
+    "dynamicCost": {
+      "type": "object",
+      "properties": {
+        "base": { "type": "number", "minimum": 0 },
+        "factors": { "type": "array" }
+      },
+      "required": ["base"]
+    }
+  }
+}
