@@ -24,12 +24,12 @@ describe('Effects Generation Performance', () => {
 
   describe('Batch Generation Performance', () => {
     it('should generate effects for 200 actions in under 5 seconds', () => {
-      // Get all action IDs from all loaded mods
+      // Get action IDs from all loaded mods, limited to 200 for consistent benchmarking
       const allActions = dataRegistry.getAll('actions');
-      const actionIds = Array.from(allActions.keys());
+      const actionIds = Array.from(allActions.keys()).slice(0, 200);
 
-      // Ensure we have enough actions to test
-      expect(actionIds.length).toBeGreaterThan(100);
+      // Ensure we have enough actions to test (should have at least 200)
+      expect(actionIds.length).toBe(200);
 
       const startTime = Date.now();
       const effectsMap = new Map();
@@ -53,7 +53,7 @@ describe('Effects Generation Performance', () => {
 
       // Log performance metrics
       console.log(`\nPerformance Metrics:`);
-      console.log(`  Total actions: ${actionIds.length}`);
+      console.log(`  Actions tested: ${actionIds.length} (capped for consistent benchmarking)`);
       console.log(`  Generated effects: ${effectsMap.size}`);
       console.log(`  Duration: ${duration}ms`);
       console.log(`  Average: ${Math.round(duration / effectsMap.size)}ms per action`);
