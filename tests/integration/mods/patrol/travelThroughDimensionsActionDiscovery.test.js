@@ -25,6 +25,7 @@ describe('travel_through_dimensions Action Discovery', () => {
     it('should discover travel_through_dimensions for Writhing Observer at perimeter', async () => {
       // Create perimeter location with dimensional exit
       const perimeterId = fixture.createEntity({
+        id: 'test-perimeter',
         name: 'perimeter of rip in reality',
         components: [
           {
@@ -36,6 +37,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       // Create eldritch dimension
       const dimensionId = fixture.createEntity({
+        id: 'test-dimension',
         name: 'eldritch dimension',
         components: [
           {
@@ -47,6 +49,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       // Create dimensional blocker
       const blockerId = fixture.createEntity({
+        id: 'test-blocker',
         name: 'dimensional rift',
         components: [
           {
@@ -67,6 +70,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       // Create Writhing Observer at perimeter
       const observerId = fixture.createEntity({
+        id: 'test-observer',
         name: 'Writhing Observer',
         components: [
           {
@@ -96,6 +100,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       // Create human without dimensional travel component
       const humanId = fixture.createEntity({
+        id: 'test-human',
         name: 'Human Sentinel',
         components: [
           {
@@ -117,6 +122,7 @@ describe('travel_through_dimensions Action Discovery', () => {
     it('should NOT discover travel_through_dimensions for unblocked exits', async () => {
       // Create location with unblocked exit
       const locationId = fixture.createEntity({
+        id: 'test-location',
         name: 'normal location',
         components: [
           {
@@ -127,6 +133,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       });
 
       const targetId = fixture.createEntity({
+        id: 'test-target',
         name: 'another location',
         components: [
           {
@@ -146,6 +153,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       ]);
 
       const observerId = fixture.createEntity({
+        id: 'test-observer2',
         name: 'Writhing Observer',
         components: [
           {
@@ -220,16 +228,19 @@ describe('travel_through_dimensions Action Discovery', () => {
  */
 function createDimensionalScenario(fixture) {
   const perimeterId = fixture.createEntity({
+    id: 'helper-perimeter',
     name: 'perimeter of rip in reality',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const dimensionId = fixture.createEntity({
+    id: 'helper-dimension',
     name: 'eldritch dimension',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const blockerId = fixture.createEntity({
+    id: 'helper-blocker',
     name: 'dimensional rift',
     components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
   });
@@ -253,21 +264,25 @@ function createDimensionalScenario(fixture) {
  */
 function createMixedExitScenario(fixture) {
   const startLocationId = fixture.createEntity({
+    id: 'helper-start',
     name: 'start location',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const normalRoomId = fixture.createEntity({
+    id: 'helper-normalroom',
     name: 'normal room',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const dimensionId = fixture.createEntity({
+    id: 'helper-dimension2',
     name: 'eldritch dimension',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const blockerId = fixture.createEntity({
+    id: 'helper-blocker2',
     name: 'dimensional rift',
     components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
   });
@@ -286,6 +301,7 @@ function createMixedExitScenario(fixture) {
   ]);
 
   const humanId = fixture.createEntity({
+    id: 'helper-human',
     name: 'Human Sentinel',
     components: [
       { componentId: 'core:actor', data: {} },

@@ -1,5 +1,6 @@
 {
-  "$schema": "http://example.com/schemas/entity-instance.schema.json",
-  "id": "patrol:dimensional_rift_blocker_instance",
-  "definitionId": "patrol:dimensional_rift_blocker"
+  "$schema": "schema://living-narrative-engine/entity-instance.schema.json",
+  "instanceId": "patrol:dimensional_rift_blocker_instance",
+  "definitionId": "patrol:dimensional_rift_blocker",
+  "componentOverrides": {}
 }
