@@ -1,6 +1,7 @@
 /**
  * @file Integration tests for validate-recipe.js CLI tool
- * @description Tests CLI execution scenarios with actual recipe files
+ * @description Tests CLI execution with actual recipe validation and mod loading
+ * @note Streamlined to critical paths only - CLI behavior tests moved to unit tests
  */
 
 import { describe, it, expect } from '@jest/globals';
@@ -41,52 +42,61 @@ function executeCLI(args) {
 }
 
 describe('validate-recipe CLI integration tests', () => {
-  describe('Basic execution', () => {
-    it('should exit with error when no recipe files are specified', () => {
-      const result = executeCLI([]);
-
-      expect(result.exitCode).toBe(1);
-      expect(result.stdout).toContain('Usage: npm run validate:recipe');
-    });
-
-    it('should validate a single recipe file', () => {
+  describe('Critical validation paths', () => {
+    it('should validate a valid recipe with full mod loading', () => {
       const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
       const result = executeCLI([recipePath]);
 
-      // With empty registry (Phase 1), we expect validation errors
-      // but the tool should execute successfully
-      expect(result.stdout).toContain('Validating');
-      expect(result.stdout).toContain('Validation Report');
+      expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('anatomy:human_male');
+      expect(result.stdout).toContain('component references exist');
+      expect(result.stdout).toContain('Blueprint');
+      expect(result.stdout).toContain('Passed Checks');
+      expect(result.stdout).toContain('Validation PASSED');
     });
 
-    it('should validate multiple recipe files', () => {
+    it('should validate multiple recipes in batch', () => {
       const recipePaths = [
         'data/mods/anatomy/recipes/human_male.recipe.json',
         'data/mods/anatomy/recipes/human_female.recipe.json',
       ];
       const result = executeCLI(recipePaths);
 
+      expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('anatomy:human_male');
       expect(result.stdout).toContain('anatomy:human_female');
       expect(result.stdout).toContain('VALIDATION SUMMARY');
       expect(result.stdout).toContain('Recipes Validated: 2');
+      expect(result.stdout).toContain('Validation PASSED');
     });
 
-    it('should complete validation in under 5 seconds', () => {
+    it('should validate recipe with structure template (red_dragon)', () => {
       const recipePath = 'data/mods/anatomy/recipes/red_dragon.recipe.json';
-      const startTime = Date.now();
+      const result = executeCLI([recipePath]);
 
-      executeCLI([recipePath]);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('Validation PASSED');
+      expect(result.stdout).toContain('Blueprint');
+    });
 
-      const duration = Date.now() - startTime;
+    it('should fail for non-existent recipe file', () => {
+      const recipePath = 'data/mods/anatomy/recipes/nonexistent.recipe.json';
+      const result = executeCLI([recipePath]);
 
-      // Should be much faster than 5 seconds, but allow some margin
-      expect(duration).toBeLessThan(5000);
+      expect(result.exitCode).toBe(1);
+      expect(result.stdout).toContain('Validation FAILED');
+    });
+
+    it('should fail for invalid file path', () => {
+      const recipePath = 'invalid/path/to/recipe.json';
+      const result = executeCLI([recipePath]);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stdout).toContain('Validation FAILED');
     });
   });
 
-  describe('JSON output', () => {
+  describe('JSON output format', () => {
     it('should output valid JSON with --json flag', () => {
       const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
       const result = executeCLI(['--json', recipePath]);
@@ -112,78 +122,8 @@ describe('validate-recipe CLI integration tests', () => {
     });
   });
 
-  describe('Exit codes', () => {
-    it('should exit with code 0 when validation passes for valid recipes', () => {
-      const recipePath = 'data/mods/anatomy/recipes/red_dragon.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      // With loaded mods (core, descriptors, anatomy), valid recipes pass validation
-      expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Validation PASSED');
-    });
-
-    it('should exit with code 1 for non-existent recipe file', () => {
-      const recipePath = 'data/mods/anatomy/recipes/nonexistent.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      expect(result.exitCode).toBe(1);
-      expect(result.stdout).toContain('Validation FAILED');
-    });
-  });
-
-  describe('Validation checks', () => {
-    it('should verify component references exist in loaded mods', () => {
-      const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      // With loaded mods, components should be found
-      expect(result.stdout).toContain('component references exist');
-      expect(result.stdout).toContain('Passed Checks');
-    });
-
-    it('should verify blueprint exists in loaded mods', () => {
-      const recipePath = 'data/mods/anatomy/recipes/red_dragon.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      // With loaded mods, blueprint should be found
-      expect(result.stdout).toContain('Blueprint');
-      expect(result.stdout).toContain('found');
-    });
-
-    it('should provide helpful suggestions when applicable', () => {
-      const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      // Suggestions section appears even when validation passes
-      const hasSuggestions =
-        result.stdout.includes('Suggestions') ||
-        result.stdout.includes('SUGGESTION');
-      expect(hasSuggestions).toBe(true);
-    });
-
-    it('should show passed checks section', () => {
-      const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      expect(result.stdout).toContain('Passed Checks');
-    });
-  });
-
   describe('Fail-fast mode', () => {
-    it('should validate all valid recipes even with --fail-fast flag', () => {
-      const recipePaths = [
-        'data/mods/anatomy/recipes/human_male.recipe.json',
-        'data/mods/anatomy/recipes/human_female.recipe.json',
-      ];
-      const result = executeCLI(['--fail-fast', ...recipePaths]);
-
-      // With valid recipes, --fail-fast has no effect (all pass)
-      expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('anatomy:human_male');
-      expect(result.stdout).toContain('anatomy:human_female');
-    });
-
-    it('should stop on first error when invalid file is encountered', () => {
+    it('should stop on first error with --fail-fast flag', () => {
       const recipePaths = [
         'data/mods/anatomy/recipes/nonexistent.recipe.json',
         'data/mods/anatomy/recipes/human_female.recipe.json',
@@ -200,67 +140,23 @@ describe('validate-recipe CLI integration tests', () => {
       // Should not process second file
       expect(result.stdout).not.toContain('anatomy:human_female');
     });
-  });
 
-  describe('Performance characteristics', () => {
-    it('should validate multiple recipes efficiently', () => {
-      const recipePaths = [
-        'data/mods/anatomy/recipes/human_male.recipe.json',
-        'data/mods/anatomy/recipes/human_female.recipe.json',
-        'data/mods/anatomy/recipes/red_dragon.recipe.json',
-      ];
-
-      const startTime = Date.now();
-      executeCLI(recipePaths);
-      const duration = Date.now() - startTime;
-
-      // Should complete 3 recipes in under 10 seconds
-      expect(duration).toBeLessThan(10000);
-    });
-  });
-
-  describe('Output formatting', () => {
-    it('should include colored output symbols', () => {
-      const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      // Check for various output symbols
-      expect(result.stdout).toContain('Validation Report');
-      expect(result.stdout).toContain('='.repeat(80));
-    });
-
-    it('should include summary statistics for batch validation', () => {
+    it('should validate all valid recipes even with --fail-fast flag', () => {
       const recipePaths = [
         'data/mods/anatomy/recipes/human_male.recipe.json',
         'data/mods/anatomy/recipes/human_female.recipe.json',
       ];
-      const result = executeCLI(recipePaths);
+      const result = executeCLI(['--fail-fast', ...recipePaths]);
 
-      expect(result.stdout).toContain('VALIDATION SUMMARY');
-      expect(result.stdout).toContain('Recipes Validated');
-      expect(result.stdout).toContain('Errors:');
-      expect(result.stdout).toContain('Warnings:');
+      // With valid recipes, --fail-fast has no effect (all pass)
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('anatomy:human_male');
+      expect(result.stdout).toContain('anatomy:human_female');
     });
   });
 
-  describe('Error scenarios', () => {
-    it('should report error for truly non-existent file', () => {
-      const recipePath = 'data/mods/anatomy/recipes/completely_fake.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      expect(result.exitCode).toBe(1);
-      expect(result.stdout).toContain('Validation FAILED');
-    });
-
-    it('should handle invalid file paths gracefully', () => {
-      const recipePath = 'invalid/path/to/recipe.json';
-      const result = executeCLI([recipePath]);
-
-      expect(result.exitCode).toBe(1);
-      expect(result.stdout).toContain('Validation FAILED');
-    });
-
-    it('should validate successfully for all existing valid recipes', () => {
+  describe('Comprehensive validation checks', () => {
+    it('should validate all existing recipes successfully', () => {
       const recipePaths = [
         'data/mods/anatomy/recipes/human_male.recipe.json',
         'data/mods/anatomy/recipes/human_female.recipe.json',
@@ -271,6 +167,7 @@ describe('validate-recipe CLI integration tests', () => {
       // All valid recipes should pass with loaded mods
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Validation PASSED');
+      expect(result.stdout).toContain('Recipes Validated: 3');
     });
   });
 });
