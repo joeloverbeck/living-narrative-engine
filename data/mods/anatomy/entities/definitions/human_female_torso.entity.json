@@ -79,6 +79,9 @@
         }
       ]
     },
+    "descriptors:build": {
+      "build": "toned"
+    },
     "core:name": {
       "text": "torso"
     }
