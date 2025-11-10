@@ -78,6 +78,33 @@ export class ValidationReport {
   }
 
   /**
+   * Get recipe ID
+   *
+   * @returns {string} Recipe ID
+   */
+  get recipeId() {
+    return this.#results.recipeId;
+  }
+
+  /**
+   * Get recipe path
+   *
+   * @returns {string|undefined} Recipe path if provided
+   */
+  get recipePath() {
+    return this.#results.recipePath;
+  }
+
+  /**
+   * Get timestamp
+   *
+   * @returns {string} ISO timestamp
+   */
+  get timestamp() {
+    return this.#results.timestamp;
+  }
+
+  /**
    * Get summary statistics
    *
    * @returns {object} Summary object with statistics

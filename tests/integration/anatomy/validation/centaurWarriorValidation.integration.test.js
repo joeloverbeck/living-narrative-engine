@@ -4,18 +4,40 @@
  * after blueprint processing improvements
  */
 
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../../../../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import fs from 'fs';
+import path from 'path';
 
 describe('Centaur Warrior Recipe Validation', () => {
   let container;
   let validator;
   let dataRegistry;
+  let originalFetch;
 
   beforeAll(async () => {
+    // Mock fetch to read from filesystem for schema loading
+    originalFetch = global.fetch;
+    global.fetch = jest.fn((url) => {
+      // Convert URL to file path
+      const filePath = url.replace(/^\.\//, '');
+      const fullPath = path.resolve(process.cwd(), filePath);
+
+      try {
+        const content = fs.readFileSync(fullPath, 'utf-8');
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(JSON.parse(content)),
+        });
+      } catch (error) {
+        return Promise.reject(new Error(`Failed to load ${url}: ${error.message}`));
+      }
+    });
+
     // Create and configure container
     container = new AppContainer();
     await configureMinimalContainer(container);
@@ -57,6 +79,11 @@ describe('Centaur Warrior Recipe Validation', () => {
       slotGenerator,
       logger,
     });
+  });
+
+  afterAll(() => {
+    // Restore original fetch
+    global.fetch = originalFetch;
   });
 
   it('should validate centaur_warrior recipe without false positive warnings', async () => {
