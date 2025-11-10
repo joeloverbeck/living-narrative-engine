@@ -207,25 +207,49 @@ constructor({ actionSelector, goalManager }) {
 
 ## Testing
 
-### Schema Tests
+### Unit Tests
+- `tests/unit/goap/analysis/` - Effects analyzer tests
+- `tests/unit/goap/generation/` - Effects generator tests
+- `tests/unit/goap/validation/` - Effects validator tests
 - `tests/unit/goap/schemas/` - Schema validation tests
-- Coverage target: 95%+
+- Coverage target: 90%+ branches, 95%+ lines
 
 ### Integration Tests
-- `tests/integration/goap/` - System integration tests
+- `tests/integration/goap/effectsGeneration.integration.test.js` - Full generation workflow
+- `tests/integration/goap/schemaIntegration.test.js` - Schema integration
+- `tests/integration/goap/effectsValidation.integration.test.js` - Validation integration
 - Tests with real actions and goals
-- Validates end-to-end planning flow
+- Validates end-to-end effects generation flow
 
 ### Performance Tests
-- `tests/performance/goap/` - Performance benchmarks
-- Ensures planning meets latency targets
+- `tests/performance/goap/effectsGeneration.performance.test.js` - Performance benchmarks
+- Target: < 5 seconds for 200 actions
+- Target: < 100ms for complex rule analysis
+- Memory leak detection
+
+### Running Tests
+
+```bash
+# Run all GOAP tests
+npm run test:unit -- tests/unit/goap/
+npm run test:integration -- tests/integration/goap/
+npm run test:performance -- tests/performance/goap/
+
+# Run specific test suite
+npm run test:unit -- tests/unit/goap/analysis/effectsAnalyzer.test.js
+
+# With coverage
+npm run test:unit -- tests/unit/goap/ --coverage
+```
 
 ## Development Roadmap
 
-### Phase 1: Effects Auto-Generation (Current)
+### Phase 1: Effects Auto-Generation (Completed)
 - [x] GOAP-TIER1-001: Schema design and DI setup
-- [ ] GOAP-TIER1-002: Effects analyzer implementation
-- [ ] GOAP-TIER1-003: Effects generator implementation
+- [x] GOAP-TIER1-002: Effects analyzer implementation
+- [x] GOAP-TIER1-003: Effects generator implementation
+- [x] GOAP-TIER1-004: Effects validator implementation
+- [x] GOAP-TIER1-005: Effects testing and documentation
 
 ### Phase 2: Simple Action Planning
 - [ ] GOAP-TIER2-001: Goal system implementation
@@ -239,8 +263,20 @@ constructor({ actionSelector, goalManager }) {
 
 ## Related Documentation
 
+### Core Documentation
+- [Effects Auto-Generation](./effects-auto-generation.md) - Complete guide to auto-generation system
 - [Operation Mapping](./operation-mapping.md) - Complete operation-to-effect mapping
 - [Effects Analyzer Architecture](./effects-analyzer-architecture.md) - Analyzer design
+- [Effects Generator Usage](./effects-generator-usage.md) - How to use the effects generator
+- [Effects Generation Workflow](./effects-generation-workflow.md) - Step-by-step workflow guide
+
+### Advanced Topics
+- [Abstract Preconditions](./abstract-preconditions.md) - Complete catalog and usage guide
+- [Operation Result Structures](./operation-result-structures.md) - Result variable documentation
+- [Macro Resolution](./macro-resolution.md) - How macros work and are resolved
+- [Troubleshooting](./troubleshooting.md) - Common issues and solutions
+
+### External Resources
 - [GOAP Theory](https://alumni.media.mit.edu/~jorkin/goap.html) - Original GOAP paper by Jeff Orkin
 
 ## Contributing
