@@ -16,14 +16,23 @@ This comprehensive catalog documents all common anatomy system errors with searc
 
 | Error Message | Error Class | Source | Section |
 |---------------|-------------|--------|---------|
+| **Load-Time Errors** ||||
 | "Recipe validation failed" | RecipeValidationError | RecipePreflightValidator | [Validation Report Errors](#1-validation-report-errors) |
 | "Component does not exist in the component registry" | ComponentNotFoundError | ComponentExistenceValidationRule | [Component Existence Errors](#2-component-existence-errors) |
 | "Property has invalid value" | InvalidPropertyError | PropertySchemaValidationRule | [Property Schema Errors](#3-property-schema-errors) |
-| "No entity definitions found matching anatomy requirements" | Entity Selection Error | PartSelectionService | [Entity/Part Selection Errors](#4-entitypart-selection-errors) |
-| "Socket not found on parent entity" | SocketNotFoundError | Blueprint slot processing | [Socket/Slot Errors](#5-socketslot-errors) |
 | "Pattern matched zero slots" | Pattern Matching Warning | patternMatchingValidator | [Pattern Matching Errors](#6-pattern-matching-errors) |
 | "Blueprint-recipe mismatch" | Blueprint Validation Error | BlueprintRecipeValidationRule | [Blueprint/Recipe Compatibility Errors](#7-blueprintrecipe-compatibility-errors) |
 | "Invalid 'requires' group" | Constraint Validation Error | Recipe constraint evaluator | [Constraint Validation Errors](#8-constraint-validation-errors) |
+| **Runtime Errors** ||||
+| "No entity definitions found matching anatomy requirements" | Entity Selection Error | PartSelectionService | [Entity/Part Selection Errors](#4-entitypart-selection-errors) |
+| "Socket not found on parent entity" | SocketNotFoundError | Blueprint slot processing | [Socket/Slot Errors](#5-socketslot-errors) |
+| "Cycle detected in anatomy graph" | Cycle Detection Error | CycleDetectionRule | [Runtime Anatomy Validation](#9-runtime-anatomy-validation-errors) |
+| "Part type not allowed in socket" | Part Type Compatibility Error | PartTypeCompatibilityRule | [Runtime Anatomy Validation](#9-runtime-anatomy-validation-errors) |
+| "Orphaned part has parent not in graph" | Orphan Detection Error | OrphanDetectionRule | [Runtime Anatomy Validation](#9-runtime-anatomy-validation-errors) |
+| "Multiple root entities found" | Orphan Detection Warning | OrphanDetectionRule | [Runtime Anatomy Validation](#9-runtime-anatomy-validation-errors) |
+| "Entity has incomplete joint data" | Joint Consistency Error | JointConsistencyRule | [Runtime Anatomy Validation](#9-runtime-anatomy-validation-errors) |
+| "Socket not found on entity" | Socket Limit Error | SocketLimitRule | [Runtime Anatomy Validation](#9-runtime-anatomy-validation-errors) |
+| "Invalid body descriptor enum value" | BodyDescriptorValidationError | Body descriptor validation | [Body Descriptor Validation](#10-body-descriptor-validation-errors) |
 
 ---
 
@@ -1110,6 +1119,766 @@ After (CORRECT - Multiple parts):
 - Constraint validation during RecipePreflightValidator
 
 **Cross-Reference:** [`anatomy-system-guide.md`](./anatomy-system-guide.md) - Constraint system documentation
+
+---
+
+## 9. Runtime Anatomy Validation Errors
+
+These errors occur during anatomy generation after a recipe has been loaded successfully. They validate the structural integrity of the generated anatomy graph. Unlike load-time validation errors (which prevent recipes from loading), runtime validation errors occur when anatomy is actually instantiated and assembled.
+
+### Error: "Cycle detected in anatomy graph"
+
+**Error Class:** Cycle Detection Error (runtime validation issue)
+**Source:** `src/anatomy/validation/rules/cycleDetectionRule.js`
+
+**Error Signature:**
+```
+Error: Cycle detected in anatomy graph
+Entity 'anatomy:dragon_tail_segment_3' creates a cycle when referenced from 'anatomy:dragon_tail_segment_1'
+```
+
+**Error Properties:**
+- `involvedEntities`: Array of entity IDs involved in the cycle
+- `message`: Description of which entities form the cycle
+- Location: Anatomy graph validation (post-generation)
+
+**Symptom:** Anatomy graph contains a circular reference where a part is its own ancestor
+
+**When It Occurs:**
+- **Runtime** (during anatomy validation after generation)
+- After all parts have been instantiated
+- During graph structure validation
+- Indicates serious structural problem
+
+**Common Causes:**
+1. **Joint parent chain loops back** - Entity A has parent B, which has parent C, which has parent A
+2. **Self-referencing joint** - Entity has itself as parent
+3. **Recipe pattern error** - Pattern creates circular dependencies
+4. **Blueprint structure issue** - Blueprint defines impossible parent-child relationships
+
+**Diagnostic Steps:**
+1. Trace the joint parent chain for involved entities
+2. Check anatomy:joint components for parentId values
+3. Verify blueprint slot-to-socket mappings
+4. Look for self-references in joint data
+5. Review recipe constraints that might force circular structures
+
+**Example Fix:**
+
+Before (WRONG - Circular reference):
+```json
+// Entity A
+{
+  "id": "anatomy:part_a",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:part_b",  // A → B
+      "socketId": "socket_1"
+    }
+  }
+}
+
+// Entity B
+{
+  "id": "anatomy:part_b",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:part_c",  // B → C
+      "socketId": "socket_2"
+    }
+  }
+}
+
+// Entity C
+{
+  "id": "anatomy:part_c",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:part_a",  // C → A (CYCLE!)
+      "socketId": "socket_3"
+    }
+  }
+}
+```
+
+After (CORRECT - No cycle):
+```json
+// Entity C becomes the root
+{
+  "id": "anatomy:part_c",
+  "components": {
+    "anatomy:part": { "subType": "torso" }
+    // ✅ No joint - this is the root
+  }
+}
+
+// Entity B attaches to C
+{
+  "id": "anatomy:part_b",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:part_c",  // B → C
+      "socketId": "socket_2"
+    }
+  }
+}
+
+// Entity A attaches to B
+{
+  "id": "anatomy:part_a",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:part_b",  // A → B → C (linear, no cycle)
+      "socketId": "socket_1"
+    }
+  }
+}
+```
+
+**Related Errors:**
+- "Orphaned part" (if fixing cycle creates disconnected parts)
+- "Joint consistency" errors (if joint data is malformed)
+
+**Implementation References:**
+- `src/anatomy/validation/rules/cycleDetectionRule.js:37-69` - Cycle detection algorithm
+- Uses depth-first search with recursion stack tracking
+- Checks all potential roots and unvisited entities
+
+---
+
+### Error: "Part type not allowed in socket"
+
+**Error Class:** Part Type Compatibility Error (runtime validation issue)
+**Source:** `src/anatomy/validation/rules/partTypeCompatibilityRule.js`
+
+**Error Signature:**
+```
+Error: Part type 'dragon_leg' not allowed in socket 'wing_socket' on entity 'anatomy:dragon_torso'
+Allowed types: [wing, dragon_wing]
+```
+
+**Error Properties:**
+- `entityId`: Part entity that doesn't match
+- `partType`: The part's subType that was rejected
+- `socketId`: Socket that rejected the part
+- `parentId`: Parent entity containing the socket
+- `allowedTypes`: Array of allowed types for the socket
+
+**Symptom:** Generated anatomy has parts attached to sockets that don't allow their type
+
+**When It Occurs:**
+- **Runtime** (during anatomy validation after generation)
+- After part selection and attachment
+- During post-generation validation
+- Indicates mismatch between generation and socket constraints
+
+**Common Causes:**
+1. **Socket allowedTypes too restrictive** - Socket doesn't include the part type
+2. **Part subType mismatch** - Part's anatomy:part.subType doesn't match pattern partType
+3. **Generation logic bypass** - Part attached without proper validation
+4. **Template update** - Socket allowedTypes changed but recipes not updated
+
+**Diagnostic Steps:**
+1. Check socket's allowedTypes array on parent entity
+2. Verify part's anatomy:part.subType value
+3. Review how part was selected and attached
+4. Check if socket allows wildcard '*'
+5. Compare pattern partType with entity subType
+
+**Example Fix:**
+
+Before (WRONG - Part type not in allowedTypes):
+```json
+// Parent entity with socket
+{
+  "id": "anatomy:dragon_torso",
+  "components": {
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "wing_socket",
+          "allowedTypes": ["wing"],  // ❌ Doesn't include "dragon_wing"
+          "orientation": "lateral"
+        }
+      ]
+    }
+  }
+}
+
+// Part entity
+{
+  "id": "anatomy:dragon_wing",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_wing"  // ❌ Not in socket's allowedTypes
+    },
+    "anatomy:joint": {
+      "parentId": "anatomy:dragon_torso",
+      "socketId": "wing_socket"
+    }
+  }
+}
+```
+
+After (CORRECT - Option 1: Update socket):
+```json
+// Parent entity - expand allowedTypes
+{
+  "id": "anatomy:dragon_torso",
+  "components": {
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "wing_socket",
+          "allowedTypes": ["wing", "dragon_wing"],  // ✅ Includes both
+          "orientation": "lateral"
+        }
+      ]
+    }
+  }
+}
+```
+
+After (CORRECT - Option 2: Use wildcard):
+```json
+// Parent entity - allow any type
+{
+  "id": "anatomy:dragon_torso",
+  "components": {
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "wing_socket",
+          "allowedTypes": ["*"],  // ✅ Accepts any part type
+          "orientation": "lateral"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Related Errors:**
+- "No entity definitions found" (during part selection)
+- SocketNotFoundError (if socket doesn't exist)
+
+**Implementation References:**
+- `src/anatomy/validation/rules/partTypeCompatibilityRule.js:55-72` - Type compatibility check
+- Handles wildcard '*' in allowedTypes
+- Validates each entity with anatomy:joint component
+
+---
+
+### Error: "Orphaned part has parent not in graph"
+
+**Error Class:** Orphan Detection Error (runtime validation issue)
+**Source:** `src/anatomy/validation/rules/orphanDetectionRule.js`
+
+**Error Signature:**
+```
+Error: Orphaned part 'anatomy:dragon_wing_left' has parent 'anatomy:dragon_torso' not in graph
+```
+
+**Warning Signature:**
+```
+Warning: Multiple root entities found: anatomy:dragon_body, anatomy:dragon_head
+```
+
+**Error Properties:**
+- `entityId`: The orphaned part
+- `parentId`: Referenced parent not in graph
+- `socketId`: Socket on the missing parent
+- For warning: `rootEntities` array and `count`
+
+**Symptom:** Part references a parent entity that doesn't exist in the anatomy graph, or multiple root entities detected
+
+**When It Occurs:**
+- **Runtime** (during anatomy validation after generation)
+- After graph assembly
+- Before description generation
+- Indicates incomplete or fragmented anatomy
+
+**Common Causes:**
+1. **Parent not generated** - Recipe pattern didn't match parent entity
+2. **Generation partial failure** - Some parts succeeded, parent failed
+3. **Entity ID mismatch** - parentId references wrong entity
+4. **Multiple blueprints** - Each created their own root (warning case)
+5. **Incomplete pattern coverage** - Recipe doesn't cover all needed parts
+
+**Diagnostic Steps:**
+1. List all entity IDs in the generated anatomy
+2. Check if parentId exists in the entity list
+3. Verify recipe patterns cover all necessary parts
+4. Check generation logs for partial failures
+5. Review blueprint rootEntity configuration
+6. For multiple roots: Check if multiple recipes were applied
+
+**Example Fix:**
+
+**Case 1: Orphaned Part (Error)**
+
+Before (WRONG - Parent missing):
+```json
+// Generated entities (only 2, parent missing)
+[
+  {
+    "id": "anatomy:dragon_wing_left",
+    "components": {
+      "anatomy:joint": {
+        "parentId": "anatomy:dragon_torso",  // ❌ Not in graph
+        "socketId": "wing_left"
+      }
+    }
+  },
+  {
+    "id": "anatomy:dragon_wing_right",
+    "components": {
+      "anatomy:joint": {
+        "parentId": "anatomy:dragon_torso",  // ❌ Not in graph
+        "socketId": "wing_right"
+      }
+    }
+  }
+]
+```
+
+After (CORRECT - Parent included):
+```json
+// Generated entities (all 3 present)
+[
+  {
+    "id": "anatomy:dragon_torso",  // ✅ Parent exists
+    "components": {
+      "anatomy:part": { "subType": "dragon_torso" },
+      "anatomy:sockets": {
+        "sockets": [
+          { "id": "wing_left", "allowedTypes": ["wing"] },
+          { "id": "wing_right", "allowedTypes": ["wing"] }
+        ]
+      }
+    }
+  },
+  {
+    "id": "anatomy:dragon_wing_left",
+    "components": {
+      "anatomy:joint": {
+        "parentId": "anatomy:dragon_torso",  // ✅ Parent in graph
+        "socketId": "wing_left"
+      }
+    }
+  },
+  {
+    "id": "anatomy:dragon_wing_right",
+    "components": {
+      "anatomy:joint": {
+        "parentId": "anatomy:dragon_torso",  // ✅ Parent in graph
+        "socketId": "wing_right"
+      }
+    }
+  }
+]
+```
+
+**Case 2: Multiple Roots (Warning)**
+
+Before (Potential Issue - 2 roots):
+```json
+// Two separate root entities (no joints)
+[
+  {
+    "id": "anatomy:dragon_body",  // Root 1
+    "components": {
+      "anatomy:part": { "subType": "dragon_body" }
+    }
+  },
+  {
+    "id": "anatomy:dragon_head",  // Root 2
+    "components": {
+      "anatomy:part": { "subType": "dragon_head" }
+    }
+  }
+]
+```
+
+After (Typical Case - 1 root):
+```json
+// Single root with attached parts
+[
+  {
+    "id": "anatomy:dragon_body",  // ✅ Single root
+    "components": {
+      "anatomy:part": { "subType": "dragon_body" },
+      "anatomy:sockets": {
+        "sockets": [
+          { "id": "head", "allowedTypes": ["head"] }
+        ]
+      }
+    }
+  },
+  {
+    "id": "anatomy:dragon_head",  // ✅ Attached to root
+    "components": {
+      "anatomy:part": { "subType": "dragon_head" },
+      "anatomy:joint": {
+        "parentId": "anatomy:dragon_body",
+        "socketId": "head"
+      }
+    }
+  }
+]
+```
+
+**Note:** Multiple roots are allowed (just a warning) and may be intentional for certain use cases.
+
+**Related Errors:**
+- "Cycle detected" (if trying to connect orphans creates cycles)
+- "Joint consistency" errors (if joint data is incorrect)
+
+**Implementation References:**
+- `src/anatomy/validation/rules/orphanDetectionRule.js:40-51` - Orphan detection
+- `src/anatomy/validation/rules/orphanDetectionRule.js:60-70` - Multiple root warning
+- Stores `rootEntities` in context metadata for other rules
+
+---
+
+### Error: "Entity has incomplete joint data"
+
+**Error Class:** Joint Consistency Error (runtime validation issue)
+**Source:** `src/anatomy/validation/rules/jointConsistencyRule.js`
+
+**Error Signature:**
+```
+Error: Entity 'anatomy:dragon_leg_front_left' has incomplete joint data
+Missing fields: parentId, socketId
+```
+
+**Alternate Signature:**
+```
+Error: Entity 'anatomy:dragon_wing' has joint referencing non-existent parent 'anatomy:dragon_body_v2'
+```
+
+**Error Properties:**
+- `entityId`: Entity with incomplete or invalid joint
+- `joint`: The joint data object
+- `missingFields`: Array of missing required fields
+- For parent errors: `parentId`, `socketId`
+- For socket errors: `availableSockets` array
+
+**Symptom:** Entity has anatomy:joint component with missing or invalid data
+
+**When It Occurs:**
+- **Runtime** (during anatomy validation after generation)
+- After entity instantiation
+- Before graph traversal
+- Indicates malformed joint data
+
+**Common Causes:**
+1. **Incomplete joint object** - Missing parentId or socketId
+2. **Parent doesn't exist** - References entity not in graph
+3. **Socket doesn't exist** - References socket not on parent
+4. **Serialization error** - Data corruption during save/load
+5. **Manual editing error** - Hand-edited JSON with mistakes
+
+**Diagnostic Steps:**
+1. Check joint component has both parentId and socketId
+2. Verify parentId exists in entity list
+3. Check parent entity has anatomy:sockets component
+4. Verify socketId exists in parent's sockets array
+5. Review generation logs for joint creation
+
+**Example Fix:**
+
+**Case 1: Missing Joint Fields**
+
+Before (WRONG):
+```json
+{
+  "id": "anatomy:dragon_leg",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:dragon_torso"
+      // ❌ Missing socketId
+    }
+  }
+}
+```
+
+After (CORRECT):
+```json
+{
+  "id": "anatomy:dragon_leg",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:dragon_torso",
+      "socketId": "leg_socket"  // ✅ Added socketId
+    }
+  }
+}
+```
+
+**Case 2: Invalid Parent Reference**
+
+Before (WRONG):
+```json
+{
+  "id": "anatomy:dragon_wing",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:dragon_torso_OLD",  // ❌ Doesn't exist
+      "socketId": "wing_socket"
+    }
+  }
+}
+```
+
+After (CORRECT):
+```json
+{
+  "id": "anatomy:dragon_wing",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:dragon_torso",  // ✅ Correct entity ID
+      "socketId": "wing_socket"
+    }
+  }
+}
+```
+
+**Case 3: Invalid Socket Reference**
+
+Before (WRONG):
+```json
+// Parent entity
+{
+  "id": "anatomy:dragon_torso",
+  "components": {
+    "anatomy:sockets": {
+      "sockets": [
+        { "id": "wing_left", "allowedTypes": ["wing"] },
+        { "id": "wing_right", "allowedTypes": ["wing"] }
+        // ❌ No "wing_socket"
+      ]
+    }
+  }
+}
+
+// Child entity
+{
+  "id": "anatomy:dragon_wing",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:dragon_torso",
+      "socketId": "wing_socket"  // ❌ Socket doesn't exist
+    }
+  }
+}
+```
+
+After (CORRECT):
+```json
+// Child entity - use existing socket
+{
+  "id": "anatomy:dragon_wing",
+  "components": {
+    "anatomy:joint": {
+      "parentId": "anatomy:dragon_torso",
+      "socketId": "wing_left"  // ✅ Socket exists
+    }
+  }
+}
+```
+
+**Related Errors:**
+- "Orphaned part" (if parent truly doesn't exist)
+- SocketNotFoundError (during blueprint processing)
+- "Socket not found on entity" (socket validation)
+
+**Implementation References:**
+- `src/anatomy/validation/rules/jointConsistencyRule.js:38-50` - Missing fields check
+- `src/anatomy/validation/rules/jointConsistencyRule.js:53-64` - Parent existence check
+- `src/anatomy/validation/rules/jointConsistencyRule.js:67-88` - Socket existence check
+
+---
+
+### Error: "Socket not found on entity"
+
+**Error Class:** Socket Limit Error (runtime validation issue)
+**Source:** `src/anatomy/validation/rules/socketLimitRule.js`
+
+**Error Signature:**
+```
+Error: Socket 'wing_socket_left' not found on entity 'anatomy:dragon_torso'
+```
+
+**Error Properties:**
+- `parentId`: Entity that should have the socket
+- `socketId`: Socket that wasn't found
+
+**Symptom:** Socket referenced in occupancy tracking doesn't exist on parent entity
+
+**When It Occurs:**
+- **Runtime** (during socket occupancy validation)
+- After parts have been attached
+- During validation of occupied sockets
+- Indicates socket definition missing
+
+**Common Causes:**
+1. **Socket removed from entity** - Entity updated but parts not updated
+2. **Socket ID mismatch** - Typo in socket reference
+3. **Dynamic socket generation** - Socket should be created but wasn't
+4. **Template update** - Structure template changed socket IDs
+
+**Diagnostic Steps:**
+1. Check parent entity's anatomy:sockets component
+2. List all socket IDs on parent
+3. Verify socket ID in joint matches exactly
+4. Check for case sensitivity issues
+5. Review recent template or entity changes
+
+**Example Fix:**
+
+Before (WRONG - Socket missing):
+```json
+// Parent entity
+{
+  "id": "anatomy:dragon_torso",
+  "components": {
+    "anatomy:sockets": {
+      "sockets": [
+        { "id": "head", "allowedTypes": ["head"] },
+        { "id": "tail", "allowedTypes": ["tail"] }
+        // ❌ Missing wing_socket_left
+      ]
+    }
+  }
+}
+
+// socketOccupancy tracking: Set(['anatomy:dragon_torso:wing_socket_left'])
+```
+
+After (CORRECT - Add socket):
+```json
+// Parent entity
+{
+  "id": "anatomy:dragon_torso",
+  "components": {
+    "anatomy:sockets": {
+      "sockets": [
+        { "id": "head", "allowedTypes": ["head"] },
+        { "id": "tail", "allowedTypes": ["tail"] },
+        {  // ✅ Added socket
+          "id": "wing_socket_left",
+          "allowedTypes": ["wing"],
+          "orientation": "lateral_left"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Related Errors:**
+- SocketNotFoundError (during blueprint slot processing)
+- "Joint consistency" errors (if joint references wrong socket)
+
+**Implementation References:**
+- `src/anatomy/validation/rules/socketLimitRule.js:36-53` - Socket existence validation
+- Validates against socketOccupancy Set from context
+- Each occupied socket must exist on parent entity
+
+---
+
+## 10. Body Descriptor Validation Errors
+
+These errors occur when body descriptor values are invalid according to the Body Descriptor Registry. While BodyDescriptorValidationError exists in `src/anatomy/errors/bodyDescriptorValidationError.js`, it's not currently exported in the main errors index.
+
+### Error: "Invalid body descriptor enum value"
+
+**Error Class:** BodyDescriptorValidationError (validation error, not exported)
+**Source:** `src/anatomy/errors/bodyDescriptorValidationError.js`
+
+**Error Signature:**
+```
+Error: Invalid skinColor descriptor: 'bright-red' in recipe 'anatomy:dragon_red'
+Must be one of: pale, fair, tan, brown, dark-brown, black, grey, blue, green, red, orange, yellow, purple, white
+```
+
+**Error Properties:**
+- `descriptorProperty`: The descriptor property name (e.g., 'skinColor')
+- `invalidValue`: The invalid value provided
+- Context: Where the error occurred (recipe, entity, etc.)
+
+**Symptom:** Body descriptor value doesn't match valid enum values in registry
+
+**When It Occurs:**
+- During body descriptor validation
+- When processing anatomy recipes or entities
+- At load time or generation time depending on validation configuration
+
+**Common Causes:**
+1. **Invalid enum value** - Value not in Body Descriptor Registry validValues
+2. **Typo in descriptor value** - Misspelled valid value
+3. **Registry out of sync** - Value valid in old registry version
+4. **Case sensitivity** - Wrong capitalization (values are case-sensitive)
+
+**Diagnostic Steps:**
+1. Check Body Descriptor Registry for valid values
+2. Review `src/anatomy/registries/bodyDescriptorRegistry.js`
+3. Verify descriptor property exists in registry
+4. Check enum values for the specific descriptor
+5. Run `npm run validate:body-descriptors` to check registry consistency
+
+**Example Fix:**
+
+Before (WRONG - Invalid enum):
+```json
+{
+  "recipeId": "anatomy:dragon_red",
+  "bodyDescriptors": {
+    "skinColor": "bright-red",  // ❌ Not in registry enum
+    "height": "massive",
+    "build": "athletic"
+  }
+}
+```
+
+After (CORRECT - Valid enum):
+```json
+{
+  "recipeId": "anatomy:dragon_red",
+  "bodyDescriptors": {
+    "skinColor": "red",  // ✅ Valid enum value
+    "height": "tall",    // ✅ Valid (if 'massive' invalid)
+    "build": "athletic"
+  }
+}
+```
+
+**Valid Body Descriptors (Registry Reference):**
+
+Current descriptors in registry (6 total):
+- `height` - Display order: 10
+- `skinColor` - Display order: 20
+- `build` - Display order: 30
+- `composition` - Display order: 40
+- `hairDensity` - Display order: 50
+- `smell` - Display order: 60
+
+**Related Errors:**
+- InvalidPropertyError (for component property validation)
+- RecipeValidationError (if validation integrated into recipe preflight)
+
+**Implementation References:**
+- `src/anatomy/errors/bodyDescriptorValidationError.js` - Error class
+- `src/anatomy/registries/bodyDescriptorRegistry.js` - Registry with valid values
+- `src/anatomy/validators/bodyDescriptorValidator.js` - Validation logic
+- CLI: `npm run validate:body-descriptors` - Validate registry consistency
+
+**Documentation:**
+- [`docs/anatomy/body-descriptors-complete.md`](./body-descriptors-complete.md) - Complete descriptor guide
+- Registry exports: `getDescriptorMetadata()`, `validateDescriptorValue()`, `getAllDescriptorNames()`
+
+**Note:** This error class exists but is not currently exported in `src/anatomy/errors/index.js`. If you encounter this error, it indicates the descriptor validation system is active even though the error class isn't in the public API.
 
 ---
 
