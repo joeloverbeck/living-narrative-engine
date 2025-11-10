@@ -1200,7 +1200,7 @@ const template = {
 
 ## Related Documentation
 
-- [Anatomy System Guide](../anatomy/anatomy-system-guide.md) - System architecture overview
-- [Troubleshooting](../anatomy/troubleshooting.md) - Common issues and solutions
-- [Mod Testing Guide](./mod-testing-guide.md) - General mod testing patterns
+- [Anatomy System Guide](anatomy-system-guide.md) - System architecture overview
+- [Troubleshooting](troubleshooting.md) - Common issues and solutions
+- [Mod Testing Guide](../testing/mod-testing-guide.md) - General mod testing patterns
 - [Development Guide](../development/anatomy-development-guide.md) - Quick-start for developers

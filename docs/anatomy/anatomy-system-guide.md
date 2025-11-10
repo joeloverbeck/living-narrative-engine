@@ -787,7 +787,7 @@ Before these refactorings, the anatomy system experienced:
 - [Body Descriptors Complete](./body-descriptors-complete.md) - Body descriptor registry, adding, and validation
 - [Non-Human Quickstart](./non-human-quickstart.md) - End-to-end tutorial
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions
-- [Testing Guide](../testing/anatomy-testing-guide.md) - Testing patterns and strategies
+- [Testing Guide](anatomy-testing-guide.md) - Testing patterns and strategies
 - [Development Guide](../development/anatomy-development-guide.md) - Quick-start for developers
 
 ---
