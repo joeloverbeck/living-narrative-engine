@@ -160,6 +160,38 @@ describe('ModValidationErrorHandler', () => {
     expect(result.degradationApplied).toBe(true);
   });
 
+  it('falls back to empty defaults when default payload is missing', () => {
+    const { handler } = createHandler();
+    const error = new Error('ENOENT: another missing file');
+    const context = {
+      filePath: 'mods/another.json',
+      hasDefault: true,
+    };
+
+    const result = handler.handleExtractionError(error, context);
+
+    expect(result.strategy).toBe(RecoveryStrategy.USE_DEFAULT);
+    expect(result.partialResults).toEqual({});
+    expect(result.usedDefault).toBe(true);
+  });
+
+  it('returns empty partial results when corruption context lacks data', () => {
+    const { handler } = createHandler();
+    const corruptionError = new ModCorruptionError(
+      'Malformed JSON structure',
+      'mods/no-partial.json',
+      { parseError: 'trailing comma' }
+    );
+
+    const result = handler.handleExtractionError(corruptionError, {
+      filePath: 'mods/no-partial.json',
+    });
+
+    expect(result.strategy).toBe(RecoveryStrategy.PARTIAL_RESULT);
+    expect(result.partialResults).toEqual({});
+    expect(result.degradationApplied).toBe(true);
+  });
+
   it('throws for unrecoverable corruption errors detected by message', () => {
     const { handler } = createHandler();
     const error = new Error('Unexpected token in JSON');
@@ -262,6 +294,44 @@ describe('ModValidationErrorHandler', () => {
     );
   });
 
+  it('uses default details when security violation lacks specifics', () => {
+    const logger = createMockLogger();
+    const { handler } = createHandler({ logger });
+    let thrownError;
+
+    try {
+      handler.handleSecurityViolation({}, { mod: 'mystery-mod' });
+    } catch (error) {
+      thrownError = error;
+    }
+
+    expect(thrownError).toBeInstanceOf(ModSecurityError);
+    expect(thrownError?.message).toBe('Security violation detected');
+    expect(thrownError?.securityLevel).toBe(SecurityLevel.HIGH);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Security violation detected',
+      expect.objectContaining({
+        violation: {},
+        context: { mod: 'mystery-mod' },
+        incidentReport: expect.any(Object),
+      })
+    );
+  });
+
+  it('records errors when event dispatching fails before recovery', () => {
+    const logger = createMockLogger();
+    const eventBus = { dispatch: jest.fn(() => { throw new Error('dispatch failed'); }) };
+    const handler = new ModValidationErrorHandler({ logger, eventBus });
+
+    expect(() =>
+      handler.handleExtractionError(new Error('transient issue'), {})
+    ).toThrow('dispatch failed');
+
+    const stats = handler.getErrorStatistics();
+    expect(stats.totalErrors).toBe(1);
+    expect(stats.recoverySuccessRate).toBe(0);
+  });
+
   it('caps stored error history and reports statistics', () => {
     const { handler } = createHandler();
 
@@ -311,6 +381,52 @@ describe('ModValidationErrorHandler', () => {
         overrideStrategy: 'CUSTOM',
       })
     ).toThrow('mystery failure');
+  });
+
+  it('fails fast when corruption error lacks partial recovery context', () => {
+    const { handler } = createHandler();
+    const corruptionError = new ModCorruptionError(
+      'Malformed JSON in archive',
+      'mods/corrupt.json',
+      {}
+    );
+
+    expect(() =>
+      handler.handleExtractionError(corruptionError, {
+        filePath: 'mods/corrupt.json',
+      })
+    ).toThrow(corruptionError);
+  });
+
+  it('classifies errors without messages as unknown recoverable issues', () => {
+    const { handler } = createHandler();
+    const result = handler.handleExtractionError(
+      /** @type {Error} */ ({ name: 'MysteryError' }),
+      {}
+    );
+
+    expect(result.strategy).toBe(RecoveryStrategy.SKIP);
+    expect(result.skipped).toBe(true);
+    expect(result.partialResults).toEqual({});
+  });
+
+  it('tracks retries using fallback identifiers when context is empty', () => {
+    const { handler } = createHandler();
+    const timeoutError = new Error('timeout contacting validator');
+    const context = {};
+
+    const firstAttempt = handler.handleExtractionError(timeoutError, context);
+    expect(firstAttempt.strategy).toBe(RecoveryStrategy.RETRY);
+    expect(firstAttempt.retryCount).toBe(1);
+
+    const secondAttempt = handler.handleExtractionError(timeoutError, context);
+    expect(secondAttempt.strategy).toBe(RecoveryStrategy.RETRY);
+    expect(secondAttempt.retryCount).toBe(2);
+
+    const thirdAttempt = handler.handleExtractionError(timeoutError, context);
+    expect(thirdAttempt.strategy).toBe(RecoveryStrategy.SKIP);
+    expect(thirdAttempt.skipped).toBe(true);
+    expect(thirdAttempt.partialResults).toEqual({});
   });
 
   it('resets history and retry tracking', () => {

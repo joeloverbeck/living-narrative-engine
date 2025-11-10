@@ -365,9 +365,7 @@ class ModValidationErrorHandler {
 
       case ErrorType.CORRUPTION:
         // Try partial recovery if possible
-        return classification.recoverable
-          ? RecoveryStrategy.PARTIAL_RESULT
-          : RecoveryStrategy.SKIP;
+        return RecoveryStrategy.PARTIAL_RESULT;
 
       case ErrorType.TIMEOUT:
         // Retry timeouts up to limit
