@@ -898,7 +898,10 @@ export class ScopeResolverHelpers {
         'items:items_at_location',
         {
           filterFn: (entityId, source, context, em) => {
-            return em.hasComponent(entityId, 'items:item');
+            return (
+              em.hasComponent(entityId, 'items:item') &&
+              em.hasComponent(entityId, 'items:portable')
+            );
           },
         }
       ),
@@ -912,6 +915,29 @@ export class ScopeResolverHelpers {
               em.hasComponent(entityId, 'items:item') &&
               em.hasComponent(entityId, 'items:portable')
             );
+          },
+        }
+      ),
+
+      // "non-portable items at location"
+      'items:non_portable_items_at_location': this.createLocationMatchResolver(
+        'items:non_portable_items_at_location',
+        {
+          filterFn: (entityId, source, context, em) => {
+            return (
+              em.hasComponent(entityId, 'items:item') &&
+              !em.hasComponent(entityId, 'items:portable')
+            );
+          },
+        }
+      ),
+
+      // "items at actor's location" (union of portable and non-portable)
+      'items:items_at_actor_location': this.createLocationMatchResolver(
+        'items:items_at_actor_location',
+        {
+          filterFn: (entityId, source, context, em) => {
+            return em.hasComponent(entityId, 'items:item');
           },
         }
       ),
