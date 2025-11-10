@@ -7,15 +7,15 @@
 
 ## Overview
 
-Implement the goal management system including GoalManager and GoalStateEvaluator. This system selects the highest-priority relevant goal for GOAP actors and evaluates goal satisfaction using ScopeDSL and JSON Logic.
+Implement the goal management system including GoalManager and GoalStateEvaluator. This system selects the highest-priority relevant goal for GOAP actors and evaluates goal satisfaction using JSON Logic conditions. Goals are loaded via IGameDataRepository and evaluated against the current world state.
 
 ## Objectives
 
 1. Implement GoalManager class
 2. Implement GoalStateEvaluator class
-3. Integrate with existing goal loader
+3. Integrate with IGameDataRepository for goal access
 4. Support JSON Logic goal states
-5. Support ScopeDSL goal states
+5. Support component access via `actor.components.*` paths
 6. Implement goal selection algorithm
 7. Implement goal state evaluation
 8. Create goal definition examples
@@ -40,7 +40,7 @@ import { string } from '../../utils/validationCore.js';
  */
 class GoalManager {
   #logger;
-  #goalLoader;
+  #gameDataRepository;
   #goalStateEvaluator;
   #jsonLogicEvaluator;
   #entityManager;
@@ -48,14 +48,14 @@ class GoalManager {
   /**
    * @param {Object} params - Dependencies
    * @param {Object} params.logger - Logger instance
-   * @param {Object} params.goalLoader - Goal loader service
+   * @param {Object} params.gameDataRepository - Game data repository
    * @param {Object} params.goalStateEvaluator - Goal state evaluator
    * @param {Object} params.jsonLogicEvaluator - JSON Logic evaluator
    * @param {Object} params.entityManager - Entity manager
    */
   constructor({
     logger,
-    goalLoader,
+    gameDataRepository,
     goalStateEvaluator,
     jsonLogicEvaluator,
     entityManager
@@ -63,21 +63,21 @@ class GoalManager {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug']
     });
-    validateDependency(goalLoader, 'IGoalLoader', logger, {
-      requiredMethods: ['getGoals', 'getGoal']
+    validateDependency(gameDataRepository, 'IGameDataRepository', logger, {
+      requiredMethods: ['getGoalDefinition', 'getAllGoalDefinitions']
     });
     validateDependency(goalStateEvaluator, 'IGoalStateEvaluator', logger, {
       requiredMethods: ['evaluate', 'calculateDistance']
     });
-    validateDependency(jsonLogicEvaluator, 'IJsonLogicEvaluator', logger, {
+    validateDependency(jsonLogicEvaluator, 'JsonLogicEvaluationService', logger, {
       requiredMethods: ['evaluate']
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntity', 'hasComponent']
+      requiredMethods: ['getEntityInstance', 'hasComponent', 'getComponentData']
     });
 
     this.#logger = logger;
-    this.#goalLoader = goalLoader;
+    this.#gameDataRepository = gameDataRepository;
     this.#goalStateEvaluator = goalStateEvaluator;
     this.#jsonLogicEvaluator = jsonLogicEvaluator;
     this.#entityManager = entityManager;
@@ -158,7 +158,7 @@ class GoalManager {
       // Prepare context with actor
       const enrichedContext = {
         ...context,
-        actor: this.#entityManager.getEntity(actorId),
+        actor: this.#entityManager.getEntityInstance(actorId),
         actorId
       };
 
@@ -208,7 +208,7 @@ class GoalManager {
 
     try {
       // Get actor's loaded mods
-      const actor = this.#entityManager.getEntity(actorId);
+      const actor = this.#entityManager.getEntityInstance(actorId);
       if (!actor) {
         this.#logger.warn(`Actor not found: ${actorId}`);
         return [];
@@ -216,7 +216,7 @@ class GoalManager {
 
       // For now, get all goals from all loaded mods
       // Could be filtered by actor type/components in future
-      const goals = this.#goalLoader.getAllGoals();
+      const goals = this.#gameDataRepository.getAllGoalDefinitions();
 
       return goals;
     } catch (error) {
@@ -248,44 +248,37 @@ import { string } from '../../utils/validationCore.js';
 class GoalStateEvaluator {
   #logger;
   #jsonLogicEvaluator;
-  #scopeEngine;
   #entityManager;
 
   /**
    * @param {Object} params - Dependencies
    * @param {Object} params.logger - Logger instance
    * @param {Object} params.jsonLogicEvaluator - JSON Logic evaluator
-   * @param {Object} params.scopeEngine - ScopeDSL engine
    * @param {Object} params.entityManager - Entity manager
    */
   constructor({
     logger,
     jsonLogicEvaluator,
-    scopeEngine,
     entityManager
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug']
     });
-    validateDependency(jsonLogicEvaluator, 'IJsonLogicEvaluator', logger, {
+    validateDependency(jsonLogicEvaluator, 'JsonLogicEvaluationService', logger, {
       requiredMethods: ['evaluate']
     });
-    validateDependency(scopeEngine, 'IScopeEngine', logger, {
-      requiredMethods: ['resolve', 'resolveFilter']
-    });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntity', 'hasComponent', 'getComponent']
+      requiredMethods: ['getEntityInstance', 'hasComponent', 'getComponentData']
     });
 
     this.#logger = logger;
     this.#jsonLogicEvaluator = jsonLogicEvaluator;
-    this.#scopeEngine = scopeEngine;
     this.#entityManager = entityManager;
   }
 
   /**
    * Evaluates if goal state condition is met
-   * @param {Object} goalState - Goal state condition (JSON Logic or ScopeDSL)
+   * @param {Object} goalState - Goal state condition (JSON Logic)
    * @param {string} actorId - Entity ID of actor
    * @param {Object} context - World state context
    * @returns {boolean} True if goal state satisfied
@@ -295,17 +288,8 @@ class GoalStateEvaluator {
     string.assertNonBlank(actorId, 'actorId', 'evaluate', this.#logger);
 
     try {
-      // Detect goal state format
-      if (typeof goalState === 'string') {
-        // ScopeDSL format
-        return this.#evaluateScopeDsl(goalState, actorId, context);
-      } else if (typeof goalState === 'object') {
-        // JSON Logic format
-        return this.#evaluateJsonLogic(goalState, actorId, context);
-      } else {
-        this.#logger.error(`Invalid goal state format: ${typeof goalState}`);
-        return false;
-      }
+      // Goal states are JSON Logic conditions (per goal.schema.json)
+      return this.#evaluateJsonLogic(goalState, actorId, context);
     } catch (error) {
       this.#logger.error('Failed to evaluate goal state', error);
       return false;
@@ -340,49 +324,13 @@ class GoalStateEvaluator {
 
   // Private helper methods
 
-  #evaluateScopeDsl(scopeExpression, actorId, context) {
-    // Handle special ScopeDSL functions like hasComponent
-    if (scopeExpression.startsWith('hasComponent(')) {
-      return this.#evaluateHasComponent(scopeExpression, actorId);
-    }
-
-    // General ScopeDSL evaluation
-    const result = this.#scopeEngine.resolve(scopeExpression, {
-      actor: actorId,
-      ...context
-    });
-
-    return !!result;
-  }
-
-  #evaluateHasComponent(expression, actorId) {
-    // Parse: hasComponent(actor, 'items:has_food')
-    const match = expression.match(/hasComponent\((\w+),\s*['"]([^'"]+)['"]\)/);
-    if (!match) {
-      this.#logger.error(`Invalid hasComponent expression: ${expression}`);
-      return false;
-    }
-
-    const [, entity, componentId] = match;
-    const entityId = entity === 'actor' ? actorId : entity;
-
-    return this.#entityManager.hasComponent(entityId, componentId);
-  }
-
   #evaluateJsonLogic(logic, actorId, context) {
     // Enrich context with actor entity
     const enrichedContext = {
       ...context,
-      actor: this.#entityManager.getEntity(actorId),
+      actor: this.#entityManager.getEntityInstance(actorId),
       actorId
     };
-
-    // Handle custom operators
-    if (logic.hasComponent) {
-      const [entity, componentId] = logic.hasComponent;
-      const entityId = entity === 'actor' ? actorId : entity;
-      return this.#entityManager.hasComponent(entityId, componentId);
-    }
 
     // Standard JSON Logic evaluation
     const result = this.#jsonLogicEvaluator.evaluate(logic, enrichedContext);
@@ -401,17 +349,19 @@ Create example goals for testing:
 
 ```json
 {
+  "$schema": "../../../schemas/goal.schema.json",
   "id": "core:find_food",
+  "description": "Actor needs to find food when hungry",
   "priority": 80,
   "relevance": {
     "and": [
-      { "hasComponent": ["actor", "core:actor"] },
-      { "<": [{ "var": "actor.hunger" }, 30] },
-      { "not": { "hasComponent": ["actor", "items:has_food"] } }
+      { ">=": [{ "var": "actor.components.core:actor" }, null] },
+      { "<": [{ "var": "actor.components.core:hunger.value" }, 30] },
+      { "!": [{ "var": "actor.components.items:has_food" }] }
     ]
   },
   "goalState": {
-    "hasComponent": ["actor", "items:has_food"]
+    ">=": [{ "var": "actor.components.items:has_food" }, null]
   }
 }
 ```
@@ -420,19 +370,20 @@ Create example goals for testing:
 
 ```json
 {
+  "$schema": "../../../schemas/goal.schema.json",
   "id": "core:rest_safely",
+  "description": "Actor needs to rest when tired",
   "priority": 60,
   "relevance": {
     "and": [
-      { "hasComponent": ["actor", "core:actor"] },
-      { "<": [{ "var": "actor.energy" }, 40] }
+      { ">=": [{ "var": "actor.components.core:actor" }, null] },
+      { "<": [{ "var": "actor.components.core:energy.value" }, 40] }
     ]
   },
   "goalState": {
     "and": [
-      { "hasComponent": ["actor", "positioning:lying_down"] },
-      { ">=": [{ "var": "actor.energy" }, 80] },
-      { "==": [{ "var": "actor.position.safe" }, true] }
+      { ">=": [{ "var": "actor.components.positioning:lying_down" }, null] },
+      { ">=": [{ "var": "actor.components.core:energy.value" }, 80] }
     ]
   }
 }
@@ -449,6 +400,32 @@ Create example goals for testing:
 ## Files to Update
 
 - [ ] `src/dependencyInjection/registrations/goapRegistrations.js` - Register GoalManager and GoalStateEvaluator
+
+**Registration Example:**
+
+```javascript
+import GoalManager from '../../goap/goals/goalManager.js';
+import GoalStateEvaluator from '../../goap/goals/goalStateEvaluator.js';
+
+// Add to registerGoapServices function:
+container.register(goapTokens.IGoalManager, GoalManager, {
+  dependencies: {
+    logger: coreTokens.ILogger,
+    gameDataRepository: coreTokens.IGameDataRepository,
+    goalStateEvaluator: goapTokens.IGoalStateEvaluator,
+    jsonLogicEvaluator: coreTokens.JsonLogicEvaluationService,
+    entityManager: coreTokens.IEntityManager
+  }
+});
+
+container.register(goapTokens.IGoalStateEvaluator, GoalStateEvaluator, {
+  dependencies: {
+    logger: coreTokens.ILogger,
+    jsonLogicEvaluator: coreTokens.JsonLogicEvaluationService,
+    entityManager: coreTokens.IEntityManager
+  }
+});
+```
 
 ## Testing Requirements
 
@@ -470,12 +447,12 @@ Create example goals for testing:
 
 - Evaluate JSON Logic goal state (true)
 - Evaluate JSON Logic goal state (false)
-- Evaluate ScopeDSL goal state (true)
-- Evaluate ScopeDSL goal state (false)
-- Evaluate hasComponent function
+- Evaluate component existence check (true)
+- Evaluate component existence check (false)
 - Calculate distance (satisfied)
 - Calculate distance (unsatisfied)
 - Handle composite conditions
+- Handle nested component paths
 
 **Coverage Target:** 90% branches, 95% functions/lines
 
@@ -494,13 +471,14 @@ Create example goals for testing:
 
 - [ ] Create `docs/goap/goal-system.md` with:
   - Goal definition format
-  - Relevance conditions
-  - Goal state conditions
-  - ScopeDSL usage in goals (link to docs/scopeDsl/)
+  - Relevance conditions (JSON Logic)
+  - Goal state conditions (JSON Logic)
+  - Accessing component data in goal conditions
   - Creating goals for creature types
   - Priority tuning
   - Troubleshooting goal selection
   - Examples for cat, goblin, monster
+  - Common JSON Logic patterns for goals
 
 ## Acceptance Criteria
 
@@ -508,13 +486,13 @@ Create example goals for testing:
 - [ ] GoalStateEvaluator class implemented
 - [ ] Goal selection algorithm works correctly
 - [ ] Supports JSON Logic goal states
-- [ ] Supports ScopeDSL goal states
+- [ ] Accesses component data via `actor.components.*` paths
 - [ ] Selects highest priority relevant goal
 - [ ] Filters out satisfied goals
-- [ ] Integrates with goal loader
+- [ ] Integrates with IGameDataRepository for goal definitions
 - [ ] All unit tests pass with 90%+ coverage
 - [ ] All integration tests pass
-- [ ] Example goal definitions created
+- [ ] Example goal definitions created (find_food, rest_safely, defeat_enemy)
 - [ ] Documentation complete
 - [ ] ESLint passes
 - [ ] TypeScript type checking passes
@@ -529,10 +507,12 @@ Create example goals for testing:
 
 ## Notes
 
-- **ScopeDSL Documentation:** Reference `docs/scopeDsl/` for ScopeDSL syntax
-- **Custom Operators:** May need to extend JSON Logic with custom operators
+- **JSON Logic Only:** Goal states use JSON Logic conditions (per goal.schema.json)
+- **Component Access:** Access entity components via `{ "var": "actor.components.core:actor" }`
+- **No Custom Operators Needed:** Standard JSON Logic is sufficient for goal evaluation
 - **Performance:** Goal selection should be fast (<10ms)
 - **Extensibility:** Design for future dynamic priority calculations
+- **IGameDataRepository:** Goals accessed via repository, not separate loader interface
 
 ## Related Tickets
 
