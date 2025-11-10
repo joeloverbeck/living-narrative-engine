@@ -1223,12 +1223,30 @@ describe('RecipePreflightValidator', () => {
         if (type === 'anatomyStructureTemplates' && id === 'test:template') {
           return structureTemplate;
         }
+        if (type === 'components' && id === 'anatomy:part') {
+          return { id: 'anatomy:part', dataSchema: {} };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return {
+            id: 'test:root',
+            components: {
+              'anatomy:sockets': {
+                sockets: [
+                  { id: 'arm_left', allowedTypes: ['arm'] },
+                ],
+              },
+            },
+          };
+        }
         return undefined;
       });
 
       mockDataRegistry.getAll = jest.fn((type) => {
         if (type === 'entityDefinitions') {
           return mockEntityDefs;
+        }
+        if (type === 'components') {
+          return [{ id: 'anatomy:part', dataSchema: {} }];
         }
         return [];
       });
@@ -1309,9 +1327,31 @@ describe('RecipePreflightValidator', () => {
         },
       ];
 
+      mockDataRegistry.get = jest.fn((type, id) => {
+        if (type === 'components' && id === 'anatomy:part') {
+          return { id: 'anatomy:part', dataSchema: {} };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return {
+            id: 'test:root',
+            components: {
+              'anatomy:sockets': {
+                sockets: [
+                  { id: 'leg_1', allowedTypes: ['leg'] },
+                ],
+              },
+            },
+          };
+        }
+        return undefined;
+      });
+
       mockDataRegistry.getAll = jest.fn((type) => {
         if (type === 'entityDefinitions') {
           return mockEntityDefs;
+        }
+        if (type === 'components') {
+          return [{ id: 'anatomy:part', dataSchema: {} }];
         }
         return [];
       });
@@ -1421,11 +1461,37 @@ describe('RecipePreflightValidator', () => {
         },
       ];
 
-      mockDataRegistry.get = jest.fn(() => structureTemplate);
+      mockDataRegistry.get = jest.fn((type, id) => {
+        if (type === 'anatomyStructureTemplates' && id === 'test:template') {
+          return structureTemplate;
+        }
+        if (type === 'components' && (id === 'anatomy:part' || id === 'anatomy:special')) {
+          return { id, dataSchema: {} };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return {
+            id: 'test:root',
+            components: {
+              'anatomy:sockets': {
+                sockets: [
+                  { id: 'head', allowedTypes: ['head', 'custom_head'] },
+                ],
+              },
+            },
+          };
+        }
+        return undefined;
+      });
 
       mockDataRegistry.getAll = jest.fn((type) => {
         if (type === 'entityDefinitions') {
           return mockEntityDefs;
+        }
+        if (type === 'components') {
+          return [
+            { id: 'anatomy:part', dataSchema: {} },
+            { id: 'anatomy:special', dataSchema: {} },
+          ];
         }
         return [];
       });

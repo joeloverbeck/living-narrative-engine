@@ -110,32 +110,13 @@ function loadScenario(
  */
 describe('stroke_penis_to_draw_attention forbidden when receiving blowjob', () => {
   let testFixture;
-  let originalValidateAction;
-
-  beforeEach(async () => {
+    beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
-    originalValidateAction = testFixture.testEnv.validateAction;
-    testFixture.testEnv.validateAction = (actorId, actionId) => {
-      if (actionId === ACTION_ID) {
-        const actorEntity =
-          testFixture.entityManager.getEntityInstance(actorId);
-        return testFixture.testEnv.prerequisiteService.evaluate(
-          strokePenisDrawAttentionAction.prerequisites,
-          strokePenisDrawAttentionAction,
-          actorEntity
-        );
-      }
-
-      return originalValidateAction(actorId, actionId);
-    };
-  });
+      });
 
   afterEach(() => {
     if (testFixture) {
-      if (originalValidateAction) {
-        testFixture.testEnv.validateAction = originalValidateAction;
-        originalValidateAction = null;
-      }
+      
       testFixture.cleanup();
     }
   });

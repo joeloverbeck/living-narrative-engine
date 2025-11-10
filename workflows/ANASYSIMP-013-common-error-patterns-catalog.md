@@ -8,17 +8,18 @@
 
 ## Context
 
-Same errors encountered repeatedly without comprehensive reference documentation. Recipe creators spend time re-discovering solutions to known problems. While `docs/anatomy/troubleshooting.md` exists with 584 lines of error documentation, it focuses on debugging specific scenarios rather than providing a comprehensive catalog of all error types with their signatures, causes, and fixes.
+Same errors encountered repeatedly without comprehensive reference documentation. Recipe creators spend time re-discovering solutions to known problems. While `docs/anatomy/troubleshooting.md` exists with 583 lines of error documentation, it focuses on debugging specific scenarios rather than providing a comprehensive catalog of all error types with their signatures, causes, and fixes. An error catalog (`docs/anatomy/common-errors.md`, 41KB) already exists but needs enhancement for complete coverage.
 
 **Current State**:
-- `docs/anatomy/troubleshooting.md` - Problem-oriented troubleshooting guide (584 lines)
+- `docs/anatomy/troubleshooting.md` - Problem-oriented troubleshooting guide (583 lines)
+- `docs/anatomy/common-errors.md` - Error catalog already exists (41KB) - needs enhancement/update
 - Error classes implemented in `src/anatomy/errors/` with structured error information
 - Validation infrastructure in place (`RecipePreflightValidator`, validation rules)
-- Need: Comprehensive error catalog organized by error type with searchable signatures
+- Task: Enhance existing error catalog with complete coverage and cross-references
 
 ## Solution Overview
 
-Create comprehensive error catalog at `docs/anatomy/common-errors.md` documenting all common anatomy system errors with:
+Enhance existing error catalog at `docs/anatomy/common-errors.md` (41KB) documenting all common anatomy system errors with:
 
 - **Error signature** - How to recognize the error
 - **Symptoms** - What you see
@@ -56,7 +57,7 @@ Based on actual error classes (`src/anatomy/errors/`) and validation infrastruct
    - partType/subType mismatch
    - Entity missing required components
    - Property value mismatches
-   - Source: `PartSelectionService`, lines 271-305
+   - Source: `PartSelectionService` - validation in `#meetsAllRequirements` (lines 251-433), type checking (lines 273-307), error building (lines 467-539)
 
 5. **Socket/Slot Errors** (SocketNotFoundError)
    - Socket not found on parent entity
@@ -166,7 +167,8 @@ After (CORRECT):
 - "Invalid property value" (if properties don't match)
 
 **Implementation References:**
-- `src/anatomy/partSelectionService.js:271-305` - Validation logic
+- `src/anatomy/partSelectionService.js:251-433` - Full validation logic in `#meetsAllRequirements`
+- `src/anatomy/partSelectionService.js:467-539` - Error context building
 - `docs/anatomy/troubleshooting.md:264-487` - partType/subType guide
 - `reports/anatomy-system-v2-improvements.md:190-196` - Red Dragon Error Round 2
 ```
@@ -175,26 +177,27 @@ After (CORRECT):
 
 ```
 docs/anatomy/
-├── troubleshooting.md            # Problem-oriented guide (existing, 584 lines)
-└── common-errors.md              # NEW: Error catalog (complements troubleshooting.md)
+├── troubleshooting.md            # Problem-oriented guide (existing, 583 lines)
+└── common-errors.md              # EXISTING: Error catalog (41KB) - enhance with complete coverage
 ```
 
 **Relationship to Existing Documentation:**
-- `troubleshooting.md` - Problem-oriented ("Body parts not generated", "Clothing not attaching")
-- `common-errors.md` - Error-oriented ("ComponentNotFoundError", "No matching entities")
+- `troubleshooting.md` (583 lines) - Problem-oriented ("Body parts not generated", "Clothing not attaching")
+- `common-errors.md` (existing 41KB) - Error-oriented ("ComponentNotFoundError", "No matching entities")
 - Different organization strategies for different use cases
-- Cross-reference between the two documents
+- Both documents exist and complement each other - task is to enhance coverage and cross-references
 
 ## Acceptance Criteria
 
 **Required Error Coverage:**
-- [ ] Documents all 6 Red Dragon error rounds from report (lines 181-234)
+- [ ] Documents all 7 error scenarios from Red Dragon case study (6 error rounds + 1 final issue, lines 181-243)
 - [ ] Covers all error classes in `src/anatomy/errors/`:
+  - [ ] AnatomyError (base class)
   - [ ] ComponentNotFoundError
   - [ ] InvalidPropertyError
   - [ ] SocketNotFoundError
   - [ ] RecipeValidationError
-  - [ ] BodyDescriptorValidationError (if relevant)
+  - [ ] BodyDescriptorValidationError (exists but not exported in index.js - document if relevant to common errors)
 - [ ] Documents all validator error types from `src/anatomy/validation/`:
   - [ ] RecipePreflightValidator errors
   - [ ] ComponentExistenceValidationRule
@@ -223,12 +226,14 @@ docs/anatomy/
 **Depends On:** ANASYSIMP-007 (Error classes provide error signatures)
 
 **Current Status**: ✅ Error classes already implemented in `src/anatomy/errors/`:
-- `AnatomyError` (base class)
-- `ComponentNotFoundError`
-- `InvalidPropertyError`
-- `SocketNotFoundError`
-- `RecipeValidationError`
+- `AnatomyError.js` (base class)
+- `ComponentNotFoundError.js`
+- `InvalidPropertyError.js`
+- `SocketNotFoundError.js`
+- `RecipeValidationError.js`
+- `bodyDescriptorValidationError.js` (exists but not exported in index.js)
 - `errorTemplates.js` with ERROR_TEMPLATES registry
+- `index.js` exports 5 main error classes
 
 Dependency is **satisfied** - error infrastructure exists and is in production use.
 
@@ -237,22 +242,29 @@ Dependency is **satisfied** - error infrastructure exists and is in production u
 **Existing Resources to Leverage:**
 1. **Error Classes** (`src/anatomy/errors/`) - Structured error information with context, problem, impact, fix, and references
 2. **Validation Infrastructure** (`src/anatomy/validation/`) - All validators and error types are implemented
-3. **Red Dragon Case Study** (`reports/anatomy-system-v2-improvements.md:181-234`) - 6 error rounds with real examples
-4. **Troubleshooting Guide** (`docs/anatomy/troubleshooting.md`) - 584 lines of problem-oriented documentation
-5. **ValidationReport Format** (`src/anatomy/validation/ValidationReport.js`) - Error/warning/suggestion structure
+   - 9 validation rules in `src/anatomy/validation/rules/`
+   - `RecipePreflightValidator.js`, `patternMatchingValidator.js`, `socketSlotCompatibilityValidator.js`
+3. **Red Dragon Case Study** (`reports/anatomy-system-v2-improvements.md:181-243`) - 7 error scenarios (6 rounds + final issue)
+4. **Troubleshooting Guide** (`docs/anatomy/troubleshooting.md`) - 583 lines of problem-oriented documentation
+5. **Existing Error Catalog** (`docs/anatomy/common-errors.md`) - 41KB existing file with error documentation
+6. **ValidationReport Format** (`src/anatomy/validation/ValidationReport.js`) - Error/warning/suggestion structure
 
 **Approach:**
-- Mine error examples from Red Dragon case study (lines 181-234 in report)
-- Extract error signatures from error class constructors
-- Document validation rules from `src/anatomy/validation/rules/`
-- Cross-reference to troubleshooting.md for related problems
+- Review and enhance existing `common-errors.md` (41KB)
+- Mine error examples from Red Dragon case study (lines 181-243 in report)
+- Extract error signatures from error class constructors (`src/anatomy/errors/*.js`)
+- Document validation rules from `src/anatomy/validation/rules/` (9 rules)
+- Cross-reference to troubleshooting.md (583 lines) for related problems
 - Maintain distinction between load-time and runtime errors
+- Ensure comprehensive coverage of all validation infrastructure
 
 ## References
 
 - **Report Section:** Recommendation 3.2
-- **Report Pages:** Lines 967-1048 (recommendation), 181-234 (Red Dragon errors)
+- **Report Pages:** Lines 967-1048 (recommendation), 181-243 (Red Dragon 7 error scenarios)
 - **Error Examples:** Throughout Red Dragon analysis in report
-- **Existing Documentation:** `docs/anatomy/troubleshooting.md` (584 lines)
-- **Error Classes:** `src/anatomy/errors/` (5 error classes + templates)
-- **Validators:** `src/anatomy/validation/` (8+ validation rules)
+- **Existing Documentation:**
+  - `docs/anatomy/troubleshooting.md` (583 lines) - Problem-oriented guide
+  - `docs/anatomy/common-errors.md` (41KB existing) - Error catalog to enhance
+- **Error Classes:** `src/anatomy/errors/` (6 error class files, 5 exported + errorTemplates)
+- **Validators:** `src/anatomy/validation/` (9 validation rules + 3 main validators)
