@@ -61,9 +61,12 @@ tests/common/mods/
 
 **File:** `tests/unit/anatomy/targetlessActionPrerequisites.test.js`
 
+**Note**: This focuses on testing the prerequisite evaluation logic in isolation, not full action discovery which requires integration tests.
+
 ```javascript
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 
 describe('Targetless Actions - Prerequisite Evaluation', () => {
   let fixture;
@@ -71,10 +74,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'seduction',
-      'seduction:squeeze_breasts_draw_attention',
-      null, // rule file
-      null, // condition file
-      { autoRegisterScopes: true, scopeCategories: ['anatomy', 'positioning'] }
+      'seduction:squeeze_breasts_draw_attention'
     );
   });
 
@@ -83,36 +83,58 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
   });
 
   describe('Actor-based Prerequisites', () => {
-    it('should evaluate hasPartOfType prerequisite for actor with targets: "none"', async () => {
-      // Arrange
-      const actor = fixture.createEntity({
-        id: 'actor-with-breasts',
-        name: 'Test Actor',
-        components: {
-          'core:actor': {},
-          'anatomy:body': {
-            parts: {
-              'breast-left': {
-                type: 'breast',
-                name: 'left breast',
-                slot: 'torso',
-                can_be_targeted: true
-              },
-              'breast-right': {
-                type: 'breast',
-                name: 'right breast',
-                slot: 'torso',
-                can_be_targeted: true
-              }
-            }
-          }
-        }
-      });
+    it('should discover action when actor has required anatomy (targets: "none")', () => {
+      // Arrange - Create actor with breast anatomy using separate entities
+      const actorId = 'actor-with-breasts';
+      const torsoId = `${actorId}_torso`;
+      const leftBreastId = `${actorId}_left_breast`;
+      const rightBreastId = `${actorId}_right_breast`;
 
-      fixture.reset([actor]);
+      const actor = new ModEntityBuilder(actorId)
+        .withName('Test Actor')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .withBody(torsoId) // anatomy:body references root part
+        .build();
+
+      // Body parts are separate entities with anatomy:part component
+      const torso = new ModEntityBuilder(torsoId)
+        .asBodyPart({
+          parent: null, // Root part
+          children: [leftBreastId, rightBreastId],
+          subType: 'torso'
+        })
+        .build();
+
+      const leftBreast = new ModEntityBuilder(leftBreastId)
+        .asBodyPart({
+          parent: torsoId,
+          children: [],
+          subType: 'breast' // hasPartOfType checks subType
+        })
+        .build();
+
+      const rightBreast = new ModEntityBuilder(rightBreastId)
+        .asBodyPart({
+          parent: torsoId,
+          children: [],
+          subType: 'breast'
+        })
+        .build();
+
+      // Create another actor at same location (required for hasOtherActorsAtLocation)
+      const otherActor = new ModEntityBuilder('other-actor')
+        .withName('Other Person')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .build();
+
+      fixture.reset([actor, torso, leftBreast, rightBreast, otherActor]);
 
       // Act
-      const actions = await fixture.discoverActions(actor.id);
+      const actions = fixture.discoverActions(actorId);
 
       // Assert
       expect(actions).toContainEqual(
@@ -122,32 +144,40 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
       );
     });
 
-    it('should NOT discover action when actor lacks required anatomy', async () => {
-      // Arrange
-      const actor = fixture.createEntity({
-        id: 'actor-no-breasts',
-        name: 'Test Actor',
-        components: {
-          'core:actor': {},
-          'anatomy:body': {
-            parts: {
-              'torso': {
-                type: 'torso',
-                name: 'torso',
-                slot: 'core',
-                can_be_targeted: false
-              }
-            }
-          }
-        }
-      });
+    it('should NOT discover action when actor lacks required anatomy', () => {
+      // Arrange - Actor with torso but no breasts
+      const actorId = 'actor-no-breasts';
+      const torsoId = `${actorId}_torso`;
 
-      fixture.reset([actor]);
+      const actor = new ModEntityBuilder(actorId)
+        .withName('Test Actor')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .withBody(torsoId)
+        .build();
+
+      const torso = new ModEntityBuilder(torsoId)
+        .asBodyPart({
+          parent: null,
+          children: [], // No breast parts
+          subType: 'torso'
+        })
+        .build();
+
+      const otherActor = new ModEntityBuilder('other-actor')
+        .withName('Other Person')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .build();
+
+      fixture.reset([actor, torso, otherActor]);
 
       // Act
-      const actions = await fixture.discoverActions(actor.id);
+      const actions = fixture.discoverActions(actorId);
 
-      // Assert
+      // Assert - Action should not be discovered (missing breast anatomy)
       expect(actions).not.toContainEqual(
         expect.objectContaining({
           id: 'seduction:squeeze_breasts_draw_attention'
@@ -155,129 +185,122 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
       );
     });
 
-    it('should evaluate hasClothingInSlot prerequisite for targetless actions', async () => {
-      const actor = fixture.createEntity({
-        id: 'actor-clothed',
-        name: 'Test Actor',
-        components: {
-          'core:actor': {},
-          'anatomy:body': { parts: { /* anatomy */ } },
-          'clothing:worn_items': {
-            slots: {
-              'chest': { item_id: 'shirt-1', coverage: 'full' }
+    it('should respect clothing coverage prerequisites (isSocketCovered)', () => {
+      // Arrange - Actor with breasts but both covered
+      const actorId = 'actor-covered';
+      const torsoId = `${actorId}_torso`;
+      const leftBreastId = `${actorId}_left_breast`;
+      const rightBreastId = `${actorId}_right_breast`;
+      const shirtId = 'covering-shirt';
+
+      const actor = new ModEntityBuilder(actorId)
+        .withName('Covered Actor')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .withBody(torsoId)
+        .withComponent('clothing:equipment', {
+          equipped: {
+            torso_upper: { base: [shirtId] }
+          }
+        })
+        .withComponent('clothing:slot_metadata', {
+          slotMappings: {
+            torso_upper: {
+              coveredSockets: ['left_chest', 'right_chest'], // Both breasts covered
+              allowedLayers: ['base', 'outer']
             }
           }
-        }
-      });
+        })
+        .build();
 
-      fixture.reset([actor]);
+      const torso = new ModEntityBuilder(torsoId)
+        .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+        .build();
 
-      // Create action that requires chest clothing
-      const action = {
-        id: 'test:targetless_action_with_clothing',
-        targets: 'none',
-        prerequisites: [
-          { logic: { hasClothingInSlot: ['actor', 'chest'] } }
-        ]
-      };
+      const leftBreast = new ModEntityBuilder(leftBreastId)
+        .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+        .build();
 
-      // Test prerequisite evaluation
-      const result = await fixture.evaluatePrerequisites(
-        action.prerequisites,
-        actor.id,
-        null // no target
+      const rightBreast = new ModEntityBuilder(rightBreastId)
+        .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+        .build();
+
+      const shirt = new ModEntityBuilder(shirtId)
+        .withName('Covering Shirt')
+        .build();
+
+      const otherActor = new ModEntityBuilder('other-actor')
+        .withName('Other Person')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .build();
+
+      fixture.reset([actor, torso, leftBreast, rightBreast, shirt, otherActor]);
+
+      // Act
+      const actions = fixture.discoverActions(actorId);
+
+      // Assert - Action requires at least one breast uncovered
+      expect(actions).not.toContainEqual(
+        expect.objectContaining({
+          id: 'seduction:squeeze_breasts_draw_attention'
+        })
       );
-
-      expect(result).toBe(true);
     });
   });
 
-  describe('Composite Prerequisites', () => {
-    it('should evaluate AND prerequisites for targetless actions', async () => {
-      const actor = fixture.createEntity({
-        id: 'actor-composite',
-        name: 'Test Actor',
-        components: {
-          'core:actor': {},
-          'anatomy:body': {
-            parts: {
-              'breast-left': { type: 'breast', name: 'left breast', slot: 'torso', can_be_targeted: true }
-            }
-          },
-          'positioning:standing': {}
-        }
-      });
+  describe('Forbidden Components', () => {
+    it('should respect forbidden_components for targetless actions', () => {
+      // Arrange - Actor with breasts but in forbidden state (hugging)
+      const actorId = 'actor-forbidden';
+      const torsoId = `${actorId}_torso`;
+      const leftBreastId = `${actorId}_left_breast`;
+      const rightBreastId = `${actorId}_right_breast`;
 
-      fixture.reset([actor]);
+      const actor = new ModEntityBuilder(actorId)
+        .withName('Hugging Actor')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .withBody(torsoId)
+        .withComponent('positioning:hugging', {
+          embraced_entity_id: 'target-id',
+          initiated: true
+        })
+        .build();
 
-      const prerequisites = [
-        { logic: { hasPartOfType: ['actor', 'breast'] } },
-        { logic: { component_present: ['actor', 'positioning:standing'] } }
-      ];
+      const torso = new ModEntityBuilder(torsoId)
+        .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+        .build();
 
-      const result = await fixture.evaluatePrerequisites(
-        prerequisites,
-        actor.id,
-        null
+      const leftBreast = new ModEntityBuilder(leftBreastId)
+        .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+        .build();
+
+      const rightBreast = new ModEntityBuilder(rightBreastId)
+        .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+        .build();
+
+      const otherActor = new ModEntityBuilder('other-actor')
+        .withName('Other Person')
+        .asActor()
+        .atLocation('test-room')
+        .withLocationComponent('test-room')
+        .build();
+
+      fixture.reset([actor, torso, leftBreast, rightBreast, otherActor]);
+
+      // Act
+      const actions = fixture.discoverActions(actorId);
+
+      // Assert - Action forbidden when hugging (forbidden_components check)
+      expect(actions).not.toContainEqual(
+        expect.objectContaining({
+          id: 'seduction:squeeze_breasts_draw_attention'
+        })
       );
-
-      expect(result).toBe(true);
-    });
-
-    it('should fail when one AND condition fails', async () => {
-      const actor = fixture.createEntity({
-        id: 'actor-incomplete',
-        name: 'Test Actor',
-        components: {
-          'core:actor': {},
-          'anatomy:body': { parts: {} }, // No breasts
-          'positioning:standing': {}
-        }
-      });
-
-      fixture.reset([actor]);
-
-      const prerequisites = [
-        { logic: { hasPartOfType: ['actor', 'breast'] } },
-        { logic: { component_present: ['actor', 'positioning:standing'] } }
-      ];
-
-      const result = await fixture.evaluatePrerequisites(
-        prerequisites,
-        actor.id,
-        null
-      );
-
-      expect(result).toBe(false);
-    });
-  });
-
-  describe('Prerequisite Context Creation', () => {
-    it('should create prerequisite context with actor even when targets is "none"', () => {
-      const actor = { id: 'actor-1', components: {} };
-      const resolvedTargets = {}; // Empty targets
-
-      const context = fixture.testEnv.buildPrerequisiteContextOverride(
-        resolvedTargets,
-        actor.id
-      );
-
-      expect(context).not.toBeNull();
-      expect(context.actor).toBeDefined();
-      expect(context.actor.id).toBe(actor.id);
-      expect(context.targets).toEqual({});
-    });
-
-    it('should return null only when no actor AND no targets', () => {
-      const resolvedTargets = {};
-      const actorId = null;
-
-      const context = fixture.testEnv.buildPrerequisiteContextOverride(
-        resolvedTargets,
-        actorId
-      );
-
-      expect(context).toBeNull();
     });
   });
 });
@@ -287,9 +310,12 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
 
 **File:** `tests/integration/anatomy/targetlessActionWorkflow.test.js`
 
+**Note**: Integration tests focus on end-to-end workflows including discovery, execution, and event verification.
+
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 import '../../common/mods/domainMatchers.js';
 
 describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
@@ -298,10 +324,7 @@ describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'seduction',
-      'seduction:grab_crotch_draw_attention',
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['anatomy'] }
+      'seduction:squeeze_breasts_draw_attention'
     );
   });
 
@@ -310,175 +333,102 @@ describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
   });
 
   it('should complete full workflow: discovery → execution → effects', async () => {
-    // Arrange - Actor with required anatomy
-    const actor = fixture.createEntity({
-      id: 'actor-1',
-      name: 'Seductive Actor',
-      components: {
-        'core:actor': {},
-        'anatomy:body': {
-          parts: {
-            'groin': {
-              type: 'groin',
-              name: 'groin',
-              slot: 'lower_body',
-              can_be_targeted: true
-            }
-          }
-        }
-      }
-    });
+    // Arrange - Actor with required anatomy (breasts uncovered)
+    const actorId = 'seductive-actor';
+    const torsoId = `${actorId}_torso`;
+    const leftBreastId = `${actorId}_left_breast`;
+    const rightBreastId = `${actorId}_right_breast`;
 
-    fixture.reset([actor]);
+    const actor = new ModEntityBuilder(actorId)
+      .withName('Seductive Actor')
+      .asActor()
+      .atLocation('test-room')
+      .withLocationComponent('test-room')
+      .withBody(torsoId)
+      .build();
+
+    const torso = new ModEntityBuilder(torsoId)
+      .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+      .build();
+
+    const leftBreast = new ModEntityBuilder(leftBreastId)
+      .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+      .build();
+
+    const rightBreast = new ModEntityBuilder(rightBreastId)
+      .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+      .build();
+
+    // Other actor required for hasOtherActorsAtLocation prerequisite
+    const otherActor = new ModEntityBuilder('audience-member')
+      .withName('Audience Member')
+      .asActor()
+      .atLocation('test-room')
+      .withLocationComponent('test-room')
+      .build();
+
+    fixture.reset([actor, torso, leftBreast, rightBreast, otherActor]);
 
     // Act - Discover actions
-    const discovered = await fixture.discoverActions(actor.id);
+    const discovered = fixture.discoverActions(actorId);
 
     // Assert - Action is discovered
     expect(discovered).toContainEqual(
       expect.objectContaining({
-        id: 'seduction:grab_crotch_draw_attention'
+        id: 'seduction:squeeze_breasts_draw_attention'
       })
     );
 
-    // Act - Execute action
-    await fixture.executeAction(actor.id, null); // No target
+    // Act - Execute action (targetless - no target ID)
+    await fixture.executeAction(actorId);
 
     // Assert - Action succeeded
     expect(fixture.events).toHaveActionSuccess();
   });
 
-  it('should respect forbidden components for targetless actions', async () => {
-    const actor = fixture.createEntity({
-      id: 'actor-forbidden',
-      name: 'Actor Receiving Blowjob',
-      components: {
-        'core:actor': {},
-        'anatomy:body': {
-          parts: {
-            'groin': { type: 'groin', name: 'groin', slot: 'lower_body', can_be_targeted: true }
-          }
-        },
-        'sex-penile-oral:receiving_blowjob': {} // Forbidden component
-      }
-    });
+  it('should NOT discover when other actors prerequisite fails', () => {
+    // Arrange - Actor with breasts but alone (no other actors at location)
+    const actorId = 'lonely-actor';
+    const torsoId = `${actorId}_torso`;
+    const leftBreastId = `${actorId}_left_breast`;
+    const rightBreastId = `${actorId}_right_breast`;
 
-    fixture.reset([actor]);
+    const actor = new ModEntityBuilder(actorId)
+      .withName('Lonely Actor')
+      .asActor()
+      .atLocation('empty-room')
+      .withLocationComponent('empty-room')
+      .withBody(torsoId)
+      .build();
 
-    // Should NOT discover action due to forbidden component
-    const discovered = await fixture.discoverActions(actor.id);
+    const torso = new ModEntityBuilder(torsoId)
+      .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+      .build();
 
+    const leftBreast = new ModEntityBuilder(leftBreastId)
+      .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+      .build();
+
+    const rightBreast = new ModEntityBuilder(rightBreastId)
+      .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+      .build();
+
+    fixture.reset([actor, torso, leftBreast, rightBreast]);
+
+    // Act
+    const discovered = fixture.discoverActions(actorId);
+
+    // Assert - Action requires other actors present (hasOtherActorsAtLocation fails)
     expect(discovered).not.toContainEqual(
       expect.objectContaining({
-        id: 'seduction:grab_crotch_draw_attention'
+        id: 'seduction:squeeze_breasts_draw_attention'
       })
     );
-  });
-
-  it('should handle complex anatomy prerequisites for targetless actions', async () => {
-    const actor = fixture.createEntity({
-      id: 'actor-complex',
-      name: 'Complex Actor',
-      components: {
-        'core:actor': {},
-        'anatomy:body': {
-          parts: {
-            'penis': { type: 'penis', name: 'penis', slot: 'groin', can_be_targeted: true, state: 'exposed' }
-          }
-        },
-        'positioning:standing': {}
-      }
-    });
-
-    fixture.reset([actor]);
-
-    const action = {
-      id: 'test:complex_targetless',
-      targets: 'none',
-      prerequisites: [
-        { logic: { hasPartOfType: ['actor', 'penis'] } },
-        { logic: { hasPartWithState: ['actor', 'penis', 'exposed'] } }
-      ]
-    };
-
-    const result = await fixture.evaluatePrerequisites(
-      action.prerequisites,
-      actor.id,
-      null
-    );
-
-    expect(result).toBe(true);
   });
 });
 ```
 
-### Step 3: Enhance Test Utilities with Assertions
-
-**File:** `tests/common/engine/systemLogicTestEnv.js` (modify)
-
-Add validation assertions in `buildPrerequisiteContextOverride`:
-
-```javascript
-const buildPrerequisiteContextOverride = (resolvedTargets, actorId) => {
-  const hasTargets = resolvedTargets && Object.keys(resolvedTargets).length > 0;
-
-  const override = { targets: {} };
-
-  if (hasTargets) {
-    // ... existing target handling ...
-  }
-
-  // Always add actor context if actorId is provided
-  if (actorId) {
-    const actorOverride = createResolvedTarget(actorId);
-    if (actorOverride) {
-      override.actor = actorOverride;
-
-      // ASSERTION: Validate actor context structure
-      if (!override.actor.id) {
-        logger.warn(
-          'buildPrerequisiteContextOverride: Actor context missing ID',
-          { actorId, actorOverride }
-        );
-      }
-
-      if (!override.actor.entity) {
-        logger.debug(
-          'buildPrerequisiteContextOverride: Actor context missing entity instance',
-          { actorId, note: 'This may be expected for lightweight contexts' }
-        );
-      }
-    } else {
-      logger.warn(
-        'buildPrerequisiteContextOverride: Failed to create actor context',
-        { actorId, note: 'Actor may not exist in entity manager' }
-      );
-    }
-  }
-
-  // Return override if we have actor context, even if no targets
-  if (override.actor || hasTargets) {
-    // ASSERTION: Log context creation for targetless actions
-    if (!hasTargets && override.actor) {
-      logger.debug(
-        'buildPrerequisiteContextOverride: Created context for targetless action',
-        {
-          actorId,
-          hasActor: !!override.actor,
-          hasTargets: false,
-          note: 'This is expected for actions with targets: "none"'
-        }
-      );
-    }
-
-    return override;
-  }
-
-  return null;
-};
-```
-
-### Step 4: Create Pattern Documentation
+### Step 3: Create Pattern Documentation
 
 **File:** `docs/testing/targetless-action-patterns.md`
 
@@ -508,28 +458,53 @@ Actions that require the actor to have specific anatomy:
 
 **Test Pattern:**
 ```javascript
-it('should evaluate anatomy prerequisites for targetless actions', async () => {
-  const actor = fixture.createEntity({
-    id: 'actor-1',
-    components: {
-      'core:actor': {},
-      'anatomy:body': {
-        parts: {
-          'breast-left': { type: 'breast', ... },
-          'breast-right': { type: 'breast', ... }
-        }
-      }
-    }
-  });
+it('should evaluate anatomy prerequisites for targetless actions', () => {
+  // Anatomy is modeled as separate entities with anatomy:part components
+  const actorId = 'actor-1';
+  const torsoId = `${actorId}_torso`;
+  const leftBreastId = `${actorId}_left_breast`;
+  const rightBreastId = `${actorId}_right_breast`;
 
-  fixture.reset([actor]);
+  const actor = new ModEntityBuilder(actorId)
+    .asActor()
+    .atLocation('test-room')
+    .withLocationComponent('test-room')
+    .withBody(torsoId) // Links to root anatomy part
+    .build();
 
-  const actions = await fixture.discoverActions(actor.id);
+  const torso = new ModEntityBuilder(torsoId)
+    .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+    .build();
+
+  const leftBreast = new ModEntityBuilder(leftBreastId)
+    .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+    .build();
+
+  const rightBreast = new ModEntityBuilder(rightBreastId)
+    .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+    .build();
+
+  // Other actors required for hasOtherActorsAtLocation prerequisite
+  const otherActor = new ModEntityBuilder('other-actor')
+    .asActor()
+    .atLocation('test-room')
+    .withLocationComponent('test-room')
+    .build();
+
+  fixture.reset([actor, torso, leftBreast, rightBreast, otherActor]);
+
+  const actions = fixture.discoverActions(actorId);
   expect(actions).toContainEqual(
     expect.objectContaining({ id: 'seduction:squeeze_breasts_draw_attention' })
   );
 });
 ```
+
+**Key Points:**
+- Anatomy is NOT nested in `anatomy:body.parts` - parts are separate entities
+- Use `ModEntityBuilder.asBodyPart({ subType: 'breast' })` to create body parts
+- `hasPartOfType` operator checks the `subType` field in `anatomy:part` component
+- `anatomy:body` component only contains `{ body: { root: 'torso-id' } }`
 
 ### Pattern 2: Component-Based Targetless Actions
 
@@ -548,168 +523,232 @@ Actions that check for forbidden or required components:
 
 **Test Pattern:**
 ```javascript
-it('should respect forbidden components for targetless actions', async () => {
-  const actorWithForbidden = fixture.createEntity({
-    id: 'actor-forbidden',
-    components: {
-      'core:actor': {},
-      'sex-penile-oral:receiving_blowjob': {}
-    }
-  });
+it('should respect forbidden components for targetless actions', () => {
+  const actorId = 'actor-forbidden';
+  const torsoId = `${actorId}_torso`;
+  const breastId = `${actorId}_breast`;
 
-  fixture.reset([actorWithForbidden]);
+  const actor = new ModEntityBuilder(actorId)
+    .asActor()
+    .atLocation('test-room')
+    .withLocationComponent('test-room')
+    .withBody(torsoId)
+    .withComponent('positioning:hugging', { // Forbidden component
+      embraced_entity_id: 'someone',
+      initiated: true
+    })
+    .build();
 
-  const actions = await fixture.discoverActions(actorWithForbidden.id);
+  const torso = new ModEntityBuilder(torsoId)
+    .asBodyPart({ parent: null, children: [breastId], subType: 'torso' })
+    .build();
+
+  const breast = new ModEntityBuilder(breastId)
+    .asBodyPart({ parent: torsoId, children: [], subType: 'breast' })
+    .build();
+
+  const otherActor = new ModEntityBuilder('other-actor')
+    .asActor()
+    .atLocation('test-room')
+    .withLocationComponent('test-room')
+    .build();
+
+  fixture.reset([actor, torso, breast, otherActor]);
+
+  const actions = fixture.discoverActions(actorId);
+  // Action should NOT be discovered due to forbidden positioning:hugging component
   expect(actions).not.toContainEqual(
-    expect.objectContaining({ id: 'seduction:grab_crotch_draw_attention' })
+    expect.objectContaining({ id: 'seduction:squeeze_breasts_draw_attention' })
   );
 });
 ```
 
-### Pattern 3: Composite Prerequisites
-
-Targetless actions with multiple AND/OR prerequisites:
-
-**Test Pattern:**
-```javascript
-it('should evaluate composite prerequisites for targetless actions', async () => {
-  const actor = fixture.createEntity({
-    id: 'actor-composite',
-    components: {
-      'core:actor': {},
-      'anatomy:body': { parts: { 'breast': { type: 'breast', ... } } },
-      'positioning:standing': {}
-    }
-  });
-
-  const prerequisites = [
-    { logic: { hasPartOfType: ['actor', 'breast'] } },
-    { logic: { component_present: ['actor', 'positioning:standing'] } }
-  ];
-
-  const result = await fixture.evaluatePrerequisites(
-    prerequisites,
-    actor.id,
-    null // No target
-  );
-
-  expect(result).toBe(true);
-});
-```
+**Key Points:**
+- `forbidden_components` is checked during action discovery
+- Components are added using `ModEntityBuilder.withComponent(componentId, data)`
+- Discovery pipeline automatically filters out actions with forbidden components present
 
 ## Test Utilities
 
-### Prerequisite Context Validation
+### ModTestFixture
 
-The test environment automatically creates actor context even when `targets: "none"`:
-
-```javascript
-// Internal behavior (systemLogicTestEnv.js)
-const buildPrerequisiteContextOverride = (resolvedTargets, actorId) => {
-  const override = { targets: {} };
-
-  // Always add actor context if actorId is provided
-  if (actorId) {
-    override.actor = createResolvedTarget(actorId);
-  }
-
-  // Return override if we have actor context, even if no targets
-  if (override.actor || hasTargets) {
-    return override;
-  }
-
-  return null;
-};
-```
-
-### Discovery and Execution
-
-Execute targetless actions with `null` or omitted target:
+The `ModTestFixture` provides test helpers for action discovery and execution:
 
 ```javascript
-// Discovery
-const actions = await fixture.discoverActions(actor.id);
+// Create fixture for specific action
+const fixture = await ModTestFixture.forAction('modId', 'modId:actionId');
 
-// Execution
-await fixture.executeAction(actor.id, null); // Explicit null
-// OR
-await fixture.executeAction(actor.id);       // Omitted
+// Build and reset entity state
+const entities = [actor, ...bodyParts, ...otherActors];
+fixture.reset(entities);
+
+// Discovery (synchronous)
+const actions = fixture.discoverActions(actorId);
+
+// Execution (async) - for targetless actions, omit or pass null as target
+await fixture.executeAction(actorId);        // Targetless (no target)
+await fixture.executeAction(actorId, null);  // Explicit null
+await fixture.executeAction(actorId, targetId); // With target
 ```
+
+### ModEntityBuilder
+
+The `ModEntityBuilder` provides fluent API for entity creation:
+
+```javascript
+// Create actor with anatomy
+const actor = new ModEntityBuilder('actor-id')
+  .withName('Actor Name')
+  .asActor()
+  .atLocation('location-id')
+  .withLocationComponent('location-id')
+  .withBody('torso-id') // Links to anatomy root
+  .withComponent('component:id', { data })
+  .build();
+
+// Create body part
+const part = new ModEntityBuilder('part-id')
+  .asBodyPart({
+    parent: 'parent-id',  // null for root
+    children: ['child1-id', 'child2-id'],
+    subType: 'breast'     // Type used by hasPartOfType
+  })
+  .build();
+```
+
+### Internal Prerequisite Handling
+
+Prerequisites are evaluated internally during discovery. The `buildPrerequisiteContextOverride` function in `systemLogicTestEnv.js` creates context for prerequisite evaluation:
+
+```javascript
+// Internal function (systemLogicTestEnv.js:1288-1348)
+// Always creates actor context if actorId provided, even for targetless actions
+buildPrerequisiteContextOverride(resolvedTargets, actorId)
+// Returns: { actor: {...}, targets: {...} } or null
+```
+
+**Key behaviors:**
+- Actor context created even when `targets: "none"`
+- Context includes actor entity and components for prerequisite evaluation
+- Returns `null` only when both actorId and resolvedTargets are empty
 
 ## Common Mistakes
 
-### ❌ Assuming Targetless Actions Can't Have Prerequisites
+### ❌ Incorrect Anatomy Structure
 
 **Wrong:**
 ```javascript
-// Assuming no prerequisites can be evaluated
-const action = {
-  targets: 'none',
-  prerequisites: [] // ❌ Empty because "no targets"
-};
+// Anatomy parts nested in anatomy:body component
+const actor = new ModEntityBuilder('actor')
+  .withComponent('anatomy:body', {
+    parts: {
+      'breast': { type: 'breast', name: 'left breast' } // ❌ Wrong structure
+    }
+  })
+  .build();
 ```
 
 **Correct:**
 ```javascript
-// Prerequisites can reference actor
-const action = {
-  targets: 'none',
-  prerequisites: [
-    { logic: { hasPartOfType: ['actor', 'breast'] } }
-  ]
-};
+// Anatomy parts are separate entities
+const actor = new ModEntityBuilder('actor')
+  .withBody('torso-id') // ✅ References root part entity
+  .build();
+
+const breast = new ModEntityBuilder('breast-id')
+  .asBodyPart({ // ✅ Separate entity with anatomy:part component
+    parent: 'torso-id',
+    children: [],
+    subType: 'breast' // ✅ Used by hasPartOfType operator
+  })
+  .build();
 ```
 
-### ❌ Not Providing Actor ID to executeAction
+### ❌ Using Wrong Property Names
 
 **Wrong:**
 ```javascript
-await fixture.executeAction(null, null); // ❌ No actor
+.asBodyPart({
+  parent: 'torso',
+  children: [],
+  type: 'breast' // ❌ Should be 'subType'
+})
 ```
 
 **Correct:**
 ```javascript
-await fixture.executeAction(actor.id, null); // ✅ Actor provided
+.asBodyPart({
+  parent: 'torso',
+  children: [],
+  subType: 'breast' // ✅ Correct property name
+})
 ```
 
-### ❌ Testing Only With Targets
+### ❌ Forgetting Required Prerequisites
 
 **Wrong:**
 ```javascript
-// Only testing actions with targets
-it('should test action', async () => {
-  await fixture.executeAction(actor.id, target.id);
-});
+// Testing action but missing hasOtherActorsAtLocation prerequisite
+fixture.reset([actor, ...bodyParts]); // ❌ No other actors
+const actions = fixture.discoverActions(actorId);
+// Action won't be discovered - prerequisite fails silently
 ```
 
 **Correct:**
 ```javascript
-// Test both targeted and targetless variants
-describe('Action behavior', () => {
-  it('should work with targets', async () => {
-    await fixture.executeAction(actor.id, target.id);
-  });
+// Include entities needed to satisfy all prerequisites
+const otherActor = new ModEntityBuilder('other')
+  .asActor()
+  .atLocation('same-room')
+  .withLocationComponent('same-room')
+  .build();
 
-  it('should work without targets (targetless)', async () => {
-    await fixture.executeAction(actor.id, null);
-  });
-});
+fixture.reset([actor, ...bodyParts, otherActor]); // ✅ Other actor present
+const actions = fixture.discoverActions(actorId);
+```
+
+### ❌ Async/Await Confusion
+
+**Wrong:**
+```javascript
+// discoverActions is synchronous, not async
+const actions = await fixture.discoverActions(actor.id); // ❌ Unnecessary await
+```
+
+**Correct:**
+```javascript
+// Discovery is synchronous
+const actions = fixture.discoverActions(actor.id); // ✅ No await
+
+// Execution is async
+await fixture.executeAction(actor.id); // ✅ Await needed
 ```
 
 ## References
 
 - **Test Examples:**
-  - `tests/unit/anatomy/targetlessActionPrerequisites.test.js`
-  - `tests/integration/anatomy/targetlessActionWorkflow.test.js`
+  - `tests/integration/mods/seduction/squeeze_breasts_draw_attention_action_discovery.test.js` - Real implementation
 - **Real-World Actions:**
-  - `data/mods/seduction/actions/squeeze_breasts_draw_attention.action.json`
+  - `data/mods/seduction/actions/squeeze_breasts_draw_attention.action.json` (lines 12-34: prerequisites)
   - `data/mods/seduction/actions/grab_crotch_draw_attention.action.json`
+  - `data/mods/seduction/actions/stroke_penis_to_draw_attention.action.json`
+- **Production Code:**
+  - `tests/common/mods/ModTestFixture.js` - Test fixture factory (lines 0-99: structure)
+  - `tests/common/mods/ModEntityBuilder.js` - Entity builder (lines 375-406: anatomy methods)
+  - `tests/common/engine/systemLogicTestEnv.js` - Test environment (lines 1288-1348: prerequisite context)
+  - `src/logic/operators/hasPartOfTypeOperator.js` - Anatomy prerequisite operator
+- **Documentation:**
+  - `docs/anatomy/anatomy-system-guide.md` - Anatomy system architecture
+  - `docs/anatomy/body-descriptors-complete.md` - Body descriptor registry (lines 1-14: anatomy:body schema)
+  - `docs/testing/mod-testing-guide.md` - Mod testing patterns
+- **Component Schema:**
+  - `data/mods/anatomy/components/body.component.json` - anatomy:body structure (lines 13-104)
 - **Report:** `reports/anatomy-prerequisite-test-fixes-2025-01.md` (lines 136-162)
 ```
 
-### Step 5: Update Anatomy Testing Guide
+### Step 4: Update Anatomy Testing Guide
 
-**File:** `docs/testing/anatomy-testing-guide.md` (add section)
+**File:** `docs/testing/anatomy-testing-guide.md` (add section if it exists)
 
 ```markdown
 ## Testing Targetless Actions with Anatomy Prerequisites
@@ -741,40 +780,52 @@ For complete patterns, see [Targetless Action Patterns](./targetless-action-patt
 
 ## Acceptance Criteria
 
-- [ ] Unit test suite created for targetless action prerequisites (`targetlessActionPrerequisites.test.js`)
-- [ ] Integration test suite created for full workflows (`targetlessActionWorkflow.test.js`)
+- [ ] Unit test suite created for targetless action prerequisites (`tests/unit/anatomy/targetlessActionPrerequisites.test.js`)
+- [ ] Integration test suite created for full workflows (`tests/integration/anatomy/targetlessActionWorkflow.test.js`)
 - [ ] Tests cover:
-  - Actor-based anatomy prerequisites (hasPartOfType)
-  - Component-based prerequisites (forbidden_components, required_components)
-  - Composite prerequisites (AND/OR logic)
-  - Prerequisite context creation validation
-- [ ] Enhanced assertions added to `buildPrerequisiteContextOverride` with diagnostic logging
+  - Actor-based anatomy prerequisites (hasPartOfType with anatomy:part entities)
+  - Clothing coverage prerequisites (isSocketCovered)
+  - Forbidden component filtering (forbidden_components check)
+  - Multiple prerequisite evaluation (hasOtherActorsAtLocation)
+- [ ] Tests use correct anatomy structure:
+  - Body parts as separate entities with anatomy:part component
+  - anatomy:body only references root part via `body.root`
+  - hasPartOfType checks `subType` field in anatomy:part
+  - ModEntityBuilder.asBodyPart() for part creation
 - [ ] Pattern documentation created at `docs/testing/targetless-action-patterns.md`
-- [ ] Anatomy testing guide updated with targetless action section
+- [ ] Pattern documentation includes correct anatomy entity structure examples
 - [ ] All tests pass (100% pass rate)
-- [ ] Test coverage for targetless actions ≥ 80%
+- [ ] Test coverage for targetless action patterns ≥ 80%
 
 ## Implementation Notes
 
 **Key Design Decisions:**
 
-1. **Assertion Placement**: Add diagnostic assertions in `buildPrerequisiteContextOverride` rather than throwing errors to avoid breaking existing tests
-2. **Test Coverage**: Focus on anatomy-based prerequisites since those were the failing cases
-3. **Documentation Focus**: Provide clear patterns to prevent future regressions
+1. **Anatomy Structure**: Use separate entities for body parts, not nested objects in anatomy:body
+2. **Test Coverage**: Focus on anatomy-based prerequisites using real action examples (squeeze_breasts_draw_attention)
+3. **Documentation Focus**: Provide clear patterns with correct anatomy entity structure to prevent future regressions
+4. **Test Utilities**: Leverage existing ModTestFixture and ModEntityBuilder without modifications
 
 **Testing Strategy:**
 
-1. Unit tests validate prerequisite evaluation logic in isolation
-2. Integration tests validate full discovery → execution workflow
-3. Assertions in test utilities provide runtime validation
+1. Unit tests validate prerequisite-driven action discovery
+2. Integration tests validate full discovery → execution → event workflow
+3. Use real-world action definitions for authentic testing
+
+**Anatomy System Architecture:**
+
+- **anatomy:body** component: Contains `{ body: { root: 'entity-id' } }` - reference to root part
+- **anatomy:part** component: Each body part is a separate entity with `{ parent, children, subType }`
+- **hasPartOfType** operator: Queries `subType` field via BodyGraphService
+- **Entity hierarchy**: Actor → anatomy:body → root part entity → child part entities
 
 **Common Edge Cases:**
 
-1. Actor with required anatomy → Action discovered ✅
+1. Actor with required anatomy (breasts) → Action discovered ✅
 2. Actor missing required anatomy → Action not discovered ✅
-3. Actor with forbidden component → Action not discovered ✅
-4. Composite prerequisites (AND/OR) → Correct evaluation ✅
-5. Null actor ID → No context created (null returned) ✅
+3. Actor with forbidden component (hugging) → Action not discovered ✅
+4. Actor with covered sockets → Action not discovered (isSocketCovered) ✅
+5. Actor alone (no other actors) → Action not discovered (hasOtherActorsAtLocation) ✅
 
 ## Dependencies
 
