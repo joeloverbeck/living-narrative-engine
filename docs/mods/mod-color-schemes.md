@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 ## Current Status
 
 **Total Schemes**: 42 defined color combinations
-**In Use**: 25 schemes actively implemented across mods
-**Available**: 17 schemes ready for future mods
+**In Use**: 26 schemes actively implemented across mods
+**Available**: 16 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -48,6 +48,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Vampirism                | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
+| Weapons                  | Arctic Steel       | 11.8    | `#112a46`        | Active   |
 
 ## Available Color Schemes by Category
 
@@ -686,7 +687,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Use Cases**: High-clarity command centers, tactical overviews
 - **Theme**: Frozen night sky, crystalline focus
 
-#### 11.8 Arctic Steel 🟢 AVAILABLE
+#### 11.8 Arctic Steel ✅ IN USE: Weapons
 
 ```json
 {
