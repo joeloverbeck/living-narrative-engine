@@ -84,6 +84,9 @@
         "events": {
           "$ref": "#/definitions/contentFileList"
         },
+        "goals": {
+          "$ref": "#/definitions/contentFileList"
+        },
         "macros": {
           "$ref": "#/definitions/contentFileList"
         },
