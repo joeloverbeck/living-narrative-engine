@@ -3,6 +3,11 @@
  * @see tests/common/entities/simpleEntityManager.js
  */
 
+/**
+ * @template T
+ * @typedef {Iterator<T> & Iterable<T>} IterableIterator
+ */
+
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 
 /**
@@ -19,13 +24,13 @@ export default class SimpleEntityManager {
    */
   constructor(entities = []) {
     /** @type {Map<string, {id:string, components:Record<string, any>}>} */
-    this.entities = new Map();
+    this.entitiesMap = new Map();
     /** @type {Map<string, object>} Entity instance cache for consistent references */
     this.entityInstanceCache = new Map();
     this.setEntities(entities);
 
     // Add activeEntities alias for compatibility with older code
-    this.activeEntities = this.entities;
+    this.activeEntities = this.entitiesMap;
   }
 
   /**
@@ -34,15 +39,16 @@ export default class SimpleEntityManager {
    * @param {Array<{id:string, components:object}>} [entities] - The new entities.
    */
   setEntities(entities = []) {
-    this.entities.clear();
+    this.entitiesMap.clear();
     this.entityInstanceCache.clear(); // Clear cache when entities change
     for (const e of entities) {
       if (!e) {
+        // eslint-disable-next-line no-console
         console.warn('SimpleEntityManager.setEntities: Skipping null/undefined entity');
         continue;
       }
       const cloned = deepClone(e);
-      this.entities.set(cloned.id, cloned);
+      this.entitiesMap.set(cloned.id, cloned);
     }
   }
 
@@ -53,7 +59,7 @@ export default class SimpleEntityManager {
    * @returns {object|undefined} The entity object or undefined if not found.
    */
   getEntityInstance(id) {
-    const entity = this.entities.get(id);
+    const entity = this.entitiesMap.get(id);
     if (!entity) {
       return undefined;
     }
@@ -119,7 +125,7 @@ export default class SimpleEntityManager {
    * @returns {any} Component data or null.
    */
   getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
+    return this.entitiesMap.get(id)?.components[type] ?? null;
   }
 
   /**
@@ -142,7 +148,7 @@ export default class SimpleEntityManager {
    */
   hasComponent(id, type) {
     return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
+      this.entitiesMap.get(id)?.components || {},
       type
     );
   }
@@ -157,7 +163,7 @@ export default class SimpleEntityManager {
   createEntity(id) {
     // Always create/recreate the entity with fresh components
     // This ensures tests that reuse entity IDs get clean entities
-    this.entities.set(id, { id, components: {} });
+    this.entitiesMap.set(id, { id, components: {} });
     // Clear cache for this entity
     this.entityInstanceCache.delete(id);
     return this.getEntityInstance(id);
@@ -187,10 +193,10 @@ export default class SimpleEntityManager {
     // Clear cache first to ensure fresh data is returned
     this.entityInstanceCache.delete(id);
 
-    let ent = this.entities.get(id);
+    let ent = this.entitiesMap.get(id);
     if (!ent) {
       ent = { id, components: {} };
-      this.entities.set(id, ent);
+      this.entitiesMap.set(id, ent);
     }
     ent.components[type] = deepClone(data);
 
@@ -205,7 +211,7 @@ export default class SimpleEntityManager {
    * @returns {void}
    */
   removeComponent(id, type) {
-    const ent = this.entities.get(id);
+    const ent = this.entitiesMap.get(id);
     if (ent) {
       delete ent.components[type];
       // Clear cache for this entity since its components changed
@@ -220,47 +226,64 @@ export default class SimpleEntityManager {
    * @returns {void}
    */
   deleteEntity(id) {
-    this.entities.delete(id);
+    this.entitiesMap.delete(id);
     this.entityInstanceCache.delete(id);
   }
 
   /**
+   * Getter that returns an iterator over all active entities.
+   * Provides compatibility with production EntityManager interface.
+   *
+   * @returns {IterableIterator<object>} Iterator over all active entities
+   */
+  get entities() {
+    const self = this;
+    return (function* () {
+      for (const entity of self.entitiesMap.values()) {
+        yield self.getEntityInstance(entity.id);
+      }
+    })();
+  }
+
+  /**
    * Returns all entities in the manager.
+   * Kept for backward compatibility with existing tests.
    *
    * @returns {Array<object>} Array of all entity objects.
+   * @deprecated Use entities getter for interface compliance
    */
   getEntities() {
     const result = [];
     const entityManager = this; // Capture reference to fix closure issue
 
-    for (const entity of this.entities.values()) {
+    for (const entity of this.entitiesMap.values()) {
       result.push({
         id: entity.id,
         get components() {
           // Always get fresh data from the entity manager
-          const currentEnt = entityManager.entities.get(entity.id);
+          const currentEnt = entityManager.entitiesMap.get(entity.id);
           return currentEnt ? currentEnt.components : {};
         },
         get componentTypeIds() {
           // Always get fresh data from the entity manager
-          const currentEnt = entityManager.entities.get(entity.id);
+          const currentEnt = entityManager.entitiesMap.get(entity.id);
           return currentEnt ? Object.keys(currentEnt.components) : [];
         },
         getComponentData: (type) => {
           // Always get fresh data from the entity manager
-          const currentEnt = entityManager.entities.get(entity.id);
+          const currentEnt = entityManager.entitiesMap.get(entity.id);
           return currentEnt ? (currentEnt.components[type] ?? null) : null;
         },
         hasComponent: (type) => {
           // Always get fresh data from the entity manager
-          const currentEnt = entityManager.entities.get(entity.id);
+          const currentEnt = entityManager.entitiesMap.get(entity.id);
           return currentEnt
             ? Object.prototype.hasOwnProperty.call(currentEnt.components, type)
             : false;
         },
         getAllComponents: () => {
           // Always get fresh data from the entity manager
-          const currentEnt = entityManager.entities.get(entity.id);
+          const currentEnt = entityManager.entitiesMap.get(entity.id);
           return currentEnt ? currentEnt.components : {};
         },
       });
@@ -278,7 +301,7 @@ export default class SimpleEntityManager {
     const result = [];
     const entityManager = this; // Capture reference to fix closure issue
 
-    for (const ent of this.entities.values()) {
+    for (const ent of this.entitiesMap.values()) {
       if (Object.prototype.hasOwnProperty.call(ent.components, componentType)) {
         // Check if we have the original Entity instance stored
         if (ent._originalEntity) {
@@ -326,7 +349,7 @@ export default class SimpleEntityManager {
    * @returns {string[]} Array of entity IDs.
    */
   getEntityIds() {
-    return Array.from(this.entities.keys());
+    return Array.from(this.entitiesMap.keys());
   }
 
   /**
@@ -338,7 +361,7 @@ export default class SimpleEntityManager {
   getEntitiesInLocation(locationId) {
     const POSITION_COMPONENT_ID = 'core:position';
     const ids = new Set();
-    for (const [id, ent] of this.entities) {
+    for (const [id, ent] of this.entitiesMap) {
       const loc = ent.components[POSITION_COMPONENT_ID]?.locationId;
       if (loc === locationId) ids.add(id);
     }
@@ -352,7 +375,7 @@ export default class SimpleEntityManager {
    * @returns {string[]} Array of component type IDs.
    */
   getAllComponentTypesForEntity(entityId) {
-    const entity = this.entities.get(entityId);
+    const entity = this.entitiesMap.get(entityId);
     if (!entity) return [];
     return Object.keys(entity.components);
   }
@@ -377,10 +400,10 @@ export default class SimpleEntityManager {
         // Clear cache first to ensure fresh data is returned
         this.entityInstanceCache.delete(instanceId);
 
-        let ent = this.entities.get(instanceId);
+        let ent = this.entitiesMap.get(instanceId);
         if (!ent) {
           ent = { id: instanceId, components: {} };
-          this.entities.set(instanceId, ent);
+          this.entitiesMap.set(instanceId, ent);
         }
 
         ent.components[componentTypeId] = deepClone(componentData);
@@ -436,7 +459,7 @@ export default class SimpleEntityManager {
       entityToStore = deepClone(entityObject);
     }
 
-    this.entities.set(entityToStore.id, entityToStore);
+    this.entitiesMap.set(entityToStore.id, entityToStore);
     // Clear cache for this entity since it's new/updated
     this.entityInstanceCache.delete(entityToStore.id);
   }
