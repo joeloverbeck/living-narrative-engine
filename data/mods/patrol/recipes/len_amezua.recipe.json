@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "patrol:len_amezua_recipe",
+  "blueprintId": "anatomy:human_female",
+  "bodyDescriptors": {
+    "build": "athletic",
+    "composition": "lean",
+    "skinColor": "olive"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:human_female_torso"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg"
+    }
+  ]
+}
