@@ -81,24 +81,24 @@ export default class SimpleEntityManager {
       id: entity.id,
       get components() {
         // Always get fresh data from the entity manager
-        const currentEnt = entityManager.entities.get(id);
+        const currentEnt = entityManager.entitiesMap.get(id);
         return currentEnt ? currentEnt.components : {};
       },
       get componentTypeIds() {
         // Always get fresh data from the entity manager
-        const currentEnt = entityManager.entities.get(id);
+        const currentEnt = entityManager.entitiesMap.get(id);
         return currentEnt ? Object.keys(currentEnt.components) : [];
       },
       getComponentData: (componentType) => {
         // Always get fresh data from the entity manager
-        const currentEnt = entityManager.entities.get(id);
+        const currentEnt = entityManager.entitiesMap.get(id);
         return currentEnt
           ? (currentEnt.components[componentType] ?? null)
           : null;
       },
       hasComponent: (componentType) => {
         // Always get fresh data from the entity manager
-        const currentEnt = entityManager.entities.get(id);
+        const currentEnt = entityManager.entitiesMap.get(id);
         return currentEnt
           ? Object.prototype.hasOwnProperty.call(
               currentEnt.components,
@@ -108,7 +108,7 @@ export default class SimpleEntityManager {
       },
       getAllComponents: () => {
         // Always get fresh data from the entity manager
-        const currentEnt = entityManager.entities.get(id);
+        const currentEnt = entityManager.entitiesMap.get(id);
         return currentEnt ? currentEnt.components : {};
       },
     };
@@ -313,17 +313,17 @@ export default class SimpleEntityManager {
             id: ent.id,
             get componentTypeIds() {
               // Always get fresh data from the entity manager
-              const currentEnt = entityManager.entities.get(ent.id);
+              const currentEnt = entityManager.entitiesMap.get(ent.id);
               return currentEnt ? Object.keys(currentEnt.components) : [];
             },
             getComponentData: (type) => {
               // Always get fresh data from the entity manager
-              const currentEnt = entityManager.entities.get(ent.id);
+              const currentEnt = entityManager.entitiesMap.get(ent.id);
               return currentEnt ? (currentEnt.components[type] ?? null) : null;
             },
             hasComponent: (type) => {
               // Always get fresh data from the entity manager
-              const currentEnt = entityManager.entities.get(ent.id);
+              const currentEnt = entityManager.entitiesMap.get(ent.id);
               return currentEnt
                 ? Object.prototype.hasOwnProperty.call(
                     currentEnt.components,
@@ -333,7 +333,7 @@ export default class SimpleEntityManager {
             },
             getAllComponents: () => {
               // Always get fresh data from the entity manager
-              const currentEnt = entityManager.entities.get(ent.id);
+              const currentEnt = entityManager.entitiesMap.get(ent.id);
               return currentEnt ? currentEnt.components : {};
             },
           });
