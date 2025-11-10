@@ -40,6 +40,8 @@
 import StaticConfiguration from '../../configuration/staticConfiguration.js';
 import DefaultPathResolver from '../../pathing/defaultPathResolver.js';
 import AjvSchemaValidator from '../../validation/ajvSchemaValidator.js';
+import ValidatorGenerator from '../../validation/validatorGenerator.js';
+import StringSimilarityCalculator from '../../validation/stringSimilarityCalculator.js';
 import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 import TextDataFetcher from '../../data/textDataFetcher.js';
@@ -203,6 +205,22 @@ export async function registerLoaders(container) {
   registrar.singletonFactory(
     tokens.ITextDataFetcher,
     () => new TextDataFetcher()
+  );
+
+  // === Validation Services ===
+  registrar.singletonFactory(
+    tokens.IStringSimilarityCalculator,
+    (c) => new StringSimilarityCalculator({
+      logger: c.resolve(tokens.ILogger)
+    })
+  );
+
+  registrar.singletonFactory(
+    tokens.IValidatorGenerator,
+    (c) => new ValidatorGenerator({
+      logger: c.resolve(tokens.ILogger),
+      similarityCalculator: c.resolve(tokens.IStringSimilarityCalculator)
+    })
   );
 
   // === Individual Content & Data Loaders (unchanged) ===

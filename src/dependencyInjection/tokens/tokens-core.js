@@ -43,6 +43,8 @@ export const coreTokens = freeze({
   ITraceConfigLoader: 'ITraceConfigLoader',
   IPathResolver: 'IPathResolver',
   ISchemaValidator: 'ISchemaValidator',
+  IStringSimilarityCalculator: 'IStringSimilarityCalculator',
+  IValidatorGenerator: 'IValidatorGenerator',
   IDataRegistry: 'IDataRegistry',
   ISpatialIndexManager: 'ISpatialIndexManager',
   ProxyUrl: 'ProxyUrl',
