@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-  "recipeId": "patrol:len_amezua",
+  "recipeId": "patrol:len_amezua_recipe",
   "blueprintId": "anatomy:human_female",
   "bodyDescriptors": {
     "height": "average",

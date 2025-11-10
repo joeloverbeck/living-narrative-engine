@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "patrol:perimeter_of_rip_in_reality_instance",
+    "definitionId": "patrol:perimeter_of_rip_in_reality"
+}
