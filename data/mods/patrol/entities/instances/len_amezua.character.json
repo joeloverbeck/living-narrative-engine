@@ -3,15 +3,17 @@
     "instanceId": "patrol:len_amezua_instance",
     "definitionId": "patrol:len_amezua",
     "componentOverrides": {
-    "core:position": {
-      "locationId": "patrol:perimeter_of_rip_in_reality_instance"
-    },
-    "items:inventory": {
-      "items": [],
-      "capacity": {
-        "maxWeight": 50.0,
-        "maxItems": 20
-      }
+        "core:position": {
+            "locationId": "patrol:perimeter_of_rip_in_reality_instance"
+        },
+        "items:inventory": {
+            "items": [
+                "patrol:field_notebook_instance"
+            ],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
     }
-  }
 }

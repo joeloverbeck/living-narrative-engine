@@ -3,7 +3,7 @@
     "id": "patrol:writhing_observer",
     "components": {
         "core:name": {
-            "text": "writhing observer"
+            "text": "Writhing observer"
         },
         "core:portrait": {
             "imagePath": "portraits/writhing_observer.png",
