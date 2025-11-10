@@ -2,108 +2,33 @@
 
 ## Overview
 
-This specification describes the implementation of a waterproof field notebook item and an associated "jot down notes on notebook" action within the items mod (`data/mods/items/`). The notebook represents a physical, unauthorized personal documentation system used by actors for logging observations, anomalies, and field data.
+This specification describes the implementation of a waterproof field notebook item and an associated "jot down notes on notebook" action within the items mod (`data/mods/items/`). The notebook is a static readable item for a demo scenario, representing an unauthorized personal documentation system used for logging patrol observations and anomalies.
 
 ## Background
 
-The notebook is inspired by a character who maintains an unauthorized Rite-in-the-Rain waterproof notebook for independent record-keeping, logging: temperature, EM noise, visual flicker, sound anomalies, heart rate spikes, partner statements, communications traffic, and timestamps. The character uses color-coded ink (black for readings, blue for observations, red for anomalies) to categorize entries.
+The notebook is part of a patrol scenario where a character maintains an unauthorized Rite-in-the-Rain waterproof notebook for independent record-keeping. The notebook already contains organized notes about patrol rounds and observations regarding the "rip in reality" phenomenon. For the demo scenario, the notebook's content is pre-written and static.
 
 ## Design Decisions
 
-### Note Content Generation
+### Simplified Approach
 
-Since the engine lacks mechanisms for players (human or LLM) to specify arbitrary note text, notes will be **procedurally generated** based on:
-1. **Generic observation templates** - Randomized field observations
-2. **Timestamp data** - When the note was written
-3. **Context-aware elements** (optional future enhancement) - Actor's location, nearby entities, recent perceptions
-
-Notes will follow the character's logging style: technical, concise, and categorized.
+For this demo scenario, we're taking a simplified approach:
+- The notebook is a **regular readable item** with static text content
+- The "jot down notes" action produces only **perceptible and success event messages**
+- **No actual note content is generated or modified** - this avoids complexity for a demo item
+- The notebook entity will be created in the **patrol mod** (`data/mods/patrol/`) as part of the scenario
 
 ### Notebook Structure
 
-The notebook uses two components:
-- **`items:readable`** (existing) - Contains the full accumulated text of all notes, readable via the `read_item` action
-- **`items:writable_notebook`** (new) - Tracks individual note entries with metadata (timestamp, entry number)
-
-This dual-component approach allows:
-- Reading the full notebook as a single text block (via existing read_item action)
-- Tracking individual notes with metadata for future features (search, filtering, export)
-- Maintaining compatibility with existing readable item systems
+The notebook uses only existing components:
+- **`items:item`** - Marks it as an item
+- **`items:portable`** - Allows it to be carried
+- **`items:weight`** - Physical weight
+- **`items:readable`** - Contains pre-written notes about patrol observations and the rip in reality
 
 ## Implementation Plan
 
-### 1. New Component: `items:writable_notebook`
-
-**File**: `data/mods/items/components/writable_notebook.component.json`
-
-**Purpose**: Marker component indicating an item can have notes written to it. Tracks individual note entries with metadata.
-
-**Schema**:
-```json
-{
-  "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "items:writable_notebook",
-  "description": "Component for items that can have notes written to them. Tracks individual entries with timestamps.",
-  "dataSchema": {
-    "type": "object",
-    "properties": {
-      "entries": {
-        "type": "array",
-        "description": "Individual note entries with metadata",
-        "items": {
-          "type": "object",
-          "properties": {
-            "entryNumber": {
-              "type": "integer",
-              "description": "Sequential entry number",
-              "minimum": 1
-            },
-            "timestamp": {
-              "type": "string",
-              "description": "ISO 8601 timestamp when note was written"
-            },
-            "noteText": {
-              "type": "string",
-              "description": "The note content",
-              "minLength": 1
-            },
-            "category": {
-              "type": "string",
-              "description": "Note category (reading, observation, anomaly)",
-              "enum": ["reading", "observation", "anomaly"]
-            }
-          },
-          "required": ["entryNumber", "timestamp", "noteText", "category"],
-          "additionalProperties": false
-        },
-        "default": []
-      },
-      "nextEntryNumber": {
-        "type": "integer",
-        "description": "Next available entry number",
-        "minimum": 1,
-        "default": 1
-      },
-      "maxEntries": {
-        "type": "integer",
-        "description": "Maximum number of entries before notebook is full",
-        "minimum": 1,
-        "default": 100
-      }
-    },
-    "required": ["entries", "nextEntryNumber", "maxEntries"],
-    "additionalProperties": false
-  }
-}
-```
-
-**Rationale**:
-- Array structure allows for future enhancements (filtering, searching, pagination)
-- Sequential entry numbers provide clear organization
-- Category field enables color-coding simulation
-- Max entries cap prevents infinite growth
-
-### 2. New Action: `items:jot_down_notes`
+### 1. New Action: `items:jot_down_notes`
 
 **File**: `data/mods/items/actions/jot_down_notes.action.json`
 
@@ -113,7 +38,7 @@ This dual-component approach allows:
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "items:jot_down_notes",
   "name": "Jot Down Notes",
-  "description": "Write observations and data into a notebook for personal record-keeping.",
+  "description": "Make notes in a notebook.",
   "targets": {
     "primary": {
       "scope": "items:actor_inventory_items",
@@ -122,13 +47,13 @@ This dual-component approach allows:
     }
   },
   "required_components": {
-    "primary": ["items:item", "items:writable_notebook"]
+    "primary": ["items:item", "items:readable"]
   },
   "forbidden_components": {
     "actor": ["positioning:doing_complex_performance"]
   },
   "prerequisites": [],
-  "template": "jot down notes in {notebook}",
+  "template": "jot down notes on {notebook}",
   "visual": {
     "backgroundColor": "#2d3436",
     "textColor": "#dfe6e9",
@@ -140,11 +65,11 @@ This dual-component approach allows:
 
 **Rationale**:
 - Targets inventory items only (actor must be holding notebook)
-- Requires `items:writable_notebook` component
+- Requires `items:readable` component (works with any readable item)
 - Forbidden during complex performances (requires focus)
 - Dark theme visual matches the utilitarian nature of field notes
 
-### 3. New Condition: `items:event-is-action-jot-down-notes`
+### 2. New Condition: `items:event-is-action-jot-down-notes`
 
 **File**: `data/mods/items/conditions/event-is-action-jot-down-notes.condition.json`
 
@@ -163,49 +88,22 @@ This dual-component approach allows:
 }
 ```
 
-### 4. New Rule: `handle_jot_down_notes`
+### 3. New Rule: `handle_jot_down_notes`
 
 **File**: `data/mods/items/rules/handle_jot_down_notes.rule.json`
 
 **Logic Flow**:
 
-1. **Query notebook state** - Get current `items:writable_notebook` component
-2. **Check capacity** - Verify notebook isn't full (entries.length < maxEntries)
-3. **Generate note content** - Create procedural note text based on category rotation
-4. **Get timestamp** - Use `GET_TIMESTAMP` operation
-5. **Add entry** - Use `MODIFY_ARRAY_FIELD` to push new entry to `entries` array
-6. **Increment counter** - Use `MODIFY_COMPONENT` to increment `nextEntryNumber`
-7. **Rebuild readable text** - Update `items:readable` component with all accumulated notes
-8. **Dispatch public perception** - Show actor writing in notebook
-9. **Display success** - Show confirmation message
-10. **End turn** - Mark turn complete
+1. **Get actor and notebook names** - Use `GET_NAME` operations
+2. **Dispatch perceptible event** - Show "{actor} jots down notes on {primary}."
+3. **Dispatch success event** - Show "{actor} jots down notes on {primary}."
+4. **End turn** - Mark turn complete
 
 **Key Operations Used**:
-- `GET_TIMESTAMP` - Capture current time
-- `QUERY_COMPONENT` - Read notebook state
-- `GET_NAME` - Get actor and notebook names
-- `MATH` - Check capacity, calculate entry number
-- `IF` - Branch on capacity check
-- `MODIFY_ARRAY_FIELD` (mode: "push") - Add new entry
-- `MODIFY_COMPONENT` (mode: "set") - Update counter and readable text
+- `GET_NAME` - Get actor and notebook names for message formatting
 - `DISPATCH_PERCEPTIBLE_EVENT` - Public observation of writing
-- `DISPATCH_EVENT` - UI feedback
+- `DISPATCH_EVENT` - UI success feedback
 - `END_TURN` - Complete action
-
-**Note Generation Strategy**:
-
-Notes are generated using a rotation through three categories:
-1. **Reading** (Entry N mod 3 == 0): Environmental measurements
-   - "Temperature reading: 18°C. EM noise: nominal. Visual clarity: good."
-   - "Ambient sound: 42dB. No electromagnetic anomalies detected."
-
-2. **Observation** (Entry N mod 3 == 1): Behavioral and procedural notes
-   - "Perimeter check at HH:MM. Automated systems reporting green across all sectors."
-   - "Comms traffic normal. No irregularities in partner communications."
-
-3. **Anomaly** (Entry N mod 3 == 2): Flags and concerns
-   - "Visual flicker observed in sector 7. Duration: 3 seconds. Logging for correlation."
-   - "Heart rate spike during routine scan. Possible equipment malfunction. Monitoring."
 
 **Pseudo-Schema** (simplified for clarity):
 ```json
@@ -214,78 +112,49 @@ Notes are generated using a rotation through three categories:
   "event_type": "core:attempt_action",
   "condition": { "condition_ref": "items:event-is-action-jot-down-notes" },
   "actions": [
-    "QUERY_COMPONENT: get items:writable_notebook → notebookData",
     "GET_NAME: actor → actorName",
-    "GET_NAME: target → notebookName",
-    "GET_TIMESTAMP → currentTimestamp",
-    "QUERY_COMPONENT: get actor core:position → actorPosition",
-    "MATH: notebookData.entries.length < notebookData.maxEntries → hasCapacity",
-    "IF hasCapacity THEN:",
-    "  SET_VARIABLE: entryNumber = notebookData.nextEntryNumber",
-    "  MATH: entryNumber % 3 → categoryIndex",
-    "  IF categoryIndex == 0: SET category = 'reading', noteText = template_A",
-    "  IF categoryIndex == 1: SET category = 'observation', noteText = template_B",
-    "  IF categoryIndex == 2: SET category = 'anomaly', noteText = template_C",
-    "  MODIFY_ARRAY_FIELD: push to notebookData.entries { entryNumber, timestamp, noteText, category }",
-    "  MODIFY_COMPONENT: increment notebookData.nextEntryNumber",
-    "  FOR_EACH entry in notebookData.entries → rebuild readable text",
-    "  MODIFY_COMPONENT: update items:readable.text with rebuilt text",
-    "  DISPATCH_PERCEPTIBLE_EVENT: '{actorName} jots down notes in {notebookName}.'",
-    "  DISPATCH_EVENT: success message",
-    "  END_TURN: success",
-    "ELSE:",
-    "  DISPATCH_EVENT: '{notebookName} is full. No more space for entries.'",
-    "  END_TURN: failure"
+    "GET_NAME: primary → notebookName",
+    "DISPATCH_PERCEPTIBLE_EVENT: '{actorName} jots down notes on {notebookName}.'",
+    "DISPATCH_EVENT: type='core:action_successful', message='{actorName} jots down notes on {notebookName}.'",
+    "END_TURN: success"
   ]
 }
 ```
 
-### 5. Example Notebook Entity Definition
+### 4. Notebook Entity Definition
 
-**Not a file** - This would be created dynamically in tests or by mod authors. Example structure:
+**File**: `data/mods/patrol/entities/definitions/field_notebook.entity.json`
 
-```javascript
-const notebook = new ModEntityBuilder('field_notebook_001')
-  .withName('Waterproof Field Notebook')
-  .withComponent('core:description', {
-    text: 'A battered Rite-in-the-Rain waterproof notebook with a olive drab cover. Multiple colored pens are clipped to the spine.'
-  })
-  .withComponent('items:item', {})
-  .withComponent('items:portable', {})
-  .withComponent('items:weight', { weight: 0.3 })
-  .withComponent('items:readable', {
-    text: '-- Field Notebook --\n\nNo entries yet.'
-  })
-  .withComponent('items:writable_notebook', {
-    entries: [],
-    nextEntryNumber: 1,
-    maxEntries: 100
-  })
-  .build();
+**Purpose**: Create the physical notebook entity for the patrol scenario with pre-written notes about patrol observations and the rip in reality.
+
+**Schema**:
+```json
+{
+  "$schema": "schema://living-narrative-engine/entity.schema.json",
+  "id": "field_notebook_001",
+  "name": "Waterproof Field Notebook",
+  "components": {
+    "core:description": {
+      "text": "A battered Rite-in-the-Rain waterproof notebook with an olive drab cover. Multiple colored pens are clipped to the spine. The pages are filled with meticulous handwriting."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.3
+    },
+    "items:readable": {
+      "text": "-- Field Notebook --\nUnauthorized personal documentation system. Paper trail, not digital. Can't delete paper.\n\n=== PATROL OBSERVATIONS ===\n\nEntry 1 - Sector 3 Patrol (14:20)\nTemperature: 18°C. EM noise: nominal. Visual clarity: good.\nPerimeter check complete. All automated systems green.\n\nEntry 2 - Sector 7 Anomaly (15:47)\nVisual flicker observed. Duration: 3 seconds.\nAir pressure drop detected. Recording coordinates.\n\nEntry 3 - The Rip (16:12)\nIt's there again. Same location. Expanding?\nCommand won't listen. Need to document everything.\nEdges shimmer like heat distortion but temperature is normal.\nSound: low frequency hum, barely perceptible.\n\nEntry 4 - Partner Observation (17:03)\nPartner dismisses concerns. Following protocol.\nBut protocol doesn't account for reality fractures.\n\nEntry 5 - Equipment Check (18:30)\nAll sensors calibrated. This is real.\nThe rip in reality grows 2cm per day.\nSomeone needs to know.\n\n=== END ENTRIES ===\n\nNote: Keep this notebook secure. Official channels compromised or willfully ignorant."
+    }
+  }
+}
 ```
 
-### 6. Readable Text Format
-
-When the notebook is read via `items:read_item`, the accumulated text should follow this format:
-
-```
--- Field Notebook --
-Unauthorized personal documentation system. Paper trail, not digital. Can't delete paper.
-
-Entry 1 [READING] - 2025-11-10T14:32:15Z
-Temperature reading: 18°C. EM noise: nominal. Visual clarity: good.
-
-Entry 2 [OBSERVATION] - 2025-11-10T15:47:22Z
-Perimeter check at 15:47. Automated systems reporting green across all sectors.
-
-Entry 3 [ANOMALY] - 2025-11-10T16:12:08Z
-Visual flicker observed in sector 7. Duration: 3 seconds. Logging for correlation.
-
----
-Total entries: 3 / 100
-```
-
-The rule should construct this text by iterating through the `entries` array and concatenating formatted strings.
+**Rationale**:
+- Located in `patrol` mod as part of the demo scenario
+- Pre-filled with narrative-appropriate content about patrol duties and the anomaly
+- Uses only existing item components
+- Can be read via the existing `items:read_item` action
+- Content reinforces the unauthorized documentation theme
 
 ## Testing Requirements
 
@@ -299,44 +168,18 @@ None required - all logic is in rule operations which are integration-tested.
 
 **Test Cases**:
 
-1. **Successfully writes first entry**
-   - Setup: Actor with empty notebook in inventory
+1. **Successfully executes jot down notes action**
+   - Setup: Actor with readable notebook in inventory
    - Execute: `jot_down_notes` action
    - Assert:
-     - `items:writable_notebook.entries` has 1 entry
-     - Entry has correct structure (entryNumber: 1, timestamp, noteText, category: 'reading')
-     - `nextEntryNumber` incremented to 2
-     - `items:readable.text` contains formatted entry
-     - Perceptible event dispatched
+     - Perceptible event dispatched with message "{actorName} jots down notes on {notebookName}."
+     - Success event dispatched with same message
      - Turn ended successfully
+     - No components modified (notebook content remains static)
 
-2. **Successfully writes multiple entries with category rotation**
-   - Setup: Actor with notebook (2 existing entries)
-   - Execute: `jot_down_notes` action 3 times
-   - Assert:
-     - Entries 3, 4, 5 added with correct categories (anomaly, reading, observation)
-     - Readable text includes all 5 entries
-     - All entries have unique timestamps
-
-3. **Prevents writing when notebook is full**
-   - Setup: Notebook with `maxEntries: 2` and 2 existing entries
-   - Execute: `jot_down_notes` action
-   - Assert:
-     - No new entry added
-     - Failure message dispatched: "... is full. No more space..."
-     - Turn ended with failure
-
-4. **Maintains readable text format consistency**
-   - Setup: Notebook with 3 entries
-   - Execute: Read notebook via `read_item`
-   - Assert:
-     - Text follows specification format
-     - All entries present with correct headers
-     - Footer shows correct entry count
-
-5. **Requires notebook in inventory**
+2. **Requires notebook in inventory**
    - Setup: Notebook at location (not in inventory)
-   - Execute: `jot_down_notes` action
+   - Execute: Try to discover `jot_down_notes` action
    - Assert:
      - Action not available (filtered by scope)
 
@@ -344,13 +187,13 @@ None required - all logic is in rule operations which are integration-tested.
 
 **Test Cases**:
 
-1. **Action appears for writable notebook in inventory**
-   - Setup: Actor with writable notebook in inventory
+1. **Action appears for readable notebook in inventory**
+   - Setup: Actor with readable notebook in inventory
    - Assert: `jot_down_notes` action is available
 
-2. **Action does NOT appear for non-writable items**
-   - Setup: Actor with regular readable book (no writable_notebook component)
-   - Assert: `jot_down_notes` action not available
+2. **Action appears for any readable item in inventory**
+   - Setup: Actor with regular readable book in inventory
+   - Assert: `jot_down_notes` action is available (works on any readable item)
 
 3. **Action does NOT appear when actor is performing complex action**
    - Setup: Actor with notebook, but has `positioning:doing_complex_performance`
@@ -358,28 +201,30 @@ None required - all logic is in rule operations which are integration-tested.
 
 ## Future Enhancements
 
-### Phase 2 - Player-Specified Notes
+If this action needs to be expanded beyond the demo scenario:
+
+### Phase 2 - Dynamic Note Generation
+- Add actual note content generation based on context
+- Create `items:writable_notebook` component to track entries
+- Update `items:readable` text dynamically when notes are added
+
+### Phase 3 - Player-Specified Notes
 - Add UI modal for text input
 - Operation to accept custom note text from player
 - Validation and sanitization of player input
 
-### Phase 3 - Context-Aware Notes
+### Phase 4 - Context-Aware Notes
 - Integrate with perception system to reference recent events
 - Add location-specific note templates
 - Include nearby entity names in generated notes
 
-### Phase 4 - Advanced Features
-- Search/filter notes by category
-- Export notes to external format
-- Note-sharing between actors
-- Notebook durability/damage system
-
 ## Dependencies
 
 ### Existing Systems
-- **items mod**: Uses existing scopes, components (item, portable, readable, weight)
-- **Operation handlers**: GET_TIMESTAMP, MODIFY_ARRAY_FIELD, MODIFY_COMPONENT, IF, MATH
-- **Event system**: DISPATCH_PERCEPTIBLE_EVENT for public observation
+- **items mod**: Uses existing scopes, components (item, portable, readable, weight), actions (read_item)
+- **Operation handlers**: GET_NAME, DISPATCH_PERCEPTIBLE_EVENT, DISPATCH_EVENT, END_TURN
+- **Event system**: Standard action attempt and success pattern
+- **patrol mod**: Will contain the notebook entity definition
 
 ### No New Operations Required
 All necessary operations exist in the current operation schema registry.
@@ -388,55 +233,39 @@ All necessary operations exist in the current operation schema registry.
 
 ### Schema Validation
 - Run `npm run validate` to verify all new JSON files
-- Ensure component schema passes AJV validation
-- Verify action and rule schemas are valid
+- Verify action, condition, and rule schemas are valid
+- Ensure notebook entity schema is valid
 
 ### Mod Validation
-- Add notebook action to mod manifest if required
 - Verify condition references resolve correctly
-- Check that all operation types are registered in `preValidationUtils.js`
+- Check that `items:jot_down_notes` is registered as a known action type
+- Ensure patrol mod can load the notebook entity
 
 ### Manual Testing
-- Create notebook entity in test scenario
+- Add notebook entity to patrol scenario
+- Give notebook to actor's inventory
 - Verify action appears in UI
-- Execute action and check notebook state
-- Read notebook and verify format
-- Test full notebook scenario
+- Execute action and verify event messages
+- Read notebook via `read_item` to see static content
 
 ## File Checklist
 
-- [ ] `data/mods/items/components/writable_notebook.component.json`
 - [ ] `data/mods/items/actions/jot_down_notes.action.json`
 - [ ] `data/mods/items/conditions/event-is-action-jot-down-notes.condition.json`
 - [ ] `data/mods/items/rules/handle_jot_down_notes.rule.json`
+- [ ] `data/mods/patrol/entities/definitions/field_notebook.entity.json`
 - [ ] `tests/integration/mods/items/jotDownNotesRuleExecution.test.js`
 - [ ] `tests/integration/mods/items/jotDownNotesActionDiscovery.test.js`
 - [ ] Update `data/mods/items/mod-manifest.json` (if actions list exists)
 
-## Open Questions
-
-1. **Should notebook be a pre-defined entity or only created via tests/mod content?**
-   - Recommendation: Leave as test/mod-defined. No core entity needed.
-
-2. **Should there be a character trait or skill that affects note quality?**
-   - Recommendation: Phase 2 enhancement. Current spec uses generic templates.
-
-3. **Should notes have a character limit per entry?**
-   - Recommendation: Yes, add `maxLength: 500` to noteText in component schema.
-
-4. **Should timestamps be displayed in a human-readable format in readable text?**
-   - Recommendation: Yes, format as "YYYY-MM-DD HH:MM:SS" in readable text generation.
-
-5. **Should there be different notebook types (waterproof, regular, tactical)?**
-   - Recommendation: Future enhancement. Current spec uses generic writable_notebook.
-
 ## Summary
 
-This specification provides a complete plan for implementing a waterproof field notebook item and "jot down notes" action within the existing items mod infrastructure. The implementation:
+This specification provides a simplified plan for implementing a waterproof field notebook item and "jot down notes" action for a demo scenario. The implementation:
 
-- **Extends existing systems** without requiring new operation handlers
-- **Uses established patterns** from other items actions (read, examine)
-- **Supports future enhancement** through structured component design
-- **Maintains consistency** with project architecture and testing standards
+- **Uses only existing components** - no new component types needed
+- **Provides simple event messaging** - perceptible and success events with actor and notebook names
+- **Creates static notebook content** - pre-written notes about patrol observations and the rip in reality
+- **Minimizes complexity** - avoids dynamic note generation for demo purposes
+- **Follows established patterns** - matches other simple items actions
 
-The notebook captures the essence of unauthorized personal documentation while working within the engine's technical constraints by using procedurally generated note content rather than requiring player text input.
+The notebook serves as a narrative device for the patrol scenario, containing pre-written observations about patrol rounds and the mysterious "rip in reality" phenomenon. The "jot down notes" action provides a simple roleplay action without modifying the notebook's static content.
