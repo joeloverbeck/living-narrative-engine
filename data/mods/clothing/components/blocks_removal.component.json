@@ -14,14 +14,15 @@
             "slot": {
               "type": "string",
               "enum": [
-                "torso_upper",
-                "torso_lower",
-                "legs",
                 "feet",
-                "head_gear",
+                "full_body",
                 "hands",
+                "head_gear",
                 "left_arm_clothing",
-                "right_arm_clothing"
+                "legs",
+                "right_arm_clothing",
+                "torso_lower",
+                "torso_upper"
               ],
               "description": "Equipment slot that is blocked"
             },
