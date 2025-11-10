@@ -435,6 +435,177 @@ describe('RecipePreflightValidator', () => {
       expect(report.hasSuggestions).toBe(false);
     });
 
+    it('should not add suggestions when slot uses preferId with entity that has descriptors', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = () => ({ id: 'test:component1' });
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'anatomy:humanoid_head_bearded',
+              components: {
+                'anatomy:part': { subType: 'head' },
+                'descriptors:facial_hair': { style: 'bearded' },
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:humanoid_head_bearded',
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should not have suggestions because preferId entity has descriptors
+      expect(report.hasSuggestions).toBe(false);
+      expect(report.suggestions.length).toBe(0);
+    });
+
+    it('should add suggestions when slot uses preferId with entity that has no descriptors', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = () => ({ id: 'test:component1' });
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'anatomy:plain_head',
+              components: {
+                'anatomy:part': { subType: 'head' },
+                // No descriptor components
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:plain_head',
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should have suggestions because neither slot nor preferId entity have descriptors
+      expect(report.hasSuggestions).toBe(true);
+      expect(report.suggestions.length).toBeGreaterThan(0);
+      expect(report.suggestions[0].type).toBe('MISSING_DESCRIPTORS');
+      expect(report.suggestions[0].reason).toContain('preferred entity');
+      expect(report.suggestions[0].reason).toContain('anatomy:plain_head');
+    });
+
+    it('should not add suggestions when slot with properties has descriptors even if preferId entity does not', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = () => ({ id: 'descriptors:size_category' });
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'anatomy:plain_head',
+              components: {
+                'anatomy:part': { subType: 'head' },
+                // No descriptor components
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:plain_head',
+            properties: {
+              'descriptors:size_category': { size: 'large' },
+            },
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should not have suggestions because slot properties have descriptors
+      expect(report.hasSuggestions).toBe(false);
+    });
+
+    it('should handle preferId that references non-existent entity gracefully', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+      });
+
+      mockDataRegistry.get = () => ({ id: 'test:component1' });
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return []; // Entity not found
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          head: {
+            partType: 'head',
+            preferId: 'anatomy:nonexistent_head',
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should add suggestion since entity not found means no descriptors
+      expect(report.hasSuggestions).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('anatomy:nonexistent_head')
+      );
+    });
+
     it('should handle validation errors gracefully', async () => {
       mockAnatomyBlueprintRepository.getBlueprint = async () => {
         throw new Error('Test error');

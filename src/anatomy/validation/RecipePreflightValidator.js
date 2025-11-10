@@ -400,16 +400,29 @@ class RecipePreflightValidator {
       const suggestions = [];
 
       for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
-        const hasDescriptors = this.#hasDescriptorComponents(
+        // First check if slot properties have descriptors
+        const hasDescriptorsInProperties = this.#hasDescriptorComponents(
           Object.keys(slot.properties || {})
         );
 
+        // If slot has no descriptors in properties, check if preferId entity has descriptors
+        let hasDescriptorsInPreferredEntity = false;
+        if (!hasDescriptorsInProperties && slot.preferId) {
+          hasDescriptorsInPreferredEntity = this.#preferredEntityHasDescriptors(slot.preferId);
+        }
+
+        const hasDescriptors = hasDescriptorsInProperties || hasDescriptorsInPreferredEntity;
+
         if (!hasDescriptors) {
+          const reason = slot.preferId
+            ? `No descriptor components in slot properties, and preferred entity '${slot.preferId}' has no descriptors`
+            : 'No descriptor components in properties';
+
           suggestions.push({
             type: 'MISSING_DESCRIPTORS',
             location: { type: 'slot', name: slotName },
             message: `Slot '${slotName}' may not appear in descriptions`,
-            reason: 'No descriptor components in properties',
+            reason,
             suggestion:
               'Add descriptor components (descriptors:size_category, descriptors:texture, etc.)',
             impact: 'Part will be excluded from anatomy description',
@@ -433,6 +446,38 @@ class RecipePreflightValidator {
 
   #hasDescriptorComponents(tags) {
     return tags.some((tag) => tag.startsWith('descriptors:'));
+  }
+
+  /**
+   * Checks if a preferred entity (referenced by preferId) has descriptor components
+   *
+   * @param {string} entityId - Entity ID to check (e.g., 'anatomy:humanoid_head_bearded')
+   * @returns {boolean} True if entity has descriptor components
+   * @private
+   */
+  #preferredEntityHasDescriptors(entityId) {
+    try {
+      // Look up the entity definition in the data registry
+      const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+      const entityDef = allEntityDefs.find((def) => def.id === entityId);
+
+      if (!entityDef) {
+        this.#logger.debug(
+          `RecipePreflightValidator: Entity '${entityId}' not found when checking for descriptors`
+        );
+        return false;
+      }
+
+      // Check if any component in the entity starts with 'descriptors:'
+      const componentIds = Object.keys(entityDef.components || {});
+      return this.#hasDescriptorComponents(componentIds);
+    } catch (error) {
+      this.#logger.error(
+        `Failed to check descriptors for preferred entity '${entityId}'`,
+        error
+      );
+      return false;
+    }
   }
 
   async #checkPartAvailability(recipe, results) {

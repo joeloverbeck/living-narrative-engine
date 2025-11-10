@@ -53,9 +53,10 @@ async function loadRecipeFile(recipePath) {
  * Loads mods and all required services for validation
  *
  * @param {boolean} verbose - Whether to show verbose output
+ * @param {string} recipePath - Path to the recipe being validated (optional)
  * @returns {Promise<object>} Validation dependencies
  */
-async function createValidationContext(verbose = false) {
+async function createValidationContext(verbose = false, recipePath = null) {
   // Create and configure container
   const container = new AppContainer();
   await configureMinimalContainer(container);
@@ -78,16 +79,27 @@ async function createValidationContext(verbose = false) {
   }
 
   try {
-    // Load only essential mods for recipe validation
-    // These mods contain the core components and anatomy system
+    // Load essential mods plus the mod containing the recipe being validated
+    // This ensures we can find entity definitions that reference the recipe
     const essentialMods = [
       'core',
       'descriptors',
       'anatomy',
     ];
 
+    // If we have a recipe path, try to infer the mod name from the path
+    // Path format: data/mods/{modName}/recipes/{recipeName}.recipe.json
+    const pathMatch = recipePath?.match(/data\/mods\/([^/]+)\//);
+    const recipeModName = pathMatch ? pathMatch[1] : null;
+
+    // Add the recipe's mod to the load list if it's not already included
+    const modsToLoad = [...essentialMods];
+    if (recipeModName && !modsToLoad.includes(recipeModName)) {
+      modsToLoad.push(recipeModName);
+    }
+
     if (verbose) {
-      console.log(chalk.blue(`   Loading ${essentialMods.length} essential mods: ${essentialMods.join(', ')}`));
+      console.log(chalk.blue(`   Loading ${modsToLoad.length} mods: ${modsToLoad.join(', ')}`));
     }
 
     // Manually run only the necessary phases to avoid GameConfigPhase
@@ -97,7 +109,7 @@ async function createValidationContext(verbose = false) {
     // Create load context
     let context = createLoadContext({
       worldName: 'recipe-validation',
-      requestedMods: essentialMods,
+      requestedMods: modsToLoad,
       registry: dataRegistry,
     });
 
@@ -168,7 +180,9 @@ program
         console.log(chalk.blue('\n🔧 Creating validation context and loading mods...\n'));
       }
 
-      const context = await createValidationContext(options.verbose);
+      // Use the first recipe path to determine which mod to load
+      const firstRecipePath = recipes[0];
+      const context = await createValidationContext(options.verbose, firstRecipePath);
       const validator = new RecipePreflightValidator(context);
       const results = [];
 
