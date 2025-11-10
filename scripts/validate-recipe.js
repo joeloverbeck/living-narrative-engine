@@ -19,6 +19,15 @@ import RecipePreflightValidator from '../src/anatomy/validation/RecipePreflightV
 import AppContainer from '../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../src/dependencyInjection/tokens.js';
+import {
+  validateCliArgs,
+  formatNoRecipesError,
+  formatSummary,
+  formatJsonOutput,
+  determineExitCode,
+  formatExitMessage,
+  formatErrorResult,
+} from './validateRecipeCore.js';
 
 /**
  * Load a recipe file from disk
@@ -135,29 +144,7 @@ async function createValidationContext(verbose = false) {
   }
 }
 
-/**
- * Format summary statistics
- *
- * @param {Array} results - Array of validation reports
- * @returns {string} Formatted summary
- */
-function formatSummary(results) {
-  const totalRecipes = results.length;
-  const validRecipes = results.filter(r => r.isValid).length;
-  const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0);
-  const totalWarnings = results.reduce((sum, r) => sum + r.warnings.length, 0);
-  const totalSuggestions = results.reduce((sum, r) => sum + r.suggestions.length, 0);
-
-  let summary = '\n' + chalk.bold('═'.repeat(80)) + '\n';
-  summary += chalk.bold('VALIDATION SUMMARY') + '\n';
-  summary += chalk.bold('═'.repeat(80)) + '\n\n';
-
-  summary += `Recipes Validated: ${totalRecipes}\n`;
-  summary += `Valid: ${chalk.green(validRecipes)} | Invalid: ${chalk.red(totalRecipes - validRecipes)}\n`;
-  summary += `Errors: ${chalk.red(totalErrors)} | Warnings: ${chalk.yellow(totalWarnings)} | Suggestions: ${chalk.blue(totalSuggestions)}\n`;
-
-  return summary;
-}
+// formatSummary is now imported from validateRecipeCore.js
 
 // Configure CLI
 program
@@ -170,11 +157,10 @@ program
   .action(async (recipes, options) => {
     try {
       // Validate that recipes were provided
-      if (!recipes || recipes.length === 0) {
-        console.error(chalk.red('\n❌ Error: No recipe files specified\n'));
-        console.log('Usage: npm run validate:recipe <recipe-file> [<recipe-file> ...]');
-        console.log('Example: npm run validate:recipe data/mods/anatomy/recipes/red_dragon.recipe.json\n');
-        process.exit(1);
+      const argsValidation = validateCliArgs(recipes);
+      if (!argsValidation.isValid) {
+        console.error(formatNoRecipesError(chalk));
+        process.exit(argsValidation.exitCode);
       }
 
       // Load validation context (with mod loading)
@@ -202,7 +188,7 @@ program
           results.push(report);
 
           if (options.json) {
-            console.log(JSON.stringify(report.toJSON(), null, 2));
+            console.log(formatJsonOutput(report));
           } else {
             console.log(report.toString());
           }
@@ -222,31 +208,19 @@ program
           }
 
           // Add error result
-          results.push({
-            isValid: false,
-            errors: [{ message: error.message }],
-            warnings: [],
-            suggestions: []
-          });
+          results.push(formatErrorResult(recipePath, error));
         }
       }
 
       // Display summary
       if (!options.json && results.length > 1) {
-        console.log(formatSummary(results));
+        console.log(formatSummary(results, chalk));
       }
 
       // Exit with appropriate code
-      const totalErrors = results.reduce((sum, r) => sum + (r.errors?.length || 0), 0);
-      const totalWarnings = results.reduce((sum, r) => sum + (r.warnings?.length || 0), 0);
-
-      if (totalErrors > 0) {
-        console.log(chalk.red(`\n❌ Validation FAILED: ${totalErrors} error(s), ${totalWarnings} warning(s)\n`));
-        process.exit(1);
-      } else {
-        console.log(chalk.green(`\n✅ Validation PASSED: ${results.length} recipe(s) valid\n`));
-        process.exit(0);
-      }
+      const exitResult = determineExitCode(results);
+      console.log(formatExitMessage(exitResult, chalk));
+      process.exit(exitResult.exitCode);
 
     } catch (error) {
       console.error(chalk.red(`\n❌ Validation Error: ${error.message}\n`));
