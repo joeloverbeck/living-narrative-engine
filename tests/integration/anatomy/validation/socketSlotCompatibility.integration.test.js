@@ -302,7 +302,7 @@ describe('Socket/Slot Compatibility Integration', () => {
               partType: 'venom_gland',
               components: ['anatomy:part', 'anatomy:venom'],
             },
-            optional: true,
+            // Removed optional: true to test that required slots are validated
           },
           spinnerets: {
             socket: 'spinnerets', // This socket exists
