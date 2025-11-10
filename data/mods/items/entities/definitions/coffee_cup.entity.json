@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "items:coffee_cup",
+  "components": {
+    "core:name": {
+      "text": "ceramic coffee cup"
+    },
+    "core:description": {
+      "text": "A sturdy ceramic coffee cup with a simple, practical design. The kind of reliable vessel professionals rely on during long field work days."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.35
+    },
+    "items:drinkable": {},
+    "items:liquid_container": {
+      "currentVolumeMilliliters": 350,
+      "maxCapacityMilliliters": 350,
+      "servingSizeMilliliters": 50,
+      "isRefillable": true,
+      "flavorText": "The coffee is strong and black, slightly bitter with a robust body. It provides a welcome jolt of caffeine and warmth."
+    }
+  }
+}
