@@ -26,6 +26,19 @@ This operator is used in:
 2. Scope resolution filtering (via SlotAccessResolver)
 3. Action validation (prerequisite checks)
 
+## Corrected Assumptions
+
+This workflow has been updated to correct several assumptions about the codebase:
+
+1. **Base Class**: Changed from non-existent `BaseOperator` to `BaseEquipmentOperator` (follows pattern of IsSocketCoveredOperator and HasClothingInSlotOperator)
+2. **EntityManager Methods**: Changed `getComponent()` to `getComponentData()` throughout
+3. **Import Paths**: Corrected to use `BaseEquipmentOperator` from `./base/` and entity path utilities
+4. **Operator Signature**: Changed from direct entity IDs to entity path resolution pattern:
+   - Old: `evaluate([actorId, targetItemId], context)`
+   - New: `evaluate(["actor", "targetItem"], context)` with path resolution
+5. **Method Structure**: Changed from standalone `evaluate()` to `evaluateInternal()` that receives resolved actor ID and resolves target item internally
+6. **Validation Pattern**: Now uses BaseEquipmentOperator's built-in entity resolution for the actor, and custom resolution for the target item
+
 ---
 
 ## Requirements
@@ -39,8 +52,14 @@ This operator is used in:
 **Full Implementation**:
 
 ```javascript
-import { BaseOperator } from './baseOperator.js';
-import { validateDependency, assertPresent } from '../utils/dependencyUtils.js';
+import { BaseEquipmentOperator } from './base/BaseEquipmentOperator.js';
+import {
+  resolveEntityPath,
+  hasValidEntityId,
+} from '../utils/entityPathResolver.js';
+
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
  * @file IsRemovalBlocked JSON Logic Operator
@@ -54,77 +73,90 @@ import { validateDependency, assertPresent } from '../utils/dependencyUtils.js';
  * Usage in JSON Logic:
  * {
  *   "isRemovalBlocked": [
- *     "{actorId}",      // Entity ID wearing the clothing
- *     "{targetItemId}"  // Item ID to check for removal blocking
+ *     "actor",          // Entity path to actor wearing the clothing
+ *     "targetItem"      // Entity path to item to check for removal blocking
  *   ]
  * }
  *
  * Returns: true if removal is blocked, false if allowed
  */
-export class IsRemovalBlockedOperator extends BaseOperator {
-  #entityManager;
-  #logger;
-
+export class IsRemovalBlockedOperator extends BaseEquipmentOperator {
+  /**
+   * @param {object} dependencies
+   * @param {IEntityManager} dependencies.entityManager
+   * @param {ILogger} dependencies.logger
+   */
   constructor({ entityManager, logger }) {
-    super();
-    validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getComponent', 'hasComponent'],
-    });
-    validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'warn', 'error', 'debug'],
-    });
-
-    this.#entityManager = entityManager;
-    this.#logger = logger;
+    super({ entityManager, logger }, 'isRemovalBlocked');
   }
 
   /**
    * Evaluates removal blocking for a target item
-   * @param {Array} args - [actorId, targetItemId]
-   * @param {Object} context - Evaluation context (unused)
+   * @protected
+   * @param {string} entityId - Actor entity ID wearing the clothing
+   * @param {Array} params - [targetItemPath] where targetItemPath is the entity path to the item
+   * @param {object} context - Evaluation context
    * @returns {boolean} - true if blocked, false if allowed
    */
-  evaluate(args, context) {
-    assertPresent(args, 'IsRemovalBlocked requires arguments');
-
-    if (!Array.isArray(args) || args.length !== 2) {
-      this.#logger.warn(
-        'IsRemovalBlocked operator requires exactly 2 arguments: [actorId, targetItemId]',
-        { args }
+  evaluateInternal(entityId, params, context) {
+    // Validate parameters
+    if (!params || params.length < 1) {
+      this.logger.warn(
+        `${this.operatorName}: Missing required parameter: targetItemPath`
       );
       return false;
     }
 
-    const [actorId, targetItemId] = args;
+    const [targetItemPath] = params;
 
-    if (!actorId || !targetItemId) {
-      this.#logger.warn('IsRemovalBlocked received null or undefined arguments', {
-        actorId,
-        targetItemId,
-      });
+    if (!targetItemPath) {
+      this.logger.warn(
+        `${this.operatorName}: Null or undefined targetItemPath`,
+        { targetItemPath }
+      );
       return false;
     }
 
     try {
-      // Get actor's equipment
-      const equipment = this.#entityManager.getComponent(
-        actorId,
-        'clothing:equipment'
+      // Resolve target item entity from path
+      const { entity: targetEntity, isValid } = resolveEntityPath(
+        context,
+        targetItemPath
       );
 
+      if (!isValid) {
+        this.logger.warn(
+          `${this.operatorName}: No entity found at path ${targetItemPath}`
+        );
+        return false;
+      }
+
+      const targetItemId = this.#resolveTargetItemId(targetEntity, targetItemPath);
+
+      if (targetItemId === null) {
+        return false;
+      }
+
+      // Get actor's equipment
+      const equipment = this.getEquipmentData(entityId);
+
       if (!equipment || !equipment.equipped) {
-        this.#logger.debug('Actor has no equipment', { actorId });
+        this.logger.debug(`${this.operatorName}: Actor has no equipment`, {
+          actorId: entityId,
+        });
         return false;
       }
 
       // Get target item's wearable data
-      const targetWearable = this.#entityManager.getComponent(
+      const targetWearable = this.entityManager.getComponentData(
         targetItemId,
         'clothing:wearable'
       );
 
       if (!targetWearable) {
-        this.#logger.warn('Target item is not wearable', { targetItemId });
+        this.logger.warn(`${this.operatorName}: Target item is not wearable`, {
+          targetItemId,
+        });
         return false;
       }
 
@@ -141,7 +173,7 @@ export class IsRemovalBlockedOperator extends BaseOperator {
 
             // Check if this equipped item has blocking component
             if (
-              !this.#entityManager.hasComponent(
+              !this.entityManager.hasComponent(
                 equippedItemId,
                 'clothing:blocks_removal'
               )
@@ -149,18 +181,26 @@ export class IsRemovalBlockedOperator extends BaseOperator {
               continue;
             }
 
-            const blocking = this.#entityManager.getComponent(
+            const blocking = this.entityManager.getComponentData(
               equippedItemId,
               'clothing:blocks_removal'
             );
 
             // Check slot-based blocking
             if (blocking.blockedSlots) {
-              if (this.#itemIsBlockedBySlotRules(targetWearable, blocking.blockedSlots)) {
-                this.#logger.debug('Item removal blocked by slot rules', {
-                  targetItemId,
-                  blockedBy: equippedItemId,
-                });
+              if (
+                this.#itemIsBlockedBySlotRules(
+                  targetWearable,
+                  blocking.blockedSlots
+                )
+              ) {
+                this.logger.debug(
+                  `${this.operatorName}: Item removal blocked by slot rules`,
+                  {
+                    targetItemId,
+                    blockedBy: equippedItemId,
+                  }
+                );
                 return true;
               }
             }
@@ -170,10 +210,13 @@ export class IsRemovalBlockedOperator extends BaseOperator {
               blocking.blocksRemovalOf &&
               blocking.blocksRemovalOf.includes(targetItemId)
             ) {
-              this.#logger.debug('Item removal blocked by explicit ID', {
-                targetItemId,
-                blockedBy: equippedItemId,
-              });
+              this.logger.debug(
+                `${this.operatorName}: Item removal blocked by explicit ID`,
+                {
+                  targetItemId,
+                  blockedBy: equippedItemId,
+                }
+              );
               return true;
             }
           }
@@ -182,13 +225,52 @@ export class IsRemovalBlockedOperator extends BaseOperator {
 
       return false;
     } catch (err) {
-      this.#logger.error('Error evaluating IsRemovalBlocked operator', {
-        error: err.message,
-        actorId,
-        targetItemId,
-      });
+      this.logger.error(
+        `${this.operatorName}: Error evaluating IsRemovalBlocked operator`,
+        {
+          error: err.message,
+          actorId: entityId,
+          targetItemPath,
+        }
+      );
       return false;
     }
+  }
+
+  /**
+   * Resolves a usable entity identifier from the resolved target item entity
+   * @private
+   * @param {any} entity - The resolved entity value from the context
+   * @param {string} entityPath - The JSON Logic path used to resolve the entity
+   * @returns {string|number|null} A valid entity identifier or null when invalid
+   */
+  #resolveTargetItemId(entity, entityPath) {
+    let entityId = null;
+
+    if (hasValidEntityId(entity)) {
+      entityId = /** @type {{id: string|number}} */ (entity).id;
+    } else if (typeof entity === 'string' || typeof entity === 'number') {
+      entityId = entity;
+    } else {
+      this.logger.warn(
+        `${this.operatorName}: Invalid entity at path ${entityPath}`
+      );
+      return null;
+    }
+
+    if (
+      entityId === undefined ||
+      entityId === null ||
+      (typeof entityId === 'string' && entityId.trim() === '') ||
+      (typeof entityId === 'number' && Number.isNaN(entityId))
+    ) {
+      this.logger.warn(
+        `${this.operatorName}: Invalid entity at path ${entityPath}`
+      );
+      return null;
+    }
+
+    return entityId;
   }
 
   /**
@@ -221,11 +303,13 @@ export default IsRemovalBlockedOperator;
 
 ### Design Rationale
 
-1. **Fail-Safe Defaults**: Returns `false` (allow removal) on errors to avoid blocking valid actions
-2. **Comprehensive Checks**: Validates both slot-based and explicit ID blocking
-3. **Self-Exclusion**: Skips the target item itself when checking blockers
-4. **Logging**: Detailed debug logging for troubleshooting blocking issues
-5. **Error Handling**: Catches and logs errors without crashing evaluation
+1. **Extends BaseEquipmentOperator**: Follows established pattern for equipment-related operators (similar to IsSocketCoveredOperator, HasClothingInSlotOperator)
+2. **Entity Path Resolution**: Uses standard entity path resolution pattern from BaseEquipmentOperator for first entity (actor), then manually resolves second entity (target item)
+3. **Fail-Safe Defaults**: Returns `false` (allow removal) on errors to avoid blocking valid actions
+4. **Comprehensive Checks**: Validates both slot-based and explicit ID blocking
+5. **Self-Exclusion**: Skips the target item itself when checking blockers
+6. **Detailed Logging**: Uses operatorName prefix and debug logging for troubleshooting blocking issues
+7. **Error Handling**: Catches and logs errors without crashing evaluation
 
 ---
 
@@ -238,6 +322,12 @@ Create `src/logic/operators/isRemovalBlockedOperator.js` with the full implement
 ### 2. Create Unit Tests
 
 **File**: `tests/unit/logic/operators/isRemovalBlockedOperator.test.js`
+
+**Note**: The test examples below show the corrected signature. The operator now:
+- Extends `BaseEquipmentOperator` instead of a non-existent `BaseOperator`
+- Uses `getComponentData()` instead of `getComponent()`
+- Takes entity paths like `["actor", "targetItem"]` that get resolved from context
+- Requires context objects with entity references (e.g., `{ actor: { id: 'actor1' }, targetItem: { id: 'item1' } }`)
 
 **Test Coverage**:
 
@@ -272,8 +362,9 @@ describe('IsRemovalBlockedOperator', () => {
       const actorId = 'actor1';
       const beltId = 'belt1';
       const pantsId = 'pants1';
+      const context = { actor: { id: actorId }, targetItem: { id: pantsId } };
 
-      mockEntityManager.getComponent.mockImplementation((entityId, componentId) => {
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
         if (entityId === actorId && componentId === 'clothing:equipment') {
           return {
             equipped: {
@@ -311,12 +402,12 @@ describe('IsRemovalBlockedOperator', () => {
       });
 
       // Act
-      const result = operator.evaluate([actorId, pantsId], {});
+      const result = operator.evaluate(['actor', 'targetItem'], context);
 
       // Assert
       expect(result).toBe(true);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Item removal blocked by slot rules',
+        expect.stringContaining('Item removal blocked by slot rules'),
         expect.objectContaining({
           targetItemId: pantsId,
           blockedBy: beltId,
@@ -691,27 +782,33 @@ Expected: No warnings or errors.
 ## Acceptance Criteria
 
 - [ ] Operator class created at `src/logic/operators/isRemovalBlockedOperator.js`
-- [ ] Operator extends `BaseOperator`
-- [ ] Constructor validates dependencies (entityManager, logger)
-- [ ] `evaluate()` method handles all edge cases
+- [ ] Operator extends `BaseEquipmentOperator` (not BaseOperator)
+- [ ] Constructor passes dependencies to super class correctly
+- [ ] `evaluateInternal()` method handles all edge cases
+- [ ] Entity path resolution implemented for both actor and target item
+- [ ] Uses `getComponentData()` method (not `getComponent()`)
 - [ ] Slot-based blocking logic implemented correctly
 - [ ] Explicit item ID blocking logic implemented correctly
 - [ ] Self-exclusion logic prevents items from blocking themselves
-- [ ] Comprehensive unit tests created
+- [ ] Comprehensive unit tests created with proper context objects
 - [ ] All unit tests pass
 - [ ] Test coverage ≥ 80%
 - [ ] ESLint passes
 - [ ] Type checking passes
-- [ ] Detailed logging for debugging
+- [ ] Detailed logging for debugging with operatorName prefix
 
 ---
 
 ## Notes
 
-- Operator returns `false` (allow removal) on errors to avoid blocking valid actions
-- Logging uses `debug` level for normal blocking checks, `warn` for invalid inputs, `error` for exceptions
-- The operator is stateless and can be called multiple times safely
-- This operator will be used in both condition evaluation and scope resolution
+- **Pattern**: This operator follows the BaseEquipmentOperator pattern used by IsSocketCoveredOperator and HasClothingInSlotOperator
+- **Entity Resolution**: BaseEquipmentOperator handles actor path resolution; target item path is resolved manually within evaluateInternal()
+- **Method Names**: Uses `getComponentData()` and `hasComponent()` from EntityManager (not `getComponent()`)
+- **Fail-Safe**: Operator returns `false` (allow removal) on errors to avoid blocking valid actions
+- **Logging Levels**: Uses `debug` for normal checks, `warn` for invalid inputs, `error` for exceptions, all prefixed with operatorName
+- **Stateless**: The operator is stateless and can be called multiple times safely
+- **Usage Context**: This operator will be used in both condition evaluation and scope resolution
+- **JSON Logic Call Pattern**: `{"isRemovalBlocked": ["actor", "targetItem"]}` where paths resolve from context
 
 ---
 
