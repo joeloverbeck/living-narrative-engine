@@ -21,6 +21,12 @@
         "hasClothingInSlot": ["actor", "torso_upper"]
       },
       "failure_message": "You need to be wearing clothing on your upper torso to draw attention to your breasts."
+    },
+    {
+      "logic": {
+        "hasOtherActorsAtLocation": ["actor"]
+      },
+      "failure_message": "There is nobody here to draw attention from."
     }
   ],
   "visual": {

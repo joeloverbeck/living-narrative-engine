@@ -23,6 +23,12 @@
         }
       },
       "failure_message": "Your penis must be uncovered to perform this action."
+    },
+    {
+      "logic": {
+        "hasOtherActorsAtLocation": ["actor"]
+      },
+      "failure_message": "There is nobody here to draw attention from."
     }
   ],
   "visual": {

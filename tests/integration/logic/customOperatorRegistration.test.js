@@ -74,6 +74,20 @@ describe('Custom Operator Registration - Runtime Validation', () => {
     }).not.toThrow();
   });
 
+  it('should have hasOtherActorsAtLocation operator registered', () => {
+    // Check that the hasOtherActorsAtLocation operator is registered
+    const testRule = { hasOtherActorsAtLocation: ['actor'] };
+
+    const context = {
+      entity: { id: 'test' },
+      actor: { id: 'test' },
+    };
+
+    // The operator should be registered and return a boolean
+    const result = jsonLogicService.evaluate(testRule, context);
+    expect(typeof result).toBe('boolean');
+  });
+
   it('should have all custom operators registered', () => {
     // Test a few more operators to ensure comprehensive registration
     const operators = [
@@ -89,6 +103,7 @@ describe('Custom Operator Registration - Runtime Validation', () => {
           'val',
         ],
       },
+      { hasOtherActorsAtLocation: ['dummy'] },
     ];
 
     operators.forEach((rule) => {

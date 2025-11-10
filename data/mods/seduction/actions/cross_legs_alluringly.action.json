@@ -20,6 +20,12 @@
         "hasPartOfType": ["actor", "leg"]
       },
       "failure_message": "You need legs to cross them."
+    },
+    {
+      "logic": {
+        "hasOtherActorsAtLocation": ["actor"]
+      },
+      "failure_message": "There is nobody here to draw attention from."
     }
   ],
   "visual": {

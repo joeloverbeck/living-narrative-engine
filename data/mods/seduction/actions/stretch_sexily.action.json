@@ -9,7 +9,14 @@
     "actor": ["positioning:hugging", "positioning:doing_complex_performance"]
   },
   "template": "stretch sexily",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "hasOtherActorsAtLocation": ["actor"]
+      },
+      "failure_message": "There is nobody here to draw attention from."
+    }
+  ],
   "visual": {
     "backgroundColor": "#f57f17",
     "textColor": "#000000",
