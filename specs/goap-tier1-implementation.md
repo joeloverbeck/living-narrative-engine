@@ -1,8 +1,9 @@
 # GOAP Tier 1 Implementation Specification
 
-**Version:** 1.0
+**Version:** 1.1
 **Created:** 2025-01-09
-**Status:** Specification
+**Updated:** 2025-01-09
+**Status:** Specification (Revised)
 **Related Document:** brainstorming/goap-player-implementation-design.md
 
 ---
@@ -115,21 +116,68 @@ class EffectsAnalyzer {
 - `ADD_COMPONENT`
 - `REMOVE_COMPONENT`
 - `MODIFY_COMPONENT`
-- `CREATE_ENTITY`
-- `DESTROY_ENTITY`
+- `ATOMIC_MODIFY_COMPONENT` - Atomic state changes with conflict detection
 - Component-based operations that map to component changes:
   - `LOCK_MOVEMENT` → `ADD_COMPONENT` (positioning:movement_locked)
   - `UNLOCK_MOVEMENT` → `REMOVE_COMPONENT` (positioning:movement_locked)
+  - `LOCK_MOUTH_ENGAGEMENT` → `ADD_COMPONENT` (relevant mouth engagement marker)
+  - `UNLOCK_MOUTH_ENGAGEMENT` → `REMOVE_COMPONENT` (relevant mouth engagement marker)
   - `ESTABLISH_SITTING_CLOSENESS` → `ADD_COMPONENT` (positioning:sitting_close_to)
+  - `ESTABLISH_LYING_CLOSENESS` → `ADD_COMPONENT` (positioning:lying_close_to)
+  - `REMOVE_SITTING_CLOSENESS` → `REMOVE_COMPONENT` (positioning:sitting_close_to)
+  - `REMOVE_LYING_CLOSENESS` → `REMOVE_COMPONENT` (positioning:lying_close_to)
+  - `BREAK_CLOSENESS_WITH_TARGET` → `REMOVE_COMPONENT` (closeness components)
   - `TRANSFER_ITEM` → Remove from source, add to destination
-  - `DROP_ITEM` → Remove from inventory, add at_location
-  - `PICK_UP_ITEM` → Remove at_location, add to inventory
+  - `DROP_ITEM_AT_LOCATION` → Remove from inventory, add at_location
+  - `PICK_UP_ITEM_FROM_LOCATION` → Remove at_location, add to inventory
+  - `OPEN_CONTAINER` → `MODIFY_COMPONENT` (container state)
+  - `TAKE_FROM_CONTAINER` → Move item from container to inventory
+  - `PUT_IN_CONTAINER` → Move item from inventory to container
+  - `UNEQUIP_CLOTHING` → `REMOVE_COMPONENT` (clothing equipped state)
+  - `DRINK_FROM` → `MODIFY_COMPONENT` (consumable quantity)
+  - `DRINK_ENTIRELY` → `REMOVE_COMPONENT` (consumable component)
 
-**Excluded Operations (not world state):**
-- `DISPATCH_EVENT` - Execution concern
-- `DISPATCH_PERCEPTIBLE_EVENT` - Execution concern
-- `LOG` - Side effect
-- `VALIDATE` - Validation only
+**Operations Producing Context Data (Critical for Conditional Effects):**
+- `QUERY_COMPONENT` - Queries component data, stores in `result_variable`
+- `QUERY_COMPONENTS` - Queries multiple components
+- `QUERY_ENTITIES` - Queries entities matching criteria
+- `QUERY_LOOKUP` - Queries lookup tables
+- `GET_NAME` - Gets entity name, stores in `result_variable`
+- `GET_TIMESTAMP` - Gets current timestamp, stores in `result_variable`
+- `SET_VARIABLE` - Sets context variable for later operations
+- `VALIDATE_INVENTORY_CAPACITY` - Returns validation result with reason
+- `VALIDATE_CONTAINER_CAPACITY` - Returns validation result with reason
+- `HAS_COMPONENT` - Returns boolean result
+- `HAS_BODY_PART_WITH_COMPONENT_VALUE` - Returns boolean result
+- `RESOLVE_DIRECTION` - Resolves direction string to location ID
+- `MATH` - Performs mathematical operations, stores result
+
+**Control Flow Operations:**
+- `IF` - Conditional branching with `then_actions` and `else_actions`
+- `IF_CO_LOCATED` - Conditional based on location matching
+- `FOR_EACH` - Iteration over arrays
+- `SEQUENCE` - Sequential operation execution
+
+**Excluded Operations (not relevant for planning):**
+- `DISPATCH_EVENT` - Execution-time communication only
+- `DISPATCH_PERCEPTIBLE_EVENT` - Execution-time perception logging
+- `DISPATCH_SPEECH` - Execution-time output
+- `DISPATCH_THOUGHT` - Execution-time output
+- `LOG` - Debug/diagnostics only
+- `END_TURN` - Execution control only
+- `REGENERATE_DESCRIPTION` - UI update only
+- `ADD_PERCEPTION_LOG_ENTRY` - Logging only
+- `SYSTEM_MOVE_ENTITY` - System-level operation
+- `REBUILD_LEADER_LIST_CACHE` - Cache management
+- `CHECK_FOLLOW_CYCLE` - Validation only
+- `AUTO_MOVE_CLOSENESS_PARTNERS` - Derived movement (not primary action)
+- `AUTO_MOVE_FOLLOWERS` - Derived movement (not primary action)
+- `MODIFY_ARRAY_FIELD` - Low-level implementation detail
+- `MODIFY_CONTEXT_ARRAY` - Context manipulation only
+- `REMOVE_FROM_CLOSENESS_CIRCLE` - Internal closeness management
+- `MERGE_CLOSENESS_CIRCLE` - Internal closeness management
+
+**Note:** `CREATE_ENTITY` and `DESTROY_ENTITY` operations are not currently implemented in the codebase and should be excluded from Tier 1 scope.
 
 #### 1.2.2 Effects Generator
 
@@ -203,6 +251,22 @@ class EffectsGenerator {
         { "type": "number", "minimum": 0 },
         { "$ref": "#/definitions/dynamicCost" }
       ]
+    },
+    "abstractPreconditions": {
+      "type": "object",
+      "description": "Abstract precondition functions used in conditional effects (optional)",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": { "type": "string" },
+          "parameters": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "simulationFunction": { "type": "string" }
+        },
+        "required": ["description", "parameters", "simulationFunction"]
+      }
     }
   },
   "required": ["effects"],
@@ -285,10 +349,21 @@ class EffectsGenerator {
 1. Run effects generator: `npm run generate:effects`
 2. Generator reads all actions
 3. For each action, find corresponding rule
-4. Analyze rule operations
-5. Generate planning effects
-6. Inject into action definition (in-memory or write to file)
-7. Validate against schema
+4. **Resolve macros** - Expand all macro references to their constituent operations
+5. **Analyze data flow** - Track operations that produce context variables
+6. **Trace execution paths** - Identify all conditional branches and execution paths
+7. **Extract state changes** - Collect state-changing operations from each path
+8. **Generate abstract preconditions** - Convert query/validation operations to abstract conditions
+9. Generate planning effects with conditional blocks
+10. Inject into action definition (in-memory or write to file)
+11. Validate against schema
+
+**Macro Resolution:**
+- Rules frequently use macros like `"macro": "core:logSuccessAndEndTurn"`
+- Macros expand to multiple operations (queries, logging, events, etc.)
+- Effects generator MUST resolve macros before analysis
+- Use existing macro loader/resolver from rule loading system
+- Document which macros are commonly used and their expanded operations
 
 #### 1.2.5 Validation Tool
 
@@ -316,6 +391,199 @@ Summary: 150 valid, 10 warnings, 2 errors
 ```
 
 ### 1.3 Implementation Details
+
+#### 1.3.0 Data Flow Analysis and Context Variables
+
+**Critical Challenge:** Rules frequently use operations that query data and store results in context variables, which are then used by later operations for conditional branching or as inputs.
+
+**Example Pattern from Real Rules:**
+```javascript
+// Step 1: Validate capacity and store result
+{
+  "type": "VALIDATE_INVENTORY_CAPACITY",
+  "parameters": {
+    "targetEntity": "{event.payload.actorId}",
+    "itemEntity": "{event.payload.targetId}",
+    "result_variable": "capacityCheck"  // ← Stores result object
+  }
+}
+
+// Step 2: Branch based on stored result
+{
+  "type": "IF",
+  "parameters": {
+    "condition": {
+      "==": [{ "var": "context.capacityCheck.valid" }, false]  // ← Uses stored result
+    },
+    "then_actions": [/* failure path */],
+    "else_actions": [/* success path with state changes */]
+  }
+}
+```
+
+**Data Flow Categories:**
+
+1. **Query Operations** (produce context data):
+   - `QUERY_COMPONENT` → component data object
+   - `GET_NAME` → entity name string
+   - `VALIDATE_INVENTORY_CAPACITY` → `{ valid: boolean, reason: string }`
+   - `OPEN_CONTAINER` → `{ success: boolean, error: string }`
+   - `ATOMIC_MODIFY_COMPONENT` → boolean success/failure
+   - `ESTABLISH_SITTING_CLOSENESS` → boolean or structure
+
+2. **Consuming Operations** (use context data):
+   - `IF` conditions - reference `context.variableName`
+   - `SET_VARIABLE` - copy/transform context data
+   - State-changing operations - use context data in parameters
+
+**Effects Generation Strategies:**
+
+**Strategy 1: Final State Only (Recommended for Tier 1)**
+- Analyze the complete rule execution flow
+- Track all possible execution paths (all IF branches)
+- Generate effects representing only the final state changes
+- Ignore intermediate query/validation steps
+- Simulate queries during planning (not in effects)
+
+**Advantages:**
+- Simpler effects structure
+- Closer to traditional GOAP effects
+- Easier to validate and reason about
+
+**Example:**
+```javascript
+// Rule has: VALIDATE_INVENTORY_CAPACITY → IF → PICK_UP or fail
+// Generated effects (final state only):
+{
+  "effects": [
+    {
+      "operation": "CONDITIONAL",
+      "condition": { "hasInventoryCapacity": ["actor", "target"] },  // Abstract condition
+      "then": [
+        { "operation": "ADD_COMPONENT", "entity": "actor", "component": "items:inventory_item" },
+        { "operation": "REMOVE_COMPONENT", "entity": "target", "component": "core:at_location" }
+      ]
+    }
+  ]
+}
+```
+
+**Strategy 2: Explicit Data Flow (Deferred to Tier 2)**
+- Model intermediate computational states
+- Track data dependencies between operations
+- Generate effects with data flow annotations
+- Planner simulates complete execution including queries
+
+**Implementation Approach for Tier 1:**
+
+1. **Macro Resolution First**
+   - Expand all macros before analyzing operations
+   - Macros like `core:logSuccessAndEndTurn` contain operations
+   - Cannot generate accurate effects without expansion
+
+2. **Path Analysis**
+   - Identify all `IF` operations in rule
+   - Trace all possible execution paths
+   - For each path, collect state-changing operations
+
+3. **Abstract Preconditions**
+   - Convert query operations to abstract preconditions
+   - `VALIDATE_INVENTORY_CAPACITY` → `hasInventoryCapacity(actor, item)`
+   - `HAS_COMPONENT` → `hasComponent(entity, component)`
+   - Store mapping of abstract functions to simulation logic
+
+4. **Effect Generation**
+   - For each execution path, generate conditional effect
+   - Use abstract preconditions in `CONDITIONAL.condition`
+   - List only state-changing operations in `then` block
+
+5. **Simulation Functions**
+   - Implement simulation for each abstract function
+   - `hasInventoryCapacity(actor, item)` - check weight/count limits
+   - `hasComponent(entity, component)` - check component presence
+   - Used by planner during action selection
+
+**Example: Complete Analysis of `handle_pick_up_item` Rule**
+
+**Rule Structure:**
+```
+1. VALIDATE_INVENTORY_CAPACITY → capacityCheck
+2. IF capacityCheck.valid == false
+   THEN: [QUERY_COMPONENT, GET_NAME, ..., END_TURN (failure)]
+   ELSE: [PICK_UP_ITEM_FROM_LOCATION, QUERY_COMPONENT, GET_NAME, SET_VARIABLE, ...]
+```
+
+**Generated Effects:**
+```javascript
+{
+  "effects": [
+    {
+      "operation": "CONDITIONAL",
+      "condition": {
+        "hasInventoryCapacity": [
+          { "ref": "actor" },
+          { "ref": "target" }
+        ]
+      },
+      "then": [
+        {
+          "operation": "ADD_COMPONENT",
+          "entity": "actor",
+          "component": "items:inventory_item",
+          "data": { "item_id": { "ref": "target.id" } }
+        },
+        {
+          "operation": "REMOVE_COMPONENT",
+          "entity": "target",
+          "component": "core:at_location"
+        }
+      ],
+      "else": []  // No state changes on failure path
+    }
+  ],
+  "cost": 1.0,
+  "abstractPreconditions": {
+    "hasInventoryCapacity": {
+      "description": "Checks if actor can carry the item",
+      "parameters": ["actorId", "itemId"],
+      "simulationFunction": "simulateInventoryCapacity"
+    }
+  }
+}
+```
+
+**Simulation Implementation:**
+```javascript
+// In SimplePlanner or ActionSelector
+simulateInventoryCapacity(actorId, itemId, worldState) {
+  const actorInventory = worldState.getComponent(actorId, 'items:inventory');
+  const item = worldState.getComponent(itemId, 'items:item');
+
+  const currentWeight = calculateTotalWeight(actorInventory);
+  const itemWeight = item.weight || 0;
+  const capacity = actorInventory.max_weight || Infinity;
+
+  return (currentWeight + itemWeight) <= capacity;
+}
+```
+
+**Documentation Requirements:**
+
+1. **Effect Generation Guide** (`docs/goap/effects-auto-generation.md`)
+   - Data flow analysis algorithm
+   - Path tracing for IF operations
+   - Abstract precondition catalog
+   - Simulation function implementation guide
+
+2. **Operation Result Structures** (`docs/goap/operation-result-structures.md`)
+   - Document result_variable structure for each query operation
+   - Example: `VALIDATE_INVENTORY_CAPACITY` → `{ valid: boolean, reason: string }`
+   - Used for testing and validation
+
+3. **Abstract Preconditions Reference** (`docs/goap/abstract-preconditions.md`)
+   - List all abstract precondition functions
+   - Parameters and return types
+   - Simulation implementation requirements
 
 #### 1.3.1 Operation Mapping
 
@@ -918,7 +1186,20 @@ class PlanCache {
 
 **Purpose:** Integrate GOAP system with turn decision workflow.
 
-**Current State:** Placeholder that selects first action.
+**Current State:** Placeholder that extends `DelegatingDecisionProvider` and selects first action.
+
+**Current Interface:**
+```javascript
+class GoapDecisionProvider extends DelegatingDecisionProvider {
+  constructor({ logger, safeEventDispatcher }) {
+    const delegate = async (_actor, _context, actions) => {
+      // Placeholder implementation: returns first action
+      return { index: resolvedIndex };
+    };
+    super({ delegate, logger, safeEventDispatcher });
+  }
+}
+```
 
 **Updated Implementation:**
 ```javascript
@@ -927,9 +1208,16 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
   #simplePlanner;
   #planCache;
   #logger;
+  #safeEventDispatcher;
 
-  constructor({ goalManager, simplePlanner, planCache, logger }) {
-    super({ logger });
+  constructor({ goalManager, simplePlanner, planCache, logger, safeEventDispatcher }) {
+    // Create delegate function for GOAP decision logic
+    const delegate = async (actor, context, actions) => {
+      return this.#decideActionInternal(actor, context, actions);
+    };
+
+    super({ delegate, logger, safeEventDispatcher });
+
     validateDependency(goalManager, 'IGoalManager', logger, {
       requiredMethods: ['selectGoal', 'isGoalSatisfied']
     });
@@ -944,27 +1232,36 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
     this.#simplePlanner = simplePlanner;
     this.#planCache = planCache;
     this.#logger = logger;
+    this.#safeEventDispatcher = safeEventDispatcher;
   }
 
   /**
-   * Decides action for GOAP agent
-   * @param {string} actorId - Entity ID of actor
-   * @param {Array<Object>} availableActions - Available actions
+   * Internal decision logic for GOAP agent
+   * @param {Object} actor - Actor entity object
    * @param {Object} context - Decision context
-   * @returns {Promise<Object>} Decision result
+   * @param {Array<Object>} actions - Available indexed actions
+   * @returns {Promise<Object>} Decision result with { index: number|null }
+   * @private
    */
-  async decideAction(actorId, availableActions, context) {
-    // 1. Check cached plan
+  async #decideActionInternal(actor, context, actions) {
+    const actorId = actor.id;
+    // 1. Validate input
+    if (!Array.isArray(actions) || actions.length === 0) {
+      this.#logger.debug(`No actions available for ${actorId}`);
+      return { index: null };
+    }
+
+    // 2. Check cached plan
     let plan = this.#planCache.get(actorId);
 
-    // 2. Validate cached plan
+    // 3. Validate cached plan
     if (plan && !this.#simplePlanner.validatePlan(plan, context)) {
       this.#logger.debug(`Cached plan for ${actorId} invalid, replanning`);
       this.#planCache.invalidate(actorId);
       plan = null;
     }
 
-    // 3. If no valid plan, create new one
+    // 4. If no valid plan, create new one
     if (!plan) {
       // Select goal
       const goal = this.#goalManager.selectGoal(actorId, context);
@@ -980,8 +1277,8 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
         return { index: null };
       }
 
-      // Plan action
-      const action = this.#simplePlanner.plan(goal, availableActions, actorId, context);
+      // Plan action - note: actions array contains indexed action objects
+      const action = this.#simplePlanner.plan(goal, actions, actorId, context);
 
       if (!action) {
         this.#logger.debug(`No action found for goal ${goal.id}`);
@@ -993,18 +1290,21 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
       this.#planCache.set(actorId, plan);
     }
 
-    // 4. Execute first step of plan
+    // 5. Execute first step of plan
     const step = plan.steps[0];
-    const actionIndex = availableActions.findIndex(a => a.id === step.actionId);
 
-    if (actionIndex === -1) {
+    // Find action in indexed actions array
+    // Note: actions array from DelegatingDecisionProvider contains objects with { index, ...actionData }
+    const actionMatch = actions.find(a => a.id === step.actionId);
+
+    if (!actionMatch) {
       this.#logger.warn(`Planned action ${step.actionId} not in available actions`);
       this.#planCache.invalidate(actorId);
       return { index: null };
     }
 
     this.#logger.info(`Actor ${actorId} executing ${step.actionId} for goal ${plan.goalId}`);
-    return { index: actionIndex };
+    return { index: actionMatch.index };
   }
 }
 ```
@@ -1709,6 +2009,9 @@ npm run format
 - [ ] `docs/goap/goal-system.md`
 - [ ] `docs/goap/simple-planner.md`
 - [ ] `docs/goap/README.md`
+- [ ] `docs/goap/operation-result-structures.md` (NEW - documents result_variable structures)
+- [ ] `docs/goap/abstract-preconditions.md` (NEW - abstract precondition catalog)
+- [ ] `docs/goap/macro-resolution.md` (NEW - macro expansion for effects generation)
 
 **Scripts:**
 - [ ] `scripts/generateEffects.js`
@@ -1789,6 +2092,170 @@ npm run format
   "cost": 1.0
 }
 ```
+
+---
+
+## Appendix D: Specification Revisions
+
+**Version:** 1.1
+**Date:** 2025-01-09
+**Changes:** Corrections based on codebase analysis
+
+### Major Changes
+
+#### 1. Data Flow Analysis and Context Variables (Section 1.3.0 - NEW)
+
+**Issue:** Original spec didn't account for operations that query data and store results in context variables, which are then used by later operations.
+
+**Real Pattern from Rules:**
+```javascript
+// Query operation stores result
+{ "type": "VALIDATE_INVENTORY_CAPACITY", "result_variable": "capacityCheck" }
+// Later operations use stored result
+{ "type": "IF", "condition": { "==": [{ "var": "context.capacityCheck.valid" }, false] } }
+```
+
+**Solution Added:**
+- New section 1.3.0 "Data Flow Analysis and Context Variables"
+- Strategy 1: Final State Only (Recommended for Tier 1)
+- Strategy 2: Explicit Data Flow (Deferred to Tier 2)
+- Abstract preconditions concept
+- Simulation functions for query operations
+- Complete example of `handle_pick_up_item` analysis
+
+**Impact:** Critical - Without this, effects generation cannot handle conditional logic based on runtime queries.
+
+#### 2. Operation Type Corrections (Section 1.2.1)
+
+**Issues Found:**
+- ❌ `CREATE_ENTITY` and `DESTROY_ENTITY` listed but don't exist in codebase
+- Missing many state-changing operations that DO exist
+- Query operations wrongly excluded (needed for conditional effects)
+
+**Corrections:**
+- Removed non-existent operations
+- Added 10+ missing state-changing operations (ATOMIC_MODIFY_COMPONENT, OPEN_CONTAINER, etc.)
+- Created new category: "Operations Producing Context Data"
+- Added "Control Flow Operations" category
+- Expanded excluded operations list with explanations
+
+**Impact:** High - Ensures effects generator targets the correct operations.
+
+#### 3. GoapDecisionProvider Interface (Section 3.2.3)
+
+**Issue:** Spec didn't match existing `DelegatingDecisionProvider` pattern.
+
+**Corrections:**
+- Documented current placeholder implementation
+- Updated interface to use delegate pattern
+- Fixed parameter names (actor object vs actorId string)
+- Added note about indexed actions array structure
+- Added `safeEventDispatcher` dependency
+
+**Impact:** Medium - Prevents implementation confusion.
+
+#### 4. Effects Schema Extension (Section 1.2.3)
+
+**Issue:** Original schema didn't support abstract preconditions.
+
+**Addition:**
+- Added `abstractPreconditions` field to schema
+- Documents simulation function metadata
+- Optional field for effects that use abstract conditions
+
+**Impact:** Medium - Enables Strategy 1 approach for data flow.
+
+#### 5. Macro Resolution (Section 1.2.4)
+
+**Issue:** Spec didn't mention macros, but rules extensively use them.
+
+**Addition:**
+- Added macro resolution step to generation workflow
+- Documented requirement to expand macros before analysis
+- Added documentation file: `docs/goap/macro-resolution.md`
+
+**Impact:** High - Cannot generate accurate effects without resolving macros.
+
+### Minor Changes
+
+#### 6. Documentation Files Added
+
+**New Files in Appendix B:**
+- `docs/goap/operation-result-structures.md` - Documents result_variable structures for query operations
+- `docs/goap/abstract-preconditions.md` - Catalog of abstract precondition functions
+- `docs/goap/macro-resolution.md` - Macro expansion guide
+
+**Impact:** Low - Improves documentation completeness.
+
+#### 7. Conditional Operations Expansion (Section 1.3.2)
+
+**Enhancement:**
+- Original example was simple
+- Added note about nested IF operations
+- Referenced real rules with complex branching
+
+**Impact:** Low - Better examples for implementers.
+
+### Assumptions Validated
+
+The following assumptions in the original spec were **CORRECT**:
+
+✅ **File Paths:**
+- `src/loaders/goalLoader.js` - EXISTS
+- `data/schemas/goal.schema.json` - EXISTS
+- `src/turns/providers/goapDecisionProvider.js` - EXISTS
+- `src/loaders/ruleLoader.js` - EXISTS (assumed)
+
+✅ **Goal Schema:**
+- Structure matches spec (id, priority, relevance, goalState)
+
+✅ **ScopeDSL Documentation:**
+- `docs/scopeDsl/README.md` - EXISTS
+- `docs/scopeDsl/quick-reference.md` - EXISTS
+- `docs/scopeDsl/error-handling-guide.md` - EXISTS
+
+✅ **Basic Architecture:**
+- Effects as planning metadata (not execution)
+- Single source of truth (rules are authoritative)
+- Auto-generation approach
+
+### Implementation Recommendations
+
+Based on codebase analysis, the following priorities are recommended:
+
+**Phase 1 (Weeks 1-4): Foundation**
+1. Implement EffectsAnalyzer with data flow tracking
+2. Implement macro resolution integration
+3. Create abstract precondition catalog
+
+**Phase 1 (Weeks 5-8): Generation**
+4. Implement path tracing for IF operations
+5. Generate effects for 20-30 simple actions first
+6. Test Strategy 1 approach thoroughly before proceeding
+
+**Critical Dependencies:**
+- Macro loader/resolver from existing rule system
+- Operation handler registry for validating operation types
+- Component schema for validating component references
+
+**Risk Mitigation:**
+- Start with actions that have no conditionals
+- Validate generated effects against manual execution
+- Create diff tool to compare effects vs actual rule execution
+
+### Open Questions
+
+The following questions should be resolved during implementation:
+
+1. **Macro Expansion Timing:** Should macros be expanded during effects generation or during rule loading?
+2. **Simulation Function Location:** Where should simulation functions live? In SimplePlanner or separate service?
+3. **Abstract Precondition Registry:** Should this be a static catalog or dynamically generated?
+4. **Effect Validation:** How to validate that generated effects match actual execution without running the action?
+
+### Version History
+
+- **1.0** (2025-01-09) - Initial specification
+- **1.1** (2025-01-09) - Corrections based on codebase analysis (this version)
 
 ---
 
