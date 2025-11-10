@@ -110,8 +110,8 @@ describe('Component Schema Extension - Integration Tests', () => {
 
           // Validate against component schema
           const result = validator.validate(
-            component,
-            'schema://living-narrative-engine/component.schema.json'
+            'schema://living-narrative-engine/component.schema.json',
+            component
           );
 
           if (!result.isValid) {
@@ -155,8 +155,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        componentWithoutRules,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        componentWithoutRules
       );
 
       expect(result.isValid).toBe(true);
@@ -173,8 +173,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        componentMissingRequired,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        componentMissingRequired
       );
 
       expect(result.isValid).toBe(false);
@@ -198,8 +198,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       }
 
       const result = validator.validate(
-        exampleComponent,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        exampleComponent
       );
 
       expect(result.isValid).toBe(true);
@@ -221,16 +221,14 @@ describe('Component Schema Extension - Integration Tests', () => {
 
   describe('Schema Loader Integration', () => {
     it('should handle component schemas with validationRules via schema loader', async () => {
-      const componentWithRules = {
-        $schema: 'schema://living-narrative-engine/component.schema.json',
-        id: 'test:loader-test',
-        description: 'Component for testing schema loader',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            status: { type: 'string', enum: ['active', 'inactive'] },
-          },
+      // Create a valid JSON Schema (not a component definition)
+      // This represents what would be in a component's dataSchema
+      const schemaWithRules = {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['active', 'inactive'] },
         },
+        // Note: validationRules is custom metadata, not standard JSON Schema
         validationRules: {
           generateValidator: true,
           errorMessages: {
@@ -240,8 +238,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       // Add schema using addSchema method
-      const schemaId = 'test://component-with-rules';
-      await validator.addSchema(componentWithRules, schemaId);
+      const schemaId = 'test://schema-with-rules';
+      await validator.addSchema(schemaWithRules, schemaId);
 
       // Verify schema is loaded
       expect(validator.isSchemaLoaded(schemaId)).toBe(true);
@@ -269,8 +267,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        componentWithInvalidRules,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        componentWithInvalidRules
       );
 
       expect(result.isValid).toBe(false);
@@ -280,7 +278,7 @@ describe('Component Schema Extension - Integration Tests', () => {
       const errorMessages = result.errors
         .map((e) => e.message || e.schemaPath)
         .join(' ');
-      expect(errorMessages).toContain('additionalProperties');
+      expect(errorMessages).toContain('additional properties');
     });
 
     it('should provide clear error messages for invalid errorMessages structure', async () => {
@@ -301,8 +299,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        componentWithInvalidErrorMessages,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        componentWithInvalidErrorMessages
       );
 
       expect(result.isValid).toBe(false);
@@ -327,8 +325,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        componentWithInvalidSuggestions,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        componentWithInvalidSuggestions
       );
 
       expect(result.isValid).toBe(false);
@@ -353,8 +351,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        component,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        component
       );
 
       expect(result.isValid).toBe(true);
@@ -379,8 +377,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        component,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        component
       );
 
       expect(result.isValid).toBe(true);
@@ -406,8 +404,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        component,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        component
       );
 
       expect(result.isValid).toBe(true);
@@ -439,8 +437,8 @@ describe('Component Schema Extension - Integration Tests', () => {
       };
 
       const result = validator.validate(
-        component,
-        'schema://living-narrative-engine/component.schema.json'
+        'schema://living-narrative-engine/component.schema.json',
+        component
       );
 
       expect(result.isValid).toBe(true);
