@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:dark_gray_wool_boot_socks",
+  "description": "Dark gray merino wool boot socks",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "underwear"
+      ]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "boot socks"
+    },
+    "core:description": {
+      "text": "Premium dark gray merino wool boot socks engineered for comfort during extended wear. The cushioned sole provides impact absorption while the reinforced heel and toe areas ensure long-lasting durability. Natural merino fibers offer superior moisture-wicking and temperature regulation, keeping feet dry and comfortable in any conditions. The mid-calf height provides protection from boot chafing while the elastic arch support ensures a secure fit."
+    },
+    "descriptors:color_basic": {
+      "color": "gray"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.12
+    }
+  }
+}
