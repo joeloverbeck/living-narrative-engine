@@ -9,6 +9,23 @@
 
 Design and implement the foundational architecture for GOAP Tier 1, including JSON schemas for planning effects and dependency injection setup. This ticket establishes the infrastructure that all other GOAP components will build upon.
 
+## Workflow Validation Notes
+
+**Last Validated:** 2025-11-10
+**Validated Against:** Production codebase at commit a40ee23
+
+**Key Corrections Made:**
+1. **Container Integration:** Updated references from non-existent `containerFactory.js` to actual `baseContainerConfig.js`
+2. **Token Pattern:** Added proper `freeze()` utility usage and JSDoc annotations matching project standards
+3. **Token Export:** Added step to integrate goapTokens into central `tokens.js` export
+4. **Schema Flexibility:** Clarified that action schema already supports additionalProperties, making explicit field definition optional
+
+**Verified Patterns:**
+- DI token structure matches existing pattern (tokens-ai.js, tokens-core.js, etc.)
+- Registration bundle pattern matches existing registrations (aiRegistrations.js, etc.)
+- Operation schema structure verified against existing operations (addComponent, etc.)
+- Integration flow verified in baseContainerConfig.js
+
 ## Objectives
 
 1. Create planning effects JSON schema
@@ -121,23 +138,29 @@ Create a JSON schema defining the structure of planning effects:
 }
 ```
 
-### 2. Update Action Schema
+### 2. Update Action Schema (Optional)
 
 **File:** `data/schemas/action.schema.json`
 
-Add optional `planningEffects` field:
+**Note:** The action schema currently has `"additionalProperties": true` (line 261), which already allows adding `planningEffects` without explicit schema definition. However, for better documentation and type safety, you may optionally add an explicit field definition.
+
+**Option A:** Use existing `additionalProperties` support (recommended for initial implementation)
+- No schema changes needed
+- Actions can include `planningEffects` field immediately
+- Validates against planning-effects.schema.json when present
+
+**Option B:** Explicitly define the field (recommended for production)
+
+Add to the `properties` section:
 
 ```json
 {
   "properties": {
-    "id": { "type": "string" },
-    "name": { "type": "string" },
-    "targets": { "type": "string" },
-    // ... existing fields ...
+    // ... existing properties ...
 
     "planningEffects": {
       "$ref": "schema://living-narrative-engine/planning-effects.schema.json",
-      "description": "Auto-generated planning metadata for GOAP (optional)"
+      "description": "Auto-generated planning metadata for GOAP planner (optional, not used during execution)"
     }
   }
 }
@@ -148,11 +171,19 @@ Add optional `planningEffects` field:
 **File:** `src/dependencyInjection/tokens/tokens-goap.js`
 
 ```javascript
+import { freeze } from '../../utils/cloneUtils.js';
+
 /**
  * @file Dependency injection tokens for GOAP system
+ * @typedef {string} DiToken
  */
 
-export const goapTokens = {
+/**
+ * Tokens used by the GOAP planning system.
+ *
+ * @type {Readonly<Record<string, DiToken>>}
+ */
+export const goapTokens = freeze({
   // Analysis
   IEffectsAnalyzer: 'IEffectsAnalyzer',
   IEffectsGenerator: 'IEffectsGenerator',
@@ -168,7 +199,28 @@ export const goapTokens = {
   // Planning
   ISimplePlanner: 'ISimplePlanner',
   IPlanCache: 'IPlanCache'
-};
+});
+```
+
+### 3a. Update Central Tokens Export
+
+**File:** `src/dependencyInjection/tokens.js`
+
+Add import and spread goapTokens into the main tokens object:
+
+```javascript
+import { goapTokens } from './tokens/tokens-goap.js';
+
+export const tokens = freeze({
+  ...coreTokens,
+  ...uiTokens,
+  ...aiTokens,
+  ...testingTokens,
+  ...pipelineTokens,
+  ...actionTracingTokens,
+  ...monitoringTokens,
+  ...goapTokens,  // Add this line
+});
 ```
 
 ### 4. DI Registrations File
@@ -205,24 +257,35 @@ export function registerGoapServices(container) {
 }
 ```
 
-### 5. Update Container Factory
+### 5. Update Base Container Configuration
 
-**File:** `src/dependencyInjection/containerFactory.js`
+**File:** `src/dependencyInjection/baseContainerConfig.js`
 
-Add GOAP registrations:
+Add GOAP registrations to the base container configuration:
 
 ```javascript
+// Add import at the top with other registration imports
 import { registerGoapServices } from './registrations/goapRegistrations.js';
 
-export function createContainer() {
-  const container = new Container();
+// Inside configureBaseContainer function, after core registrations:
+export async function configureBaseContainer(container, options = {}) {
+  // ... existing code ...
 
-  // ... existing registrations ...
-  registerGoapServices(container);
+  // After registerInterpreters(container)
+  if (logger) logger.debug('[BaseContainerConfig] Registering GOAP services...');
+  try {
+    registerGoapServices(container);
+  } catch (error) {
+    const errorMessage = `Failed to register GOAP services: ${error.message}`;
+    if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+    throw new Error(errorMessage);
+  }
 
-  return container;
+  // ... rest of existing code ...
 }
 ```
+
+**Note:** The project uses `baseContainerConfig.js` for registration bundles, not a separate `containerFactory.js`.
 
 ### 6. Operation Mapping Document
 
@@ -263,8 +326,9 @@ Design document covering:
 
 ## Files to Update
 
-- [ ] `data/schemas/action.schema.json` - Add `planningEffects` field
-- [ ] `src/dependencyInjection/containerFactory.js` - Register GOAP services
+- [ ] `data/schemas/action.schema.json` - Add `planningEffects` field (optional - schema already allows additionalProperties)
+- [ ] `src/dependencyInjection/tokens.js` - Import and spread goapTokens
+- [ ] `src/dependencyInjection/baseContainerConfig.js` - Register GOAP services
 
 ## Testing Requirements
 
