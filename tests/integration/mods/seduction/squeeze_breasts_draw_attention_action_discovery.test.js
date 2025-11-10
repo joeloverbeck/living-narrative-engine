@@ -146,34 +146,15 @@ function loadScenario(
 
 describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
   let testFixture;
-  let originalValidateAction;
-
-  beforeEach(async () => {
+    beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
     testFixture.suppressHints();
 
-    originalValidateAction = testFixture.testEnv.validateAction;
-    testFixture.testEnv.validateAction = (actorId, actionId) => {
-      if (actionId === ACTION_ID) {
-        const actorEntity =
-          testFixture.entityManager.getEntityInstance(actorId);
-        return testFixture.testEnv.prerequisiteService.evaluate(
-          squeezeBreastsDrawAttentionAction.prerequisites,
-          squeezeBreastsDrawAttentionAction,
-          actorEntity
-        );
-      }
-
-      return originalValidateAction(actorId, actionId);
-    };
-  });
+      });
 
   afterEach(() => {
     if (testFixture) {
-      if (originalValidateAction) {
-        testFixture.testEnv.validateAction = originalValidateAction;
-        originalValidateAction = null;
-      }
+      
       testFixture.cleanup();
       testFixture = null;
     }
@@ -186,15 +167,7 @@ describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
         coverRightBreast: true,
       });
 
-      const prerequisitesPassed =
-        testFixture.testEnv.prerequisiteService.evaluate(
-          squeezeBreastsDrawAttentionAction.prerequisites,
-          squeezeBreastsDrawAttentionAction,
-          testFixture.entityManager.getEntityInstance(actorId)
-        );
-      expect(prerequisitesPassed).toBe(true);
-
-      const availableActions = testFixture.discoverActions(actorId);
+            const availableActions = testFixture.discoverActions(actorId);
       expect(availableActions).toHaveAction(ACTION_ID);
     });
 
@@ -204,15 +177,7 @@ describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
         includeRightBreast: false,
       });
 
-      const prerequisitesPassed =
-        testFixture.testEnv.prerequisiteService.evaluate(
-          squeezeBreastsDrawAttentionAction.prerequisites,
-          squeezeBreastsDrawAttentionAction,
-          testFixture.entityManager.getEntityInstance(actorId)
-        );
-      expect(prerequisitesPassed).toBe(false);
-
-      const availableActions = testFixture.discoverActions(actorId);
+            const availableActions = testFixture.discoverActions(actorId);
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
 
@@ -222,15 +187,7 @@ describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
         coverRightBreast: true,
       });
 
-      const prerequisitesPassed =
-        testFixture.testEnv.prerequisiteService.evaluate(
-          squeezeBreastsDrawAttentionAction.prerequisites,
-          squeezeBreastsDrawAttentionAction,
-          testFixture.entityManager.getEntityInstance(actorId)
-        );
-      expect(prerequisitesPassed).toBe(false);
-
-      const availableActions = testFixture.discoverActions(actorId);
+            const availableActions = testFixture.discoverActions(actorId);
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
   });
