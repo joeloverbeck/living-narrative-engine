@@ -11,6 +11,7 @@ import { EntityRepositoryAdapter } from '../../../../src/entities/services/entit
 import Entity from '../../../../src/entities/entity.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../../../src/entities/entityInstanceData.js';
+import { COMPONENTS_BATCH_ADDED_ID } from '../../../../src/constants/eventIds.js';
 
 /**
  * Creates a mock schema validator that tracks validation calls
@@ -372,6 +373,66 @@ describe('ComponentMutationService - Batch Operations', () => {
       // Second entity should have the component
       const entity2Instance = entityRepository.get('test:actor2');
       expect(entity2Instance.hasComponent('core:position')).toBe(true);
+    });
+  });
+
+  describe('Batch event emission', () => {
+    it('should record an error when a component spec is missing required identifiers', async () => {
+      const batchSpec = [
+        {
+          componentTypeId: 'core:position',
+          componentData: { locationId: 'room-1' },
+        },
+      ];
+
+      const result = await service.batchAddComponentsOptimized(batchSpec);
+
+      expect(result.results).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].error).toBeInstanceOf(Error);
+      expect(result.errors[0].error.message).toContain(
+        'Invalid component spec: missing instanceId or componentTypeId'
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid component spec')
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Batch add components completed with 1 errors out of 1 total'
+      );
+    });
+
+    it('should emit a batch event when emitBatchEvent is true and updates exist', async () => {
+      const batchSpec = [
+        {
+          instanceId: 'test:actor1',
+          componentTypeId: 'core:position',
+          componentData: { locationId: 'room-1' },
+        },
+      ];
+
+      const result = await service.batchAddComponentsOptimized(batchSpec);
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.updateCount).toBe(1);
+      expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        COMPONENTS_BATCH_ADDED_ID,
+        expect.objectContaining({
+          updateCount: 1,
+          updates: [
+            expect.objectContaining({
+              instanceId: 'test:actor1',
+              componentTypeId: 'core:position',
+              componentData: { locationId: 'room-1' },
+              oldComponentData: undefined,
+              isNewComponent: true,
+            }),
+          ],
+        })
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Emitted batch event for ${result.updateCount} component updates`
+      );
     });
   });
 });
