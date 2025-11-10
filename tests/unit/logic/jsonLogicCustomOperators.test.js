@@ -71,7 +71,11 @@ describe('JsonLogicCustomOperators', () => {
         'JsonLogicCustomOperators: Registering custom JSON Logic operators'
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'JsonLogicCustomOperators: Custom JSON Logic operators registered successfully'
+        'JsonLogicCustomOperators: Custom JSON Logic operators registered successfully',
+        expect.objectContaining({
+          count: expect.any(Number),
+          operators: expect.any(Array),
+        })
       );
     });
   });
@@ -85,6 +89,9 @@ describe('JsonLogicCustomOperators', () => {
       evaluationService = {
         addOperation: jest.fn((name, handler) => {
           operations[name] = handler;
+        }),
+        getAllowedOperations: jest.fn(() => {
+          return new Set(Object.keys(operations));
         }),
       };
     });
