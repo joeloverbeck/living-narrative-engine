@@ -135,6 +135,8 @@ class JsonLogicEvaluationService extends BaseService {
       'hasClothingInSlot',
       'hasClothingInSlotLayer',
       'isSocketCovered',
+      // Location/actor operators
+      'hasOtherActorsAtLocation',
       // Furniture/positioning operators
       'hasSittingSpaceToRight',
       'canScootCloser',

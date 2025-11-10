@@ -1286,49 +1286,52 @@ export function createRuleTestEnvironment(options) {
     };
 
     const buildPrerequisiteContextOverride = (resolvedTargets, actorId) => {
-      if (!resolvedTargets || Object.keys(resolvedTargets).length === 0) {
-        return null;
-      }
+      // For actions with no targets (targets: "none"), we still need to create
+      // a context override with the actor for prerequisite evaluation
+      const hasTargets = resolvedTargets && Object.keys(resolvedTargets).length > 0;
 
       const override = { targets: {} };
 
-      for (const [targetKey, resolvedTarget] of Object.entries(resolvedTargets)) {
-        if (!resolvedTarget || !resolvedTarget.id) {
-          continue;
-        }
+      if (hasTargets) {
+        for (const [targetKey, resolvedTarget] of Object.entries(resolvedTargets)) {
+          if (!resolvedTarget || !resolvedTarget.id) {
+            continue;
+          }
 
-        const entityContext = createEntityContext(
-          resolvedTarget.id,
-          env.entityManager,
-          env.logger
-        );
+          const entityContext = createEntityContext(
+            resolvedTarget.id,
+            env.entityManager,
+            env.logger
+          );
 
-        override[targetKey] = entityContext;
-        override.targets[targetKey] = [entityContext];
+          override[targetKey] = entityContext;
+          override.targets[targetKey] = [entityContext];
 
-        if (targetKey === 'primary') {
-          override.primary = entityContext;
+          if (targetKey === 'primary') {
+            override.primary = entityContext;
+          }
+
+          if (!override.target) {
+            override.target = entityContext;
+          }
         }
 
         if (!override.target) {
-          override.target = entityContext;
+          const firstContext = Object.values(override).find(
+            (value) =>
+              value &&
+              typeof value === 'object' &&
+              'id' in value &&
+              'components' in value
+          );
+
+          if (firstContext) {
+            override.target = firstContext;
+          }
         }
       }
 
-      if (!override.target) {
-        const firstContext = Object.values(override).find(
-          (value) =>
-            value &&
-            typeof value === 'object' &&
-            'id' in value &&
-            'components' in value
-        );
-
-        if (firstContext) {
-          override.target = firstContext;
-        }
-      }
-
+      // Always add actor context if actorId is provided
       if (actorId) {
         const actorOverride = createResolvedTarget(actorId);
         if (actorOverride) {
@@ -1336,7 +1339,12 @@ export function createRuleTestEnvironment(options) {
         }
       }
 
-      return override;
+      // Return override if we have actor context, even if no targets
+      if (override.actor || hasTargets) {
+        return override;
+      }
+
+      return null;
     };
 
     const createResolvedTarget = (entityId) => {
@@ -1502,6 +1510,9 @@ export function createRuleTestEnvironment(options) {
           );
 
           if (!contextOverride) {
+            env.logger.debug(
+              `Action ${actionId}: No context override created for prerequisite evaluation`
+            );
             continue;
           }
 

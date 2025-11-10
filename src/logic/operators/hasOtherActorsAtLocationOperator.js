@@ -155,7 +155,7 @@ export class HasOtherActorsAtLocationOperator {
     );
 
     // Get all entities
-    const allEntities = this.#entityManager.getAllEntities();
+    const allEntities = this.#entityManager.getEntities();
 
     // Find all entities at the same location
     const entitiesAtLocation = allEntities.filter((entity) => {
