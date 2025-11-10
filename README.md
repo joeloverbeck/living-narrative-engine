@@ -816,7 +816,7 @@ See [Action Visual Customization Guide](docs/mods/action-visual-customization.md
 **Action Visual Customization ➜ docs/mods/action-visual-customization.md**  
 Complete guide for adding visual properties to action buttons in your mods.
 
-**Color Palettes Reference ➜ docs/mods/color-palettes.md**  
+**Color Palettes Reference ➜ docs/mods/mod-color-schemes.md**  
 Recommended color schemes and accessibility-safe combinations for actions.
 
 **JSON Logic – Composite Operators ➜ docs/json-logic/composite-logical-operators.md**  

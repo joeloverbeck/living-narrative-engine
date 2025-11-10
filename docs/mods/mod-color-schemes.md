@@ -1,24 +1,25 @@
-# WCAG 2.1 AA Compliant Color Combinations Specification
+# Mod Color Schemes - Complete Reference
 
 ## Overview
 
-This specification provides a curated collection of pre-validated color combinations that meet WCAG 2.1 AA accessibility standards for the Living Narrative Engine action system. All combinations ensure a minimum contrast ratio of 4.5:1 between text and background colors, with many achieving AAA compliance (7:1+).
+This document provides the complete collection of WCAG 2.1 AA compliant color schemes for the Living Narrative Engine mod system. All color combinations are pre-validated for accessibility and ready for immediate use in action visual properties.
 
-**Purpose**: Provide developers with a ready-to-use pool of accessible color combinations for action visual properties, eliminating the need for manual contrast validation.
+**Purpose**: Serve as the single source of truth for color scheme selection when creating or updating mods.
 
 **Requirements**:
-
 - WCAG 2.1 AA: Minimum 4.5:1 contrast ratio for normal text
 - WCAG 2.1 AAA: 7:1+ contrast ratio (marked with 🌟)
 - All combinations tested for both normal and hover states
 
-## Current Usage Overview
+## Current Status
 
-**Status**: 25 color schemes are actively implemented across mods out of 42 defined combinations, leaving 17 available for future work.
+**Total Schemes**: 42 defined color combinations
+**In Use**: 25 schemes actively implemented across mods
+**Available**: 17 schemes ready for future mods
 
-### Active Mod Assignments
+## Quick Reference: Mod Assignments
 
-| Mod                      | Color Scheme       | Section | Background Color | State    |
+| Mod                      | Color Scheme       | Section | Background Color | Status   |
 | ------------------------ | ------------------ | ------- | ---------------- | -------- |
 | Affection                | Soft Purple        | 3.1     | `#6a1b9a`        | Active   |
 | Ballet                   | Indigo Professional| 10.1    | `#283593`        | Active   |
@@ -26,6 +27,7 @@ This specification provides a curated collection of pre-validated color combinat
 | Clothing                 | Earth Brown        | 4.2     | `#6d4c41`        | Active   |
 | Companionship            | Deep Teal          | 3.3     | `#00695c`        | Active   |
 | Core                     | Classic Blue-Grey  | 1.1     | `#455a64`        | Active   |
+| Distress                 | Obsidian Frost     | 11.7    | `#0b132b`        | Active   |
 | Exercise                 | Orange Flame       | 2.3     | `#e65100`        | Active   |
 | Gymnastics               | Journey Cobalt     | 9.1     | `#1a237e`        | Active   |
 | Hugging                  | Warm Embrace       | 3.4     | `#7d2a50`        | Active   |
@@ -33,41 +35,62 @@ This specification provides a curated collection of pre-validated color combinat
 | Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
 | Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
 | Music                    | Starlight Navy     | 11.4    | `#1a2332`        | Active   |
+| Physical-Control         | Ironclad Slate     | 11.2    | `#2f2f2f`        | Active   |
 | Positioning              | Deep Orange Energy | 10.2    | `#bf360c`        | Active   |
 | Seduction                | Golden Divine      | 5.2     | `#f57f17`        | Active   |
-| Sex-Core                 | Mystic Purple      | 5.1     | `#4a148c`        | Active   |
+| Sex-Anal-Penetration     | Obsidian Teal      | 12.6    | `#053b3f`        | Active   |
 | Sex-Breastplay           | Blush Amethyst     | 12.1    | `#7a1d58`        | Active   |
+| Sex-Core                 | Mystic Purple      | 5.1     | `#4a148c`        | Active   |
+| Sex-Dry-Intimacy         | Velvet Smoke       | 12.4    | `#4a2741`        | Active   |
 | Sex-Penile-Manual        | Ember Touch        | 12.2    | `#8a3b12`        | Active   |
 | Sex-Penile-Oral          | Midnight Orchid    | 12.3    | `#2a1a5e`        | Active   |
-| Sex-Dry-Intimacy         | Velvet Smoke       | 12.4    | `#4a2741`        | Active   |
-| Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
-| Sex-Anal-Penetration     | Obsidian Teal      | 12.6    | `#053b3f`        | Active   |
 | Sex-Physical-Control     | Velvet Twilight    | 11.3    | `#2c0e37`        | Active   |
+| Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Vampirism                | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
 | Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
-| Physical-Control         | Ironclad Slate     | 11.2    | `#2f2f2f`        | Active   |
 
-### Available Color Combinations
+## Available Color Schemes by Category
 
-- **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
-- **Action/Combat**: Bold Red (2.1)
-- **Social/Intimacy**: _(all assigned — see Section 3 for active intimacy hues)_
-- **Nature/Environment**: Forest Green (4.1), Ocean Blue (4.3)
-- **Magic/Special**: _(none available)_
-- **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
-- **Dark Theme**: Deep Blue (7.1), Midnight Green (7.3)
-- **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
-- **Additional Versatile**: Pathfinder Slate (9.2)
-- **Professional/Modern**: Cool Grey Modern (10.3)
-- **Expansion Set (Section 11)**: Evergreen Shadow (11.5), Molten Copper (11.6), Arctic Steel (11.8)
+### Neutral/System
+- **Slate Grey** (1.2) - Administrative actions, settings
+- **Charcoal** (1.3) - Dark theme default, low-energy actions
 
-**Recommendation**: When creating new mods, select from the available combinations above to maintain visual consistency and avoid conflicts.
+### Action/Combat
+- **Bold Red** (2.1) - Combat, aggressive actions
 
-## Color Combination Sets
+### Nature/Environment
+- **Forest Green** (4.1) - Nature magic, outdoor actions
+- **Ocean Blue** (4.3) - Water abilities, fluid movements
+
+### Warning/Alert
+- **Amber Warning** (6.1) - Caution actions, moderate warnings
+- **Dark Red Alert** (6.2) - Critical alerts, dangerous actions
+
+### Dark Theme Optimized
+- **Deep Blue** (7.1) - Primary actions in dark themes
+- **Midnight Green** (7.3) - Success actions in dark themes
+
+### High Contrast
+- **Pure Black & White** (8.1) - Maximum accessibility
+- **White & Black** (8.2) - Light theme high contrast
+- **Yellow on Black** (8.3) - High visibility
+
+### Additional Versatile
+- **Pathfinder Slate** (9.2) - Navigation, wayfinding
+
+### Professional/Modern
+- **Cool Grey Modern** (10.3) - Modern UI, neutral actions
+
+### Expansion Set
+- **Evergreen Shadow** (11.5) - Stealth exploration, healing rituals
+- **Molten Copper** (11.6) - Forging, charismatic performances
+- **Arctic Steel** (11.8) - High-tech interfaces, frost magic
+
+## Complete Color Scheme Definitions
 
 ### 1. Neutral/System Colors
 
-#### 1.1 Classic Blue-Grey
+#### 1.1 Classic Blue-Grey ✅ IN USE: Core
 
 ```json
 {
@@ -82,9 +105,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.65:1 🌟 AAA
 - **Use Cases**: System actions, navigation, utilities
 - **Theme**: Professional, neutral, non-intrusive
-- ✅ **USED BY**: Core mod (core utility actions)
 
-#### 1.2 Slate Grey
+#### 1.2 Slate Grey 🟢 AVAILABLE
 
 ```json
 {
@@ -99,9 +121,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.92:1 ✅ AA
 - **Use Cases**: Administrative actions, settings, configuration
 - **Theme**: Modern, sophisticated, calm
-- 🟢 **AVAILABLE**
 
-#### 1.3 Charcoal
+#### 1.3 Charcoal 🟢 AVAILABLE
 
 ```json
 {
@@ -116,11 +137,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.34:1 🌟 AAA
 - **Use Cases**: Dark theme default, low-energy actions
 - **Theme**: Minimal, elegant, understated
-- 🟢 **AVAILABLE**
 
 ### 2. Action/Combat Colors
 
-#### 2.1 Bold Red
+#### 2.1 Bold Red 🟢 AVAILABLE
 
 ```json
 {
@@ -135,9 +155,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.25:1 ✅ AA
 - **Use Cases**: Combat, aggressive actions, critical alerts
 - **Theme**: Danger, power, intensity
-- 🟢 **AVAILABLE**
 
-#### 2.2 Dark Crimson
+#### 2.2 Dark Crimson ✅ IN USE: Violence
 
 ```json
 {
@@ -152,9 +171,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 8.41:1 🌟 AAA
 - **Use Cases**: Berserker actions, blood magic, violence
 - **Theme**: Brutal, serious, high-stakes
-- ✅ **USED BY**: Violence mod (slap, sucker_punch)
 
-#### 2.3 Orange Flame
+#### 2.3 Orange Flame ✅ IN USE: Exercise
 
 ```json
 {
@@ -169,11 +187,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 4.56:1 ✅ AA
 - **Use Cases**: Fire attacks, energy bursts, special moves
 - **Theme**: Energy, excitement, dynamism
-- ✅ **USED BY**: Exercise mod (jumping, displaying biceps, squats, exercise machines)
 
 ### 3. Social/Intimacy Colors
 
-#### 3.1 Soft Purple
+#### 3.1 Soft Purple ✅ IN USE: Affection
 
 ```json
 {
@@ -188,9 +205,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.04:1 🌟 AAA
 - **Use Cases**: Intimacy actions, romantic interactions
 - **Theme**: Romance, mystery, elegance
-- ✅ **USED BY**: Affection mod (gentle touch actions)
 
-#### 3.2 Rose Pink
+#### 3.2 Rose Pink ✅ IN USE: Kissing
 
 ```json
 {
@@ -205,9 +221,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 4.88:1 ✅ AA
 - **Use Cases**: Romantic escalation, kissing, emotional intensity
 - **Theme**: Warmth, tenderness, passion
-- ✅ **USED BY**: Kissing mod (all kissing progression actions)
 
-#### 3.3 Deep Teal
+#### 3.3 Deep Teal ✅ IN USE: Companionship
 
 ```json
 {
@@ -222,9 +237,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.42:1 ✅ AA
 - **Use Cases**: Calming interactions, trust-building
 - **Theme**: Trust, stability, depth
-- ✅ **USED BY**: Companionship mod (follow, stop_following, dismiss)
 
-#### 3.4 Warm Embrace
+#### 3.4 Warm Embrace ✅ IN USE: Hugging
 
 ```json
 {
@@ -239,11 +253,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.84:1 ✅ AA
 - **Use Cases**: Comforting hugs, supportive reassurance, nurturing contact
 - **Theme**: Cozy warmth, heartfelt closeness, gentle reassurance
-- ✅ **USED BY**: Hugging mod (hug_tight and related hugging actions)
 
 ### 4. Nature/Environment Colors
 
-#### 4.1 Forest Green
+#### 4.1 Forest Green 🟢 AVAILABLE
 
 ```json
 {
@@ -258,9 +271,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.37:1 ✅ AA
 - **Use Cases**: Nature magic, outdoor actions, environmental
 - **Theme**: Growth, natural, organic
-- 🟢 **AVAILABLE**
 
-#### 4.2 Earth Brown
+#### 4.2 Earth Brown ✅ IN USE: Clothing
 
 ```json
 {
@@ -275,9 +287,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.53:1 ✅ AA
 - **Use Cases**: Clothing interactions, crafting, physical items
 - **Theme**: Stability, reliability, groundedness
-- ✅ **USED BY**: Clothing mod (remove and adjust clothing)
 
-#### 4.3 Ocean Blue
+#### 4.3 Ocean Blue 🟢 AVAILABLE
 
 ```json
 {
@@ -292,11 +303,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.26:1 ✅ AA
 - **Use Cases**: Water abilities, naval actions, fluid movements
 - **Theme**: Depth, flow, adaptability
-- 🟢 **AVAILABLE**
 
 ### 5. Magic/Special Colors
 
-#### 5.1 Mystic Purple
+#### 5.1 Mystic Purple ✅ IN USE: Sex-Core
 
 ```json
 {
@@ -311,9 +321,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.89:1 🌟 AAA
 - **Use Cases**: Arcane magic, psychic abilities, enchantments
 - **Theme**: Mystical, powerful, otherworldly
-- ✅ **USED BY**: Sex-Core mod (shared sexual scaffolding)
 
-#### 5.2 Golden Divine
+#### 5.2 Golden Divine ✅ IN USE: Seduction
 
 ```json
 {
@@ -328,11 +337,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.07:1 🌟 AAA
 - **Use Cases**: Divine magic, holy abilities, blessings, seductive actions
 - **Theme**: Sacred, radiant, powerful, alluring
-- ✅ **USED BY**: Seduction mod (seductive actions, attention-drawing gestures)
 
 ### 6. Warning/Alert Colors
 
-#### 6.1 Amber Warning
+#### 6.1 Amber Warning 🟢 AVAILABLE
 
 ```json
 {
@@ -347,9 +355,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.28:1 🌟 AAA
 - **Use Cases**: Caution actions, moderate warnings, attention
 - **Theme**: Alert, attention, caution
-- 🟢 **AVAILABLE**
 
-#### 6.2 Dark Red Alert
+#### 6.2 Dark Red Alert 🟢 AVAILABLE
 
 ```json
 {
@@ -364,11 +371,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.13:1 🌟 AAA
 - **Use Cases**: Critical alerts, dangerous actions, urgent
 - **Theme**: Urgent, critical, immediate
-- 🟢 **AVAILABLE**
 
 ### 7. Dark Theme Optimized
 
-#### 7.1 Deep Blue
+#### 7.1 Deep Blue 🟢 AVAILABLE
 
 ```json
 {
@@ -383,9 +389,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.23:1 🌟 AAA
 - **Use Cases**: Primary actions in dark themes
 - **Theme**: Professional, focused, reliable
-- 🟢 **AVAILABLE**
 
-#### 7.2 Dark Purple
+#### 7.2 Dark Purple ✅ IN USE: Caressing
 
 ```json
 {
@@ -400,9 +405,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 11.45:1 🌟 AAA
 - **Use Cases**: Sensual touch actions, premium special abilities in dark themes
 - **Theme**: Premium, special, unique
-- ✅ **USED BY**: Caressing mod (sensual touch actions)
 
-#### 7.3 Midnight Green
+#### 7.3 Midnight Green 🟢 AVAILABLE
 
 ```json
 {
@@ -417,11 +421,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.42:1 🌟 AAA
 - **Use Cases**: Success actions in dark themes
 - **Theme**: Success, achievement, progress
-- 🟢 **AVAILABLE**
 
 ### 8. High Contrast Options
 
-#### 8.1 Pure Black & White
+#### 8.1 Pure Black & White 🟢 AVAILABLE
 
 ```json
 {
@@ -436,9 +439,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 15.54:1 🌟 AAA
 - **Use Cases**: Maximum accessibility, vision impairment support
 - **Theme**: Ultimate clarity, maximum contrast
-- 🟢 **AVAILABLE**
 
-#### 8.2 White & Black
+#### 8.2 White & Black 🟢 AVAILABLE
 
 ```json
 {
@@ -453,9 +455,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 15.54:1 🌟 AAA
 - **Use Cases**: Light theme high contrast
 - **Theme**: Clean, clear, accessible
-- 🟢 **AVAILABLE**
 
-#### 8.3 Yellow on Black
+#### 8.3 Yellow on Black 🟢 AVAILABLE
 
 ```json
 {
@@ -470,11 +471,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 15.42:1 🌟 AAA
 - **Use Cases**: High visibility, attention grabbing
 - **Theme**: Maximum visibility, alertness
-- 🟢 **AVAILABLE**
 
 ### 9. Additional Versatile Options
 
-#### 9.1 Journey Cobalt
+#### 9.1 Journey Cobalt ✅ IN USE: Gymnastics
 
 ```json
 {
@@ -489,9 +489,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.5:1 🌟 AAA
 - **Use Cases**: Travel actions, long-distance movement, exploration, precision athletics
 - **Theme**: Journey, vast distances, adventure, disciplined motion
-- ✅ **USED BY**: Gymnastics mod (tumbling fundamentals and cartwheels)
 
-#### 9.2 Pathfinder Slate
+#### 9.2 Pathfinder Slate 🟢 AVAILABLE
 
 ```json
 {
@@ -506,9 +505,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.5:1 ✅ AA
 - **Use Cases**: Navigation, wayfinding, path selection
 - **Theme**: Roads, paths, neutral guidance
-- 🟢 **AVAILABLE**
 
-#### 9.3 Explorer Cyan
+#### 9.3 Explorer Cyan ✅ IN USE: Movement
 
 ```json
 {
@@ -523,11 +521,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.8:1 ✅ AA
 - **Use Cases**: Discovery, navigation, movement freedom
 - **Theme**: Exploration, discovery, spatial awareness
-- ✅ **USED BY**: Movement mod (go, enter, exit, navigate, traverse, explore)
 
 ### 10. Professional & Modern Options
 
-#### 10.1 Indigo Professional
+#### 10.1 Indigo Professional ✅ IN USE: Ballet
 
 ```json
 {
@@ -542,9 +539,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.89:1 🌟 AAA
 - **Use Cases**: Professional actions, ballet techniques, disciplined artistic performance
 - **Theme**: Professional, disciplined, artistic, graceful
-- ✅ **USED BY**: Ballet mod (classical ballet movements and techniques)
 
-#### 10.2 Deep Orange Energy
+#### 10.2 Deep Orange Energy ✅ IN USE: Positioning
 
 ```json
 {
@@ -559,9 +555,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 8.41:1 🌟 AAA
 - **Use Cases**: Energy actions, positioning, movement
 - **Theme**: Dynamic, energetic, active
-- ✅ **USED BY**: Positioning mod (get_close, step_back, turn_around, kneel_before, etc.)
 
-#### 10.3 Cool Grey Modern
+#### 10.3 Cool Grey Modern 🟢 AVAILABLE
 
 ```json
 {
@@ -576,11 +571,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.04:1 🌟 AAA
 - **Use Cases**: Modern UI, neutral actions
 - **Theme**: Contemporary, balanced, versatile
-- 🟢 **AVAILABLE**
 
 ### 11. Expansion Set – High Contrast Additions
 
-#### 11.1 Aurora Depths
+#### 11.1 Aurora Depths ✅ IN USE: Items
 
 ```json
 {
@@ -595,9 +589,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.38:1 ✅ AA
 - **Use Cases**: Inventory and item management, calm focus states
 - **Theme**: Aquatic depth, precise utility, trustworthy teal
-- ✅ **USED BY**: Items mod (inventory and item interaction actions)
 
-#### 11.2 Ironclad Slate
+#### 11.2 Ironclad Slate ✅ IN USE: Physical-Control
 
 ```json
 {
@@ -612,9 +605,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.93:1 🌟 AAA
 - **Use Cases**: Crafting menus, defensive stances, engineering tools
 - **Theme**: Industrial precision, fortified neutrality
-- ✅ **USED BY**: Physical-Control mod (physical restraint actions)
 
-#### 11.3 Velvet Twilight
+#### 11.3 Velvet Twilight ✅ IN USE: Sex-Physical-Control
 
 ```json
 {
@@ -629,9 +621,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 11.45:1 🌟 AAA
 - **Use Cases**: Elegant social actions, mysterious story beats, sexual physical control
 - **Theme**: Luxurious nightfall, refined intrigue, sensual control
-- ✅ **USED BY**: Sex-Physical-Control mod (sexual physical guidance actions)
 
-#### 11.4 Starlight Navy
+#### 11.4 Starlight Navy ✅ IN USE: Music
 
 ```json
 {
@@ -646,9 +637,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.2:1 🌟 AAA
 - **Use Cases**: Musical performance actions, artistic performances, creative expression
 - **Theme**: Artistic sophistication and creative expression with calm, focused aesthetic
-- ✅ **USED BY**: Music mod (musical performance system)
 
-#### 11.5 Evergreen Shadow
+#### 11.5 Evergreen Shadow 🟢 AVAILABLE
 
 ```json
 {
@@ -663,9 +653,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.87:1 🌟 AAA
 - **Use Cases**: Stealth exploration, nature attunement, healing rituals
 - **Theme**: Quiet resilience, verdant focus
-- 🟢 **AVAILABLE**
 
-#### 11.6 Molten Copper
+#### 11.6 Molten Copper 🟢 AVAILABLE
 
 ```json
 {
@@ -680,9 +669,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.05:1 🌟 AAA
 - **Use Cases**: Forging, high-heat abilities, charismatic performances
 - **Theme**: Liquid metal, artisan warmth
-- 🟢 **AVAILABLE**
 
-#### 11.7 Obsidian Frost
+#### 11.7 Obsidian Frost ✅ IN USE: Distress
 
 ```json
 {
@@ -697,9 +685,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 12.26:1 🌟 AAA
 - **Use Cases**: High-clarity command centers, tactical overviews
 - **Theme**: Frozen night sky, crystalline focus
-- ✅ **USED BY**: Distress mod (distress gestures)
 
-#### 11.8 Arctic Steel
+#### 11.8 Arctic Steel 🟢 AVAILABLE
 
 ```json
 {
@@ -714,11 +701,10 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 11.00:1 🌟 AAA
 - **Use Cases**: High-tech interfaces, precision ranged actions, frost magic
 - **Theme**: Tempered steel, arctic clarity
-- 🟢 **AVAILABLE**
 
 ### 12. Intimacy Spectrum Colors
 
-#### 12.1 Blush Amethyst
+#### 12.1 Blush Amethyst ✅ IN USE: Sex-Breastplay
 
 ```json
 {
@@ -733,9 +719,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.41:1 🌟 AAA
 - **Use Cases**: Breast play interactions, tender chest-to-chest scenes
 - **Theme**: Warm blush intimacy with luxurious accents
-- ✅ **USED BY**: Sex-Breastplay mod (breast-centric actions)
 
-#### 12.2 Ember Touch
+#### 12.2 Ember Touch ✅ IN USE: Sex-Penile-Manual
 
 ```json
 {
@@ -750,9 +735,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.86:1 🌟 AAA
 - **Use Cases**: Manual penis stimulation, warming tactile contact
 - **Theme**: Smoldering copper glow evoking heated touch
-- ✅ **USED BY**: Sex-Penile-Manual mod (hand-based penis actions)
 
-#### 12.3 Midnight Orchid
+#### 12.3 Midnight Orchid ✅ IN USE: Sex-Penile-Oral
 
 ```json
 {
@@ -767,9 +751,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 8.19:1 🌟 AAA
 - **Use Cases**: Oral penis/testicle play, low-light teasing
 - **Theme**: Velvet-night indigo with soft lavender highlights
-- ✅ **USED BY**: Sex-Penile-Oral mod (oral-focused penis/testicle actions)
 
-#### 12.4 Velvet Smoke
+#### 12.4 Velvet Smoke ✅ IN USE: Sex-Dry-Intimacy
 
 ```json
 {
@@ -784,9 +767,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.59:1 🌟 AAA
 - **Use Cases**: Grinding, frottage, clothed intimacy loops
 - **Theme**: Smoky plum aura reflecting close, rhythmic motion
-- ✅ **USED BY**: Sex-Dry-Intimacy mod (grinding and frottage actions)
 
-#### 12.5 Crimson Embrace
+#### 12.5 Crimson Embrace ✅ IN USE: Sex-Vaginal-Penetration, Vampirism
 
 ```json
 {
@@ -801,9 +783,8 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.62:1 🌟 AAA
 - **Use Cases**: Vaginal penetration, straddling rhythms, labia teasing, vampiric menace displays
 - **Theme**: Deep crimson passion with luminous highlights
-- ✅ **USED BY**: Sex-Vaginal-Penetration mod (penetrative vaginal actions), Vampirism mod (vampiric threat displays)
 
-#### 12.6 Obsidian Teal
+#### 12.6 Obsidian Teal ✅ IN USE: Sex-Anal-Penetration
 
 ```json
 {
@@ -818,13 +799,12 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.56:1 🌟 AAA
 - **Use Cases**: Anal teasing, exploratory penetration build-up
 - **Theme**: Cool, deliberate teal-black depth for focused exploration
-- ✅ **USED BY**: Sex-Anal-Penetration mod (anal teasing and penetration prep)
 
-## Implementation Guidelines
+## Implementation Guide
 
-### Usage in Action Files
+### Using in Action Files
 
-To apply these color combinations to your action files:
+Add the `visual` property to your action definition:
 
 ```json
 {
@@ -840,18 +820,26 @@ To apply these color combinations to your action files:
 }
 ```
 
-### Selection Criteria
+### Selection Guidelines
 
-When choosing a color combination:
+1. **Match action intent**: Choose colors that reflect the action's nature
+   - Combat/Violence → Reds, dark crimsons
+   - Healing/Nature → Greens
+   - Social/Trust → Teals, blues
+   - Magic/Mystery → Purples
+   - Energy/Excitement → Oranges
 
-1. **Match the action's intent**: Combat actions should use reds/oranges, healing should use greens
-2. **Consider the mod's theme**: Maintain consistency within each mod
-3. **Account for user preferences**: Provide high-contrast options for accessibility
-4. **Test in context**: Verify the colors work well with your UI layout
+2. **Maintain mod consistency**: Use the same scheme throughout a mod when possible
+
+3. **Check availability**: Verify the scheme isn't already used by another mod (unless intentional)
+
+4. **Prioritize accessibility**: All schemes meet WCAG AA; prefer AAA (🌟) when possible
+
+5. **Test in context**: Verify colors work with your UI and other visual elements
 
 ### Validation
 
-All combinations can be validated using the project's contrast validation script:
+Validate your color schemes using the project's validation script:
 
 ```bash
 node scripts/validateVisualContrast.js
@@ -859,24 +847,91 @@ node scripts/validateVisualContrast.js
 
 ## Color Psychology Reference
 
-- **Red tones**: Danger, urgency, power, passion
-- **Blue tones**: Trust, calm, information, stability
-- **Green tones**: Growth, success, nature, healing
-- **Purple tones**: Magic, mystery, luxury, creativity
-- **Orange/Yellow tones**: Energy, attention, warmth, caution
-- **Grey tones**: Neutral, professional, balanced, subtle
-- **Brown tones**: Earthy, stable, practical, reliable
+### By Color Family
 
-## Notes
+| Color Family | Psychological Association | Best Used For |
+|-------------|---------------------------|---------------|
+| Red tones | Danger, urgency, power, passion | Combat, violence, critical actions |
+| Blue tones | Trust, calm, information, stability | Social actions, information, navigation |
+| Green tones | Growth, success, nature, healing | Environmental actions, healing, success states |
+| Purple tones | Magic, mystery, luxury, creativity | Arcane abilities, special powers, intimacy |
+| Orange/Yellow | Energy, attention, warmth, caution | Energy actions, warnings, excitement |
+| Grey/Black | Neutral, professional, balanced | System actions, utilities, backgrounds |
+| Brown tones | Earthy, stable, practical, reliable | Crafting, items, physical objects |
+| Teal/Cyan | Discovery, exploration, precision | Navigation, exploration, focused actions |
 
-- All contrast ratios calculated using WCAG 2.1 relative luminance formula
-- Hover states may have slightly lower contrast but still meet AA standards
-- Consider providing user preferences for high-contrast mode
-- Test color combinations with actual users for best results
-- Remember that color should not be the only differentiator (use icons/text too)
+### Design Principles
+
+- **Contrast is critical**: Never rely on color alone to differentiate actions
+- **Context matters**: Same color can evoke different feelings based on saturation and surrounding elements
+- **Cultural awareness**: Color meanings vary across cultures; document intent clearly
+- **Accessibility first**: Always verify contrast ratios before implementation
+
+## Additional Color Suggestions
+
+The following are alternative color suggestions that may be useful for specific contexts but are not part of the validated scheme set. **Use with caution and validate contrast ratios.**
+
+### General Purpose Alternatives
+
+```json
+// Defensive Green (alternative to Forest Green)
+{
+  "backgroundColor": "#2e7d32",
+  "textColor": "#ffffff",
+  "hoverBackgroundColor": "#388e3c",
+  "hoverTextColor": "#c8e6c9"
+}
+
+// Tech Blue (alternative to Ocean Blue)
+{
+  "backgroundColor": "#01579b",
+  "textColor": "#e1f5fe",
+  "hoverBackgroundColor": "#0277bd",
+  "hoverTextColor": "#ffffff"
+}
+
+// Investigation Brown (alternative to Earth Brown)
+{
+  "backgroundColor": "#5d4037",
+  "textColor": "#efebe9",
+  "hoverBackgroundColor": "#6d4c41",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+**Note**: These alternatives should be validated for WCAG compliance before use in production.
+
+## Maintenance
+
+### Adding New Schemes
+
+When adding new color schemes:
+
+1. Validate WCAG compliance (minimum AA 4.5:1)
+2. Add to appropriate category section
+3. Include contrast ratios and use cases
+4. Update status tables
+5. Document in mod files where used
+6. Run validation script
+
+### Updating Existing Schemes
+
+When modifying schemes:
+
+1. Check all mods currently using the scheme
+2. Re-validate contrast ratios
+3. Update all documentation
+4. Notify affected mod maintainers
+5. Test visual changes in-game
 
 ## References
 
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/#contrast-minimum)
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - Project validation script: `/scripts/validateVisualContrast.js`
+
+## Version History
+
+- **2025-11**: Consolidated from multiple sources into single reference document
+- Original spec: `specs/wcag-compliant-color-combinations.spec.md` (removed)
+- Original guide: `docs/mods/color-palettes.md` (removed)

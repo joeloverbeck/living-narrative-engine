@@ -46,7 +46,7 @@ A **swell** (or crescendo accent) is a musical technique where volume and intens
 - `specs/play-phrase-on-instrument-action.spec.md` - General phrase-playing action
 - `specs/play-ostinato-on-instrument-action.spec.md` - Ostinato performance action
 - `specs/lookups-content-type-infrastructure.spec.md` - Lookup system infrastructure
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity for music mod
+- `docs/mods/mod-color-schemes.md` - Visual identity for music mod
 
 ## 2. Action Definition
 

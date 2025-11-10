@@ -48,7 +48,7 @@ A **flourish** is a showy ornamental passage or embellishment in music. It is ch
 - `specs/play-ostinato-on-instrument-action.spec.md` - Reference pattern for mood-restricted actions
 - `specs/play-phrase-on-instrument-action.spec.md` - General phrase-playing action
 - `specs/lookups-content-type-infrastructure.spec.md` - Lookup system infrastructure
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity for music mod
+- `docs/mods/mod-color-schemes.md` - Visual identity for music mod
 
 ## 2. Action Definition
 

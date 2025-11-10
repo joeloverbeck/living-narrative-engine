@@ -34,7 +34,7 @@ Building on the existing music mod actions (`play_phrase_on_instrument`, mood-se
 - `specs/music-mod.spec.md` - Core music component definitions
 - `specs/play-phrase-on-instrument-action.spec.md` - Play phrase action (uses same scope)
 - `specs/music-mood-setting-actions.spec.md` - Mood-setting actions that initiate performance
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity for music mod
+- `docs/mods/mod-color-schemes.md` - Visual identity for music mod
 
 ## 2. Action Definition
 
@@ -1141,7 +1141,7 @@ Track performance metrics:
 - `specs/music-mod.spec.md` - Core music component definitions
 - `specs/play-phrase-on-instrument-action.spec.md` - Complementary action using same scope
 - `specs/music-mood-setting-actions.spec.md` - Actions that create the state this action removes
-- `specs/wcag-compliant-color-combinations.spec.md` - Visual identity
+- `docs/mods/mod-color-schemes.md` - Visual identity
 
 ### 11.2 Related Documentation
 
