@@ -40,7 +40,6 @@
         "core:apparent_age": {
             "minAge": 30,
             "maxAge": 32
-        },
-        "movement:can_teleport": {}
+        }
     }
 }
