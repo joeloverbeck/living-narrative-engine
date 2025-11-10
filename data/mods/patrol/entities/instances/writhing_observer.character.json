@@ -4,7 +4,7 @@
     "definitionId": "patrol:writhing_observer",
     "componentOverrides": {
         "core:position": {
-            "locationId": "patrol:perimeter_of_rip_in_reality_instance"
+            "locationId": "patrol:eldritch_dimension_instance"
         },
         "items:inventory": {
             "items": [],

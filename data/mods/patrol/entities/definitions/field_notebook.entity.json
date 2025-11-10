@@ -4,7 +4,7 @@
   "description": "A battered Rite-in-the-Rain waterproof field notebook for patrol observations",
   "components": {
     "core:name": {
-      "text": "Waterproof Field Notebook"
+      "text": "waterproof field notebook"
     },
     "core:description": {
       "text": "A battered Rite-in-the-Rain waterproof notebook with an olive drab cover. Multiple colored pens are clipped to the spine. The pages are filled with meticulous handwriting."
