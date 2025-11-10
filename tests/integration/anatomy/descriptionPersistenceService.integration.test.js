@@ -178,14 +178,14 @@ describe('DescriptionPersistenceService Integration Tests', () => {
       }
     });
 
-    it('should successfully update all valid entities (lines 78-82, 86-90)', () => {
+    it('should successfully update all valid entities (lines 78-82, 86-90)', async () => {
       const descriptionsMap = new Map([
         ['entity-1', 'Description for entity 1'],
         ['entity-2', 'Description for entity 2'],
         ['entity-3', 'Description for entity 3'],
       ]);
 
-      const result = service.updateMultipleDescriptions(descriptionsMap);
+      const result = await service.updateMultipleDescriptions(descriptionsMap);
 
       expect(result.successful).toBe(3);
       expect(result.failed).toEqual([]);
@@ -202,14 +202,14 @@ describe('DescriptionPersistenceService Integration Tests', () => {
       );
     });
 
-    it('should handle mixed success/failure scenarios (lines 82)', () => {
+    it('should handle mixed success/failure scenarios (lines 82)', async () => {
       const descriptionsMap = new Map([
         ['entity-1', 'Description for entity 1'],
         ['non-existent', 'Description for non-existent'],
         ['entity-2', 'Description for entity 2'],
       ]);
 
-      const result = service.updateMultipleDescriptions(descriptionsMap);
+      const result = await service.updateMultipleDescriptions(descriptionsMap);
 
       expect(result.successful).toBe(2);
       expect(result.failed).toEqual(['non-existent']);
@@ -219,9 +219,9 @@ describe('DescriptionPersistenceService Integration Tests', () => {
       );
     });
 
-    it('should handle empty batch gracefully', () => {
+    it('should handle empty batch gracefully', async () => {
       const descriptionsMap = new Map();
-      const result = service.updateMultipleDescriptions(descriptionsMap);
+      const result = await service.updateMultipleDescriptions(descriptionsMap);
 
       expect(result.successful).toBe(0);
       expect(result.failed).toEqual([]);
@@ -501,7 +501,7 @@ describe('DescriptionPersistenceService Integration Tests', () => {
         ['workflow-entity-3', 'Batch description 3'],
       ]);
 
-      const batchResult = service.updateMultipleDescriptions(descriptionsMap);
+      const batchResult = await service.updateMultipleDescriptions(descriptionsMap);
       expect(batchResult.successful).toBe(3);
 
       // Individual verifications
