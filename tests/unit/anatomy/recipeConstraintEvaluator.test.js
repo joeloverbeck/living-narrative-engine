@@ -276,6 +276,205 @@ describe('RecipeConstraintEvaluator', () => {
         expect(result.valid).toBe(true);
         expect(result.errors).toHaveLength(0);
       });
+
+      it('should honor minItems for co-presence constraints - should NOT fire with only 1 part type when minItems is 2', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['dragon_wing', 'dragon_tail'],
+                components: ['anatomy:flight_membrane'],
+                validation: {
+                  minItems: 2,
+                  errorMessage: 'Dragons require both wings and tail for flight',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1'];
+
+        // Only dragon_wing is present, not dragon_tail
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'dragon_wing' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        // Should pass because minItems: 2 requires at least 2 part types
+        // Only 1 part type (dragon_wing) is present, so constraint should not apply
+        expect(result.valid).toBe(true);
+        expect(result.errors).toHaveLength(0);
+      });
+
+      it('should honor minItems for co-presence constraints - SHOULD fire with 2+ part types when minItems is 2', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['dragon_wing', 'dragon_tail'],
+                components: ['anatomy:flight_membrane'],
+                validation: {
+                  minItems: 2,
+                  errorMessage: 'Dragons require both wings and tail for flight',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1', 'entity2'];
+
+        // Both dragon_wing and dragon_tail are present
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return entityId === 'entity1'
+                ? { subType: 'dragon_wing' }
+                : { subType: 'dragon_tail' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        // Should fail because both part types are present but flight_membrane is missing
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toBe(
+          'Dragons require both wings and tail for flight'
+        );
+      });
+
+      it('should default to minItems: 1 when not specified - constraint fires with 1 part type', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['head', 'torso'],
+                components: ['anatomy:brain'],
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1'];
+
+        // Only head is present, not torso
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        // Should fail because default minItems is 1, so constraint applies
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toContain('Required constraint not satisfied');
+        expect(result.errors[0]).toContain('has part types [head]');
+        expect(result.errors[0]).toContain(
+          'missing required components [anatomy:brain]'
+        );
+      });
+
+      it('should honor minItems: 3 for complex co-presence constraints', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['wing', 'tail', 'beak', 'feathers'],
+                components: ['anatomy:flight_capable'],
+                validation: {
+                  minItems: 3,
+                  errorMessage: 'Birds need at least 3 avian features to fly',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1', 'entity2'];
+
+        // Only 2 part types present: wing and tail (not enough for minItems: 3)
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return entityId === 'entity1'
+                ? { subType: 'wing' }
+                : { subType: 'tail' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        // Should pass because only 2 part types present (less than minItems: 3)
+        expect(result.valid).toBe(true);
+        expect(result.errors).toHaveLength(0);
+      });
+
+      it('should fire constraint when minItems threshold is met with 3 out of 4 part types', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['wing', 'tail', 'beak', 'feathers'],
+                components: ['anatomy:flight_capable'],
+                validation: {
+                  minItems: 3,
+                  errorMessage: 'Birds need at least 3 avian features to fly',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1', 'entity2', 'entity3'];
+
+        // 3 part types present: wing, tail, beak (meets minItems: 3)
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              if (entityId === 'entity1') return { subType: 'wing' };
+              if (entityId === 'entity2') return { subType: 'tail' };
+              return { subType: 'beak' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        // Should fail because 3 part types present (meets minItems: 3) but missing component
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toBe(
+          'Birds need at least 3 avian features to fly'
+        );
+      });
     });
 
     describe('excludes constraints', () => {

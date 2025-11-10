@@ -173,14 +173,15 @@ export class RecipeConstraintEvaluator {
 
       // Get validation metadata if provided
       const validation = constraint.validation || {};
+      const minItems = validation.minItems || 1;
 
-      // Check if any required part types are present
+      // Check if sufficient required part types are present
       const presentPartTypes = requiredPartTypes.filter((pt) =>
         graphMetadata.partTypes.has(pt)
       );
-      const hasRequiredPartType = presentPartTypes.length > 0;
+      const hasRequiredPartType = presentPartTypes.length >= minItems;
 
-      // If we have the required part type, check for required components
+      // If we have sufficient required part types, check for required components
       if (hasRequiredPartType && requiredComponents.length > 0) {
         const missingComponents = requiredComponents.filter(
           (c) => !graphMetadata.components.has(c)
