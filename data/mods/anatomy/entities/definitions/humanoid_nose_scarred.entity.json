@@ -1,0 +1,16 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:humanoid_nose_scarred",
+    "description": "A scarred humanoid nose",
+    "components": {
+        "anatomy:part": {
+            "subType": "nose"
+        },
+        "descriptors:texture": {
+            "texture": "scarred"
+        },
+        "core:name": {
+            "text": "nose"
+        }
+    }
+}

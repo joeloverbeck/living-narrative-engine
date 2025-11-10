@@ -44,6 +44,8 @@
       ],
       "instances": [
         "centaur_warrior.character.json",
+        "coffee_cup.entity.json",
+        "dylan_crace.character.json",
         "eldritch_dimension.location.json",
         "field_notebook.entity.json",
         "giant_forest_spider.character.json",
@@ -58,6 +60,7 @@
     "macros": [],
     "scopes": [],
     "recipes": [
+      "dylan_crace.recipe.json",
       "len_amezua.recipe.json"
     ],
     "portraits": [
