@@ -160,29 +160,38 @@ Scenario Content (Specific Weapons)
 #### items:aimable_items_in_inventory
 
 ```scope-dsl
-actor.items:inventory.contents[].items:aimable
+actor.components.items:inventory.items[][{"has": [{"var": "."}, "items:aimable"]}]
 ```
 
 **Description**: All aimable items in the actor's inventory.
 
+**Note**: Uses filter to check for `items:aimable` component on inventory items.
+
 #### items:aimed_items_in_inventory
 
 ```scope-dsl
-actor.items:inventory.contents[].items:aimed_at
+actor.components.items:inventory.items[][{"has": [{"var": "."}, "items:aimed_at"]}]
 ```
 
 **Description**: All items in actor's inventory that are currently aimed (have `items:aimed_at` component).
 
+**Note**: Uses filter to check for `items:aimed_at` component on inventory items.
+
 #### items:aimable_targets
 
 ```scope-dsl
-location.entities[{"and": [
+entities(core:actor)[{"and": [
   {"!=": [{"var": "id"}, {"var": "actor.id"}]},
-  {"in": [{"var": "location"}, [{"var": "actor.location"}]]}
+  {"==": [
+    {"var": "entity.components.core:position.locationId"},
+    {"var": "actor.components.core:position.locationId"}
+  ]}
 ]}]
 ```
 
-**Description**: All entities at the actor's location except the actor themselves. Can be refined to exclude certain entity types if needed.
+**Description**: All actors at the actor's location except the actor themselves. Can be refined to include other entity types if needed.
+
+**Note**: Uses `entities(core:actor)` source with filters for same location and not self.
 
 ### Events
 
@@ -193,7 +202,7 @@ location.entities[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "items:item_aimed",
   "description": "Dispatched when an actor aims an item at a target",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -226,7 +235,7 @@ location.entities[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "items:aim_lowered",
   "description": "Dispatched when an actor stops aiming an item",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -258,24 +267,45 @@ location.entities[{"and": [
 
 **Condition**: `event-is-action-aim-item`
 
-**Operations**:
+**Actions**:
 1. `ADD_COMPONENT` - Add `items:aimed_at` to secondary target (item)
    ```json
    {
-     "targetId": "{event.primaryTargetId}",
-     "aimedBy": "{event.actorId}",
-     "timestamp": "{event.timestamp}"
+     "type": "ADD_COMPONENT",
+     "parameters": {
+       "entity_ref": "{event.payload.secondaryId}",
+       "component_type": "items:aimed_at",
+       "value": {
+         "targetId": "{event.payload.targetId}",
+         "aimedBy": "{event.payload.actorId}",
+         "timestamp": "{context.currentTimestamp}"
+       }
+     }
    }
    ```
-2. `DISPATCH_EVENT` - `items:item_aimed`
+2. `GET_TIMESTAMP` - Get current timestamp
+3. `DISPATCH_EVENT` - `items:item_aimed`
+
+**Note**: Use `GET_TIMESTAMP` operation to get current timestamp before adding component.
 
 #### items:handle_lower_aim
 
 **Condition**: `event-is-action-lower-aim`
 
-**Operations**:
+**Actions**:
 1. `REMOVE_COMPONENT` - Remove `items:aimed_at` from primary target (item)
+   ```json
+   {
+     "type": "REMOVE_COMPONENT",
+     "parameters": {
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "items:aimed_at"
+     }
+   }
+   ```
 2. `DISPATCH_EVENT` - `items:aim_lowered`
+
+**Note**: Rules use `"actions"` array, not `"operations"`. Event payload accessed via `event.payload.*`.
 
 ---
 
@@ -795,49 +825,55 @@ location.entities[{"and": [
 #### weapons:ready_firearms_in_inventory
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:weapon"]},
   {"has": [{"var": "."}, "items:aimed_at"]},
   {"has": [{"var": "."}, "weapons:ammunition"]},
-  {">": [{"var": "weapons:ammunition.currentAmmo"}, 0]},
+  {">": [{"var": "entity.components.weapons:ammunition.currentAmmo"}, 0]},
   {"!": [{"has": [{"var": "."}, "weapons:jammed"]}]}
 ]}]
 ```
 
 **Description**: Firearms in inventory that are ready to shoot (aimed, loaded, not jammed).
 
+**Note**: Accesses inventory via `actor.components.items:inventory.items[]` and component data via `entity.components.*`.
+
 #### weapons:reloadable_firearms_in_inventory
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:weapon"]},
   {"has": [{"var": "."}, "weapons:ammunition"]},
   {"<": [
-    {"var": "weapons:ammunition.currentAmmo"},
-    {"var": "weapons:ammunition.maxCapacity"}
+    {"var": "entity.components.weapons:ammunition.currentAmmo"},
+    {"var": "entity.components.weapons:ammunition.maxCapacity"}
   ]}
 ]}]
 ```
 
 **Description**: Firearms in inventory that can be reloaded (not at max capacity).
 
+**Note**: Uses `entity.components.*` to access component field values within filters.
+
 #### weapons:unchambered_firearms_in_inventory
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:weapon"]},
   {"has": [{"var": "."}, "weapons:ammunition"]},
-  {">": [{"var": "weapons:ammunition.currentAmmo"}, 0]},
-  {"==": [{"var": "weapons:ammunition.chambered"}, false]}
+  {">": [{"var": "entity.components.weapons:ammunition.currentAmmo"}, 0]},
+  {"==": [{"var": "entity.components.weapons:ammunition.chambered"}, false]}
 ]}]
 ```
 
 **Description**: Firearms with ammo but no round chambered.
 
+**Note**: Uses `entity.components.*` notation for accessing component field values.
+
 #### weapons:jammed_firearms_in_inventory
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:weapon"]},
   {"has": [{"var": "."}, "weapons:jammed"]}
 ]}]
@@ -845,73 +881,85 @@ actor.items:inventory.contents[{"and": [
 
 **Description**: Jammed firearms in inventory.
 
+**Note**: Uses `actor.components.items:inventory.items[]` to access inventory items.
+
 #### weapons:compatible_ammo_in_inventory
 
 **Note**: This scope requires context from the weapon being reloaded. Implementation would use a parameterized scope or condition logic.
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:ammo_container"]},
   {"==": [
-    {"var": "weapons:ammo_container.ammoType"},
-    {"var": "context.weapon.weapons:ammunition.ammoType"}
+    {"var": "entity.components.weapons:ammo_container.ammoType"},
+    {"var": "context.weapon.components.weapons:ammunition.ammoType"}
   ]},
-  {">": [{"var": "weapons:ammo_container.currentRounds"}, 0]}
+  {">": [{"var": "entity.components.weapons:ammo_container.currentRounds"}, 0]}
 ]}]
 ```
 
 **Description**: Ammo containers with compatible ammunition type and available rounds.
+
+**Note**: Context weapon accessed via `context.weapon.components.*`.
 
 #### weapons:aimed_target_from_weapon
 
 **Note**: Extracts target ID from weapon's `items:aimed_at` component.
 
 ```scope-dsl
-entity[{"==": [{"var": "id"}, {"var": "context.weapon.items:aimed_at.targetId"}]}]
+entity[{"==": [{"var": "id"}, {"var": "context.weapon.components.items:aimed_at.targetId"}]}]
 ```
 
 **Description**: The entity that the weapon is currently aimed at.
 
+**Note**: Accesses weapon component via `context.weapon.components.items:aimed_at.*`.
+
 #### weapons:magazine_fed_firearms_with_magazine
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:weapon"]},
   {"has": [{"var": "."}, "weapons:magazine"]},
-  {"==": [{"var": "weapons:magazine.magazineInserted"}, true]}
+  {"==": [{"var": "entity.components.weapons:magazine.magazineInserted"}, true]}
 ]}]
 ```
 
 **Description**: Magazine-fed firearms with magazine inserted.
 
+**Note**: Accesses component field via `entity.components.weapons:magazine.magazineInserted`.
+
 #### weapons:magazine_fed_firearms_without_magazine
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:weapon"]},
   {"has": [{"var": "."}, "weapons:magazine"]},
-  {"==": [{"var": "weapons:magazine.magazineInserted"}, false]}
+  {"==": [{"var": "entity.components.weapons:magazine.magazineInserted"}, false]}
 ]}]
 ```
 
 **Description**: Magazine-fed firearms without magazine inserted.
+
+**Note**: Accesses component field via `entity.components.weapons:magazine.magazineInserted`.
 
 #### weapons:compatible_magazines_in_inventory
 
 **Note**: Requires context from weapon.
 
 ```scope-dsl
-actor.items:inventory.contents[{"and": [
+actor.components.items:inventory.items[][{"and": [
   {"has": [{"var": "."}, "weapons:ammo_container"]},
-  {"==": [{"var": "weapons:ammo_container.containerType"}, "magazine"]},
+  {"==": [{"var": "entity.components.weapons:ammo_container.containerType"}, "magazine"]},
   {"==": [
-    {"var": "weapons:ammo_container.ammoType"},
-    {"var": "context.weapon.weapons:ammunition.ammoType"}
+    {"var": "entity.components.weapons:ammo_container.ammoType"},
+    {"var": "context.weapon.components.weapons:ammunition.ammoType"}
   ]}
 ]}]
 ```
 
 **Description**: Magazines compatible with the weapon's ammunition type.
+
+**Note**: Accesses weapon context via `context.weapon.components.weapons:ammunition.*`.
 
 ### Events
 
@@ -922,7 +970,7 @@ actor.items:inventory.contents[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "weapons:weapon_fired",
   "description": "Dispatched when a weapon is fired",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -964,7 +1012,7 @@ actor.items:inventory.contents[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "weapons:weapon_jammed",
   "description": "Dispatched when a weapon jams",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -998,7 +1046,7 @@ actor.items:inventory.contents[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "weapons:weapon_reloaded",
   "description": "Dispatched when a weapon is reloaded",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -1041,7 +1089,7 @@ actor.items:inventory.contents[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "weapons:round_chambered",
   "description": "Dispatched when a round is manually chambered",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -1070,7 +1118,7 @@ actor.items:inventory.contents[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "weapons:jam_cleared",
   "description": "Dispatched when a weapon jam is successfully cleared",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -1104,7 +1152,7 @@ actor.items:inventory.contents[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "weapons:magazine_ejected",
   "description": "Dispatched when a magazine is ejected from a weapon",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -1142,7 +1190,7 @@ actor.items:inventory.contents[{"and": [
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "weapons:magazine_inserted",
   "description": "Dispatched when a magazine is inserted into a weapon",
-  "dataSchema": {
+  "payloadSchema": {
     "type": "object",
     "properties": {
       "actorId": {
@@ -1411,155 +1459,185 @@ actor.items:inventory.contents[{"and": [
 
 **Condition**: `event-is-action-shoot-weapon`
 
-**Operations Sequence**:
+**Actions Sequence**:
 
-1. **Decrement Ammo**
+1. **Query Weapon Component**
    ```json
    {
-     "type": "UPDATE_COMPONENT",
+     "type": "QUERY_COMPONENT",
      "parameters": {
-       "entityId": "{event.secondaryTargetId}",
-       "componentId": "weapons:ammunition",
-       "updates": {
-         "currentAmmo": "{event.secondaryTarget.weapons:ammunition.currentAmmo - 1}",
-         "chambered": false
-       }
+       "entity_ref": "{event.payload.secondaryId}",
+       "component_type": "weapons:ammunition",
+       "result_variable": "weaponAmmo"
      }
    }
    ```
 
-2. **Calculate Hit** (Simplified - can be expanded)
+2. **Calculate New Ammo Count**
+   ```json
+   {
+     "type": "MATH",
+     "parameters": {
+       "operation": "subtract",
+       "operands": [
+         {"var": "context.weaponAmmo.currentAmmo"},
+         1
+       ],
+       "result_variable": "newAmmoCount"
+     }
+   }
+   ```
+
+3. **Decrement Ammo**
+   ```json
+   {
+     "type": "MODIFY_COMPONENT",
+     "parameters": {
+       "entity_ref": "{event.payload.secondaryId}",
+       "component_type": "weapons:ammunition",
+       "field": "currentAmmo",
+       "mode": "set",
+       "value": "{context.newAmmoCount}"
+     }
+   }
+   ```
+
+4. **Set Chambered to False**
+   ```json
+   {
+     "type": "MODIFY_COMPONENT",
+     "parameters": {
+       "entity_ref": "{event.payload.secondaryId}",
+       "component_type": "weapons:ammunition",
+       "field": "chambered",
+       "mode": "set",
+       "value": false
+     }
+   }
+   ```
+
+5. **Calculate Hit** (Simplified - can be expanded with random logic)
    ```json
    {
      "type": "SET_VARIABLE",
+     "comment": "For now, set hit to true; implement random logic later",
      "parameters": {
-       "name": "hitRoll",
-       "value": "{random(0, 100)}"
+       "variable_name": "hit",
+       "value": true
      }
    }
    ```
 
-3. **Determine Hit/Miss**
+6. **Check for Jam** (Simplified - implement probability later)
    ```json
    {
-     "type": "CONDITIONAL",
+     "type": "SET_VARIABLE",
+     "comment": "Jam check disabled for MVP; set to false",
      "parameters": {
-       "condition": "{hitRoll <= event.secondaryTarget.weapons:firearm.accuracy}",
-       "ifTrue": [
-         {
-           "type": "SET_VARIABLE",
-           "parameters": {
-             "name": "hit",
-             "value": true
-           }
-         }
-       ],
-       "ifFalse": [
-         {
-           "type": "SET_VARIABLE",
-           "parameters": {
-             "name": "hit",
-             "value": false
-           }
-         }
-       ]
+       "variable_name": "jammed",
+       "value": false
      }
    }
    ```
 
-4. **Check for Jam** (based on condition)
+7. **Get Timestamp**
    ```json
    {
-     "type": "CONDITIONAL",
+     "type": "GET_TIMESTAMP",
      "parameters": {
-       "condition": "{random(0, 100) < jamProbability}",
-       "ifTrue": [
-         {
-           "type": "ADD_COMPONENT",
-           "parameters": {
-             "entityId": "{event.secondaryTargetId}",
-             "componentId": "weapons:jammed",
-             "data": {
-               "jamType": "{selectRandomJamType()}",
-               "timestamp": "{event.timestamp}"
-             }
-           }
-         },
-         {
-           "type": "DISPATCH_EVENT",
-           "parameters": {
-             "eventId": "weapons:weapon_jammed",
-             "payload": {
-               "actorId": "{event.actorId}",
-               "weaponId": "{event.secondaryTargetId}",
-               "jamType": "{jamType}",
-               "timestamp": "{event.timestamp}"
-             }
-           }
-         }
-       ]
+       "result_variable": "currentTimestamp"
      }
    }
    ```
 
-5. **Dispatch Weapon Fired Event**
+8. **Dispatch Weapon Fired Event**
    ```json
    {
      "type": "DISPATCH_EVENT",
      "parameters": {
-       "eventId": "weapons:weapon_fired",
+       "eventType": "weapons:weapon_fired",
        "payload": {
-         "actorId": "{event.actorId}",
-         "weaponId": "{event.secondaryTargetId}",
-         "targetId": "{event.primaryTargetId}",
-         "hit": "{hit}",
-         "remainingAmmo": "{event.secondaryTarget.weapons:ammunition.currentAmmo - 1}",
-         "timestamp": "{event.timestamp}"
+         "actorId": "{event.payload.actorId}",
+         "weaponId": "{event.payload.secondaryId}",
+         "targetId": "{event.payload.targetId}",
+         "hit": "{context.hit}",
+         "remainingAmmo": "{context.newAmmoCount}",
+         "timestamp": "{context.currentTimestamp}"
        }
      }
    }
    ```
 
-6. **Auto-Chamber Next Round** (for semi-auto/auto weapons)
+9. **Auto-Chamber Next Round** (for semi-auto/auto weapons)
    ```json
    {
-     "type": "CONDITIONAL",
+     "type": "IF",
      "parameters": {
-       "condition": "{event.secondaryTarget.weapons:firearm.firingMode != 'manual' && event.secondaryTarget.weapons:ammunition.currentAmmo > 0}",
-       "ifTrue": [
+       "condition": {
+         "and": [
+           {"!=": [{"var": "context.weaponAmmo.firingMode"}, "manual"]},
+           {">": [{"var": "context.newAmmoCount"}, 0]}
+         ]
+       },
+       "then_actions": [
          {
-           "type": "UPDATE_COMPONENT",
+           "type": "MODIFY_COMPONENT",
            "parameters": {
-             "entityId": "{event.secondaryTargetId}",
-             "componentId": "weapons:ammunition",
-             "updates": {
-               "chambered": true
-             }
+             "entity_ref": "{event.payload.secondaryId}",
+             "component_type": "weapons:ammunition",
+             "field": "chambered",
+             "mode": "set",
+             "value": true
            }
          }
        ]
      }
    }
    ```
+
+10. **End Turn**
+    ```json
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+    ```
+
+**Note**: This implementation is simplified for MVP. Random hit calculation and jam probability should be implemented using custom operations or JavaScript logic in operation handlers.
 
 ### Rule: handle_reload_weapon
 
 **Condition**: `event-is-action-reload-weapon`
 
-**Operations Sequence**:
+**Actions Sequence**:
 
-1. **Remove Aim (if aimed)**
+1. **Check if Weapon is Aimed**
    ```json
    {
-     "type": "CONDITIONAL",
+     "type": "HAS_COMPONENT",
      "parameters": {
-       "condition": "{event.primaryTarget.items:aimed_at != null}",
-       "ifTrue": [
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "items:aimed_at",
+       "result_variable": "weaponAimed"
+     }
+   }
+   ```
+
+2. **Remove Aim (if aimed)**
+   ```json
+   {
+     "type": "IF",
+     "parameters": {
+       "condition": {"==": [{"var": "context.weaponAimed"}, true]},
+       "then_actions": [
          {
            "type": "REMOVE_COMPONENT",
            "parameters": {
-             "entityId": "{event.primaryTargetId}",
-             "componentId": "items:aimed_at"
+             "entity_ref": "{event.payload.targetId}",
+             "component_type": "items:aimed_at"
            }
          }
        ]
@@ -1567,67 +1645,127 @@ actor.items:inventory.contents[{"and": [
    }
    ```
 
-2. **Calculate Rounds to Transfer**
+3. **Query Weapon and Ammo Container Components**
    ```json
    {
-     "type": "SET_VARIABLE",
+     "type": "QUERY_COMPONENT",
      "parameters": {
-       "name": "availableRounds",
-       "value": "{event.secondaryTarget.weapons:ammo_container.currentRounds}"
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "weapons:ammunition",
+       "result_variable": "weaponAmmo"
      }
    },
    {
-     "type": "SET_VARIABLE",
+     "type": "QUERY_COMPONENT",
      "parameters": {
-       "name": "neededRounds",
-       "value": "{event.primaryTarget.weapons:ammunition.maxCapacity - event.primaryTarget.weapons:ammunition.currentAmmo}"
-     }
-   },
-   {
-     "type": "SET_VARIABLE",
-     "parameters": {
-       "name": "roundsToTransfer",
-       "value": "{min(availableRounds, neededRounds)}"
+       "entity_ref": "{event.payload.secondaryId}",
+       "component_type": "weapons:ammo_container",
+       "result_variable": "ammoContainer"
      }
    }
    ```
 
-3. **Transfer Ammunition**
+4. **Calculate Rounds to Transfer**
    ```json
    {
-     "type": "UPDATE_COMPONENT",
+     "type": "MATH",
      "parameters": {
-       "entityId": "{event.primaryTargetId}",
-       "componentId": "weapons:ammunition",
-       "updates": {
-         "currentAmmo": "{event.primaryTarget.weapons:ammunition.currentAmmo + roundsToTransfer}",
-         "chambered": true
-       }
+       "operation": "subtract",
+       "operands": [
+         {"var": "context.weaponAmmo.maxCapacity"},
+         {"var": "context.weaponAmmo.currentAmmo"}
+       ],
+       "result_variable": "neededRounds"
      }
    },
    {
-     "type": "UPDATE_COMPONENT",
+     "type": "MATH",
      "parameters": {
-       "entityId": "{event.secondaryTargetId}",
-       "componentId": "weapons:ammo_container",
-       "updates": {
-         "currentRounds": "{event.secondaryTarget.weapons:ammo_container.currentRounds - roundsToTransfer}"
-       }
+       "operation": "min",
+       "operands": [
+         {"var": "context.ammoContainer.currentRounds"},
+         {"var": "context.neededRounds"}
+       ],
+       "result_variable": "roundsToTransfer"
      }
    }
    ```
 
-4. **Remove Empty Ammo Container**
+5. **Calculate New Ammo Counts**
    ```json
    {
-     "type": "CONDITIONAL",
+     "type": "MATH",
      "parameters": {
-       "condition": "{event.secondaryTarget.weapons:ammo_container.currentRounds - roundsToTransfer <= 0}",
-       "ifTrue": [
+       "operation": "add",
+       "operands": [
+         {"var": "context.weaponAmmo.currentAmmo"},
+         {"var": "context.roundsToTransfer"}
+       ],
+       "result_variable": "newWeaponAmmo"
+     }
+   },
+   {
+     "type": "MATH",
+     "parameters": {
+       "operation": "subtract",
+       "operands": [
+         {"var": "context.ammoContainer.currentRounds"},
+         {"var": "context.roundsToTransfer"}
+       ],
+       "result_variable": "newContainerRounds"
+     }
+   }
+   ```
+
+6. **Update Weapon Ammunition**
+   ```json
+   {
+     "type": "MODIFY_COMPONENT",
+     "parameters": {
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "weapons:ammunition",
+       "field": "currentAmmo",
+       "mode": "set",
+       "value": "{context.newWeaponAmmo}"
+     }
+   },
+   {
+     "type": "MODIFY_COMPONENT",
+     "parameters": {
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "weapons:ammunition",
+       "field": "chambered",
+       "mode": "set",
+       "value": true
+     }
+   }
+   ```
+
+7. **Update or Remove Ammo Container**
+   ```json
+   {
+     "type": "IF",
+     "parameters": {
+       "condition": {"<=": [{"var": "context.newContainerRounds"}, 0]},
+       "then_actions": [
          {
-           "type": "REMOVE_ENTITY",
+           "type": "REMOVE_COMPONENT",
+           "comment": "Remove empty container from game (simplified)",
            "parameters": {
-             "entityId": "{event.secondaryTargetId}"
+             "entity_ref": "{event.payload.secondaryId}",
+             "component_type": "weapons:ammo_container"
+           }
+         }
+       ],
+       "else_actions": [
+         {
+           "type": "MODIFY_COMPONENT",
+           "parameters": {
+             "entity_ref": "{event.payload.secondaryId}",
+             "component_type": "weapons:ammo_container",
+             "field": "currentRounds",
+             "mode": "set",
+             "value": "{context.newContainerRounds}"
            }
          }
        ]
@@ -1635,20 +1773,37 @@ actor.items:inventory.contents[{"and": [
    }
    ```
 
-5. **Dispatch Reload Event**
+8. **Get Timestamp and Dispatch Event**
    ```json
+   {
+     "type": "GET_TIMESTAMP",
+     "parameters": {
+       "result_variable": "currentTimestamp"
+     }
+   },
    {
      "type": "DISPATCH_EVENT",
      "parameters": {
-       "eventId": "weapons:weapon_reloaded",
+       "eventType": "weapons:weapon_reloaded",
        "payload": {
-         "actorId": "{event.actorId}",
-         "weaponId": "{event.primaryTargetId}",
-         "ammoSourceId": "{event.secondaryTargetId}",
-         "roundsLoaded": "{roundsToTransfer}",
-         "newAmmoCount": "{event.primaryTarget.weapons:ammunition.currentAmmo + roundsToTransfer}",
-         "timestamp": "{event.timestamp}"
+         "actorId": "{event.payload.actorId}",
+         "weaponId": "{event.payload.targetId}",
+         "ammoSourceId": "{event.payload.secondaryId}",
+         "roundsLoaded": "{context.roundsToTransfer}",
+         "newAmmoCount": "{context.newWeaponAmmo}",
+         "timestamp": "{context.currentTimestamp}"
        }
+     }
+   }
+   ```
+
+9. **End Turn**
+   ```json
+   {
+     "type": "END_TURN",
+     "parameters": {
+       "entityId": "{event.payload.actorId}",
+       "success": true
      }
    }
    ```
@@ -1657,33 +1812,54 @@ actor.items:inventory.contents[{"and": [
 
 **Condition**: `event-is-action-chamber-round`
 
-**Operations Sequence**:
+**Actions Sequence**:
 
 1. **Set Chambered Flag**
    ```json
    {
-     "type": "UPDATE_COMPONENT",
+     "type": "MODIFY_COMPONENT",
      "parameters": {
-       "entityId": "{event.primaryTargetId}",
-       "componentId": "weapons:ammunition",
-       "updates": {
-         "chambered": true
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "weapons:ammunition",
+       "field": "chambered",
+       "mode": "set",
+       "value": true
+     }
+   }
+   ```
+
+2. **Get Timestamp**
+   ```json
+   {
+     "type": "GET_TIMESTAMP",
+     "parameters": {
+       "result_variable": "currentTimestamp"
+     }
+   }
+   ```
+
+3. **Dispatch Round Chambered Event**
+   ```json
+   {
+     "type": "DISPATCH_EVENT",
+     "parameters": {
+       "eventType": "weapons:round_chambered",
+       "payload": {
+         "actorId": "{event.payload.actorId}",
+         "weaponId": "{event.payload.targetId}",
+         "timestamp": "{context.currentTimestamp}"
        }
      }
    }
    ```
 
-2. **Dispatch Round Chambered Event**
+4. **End Turn**
    ```json
    {
-     "type": "DISPATCH_EVENT",
+     "type": "END_TURN",
      "parameters": {
-       "eventId": "weapons:round_chambered",
-       "payload": {
-         "actorId": "{event.actorId}",
-         "weaponId": "{event.primaryTargetId}",
-         "timestamp": "{event.timestamp}"
-       }
+       "entityId": "{event.payload.actorId}",
+       "success": true
      }
    }
    ```
@@ -1692,34 +1868,51 @@ actor.items:inventory.contents[{"and": [
 
 **Condition**: `event-is-action-clear-jam`
 
-**Operations Sequence**:
+**Actions Sequence**:
 
-1. **Remove Jam Component**
+1. **Query Jam Component**
    ```json
    {
-     "type": "REMOVE_COMPONENT",
+     "type": "QUERY_COMPONENT",
      "parameters": {
-       "entityId": "{event.primaryTargetId}",
-       "componentId": "weapons:jammed"
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "weapons:jammed",
+       "result_variable": "jamInfo"
      }
    }
    ```
 
-2. **Eject Chambered Round** (for certain jam types)
+2. **Remove Jam Component**
    ```json
    {
-     "type": "CONDITIONAL",
+     "type": "REMOVE_COMPONENT",
      "parameters": {
-       "condition": "{event.primaryTarget.weapons:jammed.jamType == 'double_feed' || event.primaryTarget.weapons:jammed.jamType == 'stovepipe'}",
-       "ifTrue": [
+       "entity_ref": "{event.payload.targetId}",
+       "component_type": "weapons:jammed"
+     }
+   }
+   ```
+
+3. **Eject Chambered Round** (for certain jam types)
+   ```json
+   {
+     "type": "IF",
+     "parameters": {
+       "condition": {
+         "or": [
+           {"==": [{"var": "context.jamInfo.jamType"}, "double_feed"]},
+           {"==": [{"var": "context.jamInfo.jamType"}, "stovepipe"]}
+         ]
+       },
+       "then_actions": [
          {
-           "type": "UPDATE_COMPONENT",
+           "type": "MODIFY_COMPONENT",
            "parameters": {
-             "entityId": "{event.primaryTargetId}",
-             "componentId": "weapons:ammunition",
-             "updates": {
-               "chambered": false
-             }
+             "entity_ref": "{event.payload.targetId}",
+             "component_type": "weapons:ammunition",
+             "field": "chambered",
+             "mode": "set",
+             "value": false
            }
          }
        ]
@@ -1727,18 +1920,39 @@ actor.items:inventory.contents[{"and": [
    }
    ```
 
-3. **Dispatch Jam Cleared Event**
+4. **Get Timestamp**
+   ```json
+   {
+     "type": "GET_TIMESTAMP",
+     "parameters": {
+       "result_variable": "currentTimestamp"
+     }
+   }
+   ```
+
+5. **Dispatch Jam Cleared Event**
    ```json
    {
      "type": "DISPATCH_EVENT",
      "parameters": {
-       "eventId": "weapons:jam_cleared",
+       "eventType": "weapons:jam_cleared",
        "payload": {
-         "actorId": "{event.actorId}",
-         "weaponId": "{event.primaryTargetId}",
-         "jamType": "{event.primaryTarget.weapons:jammed.jamType}",
-         "timestamp": "{event.timestamp}"
+         "actorId": "{event.payload.actorId}",
+         "weaponId": "{event.payload.targetId}",
+         "jamType": "{context.jamInfo.jamType}",
+         "timestamp": "{context.currentTimestamp}"
        }
+     }
+   }
+   ```
+
+6. **End Turn**
+   ```json
+   {
+     "type": "END_TURN",
+     "parameters": {
+       "entityId": "{event.payload.actorId}",
+       "success": true
      }
    }
    ```
