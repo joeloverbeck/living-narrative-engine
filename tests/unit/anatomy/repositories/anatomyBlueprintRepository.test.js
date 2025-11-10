@@ -221,7 +221,7 @@ describe('AnatomyBlueprintRepository', () => {
     it('should return null if recipe has no blueprintId', async () => {
       const recipeWithoutBlueprint = { id: 'test:recipe' };
 
-      mockDataRegistry.get.mockImplementation((category, id) => {
+      mockDataRegistry.get.mockImplementation((category) => {
         if (category === 'anatomyRecipes') {
           return recipeWithoutBlueprint;
         }
@@ -234,8 +234,8 @@ describe('AnatomyBlueprintRepository', () => {
     });
 
     it('should return null if blueprint not found', async () => {
-      mockDataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'anatomyRecipes' && id === 'test:humanoid_recipe') {
+      mockDataRegistry.get.mockImplementation((category, lookupId) => {
+        if (category === 'anatomyRecipes' && lookupId === 'test:humanoid_recipe') {
           return testRecipe;
         }
         return null; // Blueprint not found
@@ -260,7 +260,7 @@ describe('AnatomyBlueprintRepository', () => {
     });
 
     it('should handle errors in recipe lookup', async () => {
-      mockDataRegistry.get.mockImplementation((category, id) => {
+      mockDataRegistry.get.mockImplementation((category) => {
         if (category === 'anatomyRecipes') {
           throw new Error('Recipe lookup error');
         }
@@ -273,7 +273,7 @@ describe('AnatomyBlueprintRepository', () => {
     });
 
     it('should handle errors in blueprint lookup', async () => {
-      mockDataRegistry.get.mockImplementation((category, id) => {
+      mockDataRegistry.get.mockImplementation((category) => {
         if (category === 'anatomyRecipes') {
           return testRecipe;
         }
@@ -320,7 +320,7 @@ describe('AnatomyBlueprintRepository', () => {
         root: { type: 'test:torso' },
       };
 
-      mockDataRegistry.get.mockImplementation((category, id) => {
+      mockDataRegistry.get.mockImplementation((category) => {
         if (category === 'anatomyRecipes') {
           return testRecipe;
         }
@@ -349,6 +349,37 @@ describe('AnatomyBlueprintRepository', () => {
       // Verify cache is cleared (calls dataRegistry again)
       await repository.getBlueprintByRecipeId('test:humanoid_recipe');
       expect(mockDataRegistry.get).toHaveBeenCalled();
+    });
+  });
+
+  describe('getBlueprint - Wizard ID mismatch scenario', () => {
+    it('should return null when trying to get blueprint by non-namespaced ID when registry stores by full ID', async () => {
+      // This reproduces the wizard bug where getAll returns blueprints with
+      // id="giant_spider" but registry stores them as "anatomy:giant_spider"
+      mockDataRegistry.get.mockImplementation((category, id) => {
+        // Simulate registry storing by full ID only
+        if (category === 'anatomyBlueprints' && id === 'anatomy:human_female') {
+          return {
+            id: 'anatomy:human_female',
+            root: 'anatomy:torso',
+            slots: {},
+          };
+        }
+        // Non-namespaced ID returns null
+        if (category === 'anatomyBlueprints' && id === 'human_female') {
+          return null;
+        }
+        return null;
+      });
+
+      // This is what the wizard does - tries to get by non-namespaced ID
+      const result = await repository.getBlueprint('human_female');
+      expect(result).toBeNull();
+
+      // But the full ID works
+      const result2 = await repository.getBlueprint('anatomy:human_female');
+      expect(result2).not.toBeNull();
+      expect(result2.id).toBe('anatomy:human_female');
     });
   });
 });
