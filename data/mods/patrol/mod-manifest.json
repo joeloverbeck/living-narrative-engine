@@ -32,6 +32,8 @@
     "entities": {
       "definitions": [
         "centaur_warrior.character.json",
+        "dylan_crace.character.json",
+        "eldritch_dimension.location.json",
         "field_notebook.entity.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json",
@@ -42,6 +44,7 @@
       ],
       "instances": [
         "centaur_warrior.character.json",
+        "eldritch_dimension.location.json",
         "field_notebook.entity.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json",
@@ -58,6 +61,7 @@
       "len_amezua.recipe.json"
     ],
     "portraits": [
+      "eldritch_dimension.png",
       "len_amezua.png",
       "perimeter_of_rip_in_reality.png",
       "writhing_observer.png"

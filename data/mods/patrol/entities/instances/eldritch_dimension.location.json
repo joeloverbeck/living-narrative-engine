@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "patrol:eldritch_dimension_instance",
+    "definitionId": "patrol:eldritch_dimension"
+}

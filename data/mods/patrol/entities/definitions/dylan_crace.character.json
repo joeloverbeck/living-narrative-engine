@@ -1,0 +1,32 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "patrol:dylan_crace",
+    "components": {
+      "core:name": {
+        "text": "Dylan Crace"
+      },
+      "core:portrait": {
+        "imagePath": "portraits/dylan_crace.png",
+        "altText": "Dylan Crace - ex-military corpo."
+      },
+      "core:actor": {},
+      "core:player_type": {
+        "type": "human"
+      },
+      "core:perception_log": {
+        "maxEntries": 50,
+        "logEntries": []
+      },
+      "anatomy:body": {
+        "recipeId": "patrol:dylan_crace_recipe"
+      },
+      "core:gender": {
+        "value": "male"
+      },
+      "core:apparent_age": {
+        "minAge": 36,
+        "maxAge": 38
+      },
+      "movement:can_teleport": {}
+    }
+  }

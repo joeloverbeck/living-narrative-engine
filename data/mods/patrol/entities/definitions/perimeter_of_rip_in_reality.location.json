@@ -13,6 +13,11 @@
             "altText": "Perimeter of rip in reality."
         },
         "movement:exits": [
+            {
+                "direction": "to eldritch dimension",
+                "target": "patrol:eldritch_dimension_instance",
+                "blocker": null
+            }
         ]
     }
 }

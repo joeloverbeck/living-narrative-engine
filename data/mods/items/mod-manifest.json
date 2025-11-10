@@ -84,6 +84,7 @@
       "actor_inventory_items.scope",
       "close_actors_with_inventory.scope",
       "container_contents.scope",
+      "examinable_items.scope",
       "items_at_actor_location.scope",
       "items_at_location.scope",
       "non_portable_items_at_location.scope",

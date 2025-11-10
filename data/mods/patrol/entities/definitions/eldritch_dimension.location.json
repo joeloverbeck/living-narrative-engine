@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "patrol:eldritch_dimension",
+    "components": {
+        "core:name": {
+            "text": "eldritch dimension"
+        },
+        "core:description": {
+            "text": "Cold, green light washes over a drowned stone shore. Stepped slabs that descend to black water, where slow ripples break the reflection of a starfield twisting in impossible arcs. Cyclopean arches rise from the mist like vertebrae, some intact, some shattered, their curves too perfect and too wrong. Leaning monoliths flank the inlet; small hexagonal insets glow faintly along their faces, pulsing as if listening. The ground is a crust of dark, cracked plates, thin seams leaking a dim emerald luminescence. Far out across the slick flats, fog hides most shapes, but a colossal, tentacled silhouette looms and shifts behind it, more sensed than seen."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/eldritch_dimension.png",
+            "altText": "Eldritch dimension."
+        },
+        "movement:exits": [
+            {
+                "direction": "to perimeter of rip in reality",
+                "target": "patrol:perimeter_of_rip_in_reality_instance",
+                "blocker": null
+            }
+        ]
+    }
+}
