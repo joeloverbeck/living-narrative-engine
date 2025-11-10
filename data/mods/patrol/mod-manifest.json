@@ -25,13 +25,24 @@
     }
   ],
   "content": {
-    "actions": [],
-    "components": [],
-    "conditions": [],
-    "rules": [],
+    "actions": [
+      "travel_through_dimensions.action.json"
+    ],
+    "components": [
+      "can_travel_through_dimensions.component.json",
+      "is_dimensional_portal.component.json"
+    ],
+    "conditions": [
+      "blocker-is-dimensional-portal.condition.json",
+      "event-is-action-travel-through-dimensions.condition.json"
+    ],
+    "rules": [
+      "handle_travel_through_dimensions.rule.json"
+    ],
     "entities": {
       "definitions": [
         "centaur_warrior.character.json",
+        "dimensional_rift_blocker.entity.json",
         "dylan_crace.character.json",
         "eldritch_dimension.location.json",
         "field_notebook.entity.json",
@@ -45,6 +56,7 @@
       "instances": [
         "centaur_warrior.character.json",
         "coffee_cup.entity.json",
+        "dimensional_rift_blocker.entity.json",
         "dylan_crace.character.json",
         "eldritch_dimension.location.json",
         "field_notebook.entity.json",
@@ -58,7 +70,9 @@
     },
     "events": [],
     "macros": [],
-    "scopes": [],
+    "scopes": [
+      "dimensional_portals.scope"
+    ],
     "recipes": [
       "dylan_crace.recipe.json",
       "len_amezua.recipe.json"

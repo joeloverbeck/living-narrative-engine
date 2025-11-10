@@ -1,0 +1,84 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "id": "patrol:handle_travel_through_dimensions",
+  "description": "Handles entity traveling through dimensional tear to reach another dimension",
+  "priority": 100,
+  "conditions": ["patrol:event-is-action-travel-through-dimensions"],
+  "operations": [
+    {
+      "type": "GET_NAME",
+      "params": {
+        "entityId": { "var": "event.payload.actorId" }
+      },
+      "resultVariable": "actorName"
+    },
+    {
+      "type": "GET_NAME",
+      "params": {
+        "entityId": { "var": "event.payload.primaryTargetId" }
+      },
+      "resultVariable": "destinationName"
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "params": {
+        "entityId": { "var": "event.payload.actorId" },
+        "componentId": "core:position"
+      },
+      "resultVariable": "actorPosition"
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "params": {
+        "actorId": { "var": "event.payload.actorId" },
+        "locationId": { "var": "actorPosition.locationId" },
+        "message": {
+          "cat": [
+            { "var": "actorName" },
+            "'s form ripples and distorts as they step through the dimensional tear."
+          ]
+        },
+        "perceptionType": "dimensional_departure"
+      }
+    },
+    {
+      "type": "CHANGE_LOCATION",
+      "params": {
+        "entityId": { "var": "event.payload.actorId" },
+        "destinationLocationId": { "var": "event.payload.primaryTargetId" }
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "params": {
+        "actorId": { "var": "event.payload.actorId" },
+        "locationId": { "var": "event.payload.primaryTargetId" },
+        "message": {
+          "cat": [
+            { "var": "actorName" },
+            " materializes from the dimensional tear, their form stabilizing in alien space."
+          ]
+        },
+        "perceptionType": "dimensional_arrival"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "params": {
+        "name": "successMessage",
+        "value": {
+          "cat": [
+            { "var": "actorName" },
+            " travels through dimensions to ",
+            { "var": "destinationName" },
+            "."
+          ]
+        }
+      }
+    },
+    {
+      "type": "MACRO",
+      "macroId": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

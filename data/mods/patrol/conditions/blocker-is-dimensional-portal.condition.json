@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "patrol:blocker-is-dimensional-portal",
+  "description": "Checks if the blocker entity has the is_dimensional_portal marker component",
+  "logic": {
+    "has_component": [
+      { "var": "entity.blocker" },
+      "patrol:is_dimensional_portal"
+    ]
+  }
+}

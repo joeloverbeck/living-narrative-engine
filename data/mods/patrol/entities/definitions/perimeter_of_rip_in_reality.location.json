@@ -14,9 +14,9 @@
         },
         "movement:exits": [
             {
-                "direction": "to eldritch dimension",
+                "direction": "through the dimensional rift",
                 "target": "patrol:eldritch_dimension_instance",
-                "blocker": null
+                "blocker": "patrol:dimensional_rift_blocker_instance"
             }
         ]
     }
