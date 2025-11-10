@@ -113,23 +113,31 @@
   ],
   "clothingEntities": [
     {
-      "entityId": "clothing:charcoal_heather_zip_up_hoodie",
+      "entityId": "clothing:charcoal_nylon_sports_bra",
       "equip": true
     },
     {
-      "entityId": "clothing:dark_burgundy_long_sleeve_tshirt",
+      "entityId": "clothing:graphite_wool_briefs",
       "equip": true
     },
     {
-      "entityId": "clothing:black_cargo_joggers",
+      "entityId": "clothing:shale_gray_nylon_field_pants",
       "equip": true
     },
     {
-      "entityId": "clothing:nude_microfiber_seamless_thong",
+      "entityId": "clothing:black_tactical_work_belt",
       "equip": true
     },
     {
-      "entityId": "clothing:black_trail_running_shoes",
+      "entityId": "clothing:dark_gray_wool_boot_socks",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:black_leather_duty_boots",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:slate_nylon_baseball_cap",
       "equip": true
     }
   ]

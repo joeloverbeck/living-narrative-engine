@@ -187,6 +187,11 @@
       "actors_in_location.scope",
       "environment.scope"
     ],
-    "recipes": []
+    "recipes": [],
+    "goals": [
+      "defeat_enemy.goal.json",
+      "find_food.goal.json",
+      "rest_safely.goal.json"
+    ]
   }
 }

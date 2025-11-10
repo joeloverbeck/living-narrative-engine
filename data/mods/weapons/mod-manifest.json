@@ -1,0 +1,18 @@
+{
+  "id": "weapons",
+  "version": "1.0.0",
+  "name": "weapons",
+  "dependencies": [],
+  "content": {
+    "actions": [],
+    "components": [],
+    "conditions": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [],
+    "rules": [],
+    "scopes": []
+  }
+}

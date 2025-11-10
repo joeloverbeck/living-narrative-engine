@@ -32,16 +32,21 @@
     "entities": {
       "definitions": [
         "centaur_warrior.character.json",
+        "field_notebook.entity.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json",
         "len_amezua.character.json",
+        "perimeter_of_rip_in_reality.location.json",
         "red_dragon.character.json",
         "writhing_observer.character.json"
       ],
       "instances": [
         "centaur_warrior.character.json",
+        "field_notebook.entity.json",
         "giant_forest_spider.character.json",
         "kraken_elder.character.json",
+        "len_amezua.character.json",
+        "perimeter_of_rip_in_reality.location.json",
         "red_dragon.character.json",
         "writhing_observer.character.json"
       ]
@@ -51,6 +56,14 @@
     "scopes": [],
     "recipes": [
       "len_amezua.recipe.json"
+    ],
+    "portraits": [
+      "len_amezua.png",
+      "perimeter_of_rip_in_reality.png",
+      "writhing_observer.png"
+    ],
+    "worlds": [
+      "patrol.world.json"
     ]
   }
 }
