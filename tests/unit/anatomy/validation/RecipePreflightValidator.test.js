@@ -1019,6 +1019,370 @@ describe('RecipePreflightValidator', () => {
       expect(report.isValid).toBe(true);
       expect(report.errors.filter(e => e.type === 'PART_UNAVAILABLE')).toHaveLength(0);
     });
+
+    it('should treat non-object property requirements as optional during part availability checks', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'entity:arm_part',
+              components: {
+                'anatomy:part': { subType: 'arm' },
+              },
+            },
+          ];
+        }
+        return [];
+      });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          slot1: {
+            partType: 'arm',
+            tags: [],
+            properties: 'not-an-object',
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+      });
+
+      expect(report.isValid).toBe(true);
+      expect(
+        report.errors.filter((error) => error.type === 'PART_UNAVAILABLE')
+      ).toHaveLength(0);
+    });
+  });
+
+  describe('Generated slot part availability validation', () => {
+    it('should skip generated slot checks when blueprint becomes unavailable mid-run', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const blueprint = {
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        slots: {},
+        additionalSlots: {},
+      };
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest
+        .fn()
+        .mockResolvedValueOnce(blueprint)
+        .mockResolvedValueOnce(blueprint)
+        .mockResolvedValueOnce(null);
+
+      mockDataRegistry.getAll = jest.fn(() => []);
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [{ matches: ['ghost_slot'] }],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipLoadFailureChecks: true,
+      });
+
+      expect(mockAnatomyBlueprintRepository.getBlueprint).toHaveBeenCalledTimes(3);
+      expect(
+        report.errors.filter(
+          (error) => error.type === 'GENERATED_SLOT_PART_UNAVAILABLE'
+        )
+      ).toHaveLength(0);
+    });
+
+    it('should warn when a pattern matches a slot that does not exist', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const blueprint = {
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        slots: {},
+        additionalSlots: {},
+      };
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest
+        .fn()
+        .mockResolvedValue(blueprint);
+
+      mockDataRegistry.getAll = jest.fn(() => []);
+
+      jest
+        .spyOn(patternMatchingValidator, 'findMatchingSlots')
+        .mockReturnValue({ matches: ['missing_slot'], availableSlots: [] });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [{ matches: ['missing_slot'] }],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipLoadFailureChecks: true,
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "RecipePreflightValidator: Slot 'missing_slot' matched by pattern but not found in blueprint or structure template"
+      );
+      expect(
+        report.errors.filter(
+          (error) => error.type === 'GENERATED_SLOT_PART_UNAVAILABLE'
+        )
+      ).toHaveLength(0);
+    });
+
+    it('should report detailed errors with merged requirements when generated slots lack entities', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const blueprint = {
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+        slots: {
+          group_slot: {
+            allowedTypes: ['arm'],
+            requirements: {
+              components: ['component:blueprintTag'],
+              properties: {
+                'component:patternProp': { hue: 'cool' },
+                'component:blueprintOnly': { intensity: 'high' },
+              },
+            },
+          },
+          pattern_slot: {
+            allowedTypes: ['wing'],
+            requirements: {
+              components: ['component:blueprintTag'],
+              properties: {
+                'component:patternProp': { hue: 'cool' },
+                'component:blueprintOnly': { intensity: 'high' },
+              },
+            },
+          },
+          all_slot: {
+            allowedTypes: ['wing'],
+            requirements: {
+              components: ['component:blueprintTag'],
+              properties: {
+                'component:patternProp': { hue: 'cool' },
+                'component:blueprintOnly': { intensity: 'high' },
+              },
+            },
+          },
+          explicit_slot: {
+            allowedTypes: ['wing'],
+            requirements: {
+              components: ['component:blueprintTag'],
+              properties: {
+                'component:patternProp': { hue: 'cool' },
+                'component:blueprintOnly': { intensity: 'high' },
+              },
+            },
+          },
+          unknown_slot: {
+            allowedTypes: ['wing'],
+            requirements: {
+              components: ['component:blueprintTag'],
+              properties: {
+                'component:patternProp': { hue: 'cool' },
+                'component:blueprintOnly': { intensity: 'high' },
+              },
+            },
+          },
+        },
+      };
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest
+        .fn()
+        .mockResolvedValue(blueprint);
+
+      const entityDefs = [
+        {
+          id: 'entity:allowedTypeMismatch',
+          components: {
+            'anatomy:part': { subType: 'wing' },
+            'component:blueprintTag': {},
+            'component:patternProp': { tone: 'midnight', hue: 'cool' },
+          },
+        },
+        {
+          id: 'entity:missingBlueprintTag',
+          components: {
+            'anatomy:part': { subType: 'wing' },
+            'component:patternTag': {},
+            'component:patternProp': { tone: 'midnight' },
+            'component:blueprintOnly': { intensity: 'high' },
+          },
+        },
+        {
+          id: 'entity:propertyMismatch',
+          components: {
+            'anatomy:part': { subType: 'wing' },
+            'component:patternTag': {},
+            'component:blueprintTag': {},
+            'component:patternProp': { tone: 'dawn' },
+            'component:blueprintOnly': { intensity: 'low' },
+          },
+        },
+      ];
+
+      mockDataRegistry.getAll = jest.fn((type) => {
+        if (type === 'entityDefinitions') {
+          return entityDefs;
+        }
+        return [];
+      });
+
+      jest
+        .spyOn(patternMatchingValidator, 'findMatchingSlots')
+        .mockImplementation((pattern) => {
+          const availableSlots = Object.keys(blueprint.slots);
+          if (pattern.matchesGroup) {
+            return { matches: ['group_slot'], availableSlots };
+          }
+          if (pattern.matchesPattern !== undefined) {
+            return { matches: ['pattern_slot'], availableSlots };
+          }
+          if (pattern.matchesAll) {
+            return { matches: ['all_slot'], availableSlots };
+          }
+          if (Array.isArray(pattern.matches)) {
+            return { matches: pattern.matches, availableSlots };
+          }
+          return { matches: ['unknown_slot'], availableSlots };
+        });
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [
+          {
+            matchesGroup: 'wing_group',
+            partType: 'wing',
+            tags: ['component:patternTag'],
+            properties: { 'component:patternProp': { tone: 'midnight' } },
+          },
+          {
+            matchesPattern: 'wing_*',
+            partType: 'wing',
+            tags: ['component:patternTag'],
+            properties: { 'component:patternProp': { tone: 'midnight' } },
+          },
+          {
+            matchesAll: { slotType: 'wing' },
+            partType: 'wing',
+            tags: ['component:patternTag'],
+            properties: { 'component:patternProp': { tone: 'midnight' } },
+          },
+          {
+            matches: ['explicit_slot'],
+            partType: 'wing',
+            tags: ['component:patternTag'],
+            properties: { 'component:patternProp': { tone: 'midnight' } },
+          },
+          {
+            partType: 'wing',
+            tags: ['component:patternTag'],
+            properties: { 'component:patternProp': { tone: 'midnight' } },
+          },
+        ],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipLoadFailureChecks: true,
+      });
+
+      const generatedErrors = report.errors.filter(
+        (error) => error.type === 'GENERATED_SLOT_PART_UNAVAILABLE'
+      );
+      expect(generatedErrors).toHaveLength(5);
+
+      const patternDescriptions = generatedErrors.map(
+        (error) => error.location.pattern
+      );
+      expect(patternDescriptions).toEqual(
+        expect.arrayContaining([
+          "matchesGroup 'wing_group'",
+          "matchesPattern 'wing_*'",
+          "matchesAll {\"slotType\":\"wing\"}",
+          'explicit [explicit_slot]',
+          'unknown pattern',
+        ])
+      );
+
+      const mergedRequirementsError = generatedErrors.find((error) =>
+        error.details.requiredProperties.includes('component:blueprintOnly')
+      );
+      expect(mergedRequirementsError).toBeDefined();
+      expect(mergedRequirementsError.details.requiredProperties).toEqual(
+        expect.arrayContaining(['component:patternProp', 'component:blueprintOnly'])
+      );
+      expect(mergedRequirementsError.fix).toEqual(
+        expect.stringContaining('component:patternProp')
+      );
+    });
   });
 
   describe('Error handling', () => {
@@ -1166,6 +1530,98 @@ describe('RecipePreflightValidator', () => {
 
       // Restore
       mockLogger.error = originalError;
+    });
+  });
+
+  describe('Entity definition load failure diagnostics', () => {
+    it('should surface detailed information for entity definition load failures', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const loadFailures = {
+        entityDefinitions: {
+          failures: [
+            {
+              file: 'anatomy/entities/wing.entity.json',
+              error: new Error(
+                'Invalid components: [component:alpha, component:beta]. data/hue must be equal to one of the allowed values'
+              ),
+            },
+            {
+              file: 'anatomy/entities/torso.entity.json',
+              error: new Error('Unexpected end of JSON input'),
+            },
+          ],
+        },
+      };
+
+      const validatorWithFailures = new RecipePreflightValidator({
+        dataRegistry: mockDataRegistry,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        schemaValidator: mockSchemaValidator,
+        slotGenerator: mockSlotGenerator,
+        logger: mockLogger,
+        loadFailures,
+      });
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.getAll = jest.fn(() => []);
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validatorWithFailures.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+      });
+
+      const loadErrors = report.errors.filter(
+        (error) => error.type === 'ENTITY_LOAD_FAILURE'
+      );
+      expect(loadErrors).toHaveLength(2);
+
+      const detailedError = loadErrors.find((error) =>
+        error.details.failedComponents?.includes('component:alpha')
+      );
+      expect(detailedError).toBeDefined();
+      expect(detailedError.details.validationDetails).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            component: 'component:alpha',
+            issue: expect.stringContaining('invalid value'),
+          }),
+        ])
+      );
+      expect(detailedError.fix).toContain('component:alpha');
+
+      const genericError = loadErrors.find(
+        (error) => !error.details.failedComponents
+      );
+      expect(genericError).toBeDefined();
+      expect(genericError.fix).toContain('Review');
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Found 2 entity definition load failures')
+      );
     });
   });
 
