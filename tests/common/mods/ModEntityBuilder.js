@@ -389,12 +389,19 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   asBodyPart(options = {}) {
-    const { parent = null, children = [], subType } = options;
+    const { parent = null, children = [], subType, socketId = 'default-socket' } = options;
     this.entityData.components['anatomy:part'] = {
       parent,
       children,
       subType,
     };
+    // Also add anatomy:joint component needed by body graph service
+    if (parent) {
+      this.entityData.components['anatomy:joint'] = {
+        parentId: parent,
+        socketId: socketId,
+      };
+    }
     return this;
   }
 

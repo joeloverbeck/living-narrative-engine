@@ -100,32 +100,13 @@ function loadScenario(
 
 describe('seduction:grab_crotch_draw_attention action discovery', () => {
   let testFixture;
-  let originalValidateAction;
-
-  beforeEach(async () => {
+    beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
-    originalValidateAction = testFixture.testEnv.validateAction;
-    testFixture.testEnv.validateAction = (actorId, actionId) => {
-      if (actionId === ACTION_ID) {
-        const actorEntity =
-          testFixture.entityManager.getEntityInstance(actorId);
-        return testFixture.testEnv.prerequisiteService.evaluate(
-          grabCrotchDrawAttentionAction.prerequisites,
-          grabCrotchDrawAttentionAction,
-          actorEntity
-        );
-      }
-
-      return originalValidateAction(actorId, actionId);
-    };
-  });
+      });
 
   afterEach(() => {
     if (testFixture) {
-      if (originalValidateAction) {
-        testFixture.testEnv.validateAction = originalValidateAction;
-        originalValidateAction = null;
-      }
+      
       testFixture.cleanup();
     }
   });
@@ -137,15 +118,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: true,
       });
 
-      const prerequisitesPassed =
-        testFixture.testEnv.prerequisiteService.evaluate(
-          grabCrotchDrawAttentionAction.prerequisites,
-          grabCrotchDrawAttentionAction,
-          testFixture.entityManager.getEntityInstance(actorId)
-        );
-      expect(prerequisitesPassed).toBe(true);
-
-      const availableActions = testFixture.discoverActions(actorId);
+            const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).toHaveAction(ACTION_ID);
     });
@@ -156,15 +129,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: true,
       });
 
-      const prerequisitesPassed =
-        testFixture.testEnv.prerequisiteService.evaluate(
-          grabCrotchDrawAttentionAction.prerequisites,
-          grabCrotchDrawAttentionAction,
-          testFixture.entityManager.getEntityInstance(actorId)
-        );
-      expect(prerequisitesPassed).toBe(false);
-
-      const availableActions = testFixture.discoverActions(actorId);
+            const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
@@ -175,15 +140,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: false,
       });
 
-      const prerequisitesPassed =
-        testFixture.testEnv.prerequisiteService.evaluate(
-          grabCrotchDrawAttentionAction.prerequisites,
-          grabCrotchDrawAttentionAction,
-          testFixture.entityManager.getEntityInstance(actorId)
-        );
-      expect(prerequisitesPassed).toBe(false);
-
-      const availableActions = testFixture.discoverActions(actorId);
+            const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
@@ -194,15 +151,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: false,
       });
 
-      const prerequisitesPassed =
-        testFixture.testEnv.prerequisiteService.evaluate(
-          grabCrotchDrawAttentionAction.prerequisites,
-          grabCrotchDrawAttentionAction,
-          testFixture.entityManager.getEntityInstance(actorId)
-        );
-      expect(prerequisitesPassed).toBe(false);
-
-      const availableActions = testFixture.discoverActions(actorId);
+            const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
