@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../schemas/goal.schema.json",
+  "id": "core:defeat_enemy",
+  "description": "Actor needs to defeat an enemy in combat",
+  "priority": 90,
+  "relevance": {
+    "and": [
+      { ">=": [{ "var": "actor.components.core:actor" }, null] },
+      { ">=": [{ "var": "actor.components.combat:in_combat" }, null] },
+      { ">": [{ "var": "actor.components.core:health.value" }, 20] }
+    ]
+  },
+  "goalState": {
+    "!": [{ "var": "actor.components.combat:in_combat" }]
+  }
+}

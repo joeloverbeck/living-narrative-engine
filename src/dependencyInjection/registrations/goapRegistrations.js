@@ -7,6 +7,8 @@ import { coreTokens } from '../tokens/tokens-core.js';
 import EffectsAnalyzer from '../../goap/analysis/effectsAnalyzer.js';
 import EffectsGenerator from '../../goap/generation/effectsGenerator.js';
 import EffectsValidator from '../../goap/validation/effectsValidator.js';
+import GoalManager from '../../goap/goals/goalManager.js';
+import GoalStateEvaluator from '../../goap/goals/goalStateEvaluator.js';
 
 /**
  * Registers GOAP services in the DI container
@@ -39,9 +41,24 @@ export function registerGoapServices(container) {
     }
   });
 
-  // Goals (to be implemented in later tickets)
-  // container.register(goapTokens.IGoalManager, GoalManager);
-  // container.register(goapTokens.IGoalStateEvaluator, GoalStateEvaluator);
+  // Goals
+  container.register(goapTokens.IGoalStateEvaluator, GoalStateEvaluator, {
+    dependencies: {
+      logger: coreTokens.ILogger,
+      jsonLogicEvaluator: coreTokens.JsonLogicEvaluationService,
+      entityManager: coreTokens.IEntityManager
+    }
+  });
+
+  container.register(goapTokens.IGoalManager, GoalManager, {
+    dependencies: {
+      logger: coreTokens.ILogger,
+      gameDataRepository: coreTokens.IGameDataRepository,
+      goalStateEvaluator: goapTokens.IGoalStateEvaluator,
+      jsonLogicEvaluator: coreTokens.JsonLogicEvaluationService,
+      entityManager: coreTokens.IEntityManager
+    }
+  });
 
   // Selection (to be implemented in later tickets)
   // container.register(goapTokens.IActionSelector, ActionSelector);
