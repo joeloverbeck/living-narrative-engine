@@ -655,6 +655,275 @@ describe('RecipeConstraintEvaluator', () => {
       });
     });
 
+    describe('validation metadata', () => {
+      it('should use custom error message from requires constraint validation metadata', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['head'],
+                components: ['anatomy:brain'],
+                validation: {
+                  errorMessage: 'Dragons require both wings and tail for flight stability',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1'];
+
+        // Mock entity has head part but no brain component
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toBe(
+          'Dragons require both wings and tail for flight stability'
+        );
+      });
+
+      it('should use custom error message from excludes constraint validation metadata', () => {
+        const recipe = {
+          constraints: {
+            excludes: [
+              {
+                components: ['anatomy:wings', 'anatomy:arms'],
+                validation: {
+                  errorMessage: 'Cannot have both gills and lungs',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1', 'entity2'];
+
+        mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+          (entityId) => {
+            return entityId === 'entity1'
+              ? ['anatomy:wings']
+              : ['anatomy:arms'];
+          }
+        );
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toBe('Cannot have both gills and lungs');
+      });
+
+      it('should log explanation when validation.explanation is provided for requires constraint', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['head'],
+                components: ['anatomy:brain'],
+                validation: {
+                  explanation: 'Flight mechanics require wing-tail coordination for balance',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1'];
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'Constraint explanation: Flight mechanics require wing-tail coordination for balance'
+        );
+      });
+
+      it('should log explanation when validation.explanation is provided for excludes constraint', () => {
+        const recipe = {
+          constraints: {
+            excludes: [
+              {
+                components: ['anatomy:wings', 'anatomy:arms'],
+                validation: {
+                  explanation: 'Choose either aquatic (gills) or terrestrial (lungs)',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1', 'entity2'];
+
+        mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+          (entityId) => {
+            return entityId === 'entity1'
+              ? ['anatomy:wings']
+              : ['anatomy:arms'];
+          }
+        );
+
+        evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'Constraint explanation: Choose either aquatic (gills) or terrestrial (lungs)'
+        );
+      });
+
+      it('should use default error message when validation metadata is not provided', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['head'],
+                components: ['anatomy:brain'],
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1'];
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'anatomy:part',
+        ]);
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toContain('Required constraint not satisfied');
+        expect(result.errors[0]).toContain('has part types [head]');
+        expect(result.errors[0]).toContain(
+          'missing required components [anatomy:brain]'
+        );
+      });
+
+      it('should support both custom error message and explanation together', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['dragon_wing', 'dragon_tail'],
+                components: [],
+                validation: {
+                  minItems: 2,
+                  errorMessage: 'Co-presence constraint requires at least 2 part types',
+                  explanation: 'Dragons need both wings and tail for flight balance',
+                },
+              },
+            ],
+            excludes: [
+              {
+                components: ['anatomy:gills', 'anatomy:lungs'],
+                validation: {
+                  mutuallyExclusive: true,
+                  errorMessage: 'Cannot have both gills and lungs',
+                  explanation: 'Choose either aquatic (gills) or terrestrial (lungs)',
+                },
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1', 'entity2'];
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return entityId === 'entity1'
+                ? { subType: 'dragon_wing' }
+                : { subType: 'other' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+          (entityId) => {
+            return entityId === 'entity1'
+              ? ['anatomy:part', 'anatomy:gills']
+              : ['anatomy:part', 'anatomy:lungs'];
+          }
+        );
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toBe('Cannot have both gills and lungs');
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'Constraint explanation: Choose either aquatic (gills) or terrestrial (lungs)'
+        );
+      });
+
+      it('should maintain backward compatibility with constraints without validation metadata', () => {
+        const recipe = {
+          constraints: {
+            requires: [
+              {
+                partTypes: ['head'],
+                components: ['anatomy:brain'],
+              },
+            ],
+            excludes: [
+              {
+                components: ['anatomy:wings', 'anatomy:arms'],
+              },
+            ],
+          },
+        };
+        const entityIds = ['entity1', 'entity2'];
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentType) => {
+            if (componentType === 'anatomy:part') {
+              return { subType: 'head' };
+            }
+            return null;
+          }
+        );
+        mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+          (entityId) => {
+            return entityId === 'entity1'
+              ? ['anatomy:part', 'anatomy:wings']
+              : ['anatomy:part', 'anatomy:arms'];
+          }
+        );
+
+        const result = evaluator.evaluateConstraints(entityIds, recipe);
+
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(2);
+        expect(result.errors[0]).toContain('Required constraint not satisfied');
+        expect(result.errors[1]).toContain('Exclusion constraint violated');
+      });
+    });
+
     describe('complex scenarios', () => {
       it('should handle multiple constraint types together', () => {
         const recipe = {

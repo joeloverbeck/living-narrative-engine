@@ -1109,6 +1109,63 @@ After (CORRECT - Multiple parts):
 }
 ```
 
+**Declarative Constraint Validation (Enhanced):**
+
+As of ANASYSIMP-018, constraints support optional validation metadata for custom error messages and explanations. This makes constraints self-documenting and provides better error reporting.
+
+**Validation Metadata Properties:**
+
+For `requires` constraints:
+- `minItems` (integer, minimum 2): Minimum number of items required for co-presence
+- `errorMessage` (string): Custom error message when constraint violated
+- `explanation` (string): Explanation logged for debugging/documentation
+
+For `excludes` constraints:
+- `mutuallyExclusive` (boolean): Indicates items are mutually exclusive
+- `errorMessage` (string): Custom error message when constraint violated
+- `explanation` (string): Explanation logged for debugging/documentation
+
+**Enhanced Constraint Examples:**
+
+```json
+{
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": ["dragon_wing", "dragon_tail"],
+        "validation": {
+          "minItems": 2,
+          "errorMessage": "Dragons require both wings and tail for flight stability",
+          "explanation": "Flight mechanics require wing-tail coordination for balance"
+        }
+      }
+    ],
+    "excludes": [
+      {
+        "components": ["anatomy:gills", "anatomy:lungs"],
+        "validation": {
+          "mutuallyExclusive": true,
+          "errorMessage": "Cannot have both gills and lungs",
+          "explanation": "Choose either aquatic (gills) or terrestrial (lungs)"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Benefits:**
+- **Self-documenting**: Constraints explain themselves inline
+- **Better errors**: Custom messages provide clearer guidance
+- **Debugging aid**: Explanations logged when constraints fail
+- **Backward compatible**: Validation metadata is optional; existing recipes continue to work with default error messages
+
+**Usage Notes:**
+- Validation metadata is entirely optional
+- Default error messages used when validation metadata absent
+- Explanations logged at debug level when provided
+- All validation properties are optional within the validation object
+
 **Related Errors:**
 - RecipeValidationError (parent error containing constraint errors)
 - Schema validation errors (if constraint structure is completely wrong)
