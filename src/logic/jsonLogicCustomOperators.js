@@ -11,6 +11,7 @@ import { HasSittingSpaceToRightOperator } from './operators/hasSittingSpaceToRig
 import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
 import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
 import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupantOperator.js';
+import { HasOtherActorsAtLocationOperator } from './operators/hasOtherActorsAtLocationOperator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
@@ -128,6 +129,11 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const hasOtherActorsAtLocationOp = new HasOtherActorsAtLocationOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     // Register hasPartWithComponentValue operator
     jsonLogicEvaluationService.addOperation(
       'hasPartWithComponentValue',
@@ -239,6 +245,15 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, targetPath, actorPath],
           this
         );
+      }
+    );
+
+    // Register hasOtherActorsAtLocation operator
+    jsonLogicEvaluationService.addOperation(
+      'hasOtherActorsAtLocation',
+      function (entityPath) {
+        // 'this' is the evaluation context
+        return hasOtherActorsAtLocationOp.evaluate([entityPath], this);
       }
     );
 

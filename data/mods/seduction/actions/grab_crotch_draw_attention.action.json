@@ -21,6 +21,12 @@
         "hasClothingInSlot": ["actor", "torso_lower"]
       },
       "failure_message": "Your crotch needs to be covered to emphasize the bulge."
+    },
+    {
+      "logic": {
+        "hasOtherActorsAtLocation": ["actor"]
+      },
+      "failure_message": "There is nobody here to draw attention from."
     }
   ],
   "visual": {
