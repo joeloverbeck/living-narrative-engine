@@ -171,6 +171,9 @@ export class RecipeConstraintEvaluator {
       const requiredComponents = constraint.components || [];
       const requiredPartTypes = constraint.partTypes || [];
 
+      // Get validation metadata if provided
+      const validation = constraint.validation || {};
+
       // Check if any required part types are present
       const presentPartTypes = requiredPartTypes.filter((pt) =>
         graphMetadata.partTypes.has(pt)
@@ -184,10 +187,18 @@ export class RecipeConstraintEvaluator {
         );
 
         if (missingComponents.length > 0) {
-          errors.push(
+          // Use custom error message if provided, otherwise use default
+          const errorMessage =
+            validation.errorMessage ||
             `Required constraint not satisfied: has part types [${presentPartTypes.join(', ')}] ` +
-              `but missing required components [${missingComponents.join(', ')}]`
-          );
+              `but missing required components [${missingComponents.join(', ')}]`;
+
+          errors.push(errorMessage);
+
+          // Log explanation if provided
+          if (validation.explanation) {
+            this.#logger.debug(`Constraint explanation: ${validation.explanation}`);
+          }
         }
       }
     }
@@ -206,16 +217,27 @@ export class RecipeConstraintEvaluator {
       // Handle nested format with components array
       const excludedComponents = constraint.components || constraint;
 
+      // Get validation metadata if provided
+      const validation = constraint.validation || {};
+
       if (Array.isArray(excludedComponents)) {
         const presentExcluded = excludedComponents.filter((c) =>
           graphMetadata.components.has(c)
         );
 
         if (presentExcluded.length > 1) {
-          errors.push(
+          // Use custom error message if provided, otherwise use default
+          const errorMessage =
+            validation.errorMessage ||
             `Exclusion constraint violated: found mutually exclusive components ` +
-              `[${presentExcluded.join(', ')}] in the same anatomy`
-          );
+              `[${presentExcluded.join(', ')}] in the same anatomy`;
+
+          errors.push(errorMessage);
+
+          // Log explanation if provided
+          if (validation.explanation) {
+            this.#logger.debug(`Constraint explanation: ${validation.explanation}`);
+          }
         }
       }
     }

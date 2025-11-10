@@ -55,6 +55,26 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "validation": {
+                "type": "object",
+                "description": "Optional validation metadata for custom error messages and explanations",
+                "properties": {
+                  "minItems": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "description": "Minimum number of items required for co-presence constraint"
+                  },
+                  "errorMessage": {
+                    "type": "string",
+                    "description": "Custom error message to display when constraint is violated"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of why constraint exists (logged for debugging/documentation)"
+                  }
+                },
+                "additionalProperties": false
               }
             },
             "additionalProperties": false
@@ -79,6 +99,25 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "validation": {
+                "type": "object",
+                "description": "Optional validation metadata for custom error messages and explanations",
+                "properties": {
+                  "mutuallyExclusive": {
+                    "type": "boolean",
+                    "description": "Indicates that listed items are mutually exclusive"
+                  },
+                  "errorMessage": {
+                    "type": "string",
+                    "description": "Custom error message to display when constraint is violated"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Explanation of why constraint exists (logged for debugging/documentation)"
+                  }
+                },
+                "additionalProperties": false
               }
             },
             "additionalProperties": false
