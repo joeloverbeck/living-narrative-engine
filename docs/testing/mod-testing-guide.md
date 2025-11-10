@@ -378,6 +378,242 @@ beforeEach(async () => {
 - Guard diagnostic logging with environment checks (e.g., `if (process.env.DEBUG_DISCOVERY)`) to keep standard runs silent.
 - Use the captured log accessors (`getDebugLogs()`, `getInfoLogs()`, etc.) instead of reading from `console` output.
 
+## 🔍 Diagnostics Features
+
+The ModTestFixture provides comprehensive diagnostics to help debug scope resolution issues.
+
+### Parameter Validation
+
+**What it does**: Validates parameters passed to scope resolution functions
+
+**Catches**:
+- Context object passed instead of entity
+- Missing or invalid runtimeCtx
+- Malformed AST structures
+
+**Example error**:
+```javascript
+ParameterValidationError: Expected actorEntity (object with .id), got object
+  Source: ScopeEngine.resolve
+  💡 Hint: Extract actorEntity from context before passing
+  Example: const actorEntity = context.actorEntity || context.actor;
+```
+
+### Enhanced Error Context
+
+**What it does**: Wraps scope resolution errors with rich context
+
+**Provides**:
+- Scope name and phase where error occurred
+- Parameter values for debugging
+- Helpful hints and suggestions
+- Code examples for correct usage
+
+**Example error**:
+```javascript
+ScopeResolutionError: Invalid parameter passed to scope resolver
+  Scope: positioning:close_actors
+  Phase: parameter extraction
+  Parameters:
+    contextType: object
+    hasActorEntity: false
+  💡 Hint: Extract actorEntity from context before passing
+```
+
+### Scope Evaluation Tracing
+
+**What it does**: Captures step-by-step execution of scope resolution
+
+**Enables**:
+- Seeing which resolvers execute and in what order
+- Inspecting input/output of each step
+- Viewing filter evaluations per entity
+- Identifying where empty sets occur
+
+**Usage**:
+```javascript
+it('debug with scope tracing', async () => {
+  testFixture.enableScopeTracing();
+
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  const actions = testFixture.discoverActions(scenario.actor.id);
+
+  if (actions.length === 0) {
+    console.log(testFixture.getScopeTrace());
+  }
+});
+```
+
+**Output**:
+```
+SCOPE EVALUATION TRACE:
+================================================================================
+
+1. [SourceResolver] resolve(kind='actor')
+   Input: Context object
+   Output: Set (1 item) ['actor-alice-123']
+
+2. [StepResolver] resolve(field='components.positioning:closeness.partners')
+   Input: Set (1 item) ['actor-alice-123']
+   Output: Set (1 item) ['actor-bob-456']
+
+3. [FilterResolver] Evaluating 1 entities
+
+   Entity: actor-bob-456
+   Result: PASS ✓
+
+================================================================================
+Summary: 3 steps, 12ms, Final size: 1
+```
+
+### Filter Clause Breakdown
+
+**What it does**: Shows which filter clauses pass/fail for each entity
+
+**Enables**:
+- Identifying exactly which filter condition failed
+- Seeing variable values in filter context
+- Understanding complex nested filter logic
+
+**Usage**:
+```javascript
+it('debug filter failure', async () => {
+  testFixture.enableScopeTracing();
+
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  testFixture.discoverActions(scenario.actor.id);
+
+  const breakdown = testFixture.getFilterBreakdown(scenario.target.id);
+
+  if (breakdown && !breakdown.result) {
+    console.log('Filter failed:');
+    breakdown.clauses.forEach(clause => {
+      const symbol = clause.result ? '✓' : '✗';
+      console.log(`  ${symbol} ${clause.operator}: ${clause.description}`);
+    });
+  }
+});
+```
+
+**Output**:
+```
+Filter failed:
+  ✗ and: All conditions must be true
+    ✓ ==: var("type") equals "actor"
+    ✗ component_present: Component "positioning:sitting" is present
+```
+
+### Performance Metrics
+
+**What it does**: Measures timing of scope resolution operations
+
+**Provides**:
+- Per-resolver timing breakdown
+- Filter evaluation statistics
+- Slowest operation identification
+- Tracing overhead calculation
+
+**Usage**:
+```javascript
+it('analyze performance', async () => {
+  testFixture.enableScopeTracing();
+
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  testFixture.discoverActions(scenario.actor.id);
+
+  const metrics = testFixture.getScopePerformanceMetrics();
+
+  console.log(`Total: ${metrics.totalDuration.toFixed(2)}ms`);
+  metrics.resolverStats.forEach(stat => {
+    console.log(`  ${stat.resolver}: ${stat.totalTime.toFixed(2)}ms (${stat.percentage.toFixed(1)}%)`);
+  });
+});
+```
+
+## 📚 ModTestFixture API Reference
+
+### Scope Tracing Control
+
+#### `enableScopeTracing()`
+Enable scope evaluation tracing.
+
+#### `disableScopeTracing()`
+Disable scope evaluation tracing.
+
+#### `clearScopeTrace()`
+Clear accumulated trace data.
+
+#### `enableScopeTracingIf(condition)`
+Conditionally enable tracing.
+
+```javascript
+const shouldTrace = actions.length === 0;
+testFixture.enableScopeTracingIf(shouldTrace);
+```
+
+### Trace Data Access
+
+#### `getScopeTrace()`
+Get formatted, human-readable trace output.
+
+**Returns**: `string` - Formatted trace
+
+```javascript
+const trace = testFixture.getScopeTrace();
+console.log(trace);
+```
+
+#### `getScopeTraceData()`
+Get raw trace data structure.
+
+**Returns**: `object` - Raw trace with steps and summary
+
+```javascript
+const data = testFixture.getScopeTraceData();
+console.log(data.summary.totalSteps);
+console.log(data.summary.resolversUsed);
+```
+
+#### `getFilterBreakdown(entityId?)`
+Get filter clause breakdown.
+
+**Parameters**:
+- `entityId` (optional): Filter to specific entity
+
+**Returns**: `object|Array` - Filter breakdown with clauses
+
+```javascript
+// All filter evaluations
+const allBreakdowns = testFixture.getFilterBreakdown();
+
+// Specific entity
+const breakdown = testFixture.getFilterBreakdown(entityId);
+```
+
+### Performance Metrics
+
+#### `getScopePerformanceMetrics()`
+Get detailed performance timing metrics.
+
+**Returns**: `object` - Performance metrics
+
+```javascript
+const metrics = testFixture.getScopePerformanceMetrics();
+console.log(metrics.resolverStats);
+console.log(metrics.filterEvaluation);
+console.log(metrics.slowestOperations);
+```
+
+#### `getScopeTraceWithPerformance()`
+Get formatted trace with performance focus.
+
+**Returns**: `string` - Performance-focused trace
+
+```javascript
+const perfTrace = testFixture.getScopeTraceWithPerformance();
+console.log(perfTrace);
+```
+
 ### Domain Matchers
 
 Import the relevant matcher modules once per suite to unlock expressive assertions.
