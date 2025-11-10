@@ -1,0 +1,74 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "clothing:blocks_removal",
+  "description": "Defines what items or layers this item blocks from removal while it remains equipped. Used to enforce realistic clothing physics (e.g., belts blocking pants removal).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "blockedSlots": {
+        "type": "array",
+        "description": "List of slot/layer combinations that cannot be removed while this item is worn",
+        "items": {
+          "type": "object",
+          "properties": {
+            "slot": {
+              "type": "string",
+              "enum": [
+                "torso_upper",
+                "torso_lower",
+                "legs",
+                "feet",
+                "head_gear",
+                "hands",
+                "left_arm_clothing",
+                "right_arm_clothing"
+              ],
+              "description": "Equipment slot that is blocked"
+            },
+            "layers": {
+              "type": "array",
+              "description": "Layers in the blocked slot that cannot be removed",
+              "items": {
+                "type": "string",
+                "enum": ["underwear", "base", "outer", "accessories"]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "blockType": {
+              "type": "string",
+              "enum": [
+                "must_remove_first",
+                "must_loosen_first",
+                "full_block"
+              ],
+              "description": "Type of blocking: must_remove_first (this item must be removed), must_loosen_first (this item must be loosened), full_block (complete inaccessibility)"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Human-readable explanation of why blocking occurs (for error messages)"
+            }
+          },
+          "required": ["slot", "layers", "blockType"],
+          "additionalProperties": false
+        },
+        "minItems": 1
+      },
+      "blocksRemovalOf": {
+        "type": "array",
+        "description": "Specific item IDs that cannot be removed while this item is worn (for explicit item-to-item blocking)",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$"
+        },
+        "uniqueItems": true
+      }
+    },
+    "anyOf": [
+      { "required": ["blockedSlots"] },
+      { "required": ["blocksRemovalOf"] }
+    ],
+    "additionalProperties": false
+  }
+}
