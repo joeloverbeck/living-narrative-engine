@@ -65,6 +65,7 @@
         "item_use",
         "liquid_consumed",
         "liquid_consumed_entirely",
+        "notes_jotted",
         "put_in_container_failed",
         "speech_local",
         "state_change_observable",
