@@ -175,6 +175,12 @@ export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
     }
 
     if (!sockets.has(slot.socket)) {
+      // Skip validation for optional slots - production gracefully handles missing sockets
+      // by skipping optional slots (see slotResolutionOrchestrator.js:106-118)
+      if (slot.optional === true) {
+        continue;
+      }
+
       errors.push({
         type: 'SOCKET_NOT_FOUND',
         blueprintId: blueprint.id,
