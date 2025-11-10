@@ -38,14 +38,19 @@ describe('EffectsAnalyzer', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    effectsAnalyzer = testBed.createEffectsAnalyzer();
+    const mockLogger = testBed.createMockLogger();
+    const mockDataRegistry = testBed.createMock('dataRegistry', ['get', 'getAll']);
+    effectsAnalyzer = new EffectsAnalyzer({
+      logger: mockLogger,
+      dataRegistry: mockDataRegistry
+    });
   });
 
   describe('analyzeRule', () => {
     it('should extract state-changing effects from simple rule', () => {
-      const rule = testBed.createRule({
+      const rule = {
         id: 'test:simple_rule',
-        operations: [
+        actions: [  // Note: 'actions', not 'operations'
           {
             type: 'ADD_COMPONENT',
             parameters: {
@@ -54,9 +59,12 @@ describe('EffectsAnalyzer', () => {
             }
           }
         ]
-      });
+      };
 
-      const result = effectsAnalyzer.analyzeRule(rule);
+      // Mock dataRegistry to return the rule
+      testBed.mocks.dataRegistry.get.mockReturnValue(rule);
+
+      const result = effectsAnalyzer.analyzeRule('test:simple_rule');  // Pass string ID
 
       expect(result.effects).toHaveLength(1);
       expect(result.effects[0].operation).toBe('ADD_COMPONENT');
@@ -175,9 +183,9 @@ describe('Effects Generation Integration', () => {
     testBed.cleanup();
   });
 
-  it('should generate effects for positioning:sit_down', async () => {
+  it('should generate effects for positioning:sit_down', () => {
     const effectsGenerator = testBed.resolve('IEffectsGenerator');
-    const effects = await effectsGenerator.generateForAction('positioning:sit_down');
+    const effects = effectsGenerator.generateForAction('positioning:sit_down');  // Synchronous
 
     expect(effects).toBeDefined();
     expect(effects.effects.length).toBeGreaterThan(0);
@@ -189,9 +197,9 @@ describe('Effects Generation Integration', () => {
     );
   });
 
-  it('should generate effects for items:pick_up_item', async () => {
+  it('should generate effects for items:pick_up_item', () => {
     const effectsGenerator = testBed.resolve('IEffectsGenerator');
-    const effects = await effectsGenerator.generateForAction('items:pick_up_item');
+    const effects = effectsGenerator.generateForAction('items:pick_up_item');  // Synchronous
 
     expect(effects).toBeDefined();
     expect(effects.effects).toContainEqual(
@@ -207,20 +215,20 @@ describe('Effects Generation Integration', () => {
     expect(effects.abstractPreconditions.hasInventoryCapacity).toBeDefined();
   });
 
-  it('should validate generated effects match rules', async () => {
+  it('should validate generated effects match rules', () => {
     const effectsGenerator = testBed.resolve('IEffectsGenerator');
     const effectsValidator = testBed.resolve('IEffectsValidator');
 
     // Generate effects
-    const effects = await effectsGenerator.generateForAction('positioning:sit_down');
+    const effects = effectsGenerator.generateForAction('positioning:sit_down');  // Synchronous
 
-    // Inject into action
-    await effectsGenerator.injectEffects(
+    // Inject into action (synchronous)
+    effectsGenerator.injectEffects(
       new Map([['positioning:sit_down', effects]])
     );
 
-    // Validate
-    const result = await effectsValidator.validateAction('positioning:sit_down');
+    // Validate (synchronous)
+    const result = effectsValidator.validateAction('positioning:sit_down');
 
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
@@ -259,17 +267,36 @@ describe('Effects Generation Performance', () => {
     await testBed.loadAllMods();
 
     const effectsGenerator = testBed.resolve('IEffectsGenerator');
+    const dataRegistry = testBed.resolve('IDataRegistry');
+
+    // Get all action IDs from all loaded mods
+    const allActions = dataRegistry.getAll('actions');
 
     const startTime = Date.now();
-    const effectsMap = await effectsGenerator.generateForAllMods();
+    const effectsMap = new Map();
+    for (const [actionId, action] of allActions) {
+      const effects = effectsGenerator.generateForAction(actionId);  // Synchronous
+      if (effects) {
+        effectsMap.set(actionId, effects);
+      }
+    }
     const duration = Date.now() - startTime;
 
     expect(effectsMap.size).toBeGreaterThan(100);
     expect(duration).toBeLessThan(5000); // < 5 seconds
   });
 
-  it('should analyze complex rule in under 100ms', async () => {
+  it('should analyze complex rule in under 100ms', () => {
+    const testBed = createTestBed();
+    const effectsAnalyzer = testBed.resolve('IEffectsAnalyzer');
+
     // Test single complex rule analysis
+    const startTime = Date.now();
+    const effects = effectsAnalyzer.analyzeRule('items:pick_up_item');  // Complex rule with conditionals
+    const duration = Date.now() - startTime;
+
+    expect(effects).toBeDefined();
+    expect(duration).toBeLessThan(100);  // < 100ms
   });
 });
 ```
