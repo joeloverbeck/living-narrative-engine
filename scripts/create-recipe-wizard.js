@@ -102,7 +102,9 @@ function getAvailableBlueprints(dataRegistry) {
   const blueprints = dataRegistry.getAll('anatomyBlueprints') || [];
 
   return blueprints.map(blueprint => ({
-    id: blueprint.id,
+    // Use _fullId which includes namespace (e.g., 'anatomy:human_female')
+    // instead of id which might not include it (e.g., 'human_female')
+    id: blueprint._fullId || blueprint.id,
     version: blueprint.schemaVersion === '2.0' ? 'V2' : 'V1',
     description: blueprint.description || 'No description',
     template: blueprint.structureTemplate || null,
@@ -117,6 +119,16 @@ function getAvailableBlueprints(dataRegistry) {
  * @returns {Promise<object>} Blueprint introspection info
  */
 async function introspectBlueprint(blueprint, context) {
+  // Handle null blueprint
+  if (!blueprint) {
+    return {
+      version: 'Unknown',
+      error: 'Blueprint not found',
+      slots: [],
+    };
+  }
+
+  // V1 blueprints don't have schemaVersion or have it undefined
   if (blueprint.schemaVersion !== '2.0') {
     return {
       version: 'V1',
@@ -550,6 +562,17 @@ async function runWizard(options) {
 
     // Load and introspect blueprint
     const blueprint = await context.anatomyBlueprintRepository.getBlueprint(blueprintId);
+
+    // Check if blueprint was found
+    if (!blueprint) {
+      console.error(chalk.red(`\n❌ Blueprint '${blueprintId}' not found in registry.\n`));
+      console.error(chalk.yellow('Available blueprints:'));
+      blueprints.forEach(bp => {
+        console.error(chalk.gray(`  - ${bp.id}`));
+      });
+      process.exit(1);
+    }
+
     const introspection = await introspectBlueprint(blueprint, context);
 
     // Display blueprint info
