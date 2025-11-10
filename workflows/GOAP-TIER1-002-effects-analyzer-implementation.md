@@ -14,9 +14,21 @@ Implement the EffectsAnalyzer class that analyzes rule operations and extracts s
 1. Implement EffectsAnalyzer class
 2. Implement operation detection (state-changing vs. non-state-changing)
 3. Implement operation-to-effect conversion
-4. Implement macro resolution integration
-5. Implement data flow analysis for context variables
-6. Implement path tracing for conditional operations
+4. Implement data flow analysis for context variables
+5. Implement path tracing for conditional operations (IF and IF_CO_LOCATED)
+6. Integrate with existing data registry for rule access
+
+## Architecture Corrections
+
+### Key Assumptions Corrected
+
+1. **Rule Access**: Rules are accessed via `IDataRegistry.get('rules', ruleId)`, NOT via a separate RuleLoader service with `getRule()`/`getRules()` methods.
+
+2. **Macro Expansion**: Macros (`{"macro": "modId:macroId"}`) are ALREADY expanded during rule loading by `RuleLoader` using the `expandMacros()` utility from `src/utils/macroUtils.js`. The EffectsAnalyzer receives rules with macros already expanded.
+
+3. **Placeholder Resolution**: Runtime placeholders like `{var: "itemId"}` are handled by `contextUtils.resolvePlaceholders()` during execution, NOT during analysis. The analyzer should preserve these as-is in effects or mark them as parameterized.
+
+4. **Operation Types**: The codebase has 60+ operation types (see `src/utils/preValidationUtils.js` KNOWN_OPERATION_TYPES), not just the 20 initially assumed.
 
 ## Technical Details
 
@@ -38,59 +50,59 @@ import { string } from '../../utils/validationCore.js';
  */
 class EffectsAnalyzer {
   #logger;
-  #ruleLoader;
-  #macroResolver;
+  #dataRegistry;
 
   /**
    * @param {Object} params - Dependencies
    * @param {Object} params.logger - Logger instance
-   * @param {Object} params.ruleLoader - Rule loader service
-   * @param {Object} params.macroResolver - Macro resolver service
+   * @param {Object} params.dataRegistry - Data registry for accessing rules
    */
-  constructor({ logger, ruleLoader, macroResolver }) {
+  constructor({ logger, dataRegistry }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug']
     });
-    validateDependency(ruleLoader, 'IRuleLoader', logger, {
-      requiredMethods: ['getRule', 'getRules']
-    });
-    validateDependency(macroResolver, 'IMacroResolver', logger, {
-      requiredMethods: ['resolveMacro', 'expandMacros']
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['get', 'getAll']
     });
 
     this.#logger = logger;
-    this.#ruleLoader = ruleLoader;
-    this.#macroResolver = macroResolver;
+    this.#dataRegistry = dataRegistry;
   }
 
   /**
    * Analyzes a rule and extracts planning effects
-   * @param {Object} rule - Rule definition
+   * @param {String} ruleId - Rule ID (qualified with mod prefix, e.g., 'positioning:sit_down')
    * @returns {Object} Planning effects structure
    */
-  analyzeRule(rule) {
-    assertPresent(rule, 'Rule is required');
-    string.assertNonBlank(rule.id, 'rule.id', 'analyzeRule', this.#logger);
+  analyzeRule(ruleId) {
+    string.assertNonBlank(ruleId, 'ruleId', 'analyzeRule', this.#logger);
 
-    this.#logger.debug(`Analyzing rule: ${rule.id}`);
+    this.#logger.debug(`Analyzing rule: ${ruleId}`);
+
+    // Fetch rule from data registry
+    const rule = this.#dataRegistry.get('rules', ruleId);
+    if (!rule) {
+      throw new Error(`Rule not found in registry: ${ruleId}`);
+    }
 
     try {
-      // Step 1: Expand macros
-      const expandedOperations = this.#expandMacros(rule.operations);
+      // Note: Macros are already expanded during rule loading (see RuleLoader)
+      // The rule.actions array contains fully expanded operations
+      const operations = rule.actions || [];
 
-      // Step 2: Analyze data flow (track context variables)
-      const dataFlow = this.#analyzeDataFlow(expandedOperations);
+      // Step 1: Analyze data flow (track context variables produced by operations)
+      const dataFlow = this.#analyzeDataFlow(operations);
 
-      // Step 3: Trace execution paths (handle conditionals)
-      const paths = this.#traceExecutionPaths(expandedOperations, dataFlow);
+      // Step 2: Trace execution paths (handle conditionals: IF, IF_CO_LOCATED)
+      const paths = this.#traceExecutionPaths(operations, dataFlow);
 
-      // Step 4: Extract state changes from each path
+      // Step 3: Extract state changes from each path
       const effects = this.#extractEffectsFromPaths(paths);
 
-      // Step 5: Generate abstract preconditions
+      // Step 4: Generate abstract preconditions for runtime-dependent conditions
       const abstractPreconditions = this.#generateAbstractPreconditions(dataFlow);
 
-      // Step 6: Calculate cost
+      // Step 5: Calculate cost
       const cost = this.#calculateCost(rule, effects);
 
       return {
@@ -101,7 +113,7 @@ class EffectsAnalyzer {
           : undefined
       };
     } catch (error) {
-      this.#logger.error(`Failed to analyze rule ${rule.id}`, error);
+      this.#logger.error(`Failed to analyze rule ${ruleId}`, error);
       throw error;
     }
   }
@@ -115,29 +127,62 @@ class EffectsAnalyzer {
     assertPresent(operation, 'Operation is required');
     assertPresent(operation.type, 'Operation type is required');
 
+    // State-changing operations that modify world state for planning purposes
+    // Based on actual operation types in src/utils/preValidationUtils.js
     const stateChangingOperations = [
+      // Core component operations
       'ADD_COMPONENT',
       'REMOVE_COMPONENT',
       'MODIFY_COMPONENT',
       'ATOMIC_MODIFY_COMPONENT',
+      'MODIFY_ARRAY_FIELD',
+
+      // Movement and positioning
       'LOCK_MOVEMENT',
       'UNLOCK_MOVEMENT',
-      'LOCK_MOUTH_ENGAGEMENT',
-      'UNLOCK_MOUTH_ENGAGEMENT',
+      'SYSTEM_MOVE_ENTITY',
+
+      // Closeness relationships
       'ESTABLISH_SITTING_CLOSENESS',
       'ESTABLISH_LYING_CLOSENESS',
       'REMOVE_SITTING_CLOSENESS',
       'REMOVE_LYING_CLOSENESS',
       'BREAK_CLOSENESS_WITH_TARGET',
+      'REMOVE_FROM_CLOSENESS_CIRCLE',
+      'MERGE_CLOSENESS_CIRCLE',
+
+      // Mouth engagement
+      'LOCK_MOUTH_ENGAGEMENT',
+      'UNLOCK_MOUTH_ENGAGEMENT',
+
+      // Items and inventory
       'TRANSFER_ITEM',
       'DROP_ITEM_AT_LOCATION',
       'PICK_UP_ITEM_FROM_LOCATION',
+
+      // Containers
       'OPEN_CONTAINER',
       'TAKE_FROM_CONTAINER',
       'PUT_IN_CONTAINER',
+
+      // Clothing
       'UNEQUIP_CLOTHING',
+
+      // Consumption
       'DRINK_FROM',
-      'DRINK_ENTIRELY'
+      'DRINK_ENTIRELY',
+
+      // Following and companionship
+      'ESTABLISH_FOLLOW_RELATION',
+      'BREAK_FOLLOW_RELATION',
+      'REBUILD_LEADER_LIST_CACHE',
+
+      // Auto-movement
+      'AUTO_MOVE_CLOSENESS_PARTNERS',
+      'AUTO_MOVE_FOLLOWERS',
+
+      // Perception
+      'ADD_PERCEPTION_LOG_ENTRY'
     ];
 
     return stateChangingOperations.includes(operation.type);
@@ -149,6 +194,8 @@ class EffectsAnalyzer {
    * @returns {boolean} True if produces context data
    */
   isContextProducing(operation) {
+    // Operations that produce data used by other operations
+    // These don't change world state but provide information
     const contextProducingOperations = [
       'QUERY_COMPONENT',
       'QUERY_COMPONENTS',
@@ -157,12 +204,14 @@ class EffectsAnalyzer {
       'GET_NAME',
       'GET_TIMESTAMP',
       'SET_VARIABLE',
+      'MODIFY_CONTEXT_ARRAY',
       'VALIDATE_INVENTORY_CAPACITY',
       'VALIDATE_CONTAINER_CAPACITY',
       'HAS_COMPONENT',
       'HAS_BODY_PART_WITH_COMPONENT_VALUE',
       'RESOLVE_DIRECTION',
-      'MATH'
+      'MATH',
+      'CHECK_FOLLOW_CYCLE'
     ];
 
     return contextProducingOperations.includes(operation.type);
@@ -171,7 +220,7 @@ class EffectsAnalyzer {
   /**
    * Converts operation to planning effect
    * @param {Object} operation - Operation from rule
-   * @returns {Object} Planning effect
+   * @returns {Object|Array<Object>} Planning effect(s)
    */
   operationToEffect(operation) {
     assertPresent(operation, 'Operation is required');
@@ -213,18 +262,32 @@ class EffectsAnalyzer {
       case 'PUT_IN_CONTAINER':
         return this.#convertContainerOperation(operation);
 
+      case 'LOCK_MOUTH_ENGAGEMENT':
+        return this.#convertLockMouthEngagement(operation);
+
+      case 'UNLOCK_MOUTH_ENGAGEMENT':
+        return this.#convertUnlockMouthEngagement(operation);
+
+      case 'UNEQUIP_CLOTHING':
+        return this.#convertUnequipClothing(operation);
+
       default:
-        this.#logger.warn(`Unknown state-changing operation: ${operation.type}`);
+        this.#logger.warn(`Unknown or unhandled state-changing operation: ${operation.type}`);
         return null;
     }
   }
 
   // Private helper methods
 
-  #expandMacros(operations) {
-    // Use macro resolver to expand all macro references
-    return this.#macroResolver.expandMacros(operations);
-  }
+  // Note: Macros are already expanded during rule loading by RuleLoader
+  // The macro system in src/utils/macroUtils.js expands {"macro": "modId:macroId"}
+  // references to action arrays. This happens before the rule reaches this analyzer.
+  //
+  // What we need to handle here is recognizing that runtime placeholders
+  // like {var: "itemId"} or {param: "targetId"} cannot be fully resolved during
+  // analysis. These are resolved during execution by contextUtils.resolvePlaceholders().
+  // For planning purposes, we preserve these as parameterized values or mark them
+  // with special notation (e.g., "{itemId}") to indicate runtime dependency.
 
   #analyzeDataFlow(operations) {
     // Track operations that produce context variables
@@ -233,7 +296,11 @@ class EffectsAnalyzer {
 
     for (const operation of operations) {
       if (this.isContextProducing(operation)) {
-        const resultVar = operation.parameters?.result_variable;
+        // Note: Different operations store result variables differently
+        // Some use 'result_variable', others use 'variable', 'output_variable', etc.
+        const resultVar = operation.parameters?.result_variable ||
+                         operation.parameters?.variable ||
+                         operation.parameters?.output_variable;
         if (resultVar) {
           dataFlow.set(resultVar, operation);
         }
@@ -255,13 +322,30 @@ class EffectsAnalyzer {
     for (let i = 0; i < operations.length; i++) {
       const op = operations[i];
 
-      if (op.type === 'IF') {
+      // Handle both IF and IF_CO_LOCATED conditionals
+      if (op.type === 'IF' || op.type === 'IF_CO_LOCATED') {
         // Branch into then and else paths
         const thenPath = [...currentPath];
         const elsePath = [...currentPath];
 
+        // Determine the condition
+        let condition;
+        if (op.type === 'IF') {
+          condition = op.parameters.condition;
+        } else if (op.type === 'IF_CO_LOCATED') {
+          // IF_CO_LOCATED compares locations of two entities
+          const entityA = op.parameters.entity_a || 'actor';
+          const entityB = op.parameters.entity_b || 'target';
+          condition = {
+            '==': [
+              { var: `${entityA}.location` },
+              { var: `${entityB}.location` }
+            ]
+          };
+        }
+
         // Then branch
-        const thenConditions = [...conditions, op.parameters.condition];
+        const thenConditions = [...conditions, condition];
         this.#tracePathRecursive(
           op.parameters.then_actions || [],
           thenPath,
@@ -269,19 +353,21 @@ class EffectsAnalyzer {
           allPaths
         );
 
-        // Else branch
-        const elseConditions = [
-          ...conditions,
-          { not: op.parameters.condition }
-        ];
-        this.#tracePathRecursive(
-          op.parameters.else_actions || [],
-          elsePath,
-          elseConditions,
-          allPaths
-        );
+        // Else branch (if exists)
+        if (op.parameters.else_actions) {
+          const elseConditions = [
+            ...conditions,
+            { not: condition }
+          ];
+          this.#tracePathRecursive(
+            op.parameters.else_actions || [],
+            elsePath,
+            elseConditions,
+            allPaths
+          );
+        }
 
-        return; // Don't process operations after IF
+        return; // Don't process operations after conditional
       } else {
         currentPath.push(op);
       }
@@ -304,7 +390,14 @@ class EffectsAnalyzer {
       for (const op of paths[0].operations) {
         if (this.isWorldStateChanging(op)) {
           const effect = this.operationToEffect(op);
-          if (effect) effects.push(effect);
+          if (effect) {
+            // Handle both single effects and arrays of effects
+            if (Array.isArray(effect)) {
+              effects.push(...effect);
+            } else {
+              effects.push(effect);
+            }
+          }
         }
       }
     } else {
@@ -314,7 +407,13 @@ class EffectsAnalyzer {
         for (const op of path.operations) {
           if (this.isWorldStateChanging(op)) {
             const effect = this.operationToEffect(op);
-            if (effect) pathEffects.push(effect);
+            if (effect) {
+              if (Array.isArray(effect)) {
+                pathEffects.push(...effect);
+              } else {
+                pathEffects.push(effect);
+              }
+            }
           }
         }
 
@@ -337,6 +436,7 @@ class EffectsAnalyzer {
 
   #generateAbstractPreconditions(dataFlow) {
     // Convert context-producing operations to abstract preconditions
+    // Abstract preconditions are for conditions that depend on runtime state
     const preconditions = {};
 
     for (const [varName, operation] of dataFlow.entries()) {
@@ -351,32 +451,48 @@ class EffectsAnalyzer {
 
   #operationToAbstractPrecondition(operation) {
     // Map operation types to abstract precondition definitions
+    // These represent runtime checks that the planner cannot evaluate statically
     const preconditionMap = {
       'VALIDATE_INVENTORY_CAPACITY': {
         description: 'Checks if actor can carry the item',
         parameters: ['actorId', 'itemId'],
-        simulationFunction: 'simulateInventoryCapacity'
+        simulationFunction: 'assumeTrue'  // Optimistic: assume inventory has space
       },
       'VALIDATE_CONTAINER_CAPACITY': {
         description: 'Checks if container has space for item',
         parameters: ['containerId', 'itemId'],
-        simulationFunction: 'simulateContainerCapacity'
+        simulationFunction: 'assumeTrue'  // Optimistic: assume container has space
       },
       'HAS_COMPONENT': {
         description: 'Checks if entity has component',
         parameters: ['entityId', 'componentId'],
-        simulationFunction: 'simulateHasComponent'
+        simulationFunction: 'assumeTrue'  // Optimistic: assume component exists
+      },
+      'CHECK_FOLLOW_CYCLE': {
+        description: 'Checks if following relationship would create a cycle',
+        parameters: ['leaderId', 'followerId'],
+        simulationFunction: 'assumeFalse'  // Conservative: assume no cycle
       }
-      // Add more mappings as needed
+      // Add more mappings as needed during implementation
     };
 
     return preconditionMap[operation.type] || null;
   }
 
   #calculateCost(rule, effects) {
-    // Default cost is 1.0
-    // Can be made more sophisticated based on effect complexity
-    return 1.0;
+    // Calculate action cost based on effects complexity
+    // Base cost is 1.0
+    let cost = 1.0;
+
+    // Add cost for each state-changing effect
+    const flatEffects = effects.filter(e => e.operation !== 'CONDITIONAL');
+    const conditionalEffects = effects.filter(e => e.operation === 'CONDITIONAL');
+
+    cost += flatEffects.length * 0.1;
+    cost += conditionalEffects.length * 0.2;
+
+    // Round to 1 decimal place
+    return Math.round(cost * 10) / 10;
   }
 
   #combineConditions(conditions) {
@@ -386,7 +502,6 @@ class EffectsAnalyzer {
   }
 
   // Conversion methods for specific operation types
-  // (Implementation details for each converter method)
 
   #convertAddComponent(operation) {
     return {
@@ -417,7 +532,7 @@ class EffectsAnalyzer {
   #convertLockMovement(operation) {
     return {
       operation: 'ADD_COMPONENT',
-      entity: 'actor',
+      entity: operation.parameters.entity || 'actor',
       component: 'positioning:movement_locked',
       data: {}
     };
@@ -426,8 +541,25 @@ class EffectsAnalyzer {
   #convertUnlockMovement(operation) {
     return {
       operation: 'REMOVE_COMPONENT',
-      entity: 'actor',
+      entity: operation.parameters.entity || 'actor',
       component: 'positioning:movement_locked'
+    };
+  }
+
+  #convertLockMouthEngagement(operation) {
+    return {
+      operation: 'ADD_COMPONENT',
+      entity: operation.parameters.entity || 'actor',
+      component: 'positioning:mouth_engagement_locked',
+      data: {}
+    };
+  }
+
+  #convertUnlockMouthEngagement(operation) {
+    return {
+      operation: 'REMOVE_COMPONENT',
+      entity: operation.parameters.entity || 'actor',
+      component: 'positioning:mouth_engagement_locked'
     };
   }
 
@@ -436,77 +568,115 @@ class EffectsAnalyzer {
       ? 'positioning:sitting_close_to'
       : 'positioning:lying_close_to';
 
-    return {
-      operation: 'ADD_COMPONENT',
-      entity: 'actor',
-      component,
-      data: {
-        target_id: { ref: 'target.id' }
+    // Closeness is bidirectional - both entities get the component
+    const entity = operation.parameters.entity || 'actor';
+    const targetEntity = operation.parameters.target_entity || 'target';
+
+    return [
+      {
+        operation: 'ADD_COMPONENT',
+        entity: entity,
+        component,
+        data: {
+          targetId: `{${targetEntity}.id}`  // Runtime placeholder
+        }
+      },
+      {
+        operation: 'ADD_COMPONENT',
+        entity: targetEntity,
+        component,
+        data: {
+          targetId: `{${entity}.id}`  // Runtime placeholder
+        }
       }
-    };
+    ];
   }
 
   #convertRemoveCloseness(operation) {
+    const entity = operation.parameters.entity || 'actor';
+
     // Determine component based on operation type
-    let component;
     if (operation.type === 'REMOVE_SITTING_CLOSENESS') {
-      component = 'positioning:sitting_close_to';
+      return {
+        operation: 'REMOVE_COMPONENT',
+        entity: entity,
+        component: 'positioning:sitting_close_to'
+      };
     } else if (operation.type === 'REMOVE_LYING_CLOSENESS') {
-      component = 'positioning:lying_close_to';
-    } else {
-      // BREAK_CLOSENESS_WITH_TARGET removes both
+      return {
+        operation: 'REMOVE_COMPONENT',
+        entity: entity,
+        component: 'positioning:lying_close_to'
+      };
+    } else if (operation.type === 'BREAK_CLOSENESS_WITH_TARGET') {
+      // BREAK_CLOSENESS_WITH_TARGET removes both sitting and lying closeness
       return [
         {
           operation: 'REMOVE_COMPONENT',
-          entity: 'actor',
+          entity: entity,
           component: 'positioning:sitting_close_to'
         },
         {
           operation: 'REMOVE_COMPONENT',
-          entity: 'actor',
+          entity: entity,
           component: 'positioning:lying_close_to'
         }
       ];
     }
 
-    return {
-      operation: 'REMOVE_COMPONENT',
-      entity: 'actor',
-      component
-    };
+    return null;
   }
 
   #convertItemOperation(operation) {
     // TRANSFER_ITEM, DROP_ITEM_AT_LOCATION, PICK_UP_ITEM_FROM_LOCATION
-    // Return multiple effects for item movement
     const effects = [];
+    const itemId = operation.parameters.item_id || '{itemId}';  // Placeholder if not specified
 
     if (operation.type === 'PICK_UP_ITEM_FROM_LOCATION') {
       effects.push(
         {
+          operation: 'REMOVE_COMPONENT',
+          entity: itemId,
+          component: 'items:at_location'
+        },
+        {
           operation: 'ADD_COMPONENT',
           entity: 'actor',
           component: 'items:inventory_item',
-          data: { item_id: { ref: 'target.id' } }
-        },
-        {
-          operation: 'REMOVE_COMPONENT',
-          entity: 'target',
-          component: 'core:at_location'
+          data: { itemId: itemId }
         }
       );
     } else if (operation.type === 'DROP_ITEM_AT_LOCATION') {
+      const location = operation.parameters.location || '{actor.location}';
       effects.push(
         {
           operation: 'REMOVE_COMPONENT',
           entity: 'actor',
-          component: 'items:inventory_item'
+          component: 'items:inventory_item',
+          data: { itemId: itemId }
         },
         {
           operation: 'ADD_COMPONENT',
-          entity: 'target',
-          component: 'core:at_location',
-          data: { location_id: { ref: 'actor.location' } }
+          entity: itemId,
+          component: 'items:at_location',
+          data: { location: location }
+        }
+      );
+    } else if (operation.type === 'TRANSFER_ITEM') {
+      const fromEntity = operation.parameters.from_entity || 'actor';
+      const toEntity = operation.parameters.to_entity || 'target';
+      effects.push(
+        {
+          operation: 'REMOVE_COMPONENT',
+          entity: fromEntity,
+          component: 'items:inventory_item',
+          data: { itemId: itemId }
+        },
+        {
+          operation: 'ADD_COMPONENT',
+          entity: toEntity,
+          component: 'items:inventory_item',
+          data: { itemId: itemId }
         }
       );
     }
@@ -519,41 +689,64 @@ class EffectsAnalyzer {
     if (operation.type === 'OPEN_CONTAINER') {
       return {
         operation: 'MODIFY_COMPONENT',
-        entity: 'target',
+        entity: operation.parameters.container_entity || 'target',
         component: 'items:container',
-        updates: { open: true }
+        updates: { isOpen: true }
       };
     } else if (operation.type === 'TAKE_FROM_CONTAINER') {
+      const containerId = operation.parameters.container_id || 'target';
+      const itemId = operation.parameters.item_id || '{itemId}';
       return [
         {
           operation: 'REMOVE_COMPONENT',
-          entity: 'tertiary_target',
+          entity: itemId,
           component: 'items:contained_in'
         },
         {
           operation: 'ADD_COMPONENT',
           entity: 'actor',
           component: 'items:inventory_item',
-          data: { item_id: { ref: 'tertiary_target.id' } }
+          data: { itemId: itemId }
         }
       ];
     } else if (operation.type === 'PUT_IN_CONTAINER') {
+      const containerId = operation.parameters.container_id || 'target';
+      const itemId = operation.parameters.item_id || '{itemId}';
       return [
         {
           operation: 'REMOVE_COMPONENT',
-          entity: 'tertiary_target',
-          component: 'items:inventory_item'
+          entity: 'actor',
+          component: 'items:inventory_item',
+          data: { itemId: itemId }
         },
         {
           operation: 'ADD_COMPONENT',
-          entity: 'tertiary_target',
+          entity: itemId,
           component: 'items:contained_in',
-          data: { container_id: { ref: 'target.id' } }
+          data: { containerId: containerId }
         }
       ];
     }
 
     return null;
+  }
+
+  #convertUnequipClothing(operation) {
+    const clothingId = operation.parameters.clothing_id || '{clothingId}';
+    return [
+      {
+        operation: 'REMOVE_COMPONENT',
+        entity: 'actor',
+        component: 'clothing:equipped',
+        data: { clothingId: clothingId }
+      },
+      {
+        operation: 'ADD_COMPONENT',
+        entity: 'actor',
+        component: 'items:inventory_item',
+        data: { itemId: clothingId }
+      }
+    ];
   }
 }
 
@@ -571,14 +764,14 @@ export default EffectsAnalyzer;
 **File:** `tests/unit/goap/analysis/effectsAnalyzer.test.js`
 
 Test Coverage:
-- State-changing operation detection (all 20+ operation types)
+- State-changing operation detection (40+ operation types from KNOWN_OPERATION_TYPES)
 - Context-producing operation detection
 - Operation to effect conversion (each operation type)
-- Macro expansion integration
-- Data flow analysis
-- Path tracing for IF operations
+- Data flow analysis (tracking context variables)
+- Path tracing for IF and IF_CO_LOCATED operations
 - Abstract precondition generation
 - Cost calculation
+- Integration with data registry
 
 **File:** `tests/unit/goap/analysis/effectsAnalyzer.edgeCases.test.js`
 
@@ -586,10 +779,11 @@ Edge Cases:
 - Empty operations list
 - Operations with no state changes
 - Nested IF operations
-- Multiple conditional paths
+- Multiple conditional paths (IF_CO_LOCATED combined with IF)
 - Operations with missing parameters
 - Invalid operation types
-- Circular macro references
+- Rule not found in registry
+- Bidirectional effects (closeness operations)
 
 **Coverage Target:** 90% branches, 95% functions/lines
 
@@ -600,17 +794,19 @@ Edge Cases:
 - [ ] Code examples in comments
 - [ ] Document operation type mappings in comments
 - [ ] Create `docs/goap/effects-analyzer-usage.md` with usage examples
+- [ ] Document integration with existing macro expansion system
 
 ## Acceptance Criteria
 
 - [ ] EffectsAnalyzer class implemented with all methods
-- [ ] Detects all 20+ state-changing operation types correctly
+- [ ] Detects all 40+ state-changing operation types correctly (based on KNOWN_OPERATION_TYPES)
 - [ ] Converts operations to effects correctly
-- [ ] Handles macro expansion
-- [ ] Traces conditional paths correctly
-- [ ] Generates abstract preconditions for query operations
-- [ ] Handles nested IF operations
+- [ ] Integrates with data registry for rule access
+- [ ] Traces conditional paths correctly (IF and IF_CO_LOCATED)
+- [ ] Generates abstract preconditions for validation operations
+- [ ] Handles nested conditionals
 - [ ] Handles multiple execution paths
+- [ ] Preserves runtime placeholders in effects
 - [ ] All unit tests pass with 90%+ coverage
 - [ ] All edge case tests pass
 - [ ] ESLint passes
@@ -621,16 +817,26 @@ Edge Cases:
 
 - ✅ Correctly identifies state-changing operations
 - ✅ Accurately converts operations to effects
-- ✅ Handles complex conditional logic
+- ✅ Handles complex conditional logic (IF and IF_CO_LOCATED)
 - ✅ Generates valid planning effects structures
 - ✅ All tests green with high coverage
+- ✅ Integrates seamlessly with existing macro expansion in RuleLoader
 
 ## Notes
 
-- **Macro Resolution Critical:** Must integrate with existing macro system
-- **Path Tracing:** Algorithm must handle nested conditionals
-- **Abstract Preconditions:** Foundation for planner simulation
-- **Validation:** Each conversion should validate input parameters
+- **Macro Expansion Already Handled:** Macros are expanded during rule loading by `RuleLoader` using `src/utils/macroUtils.js`. The analyzer receives rules with macros already expanded.
+
+- **Runtime Placeholders:** Placeholders like `{var: "itemId"}` are runtime concerns, resolved by `contextUtils.resolvePlaceholders()` during execution. The analyzer should preserve these in effects or mark them with special notation (e.g., `"{itemId}"`).
+
+- **Data Registry Integration:** Rules are accessed via `dataRegistry.get('rules', ruleId)`, not through a separate RuleLoader service.
+
+- **Path Tracing:** Algorithm must handle both IF and IF_CO_LOCATED operations, as well as nested conditionals.
+
+- **Abstract Preconditions:** Foundation for planner simulation of runtime-dependent checks (inventory capacity, component existence, etc.).
+
+- **Bidirectional Effects:** Some operations (like closeness establishment) create effects on multiple entities.
+
+- **Operation Type Completeness:** The implementation should reference `src/utils/preValidationUtils.js` KNOWN_OPERATION_TYPES for the authoritative list of valid operations.
 
 ## Related Tickets
 
