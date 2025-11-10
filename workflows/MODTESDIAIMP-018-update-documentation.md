@@ -23,9 +23,9 @@ Update project documentation to reflect new mod testing diagnostics capabilities
 
 ### Files to Update
 
-1. **Main Testing Guide** - `docs/testing/mod-testing-guide.md`
-2. **Troubleshooting Guide** - `docs/testing/troubleshooting-scope-issues.md` (new)
-3. **API Reference** - `docs/testing/mod-test-fixture-api.md` (new)
+1. **Main Testing Guide** - `docs/testing/mod-testing-guide.md` (update existing)
+2. **Troubleshooting Guide** - `docs/testing/troubleshooting-scope-issues.md` (new - focuses on ModTestFixture diagnostics; complements existing `docs/scopeDsl/troubleshooting.md` which covers DSL syntax)
+3. **API Reference** - `docs/testing/mod-test-fixture-api.md` (new - comprehensive API reference for diagnostics features)
 
 ### 1. Update mod-testing-guide.md
 
@@ -91,8 +91,8 @@ ScopeResolutionError: Invalid parameter passed to scope resolver
 it('debug with scope tracing', async () => {
   testFixture.enableScopeTracing();
 
-  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-  const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  const actions = testFixture.discoverActions(scenario.actor.id);
 
   if (actions.length === 0) {
     console.log(testFixture.getScopeTrace());
@@ -136,8 +136,8 @@ Summary: 3 steps, 12ms, Final size: 1
 it('debug filter failure', async () => {
   testFixture.enableScopeTracing();
 
-  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-  testFixture.testEnv.getAvailableActions(scenario.actor.id);
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  testFixture.discoverActions(scenario.actor.id);
 
   const breakdown = testFixture.getFilterBreakdown(scenario.target.id);
 
@@ -174,8 +174,8 @@ Filter failed:
 it('analyze performance', async () => {
   testFixture.enableScopeTracing();
 
-  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-  testFixture.testEnv.getAvailableActions(scenario.actor.id);
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  testFixture.discoverActions(scenario.actor.id);
 
   const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -282,7 +282,9 @@ console.log(perfTrace);
 ```markdown
 # Troubleshooting Scope Resolution Issues
 
-This guide helps debug common scope resolution problems using the diagnostics features.
+This guide helps debug common scope resolution problems using ModTestFixture diagnostics features.
+
+> **See Also**: For ScopeDSL syntax errors and general troubleshooting, see [docs/scopeDsl/troubleshooting.md](../scopeDsl/troubleshooting.md). This guide focuses specifically on using ModTestFixture's tracing and diagnostics features.
 
 ## Common Issues
 
@@ -295,8 +297,8 @@ This guide helps debug common scope resolution problems using the diagnostics fe
 it('debug missing action', async () => {
   testFixture.enableScopeTracing();
 
-  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-  const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  const actions = testFixture.discoverActions(scenario.actor.id);
 
   expect(actions.some(a => a.id === 'positioning:sit_down')).toBe(true);
 });
@@ -330,8 +332,8 @@ it('debug missing action', async () => {
 it('debug empty set', async () => {
   testFixture.enableScopeTracing();
 
-  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-  testFixture.testEnv.getAvailableActions(scenario.actor.id);
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  testFixture.discoverActions(scenario.actor.id);
 
   const trace = testFixture.getScopeTrace();
   console.log(trace);
@@ -373,8 +375,8 @@ const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
 it('analyze performance bottleneck', async () => {
   testFixture.enableScopeTracing();
 
-  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-  testFixture.testEnv.getAvailableActions(scenario.actor.id);
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  testFixture.discoverActions(scenario.actor.id);
 
   const metrics = testFixture.getScopePerformanceMetrics();
 
@@ -414,13 +416,13 @@ it('analyze performance bottleneck', async () => {
 
 ```javascript
 it('test with conditional tracing', async () => {
-  const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-  const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+  const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+  const actions = testFixture.discoverActions(scenario.actor.id);
 
   // Only trace if test would fail
   if (actions.length === 0) {
     testFixture.enableScopeTracing();
-    testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    testFixture.discoverActions(scenario.actor.id);
     console.log(testFixture.getScopeTrace());
   }
 
@@ -577,16 +579,16 @@ Get formatted trace with performance focus.
 ### Basic Tracing
 ```javascript
 testFixture.enableScopeTracing();
-const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-testFixture.testEnv.getAvailableActions(scenario.actor.id);
+const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+testFixture.discoverActions(scenario.actor.id);
 console.log(testFixture.getScopeTrace());
 ```
 
 ### Filter Breakdown Analysis
 ```javascript
 testFixture.enableScopeTracing();
-const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-testFixture.testEnv.getAvailableActions(scenario.actor.id);
+const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+testFixture.discoverActions(scenario.actor.id);
 
 const breakdown = testFixture.getFilterBreakdown(scenario.target.id);
 if (!breakdown.result) {
@@ -600,8 +602,8 @@ if (!breakdown.result) {
 ### Performance Analysis
 ```javascript
 testFixture.enableScopeTracing();
-const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
-testFixture.testEnv.getAvailableActions(scenario.actor.id);
+const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+testFixture.discoverActions(scenario.actor.id);
 
 const metrics = testFixture.getScopePerformanceMetrics();
 console.log(`Total: ${metrics.totalDuration.toFixed(2)}ms`);
@@ -639,14 +641,7 @@ metrics.resolverStats.forEach(stat => {
 
 ## Testing Requirements
 
-Verify all code examples in documentation:
-
-```bash
-# Extract and test code examples
-npm run docs:test-examples
-
-# Or manually verify key examples
-```
+Verify all code examples in documentation by manually testing key examples in a test file to ensure they execute correctly with the actual ModTestFixture API.
 
 ## Success Metrics
 
@@ -658,5 +653,12 @@ npm run docs:test-examples
 ## References
 
 - **Spec Section**: 8. Documentation (lines 2606-2640)
-- **Existing Docs**: `docs/testing/mod-testing-guide.md`
+- **Existing Docs**:
+  - `docs/testing/mod-testing-guide.md` - Main mod testing guide
+  - `docs/scopeDsl/troubleshooting.md` - ScopeDSL syntax troubleshooting (different focus)
 - **Related Tickets**: All previous MODTESDIAIMP tickets
+- **Key Implementation Files**:
+  - `tests/common/mods/ModTestFixture.js` - Main fixture with diagnostic methods
+  - `tests/common/mods/scopeEvaluationTracer.js` - Scope tracing implementation
+  - `src/scopeDsl/errors/parameterValidationError.js` - Parameter validation error class
+  - `src/scopeDsl/errors/scopeResolutionError.js` - Scope resolution error class
