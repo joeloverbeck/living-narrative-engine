@@ -23,7 +23,7 @@ describe('travel_through_dimensions Rule Execution', () => {
 
   describe('Successful Dimensional Travel', () => {
     it('should successfully execute dimensional travel', async () => {
-      const scenario = createDimensionalScenario(fixture);
+      const scenario = await createDimensionalScenario(fixture);
 
       await fixture.executeAction(
         scenario.observerId,
@@ -39,7 +39,7 @@ describe('travel_through_dimensions Rule Execution', () => {
     });
 
     it('should dispatch departure perception at origin', async () => {
-      const scenario = createDimensionalScenario(fixture);
+      const scenario = await createDimensionalScenario(fixture);
       const events = [];
 
       fixture.eventBus.on('PERCEPTIBLE_EVENT', (event) => {
@@ -60,7 +60,7 @@ describe('travel_through_dimensions Rule Execution', () => {
     });
 
     it('should dispatch arrival perception at destination', async () => {
-      const scenario = createDimensionalScenario(fixture);
+      const scenario = await createDimensionalScenario(fixture);
       const events = [];
 
       fixture.eventBus.on('PERCEPTIBLE_EVENT', (event) => {
@@ -83,7 +83,7 @@ describe('travel_through_dimensions Rule Execution', () => {
 
   describe('Round-Trip Travel', () => {
     it('should allow travel from reality to dimension and back', async () => {
-      const scenario = createBidirectionalScenario(fixture);
+      const scenario = await createBidirectionalScenario(fixture);
 
       // Travel to dimension
       await fixture.executeAction(
@@ -113,7 +113,7 @@ describe('travel_through_dimensions Rule Execution', () => {
 
   describe('Validation Failures', () => {
     it('should fail when actor lacks dimensional travel component', async () => {
-      const scenario = createDimensionalScenario(fixture, {
+      const scenario = await createDimensionalScenario(fixture, {
         actorHasAffordance: false,
       });
 
@@ -131,7 +131,7 @@ describe('travel_through_dimensions Rule Execution', () => {
  * @param {object} options - Configuration options
  * @returns {object} Scenario with locations and actors
  */
-function createDimensionalScenario(fixture, options = {}) {
+async function createDimensionalScenario(fixture, options = {}) {
   const { actorHasAffordance = true } = options;
 
   const perimeterId = fixture.createEntity({
@@ -152,7 +152,7 @@ function createDimensionalScenario(fixture, options = {}) {
     components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
   });
 
-  fixture.modifyComponent(perimeterId, 'movement:exits', [
+  await fixture.modifyComponent(perimeterId, 'movement:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,
@@ -193,7 +193,7 @@ function createDimensionalScenario(fixture, options = {}) {
  * @param {object} fixture - Test fixture instance
  * @returns {object} Scenario with bidirectional portals
  */
-function createBidirectionalScenario(fixture) {
+async function createBidirectionalScenario(fixture) {
   const perimeterId = fixture.createEntity({
     id: 'rule-bidir-perimeter',
     name: 'perimeter of rip in reality',
@@ -213,7 +213,7 @@ function createBidirectionalScenario(fixture) {
   });
 
   // Perimeter exit to dimension
-  fixture.modifyComponent(perimeterId, 'movement:exits', [
+  await fixture.modifyComponent(perimeterId, 'movement:exits', [
     {
       direction: 'through the dimensional rift',
       target: dimensionId,
@@ -222,7 +222,7 @@ function createBidirectionalScenario(fixture) {
   ]);
 
   // Dimension exit back to perimeter
-  fixture.modifyComponent(dimensionId, 'movement:exits', [
+  await fixture.modifyComponent(dimensionId, 'movement:exits', [
     {
       direction: 'through the dimensional tear back to reality',
       target: perimeterId,

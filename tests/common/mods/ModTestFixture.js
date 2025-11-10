@@ -1178,38 +1178,126 @@ class BaseModTestFixture {
    * Provides a convenient way to create entities without manually instantiating ModEntityBuilder.
    *
    * @param {object} config - Entity configuration
-   * @param {string} config.id - Entity ID
-   * @param {object} config.components - Components to add to the entity
-   * @returns {object} Built entity object
+   * @param {string} [config.id] - Entity ID (auto-generated if not provided)
+   * @param {string} [config.name] - Entity name
+   * @param {object|Array} config.components - Components to add (object map or array of {componentId, data})
+   * @returns {string} Entity ID
    * @example
-   * const entity = testFixture.createEntity({
+   * // Object format
+   * const entityId = fixture.createEntity({
    *   id: 'actor1',
    *   components: {
    *     'core:name': { text: 'Alice' },
    *     'core:position': { locationId: 'room1' }
    *   }
    * });
+   * @example
+   * // Array format with auto-generated ID
+   * const entityId = fixture.createEntity({
+   *   name: 'Alice',
+   *   components: [
+   *     { componentId: 'core:actor', data: {} },
+   *     { componentId: 'core:position', data: { locationId: 'room1' } }
+   *   ]
+   * });
    */
   createEntity(config) {
-    const { id, components = {} } = config;
+    let { id, name, components = {} } = config;
 
+    // Auto-generate ID if not provided
     if (!id) {
-      throw new Error('ModTestFixture.createEntity: config.id is required');
+      // Generate a unique ID using timestamp and random number
+      id = `entity-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     }
 
     if (typeof components !== 'object' || components === null) {
-      throw new Error('ModTestFixture.createEntity: config.components must be an object');
+      throw new Error('ModTestFixture.createEntity: config.components must be an object or array');
     }
 
-    // Create builder with the ID
-    const builder = new ModEntityBuilder(id);
-
-    // Add each component using withComponent
-    for (const [componentId, componentData] of Object.entries(components)) {
-      builder.withComponent(componentId, componentData);
+    if (!this.testEnv || !this.testEnv.entityManager) {
+      throw new Error('ModTestFixture: Test environment not initialized');
     }
 
-    return builder.build();
+    // Create entity in entity manager
+    this.testEnv.entityManager.createEntity(id);
+
+    // Add name component if provided
+    if (name) {
+      this.testEnv.entityManager.addComponent(id, 'core:name', { text: name });
+    }
+
+    // Handle array format: [{componentId, data}, ...]
+    if (Array.isArray(components)) {
+      for (const component of components) {
+        if (!component.componentId) {
+          throw new Error('ModTestFixture.createEntity: Array components must have componentId property');
+        }
+        this.testEnv.entityManager.addComponent(
+          id,
+          component.componentId,
+          component.data || {}
+        );
+      }
+    } else {
+      // Handle object format: {componentId: data, ...}
+      for (const [componentId, componentData] of Object.entries(components)) {
+        this.testEnv.entityManager.addComponent(id, componentId, componentData);
+      }
+    }
+
+    return id;
+  }
+
+  /**
+   * Modifies a component on an existing entity.
+   *
+   * @param {string} entityId - Entity ID
+   * @param {string} componentId - Component ID
+   * @param {any} componentData - Component data
+   * @returns {Promise<boolean>} Promise resolving to true on success
+   * @example
+   * await fixture.modifyComponent('actor1', 'core:position', { locationId: 'room2' });
+   */
+  async modifyComponent(entityId, componentId, componentData) {
+    if (!this.testEnv || !this.testEnv.entityManager) {
+      throw new Error('ModTestFixture: Test environment not initialized');
+    }
+
+    return await this.testEnv.entityManager.addComponent(
+      entityId,
+      componentId,
+      componentData
+    );
+  }
+
+  /**
+   * Gets a component from an entity.
+   *
+   * @param {string} entityId - Entity ID
+   * @param {string} componentId - Component ID
+   * @returns {any} Component data or null
+   * @example
+   * const position = fixture.getComponent('actor1', 'core:position');
+   */
+  getComponent(entityId, componentId) {
+    if (!this.testEnv || !this.testEnv.entityManager) {
+      throw new Error('ModTestFixture: Test environment not initialized');
+    }
+
+    return this.testEnv.entityManager.getComponent(entityId, componentId);
+  }
+
+  /**
+   * Gets the event bus from the test environment.
+   *
+   * @returns {object} Event bus instance
+   */
+  get eventBus() {
+    if (!this.testEnv || !this.testEnv.eventBus) {
+      throw new Error('ModTestFixture: Test environment or event bus not initialized');
+    }
+
+    return this.testEnv.eventBus;
   }
 
   /**
