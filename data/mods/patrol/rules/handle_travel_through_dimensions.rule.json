@@ -58,10 +58,14 @@
       }
     },
     {
-      "type": "CHANGE_LOCATION",
+      "type": "MODIFY_COMPONENT",
+      "comment": "Update the actor's locationId to the dimensional destination.",
       "parameters": {
         "entity_ref": "actor",
-        "destination_location_id": "{event.payload.targetId}"
+        "component_type": "core:position",
+        "field": "locationId",
+        "mode": "set",
+        "value": "{event.payload.targetId}"
       }
     },
     {
