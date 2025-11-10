@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_examine_item",
-  "comment": "Handles examine_item action with detailed item description in perception and brief success message",
+  "rule_id": "handle_examine_owned_item",
+  "comment": "Handles examine_owned_item action with detailed item description in perception and brief success message",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "items:event-is-action-examine-item"
+    "condition_ref": "items:event-is-action-examine-owned-item"
   },
   "actions": [
     {
@@ -46,7 +46,7 @@
       "comment": "Log examination with full description for observers",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.actorName} examines {context.itemName}: {context.itemDescription.text}",
+        "description_text": "{context.actorName} examines their {context.itemName}: {context.itemDescription.text}",
         "perception_type": "item_examined",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
@@ -60,7 +60,7 @@
       "comment": "Prepare brief success message",
       "parameters": {
         "variable_name": "successMessage",
-        "value": "{context.actorName} examines {context.itemName}."
+        "value": "{context.actorName} examines their {context.itemName}."
       }
     },
     {

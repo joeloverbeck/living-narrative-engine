@@ -1,13 +1,13 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "items:examine_item",
-  "name": "Examine Item",
-  "description": "Inspect an item to learn its details",
+  "id": "items:examine_owned_item",
+  "name": "Examine Owned Item",
+  "description": "Inspect an item in your inventory to learn its details",
   "targets": {
     "primary": {
-      "scope": "items:examinable_items",
-      "placeholder": "item",
-      "description": "Item to examine"
+      "scope": "items:actor_inventory_items",
+      "placeholder": "target",
+      "description": "Item in inventory to examine"
     }
   },
   "required_components": {
@@ -17,7 +17,7 @@
     "actor": ["positioning:doing_complex_performance"]
   },
   "prerequisites": [],
-  "template": "examine {item}",
+  "template": "examine my {target}",
   "visual": {
     "backgroundColor": "#004d61",
     "textColor": "#e0f7fa",
