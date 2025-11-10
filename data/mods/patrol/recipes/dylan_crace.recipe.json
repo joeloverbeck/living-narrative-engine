@@ -1,0 +1,153 @@
+{
+    "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
+    "recipeId": "p_erotica_irun:dylan_crace_recipe",
+    "blueprintId": "anatomy:human_male",
+    "bodyDescriptors": {
+        "build": "muscular",
+        "hairDensity": "hairy",
+        "composition": "lean",
+        "height": "tall",
+        "skinColor": "sun-cooked",
+        "smell": "body spray"
+    },
+    "slots": {
+        "torso": {
+            "partType": "torso",
+            "properties": {
+                "descriptors:build": {
+                    "build": "muscular"
+                },
+                "descriptors:body_hair": {
+                    "hairDensity": "moderate"
+                }
+            }
+        },
+        "head": {
+            "partType": "head",
+            "preferId": "anatomy:humanoid_head_bearded"
+        },
+        "hair": {
+            "partType": "hair",
+            "properties": {
+                "descriptors:color_extended": {
+                    "color": "blonde"
+                },
+                "descriptors:hair_style": {
+                    "style": "buzzed"
+                }
+            }
+        },
+        "nose": {
+            "partType": "nose",
+            "properties": {
+                "descriptors:texture": {
+                    "texture": "scarred"
+                }
+            }
+        },
+        "penis": {
+            "partType": "penis",
+            "properties": {
+                "descriptors:build": {
+                    "build": "thick"
+                },
+                "descriptors:size_category": {
+                    "size": "large"
+                },
+                "descriptors:weight_feel": {
+                    "weight": "meaty"
+                }
+            }
+        }
+    },
+    "patterns": [
+        {
+            "matches": [
+                "left_arm",
+                "right_arm"
+            ],
+            "partType": "arm",
+            "preferId": "anatomy:humanoid_arm_muscular"
+        },
+        {
+            "matches": [
+                "left_leg",
+                "right_leg"
+            ],
+            "partType": "leg",
+            "preferId": "anatomy:human_leg_muscular"
+        },
+        {
+            "matches": [
+                "left_eye",
+                "right_eye"
+            ],
+            "partType": "eye",
+            "properties": {
+                "descriptors:color_basic": {
+                    "color": "brown"
+                },
+                "descriptors:shape_eye": {
+                    "shape": "almond"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_testicle",
+                "right_testicle"
+            ],
+            "partType": "testicle",
+            "properties": {
+                "descriptors:build": {
+                    "build": "thick"
+                }
+            }
+        },
+        {
+            "matches": [
+                "left_ass",
+                "right_ass"
+            ],
+            "partType": "ass_cheek",
+            "properties": {
+                "descriptors:firmness": {
+                    "firmness": "firm"
+                },
+                "descriptors:build": {
+                    "build": "thick"
+                }
+            }
+        }
+    ],
+    "clothingEntities": [
+        {
+            "entityId": "clothing:graphite_wool_briefs",
+            "equip": true
+        },
+        {
+            "entityId": "clothing:shale_gray_nylon_field_pants",
+            "equip": true
+        },
+        {
+            "entityId": "clothing:charcoal_wool_tshirt",
+            "equip": true
+        },
+        {
+            "entityId": "clothing:black_tactical_work_belt",
+            "equip": true
+        },
+        {
+            "entityId": "clothing:dark_gray_wool_boot_socks",
+            "equip": true
+        },
+        {
+            "entityId": "clothing:black_leather_duty_boots",
+            "equip": true
+        },
+        {
+            "entityId": "clothing:slate_nylon_baseball_cap",
+            "equip": true
+        }
+    ]
+}

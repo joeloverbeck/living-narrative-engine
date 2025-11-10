@@ -1,0 +1,19 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_hair_blonde_buzzed",
+    "description": "Buzzed blonde hair",
+    "components": {
+        "anatomy:part": {
+            "subType": "hair"
+        },
+        "descriptors:color_extended": {
+            "color": "blonde"
+        },
+        "descriptors:hair_style": {
+            "style": "buzzed"
+        },
+        "core:name": {
+            "text": "hair"
+        }
+    }
+}
