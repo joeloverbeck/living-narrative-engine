@@ -84,10 +84,6 @@ export function applySchemaDefaults(value, componentDefinition, logger) {
  * @private
  */
 function applyNestedDefaults(value, schema, logger) {
-  if (!schema.properties) {
-    return value;
-  }
-
   const baseValue =
     value && typeof value === 'object'
       ? value
