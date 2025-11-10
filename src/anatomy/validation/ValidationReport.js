@@ -69,6 +69,15 @@ export class ValidationReport {
   }
 
   /**
+   * Get all passed checks
+   *
+   * @returns {Array} Array of passed check objects
+   */
+  get passed() {
+    return [...this.#results.passed];
+  }
+
+  /**
    * Get summary statistics
    *
    * @returns {object} Summary object with statistics

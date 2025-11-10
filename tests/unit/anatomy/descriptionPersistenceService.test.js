@@ -194,7 +194,7 @@ describe('DescriptionPersistenceService', () => {
       const result = await service.updateMultipleDescriptions(descriptionsMap);
 
       expect(result.successful).toBe(2);
-      expect(result.failed).toEqual([]);
+      expect(result.failed).toEqual(['entity2']);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "DescriptionPersistenceService: Entity 'entity2' not found, skipping in batch"
       );
@@ -472,7 +472,7 @@ describe('DescriptionPersistenceService', () => {
       const result = await service.updateMultipleDescriptions(descriptionsMap);
 
       expect(result.successful).toBe(2);
-      expect(result.failed).toEqual([]);
+      expect(result.failed).toEqual(['non-existent']);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "DescriptionPersistenceService: Entity 'non-existent' not found, skipping in batch"
       );
