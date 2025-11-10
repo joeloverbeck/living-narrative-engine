@@ -1852,6 +1852,12 @@ describe('RecipePreflightValidator', () => {
             'anatomy:part': { subType: 'arm' },
           },
         },
+        {
+          id: 'test:entity_using_recipe',
+          components: {
+            'anatomy:body': { recipeId: 'test:recipe' },
+          },
+        },
       ];
 
       mockDataRegistry.get = jest.fn((type, id) => {
@@ -2094,6 +2100,12 @@ describe('RecipePreflightValidator', () => {
             'anatomy:special': {},
           },
         },
+        {
+          id: 'test:entity_using_recipe',
+          components: {
+            'anatomy:body': { recipeId: 'test:recipe' },
+          },
+        },
       ];
 
       mockDataRegistry.get = jest.fn((type, id) => {
@@ -2214,6 +2226,255 @@ describe('RecipePreflightValidator', () => {
       // Should not call slot generator since blueprint is already processed
       expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
       // get() might be called for other purposes, so we just verify generateBlueprintSlots wasn't called
+    });
+  });
+
+  describe('Recipe usage validation', () => {
+    it('should pass when recipe is referenced by entity definitions', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+        slots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components') {
+          return { id: 'test:component', dataSchema: { type: 'object' } };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'test:entity1',
+              components: {
+                'anatomy:body': { recipeId: 'test:recipe' },
+              },
+            },
+            {
+              id: 'test:entity2',
+              components: {
+                'anatomy:body': { recipeId: 'test:recipe' },
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(true);
+      const usageCheck = report.passed.find((p) => p.check === 'recipe_usage');
+      expect(usageCheck).toBeDefined();
+      expect(usageCheck.message).toContain('2 entity definition(s)');
+      expect(usageCheck.details.totalCount).toBe(2);
+    });
+
+    it('should warn when recipe is not referenced by any entity definitions', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+        slots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components') {
+          return { id: 'test:component', dataSchema: { type: 'object' } };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'test:entity1',
+              components: {
+                'anatomy:body': { recipeId: 'other:recipe' },
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should still pass overall but have a warning
+      expect(report.isValid).toBe(true);
+      expect(report.warnings.length).toBeGreaterThan(0);
+      const usageWarning = report.warnings.find((w) => w.type === 'RECIPE_UNUSED');
+      expect(usageWarning).toBeDefined();
+      expect(usageWarning.message).toContain('not referenced by any entity definitions');
+      expect(usageWarning.details.recipeId).toBe('test:recipe');
+    });
+
+    it('should handle entity definitions without anatomy:body component', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+        slots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components') {
+          return { id: 'test:component', dataSchema: { type: 'object' } };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'test:entity1',
+              components: {
+                'core:name': { text: 'Test Entity' },
+              },
+            },
+            {
+              id: 'test:entity2',
+              components: {
+                'anatomy:body': { recipeId: 'test:recipe' },
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      expect(report.isValid).toBe(true);
+      const usageCheck = report.passed.find((p) => p.check === 'recipe_usage');
+      expect(usageCheck).toBeDefined();
+      expect(usageCheck.details.totalCount).toBe(1);
+    });
+
+    it('should skip recipe usage check when option is set', async () => {
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+      });
+
+      mockDataRegistry.get = (type) => {
+        if (type === 'components') {
+          return { id: 'test:component', dataSchema: { type: 'object' } };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, { skipRecipeUsageCheck: true });
+
+      // Should not have any recipe usage warnings or passed checks
+      expect(report.warnings.some((w) => w.type === 'RECIPE_UNUSED')).toBe(false);
+      expect(report.passed.some((p) => p.check === 'recipe_usage')).toBe(false);
+    });
+
+    it('should handle recipe ID mismatch scenario', async () => {
+      // This simulates the real-world bug: entity expects 'patrol:len_amezua_recipe'
+      // but recipe has 'patrol:len_amezua'
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: 'test:template',
+        additionalSlots: {},
+        slots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components') {
+          return { id: 'test:component', dataSchema: { type: 'object' } };
+        }
+        if (type === 'entityDefinitions' && id === 'test:root') {
+          return { id: 'test:root', components: {} };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = (type) => {
+        if (type === 'entityDefinitions') {
+          return [
+            {
+              id: 'patrol:len_amezua',
+              components: {
+                'anatomy:body': { recipeId: 'patrol:len_amezua_recipe' }, // Wrong ID
+              },
+            },
+          ];
+        }
+        return [];
+      };
+
+      const recipe = {
+        recipeId: 'patrol:len_amezua', // Recipe has different ID
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe);
+
+      // Should warn that recipe is not referenced (because IDs don't match)
+      expect(report.isValid).toBe(true);
+      const usageWarning = report.warnings.find((w) => w.type === 'RECIPE_UNUSED');
+      expect(usageWarning).toBeDefined();
+      expect(usageWarning.message).toContain('not referenced by any entity definitions');
     });
   });
 });
