@@ -6,6 +6,7 @@ import { goapTokens } from '../tokens/tokens-goap.js';
 import { coreTokens } from '../tokens/tokens-core.js';
 import EffectsAnalyzer from '../../goap/analysis/effectsAnalyzer.js';
 import EffectsGenerator from '../../goap/generation/effectsGenerator.js';
+import EffectsValidator from '../../goap/validation/effectsValidator.js';
 
 /**
  * Registers GOAP services in the DI container
@@ -30,8 +31,13 @@ export function registerGoapServices(container) {
     }
   });
 
-  // Effects Validator (to be implemented in later tickets)
-  // container.register(goapTokens.IEffectsValidator, EffectsValidator);
+  container.register(goapTokens.IEffectsValidator, EffectsValidator, {
+    dependencies: {
+      logger: coreTokens.ILogger,
+      effectsAnalyzer: goapTokens.IEffectsAnalyzer,
+      dataRegistry: coreTokens.IDataRegistry
+    }
+  });
 
   // Goals (to be implemented in later tickets)
   // container.register(goapTokens.IGoalManager, GoalManager);
