@@ -1,0 +1,59 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_head_hideous",
+  "description": "A hideous humanoid head",
+  "components": {
+    "anatomy:part": {
+      "subType": "head"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "left_eye",
+          "orientation": "left",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_eye",
+          "orientation": "right",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_ear",
+          "orientation": "left",
+          "allowedTypes": ["ear"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_ear",
+          "orientation": "right",
+          "allowedTypes": ["ear"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "scalp",
+          "allowedTypes": ["hair"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "nose",
+          "allowedTypes": ["nose"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "mouth",
+          "allowedTypes": ["mouth"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "descriptors:facial_aesthetic": {
+      "value": "hideous"
+    },
+    "core:name": {
+      "text": "head"
+    }
+  }
+}
