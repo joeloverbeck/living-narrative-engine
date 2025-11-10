@@ -147,8 +147,8 @@ describe('ContentPhase integration', () => {
     expect(Object.isFrozen(result)).toBe(true);
     expect(result.totals).not.toBe(initialTotals);
     expect(result.totals).toEqual({
-      entityDefinitions: { count: 2, overrides: 0, errors: 0 },
-      entityInstances: { count: 2, overrides: 0, errors: 0 },
+      entityDefinitions: { count: 2, overrides: 0, errors: 0, failures: [] },
+      entityInstances: { count: 2, overrides: 0, errors: 0, failures: [] },
     });
     expect(result.manifests).toBe(manifests);
     expect(result.finalModOrder).toBe(finalOrder);
