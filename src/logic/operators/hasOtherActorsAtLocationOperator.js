@@ -154,8 +154,8 @@ export class HasOtherActorsAtLocationOperator {
       `${this.#operatorName}: Checking for other actors at location ${locationId}`
     );
 
-    // Get all entities
-    const allEntities = this.#entityManager.getEntities();
+    // Get all entities (entities is a getter that returns an iterator)
+    const allEntities = Array.from(this.#entityManager.entities);
 
     // Find all entities at the same location
     const entitiesAtLocation = allEntities.filter((entity) => {

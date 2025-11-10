@@ -8,11 +8,20 @@ describe('HasOtherActorsAtLocationOperator', () => {
   let mockContext;
 
   beforeEach(() => {
+    // Create a mock array for entities
+    const mockEntitiesArray = [];
+
     mockEntityManager = {
       getComponentData: jest.fn(),
-      getAllEntities: jest.fn(),
       hasComponent: jest.fn(),
+      // Mock the entities getter
+      get entities() {
+        return mockEntitiesArray[Symbol.iterator]();
+      },
     };
+
+    // Store reference to the array so tests can modify it
+    mockEntityManager._mockEntitiesArray = mockEntitiesArray;
 
     mockLogger = {
       debug: jest.fn(),
@@ -40,10 +49,10 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([
+      mockEntityManager._mockEntitiesArray.push(
         { id: 'actor1' },
-        { id: 'actor2' },
-      ]);
+        { id: 'actor2' }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
@@ -70,7 +79,7 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([{ id: 'actor1' }]);
+      mockEntityManager._mockEntitiesArray.push({ id: 'actor1' });
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
@@ -129,11 +138,11 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([
+      mockEntityManager._mockEntitiesArray.push(
         { id: 'actor1' },
         { id: 'actor2' },
-        { id: 'actor3' },
-      ]);
+        { id: 'actor3' }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
@@ -156,10 +165,10 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([
+      mockEntityManager._mockEntitiesArray.push(
         { id: 'actor1' },
-        { id: 'furniture1' },
-      ]);
+        { id: 'furniture1' }
+      );
 
       mockEntityManager.hasComponent.mockImplementation((entityId) => {
         return entityId === 'actor1'; // Only actor1 is an actor
@@ -187,10 +196,10 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([
+      mockEntityManager._mockEntitiesArray.push(
         { id: 'actor1' },
-        { id: 'actor2' },
-      ]);
+        { id: 'actor2' }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
@@ -213,10 +222,10 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([
+      mockEntityManager._mockEntitiesArray.push(
         { id: 'actor1' },
-        { id: 'actor2' },
-      ]);
+        { id: 'actor2' }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
@@ -281,10 +290,10 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([
+      mockEntityManager._mockEntitiesArray.push(
         { id: 'nestedActor1' },
-        { id: 'actor2' },
-      ]);
+        { id: 'actor2' }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
@@ -303,10 +312,10 @@ describe('HasOtherActorsAtLocationOperator', () => {
         return null;
       });
 
-      mockEntityManager.getAllEntities.mockReturnValue([
+      mockEntityManager._mockEntitiesArray.push(
         { id: 'actor1' },
-        { id: 'actor2' },
-      ]);
+        { id: 'actor2' }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
