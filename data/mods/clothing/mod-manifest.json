@@ -22,6 +22,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "components": [
+      "blocks_removal.component.json",
       "coverage_mapping.component.json",
       "equipment.component.json",
       "slot_metadata.component.json",

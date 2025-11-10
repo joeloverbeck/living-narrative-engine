@@ -1,0 +1,17 @@
+{
+    "$schema": "http://example.com/schemas/world.schema.json",
+    "id": "patrol:patrol",
+    "name": "Salt flats rip in reality",
+    "description": "A self-contained game world centered around a rip in reality.",
+    "instances": [
+      {
+        "instanceId": "p_erotica_irun:perimeter_of_rip_in_reality_instance"
+      },
+      {
+        "instanceId": "p_erotica_irun:len_amezua_instance"
+      },
+      {
+        "instanceId": "p_erotica_irun:writhing_observer_instance"
+      }
+    ]
+  }

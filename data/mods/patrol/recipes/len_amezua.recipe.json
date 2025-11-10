@@ -3,30 +3,134 @@
   "recipeId": "patrol:len_amezua_recipe",
   "blueprintId": "anatomy:human_female",
   "bodyDescriptors": {
-    "build": "athletic",
+    "height": "average",
+    "skinColor": "tanned",
+    "build": "stocky",
     "composition": "lean",
-    "skinColor": "olive"
+    "smell": "sweat"
   },
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "anatomy:human_female_torso"
+      "properties": {
+        "descriptors:build": {
+          "build": "stocky"
+        }
+      }
     },
     "head": {
       "partType": "head",
-      "preferId": "anatomy:humanoid_head"
+      "properties": {
+        "descriptors:facial_aesthetic": {
+          "value": "plain"
+        }
+      }
+    },
+    "nose": {
+      "partType": "nose",
+      "preferId": "anatomy:humanoid_nose",
+      "properties": {
+        "descriptors:size_category": {
+          "size": "small"
+        }
+      }
+    },
+    "left_eye": {
+      "partType": "eye",
+      "properties": {
+        "descriptors:color_basic": {
+          "color": "green"
+        }
+      }
+    },
+    "right_eye": {
+      "partType": "eye",
+      "properties": {
+        "descriptors:color_basic": {
+          "color": "green"
+        }
+      }
+    },
+    "hair": {
+      "partType": "hair",
+      "properties": {
+        "descriptors:hair_style": {
+          "style": "ponytail"
+        }
+      }
     }
   },
   "patterns": [
     {
-      "matches": ["left_arm", "right_arm"],
+      "matches": [
+        "left_arm",
+        "right_arm"
+      ],
       "partType": "arm",
-      "preferId": "anatomy:humanoid_arm"
+      "preferId": "anatomy:humanoid_arm_scarred"
     },
     {
-      "matches": ["left_leg", "right_leg"],
+      "matches": [
+        "left_leg",
+        "right_leg"
+      ],
       "partType": "leg",
       "preferId": "anatomy:human_leg"
+    },
+    {
+      "matches": [
+        "left_breast",
+        "right_breast"
+      ],
+      "partType": "breast",
+      "properties": {
+        "descriptors:size_specific": {
+          "size": "C-cup"
+        },
+        "descriptors:weight_feel": {
+          "weight": "moderate"
+        },
+        "descriptors:firmness": {
+          "firmness": "soft"
+        }
+      }
+    },
+    {
+      "matches": [
+        "left_ass",
+        "right_ass"
+      ],
+      "partType": "ass_cheek",
+      "properties": {
+        "descriptors:firmness": {
+          "firmness": "firm"
+        },
+        "descriptors:build": {
+          "build": "thick"
+        }
+      }
+    }
+  ],
+  "clothingEntities": [
+    {
+      "entityId": "clothing:charcoal_heather_zip_up_hoodie",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:dark_burgundy_long_sleeve_tshirt",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:black_cargo_joggers",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:nude_microfiber_seamless_thong",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:black_trail_running_shoes",
+      "equip": true
     }
   ]
 }
