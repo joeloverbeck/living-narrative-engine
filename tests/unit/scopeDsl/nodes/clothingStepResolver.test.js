@@ -325,6 +325,24 @@ describe('ClothingStepResolver', () => {
       );
     });
 
+    it('should skip non-string entity identifiers returned from dispatcher', () => {
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([123]));
+
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).not.toHaveBeenCalled();
+      expect(mockEntitiesGateway.getComponentData).not.toHaveBeenCalled();
+    });
+
     it('should call errorHandler for invalid clothing field', () => {
       const node = {
         type: 'Step',
@@ -372,6 +390,34 @@ describe('ClothingStepResolver', () => {
         }),
         'ClothingStepResolver',
         ErrorCodes.COMPONENT_RESOLUTION_FAILED
+      );
+    });
+
+    it('should call errorHandler when parent resolution fails', () => {
+      mockContext.dispatcher.resolve.mockImplementation(() => {
+        throw new Error('Dispatcher exploded');
+      });
+
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        'Failed to resolve parent node: Dispatcher exploded',
+        expect.objectContaining({
+          field: 'topmost_clothing',
+          parentNode: node.parent,
+          originalError: 'Dispatcher exploded',
+        }),
+        'ClothingStepResolver',
+        ErrorCodes.STEP_RESOLUTION_FAILED
       );
     });
 
@@ -433,6 +479,138 @@ describe('ClothingStepResolver', () => {
       expect(() => {
         resolverWithoutHandler.resolve(node, mockContext);
       }).not.toThrow();
+    });
+  });
+
+  describe('Error handling without optional errorHandler', () => {
+    it('should tolerate invalid entity identifiers without errorHandler', () => {
+      const resolverWithoutHandler = createClothingStepResolver({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const context = {
+        dispatcher: {
+          resolve: jest.fn().mockReturnValue(new Set([123])),
+        },
+      };
+
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      const result = resolverWithoutHandler.resolve(node, context);
+
+      expect(result).toEqual(new Set());
+      expect(mockEntitiesGateway.getComponentData).not.toHaveBeenCalled();
+    });
+
+    it('should handle non-string clothing fields when errorHandler is absent', () => {
+      const resolverWithoutHandler = createClothingStepResolver({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const node = {
+        type: 'Step',
+        field: { invalid: true },
+        parent: { type: 'Source' },
+      };
+
+      const context = {
+        dispatcher: {
+          resolve: jest.fn().mockReturnValue(new Set(['actor_1'])),
+        },
+      };
+
+      const result = resolverWithoutHandler.resolve(node, context);
+
+      expect(result).toEqual(new Set());
+      expect(mockEntitiesGateway.getComponentData).not.toHaveBeenCalled();
+    });
+
+    it('should recover from component lookup failures without errorHandler', () => {
+      const entitiesGatewayWithoutHandler = {
+        getComponentData: jest.fn(() => {
+          throw new Error('Component missing');
+        }),
+      };
+
+      const resolverWithoutHandler = createClothingStepResolver({
+        entitiesGateway: entitiesGatewayWithoutHandler,
+      });
+
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      const context = {
+        dispatcher: {
+          resolve: jest.fn().mockReturnValue(new Set(['actor_1'])),
+        },
+      };
+
+      const result = resolverWithoutHandler.resolve(node, context);
+
+      expect(result).toEqual(new Set());
+      expect(entitiesGatewayWithoutHandler.getComponentData).toHaveBeenCalledWith(
+        'actor_1',
+        'clothing:equipment'
+      );
+    });
+
+    it('should handle parent resolution failures gracefully without errorHandler', () => {
+      const resolverWithoutHandler = createClothingStepResolver({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const context = {
+        dispatcher: {
+          resolve: jest.fn(() => {
+            throw new Error('Dispatcher exploded');
+          }),
+        },
+      };
+
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      const result = resolverWithoutHandler.resolve(node, context);
+
+      expect(result).toEqual(new Set());
+    });
+
+    it('should safely ignore invalid nodes when errorHandler is not provided', () => {
+      const resolverWithoutHandler = createClothingStepResolver({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const result = resolverWithoutHandler.resolve(null, mockContext);
+
+      expect(result).toEqual(new Set());
+    });
+
+    it('should return an empty result when dispatcher is missing without errorHandler', () => {
+      const resolverWithoutHandler = createClothingStepResolver({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const context = { trace: { addLog: jest.fn() } };
+
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      const result = resolverWithoutHandler.resolve(node, context);
+
+      expect(result).toEqual(new Set());
     });
   });
 });
