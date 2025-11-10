@@ -8,39 +8,103 @@
 
 ## Context
 
-The `hasOtherActorsAtLocation` operator was fully implemented and registered in `jsonLogicCustomOperators.js` but was missing from the `ALLOWED_OPERATIONS` whitelist in `jsonLogicEvaluationService.js`. This caused silent failures where prerequisites were evaluated but operators weren't called.
+**Original Issue (RESOLVED):** The `hasOtherActorsAtLocation` operator was fully implemented and registered in `jsonLogicCustomOperators.js` but was missing from the `ALLOWED_OPERATIONS` whitelist in `jsonLogicEvaluationService.js`. This was fixed in commit f786635 (Mon Nov 10 2025).
+
+**Current Status:** The immediate problem is resolved - `hasOtherActorsAtLocation` is now in the whitelist (line 139 of `jsonLogicEvaluationService.js`).
+
+**Remaining Issue:** Manual synchronization is still required between operator registration and validation whitelist, with no automated checks. This creates risk of the same problem recurring with future operators.
 
 **Root Cause:** Manual synchronization required between operator registration and validation whitelist, with no automated checks.
 
-**Impact:** Operators can be implemented and registered but silently fail due to missing whitelist entry, causing hard-to-debug prerequisite failures.
+**Impact:** Future operators can be implemented and registered but silently fail due to missing whitelist entry, causing hard-to-debug prerequisite failures.
 
-**Reference:** Report lines 164-192
+**Reference:** Report lines 164-192, commit f786635
 
 ## Solution Overview
 
-Automate operator registration validation to eliminate manual synchronization:
+Add automatic validation to catch operator registration/whitelist synchronization errors:
 
-1. **Automated Whitelist Generation**
-   - Generate `ALLOWED_OPERATIONS` from registered operators at initialization
-   - Remove manual whitelist maintenance
-   - Add validation to ensure all registered operators are allowed
+### Approach: Pragmatic Validation (Not Full Auto-Generation)
 
-2. **Registration-Time Validation**
-   - Validate operator registration during `JsonLogicCustomOperators.registerOperators()`
+Due to the current DI architecture and initialization order, we're implementing **validation** rather than **auto-generation**:
+
+1. **Track Registered Operators**
+   - Add `#registeredOperators` Set to `JsonLogicCustomOperators` class
+   - Track operators as they're registered via helper method
+   - Expose via public `getRegisteredOperators()` method
+
+2. **Expose Whitelist**
+   - Move `ALLOWED_OPERATIONS` from local const to class property in `JsonLogicEvaluationService`
+   - Add `getAllowedOperations()` public method for external access
+   - Maintain same validation logic
+
+3. **Automatic Validation**
+   - Validate operator registration at end of `JsonLogicCustomOperators.registerOperators()`
+   - Compare registered operators against evaluation service whitelist
    - Fail fast when operators are registered but not whitelisted
    - Provide clear error messages with remediation steps
 
-3. **Validation Tests**
+4. **Validation Tests**
    - Create test to verify all registered operators are in whitelist
    - Test that unregistered operators are rejected
+   - Test the original bug scenario (operator registered but not whitelisted)
    - Ensure validation doesn't break existing functionality
 
-## File Structure
+### Why Not Full Auto-Generation?
+
+Full auto-generation of the whitelist from registered operators would require:
+- Circular dependency: `JsonLogicEvaluationService` needs `JsonLogicCustomOperators`
+- Initialization order changes in DI container
+- Security review process changes (implicit vs explicit approval)
+
+The pragmatic approach provides **fail-fast validation** without architectural changes.
+
+## Current Architecture
+
+### Actual Implementation (Class-Based)
 
 ```
 src/logic/
-├── jsonLogicCustomOperators.js              # Modified: Add validation
-├── jsonLogicEvaluationService.js            # Modified: Auto-generate whitelist
+├── jsonLogicCustomOperators.js              # Class: JsonLogicCustomOperators
+│   └── registerOperators(jsonLogicEvaluationService)  # Instance method
+├── jsonLogicEvaluationService.js            # Class: JsonLogicEvaluationService
+│   ├── addOperation(name, func)             # Registers with json-logic-js
+│   ├── #validateJsonLogic(rule)             # Has ALLOWED_OPERATIONS const
+│   └── evaluate(rule, context)              # Validates then evaluates
+└── operators/                               # Operator implementations
+    ├── hasOtherActorsAtLocationOperator.js  # Class: HasOtherActorsAtLocationOperator
+    ├── hasPartOfTypeOperator.js             # Class: HasPartOfTypeOperator
+    └── ...                                  # Other operator classes
+```
+
+### Registration Flow (Current)
+
+```
+1. JsonLogicCustomOperators instantiated with dependencies
+2. registerOperators(evaluationService) called
+3. For each operator:
+   - Instantiate operator class (e.g., new HasPartOfTypeOperator())
+   - Call evaluationService.addOperation(name, wrapperFunc)
+4. addOperation() calls jsonLogic.add_operation(name, func)
+5. No tracking of registered operators
+```
+
+### Validation Flow (Current)
+
+```
+1. evaluate(rule, context) called on JsonLogicEvaluationService
+2. #validateJsonLogic(rule) called with local ALLOWED_OPERATIONS const
+3. Recursively checks all operators in rule against whitelist
+4. Throws if disallowed operator found
+5. If valid, evaluates rule with jsonLogic.apply()
+```
+
+## Proposed Changes
+
+```
+src/logic/
+├── jsonLogicCustomOperators.js              # Modified: Add tracking & validation
+├── jsonLogicEvaluationService.js            # Modified: Expose whitelist access
 └── operatorRegistrationValidator.js         # NEW: Validation utility
 
 tests/unit/logic/
@@ -193,116 +257,234 @@ export function generateAllowedOperations(registeredOperators, additionalOperato
 
 **File:** `src/logic/jsonLogicCustomOperators.js` (modify)
 
-```javascript
-/**
- * @file JSON Logic Custom Operators
- * @description Register custom operators for json-logic-js with validation
- */
+**Current Implementation:** Class-based with instance method `registerOperators(jsonLogicEvaluationService)`
 
-import jsonLogic from 'json-logic-js';
+**Changes Needed:**
+1. Add private `#registeredOperators` Set to track registered operators
+2. Create helper method `#registerOperator(name, implementation, evaluationService)`
+3. Add public method `getRegisteredOperators()` for external access
+4. Add validation call after all operators registered
+
+```javascript
+// src/logic/jsonLogicCustomOperators.js
+
+import { BaseService } from '../utils/serviceBase.js';
+import { HasPartWithComponentValueOperator } from './operators/hasPartWithComponentValueOperator.js';
+// ... other imports ...
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 
 /**
- * Track all registered custom operators.
- * @type {Set<string>}
+ * @class JsonLogicCustomOperators
+ * @description Service responsible for registering custom JSON Logic operators
  */
-const REGISTERED_OPERATORS = new Set();
+export class JsonLogicCustomOperators extends BaseService {
+  /** @private @type {ILogger} */
+  #logger;
+  /** @private @type {BodyGraphService} */
+  #bodyGraphService;
+  /** @private @type {IEntityManager} */
+  #entityManager;
+  /** @private @type {Set<string>} Track registered operators */
+  #registeredOperators = new Set();
 
-/**
- * Register all custom operators with json-logic-js.
- *
- * @param {Object} dependencies - Service dependencies
- * @param {Object} dependencies.entityManager - Entity manager instance
- * @param {Object} dependencies.logger - Logger instance
- * @param {Object} dependencies.evaluationService - JSON Logic evaluation service (for validation)
- */
-export function registerOperators({ entityManager, logger, evaluationService }) {
-  // Clear previous registrations
-  REGISTERED_OPERATORS.clear();
+  constructor({ logger, bodyGraphService, entityManager }) {
+    super();
+    this.#logger = this._init('JsonLogicCustomOperators', logger, {
+      bodyGraphService: {
+        value: bodyGraphService,
+        requiredMethods: [
+          'hasPartWithComponentValue',
+          'findPartsByType',
+          'getAllParts',
+          'buildAdjacencyCache',
+        ],
+      },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData'],
+      },
+    });
 
-  // Register each custom operator
-  registerOperator('hasPartOfType', hasPartOfTypeOperator({ entityManager, logger }));
-  registerOperator('hasPartWithState', hasPartWithStateOperator({ entityManager, logger }));
-  registerOperator('hasClothingInSlot', hasClothingInSlotOperator({ entityManager, logger }));
-  registerOperator('hasOtherActorsAtLocation', hasOtherActorsAtLocationOperator({ entityManager, logger }));
-  registerOperator('component_present', componentPresentOperator({ entityManager, logger }));
-  // ... register other operators ...
+    this.#bodyGraphService = bodyGraphService;
+    this.#entityManager = entityManager;
 
-  // VALIDATION: Ensure all registered operators are whitelisted
-  if (evaluationService && evaluationService.getAllowedOperations) {
-    const allowedOps = evaluationService.getAllowedOperations();
-    validateOperatorWhitelist(REGISTERED_OPERATORS, allowedOps, logger);
+    this.#logger.debug('JsonLogicCustomOperators initialized');
   }
 
-  logger.info('Registered custom JSON Logic operators', {
-    count: REGISTERED_OPERATORS.size,
-    operators: Array.from(REGISTERED_OPERATORS).sort()
-  });
+  /**
+   * Helper to register operator and track it
+   * @private
+   */
+  #registerOperator(name, implementation, evaluationService) {
+    evaluationService.addOperation(name, implementation);
+    this.#registeredOperators.add(name);
+  }
+
+  /**
+   * Registers all custom operators with the JsonLogicEvaluationService
+   *
+   * @param {JsonLogicEvaluationService} jsonLogicEvaluationService
+   */
+  registerOperators(jsonLogicEvaluationService) {
+    this.#logger.debug('Registering custom JSON Logic operators');
+
+    // Clear previous registrations
+    this.#registeredOperators.clear();
+
+    // Create operator instances
+    const hasPartWithComponentValueOp = new HasPartWithComponentValueOperator({
+      entityManager: this.#entityManager,
+      bodyGraphService: this.#bodyGraphService,
+      logger: this.#logger,
+    });
+
+    // ... create other operators ...
+
+    // Register operators using helper (tracks automatically)
+    this.#registerOperator(
+      'hasPartWithComponentValue',
+      function (entityPath, componentId, propertyPath, expectedValue) {
+        return hasPartWithComponentValueOp.evaluate(
+          [entityPath, componentId, propertyPath, expectedValue],
+          this
+        );
+      },
+      jsonLogicEvaluationService
+    );
+
+    // ... register other operators similarly ...
+
+    // VALIDATION: Ensure all registered operators are whitelisted
+    const allowedOps = jsonLogicEvaluationService.getAllowedOperations();
+    validateOperatorWhitelist(this.#registeredOperators, allowedOps, this.#logger);
+
+    this.#logger.info('Custom JSON Logic operators registered successfully', {
+      count: this.#registeredOperators.size,
+      operators: Array.from(this.#registeredOperators).sort()
+    });
+  }
+
+  /**
+   * Get set of all registered custom operators.
+   * @returns {Set<string>} Set of registered operator names
+   */
+  getRegisteredOperators() {
+    return new Set(this.#registeredOperators);
+  }
+
+  /**
+   * Clears all operator caches - useful for testing
+   */
+  clearCaches() {
+    this.#logger.debug('Clearing custom operator caches');
+    if (this.isSocketCoveredOp) {
+      this.isSocketCoveredOp.clearCache();
+    }
+  }
 }
 
-/**
- * Register a single operator with json-logic-js and track it.
- *
- * @param {string} name - Operator name
- * @param {Function} implementation - Operator implementation
- */
-function registerOperator(name, implementation) {
-  jsonLogic.add_operation(name, implementation);
-  REGISTERED_OPERATORS.add(name);
-}
-
-/**
- * Get set of all registered custom operators.
- *
- * @returns {Set<string>} Set of registered operator names
- */
-export function getRegisteredOperators() {
-  return new Set(REGISTERED_OPERATORS);
-}
-
-/**
- * Check if an operator is registered.
- *
- * @param {string} operatorName - Operator name to check
- * @returns {boolean} True if operator is registered
- */
-export function isOperatorRegistered(operatorName) {
-  return REGISTERED_OPERATORS.has(operatorName);
-}
+export default JsonLogicCustomOperators;
 ```
 
-### Step 3: Modify JsonLogicEvaluationService for Auto-Generation
+### Step 3: Modify JsonLogicEvaluationService to Expose Whitelist
 
 **File:** `src/logic/jsonLogicEvaluationService.js` (modify)
 
+**Current Implementation:** `ALLOWED_OPERATIONS` is a local const inside `#validateJsonLogic` method
+
+**Problem:** The whitelist is hardcoded and not accessible from outside for validation
+
+**Changes Needed:**
+1. Move `ALLOWED_OPERATIONS` from local const to private class property `#allowedOperations`
+2. Add public method `getAllowedOperations()` to expose the whitelist
+3. Keep same validation logic, just use `this.#allowedOperations` instead of local const
+
+**Note:** We're NOT auto-generating from registered operators (that would require dependency injection changes). Instead, we're just exposing the existing whitelist for validation.
+
 ```javascript
-/**
- * @file JSON Logic Evaluation Service
- * @description Validates and evaluates JSON Logic expressions
- */
+// src/logic/jsonLogicEvaluationService.js
 
-import { generateAllowedOperations } from './operatorRegistrationValidator.js';
+import jsonLogic from 'json-logic-js';
+import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
+import { BaseService } from '../utils/serviceBase.js';
+// ... other imports ...
 
-class JsonLogicEvaluationService {
+class JsonLogicEvaluationService extends BaseService {
+  /** @private @type {ILogger} */
   #logger;
+  /** @private @type {IGameDataRepository} */
+  #gameDataRepository;
+  /** @private @type {Set<string>} Allowed JSON Logic operations */
   #allowedOperations;
 
-  constructor({ logger, customOperators }) {
-    this.#logger = logger;
+  constructor({ logger, gameDataRepository, serviceSetup } = {}) {
+    super();
+    const setup = serviceSetup ?? new ServiceSetup();
+    this.#logger = setup.setupService('JsonLogicEvaluationService', logger);
 
-    // AUTO-GENERATE allowed operations from registered custom operators
-    const registeredOps = customOperators?.getRegisteredOperators() || new Set();
-    this.#allowedOperations = generateAllowedOperations(registeredOps);
+    // ... existing gameDataRepository setup ...
 
-    this.#logger.info('Initialized JSON Logic evaluation service', {
+    // Initialize allowed operations whitelist
+    this.#allowedOperations = new Set([
+      // Comparison operators
+      '==', '===', '!=', '!==', '>', '>=', '<', '<=',
+      // Logical operators
+      'and', 'or', 'not', '!', '!!',
+      // Conditional
+      'if',
+      // Data access
+      'var', 'missing', 'missing_some',
+      // Object operations
+      'has',
+      // Array operations
+      'in', 'cat', 'substr', 'merge',
+      // Math operations
+      '+', '-', '*', '/', '%', 'min', 'max',
+      // String operations
+      'toLowerCase', 'toUpperCase',
+      // Type checks
+      'some', 'none', 'all',
+      // Special
+      'log',
+      // Custom operations
+      'condition_ref',
+      // Anatomy/body part operators
+      'hasPartWithComponentValue',
+      'hasBodyPartWithComponentValue',
+      'hasPartOfType',
+      'hasPartOfTypeWithComponentValue',
+      // Clothing/equipment operators
+      'hasClothingInSlot',
+      'hasClothingInSlotLayer',
+      'isSocketCovered',
+      // Location/actor operators
+      'hasOtherActorsAtLocation',
+      // Furniture/positioning operators
+      'hasSittingSpaceToRight',
+      'canScootCloser',
+      'isClosestLeftOccupant',
+      'isClosestRightOccupant',
+      // Test operators
+      'throw_error_operator',
+    ]);
+
+    // Register built-in custom operators
+    this.addOperation('not', (a) => !a);
+    this.addOperation('has', (object, property) => {
+      if (object && typeof object === 'object') {
+        return property in object;
+      }
+      return false;
+    });
+
+    this.#logger.debug('JsonLogicEvaluationService initialized.', {
       allowedOperationCount: this.#allowedOperations.size
     });
   }
 
   /**
    * Get the set of allowed operations.
-   *
-   * @returns {Set<string>} Set of allowed operation names
+   * @returns {Set<string>} Copy of allowed operation names
    */
   getAllowedOperations() {
     return new Set(this.#allowedOperations);
@@ -310,7 +492,6 @@ class JsonLogicEvaluationService {
 
   /**
    * Check if an operator is allowed.
-   *
    * @param {string} operatorName - Operator name
    * @returns {boolean} True if operator is allowed
    */
@@ -319,51 +500,76 @@ class JsonLogicEvaluationService {
   }
 
   /**
-   * Validate JSON Logic expression recursively.
-   *
-   * @param {*} logic - JSON Logic expression to validate
-   * @throws {Error} If expression contains disallowed operators
+   * Validates a JSON Logic rule to ensure it only uses allowed operations.
+   * @private
+   * @param {any} rule - The rule to validate
+   * @param {Set<string>} seenObjects - Track objects to prevent circular references
+   * @param {number} depth - Current recursion depth
+   * @throws {Error} If rule contains disallowed operations or exceeds depth limit
    */
-  #validateJsonLogic(logic) {
-    if (typeof logic !== 'object' || logic === null) {
+  #validateJsonLogic(rule, seenObjects = new Set(), depth = 0) {
+    const MAX_DEPTH = 50;
+
+    if (depth > MAX_DEPTH) {
+      throw new Error(
+        `JSON Logic validation error: Maximum nesting depth (${MAX_DEPTH}) exceeded`
+      );
+    }
+
+    // Handle null/undefined
+    if (rule === null || rule === undefined) {
       return;
     }
 
-    if (Array.isArray(logic)) {
-      logic.forEach(item => this.#validateJsonLogic(item));
+    // Handle primitives
+    if (typeof rule !== 'object') {
       return;
     }
 
-    for (const [operator, args] of Object.entries(logic)) {
-      if (!this.#allowedOperations.has(operator)) {
-        const message =
-          `Disallowed JSON Logic operator: "${operator}"\n` +
-          `\n` +
-          `Allowed operators: ${Array.from(this.#allowedOperations).sort().join(', ')}\n` +
-          `\n` +
-          `If this is a custom operator, ensure it is:\n` +
-          `1. Registered in JsonLogicCustomOperators.registerOperators()\n` +
-          `2. Added to ALLOWED_OPERATIONS in JsonLogicEvaluationService`;
+    // Handle circular references
+    if (seenObjects.has(rule)) {
+      throw new Error('JSON Logic validation error: Circular reference detected');
+    }
+    seenObjects.add(rule);
 
-        this.#logger.error('JSON Logic validation failed', {
-          operator,
-          allowedCount: this.#allowedOperations.size
-        });
-
-        throw new Error(message);
+    try {
+      // Handle arrays
+      if (Array.isArray(rule)) {
+        for (const item of rule) {
+          this.#validateJsonLogic(item, seenObjects, depth + 1);
+        }
+        return;
       }
 
-      // Recursively validate arguments
-      if (Array.isArray(args)) {
-        args.forEach(arg => this.#validateJsonLogic(arg));
-      } else {
-        this.#validateJsonLogic(args);
+      // Handle objects - check operations
+      const keys = Object.keys(rule);
+
+      // Check for dangerous properties
+      // ... existing security checks ...
+
+      // For single-key objects, check if it's a valid operation
+      if (keys.length === 1) {
+        const operation = keys[0];
+        if (!this.#allowedOperations.has(operation)) {
+          throw new Error(
+            `JSON Logic validation error: Disallowed operation '${operation}'`
+          );
+        }
       }
+
+      // Recursively validate all values
+      for (const key of keys) {
+        this.#validateJsonLogic(rule[key], seenObjects, depth + 1);
+      }
+    } finally {
+      seenObjects.delete(rule);
     }
   }
 
   // ... rest of class implementation ...
 }
+
+export default JsonLogicEvaluationService;
 ```
 
 ### Step 4: Create Registration Validation Tests
@@ -372,12 +578,16 @@ class JsonLogicEvaluationService {
 
 ```javascript
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { registerOperators, getRegisteredOperators } from '../../../src/logic/jsonLogicCustomOperators.js';
+import { JsonLogicCustomOperators } from '../../../src/logic/jsonLogicCustomOperators.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import { validateOperatorWhitelist } from '../../../src/logic/operatorRegistrationValidator.js';
 
 describe('JSON Logic Operator Registration', () => {
   let logger;
   let entityManager;
+  let bodyGraphService;
+  let gameDataRepository;
+  let customOperators;
   let evaluationService;
 
   beforeEach(() => {
@@ -393,13 +603,35 @@ describe('JSON Logic Operator Registration', () => {
       getComponentData: jest.fn(() => null),
       hasComponent: jest.fn(() => false)
     };
+
+    bodyGraphService = {
+      hasPartWithComponentValue: jest.fn(() => false),
+      findPartsByType: jest.fn(() => []),
+      getAllParts: jest.fn(() => []),
+      buildAdjacencyCache: jest.fn()
+    };
+
+    gameDataRepository = {
+      getConditionDefinition: jest.fn(() => null)
+    };
   });
 
   describe('Operator Registration', () => {
     it('should register all custom operators', () => {
-      registerOperators({ entityManager, logger });
+      customOperators = new JsonLogicCustomOperators({
+        logger,
+        bodyGraphService,
+        entityManager
+      });
 
-      const registered = getRegisteredOperators();
+      evaluationService = new JsonLogicEvaluationService({
+        logger,
+        gameDataRepository
+      });
+
+      customOperators.registerOperators(evaluationService);
+
+      const registered = customOperators.getRegisteredOperators();
 
       expect(registered.size).toBeGreaterThan(0);
       expect(registered.has('hasPartOfType')).toBe(true);
@@ -408,29 +640,46 @@ describe('JSON Logic Operator Registration', () => {
     });
 
     it('should track registered operators', () => {
-      registerOperators({ entityManager, logger });
+      customOperators = new JsonLogicCustomOperators({
+        logger,
+        bodyGraphService,
+        entityManager
+      });
 
-      const registered = getRegisteredOperators();
+      evaluationService = new JsonLogicEvaluationService({
+        logger,
+        gameDataRepository
+      });
+
+      customOperators.registerOperators(evaluationService);
+
+      const registered = customOperators.getRegisteredOperators();
       const operatorNames = Array.from(registered).sort();
 
       expect(operatorNames).toContain('hasPartOfType');
-      expect(operatorNames).toContain('component_present');
+      expect(operatorNames).toContain('hasPartWithComponentValue');
       expect(operatorNames.length).toBeGreaterThan(3);
     });
   });
 
   describe('Whitelist Synchronization', () => {
-    it('should have all registered operators in evaluation service whitelist', () => {
-      // Register operators first
-      registerOperators({ entityManager, logger });
-
-      // Create evaluation service (auto-generates whitelist)
-      evaluationService = new JsonLogicEvaluationService({
+    beforeEach(() => {
+      customOperators = new JsonLogicCustomOperators({
         logger,
-        customOperators: { getRegisteredOperators }
+        bodyGraphService,
+        entityManager
       });
 
-      const registered = getRegisteredOperators();
+      evaluationService = new JsonLogicEvaluationService({
+        logger,
+        gameDataRepository
+      });
+
+      customOperators.registerOperators(evaluationService);
+    });
+
+    it('should have all registered operators in evaluation service whitelist', () => {
+      const registered = customOperators.getRegisteredOperators();
       const allowed = evaluationService.getAllowedOperations();
 
       // All registered operators should be allowed
@@ -440,11 +689,6 @@ describe('JSON Logic Operator Registration', () => {
     });
 
     it('should include standard json-logic-js operators in whitelist', () => {
-      evaluationService = new JsonLogicEvaluationService({
-        logger,
-        customOperators: { getRegisteredOperators }
-      });
-
       const allowed = evaluationService.getAllowedOperations();
 
       // Standard operators
@@ -457,22 +701,29 @@ describe('JSON Logic Operator Registration', () => {
 
     it('should fail validation when operator is registered but not whitelisted', () => {
       // This test simulates the bug that was fixed
-      const mockGetRegisteredOperators = () => new Set(['hasOtherActorsAtLocation', 'hasPartOfType']);
+      const mockRegisteredOps = new Set(['hasOtherActorsAtLocation', 'hasPartOfType']);
       const mockAllowedOps = new Set(['hasPartOfType']); // Missing hasOtherActorsAtLocation
 
       expect(() => {
-        validateOperatorWhitelist(mockGetRegisteredOperators(), mockAllowedOps, logger);
+        validateOperatorWhitelist(mockRegisteredOps, mockAllowedOps, logger);
       }).toThrow('hasOtherActorsAtLocation');
     });
   });
 
   describe('Operator Validation', () => {
     beforeEach(() => {
-      registerOperators({ entityManager, logger });
+      customOperators = new JsonLogicCustomOperators({
+        logger,
+        bodyGraphService,
+        entityManager
+      });
+
       evaluationService = new JsonLogicEvaluationService({
         logger,
-        customOperators: { getRegisteredOperators }
+        gameDataRepository
       });
+
+      customOperators.registerOperators(evaluationService);
     });
 
     it('should allow registered custom operators in expressions', () => {
@@ -480,7 +731,8 @@ describe('JSON Logic Operator Registration', () => {
         hasPartOfType: ['actor', 'hand']
       };
 
-      expect(() => evaluationService.validate(logic)).not.toThrow();
+      // Note: evaluate() calls #validateJsonLogic internally
+      expect(() => evaluationService.evaluate(logic, {})).not.toThrow();
     });
 
     it('should reject unregistered operators', () => {
@@ -488,18 +740,18 @@ describe('JSON Logic Operator Registration', () => {
         unknownOperator: ['actor', 'data']
       };
 
-      expect(() => evaluationService.validate(logic)).toThrow('unknownOperator');
+      expect(() => evaluationService.evaluate(logic, {})).toThrow('unknownOperator');
     });
 
     it('should validate nested expressions with custom operators', () => {
       const logic = {
         and: [
           { hasPartOfType: ['actor', 'hand'] },
-          { component_present: ['actor', 'positioning:standing'] }
+          { hasClothingInSlot: ['actor', 'torso'] }
         ]
       };
 
-      expect(() => evaluationService.validate(logic)).not.toThrow();
+      expect(() => evaluationService.evaluate(logic, {})).not.toThrow();
     });
   });
 });
@@ -542,28 +794,66 @@ export function myCustomOperator({ entityManager, logger }) {
 
 ### Step 2: Register Operator
 
-Add registration in `jsonLogicCustomOperators.js`:
+Add registration in `JsonLogicCustomOperators.registerOperators()` method:
 
 ```javascript
-import { myCustomOperator } from './operators/myCustomOperator.js';
+// In src/logic/jsonLogicCustomOperators.js
+import { MyCustomOperator } from './operators/myCustomOperator.js';
 
-export function registerOperators({ entityManager, logger, evaluationService }) {
-  // ... existing operators ...
+export class JsonLogicCustomOperators extends BaseService {
+  // ... existing code ...
 
-  registerOperator('myCustomOperator', myCustomOperator({ entityManager, logger }));
+  registerOperators(jsonLogicEvaluationService) {
+    this.#logger.debug('Registering custom JSON Logic operators');
+    this.#registeredOperators.clear();
 
-  // Validation happens automatically
+    // Create operator instance
+    const myCustomOp = new MyCustomOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
+    // Register using helper (tracks automatically)
+    this.#registerOperator(
+      'myCustomOperator',
+      function (entityPath, expectedValue) {
+        return myCustomOp.evaluate([entityPath, expectedValue], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // ... register other operators ...
+
+    // Validation happens automatically at end of method
+    const allowedOps = jsonLogicEvaluationService.getAllowedOperations();
+    validateOperatorWhitelist(this.#registeredOperators, allowedOps, this.#logger);
+  }
 }
 ```
 
-### Step 3: Validation (Automatic)
+### Step 3: Add to ALLOWED_OPERATIONS Whitelist
 
-**NO MANUAL WHITELIST UPDATE NEEDED!**
+**MANUAL STEP REQUIRED** (for now):
 
-The operator is automatically:
-1. ✅ Added to `REGISTERED_OPERATORS` set
-2. ✅ Included in `ALLOWED_OPERATIONS` via auto-generation
-3. ✅ Validated during initialization
+Add the operator to the `#allowedOperations` Set in `JsonLogicEvaluationService` constructor:
+
+```javascript
+// In src/logic/jsonLogicEvaluationService.js constructor
+this.#allowedOperations = new Set([
+  // ... existing operators ...
+  // Custom operations - your new operator
+  'myCustomOperator',  // <-- ADD THIS
+  // ... rest of operators ...
+]);
+```
+
+**Validation** (automatic):
+
+After adding to whitelist, validation happens automatically:
+1. ✅ Operator added to `#registeredOperators` set when registered
+2. ✅ `validateOperatorWhitelist()` called at end of `registerOperators()`
+3. ✅ Throws error if operator is registered but not in `#allowedOperations`
+4. ✅ Throws error if operator is in whitelist but not registered
 
 ### Step 4: Write Tests
 
@@ -611,16 +901,29 @@ describe('myCustomOperator', () => {
 
 ### What You Don't Need to Do
 
-❌ **Don't manually update ALLOWED_OPERATIONS** - Auto-generated
-❌ **Don't add to validation whitelist** - Automatic
-❌ **Don't worry about synchronization** - Validated at initialization
+❌ **Don't manually track registrations** - Automatic via `#registerOperator()` helper
+❌ **Don't worry about forgetting validation** - Automatic at end of `registerOperators()`
+❌ **Don't silent fail on missing whitelist** - Throws error immediately
 
 ### What You Still Need to Do
 
-✅ **Implement operator logic** - In `src/logic/operators/`
-✅ **Register operator** - Call `registerOperator()` in `jsonLogicCustomOperators.js`
+✅ **Implement operator logic** - Create operator class in `src/logic/operators/`
+✅ **Register operator** - Add to `JsonLogicCustomOperators.registerOperators()`
+✅ **Add to whitelist** - Add operator name to `#allowedOperations` in `JsonLogicEvaluationService`
 ✅ **Write tests** - In `tests/unit/logic/operators/`
 ✅ **Document usage** - Add to this guide or operator JSDoc
+
+### Why Still Manual?
+
+The current implementation requires manual whitelist updates because:
+
+1. **Dependency Injection Complexity**: Auto-generation would require passing `JsonLogicCustomOperators` to `JsonLogicEvaluationService` constructor, which creates circular dependencies in the DI setup.
+
+2. **Initialization Order**: `JsonLogicEvaluationService` is created before operators are registered, so the whitelist must exist before registration.
+
+3. **Security Considerations**: Explicit whitelist provides security review checkpoint - all operators must be explicitly approved.
+
+**Future Enhancement**: A fully auto-generated approach would require DI architecture changes to resolve initialization order and circular dependencies.
 
 ## Error Messages
 
@@ -661,14 +964,24 @@ If this is a custom operator, ensure it is:
 2. Added to ALLOWED_OPERATIONS in JsonLogicEvaluationService
 ```
 
-## Migration from Manual Whitelist
+## Improvement from Current System
 
-If you have existing operators that were manually added to whitelist:
+The enhancement adds automatic validation to the existing manual process:
 
-1. ✅ Verify operator is registered in `jsonLogicCustomOperators.js`
-2. ✅ Remove manual entry from `ALLOWED_OPERATIONS` (will be auto-generated)
-3. ✅ Run tests to verify everything works
-4. ✅ Done!
+**Before (Current - No Validation):**
+1. Implement operator in `src/logic/operators/`
+2. Register in `JsonLogicCustomOperators.registerOperators()`
+3. Manually add to `ALLOWED_OPERATIONS` whitelist
+4. ⚠️ If you forget step 3, silent failure occurs
+
+**After (Enhanced - With Validation):**
+1. Implement operator in `src/logic/operators/`
+2. Register in `JsonLogicCustomOperators.registerOperators()` using `#registerOperator()` helper
+3. Manually add to `ALLOWED_OPERATIONS` whitelist
+4. ✅ `validateOperatorWhitelist()` called automatically
+5. ✅ If you forget step 3, immediate error with clear message
+
+**Key Benefit:** Same manual process, but with fail-fast validation that prevents silent failures.
 
 ## References
 
@@ -681,40 +994,75 @@ If you have existing operators that were manually added to whitelist:
 
 ## Acceptance Criteria
 
-- [ ] Operator registration validator created (`operatorRegistrationValidator.js`)
+### Code Changes
+- [ ] Operator registration validator created (`src/logic/operatorRegistrationValidator.js`)
+  - [ ] `validateOperatorWhitelist()` function
+  - [ ] `generateAllowedOperations()` function (for tests)
+  - [ ] `isStandardOperator()` helper function
 - [ ] `JsonLogicCustomOperators` modified to track registered operators
-- [ ] `JsonLogicEvaluationService` modified to auto-generate `ALLOWED_OPERATIONS`
-- [ ] Validation occurs automatically during initialization (fail-fast)
-- [ ] Registration tests created and passing
+  - [ ] Private `#registeredOperators` Set added
+  - [ ] Private `#registerOperator()` helper method
+  - [ ] Public `getRegisteredOperators()` method
+  - [ ] `registerOperators()` updated to use helper and validate
+- [ ] `JsonLogicEvaluationService` modified to expose whitelist
+  - [ ] `ALLOWED_OPERATIONS` moved from local const to `#allowedOperations` class property
+  - [ ] Public `getAllowedOperations()` method added
+  - [ ] Public `isOperatorAllowed()` method added (optional but useful)
+  - [ ] `#validateJsonLogic()` updated to use `this.#allowedOperations`
+
+### Testing
+- [ ] Registration validation tests created (`tests/unit/logic/jsonLogicOperatorRegistration.test.js`)
+  - [ ] Tests verify operator tracking
+  - [ ] Tests verify whitelist synchronization
+  - [ ] Tests simulate the original bug (operator registered but not whitelisted)
+  - [ ] Tests verify validation throws clear errors
 - [ ] All existing tests pass (no regressions)
 - [ ] Error messages provide clear remediation steps
+
+### Documentation
 - [ ] Operator development guide created at `docs/development/json-logic-operator-guide.md`
 - [ ] Guide includes:
-  - Operator registration process (4 steps)
-  - Automatic validation explanation
-  - Error message examples
-  - Migration guide from manual whitelist
+  - [ ] Operator registration process (4 steps: implement, register, whitelist, test)
+  - [ ] Explanation of why manual whitelist is still needed
+  - [ ] Automatic validation explanation
+  - [ ] Error message examples
+  - [ ] Comparison of before/after behavior
+- [ ] CLAUDE.md updated with reference to operator guide (optional)
+
+### Validation
+- [ ] Manual test: Add new operator without whitelist entry → should throw clear error
+- [ ] Manual test: Add whitelist entry without registering → should warn
+- [ ] Integration test: Existing operators continue to work correctly
 
 ## Implementation Notes
 
 **Key Design Decisions:**
 
-1. **Auto-generation over Manual**: Generate `ALLOWED_OPERATIONS` from `REGISTERED_OPERATORS` to eliminate sync issues
-2. **Fail-fast**: Validate during initialization rather than at first usage
+1. **Validation over Auto-Generation**: Add validation to manual process to catch errors early without changing DI architecture
+2. **Fail-Fast**: Validate during `registerOperators()` rather than at first usage
 3. **Clear Errors**: Provide actionable error messages with remediation steps
+4. **Minimal Changes**: Work within existing class-based architecture
 
 **Testing Strategy:**
 
-1. Unit tests verify registration tracking
-2. Tests verify whitelist auto-generation
-3. Tests simulate the original bug (missing whitelist entry)
-4. Integration tests ensure no regressions
+1. Unit tests verify registration tracking in `JsonLogicCustomOperators`
+2. Tests verify whitelist exposure in `JsonLogicEvaluationService`
+3. Tests verify `validateOperatorWhitelist()` utility function
+4. Tests simulate the original bug (operator registered but not whitelisted)
+5. Integration tests ensure no regressions with existing operators
 
-**Migration Considerations:**
+**Architecture Constraints:**
 
-- Existing manual `ALLOWED_OPERATIONS` entries can be removed
-- All custom operators must be registered via `registerOperators()`
-- Standard json-logic-js operators automatically included
+- `JsonLogicEvaluationService` is instantiated before operators are registered
+- Circular dependency if evaluation service needs custom operators service
+- Manual whitelist provides explicit security review point
+- Future refactor could enable full auto-generation with DI changes
+
+**Performance Considerations:**
+
+- Validation only runs once at initialization (negligible impact)
+- Operator tracking uses Set (O(1) lookups)
+- No runtime performance impact after initialization
 
 ## Dependencies
 

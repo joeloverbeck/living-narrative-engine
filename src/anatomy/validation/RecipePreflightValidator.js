@@ -135,6 +135,12 @@ class RecipePreflightValidator {
     if (!options.skipLoadFailureChecks) {
       this.#checkEntityDefinitionLoadFailures(results);
     }
+
+    // 10. Recipe Usage Check (Warning - P1)
+    // Verify that entity definitions actually reference this recipe
+    if (!options.skipRecipeUsageCheck) {
+      this.#checkRecipeUsage(recipe, results);
+    }
   }
 
   async #checkComponentExistence(recipe, results) {
@@ -992,6 +998,54 @@ class RecipePreflightValidator {
     }
 
     return details;
+  }
+
+  /**
+   * Check if any entity definitions reference this recipe
+   * This helps catch ID mismatches where the recipe exists but with wrong ID
+   *
+   * @param {object} recipe - Recipe to validate
+   * @param {object} results - Validation results object
+   */
+  #checkRecipeUsage(recipe, results) {
+    try {
+      const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+      const referencingEntities = [];
+
+      // Find all entity definitions that reference this recipe
+      for (const entityDef of allEntityDefs) {
+        const bodyComponent = entityDef.components?.['anatomy:body'];
+        if (bodyComponent?.recipeId === recipe.recipeId) {
+          referencingEntities.push(entityDef.id);
+        }
+      }
+
+      if (referencingEntities.length === 0) {
+        results.warnings.push({
+          type: 'RECIPE_UNUSED',
+          severity: 'warning',
+          check: 'recipe_usage',
+          message: `Recipe '${recipe.recipeId}' is not referenced by any entity definitions`,
+          suggestion: 'Verify that the recipeId matches what entity definitions expect',
+          details: {
+            recipeId: recipe.recipeId,
+            hint: `Entity definitions should have: "anatomy:body": { "recipeId": "${recipe.recipeId}" }`,
+          },
+        });
+      } else {
+        results.passed.push({
+          check: 'recipe_usage',
+          message: `Recipe is referenced by ${referencingEntities.length} entity definition(s)`,
+          details: {
+            referencingEntities: referencingEntities.slice(0, 5), // Show first 5
+            totalCount: referencingEntities.length,
+          },
+        });
+      }
+    } catch (error) {
+      this.#logger.error('Recipe usage check failed', error);
+      // Don't add to results - this is a diagnostic check
+    }
   }
 }
 
