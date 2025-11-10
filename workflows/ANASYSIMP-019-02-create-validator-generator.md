@@ -438,19 +438,47 @@ class StringSimilarityCalculator {
 export default StringSimilarityCalculator;
 ```
 
-### 3. Dependency Injection Registration
+### 3. Dependency Injection Token Definition
 
-**File to Update:** `src/dependencyInjection/registrations/validationRegistrations.js`
+**File to Update:** `src/dependencyInjection/tokens/tokens-core.js`
 
-Add registrations for the new classes:
+Add new tokens to the `coreTokens` object (keep alphabetically sorted):
+
+```javascript
+export const coreTokens = freeze({
+  // ... existing tokens ...
+  ISchemaValidator: 'ISchemaValidator',
+  IStringSimilarityCalculator: 'IStringSimilarityCalculator',  // ADD THIS
+  IValidatorGenerator: 'IValidatorGenerator',                  // ADD THIS
+  // ... remaining tokens ...
+});
+```
+
+### 4. Dependency Injection Registration
+
+**File to Update:** `src/dependencyInjection/registrations/loadersRegistrations.js`
+
+Add registrations for the new classes in the appropriate section (near the validation services):
 
 ```javascript
 import ValidatorGenerator from '../../validation/validatorGenerator.js';
 import StringSimilarityCalculator from '../../validation/stringSimilarityCalculator.js';
 
-// Add to registration function
-container.register('StringSimilarityCalculator', StringSimilarityCalculator);
-container.register('ValidatorGenerator', ValidatorGenerator);
+// Add after ISchemaValidator registration (around line 193)
+registrar.singletonFactory(
+  tokens.IStringSimilarityCalculator,
+  (c) => new StringSimilarityCalculator({
+    logger: c.resolve(tokens.ILogger)
+  })
+);
+
+registrar.singletonFactory(
+  tokens.IValidatorGenerator,
+  (c) => new ValidatorGenerator({
+    logger: c.resolve(tokens.ILogger),
+    similarityCalculator: c.resolve(tokens.IStringSimilarityCalculator)
+  })
+);
 ```
 
 ## Files to Create
@@ -462,8 +490,8 @@ container.register('ValidatorGenerator', ValidatorGenerator);
 
 ## Files to Update
 
-- [ ] `src/dependencyInjection/registrations/validationRegistrations.js` - Register new classes
-- [ ] `src/dependencyInjection/tokens/tokens-validation.js` - Add tokens (if file exists)
+- [ ] `src/dependencyInjection/registrations/loadersRegistrations.js` - Register new classes
+- [ ] `src/dependencyInjection/tokens/tokens-core.js` - Add new tokens for validation services
 
 ## Testing Requirements
 
@@ -556,10 +584,13 @@ npx eslint src/validation/validatorGenerator.js src/validation/stringSimilarityC
 
 ## Notes
 
+- **Dependency Status:** The dependency ticket ANASYSIMP-019-01 is COMPLETE. The `validationRules` schema extension already exists in `data/schemas/component.schema.json` and is ready to use.
+- **Example Component:** See `data/mods/descriptors/components/texture-with-validation.component.json` for a working example of the `validationRules` usage.
 - **Levenshtein Distance:** Standard algorithm for measuring string similarity
 - **Template Variables:** Use `{{variable}}` syntax for consistency
 - **Performance:** Cache similarity calculations if performance becomes an issue
 - **Extensibility:** Design allows adding more validator types (pattern, range, etc.)
+- **Token Import:** Tokens are imported in loadersRegistrations.js via `import { tokens } from '../tokens.js';` which aggregates all token files including tokens-core.js. No additional import changes needed.
 
 ## Alternative Approaches
 
