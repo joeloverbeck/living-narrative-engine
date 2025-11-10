@@ -386,6 +386,71 @@ function toHaveComponentData(received, componentType, expectedData) {
   };
 }
 
+/**
+ * Checks if discovered actions array contains a specific action
+ *
+ * @param {Array} received - Actions array from discoverActions
+ * @param {string} expectedActionId - Action ID to find (e.g., 'patrol:travel_through_dimensions')
+ * @param {object} [options] - Optional match criteria
+ * @param {string} [options.primaryTargetId] - Expected primary target ID
+ * @returns {{pass: boolean, message: Function}} Jest matcher result
+ * @example expect(actions).toContainAction('patrol:travel_through_dimensions')
+ * @example expect(actions).toContainAction('patrol:travel_through_dimensions', { primaryTargetId: 'dimension-1' })
+ */
+function toContainAction(received, expectedActionId, options = {}) {
+  const { printReceived, printExpected, matcherHint } = this.utils;
+
+  if (!Array.isArray(received)) {
+    throw new Error('toContainAction: received must be an actions array');
+  }
+
+  const { primaryTargetId } = options;
+
+  // Find matching actions
+  let matchingActions = received.filter((action) => action.id === expectedActionId);
+
+  // If primaryTargetId is specified, further filter by target
+  if (primaryTargetId !== undefined && matchingActions.length > 0) {
+    matchingActions = matchingActions.filter(
+      (action) => action.primaryTargetId === primaryTargetId
+    );
+  }
+
+  const pass = matchingActions.length > 0;
+
+  if (pass) {
+    return {
+      message: () =>
+        matcherHint('.not.toContainAction', 'actions', printExpected(expectedActionId)) +
+        '\n\n' +
+        'Expected actions NOT to contain:\n' +
+        `  ${printExpected(expectedActionId)}\n` +
+        (primaryTargetId ? `  with primaryTargetId: ${printExpected(primaryTargetId)}\n` : '') +
+        '\nBut it was found in the actions array',
+      pass: true,
+    };
+  }
+
+  // Build detailed failure message
+  const actionIds = received.map((a) => a.id);
+  const failureDetails =
+    '\nExpected action: ' +
+    printExpected(expectedActionId) +
+    (primaryTargetId ? `\nWith primaryTargetId: ${printExpected(primaryTargetId)}` : '') +
+    '\n\nAvailable actions: ' +
+    printReceived(actionIds.length > 0 ? actionIds.join(', ') : '(none)') +
+    '\n';
+
+  return {
+    message: () =>
+      matcherHint('.toContainAction', 'actions', printExpected(expectedActionId)) +
+      '\n\n' +
+      'Expected actions to contain:' +
+      failureDetails,
+    pass: false,
+  };
+}
+
 // Export all matchers
 export const domainMatchers = {
   toHaveActionSuccess,
@@ -395,6 +460,7 @@ export const domainMatchers = {
   toBeAt,
   toDispatchEvent,
   toHaveComponentData,
+  toContainAction,
 };
 
 /**

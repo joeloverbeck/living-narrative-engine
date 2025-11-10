@@ -1012,6 +1012,7 @@ class BaseModTestFixture {
             try {
               createActionValidationProxy(parsed, `${this.modId}:${file} action`);
             } catch (validationError) {
+              console.warn(`⚠️  Action validation failed for ${file}:`, validationError.message);
               return null;
             }
             return parsed;
@@ -1024,6 +1025,8 @@ class BaseModTestFixture {
 
       // Filter out nulls from failed loads
       const validActions = actions.filter(a => a !== null);
+
+      console.log(`[ModTestFixture] Loaded ${validActions.length} action(s) for mod '${this.modId}':`, validActions.map(a => a.id));
 
       return validActions;
     } catch (error) {
@@ -1179,10 +1182,10 @@ class BaseModTestFixture {
    *
    * @param {object} config - Entity configuration
    * @param {string} config.id - Entity ID
-   * @param {object} config.components - Components to add to the entity
-   * @returns {object} Built entity object
+   * @param {object} config.components - Components to add to the entity (can be array or object)
+   * @returns {string} Entity ID (the entity is registered with the entityManager)
    * @example
-   * const entity = testFixture.createEntity({
+   * const entityId = testFixture.createEntity({
    *   id: 'actor1',
    *   components: {
    *     'core:name': { text: 'Alice' },
@@ -1197,19 +1200,82 @@ class BaseModTestFixture {
       throw new Error('ModTestFixture.createEntity: config.id is required');
     }
 
-    if (typeof components !== 'object' || components === null) {
-      throw new Error('ModTestFixture.createEntity: config.components must be an object');
+    // Support both array format (like in tests) and object format
+    let componentsObj = components;
+    if (Array.isArray(components)) {
+      componentsObj = {};
+      for (const comp of components) {
+        componentsObj[comp.componentId] = comp.data;
+      }
+    }
+
+    if (typeof componentsObj !== 'object' || componentsObj === null) {
+      throw new Error('ModTestFixture.createEntity: config.components must be an object or array');
     }
 
     // Create builder with the ID
     const builder = new ModEntityBuilder(id);
 
     // Add each component using withComponent
-    for (const [componentId, componentData] of Object.entries(components)) {
+    for (const [componentId, componentData] of Object.entries(componentsObj)) {
       builder.withComponent(componentId, componentData);
     }
 
-    return builder.build();
+    const entity = builder.build();
+
+    // Register the entity with the entity manager if available
+    if (this.entityManager) {
+      // Add the entity to the entity manager's registry
+      // The entity manager should have a way to register entities
+      // For now, we'll add components one by one
+      for (const [componentId, componentData] of Object.entries(componentsObj)) {
+        this.entityManager.addComponent(id, componentId, componentData);
+      }
+    }
+
+    // Return just the ID
+    return id;
+  }
+
+  /**
+   * Modifies or adds a component to an existing entity.
+   * If the component exists, it will be removed and re-added with new data.
+   * If it doesn't exist, it will be added.
+   *
+   * @param {string} entityId - Entity ID to modify
+   * @param {string} componentId - Component ID to add/modify
+   * @param {*} componentData - Component data (can be array or object)
+   * @returns {Promise<void>}
+   */
+  async modifyComponent(entityId, componentId, componentData) {
+    if (!this.entityManager) {
+      throw new Error('ModTestFixture.modifyComponent: entityManager not available');
+    }
+
+    // Check if component exists
+    const entity = this.entityManager.getEntityInstance(entityId);
+    if (entity && entity.components && entity.components[componentId]) {
+      // Remove existing component first
+      await this.entityManager.removeComponent(entityId, componentId);
+    }
+
+    // Add component with new data
+    await this.entityManager.addComponent(entityId, componentId, componentData);
+  }
+
+  /**
+   * Gets component data from an entity.
+   *
+   * @param {string} entityId - Entity ID
+   * @param {string} componentId - Component ID to retrieve
+   * @returns {*} Component data or undefined if not found
+   */
+  getComponent(entityId, componentId) {
+    if (!this.entityManager) {
+      throw new Error('ModTestFixture.getComponent: entityManager not available');
+    }
+
+    return this.entityManager.getComponentData(entityId, componentId);
   }
 
   /**
