@@ -38,6 +38,7 @@
       "size_specific.component.json",
       "structural_integrity.component.json",
       "temperature.component.json",
+      "texture-with-validation.component.json",
       "texture.component.json",
       "visual_capability.component.json",
       "vocal_capability.component.json",
