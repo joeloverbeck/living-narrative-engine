@@ -25,15 +25,23 @@ Create the following directory structure:
 
 ```
 data/mods/weapons/
-├── components/          # Component definitions
-├── actions/            # Action definitions
-├── rules/              # Rule definitions
-├── scopes/             # Scope DSL files
-├── events/             # Event definitions
-├── conditions/         # Condition definitions
-├── entities/           # Entity definitions (example weapons/ammo)
-└── mod-manifest.json   # Mod manifest (created in WEASYSIMP-002)
+├── components/              # Component definitions
+├── actions/                # Action definitions
+├── rules/                  # Rule definitions
+├── scopes/                 # Scope DSL files
+├── events/                 # Event definitions
+├── conditions/             # Condition definitions
+├── entities/               # Entity files (subdirectories below)
+│   ├── definitions/        # Entity definition files (.entity.json)
+│   └── instances/          # Entity instance files (.entity.json)
+├── README.md               # Mod documentation (optional but recommended)
+└── mod-manifest.json       # Mod manifest (created in WEASYSIMP-002)
 ```
+
+**Note:** Optional directories (not created by default, add only if needed):
+- `macros/` - Reusable action sequences (used by core and companionship mods)
+- `lookups/` - Lookup tables (rarely used)
+- `goals/` - Goal definitions (not currently used by any mod)
 
 ### 2. Directory Creation Script
 
@@ -43,17 +51,21 @@ Execute the following commands:
 # Create base mod directory
 mkdir -p data/mods/weapons
 
-# Create subdirectories
+# Create standard subdirectories
 mkdir -p data/mods/weapons/components
 mkdir -p data/mods/weapons/actions
 mkdir -p data/mods/weapons/rules
 mkdir -p data/mods/weapons/scopes
 mkdir -p data/mods/weapons/events
 mkdir -p data/mods/weapons/conditions
-mkdir -p data/mods/weapons/entities
+
+# Create entities subdirectories (required structure for mod loader)
+mkdir -p data/mods/weapons/entities/definitions
+mkdir -p data/mods/weapons/entities/instances
 
 # Verify structure
 ls -la data/mods/weapons/
+ls -la data/mods/weapons/entities/
 ```
 
 ### 3. Verification
@@ -67,10 +79,11 @@ After creation, verify:
 ## Acceptance Criteria
 
 - [ ] `data/mods/weapons/` directory exists
-- [ ] All 7 subdirectories (components, actions, rules, scopes, events, conditions, entities) exist
-- [ ] Directory structure matches existing mod patterns (e.g., items mod, core mod)
+- [ ] All 7 standard subdirectories exist (components, actions, rules, scopes, events, conditions, entities/)
+- [ ] `entities/` has proper subdirectories (`definitions/` and `instances/`)
+- [ ] Directory structure matches existing mod patterns (especially items mod structure)
 - [ ] Permissions allow file creation in all directories
-- [ ] Structure validated against mod conventions
+- [ ] Structure validated against mod loader expectations (see `src/loaders/loaderMeta.js`)
 
 ## Testing Requirements
 
@@ -84,6 +97,13 @@ test -d data/mods/weapons/scopes && echo "✓ Scopes directory exists" || echo "
 test -d data/mods/weapons/events && echo "✓ Events directory exists" || echo "✗ Events missing"
 test -d data/mods/weapons/conditions && echo "✓ Conditions directory exists" || echo "✗ Conditions missing"
 test -d data/mods/weapons/entities && echo "✓ Entities directory exists" || echo "✗ Entities missing"
+test -d data/mods/weapons/entities/definitions && echo "✓ Entities/definitions exists" || echo "✗ Entities/definitions missing"
+test -d data/mods/weapons/entities/instances && echo "✓ Entities/instances exists" || echo "✗ Entities/instances missing"
+
+# Compare with items mod structure (reference)
+echo ""
+echo "Reference: Items mod structure"
+ls -la data/mods/items/
 ```
 
 ## Additional Notes
@@ -93,6 +113,22 @@ test -d data/mods/weapons/entities && echo "✓ Entities directory exists" || ec
 - Mod manifest creation is handled in WEASYSIMP-002
 - Follow the exact same structure as existing mods for consistency
 - The weapons mod will depend on both `core` and `items` mods
+
+### Directory Structure Details
+
+**Entities Subdirectories:**
+- `entities/definitions/` - Entity definition templates (e.g., `revolver.entity.json`)
+- `entities/instances/` - Specific entity instances (e.g., `rusty_revolver_001.entity.json`)
+- The mod loader (`src/loaders/loaderMeta.js`) expects this exact subdirectory structure
+
+**Optional Directories (Not Included):**
+- `macros/` - Only needed if the mod defines reusable action sequences (like core mod's `displaySuccessAndEndTurn.macro.json`)
+- `lookups/` - Only needed for lookup tables (rarely used)
+- `goals/` - Not currently used by any mod in the codebase
+
+**Documentation (Recommended):**
+- Consider adding a `README.md` file (see `data/mods/items/README.md` as a template)
+- This helps developers understand the mod's purpose and structure
 
 ## Related Tickets
 
