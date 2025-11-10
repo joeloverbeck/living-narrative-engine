@@ -19,9 +19,9 @@
   "prerequisites": [],
   "template": "jot down notes on {notebook}",
   "visual": {
-    "backgroundColor": "#2d3436",
-    "textColor": "#dfe6e9",
-    "hoverBackgroundColor": "#636e72",
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
     "hoverTextColor": "#ffffff"
   }
 }
