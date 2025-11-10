@@ -70,7 +70,7 @@ describe('Operation Handler Performance Tests', () => {
 
   afterEach(() => {
     // Clear entity manager
-    entityManager.entities.clear();
+    entityManager.clearAll();
   });
 
   describe('ModifyArrayFieldHandler Performance', () => {

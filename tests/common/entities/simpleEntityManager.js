@@ -463,4 +463,15 @@ export default class SimpleEntityManager {
     // Clear cache for this entity since it's new/updated
     this.entityInstanceCache.delete(entityToStore.id);
   }
+
+  /**
+   * Clear all entities from the manager.
+   * Provides API compatibility with production EntityManager.
+   *
+   * @returns {void}
+   */
+  clearAll() {
+    this.entitiesMap.clear();
+    this.entityInstanceCache.clear();
+  }
 }
