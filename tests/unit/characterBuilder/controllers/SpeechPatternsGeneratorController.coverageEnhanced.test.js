@@ -13,6 +13,8 @@ import {
 import {
   SpeechPatternsGeneratorController,
   formatTimeEstimateText,
+  buildStageMessage,
+  computeTimeEstimate,
 } from '../../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 
 globalThis.__validatorInstances = [];
@@ -973,6 +975,203 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     jest.useRealTimers();
   });
 
+  it('sanitizes fallback display output when speech patterns omit optional fields', async () => {
+    jest.useFakeTimers();
+
+    const { dependencies, mocks } = createDependencies();
+
+    mocks.speechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
+      speechPatterns: [
+        {
+          circumstances: '<script>alert(1)</script>',
+        },
+      ],
+      generatedAt: new Date('2024-02-01T00:00:00Z').toISOString(),
+    });
+
+    const controller = createControllerInstance(dependencies);
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.82 },
+    });
+
+    const generationPromise = waitForValidationAndGeneration({
+      characterData: createValidCharacterData({ text: 'Fallback Sanitizer' }),
+      validatorInstance,
+    });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
+
+    const container = document.getElementById('speech-patterns-container');
+    expect(container.innerHTML).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(container.textContent).toContain('Pattern 1 of 1');
+    expect(container.innerHTML).toContain('Speech Patterns for Character');
+
+    jest.useRealTimers();
+  });
+
+  it('generates fallback export text with examples, context, and character data', async () => {
+    jest.useFakeTimers();
+
+    const { dependencies, mocks } = createDependencies();
+
+    const generatedAt = new Date('2024-02-02T03:04:05Z').toISOString();
+    mocks.speechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
+      speechPatterns: [
+        {
+          pattern: 'Speaks thoughtfully before responding',
+          example: '"Let me consider every perspective."',
+          circumstances: 'In tense negotiations',
+        },
+      ],
+      characterName: 'Fallback Chronicler',
+      generatedAt,
+    });
+
+    const controller = createControllerInstance(dependencies);
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.9 },
+    });
+
+    const generationPromise = waitForValidationAndGeneration({
+      characterData: createValidCharacterData({ text: 'Fallback Chronicler' }),
+      validatorInstance,
+    });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
+
+    document
+      .getElementById('export-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
+
+    const lastBlobCall = global.Blob.mock.calls.at(-1);
+    expect(lastBlobCall).toBeDefined();
+    const [blobContent, options] = lastBlobCall;
+    const [textContent] = blobContent;
+
+    expect(options).toEqual({ type: 'text/plain;charset=utf-8' });
+    expect(textContent).toContain(
+      'Example: "\"Let me consider every perspective.\""'
+    );
+    expect(textContent).toContain('Context: In tense negotiations');
+    expect(textContent).toContain('Character Definition:');
+    expect(global.URL.createObjectURL).toHaveBeenCalled();
+
+    jest.useRealTimers();
+  });
+
+  it('falls back to the first supported format when an unknown export option is chosen', async () => {
+    jest.useFakeTimers();
+
+    const { dependencies, mocks } = createDependencies({
+      withDisplayEnhancer: true,
+    });
+
+    const displayEnhancer = mocks.displayEnhancer;
+    displayEnhancer.getSupportedExportFormats.mockReturnValue([
+      {
+        id: 'txt',
+        name: 'Text',
+        extension: '.txt',
+        mimeType: 'text/plain',
+        description: 'Plain text export',
+      },
+      {
+        id: 'json',
+        name: 'JSON',
+        extension: '.json',
+        mimeType: 'application/json',
+        description: 'Structured JSON',
+      },
+    ]);
+    displayEnhancer.getAvailableTemplates.mockReturnValue([
+      { id: 'default', name: 'Default', description: 'Standard layout' },
+    ]);
+    displayEnhancer.enhanceForDisplay.mockImplementation((patterns) => ({
+      characterName: patterns.characterName,
+      totalCount: patterns.speechPatterns.length,
+      patterns: patterns.speechPatterns.map((pattern, index) => ({
+        index: index + 1,
+        htmlSafePattern: pattern.pattern,
+        htmlSafeExample: pattern.example,
+        circumstances: pattern.circumstances,
+      })),
+    }));
+    displayEnhancer.formatForExport.mockReturnValue('Formatted export');
+    displayEnhancer.generateExportFilename.mockReturnValue('fallback.txt');
+
+    const controller = createControllerInstance(dependencies);
+    const originalCache = controller._cacheElements.bind(controller);
+    controller._cacheElements = function () {
+      originalCache();
+      this._cacheElementsFromMap({
+        exportFormat: '#export-format',
+        exportTemplate: '#export-template',
+        templateGroup: '#template-group',
+      });
+    };
+
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.91 },
+    });
+
+    mocks.speechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
+      speechPatterns: [
+        {
+          pattern: 'Delivers stories with lively energy',
+          example: 'Gather round, I have a tale to tell!',
+        },
+      ],
+      characterName: 'Fallback Format Hero',
+      generatedAt: new Date('2024-02-04T00:00:00Z').toISOString(),
+    });
+
+    const generationPromise = waitForValidationAndGeneration({
+      characterData: createValidCharacterData({ text: 'Fallback Format Hero' }),
+      validatorInstance,
+    });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
+
+    const exportFormat = document.getElementById('export-format');
+    exportFormat.value = 'xml';
+
+    document
+      .getElementById('export-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
+
+    expect(displayEnhancer.generateExportFilename).toHaveBeenCalledWith(
+      'Fallback Format Hero',
+      { extension: '.txt' }
+    );
+    expect(global.Blob).toHaveBeenCalled();
+
+    jest.useRealTimers();
+  });
+
   it('announces minute-level time estimates for low and high confidence stages', async () => {
     jest.useFakeTimers();
 
@@ -1034,16 +1233,24 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(typeof capturedProgress).toBe('function');
 
     const timeEstimate = document.getElementById('time-estimate');
+    const progressBar = document.getElementById('progress-bar');
+    const announcer = document.getElementById('screen-reader-announcement');
 
     capturedProgress(0);
+    await jest.advanceTimersToNextTimerAsync();
     await flushMicrotasks();
 
     expect(timeEstimate.textContent).toMatch(/\d+-\d+ minutes remaining/);
+    expect(progressBar.classList.contains('low-confidence')).toBe(true);
+    expect(announcer.textContent).toMatch(/remaining/);
 
     capturedProgress(100);
+    await jest.advanceTimersToNextTimerAsync();
     await flushMicrotasks();
 
     expect(timeEstimate.textContent).toMatch(/About \d+ minute/);
+    expect(progressBar.classList.contains('high-confidence')).toBe(true);
+    expect(announcer.textContent).toMatch(/remaining/);
 
     resolveGeneration({
       speechPatterns: [
@@ -1069,6 +1276,31 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(
       formatTimeEstimateText({ remaining: 4500, confidence: 0.7 })
     ).toBe('4-6 seconds remaining');
+  });
+
+  it('builds a fallback stage message for unknown stages', () => {
+    expect(buildStageMessage('mystery', 37.6)).toBe(
+      'Generating speech patterns (38% complete)'
+    );
+  });
+
+  it('computes time estimates using processing defaults when stage is unknown', () => {
+    const now = jest.fn().mockReturnValue(2000);
+
+    const estimate = computeTimeEstimate({
+      currentStage: 'mystery',
+      startTime: 0,
+      progress: 0,
+      now,
+    });
+
+    expect(now).toHaveBeenCalledTimes(1);
+    expect(estimate).toEqual({
+      elapsed: 2000,
+      remaining: 25273,
+      total: 27273,
+      confidence: 0.7,
+    });
   });
 
   it('announces cancellation when generation is aborted', async () => {
@@ -1638,6 +1870,101 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(warningsList.style.display).toBe('block');
   });
 
+  it('applies warning styling when enhanced validation reports non-blocking issues', async () => {
+    const { dependencies } = createDependencies();
+    const controller = createControllerInstance(dependencies);
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: false,
+      errors: [],
+      warnings: ['Consider adding more background detail'],
+      suggestions: [],
+      quality: { overallScore: 0.65 },
+    });
+
+    await enterCharacterDefinition({
+      characterData: createValidCharacterData({ text: 'Warning Hero' }),
+      validatorInstance,
+    });
+
+    const textarea = document.getElementById('character-definition');
+    expect(textarea.classList.contains('warning')).toBe(true);
+    expect(textarea.classList.contains('error')).toBe(false);
+  });
+
+  it('displays and auto hides validation success messaging for strong character definitions', async () => {
+    jest.useFakeTimers();
+
+    try {
+      const { dependencies } = createDependencies();
+      const controller = createControllerInstance(dependencies);
+      await controller.initialize();
+
+      const validatorInstance = getLatestValidatorInstance();
+      validatorInstance.validateInput.mockResolvedValue({
+        isValid: true,
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        quality: { overallScore: 0.88 },
+      });
+
+      await enterCharacterDefinition({
+        characterData: createValidCharacterData({ text: 'Success Hero' }),
+        validatorInstance,
+      });
+
+      const errorContainer = document.getElementById('character-input-error');
+      const textarea = document.getElementById('character-definition');
+
+      expect(errorContainer.innerHTML).toContain('Excellent character definition!');
+      expect(errorContainer.style.display).toBe('block');
+      expect(textarea.classList.contains('success')).toBe(true);
+
+      jest.advanceTimersByTime(3000);
+      await flushMicrotasks();
+
+      expect(errorContainer.style.display).toBe('none');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('clears enhanced validation feedback when the character definition is emptied', async () => {
+    const { dependencies } = createDependencies();
+    const controller = createControllerInstance(dependencies);
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: false,
+      errors: ['Needs more detail'],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.3 },
+    });
+
+    await enterCharacterDefinition({
+      characterData: createValidCharacterData({ text: 'Clearing Hero' }),
+      validatorInstance,
+    });
+
+    const textarea = document.getElementById('character-definition');
+    const errorContainer = document.getElementById('character-input-error');
+    expect(errorContainer.style.display).toBe('block');
+
+    textarea.value = '';
+    textarea.dispatchEvent(new Event('blur', { bubbles: true }));
+    await flushMicrotasks();
+
+    expect(errorContainer.style.display).toBe('none');
+    expect(textarea.classList.contains('error')).toBe(false);
+    expect(textarea.classList.contains('warning')).toBe(false);
+    expect(textarea.classList.contains('success')).toBe(false);
+  });
+
   it('keyboard shortcuts trigger generation and export actions', async () => {
     jest.useFakeTimers();
 
@@ -1754,7 +2081,90 @@ describe('SpeechPatternsGeneratorController - advanced coverage', () => {
     expect(exportEvent.preventDefault).toHaveBeenCalled();
     expect(global.Blob).toHaveBeenCalled();
 
+    const textarea = document.getElementById('character-definition');
+    textarea.value = 'Temporary text';
+
+    const deleteEvent = new KeyboardEvent('keydown', {
+      key: 'Delete',
+      ctrlKey: true,
+      shiftKey: true,
+      bubbles: true,
+    });
+    Object.defineProperty(deleteEvent, 'preventDefault', {
+      value: jest.fn(),
+      configurable: true,
+    });
+
+    document.body.dispatchEvent(deleteEvent);
+
+    expect(deleteEvent.preventDefault).toHaveBeenCalled();
+    expect(textarea.value).toBe('');
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toBe('All content cleared');
+
     document.createElement.mockRestore();
+    jest.useRealTimers();
+  });
+
+  it('navigates between rendered patterns using keyboard controls', async () => {
+    jest.useFakeTimers();
+
+    const { dependencies, mocks } = createDependencies();
+    mocks.speechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
+      speechPatterns: [
+        { pattern: 'Speaks first', example: 'Hello there.' },
+        { pattern: 'Responds second', example: 'Good to see you.' },
+      ],
+      characterName: 'Navigator',
+      generatedAt: new Date('2024-02-03T00:00:00Z').toISOString(),
+    });
+
+    const controller = createControllerInstance(dependencies);
+    await controller.initialize();
+
+    const validatorInstance = getLatestValidatorInstance();
+    validatorInstance.validateInput.mockResolvedValue({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.9 },
+    });
+
+    const generationPromise = waitForValidationAndGeneration({
+      characterData: createValidCharacterData({ text: 'Navigator' }),
+      validatorInstance,
+    });
+
+    await jest.advanceTimersByTimeAsync(500);
+    await generationPromise;
+
+    const items = Array.from(
+      document.querySelectorAll('.speech-pattern-item')
+    );
+    expect(items).toHaveLength(2);
+
+    items.forEach((item) => {
+      Object.defineProperty(item, 'focus', {
+        value: jest.fn(),
+        writable: true,
+      });
+    });
+
+    const downEvent = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+    });
+    items[0].dispatchEvent(downEvent);
+
+    expect(items[1].focus).toHaveBeenCalled();
+    expect(items[0].getAttribute('tabindex')).toBe('-1');
+    expect(items[1].getAttribute('tabindex')).toBe('0');
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toContain('Pattern 2 focused');
+
     jest.useRealTimers();
   });
 

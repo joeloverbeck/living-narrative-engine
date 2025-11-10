@@ -48,6 +48,76 @@ export function formatTimeEstimateText(timeEstimate) {
 }
 
 /**
+ * @description Build a user-facing progress message for the current generation stage.
+ * @param {string} stage - Stage identifier supplied by the controller.
+ * @param {number} progress - Progress percentage.
+ * @returns {string} Message describing the generation progress.
+ */
+export function buildStageMessage(stage, progress) {
+  const roundedProgress = Math.round(progress);
+
+  const stageMessages = {
+    validation: `Stage 1 of 4: Validating character definition (${roundedProgress}% complete)`,
+    processing: `Stage 2 of 4: AI analyzing character traits and generating patterns (${roundedProgress}% complete)`,
+    response: `Stage 3 of 4: Processing and validating generated content (${roundedProgress}% complete)`,
+    rendering: `Stage 4 of 4: Preparing results for display (${roundedProgress}% complete)`,
+  };
+
+  return (
+    stageMessages[stage] ||
+    `Generating speech patterns (${roundedProgress}% complete)`
+  );
+}
+
+/**
+ * @description Calculate elapsed, remaining, and confidence metrics for UI progress displays.
+ * @param {object} params - Calculation parameters.
+ * @param {string} params.currentStage - Stage identifier.
+ * @param {number} params.startTime - Timestamp captured at generation start.
+ * @param {number} [params.progress=0] - Progress percentage between 0-100.
+ * @param {Function} [params.now] - Function returning the current high-resolution timestamp.
+ * @returns {{elapsed: number, remaining: number, total: number, confidence: number}} Time estimate information.
+ */
+export function computeTimeEstimate({
+  currentStage,
+  startTime,
+  progress = 0,
+  now = () => performance.now(),
+}) {
+  const currentTime = now();
+  const elapsedTime = currentTime - startTime;
+
+  const stageWeights = {
+    validation: { weight: 0.15, baseTime: 1000 },
+    processing: { weight: 0.55, baseTime: 15000 },
+    response: { weight: 0.2, baseTime: 3000 },
+    rendering: { weight: 0.1, baseTime: 1000 },
+  };
+
+  const stageInfo = stageWeights[currentStage] || stageWeights['processing'];
+
+  let estimatedTotal;
+  if (progress > 5) {
+    estimatedTotal = elapsedTime / (progress / 100);
+  } else {
+    estimatedTotal = stageInfo.baseTime / stageInfo.weight;
+  }
+
+  const remaining = Math.max(0, estimatedTotal - elapsedTime);
+
+  let confidence = 0.7;
+  if (progress > 20) confidence = 0.85;
+  if (progress > 50) confidence = 0.95;
+
+  return {
+    elapsed: Math.round(elapsedTime),
+    remaining: Math.round(remaining),
+    total: Math.round(estimatedTotal),
+    confidence: confidence,
+  };
+}
+
+/**
  * Controller for speech patterns generator interface
  * Handles character input validation, generation workflow, and results display
  */
@@ -663,42 +733,12 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @returns {object} Time estimate data
    */
   #calculateTimeEstimate(currentStage, startTime, progress = 0) {
-    const currentTime = performance.now();
-    const elapsedTime = currentTime - startTime;
-
-    // Stage-based time estimation (based on existing performance data)
-    const stageWeights = {
-      validation: { weight: 0.15, baseTime: 1000 }, // 15% - Fast validation
-      processing: { weight: 0.55, baseTime: 15000 }, // 55% - Main AI processing
-      response: { weight: 0.2, baseTime: 3000 }, // 20% - Response processing
-      rendering: { weight: 0.1, baseTime: 1000 }, // 10% - Display rendering
-    };
-
-    const stageInfo = stageWeights[currentStage] || stageWeights['processing'];
-
-    // Calculate estimated total time based on progress
-    let estimatedTotal;
-    if (progress > 5) {
-      // Use actual progress for better estimate
-      estimatedTotal = elapsedTime / (progress / 100);
-    } else {
-      // Use stage-based estimate for early stages
-      estimatedTotal = stageInfo.baseTime / stageInfo.weight;
-    }
-
-    const remaining = Math.max(0, estimatedTotal - elapsedTime);
-
-    // Confidence decreases with estimation uncertainty
-    let confidence = 0.7; // Base confidence
-    if (progress > 20) confidence = 0.85;
-    if (progress > 50) confidence = 0.95;
-
-    return {
-      elapsed: Math.round(elapsedTime),
-      remaining: Math.round(remaining),
-      total: Math.round(estimatedTotal),
-      confidence: confidence,
-    };
+    return computeTimeEstimate({
+      currentStage,
+      startTime,
+      progress,
+      now: () => performance.now(),
+    });
   }
 
   /**
@@ -710,19 +750,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @returns {string} Stage message
    */
   #getStageMessage(stage, progress) {
-    const roundedProgress = Math.round(progress);
-
-    const stageMessages = {
-      validation: `Stage 1 of 4: Validating character definition (${roundedProgress}% complete)`,
-      processing: `Stage 2 of 4: AI analyzing character traits and generating patterns (${roundedProgress}% complete)`,
-      response: `Stage 3 of 4: Processing and validating generated content (${roundedProgress}% complete)`,
-      rendering: `Stage 4 of 4: Preparing results for display (${roundedProgress}% complete)`,
-    };
-
-    return (
-      stageMessages[stage] ||
-      `Generating speech patterns (${roundedProgress}% complete)`
-    );
+    return buildStageMessage(stage, progress);
   }
 
   /**
