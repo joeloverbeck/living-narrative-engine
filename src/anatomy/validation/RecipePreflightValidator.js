@@ -276,6 +276,61 @@ class RecipePreflightValidator {
     }
   }
 
+  /**
+   * Ensures blueprint is fully processed with generated slots and merged additionalSlots
+   * V2 blueprints with structure templates need slot generation before pattern validation
+   *
+   * @param {object} blueprint - Raw blueprint from repository
+   * @returns {Promise<object>} Processed blueprint with all slots merged
+   * @private
+   */
+  async #ensureBlueprintProcessed(blueprint) {
+    // V1 blueprints or already-processed blueprints pass through
+    if (!blueprint.structureTemplate || blueprint._generatedSockets) {
+      return blueprint;
+    }
+
+    // V2 blueprint needs processing
+    this.#logger.debug(
+      `RecipePreflightValidator: Processing V2 blueprint '${blueprint.id}' with structure template`
+    );
+
+    // Load structure template
+    const template = this.#dataRegistry.get(
+      'anatomyStructureTemplates',
+      blueprint.structureTemplate
+    );
+
+    if (!template) {
+      this.#logger.warn(
+        `RecipePreflightValidator: Structure template '${blueprint.structureTemplate}' not found, using raw blueprint`
+      );
+      return blueprint;
+    }
+
+    // Generate slots from structure template
+    // This mirrors what blueprintLoader.js does at runtime
+    const generatedSlots = this.#slotGenerator.generateBlueprintSlots(template);
+    const additionalSlots = blueprint.additionalSlots || {};
+
+    // Merge generated slots with additionalSlots (additionalSlots take precedence)
+    const mergedSlots = {
+      ...generatedSlots,
+      ...additionalSlots,
+    };
+
+    this.#logger.debug(
+      `RecipePreflightValidator: Generated ${Object.keys(generatedSlots).length} slots, merged with ${Object.keys(additionalSlots).length} additionalSlots = ${Object.keys(mergedSlots).length} total slots`
+    );
+
+    // Return processed blueprint with merged slots
+    return {
+      ...blueprint,
+      slots: mergedSlots,
+      _generatedSockets: true, // Mark as processed
+    };
+  }
+
   async #checkPatternMatching(recipe, results) {
     try {
       const patterns = recipe.patterns || [];
@@ -288,15 +343,19 @@ class RecipePreflightValidator {
       }
 
       // Get blueprint for the recipe
-      const blueprint =
+      const rawBlueprint =
         await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
 
-      if (!blueprint) {
+      if (!rawBlueprint) {
         this.#logger.warn(
           `Cannot validate patterns: blueprint '${recipe.blueprintId}' not found`
         );
         return;
       }
+
+      // Process blueprint to generate slots and merge additionalSlots
+      // This ensures the validator sees the same blueprint structure as runtime
+      const blueprint = await this.#ensureBlueprintProcessed(rawBlueprint);
 
       // Run pattern matching dry-run validation
       const warnings = validatePatternMatching(
@@ -484,14 +543,17 @@ class RecipePreflightValidator {
    */
   async #checkGeneratedSlotPartAvailability(recipe, results) {
     try {
-      const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(
+      const rawBlueprint = await this.#anatomyBlueprintRepository.getBlueprint(
         recipe.blueprintId
       );
 
-      if (!blueprint) {
+      if (!rawBlueprint) {
         // Blueprint check already failed, skip this check
         return;
       }
+
+      // Process blueprint to ensure all slots are generated
+      const blueprint = await this.#ensureBlueprintProcessed(rawBlueprint);
 
       const patterns = recipe.patterns || [];
       if (patterns.length === 0) {
