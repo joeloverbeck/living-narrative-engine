@@ -77,6 +77,26 @@ describe('JSON-Schema – Mod Manifest', () => {
       if (!ok) console.error(validate.errors);
       expect(ok).toBe(true);
     });
+
+    test('✓ should validate with goals content type', () => {
+      const manifestWithGoals = {
+        id: 'test_mod',
+        version: '1.0.0',
+        name: 'Test Mod',
+        content: {
+          goals: [
+            'goals/find_food.goal.json',
+            'goals/rest_safely.goal.json',
+            'goals/defeat_enemy.goal.json',
+          ],
+        },
+      };
+      const ok = validate(manifestWithGoals);
+      if (!ok) {
+        console.error('Validation Errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
   });
 
   /* ── INVALID CASES ────────────────────────────────────────────────────── */
