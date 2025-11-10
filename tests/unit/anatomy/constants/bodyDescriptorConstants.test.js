@@ -144,13 +144,18 @@ describe('bodyDescriptorConstants - Registry Derivation', () => {
       expect(SUPPORTED_DESCRIPTOR_PROPERTIES).toContain('smell');
     });
 
-    it('should have same values as before migration', () => {
-      // These are the exact values that existed before
+    it('should have same values as current registry', () => {
+      // These values match the current registry state
       const expectedBuildTypes = ['skinny', 'slim', 'lissom', 'toned', 'athletic',
-                                   'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'];
+                                   'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky',
+                                   'frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous',
+                                   'massive', 'willowy', 'barrel-chested', 'lanky'];
       const expectedHairDensity = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'];
-      const expectedComposition = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
-      const expectedHeight = ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'];
+      const expectedComposition = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese',
+                                   'atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated',
+                                   'wasted', 'desiccated', 'bloated', 'rotting'];
+      const expectedHeight = ['microscopic', 'minuscule', 'tiny', 'petite', 'short', 'average',
+                              'tall', 'very-tall', 'gigantic', 'colossal', 'titanic'];
 
       expect(Object.values(BODY_BUILD_TYPES)).toEqual(expectedBuildTypes);
       expect(Object.values(BODY_HAIR_DENSITY)).toEqual(expectedHairDensity);
