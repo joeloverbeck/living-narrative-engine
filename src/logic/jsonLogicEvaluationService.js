@@ -22,6 +22,8 @@ class JsonLogicEvaluationService extends BaseService {
   #logger;
   /** @private @type {IGameDataRepository} */
   #gameDataRepository;
+  /** @private @type {Set<string>} Allowed JSON Logic operations */
+  #allowedOperations;
 
   /**
    * Creates an instance of JsonLogicEvaluationService.
@@ -52,33 +54,8 @@ class JsonLogicEvaluationService extends BaseService {
       this.#gameDataRepository = gameDataRepository;
     }
 
-    // --- ADDED: Register the 'not' operator alias upon instantiation ---
-    this.addOperation('not', (a) => !a);
-
-    // --- ADDED: Register the 'has' operator for checking object properties ---
-    this.addOperation('has', (object, property) => {
-      if (object && typeof object === 'object') {
-        return property in object;
-      }
-      return false;
-    });
-
-    this.#logger.debug('JsonLogicEvaluationService initialized.');
-  }
-
-  /**
-   * Validates a JSON Logic rule to ensure it only uses allowed operations.
-   * This prevents potential security issues from arbitrary operations.
-   *
-   * @private
-   * @param {any} rule - The rule to validate (can be object, array, or primitive)
-   * @param {Set<string>} seenObjects - Track objects to prevent circular references
-   * @param {number} depth - Current recursion depth
-   * @throws {Error} If rule contains disallowed operations or exceeds depth limit
-   */
-  #validateJsonLogic(rule, seenObjects = new Set(), depth = 0) {
-    // Define allowed operations - conservative whitelist approach
-    const ALLOWED_OPERATIONS = new Set([
+    // Initialize allowed operations whitelist
+    this.#allowedOperations = new Set([
       // Comparison operators
       '==',
       '===',
@@ -124,8 +101,8 @@ class JsonLogicEvaluationService extends BaseService {
       'all',
       // Special
       'log',
-      // Custom operations we've added
-      'condition_ref', // Used for condition references
+      // Custom operations
+      'condition_ref',
       // Anatomy/body part operators
       'hasPartWithComponentValue',
       'hasBodyPartWithComponentValue',
@@ -143,9 +120,55 @@ class JsonLogicEvaluationService extends BaseService {
       'isClosestLeftOccupant',
       'isClosestRightOccupant',
       // Test operators
-      'throw_error_operator', // Used in tests for short-circuit behavior
+      'throw_error_operator',
     ]);
 
+    // --- ADDED: Register the 'not' operator alias upon instantiation ---
+    this.addOperation('not', (a) => !a);
+
+    // --- ADDED: Register the 'has' operator for checking object properties ---
+    this.addOperation('has', (object, property) => {
+      if (object && typeof object === 'object') {
+        return property in object;
+      }
+      return false;
+    });
+
+    this.#logger.debug('JsonLogicEvaluationService initialized.', {
+      allowedOperationCount: this.#allowedOperations.size,
+    });
+  }
+
+  /**
+   * Get the set of allowed operations.
+   *
+   * @returns {Set<string>} Copy of allowed operation names
+   */
+  getAllowedOperations() {
+    return new Set(this.#allowedOperations);
+  }
+
+  /**
+   * Check if an operator is allowed.
+   *
+   * @param {string} operatorName - Operator name
+   * @returns {boolean} True if operator is allowed
+   */
+  isOperatorAllowed(operatorName) {
+    return this.#allowedOperations.has(operatorName);
+  }
+
+  /**
+   * Validates a JSON Logic rule to ensure it only uses allowed operations.
+   * This prevents potential security issues from arbitrary operations.
+   *
+   * @private
+   * @param {any} rule - The rule to validate (can be object, array, or primitive)
+   * @param {Set<string>} seenObjects - Track objects to prevent circular references
+   * @param {number} depth - Current recursion depth
+   * @throws {Error} If rule contains disallowed operations or exceeds depth limit
+   */
+  #validateJsonLogic(rule, seenObjects = new Set(), depth = 0) {
     const MAX_DEPTH = 50; // Prevent stack overflow from deeply nested rules
 
     if (depth > MAX_DEPTH) {
@@ -226,7 +249,7 @@ class JsonLogicEvaluationService extends BaseService {
       // For single-key objects, check if it's a valid operation
       if (keys.length === 1) {
         const operation = keys[0];
-        if (!ALLOWED_OPERATIONS.has(operation)) {
+        if (!this.#allowedOperations.has(operation)) {
           throw new Error(
             `JSON Logic validation error: Disallowed operation '${operation}'`
           );

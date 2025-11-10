@@ -12,6 +12,7 @@ import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
 import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
 import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupantOperator.js';
 import { HasOtherActorsAtLocationOperator } from './operators/hasOtherActorsAtLocationOperator.js';
+import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
@@ -29,6 +30,8 @@ export class JsonLogicCustomOperators extends BaseService {
   #bodyGraphService;
   /** @private @type {IEntityManager} */
   #entityManager;
+  /** @private @type {Set<string>} Track registered operators */
+  #registeredOperators = new Set();
 
   /**
    * Creates an instance of JsonLogicCustomOperators
@@ -63,12 +66,28 @@ export class JsonLogicCustomOperators extends BaseService {
   }
 
   /**
+   * Helper to register operator and track it
+   *
+   * @private
+   * @param {string} name - Operator name
+   * @param {Function} implementation - Operator implementation function
+   * @param {JsonLogicEvaluationService} evaluationService - Evaluation service
+   */
+  #registerOperator(name, implementation, evaluationService) {
+    evaluationService.addOperation(name, implementation);
+    this.#registeredOperators.add(name);
+  }
+
+  /**
    * Registers all custom operators with the JsonLogicEvaluationService
    *
    * @param {JsonLogicEvaluationService} jsonLogicEvaluationService
    */
   registerOperators(jsonLogicEvaluationService) {
     this.#logger.debug('Registering custom JSON Logic operators');
+
+    // Clear previous registrations
+    this.#registeredOperators.clear();
 
     // Register hasPartWithComponentValue operator
     // This operator checks if an entity has a body part with a specific component value
@@ -135,7 +154,7 @@ export class JsonLogicCustomOperators extends BaseService {
     });
 
     // Register hasPartWithComponentValue operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'hasPartWithComponentValue',
       function (entityPath, componentId, propertyPath, expectedValue) {
         // 'this' is the evaluation context
@@ -143,20 +162,22 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, componentId, propertyPath, expectedValue],
           this
         );
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register hasPartOfType operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'hasPartOfType',
       function (entityPath, partType) {
         // 'this' is the evaluation context
         return hasPartOfTypeOp.evaluate([entityPath, partType], this);
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register hasPartOfTypeWithComponentValue operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'hasPartOfTypeWithComponentValue',
       function (
         entityPath,
@@ -170,20 +191,22 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, partType, componentId, propertyPath, expectedValue],
           this
         );
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register hasClothingInSlot operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'hasClothingInSlot',
       function (entityPath, slotName) {
         // 'this' is the evaluation context
         return hasClothingInSlotOp.evaluate([entityPath, slotName], this);
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register hasClothingInSlotLayer operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'hasClothingInSlotLayer',
       function (entityPath, slotName, layerName) {
         // 'this' is the evaluation context
@@ -191,21 +214,23 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, slotName, layerName],
           this
         );
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register isSocketCovered operator
     const self = this;
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'isSocketCovered',
       function (entityPath, socketId) {
         // 'this' is the evaluation context
         return self.isSocketCoveredOp.evaluate([entityPath, socketId], this);
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register hasSittingSpaceToRight operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'hasSittingSpaceToRight',
       function (entityPath, targetPath, minSpaces) {
         // 'this' is the evaluation context
@@ -213,20 +238,22 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, targetPath, minSpaces],
           this
         );
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register canScootCloser operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'canScootCloser',
       function (entityPath, targetPath) {
         // 'this' is the evaluation context
         return canScootCloserOp.evaluate([entityPath, targetPath], this);
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register isClosestLeftOccupant operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'isClosestLeftOccupant',
       function (entityPath, targetPath, actorPath) {
         // 'this' is the evaluation context
@@ -234,30 +261,49 @@ export class JsonLogicCustomOperators extends BaseService {
           [entityPath, targetPath, actorPath],
           this
         );
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register isClosestRightOccupant operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'isClosestRightOccupant',
       function (entityPath, targetPath, actorPath) {
         return isClosestRightOccupantOp.evaluate(
           [entityPath, targetPath, actorPath],
           this
         );
-      }
+      },
+      jsonLogicEvaluationService
     );
 
     // Register hasOtherActorsAtLocation operator
-    jsonLogicEvaluationService.addOperation(
+    this.#registerOperator(
       'hasOtherActorsAtLocation',
       function (entityPath) {
         // 'this' is the evaluation context
         return hasOtherActorsAtLocationOp.evaluate([entityPath], this);
-      }
+      },
+      jsonLogicEvaluationService
     );
 
-    this.#logger.info('Custom JSON Logic operators registered successfully');
+    // VALIDATION: Ensure all registered operators are whitelisted
+    const allowedOps = jsonLogicEvaluationService.getAllowedOperations();
+    validateOperatorWhitelist(this.#registeredOperators, allowedOps, this.#logger);
+
+    this.#logger.info('Custom JSON Logic operators registered successfully', {
+      count: this.#registeredOperators.size,
+      operators: Array.from(this.#registeredOperators).sort(),
+    });
+  }
+
+  /**
+   * Get set of all registered custom operators.
+   *
+   * @returns {Set<string>} Set of registered operator names
+   */
+  getRegisteredOperators() {
+    return new Set(this.#registeredOperators);
   }
 
   /**
