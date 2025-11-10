@@ -135,16 +135,19 @@ function createDimensionalScenario(fixture, options = {}) {
   const { actorHasAffordance = true } = options;
 
   const perimeterId = fixture.createEntity({
+    id: 'rule-perimeter',
     name: 'perimeter of rip in reality',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const dimensionId = fixture.createEntity({
+    id: 'rule-dimension',
     name: 'eldritch dimension',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const blockerId = fixture.createEntity({
+    id: 'rule-blocker',
     name: 'dimensional rift',
     components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
   });
@@ -171,6 +174,7 @@ function createDimensionalScenario(fixture, options = {}) {
   }
 
   const actorId = fixture.createEntity({
+    id: 'rule-actor',
     name: 'Test Actor',
     components: actorComponents,
   });
@@ -191,16 +195,19 @@ function createDimensionalScenario(fixture, options = {}) {
  */
 function createBidirectionalScenario(fixture) {
   const perimeterId = fixture.createEntity({
+    id: 'rule-bidir-perimeter',
     name: 'perimeter of rip in reality',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const dimensionId = fixture.createEntity({
+    id: 'rule-bidir-dimension',
     name: 'eldritch dimension',
     components: [{ componentId: 'core:location', data: {} }],
   });
 
   const blockerId = fixture.createEntity({
+    id: 'rule-bidir-blocker',
     name: 'dimensional rift',
     components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
   });
@@ -224,6 +231,7 @@ function createBidirectionalScenario(fixture) {
   ]);
 
   const observerId = fixture.createEntity({
+    id: 'rule-bidir-observer',
     name: 'Writhing Observer',
     components: [
       { componentId: 'core:actor', data: {} },

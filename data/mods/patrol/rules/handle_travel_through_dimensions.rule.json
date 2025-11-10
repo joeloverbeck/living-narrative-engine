@@ -1,84 +1,106 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "id": "patrol:handle_travel_through_dimensions",
-  "description": "Handles entity traveling through dimensional tear to reach another dimension",
-  "priority": 100,
-  "conditions": ["patrol:event-is-action-travel-through-dimensions"],
-  "operations": [
+  "rule_id": "handle_travel_through_dimensions",
+  "comment": "Handles entity traveling through dimensional tear to reach another dimension",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "patrol:event-is-action-travel-through-dimensions"
+  },
+  "actions": [
     {
       "type": "GET_NAME",
-      "params": {
-        "entityId": { "var": "event.payload.actorId" }
-      },
-      "resultVariable": "actorName"
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
     },
     {
       "type": "GET_NAME",
-      "params": {
-        "entityId": { "var": "event.payload.primaryTargetId" }
-      },
-      "resultVariable": "destinationName"
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "destinationName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
-      "params": {
-        "entityId": { "var": "event.payload.actorId" },
-        "componentId": "core:position"
-      },
-      "resultVariable": "actorPosition"
-    },
-    {
-      "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "params": {
-        "actorId": { "var": "event.payload.actorId" },
-        "locationId": { "var": "actorPosition.locationId" },
-        "message": {
-          "cat": [
-            { "var": "actorName" },
-            "'s form ripples and distorts as they step through the dimensional tear."
-          ]
-        },
-        "perceptionType": "dimensional_departure"
-      }
-    },
-    {
-      "type": "CHANGE_LOCATION",
-      "params": {
-        "entityId": { "var": "event.payload.actorId" },
-        "destinationLocationId": { "var": "event.payload.primaryTargetId" }
-      }
-    },
-    {
-      "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "params": {
-        "actorId": { "var": "event.payload.actorId" },
-        "locationId": { "var": "event.payload.primaryTargetId" },
-        "message": {
-          "cat": [
-            { "var": "actorName" },
-            " materializes from the dimensional tear, their form stabilizing in alien space."
-          ]
-        },
-        "perceptionType": "dimensional_arrival"
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
       }
     },
     {
       "type": "SET_VARIABLE",
-      "params": {
-        "name": "successMessage",
-        "value": {
-          "cat": [
-            { "var": "actorName" },
-            " travels through dimensions to ",
-            { "var": "destinationName" },
-            "."
-          ]
-        }
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName}'s form ripples and distorts as they step through the dimensional tear."
       }
     },
     {
-      "type": "MACRO",
-      "macroId": "core:logSuccessAndEndTurn"
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "dimensional_departure"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "CHANGE_LOCATION",
+      "parameters": {
+        "entity_ref": "actor",
+        "destination_location_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} materializes from the dimensional tear, their form stabilizing in alien space."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "dimensional_arrival"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} travels through dimensions to {context.destinationName}."
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
     }
   ]
 }
