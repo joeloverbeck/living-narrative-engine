@@ -61,10 +61,18 @@ describe('seduction:stretch_sexily action discovery', () => {
   });
 
   describe('Prerequisite handling', () => {
-    it('should expose an empty prerequisites array', () => {
+    it('should require other actors at location', () => {
       expect(stretchSexilyAction.prerequisites).toBeDefined();
       expect(Array.isArray(stretchSexilyAction.prerequisites)).toBe(true);
-      expect(stretchSexilyAction.prerequisites).toHaveLength(0);
+      expect(stretchSexilyAction.prerequisites).toHaveLength(1);
+
+      const otherActorsPrerequisite = stretchSexilyAction.prerequisites[0];
+      expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
+        'actor',
+      ]);
+      expect(otherActorsPrerequisite.failure_message).toBe(
+        'There is nobody here to draw attention from.'
+      );
     });
   });
 

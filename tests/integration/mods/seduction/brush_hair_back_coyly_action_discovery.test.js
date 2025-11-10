@@ -65,12 +65,20 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
     it('should require hair body part', () => {
       expect(brushHairBackCoylyAction.prerequisites).toBeDefined();
       expect(Array.isArray(brushHairBackCoylyAction.prerequisites)).toBe(true);
-      expect(brushHairBackCoylyAction.prerequisites).toHaveLength(1);
+      expect(brushHairBackCoylyAction.prerequisites).toHaveLength(2);
 
       const hairPrerequisite = brushHairBackCoylyAction.prerequisites[0];
       expect(hairPrerequisite.logic.hasPartOfType).toEqual(['actor', 'hair']);
       expect(hairPrerequisite.failure_message).toBe(
         'You need hair to perform this action.'
+      );
+
+      const otherActorsPrerequisite = brushHairBackCoylyAction.prerequisites[1];
+      expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
+        'actor',
+      ]);
+      expect(otherActorsPrerequisite.failure_message).toBe(
+        'There is nobody here to draw attention from.'
       );
     });
   });

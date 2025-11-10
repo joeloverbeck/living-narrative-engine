@@ -52,7 +52,7 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
 
     it('should have prerequisites for ass cheeks and lower torso clothing', () => {
       validatePrerequisites(drawAttentionToAssAction.prerequisites, {
-        count: 2,
+        count: 3,
       });
     });
   });
@@ -115,19 +115,34 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
       ]);
     });
 
+    it('should require other actors at location', () => {
+      const otherActorsPrerequisite =
+        drawAttentionToAssAction.prerequisites[2];
+      expect(
+        otherActorsPrerequisite.logic.hasOtherActorsAtLocation
+      ).toBeDefined();
+      expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
+        'actor',
+      ]);
+    });
+
     it('should have meaningful failure messages', () => {
       const assFailure =
         drawAttentionToAssAction.prerequisites[0].failure_message;
       const clothingFailure =
         drawAttentionToAssAction.prerequisites[1].failure_message;
+      const otherActorsFailure =
+        drawAttentionToAssAction.prerequisites[2].failure_message;
 
       expect(assFailure).toContain('ass cheeks');
       expect(clothingFailure).toContain('clothing');
       expect(clothingFailure).toContain('lower torso');
+      expect(otherActorsFailure).toContain('nobody here');
 
       // Messages should be descriptive and user-friendly
       expect(assFailure.length).toBeGreaterThan(20);
       expect(clothingFailure.length).toBeGreaterThan(20);
+      expect(otherActorsFailure.length).toBeGreaterThan(20);
     });
   });
 });
