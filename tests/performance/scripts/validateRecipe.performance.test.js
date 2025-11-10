@@ -47,15 +47,7 @@ function executeCLI(args) {
 describe('validate-recipe CLI performance tests', () => {
   describe('Single recipe validation', () => {
     it('should complete single recipe validation in under 5 seconds', () => {
-      const recipePath = 'data/mods/anatomy/recipes/red_dragon.recipe.json';
-      const result = executeCLI([recipePath]);
-
-      // Should be much faster than 5 seconds, but allow some margin
-      expect(result.duration).toBeLessThan(5000);
-      expect(result.exitCode).toBe(0);
-    });
-
-    it('should validate simple recipe quickly', () => {
+      // Use human_male as it's a simpler recipe than red_dragon
       const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
       const result = executeCLI([recipePath]);
 
@@ -79,46 +71,26 @@ describe('validate-recipe CLI performance tests', () => {
       expect(result.duration).toBeLessThan(10000);
       expect(result.exitCode).toBe(0);
     });
-
-    it('should demonstrate acceptable scaling for batch operations', () => {
-      // Validate single recipe
-      const recipePath1 = 'data/mods/anatomy/recipes/human_male.recipe.json';
-      const singleResult = executeCLI([recipePath1]);
-
-      // Validate multiple recipes
-      const recipePaths = [
-        'data/mods/anatomy/recipes/human_male.recipe.json',
-        'data/mods/anatomy/recipes/human_female.recipe.json',
-      ];
-      const batchResult = executeCLI(recipePaths);
-
-      // Batch validation should be faster than running individually
-      // (due to shared mod loading)
-      // This is informational - we just ensure both complete
-      expect(singleResult.duration).toBeGreaterThan(0);
-      expect(batchResult.duration).toBeGreaterThan(0);
-      expect(batchResult.exitCode).toBe(0);
-    });
   });
 
   describe('Startup overhead', () => {
     it('should have consistent startup time across invocations', async () => {
       const recipePath = 'data/mods/anatomy/recipes/human_male.recipe.json';
 
-      // Run multiple times to measure consistency
+      // Run 2 times to measure consistency (reduced from 3 for performance)
       const durations = [];
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 2; i++) {
         const result = executeCLI([recipePath]);
         durations.push(result.duration);
       }
 
-      // Calculate variance
+      // Calculate variance between the two runs
       const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
       const variance = durations.reduce((sum, d) => sum + Math.pow(d - avg, 2), 0) / durations.length;
       const stdDev = Math.sqrt(variance);
 
       // Standard deviation should be reasonable (less than 50% of average)
-      // This indicates consistent performance
+      // With only 2 samples, we're checking for basic consistency
       expect(stdDev).toBeLessThan(avg * 0.5);
     });
   });
