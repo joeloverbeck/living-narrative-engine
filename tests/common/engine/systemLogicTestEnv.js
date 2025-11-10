@@ -505,6 +505,48 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(itemIds) };
         }
 
+        // Handle the items:non_portable_items_at_location scope
+        if (scopeName === 'items:non_portable_items_at_location') {
+          // Extract actor ID from context
+          const actorId = context?.actor?.id || context;
+
+          // Get actor's position
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+          if (!actorPosition || !actorPosition.locationId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Find all entities with items:item (but NOT items:portable) at same location
+          const allEntityIds = entityManager.getEntityIds();
+          const allEntities = allEntityIds.map((id) => {
+            const instance = entityManager.getEntityInstance(id);
+            return instance || { id, components: {} };
+          });
+
+          const nonPortableItemsAtLocation = allEntities.filter((entity) => {
+            const hasItemComponent = entity.components?.['items:item'];
+            const hasPortableComponent = entity.components?.['items:portable'];
+            const entityPosition = entity.components?.['core:position'];
+
+            // Must have items:item component
+            if (!hasItemComponent || !entityPosition) {
+              return false;
+            }
+
+            // Must NOT have items:portable component
+            if (hasPortableComponent) {
+              return false;
+            }
+
+            // Check if in same location as actor
+            return entityPosition.locationId === actorPosition.locationId;
+          });
+
+          const itemIds = nonPortableItemsAtLocation.map((item) => item.id);
+          return { success: true, value: new Set(itemIds) };
+        }
+
         // Handle the positioning:close_actors scope
         if (scopeName === 'positioning:close_actors') {
           // Extract actor ID from context

@@ -11,7 +11,13 @@ describe('items:examine_item_in_location action definition', () => {
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('items', 'items:examine_item_in_location');
+    testFixture = await ModTestFixture.forAction(
+      'items',
+      'items:examine_item_in_location',
+      null,
+      null,
+      { autoRegisterScopes: true, scopeCategories: ['items'] }
+    );
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
