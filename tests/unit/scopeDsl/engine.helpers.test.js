@@ -127,6 +127,77 @@ describe('ScopeEngine helper methods', () => {
       const entities = gateway.getEntities();
       expect(entities).toEqual([entityOne, entityTwo]);
     });
+
+    it('returns entity array when entity manager exposes array storage', () => {
+      const entityOne = { id: 'entity-1' };
+      const entityTwo = { id: 'entity-2' };
+      const entityArray = [entityOne, entityTwo];
+      Object.defineProperty(entityArray, 'values', {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+      const gateway = engine._createEntitiesGateway({
+        entityManager: {
+          entities: entityArray,
+        },
+      });
+
+      const entities = gateway.getEntities();
+
+      expect(Array.isArray(entities)).toBe(true);
+      expect(entities).toBe(entityArray);
+    });
+
+    it('returns empty array when entity manager lacks retrievable collections', () => {
+      const gateway = engine._createEntitiesGateway({
+        entityManager: {},
+      });
+
+      expect(gateway.getEntities()).toEqual([]);
+    });
+
+    it('builds item components from componentTypeIds when no component map exists', () => {
+      const itemId = 'item-from-ids';
+      const runtimeCtxWithComponentIds = {
+        entityManager: {
+          getEntity: jest.fn(() => ({
+            id: itemId,
+            componentTypeIds: ['core:item', 'core:clothing'],
+          })),
+          getComponentData: jest.fn((entityId, componentId) => {
+            if (entityId !== itemId) {
+              return null;
+            }
+
+            if (componentId === 'core:item') {
+              return { name: 'Hat' };
+            }
+
+            if (componentId === 'core:clothing') {
+              return { slot: 'head' };
+            }
+
+            return null;
+          }),
+        },
+      };
+
+      const gateway = engine._createEntitiesGateway(runtimeCtxWithComponentIds);
+
+      const components = gateway.getItemComponents(itemId);
+
+      expect(components).toEqual({
+        'core:item': { name: 'Hat' },
+        'core:clothing': { slot: 'head' },
+      });
+      expect(
+        runtimeCtxWithComponentIds.entityManager.getComponentData
+      ).toHaveBeenCalledWith(itemId, 'core:item');
+      expect(
+        runtimeCtxWithComponentIds.entityManager.getComponentData
+      ).toHaveBeenCalledWith(itemId, 'core:clothing');
+    });
   });
 
   describe('_createLogicEvaluator', () => {
