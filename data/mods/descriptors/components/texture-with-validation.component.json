@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:texture-validation-example",
+  "description": "Example component showing validationRules usage for texture descriptors",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "texture": {
+        "type": "string",
+        "description": "The surface texture",
+        "enum": ["bumpy", "chitinous", "coarse", "smooth", "rough", "scaly", "slimy", "soft", "sticky"],
+        "default": "smooth"
+      }
+    },
+    "required": ["texture"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid texture value '{{value}}'. Valid textures are: {{validValues}}",
+      "missingRequired": "Texture is required but was not provided"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}
