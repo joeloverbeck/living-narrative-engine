@@ -212,5 +212,50 @@ describe('clothing:blocks_removal Component', () => {
       const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
       expect(result.isValid).toBe(false);
     });
+
+    it('should validate all equipment slots used in clothing mod', () => {
+      // These are the equipment slots actually used as primary/secondary slots in clothing entities
+      const validSlots = [
+        'feet',
+        'full_body',
+        'hands',
+        'head_gear',
+        'left_arm_clothing',
+        'legs',
+        'right_arm_clothing',
+        'torso_lower',
+        'torso_upper',
+      ];
+
+      validSlots.forEach((slot) => {
+        const data = {
+          blockedSlots: [
+            {
+              slot: slot,
+              layers: ['base'],
+              blockType: 'must_remove_first',
+            },
+          ],
+        };
+        const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+        expect(result.isValid).toBe(true);
+      });
+    });
+
+    it('should specifically validate full_body slot for dresses and gowns', () => {
+      // full_body is used by dresses, gowns, and bodysuits - must be supported
+      const data = {
+        blockedSlots: [
+          {
+            slot: 'full_body',
+            layers: ['underwear', 'base'],
+            blockType: 'must_remove_first',
+            reason: 'Full-body garment blocks removal of underlying items',
+          },
+        ],
+      };
+      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      expect(result.isValid).toBe(true);
+    });
   });
 });
