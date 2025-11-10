@@ -36,9 +36,9 @@ describe('EntityBuilder Performance', () => {
     // Create a gateway implementation that uses the entity manager
     gateway = {
       getEntityInstance: (id) => entityManager.getEntityInstance(id),
-      getEntities: () => Array.from(entityManager.entities.values()),
+      getEntities: () => Array.from(entityManager.entities),
       getEntitiesWithComponent: (componentTypeId) => {
-        return Array.from(entityManager.entities.values()).filter(
+        return Array.from(entityManager.entities).filter(
           (entity) => entity.components && entity.components[componentTypeId]
         );
       },
