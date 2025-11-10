@@ -14,9 +14,9 @@
         },
         "movement:exits": [
             {
-                "direction": "to perimeter of rip in reality",
+                "direction": "through the dimensional tear back to reality",
                 "target": "patrol:perimeter_of_rip_in_reality_instance",
-                "blocker": null
+                "blocker": "patrol:dimensional_rift_blocker_instance"
             }
         ]
     }

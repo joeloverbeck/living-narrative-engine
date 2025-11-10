@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "patrol:travel_through_dimensions",
+  "name": "Travel Through Dimensions",
+  "description": "Slip through the tear in reality, traversing the boundary between dimensions. Your form ripples and distorts as you step into alien geometries.",
+  "targets": {
+    "primary": {
+      "scope": "patrol:dimensional_portals",
+      "placeholder": "destination",
+      "description": "Dimensional destination to travel to"
+    }
+  },
+  "required_components": {
+    "actor": ["patrol:can_travel_through_dimensions"]
+  },
+  "template": "travel through dimensions to {destination}",
+  "visual": {
+    "backgroundColor": "#1a0033",
+    "textColor": "#cc99ff",
+    "hoverBackgroundColor": "#330066",
+    "hoverTextColor": "#e6ccff"
+  },
+  "metadata": {
+    "category": "dimensional",
+    "tags": ["dimensional", "supernatural", "eldritch", "movement"]
+  }
+}
