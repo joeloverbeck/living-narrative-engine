@@ -1,6 +1,6 @@
 {
     "$schema": "http://example.com/schemas/anatomy.recipe.schema.json",
-    "recipeId": "p_erotica_irun:dylan_crace_recipe",
+    "recipeId": "patrol:dylan_crace_recipe",
     "blueprintId": "anatomy:human_male",
     "bodyDescriptors": {
         "build": "muscular",
