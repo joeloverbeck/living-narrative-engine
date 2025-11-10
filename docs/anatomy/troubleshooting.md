@@ -259,7 +259,7 @@ console.log('Quadrupedal result:', quadrupedal); // Should be 'left_front'
 - Use `matchesGroup` for template-independent patterns
 - Update test fixtures to reflect new slot structure
 - Run integration tests after template modifications
-- See [Testing Guide](../testing/anatomy-testing-guide.md) for contract testing patterns
+- See [Testing Guide](anatomy-testing-guide.md) for contract testing patterns
 
 ## Problem: partType/subType Mismatches
 
@@ -569,7 +569,7 @@ Monitor ANATOMY_GENERATED events:
 - [Recipe Pattern Matching](./recipe-pattern-matching.md) - Pattern matching and debugging
 - [Body Descriptors Complete](./body-descriptors-complete.md) - Body descriptor system
 - [Non-Human Quickstart](./non-human-quickstart.md) - End-to-end tutorial
-- [Testing Guide](../testing/anatomy-testing-guide.md) - Contract testing patterns
+- [Testing Guide](anatomy-testing-guide.md) - Contract testing patterns
 
 ## Getting Help
 
