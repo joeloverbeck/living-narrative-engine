@@ -39,6 +39,7 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
       'template',
       'prerequisites',
       'visual',
+      'metadata', // Action metadata (category, tags, etc.)
       'generateCombinations', // For multi-target actions
     ],
 

@@ -1012,6 +1012,7 @@ class BaseModTestFixture {
             try {
               createActionValidationProxy(parsed, `${this.modId}:${file} action`);
             } catch (validationError) {
+              console.warn(`⚠️  Action validation failed for ${file}:`, validationError.message);
               return null;
             }
             return parsed;
@@ -1024,6 +1025,8 @@ class BaseModTestFixture {
 
       // Filter out nulls from failed loads
       const validActions = actions.filter(a => a !== null);
+
+      console.log(`[ModTestFixture] Loaded ${validActions.length} action(s) for mod '${this.modId}':`, validActions.map(a => a.id));
 
       return validActions;
     } catch (error) {

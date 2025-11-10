@@ -183,6 +183,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       const { perimeterId, dimensionId } = await createDimensionalScenario(fixture);
 
       const humanId = fixture.createEntity({
+        id: 'test-human-go-exclusion',
         name: 'Human Sentinel',
         components: [
           {
