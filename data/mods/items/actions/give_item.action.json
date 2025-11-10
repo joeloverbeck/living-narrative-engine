@@ -12,7 +12,7 @@
   },
   "targets": {
     "primary": {
-      "scope": "positioning:close_actors",
+      "scope": "core:actors_in_location",
       "placeholder": "recipient",
       "description": "Actor to give item to"
     },
