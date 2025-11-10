@@ -185,6 +185,75 @@ describe('EffectsAnalyzer', () => {
       expect(result.effects).toHaveLength(2);
       expect(result.cost).toBe(1.2); // Base 1.0 + (2 * 0.1)
     });
+
+    it('should expose abstract preconditions from context operations', () => {
+      const rule = {
+        id: 'test:rule',
+        actions: [
+          {
+            type: 'VALIDATE_INVENTORY_CAPACITY',
+            parameters: {
+              result_variable: 'canCarry'
+            }
+          }
+        ]
+      };
+      mockDataRegistry.get.mockReturnValue(rule);
+
+      const result = analyzer.analyzeRule('test:rule');
+
+      expect(result.abstractPreconditions).toEqual({
+        canCarry: {
+          description: 'Checks if actor can carry the item',
+          parameters: ['actorId', 'itemId'],
+          simulationFunction: 'assumeTrue'
+        }
+      });
+    });
+
+    it('should include array effects inside conditional branches', () => {
+      const rule = {
+        id: 'test:rule',
+        actions: [
+          {
+            type: 'IF',
+            parameters: {
+              condition: { '==': [{ var: 'actor.mood' }, 'friendly'] },
+              then_actions: [
+                {
+                  type: 'BREAK_CLOSENESS_WITH_TARGET',
+                  parameters: {
+                    entity: 'actor'
+                  }
+                }
+              ],
+              else_actions: [
+                {
+                  type: 'ADD_COMPONENT',
+                  parameters: {
+                    entity: 'actor',
+                    component: 'test:else',
+                    data: {}
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      };
+      mockDataRegistry.get.mockReturnValue(rule);
+
+      const result = analyzer.analyzeRule('test:rule');
+
+      expect(result.effects).toHaveLength(2);
+      const breakClosenessEffect = result.effects.find(
+        effect => effect.operation === 'CONDITIONAL' && effect.then.length === 2
+      );
+      expect(breakClosenessEffect).toBeDefined();
+      expect(breakClosenessEffect.then).toHaveLength(2);
+      expect(breakClosenessEffect.then[0].operation).toBe('REMOVE_COMPONENT');
+      expect(breakClosenessEffect.then[1].operation).toBe('REMOVE_COMPONENT');
+    });
   });
 
   describe('isWorldStateChanging', () => {
@@ -355,6 +424,21 @@ describe('EffectsAnalyzer', () => {
         operation: 'REMOVE_COMPONENT',
         entity: 'actor',
         component: 'positioning:sitting_close_to'
+      });
+    });
+
+    it('should convert REMOVE_LYING_CLOSENESS to REMOVE_COMPONENT', () => {
+      const operation = {
+        type: 'REMOVE_LYING_CLOSENESS',
+        parameters: { entity: 'actor' }
+      };
+
+      const effect = analyzer.operationToEffect(operation);
+
+      expect(effect).toEqual({
+        operation: 'REMOVE_COMPONENT',
+        entity: 'actor',
+        component: 'positioning:lying_close_to'
       });
     });
 

@@ -384,16 +384,12 @@ class EffectsAnalyzer {
           }
         }
 
-        if (pathEffects.length > 0) {
-          if (path.conditions.length > 0) {
-            effects.push({
-              operation: 'CONDITIONAL',
-              condition: this.#combineConditions(path.conditions),
-              then: pathEffects
-            });
-          } else {
-            effects.push(...pathEffects);
-          }
+        if (pathEffects.length > 0 && path.conditions.length > 0) {
+          effects.push({
+            operation: 'CONDITIONAL',
+            condition: this.#combineConditions(path.conditions),
+            then: pathEffects
+          });
         }
       }
     }
@@ -590,8 +586,6 @@ class EffectsAnalyzer {
         }
       ];
     }
-
-    return null;
   }
 
   #convertItemOperation(operation) {
@@ -693,8 +687,6 @@ class EffectsAnalyzer {
         }
       ];
     }
-
-    return null;
   }
 
   #convertUnequipClothing(operation) {
