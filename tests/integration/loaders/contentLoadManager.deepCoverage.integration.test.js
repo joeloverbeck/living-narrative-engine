@@ -236,8 +236,8 @@ describe('Integration: ContentLoadManager deep coverage', () => {
       alpha: ContentLoadStatus.FAILED,
     });
     expect(result.updatedTotals).toEqual({
-      entityDefinitions: { count: 3, overrides: 1, errors: 0 },
-      entityInstances: { count: 0, overrides: 0, errors: 1 },
+      entityDefinitions: { count: 3, overrides: 1, errors: 0, failures: [] },
+      entityInstances: { count: 0, overrides: 0, errors: 1, failures: [] },
     });
     expect(initialTotals).toEqual({
       entityDefinitions: { count: 1, overrides: 0, errors: 0 },
@@ -366,7 +366,7 @@ describe('Integration: ContentLoadManager deep coverage', () => {
       beta: ContentLoadStatus.SUCCESS,
     });
     expect(outcome.updatedTotals).toEqual({
-      entityDefinitions: { count: 1, overrides: 0, errors: 0 },
+      entityDefinitions: { count: 1, overrides: 0, errors: 0, failures: [] },
     });
 
     expect(
