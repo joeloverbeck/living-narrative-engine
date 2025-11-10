@@ -8,11 +8,13 @@
 
 ## Context
 
-The incompatibility between `SimpleEntityManager` (tests) and `EntityManager` (production) caused runtime errors in anatomy prerequisite tests. The `hasOtherActorsAtLocationOperator` called `getAllEntities()` which doesn't exist in either implementation, requiring a fix to use `getEntities()` instead.
+The incompatibility between `SimpleEntityManager` (tests) and `EntityManager` (production) caused runtime errors in anatomy prerequisite tests. The `hasOtherActorsAtLocationOperator` attempted to call a non-existent method, requiring analysis of the actual interface contract.
 
-**Root Cause:** No documented minimal interface contract that operators and other consumers can rely on.
+**Root Cause:** Mismatch between test and production entity manager APIs - production uses `entities` getter returning iterator, while SimpleEntityManager uses `getEntities()` method returning array.
 
 **Impact:** API drift between test and production entity managers leads to runtime errors that are difficult to debug and don't surface until integration testing.
+
+**Key Discovery:** Production EntityManager uses `entities` getter (IterableIterator), not `getEntities()` method. IEntityManager interface already exists at `src/interfaces/IEntityManager.js` with comprehensive method definitions.
 
 **Reference:** Report lines 113-134
 
@@ -42,275 +44,251 @@ docs/testing/
 ├── entity-manager-interface.md          # Interface documentation
 └── anatomy-testing-guide.md             # Reference interface docs
 
-src/entities/
-└── interfaces/
-    └── IEntityManager.js                # JSDoc interface definition
+src/interfaces/
+└── IEntityManager.js                    # EXISTING: Interface already defined
+
+tests/common/entities/
+└── simpleEntityManager.js               # EXISTING: Test implementation
 
 tests/common/engine/
-├── systemLogicTestEnv.js                # Add interface validation
-└── entityManagerInterfaceValidator.js   # NEW: Validation utility
+└── systemLogicTestEnv.js                # MODIFY: Add interface validation
 
 tests/unit/entities/
 └── entityManagerInterface.test.js       # NEW: Interface compliance tests
+
+tests/unit/interfaces/
+└── IEntityManager.test.js               # NEW: Interface contract tests
 ```
+
+**Note:** IEntityManager interface already exists with comprehensive method definitions. This ticket focuses on documenting the interface, adding validation, and ensuring test/production compatibility.
 
 ## Detailed Implementation Steps
 
-### Step 1: Define JSDoc Interface
+### Step 1: Update Existing IEntityManager Interface Documentation
 
-**File:** `src/entities/interfaces/IEntityManager.js`
+**File:** `src/interfaces/IEntityManager.js` (EXISTING - already at correct location)
+
+**Status:** Interface already exists with comprehensive method definitions. This step involves:
+1. Reviewing existing interface for completeness
+2. Adding clarifying JSDoc comments where needed
+3. Ensuring consistency between method signatures
+
+**Key Interface Methods** (from existing implementation):
 
 ```javascript
 /**
- * @file IEntityManager interface definition
- * @description Minimal entity manager interface for operators and services
- */
-
-/**
- * Minimal entity manager interface that all implementations must satisfy.
+ * Core query methods that all implementations must support:
  *
- * @interface IEntityManager
- * @description This interface defines the contract that operators, scope resolvers,
- * and other services rely on when interacting with entity managers.
- */
-export const IEntityManager = {
-  /**
-   * Get all entities as an array.
-   *
-   * @function
-   * @name IEntityManager#getEntities
-   * @returns {Array<Object>} Array of entity objects with at minimum { id: string }
-   * @example
-   * const entities = entityManager.getEntities();
-   * // Returns: [{ id: 'actor-1', ... }, { id: 'item-2', ... }]
-   */
-  getEntities: () => [],
-
-  /**
-   * Get component data for a specific entity and component type.
-   *
-   * @function
-   * @name IEntityManager#getComponentData
-   * @param {string} entityId - The entity ID
-   * @param {string} componentType - Namespaced component type (e.g., 'positioning:closeness')
-   * @returns {Object|null} Component data object, or null if not found
-   * @example
-   * const data = entityManager.getComponentData('actor-1', 'positioning:closeness');
-   * // Returns: { partners: ['actor-2'] } or null
-   */
-  getComponentData: (entityId, componentType) => null,
-
-  /**
-   * Check if entity has a specific component.
-   *
-   * @function
-   * @name IEntityManager#hasComponent
-   * @param {string} entityId - The entity ID
-   * @param {string} componentType - Namespaced component type
-   * @returns {boolean} True if entity has component, false otherwise
-   * @example
-   * const hasSitting = entityManager.hasComponent('actor-1', 'positioning:sitting');
-   */
-  hasComponent: (entityId, componentType) => false,
-
-  /**
-   * Get full entity instance with all components.
-   *
-   * @function
-   * @name IEntityManager#getEntityInstance
-   * @param {string} entityId - The entity ID
-   * @returns {Object|null} Entity object with components, or null if not found
-   * @example
-   * const entity = entityManager.getEntityInstance('actor-1');
-   * // Returns: { id: 'actor-1', components: { ... } } or null
-   */
-  getEntityInstance: (entityId) => null
-};
-
-/**
- * Validate that an object conforms to IEntityManager interface.
+ * - get entities() - Getter returning IterableIterator<Entity> (NOT a method!)
+ * - getEntityInstance(instanceId) - Returns Entity|undefined
+ * - getEntityIds() - Returns string[] of all entity IDs
+ * - getComponentData(instanceId, componentTypeId) - Returns object|undefined
+ * - hasComponent(instanceId, componentTypeId) - Returns boolean
+ * - hasComponentOverride(instanceId, componentTypeId) - Returns boolean
+ * - getEntitiesWithComponent(componentTypeId) - Returns Entity[]
+ * - getEntitiesInLocation(locationId) - Returns Set<string>
+ * - findEntities(query) - Returns Entity[]
+ * - getAllComponentTypesForEntity(entityId) - Returns string[]
  *
- * @param {Object} manager - Object to validate
- * @param {string} context - Context string for error messages
- * @throws {Error} If manager doesn't implement required methods
+ * Component mutation methods:
+ * - addComponent(instanceId, componentTypeId, componentData) - Returns boolean
+ * - removeComponent(instanceId, componentTypeId) - Returns boolean
+ * - batchAddComponentsOptimized(componentSpecs, emitBatchEvent) - Returns Promise<object>
+ *
+ * Entity lifecycle methods:
+ * - createEntityInstance(definitionId, options) - Returns Entity
+ * - reconstructEntity(serializedEntity) - Returns Entity
+ * - batchCreateEntities(entitySpecs, options) - Returns Promise<object>
+ * - hasBatchSupport() - Returns boolean
+ * - clearAll() - Returns void
  */
-export function validateEntityManagerInterface(manager, context = 'EntityManager') {
-  const requiredMethods = ['getEntities', 'getComponentData', 'hasComponent', 'getEntityInstance'];
+```
 
-  for (const method of requiredMethods) {
-    if (typeof manager[method] !== 'function') {
-      throw new Error(
-        `${context} does not implement IEntityManager.${method}. ` +
-        `Required methods: ${requiredMethods.join(', ')}`
-      );
+**CRITICAL DISCOVERY:** Production uses `entities` **getter** (returns iterator), not `getEntities()` method. SimpleEntityManager has `getEntities()` method for test convenience, creating an API mismatch.
+
+### Step 2: Harmonize SimpleEntityManager with IEntityManager Interface
+
+**File:** `tests/common/entities/simpleEntityManager.js` (MODIFY)
+
+**Issue:** SimpleEntityManager has `getEntities()` method returning array, but production interface uses `entities` getter returning iterator. This creates API drift.
+
+**Solution Options:**
+
+**Option A (Recommended):** Add `entities` getter to SimpleEntityManager for compatibility:
+```javascript
+// In SimpleEntityManager class
+/**
+ * Getter that returns an iterator over all active entities.
+ * Provides compatibility with production EntityManager interface.
+ *
+ * @returns {IterableIterator<Entity>} Iterator over all active entities
+ */
+get entities() {
+  return this.entities.values();
+}
+```
+
+**Option B:** Keep both methods for backward compatibility with existing tests:
+- Keep existing `getEntities()` for tests that use it
+- Add `entities` getter for interface compliance
+- Document deprecation path for `getEntities()`
+
+**Validation:** Add optional validation helper (not required in constructor):
+```javascript
+import { IEntityManager } from '../../../src/interfaces/IEntityManager.js';
+
+// Optional validation in test setup
+export function validateEntityManagerCompliance(manager, context = 'EntityManager') {
+  // Check for key interface members
+  const requiredMembers = ['entities', 'getEntityInstance', 'getComponentData', 'hasComponent'];
+
+  for (const member of requiredMembers) {
+    if (!(member in manager)) {
+      throw new Error(`${context} missing required interface member: ${member}`);
     }
   }
 }
 ```
 
-### Step 2: Add Interface Validation to Test Environment
-
-**File:** `tests/common/engine/systemLogicTestEnv.js` (modify)
-
-Add validation during test environment setup:
-
-```javascript
-import { validateEntityManagerInterface } from '../../../src/entities/interfaces/IEntityManager.js';
-
-// In createSystemLogicTestEnv function, after creating SimpleEntityManager:
-export function createSystemLogicTestEnv() {
-  // ... existing setup ...
-
-  const entityManager = new SimpleEntityManager({ logger });
-
-  // Validate interface compliance
-  validateEntityManagerInterface(entityManager, 'SimpleEntityManager');
-
-  // ... rest of setup ...
-}
-```
-
-### Step 3: Create Interface Validator Utility
-
-**File:** `tests/common/engine/entityManagerInterfaceValidator.js`
-
-```javascript
-/**
- * @file Entity Manager Interface Validator
- * @description Runtime validation for IEntityManager compliance
- */
-
-import { validateEntityManagerInterface } from '../../../src/entities/interfaces/IEntityManager.js';
-
-/**
- * Test helper to validate entity manager interface compliance.
- *
- * @param {Object} manager - Entity manager instance to validate
- * @param {Object} logger - Logger for diagnostic output
- * @returns {Object} Validation result with details
- */
-export function validateInterfaceCompliance(manager, logger) {
-  const results = {
-    valid: true,
-    errors: [],
-    warnings: [],
-    methods: {}
-  };
-
-  const requiredMethods = [
-    { name: 'getEntities', expectedReturn: 'array' },
-    { name: 'getComponentData', expectedReturn: 'object|null', params: 2 },
-    { name: 'hasComponent', expectedReturn: 'boolean', params: 2 },
-    { name: 'getEntityInstance', expectedReturn: 'object|null', params: 1 }
-  ];
-
-  for (const methodSpec of requiredMethods) {
-    const method = manager[methodSpec.name];
-
-    if (typeof method !== 'function') {
-      results.valid = false;
-      results.errors.push(`Missing required method: ${methodSpec.name}`);
-      results.methods[methodSpec.name] = { exists: false };
-      continue;
-    }
-
-    // Validate method signature
-    if (methodSpec.params && method.length !== methodSpec.params) {
-      results.warnings.push(
-        `Method ${methodSpec.name} expects ${methodSpec.params} parameters, ` +
-        `found ${method.length}`
-      );
-    }
-
-    results.methods[methodSpec.name] = {
-      exists: true,
-      paramCount: method.length,
-      expectedReturn: methodSpec.expectedReturn
-    };
-  }
-
-  if (!results.valid) {
-    logger.error('Entity manager interface validation failed', results);
-  } else if (results.warnings.length > 0) {
-    logger.warn('Entity manager interface validation warnings', results.warnings);
-  }
-
-  return results;
-}
-```
-
-### Step 4: Create Interface Compliance Tests
+### Step 3: Create Interface Compliance Tests
 
 **File:** `tests/unit/entities/entityManagerInterface.test.js`
 
 ```javascript
 import { describe, it, expect } from '@jest/globals';
-import { validateEntityManagerInterface } from '../../../src/entities/interfaces/IEntityManager.js';
-import SimpleEntityManager from '../../common/engine/SimpleEntityManager.js';
+import { IEntityManager } from '../../../src/interfaces/IEntityManager.js';
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 import EntityManager from '../../../src/entities/entityManager.js';
 
 describe('IEntityManager Interface Compliance', () => {
   describe('SimpleEntityManager', () => {
-    it('should implement all required interface methods', () => {
-      const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-      const manager = new SimpleEntityManager({ logger });
+    it('should implement core query methods', () => {
+      const manager = new SimpleEntityManager([]);
 
-      expect(() => validateEntityManagerInterface(manager, 'SimpleEntityManager'))
-        .not.toThrow();
-    });
-
-    it('should have correct method signatures', () => {
-      const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-      const manager = new SimpleEntityManager({ logger });
-
-      expect(typeof manager.getEntities).toBe('function');
-      expect(manager.getEntities.length).toBe(0); // No parameters
+      // Core methods that must exist
+      expect(typeof manager.getEntityInstance).toBe('function');
+      expect(manager.getEntityInstance.length).toBe(1);
 
       expect(typeof manager.getComponentData).toBe('function');
-      expect(manager.getComponentData.length).toBe(2); // entityId, componentType
+      expect(manager.getComponentData.length).toBe(2);
 
       expect(typeof manager.hasComponent).toBe('function');
-      expect(manager.hasComponent.length).toBe(2); // entityId, componentType
+      expect(manager.hasComponent.length).toBe(2);
 
-      expect(typeof manager.getEntityInstance).toBe('function');
-      expect(manager.getEntityInstance.length).toBe(1); // entityId
+      expect(typeof manager.getEntitiesWithComponent).toBe('function');
+      expect(manager.getEntitiesWithComponent.length).toBe(1);
+    });
+
+    it('should have getEntities method for backward compatibility', () => {
+      const manager = new SimpleEntityManager([]);
+
+      expect(typeof manager.getEntities).toBe('function');
+      expect(manager.getEntities()).toEqual([]);
+    });
+
+    it('should have entities getter for interface compliance', () => {
+      const manager = new SimpleEntityManager([
+        { id: 'test-1', components: {} }
+      ]);
+
+      // After Step 2 implementation, this should work
+      // expect('entities' in manager).toBe(true);
+      // expect(Symbol.iterator in Object.getPrototypeOf(manager.entities)).toBe(true);
+    });
+
+    it('should return consistent data from both entities getter and getEntities method', () => {
+      const testEntities = [
+        { id: 'actor-1', components: { 'core:actor': {} } },
+        { id: 'item-1', components: { 'items:item': {} } }
+      ];
+      const manager = new SimpleEntityManager(testEntities);
+
+      const entitiesArray = manager.getEntities();
+      expect(entitiesArray).toHaveLength(2);
+      expect(entitiesArray.map(e => e.id)).toEqual(['actor-1', 'item-1']);
+
+      // After Step 2 implementation:
+      // const entitiesIterator = Array.from(manager.entities);
+      // expect(entitiesIterator).toHaveLength(2);
+      // expect(entitiesIterator.map(e => e.id)).toEqual(['actor-1', 'item-1']);
     });
   });
 
   describe('EntityManager (Production)', () => {
-    it('should implement all required interface methods', () => {
-      const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-      const eventBus = { dispatch: jest.fn() };
-      const manager = new EntityManager({ logger, eventBus });
+    it('should extend IEntityManager', () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+      const mockValidator = { validate: jest.fn() };
+      const mockRegistry = { getEntityDefinition: jest.fn() };
+      const mockDispatcher = { dispatch: jest.fn() };
 
-      expect(() => validateEntityManagerInterface(manager, 'EntityManager'))
-        .not.toThrow();
+      const manager = new EntityManager({
+        logger: mockLogger,
+        validator: mockValidator,
+        registry: mockRegistry,
+        dispatcher: mockDispatcher
+      });
+
+      expect(manager instanceof IEntityManager).toBe(true);
+    });
+
+    it('should have entities getter not getEntities method', () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+      const mockValidator = { validate: jest.fn() };
+      const mockRegistry = { getEntityDefinition: jest.fn() };
+      const mockDispatcher = { dispatch: jest.fn() };
+
+      const manager = new EntityManager({
+        logger: mockLogger,
+        validator: mockValidator,
+        registry: mockRegistry,
+        dispatcher: mockDispatcher
+      });
+
+      // Production uses getter, not method
+      expect('entities' in manager).toBe(true);
+      expect(typeof manager.getEntities).toBe('undefined');
+    });
+
+    it('should implement all interface methods', () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+      const mockValidator = { validate: jest.fn() };
+      const mockRegistry = { getEntityDefinition: jest.fn() };
+      const mockDispatcher = { dispatch: jest.fn() };
+
+      const manager = new EntityManager({
+        logger: mockLogger,
+        validator: mockValidator,
+        registry: mockRegistry,
+        dispatcher: mockDispatcher
+      });
+
+      // Core interface methods
+      expect(typeof manager.getEntityInstance).toBe('function');
+      expect(typeof manager.getComponentData).toBe('function');
+      expect(typeof manager.hasComponent).toBe('function');
+      expect(typeof manager.getEntityIds).toBe('function');
+      expect(typeof manager.getEntitiesWithComponent).toBe('function');
     });
   });
 
-  describe('Interface Validation Error Handling', () => {
-    it('should throw clear error for missing methods', () => {
-      const incomplete = {
-        getEntities: () => [],
-        getComponentData: () => null
-        // Missing: hasComponent, getEntityInstance
-      };
+  describe('API Compatibility Checks', () => {
+    it('should document the entities getter vs getEntities() method difference', () => {
+      // This test serves as documentation of the key difference:
+      // Production: uses 'entities' getter returning IterableIterator
+      // Test: uses 'getEntities()' method returning Array
 
-      expect(() => validateEntityManagerInterface(incomplete, 'IncompleteManager'))
-        .toThrow('IncompleteManager does not implement IEntityManager.hasComponent');
-    });
+      const testManager = new SimpleEntityManager([]);
+      expect(typeof testManager.getEntities).toBe('function'); // Test convenience
 
-    it('should list all required methods in error message', () => {
-      const incomplete = {};
-
-      expect(() => validateEntityManagerInterface(incomplete, 'EmptyManager'))
-        .toThrow('Required methods: getEntities, getComponentData, hasComponent, getEntityInstance');
+      // Production manager would have:
+      // expect('entities' in productionManager).toBe(true);
+      // expect(typeof productionManager.getEntities).toBe('undefined');
     });
   });
 });
 ```
 
-### Step 5: Create Documentation
+### Step 4: Create Documentation
 
 **File:** `docs/testing/entity-manager-interface.md`
 
@@ -319,112 +297,200 @@ describe('IEntityManager Interface Compliance', () => {
 
 ## Overview
 
-The `IEntityManager` interface defines the minimal contract that all entity manager implementations (production and test) must satisfy. This ensures compatibility between operators, scope resolvers, and other services across different execution contexts.
+The `IEntityManager` interface (located at `src/interfaces/IEntityManager.js`) defines the contract that all entity manager implementations (production and test) must satisfy. This ensures compatibility between operators, scope resolvers, and other services across different execution contexts.
 
-## Interface Definition
+**Key Location:** `src/interfaces/IEntityManager.js` - Interface already exists with comprehensive method definitions.
 
-All entity manager implementations must provide these methods:
+## Critical Interface Differences
 
-### `getEntities(): Array<Object>`
+### Production EntityManager vs Test SimpleEntityManager
 
-Returns all entities as an array.
+**Production (`src/entities/entityManager.js`):**
+- Uses `entities` **getter** returning `IterableIterator<Entity>`
+- Extends `IEntityManager` class
+- Full dependency injection with validators, registries, dispatchers
 
-**Returns:** Array of entity objects with at minimum `{ id: string }`
+**Test (`tests/common/entities/simpleEntityManager.js`):**
+- Has `getEntities()` **method** returning `Array<Object>`
+- Does NOT extend `IEntityManager` (standalone implementation)
+- Simplified constructor taking entities array directly
+
+**Impact:** Code written for production may not work in tests and vice versa.
+
+## Core Interface Methods
+
+### `get entities(): IterableIterator<Entity>`
+
+Returns an iterator over all active entities (GETTER, not method).
+
+**Type:** Property getter
+**Returns:** `IterableIterator<Entity>` (use with `for...of` or `Array.from()`)
 
 **Example:**
 ```javascript
-const entities = entityManager.getEntities();
-// [{ id: 'actor-1', ... }, { id: 'item-2', ... }]
+// ✅ CORRECT - Production pattern
+for (const entity of entityManager.entities) {
+  console.log(entity.id);
+}
+
+// ✅ CORRECT - Convert to array
+const entitiesArray = Array.from(entityManager.entities);
+
+// ❌ INCORRECT - entities is not a method
+const entities = entityManager.entities(); // TypeError!
+
+// ❌ INCORRECT - Method doesn't exist in production
+const entities = entityManager.getEntities(); // undefined in production
 ```
 
-**Usage in Operators:**
+**Usage in Operators (Production):**
 ```javascript
 // ✅ CORRECT
-const allEntities = this.#entityManager.getEntities();
+const allEntities = Array.from(this.#entityManager.entities);
 
-// ❌ INCORRECT - Method doesn't exist
-const allEntities = this.#entityManager.getAllEntities();
+// ❌ INCORRECT - Not a method
+const allEntities = this.#entityManager.entities();
+
+// ❌ INCORRECT - Method doesn't exist in production
+const allEntities = this.#entityManager.getEntities();
 ```
 
-### `getComponentData(entityId, componentType): Object|null`
+### `getComponentData(instanceId, componentTypeId): object|undefined`
 
 Get component data for a specific entity and component type.
 
 **Parameters:**
-- `entityId` (string): The entity ID
-- `componentType` (string): Namespaced component type (e.g., 'positioning:closeness')
+- `instanceId` (string): The entity ID (UUID)
+- `componentTypeId` (string): Namespaced component type (e.g., 'positioning:closeness')
 
-**Returns:** Component data object, or null if not found
+**Returns:** Component data object, or `undefined` if not found
 
 **Example:**
 ```javascript
 const closeness = entityManager.getComponentData('actor-1', 'positioning:closeness');
-// { partners: ['actor-2'] } or null
+// Returns: { partners: ['actor-2'] } or undefined
+
+// Test SimpleEntityManager returns null instead of undefined
+const closenessTest = testEntityManager.getComponentData('actor-1', 'positioning:closeness');
+// Returns: { partners: ['actor-2'] } or null
 ```
 
-### `hasComponent(entityId, componentType): boolean`
+### `hasComponent(instanceId, componentTypeId, checkOverrideOnly?): boolean`
 
 Check if entity has a specific component.
 
 **Parameters:**
-- `entityId` (string): The entity ID
-- `componentType` (string): Namespaced component type
+- `instanceId` (string): The entity ID (UUID)
+- `componentTypeId` (string): Namespaced component type
+- `checkOverrideOnly` (boolean, optional): If true, only check for instance-level overrides
 
-**Returns:** True if entity has component, false otherwise
+**Returns:** `boolean` - True if entity has component, false otherwise
 
 **Example:**
 ```javascript
 const isSitting = entityManager.hasComponent('actor-1', 'positioning:sitting');
+// Returns: true or false
 ```
 
-### `getEntityInstance(entityId): Object|null`
+### `getEntityInstance(instanceId): Entity|undefined`
 
 Get full entity instance with all components.
 
 **Parameters:**
-- `entityId` (string): The entity ID
+- `instanceId` (string): The entity ID (UUID)
 
-**Returns:** Entity object with components, or null if not found
+**Returns:** `Entity` object or `undefined` if not found
+
+**Important:** Return type is `Entity|undefined` in production, not `Object|null`
 
 **Example:**
 ```javascript
 const entity = entityManager.getEntityInstance('actor-1');
-// { id: 'actor-1', components: { 'positioning:closeness': { ... } } } or null
+if (entity) {
+  // Entity found - access via methods
+  const components = entity.getAllComponents();
+  const hasActor = entity.hasComponent('core:actor');
+}
+// Returns: Entity instance or undefined
 ```
 
-## Implementation Compliance
+### `getEntityIds(): string[]`
 
-### Validation
+Returns an array of all active entity IDs.
 
-Use the interface validator to ensure compliance:
+**Returns:** `string[]` - Array of entity instance IDs (UUIDs)
 
+**Example:**
 ```javascript
-import { validateEntityManagerInterface } from '../../../src/entities/interfaces/IEntityManager.js';
-
-// Validate during setup
-validateEntityManagerInterface(entityManager, 'MyEntityManager');
+const ids = entityManager.getEntityIds();
+// Returns: ['actor-1', 'actor-2', 'item-1']
 ```
 
-### Test Environment
+### `getEntitiesWithComponent(componentTypeId): Entity[]`
 
-The test environment automatically validates `SimpleEntityManager` compliance during setup:
+Fetches all active entities that possess a specific component type.
+
+**Parameters:**
+- `componentTypeId` (string): The component type identifier
+
+**Returns:** `Entity[]` - Array of Entity instances (never null, empty array if none)
+
+**Example:**
+```javascript
+const actors = entityManager.getEntitiesWithComponent('core:actor');
+// Returns: [Entity, Entity, ...] or []
+```
+
+## Test vs Production Compatibility
+
+### SimpleEntityManager Test Patterns
 
 ```javascript
-// Automatic validation in createSystemLogicTestEnv()
-const entityManager = new SimpleEntityManager({ logger });
-validateEntityManagerInterface(entityManager, 'SimpleEntityManager');
+// Test pattern - SimpleEntityManager
+const testManager = new SimpleEntityManager([
+  { id: 'actor-1', components: { 'core:actor': {} } }
+]);
+
+// ✅ Works in tests - method returns array
+const entities = testManager.getEntities();
+entities.forEach(e => console.log(e.id));
+
+// ✅ After Step 2 - adds getter for compatibility
+for (const entity of testManager.entities) {
+  console.log(entity.id);
+}
+```
+
+### Production EntityManager Patterns
+
+```javascript
+// Production pattern - EntityManager
+const entityManager = container.resolve('IEntityManager');
+
+// ✅ Correct - use getter with for...of
+for (const entity of entityManager.entities) {
+  console.log(entity.id);
+}
+
+// ✅ Correct - convert to array if needed
+const entitiesArray = Array.from(entityManager.entities);
+
+// ❌ WRONG - getEntities() doesn't exist in production
+const entities = entityManager.getEntities(); // undefined!
 ```
 
 ## Common Migration Patterns
 
-### Updating Operators
+### Updating Operators for Production
 
 **Before (Incorrect):**
 ```javascript
 class MyOperator {
   execute(context) {
-    const entities = this.#entityManager.getAllEntities(); // ❌ Method doesn't exist
-    // ...
+    // ❌ Method doesn't exist in production
+    const entities = this.#entityManager.getAllEntities();
+    // ❌ Also wrong - getEntities doesn't exist in production
+    const entities2 = this.#entityManager.getEntities();
   }
 }
 ```
@@ -433,8 +499,13 @@ class MyOperator {
 ```javascript
 class MyOperator {
   execute(context) {
-    const entities = this.#entityManager.getEntities(); // ✅ Correct method
-    // ...
+    // ✅ Use entities getter and convert to array
+    const entities = Array.from(this.#entityManager.entities);
+
+    // ✅ Or iterate directly
+    for (const entity of this.#entityManager.entities) {
+      // process entity
+    }
   }
 }
 ```
@@ -444,57 +515,90 @@ class MyOperator {
 Scope resolvers should use the interface methods consistently:
 
 ```javascript
-// ✅ Good - Uses interface methods
+// ✅ Good - Uses entities getter correctly
 const resolver = (runtimeCtx) => {
-  const entities = runtimeCtx.entityManager.getEntities();
+  // Convert iterator to array first
+  const entities = Array.from(runtimeCtx.entityManager.entities);
   return entities.filter(e =>
     runtimeCtx.entityManager.hasComponent(e.id, 'positioning:sitting')
   );
 };
+
+// ✅ Better - Iterate directly without array conversion
+const resolver = (runtimeCtx) => {
+  const result = [];
+  for (const entity of runtimeCtx.entityManager.entities) {
+    if (runtimeCtx.entityManager.hasComponent(entity.id, 'positioning:sitting')) {
+      result.push(entity);
+    }
+  }
+  return result;
+};
 ```
+
+## Key Takeaways
+
+1. **Production uses `entities` getter** returning `IterableIterator<Entity>`, NOT a `getEntities()` method
+2. **Test SimpleEntityManager has `getEntities()` method** returning `Array<Object>` for convenience
+3. **Return types differ:** Production returns `undefined` for missing entities/components, test may return `null`
+4. **Always use `Array.from()` or `for...of`** to work with the entities iterator in production
+5. **IEntityManager already exists** at `src/interfaces/IEntityManager.js` with comprehensive interface definition
 
 ## References
 
-- **Interface Definition:** `src/entities/interfaces/IEntityManager.js`
-- **Validation Utility:** `tests/common/engine/entityManagerInterfaceValidator.js`
-- **Compliance Tests:** `tests/unit/entities/entityManagerInterface.test.js`
+- **Interface Definition:** `src/interfaces/IEntityManager.js` (EXISTING)
+- **Production Implementation:** `src/entities/entityManager.js`
+- **Test Implementation:** `tests/common/entities/simpleEntityManager.js`
+- **Compliance Tests:** `tests/unit/entities/entityManagerInterface.test.js` (NEW)
 - **Report:** `reports/anatomy-prerequisite-test-fixes-2025-01.md` (lines 113-134)
 ```
 
 ## Acceptance Criteria
 
-- [ ] `IEntityManager` interface defined with JSDoc annotations in `src/entities/interfaces/IEntityManager.js`
-- [ ] Interface validation integrated into `createSystemLogicTestEnv()`
-- [ ] Interface validator utility created with diagnostic output
-- [ ] Unit tests verify `SimpleEntityManager` and `EntityManager` compliance
-- [ ] Documentation created at `docs/testing/entity-manager-interface.md`
-- [ ] Documentation includes:
-  - All 4 required interface methods with signatures
-  - Usage examples for operators and scope resolvers
-  - Common migration patterns (getAllEntities → getEntities)
-  - References to validation utilities
-- [ ] All tests pass (unit and integration)
-- [ ] No breaking changes to existing code
+- [ ] **Interface Review:** Reviewed existing `IEntityManager` at `src/interfaces/IEntityManager.js` for completeness
+- [ ] **SimpleEntityManager Enhancement:** Add `entities` getter to `tests/common/entities/simpleEntityManager.js` for interface compatibility
+- [ ] **Unit Tests:** Create `tests/unit/entities/entityManagerInterface.test.js` verifying both implementations
+- [ ] **Documentation:** Create comprehensive `docs/testing/entity-manager-interface.md` with:
+  - Critical differences between production and test implementations
+  - Correct usage of `entities` getter (not `getEntities()` method)
+  - All core interface methods with accurate signatures and return types
+  - Migration patterns from incorrect usage
+  - Test vs production compatibility examples
+- [ ] **Key Discoveries Documented:**
+  - Production uses `entities` getter returning `IterableIterator<Entity>`
+  - SimpleEntityManager uses `getEntities()` method returning `Array<Object>`
+  - Return types: `undefined` vs `null` differences
+  - Correct iteration patterns using `Array.from()` or `for...of`
+- [ ] All tests pass without breaking existing code
+- [ ] No breaking changes to production or test code
 
 ## Implementation Notes
 
 **Key Design Decisions:**
 
-1. **JSDoc over TypeScript**: Use JSDoc `@interface` for runtime validation without TypeScript compilation overhead
-2. **Validation Timing**: Validate during test setup (fail-fast) rather than at method call time (performance)
-3. **Error Messages**: Include full list of required methods in error messages for quick remediation
+1. **Interface Already Exists**: No need to create new interface - `src/interfaces/IEntityManager.js` already has comprehensive definitions
+2. **Preserve Backward Compatibility**: Keep `getEntities()` method in SimpleEntityManager for existing tests while adding `entities` getter
+3. **Document, Don't Break**: Focus on documenting correct usage patterns rather than forcing breaking changes
+4. **Production Pattern is Source of Truth**: Production `EntityManager` using `entities` getter is the canonical interface
 
 **Testing Strategy:**
 
-1. Unit tests verify both implementations comply with interface
-2. Integration tests ensure operators work with both implementations
-3. Interface validator provides diagnostic output for debugging
+1. Create interface compliance tests comparing production and test implementations
+2. Document API differences explicitly in tests
+3. Test both `getEntities()` method (backward compat) and `entities` getter (forward compat) in SimpleEntityManager
 
 **Migration Path:**
 
-1. Phase 1: Add interface definition and validation (this ticket)
-2. Phase 2: Update all operators to use correct methods (separate tickets)
-3. Phase 3: Enable strict mode to catch new violations
+1. **Phase 1** (This Ticket): Document interface, add compliance tests, enhance SimpleEntityManager with getter
+2. **Phase 2** (Future): Gradually migrate test code to use `entities` getter instead of `getEntities()` method
+3. **Phase 3** (Future): Consider deprecating `getEntities()` method in favor of standard getter
+
+**Critical Discoveries:**
+
+- **Original assumption was WRONG**: Workflow assumed `getEntities()` method exists in production - it doesn't!
+- **Actual interface**: Production uses `entities` **getter** returning `IterableIterator<Entity>`
+- **Test convenience**: SimpleEntityManager has `getEntities()` **method** for test convenience, creating API drift
+- **Return type differences**: Production returns `undefined`, tests may return `null`
 
 ## Dependencies
 
@@ -509,7 +613,13 @@ const resolver = (runtimeCtx) => {
 
 - **Report Section:** Suggestion #1 - Create Entity Manager Interface Documentation
 - **Report Lines:** 113-134
-- **Fixed Issue:** `hasOtherActorsAtLocationOperator.js:166` - `getAllEntities()` → `getEntities()`
+- **Original Issue:** Operator attempted to call non-existent method on entity manager
+- **Corrected Understanding:** Production uses `entities` getter, not `getEntities()` or `getAllEntities()` methods
+- **Related Files:**
+  - `src/interfaces/IEntityManager.js` - Existing interface definition (26 methods total)
+  - `src/entities/entityManager.js` - Production implementation (lines 87-88: entities getter)
+  - `tests/common/entities/simpleEntityManager.js` - Test implementation (line 232: getEntities method)
+  - `tests/common/engine/systemLogicTestEnv.js` - Test environment using SimpleEntityManager
 - **Related Docs:**
-  - `docs/testing/anatomy-testing-guide.md` - Will reference this interface
-  - `docs/testing/mod-testing-guide.md` - Testing patterns
+  - `docs/testing/anatomy-testing-guide.md` - Will reference this interface documentation
+  - `docs/testing/mod-testing-guide.md` - Testing patterns and best practices
