@@ -58,6 +58,29 @@
       }
     },
     {
+      "type": "GET_TIMESTAMP",
+      "parameters": {
+        "result_variable": "nowIso"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch departure perception at origin location",
+      "parameters": {
+        "eventType": "core:perceptible_event",
+        "payload": {
+          "eventName": "core:perceptible_event",
+          "locationId": "{context.locationId}",
+          "message": "{context.logMessage}",
+          "timestamp": "{context.nowIso}",
+          "perceptionType": "{context.perceptionType}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{context.targetId}",
+          "involvedEntities": []
+        }
+      }
+    },
+    {
       "type": "MODIFY_COMPONENT",
       "comment": "Update the actor's locationId to the dimensional destination.",
       "parameters": {
@@ -97,6 +120,29 @@
       }
     },
     {
+      "type": "GET_TIMESTAMP",
+      "parameters": {
+        "result_variable": "nowIso"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch arrival perception at destination location",
+      "parameters": {
+        "eventType": "core:perceptible_event",
+        "payload": {
+          "eventName": "core:perceptible_event",
+          "locationId": "{context.locationId}",
+          "message": "{context.logMessage}",
+          "timestamp": "{context.nowIso}",
+          "perceptionType": "{context.perceptionType}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{context.targetId}",
+          "involvedEntities": []
+        }
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
@@ -104,7 +150,33 @@
       }
     },
     {
-      "macro": "core:logSuccessAndEndTurn"
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.logMessage}"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "parameters": {
+        "eventType": "core:action_success",
+        "payload": {
+          "eventName": "core:action_success",
+          "actionId": "{event.payload.actionId}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
     }
   ]
 }
