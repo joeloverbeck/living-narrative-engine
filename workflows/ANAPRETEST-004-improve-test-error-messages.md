@@ -52,16 +52,16 @@ Enhance prerequisite evaluation error messages to provide actionable debugging i
 ## File Structure
 
 ```
-src/logic/
+src/actions/validation/
 ├── errors/
 │   └── prerequisiteEvaluationError.js      # NEW: Rich error class
-├── prerequisiteEvaluator.js                 # Modified: Enhanced errors
+├── prerequisiteEvaluationService.js         # Modified: Enhanced errors
 └── prerequisiteDebugger.js                  # NEW: Debug utilities
 
 tests/common/engine/
 └── systemLogicTestEnv.js                    # Modified: Debug mode support
 
-tests/unit/logic/
+tests/unit/actions/validation/
 └── prerequisiteErrorMessages.test.js        # NEW: Error message tests
 
 docs/testing/
@@ -72,7 +72,7 @@ docs/testing/
 
 ### Step 1: Create PrerequisiteEvaluationError Class
 
-**File:** `src/logic/errors/prerequisiteEvaluationError.js`
+**File:** `src/actions/validation/errors/prerequisiteEvaluationError.js`
 
 ```javascript
 /**
@@ -192,7 +192,7 @@ function formatValue(value) {
 
 ### Step 2: Create Prerequisite Debugger Utility
 
-**File:** `src/logic/prerequisiteDebugger.js`
+**File:** `src/actions/validation/prerequisiteDebugger.js`
 
 ```javascript
 /**
@@ -201,6 +201,7 @@ function formatValue(value) {
  */
 
 import { PrerequisiteEvaluationError } from './errors/prerequisiteEvaluationError.js';
+import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 
 /**
  * Debug mode levels.
@@ -380,14 +381,14 @@ export class PrerequisiteDebugger {
   }
 
   /**
-   * Get entity location from positioning component.
+   * Get entity location from position component.
    *
    * @param {string} entityId - Entity ID
    * @returns {string|null} Location ID
    */
   #getEntityLocation(entityId) {
-    const locationData = this.#entityManager.getComponentData(entityId, 'core:location');
-    return locationData?.location_id || null;
+    const positionData = this.#entityManager.getComponentData(entityId, 'core:position');
+    return positionData?.locationId || null;
   }
 
   /**
@@ -401,10 +402,13 @@ export class PrerequisiteDebugger {
     const entity = context[entityRef];
     if (!entity) return [];
 
-    const bodyData = this.#entityManager.getComponentData(entity.id, 'anatomy:body');
-    if (!bodyData || !bodyData.parts) return [];
+    const bodyComponent = this.#entityManager.getComponentData(entity.id, 'anatomy:body');
+    if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.parts) return [];
 
-    return Object.values(bodyData.parts).map(part => part.type);
+    return Object.values(bodyComponent.body.parts).map(partId => {
+      const partComponent = this.#entityManager.getComponentData(partId, 'anatomy:part');
+      return partComponent?.subType;
+    }).filter(Boolean);
   }
 
   /**
@@ -472,82 +476,95 @@ export class PrerequisiteDebugger {
 }
 ```
 
-### Step 3: Integrate with PrerequisiteEvaluator
+### Step 3: Integrate with PrerequisiteEvaluationService
 
-**File:** `src/logic/prerequisiteEvaluator.js` (modify)
+**File:** `src/actions/validation/prerequisiteEvaluationService.js` (modify)
+
+**Note:** The actual integration requires modifying the existing `PrerequisiteEvaluationService.evaluate()` method to optionally use the debugger when debug mode is enabled.
 
 ```javascript
+// Add to imports
 import { PrerequisiteDebugger, DebugLevel } from './prerequisiteDebugger.js';
 
-class PrerequisiteEvaluator {
+// Modify the PrerequisiteEvaluationService class
+class PrerequisiteEvaluationService extends BaseService {
   #logger;
-  #jsonLogicEval;
-  #debugger;
+  #jsonLogicEvaluationService;
+  #actionValidationContextBuilder;
+  #gameDataRepository;
+  #debugger; // NEW: Optional debugger
 
-  constructor({ logger, jsonLogicEval, entityManager, debugMode = false }) {
-    this.#logger = logger;
-    this.#jsonLogicEval = jsonLogicEval;
+  constructor({
+    logger,
+    jsonLogicEvaluationService,
+    actionValidationContextBuilder,
+    gameDataRepository,
+    entityManager, // NEW: Required for debugger
+    debugMode = false, // NEW: Debug mode flag
+  }) {
+    // ... existing initialization ...
 
-    // Create debugger with appropriate level
-    const debugLevel = debugMode ? DebugLevel.DEBUG : DebugLevel.ERROR;
-    this.#debugger = new PrerequisiteDebugger({
-      logger,
-      debugLevel,
-      entityManager
-    });
+    // NEW: Create debugger if entity manager is provided
+    if (entityManager) {
+      const debugLevel = debugMode ? DebugLevel.DEBUG : DebugLevel.ERROR;
+      this.#debugger = new PrerequisiteDebugger({
+        logger,
+        debugLevel,
+        entityManager
+      });
+    }
   }
 
   /**
-   * Evaluate all prerequisites for an action.
-   *
-   * @param {Array<Object>} prerequisites - Array of prerequisite objects
-   * @param {Object} context - Evaluation context
-   * @param {string} actionId - Action ID (for error messages)
-   * @returns {Object} { success: boolean, failedIndex?: number, error?: Error }
+   * Modified internal evaluation to use debugger when available
    */
-  evaluateAll(prerequisites, context, actionId) {
-    if (!prerequisites || prerequisites.length === 0) {
-      return { success: true };
+  #evaluatePrerequisiteInternal(
+    prereqObject,
+    ruleNumber,
+    totalRules,
+    evaluationContext,
+    actionId,
+    trace = null
+  ) {
+    // Validate rule structure
+    if (!this._validatePrerequisiteRule(prereqObject, ruleNumber, totalRules, actionId)) {
+      return false;
     }
 
-    for (let i = 0; i < prerequisites.length; i++) {
-      const prereq = prerequisites[i];
-
+    // If debugger is available, use it for enhanced error context
+    if (this.#debugger) {
       const result = this.#debugger.evaluate({
         actionId,
-        prerequisiteIndex: i,
-        prerequisiteLogic: prereq.logic,
-        evaluator: (logic, ctx) => this.#jsonLogicEval.apply(logic, ctx),
-        context
+        prerequisiteIndex: ruleNumber - 1,
+        prerequisiteLogic: prereqObject.logic,
+        evaluator: (logic) => this.#resolveAndEvaluate(prereqObject, actionId, evaluationContext, trace),
+        context: evaluationContext
       });
 
       if (!result.success) {
-        return {
-          success: false,
-          failedIndex: i,
-          error: result.error
-        };
+        // Error with enhanced context already logged by debugger
+        return false;
       }
 
-      if (!result.result) {
-        // Prerequisite evaluated but returned false
-        const error = this.#debugger.evaluate({
-          actionId,
-          prerequisiteIndex: i,
-          prerequisiteLogic: prereq.logic,
-          evaluator: () => { throw new Error('Prerequisite condition not met'); },
-          context
-        }).error;
-
-        return {
-          success: false,
-          failedIndex: i,
-          error
-        };
-      }
+      return this._logPrerequisiteResult(
+        result.result,
+        prereqObject,
+        ruleNumber,
+        totalRules,
+        actionId
+      );
     }
 
-    return { success: true };
+    // Fallback to existing implementation when debugger not available
+    let rulePassed;
+    try {
+      rulePassed = this.#resolveAndEvaluate(prereqObject, actionId, evaluationContext, trace);
+    } catch (evalError) {
+      // ... existing error handling ...
+      return false;
+    }
+
+    return this._logPrerequisiteResult(rulePassed, prereqObject, ruleNumber, totalRules, actionId);
   }
 }
 ```
@@ -556,31 +573,35 @@ class PrerequisiteEvaluator {
 
 **File:** `tests/common/engine/systemLogicTestEnv.js` (modify)
 
-```javascript
-export function createSystemLogicTestEnv(options = {}) {
-  const {
-    debugPrerequisites = false,
-    // ... other options
-  } = options;
+**Note:** The test environment uses `PrerequisiteEvaluationService` which is created in the test setup. Debug mode integration requires passing `entityManager` and `debugMode` flags during service instantiation.
 
+```javascript
+export function createBaseRuleEnvironment({
+  // ... existing parameters ...
+  debugPrerequisites = false, // NEW: Debug mode flag
+}) {
   // ... existing setup ...
 
-  const prerequisiteEvaluator = new PrerequisiteEvaluator({
-    logger,
-    jsonLogicEval,
-    entityManager,
-    debugMode: debugPrerequisites
+  // Modify the prerequisite service creation to include entityManager
+  const prerequisiteService = new PrerequisiteEvaluationService({
+    logger: testLogger,
+    jsonLogicEvaluationService: jsonLogic,
+    actionValidationContextBuilder,
+    gameDataRepository: testDataRegistry,
+    entityManager: init.entityManager, // NEW: Pass entity manager for debugging
+    debugMode: debugPrerequisites, // NEW: Enable debug mode
   });
-
-  // ... rest of setup ...
 
   return {
     // ... existing properties ...
+    prerequisiteService,
+    // NEW: Methods to control debug mode
     enablePrerequisiteDebug: () => {
-      prerequisiteEvaluator.setDebugMode(true);
+      // This would require adding setDebugMode method to PrerequisiteEvaluationService
+      // Or recreating the service with debugMode: true
     },
     disablePrerequisiteDebug: () => {
-      prerequisiteEvaluator.setDebugMode(false);
+      // Similar to enable
     }
   };
 }
@@ -612,12 +633,12 @@ class ModTestFixture {
 
 ### Step 5: Create Error Message Tests
 
-**File:** `tests/unit/logic/prerequisiteErrorMessages.test.js`
+**File:** `tests/unit/actions/validation/prerequisiteErrorMessages.test.js`
 
 ```javascript
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { PrerequisiteEvaluationError } from '../../../src/logic/errors/prerequisiteEvaluationError.js';
-import { PrerequisiteDebugger, DebugLevel } from '../../../src/logic/prerequisiteDebugger.js';
+import { PrerequisiteEvaluationError } from '../../../../src/actions/validation/errors/prerequisiteEvaluationError.js';
+import { PrerequisiteDebugger, DebugLevel } from '../../../../src/actions/validation/prerequisiteDebugger.js';
 
 describe('Prerequisite Error Messages', () => {
   describe('PrerequisiteEvaluationError', () => {
@@ -989,9 +1010,10 @@ actor.components['positioning:sitting'] = { furniture_id: 'couch' };
 
 ## References
 
-- **Error Class:** `src/logic/errors/prerequisiteEvaluationError.js`
-- **Debugger:** `src/logic/prerequisiteDebugger.js`
-- **Tests:** `tests/unit/logic/prerequisiteErrorMessages.test.js`
+- **Error Class:** `src/actions/validation/errors/prerequisiteEvaluationError.js`
+- **Debugger:** `src/actions/validation/prerequisiteDebugger.js`
+- **Evaluation Service:** `src/actions/validation/prerequisiteEvaluationService.js`
+- **Tests:** `tests/unit/actions/validation/prerequisiteErrorMessages.test.js`
 - **Report:** `reports/anatomy-prerequisite-test-fixes-2025-01.md` (lines 194-217)
 ```
 
