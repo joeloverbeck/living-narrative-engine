@@ -439,11 +439,140 @@ Goals work with the GOAP action system:
 - **Goal Memory**: Remember failed/completed goals
 - **Goal Sharing**: Cooperative goals between actors
 
+## Action Selection
+
+The ActionSelector class selects the best action to move toward a goal using greedy selection.
+
+### ActionSelector API
+
+```javascript
+class ActionSelector {
+  /**
+   * Selects best action to move toward goal
+   * @param {Array<object>} availableActions - Actions from action discovery
+   * @param {object} goal - Selected goal
+   * @param {string} actorId - Entity ID of actor
+   * @param {object} context - World state context
+   * @returns {object|null} Selected action or null
+   */
+  selectAction(availableActions, goal, actorId, context);
+
+  /**
+   * Calculates how much an action progresses toward goal
+   * @param {object} action - Action with planningEffects
+   * @param {object} goal - Goal definition
+   * @param {string} actorId - Entity ID of actor
+   * @param {object} context - World state context
+   * @returns {number} Progress score (higher = better)
+   */
+  calculateProgress(action, goal, actorId, context);
+
+  /**
+   * Simulates applying action effects to world state
+   * @param {object} action - Action with planningEffects
+   * @param {string} actorId - Entity ID of actor
+   * @param {object} currentState - Current world state
+   * @returns {object} Simulated future state
+   */
+  simulateEffects(action, actorId, currentState);
+}
+```
+
+### Selection Algorithm
+
+1. **Filter Plannable Actions**: Only consider actions with `planningEffects`
+2. **Calculate Progress**: For each action, simulate effects and calculate progress toward goal
+3. **Filter Positive Progress**: Only consider actions that move closer to goal
+4. **Select Best**: Return action with highest progress score
+
+### Effect Simulation
+
+The ActionSelector simulates action effects to predict future world state:
+
+- **ADD_COMPONENT**: Adds component to simulated state
+- **REMOVE_COMPONENT**: Removes component from simulated state
+- **MODIFY_COMPONENT**: Updates component properties in simulated state
+- **CONDITIONAL**: Evaluates condition and applies appropriate effects
+
+### Abstract Preconditions
+
+Conditional effects use abstract preconditions which are simulated during planning:
+
+```javascript
+{
+  operation: 'CONDITIONAL',
+  condition: {
+    abstractPrecondition: 'hasInventoryCapacity',
+    params: ['actor', 'item1']
+  },
+  then: [...]
+}
+```
+
+See [Abstract Preconditions](./abstract-preconditions.md) for the complete catalog.
+
+### AbstractPreconditionSimulator API
+
+```javascript
+class AbstractPreconditionSimulator {
+  /**
+   * Simulates an abstract precondition
+   * @param {string} functionName - Name of abstract function
+   * @param {Array} parameters - Function parameters
+   * @param {object} worldState - World state for simulation
+   * @returns {boolean} Result of simulation
+   */
+  simulate(functionName, parameters, worldState);
+}
+```
+
+**Built-in Simulators**:
+- `hasInventoryCapacity(actorId, itemId)` - Checks if actor can carry item
+- `hasContainerCapacity(containerId, itemId)` - Checks if container has space
+- `hasComponent(entityId, componentId)` - Checks if entity has component
+
+### Example Usage
+
+```javascript
+// Select action toward find_food goal
+const goal = {
+  id: 'core:find_food',
+  goalState: {
+    '>=': [{ var: 'actor.components.items:has_food' }, null]
+  }
+};
+
+const actions = [
+  {
+    id: 'items:pick_up_food',
+    planningEffects: {
+      effects: [
+        {
+          operation: 'ADD_COMPONENT',
+          entity: 'actor',
+          component: 'items:has_food',
+          data: {}
+        }
+      ]
+    }
+  }
+];
+
+const context = {
+  entities: {
+    actor1: { components: { 'core:hunger': { value: 25 } } }
+  }
+};
+
+const selected = actionSelector.selectAction(actions, goal, 'actor1', context);
+// Returns: items:pick_up_food (adds the component needed for goal)
+```
+
 ## Related Documentation
 
 - [GOAP System Overview](./README.md)
 - [Effects Auto-Generation](./effects-auto-generation.md)
-- [Action Selector](./action-selector.md) _(Coming in GOAP-TIER1-008)_
+- [Abstract Preconditions](./abstract-preconditions.md)
 - [Planning System](./planning-system.md) _(Coming in future tickets)_
 
 ## API Reference
