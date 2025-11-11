@@ -70,57 +70,6 @@ describe('items:give_item action definition', () => {
   });
 
   describe('Action discovery integration tests', () => {
-    // Note: The action discovery test is skipped because the test infrastructure
-    // doesn't properly support testing with core:actors_in_location scope in the
-    // action discovery context. The rule execution tests verify that the action
-    // works correctly in actual use.
-    it.skip('should discover give_item action when actor has items and recipients are in the same location', () => {
-      // Setup: Two actors in same location, one with an item
-      const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
-
-      const actor1 = new ModEntityBuilder('test:actor1')
-        .withName('Alice')
-        .atLocation('saloon1')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: ['letter-1'],
-          capacity: { maxWeight: 50, maxItems: 10 },
-        })
-        .build();
-
-      const actor2 = new ModEntityBuilder('test:actor2')
-        .withName('Bob')
-        .atLocation('saloon1')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: [],
-          capacity: { maxWeight: 50, maxItems: 10 },
-        })
-        .build();
-
-      const item = new ModEntityBuilder('letter-1')
-        .withName('Letter')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', {})
-        .withComponent('items:weight', { weight: 0.05 })
-        .build();
-
-      // Reset test environment with all entities
-      testFixture.reset([room, actor1, actor2, item]);
-
-      // Configure action discovery
-      configureActionDiscovery();
-
-      // Discover actions for actor with item
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'test:actor1'
-      );
-
-      // Assert: give_item action should be discovered
-      const actionIds = availableActions.map((a) => a.id);
-      expect(actionIds).toContain('items:give_item');
-    });
-
     it('should NOT appear when actor has inventory component but no portable items', () => {
       // Setup: Two actors in same location, both with empty inventory
       const room = new ModEntityBuilder('saloon1').asRoom('Saloon').build();
@@ -163,30 +112,6 @@ describe('items:give_item action definition', () => {
         (action) => action.id === 'items:give_item'
       );
       expect(giveItemActions.length).toBe(0);
-    });
-
-    it('should NOT appear when no recipients in location', () => {
-      // Manual test case:
-      // 1. Create actor with inventory items
-      // 2. Place actor alone in location
-      // 3. Expected: give_item action should NOT be available
-      expect(true).toBe(true);
-    });
-
-    it('should create separate actions for each item in inventory', () => {
-      // Manual test case:
-      // 1. Create actor with multiple items in inventory
-      // 2. Create recipient in same location
-      // 3. Expected: One give_item action per item in inventory
-      expect(true).toBe(true);
-    });
-
-    it('should create actions for multiple potential recipients', () => {
-      // Manual test case:
-      // 1. Create actor with item
-      // 2. Create multiple actors in same location
-      // 3. Expected: give_item actions for each (item, recipient) combination
-      expect(true).toBe(true);
     });
   });
 });
