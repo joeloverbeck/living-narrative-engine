@@ -47,23 +47,27 @@ export class ClothingAccessibilityService {
   #priorityCache;
   /** @type {number} */
   #maxPriorityCacheSize;
+  /** @type {number} */
+  #maxCacheSize;
 
   /**
    * Creates an instance of ClothingAccessibilityService
-   * 
+   *
    * @param {object} deps - Constructor dependencies
    * @param {ILogger} deps.logger - Logger instance for debugging and error reporting
    * @param {IEntityManager} deps.entityManager - Entity manager for accessing entity data
    * @param {IEntitiesGateway} [deps.entitiesGateway] - Optional entities gateway for coverage analysis
    * @param {Function} [deps.coverageAnalyzerFactory] - Optional factory used to create the coverage analyzer
    * @param {object} [deps.priorityConfig] - Optional priority configuration overrides
+   * @param {number} [deps.maxCacheSize=500] - Maximum number of cache entries for query results
    */
   constructor({
     logger,
     entityManager,
     entitiesGateway,
     coverageAnalyzerFactory = createCoverageAnalyzer,
-    priorityConfig = PRIORITY_CONFIG
+    priorityConfig = PRIORITY_CONFIG,
+    maxCacheSize = 500
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error', 'info']
@@ -71,10 +75,11 @@ export class ClothingAccessibilityService {
     validateDependency(entityManager, 'IEntityManager', logger, {
       requiredMethods: ['getComponentData', 'hasComponent']
     });
-    
+
     this.#logger = logger;
     this.#entityManager = entityManager;
     this.#cache = new Map();
+    this.#maxCacheSize = maxCacheSize;
     
     // Initialize priority cache if caching enabled
     if (priorityConfig.enableCaching) {
@@ -233,7 +238,7 @@ export class ClothingAccessibilityService {
 
   /**
    * Cache result and return it
-   * 
+   *
    * @private
    * @param {string} cacheKey - Cache key
    * @param {Array} result - Result to cache
@@ -244,6 +249,10 @@ export class ClothingAccessibilityService {
       result,
       timestamp: Date.now()
     });
+
+    // Manage cache size to prevent unbounded growth
+    this.#manageCacheSize();
+
     return result;
   }
 
@@ -516,17 +525,49 @@ export class ClothingAccessibilityService {
    * @private
    */
   #managePriorityCacheSize() {
-    if (!this.#priorityCache || 
+    if (!this.#priorityCache ||
         this.#priorityCache.size <= this.#maxPriorityCacheSize) {
       return;
     }
-    
+
     // Remove oldest entries (FIFO)
     const entriesToRemove = this.#priorityCache.size - this.#maxPriorityCacheSize;
     const keys = Array.from(this.#priorityCache.keys());
-    
+
     for (let i = 0; i < entriesToRemove; i++) {
       this.#priorityCache.delete(keys[i]);
+    }
+  }
+
+  /**
+   * Manage main cache size and clean expired entries
+   *
+   * @private
+   */
+  #manageCacheSize() {
+    const now = Date.now();
+    const TTL = 5000; // 5 second TTL
+
+    // First, remove expired entries
+    const expiredKeys = [];
+    for (const [key, value] of this.#cache.entries()) {
+      if (now - value.timestamp >= TTL) {
+        expiredKeys.push(key);
+      }
+    }
+
+    for (const key of expiredKeys) {
+      this.#cache.delete(key);
+    }
+
+    // If still over size limit, remove oldest entries (LRU eviction)
+    if (this.#cache.size > this.#maxCacheSize) {
+      const entriesToRemove = this.#cache.size - this.#maxCacheSize;
+      const keys = Array.from(this.#cache.keys());
+
+      for (let i = 0; i < entriesToRemove; i++) {
+        this.#cache.delete(keys[i]);
+      }
     }
   }
 
