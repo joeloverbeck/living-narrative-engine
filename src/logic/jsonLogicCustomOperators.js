@@ -12,6 +12,7 @@ import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
 import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
 import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupantOperator.js';
 import { HasOtherActorsAtLocationOperator } from './operators/hasOtherActorsAtLocationOperator.js';
+import { IsRemovalBlockedOperator } from './operators/isRemovalBlockedOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -153,6 +154,11 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const isRemovalBlockedOp = new IsRemovalBlockedOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     // Register hasPartWithComponentValue operator
     this.#registerOperator(
       'hasPartWithComponentValue',
@@ -283,6 +289,16 @@ export class JsonLogicCustomOperators extends BaseService {
       function (entityPath) {
         // 'this' is the evaluation context
         return hasOtherActorsAtLocationOp.evaluate([entityPath], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register isRemovalBlocked operator
+    this.#registerOperator(
+      'isRemovalBlocked',
+      function (actorPath, targetItemPath) {
+        // 'this' is the evaluation context
+        return isRemovalBlockedOp.evaluate([actorPath, targetItemPath], this);
       },
       jsonLogicEvaluationService
     );
