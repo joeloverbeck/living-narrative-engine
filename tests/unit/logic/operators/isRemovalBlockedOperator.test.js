@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import IsRemovalBlockedOperator from '../../../../src/logic/operators/isRemovalBlockedOperator.js';
+import * as entityPathResolver from '../../../../src/logic/utils/entityPathResolver.js';
 
 describe('IsRemovalBlockedOperator', () => {
   let testBed;
@@ -20,6 +21,10 @@ describe('IsRemovalBlockedOperator', () => {
       entityManager: mockEntityManager,
       logger: mockLogger,
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Slot-Based Blocking', () => {
@@ -506,6 +511,238 @@ describe('IsRemovalBlockedOperator', () => {
           targetItemPath: 'targetItem',
         })
       );
+    });
+  });
+
+  describe('Parameter validation coverage', () => {
+    it('returns false and warns when parameters are missing', () => {
+      mockLogger.warn.mockClear();
+
+      const result = operator.evaluateInternal('actor-1', undefined, {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Missing required parameter: targetItemPath')
+      );
+    });
+
+    it('returns false and warns when target item path is nullish', () => {
+      mockLogger.warn.mockClear();
+
+      const result = operator.evaluateInternal('actor-1', [null], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Null or undefined targetItemPath'),
+        { targetItemPath: null }
+      );
+    });
+  });
+
+  describe('Target resolution coverage', () => {
+    it('returns false and warns when target entity cannot be resolved', () => {
+      const spy = jest
+        .spyOn(entityPathResolver, 'resolveEntityPath')
+        .mockReturnValue({ entity: null, isValid: false });
+
+      mockLogger.warn.mockClear();
+
+      const result = operator.evaluateInternal('actor-1', ['target.path'], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('No entity found at path target.path')
+      );
+
+      spy.mockRestore();
+    });
+
+    it('returns false when resolved entity lacks an identifier', () => {
+      const spy = jest
+        .spyOn(entityPathResolver, 'resolveEntityPath')
+        .mockReturnValue({ entity: {}, isValid: true });
+
+      mockLogger.warn.mockClear();
+
+      const result = operator.evaluateInternal('actor-1', ['target.path'], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entity at path target.path')
+      );
+
+      spy.mockRestore();
+    });
+
+    it('warns when resolved entity identifier is blank', () => {
+      const spy = jest
+        .spyOn(entityPathResolver, 'resolveEntityPath')
+        .mockReturnValue({ entity: { id: '   ' }, isValid: true });
+
+      mockLogger.warn.mockClear();
+
+      const result = operator.evaluateInternal('actor-1', ['target.path'], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entity at path target.path')
+      );
+
+      spy.mockRestore();
+    });
+
+    it('warns when resolved entity identifier is NaN', () => {
+      const spy = jest
+        .spyOn(entityPathResolver, 'resolveEntityPath')
+        .mockReturnValue({ entity: { id: Number.NaN }, isValid: true });
+
+      mockLogger.warn.mockClear();
+
+      const result = operator.evaluateInternal('actor-1', ['target.path'], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entity at path target.path')
+      );
+
+      spy.mockRestore();
+    });
+
+    it('accepts primitive target identifiers and evaluates without blockers', () => {
+      const actorId = 'actor-1';
+      const targetId = 'item-1';
+      const otherItemId = 'item-2';
+
+      const spy = jest
+        .spyOn(entityPathResolver, 'resolveEntityPath')
+        .mockReturnValue({ entity: targetId, isValid: true });
+
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
+        if (entityId === actorId && componentId === 'clothing:equipment') {
+          return {
+            equipped: {
+              legs: {
+                base: [targetId, otherItemId],
+              },
+            },
+          };
+        }
+
+        if (entityId === targetId && componentId === 'clothing:wearable') {
+          return {
+            layer: 'base',
+            equipmentSlots: { primary: 'legs' },
+          };
+        }
+
+        return null;
+      });
+
+      mockEntityManager.hasComponent.mockReturnValue(false);
+
+      const result = operator.evaluateInternal(actorId, ['targetItem'], {});
+
+      expect(result).toBe(false);
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        otherItemId,
+        'clothing:blocks_removal'
+      );
+
+      spy.mockRestore();
+    });
+  });
+
+  describe('Slot blocking rule coverage', () => {
+    it('returns false when target wearable lacks slot metadata', () => {
+      const actorId = 'actor-1';
+      const targetId = 'item-1';
+      const blockerId = 'blocker-1';
+      const context = { targetItem: { id: targetId } };
+
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
+        if (entityId === actorId && componentId === 'clothing:equipment') {
+          return {
+            equipped: {
+              torso: {
+                base: [targetId],
+                accessories: [blockerId],
+              },
+            },
+          };
+        }
+
+        if (entityId === targetId && componentId === 'clothing:wearable') {
+          return {
+            layer: 'base',
+            equipmentSlots: {},
+          };
+        }
+
+        if (entityId === blockerId && componentId === 'clothing:blocks_removal') {
+          return {
+            blockedSlots: [
+              { slot: 'torso', layers: ['base'] },
+            ],
+          };
+        }
+
+        return null;
+      });
+
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) =>
+          entityId === blockerId && componentId === 'clothing:blocks_removal'
+      );
+
+      const result = operator.evaluateInternal(actorId, ['targetItem'], context);
+
+      expect(result).toBe(false);
+    });
+
+    it('returns false when no slot blocking rules match the target', () => {
+      const actorId = 'actor-1';
+      const targetId = 'item-1';
+      const blockerId = 'blocker-1';
+      const context = { targetItem: { id: targetId } };
+
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
+        if (entityId === actorId && componentId === 'clothing:equipment') {
+          return {
+            equipped: {
+              legs: {
+                base: [targetId],
+                accessories: blockerId,
+              },
+            },
+          };
+        }
+
+        if (entityId === targetId && componentId === 'clothing:wearable') {
+          return {
+            layer: 'base',
+            equipmentSlots: { primary: 'legs' },
+          };
+        }
+
+        if (entityId === blockerId && componentId === 'clothing:blocks_removal') {
+          return {
+            blockedSlots: [
+              { slot: 'torso', layers: ['outer'] },
+            ],
+          };
+        }
+
+        return null;
+      });
+
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) =>
+          entityId === blockerId && componentId === 'clothing:blocks_removal'
+      );
+
+      const result = operator.evaluateInternal(actorId, ['targetItem'], context);
+
+      expect(result).toBe(false);
     });
   });
 });
