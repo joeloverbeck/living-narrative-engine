@@ -5,7 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import '../../../common/mods/domainMatchers.js';
 import hugTightRule from '../../../../data/mods/hugging/rules/handle_hug_tight.rule.json';
 import eventIsActionHugTight from '../../../../data/mods/hugging/conditions/event-is-action-hug-tight.condition.json';
@@ -132,29 +132,27 @@ describe('hugging:hug_tight action integration', () => {
       location: 'studio',
     });
 
-    const stalePartner = testFixture.createEntity({
-      id: 'clara_old_partner',
-      components: {
-        'core:name': { text: 'Clara' },
-        'core:position': { locationId: 'studio' },
-        'positioning:being_hugged': {
-          hugging_entity_id: scenario.actor.id,
-          consented: false,
-        },
-      },
-    });
+    const stalePartner = new ModEntityBuilder('clara_old_partner')
+      .withName('Clara')
+      .atLocation('studio')
+      .asActor()
+      .build();
 
-    const previousHugger = testFixture.createEntity({
-      id: 'hugo_previous_hugger',
-      components: {
-        'core:name': { text: 'Hugo' },
-        'core:position': { locationId: 'studio' },
-        'positioning:hugging': {
-          embraced_entity_id: scenario.target.id,
-          initiated: false,
-        },
-      },
-    });
+    stalePartner.components['positioning:being_hugged'] = {
+      hugging_entity_id: scenario.actor.id,
+      consented: false,
+    };
+
+    const previousHugger = new ModEntityBuilder('hugo_previous_hugger')
+      .withName('Hugo')
+      .atLocation('studio')
+      .asActor()
+      .build();
+
+    previousHugger.components['positioning:hugging'] = {
+      embraced_entity_id: scenario.target.id,
+      initiated: false,
+    };
 
     scenario.actor.components['positioning:hugging'] = {
       embraced_entity_id: stalePartner.id,
@@ -216,17 +214,16 @@ describe('hugging:hug_tight action integration', () => {
       location: 'atrium',
     });
 
-    const currentHugger = testFixture.createEntity({
-      id: 'nora_current_hugger',
-      components: {
-        'core:name': { text: 'Nora' },
-        'core:position': { locationId: 'atrium' },
-        'positioning:hugging': {
-          embraced_entity_id: scenario.target.id,
-          initiated: true,
-        },
-      },
-    });
+    const currentHugger = new ModEntityBuilder('nora_current_hugger')
+      .withName('Nora')
+      .atLocation('atrium')
+      .asActor()
+      .build();
+
+    currentHugger.components['positioning:hugging'] = {
+      embraced_entity_id: scenario.target.id,
+      initiated: true,
+    };
 
     scenario.target.components['positioning:being_hugged'] = {
       hugging_entity_id: currentHugger.id,

@@ -5,7 +5,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
 import tearOutThroatRule from '../../../../data/mods/violence/rules/handle_tear_out_throat.rule.json';
 import eventIsActionTearOutThroat from '../../../../data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json';
@@ -407,20 +407,19 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
     it('does not affect unrelated entities', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
-      // Create unrelated entity using ModEntityBuilder (through fixture's helper)
-      const unrelatedEntity = testFixture.createEntity({
-        id: 'charlie',
-        name: 'Charlie',
-        components: {
-          'core:position': { locationId: 'room1' },
-          'positioning:closeness': { partners: [] },
-          'positioning:biting_neck': {
-            bitten_entity_id: 'someone_else',
-            initiated: true,
-            consented: false,
-          },
-        },
-      });
+      // Create unrelated entity using ModEntityBuilder
+      const unrelatedEntity = new ModEntityBuilder('charlie')
+        .withName('Charlie')
+        .atLocation('room1')
+        .asActor()
+        .build();
+
+      unrelatedEntity.components['positioning:closeness'] = { partners: [] };
+      unrelatedEntity.components['positioning:biting_neck'] = {
+        bitten_entity_id: 'someone_else',
+        initiated: true,
+        consented: false,
+      };
 
       scenario.actor.components['positioning:biting_neck'] = {
         bitten_entity_id: scenario.target.id,
@@ -445,7 +444,7 @@ describe('Violence Mod: Tear Out Throat Action Integration', () => {
 
       // Unrelated entity should still have its component
       const charlie = testFixture.entityManager.getEntityInstance('charlie');
-      expect(charlie.components['positioning:biting_neck']).toEqual({
+      expect(charlie.getComponentData('positioning:biting_neck')).toEqual({
         bitten_entity_id: 'someone_else',
         initiated: true,
         consented: false,
