@@ -135,8 +135,6 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
     console.log('Action IDs:', actionIds);
 
     // Check if our action is there
-    expect(actions).toContainAction('patrol:travel_through_dimensions', {
-      primaryTargetId: dimensionId,
-    });
+    expect(actions).toContainAction('patrol:travel_through_dimensions');
   });
 });

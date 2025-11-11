@@ -547,8 +547,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(itemIds) };
         }
 
-        // Handle the positioning:close_actors scope
-        if (scopeName === 'positioning:close_actors') {
+        // Handle the core:actors_in_location scope (same as positioning:close_actors)
+        if (scopeName === 'core:actors_in_location' || scopeName === 'positioning:close_actors') {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
 
@@ -939,6 +939,41 @@ export function createBaseRuleEnvironment({
           }
 
           return { success: true, value: new Set([playingMusic.playing_on]) };
+        }
+
+        // Handle the patrol:dimensional_portals scope
+        if (scopeName === 'patrol:dimensional_portals') {
+          // Get actor's location
+          const actorId = context?.actor?.id || context;
+          const actor = entityManager.getEntityInstance(actorId);
+          const actorPosition = actor?.components?.['core:position'];
+
+          if (!actorPosition || !actorPosition.locationId) {
+            return { success: true, value: new Set() };
+          }
+
+          // Get location entity
+          const location = entityManager.getEntityInstance(actorPosition.locationId);
+          const exits = location?.components?.['movement:exits'];
+
+          if (!Array.isArray(exits)) {
+            return { success: true, value: new Set() };
+          }
+
+          // Filter exits that have a blocker with patrol:is_dimensional_portal component
+          const dimensionalPortals = exits
+            .filter((exit) => {
+              if (!exit.blocker) {
+                return false;
+              }
+
+              const blocker = entityManager.getEntityInstance(exit.blocker);
+              return blocker?.components?.['patrol:is_dimensional_portal'] !== undefined;
+            })
+            .map((exit) => exit.target)
+            .filter((target) => typeof target === 'string' && target.length > 0);
+
+          return { success: true, value: new Set(dimensionalPortals) };
         }
 
         // Handle other scopes or return empty set
