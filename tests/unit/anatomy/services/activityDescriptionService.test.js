@@ -222,6 +222,18 @@ describe('ActivityDescriptionService', () => {
     expect(typeof hooks.formatActivityDescription).toBe('function');
   });
 
+  it('defaults optional cache and event dependencies when omitted entirely', () => {
+    const dependencies = createMockDependencies();
+    delete dependencies.activityIndex;
+    delete dependencies.eventBus;
+
+    const service = new ActivityDescriptionService(dependencies);
+    const hooks = service.getTestHooks();
+
+    expect(hooks.dispatchError('NO_BUS', { reason: 'missing bus' })).toBeUndefined();
+    expect(dependencies.cacheManager.registerCache).toHaveBeenCalledTimes(4);
+  });
+
   it('uses provided filtering and context building systems when supplied', () => {
     const { service, dependencies } = instantiateService((deps) => {
       deps.filteringSystem.filterByConditions = jest.fn(() => [{ id: 'kept' }]);
@@ -291,6 +303,34 @@ describe('ActivityDescriptionService', () => {
     dateSpy.mockRestore();
   });
 
+  it('falls back to a generic lookup error reason when the thrown error has no message', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.entityManager.getEntityInstance.mockImplementation(() => {
+        throw { message: undefined };
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+    });
+
+    const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(321);
+    const result = await service.generateActivityDescription('entity-lookup-generic');
+
+    expect(result).toBe('');
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'ENTITY_LOOKUP_FAILED',
+        entityId: 'entity-lookup-generic',
+        reason: 'Entity lookup threw an error',
+        timestamp: 321,
+      }),
+    });
+    dateSpy.mockRestore();
+  });
+
   it('handles missing entity responses', async () => {
     const { service, dependencies } = instantiateService((deps) => {
       deps.entityManager.getEntityInstance.mockReturnValue(null);
@@ -337,6 +377,27 @@ describe('ActivityDescriptionService', () => {
     );
   });
 
+  it('handles non-array componentTypeIds without logging a warning', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      const entity = {
+        id: 'entity-non-array',
+        componentTypeIds: 'not-an-array',
+        getComponentData: jest.fn(() => null),
+      };
+      deps.entityManager.getEntityInstance.mockReturnValue(entity);
+    });
+
+    const result = await service.generateActivityDescription('entity-non-array');
+
+    expect(result).toBe('Activity: Entity entity-non-array observes and notes. they reflects.');
+    expect(
+      dependencies.logger.warn
+    ).not.toHaveBeenCalledWith(
+      expect.stringContaining('Failed to inspect componentTypeIds for entity entity-non-array'),
+      expect.any(Error)
+    );
+  });
+
   it('returns an empty string when no activities are collected', async () => {
     const { service, dependencies } = instantiateService((deps) => {
       deps.metadataCollectionSystem.collectActivityMetadata.mockReturnValue([]);
@@ -363,6 +424,32 @@ describe('ActivityDescriptionService', () => {
     );
   });
 
+  it('skips deduplication when the configuration disables it explicitly', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+        enabled: true,
+        prefix: 'Activity: ',
+        suffix: '.',
+        separator: '. ',
+        maxActivities: 5,
+        deduplicateActivities: false,
+        enableContextAwareness: true,
+        maxDescriptionLength: 200,
+        nameResolution: {
+          usePronounsWhenAvailable: true,
+          preferReflexivePronouns: true,
+        },
+      });
+    });
+
+    const description = await service.generateActivityDescription('entity-no-dedupe');
+
+    expect(description.startsWith('Activity:')).toBe(true);
+    expect(
+      dependencies.metadataCollectionSystem.deduplicateActivitiesBySignature
+    ).not.toHaveBeenCalled();
+  });
+
   it('returns an empty string when deduplication removes every activity', async () => {
     const { service, dependencies } = instantiateService((deps) => {
       deps.metadataCollectionSystem.deduplicateActivitiesBySignature = jest
@@ -374,6 +461,29 @@ describe('ActivityDescriptionService', () => {
     expect(result).toBe('');
     expect(dependencies.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('No activities remaining after deduplication')
+    );
+  });
+
+  it('falls back to the requested entity id when the entity lacks an identifier', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      const entity = {
+        id: undefined,
+        componentTypeIds: ['core:name'],
+        getComponentData: jest.fn(() => null),
+      };
+      deps.entityManager.getEntityInstance.mockReturnValue(entity);
+    });
+
+    const result = await service.generateActivityDescription('entity-no-id');
+
+    expect(result.startsWith('Activity:')).toBe(true);
+    expect(dependencies.indexManager.buildActivityIndexCacheKey).toHaveBeenCalledWith(
+      'priority',
+      'entity-no-id'
+    );
+    expect(dependencies.indexManager.buildActivityIndexCacheKey).toHaveBeenCalledWith(
+      'group',
+      'entity-no-id'
     );
   });
 
@@ -401,6 +511,30 @@ describe('ActivityDescriptionService', () => {
       payload: expect.objectContaining({
         errorType: 'ACTIVITY_DESCRIPTION_ERROR',
         entityId: 'entity-collect',
+      }),
+    });
+  });
+
+  it('falls back to an unknown error reason when top-level failures lack a message', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.metadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
+        throw { message: undefined };
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+    });
+
+    const result = await service.generateActivityDescription('entity-collect-generic');
+
+    expect(result).toBe('');
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        entityId: 'entity-collect-generic',
+        reason: 'Unknown error',
       }),
     });
   });
@@ -433,6 +567,58 @@ describe('ActivityDescriptionService', () => {
     });
   });
 
+  it('uses a generic grouping error reason when the thrown error has no message', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.groupingSystem.groupActivities.mockImplementation(() => {
+        throw { message: undefined };
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+    });
+
+    await service.generateActivityDescription('entity-grouping-generic');
+
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'GROUP_ACTIVITIES_FAILED',
+        reason: 'Grouping error',
+      }),
+    });
+  });
+
+  it('dispatches grouping failures with an unknown entity id when the actor id is missing', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.entityManager.getEntityInstance.mockReturnValue({
+        id: undefined,
+        componentTypeIds: ['core:name'],
+        getComponentData: jest.fn(() => null),
+      });
+      deps.groupingSystem.groupActivities.mockImplementation(() => {
+        throw new Error('group failure');
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+    });
+
+    await service.generateActivityDescription('entity-missing-actor');
+
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'GROUP_ACTIVITIES_FAILED',
+        entityId: 'unknown',
+        timestamp: expect.any(Number),
+      }),
+    });
+  });
+
   it('returns an empty string when the primary phrase generation fails', async () => {
     const { service, dependencies } = instantiateService((deps) => {
       let firstCall = true;
@@ -453,7 +639,6 @@ describe('ActivityDescriptionService', () => {
           id: 'single-activity',
           verb: 'observe',
           priority: 10,
-          sourceComponent: 'testing:observer',
           relatedActivities: [],
         },
       ]);
@@ -473,6 +658,102 @@ describe('ActivityDescriptionService', () => {
         entityId: 'entity-7',
       }),
     });
+  });
+
+  it('uses a default primary phrase error reason when the thrown error has no message', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.nlgSystem.generateActivityPhrase.mockImplementation(() => {
+        throw { message: undefined };
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+      deps.metadataCollectionSystem.collectActivityMetadata.mockReturnValue([
+        {
+          id: 'single-activity',
+          verb: 'observe',
+          priority: 10,
+          sourceComponent: 'testing:observer',
+          relatedActivities: [],
+        },
+      ]);
+    });
+
+    await service.generateActivityDescription('entity-primary-generic');
+
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'PRIMARY_ACTIVITY_FORMATTING_FAILED',
+        reason: 'Primary phrase error',
+      }),
+    });
+  });
+
+  it('dispatches primary phrase failures with an unknown entity id when the actor id is missing', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.entityManager.getEntityInstance.mockReturnValue({
+        id: undefined,
+        componentTypeIds: ['core:name'],
+        getComponentData: jest.fn(() => null),
+      });
+      let firstCall = true;
+      deps.nlgSystem.generateActivityPhrase.mockImplementation(() => {
+        if (firstCall) {
+          firstCall = false;
+          throw new Error('primary failure');
+        }
+        return { fullPhrase: 'fallback', verbPhrase: 'fallback' };
+      });
+      deps.metadataCollectionSystem.collectActivityMetadata.mockReturnValue([
+        {
+          id: 'single-activity',
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ]);
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+    });
+
+    const result = await service.generateActivityDescription('entity-primary-unknown');
+
+    expect(result).toBe('');
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'PRIMARY_ACTIVITY_FORMATTING_FAILED',
+        entityId: 'unknown',
+        timestamp: expect.any(Number),
+      }),
+    });
+  });
+
+  it('skips groups whose generated phrases omit full phrase content', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.metadataCollectionSystem.collectActivityMetadata.mockReturnValue([
+        {
+          id: 'activity-without-full-phrase',
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ]);
+      deps.nlgSystem.generateActivityPhrase.mockReturnValue({
+        verbPhrase: 'observes',
+      });
+    });
+
+    const description = await service.generateActivityDescription('entity-empty-primary');
+
+    expect(description).toBe('');
+    expect(dependencies.nlgSystem.generateActivityPhrase).toHaveBeenCalledTimes(1);
   });
 
   it('continues description generation when related phrase creation fails', async () => {
@@ -512,6 +793,89 @@ describe('ActivityDescriptionService', () => {
     });
   });
 
+  it('uses a default related phrase error reason when the thrown error has no message', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      let callCount = 0;
+      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => {
+        if (callCount === 1) {
+          callCount += 1;
+          throw { message: undefined };
+        }
+        callCount += 1;
+        return {
+          fullPhrase: `${actorReference} ${activity?.verb ?? ''}`.trim(),
+          verbPhrase: activity?.verb ?? '',
+        };
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+      deps.metadataCollectionSystem.collectActivityMetadata.mockReturnValue([
+        {
+          id: 'primary',
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [
+            {
+              conjunction: 'and',
+              activity: { id: 'related', verb: 'notes' },
+            },
+          ],
+        },
+      ]);
+    });
+
+    await service.generateActivityDescription('entity-related-generic');
+
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'RELATED_ACTIVITY_FORMATTING_FAILED',
+        reason: 'Related phrase error',
+      }),
+    });
+  });
+
+  it('dispatches related phrase failures with an unknown entity id when the actor id is missing', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.entityManager.getEntityInstance.mockReturnValue({
+        id: undefined,
+        componentTypeIds: ['core:name'],
+        getComponentData: jest.fn(() => null),
+      });
+      let callCount = 0;
+      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => {
+        if (callCount === 0) {
+          callCount += 1;
+          return {
+            fullPhrase: `${actorReference ?? ''} ${activity?.verb ?? ''}`.trim(),
+            verbPhrase: activity?.verb ?? '',
+          };
+        }
+        callCount += 1;
+        throw new Error('related failure');
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+    });
+
+    await service.generateActivityDescription('entity-related-unknown');
+
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'RELATED_ACTIVITY_FORMATTING_FAILED',
+        entityId: 'unknown',
+        timestamp: expect.any(Number),
+      }),
+    });
+  });
+
   it('continues when related fragment construction fails', async () => {
     const { service, dependencies } = instantiateService((deps) => {
       deps.nlgSystem.buildRelatedActivityFragment.mockImplementation(() => {
@@ -536,6 +900,76 @@ describe('ActivityDescriptionService', () => {
       payload: expect.objectContaining({
         errorType: 'RELATED_ACTIVITY_FRAGMENT_FAILED',
         entityId: 'entity-9',
+      }),
+    });
+  });
+
+  it('dispatches related fragment failures with an unknown entity id when the actor id is missing', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.entityManager.getEntityInstance.mockReturnValue({
+        id: undefined,
+        componentTypeIds: ['core:name'],
+        getComponentData: jest.fn(() => null),
+      });
+      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => ({
+        fullPhrase: `${actorReference ?? ''} ${activity?.verb ?? ''}`.trim(),
+        verbPhrase: activity?.verb ?? '',
+      }));
+      deps.nlgSystem.buildRelatedActivityFragment.mockImplementation(() => {
+        throw new Error('fragment failure');
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+    });
+
+    const result = await service.generateActivityDescription('entity-fragment-unknown');
+
+    expect(result).toBe('Activity: Unknown Entity observes. they reflects.');
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'RELATED_ACTIVITY_FRAGMENT_FAILED',
+        entityId: 'unknown',
+        timestamp: expect.any(Number),
+      }),
+    });
+  });
+
+  it('uses a default fragment error reason when the thrown error has no message', async () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.nlgSystem.buildRelatedActivityFragment.mockImplementation(() => {
+        throw { message: undefined };
+      });
+      deps.eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      };
+      deps.metadataCollectionSystem.collectActivityMetadata.mockReturnValue([
+        {
+          id: 'primary',
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [
+            {
+              conjunction: 'and',
+              activity: { id: 'related', verb: 'notes' },
+            },
+          ],
+        },
+      ]);
+    });
+
+    await service.generateActivityDescription('entity-fragment-generic');
+
+    expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'RELATED_ACTIVITY_FRAGMENT_FAILED',
+        reason: 'Fragment error',
       }),
     });
   });
@@ -602,6 +1036,67 @@ describe('ActivityDescriptionService', () => {
     expect(result).toBe('');
   });
 
+  it('falls back to the default cache key when none is supplied during formatting', () => {
+    const { service } = instantiateService();
+    const hooks = service.getTestHooks();
+
+    const result = hooks.formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-default-cache' }
+    );
+
+    expect(result.startsWith('Activity:')).toBe(true);
+  });
+
+  it('uses fallback formatting options when configuration values are undefined or disabled', () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
+        enabled: true,
+        prefix: undefined,
+        suffix: undefined,
+        separator: undefined,
+        maxActivities: null,
+        deduplicateActivities: true,
+        enableContextAwareness: false,
+        maxDescriptionLength: undefined,
+        nameResolution: {
+          usePronounsWhenAvailable: false,
+          preferReflexivePronouns: true,
+        },
+      });
+    });
+
+    const hooks = service.getTestHooks();
+    const result = hooks.formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+        {
+          verb: 'reflects',
+          priority: 5,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-fallback-formatting' }
+    );
+
+    expect(result.startsWith('Entity')).toBe(true);
+    expect(dependencies.nlgSystem.truncateDescription).toHaveBeenCalledWith(
+      expect.any(String),
+      500
+    );
+    expect(dependencies.contextBuildingSystem.buildActivityContext).not.toHaveBeenCalled();
+  });
+
   it('logs a warning when contextual tone application fails', () => {
     const { service, dependencies } = instantiateService((deps) => {
       deps.contextBuildingSystem.applyContextualTone.mockImplementation(() => {
@@ -627,6 +1122,28 @@ describe('ActivityDescriptionService', () => {
       'Failed to apply contextual tone to activity',
       expect.any(Error)
     );
+  });
+
+  it('falls back to the original activity when contextual tone returns null', () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.contextBuildingSystem.applyContextualTone.mockReturnValue(null);
+    });
+
+    const hooks = service.getTestHooks();
+    const description = hooks.formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-context-null' },
+      'cache:entity-context-null'
+    );
+
+    expect(description.startsWith('Activity:')).toBe(true);
+    expect(dependencies.contextBuildingSystem.applyContextualTone).toHaveBeenCalled();
   });
 
   it('supports iterable grouping results and warns on unexpected responses', () => {
@@ -672,6 +1189,137 @@ describe('ActivityDescriptionService', () => {
     expect(dependencies.logger.warn).toHaveBeenCalledWith(
       'Grouping activities returned unexpected data; ignoring result'
     );
+  });
+
+  it('accepts grouping results delivered as Set iterables', () => {
+    const { service } = instantiateService((deps) => {
+      deps.groupingSystem.groupActivities.mockReturnValue(
+        new Set([
+          {
+            primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' },
+            relatedActivities: [],
+          },
+        ])
+      );
+    });
+
+    const description = service
+      .getTestHooks()
+      .formatActivityDescription(
+        [
+          {
+            verb: 'observe',
+            priority: 10,
+            relatedActivities: [],
+          },
+        ],
+        { id: 'entity-set-only' },
+        'cache:entity-set-only'
+      );
+
+    expect(description.startsWith('Activity:')).toBe(true);
+  });
+
+  it('handles grouping results that resolve to null without logging warnings', () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.groupingSystem.groupActivities.mockReturnValue(null);
+    });
+
+    const result = service
+      .getTestHooks()
+      .formatActivityDescription(
+        [
+          {
+            verb: 'observe',
+            priority: 10,
+            relatedActivities: [],
+          },
+        ],
+        { id: 'entity-null-group' },
+        'cache:entity-null-group'
+      );
+
+    expect(result).toBe('');
+    expect(dependencies.logger.warn).not.toHaveBeenCalledWith(
+      'Grouping activities returned unexpected data; ignoring result'
+    );
+  });
+
+  it('accepts string primary phrases returned by the NLG system', () => {
+    const { service } = instantiateService((deps) => {
+      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => {
+        if (activity?.verb === 'observe') {
+          return `${actorReference ?? 'Unknown'} observes`;
+        }
+        return { fullPhrase: `${actorReference} ${activity?.verb ?? ''}`.trim(), verbPhrase: activity?.verb ?? '' };
+      });
+    });
+
+    const description = service
+      .getTestHooks()
+      .formatActivityDescription(
+        [
+          {
+            verb: 'observe',
+            priority: 10,
+            relatedActivities: [],
+          },
+        ],
+        { id: 'entity-string-primary' },
+        'cache:entity-string-primary'
+      );
+
+    expect(description).toBe('Activity: Entity entity-string-primary observes.');
+  });
+
+  it('uses fullPhrase output when the NLG system returns phrase components', () => {
+    const { service } = instantiateService((deps) => {
+      deps.nlgSystem.generateActivityPhrase.mockReturnValue({
+        fullPhrase: 'Entity entity-object observes',
+        verbPhrase: 'observes',
+      });
+    });
+
+    const description = service
+      .getTestHooks()
+      .formatActivityDescription(
+        [
+          {
+            verb: 'observe',
+            priority: 10,
+            relatedActivities: [],
+          },
+        ],
+        { id: 'entity-object' },
+        'cache:entity-object'
+      );
+
+    expect(description).toBe('Activity: Entity entity-object observes.');
+  });
+
+  it('skips groups when string phrases are blank after trimming', () => {
+    const { service } = instantiateService((deps) => {
+      deps.groupingSystem.groupActivities.mockReturnValue([
+        { primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' }, relatedActivities: [] },
+      ]);
+      deps.nlgSystem.generateActivityPhrase.mockReturnValue('   ');
+    });
+
+    const result = service
+      .getTestHooks()
+      .formatActivityDescription(
+        [
+          {
+            verb: 'observe',
+            priority: 10,
+            relatedActivities: [],
+          },
+        ],
+        { id: 'entity-string-empty' },
+        'cache:entity-string-empty'
+      );
+
+    expect(result).toBe('');
   });
 
   it('skips falsy groups and related activities during formatting', () => {
@@ -726,6 +1374,61 @@ describe('ActivityDescriptionService', () => {
       );
 
     expect(description).toBe('Activity: Entity entity-skip observe and smiles.');
+  });
+
+  it('does not append related fragments when the builder returns an empty string', () => {
+    const { service, dependencies } = instantiateService((deps) => {
+      deps.nlgSystem.buildRelatedActivityFragment.mockReturnValue('');
+    });
+
+    const result = service
+      .getTestHooks()
+      .formatActivityDescription(
+        [
+          {
+            verb: 'observe',
+            priority: 10,
+            relatedActivities: [
+              {
+                conjunction: 'and',
+                activity: { verb: 'smiles', sourceComponent: 'testing:observer' },
+              },
+            ],
+          },
+        ],
+        { id: 'entity-empty-fragment' },
+        'cache:entity-empty-fragment'
+      );
+
+    expect(result).toBe('Activity: Entity entity-empty-fragment observe.');
+    expect(dependencies.nlgSystem.buildRelatedActivityFragment).toHaveBeenCalled();
+  });
+
+  it('treats non-array related activities as empty collections', () => {
+    const { service } = instantiateService((deps) => {
+      deps.groupingSystem.groupActivities.mockImplementation(() => [
+        {
+          primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' },
+          relatedActivities: null,
+        },
+      ]);
+    });
+
+    const description = service
+      .getTestHooks()
+      .formatActivityDescription(
+        [
+          {
+            verb: 'observe',
+            priority: 10,
+            relatedActivities: null,
+          },
+        ],
+        { id: 'entity-no-related' },
+        'cache:entity-no-related'
+      );
+
+    expect(description).toBe('Activity: Entity entity-no-related observe.');
   });
 
   it('uses default configuration when formatting service getter is missing', () => {
@@ -814,6 +1517,7 @@ describe('ActivityDescriptionService', () => {
     const { service, dependencies } = instantiateService();
     const hooks = service.getTestHooks();
 
+    hooks.dispatchError('ONLY_TYPE');
     hooks.dispatchError('NO_BUS', { context: 'absent' });
     hooks.setEntityNameCacheEntry('entity:16', 'Name');
     hooks.setGenderCacheEntry('entity:16', 'nonbinary');
@@ -841,6 +1545,7 @@ describe('ActivityDescriptionService', () => {
       },
     ];
     hooks.buildActivityIndex(activities);
+    hooks.getActivityIndex(activities);
     hooks.getActivityIndex(activities, 'hook-cache');
     const cacheKey = hooks.buildActivityIndexCacheKey('priority', 'entity:16');
 
@@ -888,6 +1593,13 @@ describe('ActivityDescriptionService', () => {
     );
   });
 
+  it('returns null for missing cache entries while the cache manager is active', () => {
+    const { service } = instantiateService();
+    const hooks = service.getTestHooks();
+
+    expect(hooks.getCacheValue('entityName', 'missing-entity')).toBeNull();
+  });
+
   it('gracefully no-ops cache hooks after destroy', () => {
     const { service, dependencies } = instantiateService();
     const hooks = service.getTestHooks();
@@ -910,10 +1622,26 @@ describe('ActivityDescriptionService', () => {
     expect(dependencies.cacheManager.invalidate).not.toHaveBeenCalled();
   });
 
+  it('continues generating descriptions after destroy without touching caches', async () => {
+    const { service, dependencies } = instantiateService();
+
+    service.destroy();
+    dependencies.cacheManager.invalidate.mockClear();
+
+    const description = await service.generateActivityDescription('entity-after-destroy');
+
+    expect(description.startsWith('Activity:')).toBe(true);
+    expect(dependencies.cacheManager.invalidate).not.toHaveBeenCalledWith(
+      'gender',
+      'entity-after-destroy'
+    );
+  });
+
   it('logs a warning when event unsubscriber cleanup fails during destroy', () => {
     const { service, dependencies } = instantiateService();
     const hooks = service.getTestHooks();
 
+    hooks.addEventUnsubscriber('not-a-function');
     const successfulUnsub = jest.fn();
     const failingUnsub = jest.fn(() => {
       throw new Error('unsubscribe failure');
@@ -974,9 +1702,34 @@ describe('ActivityDescriptionService', () => {
     expect(dependencies.contextBuildingSystem.invalidateClosenessCache).toHaveBeenCalledTimes(2);
   });
 
+  it('skips invalid or blank identifiers during batch cache invalidation', () => {
+    const { service, dependencies } = instantiateService();
+
+    service.invalidateEntities(['entity-21', '', '  ', null, undefined]);
+
+    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledTimes(1);
+    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledWith('entity-21');
+  });
+
+  it('skips cache manager calls when invalidating after destroy', () => {
+    const { service, dependencies } = instantiateService();
+
+    service.destroy();
+    dependencies.cacheManager.invalidateAll.mockClear();
+    dependencies.contextBuildingSystem.invalidateClosenessCache.mockClear();
+
+    service.invalidateEntities(['entity-post-destroy']);
+
+    expect(dependencies.cacheManager.invalidateAll).not.toHaveBeenCalled();
+    expect(dependencies.contextBuildingSystem.invalidateClosenessCache).toHaveBeenCalledWith(
+      'entity-post-destroy'
+    );
+  });
+
   it('invalidates caches based on cache type', () => {
     const { service, dependencies } = instantiateService();
 
+    service.invalidateCache('entity-20');
     service.invalidateCache('entity-20', 'name');
     service.invalidateCache('entity-20', 'gender');
     service.invalidateCache('entity-20', 'activity');
@@ -1021,5 +1774,16 @@ describe('ActivityDescriptionService', () => {
     expect(dependencies.logger.info).toHaveBeenCalledWith(
       'ActivityDescriptionService: Service destroyed'
     );
+  });
+
+  it('allows destroy to be called multiple times without cache manager access', () => {
+    const { service, dependencies } = instantiateService();
+
+    service.destroy();
+    dependencies.cacheManager.destroy.mockClear();
+
+    service.destroy();
+
+    expect(dependencies.cacheManager.destroy).not.toHaveBeenCalled();
   });
 });
