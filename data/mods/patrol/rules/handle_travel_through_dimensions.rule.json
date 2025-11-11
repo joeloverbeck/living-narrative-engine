@@ -71,7 +71,7 @@
         "payload": {
           "eventName": "core:perceptible_event",
           "locationId": "{context.locationId}",
-          "message": "{context.logMessage}",
+          "descriptionText": "{context.logMessage}",
           "timestamp": "{context.nowIso}",
           "perceptionType": "{context.perceptionType}",
           "actorId": "{event.payload.actorId}",
@@ -133,7 +133,7 @@
         "payload": {
           "eventName": "core:perceptible_event",
           "locationId": "{context.locationId}",
-          "message": "{context.logMessage}",
+          "descriptionText": "{context.logMessage}",
           "timestamp": "{context.nowIso}",
           "perceptionType": "{context.perceptionType}",
           "actorId": "{event.payload.actorId}",
