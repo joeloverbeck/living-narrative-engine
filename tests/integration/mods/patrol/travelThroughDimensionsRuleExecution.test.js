@@ -59,7 +59,7 @@ describe('travel_through_dimensions Rule Execution', () => {
       );
       expect(departureEvent).toBeDefined();
       expect(departureEvent.payload.locationId).toBe(scenario.perimeterId);
-      expect(departureEvent.payload.message).toContain('ripples and distorts');
+      expect(departureEvent.payload.descriptionText).toContain('ripples and distorts');
     });
 
     it('should dispatch arrival perception at destination', async () => {
@@ -78,7 +78,7 @@ describe('travel_through_dimensions Rule Execution', () => {
       );
       expect(arrivalEvent).toBeDefined();
       expect(arrivalEvent.payload.locationId).toBe(scenario.dimensionId);
-      expect(arrivalEvent.payload.message).toContain('materializes');
+      expect(arrivalEvent.payload.descriptionText).toContain('materializes');
     });
   });
 
