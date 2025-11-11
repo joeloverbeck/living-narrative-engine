@@ -103,6 +103,7 @@ class JsonLogicEvaluationService extends BaseService {
       'log',
       // Custom operations
       'condition_ref',
+      'has_component',
       // Anatomy/body part operators
       'hasPartWithComponentValue',
       'hasBodyPartWithComponentValue',

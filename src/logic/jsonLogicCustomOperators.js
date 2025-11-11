@@ -13,6 +13,7 @@ import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupant
 import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupantOperator.js';
 import { HasOtherActorsAtLocationOperator } from './operators/hasOtherActorsAtLocationOperator.js';
 import { IsRemovalBlockedOperator } from './operators/isRemovalBlockedOperator.js';
+import { HasComponentOperator } from './operators/hasComponentOperator.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -159,6 +160,11 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const hasComponentOp = new HasComponentOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     // Register hasPartWithComponentValue operator
     this.#registerOperator(
       'hasPartWithComponentValue',
@@ -299,6 +305,16 @@ export class JsonLogicCustomOperators extends BaseService {
       function (actorPath, targetItemPath) {
         // 'this' is the evaluation context
         return isRemovalBlockedOp.evaluate([actorPath, targetItemPath], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register has_component operator
+    this.#registerOperator(
+      'has_component',
+      function (entityPath, componentId) {
+        // 'this' is the evaluation context
+        return hasComponentOp.evaluate([entityPath, componentId], this);
       },
       jsonLogicEvaluationService
     );
