@@ -172,5 +172,70 @@ describe('HasComponentOperator', () => {
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('blocker-1', 'movement:is_dimensional_portal');
     });
+
+    it('should accept entity objects directly without additional resolution', () => {
+      const directEntity = { id: 'direct-entity-id' };
+
+      mockEntityManager.hasComponent.mockReturnValue(true);
+
+      const result = operator.evaluate([directEntity, 'movement:is_dimensional_portal'], {});
+
+      expect(result).toBe(true);
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'direct-entity-id',
+        'movement:is_dimensional_portal'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Received entity object directly')
+      );
+    });
+
+    it('should treat unresolved strings as entity IDs when they are not context paths', () => {
+      mockEntityManager.hasComponent.mockReturnValue(true);
+
+      const result = operator.evaluate(['orphan-entity-id', 'movement:is_dimensional_portal'], {});
+
+      expect(result).toBe(true);
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'orphan-entity-id',
+        'movement:is_dimensional_portal'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('treating as entity ID')
+      );
+    });
+
+    it('should return false and warn when entityPath is of an invalid type', () => {
+      const result = operator.evaluate([123, 'movement:is_dimensional_portal'], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entityPath type')
+      );
+      expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+    });
+
+    it('should return false and warn when componentId is empty', () => {
+      const context = { entity: { id: 'entity-1' } };
+
+      const result = operator.evaluate(['entity', '   '], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid componentId')
+      );
+      expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
+    });
+
+    it('should warn and return false when resolved entity ID is invalid', () => {
+      const context = { entity: { id: '   ' } };
+
+      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entity ID at path entity')
+      );
+    });
   });
 });
