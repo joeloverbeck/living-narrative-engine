@@ -8,11 +8,29 @@
 
 ## Context
 
-Tests use `SimpleEntityManager` which has a different API than production `EntityManager`. This API mismatch required operators to handle both implementations, and caused the `hasOtherActorsAtLocationOperator` bug where it called `getAllEntities()` (non-existent method) instead of `getEntities()`.
+Tests use `SimpleEntityManager` (located at `tests/common/entities/simpleEntityManager.js`) which has largely compatible API with production `EntityManager` but with some differences in implementation details. The production EntityManager has an `entities` getter that returns an iterator, while SimpleEntityManager provides both `getEntities()` (returns array) and `entities` getter for compatibility.
 
-**Root Cause:** No adapter or wrapper to bridge the gap between test and production entity manager APIs.
+**Key Findings from Code Analysis:**
+- Production EntityManager API (src/entities/entityManager.js):
+  - `entities` getter (returns IterableIterator)
+  - `getEntityIds()` (returns array of IDs)
+  - `getEntityInstance()`, `getComponentData()`, `hasComponent()`
+  - `getEntitiesWithComponent()` (returns array of entities)
+  - `getEntitiesInLocation()` (returns Set<string> of entity IDs, NOT entities)
+  - `findEntities()`, `getAllComponentTypesForEntity()`
+  - Does NOT have: `getEntities()` as array method, `getEntitiesAtLocation()` returning entities
 
-**Impact:** API drift between test and production implementations, requiring defensive coding in operators and services.
+- SimpleEntityManager API (tests/common/entities/simpleEntityManager.js):
+  - `getEntities()` (returns array - test-only convenience)
+  - `entities` getter (returns iterator for production compatibility)
+  - `getEntityIds()`, `getEntityInstance()`, `getComponentData()`, `hasComponent()`
+  - `getEntitiesWithComponent()`, `getEntitiesInLocation()` (returns Set<string>)
+  - `getAllComponentTypesForEntity()`
+  - Already implements most IEntityManager interface methods
+
+**Root Cause:** SimpleEntityManager already has good API compatibility. The real issue is that some test code may use convenience methods like `getEntities()` that don't exist in production, and path confusion due to multiple engine-related directories.
+
+**Impact:** Minor API drift in convenience methods; mainly affects test code portability.
 
 **Reference:** Report lines 219-246
 
@@ -38,11 +56,13 @@ Create a standardized test entity manager that provides the production API surfa
 ## File Structure
 
 ```
-tests/common/engine/
+tests/common/entities/
 ├── TestEntityManagerAdapter.js              # NEW: Production API adapter
-├── SimpleEntityManager.js                   # Keep for backward compat
-├── entityManagerTestFactory.js              # NEW: Factory for test managers
-└── systemLogicTestEnv.js                    # Modified: Use adapter by default
+├── simpleEntityManager.js                   # EXISTING: Keep for backward compat
+└── entityManagerTestFactory.js              # NEW: Factory for test managers
+
+tests/common/engine/
+└── systemLogicTestEnv.js                    # EXISTING: Modified to use adapter by default
 
 tests/integration/entities/
 └── entityManagerApiCompatibility.test.js    # NEW: API compatibility tests
@@ -54,11 +74,13 @@ docs/migration/
 └── simple-entity-manager-migration.md       # NEW: Migration guide
 ```
 
+**Note:** SimpleEntityManager is located at `tests/common/entities/simpleEntityManager.js` (lowercase filename), not in the `engine/` subdirectory.
+
 ## Detailed Implementation Steps
 
 ### Step 1: Create TestEntityManagerAdapter
 
-**File:** `tests/common/engine/TestEntityManagerAdapter.js`
+**File:** `tests/common/entities/TestEntityManagerAdapter.js`
 
 ```javascript
 /**
@@ -66,7 +88,7 @@ docs/migration/
  * @description Adapts SimpleEntityManager to provide production EntityManager API
  */
 
-import SimpleEntityManager from './SimpleEntityManager.js';
+import SimpleEntityManager from './simpleEntityManager.js';
 
 /**
  * Adapter that wraps SimpleEntityManager to provide production EntityManager API.
@@ -82,10 +104,12 @@ export default class TestEntityManagerAdapter {
    * @param {Object} config - Configuration
    * @param {Object} config.logger - Logger instance
    * @param {SimpleEntityManager} [config.simpleManager] - Existing SimpleEntityManager to wrap
+   * @param {Array<Object>} [config.initialEntities] - Initial entities to load
    */
-  constructor({ logger, simpleManager }) {
+  constructor({ logger, simpleManager, initialEntities = [] }) {
     this.#logger = logger;
-    this.#simple = simpleManager || new SimpleEntityManager({ logger });
+    // Note: SimpleEntityManager constructor takes array of entities, not config object
+    this.#simple = simpleManager || new SimpleEntityManager(initialEntities);
   }
 
   // ============================================================================
@@ -93,12 +117,23 @@ export default class TestEntityManagerAdapter {
   // ============================================================================
 
   /**
-   * Get all entities as an array.
+   * Get iterator over all entities (production API).
+   * This matches the production EntityManager.entities getter.
    *
-   * @returns {Array<Object>} Array of entity objects
+   * @returns {IterableIterator<Object>} Iterator over all entities
    */
-  getEntities() {
-    return this.#simple.getEntities();
+  get entities() {
+    return this.#simple.entities;
+  }
+
+  /**
+   * Get array of all entity IDs.
+   * This matches the production EntityManager.getEntityIds() method.
+   *
+   * @returns {Array<string>} Array of entity IDs
+   */
+  getEntityIds() {
+    return this.#simple.getEntityIds();
   }
 
   /**
@@ -139,66 +174,91 @@ export default class TestEntityManagerAdapter {
 
   /**
    * Get entities that have a specific component.
+   * This matches the production EntityManager.getEntitiesWithComponent() method.
    *
    * @param {string} componentType - Component type to filter by
    * @returns {Array<Object>} Entities with component
    */
   getEntitiesWithComponent(componentType) {
-    return this.getEntities().filter(entity =>
-      this.hasComponent(entity.id, componentType)
-    );
+    return this.#simple.getEntitiesWithComponent(componentType);
   }
 
   /**
-   * Get entities at a specific location.
+   * Get entity IDs at a specific location.
+   * This matches the production EntityManager.getEntitiesInLocation() method.
+   * NOTE: Production returns Set<string> of entity IDs, NOT entity objects.
    *
    * @param {string} locationId - Location ID
-   * @returns {Array<Object>} Entities at location
+   * @returns {Set<string>} Set of entity IDs at location
    */
-  getEntitiesAtLocation(locationId) {
-    return this.getEntities().filter(entity => {
-      const locationData = this.getComponentData(entity.id, 'core:location');
-      return locationData?.location_id === locationId;
-    });
+  getEntitiesInLocation(locationId) {
+    return this.#simple.getEntitiesInLocation(locationId);
   }
 
   /**
    * Get all component types present on an entity.
+   * This matches the production EntityManager.getAllComponentTypesForEntity() method.
    *
    * @param {string} entityId - Entity ID
    * @returns {Array<string>} Component type names
    */
-  getEntityComponents(entityId) {
-    const entity = this.getEntityInstance(entityId);
-    if (!entity || !entity.components) {
-      return [];
-    }
-    return Object.keys(entity.components);
+  getAllComponentTypesForEntity(entityId) {
+    return this.#simple.getAllComponentTypesForEntity(entityId);
   }
 
   /**
-   * Check if any entities exist with given component.
+   * Find entities matching complex query criteria.
+   * This matches the production EntityManager.findEntities() method.
    *
-   * @param {string} componentType - Component type
-   * @returns {boolean} True if at least one entity has component
+   * @param {object} queryObj - Query object with withAll, withAny, without conditions
+   * @returns {Array<Object>} Array of entities matching the query
    */
-  hasAnyEntityWithComponent(componentType) {
-    return this.getEntitiesWithComponent(componentType).length > 0;
-  }
+  findEntities(queryObj) {
+    // SimpleEntityManager doesn't have findEntities, so implement it
+    const allEntities = Array.from(this.#simple.entities);
 
-  /**
-   * Count entities with specific component.
-   *
-   * @param {string} componentType - Component type
-   * @returns {number} Count of entities
-   */
-  countEntitiesWithComponent(componentType) {
-    return this.getEntitiesWithComponent(componentType).length;
+    return allEntities.filter(entity => {
+      // Check withAll - entity must have all these components
+      if (queryObj.withAll && Array.isArray(queryObj.withAll)) {
+        const hasAll = queryObj.withAll.every(componentType =>
+          this.hasComponent(entity.id, componentType)
+        );
+        if (!hasAll) return false;
+      }
+
+      // Check withAny - entity must have at least one of these components
+      if (queryObj.withAny && Array.isArray(queryObj.withAny)) {
+        const hasAny = queryObj.withAny.some(componentType =>
+          this.hasComponent(entity.id, componentType)
+        );
+        if (!hasAny) return false;
+      }
+
+      // Check without - entity must not have any of these components
+      if (queryObj.without && Array.isArray(queryObj.without)) {
+        const hasNone = queryObj.without.every(componentType =>
+          !this.hasComponent(entity.id, componentType)
+        );
+        if (!hasNone) return false;
+      }
+
+      return true;
+    });
   }
 
   // ============================================================================
   // SimpleEntityManager Passthrough (Test-Specific Methods)
   // ============================================================================
+
+  /**
+   * Get all entities as array (test-only convenience method).
+   * NOTE: Production EntityManager does NOT have this method - use entities getter instead.
+   *
+   * @returns {Array<Object>} Array of entity objects
+   */
+  getEntities() {
+    return this.#simple.getEntities();
+  }
 
   /**
    * Add entity to the manager (test-only).
@@ -210,28 +270,30 @@ export default class TestEntityManagerAdapter {
   }
 
   /**
-   * Remove entity from the manager (test-only).
+   * Delete entity from the manager (test-only).
+   * Note: SimpleEntityManager uses deleteEntity, not removeEntity.
    *
    * @param {string} entityId - Entity ID to remove
    */
-  removeEntity(entityId) {
-    this.#simple.removeEntity(entityId);
+  deleteEntity(entityId) {
+    this.#simple.deleteEntity(entityId);
   }
 
   /**
    * Clear all entities (test-only).
    */
-  clear() {
-    this.#simple.clear();
+  clearAll() {
+    this.#simple.clearAll();
   }
 
   /**
-   * Reset to initial state (test-only).
+   * Set entities (test-only).
+   * Replaces all entities with the provided array.
    *
-   * @param {Array<Object>} entities - Entities to reset with
+   * @param {Array<Object>} entities - Entities to set
    */
-  reset(entities = []) {
-    this.#simple.reset(entities);
+  setEntities(entities = []) {
+    this.#simple.setEntities(entities);
   }
 
   /**
@@ -254,7 +316,7 @@ export default class TestEntityManagerAdapter {
 
 ### Step 2: Create Entity Manager Factory
 
-**File:** `tests/common/engine/entityManagerTestFactory.js`
+**File:** `tests/common/entities/entityManagerTestFactory.js`
 
 ```javascript
 /**
@@ -263,7 +325,7 @@ export default class TestEntityManagerAdapter {
  */
 
 import TestEntityManagerAdapter from './TestEntityManagerAdapter.js';
-import SimpleEntityManager from './SimpleEntityManager.js';
+import SimpleEntityManager from './simpleEntityManager.js';
 
 /**
  * Create entity manager for tests.
@@ -278,24 +340,21 @@ export function createTestEntityManager(config) {
   const { logger, useAdapter = true, initialEntities = [] } = config;
 
   if (useAdapter) {
-    const adapter = new TestEntityManagerAdapter({ logger });
-    if (initialEntities.length > 0) {
-      adapter.reset(initialEntities);
-    }
+    const adapter = new TestEntityManagerAdapter({ logger, initialEntities });
     return adapter;
   } else {
     // Legacy mode - direct SimpleEntityManager
-    logger.warn(
-      'Using SimpleEntityManager directly is deprecated',
-      {
-        hint: 'Set useAdapter: true to use TestEntityManagerAdapter for production API compatibility'
-      }
-    );
-
-    const manager = new SimpleEntityManager({ logger });
-    if (initialEntities.length > 0) {
-      initialEntities.forEach(e => manager.addEntity(e));
+    if (logger && logger.warn) {
+      logger.warn(
+        'Using SimpleEntityManager directly is deprecated',
+        {
+          hint: 'Set useAdapter: true to use TestEntityManagerAdapter for production API compatibility'
+        }
+      );
     }
+
+    // SimpleEntityManager constructor takes array of entities directly
+    const manager = new SimpleEntityManager(initialEntities);
     return manager;
   }
 }
@@ -335,7 +394,7 @@ export function createSimpleEntityManager(config) {
 **File:** `tests/common/engine/systemLogicTestEnv.js` (modify)
 
 ```javascript
-import { createEntityManagerAdapter } from './entityManagerTestFactory.js';
+import { createEntityManagerAdapter } from '../entities/entityManagerTestFactory.js';
 
 export function createSystemLogicTestEnv(options = {}) {
   const {
@@ -348,7 +407,7 @@ export function createSystemLogicTestEnv(options = {}) {
   // Create entity manager with adapter by default
   const entityManager = useAdapterEntityManager
     ? createEntityManagerAdapter({ logger })
-    : new SimpleEntityManager({ logger }); // Legacy fallback
+    : new SimpleEntityManager([]); // Legacy fallback - takes array of entities
 
   // Validate interface compliance (from ANAPRETEST-001)
   validateEntityManagerInterface(entityManager, 'Test EntityManager');
@@ -368,8 +427,8 @@ export function createSystemLogicTestEnv(options = {}) {
 
 ```javascript
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import TestEntityManagerAdapter from '../../common/engine/TestEntityManagerAdapter.js';
-import SimpleEntityManager from '../../common/engine/SimpleEntityManager.js';
+import TestEntityManagerAdapter from '../../common/entities/TestEntityManagerAdapter.js';
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 import EntityManager from '../../../src/entities/entityManager.js';
 
 describe('Entity Manager API Compatibility', () => {
@@ -386,38 +445,41 @@ describe('Entity Manager API Compatibility', () => {
 
   describe('IEntityManager Interface', () => {
     it('TestEntityManagerAdapter should match production EntityManager API', () => {
-      const adapter = new TestEntityManagerAdapter({ logger });
-      const eventBus = { dispatch: jest.fn() };
-      const production = new EntityManager({ logger, eventBus });
+      const adapter = new TestEntityManagerAdapter({ logger, initialEntities: [] });
 
       // Required methods from IEntityManager
       const requiredMethods = [
-        'getEntities',
+        'getEntityInstance',
         'getComponentData',
         'hasComponent',
-        'getEntityInstance'
+        'getEntitiesWithComponent',
+        'findEntities',
+        'getAllComponentTypesForEntity',
+        'getEntityIds',
+        'getEntitiesInLocation'
       ];
 
       for (const method of requiredMethods) {
         expect(typeof adapter[method]).toBe('function');
-        expect(typeof production[method]).toBe('function');
-        expect(adapter[method].length).toBe(production[method].length);
       }
+
+      // Check entities getter (not a function, but a getter)
+      expect(adapter.entities).toBeDefined();
     });
 
-    it('TestEntityManagerAdapter should provide production extensions', () => {
-      const adapter = new TestEntityManagerAdapter({ logger });
+    it('TestEntityManagerAdapter should provide test-specific convenience methods', () => {
+      const adapter = new TestEntityManagerAdapter({ logger, initialEntities: [] });
 
-      // Production API extensions
-      const extensions = [
-        'getEntitiesWithComponent',
-        'getEntitiesAtLocation',
-        'getEntityComponents',
-        'hasAnyEntityWithComponent',
-        'countEntitiesWithComponent'
+      // Test-specific convenience methods (not in production)
+      const testMethods = [
+        'getEntities',      // Array convenience method (not in production)
+        'addEntity',        // Test setup method
+        'deleteEntity',     // Test cleanup method
+        'clearAll',         // Test reset method
+        'setEntities'       // Test setup method
       ];
 
-      for (const method of extensions) {
+      for (const method of testMethods) {
         expect(typeof adapter[method]).toBe('function');
       }
     });
@@ -427,7 +489,7 @@ describe('Entity Manager API Compatibility', () => {
     let adapter;
 
     beforeEach(() => {
-      adapter = new TestEntityManagerAdapter({ logger });
+      adapter = new TestEntityManagerAdapter({ logger, initialEntities: [] });
 
       // Add test entities
       adapter.addEntity({
@@ -435,7 +497,7 @@ describe('Entity Manager API Compatibility', () => {
         components: {
           'core:actor': {},
           'positioning:standing': {},
-          'core:location': { location_id: 'room1' }
+          'core:position': { locationId: 'room1' }
         }
       });
 
@@ -444,7 +506,7 @@ describe('Entity Manager API Compatibility', () => {
         components: {
           'core:actor': {},
           'positioning:sitting': { furniture_id: 'couch' },
-          'core:location': { location_id: 'room1' }
+          'core:position': { locationId: 'room1' }
         }
       });
 
@@ -452,12 +514,22 @@ describe('Entity Manager API Compatibility', () => {
         id: 'item-1',
         components: {
           'items:portable': {},
-          'core:location': { location_id: 'room2' }
+          'core:position': { locationId: 'room2' }
         }
       });
     });
 
-    describe('getEntities', () => {
+    describe('entities getter', () => {
+      it('should return iterator over all entities', () => {
+        const entities = Array.from(adapter.entities);
+
+        expect(Array.isArray(entities)).toBe(true);
+        expect(entities.length).toBe(3);
+        expect(entities.map(e => e.id).sort()).toEqual(['actor-1', 'actor-2', 'item-1']);
+      });
+    });
+
+    describe('getEntities (test convenience)', () => {
       it('should return all entities as array', () => {
         const entities = adapter.getEntities();
 
@@ -482,68 +554,78 @@ describe('Entity Manager API Compatibility', () => {
       });
     });
 
-    describe('getEntitiesAtLocation', () => {
-      it('should filter entities by location', () => {
-        const room1Entities = adapter.getEntitiesAtLocation('room1');
+    describe('getEntitiesInLocation', () => {
+      it('should return Set of entity IDs at location', () => {
+        const room1EntityIds = adapter.getEntitiesInLocation('room1');
 
-        expect(room1Entities.length).toBe(2);
-        expect(room1Entities.map(e => e.id).sort()).toEqual(['actor-1', 'actor-2']);
+        expect(room1EntityIds instanceof Set).toBe(true);
+        expect(room1EntityIds.size).toBe(2);
+        expect(Array.from(room1EntityIds).sort()).toEqual(['actor-1', 'actor-2']);
       });
 
-      it('should return empty array for empty location', () => {
-        const result = adapter.getEntitiesAtLocation('empty-room');
+      it('should return empty Set for empty location', () => {
+        const result = adapter.getEntitiesInLocation('empty-room');
 
-        expect(result).toEqual([]);
+        expect(result instanceof Set).toBe(true);
+        expect(result.size).toBe(0);
       });
     });
 
-    describe('getEntityComponents', () => {
+    describe('getAllComponentTypesForEntity', () => {
       it('should return all component types for entity', () => {
-        const components = adapter.getEntityComponents('actor-1');
+        const components = adapter.getAllComponentTypesForEntity('actor-1');
 
         expect(components.sort()).toEqual([
           'core:actor',
-          'core:location',
+          'core:position',
           'positioning:standing'
         ]);
       });
 
       it('should return empty array for nonexistent entity', () => {
-        const components = adapter.getEntityComponents('nonexistent');
+        const components = adapter.getAllComponentTypesForEntity('nonexistent');
 
         expect(components).toEqual([]);
       });
     });
 
-    describe('countEntitiesWithComponent', () => {
-      it('should count entities with component', () => {
-        const count = adapter.countEntitiesWithComponent('core:actor');
+    describe('findEntities', () => {
+      it('should find entities matching complex query', () => {
+        const result = adapter.findEntities({
+          withAll: ['core:actor'],
+          without: ['positioning:sitting']
+        });
 
-        expect(count).toBe(2);
+        expect(result.length).toBe(1);
+        expect(result[0].id).toBe('actor-1');
       });
 
-      it('should return 0 for nonexistent component', () => {
-        const count = adapter.countEntitiesWithComponent('nonexistent:component');
+      it('should return empty array when no matches', () => {
+        const result = adapter.findEntities({
+          withAll: ['nonexistent:component']
+        });
 
-        expect(count).toBe(0);
+        expect(result).toEqual([]);
       });
     });
   });
 
   describe('SimpleEntityManager Passthrough', () => {
     it('should support test-specific methods', () => {
-      const adapter = new TestEntityManagerAdapter({ logger });
+      const adapter = new TestEntityManagerAdapter({ logger, initialEntities: [] });
 
       // Test-specific methods should work
       const entity = { id: 'test', components: {} };
       adapter.addEntity(entity);
 
-      expect(adapter.getEntityInstance('test')).toEqual(entity);
+      expect(adapter.getEntityInstance('test')).toBeDefined();
+      expect(adapter.getEntityInstance('test').id).toBe('test');
 
-      adapter.removeEntity('test');
-      expect(adapter.getEntityInstance('test')).toBeNull();
+      adapter.deleteEntity('test');
+      expect(adapter.getEntityInstance('test')).toBeUndefined();
 
-      adapter.clear();
+      adapter.addEntity({ id: 'test2', components: {} });
+      adapter.clearAll();
       expect(adapter.getEntities()).toEqual([]);
     });
   });
@@ -581,7 +663,7 @@ This guide explains how to use entity managers in tests with production API comp
 ### Use TestEntityManagerAdapter (Recommended)
 
 ```javascript
-import { createEntityManagerAdapter } from '../../common/engine/entityManagerTestFactory.js';
+import { createEntityManagerAdapter } from '../../common/entities/entityManagerTestFactory.js';
 
 describe('My Test', () => {
   let entityManager;
@@ -602,47 +684,42 @@ describe('My Test', () => {
 ### Legacy SimpleEntityManager (Not Recommended)
 
 ```javascript
-import SimpleEntityManager from '../../common/engine/SimpleEntityManager.js';
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
 // ⚠️ This approach is deprecated - use TestEntityManagerAdapter instead
-const manager = new SimpleEntityManager({ logger });
+// Note: SimpleEntityManager constructor takes array of entities, not config
+const manager = new SimpleEntityManager([]);
 ```
 
 ## API Compatibility
 
 ### IEntityManager Interface (Required)
 
-All entity managers implement these methods:
+All entity managers implement these methods from the IEntityManager interface:
 
 | Method | Parameters | Returns | Description |
 |--------|-----------|---------|-------------|
-| `getEntities()` | None | `Array<Object>` | Get all entities |
-| `getComponentData(entityId, componentType)` | `string, string` | `Object\|null` | Get component data |
+| `entities` (getter) | None | `IterableIterator<Entity>` | Iterator over all entities |
+| `getEntityIds()` | None | `Array<string>` | Get all entity IDs |
+| `getComponentData(entityId, componentType)` | `string, string` | `Object\|undefined` | Get component data |
 | `hasComponent(entityId, componentType)` | `string, string` | `boolean` | Check component presence |
-| `getEntityInstance(entityId)` | `string` | `Object\|null` | Get full entity |
+| `getEntityInstance(entityId)` | `string` | `Entity\|undefined` | Get full entity |
+| `getEntitiesWithComponent(componentType)` | `string` | `Array<Entity>` | Filter entities by component |
+| `getEntitiesInLocation(locationId)` | `string` | `Set<string>` | Get entity IDs at location |
+| `findEntities(queryObj)` | `object` | `Array<Entity>` | Complex query filtering |
+| `getAllComponentTypesForEntity(entityId)` | `string` | `Array<string>` | Get all component types |
 
-### Production Extensions (Recommended)
+### Test-Specific Convenience Methods
 
-TestEntityManagerAdapter provides additional methods matching production:
-
-| Method | Description |
-|--------|-------------|
-| `getEntitiesWithComponent(componentType)` | Filter entities by component |
-| `getEntitiesAtLocation(locationId)` | Filter entities by location |
-| `getEntityComponents(entityId)` | Get all component types on entity |
-| `hasAnyEntityWithComponent(componentType)` | Check if any entity has component |
-| `countEntitiesWithComponent(componentType)` | Count entities with component |
-
-### Test-Specific Methods
-
-Methods for test setup and teardown:
+Methods for test setup and teardown (not in production):
 
 | Method | Description |
 |--------|-------------|
+| `getEntities()` | Get all entities as array (convenience) |
 | `addEntity(entity)` | Add entity to manager |
-| `removeEntity(entityId)` | Remove entity from manager |
-| `clear()` | Remove all entities |
-| `reset(entities)` | Replace all entities |
+| `deleteEntity(entityId)` | Remove entity from manager |
+| `clearAll()` | Remove all entities |
+| `setEntities(entities)` | Replace all entities |
 
 ## Common Patterns
 
@@ -663,19 +740,24 @@ beforeEach(() => {
 });
 ```
 
-### Pattern 2: Filter Entities in Operators
+### Pattern 2: Iterate Entities in Production Code
 
 ```javascript
 class MyOperator {
   execute(context) {
-    // ✅ CORRECT - Works in both test and production
-    const entities = this.#entityManager.getEntities();
+    // ✅ CORRECT - Production API using iterator
+    for (const entity of this.#entityManager.entities) {
+      // Process entity
+    }
 
-    // ✅ CORRECT - Production API extension
+    // ✅ CORRECT - Convert to array if needed
+    const entities = Array.from(this.#entityManager.entities);
+
+    // ✅ CORRECT - Production API method
     const actors = this.#entityManager.getEntitiesWithComponent('core:actor');
 
-    // ❌ WRONG - Method doesn't exist
-    const all = this.#entityManager.getAllEntities();
+    // ❌ WRONG - getEntities() doesn't exist in production
+    const all = this.#entityManager.getEntities();
   }
 }
 ```
@@ -683,11 +765,17 @@ class MyOperator {
 ### Pattern 3: Location-Based Queries
 
 ```javascript
-it('should find entities at location', () => {
-  const room1Entities = entityManager.getEntitiesAtLocation('room1');
+it('should find entity IDs at location', () => {
+  // Production API returns Set<string> of entity IDs
+  const room1EntityIds = entityManager.getEntitiesInLocation('room1');
 
-  expect(room1Entities.length).toBeGreaterThan(0);
-  expect(room1Entities[0]).toHaveProperty('id');
+  expect(room1EntityIds instanceof Set).toBe(true);
+  expect(room1EntityIds.size).toBeGreaterThan(0);
+
+  // Convert to entity objects if needed
+  const entities = Array.from(room1EntityIds)
+    .map(id => entityManager.getEntityInstance(id))
+    .filter(Boolean);
 });
 ```
 
@@ -697,14 +785,14 @@ it('should find entities at location', () => {
 
 **Before:**
 ```javascript
-import SimpleEntityManager from '../../common/engine/SimpleEntityManager.js';
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
-const manager = new SimpleEntityManager({ logger });
+const manager = new SimpleEntityManager([]);
 ```
 
 **After:**
 ```javascript
-import { createEntityManagerAdapter } from '../../common/engine/entityManagerTestFactory.js';
+import { createEntityManagerAdapter } from '../../common/entities/entityManagerTestFactory.js';
 
 const manager = createEntityManagerAdapter({ logger });
 ```
@@ -716,9 +804,9 @@ All `SimpleEntityManager` methods work through the adapter:
 ```javascript
 // These all work the same
 manager.addEntity(entity);
-manager.getEntities();
+manager.getEntities();  // Test convenience method (array)
 manager.hasComponent(id, type);
-manager.clear();
+manager.clearAll();
 ```
 
 ### Step 3: Use Production Extensions
@@ -739,16 +827,19 @@ const actors = manager.getEntities().filter(e =>
 
 ### "Method does not exist" Errors
 
-**Problem:** Calling non-existent method like `getAllEntities()`
+**Problem:** Calling `getEntities()` in production code (it only exists in test adapter)
 
-**Solution:** Use correct IEntityManager method `getEntities()`
+**Solution:** Use production API `entities` getter
 
 ```javascript
-// ❌ Wrong
-const entities = manager.getAllEntities();
-
-// ✅ Correct
+// ❌ Wrong - Only works in tests
 const entities = manager.getEntities();
+
+// ✅ Correct - Production API
+const entities = Array.from(manager.entities);
+
+// ✅ Alternative - Use specific query methods
+const actors = manager.getEntitiesWithComponent('core:actor');
 ```
 
 ### API Drift Between Test and Production
@@ -764,37 +855,41 @@ const manager = createEntityManagerAdapter({ logger });
 
 ### Performance Issues
 
-**Problem:** Filtering entities multiple times
+**Problem:** Filtering entities inefficiently
 
-**Solution:** Use built-in filter methods
+**Solution:** Use production API methods strategically
 
 ```javascript
-// ⚠️ Inefficient
-const actors = manager.getEntities()
+// ⚠️ Inefficient - Multiple iterations
+const actors = Array.from(manager.entities)
   .filter(e => manager.hasComponent(e.id, 'core:actor'))
   .filter(e => {
-    const loc = manager.getComponentData(e.id, 'core:location');
-    return loc?.location_id === 'room1';
+    const loc = manager.getComponentData(e.id, 'core:position');
+    return loc?.locationId === 'room1';
   });
 
-// ✅ Efficient
+// ✅ Better - Use getEntitiesWithComponent first
 const actorsInRoom = manager
   .getEntitiesWithComponent('core:actor')
   .filter(e => {
-    const loc = manager.getComponentData(e.id, 'core:location');
-    return loc?.location_id === 'room1';
+    const loc = manager.getComponentData(e.id, 'core:position');
+    return loc?.locationId === 'room1';
   });
 
-// ✅ Most efficient (if method exists)
-const actorsInRoom = manager.getEntitiesAtLocation('room1')
-  .filter(e => manager.hasComponent(e.id, 'core:actor'));
+// ✅ Best - Use location filter first, then check components
+const room1EntityIds = manager.getEntitiesInLocation('room1');
+const actors = manager
+  .getEntitiesWithComponent('core:actor')
+  .filter(e => room1EntityIds.has(e.id));
 ```
 
 ## References
 
-- **Interface Definition:** `src/entities/interfaces/IEntityManager.js` (from ANAPRETEST-001)
-- **Adapter Implementation:** `tests/common/engine/TestEntityManagerAdapter.js`
-- **Factory:** `tests/common/engine/entityManagerTestFactory.js`
+- **Interface Definition:** `src/interfaces/IEntityManager.js`
+- **Production Implementation:** `src/entities/entityManager.js`
+- **Test Implementation:** `tests/common/entities/simpleEntityManager.js`
+- **Adapter Implementation:** `tests/common/entities/TestEntityManagerAdapter.js`
+- **Factory:** `tests/common/entities/entityManagerTestFactory.js`
 - **Compatibility Tests:** `tests/integration/entities/entityManagerApiCompatibility.test.js`
 - **Report:** `reports/anatomy-prerequisite-test-fixes-2025-01.md` (lines 219-246)
 ```
