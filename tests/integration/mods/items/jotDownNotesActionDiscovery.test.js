@@ -79,9 +79,9 @@ describe('items:jot_down_notes action definition', () => {
 
   it('should have correct visual styling', () => {
     expect(jotDownNotesAction.visual).toBeDefined();
-    expect(jotDownNotesAction.visual.backgroundColor).toBe('#2d3436');
-    expect(jotDownNotesAction.visual.textColor).toBe('#dfe6e9');
-    expect(jotDownNotesAction.visual.hoverBackgroundColor).toBe('#636e72');
+    expect(jotDownNotesAction.visual.backgroundColor).toBe('#004d61');
+    expect(jotDownNotesAction.visual.textColor).toBe('#e0f7fa');
+    expect(jotDownNotesAction.visual.hoverBackgroundColor).toBe('#006978');
     expect(jotDownNotesAction.visual.hoverTextColor).toBe('#ffffff');
   });
 

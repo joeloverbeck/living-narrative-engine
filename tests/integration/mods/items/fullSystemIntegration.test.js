@@ -14,14 +14,12 @@ import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rul
 import pickUpItemRule from '../../../../data/mods/items/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
 import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
 import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
-import examineItemRule from '../../../../data/mods/items/rules/handle_examine_item.rule.json' assert { type: 'json' };
 import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionGiveItem from '../../../../data/mods/items/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
 import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
 import eventIsActionPickUpItem from '../../../../data/mods/items/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
 import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
 import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
-import eventIsActionExamineItem from '../../../../data/mods/items/conditions/event-is-action-examine-item.condition.json' assert { type: 'json' };
 import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
 describe('Items - Full System Integration (Phase 1-4)', () => {
@@ -59,12 +57,6 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         takeFromContainerRule,
         eventIsActionTakeFromContainer
       ),
-      examine: await ModTestFixture.forAction(
-        'items',
-        'items:examine_item',
-        examineItemRule,
-        eventIsActionExamineItem
-      ),
       put: await ModTestFixture.forAction(
         'items',
         'items:put_in_container',
@@ -80,7 +72,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
   describe('system integration verification', () => {
     it('should successfully execute all item action types', async () => {
-      // This test verifies that all 8 item actions can be discovered and executed
+      // This test verifies that all 7 item actions can be discovered and executed
       // If handlers are not registered, actions will fail to execute
       const room = new ModEntityBuilder('verification-room')
         .asRoom('Verification Room')
@@ -132,29 +124,17 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .withComponent('items:weight', { weight: 0.3 })
         .build();
 
-      // Test examine_item (free action)
-      fixtures.examine.reset([room, actor, ownedItem, locationItem, container, chestItem]);
-      await fixtures.examine.executeAction('test-actor', 'owned-item');
-      expect(fixtures.examine.events.some((e) => e.eventType === 'core:turn_ended')).toBe(true);
-
-      // Test read_item (free action)
-      let currentActor = fixtures.examine.entityManager.getEntityInstance('test-actor');
-      let currentOwnedItem = fixtures.examine.entityManager.getEntityInstance('owned-item');
-      let currentLocationItem = fixtures.examine.entityManager.getEntityInstance('floor-item');
-      let currentContainer = fixtures.examine.entityManager.getEntityInstance('test-chest');
-      let currentChestItem = fixtures.examine.entityManager.getEntityInstance('chest-item');
-
       // Test drop_item
-      fixtures.drop.reset([room, currentActor, currentOwnedItem, currentLocationItem, currentContainer, currentChestItem]);
+      fixtures.drop.reset([room, actor, ownedItem, locationItem, container, chestItem]);
       await fixtures.drop.executeAction('test-actor', 'owned-item');
       expect(fixtures.drop.events.some((e) => e.eventType === 'items:item_dropped')).toBe(true);
 
       // Test pick_up_item
-      currentActor = fixtures.drop.entityManager.getEntityInstance('test-actor');
-      currentOwnedItem = fixtures.drop.entityManager.getEntityInstance('owned-item');
-      currentLocationItem = fixtures.drop.entityManager.getEntityInstance('floor-item');
-      currentContainer = fixtures.drop.entityManager.getEntityInstance('test-chest');
-      currentChestItem = fixtures.drop.entityManager.getEntityInstance('chest-item');
+      let currentActor = fixtures.drop.entityManager.getEntityInstance('test-actor');
+      let currentOwnedItem = fixtures.drop.entityManager.getEntityInstance('owned-item');
+      let currentLocationItem = fixtures.drop.entityManager.getEntityInstance('floor-item');
+      let currentContainer = fixtures.drop.entityManager.getEntityInstance('test-chest');
+      let currentChestItem = fixtures.drop.entityManager.getEntityInstance('chest-item');
 
       fixtures.pickup.reset([room, currentActor, currentOwnedItem, currentLocationItem, currentContainer, currentChestItem]);
       await fixtures.pickup.executeAction('test-actor', 'owned-item');
@@ -287,41 +267,11 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       expect(currentBook.components['items:portable']).toBeDefined();
       expect(currentBook.components['items:weight'].weight).toBe(2.0);
 
-      // Phase 4: Actor 2 examines the book before returning it
+      // Phase 4: Actor 2 returns the book to the drawer
       currentActor1 = fixtures.give.entityManager.getEntityInstance('actor-1');
       currentActor2 = fixtures.give.entityManager.getEntityInstance('actor-2');
       currentBook = fixtures.give.entityManager.getEntityInstance('book-1');
-
-      fixtures.examine.reset([
-        room,
-        currentActor1,
-        currentActor2,
-        currentDrawer,
-        currentBook,
-      ]);
-
-      await fixtures.examine.executeAction('actor-2', 'book-1');
-
-      const examinePerceptible = fixtures.examine.events.find(
-        (event) =>
-          event.eventType === 'core:perceptible_event' &&
-          event.payload.perceptionType === 'item_examined'
-      );
-      expect(examinePerceptible).toBeDefined();
-      expect(examinePerceptible.payload.actorId).toBe('actor-2');
-      expect(examinePerceptible.payload.targetId).toBe('book-1');
-
-      const examineTurnEnded = fixtures.examine.events.find(
-        (event) => event.eventType === 'core:turn_ended'
-      );
-      expect(examineTurnEnded).toBeDefined();
-      expect(examineTurnEnded.payload.success).toBe(true);
-
-      // Actor 2 returns the book to the drawer
-      currentActor1 = fixtures.examine.entityManager.getEntityInstance('actor-1');
-      currentActor2 = fixtures.examine.entityManager.getEntityInstance('actor-2');
-      currentBook = fixtures.examine.entityManager.getEntityInstance('book-1');
-      currentDrawer = fixtures.examine.entityManager.getEntityInstance('desk-drawer');
+      currentDrawer = fixtures.take.entityManager.getEntityInstance('desk-drawer');
 
       fixtures.put.reset([
         room,

@@ -12,7 +12,7 @@ import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEn
 import removeClothingAction from '../../../../data/mods/clothing/actions/remove_clothing.action.json';
 import buryFaceInHandsAction from '../../../../data/mods/distress/actions/bury_face_in_hands.action.json';
 import dropItemAction from '../../../../data/mods/items/actions/drop_item.action.json';
-import examineItemAction from '../../../../data/mods/items/actions/examine_item.action.json';
+import examineItemAction from '../../../../data/mods/items/actions/examine_owned_item.action.json';
 import brushHairBackCoylyAction from '../../../../data/mods/seduction/actions/brush_hair_back_coyly.action.json';
 import drawAttentionToAssAction from '../../../../data/mods/seduction/actions/draw_attention_to_ass.action.json';
 import drawAttentionToBreastsAction from '../../../../data/mods/seduction/actions/draw_attention_to_breasts.action.json';
