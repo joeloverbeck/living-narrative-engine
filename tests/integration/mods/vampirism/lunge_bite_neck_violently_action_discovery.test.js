@@ -23,20 +23,8 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
     // Register positioning scopes
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
-    // Register core:actors_in_location scope (not auto-loaded in tests)
-    const actorsInLocationResolver = ScopeResolverHelpers.createLocationMatchResolver(
-      'core:actors_in_location',
-      {
-        requireActorComponent: true,
-        excludeSelf: true,
-      }
-    );
-
-    ScopeResolverHelpers._registerResolvers(
-      testFixture.testEnv,
-      testFixture.testEnv.entityManager,
-      { 'core:actors_in_location': actorsInLocationResolver }
-    );
+    // Register core:actors_in_location scope (from core mod)
+    await testFixture.registerCustomScope('core', 'actors_in_location');
   });
 
   afterEach(() => {
@@ -45,54 +33,32 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
 
   describe('Positive Discovery Cases', () => {
     it('discovers action when vampire and target are in same location without closeness', () => {
-      const actor = testFixture.createEntity({
-        id: 'vampire1',
-        name: 'Vampire',
-        components: {
-          'core:actor': {},
-          'core:position': { locationId: 'room1' },
-          'vampirism:is_vampire': {},
-        },
+      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim'], {
+        closeProximity: false,
       });
 
-      const target = testFixture.createEntity({
-        id: 'victim1',
-        name: 'Victim',
-        components: {
-          'core:actor': {},
-          'core:position': { locationId: 'room1' },
-        },
-      });
+      // Add vampire marker to actor
+      scenario.actor.components['vampirism:is_vampire'] = {};
 
       const room = ModEntityScenarios.createRoom('room1', 'Dark Alley');
-      testFixture.reset([room, actor, target]);
+      testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).toContain(ACTION_ID);
     });
 
     it('discovers action when vampire and multiple targets are in same location', () => {
-      const actor = testFixture.createEntity({
-        id: 'vampire1',
-        name: 'Predator',
-        components: {
-          'core:actor': {},
-          'core:position': { locationId: 'dark_alley' },
-          'vampirism:is_vampire': {},
-        },
+      const scenario = testFixture.createStandardActorTarget(['Predator', 'Victim 1'], {
+        closeProximity: false,
+        location: 'dark_alley',
       });
 
-      const target1 = testFixture.createEntity({
-        id: 'victim1',
-        name: 'Victim 1',
-        components: {
-          'core:actor': {},
-          'core:position': { locationId: 'dark_alley' },
-        },
-      });
+      // Add vampire marker to actor
+      scenario.actor.components['vampirism:is_vampire'] = {};
 
+      // Create second target
       const target2 = testFixture.createEntity({
         id: 'victim2',
         name: 'Victim 2',
@@ -103,38 +69,26 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
       });
 
       const room = ModEntityScenarios.createRoom('dark_alley', 'Dark Alley');
-      testFixture.reset([room, actor, target1, target2]);
+      testFixture.reset([room, scenario.actor, scenario.target, target2]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).toContain(ACTION_ID);
     });
 
     it('discovers action even when actors are at opposite ends of location', () => {
-      const actor = testFixture.createEntity({
-        id: 'vampire1',
-        name: 'Vampire',
-        components: {
-          'core:actor': {},
-          'core:position': { locationId: 'room1' },
-          'vampirism:is_vampire': {},
-        },
+      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim'], {
+        closeProximity: false,
       });
 
-      const target = testFixture.createEntity({
-        id: 'victim1',
-        name: 'Victim',
-        components: {
-          'core:actor': {},
-          'core:position': { locationId: 'room1' },
-        },
-      });
+      // Add vampire marker to actor
+      scenario.actor.components['vampirism:is_vampire'] = {};
 
       const room = ModEntityScenarios.createRoom('room1', 'Large Hall');
-      testFixture.reset([room, actor, target]);
+      testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).toContain(ACTION_ID);
