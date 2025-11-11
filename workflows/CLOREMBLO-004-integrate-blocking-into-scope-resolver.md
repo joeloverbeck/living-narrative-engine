@@ -1,21 +1,27 @@
-# CLOREMBLO-004: Integrate Blocking Logic into SlotAccessResolver
+# CLOREMBLO-004: Integrate Removal Blocking into ClothingAccessibilityService
 
 **Category**: Clothing System Enhancement
 **Priority**: High
-**Estimated Effort**: 2-3 hours
+**Estimated Effort**: 3-4 hours
 **Phase**: 3 - Scope Integration
+
+**⚠️ UPDATED:** This workflow has been corrected based on actual codebase architecture analysis.
 
 ---
 
 ## Overview
 
-Modify the `slotAccessResolver.js` to filter out items that are blocked from removal when resolving the `topmost_clothing` scope. This prevents blocked items from appearing in action discovery, creating a natural and intuitive clothing removal experience.
+Modify the `ClothingAccessibilityService` to filter out items that are blocked from removal (via `clothing:blocks_removal` component) when resolving accessible clothing items. This prevents blocked items from appearing in action discovery, creating a natural and intuitive clothing removal experience.
 
 ---
 
 ## Background
 
-Currently, `topmost_clothing` scope resolution uses only layer priority (accessories > outer > base > underwear) to determine which items are removable. This doesn't consider blocking relationships between items.
+Currently, `topmost_clothing` scope resolution uses:
+1. **Coverage blocking** (already implemented) - Items with higher coverage priority block lower priority items
+2. **Layer priority** - Within same coverage, uses layer ordering (accessories > outer > base > underwear)
+
+However, it does NOT consider **removal blocking** via the `clothing:blocks_removal` component. This component defines explicit blocking relationships (e.g., belt blocks pants, armor blocks shirt).
 
 After this implementation:
 - Belt equipped → pants don't appear in `topmost_clothing`
@@ -23,7 +29,31 @@ After this implementation:
 - Armor equipped → underlying clothing doesn't appear
 - Multiple blockers → all must be removed before blocked items appear
 
-This filtering happens at scope resolution time, ensuring blocked items never appear in action discovery in the first place.
+This filtering happens during clothing accessibility calculation, ensuring blocked items never appear in scope resolution results.
+
+---
+
+## Architecture Understanding
+
+### Current Resolution Flow
+
+```
+Scope: actor.topmost_clothing[]
+↓
+ClothingStepResolver (field: topmost_clothing)
+↓
+ArrayIterationResolver (detects __isClothingAccessObject)
+↓
+ClothingAccessibilityService.getAccessibleItems()
+  ├─ #parseEquipmentSlots()
+  ├─ #applyCoverageBlocking() → CoverageAnalyzer (COVERAGE blocking only)
+  ├─ #applyModeLogic()
+  └─ #sortByPriority()
+↓
+Returns filtered item IDs
+```
+
+**Key Insight:** `SlotAccessResolver` handles ONLY slot-specific access (e.g., `actor.topmost_clothing.torso_upper`), NOT array iteration. Array iteration goes through `ClothingAccessibilityService`.
 
 ---
 
@@ -31,150 +61,141 @@ This filtering happens at scope resolution time, ensuring blocked items never ap
 
 ### File Modification
 
-**File**: `src/scopeDsl/nodes/slotAccessResolver.js`
+**File**: `src/clothing/services/clothingAccessibilityService.js`
 
-**Location of Changes**: In the `resolveTopmostClothing` method, AFTER getting topmost candidates per slot, BEFORE returning results.
+**Location of Changes**: In the `getAccessibleItems()` method, ADD a new blocking check AFTER coverage blocking, BEFORE mode logic.
 
 ### Implementation Strategy
 
-1. **Add Blocking Check Method**: Create a private method to check if an item is blocked
-2. **Filter Candidates**: Apply blocking filter to topmost candidates
-3. **Preserve Performance**: Minimize additional checks
+1. **Add Removal Blocking Method**: Create `#applyRemovalBlocking()` to filter items blocked by `clothing:blocks_removal`
+2. **Extract Shared Logic**: Use logic from `IsRemovalBlockedOperator` or extract to shared utility
+3. **Integrate into Flow**: Call after coverage blocking in `getAccessibleItems()`
 4. **Add Logging**: Debug logging for filtered items
+5. **Handle Arrays**: Support both single item and array formats in equipment slots
 
 ### Code Changes
 
-#### 1. Add Helper Methods
+#### 1. Add Removal Blocking Method
 
-Add these private helper methods to the `SlotAccessResolver` class:
+Add this private method to the `ClothingAccessibilityService` class:
 
 ```javascript
 /**
- * Checks if item removal is blocked by any equipped items
+ * Apply removal blocking based on clothing:blocks_removal component
+ *
  * @private
- * @param {string} actorId - Entity wearing the clothing
- * @param {string} targetItemId - Item to check
- * @param {Object} equipped - Equipment data structure
- * @returns {boolean} - true if blocked
+ * @param {Array} items - Array of equipped items to filter
+ * @param {string} entityId - Entity ID wearing the clothing
+ * @param {object} equipment - Equipment state object
+ * @returns {Array} Filtered items with blocked items removed
  */
-#checkIfRemovalBlocked(actorId, targetItemId, equipped) {
-  const targetWearable = this.#entityManager.getComponent(
-    targetItemId,
-    'clothing:wearable'
-  );
+#applyRemovalBlocking(items, entityId, equipment) {
+  // Get all equipped items for checking blocking relationships
+  const allEquippedItems = this.#parseEquipmentSlots(equipment);
 
-  if (!targetWearable) {
-    return false;
-  }
+  // Filter out items that are blocked
+  return items.filter((targetItem) => {
+    // Get target item's wearable data
+    const targetWearable = this.#entityManager.getComponentData(
+      targetItem.itemId,
+      'clothing:wearable'
+    );
 
-  // Check all equipped items for blocking components
-  for (const [slot, layers] of Object.entries(equipped)) {
-    for (const [layer, items] of Object.entries(layers)) {
-      const equippedItems = Array.isArray(items) ? items : [items];
+    if (!targetWearable) {
+      return true; // Include non-wearable items (shouldn't happen)
+    }
 
-      for (const equippedItemId of equippedItems) {
-        if (equippedItemId === targetItemId) {
-          continue; // Skip self
-        }
+    // Check if any equipped item blocks this target item
+    for (const equippedItem of allEquippedItems) {
+      // Skip self
+      if (equippedItem.itemId === targetItem.itemId) {
+        continue;
+      }
 
-        if (!this.#entityManager.hasComponent(equippedItemId, 'clothing:blocks_removal')) {
-          continue;
-        }
+      // Check if this equipped item has blocking component
+      if (!this.#entityManager.hasComponent(equippedItem.itemId, 'clothing:blocks_removal')) {
+        continue;
+      }
 
-        const blocking = this.#entityManager.getComponent(
-          equippedItemId,
-          'clothing:blocks_removal'
-        );
+      const blocking = this.#entityManager.getComponentData(
+        equippedItem.itemId,
+        'clothing:blocks_removal'
+      );
 
-        // Check slot-based blocking
-        if (blocking.blockedSlots) {
-          if (this.#itemMatchesBlockingRule(targetWearable, blocking.blockedSlots)) {
-            this.#logger.debug('Filtering blocked item from topmost_clothing', {
-              targetItemId,
-              blockedBy: equippedItemId,
-            });
-            return true;
+      // Check slot-based blocking
+      if (blocking.blockedSlots) {
+        const targetSlot = targetWearable.equipmentSlots?.primary;
+        const targetLayer = targetWearable.layer;
+
+        if (targetSlot && targetLayer) {
+          for (const rule of blocking.blockedSlots) {
+            if (rule.slot === targetSlot && rule.layers.includes(targetLayer)) {
+              this.#logger.debug('Filtering blocked item from accessible items', {
+                targetItemId: targetItem.itemId,
+                blockedBy: equippedItem.itemId,
+                reason: 'slot_based_blocking',
+              });
+              return false; // Item is blocked
+            }
           }
         }
+      }
 
-        // Check explicit ID blocking
-        if (blocking.blocksRemovalOf?.includes(targetItemId)) {
-          this.#logger.debug('Filtering explicitly blocked item from topmost_clothing', {
-            targetItemId,
-            blockedBy: equippedItemId,
-          });
-          return true;
-        }
+      // Check explicit item ID blocking
+      if (blocking.blocksRemovalOf?.includes(targetItem.itemId)) {
+        this.#logger.debug('Filtering explicitly blocked item from accessible items', {
+          targetItemId: targetItem.itemId,
+          blockedBy: equippedItem.itemId,
+          reason: 'explicit_id_blocking',
+        });
+        return false; // Item is blocked
       }
     }
-  }
 
-  return false;
-}
-
-/**
- * Checks if item matches any blocking rule
- * @private
- * @param {Object} targetWearable - Target item's wearable component
- * @param {Array} blockedSlots - Array of blocking rules
- * @returns {boolean} - true if blocked
- */
-#itemMatchesBlockingRule(targetWearable, blockedSlots) {
-  const targetSlot = targetWearable.equipmentSlots?.primary;
-  const targetLayer = targetWearable.layer;
-
-  if (!targetSlot || !targetLayer) {
-    return false;
-  }
-
-  for (const rule of blockedSlots) {
-    if (rule.slot === targetSlot && rule.layers.includes(targetLayer)) {
-      return true;
-    }
-  }
-
-  return false;
+    return true; // Item is not blocked
+  });
 }
 ```
 
-#### 2. Modify resolveTopmostClothing Method
+#### 2. Modify getAccessibleItems Method
 
-In the `resolveTopmostClothing` method, find where topmost candidates are returned. Add filtering logic:
+In the `getAccessibleItems()` method, add removal blocking AFTER coverage blocking:
 
 ```javascript
-// EXISTING CODE: Get topmost candidates per slot
-// ... existing logic to build candidates array ...
-
-// NEW CODE: Filter out items that are blocked by other equipped items
-const availableForRemoval = candidates.filter((candidate) => {
-  // Check if any OTHER equipped item blocks this candidate
-  const isBlocked = this.#checkIfRemovalBlocked(
-    entityId,
-    candidate.itemId,
-    equipment.equipped
-  );
-  return !isBlocked;
+// EXISTING CODE: Apply coverage blocking
+const accessibleItems = this.#applyCoverageBlocking(
+  filteredItems,
+  entityId,
+  equipment,
+  mode
+);
+this.#logger.debug('ClothingAccessibilityService: After coverage blocking', {
+  accessibleItems,
 });
 
-// Log filtering results
-if (candidates.length !== availableForRemoval.length) {
-  this.#logger.debug('Filtered blocked items from topmost_clothing', {
-    totalCandidates: candidates.length,
-    availableForRemoval: availableForRemoval.length,
-    filtered: candidates.length - availableForRemoval.length,
-  });
-}
+// NEW CODE: Apply removal blocking (belt blocks pants, etc.)
+const removalFilteredItems = this.#applyRemovalBlocking(
+  accessibleItems,
+  entityId,
+  equipment
+);
+this.#logger.debug('ClothingAccessibilityService: After removal blocking', {
+  removalFilteredItems,
+});
 
-return availableForRemoval;
+// EXISTING CODE: Apply mode-specific logic (continue with removalFilteredItems)
+let result = this.#applyModeLogic(removalFilteredItems, mode);
 ```
 
 ### Design Rationale
 
-1. **Filtering at Scope Level**: Blocked items never appear in action discovery (cleaner UX)
-2. **Code Duplication**: Helper methods duplicate operator logic (necessary for scope resolution)
-3. **Performance**: Checks only equipped items (O(n) where n = number of equipped items)
-4. **Logging**: Debug logging helps troubleshoot filtering issues
-5. **Fail-Safe**: Returns unfiltered candidates on errors (allows gameplay to continue)
+1. **Centralized Service**: All accessibility logic in one place (ClothingAccessibilityService)
+2. **Separation of Concerns**: Coverage blocking vs. removal blocking are separate concerns
+3. **Reusable Logic**: Same service used by scope resolution AND action validation
+4. **Performance**: Checks only equipped items (O(n × m) where n = items, m = blockers)
+5. **Logging**: Debug logging helps troubleshoot complex blocking scenarios
+6. **Fail-Safe**: Errors don't break clothing system (logged and continue)
+7. **Cache Invalidation**: Cache clearing ensures blocking state stays current
 
 ---
 
@@ -182,42 +203,56 @@ return availableForRemoval;
 
 ### 1. Read Current Implementation
 
-**File**: `src/scopeDsl/nodes/slotAccessResolver.js`
+**File**: `src/clothing/services/clothingAccessibilityService.js`
 
 Read the file to understand:
-- Current structure of `resolveTopmostClothing` method
-- How candidates are built
-- Where to add filtering logic
+- Current structure of `getAccessibleItems()` method
+- How `#applyCoverageBlocking()` works
+- Where to add removal blocking (after coverage, before mode logic)
 - Existing helper methods pattern
 
-### 2. Add Helper Methods
+### 2. Add Removal Blocking Method
 
-Add the two private helper methods (`#checkIfRemovalBlocked` and `#itemMatchesBlockingRule`) to the class. Place them near other helper methods for topmost clothing resolution.
+Add the `#applyRemovalBlocking()` private method to the class. Place it near `#applyCoverageBlocking()` for logical grouping.
 
-### 3. Modify resolveTopmostClothing
+### 3. Modify getAccessibleItems
 
-Find the return statement in `resolveTopmostClothing` and add the filtering logic before it.
+In the `getAccessibleItems()` method, add a call to `#applyRemovalBlocking()` after coverage blocking but before mode logic application.
 
 ### 4. Create Unit Tests
 
-**File**: `tests/unit/scopeDsl/nodes/slotAccessResolverBlocking.test.js`
+**File**: `tests/unit/clothing/services/clothingAccessibilityServiceBlocking.test.js`
 
 **Test Coverage**:
 
 ```javascript
 import { describe, it, expect, beforeEach } from '@jest/globals';
+import { ClothingAccessibilityService } from '../../../../src/clothing/services/clothingAccessibilityService.js';
 import { createTestBed } from '../../../common/testBed.js';
 
-describe('SlotAccessResolver - Blocking Integration', () => {
+describe('ClothingAccessibilityService - Removal Blocking', () => {
   let testBed;
-  let resolver;
+  let service;
+  let entityManager;
+  let logger;
 
   beforeEach(() => {
     testBed = createTestBed();
-    resolver = testBed.createSlotAccessResolver();
+    entityManager = testBed.resolve('IEntityManager');
+    logger = testBed.resolve('ILogger');
+
+    // Create service with test dependencies
+    service = new ClothingAccessibilityService({
+      logger,
+      entityManager,
+      entitiesGateway: {
+        getComponentData: (entityId, componentId) =>
+          entityManager.getComponentData(entityId, componentId)
+      }
+    });
   });
 
-  describe('Topmost Clothing Filtering', () => {
+  describe('Removal Blocking Integration', () => {
     it('should filter out pants when belt is equipped', () => {
       // Arrange
       const actor = testBed.createEntity('actor1', ['clothing:equipment']);
@@ -250,11 +285,11 @@ describe('SlotAccessResolver - Blocking Integration', () => {
       testBed.equipItem(actor.id, pants.id);
 
       // Act
-      const topmost = resolver.resolveTopmostClothing(actor.id);
+      const accessible = service.getAccessibleItems(actor.id, { mode: 'topmost' });
 
       // Assert
-      expect(topmost).toContain(belt.id);
-      expect(topmost).not.toContain(pants.id);
+      expect(accessible).toContain(belt.id);
+      expect(accessible).not.toContain(pants.id);
     });
 
     it('should include pants after belt is removed', () => {
@@ -291,12 +326,15 @@ describe('SlotAccessResolver - Blocking Integration', () => {
       // Remove belt
       testBed.unequipItem(actor.id, belt.id);
 
+      // Clear cache after equipment change
+      service.clearCache(actor.id);
+
       // Act
-      const topmost = resolver.resolveTopmostClothing(actor.id);
+      const accessible = service.getAccessibleItems(actor.id, { mode: 'topmost' });
 
       // Assert
-      expect(topmost).not.toContain(belt.id);
-      expect(topmost).toContain(pants.id);
+      expect(accessible).not.toContain(belt.id);
+      expect(accessible).toContain(pants.id);
     });
 
     it('should handle multiple blocking items', () => {
@@ -619,33 +657,48 @@ describe('Topmost Clothing Blocking Integration', () => {
 });
 ```
 
-### 6. Run Tests
+### 6. Add Cache Invalidation
+
+When equipment changes, the cache must be invalidated. Check if this is already handled or needs to be added.
+
+**Possible locations to add cache invalidation:**
+- `EquipClothingHandler` - after successful equip
+- `RemoveClothingHandler` - after successful removal
+- Any operation that modifies `clothing:equipment`
+
+```javascript
+// Example: In operation handler after equipment change
+this.#clothingAccessibilityService.clearCache(actorId);
+```
+
+### 7. Run Tests
 
 ```bash
 # Unit tests
-NODE_ENV=test npm run test:unit -- tests/unit/scopeDsl/nodes/slotAccessResolverBlocking.test.js
+NODE_ENV=test npm run test:unit -- tests/unit/clothing/services/clothingAccessibilityServiceBlocking.test.js
 
 # Integration tests
 NODE_ENV=test npm run test:integration -- tests/integration/clothing/topmostClothingBlocking.integration.test.js
 ```
 
-### 7. Performance Benchmarking
+### 8. Performance Benchmarking
 
-Create a simple performance test to verify blocking checks don't significantly impact scope resolution:
+Create a simple performance test to verify blocking checks don't significantly impact accessibility queries:
 
 ```javascript
 const iterations = 1000;
 const start = performance.now();
 
 for (let i = 0; i < iterations; i++) {
-  resolver.resolveTopmostClothing(actorId);
+  service.clearAllCache(); // Ensure no cache hits
+  service.getAccessibleItems(actorId, { mode: 'topmost' });
 }
 
 const end = performance.now();
 const avgTime = (end - start) / iterations;
 
 console.log(`Average time: ${avgTime}ms`);
-// Target: < 5ms per resolution
+// Target: < 10ms per query (includes coverage + removal blocking)
 ```
 
 ---
@@ -655,7 +708,7 @@ console.log(`Average time: ${avgTime}ms`);
 ### Unit Tests
 
 ```bash
-NODE_ENV=test npm run test:unit -- tests/unit/scopeDsl/nodes/slotAccessResolverBlocking.test.js
+NODE_ENV=test npm run test:unit -- tests/unit/clothing/services/clothingAccessibilityServiceBlocking.test.js
 ```
 
 Expected: All tests pass, coverage ≥ 80%.
@@ -666,7 +719,7 @@ Expected: All tests pass, coverage ≥ 80%.
 NODE_ENV=test npm run test:integration -- tests/integration/clothing/topmostClothingBlocking.integration.test.js
 ```
 
-Expected: All tests pass.
+Expected: All tests pass, scope resolution returns correct blocked/unblocked items.
 
 ### Type Checking
 
@@ -679,56 +732,65 @@ Expected: No errors.
 ### ESLint
 
 ```bash
-npx eslint src/scopeDsl/nodes/slotAccessResolver.js
+npx eslint src/clothing/services/clothingAccessibilityService.js
 ```
 
 Expected: No warnings or errors.
 
 ### Performance
 
-Performance impact should be < 5ms per scope resolution with blocking checks.
+Performance impact should be < 10ms per accessibility query with both coverage and removal blocking.
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Helper methods added to `SlotAccessResolver` class
-- [ ] `resolveTopmostClothing` method modified to filter blocked items
-- [ ] Filtering logic duplicates operator logic (for consistency)
+- [ ] `#applyRemovalBlocking()` method added to `ClothingAccessibilityService` class
+- [ ] `getAccessibleItems()` method modified to call removal blocking after coverage blocking
+- [ ] Blocking logic checks `clothing:blocks_removal` component for all equipped items
 - [ ] Self-exclusion logic prevents items from blocking themselves
-- [ ] Debug logging added for filtered items
-- [ ] Unit tests created and passing
-- [ ] Integration tests created and passing
-- [ ] Performance benchmarks acceptable (< 5ms impact)
+- [ ] Debug logging added for filtered items (with blocking reason)
+- [ ] Cache invalidation added to equipment modification operations
+- [ ] Unit tests created and passing (≥ 80% coverage)
+- [ ] Integration tests created and passing (scope resolution)
+- [ ] Performance benchmarks acceptable (< 10ms per query)
 - [ ] ESLint passes
 - [ ] Type checking passes
-- [ ] No regression in existing clothing resolution
+- [ ] No regression in existing clothing resolution or coverage blocking
 
 ---
 
 ## Notes
 
-- Code duplication between operator and resolver is intentional (different contexts)
-- Filtering happens before returning candidates (items never appear)
-- Performance is O(n × m) where n = equipped items, m = blocking rules per item
-- Debug logging helps troubleshoot complex blocking scenarios
-- Fail-safe design: errors don't break clothing system
+- Removal blocking is separate from coverage blocking (two different systems)
+- Filtering happens in ClothingAccessibilityService (before scope resolution returns)
+- Performance is O(n × m) where n = candidate items, m = equipped items with blocks_removal
+- Debug logging includes blocking reason (slot_based or explicit_id)
+- Fail-safe design: errors don't break clothing system (logged and continue)
+- Cache must be invalidated when equipment changes (critical for correctness)
+- `IsRemovalBlockedOperator` provides similar logic for action validation (different use case)
 
 ---
 
 ## Common Pitfalls
 
+**Pitfall**: Modifying wrong file (slotAccessResolver.js)
+**Solution**: Modify clothingAccessibilityService.js (handles array iteration)
+
 **Pitfall**: Blocking an item from blocking itself
-**Solution**: Skip target item in blocking check loop
+**Solution**: Skip target item with `equippedItem.itemId === targetItem.itemId` check
 
-**Pitfall**: Not handling array vs single item in equipment
-**Solution**: Normalize to array with `Array.isArray() ? items : [items]`
+**Pitfall**: Not clearing cache after equipment changes
+**Solution**: Call `clearCache(entityId)` in equipment modification handlers
 
-**Pitfall**: Breaking existing topmost_clothing logic
-**Solution**: Add filtering AFTER existing candidate selection
+**Pitfall**: Breaking existing coverage blocking
+**Solution**: Add removal blocking AFTER coverage blocking, don't replace it
+
+**Pitfall**: Confusing coverage blocking with removal blocking
+**Solution**: They're separate systems - coverage is priority-based, removal is component-based
 
 **Pitfall**: Performance degradation with many items
-**Solution**: Early exits, check only equipped items
+**Solution**: Early exits when no blocks_removal component found
 
 ---
 
