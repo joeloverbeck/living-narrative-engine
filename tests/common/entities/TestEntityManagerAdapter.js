@@ -149,6 +149,18 @@ export default class TestEntityManagerAdapter {
   }
 
   /**
+   * Optimized batch add components that reduces event emissions.
+   * This matches the production EntityManager.batchAddComponentsOptimized() method.
+   *
+   * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs - Array of component specifications
+   * @param {boolean} emitBatchEvent - Whether to emit a single batch event
+   * @returns {Promise<{results: Array, errors: Array, updateCount: number}>} Results with successes, errors, and update count
+   */
+  async batchAddComponentsOptimized(componentSpecs, emitBatchEvent = true) {
+    return await this.#simple.batchAddComponentsOptimized(componentSpecs, emitBatchEvent);
+  }
+
+  /**
    * Find entities matching complex query criteria.
    * This matches the production EntityManager.findEntities() method.
    *
