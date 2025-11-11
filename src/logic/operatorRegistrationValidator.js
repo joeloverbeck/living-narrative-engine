@@ -33,6 +33,11 @@ export function validateOperatorWhitelist(
       continue;
     }
 
+    // Skip special syntax that is not a real operator
+    if (isSpecialSyntax(operator)) {
+      continue;
+    }
+
     if (!registeredOperators.has(operator)) {
       extraOperators.push(operator);
     }
@@ -124,6 +129,21 @@ function isStandardOperator(operator) {
   ]);
 
   return standardOperators.has(operator);
+}
+
+/**
+ * Check if operator is special syntax that gets resolved before evaluation.
+ * These are not real operators but syntactic constructs.
+ *
+ * @param {string} operator - Operator name
+ * @returns {boolean} True if special syntax
+ */
+function isSpecialSyntax(operator) {
+  const specialSyntax = new Set([
+    'condition_ref', // Resolved to actual logic before evaluation
+  ]);
+
+  return specialSyntax.has(operator);
 }
 
 /**
