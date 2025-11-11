@@ -75,23 +75,55 @@ export class HasComponentOperator {
         typeof entityPath === 'object' &&
         !Array.isArray(entityPath)
       ) {
-        // Evaluate JSON Logic expression to get the actual entity value
-        entity = jsonLogic.apply(entityPath, context);
-        pathForLogging = JSON.stringify(entityPath);
-        this.#logger.debug(
-          `${this.#operatorName}: Evaluated JSON Logic expression ${pathForLogging}, result: ${JSON.stringify(entity)}`
-        );
+        // Check if this is a JSON Logic expression or just an entity object
+        // Entity objects have an 'id' property but no JSON Logic operators
+        if (hasValidEntityId(entityPath)) {
+          // This is an entity object, not a JSON Logic expression
+          entity = entityPath;
+          pathForLogging = `entity object with id=${entityPath.id}`;
+          this.#logger.debug(
+            `${this.#operatorName}: Received entity object directly: ${pathForLogging}`
+          );
+        } else {
+          // Assume it's a JSON Logic expression and evaluate it
+          entity = jsonLogic.apply(entityPath, context);
+          pathForLogging = JSON.stringify(entityPath);
+          this.#logger.debug(
+            `${this.#operatorName}: Evaluated JSON Logic expression ${pathForLogging}, result: ${JSON.stringify(entity)}`
+          );
+        }
       } else if (typeof entityPath === 'string') {
-        // Resolve entity from string path
+        // Try to resolve as a path first (e.g., "entity", "entity.blocker")
         const resolved = resolveEntityPath(context, entityPath);
-        entity = resolved.entity;
         pathForLogging = entityPath;
 
         if (!resolved.isValid) {
-          this.#logger.warn(
-            `${this.#operatorName}: No entity found at path ${entityPath}`
-          );
-          return false;
+          // Path resolution failed - check if this looks like a context path or an entity ID
+          // Common context paths: "entity", "actor", "location", "target", "targets"
+          // Also paths with dots: "entity.blocker", "actor.items"
+          const commonContextKeys = ['entity', 'actor', 'location', 'target', 'targets', 'event'];
+          const looksLikeContextPath =
+            commonContextKeys.includes(entityPath) ||
+            entityPath.includes('.');
+
+          if (looksLikeContextPath) {
+            // This looks like a context path that should exist but doesn't - log warning
+            this.#logger.warn(
+              `${this.#operatorName}: No entity found at path ${entityPath}`
+            );
+            return false;
+          } else {
+            // Treat as an entity ID directly
+            // This handles cases where JSON Logic pre-evaluates {"var": "entity.blocker"}
+            // to an entity ID string like "patrol:dimensional_rift_blocker_instance"
+            // or test cases with simple entity IDs like "some-other-entity"
+            this.#logger.debug(
+              `${this.#operatorName}: Could not resolve "${entityPath}" as path, treating as entity ID`
+            );
+            entity = entityPath;
+          }
+        } else {
+          entity = resolved.entity;
         }
       } else {
         this.#logger.warn(
