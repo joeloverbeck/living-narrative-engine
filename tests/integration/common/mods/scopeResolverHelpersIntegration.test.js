@@ -100,6 +100,8 @@ describe('ScopeResolverHelpers Integration - Inventory Registration', () => {
       'items:actor_inventory_items',
       'items:items_at_location',
       'items:portable_items_at_location',
+      'items:non_portable_items_at_location',
+      'items:items_at_actor_location',
       'items:actors_at_location',
       'items:containers_at_location',
     ];
@@ -197,8 +199,8 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
     expect(testFixture.testEnv._registeredResolvers.has('items:portable_items_at_location')).toBe(true);
     expect(testFixture.testEnv._registeredResolvers.has('anatomy:actors_at_location')).toBe(true);
 
-    // Verify total count is the sum of all categories (26 + 5 + 2 = 33)
-    expect(testFixture.testEnv._registeredResolvers.size).toBe(33);
+    // Verify total count is the sum of all categories (26 + 7 + 2 = 35)
+    expect(testFixture.testEnv._registeredResolvers.size).toBe(35);
   });
 
   it('should preserve original resolver functionality', () => {

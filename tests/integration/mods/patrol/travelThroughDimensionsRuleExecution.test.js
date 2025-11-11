@@ -6,6 +6,8 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import '../../../common/mods/domainMatchers.js';
+import handleTravelThroughDimensionsRule from '../../../../data/mods/patrol/rules/handle_travel_through_dimensions.rule.json' assert { type: 'json' };
+import eventIsActionTravelThroughDimensions from '../../../../data/mods/patrol/conditions/event-is-action-travel-through-dimensions.condition.json' assert { type: 'json' };
 
 describe('travel_through_dimensions Rule Execution', () => {
   let fixture;
@@ -13,7 +15,9 @@ describe('travel_through_dimensions Rule Execution', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'patrol',
-      'travel_through_dimensions'
+      'travel_through_dimensions',
+      handleTravelThroughDimensionsRule,
+      eventIsActionTravelThroughDimensions
     );
   });
 
@@ -27,7 +31,8 @@ describe('travel_through_dimensions Rule Execution', () => {
 
       await fixture.executeAction(
         scenario.observerId,
-        scenario.dimensionId
+        scenario.dimensionId,
+        { skipDiscovery: true }
       );
 
       // Verify location changed
@@ -40,19 +45,17 @@ describe('travel_through_dimensions Rule Execution', () => {
 
     it('should dispatch departure perception at origin', async () => {
       const scenario = await createDimensionalScenario(fixture);
-      const events = [];
-
-      fixture.eventBus.on('PERCEPTIBLE_EVENT', (event) => {
-        events.push(event);
-      });
 
       await fixture.executeAction(
         scenario.observerId,
-        scenario.dimensionId
+        scenario.dimensionId,
+        { skipDiscovery: true }
       );
 
-      const departureEvent = events.find(
-        (e) => e.payload.perceptionType === 'dimensional_departure'
+      const departureEvent = fixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.perceptionType === 'character_exit'
       );
       expect(departureEvent).toBeDefined();
       expect(departureEvent.payload.locationId).toBe(scenario.perimeterId);
@@ -61,19 +64,17 @@ describe('travel_through_dimensions Rule Execution', () => {
 
     it('should dispatch arrival perception at destination', async () => {
       const scenario = await createDimensionalScenario(fixture);
-      const events = [];
-
-      fixture.eventBus.on('PERCEPTIBLE_EVENT', (event) => {
-        events.push(event);
-      });
 
       await fixture.executeAction(
         scenario.observerId,
-        scenario.dimensionId
+        scenario.dimensionId,
+        { skipDiscovery: true }
       );
 
-      const arrivalEvent = events.find(
-        (e) => e.payload.perceptionType === 'dimensional_arrival'
+      const arrivalEvent = fixture.events.find(
+        (e) =>
+          e.eventType === 'core:perceptible_event' &&
+          e.payload.perceptionType === 'character_enter'
       );
       expect(arrivalEvent).toBeDefined();
       expect(arrivalEvent.payload.locationId).toBe(scenario.dimensionId);
@@ -88,7 +89,8 @@ describe('travel_through_dimensions Rule Execution', () => {
       // Travel to dimension
       await fixture.executeAction(
         scenario.observerId,
-        scenario.dimensionId
+        scenario.dimensionId,
+        { skipDiscovery: true }
       );
 
       let position = fixture.getComponent(
@@ -100,7 +102,8 @@ describe('travel_through_dimensions Rule Execution', () => {
       // Travel back to reality
       await fixture.executeAction(
         scenario.observerId,
-        scenario.perimeterId
+        scenario.perimeterId,
+        { skipDiscovery: true }
       );
 
       position = fixture.getComponent(
