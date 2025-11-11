@@ -9,6 +9,33 @@
 
 Implement the ActionSelector class that performs greedy action selection toward goals. This class simulates action effects and calculates progress toward goal states to select the best action from available options.
 
+### Validated Assumptions (Corrected from Initial Draft)
+
+The following assumptions have been validated against the production codebase:
+
+1. **EntityManager API:**
+   - ✅ `getEntityInstance(instanceId)` - correct method name (NOT `getEntity`)
+   - ✅ `hasComponent(instanceId, componentTypeId)` - correct
+   - ✅ `getComponentData(instanceId, componentTypeId)` - correct method name (NOT `getComponent`)
+
+2. **GoalStateEvaluator:**
+   - ✅ Exists in `src/goap/goals/goalStateEvaluator.js`
+   - ✅ Has `evaluate(goalState, actorId, context)` method
+   - ✅ Has `calculateDistance(goalState, actorId, context)` method
+
+3. **DI Tokens:**
+   - ✅ `IActionSelector` token already exists in `tokens-goap.js`
+   - ⚠️ `IAbstractPreconditionSimulator` token needs to be added
+
+4. **Abstract Preconditions:**
+   - ✅ Documented structure: `{ abstractPrecondition: "name", params: [...] }`
+   - ✅ Catalog available in `docs/goap/abstract-preconditions.md`
+
+5. **Planning Effects Schema:**
+   - ✅ Exists at `data/schemas/planning-effects.schema.json`
+   - ✅ Defines CONDITIONAL operation with `condition` and `then` properties
+   - ℹ️ No `else` property in schema (optional defensive handling in code is acceptable)
+
 ## Objectives
 
 1. Implement ActionSelector class
@@ -19,6 +46,40 @@ Implement the ActionSelector class that performs greedy action selection toward 
 6. Handle abstract preconditions
 
 ## Technical Details
+
+### Context Building
+
+**Important:** The `context` parameter passed to `selectAction` must be built by the caller from EntityManager. Example structure:
+
+```javascript
+// Build context from EntityManager
+const context = {
+  entities: {},
+  targetId: targetEntityId,
+  tertiaryTargetId: tertiaryTargetEntityId
+};
+
+// Populate entity data for relevant entities
+for (const entityId of relevantEntityIds) {
+  const entity = entityManager.getEntityInstance(entityId);
+  if (entity) {
+    context.entities[entityId] = {
+      components: {}
+    };
+
+    // Copy component data
+    const componentIds = entityManager.getAllComponentTypesForEntity(entityId);
+    for (const componentId of componentIds) {
+      const data = entityManager.getComponentData(entityId, componentId);
+      if (data) {
+        context.entities[entityId].components[componentId] = data;
+      }
+    }
+  }
+}
+```
+
+This context building will typically be done by the planner or action selection orchestrator, not by ActionSelector itself.
 
 ### 1. ActionSelector Class
 
@@ -62,7 +123,7 @@ class ActionSelector {
       requiredMethods: ['evaluate', 'calculateDistance']
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntity', 'hasComponent', 'getComponent']
+      requiredMethods: ['getEntityInstance', 'hasComponent', 'getComponentData']
     });
     validateDependency(abstractPreconditionSimulator, 'IAbstractPreconditionSimulator', logger, {
       requiredMethods: ['simulate']
@@ -79,7 +140,13 @@ class ActionSelector {
    * @param {Array<Object>} availableActions - Actions from action discovery
    * @param {Object} goal - Selected goal
    * @param {string} actorId - Entity ID of actor
-   * @param {Object} context - World state context
+   * @param {Object} context - World state context (built by caller from EntityManager)
+   *   Expected structure:
+   *   {
+   *     entities: { [entityId]: { components: { [componentId]: data } } },
+   *     targetId: optional target entity ID,
+   *     tertiaryTargetId: optional tertiary target entity ID
+   *   }
    * @returns {Object|null} Selected action or null
    */
   selectAction(availableActions, goal, actorId, context) {
@@ -178,6 +245,21 @@ class ActionSelector {
 
   /**
    * Simulates applying action effects to world state
+   *
+   * Note: The worldState object is a simulated state structure used during planning,
+   * NOT direct access to EntityManager. Structure:
+   * {
+   *   entities: {
+   *     [entityId]: {
+   *       components: {
+   *         [componentId]: componentData
+   *       }
+   *     }
+   *   },
+   *   targetId: string,
+   *   tertiaryTargetId: string
+   * }
+   *
    * @param {Object} action - Action with planningEffects
    * @param {string} actorId - Entity ID of actor
    * @param {Object} currentState - Current world state
@@ -248,35 +330,28 @@ class ActionSelector {
   }
 
   #evaluateCondition(condition, actorId, state) {
-    // Check for abstract preconditions
-    if (condition.hasInventoryCapacity) {
-      const [entity, itemEntity] = condition.hasInventoryCapacity;
-      const entityId = this.#resolveEntityId(entity, actorId, state);
-      const itemId = this.#resolveEntityId(itemEntity, actorId, state);
+    // Check for abstract precondition structure
+    // Format: { abstractPrecondition: "name", params: ["entity1", "entity2"] }
+    if (condition.abstractPrecondition) {
+      const functionName = condition.abstractPrecondition;
+      const rawParams = condition.params || [];
+
+      // Resolve entity references to actual IDs
+      const resolvedParams = rawParams.map(param =>
+        this.#resolveEntityId(param, actorId, state)
+      );
 
       return this.#abstractPreconditionSimulator.simulate(
-        'hasInventoryCapacity',
-        [entityId, itemId],
+        functionName,
+        resolvedParams,
         state
       );
     }
-
-    if (condition.hasContainerCapacity) {
-      const [containerEntity, itemEntity] = condition.hasContainerCapacity;
-      const containerId = this.#resolveEntityId(containerEntity, actorId, state);
-      const itemId = this.#resolveEntityId(itemEntity, actorId, state);
-
-      return this.#abstractPreconditionSimulator.simulate(
-        'hasContainerCapacity',
-        [containerId, itemId],
-        state
-      );
-    }
-
-    // Add more abstract precondition handlers as needed
 
     // Fallback: basic JSON Logic evaluation
-    // (This is simplified - real implementation needs full JSON Logic)
+    // For Tier 1, we'll use a simple implementation
+    // Tier 2+ can integrate full JSON Logic evaluator
+    this.#logger.warn('Condition evaluation without abstract precondition not fully implemented');
     return true;
   }
 
@@ -319,12 +394,24 @@ export default ActionSelector;
 /**
  * @file Abstract precondition simulator
  * Simulates abstract preconditions during planning
+ *
+ * Note: This class works with simulated world state during planning,
+ * not with live EntityManager queries. The worldState parameter structure:
+ * {
+ *   entities: {
+ *     [entityId]: {
+ *       components: {
+ *         [componentId]: componentData
+ *       }
+ *     }
+ *   }
+ * }
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
- * Simulates abstract preconditions
+ * Simulates abstract preconditions for planning
  */
 class AbstractPreconditionSimulator {
   #logger;
@@ -421,7 +508,7 @@ export default AbstractPreconditionSimulator;
 
 ## Files to Update
 
-- [ ] `src/dependencyInjection/tokens/tokens-goap.js` - Add IAbstractPreconditionSimulator token
+- [ ] `src/dependencyInjection/tokens/tokens-goap.js` - Add IAbstractPreconditionSimulator token (Note: IActionSelector already exists in tokens-goap.js)
 - [ ] `src/dependencyInjection/registrations/goapRegistrations.js` - Register ActionSelector and AbstractPreconditionSimulator
 
 ## Testing Requirements
@@ -504,6 +591,10 @@ export default AbstractPreconditionSimulator;
 - **Greedy Selection:** Tier 1 uses greedy selection (no lookahead)
 - **State Simulation:** Must be fast and accurate
 - **Abstract Preconditions:** Critical for conditional effects
+  - Format: `{ abstractPrecondition: "functionName", params: ["entity1", "entity2"] }`
+  - See [abstract-preconditions.md](../docs/goap/abstract-preconditions.md) for catalog
+- **World State Structure:** Simulation uses a simplified state object with `entities[id].components[componentId]` structure
+- **EntityManager Methods:** Production code uses `getEntityInstance()`, `hasComponent()`, `getComponentData()`
 - **Extensibility:** Design for future A* planner integration
 
 ## Related Tickets
