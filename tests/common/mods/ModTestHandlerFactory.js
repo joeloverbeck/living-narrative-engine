@@ -603,6 +603,8 @@ export class ModTestHandlerFactory {
       kissing: this.createHandlersWithMouthEngagement.bind(this),
       vampirism: this.createHandlersWithComponentMutations.bind(this),
       music: this.createHandlersWithDescriptionRegeneration.bind(this),
+      patrol: this.createHandlersWithPerceptionLogging.bind(this),
+      movement: this.createHandlersWithPerceptionLogging.bind(this),
     };
 
     if (typeof modCategory === 'string' && modCategory.startsWith('sex-')) {
