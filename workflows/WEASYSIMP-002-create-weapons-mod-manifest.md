@@ -56,28 +56,36 @@ Create the mod manifest file for the weapons mod, defining its metadata, depende
 - **gameVersion**: Compatible game version
 - **dependencies**: Required mods that must load before weapons mod
   - `core` provides essential components (actor, position, name, description)
-  - `items` provides inventory, portable items, and aiming functionality
+  - `items` provides inventory and portable items systems (aiming functionality will be added in WEASYSIMP-003-007)
 
 ### 3. Game Configuration Update
 
-**File to Modify:** `game.json`
+**File to Modify:** `data/game.json`
 
-Add `"weapons"` to the `mods` array in load order (after `items`):
+**Current state**: Check if `"weapons"` is already in the mods array. If not present, add it after `"items"`.
+
+Current `data/game.json` structure includes many mods. Verify `"weapons"` appears in the load order after `"items"`:
 
 ```json
 {
   "mods": [
     "core",
+    ...
     "items",
-    "weapons"
-  ]
+    ...
+    "weapons",  ← Ensure this is present after items
+    ...
+  ],
+  "startWorld": "patrol:patrol"
 }
 ```
 
 **Load Order Rationale:**
 1. `core` - Foundation components (actor, position)
-2. `items` - Inventory and aiming system
-3. `weapons` - Weapon-specific functionality (depends on items:aimable, items:inventory)
+2. `items` - Inventory system (aiming system will be added in Phase 2: WEASYSIMP-003-007)
+3. `weapons` - Weapon-specific functionality (depends on items:inventory and future items:aimable component)
+
+**Note**: The actual game.json contains many other mods (furniture, positioning, clothing, etc.). Ensure weapons is positioned after items to satisfy dependency requirements.
 
 ### 4. Validation Commands
 
@@ -85,8 +93,8 @@ Add `"weapons"` to the `mods` array in load order (after `items`):
 # Validate manifest against schema
 npm run validate
 
-# Validate mod can be loaded
-npm run validate:mod:weapons
+# Validate mod-specific references (after mod content is created)
+npm run validate:mod -- --mod=weapons
 
 # Check for schema errors
 node -e "JSON.parse(require('fs').readFileSync('data/mods/weapons/mod-manifest.json'))" && echo "✓ Valid JSON"
@@ -94,14 +102,15 @@ node -e "JSON.parse(require('fs').readFileSync('data/mods/weapons/mod-manifest.j
 
 ## Acceptance Criteria
 
-- [ ] `mod-manifest.json` created at `data/mods/weapons/mod-manifest.json`
-- [ ] Manifest includes all required fields (id, version, name, description, author, gameVersion, dependencies)
-- [ ] Dependencies correctly declare `core` and `items`
+- [ ] `mod-manifest.json` exists or is updated at `data/mods/weapons/mod-manifest.json`
+- [ ] Manifest includes all required fields (id, version, name) and recommended fields (description, author, gameVersion, dependencies)
+- [ ] Dependencies correctly declare `core` and `items` with versions
 - [ ] JSON is valid and parseable
 - [ ] Manifest validates against `mod-manifest.schema.json`
-- [ ] `game.json` updated with weapons mod in correct load order
+- [ ] `data/game.json` includes weapons mod in correct load order (after items)
 - [ ] `npm run validate` passes without errors
-- [ ] Mod ID "weapons" is unique and not used by other mods
+- [ ] Mod ID "weapons" is unique and not conflicting with other mods
+- [ ] Manifest clarifies that aiming functionality is a future dependency (WEASYSIMP-003-007)
 
 ## Testing Requirements
 
@@ -119,7 +128,7 @@ node -e "JSON.parse(require('fs').readFileSync('data/mods/weapons/mod-manifest.j
 
 3. **Load Order Check:**
    ```bash
-   node -e "const game = JSON.parse(require('fs').readFileSync('game.json')); console.log('Load order:', game.mods); console.log('Weapons position:', game.mods.indexOf('weapons'));"
+   node -e "const game = JSON.parse(require('fs').readFileSync('data/game.json')); console.log('Load order:', game.mods); console.log('Weapons position:', game.mods.indexOf('weapons'));"
    ```
 
 ### Expected Output
@@ -136,11 +145,30 @@ node -e "JSON.parse(require('fs').readFileSync('data/mods/weapons/mod-manifest.j
 - The mod ID "weapons" will be used as namespace prefix for all content IDs (e.g., `weapons:pistol`, `weapons:ammunition`)
 - Version 1.0.0 follows semantic versioning: MAJOR.MINOR.PATCH
 - Dependencies must match the version numbers of installed mods
-- The weapons mod extends items mod's aiming functionality, so items must load first
+- The weapons mod will depend on items mod for inventory functionality and the aiming system that will be added in Phase 2 (WEASYSIMP-003-007)
+- **Important**: The aiming components (`items:aimable`, `items:aimed_at`) do not exist yet. They will be created in WEASYSIMP-003 before weapons-specific content
 - Future versions can add optional dependencies for integration with other mods (e.g., damage systems, skills)
+
+## Current State
+
+**Note**: The weapons mod directory structure already exists at `data/mods/weapons/` with a basic manifest file. This workflow updates the manifest to include proper metadata (description, author, gameVersion) and declares the dependency on the items mod.
+
+Existing structure:
+```
+data/mods/weapons/
+├── mod-manifest.json  (basic manifest exists, needs enhancement)
+├── actions/
+├── components/
+├── conditions/
+├── entities/
+├── events/
+├── rules/
+└── scopes/
+```
 
 ## Related Tickets
 
 - **Depends On:** WEASYSIMP-001 (Directory Structure)
 - **Blocks:** All subsequent weapons mod content tickets (WEASYSIMP-008 through WEASYSIMP-019)
+- **Phase Dependency**: Should be completed before WEASYSIMP-003 (Items Mod Aiming Components) to establish proper mod structure
 - **Reference:** See `data/mods/items/mod-manifest.json` and `data/mods/positioning/mod-manifest.json` for examples
