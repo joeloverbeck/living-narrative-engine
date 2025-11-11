@@ -55,6 +55,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
       .withComponent('items:weight', { weight: 0.01 })
+      .withComponent('core:description', {
+        text: 'A shiny gold coin',
+      })
       .build();
 
     const letterId = 'test:letter';
@@ -63,6 +66,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
       .withComponent('items:weight', { weight: 0.02 })
+      .withComponent('core:description', {
+        text: 'A letter sealed with wax',
+      })
       .build();
 
     // Create actor (the one performing actions) with items in inventory
@@ -100,6 +106,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
       .withComponent('items:weight', { weight: 0.1 })
+      .withComponent('core:description', {
+        text: 'A deep red ruby gem',
+      })
       .build();
 
     const scrollId = 'test:scroll';
@@ -108,6 +117,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
       .withComponent('items:weight', { weight: 0.05 })
+      .withComponent('core:description', {
+        text: 'An ancient scroll with mystical writing',
+      })
       .build();
 
     // Create container at location (open, for take_from_container)
@@ -255,7 +267,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       for (const action of examineActions) {
         expect(action.id).toBe('items:examine_owned_item');
         expect(action.template).toBeDefined();
-        expect(action.template).toBe('examine {item}');
+        expect(action.template).toBe('examine my {target}');
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined();
 
@@ -449,17 +461,21 @@ describe('Mixed Action Types Discovery - Integration', () => {
       // Examine actions should have proper structure
       for (const action of examineActions) {
         expect(action.id).toBe('items:examine_owned_item');
-        expect(action.template).toBe('examine {item}');
+        expect(action.template).toBe('examine my {target}');
         console.log(`  ✅ Single-target only: examine_owned_item found`);
       }
     });
 
     it('should handle when only multi-target actions are available (no examinable items)', async () => {
-      // Remove description components to make book and lamp non-examinable
+      // Remove description components to make all items non-examinable
       const bookId = 'test:book';
       const lampId = 'test:lamp';
+      const coinId = 'test:coin';
+      const letterId = 'test:letter';
       testFixture.entityManager.removeComponent(bookId, 'core:description');
       testFixture.entityManager.removeComponent(lampId, 'core:description');
+      testFixture.entityManager.removeComponent(coinId, 'core:description');
+      testFixture.entityManager.removeComponent(letterId, 'core:description');
 
       const actions = testFixture.discoverActions(actorId);
 
@@ -561,9 +577,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(giveActions.length).toBeGreaterThan(0);
       expect(takeActions.length).toBeGreaterThan(0);
 
-      // Single-target actions have {item} placeholder
+      // Single-target actions have {target} placeholder
       for (const action of examineActions) {
-        expect(action.template).toBe('examine {item}');
+        expect(action.template).toBe('examine my {target}');
         expect(action.targets.primary).toBeDefined();
 
         console.log(
@@ -652,7 +668,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
         // Templates should use proper placeholder syntax
         if (action.id === 'items:examine_owned_item') {
-          expect(action.template).toBe('examine {item}');
+          expect(action.template).toBe('examine my {target}');
         } else if (action.id === 'items:give_item') {
           expect(action.template).toBe('give {item} to {recipient}');
         } else if (action.id === 'items:take_from_container') {
