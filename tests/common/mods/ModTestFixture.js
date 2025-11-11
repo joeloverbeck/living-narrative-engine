@@ -985,6 +985,7 @@ class BaseModTestFixture {
       macros,  // Pass macros for expansion
       lookups,  // Pass lookups for QUERY_LOOKUP operations
       scopes,  // Pass scopes for scope resolution
+      debugPrerequisites: this.options.debugPrerequisites || false,
     });
   }
 
@@ -1161,6 +1162,24 @@ class BaseModTestFixture {
     if (this.diagnostics) {
       this.diagnostics.disableDiagnostics();
     }
+  }
+
+  /**
+   * Enable detailed prerequisite debugging with enhanced error messages.
+   * Note: This sets a flag that will be used when the test environment is created.
+   * If the environment already exists, you may need to recreate the fixture.
+   */
+  enablePrerequisiteDebug() {
+    this.options.debugPrerequisites = true;
+  }
+
+  /**
+   * Disable prerequisite debugging.
+   * Note: This sets a flag that will be used when the test environment is created.
+   * If the environment already exists, you may need to recreate the fixture.
+   */
+  disablePrerequisiteDebug() {
+    this.options.debugPrerequisites = false;
   }
 
   /**

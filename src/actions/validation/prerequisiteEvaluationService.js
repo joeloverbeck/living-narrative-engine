@@ -2,6 +2,7 @@
 
 import { BaseService } from '../../utils/serviceBase.js';
 import { resolveReferences } from './conditionReferenceResolver.js';
+import { PrerequisiteDebugger, DebugLevel } from './prerequisiteDebugger.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -13,6 +14,7 @@ import { resolveReferences } from './conditionReferenceResolver.js';
 // ActionTargetContext import removed as it's no longer used for prerequisite evaluation.
 /** @typedef {import('./actionValidationContextBuilder.js').ActionValidationContextBuilder} ActionValidationContextBuilder */
 /** @typedef {import('../tracing/traceContext.js').TraceContext} TraceContext */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 /**
  * @class PrerequisiteEvaluationService
@@ -26,6 +28,7 @@ export class PrerequisiteEvaluationService extends BaseService {
   #jsonLogicEvaluationService;
   #actionValidationContextBuilder;
   #gameDataRepository;
+  #debugger;
 
   /**
    * Builds the prefix used for logging messages.
@@ -46,6 +49,8 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {JsonLogicEvaluationService} dependencies.jsonLogicEvaluationService - Service for JsonLogic evaluation.
    * @param {ActionValidationContextBuilder} dependencies.actionValidationContextBuilder - Builder for evaluation contexts.
    * @param {GameDataRepository} dependencies.gameDataRepository - Repository for accessing game data like condition definitions.
+   * @param {IEntityManager} [dependencies.entityManager] - Optional entity manager for debugging.
+   * @param {boolean} [dependencies.debugMode] - Enable debug mode for enhanced error messages.
    * @throws {Error} If dependencies are missing or invalid.
    */
   constructor({
@@ -53,6 +58,8 @@ export class PrerequisiteEvaluationService extends BaseService {
     jsonLogicEvaluationService,
     actionValidationContextBuilder,
     gameDataRepository,
+    entityManager = null,
+    debugMode = false,
   }) {
     super();
     this.#logger = this._init('PrerequisiteEvaluationService', logger, {
@@ -73,6 +80,16 @@ export class PrerequisiteEvaluationService extends BaseService {
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#actionValidationContextBuilder = actionValidationContextBuilder;
     this.#gameDataRepository = gameDataRepository;
+
+    // Create debugger if entity manager is provided
+    if (entityManager) {
+      const debugLevel = debugMode ? DebugLevel.DEBUG : DebugLevel.ERROR;
+      this.#debugger = new PrerequisiteDebugger({
+        logger,
+        debugLevel,
+        entityManager,
+      });
+    }
 
     this.#logger.debug(
       'PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder and GameDataRepository).'
@@ -468,6 +485,32 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
+    // If debugger is available, use it for enhanced error context
+    if (this.#debugger) {
+      const result = this.#debugger.evaluate({
+        actionId,
+        prerequisiteIndex: ruleNumber - 1,
+        prerequisiteLogic: prereqObject.logic,
+        evaluator: () =>
+          this.#resolveAndEvaluate(prereqObject, actionId, evaluationContext, trace),
+        context: evaluationContext,
+      });
+
+      if (!result.success) {
+        // Error with enhanced context already logged by debugger
+        return false;
+      }
+
+      return this._logPrerequisiteResult(
+        result.result,
+        prereqObject,
+        ruleNumber,
+        totalRules,
+        actionId
+      );
+    }
+
+    // Fallback to existing implementation when debugger not available
     let rulePassed;
     try {
       rulePassed = this.#resolveAndEvaluate(
@@ -682,6 +725,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {string} actionId - The ID of the action being evaluated.
    * @param {string} actorId - The ID of the acting entity.
    * @param {TraceContext} [trace] - Optional tracing context for detailed logging.
+   * @param {object|null} [contextOverride] - Optional context overrides (e.g., resolved targets)
    * @returns {boolean} True if all prerequisites pass, false otherwise.
    */
   #evaluatePrerequisitesInternal(
