@@ -1,0 +1,49 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "items:aimed_at",
+  "description": "State component tracking what an aimable item is currently aimed at. Present only when item is actively aimed. Removed when aim is lowered.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "targetId": {
+        "description": "Entity ID of the target being aimed at",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+      },
+      "aimedBy": {
+        "description": "Entity ID of the actor aiming the item",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+      },
+      "activityMetadata": {
+        "type": "object",
+        "description": "Inline metadata for activity description generation. Allows this component to define how it should be described in activity summaries without requiring a separate metadata component.",
+        "additionalProperties": false,
+        "properties": {
+          "shouldDescribeInActivity": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this component should be included in activity descriptions. Set to false to hide from activity summaries."
+          },
+          "template": {
+            "type": "string",
+            "default": "{item} is aimed at {target} by {actor}",
+            "description": "Template string with placeholders for display"
+          },
+          "targetRole": {
+            "type": "string",
+            "default": "targetId",
+            "description": "Property name in this component's data containing the target entity ID"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 70,
+            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100."
+          }
+        }
+      }
+    },
+    "required": ["targetId", "aimedBy"],
+    "additionalProperties": false
+  }
+}
