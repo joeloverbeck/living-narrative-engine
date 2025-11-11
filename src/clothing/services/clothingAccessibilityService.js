@@ -299,6 +299,82 @@ export class ClothingAccessibilityService {
   }
 
   /**
+   * Apply removal blocking based on clothing:blocks_removal component
+   *
+   * @private
+   * @param {Array} items - Array of equipped items to filter
+   * @param {string} entityId - Entity ID wearing the clothing
+   * @param {object} equipment - Equipment state object
+   * @returns {Array} Filtered items with blocked items removed
+   */
+  #applyRemovalBlocking(items, entityId, equipment) {
+    // Get all equipped items for checking blocking relationships
+    const allEquippedItems = this.#parseEquipmentSlots(equipment);
+
+    // Filter out items that are blocked
+    return items.filter((targetItem) => {
+      // Get target item's wearable data
+      const targetWearable = this.#entityManager.getComponentData(
+        targetItem.itemId,
+        'clothing:wearable'
+      );
+
+      if (!targetWearable) {
+        return true; // Include non-wearable items (shouldn't happen)
+      }
+
+      // Check if any equipped item blocks this target item
+      for (const equippedItem of allEquippedItems) {
+        // Skip self
+        if (equippedItem.itemId === targetItem.itemId) {
+          continue;
+        }
+
+        // Check if this equipped item has blocking component
+        if (!this.#entityManager.hasComponent(equippedItem.itemId, 'clothing:blocks_removal')) {
+          continue;
+        }
+
+        const blocking = this.#entityManager.getComponentData(
+          equippedItem.itemId,
+          'clothing:blocks_removal'
+        );
+
+        // Check slot-based blocking
+        if (blocking.blockedSlots) {
+          const targetSlot = targetWearable.equipmentSlots?.primary;
+          const targetLayer = targetWearable.layer;
+
+          if (targetSlot && targetLayer) {
+            for (const rule of blocking.blockedSlots) {
+              if (rule.slot === targetSlot && rule.layers.includes(targetLayer)) {
+                this.#logger.debug('Filtering blocked item from accessible items', {
+                  targetItemId: targetItem.itemId,
+                  blockedBy: equippedItem.itemId,
+                  reason: 'slot_based_blocking',
+                });
+                return false; // Item is blocked
+              }
+            }
+          }
+        }
+
+        // Check explicit item ID blocking
+        if (blocking.blocksRemovalOf?.includes(targetItem.itemId)) {
+          this.#logger.debug('Filtering explicitly blocked item from accessible items', {
+            targetItemId: targetItem.itemId,
+            blockedBy: equippedItem.itemId,
+            reason: 'explicit_id_blocking',
+          });
+          return false; // Item is blocked
+        }
+      }
+
+      return true; // Item is not blocked
+    });
+  }
+
+  /**
    * Calculate unified priority for an item
    *
    * @private
@@ -575,8 +651,18 @@ export class ClothingAccessibilityService {
       accessibleItems,
     });
 
+    // Apply removal blocking (belt blocks pants, etc.)
+    const removalFilteredItems = this.#applyRemovalBlocking(
+      accessibleItems,
+      entityId,
+      equipment
+    );
+    this.#logger.debug('ClothingAccessibilityService: After removal blocking', {
+      removalFilteredItems,
+    });
+
     // Apply mode-specific logic
-    let result = this.#applyModeLogic(accessibleItems, mode);
+    let result = this.#applyModeLogic(removalFilteredItems, mode);
     this.#logger.debug('ClothingAccessibilityService: After mode logic', {
       result,
     });
