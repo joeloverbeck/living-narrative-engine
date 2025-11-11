@@ -42,6 +42,27 @@ function trackDirectory(relativePath) {
   return absolutePath;
 }
 
+/**
+ * Clean up leftover test directories from previous test runs.
+ * This ensures a clean state even if previous tests were interrupted.
+ */
+async function cleanupLeftoverDirectories() {
+  const dirsToClean = [
+    path.join(projectRoot, 'tmp-trace-batch'),
+    path.join(projectRoot, 'tmp-traces'),
+    path.join(projectRoot, 'tmp'),
+    path.join(projectRoot, 'test-traces'),
+  ];
+
+  for (const dir of dirsToClean) {
+    try {
+      await rm(dir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore errors - directory might not exist
+    }
+  }
+}
+
 beforeEach(() => {
   createdDirectories.clear();
 });
@@ -66,6 +87,9 @@ afterEach(async () => {
   }
 
   createdDirectories.clear();
+
+  // Also clean up parent directories if empty
+  await cleanupLeftoverDirectories();
 });
 
 describe('traceRoutes batch failure mode integration coverage', () => {
