@@ -7,15 +7,15 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import '../../../common/mods/domainMatchers.js';
-import handleTravelThroughDimensionsRule from '../../../../data/mods/patrol/rules/handle_travel_through_dimensions.rule.json' assert { type: 'json' };
-import eventIsActionTravelThroughDimensions from '../../../../data/mods/patrol/conditions/event-is-action-travel-through-dimensions.condition.json' assert { type: 'json' };
+import handleTravelThroughDimensionsRule from '../../../../data/mods/movement/rules/handle_travel_through_dimensions.rule.json' assert { type: 'json' };
+import eventIsActionTravelThroughDimensions from '../../../../data/mods/movement/conditions/event-is-action-travel-through-dimensions.condition.json' assert { type: 'json' };
 
 describe('travel_through_dimensions Perceptible Event Schema Validation', () => {
   let fixture;
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'patrol',
+      'movement',
       'travel_through_dimensions',
       handleTravelThroughDimensionsRule,
       eventIsActionTravelThroughDimensions
@@ -182,7 +182,7 @@ async function createDimensionalScenario(fixture) {
   const blockerId = fixture.createEntity({
     id: 'validation-blocker',
     name: 'dimensional rift',
-    components: [{ componentId: 'patrol:is_dimensional_portal', data: {} }],
+    components: [{ componentId: 'movement:is_dimensional_portal', data: {} }],
   });
 
   await fixture.modifyComponent(perimeterId, 'movement:exits', [
@@ -199,7 +199,7 @@ async function createDimensionalScenario(fixture) {
     components: [
       { componentId: 'core:actor', data: {} },
       { componentId: 'core:position', data: { locationId: perimeterId } },
-      { componentId: 'patrol:can_travel_through_dimensions', data: {} },
+      { componentId: 'movement:can_travel_through_dimensions', data: {} },
       { componentId: 'core:name', data: { text: 'Test Observer' } },
     ],
   });

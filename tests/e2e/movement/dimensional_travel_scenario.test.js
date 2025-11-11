@@ -13,7 +13,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'patrol',
-      'patrol:travel_through_dimensions'
+      'movement:travel_through_dimensions'
     );
   });
 
@@ -44,7 +44,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
       const actions = await fixture.discoverActions(lenId);
 
       // Should not have dimensional travel action (lacks component)
-      expect(actions).not.toContainAction('patrol:travel_through_dimensions');
+      expect(actions).not.toContainAction('movement:travel_through_dimensions');
 
       // Should not have go action to eldritch dimension (blocked exit)
       expect(actions).not.toContainAction('movement:go', {
@@ -59,7 +59,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
         components: [
           { componentId: 'core:actor', data: {} },
           { componentId: 'core:name', data: { text: 'Writhing Observer' } },
-          { componentId: 'patrol:can_travel_through_dimensions', data: {} },
+          { componentId: 'movement:can_travel_through_dimensions', data: {} },
         ],
       });
 
@@ -98,7 +98,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
         components: [
           { componentId: 'core:actor', data: {} },
           { componentId: 'core:name', data: { text: 'Writhing Observer' } },
-          { componentId: 'patrol:can_travel_through_dimensions', data: {} },
+          { componentId: 'movement:can_travel_through_dimensions', data: {} },
         ],
       });
 
@@ -160,7 +160,7 @@ function createDimensionalLocations(fixture) {
   const blockerId = fixture.createEntity({
     name: 'dimensional rift',
     components: [
-      { componentId: 'patrol:is_dimensional_portal', data: {} },
+      { componentId: 'movement:is_dimensional_portal', data: {} },
       { componentId: 'core:name', data: { text: 'dimensional rift' } },
     ],
   });
@@ -202,7 +202,7 @@ function createBidirectionalDimensionalLocations(fixture) {
   const blockerId = fixture.createEntity({
     name: 'dimensional rift',
     components: [
-      { componentId: 'patrol:is_dimensional_portal', data: {} },
+      { componentId: 'movement:is_dimensional_portal', data: {} },
       { componentId: 'core:name', data: { text: 'dimensional rift' } },
     ],
   });

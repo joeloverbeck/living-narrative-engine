@@ -4,7 +4,7 @@
   "comment": "Handles entity traveling through dimensional tear to reach another dimension",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "patrol:event-is-action-travel-through-dimensions"
+    "condition_ref": "movement:event-is-action-travel-through-dimensions"
   },
   "actions": [
     {

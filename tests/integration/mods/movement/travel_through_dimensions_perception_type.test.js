@@ -13,7 +13,7 @@ describe('travel_through_dimensions - perceptionType Validation', () => {
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'patrol',
+      'movement',
       'travel_through_dimensions'
     );
   });
@@ -67,14 +67,14 @@ function createDimensionalScenario() {
 
   const blocker = new ModEntityBuilder(blockerId)
     .withName('dimensional rift')
-    .withComponent('patrol:is_dimensional_portal', {})
+    .withComponent('movement:is_dimensional_portal', {})
     .build();
 
   const observer = new ModEntityBuilder(observerId)
     .withName('Test Observer')
     .asActor()
     .atLocation(perimeterId)
-    .withComponent('patrol:can_travel_through_dimensions', {})
+    .withComponent('movement:can_travel_through_dimensions', {})
     .build();
 
   return {

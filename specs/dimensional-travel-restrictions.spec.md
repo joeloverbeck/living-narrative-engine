@@ -34,7 +34,7 @@ All characters can freely use `movement:go` to travel between dimensions. This b
 
 ### Component Definitions
 
-#### 1. Dimensional Portal Marker (`patrol:is_dimensional_portal`)
+#### 1. Dimensional Portal Marker (`movement:is_dimensional_portal`)
 
 **Purpose**: Mark exit destinations that represent dimensional boundaries
 
@@ -43,7 +43,7 @@ All characters can freely use `movement:go` to travel between dimensions. This b
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "patrol:is_dimensional_portal",
+  "id": "movement:is_dimensional_portal",
   "description": "Marker component indicating this exit connects to a different dimension and requires special abilities to traverse.",
   "dataSchema": {
     "type": "object",
@@ -58,7 +58,7 @@ All characters can freely use `movement:go` to travel between dimensions. This b
 - Signals that standard movement is insufficient
 - Enables specialized scope filtering for dimensional travel actions
 
-#### 2. Interdimensional Travel Affordance (`patrol:can_travel_through_dimensions`)
+#### 2. Interdimensional Travel Affordance (`movement:can_travel_through_dimensions`)
 
 **Purpose**: Grant entities the ability to traverse dimensional boundaries
 
@@ -67,7 +67,7 @@ All characters can freely use `movement:go` to travel between dimensions. This b
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "patrol:can_travel_through_dimensions",
+  "id": "movement:can_travel_through_dimensions",
   "description": "Marker component indicating this entity can travel between dimensions through tears in reality.",
   "dataSchema": {
     "type": "object",
@@ -101,7 +101,7 @@ All characters can freely use `movement:go` to travel between dimensions. This b
     "core:description": {
       "text": "A shimmering tear in reality that bends light and warps space. Crossing it requires more than physical movement—it demands the ability to exist across dimensions."
     },
-    "patrol:is_dimensional_portal": {}
+    "movement:is_dimensional_portal": {}
   }
 }
 ```
@@ -165,7 +165,7 @@ All characters can freely use `movement:go` to travel between dimensions. This b
 **File**: `data/mods/patrol/scopes/dimensional_portals.scope`
 
 ```
-patrol:dimensional_portals := location.movement:exits[
+movement:dimensional_portals := location.movement:exits[
     { "and": [
         { "var": "entity.blocker" },
         { "condition_ref": "patrol:blocker-is-dimensional-portal" }
@@ -175,7 +175,7 @@ patrol:dimensional_portals := location.movement:exits[
 
 **Logic**:
 1. Filter location exits that have a blocker
-2. Further filter to blockers with `patrol:is_dimensional_portal` component
+2. Further filter to blockers with `movement:is_dimensional_portal` component
 3. Extract target destinations
 
 **Dependencies**:
@@ -193,7 +193,7 @@ patrol:dimensional_portals := location.movement:exits[
   "logic": {
     "has_component": [
       { "var": "entity.blocker" },
-      "patrol:is_dimensional_portal"
+      "movement:is_dimensional_portal"
     ]
   }
 }
@@ -212,18 +212,18 @@ patrol:dimensional_portals := location.movement:exits[
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "patrol:travel_through_dimensions",
+  "id": "movement:travel_through_dimensions",
   "name": "Travel Through Dimensions",
   "description": "Slip through the tear in reality, traversing the boundary between dimensions. Your form ripples and distorts as you step into alien geometries.",
   "targets": {
     "primary": {
-      "scope": "patrol:dimensional_portals",
+      "scope": "movement:dimensional_portals",
       "placeholder": "destination",
       "description": "Dimensional destination to travel to"
     }
   },
   "required_components": {
-    "actor": ["patrol:can_travel_through_dimensions"]
+    "actor": ["movement:can_travel_through_dimensions"]
   },
   "template": "travel through dimensions to {destination}",
   "visual": {
@@ -240,8 +240,8 @@ patrol:dimensional_portals := location.movement:exits[
 ```
 
 **Key Features**:
-- Uses `patrol:dimensional_portals` scope (only blocked exits with dimensional portal markers)
-- Requires `patrol:can_travel_through_dimensions` component
+- Uses `movement:dimensional_portals` scope (only blocked exits with dimensional portal markers)
+- Requires `movement:can_travel_through_dimensions` component
 - Distinct visual styling (dark purple/cosmic theme)
 - Immersive description matching eldritch theme
 
@@ -395,7 +395,7 @@ movement:clear_directions := location.movement:exits[
   "logic": {
     "==": [
       { "var": "event.payload.actionId" },
-      "patrol:travel_through_dimensions"
+      "movement:travel_through_dimensions"
     ]
   }
 }
@@ -411,7 +411,7 @@ movement:clear_directions := location.movement:exits[
 ```json
 {
   "components": {
-    "patrol:can_travel_through_dimensions": {}
+    "movement:can_travel_through_dimensions": {}
   }
 }
 ```
@@ -433,7 +433,7 @@ movement:clear_directions := location.movement:exits[
     },
     "anatomy:body": { "recipeId": "anatomy:writhing_observer" },
     "core:gender": { "value": "male" },
-    "patrol:can_travel_through_dimensions": {}
+    "movement:can_travel_through_dimensions": {}
   }
 }
 ```
@@ -449,7 +449,7 @@ movement:clear_directions := location.movement:exits[
 **Purpose**: Verify scope correctly identifies dimensional portals
 
 ```javascript
-describe('patrol:dimensional_portals Scope', () => {
+describe('movement:dimensional_portals Scope', () => {
   let scopeEngine;
   let testLocation;
 
@@ -468,7 +468,7 @@ describe('patrol:dimensional_portals Scope', () => {
         }
       ];
 
-      const result = scopeEngine.resolve('patrol:dimensional_portals', {
+      const result = scopeEngine.resolve('movement:dimensional_portals', {
         location: { 'movement:exits': exits }
       });
 
@@ -484,7 +484,7 @@ describe('patrol:dimensional_portals Scope', () => {
         }
       ];
 
-      const result = scopeEngine.resolve('patrol:dimensional_portals', {
+      const result = scopeEngine.resolve('movement:dimensional_portals', {
         location: { 'movement:exits': exits }
       });
 
@@ -500,7 +500,7 @@ describe('patrol:dimensional_portals Scope', () => {
         }
       ];
 
-      const result = scopeEngine.resolve('patrol:dimensional_portals', {
+      const result = scopeEngine.resolve('movement:dimensional_portals', {
         location: { 'movement:exits': exits }
       });
 
@@ -537,7 +537,7 @@ describe('patrol:blocker-is-dimensional-portal Condition', () => {
       expect(result).toBe(true);
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         blockerId,
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
 
@@ -583,7 +583,7 @@ describe('travel_through_dimensions Action Discovery', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'patrol',
-      'patrol:travel_through_dimensions'
+      'movement:travel_through_dimensions'
     );
   });
 
@@ -620,7 +620,7 @@ describe('travel_through_dimensions Action Discovery', () => {
         name: 'dimensional rift',
         components: [
           {
-            componentId: 'patrol:is_dimensional_portal',
+            componentId: 'movement:is_dimensional_portal',
             data: {}
           }
         ]
@@ -648,7 +648,7 @@ describe('travel_through_dimensions Action Discovery', () => {
             data: { locationId: perimeterId }
           },
           {
-            componentId: 'patrol:can_travel_through_dimensions',
+            componentId: 'movement:can_travel_through_dimensions',
             data: {}
           }
         ]
@@ -656,7 +656,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       const actions = await fixture.discoverActions(observerId);
 
-      expect(actions).toContainAction('patrol:travel_through_dimensions', {
+      expect(actions).toContainAction('movement:travel_through_dimensions', {
         primaryTargetId: dimensionId
       });
     });
@@ -669,7 +669,7 @@ describe('travel_through_dimensions Action Discovery', () => {
 
       const actions = await fixture.discoverActions(humanId);
 
-      expect(actions).not.toContainAction('patrol:travel_through_dimensions');
+      expect(actions).not.toContainAction('movement:travel_through_dimensions');
     });
 
     it('should NOT discover travel_through_dimensions for unblocked exits', async () => {
@@ -687,7 +687,7 @@ describe('travel_through_dimensions Action Discovery', () => {
             data: { locationId: scenario.locationId }
           },
           {
-            componentId: 'patrol:can_travel_through_dimensions',
+            componentId: 'movement:can_travel_through_dimensions',
             data: {}
           }
         ]
@@ -696,7 +696,7 @@ describe('travel_through_dimensions Action Discovery', () => {
       const actions = await fixture.discoverActions(observerId);
 
       // Should not appear because exits are unblocked (normal movement)
-      expect(actions).not.toContainAction('patrol:travel_through_dimensions');
+      expect(actions).not.toContainAction('movement:travel_through_dimensions');
     });
   });
 
@@ -753,7 +753,7 @@ function createDimensionalScenario(fixture, options = {}) {
   const blockerId = fixture.createEntity({
     name: 'dimensional rift',
     components: [
-      { componentId: 'patrol:is_dimensional_portal', data: {} }
+      { componentId: 'movement:is_dimensional_portal', data: {} }
     ]
   });
 
@@ -772,7 +772,7 @@ function createDimensionalScenario(fixture, options = {}) {
 
   if (actorHasAffordance) {
     actorComponents.push({
-      componentId: 'patrol:can_travel_through_dimensions',
+      componentId: 'movement:can_travel_through_dimensions',
       data: {}
     });
   }
@@ -812,7 +812,7 @@ function createMixedExitScenario(fixture) {
   const blockerId = fixture.createEntity({
     name: 'dimensional rift',
     components: [
-      { componentId: 'patrol:is_dimensional_portal', data: {} }
+      { componentId: 'movement:is_dimensional_portal', data: {} }
     ]
   });
 
@@ -857,7 +857,7 @@ describe('travel_through_dimensions Rule Execution', () => {
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
       'patrol',
-      'patrol:travel_through_dimensions'
+      'movement:travel_through_dimensions'
     );
   });
 
@@ -987,7 +987,7 @@ function createBidirectionalScenario(fixture) {
   const blockerId = fixture.createEntity({
     name: 'dimensional rift',
     components: [
-      { componentId: 'patrol:is_dimensional_portal', data: {} }
+      { componentId: 'movement:is_dimensional_portal', data: {} }
     ]
   });
 
@@ -1014,7 +1014,7 @@ function createBidirectionalScenario(fixture) {
     components: [
       { componentId: 'core:actor', data: {} },
       { componentId: 'core:position', data: { locationId: perimeterId } },
-      { componentId: 'patrol:can_travel_through_dimensions', data: {} }
+      { componentId: 'movement:can_travel_through_dimensions', data: {} }
     ]
   });
 
@@ -1052,7 +1052,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
       const actions = await fixture.discoverActions(lenId);
 
       // Should not have dimensional travel action (lacks component)
-      expect(actions).not.toContainAction('patrol:travel_through_dimensions');
+      expect(actions).not.toContainAction('movement:travel_through_dimensions');
 
       // Should not have go action to eldritch dimension (blocked exit)
       const dimensionId = fixture.getLocationId('eldritch_dimension');
@@ -1072,7 +1072,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
       const actions = await fixture.discoverActions(observerId);
 
       // Should have dimensional travel action (has component)
-      expect(actions).toContainAction('patrol:travel_through_dimensions');
+      expect(actions).toContainAction('movement:travel_through_dimensions');
 
       // Execute travel
       const dimensionId = fixture.getLocationId('eldritch_dimension');
@@ -1167,7 +1167,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
 1. `data/mods/patrol/entities/definitions/writhing_observer.character.json` (modify)
 
 **Validation**:
-- Writhing Observer gains `patrol:can_travel_through_dimensions` component
+- Writhing Observer gains `movement:can_travel_through_dimensions` component
 - Action discovery includes dimensional travel for Observer
 - Action discovery excludes dimensional travel for Len and Dylan
 
@@ -1421,7 +1421,7 @@ registerResolver('has_component', (entityId, componentId, context) => {
 ```json
 {
   "logic": {
-    "!!": { "var": "entity.blocker.patrol:is_dimensional_portal" }
+    "!!": { "var": "entity.blocker.movement:is_dimensional_portal" }
   }
 }
 ```
@@ -1430,7 +1430,7 @@ Note: Less explicit but works if component path resolution supported
 **Option 3: Dedicated Condition Scope**
 ```
 patrol:dimensional_blockers := location.movement:exits.blocker[
-    { "var": "components.patrol:is_dimensional_portal" }
+    { "var": "components.movement:is_dimensional_portal" }
 ]
 ```
 Then check if blocker is in that set (more complex scope logic)
@@ -1469,7 +1469,7 @@ When creating dimensional scenarios in tests:
 const blockerId = fixture.createEntity({
   name: 'dimensional rift',
   components: [
-    { componentId: 'patrol:is_dimensional_portal', data: {} }
+    { componentId: 'movement:is_dimensional_portal', data: {} }
   ]
 });
 

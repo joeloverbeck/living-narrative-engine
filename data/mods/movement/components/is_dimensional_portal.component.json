@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "patrol:is_dimensional_portal",
+  "id": "movement:is_dimensional_portal",
   "description": "Marker component indicating this exit connects to a different dimension and requires special abilities to traverse.",
   "dataSchema": {
     "type": "object",

@@ -1,6 +1,0 @@
-patrol:dimensional_portals := location.movement:exits[
-    { "and": [
-        { "var": "entity.blocker" },
-        { "condition_ref": "patrol:blocker-is-dimensional-portal" }
-    ]}
-].target

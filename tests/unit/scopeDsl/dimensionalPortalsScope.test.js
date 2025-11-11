@@ -1,27 +1,27 @@
 /**
- * @file Unit tests for patrol:dimensional_portals scope
+ * @file Unit tests for movement:dimensional_portals scope
  * @description Tests that the scope definition is valid and properly structured
  */
 
 import { describe, it, expect } from '@jest/globals';
 import { promises as fs } from 'fs';
 
-describe('patrol:dimensional_portals Scope', () => {
+describe('movement:dimensional_portals Scope', () => {
   describe('Scope Definition', () => {
     it('should have valid scope definition file', async () => {
       const scopeContent = await fs.readFile(
-        'data/mods/patrol/scopes/dimensional_portals.scope',
+        'data/mods/movement/scopes/dimensional_portals.scope',
         'utf-8'
       );
 
       expect(scopeContent).toBeDefined();
-      expect(scopeContent).toContain('patrol:dimensional_portals');
+      expect(scopeContent).toContain('movement:dimensional_portals');
       expect(scopeContent).toContain('location.movement:exits');
     });
 
     it('should filter exits by blocker presence', async () => {
       const scopeContent = await fs.readFile(
-        'data/mods/patrol/scopes/dimensional_portals.scope',
+        'data/mods/movement/scopes/dimensional_portals.scope',
         'utf-8'
       );
 
@@ -31,18 +31,18 @@ describe('patrol:dimensional_portals Scope', () => {
 
     it('should reference blocker-is-dimensional-portal condition', async () => {
       const scopeContent = await fs.readFile(
-        'data/mods/patrol/scopes/dimensional_portals.scope',
+        'data/mods/movement/scopes/dimensional_portals.scope',
         'utf-8'
       );
 
       // Verify it uses the condition reference
       expect(scopeContent).toContain('condition_ref');
-      expect(scopeContent).toContain('patrol:blocker-is-dimensional-portal');
+      expect(scopeContent).toContain('movement:blocker-is-dimensional-portal');
     });
 
     it('should extract target from exits', async () => {
       const scopeContent = await fs.readFile(
-        'data/mods/patrol/scopes/dimensional_portals.scope',
+        'data/mods/movement/scopes/dimensional_portals.scope',
         'utf-8'
       );
 
@@ -54,19 +54,19 @@ describe('patrol:dimensional_portals Scope', () => {
   describe('Condition Definition', () => {
     it('should have valid condition definition file', async () => {
       const conditionContent = await fs.readFile(
-        'data/mods/patrol/conditions/blocker-is-dimensional-portal.condition.json',
+        'data/mods/movement/conditions/blocker-is-dimensional-portal.condition.json',
         'utf-8'
       );
 
       const condition = JSON.parse(conditionContent);
 
-      expect(condition.id).toBe('patrol:blocker-is-dimensional-portal');
+      expect(condition.id).toBe('movement:blocker-is-dimensional-portal');
       expect(condition.logic).toBeDefined();
     });
 
     it('should check for is_dimensional_portal component', async () => {
       const conditionContent = await fs.readFile(
-        'data/mods/patrol/conditions/blocker-is-dimensional-portal.condition.json',
+        'data/mods/movement/conditions/blocker-is-dimensional-portal.condition.json',
         'utf-8'
       );
 
@@ -75,7 +75,7 @@ describe('patrol:dimensional_portals Scope', () => {
       // Verify it uses has_component operation
       expect(condition.logic.has_component).toBeDefined();
       expect(condition.logic.has_component[1]).toBe(
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
   });
