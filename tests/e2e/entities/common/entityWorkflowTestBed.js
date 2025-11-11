@@ -75,6 +75,10 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     this.logger = this.container.resolve(tokens.ILogger);
     this.validator = this.container.resolve(tokens.ISchemaValidator);
 
+    // Initialize SpatialIndexSynchronizer to start listening to events
+    // This is required for automatic spatial index maintenance
+    this.container.resolve('SpatialIndexSynchronizer');
+
     // Register required component schemas for testing
     await this.registerTestComponentSchemas();
 
