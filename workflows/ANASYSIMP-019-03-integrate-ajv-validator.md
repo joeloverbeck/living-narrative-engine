@@ -26,11 +26,14 @@ Integrate the `ValidatorGenerator` with the existing `AjvSchemaValidator` to pro
 
 **File to Update:** `src/validation/ajvSchemaValidator.js`
 
+**Important:** This file is located at `src/validation/ajvSchemaValidator.js` (NOT `src/services/ajvSchemaValidator.js` as the file header comment incorrectly states).
+
 Add support for generated validators:
 
 ```javascript
 /**
  * @file AJV-based schema validator with generated validator support
+ * @description Integrates ValidatorGenerator for enhanced validation with custom error messages
  */
 
 import { validateDependency, assertPresent } from '../utils/dependencyUtils.js';
@@ -40,48 +43,55 @@ class AjvSchemaValidator {
   #logger;
   #ajv;
   #validatorGenerator;
-  #schemaLoader;
+  #dataRegistry; // Access to component definitions (which contain dataSchemas)
   #generatedValidators; // Cache for generated validators
 
-  constructor({ logger, ajv, validatorGenerator, schemaLoader }) {
+  constructor({ logger, ajvInstance, validatorGenerator, dataRegistry, preloadSchemas }) {
+    // Note: Constructor parameter is 'ajvInstance', not 'ajv'
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     validateDependency(validatorGenerator, 'IValidatorGenerator', logger, {
       requiredMethods: ['generate'],
     });
-    validateDependency(schemaLoader, 'ISchemaLoader', logger, {
-      requiredMethods: ['getSchema'],
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['getComponentDefinition', 'getAllComponentDefinitions'],
     });
 
     this.#logger = logger;
-    this.#ajv = ajv;
+    this.#ajv = ajvInstance; // Store as #ajv internally
     this.#validatorGenerator = validatorGenerator;
-    this.#schemaLoader = schemaLoader;
+    this.#dataRegistry = dataRegistry; // Use data registry to retrieve component schemas
     this.#generatedValidators = new Map();
+
+    // ... existing initialization code (Ajv instance creation, preloadSchemas, etc.)
   }
 
   /**
    * Validates data against a schema with enhanced validation
-   * @param {*} data - Data to validate
    * @param {string} schemaId - Schema identifier
+   * @param {*} data - Data to validate
    * @returns {Object} Validation result with errors
+   *
+   * IMPORTANT: Parameter order is (schemaId, data) NOT (data, schemaId)
+   * This matches the existing implementation
    */
-  validate(data, schemaId) {
-    assertPresent(data, 'Data is required for validation');
+  validate(schemaId, data) {
+    // Note: Parameters are in the order: schemaId, data (existing implementation)
     string.assertNonBlank(schemaId, 'schemaId', 'validate', this.#logger);
+    assertPresent(data, 'Data is required for validation');
 
     try {
       // Stage 1: Standard AJV validation
-      const ajvResult = this.#validateWithAjv(data, schemaId);
+      const ajvResult = this.#validateWithAjv(schemaId, data);
 
-      if (!ajvResult.valid) {
+      if (!ajvResult.isValid) {
         // AJV validation failed, return immediately
         return ajvResult;
       }
 
       // Stage 2: Generated validator (if available)
-      const generatedResult = this.#validateWithGenerated(data, schemaId);
+      const generatedResult = this.#validateWithGenerated(schemaId, data);
 
       if (!generatedResult) {
         // No generated validator, return AJV result
@@ -93,7 +103,7 @@ class AjvSchemaValidator {
     } catch (error) {
       this.#logger.error(`Validation failed for schema ${schemaId}`, error);
       return {
-        valid: false,
+        isValid: false, // Note: Property is 'isValid' not 'valid' in existing implementation
         errors: [
           {
             message: `Validation error: ${error.message}`,
@@ -107,14 +117,15 @@ class AjvSchemaValidator {
   /**
    * Validates data using AJV
    * @private
+   * @returns {ValidationResult} Result with isValid property
    */
-  #validateWithAjv(data, schemaId) {
+  #validateWithAjv(schemaId, data) {
     const validateFn = this.#ajv.getSchema(schemaId);
 
     if (!validateFn) {
       this.#logger.warn(`Schema not found: ${schemaId}`);
       return {
-        valid: false,
+        isValid: false, // Note: Property is 'isValid' not 'valid'
         errors: [
           {
             message: `Schema not found: ${schemaId}`,
@@ -124,23 +135,26 @@ class AjvSchemaValidator {
       };
     }
 
-    const valid = validateFn(data);
+    const isValid = validateFn(data);
 
-    if (!valid) {
+    if (!isValid) {
       return {
-        valid: false,
+        isValid: false,
         errors: this.#formatAjvErrors(validateFn.errors, schemaId),
       };
     }
 
-    return { valid: true, errors: [] };
+    return { isValid: true, errors: [] };
   }
 
   /**
    * Validates data using generated validator
    * @private
+   * @param {string} schemaId - Schema identifier (component schema ID)
+   * @param {*} data - Data to validate
+   * @returns {Object|null} Validation result or null if no validator
    */
-  #validateWithGenerated(data, schemaId) {
+  #validateWithGenerated(schemaId, data) {
     // Check cache first
     if (this.#generatedValidators.has(schemaId)) {
       const validator = this.#generatedValidators.get(schemaId);
@@ -154,15 +168,18 @@ class AjvSchemaValidator {
     }
 
     // Generate validator on first use
-    const componentSchema = this.#schemaLoader.getSchema(schemaId);
+    // Note: Use IDataRegistry to retrieve component definition
+    // Component definitions contain the dataSchema needed by ValidatorGenerator
+    const componentDefinition = this.#dataRegistry.getComponentDefinition(schemaId);
 
-    if (!componentSchema) {
-      this.#logger.warn(`Component schema not found: ${schemaId}`);
+    if (!componentDefinition) {
+      this.#logger.debug(`Component definition not found: ${schemaId} (may not be a component schema)`);
       this.#generatedValidators.set(schemaId, null);
       return null;
     }
 
-    const validator = this.#validatorGenerator.generate(componentSchema);
+    // ValidatorGenerator.generate() expects a component schema with dataSchema property
+    const validator = this.#validatorGenerator.generate(componentDefinition);
 
     // Cache the result (including null)
     this.#generatedValidators.set(schemaId, validator);
@@ -177,10 +194,12 @@ class AjvSchemaValidator {
   /**
    * Merges validation results from AJV and generated validator
    * @private
+   * @returns {ValidationResult} Merged validation result
    */
   #mergeValidationResults(ajvResult, generatedResult) {
-    if (ajvResult.valid && generatedResult.valid) {
-      return { valid: true, errors: [] };
+    // Note: Check 'isValid' property, not 'valid'
+    if (ajvResult.isValid && generatedResult.valid) {
+      return { isValid: true, errors: [] };
     }
 
     const allErrors = [
@@ -189,7 +208,7 @@ class AjvSchemaValidator {
     ];
 
     return {
-      valid: false,
+      isValid: false,
       errors: allErrors,
     };
   }
@@ -250,29 +269,85 @@ class AjvSchemaValidator {
 export default AjvSchemaValidator;
 ```
 
-### 2. Schema Loader Interface
+### 2. Data Registry Interface for Component Schemas
 
-Ensure the schema loader can retrieve component schemas for validator generation.
+**Important Clarification:** Component schemas are NOT retrieved via SchemaLoader. Instead, they are stored in the IDataRegistry.
 
-**File to Check/Update:** `src/loaders/schemaLoader.js`
+**File to Check:** `src/data/inMemoryDataRegistry.js`
 
-Add method if not present:
+The IDataRegistry already has the necessary methods:
 
 ```javascript
 /**
- * Gets a component schema by ID
- * @param {string} schemaId - Schema identifier
- * @returns {Object|null} Component schema or null
+ * Gets a component definition by ID
+ * Component definitions include the dataSchema property needed by ValidatorGenerator
+ * @param {string} id - Component identifier (e.g., "core:actor")
+ * @returns {Object|undefined} Component definition or undefined
  */
-getSchema(schemaId) {
-  string.assertNonBlank(schemaId, 'schemaId', 'getSchema', this.#logger);
+getComponentDefinition(id) {
+  return this.get('components', id);
+}
 
-  // Implementation depends on existing schema loading mechanism
-  // This is a placeholder - adapt to existing code
-
-  return this.#schemaCache.get(schemaId) || null;
+/**
+ * Gets all component definitions
+ * Useful for pre-generating validators during initialization
+ * @returns {Object[]} Array of all component definitions
+ */
+getAllComponentDefinitions() {
+  return this.getAll('components');
 }
 ```
+
+**No changes needed** - the IDataRegistry already provides the necessary interface.
+
+Component definitions retrieved via `getComponentDefinition(id)` contain:
+- `id` - Component identifier
+- `dataSchema` - JSON Schema for component data (used by ValidatorGenerator)
+- `validationRules` - Optional validation configuration (used by ValidatorGenerator)
+- Other component metadata
+
+### 3. Dependency Injection Registration
+
+**File to Update:** `src/dependencyInjection/registrations/loadersRegistrations.js`
+
+Current registration (lines ~168-195):
+
+```javascript
+registrar.singletonFactory(
+  tokens.ISchemaValidator,
+  (c) =>
+    new AjvSchemaValidator({
+      logger: c.resolve(tokens.ILogger),
+      preloadSchemas: [
+        // ... schema preloads
+      ],
+    })
+);
+```
+
+**Update to:**
+
+```javascript
+registrar.singletonFactory(
+  tokens.ISchemaValidator,
+  (c) =>
+    new AjvSchemaValidator({
+      logger: c.resolve(tokens.ILogger),
+      ajvInstance: undefined, // Let AjvSchemaValidator create its own instance
+      validatorGenerator: c.resolve(tokens.IValidatorGenerator),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      preloadSchemas: [
+        // ... existing schema preloads
+      ],
+    })
+);
+```
+
+**Important Notes:**
+- `IValidatorGenerator` is already registered (line ~219-223 of same file)
+- `IDataRegistry` is already registered (line ~196-198 of same file)
+- Registration order is correct (dependencies are registered before ISchemaValidator)
+- No circular dependencies exist
 
 ## Files to Create
 
@@ -281,8 +356,20 @@ getSchema(schemaId) {
 ## Files to Update
 
 - [ ] `src/validation/ajvSchemaValidator.js` - Add generated validator support
-- [ ] `src/loaders/schemaLoader.js` - Ensure getSchema method exists (if needed)
-- [ ] `tests/unit/validation/ajvSchemaValidator.test.js` - Add tests for new functionality
+  - Update file header comment (currently says `src/services/` but file is at `src/validation/`)
+  - Add `validatorGenerator` dependency to constructor
+  - Add `dataRegistry` dependency to constructor (for accessing component definitions)
+  - Add `#generatedValidators` cache field
+  - Implement two-stage validation (AJV → Generated)
+  - Add `#validateWithGenerated` method
+  - Add `#mergeValidationResults` method
+  - Add `clearCache` method
+  - Add `preGenerateValidators` method
+- [ ] `src/dependencyInjection/registrations/loadersRegistrations.js` - Update DI registration
+  - Add `validatorGenerator` parameter to AjvSchemaValidator factory
+  - Add `dataRegistry` parameter to AjvSchemaValidator factory
+- [ ] `tests/unit/validation/ajvSchemaValidator.*.test.js` - Add tests for new functionality
+  - Create new test file or update existing ones
 
 ## Testing Requirements
 
@@ -363,34 +450,89 @@ npx eslint src/validation/ajvSchemaValidator.js
 - ✅ Backward compatibility maintained
 - ✅ All existing validation tests still pass
 
-## Implementation Notes
+## Key Corrections from Original Assumptions
+
+### ⚠️ Critical Corrections
+
+1. **File Location**: File is at `src/validation/ajvSchemaValidator.js`, but header comment incorrectly says `src/services/ajvSchemaValidator.js`
+
+2. **Parameter Names**:
+   - Constructor uses `ajvInstance` NOT `ajv`
+   - Constructor uses `dataRegistry` NOT `schemaLoader`
+
+3. **Method Signature**:
+   - `validate(schemaId, data)` NOT `validate(data, schemaId)`
+   - Parameters are REVERSED from workflow's original assumption
+
+4. **Return Value Property**:
+   - Use `isValid` property NOT `valid`
+   - Existing implementation uses `isValid` throughout
+
+5. **Schema Source**:
+   - Component schemas come from `IDataRegistry.getComponentDefinition(id)`
+   - NOT from `SchemaLoader.getSchema(id)` (which doesn't exist)
+   - SchemaLoader only loads JSON Schema files, not component definitions
+
+6. **ValidatorGenerator**:
+   - Already exists at `src/validation/validatorGenerator.js`
+   - Already registered in DI as `IValidatorGenerator`
+   - No new creation needed
+
+7. **Dependencies Already Exist**:
+   - `IValidatorGenerator` - already registered
+   - `IDataRegistry` - already registered
+   - Just need to wire them into AjvSchemaValidator
 
 ### Validation Pipeline Flow
 
 ```
-Data + Schema ID
+Schema ID + Data
     ↓
-Stage 1: AJV Validation
+Stage 1: AJV Validation (existing logic)
     ↓
-  Valid? ──No──→ Return AJV Errors
+  isValid? ──No──→ Return AJV Errors
     ↓ Yes
-Stage 2: Check for Generated Validator
+Stage 2: Check for Generated Validator (NEW)
     ↓
-  Exists? ──No──→ Return Valid
+  Component? ──No──→ Return Valid (not a component schema)
     ↓ Yes
-Stage 3: Run Generated Validator
+  Has validationRules.generateValidator? ──No──→ Return Valid
+    ↓ Yes
+Stage 3: Run Generated Validator (NEW)
     ↓
-  Valid? ──No──→ Return Enhanced Errors
+  valid? ──No──→ Return Enhanced Errors
     ↓ Yes
 Return Valid
 ```
 
+### Important: Preserve Existing Methods
+
+The AjvSchemaValidator has many existing methods that MUST be preserved:
+
+- `addSchema(schemaData, schemaId)` - Add single schema
+- `addSchemas(schemasArray)` - Batch add schemas
+- `removeSchema(schemaId)` - Remove schema
+- `preloadSchemas(schemas)` - Preload schemas during construction
+- `getValidator(schemaId)` - Get AJV validator function
+- `isSchemaLoaded(schemaId)` - Check if schema is loaded
+- `validateSchemaRefs(schemaId)` - Validate $refs are resolvable
+- `getLoadedSchemaIds()` - Get all loaded schema IDs
+- `loadSchemaObject(schemaId, schemaData)` - Alias for addSchema
+- `validateAgainstSchema(data, schemaId, context)` - Utility method
+- `formatAjvErrors(errors, data)` - Format errors
+- `_setAjvInstanceForTesting(ajvInstance)` - Test-only method
+- `_validateAddSchemaInput(schemaData, schemaId)` - Protected validation
+- `_validateBatchInput(schemasArray)` - Protected validation
+
+**Only modify the `validate(schemaId, data)` method** to add two-stage validation.
+
 ### Caching Strategy
 
-- Cache key: Schema ID
+- Cache key: Schema ID (component ID like "core:actor")
 - Cache value: Generated validator function or null
-- Clear cache when schemas reload
-- Pre-generate during initialization for better performance
+- Clear cache when schemas reload (new `clearCache()` method)
+- Pre-generate during initialization for better performance (new `preGenerateValidators()` method)
+- Cache is separate from AJV's internal schema cache
 
 ### Error Message Priority
 
@@ -414,8 +556,43 @@ When both AJV and generated validator produce errors:
 - **Blocks:** ANASYSIMP-019-05 (Pilot with Descriptor Components)
 - **Related:** ANASYSIMP-017 (Validation Result Caching) - cache complements generated validators
 
+## Summary of Required Changes
+
+### Code Changes
+
+1. **src/validation/ajvSchemaValidator.js**:
+   - Fix file header comment (`src/services/` → `src/validation/`)
+   - Add `#validatorGenerator` and `#dataRegistry` fields
+   - Add `#generatedValidators` Map for caching
+   - Update constructor to accept new dependencies
+   - Modify `validate()` method for two-stage validation
+   - Add `#validateWithGenerated()` private method
+   - Add `#mergeValidationResults()` private method
+   - Add `clearCache()` public method
+   - Add `preGenerateValidators()` public method
+
+2. **src/dependencyInjection/registrations/loadersRegistrations.js**:
+   - Update ISchemaValidator factory
+   - Add `validatorGenerator: c.resolve(tokens.IValidatorGenerator)`
+   - Add `dataRegistry: c.resolve(tokens.IDataRegistry)`
+
+### Testing Changes
+
+1. **New file**: `tests/integration/validation/ajvValidatorGeneratorIntegration.integration.test.js`
+2. **Update**: Existing unit test files for ajvSchemaValidator
+
+### No Changes Needed
+
+- `src/validation/validatorGenerator.js` - Already exists ✓
+- `src/data/inMemoryDataRegistry.js` - Already has required methods ✓
+- `src/dependencyInjection/tokens/tokens-core.js` - IValidatorGenerator already registered ✓
+
 ## References
 
-- **Current AJV Validator:** `src/validation/ajvSchemaValidator.js`
-- **Schema Loader:** `src/loaders/schemaLoader.js`
+- **Current AJV Validator:** `src/validation/ajvSchemaValidator.js` (line 1: incorrect header comment)
+- **Validator Generator:** `src/validation/validatorGenerator.js` (already implemented)
+- **Data Registry:** `src/data/inMemoryDataRegistry.js` (has getComponentDefinition method)
+- **DI Registration:** `src/dependencyInjection/registrations/loadersRegistrations.js` (lines ~168-195)
+- **DI Tokens:** `src/dependencyInjection/tokens/tokens-core.js` (IValidatorGenerator at line ~47)
+- **Schema Loader:** `src/loaders/schemaLoader.js` (loads JSON Schemas only, NOT component definitions)
 - **Validation Testing Guide:** `docs/testing/validation-testing.md` (if exists)
