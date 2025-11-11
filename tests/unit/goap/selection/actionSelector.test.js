@@ -199,6 +199,38 @@ describe('ActionSelector', () => {
       expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalled();
     });
+
+    it('should catch errors thrown during progress calculation', () => {
+      const actions = [
+        {
+          id: 'test:error-action',
+          planningEffects: { effects: [] }
+        }
+      ];
+
+      const goal = {
+        id: 'test:goal',
+        goalState: {}
+      };
+
+      const context = { entities: {} };
+
+      const progressSpy = jest
+        .spyOn(actionSelector, 'calculateProgress')
+        .mockImplementation(() => {
+          throw new Error('Progress failed');
+        });
+
+      const result = actionSelector.selectAction(actions, goal, 'actor1', context);
+
+      expect(result).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to select action',
+        expect.any(Error)
+      );
+
+      progressSpy.mockRestore();
+    });
   });
 
   describe('calculateProgress', () => {
@@ -518,6 +550,43 @@ describe('ActionSelector', () => {
       );
     });
 
+    it('should warn and default to true when condition lacks abstract precondition', () => {
+      const action = {
+        id: 'test:action',
+        planningEffects: {
+          effects: [
+            {
+              operation: 'CONDITIONAL',
+              condition: { custom: 'value' },
+              then: [
+                {
+                  operation: 'ADD_COMPONENT',
+                  entity: 'actor',
+                  component: 'test:fallback_component',
+                  data: { enabled: true }
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      const context = {
+        entities: {
+          actor1: { components: {} }
+        }
+      };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Condition evaluation without abstract precondition not fully implemented'
+      );
+      expect(result.entities.actor1.components['test:fallback_component']).toEqual({
+        enabled: true
+      });
+    });
+
     it('should handle unknown operations gracefully', () => {
       const action = {
         id: 'test:action',
@@ -536,6 +605,28 @@ describe('ActionSelector', () => {
 
       // Should silently ignore unknown operations
       expect(result).toBeDefined();
+    });
+
+    it('should log error and return current state when cloning fails', () => {
+      const action = {
+        id: 'test:bigint-action',
+        planningEffects: {
+          effects: []
+        }
+      };
+
+      const context = {
+        entities: {},
+        value: BigInt(1)
+      };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(result).toBe(context);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to simulate effects for test:bigint-action',
+        expect.any(Error)
+      );
     });
 
     it('should not mutate original state', () => {
