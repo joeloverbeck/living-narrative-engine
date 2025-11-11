@@ -1,6 +1,7 @@
 /**
  * @file Targeted tests for specific uncovered lines in ajvSchemaValidator.js
- * @description Focused on lines: 39, 68-129, 257-260, 333-336, 441-444, 633, 658-661
+ * @description Focused on lines: 39, 68-129, 257-260, 333-336, 441-444, 633, 658-661,
+ * 723-735, 751-765, 862-883
  */
 
 import {
@@ -43,6 +44,78 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
           logger: mockLogger,
         });
       }).toThrow('Failed to initialize Ajv');
+    });
+  });
+
+  describe('Lines 723-735 - validate catch block for unexpected errors', () => {
+    it('returns a validationError result when internal validation throws', async () => {
+      jest.resetModules();
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
+      const validator = new AjvSchemaValidator({
+        logger: mockLogger,
+      });
+
+      const schemaId = 'schema://living-narrative-engine/unexpected-error.schema.json';
+      const simulatedError = new Error('Simulated internal failure');
+
+      validator.getValidator = jest.fn(() => {
+        throw simulatedError;
+      });
+
+      const result = validator.validate(schemaId, { any: 'data' });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Validation failed for schema ${schemaId}`,
+        simulatedError
+      );
+
+      expect(result).toEqual({
+        isValid: false,
+        errors: [
+          expect.objectContaining({
+            keyword: 'validationError',
+            params: { schemaId },
+            message: `Validation error: ${simulatedError.message}`,
+          }),
+        ],
+      });
+    });
+  });
+
+  describe('Lines 751-765 - #validateWithAjv missing Ajv instance handling', () => {
+    it('returns schemaNotFound error when Ajv instance is unavailable', async () => {
+      jest.resetModules();
+
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
+      const validator = new AjvSchemaValidator({
+        logger: mockLogger,
+      });
+
+      validator._setAjvInstanceForTesting(null);
+
+      const schemaId = 'schema://living-narrative-engine/missing-ajv.schema.json';
+      const result = validator.validate(schemaId, { foo: 'bar' });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `AjvSchemaValidator: validate called for schemaId '${schemaId}', but no validator function was found.`
+      );
+
+      expect(result).toEqual({
+        isValid: false,
+        errors: [
+          expect.objectContaining({
+            keyword: 'schemaNotFound',
+            params: { schemaId },
+          }),
+        ],
+      });
     });
   });
 
@@ -292,6 +365,121 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       const failure = validator.validate(referencingSchema.$id, { foo: 'bad' });
       expect(failure.isValid).toBe(false);
       expect(Array.isArray(failure.errors)).toBe(true);
+    });
+  });
+
+  describe('Lines 862-883 - merge logic between AJV and generated validators', () => {
+    const createValidatorWithGeneratedSupport = async ({
+      generatedResult,
+      schemaId,
+    }) => {
+      const AjvSchemaValidator = (
+        await import('../../../src/validation/ajvSchemaValidator.js')
+      ).default;
+
+      const dataRegistry = {
+        getComponentDefinition: jest.fn(() => ({
+          id: schemaId,
+          dataSchema: {},
+        })),
+        getAllComponentDefinitions: jest.fn(() => []),
+      };
+
+      const generatedValidatorFn = jest.fn(() => generatedResult);
+      const validatorGenerator = {
+        generate: jest.fn(() => generatedValidatorFn),
+      };
+
+      const validator = new AjvSchemaValidator({
+        logger: mockLogger,
+        validatorGenerator,
+        dataRegistry,
+      });
+
+      return { validator, generatedValidatorFn, validatorGenerator, dataRegistry };
+    };
+
+    it('returns AJV validation result when generated validator succeeds', async () => {
+      jest.resetModules();
+
+      const schemaId =
+        'schema://living-narrative-engine/generated-valid.schema.json';
+      const generatedResult = { valid: true, errors: [] };
+
+      const { validator } = await createValidatorWithGeneratedSupport({
+        generatedResult,
+        schemaId,
+      });
+
+      const ajvResult = {
+        isValid: false,
+        errors: [
+          {
+            instancePath: '/field',
+            message: 'AJV failure',
+          },
+        ],
+      };
+
+      validator.getValidator = jest
+        .fn()
+        .mockReturnValue(jest.fn(() => ajvResult));
+
+      const result = validator.validate(schemaId, { field: 'value' });
+
+      expect(result).toBe(ajvResult);
+    });
+
+    it('merges generated and AJV errors while filtering duplicates', async () => {
+      jest.resetModules();
+
+      const schemaId =
+        'schema://living-narrative-engine/generated-errors.schema.json';
+
+      const generatedErrors = [
+        {
+          property: 'duplicateField',
+          message: 'Generated validation error',
+        },
+      ];
+
+      const generatedResult = {
+        valid: false,
+        errors: generatedErrors,
+      };
+
+      const { validator } = await createValidatorWithGeneratedSupport({
+        generatedResult,
+        schemaId,
+      });
+
+      const ajvErrors = [
+        {
+          property: 'duplicateField',
+          message: 'AJV duplicate error',
+        },
+        {
+          instancePath: '/uniqueField',
+          message: 'AJV unique error',
+        },
+      ];
+
+      const ajvResult = {
+        isValid: false,
+        errors: ajvErrors,
+      };
+
+      validator.getValidator = jest
+        .fn()
+        .mockReturnValue(jest.fn(() => ajvResult));
+
+      const result = validator.validate(schemaId, { duplicateField: 1 });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual([
+        generatedErrors[0],
+        ajvErrors[1],
+      ]);
     });
   });
 
