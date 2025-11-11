@@ -255,6 +255,7 @@ describe('bodyDescriptorRegistry', () => {
           'moderate',
           'hairy',
           'very-hairy',
+          'furred',
         ]);
       });
 

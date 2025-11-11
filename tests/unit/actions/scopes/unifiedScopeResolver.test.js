@@ -88,6 +88,7 @@ describe('UnifiedScopeResolver', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('resolve', () => {
@@ -838,6 +839,47 @@ describe('UnifiedScopeResolver', () => {
         expect(runtimeCtx.target).toBe(context.actionContext.target);
         expect(runtimeCtx.targets).toBe(context.actionContext.targets);
       });
+    });
+  });
+
+  describe('resolveSync', () => {
+    const scopeName = 'legacy-scope';
+    const context = {
+      actor: { id: 'actor123' },
+      actorLocation: 'location-42',
+    };
+
+    it('should return the resolved value when resolve succeeds', () => {
+      const resolvedIds = new Set(['entity-1', 'entity-2']);
+      const resolveSpy = jest
+        .spyOn(resolver, 'resolve')
+        .mockReturnValue(ActionResult.success(resolvedIds));
+
+      const result = resolver.resolveSync(scopeName, context);
+
+      expect(result).toBe(resolvedIds);
+      expect(resolveSpy).toHaveBeenCalledWith(scopeName, context, {});
+    });
+
+    it('should throw an error using the first ActionResult error message', () => {
+      const failureError = new Error('Resolution exploded');
+      jest
+        .spyOn(resolver, 'resolve')
+        .mockReturnValue(ActionResult.failure([failureError]));
+
+      expect(() => resolver.resolveSync(scopeName, context)).toThrow(
+        'Resolution exploded'
+      );
+    });
+
+    it('should throw a default error message when the failure has no errors', () => {
+      jest
+        .spyOn(resolver, 'resolve')
+        .mockReturnValue(ActionResult.failure([]));
+
+      expect(() => resolver.resolveSync(scopeName, context)).toThrow(
+        'Scope resolution failed'
+      );
     });
   });
 

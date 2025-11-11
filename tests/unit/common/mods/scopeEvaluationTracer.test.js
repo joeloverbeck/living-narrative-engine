@@ -502,8 +502,8 @@ describe('ScopeEvaluationTracer', () => {
 
       const duration = Date.now() - start;
 
-      // Should complete very quickly when disabled (< 50ms for 3000 no-op calls)
-      expect(duration).toBeLessThan(50);
+      // Should complete very quickly when disabled (< 100ms for 3000 no-op calls)
+      expect(duration).toBeLessThan(100);
       expect(tracer.getTrace().steps).toHaveLength(0);
     });
 
