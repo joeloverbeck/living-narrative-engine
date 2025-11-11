@@ -124,6 +124,31 @@ export default class TestEntityManagerAdapter {
   }
 
   /**
+   * Add a component to an entity.
+   * This matches the production EntityManager.addComponent() method.
+   *
+   * @param {string} entityId - The entity ID
+   * @param {string} componentType - Namespaced component type
+   * @param {object} componentData - Component data object
+   * @returns {Promise<boolean>} True if the component was added successfully
+   */
+  async addComponent(entityId, componentType, componentData) {
+    return await this.#simple.addComponent(entityId, componentType, componentData);
+  }
+
+  /**
+   * Remove a component from an entity.
+   * This matches the production EntityManager.removeComponent() method.
+   *
+   * @param {string} entityId - The entity ID
+   * @param {string} componentType - Namespaced component type
+   * @returns {Promise<void>}
+   */
+  async removeComponent(entityId, componentType) {
+    this.#simple.removeComponent(entityId, componentType);
+  }
+
+  /**
    * Find entities matching complex query criteria.
    * This matches the production EntityManager.findEntities() method.
    *
@@ -184,6 +209,29 @@ export default class TestEntityManagerAdapter {
    */
   addEntity(entity) {
     this.#simple.addEntity(entity);
+  }
+
+  /**
+   * Create a new empty entity (test-only).
+   * If entity already exists, recreates it with fresh components.
+   *
+   * @param {string} entityId - Entity ID to create
+   * @returns {object} The created entity instance
+   */
+  createEntity(entityId) {
+    return this.#simple.createEntity(entityId);
+  }
+
+  /**
+   * Get component data (test-only convenience alias for getComponentData).
+   * NOTE: Production EntityManager uses getComponentData, not getComponent.
+   *
+   * @param {string} entityId - Entity ID
+   * @param {string} componentType - Component type
+   * @returns {object|null} Component data or null
+   */
+  getComponent(entityId, componentType) {
+    return this.#simple.getComponent(entityId, componentType);
   }
 
   /**
