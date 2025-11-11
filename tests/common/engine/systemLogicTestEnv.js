@@ -951,8 +951,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set([playingMusic.playing_on]) };
         }
 
-        // Handle the patrol:dimensional_portals scope
-        if (scopeName === 'patrol:dimensional_portals') {
+        // Handle the movement:dimensional_portals scope
+        if (scopeName === 'movement:dimensional_portals') {
           // Get actor's location
           const actorId = context?.actor?.id || context;
           const actor = entityManager.getEntityInstance(actorId);
@@ -970,7 +970,7 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Filter exits that have a blocker with patrol:is_dimensional_portal component
+          // Filter exits that have a blocker with movement:is_dimensional_portal component
           const dimensionalPortals = exits
             .filter((exit) => {
               if (!exit.blocker) {
@@ -978,7 +978,7 @@ export function createBaseRuleEnvironment({
               }
 
               const blocker = entityManager.getEntityInstance(exit.blocker);
-              return blocker?.components?.['patrol:is_dimensional_portal'] !== undefined;
+              return blocker?.components?.['movement:is_dimensional_portal'] !== undefined;
             })
             .map((exit) => exit.target)
             .filter((target) => typeof target === 'string' && target.length > 0);

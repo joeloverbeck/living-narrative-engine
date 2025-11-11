@@ -129,7 +129,7 @@ describe('has_component Operator - Integration', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'patrol:is_dimensional_portal',
+          'movement:is_dimensional_portal',
         ],
       };
 
@@ -145,7 +145,7 @@ describe('has_component Operator - Integration', () => {
       expect(result).toBe(true);
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         blockerId,
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
 
@@ -160,7 +160,7 @@ describe('has_component Operator - Integration', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'patrol:is_dimensional_portal',
+              'movement:is_dimensional_portal',
             ],
           },
         ],
@@ -178,7 +178,7 @@ describe('has_component Operator - Integration', () => {
       expect(result).toBe(false);
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         blockerId,
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
 
@@ -189,7 +189,7 @@ describe('has_component Operator - Integration', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'patrol:is_dimensional_portal',
+              'movement:is_dimensional_portal',
             ],
           },
         ],
@@ -224,7 +224,7 @@ describe('has_component Operator - Integration', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'patrol:is_dimensional_portal',
+          'movement:is_dimensional_portal',
         ],
       };
 
@@ -240,7 +240,7 @@ describe('has_component Operator - Integration', () => {
       expect(result).toBe(true);
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         portalId,
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
 
@@ -255,7 +255,7 @@ describe('has_component Operator - Integration', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'patrol:is_dimensional_portal',
+              'movement:is_dimensional_portal',
             ],
           },
         ],
@@ -280,7 +280,7 @@ describe('has_component Operator - Integration', () => {
 
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         portalId,
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
   });

@@ -90,7 +90,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'patrol:is_dimensional_portal',
+          'movement:is_dimensional_portal',
         ],
       };
 
@@ -110,7 +110,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // After the fix, entity ID should be passed to entityManager.hasComponent
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         'patrol:dimensional_rift_blocker_instance',
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
 
       // No has_component warning should be logged - only debug messages
@@ -137,7 +137,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       const rule = {
         has_component: [
           'patrol:dimensional_rift_blocker_instance', // Direct string, not JSON Logic
-          'patrol:is_dimensional_portal',
+          'movement:is_dimensional_portal',
         ],
       };
 
@@ -165,13 +165,13 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // entityManager.hasComponent should be called with the entity ID
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         'patrol:dimensional_rift_blocker_instance',
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
 
     it('should handle missing entity gracefully when used in scope filter', () => {
       // This simulates the scope evaluation:
-      // patrol:dimensional_portals := location.movement:exits[
+      // movement:dimensional_portals := location.movement:exits[
       //   { "and": [
       //     { "var": "entity.blocker" },
       //     { "condition_ref": "patrol:blocker-is-dimensional-portal" }
@@ -184,7 +184,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'patrol:is_dimensional_portal',
+              'movement:is_dimensional_portal',
             ],
           },
         ],
@@ -213,7 +213,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // entityManager.hasComponent should be called
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         'patrol:dimensional_rift_blocker_instance',
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
     });
 
@@ -225,7 +225,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       entityManager.hasComponent.mockImplementation((entityId, componentId) => {
         if (
           entityId === blockerId &&
-          componentId === 'patrol:is_dimensional_portal'
+          componentId === 'movement:is_dimensional_portal'
         ) {
           return true;
         }
@@ -235,7 +235,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       const rule = {
         has_component: [
           { var: 'entity.blocker' },
-          'patrol:is_dimensional_portal',
+          'movement:is_dimensional_portal',
         ],
       };
 
@@ -268,7 +268,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
           {
             has_component: [
               { var: 'entity.blocker' },
-              'patrol:is_dimensional_portal',
+              'movement:is_dimensional_portal',
             ],
           },
         ],
@@ -304,7 +304,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       entityManager.hasComponent.mockReturnValue(false);
 
       const rule = {
-        has_component: [blockerId, 'patrol:is_dimensional_portal'],
+        has_component: [blockerId, 'movement:is_dimensional_portal'],
       };
 
       const context = {
@@ -341,7 +341,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       entityManager.hasComponent.mockReturnValue(false);
 
       const rule = {
-        has_component: [blockerId, 'patrol:is_dimensional_portal'],
+        has_component: [blockerId, 'movement:is_dimensional_portal'],
       };
 
       const context = {
@@ -353,7 +353,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       // hasComponent was called, meaning entity was found
       expect(entityManager.hasComponent).toHaveBeenCalledWith(
         blockerId,
-        'patrol:is_dimensional_portal'
+        'movement:is_dimensional_portal'
       );
 
       // Should only get a debug log, not a warning

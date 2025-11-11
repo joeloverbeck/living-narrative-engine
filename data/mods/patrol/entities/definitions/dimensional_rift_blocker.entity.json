@@ -8,6 +8,6 @@
     "core:description": {
       "text": "A shimmering tear in reality that bends light and warps space. Crossing it requires more than physical movement—it demands the ability to exist across dimensions."
     },
-    "patrol:is_dimensional_portal": {}
+    "movement:is_dimensional_portal": {}
   }
 }

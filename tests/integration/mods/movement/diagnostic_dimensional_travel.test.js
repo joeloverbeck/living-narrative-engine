@@ -12,7 +12,7 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'patrol',
+      'movement',
       'travel_through_dimensions'
     );
   });
@@ -52,7 +52,7 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
       name: 'dimensional rift',
       components: [
         {
-          componentId: 'patrol:is_dimensional_portal',
+          componentId: 'movement:is_dimensional_portal',
           data: {},
         },
       ],
@@ -81,7 +81,7 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
           data: { locationId: perimeterId },
         },
         {
-          componentId: 'patrol:can_travel_through_dimensions',
+          componentId: 'movement:can_travel_through_dimensions',
           data: {},
         },
       ],
@@ -135,6 +135,6 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
     console.log('Action IDs:', actionIds);
 
     // Check if our action is there
-    expect(actions).toContainAction('patrol:travel_through_dimensions');
+    expect(actions).toContainAction('movement:travel_through_dimensions');
   });
 });

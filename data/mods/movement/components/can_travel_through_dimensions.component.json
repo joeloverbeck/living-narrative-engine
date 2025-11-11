@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "patrol:can_travel_through_dimensions",
+  "id": "movement:can_travel_through_dimensions",
   "description": "Marker component indicating this entity can travel between dimensions through tears in reality.",
   "dataSchema": {
     "type": "object",

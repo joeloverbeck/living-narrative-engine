@@ -23,6 +23,6 @@
         "core:gender": {
             "value": "male"
         },
-        "patrol:can_travel_through_dimensions": {}
+        "movement:can_travel_through_dimensions": {}
     }
 }
