@@ -9,6 +9,8 @@ import EffectsGenerator from '../../goap/generation/effectsGenerator.js';
 import EffectsValidator from '../../goap/validation/effectsValidator.js';
 import GoalManager from '../../goap/goals/goalManager.js';
 import GoalStateEvaluator from '../../goap/goals/goalStateEvaluator.js';
+import ActionSelector from '../../goap/selection/actionSelector.js';
+import AbstractPreconditionSimulator from '../../goap/simulation/abstractPreconditionSimulator.js';
 
 /**
  * Registers GOAP services in the DI container
@@ -60,8 +62,22 @@ export function registerGoapServices(container) {
     }
   });
 
-  // Selection (to be implemented in later tickets)
-  // container.register(goapTokens.IActionSelector, ActionSelector);
+  // Simulation
+  container.register(goapTokens.IAbstractPreconditionSimulator, AbstractPreconditionSimulator, {
+    dependencies: {
+      logger: coreTokens.ILogger
+    }
+  });
+
+  // Selection
+  container.register(goapTokens.IActionSelector, ActionSelector, {
+    dependencies: {
+      logger: coreTokens.ILogger,
+      goalStateEvaluator: goapTokens.IGoalStateEvaluator,
+      entityManager: coreTokens.IEntityManager,
+      abstractPreconditionSimulator: goapTokens.IAbstractPreconditionSimulator
+    }
+  });
 
   // Planning (to be implemented in later tickets)
   // container.register(goapTokens.ISimplePlanner, SimplePlanner);

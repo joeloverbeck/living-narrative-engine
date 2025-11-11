@@ -23,6 +23,9 @@ export const goapTokens = freeze({
   // Selection
   IActionSelector: 'IActionSelector',
 
+  // Simulation
+  IAbstractPreconditionSimulator: 'IAbstractPreconditionSimulator',
+
   // Planning
   ISimplePlanner: 'ISimplePlanner',
   IPlanCache: 'IPlanCache',
