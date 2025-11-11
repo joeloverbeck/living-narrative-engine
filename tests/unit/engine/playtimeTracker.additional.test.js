@@ -134,4 +134,26 @@ describe('PlaytimeTracker additional branches', () => {
       dispatchError
     );
   });
+
+  test('testing helpers expose session start time for assertions', () => {
+    tracker._setSessionStartTime(12345);
+
+    expect(tracker._getSessionStartTime()).toBe(12345);
+
+    tracker.startSession();
+    expect(tracker._getSessionStartTime()).not.toBe(12345);
+  });
+
+  test('testing helpers expose accumulated playtime for assertions', () => {
+    tracker._setAccumulatedPlaytimeSeconds(99);
+    expect(tracker._getAccumulatedPlaytimeSeconds()).toBe(99);
+
+    tracker._setAccumulatedPlaytimeSeconds(15);
+    tracker._setSessionStartTime(0);
+    tracker.startSession();
+    jest.advanceTimersByTime(5000);
+    tracker.endSessionAndAccumulate();
+
+    expect(tracker._getAccumulatedPlaytimeSeconds()).toBeGreaterThan(15);
+  });
 });
