@@ -15,6 +15,7 @@ import { PrerequisiteEvaluationService } from '../../../src/actions/validation/p
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import { createEntityContext } from '../../../src/logic/contextAssembler.js';
 import { SimpleEntityManager } from '../entities/index.js';
+import { createEntityManagerAdapter } from '../entities/entityManagerTestFactory.js';
 import {
   createMockLogger,
   createCapturingEventBus,
@@ -53,6 +54,7 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
  * @param {object} [options.scopes] - Scope definitions for scope resolution
  * @param {object} [options.lookups] - Lookup definitions for QUERY_LOOKUP operations
  * @param {boolean} [options.debugPrerequisites] - Enable debug mode for enhanced prerequisite error messages
+ * @param {boolean} [options.useAdapterEntityManager=true] - Use TestEntityManagerAdapter for production API compatibility
  * @returns {{
  *   eventBus: import('../../../src/events/eventBus.js').default,
  *   events: any[],
@@ -83,6 +85,7 @@ export function createBaseRuleEnvironment({
   eventBus = null,
   createEventBus = null,
   debugPrerequisites = false,
+  useAdapterEntityManager = true,
 }) {
   // Create a debug logger that silences debug output for performance tests
   const debugLogger = {
@@ -176,14 +179,17 @@ export function createBaseRuleEnvironment({
    * @private
    * @param {Array<{id:string,components:object}>} entityList - Entities to load.
    * @returns {{
-   *   entityManager: SimpleEntityManager,
+   *   entityManager: SimpleEntityManager|TestEntityManagerAdapter,
    *   operationRegistry: OperationRegistry,
    *   operationInterpreter: OperationInterpreter,
    *   systemLogicInterpreter: SystemLogicInterpreter
    * }} Initialized services.
    */
   function initializeEnv(entityList) {
-    entityManager = new SimpleEntityManager(entityList);
+    // Create entity manager with adapter by default for production API compatibility
+    entityManager = useAdapterEntityManager
+      ? createEntityManagerAdapter({ logger: testLogger, initialEntities: entityList })
+      : new SimpleEntityManager(entityList); // Legacy fallback - takes array of entities
     operationRegistry = new OperationRegistry({ logger: testLogger });
     const handlers = createHandlers(entityManager, bus, testLogger, testDataRegistry);
     for (const [type, handler] of Object.entries(handlers)) {
