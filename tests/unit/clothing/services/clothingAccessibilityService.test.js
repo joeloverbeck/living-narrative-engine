@@ -265,14 +265,70 @@ describe('ClothingAccessibilityService', () => {
 
       it('should cache empty results', () => {
         mockEntityManager.getComponentData.mockReturnValue(null);
-        
+
         // First call
         service.getAccessibleItems('entity1');
         expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(1);
-        
+
         // Second call (should use cache even for empty result)
         service.getAccessibleItems('entity1');
         expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(1);
+      });
+
+      it('should remove expired entries when managing cache size', () => {
+        jest.setSystemTime(new Date('2020-01-01T00:00:00.000Z'));
+        mockEntityManager.getComponentData.mockReturnValue({
+          equipped: {
+            torso_upper: {
+              base: 'clothing:shirt',
+              outer: 'clothing:jacket'
+            }
+          }
+        });
+
+        const deleteSpy = jest.spyOn(Map.prototype, 'delete');
+
+        try {
+          service.getAccessibleItems('entity1');
+          jest.advanceTimersByTime(6000);
+
+          service.getAccessibleItems('entity1', { mode: 'all' });
+
+          const deletedKeys = deleteSpy.mock.calls.map(([key]) => key);
+          expect(deletedKeys).toContain('entity1:{}');
+        } finally {
+          deleteSpy.mockRestore();
+        }
+      });
+
+      it('should evict oldest entries when cache exceeds maximum size', () => {
+        jest.setSystemTime(new Date('2020-01-01T00:00:00.000Z'));
+
+        service = new ClothingAccessibilityService({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          maxCacheSize: 2,
+          priorityConfig: { enableCaching: false }
+        });
+
+        mockEntityManager.getComponentData.mockReturnValue({
+          equipped: {
+            torso_upper: {
+              base: 'clothing:shirt',
+              outer: 'clothing:jacket'
+            }
+          }
+        });
+
+        service.getAccessibleItems('entity1');
+        service.getAccessibleItems('entity1', { mode: 'all' });
+        service.getAccessibleItems('entity1', { mode: 'all', bodyArea: 'torso_upper' });
+
+        mockEntityManager.getComponentData.mockClear();
+
+        service.getAccessibleItems('entity1');
+
+        expect(mockEntityManager.getComponentData).toHaveBeenCalled();
       });
     });
 
