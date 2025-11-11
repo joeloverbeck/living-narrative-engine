@@ -654,9 +654,7 @@ class ActivityDescriptionService {
         }
       }
 
-      if (groupDescription) {
         descriptions.push(groupDescription);
-      }
     });
 
     if (descriptions.length === 0) {
