@@ -1,6 +1,7 @@
-// src/services/ajvSchemaValidator.js
+// src/validation/ajvSchemaValidator.js
 // -----------------------------------------------------------------------------
-// Implements ISchemaValidator via Ajv. Allows optional schema preloading.
+// Implements ISchemaValidator via Ajv with ValidatorGenerator support.
+// Provides two-stage validation: AJV first, then generated validator for enhanced error messages.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
@@ -8,6 +9,8 @@ import addFormats from 'ajv-formats';
 import { validateAgainstSchema as validateAgainstSchemaUtil } from '../utils/schemaValidationUtils.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
 import { formatAjvErrorsEnhanced } from '../utils/ajvAnyOfErrorFormatter.js';
+import { validateDependency, assertPresent } from '../utils/dependencyUtils.js';
+import { string } from '../utils/validationCore.js';
 
 // ── IMPORT v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────────
 // Schema IDs can be preloaded by passing them in via constructor options.
@@ -28,6 +31,12 @@ class AjvSchemaValidator {
   #ajv;
   /** @type {import('../interfaces/coreServices.js').ILogger} */
   #logger;
+  /** @type {import('./validatorGenerator.js').default} */
+  #validatorGenerator;
+  /** @type {import('../interfaces/coreServices.js').IDataRegistry} */
+  #dataRegistry;
+  /** @type {Map<string, Function|null>} */
+  #generatedValidators;
 
   /**
    * Ensures the Ajv instance is initialized.
@@ -290,9 +299,11 @@ class AjvSchemaValidator {
    * @param {object} [params]
    * @param {import('../interfaces/coreServices.js').ILogger} params.logger
    * @param {import('ajv').default} [params.ajvInstance]
+   * @param {import('./validatorGenerator.js').default} [params.validatorGenerator]
+   * @param {import('../interfaces/coreServices.js').IDataRegistry} [params.dataRegistry]
    * @param {Array<{ schema: object, id: string }>} [params.preloadSchemas]
    */
-  constructor({ logger, ajvInstance, preloadSchemas }) {
+  constructor({ logger, ajvInstance, validatorGenerator, dataRegistry, preloadSchemas }) {
     if (
       !logger ||
       typeof logger.info !== 'function' ||
@@ -305,6 +316,26 @@ class AjvSchemaValidator {
       );
     }
     this.#logger = logger;
+
+    // ValidatorGenerator and DataRegistry are optional (for backward compatibility)
+    // If not provided, enhanced validation is disabled
+    if (validatorGenerator && dataRegistry) {
+      validateDependency(validatorGenerator, 'IValidatorGenerator', logger, {
+        requiredMethods: ['generate'],
+      });
+      validateDependency(dataRegistry, 'IDataRegistry', logger, {
+        requiredMethods: ['getComponentDefinition', 'getAllComponentDefinitions'],
+      });
+      this.#validatorGenerator = validatorGenerator;
+      this.#dataRegistry = dataRegistry;
+      this.#generatedValidators = new Map();
+      this.#logger.debug('AjvSchemaValidator: Enhanced validation enabled with ValidatorGenerator');
+    } else {
+      this.#validatorGenerator = null;
+      this.#dataRegistry = null;
+      this.#generatedValidators = null;
+      this.#logger.debug('AjvSchemaValidator: Enhanced validation disabled (ValidatorGenerator or DataRegistry not provided)');
+    }
 
     try {
       if (ajvInstance) {
@@ -645,12 +676,74 @@ class AjvSchemaValidator {
 
   /**
    * Validates data against the specified schema ID.
+   * Implements two-stage validation: AJV first, then generated validator for enhanced error messages.
    *
    * @param {string} schemaId
    * @param {any} data
    * @returns {ValidationResult}
    */
   validate(schemaId, data) {
+    try {
+      string.assertNonBlank(schemaId, 'schemaId', 'validate', this.#logger);
+      assertPresent(data, 'Data is required for validation');
+    } catch (error) {
+      this.#logger.warn(
+        `AjvSchemaValidator: validate called with invalid parameters: ${error.message}`
+      );
+      return {
+        isValid: false,
+        errors: [
+          {
+            instancePath: '',
+            schemaPath: '',
+            keyword: 'invalidParameters',
+            params: { schemaId: schemaId },
+            message: error.message,
+          },
+        ],
+      };
+    }
+
+    try {
+      // Stage 1: Standard AJV validation
+      const ajvResult = this.#validateWithAjv(schemaId, data);
+
+      // Stage 2: Generated validator (if available)
+      // Run even if AJV failed to get better error messages
+      const generatedResult = this.#validateWithGenerated(schemaId, data);
+
+      if (!generatedResult) {
+        // No generated validator, return AJV result
+        return ajvResult;
+      }
+
+      // Merge results (prefer generated validator errors for better messages)
+      return this.#mergeValidationResults(ajvResult, generatedResult);
+    } catch (error) {
+      this.#logger.error(`Validation failed for schema ${schemaId}`, error);
+      return {
+        isValid: false,
+        errors: [
+          {
+            instancePath: '',
+            schemaPath: '',
+            keyword: 'validationError',
+            params: { schemaId },
+            message: `Validation error: ${error.message}`,
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * Validates data using AJV
+   * @private
+   * @param {string} schemaId - Schema identifier
+   * @param {any} data - Data to validate
+   * @returns {ValidationResult} Result with isValid property
+   */
+  #validateWithAjv(schemaId, data) {
     try {
       this.#ensureAjv();
       this.#requireValidSchemaId(schemaId);
@@ -692,6 +785,103 @@ class AjvSchemaValidator {
       };
     }
     return validatorFunction(data);
+  }
+
+  /**
+   * Validates data using generated validator
+   * @private
+   * @param {string} schemaId - Schema identifier (component schema ID)
+   * @param {*} data - Data to validate
+   * @returns {Object|null} Validation result or null if no validator
+   */
+  #validateWithGenerated(schemaId, data) {
+    // Enhanced validation disabled
+    if (!this.#validatorGenerator || !this.#dataRegistry || !this.#generatedValidators) {
+      return null;
+    }
+
+    // Check cache first
+    if (this.#generatedValidators.has(schemaId)) {
+      const validator = this.#generatedValidators.get(schemaId);
+
+      // null means no validator needed for this schema
+      if (validator === null) {
+        return null;
+      }
+
+      return validator(data);
+    }
+
+    // Generate validator on first use
+    // Note: Use IDataRegistry to retrieve component definition
+    // Component definitions contain the dataSchema needed by ValidatorGenerator
+    const componentDefinition = this.#dataRegistry.getComponentDefinition(schemaId);
+
+    if (!componentDefinition) {
+      this.#logger.debug(`Component definition not found: ${schemaId} (may not be a component schema)`);
+      this.#generatedValidators.set(schemaId, null);
+      return null;
+    }
+
+    // ValidatorGenerator.generate() expects a component schema with dataSchema property
+    const validator = this.#validatorGenerator.generate(componentDefinition);
+
+    // Cache the result (including null)
+    this.#generatedValidators.set(schemaId, validator);
+
+    if (!validator) {
+      return null;
+    }
+
+    return validator(data);
+  }
+
+  /**
+   * Merges validation results from AJV and generated validator
+   * Prefers generated validator errors over AJV errors for better messages
+   * @private
+   * @param {ValidationResult} ajvResult - Result from AJV validation
+   * @param {Object} generatedResult - Result from generated validator
+   * @returns {ValidationResult} Merged validation result
+   */
+  #mergeValidationResults(ajvResult, generatedResult) {
+    // Note: Check 'isValid' property for ajvResult, 'valid' for generatedResult
+    if (ajvResult.isValid && generatedResult.valid) {
+      return { isValid: true, errors: null };
+    }
+
+    // If only generated validator has errors, return them (more helpful messages)
+    if (ajvResult.isValid && !generatedResult.valid) {
+      return {
+        isValid: false,
+        errors: generatedResult.errors || [],
+      };
+    }
+
+    // If only AJV has errors and no generated errors, return AJV errors
+    if (!ajvResult.isValid && generatedResult.valid) {
+      return ajvResult;
+    }
+
+    // Both have errors - prefer generated validator errors (better messages)
+    // but include AJV errors for validation types not covered by generator
+    const generatedErrors = generatedResult.errors || [];
+    const ajvErrors = ajvResult.errors || [];
+
+    // Get properties that have generated errors
+    const generatedProps = new Set(
+      generatedErrors.map((e) => e.property || e.instancePath)
+    );
+
+    // Only include AJV errors for properties not covered by generated validator
+    const filteredAjvErrors = ajvErrors.filter(
+      (e) => !generatedProps.has(e.property || e.instancePath)
+    );
+
+    return {
+      isValid: false,
+      errors: [...generatedErrors, ...filteredAjvErrors],
+    };
   }
 
   /**
@@ -856,6 +1046,58 @@ class AjvSchemaValidator {
    */
   formatAjvErrors(errors, data) {
     return formatAjvErrorsEnhanced(errors, data);
+  }
+
+  /**
+   * Clears the generated validator cache
+   * Useful for testing or when schemas are reloaded
+   */
+  clearCache() {
+    if (this.#generatedValidators) {
+      this.#generatedValidators.clear();
+      this.#logger.debug('Generated validator cache cleared');
+    }
+  }
+
+  /**
+   * Pre-generates validators for all component schemas
+   * Call during initialization for better first-run performance
+   *
+   * @param {Array<object>} [componentSchemas] - Optional array of component schemas to pre-generate
+   */
+  preGenerateValidators(componentSchemas) {
+    if (!this.#validatorGenerator || !this.#dataRegistry || !this.#generatedValidators) {
+      this.#logger.debug('Pre-generation skipped: Enhanced validation not enabled');
+      return;
+    }
+
+    // If no schemas provided, get all component definitions from registry
+    const schemas = componentSchemas || this.#dataRegistry.getAllComponentDefinitions();
+
+    assertPresent(schemas, 'Component schemas required for pre-generation');
+
+    this.#logger.info(
+      `Pre-generating validators for ${schemas.length} component schemas`
+    );
+
+    let generated = 0;
+
+    for (const schema of schemas) {
+      if (schema.validationRules?.generateValidator) {
+        try {
+          const validator = this.#validatorGenerator.generate(schema);
+          this.#generatedValidators.set(schema.id, validator);
+          generated++;
+        } catch (error) {
+          this.#logger.warn(
+            `Failed to pre-generate validator for ${schema.id}: ${error.message}`,
+            error
+          );
+        }
+      }
+    }
+
+    this.#logger.info(`Pre-generated ${generated} validators`);
   }
 
   /**

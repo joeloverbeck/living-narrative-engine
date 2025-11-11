@@ -170,6 +170,9 @@ export async function registerLoaders(container) {
     (c) =>
       new AjvSchemaValidator({
         logger: c.resolve(tokens.ILogger),
+        ajvInstance: undefined, // Let AjvSchemaValidator create its own instance
+        validatorGenerator: c.resolve(tokens.IValidatorGenerator),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
         preloadSchemas: [
           {
             schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
