@@ -50,6 +50,9 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
  * @param {object} [options.eventBus] - Event bus instance to use
  * @param {() => object} [options.createEventBus] - Factory to create an event
  *   bus if none is provided
+ * @param {object} [options.scopes] - Scope definitions for scope resolution
+ * @param {object} [options.lookups] - Lookup definitions for QUERY_LOOKUP operations
+ * @param {boolean} [options.debugPrerequisites] - Enable debug mode for enhanced prerequisite error messages
  * @returns {{
  *   eventBus: import('../../../src/events/eventBus.js').default,
  *   events: any[],
@@ -79,6 +82,7 @@ export function createBaseRuleEnvironment({
   createDataRegistry = null,
   eventBus = null,
   createEventBus = null,
+  debugPrerequisites = false,
 }) {
   // Create a debug logger that silences debug output for performance tests
   const debugLogger = {
@@ -1059,6 +1063,8 @@ export function createBaseRuleEnvironment({
     jsonLogicEvaluationService: jsonLogic,
     actionValidationContextBuilder,
     gameDataRepository: testDataRegistry,
+    entityManager: init.entityManager,
+    debugMode: debugPrerequisites,
   });
 
   // Setup entity cache invalidation to match production behavior
