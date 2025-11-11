@@ -32,45 +32,43 @@ This allows the operator to be used in JSON Logic expressions like:
 
 ### DI Container Registration
 
-**File**: `src/dependencyInjection/registrations/jsonLogicRegistrations.js`
+**File**: `src/logic/jsonLogicCustomOperators.js`
 
 **Changes Required**:
 
-1. **Import the Operator**:
+1. **Import the Operator** (at top of file):
 ```javascript
-import IsRemovalBlockedOperator from '../../logic/operators/isRemovalBlockedOperator.js';
+import { IsRemovalBlockedOperator } from './operators/isRemovalBlockedOperator.js';
 ```
 
-2. **Register Factory in DI Container**:
+2. **Instantiate Operator in `registerOperators()` method** (around line 115):
 ```javascript
-// In the registration function (e.g., registerJsonLogicOperators)
-container.registerFactory(
-  'IsRemovalBlockedOperator',
-  (c) => new IsRemovalBlockedOperator({
-    entityManager: c.resolve(tokens.IEntityManager),
-    logger: c.resolve(tokens.ILogger),
-  })
-);
+const isRemovalBlockedOp = new IsRemovalBlockedOperator({
+  entityManager: this.#entityManager,
+  logger: this.#logger,
+});
 ```
 
-3. **Register with JSON Logic Engine**:
+3. **Register with JSON Logic Engine** (around line 287):
 ```javascript
-// After creating the operator instance
-const jsonLogic = container.resolve(tokens.IJSONLogic);
-const isRemovalBlockedOperator = container.resolve('IsRemovalBlockedOperator');
-
-jsonLogic.addOperation('isRemovalBlocked', (args, data) =>
-  isRemovalBlockedOperator.evaluate(args, data)
+// Register isRemovalBlocked operator
+this.#registerOperator(
+  'isRemovalBlocked',
+  function (actorPath, targetItemPath) {
+    // 'this' is the evaluation context
+    return isRemovalBlockedOp.evaluate([actorPath, targetItemPath], this);
+  },
+  jsonLogicEvaluationService
 );
 ```
 
 ### Design Rationale
 
-1. **Factory Pattern**: Operator is created by the DI container with proper dependencies
-2. **Lazy Resolution**: Operator is only created when needed
-3. **Testability**: Dependencies can be mocked for testing
-4. **Consistency**: Follows existing operator registration pattern
-5. **Encapsulation**: JSON Logic engine doesn't know about DI internals
+1. **Centralized Registration**: All custom operators are registered in one place (`JsonLogicCustomOperators`)
+2. **Service Encapsulation**: The `JsonLogicCustomOperators` service manages operator lifecycle and registration
+3. **Testability**: Operators can be tested in isolation with mocked dependencies
+4. **Consistency**: Follows existing operator registration pattern used by 11+ other operators
+5. **Automatic Validation**: Registered operators are automatically validated against whitelist
 
 ---
 
@@ -78,88 +76,134 @@ jsonLogic.addOperation('isRemovalBlocked', (args, data) =>
 
 ### 1. Locate Registration File
 
-The JSON Logic operators are registered in `src/dependencyInjection/registrations/jsonLogicRegistrations.js`. If this file doesn't exist, check for similar registration files in the `src/dependencyInjection/registrations/` directory.
+Custom JSON Logic operators are registered in `src/logic/jsonLogicCustomOperators.js`. This service is instantiated in `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` (lines 391-414).
 
 ### 2. Add Operator Import
 
-At the top of the registration file, add:
+At the top of `src/logic/jsonLogicCustomOperators.js` (around line 14), add:
 
 ```javascript
-import IsRemovalBlockedOperator from '../../logic/operators/isRemovalBlockedOperator.js';
+import { IsRemovalBlockedOperator } from './operators/isRemovalBlockedOperator.js';
 ```
 
-### 3. Register Factory
+### 3. Instantiate Operator
 
-Find the function that registers JSON Logic operators (likely named `registerJsonLogicOperators` or similar). Add the factory registration:
+In the `registerOperators(jsonLogicEvaluationService)` method (around line 115), add the operator instantiation:
 
 ```javascript
-container.registerFactory(
-  'IsRemovalBlockedOperator',
-  (c) => new IsRemovalBlockedOperator({
-    entityManager: c.resolve(tokens.IEntityManager),
-    logger: c.resolve(tokens.ILogger),
-  })
-);
+const isRemovalBlockedOp = new IsRemovalBlockedOperator({
+  entityManager: this.#entityManager,
+  logger: this.#logger,
+});
 ```
 
 ### 4. Register with JSON Logic
 
-After the factory registration, add the JSON Logic operation:
+After all operator instantiations (around line 287, before the VALIDATION comment), add:
 
 ```javascript
-const jsonLogic = container.resolve(tokens.IJSONLogic);
-const isRemovalBlockedOperator = container.resolve('IsRemovalBlockedOperator');
-
-jsonLogic.addOperation('isRemovalBlocked', (args, data) =>
-  isRemovalBlockedOperator.evaluate(args, data)
+// Register isRemovalBlocked operator
+this.#registerOperator(
+  'isRemovalBlocked',
+  function (actorPath, targetItemPath) {
+    // 'this' is the evaluation context
+    return isRemovalBlockedOp.evaluate([actorPath, targetItemPath], this);
+  },
+  jsonLogicEvaluationService
 );
 ```
 
 ### 5. Create Integration Tests
 
-**File**: `tests/integration/logic/operators/isRemovalBlockedOperatorDI.integration.test.js`
+**File**: `tests/integration/logic/operators/isRemovalBlockedOperator.integration.test.js`
 
 **Test Coverage**:
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createTestBed } from '../../../common/testBed.js';
+import EntityDefinition from '../../../../src/entities/entityDefinition.js';
+import { IsRemovalBlockedOperator } from '../../../../src/logic/operators/isRemovalBlockedOperator.js';
+import EntityManagerIntegrationTestBed from '../../../common/entities/entityManagerIntegrationTestBed.js';
 
-describe('IsRemovalBlocked Operator DI Integration', () => {
+describe('IsRemovalBlocked Operator integration with EntityManager', () => {
   let testBed;
+  let entityManager;
+  let actorDefinition;
+  let wearableDefinition;
+  let actor;
+  let belt;
+  let pants;
+  let operator;
+
+  const registerDefinition = (definition) => {
+    testBed.registry.store('entityDefinitions', definition.id, definition);
+  };
+
+  const createWearable = async (instanceId, components = {}) => {
+    const instance = await entityManager.createEntityInstance(
+      wearableDefinition.id,
+      { instanceId }
+    );
+
+    for (const [componentId, data] of Object.entries(components)) {
+      await entityManager.addComponent(instance.id, componentId, data);
+    }
+
+    return instance;
+  };
+
+  const equipItem = async (actorId, itemId, slot, layer) => {
+    const equipment = entityManager.getComponentData(actorId, 'clothing:equipment') || {
+      equipped: {},
+    };
+
+    if (!equipment.equipped[slot]) {
+      equipment.equipped[slot] = {};
+    }
+    if (!equipment.equipped[slot][layer]) {
+      equipment.equipped[slot][layer] = [];
+    }
+
+    if (!Array.isArray(equipment.equipped[slot][layer])) {
+      equipment.equipped[slot][layer] = [equipment.equipped[slot][layer]];
+    }
+
+    equipment.equipped[slot][layer].push(itemId);
+
+    await entityManager.addComponent(actorId, 'clothing:equipment', equipment);
+  };
+
+  const evaluate = (contextOverrides = {}) => {
+    const context = {
+      actor: { id: actor.id },
+      targetItem: { id: pants.id },
+      ...contextOverrides,
+    };
+    return operator.evaluate(['actor', 'targetItem'], context);
+  };
 
   beforeEach(async () => {
-    testBed = createTestBed();
-    await testBed.initialize();
-  });
+    testBed = new EntityManagerIntegrationTestBed();
+    entityManager = testBed.entityManager;
 
-  afterEach(() => {
-    testBed.cleanup();
-  });
+    actorDefinition = new EntityDefinition('integration:actor', {
+      description: 'integration actor',
+      components: {},
+    });
 
-  it('should resolve operator from DI container', () => {
-    // Arrange
-    const container = testBed.getContainer();
+    wearableDefinition = new EntityDefinition('integration:wearable', {
+      description: 'integration wearable item',
+      components: {},
+    });
 
-    // Act
-    const operator = container.resolve('IsRemovalBlockedOperator');
+    registerDefinition(actorDefinition);
+    registerDefinition(wearableDefinition);
 
-    // Assert
-    expect(operator).toBeDefined();
-    expect(operator.evaluate).toBeInstanceOf(Function);
-  });
+    actor = await entityManager.createEntityInstance(actorDefinition.id, {
+      instanceId: 'actor-1',
+    });
 
-  it('should register operator with JSON Logic engine', () => {
-    // Arrange
-    const container = testBed.getContainer();
-    const jsonLogic = container.resolve('IJSONLogic');
-
-    // Create test entities
-    const actorId = testBed.createEntity('actor1', ['clothing:equipment']);
-    const beltId = testBed.createEntity('belt1', [
-      'clothing:wearable',
-      'clothing:blocks_removal',
-    ], {
+    belt = await createWearable('belt-1', {
       'clothing:wearable': {
         layer: 'accessories',
         equipmentSlots: { primary: 'torso_lower' },
@@ -174,65 +218,70 @@ describe('IsRemovalBlocked Operator DI Integration', () => {
         ],
       },
     });
-    const pantsId = testBed.createEntity('pants1', ['clothing:wearable'], {
+
+    pants = await createWearable('pants-1', {
       'clothing:wearable': {
         layer: 'base',
         equipmentSlots: { primary: 'legs' },
       },
     });
 
-    // Equip items
-    testBed.equipItem(actorId, beltId);
-    testBed.equipItem(actorId, pantsId);
-
-    // Act: Use operator through JSON Logic
-    const result = jsonLogic.apply(
-      { isRemovalBlocked: [actorId, pantsId] },
-      {}
-    );
-
-    // Assert
-    expect(result).toBe(true);
-  });
-
-  it('should work with negation in JSON Logic', () => {
-    // Arrange
-    const container = testBed.getContainer();
-    const jsonLogic = container.resolve('IJSONLogic');
-
-    const actorId = testBed.createEntity('actor1', ['clothing:equipment']);
-    const shirtId = testBed.createEntity('shirt1', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'torso_upper' },
-      },
+    // Initialize equipment component
+    await entityManager.addComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
     });
 
-    testBed.equipItem(actorId, shirtId);
-
-    // Act: Use operator with negation (for can-remove-item condition)
-    const result = jsonLogic.apply(
-      { '!': { isRemovalBlocked: [actorId, shirtId] } },
-      {}
-    );
-
-    // Assert
-    expect(result).toBe(true); // Not blocked = can remove
+    operator = new IsRemovalBlockedOperator({
+      entityManager,
+      logger: testBed.logger,
+    });
   });
 
-  it('should handle operator errors gracefully', () => {
-    // Arrange
-    const container = testBed.getContainer();
-    const jsonLogic = container.resolve('IJSONLogic');
+  afterEach(async () => {
+    await testBed.cleanup();
+  });
 
-    // Act: Use operator with invalid arguments
-    const result = jsonLogic.apply(
-      { isRemovalBlocked: [null, null] },
-      {}
+  it('should return false when actor has no equipment', () => {
+    expect(evaluate()).toBe(false);
+  });
+
+  it('should return false when target item is not wearable', async () => {
+    const nonWearable = await entityManager.createEntityInstance(
+      wearableDefinition.id,
+      { instanceId: 'non-wearable' }
     );
 
-    // Assert
-    expect(result).toBe(false); // Fails safe
+    const context = {
+      actor: { id: actor.id },
+      targetItem: { id: nonWearable.id },
+    };
+
+    expect(operator.evaluate(['actor', 'targetItem'], context)).toBe(false);
+  });
+
+  it('should return true when removal is blocked by slot rules', async () => {
+    // Equip belt first (blocks pants removal)
+    await equipItem(actor.id, belt.id, 'torso_lower', 'accessories');
+    // Equip pants
+    await equipItem(actor.id, pants.id, 'legs', 'base');
+
+    expect(evaluate()).toBe(true);
+  });
+
+  it('should return false when no items block removal', async () => {
+    // Only equip pants (no blockers)
+    await equipItem(actor.id, pants.id, 'legs', 'base');
+
+    expect(evaluate()).toBe(false);
+  });
+
+  it('should handle operator with invalid arguments', () => {
+    const context = {
+      actor: null,
+      targetItem: null,
+    };
+
+    expect(operator.evaluate(['actor', 'targetItem'], context)).toBe(false);
   });
 });
 ```
@@ -240,7 +289,7 @@ describe('IsRemovalBlocked Operator DI Integration', () => {
 ### 6. Run Integration Tests
 
 ```bash
-NODE_ENV=test npm run test:integration -- tests/integration/logic/operators/isRemovalBlockedOperatorDI.integration.test.js
+NODE_ENV=test npm run test:integration -- tests/integration/logic/operators/isRemovalBlockedOperator.integration.test.js --no-coverage --silent
 ```
 
 Target: All tests pass.
@@ -252,7 +301,7 @@ Target: All tests pass.
 ### Integration Tests
 
 ```bash
-NODE_ENV=test npm run test:integration -- tests/integration/logic/operators/isRemovalBlockedOperatorDI.integration.test.js
+NODE_ENV=test npm run test:integration -- tests/integration/logic/operators/isRemovalBlockedOperator.integration.test.js --no-coverage --silent
 ```
 
 Expected: All tests pass.
@@ -268,7 +317,7 @@ Expected: No errors.
 ### ESLint
 
 ```bash
-npx eslint src/dependencyInjection/registrations/jsonLogicRegistrations.js
+npx eslint src/logic/jsonLogicCustomOperators.js tests/integration/logic/operators/isRemovalBlockedOperator.integration.test.js
 ```
 
 Expected: No warnings or errors.
@@ -283,10 +332,10 @@ npm run dev
 2. In browser console, verify operator is registered:
 ```javascript
 // Check if operator exists in JSON Logic
-const jsonLogic = window.game.container.resolve('IJSONLogic');
+const jsonLogic = window.game.container.resolve('JsonLogicEvaluationService');
 const result = jsonLogic.apply({
-  isRemovalBlocked: ['actor1', 'item1']
-}, {});
+  isRemovalBlocked: ['actor', 'targetItem']
+}, { actor: { id: 'test-actor' }, targetItem: { id: 'test-item' } });
 console.log('Operator works:', typeof result === 'boolean');
 ```
 
@@ -294,10 +343,9 @@ console.log('Operator works:', typeof result === 'boolean');
 
 ## Acceptance Criteria
 
-- [ ] `IsRemovalBlockedOperator` imported in registration file
-- [ ] Factory registered in DI container
-- [ ] Operator registered with JSON Logic engine
-- [ ] Factory resolves operator with correct dependencies
+- [ ] `IsRemovalBlockedOperator` imported in `jsonLogicCustomOperators.js`
+- [ ] Operator instantiated with correct dependencies in `registerOperators()` method
+- [ ] Operator registered with JSON Logic engine using `#registerOperator()` helper
 - [ ] Integration tests created and passing
 - [ ] Operator can be used in JSON Logic expressions
 - [ ] Negation works correctly (for `can-remove-item` condition)
@@ -309,27 +357,31 @@ console.log('Operator works:', typeof result === 'boolean');
 
 ## Notes
 
-- Follow existing operator registration patterns in the codebase
-- Ensure operator is registered AFTER JSON Logic engine is created
+- Follow existing operator registration patterns in `JsonLogicCustomOperators` class
+- See other operators (e.g., `HasClothingInSlotOperator`, `IsSocketCoveredOperator`) as examples
 - The operator name `isRemovalBlocked` should match the name used in conditions
-- Factory pattern ensures proper dependency injection
-- Integration tests verify end-to-end operator functionality
+- Operators are instantiated in the `registerOperators()` method with class-level dependencies
+- The `#registerOperator()` helper automatically tracks registered operators
+- Integration tests should use `EntityManagerIntegrationTestBed` and directly instantiate the operator
 
 ---
 
 ## Common Pitfalls
 
-**Pitfall**: Registering operator before JSON Logic engine is created
-**Solution**: Check registration order; JSON Logic must exist first
+**Pitfall**: Adding operator to wrong file (e.g., creating a new registration file)
+**Solution**: All custom JSON Logic operators go in `JsonLogicCustomOperators` class
 
-**Pitfall**: Wrong operator name in `addOperation()`
+**Pitfall**: Wrong operator name in `#registerOperator()`
 **Solution**: Use `isRemovalBlocked` (camelCase) consistently
 
-**Pitfall**: Missing dependencies in factory
-**Solution**: Verify `entityManager` and `logger` are both resolved
+**Pitfall**: Missing dependencies during instantiation
+**Solution**: Operators in `JsonLogicCustomOperators` use `this.#entityManager` and `this.#logger`
 
-**Pitfall**: Operator not testable in isolation
-**Solution**: Use factory pattern so dependencies can be mocked
+**Pitfall**: Not using the evaluation context properly
+**Solution**: The wrapper function should use `function` keyword (not arrow) so `this` refers to evaluation context
+
+**Pitfall**: Forgetting to add operator to validation whitelist
+**Solution**: The `validateOperatorWhitelist()` call at the end of `registerOperators()` will catch this
 
 ---
 
