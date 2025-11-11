@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import handleTravelThroughDimensionsRule from '../../../../data/mods/patrol/rules/handle_travel_through_dimensions.rule.json' assert { type: 'json' };
+import handleTravelThroughDimensionsRule from '../../../../data/mods/movement/rules/handle_travel_through_dimensions.rule.json' assert { type: 'json' };
 
 describe('handle_travel_through_dimensions Rule Schema', () => {
   describe('Perceptible Event Payload Structure', () => {
