@@ -4,6 +4,8 @@
  * @see actionExecutionTrace.js
  */
 
+/* global process */
+
 /**
  * High-precision timer service
  * Abstracts timing implementation details and provides consistent API
@@ -36,10 +38,19 @@ export class HighPrecisionTimer {
    * @returns {number} Timestamp in milliseconds with sub-millisecond precision
    */
   now() {
-    if (this.#performanceAPIAvailable) {
+    // Check if performance API is available at runtime (handles cases where it might be removed)
+    if (
+      this.#performanceAPIAvailable &&
+      typeof performance !== 'undefined' &&
+      typeof performance.now === 'function'
+    ) {
       // Browser or Node.js with performance API
       return performance.now();
-    } else if (this.#hrTimeAvailable) {
+    } else if (
+      this.#hrTimeAvailable &&
+      typeof process !== 'undefined' &&
+      typeof process.hrtime === 'function'
+    ) {
       // Node.js with process.hrtime
       const [seconds, nanoseconds] = process.hrtime();
       return seconds * 1000 + nanoseconds / 1000000;
@@ -193,7 +204,16 @@ export class HighPrecisionTimer {
    * @returns {boolean} True if high-precision timing is available
    */
   isHighPrecisionAvailable() {
-    return this.#performanceAPIAvailable || this.#hrTimeAvailable;
+    // Check at runtime for accuracy
+    const perfAvailable =
+      this.#performanceAPIAvailable &&
+      typeof performance !== 'undefined' &&
+      typeof performance.now === 'function';
+    const hrTimeAvailable =
+      this.#hrTimeAvailable &&
+      typeof process !== 'undefined' &&
+      typeof process.hrtime === 'function';
+    return perfAvailable || hrTimeAvailable;
   }
 
   /**
@@ -203,9 +223,18 @@ export class HighPrecisionTimer {
    * @returns {string} Name of timing API
    */
   #getTimingAPI() {
-    if (this.#performanceAPIAvailable) {
+    // Check at runtime to reflect current state
+    if (
+      this.#performanceAPIAvailable &&
+      typeof performance !== 'undefined' &&
+      typeof performance.now === 'function'
+    ) {
       return 'performance.now()';
-    } else if (this.#hrTimeAvailable) {
+    } else if (
+      this.#hrTimeAvailable &&
+      typeof process !== 'undefined' &&
+      typeof process.hrtime === 'function'
+    ) {
       return 'process.hrtime()';
     } else {
       return 'Date.now()';
@@ -219,9 +248,18 @@ export class HighPrecisionTimer {
    * @returns {number} Estimated resolution in milliseconds
    */
   #getTimingResolution() {
-    if (this.#performanceAPIAvailable) {
+    // Check at runtime to reflect current state
+    if (
+      this.#performanceAPIAvailable &&
+      typeof performance !== 'undefined' &&
+      typeof performance.now === 'function'
+    ) {
       return 0.001; // 1 microsecond
-    } else if (this.#hrTimeAvailable) {
+    } else if (
+      this.#hrTimeAvailable &&
+      typeof process !== 'undefined' &&
+      typeof process.hrtime === 'function'
+    ) {
       return 0.000001; // 1 nanosecond
     } else {
       return 1; // 1 millisecond
