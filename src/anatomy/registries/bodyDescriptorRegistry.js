@@ -88,7 +88,7 @@ export const BODY_DESCRIPTOR_REGISTRY = {
     displayLabel: 'Body hair density',
     displayKey: 'body_hair', // snake_case in formatting config
     dataPath: 'body.descriptors.hairDensity',
-    validValues: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'],
+    validValues: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy', 'furred'],
     displayOrder: 50,
     extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.hairDensity,
     formatter: (value) => `Body hair: ${value}`,

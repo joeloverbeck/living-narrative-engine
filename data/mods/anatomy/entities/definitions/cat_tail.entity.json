@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:cat_tail",
+  "description": "Feline tail - long, flexible, covered in fur",
+  "components": {
+    "anatomy:part": {
+      "subType": "tail"
+    },
+    "core:name": {
+      "text": "cat tail"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:flexibility": {
+      "flexibility": "highly-flexible"
+    }
+  }
+}

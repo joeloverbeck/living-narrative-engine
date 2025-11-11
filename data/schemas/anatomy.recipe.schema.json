@@ -208,8 +208,10 @@
             "light",
             "moderate",
             "hairy",
-            "very-hairy"
-          ]
+            "very-hairy",
+            "furred"
+          ],
+          "description": "Body hair density (including fur for animal-like creatures)"
         },
         "composition": {
           "type": "string",

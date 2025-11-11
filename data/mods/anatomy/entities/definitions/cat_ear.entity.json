@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:cat_ear",
+  "description": "Feline ear - triangular, mobile, covered in short fur",
+  "components": {
+    "anatomy:part": {
+      "subType": "ear"
+    },
+    "core:name": {
+      "text": "cat ear"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    }
+  }
+}

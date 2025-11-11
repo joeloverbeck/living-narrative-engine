@@ -24,6 +24,9 @@
       "definitions": [
         "beak.entity.json",
         "blueprint_slot.entity.json",
+        "cat_ear.entity.json",
+        "cat_girl_torso.entity.json",
+        "cat_tail.entity.json",
         "centaur_head.entity.json",
         "centaur_leg_front.entity.json",
         "centaur_leg_rear.entity.json",
@@ -173,6 +176,7 @@
       "instances": []
     },
     "blueprints": [
+      "cat_girl.blueprint.json",
       "centaur_warrior.blueprint.json",
       "giant_spider.blueprint.json",
       "human_female.blueprint.json",
@@ -183,6 +187,7 @@
       "writhing_observer.blueprint.json"
     ],
     "recipes": [
+      "cat_girl.recipe.json",
       "centaur_warrior.recipe.json",
       "giant_forest_spider.recipe.json",
       "human_female.recipe.json",

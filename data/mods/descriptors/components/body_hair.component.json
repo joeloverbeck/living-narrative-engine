@@ -1,33 +1,35 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "descriptors:body_hair",
-  "description": "Describes the body hair characteristics",
+  "description": "Describes the body hair characteristics (including fur for animal-like creatures)",
   "dataSchema": {
     "type": "object",
     "properties": {
       "hairDensity": {
         "type": "string",
-        "description": "The density or amount of body hair",
+        "description": "The density or amount of body hair (including fur for animal-like creatures)",
         "enum": [
           "hairless",
           "sparse",
           "light",
           "moderate",
           "hairy",
-          "very-hairy"
+          "very-hairy",
+          "furred"
         ],
         "default": "moderate"
       },
       "density": {
         "type": "string",
-        "description": "DEPRECATED: Use hairDensity instead. The density or amount of body hair",
+        "description": "DEPRECATED: Use hairDensity instead. The density or amount of body hair (including fur)",
         "enum": [
           "hairless",
           "sparse",
           "light",
           "moderate",
           "hairy",
-          "very-hairy"
+          "very-hairy",
+          "furred"
         ]
       }
     },
