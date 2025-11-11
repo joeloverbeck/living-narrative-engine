@@ -57,21 +57,44 @@ Create two components in the items mod to support aiming functionality: `items:a
     "type": "object",
     "properties": {
       "targetId": {
-        "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "Entity ID of the target being aimed at (format: modId:identifier)"
+        "description": "Entity ID of the target being aimed at",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
       },
       "aimedBy": {
-        "type": "string",
-        "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
-        "description": "Entity ID of the actor aiming the item"
+        "description": "Entity ID of the actor aiming the item",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
       },
-      "timestamp": {
-        "type": "number",
-        "description": "Game timestamp when aiming started (from GET_TIMESTAMP operation)"
+      "activityMetadata": {
+        "type": "object",
+        "description": "Inline metadata for activity description generation. Allows this component to define how it should be described in activity summaries without requiring a separate metadata component.",
+        "additionalProperties": false,
+        "properties": {
+          "shouldDescribeInActivity": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this component should be included in activity descriptions. Set to false to hide from activity summaries."
+          },
+          "template": {
+            "type": "string",
+            "default": "{item} is aimed at {target} by {actor}",
+            "description": "Template string with placeholders for display"
+          },
+          "targetRole": {
+            "type": "string",
+            "default": "targetId",
+            "description": "Property name in this component's data containing the target entity ID"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "default": 70,
+            "description": "Display priority for activity ordering. Higher values appear first. Range: 0-100."
+          }
+        }
       }
     },
-    "required": ["targetId", "aimedBy", "timestamp"],
+    "required": ["targetId", "aimedBy"],
     "additionalProperties": false
   }
 }
@@ -83,8 +106,9 @@ Create two components in the items mod to support aiming functionality: `items:a
 - **Lifecycle:**
   - **Added:** When `items:aim_item` action executes
   - **Removed:** When `items:lower_aim` action executes or actor switches targets
-- **Pattern:** Similar to transient state components like `positioning:bending_over`, `weapons:jammed`
+- **Pattern:** Similar to transient state components like `positioning:bending_over`, `positioning:kneeling_before`
 - **Usage:** Enables queries for "what am I aiming at?" and "is this item aimed?"
+- **Activity Display:** Includes optional `activityMetadata` for rich activity descriptions (consistent with positioning mod pattern)
 
 ### 3. Component Field Details
 
@@ -92,13 +116,14 @@ Create two components in the items mod to support aiming functionality: `items:a
 
 | Field | Type | Required | Purpose |
 |-------|------|----------|---------|
-| `targetId` | string | Yes | Entity ID of aim target (e.g., `core:hostile_entity_1`) |
-| `aimedBy` | string | Yes | Entity ID of actor (e.g., `core:sentinel_alpha`) |
-| `timestamp` | number | Yes | Game time when aim started (for duration tracking) |
+| `targetId` | string (namespacedId) | Yes | Entity ID of aim target (e.g., `core:hostile_entity_1`) |
+| `aimedBy` | string (namespacedId) | Yes | Entity ID of actor (e.g., `core:sentinel_alpha`) |
+| `activityMetadata` | object | No | Optional metadata for activity description generation |
 
 **Field Validation:**
-- `targetId` and `aimedBy` must match pattern: `modId:identifier`
-- `timestamp` must be positive number (from `GET_TIMESTAMP` operation)
+- `targetId` and `aimedBy` use schema reference to `common.schema.json#/definitions/namespacedId`
+- This ensures consistency with entity ID validation across the codebase
+- `activityMetadata` is optional but follows the standard pattern from positioning components
 
 ### 4. Component Integration
 
@@ -125,8 +150,9 @@ data/mods/items/
 - [ ] Both components validate against `component.schema.json`
 - [ ] Component IDs follow namespace pattern (`items:*`)
 - [ ] `items:aimable` has empty properties object (marker component)
-- [ ] `items:aimed_at` has all three required fields with correct types
-- [ ] Patterns for entity IDs are correct (`^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$`)
+- [ ] `items:aimed_at` has two required fields (`targetId`, `aimedBy`) with correct types
+- [ ] Entity ID fields use schema reference to `common.schema.json#/definitions/namespacedId`
+- [ ] `activityMetadata` is optional and follows positioning component pattern
 - [ ] Descriptions clearly explain component purpose and usage
 - [ ] `npm run validate` passes without errors
 
@@ -169,10 +195,10 @@ describe('Items Mod - Aiming Components', () => {
     it('should have required fields for state tracking', () => {
       const aimedAt = require('../../../../../data/mods/items/components/aimed_at.component.json');
       expect(aimedAt.id).toBe('items:aimed_at');
-      expect(aimedAt.dataSchema.required).toEqual(['targetId', 'aimedBy', 'timestamp']);
-      expect(aimedAt.dataSchema.properties.targetId.type).toBe('string');
-      expect(aimedAt.dataSchema.properties.aimedBy.type).toBe('string');
-      expect(aimedAt.dataSchema.properties.timestamp.type).toBe('number');
+      expect(aimedAt.dataSchema.required).toEqual(['targetId', 'aimedBy']);
+      expect(aimedAt.dataSchema.properties.targetId.$ref).toBe('schema://living-narrative-engine/common.schema.json#/definitions/namespacedId');
+      expect(aimedAt.dataSchema.properties.aimedBy.$ref).toBe('schema://living-narrative-engine/common.schema.json#/definitions/namespacedId');
+      expect(aimedAt.dataSchema.properties.activityMetadata).toBeDefined();
     });
   });
 });
@@ -186,13 +212,13 @@ describe('Items Mod - Aiming Components', () => {
 - **State Component Pattern:** `items:aimed_at` exists only while actively aiming
   - Don't persist in save files for items not currently aimed
   - Component is added/removed by rule handlers, not manually
-- **Timestamp Usage:** The `timestamp` field enables:
-  - Tracking how long an item has been aimed
-  - Implementing aim stability mechanics (longer aim = more accuracy)
-  - Creating time-based constraints (must aim for X seconds before action)
+- **Activity Metadata:** The optional `activityMetadata` field enables:
+  - Rich display in activity summaries
+  - Customizable templates for different display contexts
+  - Consistent with positioning mod patterns (`kneeling_before`, `bending_over`, etc.)
 - **Future Extensions:**
-  - Could add `accuracy_bonus` field to `items:aimed_at` for aim duration effects
   - Could add `aim_mode` field for different aim stances (hip fire, aimed, scoped)
+  - Could add `stability_modifier` for gameplay effects
 
 ## Related Tickets
 
@@ -201,4 +227,6 @@ describe('Items Mod - Aiming Components', () => {
   - WEASYSIMP-005 (Items Mod Aiming Scopes) - scopes filter by these components
   - WEASYSIMP-007 (Items Mod Aiming Rules) - rules add/remove these components
 - **Required By:** All weapons mod shooting actions (require `items:aimed_at` component)
-- **Pattern Reference:** See `items:portable`, `items:item` for marker component examples
+- **Pattern References:**
+  - Marker components: `items:portable`, `items:item`
+  - State components with activityMetadata: `positioning:bending_over`, `positioning:kneeling_before`, `positioning:sitting_on`
