@@ -1,18 +1,19 @@
 {
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "weapons",
   "version": "1.0.0",
-  "name": "weapons",
-  "dependencies": [],
-  "content": {
-    "actions": [],
-    "components": [],
-    "conditions": [],
-    "entities": {
-      "definitions": [],
-      "instances": []
+  "name": "Weapons System",
+  "description": "Firearms, ammunition, reloading, and shooting mechanics. Includes weapons, ammunition containers, and combat actions for tactical gameplay scenarios.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
     },
-    "events": [],
-    "rules": [],
-    "scopes": []
-  }
+    {
+      "id": "items",
+      "version": "1.0.0"
+    }
+  ]
 }
