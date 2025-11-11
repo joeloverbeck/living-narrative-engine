@@ -1,6 +1,7 @@
 // tests/scopeDsl/scopeRegistry.spec.js
 
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
+import { ScopeResolutionError } from '../../../src/scopeDsl/errors/scopeResolutionError.js';
 import { addMockAstsToScopes } from '../../common/scopeDsl/mockAstGenerator.js';
 
 describe('ScopeRegistry', () => {
@@ -166,6 +167,67 @@ describe('ScopeRegistry', () => {
   describe('scope access', () => {
     beforeEach(() => {
       scopeRegistry.initialize(addMockAstsToScopes(mockScopeDefinitions));
+    });
+
+    describe('getScopeOrThrow', () => {
+      it('returns the scope data when the scope exists', () => {
+        const scope = scopeRegistry.getScopeOrThrow('core:all_characters');
+
+        expect(scope).toBeDefined();
+        expect(scope.expr).toBe(mockScopeDefinitions['core:all_characters'].expr);
+      });
+
+      it('throws a ScopeResolutionError with helpful suggestions when the scope is missing', () => {
+        // Arrange: add additional scopes to verify suggestion trimming
+        const extendedScopes = addMockAstsToScopes({
+          'core:scope1': { expr: 'scope1()' },
+          'core:scope2': { expr: 'scope2()' },
+          'core:scope3': { expr: 'scope3()' },
+          'core:scope4': { expr: 'scope4()' },
+          'core:scope5': { expr: 'scope5()' },
+          'core:scope6': { expr: 'scope6()' },
+        });
+        scopeRegistry.initialize({ ...addMockAstsToScopes(mockScopeDefinitions), ...extendedScopes });
+
+        expect(() => scopeRegistry.getScopeOrThrow('core:missing_scope')).toThrow(
+          ScopeResolutionError
+        );
+
+        try {
+          scopeRegistry.getScopeOrThrow('core:missing_scope');
+        } catch (error) {
+          expect(error).toBeInstanceOf(ScopeResolutionError);
+          expect(error.message).toBe('Scope "core:missing_scope" not found');
+
+          const context = error.context;
+          expect(context.scopeName).toBe('core:missing_scope');
+          expect(context.phase).toBe('scope lookup');
+          expect(context.parameters).toEqual({
+            requestedScope: 'core:missing_scope',
+            totalRegisteredScopes: scopeRegistry.getAllScopeNames().length,
+          });
+          expect(context.hint).toBe('Check that the scope is registered and the name is correct');
+          expect(context.suggestion).toMatch(/Available scopes \(first 5\):/);
+          expect(context.suggestion.split(': ')[1].split(', ').length).toBe(5);
+          expect(context.example).toMatch(/scopeRegistry\.getScope\('/);
+        }
+      });
+
+      it('throws a ScopeResolutionError without suggestions when no scopes are registered', () => {
+        const emptyRegistry = new ScopeRegistry();
+
+        expect(() => emptyRegistry.getScopeOrThrow('core:missing_scope')).toThrow(
+          ScopeResolutionError
+        );
+
+        try {
+          emptyRegistry.getScopeOrThrow('core:missing_scope');
+        } catch (error) {
+          expect(error.context.scopeName).toBe('core:missing_scope');
+          expect(error.context.suggestion).toBe('No scopes are currently registered');
+          expect(error.context.example).toBeUndefined();
+        }
+      });
     });
 
     it('should get a scope definition by its name', () => {
