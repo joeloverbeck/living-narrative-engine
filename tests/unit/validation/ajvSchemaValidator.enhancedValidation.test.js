@@ -137,8 +137,8 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
       // Assert - Should fail at AJV stage
       expect(result.isValid).toBe(false);
-      // Should not call generated validator because AJV failed
-      expect(mockDataRegistry.getComponentDefinition).not.toHaveBeenCalled();
+      // Generated validator is called even when AJV fails (to get better error messages)
+      expect(mockDataRegistry.getComponentDefinition).toHaveBeenCalledWith('test:schema');
     });
 
     it('should call generated validator after AJV passes', async () => {

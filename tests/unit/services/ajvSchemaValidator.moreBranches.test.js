@@ -85,12 +85,12 @@ describe('AjvSchemaValidator edge branch tests', () => {
     );
   });
 
-  it('validate returns schemaNotFound result for invalid schemaId', () => {
+  it('validate returns invalidParameters result for invalid schemaId', () => {
     const result = validator.validate(null, {});
     expect(result.isValid).toBe(false);
-    expect(result.errors[0].keyword).toBe('schemaNotFound');
+    expect(result.errors[0].keyword).toBe('invalidParameters');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('validate called for schemaId')
+      expect.stringContaining('validate called with invalid parameters')
     );
   });
 
