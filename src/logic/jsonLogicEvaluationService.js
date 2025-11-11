@@ -101,7 +101,7 @@ class JsonLogicEvaluationService extends BaseService {
       'all',
       // Special
       'log',
-      // Custom operations
+      // Special syntax (resolved before evaluation, not actual operators)
       'condition_ref',
       // Anatomy/body part operators
       'hasPartWithComponentValue',
@@ -120,7 +120,7 @@ class JsonLogicEvaluationService extends BaseService {
       'canScootCloser',
       'isClosestLeftOccupant',
       'isClosestRightOccupant',
-      // Test operators
+      // Test-only operators (registered dynamically in test suites)
       'throw_error_operator',
     ]);
 
