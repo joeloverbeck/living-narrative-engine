@@ -150,7 +150,7 @@ describe('bodyDescriptorConstants - Registry Derivation', () => {
                                    'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky',
                                    'frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous',
                                    'massive', 'willowy', 'barrel-chested', 'lanky'];
-      const expectedHairDensity = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'];
+      const expectedHairDensity = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy', 'furred'];
       const expectedComposition = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese',
                                    'atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated',
                                    'wasted', 'desiccated', 'bloated', 'rotting'];
