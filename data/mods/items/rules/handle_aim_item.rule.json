@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "items:handle_aim_item",
+  "rule_id": "handle_aim_item",
   "comment": "Placeholder rule for aim_item action. To be implemented in WEASYSIMP-007.",
   "event_type": "core:attempt_action",
   "condition": {
