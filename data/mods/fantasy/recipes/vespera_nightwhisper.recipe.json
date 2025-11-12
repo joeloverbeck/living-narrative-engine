@@ -7,7 +7,7 @@
     "build": "athletic",
     "composition": "lean",
     "skinColor": "pale-cream",
-    "hairDensity": "fluffy"
+    "hairDensity": "furred"
   },
   "slots": {
     "head": {
@@ -112,24 +112,54 @@
   },
   "patterns": [
     {
-      "matches": ["left_arm", "right_arm"],
+      "matches": [
+        "left_arm",
+        "right_arm"
+      ],
       "partType": "arm",
       "preferId": "anatomy:humanoid_arm"
     },
     {
-      "matches": ["left_leg", "right_leg"],
+      "matches": [
+        "left_leg",
+        "right_leg"
+      ],
       "partType": "leg",
       "preferId": "anatomy:human_leg"
     },
     {
-      "matches": ["left_hand", "right_hand"],
+      "matches": [
+        "left_hand",
+        "right_hand"
+      ],
       "partType": "hand",
       "preferId": "anatomy:human_hand"
     },
     {
-      "matches": ["left_foot", "right_foot"],
+      "matches": [
+        "left_foot",
+        "right_foot"
+      ],
       "partType": "foot",
       "preferId": "anatomy:human_foot"
+    }
+  ],
+  "clothingEntities": [
+    {
+      "entityId": "clothing:cream_poets_shirt_billowing_sleeves",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:black_breeches_tapered_knee",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:digitigrade_foot_wraps_burgundy",
+      "equip": true
+    },
+    {
+      "entityId": "clothing:black_leather_collar_silver_bell",
+      "equip": true
     }
   ]
 }
