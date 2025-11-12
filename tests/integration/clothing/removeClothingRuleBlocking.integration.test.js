@@ -152,8 +152,7 @@ describe('Remove Others Clothing Rule - Blocking Integration', () => {
     fixture.cleanup();
   });
 
-  // TODO: This test needs investigation - the rule works but test setup may need adjustment
-  it.skip('should emit action_failed when trying to remove blocked clothing from another person', async () => {
+  it('should emit action_failed when trying to remove blocked clothing from another person', async () => {
     // Arrange: Create actor and target with blocked clothing
     const actor = {
       id: 'actor1',
