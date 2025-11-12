@@ -161,6 +161,60 @@ Here's a complete example of a winter coat with multi-region coverage:
 }
 ```
 
+## Removal Blocking
+
+The clothing system includes a blocking mechanism to enforce realistic removal order. Items can declare which other items or layers they block from removal while equipped.
+
+### Overview
+
+**Purpose**: Prevent unrealistic clothing removal scenarios (e.g., removing pants while belt is fastened).
+
+**How It Works**:
+1. Items with `clothing:blocks_removal` component declare blocking rules
+2. Scope resolution filters out blocked items from `topmost_clothing`
+3. Condition validation prevents blocked removal at action execution
+
+### Component
+
+Add `clothing:blocks_removal` to items that block other items:
+
+```json
+{
+  "clothing:blocks_removal": {
+    "blockedSlots": [
+      {
+        "slot": "legs",
+        "layers": ["base", "outer"],
+        "blockType": "must_remove_first",
+        "reason": "Belt secures pants at waist"
+      }
+    ]
+  }
+}
+```
+
+### Examples
+
+**Belt Blocking Pants**:
+```json
+{
+  "id": "clothing:belt",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": { "primary": "torso_lower" }
+    },
+    "clothing:blocks_removal": {
+      "blockedSlots": [
+        { "slot": "legs", "layers": ["base"], "blockType": "must_remove_first" }
+      ]
+    }
+  }
+}
+```
+
+For detailed documentation, see [Clothing Blocking System](clothing-blocking-system.md).
+
 ## Best Practices
 
 1. **Logical Coverage**: Only add coverage that makes real-world sense
