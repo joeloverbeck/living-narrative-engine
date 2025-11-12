@@ -4,7 +4,7 @@
   "root": "anatomy:cat_girl_torso",
   "compose": [
     {
-      "part": "anatomy:humanoid_core",
+      "part": "anatomy:feline_core",
       "include": ["slots", "clothingSlotMappings"]
     }
   ],

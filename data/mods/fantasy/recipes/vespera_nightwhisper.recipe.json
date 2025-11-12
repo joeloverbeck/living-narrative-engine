@@ -10,6 +10,10 @@
     "hairDensity": "furred"
   },
   "slots": {
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head_cute"
+    },
     "left_eye": {
       "partType": "eye",
       "preferId": "anatomy:feline_eye_amber_slit",
@@ -87,11 +91,19 @@
     },
     "left_breast": {
       "partType": "breast",
-      "preferId": "anatomy:human_breast_average"
+      "preferId": "anatomy:human_breast_c_cup_soft"
     },
     "right_breast": {
       "partType": "breast",
-      "preferId": "anatomy:human_breast_average"
+      "preferId": "anatomy:human_breast_c_cup_soft"
+    },
+    "left_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm_athletic_shelf"
+    },
+    "right_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm_athletic_shelf"
     },
     "vagina": {
       "partType": "vagina",
@@ -118,11 +130,6 @@
       "matches": ["left_foot", "right_foot"],
       "partType": "foot",
       "preferId": "anatomy:human_foot"
-    },
-    {
-      "matches": ["hair"],
-      "partType": "hair",
-      "preferId": "anatomy:human_hair"
     }
   ]
 }
