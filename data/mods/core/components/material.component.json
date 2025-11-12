@@ -89,5 +89,18 @@
     },
     "required": ["material"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid material property: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Material is required",
+      "invalidType": "Invalid type for material property: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

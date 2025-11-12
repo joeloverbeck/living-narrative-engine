@@ -13,5 +13,18 @@
       }
     },
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid gender: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Gender is required",
+      "invalidType": "Invalid type for gender: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

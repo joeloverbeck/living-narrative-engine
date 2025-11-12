@@ -64,5 +64,18 @@
     },
     "required": ["notes"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid note subject type: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Note property is required",
+      "invalidType": "Invalid type for note property: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
