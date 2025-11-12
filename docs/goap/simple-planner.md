@@ -6,18 +6,22 @@ The SimplePlanner is a one-step greedy planner that serves as the foundation for
 
 ## Architecture
 
-### Components
+### Core Components
 
 1. **SimplePlanner** (`src/goap/planning/simplePlanner.js`)
-   - Selects the best single action to move toward a goal
    - Delegates action selection to ActionSelector
    - Creates plan objects with single-step actions
    - Validates plan applicability
 
-2. **PlanCache** (`src/goap/planning/planCache.js`)
+2. **ActionSelector** (`src/goap/selection/actionSelector.js`)
+   - Filters actions to those with planning effects
+   - Calculates progress by simulating effects
+   - Selects action with highest positive progress
+   - Supports conditional effects and abstract preconditions
+
+3. **PlanCache** (`src/goap/planning/planCache.js`)
    - Caches plans to avoid replanning every turn
-   - Supports actor-specific caching
-   - Provides goal-based invalidation
+   - Provides actor-specific and goal-based invalidation
    - Tracks cache statistics
 
 ### Dependencies
@@ -26,7 +30,13 @@ The SimplePlanner is a one-step greedy planner that serves as the foundation for
 SimplePlanner
   ├── ILogger
   ├── IActionSelector
-  └── IGoalManager (reserved for Tier 2+)
+  └── IGoalManager (injected but unused; reserved for Tier 2+)
+
+ActionSelector
+  ├── ILogger
+  ├── IGoalStateEvaluator
+  ├── IEntityManager (validated but not stored)
+  └── IAbstractPreconditionSimulator
 
 PlanCache
   └── ILogger
@@ -34,39 +44,52 @@ PlanCache
 
 ## One-Step Planning Algorithm
 
-The SimplePlanner uses a greedy approach:
+The SimplePlanner delegates to ActionSelector, which uses this greedy approach:
 
-1. **Filter Actions**: Select actions with planning effects
-2. **Calculate Progress**: For each action, calculate how much it moves toward goal
-3. **Select Best**: Choose action with highest positive progress
-4. **Create Plan**: Package selected action into a plan object
+1. **Filter Actions**: Select only actions with planning effects
+2. **Calculate Progress**: For each action:
+   - Calculate current distance to goal
+   - Simulate applying action's effects (deep clone state)
+   - Calculate future distance to goal
+   - Progress = currentDistance - futureDistance
+3. **Filter Positive**: Keep only actions with positive progress (progress > 0)
+4. **Select Best**: Choose action with highest progress score
 
 ### Algorithm Details
 
 ```javascript
+// SimplePlanner.plan()
 function plan(goal, availableActions, actorId, context) {
-  // Step 1: Delegate to ActionSelector
   const selectedAction = actionSelector.selectAction(
     availableActions,
     goal,
     actorId,
     context
   );
+  return selectedAction; // or null if no suitable action
+}
 
-  // Step 2: Return selected action (or null if none suitable)
-  return selectedAction;
+// ActionSelector.selectAction()
+function selectAction(availableActions, goal, actorId, context) {
+  // Step 1: Filter to actions with planning effects
+  const plannable = availableActions.filter(a => a.planningEffects);
+
+  // Step 2: Calculate progress for each action
+  const scored = plannable.map(action => ({
+    action,
+    score: calculateProgress(action, goal, actorId, context)
+  }));
+
+  // Step 3: Filter positive progress only
+  const positive = scored.filter(s => s.score > 0);
+
+  // Step 4: Sort by score descending and return best
+  positive.sort((a, b) => b.score - a.score);
+  return positive[0]?.action || null;
 }
 ```
 
-The actual selection logic is in ActionSelector, which:
-- Calculates current distance to goal
-- Simulates applying each action's effects
-- Calculates future distance to goal
-- Returns action with best progress (currentDistance - futureDistance)
-
 ## Plan Structure
-
-Plans are simple JavaScript objects:
 
 ```javascript
 {
@@ -80,140 +103,76 @@ Plans are simple JavaScript objects:
     }
   ],
   createdAt: 1699999999999,
-  validUntil: null  // No expiration for simple planner
+  validUntil: null  // Always null for SimplePlanner (no expiration)
 }
 ```
 
-### Fields
+**Fields:**
+- `goalId` - ID of goal this plan pursues
+- `steps` - Array of action steps (always length 1 for SimplePlanner)
+- `createdAt` - Timestamp when plan was created
+- `validUntil` - Always null for SimplePlanner (Tier 2+ feature)
 
-- **goalId**: ID of goal this plan pursues
-- **steps**: Array of action steps (always length 1 for SimplePlanner)
-  - **actionId**: ID of action to execute
-  - **targetId**: Target entity ID (null if no target)
-  - **tertiaryTargetId**: Tertiary target ID (null if none)
-  - **reasoning**: Human-readable explanation
-- **createdAt**: Timestamp when plan was created
-- **validUntil**: Expiration timestamp (null = never expires)
-
-## Plan Caching Strategy
-
-The PlanCache provides actor-specific caching:
+## Plan Caching
 
 ### Cache Operations
 
 ```javascript
-// Store plan
-planCache.set('actor1', plan);
-
-// Retrieve plan
-const plan = planCache.get('actor1'); // returns plan or null
-
-// Check existence
-if (planCache.has('actor1')) {
-  // use cached plan
-}
-
-// Invalidate specific actor
-planCache.invalidate('actor1');
-
-// Invalidate all plans for goal
-planCache.invalidateGoal('survival:find_food');
-
-// Clear all plans
-planCache.clear();
-
-// Get statistics
-const stats = planCache.getStats();
-// { size: 5, actors: ['actor1', 'actor2', ...] }
+planCache.set('actor1', plan);              // Store plan
+const plan = planCache.get('actor1');       // Retrieve (or null)
+const has = planCache.has('actor1');        // Check existence
+planCache.invalidate('actor1');             // Invalidate actor's plan
+planCache.invalidateGoal('survival:find_food'); // Invalidate by goal
+planCache.clear();                          // Clear all plans
+const stats = planCache.getStats();         // { size: 5, actors: [...] }
 ```
 
 ### Caching Workflow
 
 ```
-Turn 1:
-  Check cache → miss → Plan → Cache plan → Execute first step
-
-Turn 2:
-  Check cache → hit → Validate plan → Execute next step
-
-Turn 3:
-  State change → Invalidate cache → Check cache → miss → Plan again
+Turn 1: miss → plan → cache → execute
+Turn 2: hit → validate → execute
+Turn 3: state change → invalidate → miss → plan → cache → execute
 ```
 
 ## Plan Validation
 
-SimplePlanner provides minimal validation for Tier 1:
+SimplePlanner provides minimal validation:
 
 ```javascript
 function validatePlan(plan, context) {
-  // Check expiration
-  if (plan.validUntil && Date.now() > plan.validUntil) {
-    return false;
-  }
+  // Check expiration (if set)
+  if (plan.validUntil && Date.now() > plan.validUntil) return false;
 
   // Check has steps
-  if (!plan.steps || plan.steps.length === 0) {
-    return false;
-  }
+  if (!plan.steps || plan.steps.length === 0) return false;
 
   return true;
 }
 ```
 
-More sophisticated validation will be added in Tier 2:
-- Validate preconditions still met
-- Check if world state hasn't changed significantly
-- Verify action still available
+**Note:** Tier 2+ will add precondition checking, action availability, and world state verification.
 
 ## Cache Invalidation Strategies
 
-### Actor-Specific Invalidation
-
-Invalidate when actor's state changes:
-
+**Actor-specific:**
 ```javascript
-// After action execution
-planCache.invalidate(actorId);
-
-// After component change
-eventBus.on('COMPONENT_ADDED', ({ entityId }) => {
-  planCache.invalidate(entityId);
-});
+planCache.invalidate(actorId);  // After action execution or state change
 ```
 
-### Goal-Based Invalidation
-
-Invalidate when goal conditions change:
-
+**Goal-based:**
 ```javascript
-// When goal becomes impossible
-planCache.invalidateGoal('survival:find_food');
-
-// When environment changes affecting goal
-eventBus.on('WORLD_STATE_CHANGED', ({ affectedGoals }) => {
-  affectedGoals.forEach(goalId => {
-    planCache.invalidateGoal(goalId);
-  });
-});
+planCache.invalidateGoal('survival:find_food');  // When goal becomes impossible
 ```
 
-### Full Invalidation
-
-Clear all cached plans:
-
+**Global:**
 ```javascript
-// On major state changes
-planCache.clear();
-
-// On turn boundary (optional - depends on game design)
-eventBus.on('TURN_ENDED', () => {
-  planCache.clear(); // conservative approach
-});
+planCache.clear();  // Major state changes or turn boundaries
 ```
 
 ## Context Structure
 
-The `context` parameter provides world state for planning:
+The context parameter provides a snapshot of world state for planning:
 
 ```javascript
 {
@@ -229,56 +188,66 @@ The `context` parameter provides world state for planning:
 }
 ```
 
-This structure is built by the caller (typically GoapDecisionProvider) from EntityManager:
+**Important:** The context is a plain JavaScript object (snapshot), not direct EntityManager access. This allows simulation without modifying the actual world state.
 
-```javascript
-const context = {
-  entities: {},
-  targetId: action.targetId,
-  tertiaryTargetId: action.tertiaryTargetId
-};
+## Effect Simulation
 
-// Populate entities object from EntityManager
-const relevantEntityIds = [actorId, targetId, tertiaryTargetId];
-for (const id of relevantEntityIds) {
-  if (id) {
-    const entity = entityManager.getEntityInstance(id);
-    context.entities[id] = {
-      components: entity.getAllComponents()
-    };
-  }
-}
-```
+ActionSelector simulates effects by deep cloning world state and applying operations:
+
+### Supported Operations
+
+1. **ADD_COMPONENT** - Adds component to entity
+   ```javascript
+   { operation: 'ADD_COMPONENT', entity: 'actor', component: 'core:has_food', data: {} }
+   ```
+
+2. **REMOVE_COMPONENT** - Removes component from entity
+   ```javascript
+   { operation: 'REMOVE_COMPONENT', entity: 'actor', component: 'positioning:sitting' }
+   ```
+
+3. **MODIFY_COMPONENT** - Updates component fields
+   ```javascript
+   { operation: 'MODIFY_COMPONENT', entity: 'actor', component: 'core:energy', updates: { value: 100 } }
+   ```
+
+4. **CONDITIONAL** - Conditional effects with abstract preconditions
+   ```javascript
+   {
+     operation: 'CONDITIONAL',
+     condition: { abstractPrecondition: 'isFacing', params: ['actor', 'target'] },
+     then: [/* effects if true */],
+     else: [/* effects if false */]
+   }
+   ```
+
+### Entity Reference Resolution
+
+Effects use entity references that are resolved during simulation:
+- `'actor'` → actorId parameter
+- `'target'` → context.targetId
+- `'tertiary_target'` → context.tertiaryTargetId
+- Direct ID → unchanged
 
 ## Usage Example
 
-### Basic Planning
-
 ```javascript
-// Setup
 const simplePlanner = container.resolve(goapTokens.ISimplePlanner);
 const planCache = container.resolve(goapTokens.IPlanCache);
 
-// Planning workflow
 function planForActor(actorId, goal, availableActions, context) {
-  // Check cache first
+  // Check cache
   let plan = planCache.get(actorId);
 
-  if (plan) {
-    // Validate cached plan
-    if (!simplePlanner.validatePlan(plan, context)) {
-      // Invalid, replan
-      planCache.invalidate(actorId);
-      plan = null;
-    }
+  if (plan && !simplePlanner.validatePlan(plan, context)) {
+    planCache.invalidate(actorId);
+    plan = null;
   }
 
   if (!plan) {
-    // Plan from scratch
-    const selectedAction = simplePlanner.plan(goal, availableActions, actorId, context);
-
-    if (selectedAction) {
-      plan = simplePlanner.createPlan(selectedAction, goal);
+    const action = simplePlanner.plan(goal, availableActions, actorId, context);
+    if (action) {
+      plan = simplePlanner.createPlan(action, goal);
       planCache.set(actorId, plan);
     }
   }
@@ -287,29 +256,7 @@ function planForActor(actorId, goal, availableActions, context) {
 }
 ```
 
-### With Goal Manager
-
-```javascript
-function decideAction(actorId, availableActions, context) {
-  // Step 1: Select goal
-  const goal = goalManager.selectGoal(actorId, context);
-  if (!goal) return null;
-
-  // Step 2: Check if goal satisfied
-  if (goalManager.isGoalSatisfied(goal, actorId, context)) {
-    return null; // no action needed
-  }
-
-  // Step 3: Plan for goal
-  const plan = planForActor(actorId, goal, availableActions, context);
-  if (!plan) return null;
-
-  // Step 4: Return first step's action
-  return plan.steps[0].actionId;
-}
-```
-
-## Limitations vs. Full A* Planner
+## Limitations
 
 SimplePlanner is intentionally limited for Tier 1:
 
@@ -320,246 +267,105 @@ SimplePlanner is intentionally limited for Tier 1:
 | Action sequences | Single action | Action chains |
 | Backtracking | No | Yes |
 | Dead-end detection | No | Yes |
-| Cost consideration | Via ActionSelector | Full pathfinding |
-| State simulation | Basic | Complete |
+| Cost consideration | Via progress score | Full pathfinding |
+| State simulation | Deep clone + effects | Same |
 
-### When SimplePlanner Fails
-
-SimplePlanner may struggle with:
-
-1. **Multi-step goals**: Goals requiring action sequences
-   - Example: "Open chest, take key, unlock door"
-   - SimplePlanner: Picks best single action, may not find solution
-
-2. **Dead-ends**: Actions that prevent goal achievement
-   - Example: Walking away from only food source
-   - SimplePlanner: No lookahead to detect
-
-3. **Optimal paths**: Multiple paths with different costs
-   - Example: Fast dangerous route vs. slow safe route
-   - SimplePlanner: May not find optimal path
-
-These limitations are acceptable for Tier 1 validation.
+**Known weaknesses:**
+- Multi-step goals requiring action sequences
+- Dead-ends (actions that prevent goal achievement)
+- Suboptimal paths (may not find cheapest solution)
 
 ## Migration Path to Tier 2
 
-The SimplePlanner architecture supports future enhancement:
-
-### Current Interface (Tier 1)
+The current interface will be extended with an optional `options` parameter for backward compatibility:
 
 ```javascript
+// Tier 1 (current)
 plan(goal, availableActions, actorId, context) → action|null
-createPlan(action, goal) → plan
-validatePlan(plan, context) → boolean
-```
 
-### Future Interface (Tier 2+)
-
-```javascript
-// Enhanced planning with depth limit
+// Tier 2+ (future)
 plan(goal, availableActions, actorId, context, options) → action|null
-
-// Options:
-// {
-//   maxDepth: 5,           // multi-step planning
-//   costLimit: 10.0,       // cost threshold
-//   simulateActions: true  // full state simulation
-// }
-
-// More sophisticated validation
-validatePlan(plan, context) → boolean
-// - Check preconditions for all steps
-// - Verify action chain feasibility
-// - Detect dead-ends
+// options: { maxDepth: 5, costLimit: 10.0, simulateActions: true }
 ```
 
-### Backward Compatibility
-
-New features are opt-in via options parameter:
-
-```javascript
-// Tier 1 behavior (default)
-const action = planner.plan(goal, actions, actorId, context);
-
-// Tier 2 behavior (explicit)
-const action = planner.plan(goal, actions, actorId, context, {
-  maxDepth: 5
-});
-```
+Tier 2+ enhancements:
+- Multi-step planning (A* algorithm)
+- Precondition checking for all plan steps
+- Dead-end detection
+- Plan repair when world changes
 
 ## Performance Characteristics
 
-### SimplePlanner
+- **SimplePlanner**: O(1) - delegates to ActionSelector
+- **ActionSelector**: O(n × m) where n = actions, m = effects per action
+  - Filters plannable actions: O(n)
+  - Calculates progress (with state simulation): O(n × m)
+  - Sorts by score: O(n log n)
+- **PlanCache**:
+  - Get/Set/Has: O(1)
+  - Invalidate actor: O(1)
+  - Invalidate goal: O(k) where k = cached plans
+  - Clear: O(k)
 
-- **Time Complexity**: O(n) where n = number of available actions
-  - Delegates to ActionSelector which evaluates each action once
-- **Space Complexity**: O(1) - no state simulation needed
-- **Typical Performance**: < 5ms for 20-30 actions
-
-### PlanCache
-
-- **Get/Set**: O(1) - Map-based storage
-- **Invalidate**: O(1) for actor, O(n) for goal
-- **Memory**: O(k) where k = number of cached plans
-
-### Optimization Tips
-
-1. **Limit available actions**: Filter before planning
-2. **Cache aggressively**: Most actors don't change every turn
-3. **Invalidate selectively**: Only clear when necessary
-4. **Profile planning**: Monitor ms per plan
+**Optimization tips:**
+- Filter actions before planning
+- Cache aggressively
+- Invalidate selectively
+- Profile if planning exceeds 10ms
 
 ## Testing
 
-### Unit Tests
+**Unit Tests:** `tests/unit/goap/planning/` (SimplePlanner, PlanCache, ActionSelector)
 
-Location: `tests/unit/goap/planning/`
+**E2E Tests:** `tests/e2e/goap/`
+- Action selection with effect simulation
+- Complete GOAP decision with real mods
+- Goal priority selection workflow
+- Plan caching and invalidation
+- Error recovery and graceful degradation
 
-- `simplePlanner.test.js`: SimplePlanner class tests
-- `planCache.test.js`: PlanCache class tests
+**Coverage target:** 90% branches, 95% lines
 
-Coverage target: 90% branches, 95% lines
+## Common Issues
 
-### Integration Tests
-
-Location: `tests/integration/goap/planning.integration.test.js`
-
-Tests complete workflows:
-- Plan for find_food goal
-- Plan for rest_safely goal
-- Plan caching across turns
-- Plan invalidation on state change
-- No plan when goal satisfied
-- No plan when no actions available
-
-## Examples
-
-### Example 1: Find Food
-
+**Not caching plans:**
 ```javascript
-const goal = {
-  id: 'survival:find_food',
-  goalState: {
-    requirements: [
-      {
-        entity: 'self',
-        component: 'survival:has_food',
-        mustExist: true
-      }
-    ]
-  }
-};
-
-const actions = [
-  {
-    id: 'items:pick_up_food',
-    planningEffects: {
-      effects: [
-        {
-          operation: 'ADD_COMPONENT',
-          entity: 'actor',
-          component: 'survival:has_food',
-          data: { amount: 1 }
-        }
-      ]
-    }
-  }
-];
-
-const action = simplePlanner.plan(goal, actions, 'actor1', context);
-// → { id: 'items:pick_up_food', ... }
-
-const plan = simplePlanner.createPlan(action, goal);
-// → { goalId: 'survival:find_food', steps: [...], ... }
-```
-
-### Example 2: Rest Safely
-
-```javascript
-const goal = {
-  id: 'survival:rest_safely',
-  goalState: {
-    requirements: [
-      {
-        entity: 'self',
-        component: 'positioning:sitting',
-        mustExist: true
-      }
-    ]
-  }
-};
-
-const actions = [
-  {
-    id: 'positioning:sit_down',
-    planningEffects: {
-      effects: [
-        {
-          operation: 'ADD_COMPONENT',
-          entity: 'actor',
-          component: 'positioning:sitting',
-          data: {}
-        }
-      ]
-    }
-  }
-];
-
-const action = simplePlanner.plan(goal, actions, 'actor1', context);
-const plan = simplePlanner.createPlan(action, goal);
-planCache.set('actor1', plan);
-```
-
-## Common Pitfalls
-
-### 1. Forgetting to Cache Plans
-
-```javascript
-// ❌ Bad: Plan every turn (expensive)
-function getTurnAction(actorId) {
-  const action = simplePlanner.plan(...);
-  return action;
-}
+// ❌ Bad: Plan every turn
+const action = simplePlanner.plan(...);
 
 // ✅ Good: Cache and reuse
-function getTurnAction(actorId) {
-  let plan = planCache.get(actorId);
-  if (!plan || !simplePlanner.validatePlan(plan, context)) {
-    const action = simplePlanner.plan(...);
-    plan = simplePlanner.createPlan(action, goal);
-    planCache.set(actorId, plan);
-  }
-  return plan.steps[0].actionId;
+let plan = planCache.get(actorId);
+if (!plan || !simplePlanner.validatePlan(plan, context)) {
+  const action = simplePlanner.plan(...);
+  plan = simplePlanner.createPlan(action, goal);
+  planCache.set(actorId, plan);
 }
 ```
 
-### 2. Not Invalidating Cache
-
+**Stale cache:**
 ```javascript
-// ❌ Bad: Stale plans
-eventBus.on('COMPONENT_ADDED', ({ entityId }) => {
-  // Plan cache not invalidated
-});
-
-// ✅ Good: Invalidate on change
-eventBus.on('COMPONENT_ADDED', ({ entityId }) => {
-  planCache.invalidate(entityId);
-});
+// ✅ Invalidate on state changes
+planCache.invalidate(entityId);
 ```
 
-### 3. Incorrect Context Structure
-
+**Wrong context structure:**
 ```javascript
 // ❌ Bad: Direct EntityManager reference
 const context = { entityManager };
 
-// ✅ Good: Snapshot of world state
-const context = {
-  entities: {
-    actor1: { components: {...} }
-  }
-};
+// ✅ Good: Snapshot
+const context = { entities: { actor1: { components: {...} } } };
 ```
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Planning slow | Pre-filter actions, check action count |
+| Plans not cached | Verify `planCache.set()` is called |
+| Cache always invalid | Check invalidation frequency |
+| No action selected | Ensure actions have `planningEffects` with positive progress |
+| Wrong action selected | Debug progress calculation in ActionSelector |
 
 ## Related Documentation
 
@@ -567,33 +373,3 @@ const context = {
 - [Action Selector](./action-selector.md) - Action selection algorithm
 - [Goal System](./goal-system.md) - Goal definition and evaluation
 - [Effects Auto-Generation](./effects-auto-generation.md) - Planning effects
-
-## Future Enhancements (Tier 2+)
-
-1. **Multi-step planning**: A* backward chaining
-2. **Plan repair**: Adapt plans when world changes
-3. **Plan library**: Reuse successful plans
-4. **Hierarchical planning**: Break down complex goals
-5. **Plan explanation**: Better reasoning generation
-6. **Cost optimization**: Find cheapest path to goal
-7. **Time-limited planning**: Anytime algorithm
-8. **Partial order planning**: Flexible action sequences
-
-## Questions & Troubleshooting
-
-**Q: Why is planning slow?**
-A: Check number of available actions. Consider pre-filtering or caching.
-
-**Q: Plans never cached?**
-A: Verify `planCache.set()` is called after `createPlan()`.
-
-**Q: Cached plans always invalid?**
-A: Check if `validUntil` is set too short or invalidation too aggressive.
-
-**Q: No action selected?**
-A: Ensure actions have `planningEffects` and make positive progress.
-
-**Q: Wrong action selected?**
-A: Check ActionSelector's progress calculation and goal distance.
-
-For more questions, see [GOAP Troubleshooting](./troubleshooting.md).
