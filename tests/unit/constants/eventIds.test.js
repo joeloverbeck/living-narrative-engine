@@ -9,6 +9,7 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,
   GAME_SAVED_ID: 'core:game_saved',
+  ROUND_STARTED_ID: 'core:round_started',
   TURN_STARTED_ID: 'core:turn_started',
   TURN_ENDED_ID: 'core:turn_ended',
   PLAYER_TURN_PROMPT_ID: 'core:player_turn_prompt',

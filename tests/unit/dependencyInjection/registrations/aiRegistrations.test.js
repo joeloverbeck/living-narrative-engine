@@ -1,3 +1,5 @@
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+
 function mockCreateClass(name) {
   return jest.fn().mockImplementation(function MockedClass(args) {
     this.__mockName = name;
