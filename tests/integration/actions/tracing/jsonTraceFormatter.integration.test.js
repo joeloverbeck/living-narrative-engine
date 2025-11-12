@@ -44,6 +44,10 @@ describe('JsonTraceFormatter - Integration', () => {
     });
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('ActionExecutionTrace formatting', () => {
     it('should format complete execution trace with all verbosity levels', () => {
       const mockTrace = createMockActionExecutionTrace();
@@ -396,6 +400,220 @@ describe('JsonTraceFormatter - Integration', () => {
 
       expect(result.metadata.type).toBe('generic');
       expect(result.data).toBeDefined();
+    });
+  });
+
+  describe('Edge case coverage', () => {
+    const buildDeepNestedObject = () => {
+      const root = {};
+      let current = root;
+      for (let i = 0; i < 12; i++) {
+        current.next = {};
+        current = current.next;
+      }
+      return root;
+    };
+
+    const walkToTerminalDepth = (value) => {
+      let current = value;
+      let steps = 0;
+
+      while (
+        current &&
+        typeof current === 'object' &&
+        'next' in current &&
+        steps < 30
+      ) {
+        current = current.next;
+        steps += 1;
+      }
+
+      return { terminal: current, steps };
+    };
+
+    const createComplexExecutionTrace = () => {
+      const trace = createMockActionExecutionTrace();
+
+      const payloadCircular = { name: 'payload-circular' };
+      payloadCircular.self = payloadCircular;
+
+      const payloadNestedError = new Error('Nested payload error');
+
+      const executionError = new Error('Execution failure for sanitization');
+      const contextCircular = { tag: 'context-circular' };
+      contextCircular.self = contextCircular;
+
+      executionError.context = {
+        nullable: null,
+        timestamp: new Date('2024-02-02T00:00:00Z'),
+        deep: buildDeepNestedObject(),
+        items: new Set(['ctx-one', 'ctx-two']),
+        circular: contextCircular,
+        nestedError: new Error('Inner context error'),
+      };
+
+      trace.execution = {
+        startTime: Date.now(),
+        endTime: Date.now() + 25,
+        duration: 25,
+        result: { success: false },
+        eventPayload: {
+          type: 'COMPLEX_EVENT',
+          entityCache: { shouldRemove: true },
+          componentData: { shouldRemove: true },
+          mapping: new Map([
+            ['alpha', { id: 1 }],
+            ['beta', { id: 2 }],
+          ]),
+          timestamp: new Date('2024-01-01T00:00:00Z'),
+          deep: buildDeepNestedObject(),
+          circular: payloadCircular,
+          nullable: null,
+          items: new Set(['alpha', 'beta']),
+          nested: { innerError: payloadNestedError },
+        },
+        error: executionError,
+      };
+
+      return trace;
+    };
+
+    it('should warn and return empty JSON when null trace is provided', () => {
+      const result = formatter.format(null);
+
+      expect(result).toBe('{}');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'JsonTraceFormatter: Null trace provided'
+      );
+    });
+
+    it('should return error metadata when formatting throws unexpectedly', () => {
+      const failingTrace = {
+        constructor: { name: 'ActionAwareStructuredTrace' },
+        actionId: 'broken:trace',
+        getTracedActions: () => {
+          throw new Error('Intentional failure');
+        },
+      };
+
+      const result = formatter.format(failingTrace);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'JsonTraceFormatter: Formatting error',
+        expect.any(Error)
+      );
+
+      const parsed = JSON.parse(result);
+      expect(parsed.metadata.type).toBe('error');
+      expect(parsed.error.details).toBe('Intentional failure');
+      expect(parsed.rawTrace.actionId).toBe('broken:trace');
+    });
+
+    it('should include verbose prerequisite details and handle complex stage data', () => {
+      actionTraceFilter.setVerbosityLevel('verbose');
+      actionTraceFilter.updateInclusionConfig({ prerequisites: true });
+
+      const tracedActions = new Map();
+      const circularStageData = { stageName: 'custom' };
+      circularStageData.self = circularStageData;
+      circularStageData.bigValue = BigInt('987654321');
+
+      tracedActions.set('complex-action', {
+        actionId: 'complex-action',
+        actorId: 'actor-99',
+        startTime: 2000,
+        stages: {
+          prerequisite_evaluation: {
+            timestamp: 2100,
+            data: {
+              prerequisites: ['ready'],
+              passed: true,
+              evaluationDetails: { readiness: 'confirmed' },
+            },
+          },
+          custom_stage: {
+            timestamp: 2200,
+            data: circularStageData,
+          },
+        },
+      });
+
+      const pipelineTrace = {
+        constructor: { name: 'ActionAwareStructuredTrace' },
+        getTracedActions: () => tracedActions,
+        getSpans: () => [],
+      };
+
+      const result = JSON.parse(formatter.format(pipelineTrace));
+      const stages = result.actions['complex-action'].stages;
+
+      expect(stages.prerequisite_evaluation.evaluationDetails).toEqual({
+        readiness: 'confirmed',
+      });
+      expect(stages.custom_stage.data.bigValue).toBe('987654321');
+      expect(stages.custom_stage.data.self).toBe('[Circular]');
+    });
+
+    it('should sanitize event payloads and error context across verbosity levels', () => {
+      actionTraceFilter.updateInclusionConfig({ componentData: true });
+
+      actionTraceFilter.setVerbosityLevel('minimal');
+      const minimalTrace = createComplexExecutionTrace();
+      const minimalResult = JSON.parse(formatter.format(minimalTrace));
+      expect(minimalResult.eventPayload).toEqual({ type: 'COMPLEX_EVENT' });
+
+      actionTraceFilter.setVerbosityLevel('standard');
+      const standardTrace = createComplexExecutionTrace();
+      const standardResult = JSON.parse(formatter.format(standardTrace));
+      const sanitizedPayload = standardResult.eventPayload;
+
+      expect(sanitizedPayload.entityCache).toBeUndefined();
+      expect(sanitizedPayload.componentData).toBeUndefined();
+      expect(sanitizedPayload.timestamp).toBe('2024-01-01T00:00:00.000Z');
+      expect(sanitizedPayload.circular.self).toBe('[Circular reference]');
+      expect(sanitizedPayload.items).toEqual(['alpha', 'beta']);
+      expect(sanitizedPayload.nullable).toBeNull();
+      expect(sanitizedPayload.nested.innerError.message).toBe(
+        'Nested payload error'
+      );
+      expect(sanitizedPayload.mapping.alpha).toEqual({ id: 1 });
+
+      const payloadDepth = walkToTerminalDepth(sanitizedPayload.deep);
+      expect(payloadDepth.terminal).toBe('[Max depth exceeded]');
+      expect(payloadDepth.steps).toBeGreaterThan(0);
+
+      actionTraceFilter.setVerbosityLevel('verbose');
+      const verboseTrace = createComplexExecutionTrace();
+      const verboseResult = JSON.parse(formatter.format(verboseTrace));
+
+      expect(verboseResult.eventPayload.entityCache).toEqual({
+        shouldRemove: true,
+      });
+      expect(verboseResult.error.context.items).toEqual(['ctx-one', 'ctx-two']);
+      expect(verboseResult.error.context.circular.self).toBe('[Circular reference]');
+      const contextDepth = walkToTerminalDepth(
+        verboseResult.error.context.deep
+      );
+      expect(contextDepth.terminal).toBe('[Max depth exceeded]');
+      expect(contextDepth.steps).toBeGreaterThan(0);
+      expect(verboseResult.error.context.nestedError.message).toBe(
+        'Inner context error'
+      );
+      expect(verboseResult.error.context.timestamp).toBe(
+        '2024-02-02T00:00:00.000Z'
+      );
+    });
+
+    it('should default to standard indentation for unknown verbosity levels', () => {
+      const indentSpy = jest
+        .spyOn(actionTraceFilter, 'getVerbosityLevel')
+        .mockReturnValue('experimental');
+
+      const genericTrace = { foo: 'bar' };
+      const output = formatter.format(genericTrace);
+
+      expect(indentSpy).toHaveBeenCalled();
+      expect(output).toContain('\n  "metadata"');
     });
   });
 });
