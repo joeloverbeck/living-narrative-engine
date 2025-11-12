@@ -77,6 +77,14 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     const recipeContent = await fs.readFile(recipePath, 'utf-8');
     const recipe = JSON.parse(recipeContent);
 
+    // Ensure the hairDensity value is intentionally invalid to verify validation behavior
+    if (recipe.bodyDescriptors?.hairDensity !== 'fluffy') {
+      recipe.bodyDescriptors = {
+        ...recipe.bodyDescriptors,
+        hairDensity: 'fluffy',
+      };
+    }
+
     // Validate the recipe
     const report = await validator.validate(recipe, { recipePath });
 
