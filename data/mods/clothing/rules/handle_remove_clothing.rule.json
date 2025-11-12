@@ -28,48 +28,83 @@
       }
     },
     {
-      "type": "UNEQUIP_CLOTHING",
+      "type": "IF",
       "parameters": {
-        "entity_ref": "actor",
-        "clothing_item_id": "{event.payload.targetId}",
-        "cascade_unequip": false,
-        "destination": "ground"
+        "condition": {
+          "!": {
+            "isRemovalBlocked": ["actor", "target"]
+          }
+        },
+        "then_actions": [
+          {
+            "type": "UNEQUIP_CLOTHING",
+            "parameters": {
+              "entity_ref": "actor",
+              "clothing_item_id": "{event.payload.targetId}",
+              "cascade_unequip": false,
+              "destination": "ground"
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "actor"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} removes their {context.targetName}."
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "perceptionType",
+              "value": "action_target_general"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "locationId",
+              "value": "{context.actorPosition.locationId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "targetId",
+              "value": "{event.payload.targetId}"
+            }
+          },
+          {
+            "macro": "core:logSuccessAndEndTurn"
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} cannot remove their {context.targetName} - it is blocked by other clothing."
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "parameters": {
+              "eventType": "core:action_execution_failed",
+              "payload": {
+                "actorId": "{event.payload.actorId}",
+                "actionId": "{event.payload.actionId}",
+                "reason": "removal_blocked",
+                "message": "{context.logMessage}"
+              }
+            }
+          }
+        ]
       }
-    },
-    {
-      "type": "REGENERATE_DESCRIPTION",
-      "parameters": {
-        "entity_ref": "actor"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "logMessage",
-        "value": "{context.actorName} removes their {context.targetName}."
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "action_target_general"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
-      }
-    },
-    { "macro": "core:logSuccessAndEndTurn" }
+    }
   ]
 }
