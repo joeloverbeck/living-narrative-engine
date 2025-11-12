@@ -1105,6 +1105,71 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   }
 
   /**
+   * Clear transient state between tests without destroying the container.
+   * This enables test isolation while reusing the expensive initialization.
+   *
+   * @returns {void}
+   */
+  clearTransientState() {
+    // Clear event tracking (events, entityEvents, componentEvents, performanceMetrics)
+    this.clearRecordedData();
+
+    // Clear entity tracking
+    this.createdEntities.clear();
+    this.removedEntities.clear();
+
+    // DO NOT clear:
+    // - this.container (expensive to rebuild)
+    // - this.entityManager (expensive to rebuild)
+    // - this.eventBus (expensive to rebuild)
+    // - this.registry (expensive to rebuild)
+    // - this.logger (expensive to rebuild)
+    // - this.validator (expensive to rebuild)
+    // - this.eventSubscriptions (keep these active)
+
+    this.logger?.debug('EntityWorkflowTestBed transient state cleared');
+  }
+
+  /**
+   * Verify that the test bed is in a clean state.
+   * Useful for debugging test isolation issues.
+   *
+   * @throws {Error} If the test bed has unexpected state
+   * @returns {void}
+   */
+  verifyCleanState() {
+    const issues = [];
+
+    // Check for leftover entities
+    const entityIds = this.entityManager.getEntityIds();
+    if (entityIds.length > 0) {
+      issues.push(`${entityIds.length} entities still exist: ${entityIds.join(', ')}`);
+    }
+
+    // Check for leftover event tracking
+    if (this.events.length > 0) {
+      issues.push(`${this.events.length} events still tracked`);
+    }
+
+    if (this.entityEvents.length > 0) {
+      issues.push(`${this.entityEvents.length} entity events still tracked`);
+    }
+
+    if (this.componentEvents.length > 0) {
+      issues.push(`${this.componentEvents.length} component events still tracked`);
+    }
+
+    // Check for leftover entity tracking
+    if (this.createdEntities.size > 0) {
+      issues.push(`${this.createdEntities.size} entities in createdEntities set`);
+    }
+
+    if (issues.length > 0) {
+      throw new Error(`Test bed is not in clean state:\n  - ${issues.join('\n  - ')}`);
+    }
+  }
+
+  /**
    * Clean up resources after tests
    */
   async cleanup() {

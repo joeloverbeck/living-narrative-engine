@@ -9,18 +9,36 @@
  * E2E test coverage analysis for core entity lifecycle operations.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Entity Lifecycle E2E Workflow', () => {
   let testBed;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+    // Initialize ONCE for entire suite
     testBed = new EntityWorkflowTestBed();
     await testBed.initialize();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
+    // Lightweight state cleanup between tests
+    testBed.clearTransientState();
+
+    // Clean up any entities that might have been created
+    // (belt-and-suspenders approach for test isolation)
+    const entityIds = testBed.entityManager.getEntityIds();
+    for (const entityId of entityIds) {
+      try {
+        await testBed.removeTestEntity(entityId, { expectSuccess: false });
+      } catch (error) {
+        // Ignore errors during cleanup
+      }
+    }
+  });
+
+  afterAll(async () => {
+    // Cleanup ONCE after entire suite
     if (testBed) {
       await testBed.cleanup();
     }
