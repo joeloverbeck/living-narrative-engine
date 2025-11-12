@@ -207,6 +207,7 @@
       "humanoid.slot-library.json"
     ],
     "parts": [
+      "feline_core.part.json",
       "humanoid_core.part.json"
     ],
     "events": [
