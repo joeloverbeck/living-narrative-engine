@@ -2,7 +2,7 @@
 
 ## Overview
 
-The GOAP Goal System manages the selection and evaluation of goals for AI actors. Goals represent desired world states that actors want to achieve, and the goal system selects the highest-priority relevant goal for planning.
+The GOAP Goal System manages the selection and evaluation of goals for AI actors. Goals represent desired world states that actors want to achieve. The system selects the highest-priority relevant unsatisfied goal and uses it to guide action selection through effect simulation.
 
 ## Components
 
@@ -57,6 +57,8 @@ Goals are defined in JSON files following the `goal.schema.json` schema.
 
 Both `relevance` and `goalState` use JSON Logic syntax to evaluate world state.
 
+**Note:** The `actor` object in JSON Logic evaluation uses a `ComponentAccessor` (created via `createComponentAccessor()`), which provides dynamic property access to entity components. This is automatically handled by `GoalManager.isRelevant()` and `GoalStateEvaluator.evaluate()`.
+
 ### Accessing Component Data
 
 Access entity components via the `actor.components.*` path:
@@ -77,15 +79,23 @@ Access nested component properties:
 
 ### Component Existence Checks
 
-Check if a component exists:
+Check if a component exists (using `!=` operator):
 
 ```json
 {
-  ">=": [{ "var": "actor.components.core:actor" }, null]
+  "!=": [{ "var": "actor.components.core:actor" }, null]
 }
 ```
 
-Check if a component does NOT exist:
+Check if a component does NOT exist (using `==` for null check):
+
+```json
+{
+  "==": [{ "var": "actor.components.items:has_food" }, null]
+}
+```
+
+Alternative using `!` (NOT) operator:
 
 ```json
 {
@@ -117,7 +127,7 @@ Use logical operators to combine conditions:
 ```json
 {
   "and": [
-    { ">=": [{ "var": "actor.components.core:actor" }, null] },
+    { "!=": [{ "var": "actor.components.core:actor" }, null] },
     { "<": [{ "var": "actor.components.core:hunger.value" }, 30] }
   ]
 }
@@ -154,18 +164,19 @@ A hungry actor needs to find food:
   "priority": 80,
   "relevance": {
     "and": [
-      { ">=": [{ "var": "actor.components.core:actor" }, null] },
+      { "!=": [{ "var": "actor.components.core:actor" }, null] },
+      { "!=": [{ "var": "actor.components.core:hunger" }, null] },
       { "<": [{ "var": "actor.components.core:hunger.value" }, 30] },
-      { "!": [{ "var": "actor.components.items:has_food" }] }
+      { "==": [{ "var": "actor.components.items:has_food" }, null] }
     ]
   },
   "goalState": {
-    ">=": [{ "var": "actor.components.items:has_food" }, null]
+    "!=": [{ "var": "actor.components.items:has_food" }, null]
   }
 }
 ```
 
-**Relevance:** Actor exists, is hungry (< 30), and doesn't have food
+**Relevance:** Actor exists, has hunger component, is hungry (< 30), and doesn't have food
 **Goal State:** Actor has food component
 
 ### Rest Safely Goal
@@ -180,20 +191,22 @@ A tired actor needs to rest:
   "priority": 60,
   "relevance": {
     "and": [
-      { ">=": [{ "var": "actor.components.core:actor" }, null] },
+      { "!=": [{ "var": "actor.components.core:actor" }, null] },
+      { "!=": [{ "var": "actor.components.core:energy" }, null] },
       { "<": [{ "var": "actor.components.core:energy.value" }, 40] }
     ]
   },
   "goalState": {
     "and": [
-      { ">=": [{ "var": "actor.components.positioning:lying_down" }, null] },
+      { "!=": [{ "var": "actor.components.positioning:lying_down" }, null] },
+      { "!=": [{ "var": "actor.components.core:energy" }, null] },
       { ">=": [{ "var": "actor.components.core:energy.value" }, 80] }
     ]
   }
 }
 ```
 
-**Relevance:** Actor exists and is tired (< 40)
+**Relevance:** Actor exists, has energy component, and is tired (< 40)
 **Goal State:** Actor is lying down and energy is restored (>= 80)
 
 ### Defeat Enemy Goal
@@ -208,19 +221,20 @@ An actor in combat needs to defeat their enemy:
   "priority": 90,
   "relevance": {
     "and": [
-      { ">=": [{ "var": "actor.components.core:actor" }, null] },
-      { ">=": [{ "var": "actor.components.combat:in_combat" }, null] },
+      { "!=": [{ "var": "actor.components.core:actor" }, null] },
+      { "!=": [{ "var": "actor.components.combat:in_combat" }, null] },
+      { "!=": [{ "var": "actor.components.core:health" }, null] },
       { ">": [{ "var": "actor.components.core:health.value" }, 20] }
     ]
   },
   "goalState": {
-    "!": [{ "var": "actor.components.combat:in_combat" }]
+    "==": [{ "var": "actor.components.combat:in_combat" }, null]
   }
 }
 ```
 
-**Relevance:** Actor exists, is in combat, and has sufficient health (> 20)
-**Goal State:** Actor is no longer in combat
+**Relevance:** Actor exists, is in combat, has health component, and has sufficient health (> 20)
+**Goal State:** Actor is no longer in combat (component removed)
 
 ## Creating Goals for Creature Types
 
@@ -304,9 +318,9 @@ Select Highest: defeat_enemy(90)
 ```json
 {
   "and": [
-    { ">=": [{ "var": "actor.components.core:actor" }, null] },
-    { ">=": [{ "var": "actor.components.combat:warrior" }, null] },
-    { ">=": [{ "var": "actor.components.items:weapon" }, null] }
+    { "!=": [{ "var": "actor.components.core:actor" }, null] },
+    { "!=": [{ "var": "actor.components.combat:warrior" }, null] },
+    { "!=": [{ "var": "actor.components.items:weapon" }, null] }
   ]
 }
 ```
@@ -331,7 +345,7 @@ Select Highest: defeat_enemy(90)
     {
       "and": [
         { "<": [{ "var": "actor.components.core:health.value" }, 50] },
-        { ">=": [{ "var": "actor.components.combat:in_combat" }, null] }
+        { "!=": [{ "var": "actor.components.combat:in_combat" }, null] }
       ]
     }
   ]
@@ -429,15 +443,45 @@ Goals work with the GOAP action system:
 3. **Optimize Conditions**: Use simpler conditions when possible
 4. **Profile Selection**: Monitor goal selection performance
 
+## Context Structure
+
+The GOAP system requires a properly structured context object for goal evaluation and action selection:
+
+```javascript
+const context = {
+  // Entity state data (required)
+  entities: {
+    [actorId]: {
+      components: actor.getAllComponents()
+    },
+    [targetId]: {
+      components: target.getAllComponents()
+    }
+    // ... other entities
+  },
+
+  // Optional: Target references
+  targetId: string,         // Primary target entity ID
+  tertiaryTargetId: string, // Tertiary target entity ID
+
+  // Enriched automatically by GoalManager
+  actor: entityInstance,    // Added by GoalManager
+  actorId: string          // Added by GoalManager
+};
+```
+
+**Important:** The `actor` field in context uses a `ComponentAccessor` created via `createComponentAccessor(actorId, entityManager, logger)`. This accessor provides the `actor.components.*` interface used in JSON Logic evaluation.
+
 ## Future Enhancements
 
-### Planned Features (Tier 2+)
+**Note:** The following features are potential future enhancements not yet implemented:
 
-- **Dynamic Priorities**: Calculate priority based on context
-- **Goal Interruption**: Switch goals when priorities change
+- **Dynamic Priorities**: Calculate priority based on urgency, opportunity, and cost
+- **Goal Interruption**: Switch goals mid-execution when priorities change
 - **Goal Stacking**: Support multiple concurrent goals
-- **Goal Memory**: Remember failed/completed goals
+- **Goal Memory**: Remember and learn from failed/completed goals
 - **Goal Sharing**: Cooperative goals between actors
+- **Sophisticated Distance Calculation**: Currently returns 0 (satisfied) or 1 (unsatisfied); could implement more nuanced heuristics
 
 ## Action Selection
 
@@ -531,49 +575,11 @@ class AbstractPreconditionSimulator {
 - `hasContainerCapacity(containerId, itemId)` - Checks if container has space
 - `hasComponent(entityId, componentId)` - Checks if entity has component
 
-### Example Usage
-
-```javascript
-// Select action toward find_food goal
-const goal = {
-  id: 'core:find_food',
-  goalState: {
-    '>=': [{ var: 'actor.components.items:has_food' }, null]
-  }
-};
-
-const actions = [
-  {
-    id: 'items:pick_up_food',
-    planningEffects: {
-      effects: [
-        {
-          operation: 'ADD_COMPONENT',
-          entity: 'actor',
-          component: 'items:has_food',
-          data: {}
-        }
-      ]
-    }
-  }
-];
-
-const context = {
-  entities: {
-    actor1: { components: { 'core:hunger': { value: 25 } } }
-  }
-};
-
-const selected = actionSelector.selectAction(actions, goal, 'actor1', context);
-// Returns: items:pick_up_food (adds the component needed for goal)
-```
-
 ## Related Documentation
 
 - [GOAP System Overview](./README.md)
 - [Effects Auto-Generation](./effects-auto-generation.md)
 - [Abstract Preconditions](./abstract-preconditions.md)
-- [Planning System](./planning-system.md) _(Coming in future tickets)_
 
 ## API Reference
 
@@ -634,7 +640,9 @@ class GoalStateEvaluator {
    * @param {Object} goalState - Goal state condition
    * @param {string} actorId - Entity ID of actor
    * @param {Object} context - World state context
-   * @returns {number} Distance metric (0 = satisfied)
+   * @returns {number} Distance metric (0 = satisfied, 1 = unsatisfied)
+   * Note: Currently uses simple binary heuristic. Future versions may implement
+   * more sophisticated distance calculations.
    */
   calculateDistance(goalState, actorId, context);
 }
@@ -648,19 +656,26 @@ class GoalStateEvaluator {
 # Unit tests
 npm run test:unit -- tests/unit/goap/goals/
 
-# Integration tests
-npm run test:integration -- tests/integration/goap/goalSelection.integration.test.js
+# E2E tests (most comprehensive)
+npm run test:e2e -- tests/e2e/goap/GoalRelevanceAndSatisfactionEvaluation.e2e.test.js
+npm run test:e2e -- tests/e2e/goap/GoalPrioritySelectionWorkflow.e2e.test.js
+npm run test:e2e -- tests/e2e/goap/ActionSelectionWithEffectSimulation.e2e.test.js
+npm run test:e2e -- tests/e2e/goap/CompleteGoapDecisionWithRealMods.e2e.test.js
 
 # All GOAP tests
 npm run test:unit -- tests/unit/goap/
-npm run test:integration -- tests/integration/goap/
+npm run test:e2e -- tests/e2e/goap/
 ```
 
 ### Test Coverage
 
-- **GoalManager**: 90%+ branches, 95%+ lines
-- **GoalStateEvaluator**: 90%+ branches, 95%+ lines
-- Integration tests cover real-world scenarios
+The GOAP goal system is validated through comprehensive E2E tests that use real mod data:
+
+- **Goal relevance evaluation**: Complex JSON Logic conditions (AND/OR/NOT)
+- **Goal satisfaction detection**: Component existence and value checks
+- **Priority-based selection**: Multiple competing goals
+- **Action selection with effect simulation**: Greedy selection based on goal progress
+- **Complete workflow**: From goal selection through action execution
 
 ## Support
 
