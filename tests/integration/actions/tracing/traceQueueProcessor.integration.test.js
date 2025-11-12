@@ -408,6 +408,63 @@ describe('TraceQueueProcessor integration', () => {
     }
   });
 
+  it('rejects null traces and drops new entries when the queue stays saturated after mitigation', async () => {
+    const { adapter, dbName } = await createStorageAdapter(logger);
+    activeDatabases.push(dbName);
+
+    const saturationTimer = new TestTimerService();
+    const saturationEventBus = { dispatch: jest.fn() };
+
+    const processor = new TraceQueueProcessor({
+      storageAdapter: adapter,
+      logger,
+      eventBus: saturationEventBus,
+      timerService: saturationTimer,
+      config: {
+        maxQueueSize: 1,
+        batchSize: 5,
+        batchTimeout: 50,
+        memoryLimit: 10_000,
+        storageKey: 'saturated-queue',
+        enableParallelProcessing: false,
+        maxStoredTraces: 5,
+      },
+    });
+
+    const warnSpy = jest.spyOn(logger, 'warn');
+
+    try {
+      expect(processor.enqueue(null)).toBe(false);
+
+      const retainedTrace = { actionId: 'critical:locked' };
+      expect(processor.enqueue(retainedTrace, TracePriority.HIGH)).toBe(true);
+
+      const blockedTrace = { actionId: 'critical:blocked' };
+      expect(processor.enqueue(blockedTrace, TracePriority.HIGH)).toBe(false);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Null trace provided'
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Queue full, dropping trace'
+      );
+
+      const metrics = processor.getMetrics();
+      expect(metrics.totalDropped).toBeGreaterThanOrEqual(1);
+
+      expect(saturationEventBus.dispatch).toHaveBeenCalledWith(
+        QUEUE_EVENTS.BACKPRESSURE,
+        expect.objectContaining({
+          droppedCount: expect.any(Number),
+        })
+      );
+    } finally {
+      warnSpy.mockRestore();
+      await processor.shutdown();
+      saturationTimer.clearAll();
+    }
+  });
+
   it('retries transient failures with exponential backoff and persists after recovery', async () => {
     const { adapter, dbName } = await createStorageAdapter(logger, FlakyIndexedDBAdapter, {
       failuresBeforeSuccess: 1,
@@ -459,6 +516,76 @@ describe('TraceQueueProcessor integration', () => {
     } finally {
       retryTimerService.setTimeout.mockRestore();
       await processor.shutdown();
+    }
+  });
+
+  it('respects browser memory thresholds when reported heap usage is already near capacity', async () => {
+    const originalPerformance = globalThis.performance;
+    const originalMemory = originalPerformance?.memory;
+
+    if (!originalPerformance) {
+      globalThis.performance = {
+        now: () => Date.now(),
+      };
+    }
+
+    globalThis.performance.memory = {
+      usedJSHeapSize: 900,
+      jsHeapSizeLimit: 1_000,
+    };
+
+    const { adapter, dbName } = await createStorageAdapter(logger);
+    activeDatabases.push(dbName);
+
+    const timer = new TestTimerService();
+    const memoryEventBus = { dispatch: jest.fn() };
+
+    const processor = new TraceQueueProcessor({
+      storageAdapter: adapter,
+      logger,
+      eventBus: memoryEventBus,
+      timerService: timer,
+      config: {
+        batchSize: 2,
+        batchTimeout: 5,
+        memoryLimit: 10_000,
+        storageKey: 'memory-threshold',
+        enableParallelProcessing: false,
+        maxStoredTraces: 5,
+      },
+    });
+
+    const warnSpy = jest.spyOn(logger, 'warn');
+
+    try {
+      const heavyTrace = { actionId: 'memory:heavy', payload: 'x'.repeat(1_200) };
+      expect(processor.enqueue(heavyTrace, TracePriority.NORMAL)).toBe(false);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        'TraceQueueProcessor: Memory limit still exceeded after backpressure, dropping trace',
+        expect.objectContaining({
+          limit: expect.any(Number),
+        })
+      );
+
+      expect(memoryEventBus.dispatch).toHaveBeenCalledWith(
+        QUEUE_EVENTS.BACKPRESSURE,
+        expect.objectContaining({
+          droppedCount: expect.any(Number),
+        })
+      );
+
+      const metrics = processor.getMetrics();
+      expect(metrics.totalDropped).toBe(1);
+    } finally {
+      warnSpy.mockRestore();
+      await processor.shutdown();
+      timer.clearAll();
+      if (originalPerformance) {
+        globalThis.performance.memory = originalMemory;
+      } else {
+        delete globalThis.performance;
+      }
     }
   });
 
@@ -519,6 +646,112 @@ describe('TraceQueueProcessor integration', () => {
     } finally {
       infoSpy.mockRestore();
       await breaker.shutdown();
+    }
+  });
+
+  it('logs batch processing errors for both immediate and delayed scheduling when dispatch fails', async () => {
+    const immediateLogger = new ConsoleLogger(LogLevel.DEBUG);
+    const immediateInfo = await createStorageAdapter(immediateLogger);
+    activeDatabases.push(immediateInfo.dbName);
+
+    const immediateTimer = new TestTimerService();
+    const immediateEventBus = {
+      dispatch: jest.fn(() => {
+        throw new Error('immediate dispatch failure');
+      }),
+    };
+
+    const immediateProcessor = new TraceQueueProcessor({
+      storageAdapter: immediateInfo.adapter,
+      logger: immediateLogger,
+      eventBus: immediateEventBus,
+      timerService: immediateTimer,
+      config: {
+        batchSize: 1,
+        batchTimeout: 5,
+        storageKey: 'immediate-error',
+        enableParallelProcessing: false,
+        maxStoredTraces: 5,
+      },
+    });
+
+    const immediateErrorSpy = jest.spyOn(immediateLogger, 'error');
+
+    try {
+      expect(
+        immediateProcessor.enqueue(
+          { actionId: 'critical:dispatch-failure' },
+          TracePriority.CRITICAL
+        )
+      ).toBe(true);
+
+      await immediateTimer.triggerAll();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await waitForProcessingToDrain(immediateProcessor, immediateTimer);
+
+      expect(immediateEventBus.dispatch).toHaveBeenCalled();
+      expect(immediateErrorSpy).toHaveBeenCalled();
+      expect(
+        immediateErrorSpy.mock.calls.some(
+          ([message]) => message === 'TraceQueueProcessor: Batch processing error'
+        )
+      ).toBe(true);
+    } finally {
+      immediateErrorSpy.mockRestore();
+      await immediateProcessor.shutdown();
+      immediateTimer.clearAll();
+    }
+
+    const delayedLogger = new ConsoleLogger(LogLevel.DEBUG);
+    const delayedInfo = await createStorageAdapter(delayedLogger);
+    activeDatabases.push(delayedInfo.dbName);
+
+    const delayedTimer = new TestTimerService();
+    const delayedEventBus = {
+      dispatch: jest.fn(() => {
+        throw new Error('delayed dispatch failure');
+      }),
+    };
+
+    const delayedProcessor = new TraceQueueProcessor({
+      storageAdapter: delayedInfo.adapter,
+      logger: delayedLogger,
+      eventBus: delayedEventBus,
+      timerService: delayedTimer,
+      config: {
+        batchSize: 5,
+        batchTimeout: 25,
+        storageKey: 'delayed-error',
+        enableParallelProcessing: false,
+        maxStoredTraces: 5,
+      },
+    });
+
+    const delayedErrorSpy = jest.spyOn(delayedLogger, 'error');
+
+    try {
+      expect(
+        delayedProcessor.enqueue(
+          { actionId: 'normal:dispatch-failure' },
+          TracePriority.NORMAL
+        )
+      ).toBe(true);
+
+      await delayedTimer.triggerAll();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await waitForProcessingToDrain(delayedProcessor, delayedTimer);
+
+      expect(delayedEventBus.dispatch).toHaveBeenCalled();
+      expect(delayedErrorSpy).toHaveBeenCalled();
+      expect(
+        delayedErrorSpy.mock.calls.some(
+          ([message]) => message === 'TraceQueueProcessor: Batch processing error'
+        )
+      ).toBe(true);
+    } finally {
+      delayedErrorSpy.mockRestore();
+      await delayedProcessor.shutdown();
+      delayedTimer.clearAll();
     }
   });
 
@@ -616,6 +849,75 @@ describe('TraceQueueProcessor integration', () => {
       if (!isShutdown) {
         await processor.shutdown();
       }
+    }
+  });
+
+  it('serializes structured traces without JSON helpers and computes stage durations', async () => {
+    const structuredLogger = new ConsoleLogger(LogLevel.DEBUG);
+    const { adapter, dbName } = await createStorageAdapter(structuredLogger);
+    activeDatabases.push(dbName);
+
+    const structuredTimer = new TestTimerService();
+    const structuredEventBus = { dispatch: jest.fn() };
+
+    const processor = new TraceQueueProcessor({
+      storageAdapter: adapter,
+      logger: structuredLogger,
+      eventBus: structuredEventBus,
+      timerService: structuredTimer,
+      config: {
+        batchSize: 2,
+        batchTimeout: 5,
+        storageKey: 'structured-without-json',
+        enableParallelProcessing: false,
+        maxStoredTraces: 5,
+      },
+    });
+
+    let currentTime = 1_000;
+    const dateSpy = jest
+      .spyOn(Date, 'now')
+      .mockImplementation(() => (currentTime += 500));
+
+    const filter = new ActionTraceFilter({ logger: structuredLogger });
+    const structuredTrace = new ActionAwareStructuredTrace({
+      actionTraceFilter: filter,
+      actorId: 'artisan',
+      context: { project: 'forge' },
+      logger: structuredLogger,
+    });
+
+    // Force formatTraceData to use structured path instead of toJSON
+    structuredTrace.toJSON = undefined;
+
+    structuredTrace.captureActionData('component_filtering', 'craft:forge', {
+      passed: true,
+      stage: 'start',
+    });
+    structuredTrace.captureActionData('resolution', 'craft:forge', {
+      outcome: 'complete',
+      stage: 'end',
+    });
+
+    try {
+      expect(processor.enqueue(structuredTrace, TracePriority.NORMAL)).toBe(true);
+
+      await waitForProcessingToDrain(processor, structuredTimer);
+
+      const stored = await adapter.getItem('structured-without-json');
+      expect(stored).toHaveLength(1);
+
+      const [record] = stored;
+      expect(record.data.traceType).toBe('pipeline');
+      expect(record.data.actions['craft:forge'].stageOrder).toEqual([
+        'component_filtering',
+        'resolution',
+      ]);
+      expect(record.data.actions['craft:forge'].totalDuration).toBeGreaterThan(0);
+    } finally {
+      dateSpy.mockRestore();
+      await processor.shutdown();
+      structuredTimer.clearAll();
     }
   });
 
