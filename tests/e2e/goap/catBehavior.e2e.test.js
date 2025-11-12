@@ -22,7 +22,7 @@ describe('GOAP E2E: Cat Finding Food', () => {
 
   it('should find and pick up food when hungry', async () => {
     // Setup: Hungry cat, food item at location
-    const cat = testBed.createActor({
+    const cat = await testBed.createActor({
       name: 'Whiskers',
       type: 'goap',
       components: {
@@ -30,7 +30,7 @@ describe('GOAP E2E: Cat Finding Food', () => {
       },
     });
 
-    const food = testBed.createEntity({
+    const food = await testBed.createEntity({
       name: 'Fish',
       components: {
         'items:item': { weight: 1 },
@@ -50,15 +50,15 @@ describe('GOAP E2E: Cat Finding Food', () => {
 
     // Assert: Cat should make a decision (may pick up food or perform related action)
     expect(decision).toBeDefined();
-    expect(decision).toHaveProperty('index');
+    expect(decision).toHaveProperty('chosenIndex');
 
     // If decision was made, verify it's valid
-    if (decision.index !== null) {
-      expect(typeof decision.index).toBe('number');
-      expect(decision.index).toBeGreaterThanOrEqual(1); // 1-based indexing
+    if (decision.chosenIndex !== null) {
+      expect(typeof decision.chosenIndex).toBe('number');
+      expect(decision.chosenIndex).toBeGreaterThanOrEqual(1); // 1-based indexing
 
       // Get selected action
-      const selectedAction = actions[decision.index - 1]; // Convert to 0-based
+      const selectedAction = actions[decision.chosenIndex - 1]; // Convert to 0-based
       expect(selectedAction).toBeDefined();
       expect(selectedAction).toHaveProperty('actionId');
     }
@@ -66,7 +66,7 @@ describe('GOAP E2E: Cat Finding Food', () => {
 
   it('should not take action when already has food', async () => {
     // Setup: Cat with food
-    const cat = testBed.createActor({
+    const cat = await testBed.createActor({
       name: 'Whiskers',
       type: 'goap',
       components: {
@@ -83,7 +83,7 @@ describe('GOAP E2E: Cat Finding Food', () => {
 
     // Assert: Decision should be made, but may return null if goal satisfied
     expect(decision).toBeDefined();
-    expect(decision).toHaveProperty('index');
+    expect(decision).toHaveProperty('chosenIndex');
 
     // Note: Goal may already be satisfied, so index could be null
     // This is expected behavior when the goal is already achieved
@@ -91,7 +91,7 @@ describe('GOAP E2E: Cat Finding Food', () => {
 
   it('should handle empty actions gracefully', async () => {
     // Setup: Cat with no available actions
-    const cat = testBed.createActor({
+    const cat = await testBed.createActor({
       name: 'Whiskers',
       type: 'goap',
       components: {
@@ -105,6 +105,6 @@ describe('GOAP E2E: Cat Finding Food', () => {
 
     // Assert: Should return null index for no actions
     expect(decision).toBeDefined();
-    expect(decision.index).toBeNull();
+    expect(decision.chosenIndex).toBeNull();
   }, 30000);
 });
