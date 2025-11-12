@@ -1573,4 +1573,548 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
       );
     });
   });
+  describe('Initialization and error utilities coverage', () => {
+    it('normalizes element configuration from string and object inputs', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const normalizedString = controller._normalizeElementConfig('.selector');
+      expect(normalizedString).toEqual({
+        selector: '.selector',
+        required: true,
+        validate: null,
+      });
+
+      const validateFn = jest.fn();
+      const normalizedObject = controller._normalizeElementConfig({
+        selector: '#component',
+        required: false,
+        validate: validateFn,
+      });
+
+      expect(normalizedObject).toEqual({
+        selector: '#component',
+        required: false,
+        validate: validateFn,
+      });
+    });
+
+    it('initializes character builder service and additional services when available', async () => {
+      mockCharacterBuilderService.initialize.mockResolvedValue();
+
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const additionalServicesSpy = jest
+        .spyOn(controller, '_initializeAdditionalServices')
+        .mockResolvedValue();
+
+      await controller._initializeServices();
+
+      expect(mockCharacterBuilderService.initialize).toHaveBeenCalledTimes(1);
+      expect(additionalServicesSpy).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Initializing CharacterBuilderService')
+      );
+
+      additionalServicesSpy.mockRestore();
+    });
+
+    it('initializes UI state manager when available and warns when missing', async () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      await controller._initializeUIStateManager();
+      controller._lastShowStateCall = null;
+
+      await controller._initializeUIState();
+
+      expect(controller._lastShowStateCall).toEqual({
+        state: 'empty',
+        data: undefined,
+      });
+
+      await controller.destroy();
+
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      controller._initializeUIStateManager = undefined;
+      mockLogger.warn.mockClear();
+
+      await controller._initializeUIState();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('UIStateManager not available')
+      );
+    });
+
+    it('handles initialization errors with UI feedback and event dispatch', async () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const initError = new Error('boot failure');
+      controller._onInitializationError = jest.fn().mockResolvedValue();
+
+      const showErrorSpy = jest
+        .spyOn(controller, '_showError')
+        .mockImplementation(() => {});
+
+      await controller._handleInitializationError(initError);
+
+      expect(showErrorSpy).toHaveBeenCalledWith(
+        'Failed to initialize page. Please refresh and try again.'
+      );
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'SYSTEM_ERROR_OCCURRED',
+        expect.objectContaining({
+          error: 'boot failure',
+          context: expect.stringContaining('initialization'),
+        })
+      );
+      expect(controller._onInitializationError).toHaveBeenCalledWith(
+        initError
+      );
+
+      showErrorSpy.mockRestore();
+    });
+
+    it('falls back to error state when _showError is unavailable', async () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const originalShowError = controller._showError;
+      controller._showError = undefined;
+      const originalShowState = controller._showState;
+      const showStateSpy = jest.fn();
+      controller._showState = showStateSpy;
+      controller._onInitializationError = jest.fn().mockResolvedValue();
+
+      await controller._handleInitializationError(new Error('fatal'));
+
+      expect(showStateSpy).toHaveBeenCalledWith('error', {
+        message: 'Failed to initialize page. Please refresh and try again.',
+      });
+
+      controller._showError = originalShowError;
+      controller._showState = originalShowState;
+    });
+  });
+
+  describe('Validation, retry, and recovery utilities coverage', () => {
+    it('determines retryable errors based on message content', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      expect(controller._isRetryableError(new Error('Network timeout'))).toBe(
+        true
+      );
+      expect(controller._isRetryableError(new Error('Validation failed'))).toBe(
+        false
+      );
+    });
+
+    it('retries operations when errors are retryable and respects retry delay', async () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('Network unreachable'))
+        .mockResolvedValueOnce('success');
+
+      const handleErrorSpy = jest
+        .spyOn(controller, '_handleError')
+        .mockImplementation(() => ({}));
+
+      const promise = controller._executeWithErrorHandling(operation, 'loadData', {
+        userErrorMessage: 'Unable to load',
+        retries: 1,
+        retryDelay: 100,
+      });
+
+      await Promise.resolve();
+      jest.advanceTimersByTime(100);
+
+      const result = await promise;
+      expect(result).toBe('success');
+      expect(handleErrorSpy).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+          operation: 'loadData',
+          showToUser: false,
+          metadata: expect.objectContaining({ isRetrying: true }),
+        })
+      );
+    });
+
+    it('throws non-retryable errors after handling', async () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const failingOperation = jest
+        .fn()
+        .mockRejectedValue(new Error('validation broke'));
+
+      jest
+        .spyOn(controller, '_handleError')
+        .mockImplementation(() => ({}));
+
+      await expect(
+        controller._executeWithErrorHandling(failingOperation, 'saveData', {
+          retries: 1,
+        })
+      ).rejects.toThrow('validation broke');
+    });
+
+    it('validates data successfully and formats validation failures', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      mockSchemaValidator.validate.mockReturnValueOnce({
+        isValid: true,
+      });
+
+      expect(controller._validateData({ name: 'Alice' }, 'schema')).toEqual({
+        isValid: true,
+      });
+
+      const ajvErrors = [
+        'simple string',
+        { instancePath: '/name', message: 'is required' },
+        { message: 'missing property' },
+      ];
+
+      mockSchemaValidator.validate.mockReturnValueOnce({
+        isValid: false,
+        errors: ajvErrors,
+      });
+
+      const result = controller._validateData({ name: '' }, 'schema', {
+        operation: 'submitForm',
+      });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual([
+        'simple string',
+        'name: is required',
+        'missing property',
+      ]);
+      expect(result.errorMessage).toContain('Please fix the following errors');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Validation failed for schema'),
+        expect.objectContaining({ schemaId: 'schema' })
+      );
+    });
+
+    it('handles schema validator exceptions gracefully', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      mockSchemaValidator.validate.mockImplementation(() => {
+        throw new Error('schema unavailable');
+      });
+
+      const handleErrorSpy = jest
+        .spyOn(controller, '_handleError')
+        .mockImplementation(() => ({}));
+
+      const result = controller._validateData({ field: 'value' }, 'schema', {
+        operation: 'validateData',
+      });
+
+      expect(handleErrorSpy).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            schemaId: 'schema',
+            dataKeys: ['field'],
+          }),
+        })
+      );
+      expect(result).toEqual({
+        isValid: false,
+        errors: ['Validation error: schema unavailable'],
+        errorMessage: 'Unable to validate data. Please try again.',
+      });
+    });
+
+    it('builds validation error messages and determines recoverability correctly', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      expect(controller._buildValidationErrorMessage(['Only one'])).toBe(
+        'Only one'
+      );
+
+      const combinedMessage = controller._buildValidationErrorMessage([
+        'First issue',
+        'Second issue',
+      ]);
+      expect(combinedMessage).toContain('• First issue');
+      expect(combinedMessage).toContain('• Second issue');
+
+      expect(
+        controller._determineRecoverability(new Error('temporary outage'), {
+          category: ERROR_CATEGORIES.SYSTEM,
+        })
+      ).toBe(true);
+      expect(
+        controller._determineRecoverability(new Error('No network'), {
+          category: ERROR_CATEGORIES.NETWORK,
+        })
+      ).toBe(true);
+      expect(
+        controller._determineRecoverability(new Error('bad input'), {
+          category: ERROR_CATEGORIES.VALIDATION,
+        })
+      ).toBe(false);
+    });
+
+    it('attempts recovery for network and system errors', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      controller._retryLastOperation = jest.fn(() => {
+        throw new Error('retry failure');
+      });
+
+      controller._attemptErrorRecovery({
+        category: ERROR_CATEGORIES.NETWORK,
+      });
+
+      jest.advanceTimersByTime(5000);
+      expect(controller._retryLastOperation).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Recovery retry failed'),
+        expect.any(Error)
+      );
+
+      controller._reinitialize = jest.fn();
+      mockLogger.error.mockClear();
+
+      controller._attemptErrorRecovery({
+        category: ERROR_CATEGORIES.SYSTEM,
+        operation: 'initialization',
+      });
+
+      jest.advanceTimersByTime(2000);
+      expect(controller._reinitialize).toHaveBeenCalled();
+    });
+  });
+
+  describe('Timer and rate limiting helper coverage', () => {
+    let originalRequestAnimationFrame;
+    let originalCancelAnimationFrame;
+
+    beforeEach(() => {
+      originalRequestAnimationFrame = global.requestAnimationFrame;
+      originalCancelAnimationFrame = global.cancelAnimationFrame;
+    });
+
+    afterEach(() => {
+      global.requestAnimationFrame = originalRequestAnimationFrame;
+      global.cancelAnimationFrame = originalCancelAnimationFrame;
+    });
+
+    it('manages intervals and animation frames correctly', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const intervalCallback = jest.fn();
+      const intervalId = controller._setInterval(intervalCallback, 50);
+      jest.advanceTimersByTime(50);
+      expect(intervalCallback).toHaveBeenCalledTimes(1);
+
+      controller._clearInterval(intervalId);
+      jest.advanceTimersByTime(50);
+      expect(intervalCallback).toHaveBeenCalledTimes(1);
+
+      const rafCallbacks = new Map();
+      let nextFrameId = 1;
+
+      global.requestAnimationFrame = jest.fn((cb) => {
+        const id = nextFrameId++;
+        rafCallbacks.set(id, cb);
+        return id;
+      });
+
+      global.cancelAnimationFrame = jest.fn((id) => {
+        rafCallbacks.delete(id);
+      });
+
+      const frameCallback = jest.fn();
+      const firstFrameId = controller._requestAnimationFrame(frameCallback);
+      expect(global.requestAnimationFrame).toHaveBeenCalled();
+
+      controller._cancelAnimationFrame(firstFrameId);
+      expect(global.cancelAnimationFrame).toHaveBeenCalledWith(firstFrameId);
+
+      const secondFrameId = controller._requestAnimationFrame(frameCallback);
+      const storedCallback = rafCallbacks.get(secondFrameId);
+      storedCallback(123);
+      expect(frameCallback).toHaveBeenCalledWith(123);
+    });
+
+    it('debounces calls with trailing execution, max wait, and utilities', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      jest.setSystemTime(0);
+      const trailingFn = jest.fn();
+      const debouncedTrailing = controller._debounce(trailingFn, 100, {
+        leading: false,
+        trailing: true,
+        maxWait: 200,
+      });
+
+      debouncedTrailing('first');
+      expect(debouncedTrailing.pending()).toBe(true);
+      jest.advanceTimersByTime(50);
+      debouncedTrailing('second');
+      jest.advanceTimersByTime(75);
+      debouncedTrailing('third');
+      jest.advanceTimersByTime(75);
+
+      expect(trailingFn).toHaveBeenCalledTimes(1);
+      expect(trailingFn).toHaveBeenCalledWith('third');
+
+      const flushFn = jest.fn();
+      const debouncedFlush = controller._debounce(flushFn, 100, {
+        leading: false,
+        trailing: true,
+      });
+
+      debouncedFlush('value');
+      debouncedFlush.flush();
+      expect(flushFn).toHaveBeenCalledTimes(1);
+
+      debouncedFlush('later');
+      debouncedFlush.cancel();
+      jest.advanceTimersByTime(200);
+      expect(flushFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('throttles calls with trailing execution and supports flush', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      jest.setSystemTime(0);
+      const throttledFn = jest.fn();
+      const throttled = controller._throttle(throttledFn, 100, {
+        leading: true,
+        trailing: true,
+      });
+
+      throttled('initial');
+      expect(throttledFn).toHaveBeenCalledTimes(0);
+
+      jest.advanceTimersByTime(100);
+      expect(throttledFn).toHaveBeenCalledTimes(1);
+
+      throttled('queued');
+      expect(throttledFn).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(100);
+      expect(throttledFn).toHaveBeenCalledTimes(2);
+
+      const trailingOnlyFn = jest.fn();
+      const trailingOnly = controller._throttle(trailingOnlyFn, 100, {
+        leading: false,
+        trailing: true,
+      });
+
+      trailingOnly('first');
+      jest.advanceTimersByTime(100);
+      expect(trailingOnlyFn).toHaveBeenCalledTimes(1);
+
+      trailingOnly('second');
+      trailingOnly.flush();
+      expect(trailingOnlyFn).toHaveBeenCalledTimes(2);
+    });
+
+    it('reuses debounced and throttled handlers for identical keys', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const fn = jest.fn();
+
+      const debouncedA = controller._getDebouncedHandler('search', fn, 100);
+      const debouncedB = controller._getDebouncedHandler('search', fn, 100);
+      expect(debouncedA).toBe(debouncedB);
+
+      const throttledA = controller._getThrottledHandler('scroll', fn, 100);
+      const throttledB = controller._getThrottledHandler('scroll', fn, 100);
+      expect(throttledA).toBe(throttledB);
+    });
+  });
 });
+
