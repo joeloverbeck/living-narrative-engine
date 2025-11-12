@@ -35,6 +35,9 @@ import { string } from '../../utils/validationCore.js';
 
 /**
  * One-step greedy planner (foundation for future A* planner)
+ *
+ * Note: goalManager is included as a dependency for future use in Tier 2+.
+ * In Tier 1, goal satisfaction checking is handled by the caller (GoapDecisionProvider).
  */
 class SimplePlanner {
   #logger;
@@ -45,7 +48,7 @@ class SimplePlanner {
    * @param {Object} params - Dependencies
    * @param {Object} params.logger - Logger instance
    * @param {Object} params.actionSelector - Action selector service
-   * @param {Object} params.goalManager - Goal manager service
+   * @param {Object} params.goalManager - Goal manager service (reserved for Tier 2+)
    */
   constructor({ logger, actionSelector, goalManager }) {
     validateDependency(logger, 'ILogger', logger, {
@@ -69,6 +72,12 @@ class SimplePlanner {
    * @param {Array<Object>} availableActions - Actions from discovery
    * @param {string} actorId - Entity ID of actor
    * @param {Object} context - World state context
+   *   Expected structure (built by caller from EntityManager):
+   *   {
+   *     entities: { [entityId]: { components: { [componentId]: data } } },
+   *     targetId: optional target entity ID,
+   *     tertiaryTargetId: optional tertiary target entity ID
+   *   }
    * @returns {Object|null} Best action or null
    */
   plan(goal, availableActions, actorId, context) {
@@ -131,7 +140,7 @@ class SimplePlanner {
   /**
    * Validates if plan is still applicable
    * @param {Object} plan - Plan object
-   * @param {Object} context - Current world state
+   * @param {Object} context - Current world state (same structure as plan() context)
    * @returns {boolean} True if plan valid
    */
   validatePlan(plan, context) {
@@ -406,6 +415,8 @@ export default PlanCache;
 - **Cache Performance:** Significantly reduces planning overhead
 - **Validation:** Simple validation for Tier 1, sophisticated for Tier 2
 - **Foundation:** Architecture supports future A* implementation
+- **Context Structure:** The context parameter passed to SimplePlanner must follow the structure expected by ActionSelector (entities object with components). This is built by the caller (GoapDecisionProvider) from EntityManager.
+- **GoalManager Dependency:** Included for future Tier 2+ features but not actively used in Tier 1. Goal satisfaction is checked by the caller before planning.
 
 ## Related Tickets
 
