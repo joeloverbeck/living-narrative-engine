@@ -2,24 +2,52 @@
 
 **Parent:** ANASYSIMP-019-04 (Migrate Components to Use ValidationRules)
 **Phase:** 2 (Batch Migration - Priority 6)
-**Timeline:** 30 minutes
+**Timeline:** 35 minutes
 **Status:** Not Started
 **Dependencies:** ANASYSIMP-019-04-06
+**Corrected:** Workflow assumptions validated against actual codebase
 
 ## Overview
 
-Migrate approximately 25 component schemas in remaining mods to use the new `validationRules` feature. This is the final migration batch covering all remaining mods with enum properties.
+Migrate the final 31 component schemas in remaining mods to use the new `validationRules` feature. This is the final migration batch covering all remaining components with enum properties.
 
-## Estimated Components by Mod
+## Workflow Corrections Applied
 
-Based on initial discovery (ANASYSIMP-019-04-01), remaining mods may include:
+**Original Assumptions (Incorrect):**
+- Estimated ~25 components across multiple mods
+- Expected components in: items, movement, patrol, vampirism mods
+- Assumed even distribution across various game systems
 
-- **Activity mod** - Activity states, types, etc.
-- **Items mod** - Item types, categories, states
-- **Movement mod** - Movement types, speeds, directions
-- **Patrol mod** - Patrol states, behaviors
-- **Vampirism mod** - Vampire-specific states
-- **Other mods** - As discovered during identification phase
+**Actual Codebase Reality (Verified):**
+- **31 components total** needing migration
+- **Only 2 mods** have components needing migration:
+  - **Descriptors mod: 30 components** (96.8% of work)
+  - **Activity mod: 1 component** (3.2% of work)
+- **No components** need migration in items, movement, patrol, or vampirism mods
+
+## Actual Components by Mod (Verified)
+
+Based on codebase verification, the remaining components are:
+
+- **Descriptors mod** - 30 part-level descriptor components (96.8% of remaining work)
+  - Part-level descriptors for anatomy system
+  - Apply to individual anatomy parts (eyes, hands, limbs, etc.)
+  - Includes color, shape, texture, structural integrity, sensory capabilities
+  - Supports horror, fantasy, and medical scenarios
+- **Activity mod** - 1 component (description_metadata)
+  - Metadata for activity text generation
+
+**Already migrated (16 components in previous workflows):**
+- Anatomy mod: 2 components
+- Clothing mod: 4 components
+- Core mod: 4 components
+- Descriptors mod: 5 body-level descriptors (height, build, body_composition, body_hair, texture-with-validation)
+- Music mod: 1 component
+
+**No other mods have components needing migration.** The items, movement, patrol, and vampirism mods either:
+- Have no components with enum properties, OR
+- Their components with enums already have validationRules, OR
+- Their components are marker components without data schemas
 
 **Location:** `data/mods/*/components/*.component.json`
 
@@ -49,101 +77,243 @@ Use this template for all components:
 
 ### Step 1: Review Migration Candidates List
 
-Use the list generated in ANASYSIMP-019-04-01:
+Generate the current list of components needing migration:
 
 ```bash
-# Review remaining components to migrate
-cat components-to-migrate.txt | grep -v descriptors | grep -v anatomy | grep -v clothing | grep -v core | grep -v music
+# Find all components with enums but without validationRules
+grep -l '"enum"' data/mods/*/components/*.component.json | xargs grep -L 'validationRules' > /tmp/components-to-migrate.txt
 
-# Count remaining
-cat components-to-migrate.txt | grep -v descriptors | grep -v anatomy | grep -v clothing | grep -v core | grep -v music | wc -l
+# Review the list
+cat /tmp/components-to-migrate.txt
 
-# Organize by mod
-for file in $(cat components-to-migrate.txt | grep -v descriptors | grep -v anatomy | grep -v clothing | grep -v core | grep -v music); do
-  mod=$(echo "$file" | cut -d'/' -f3)
-  echo "$mod: $file"
-done | sort
+# Count by mod
+cat /tmp/components-to-migrate.txt | awk -F'/' '{print $3}' | sort | uniq -c
+
+# Expected output:
+#       1 activity
+#      30 descriptors
 ```
 
-### Step 2: Prioritize Remaining Mods
+### Step 2: Migration Strategy
 
-Based on discovery, prioritize mods by:
-1. **Usage frequency** - Mods used in many scenarios
-2. **Dependencies** - Mods depended on by others
-3. **Complexity** - Simple mods first, complex later
+Given that 30 out of 31 components (96.8%) are in the descriptors mod, use this strategy:
 
-**Recommended Order:**
-1. Items mod (if present)
-2. Movement mod (if present)
-3. Activity mod (if present)
-4. Patrol mod (if present)
-5. Vampirism mod (if present)
-6. Other mods by alphabetical order
+**Phase 1: Activity mod (1 component) - 2 minutes**
+- Quick standalone migration
+- Simple enum validation
+- Validate and commit immediately
 
-### Step 3: Migrate by Mod (Batch Processing)
+**Phase 2: Descriptors mod (30 components) - 30 minutes**
+- Part-level descriptors for anatomy system
+- Batch process in groups of 10 components
+- Validate after each batch of 10
+- Commit after each batch of 10
 
-For each mod, follow this process:
+**Batching Strategy:**
+- **Batch A**: Components 1-10 (acoustic_property through embellishment)
+- **Batch B**: Components 11-20 (facial_aesthetic through pupil_shape)
+- **Batch C**: Components 21-30 (secretion through weight_feel)
 
-#### Process per Mod
+This approach provides better progress tracking and easier rollback if issues arise.
 
-1. **Identify components:**
+### Step 3: Phase 1 - Migrate Activity Mod (1 component)
+
+#### Component: description_metadata
+
+**File:** `data/mods/activity/components/description_metadata.component.json`
+
+1. **Review enum properties:**
    ```bash
-   # List components for specific mod
-   MOD_NAME="items"  # Change per mod
-   grep "data/mods/$MOD_NAME" components-to-migrate.txt
+   # Check the component structure
+   jq '.id, .dataSchema.properties | to_entries | map(select(.value.enum != null))' \
+     data/mods/activity/components/description_metadata.component.json
    ```
 
-2. **Review enum properties:**
-   ```bash
-   # For each component, check enum properties
-   for file in $(grep "data/mods/$MOD_NAME" components-to-migrate.txt); do
-     echo "=== $file ==="
-     jq '.id, .dataSchema.properties | to_entries | map(select(.value.enum != null)) | map({key: .key, enum: .value.enum})' "$file"
-     echo ""
-   done
-   ```
-
-3. **Migrate components:**
-   - Open each component file
+2. **Migrate component:**
+   - Open the component file
    - Identify enum property names and values
    - Add validationRules block after dataSchema
-   - Customize error messages with property names
+   - Customize error messages with appropriate property names
    - Save file
 
-4. **Validate:**
+3. **Validate:**
    ```bash
    npm run validate
    echo $?  # Should be 0
    ```
 
-5. **Commit mod batch:**
+4. **Commit:**
    ```bash
-   git add data/mods/$MOD_NAME/components/*.component.json
-   git commit -m "feat(validation): add validationRules to $MOD_NAME mod components
+   git add data/mods/activity/components/description_metadata.component.json
+   git commit -m "feat(validation): add validationRules to activity mod description_metadata component
 
-   - Add validationRules to [list component names]
+   - Add validationRules to description_metadata component
    - Enable enhanced error messages with similarity suggestions
-   - Part of ANASYSIMP-019-04 migration"
+   - Part of ANASYSIMP-019-04 migration (final batch 1/4: activity mod)"
    ```
 
-### Step 4: Migration Examples
+### Step 4: Phase 2 - Migrate Descriptors Mod (30 components)
 
-#### Example: Items Mod Component
+**Reference Documentation:**
+- `docs/anatomy/anatomy-system-guide.md` - Anatomy system overview
+- `docs/anatomy/body-descriptors-complete.md` - Body descriptor registry and validation
 
-**File:** `data/mods/items/components/item_type.component.json`
+**Note:** These are **part-level descriptors** that can be attached to individual anatomy parts (eyes, hands, limbs, etc.) during anatomy generation. They differ from the 5 body-level descriptors already migrated in ANASYSIMP-019-04-02.
 
-**Hypothetical Enum Values:**
-- Item types: "weapon", "armor", "consumable", "quest", "misc"
+#### Batch A: Components 1-10
 
-**Example ValidationRules:**
+Components to migrate:
+1. acoustic_property.component.json
+2. animation.component.json
+3. color_basic.component.json
+4. color_extended.component.json
+5. deformity.component.json
+6. digit_count.component.json
+7. effect.component.json
+8. embellishment.component.json
+9. facial_aesthetic.component.json
+10. facial_hair.component.json
+
+**Process:**
+```bash
+# List batch A components
+cd data/mods/descriptors/components
+ls -1 acoustic_property.component.json animation.component.json \
+  color_basic.component.json color_extended.component.json \
+  deformity.component.json digit_count.component.json \
+  effect.component.json embellishment.component.json \
+  facial_aesthetic.component.json facial_hair.component.json
+
+# For each component:
+# 1. Open file
+# 2. Review enum properties
+# 3. Add validationRules block with customized error messages
+# 4. Save file
+
+# Validate batch
+npm run validate
+
+# Commit batch A
+git add data/mods/descriptors/components/acoustic_property.component.json \
+  data/mods/descriptors/components/animation.component.json \
+  data/mods/descriptors/components/color_basic.component.json \
+  data/mods/descriptors/components/color_extended.component.json \
+  data/mods/descriptors/components/deformity.component.json \
+  data/mods/descriptors/components/digit_count.component.json \
+  data/mods/descriptors/components/effect.component.json \
+  data/mods/descriptors/components/embellishment.component.json \
+  data/mods/descriptors/components/facial_aesthetic.component.json \
+  data/mods/descriptors/components/facial_hair.component.json
+
+git commit -m "feat(validation): add validationRules to descriptors mod components (batch A: 1-10)
+
+- Add validationRules to part-level descriptor components
+- Components: acoustic_property, animation, color_basic, color_extended,
+  deformity, digit_count, effect, embellishment, facial_aesthetic, facial_hair
+- Enable enhanced error messages with similarity suggestions
+- Part of ANASYSIMP-019-04 migration (final batch 2/4: descriptors A)"
+```
+
+#### Batch B: Components 11-20
+
+Components to migrate:
+11. firmness.component.json
+12. flexibility.component.json
+13. hair_style.component.json
+14. length_category.component.json
+15. length_hair.component.json
+16. luminosity.component.json
+17. pattern.component.json
+18. projection.component.json
+19. pupil_shape.component.json
+20. secretion.component.json
+
+**Process:**
+```bash
+# Validate batch
+npm run validate
+
+# Commit batch B
+git add data/mods/descriptors/components/firmness.component.json \
+  data/mods/descriptors/components/flexibility.component.json \
+  data/mods/descriptors/components/hair_style.component.json \
+  data/mods/descriptors/components/length_category.component.json \
+  data/mods/descriptors/components/length_hair.component.json \
+  data/mods/descriptors/components/luminosity.component.json \
+  data/mods/descriptors/components/pattern.component.json \
+  data/mods/descriptors/components/projection.component.json \
+  data/mods/descriptors/components/pupil_shape.component.json \
+  data/mods/descriptors/components/secretion.component.json
+
+git commit -m "feat(validation): add validationRules to descriptors mod components (batch B: 11-20)
+
+- Add validationRules to part-level descriptor components
+- Components: firmness, flexibility, hair_style, length_category, length_hair,
+  luminosity, pattern, projection, pupil_shape, secretion
+- Enable enhanced error messages with similarity suggestions
+- Part of ANASYSIMP-019-04 migration (final batch 3/4: descriptors B)"
+```
+
+#### Batch C: Components 21-30
+
+Components to migrate:
+21. sensory_capability.component.json
+22. shape_eye.component.json
+23. shape_general.component.json
+24. size_category.component.json
+25. structural_integrity.component.json
+26. temperature.component.json
+27. texture.component.json
+28. visual_capability.component.json
+29. vocal_capability.component.json
+30. weight_feel.component.json
+
+**Process:**
+```bash
+# Validate batch
+npm run validate
+
+# Commit batch C
+git add data/mods/descriptors/components/sensory_capability.component.json \
+  data/mods/descriptors/components/shape_eye.component.json \
+  data/mods/descriptors/components/shape_general.component.json \
+  data/mods/descriptors/components/size_category.component.json \
+  data/mods/descriptors/components/structural_integrity.component.json \
+  data/mods/descriptors/components/temperature.component.json \
+  data/mods/descriptors/components/texture.component.json \
+  data/mods/descriptors/components/visual_capability.component.json \
+  data/mods/descriptors/components/vocal_capability.component.json \
+  data/mods/descriptors/components/weight_feel.component.json
+
+git commit -m "feat(validation): add validationRules to descriptors mod components (batch C: 21-30)
+
+- Add validationRules to part-level descriptor components
+- Components: sensory_capability, shape_eye, shape_general, size_category,
+  structural_integrity, temperature, texture, visual_capability,
+  vocal_capability, weight_feel
+- Enable enhanced error messages with similarity suggestions
+- Part of ANASYSIMP-019-04 migration (final batch 4/4: descriptors C)"
+```
+
+### Step 5: Migration Examples
+
+These examples show how to customize error messages for different descriptor types:
+
+#### Example 1: Activity Mod Component
+
+**File:** `data/mods/activity/components/description_metadata.component.json`
+
+**Purpose:** Metadata for describing activities in text generation
+
+**ValidationRules Pattern:**
 ```json
 {
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid item type: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Item type is required",
-      "invalidType": "Invalid type for item: expected {{expected}}, got {{actual}}"
+      "invalidEnum": "Invalid description metadata property: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Description metadata is required",
+      "invalidType": "Invalid type for description metadata: expected {{expected}}, got {{actual}}"
     },
     "suggestions": {
       "enableSimilarity": true,
@@ -154,22 +324,21 @@ For each mod, follow this process:
 }
 ```
 
-#### Example: Movement Mod Component
+#### Example 2: Color Descriptor Component
 
-**File:** `data/mods/movement/components/movement_type.component.json`
+**File:** `data/mods/descriptors/components/color_basic.component.json`
 
-**Hypothetical Enum Values:**
-- Movement types: "walk", "run", "sprint", "crawl", "fly", "swim"
+**Purpose:** Basic color descriptors for anatomy parts (eyes, hair, skin, etc.)
 
-**Example ValidationRules:**
+**ValidationRules Pattern:**
 ```json
 {
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid movement type: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Movement type is required",
-      "invalidType": "Invalid type for movement: expected {{expected}}, got {{actual}}"
+      "invalidEnum": "Invalid color: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Color is required",
+      "invalidType": "Invalid type for color: expected {{expected}}, got {{actual}}"
     },
     "suggestions": {
       "enableSimilarity": true,
@@ -180,22 +349,21 @@ For each mod, follow this process:
 }
 ```
 
-#### Example: Activity Mod Component
+#### Example 3: Shape Descriptor Component
 
-**File:** `data/mods/activity/components/activity_state.component.json`
+**File:** `data/mods/descriptors/components/shape_general.component.json`
 
-**Hypothetical Enum Values:**
-- Activity states: "idle", "active", "paused", "completed", "failed"
+**Purpose:** General shape descriptors for various anatomy parts
 
-**Example ValidationRules:**
+**ValidationRules Pattern:**
 ```json
 {
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid activity state: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Activity state is required",
-      "invalidType": "Invalid type for activity: expected {{expected}}, got {{actual}}"
+      "invalidEnum": "Invalid shape: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Shape is required",
+      "invalidType": "Invalid type for shape: expected {{expected}}, got {{actual}}"
     },
     "suggestions": {
       "enableSimilarity": true,
@@ -206,31 +374,85 @@ For each mod, follow this process:
 }
 ```
 
-### Step 5: Track Progress
+#### Example 4: Structural Integrity Component (Advanced)
 
-Use the migration tracking checklist from ANASYSIMP-019-04:
+**File:** `data/mods/descriptors/components/structural_integrity.component.json`
+
+**Purpose:** Describes physical condition of anatomy parts (intact, damaged, necrotic, etc.)
+
+**Context:** Used for horror, medical, and fantasy scenarios
+
+**ValidationRules Pattern:**
+```json
+{
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid structural integrity: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Structural integrity is required",
+      "invalidType": "Invalid type for structural integrity: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}
+```
+
+### Step 6: Track Progress
+
+Use the migration tracking checklist:
 
 ```markdown
-### Remaining Mods (~25 components)
-- [ ] Activity mod (X components)
-  - [ ] component1
-  - [ ] component2
-- [ ] Items mod (X components)
-  - [ ] component1
-  - [ ] component2
-- [ ] Movement mod (X components)
-  - [ ] component1
-  - [ ] component2
-- [ ] Patrol mod (X components)
-  - [ ] component1
-- [ ] Vampirism mod (X components)
-  - [ ] component1
-- [ ] (Other mods as discovered)
+### Final Migration Batch (31 components)
+
+#### Phase 1: Activity Mod (1 component)
+- [ ] description_metadata
+
+#### Phase 2: Descriptors Mod (30 components)
+
+##### Batch A (Components 1-10)
+- [ ] acoustic_property
+- [ ] animation
+- [ ] color_basic
+- [ ] color_extended
+- [ ] deformity
+- [ ] digit_count
+- [ ] effect
+- [ ] embellishment
+- [ ] facial_aesthetic
+- [ ] facial_hair
+
+##### Batch B (Components 11-20)
+- [ ] firmness
+- [ ] flexibility
+- [ ] hair_style
+- [ ] length_category
+- [ ] length_hair
+- [ ] luminosity
+- [ ] pattern
+- [ ] projection
+- [ ] pupil_shape
+- [ ] secretion
+
+##### Batch C (Components 21-30)
+- [ ] sensory_capability
+- [ ] shape_eye
+- [ ] shape_general
+- [ ] size_category
+- [ ] structural_integrity
+- [ ] temperature
+- [ ] texture
+- [ ] visual_capability
+- [ ] vocal_capability
+- [ ] weight_feel
 ```
 
-Update checklist after each mod is completed.
+Update checklist after each batch is completed.
 
-### Step 6: Final Batch Validation
+### Step 7: Final Batch Validation
 
 After all remaining mods are migrated:
 
@@ -238,81 +460,116 @@ After all remaining mods are migrated:
 # Validate all schemas
 npm run validate
 
-# Verify no components remain
+# Verify no components remain without validationRules
 grep -l '"enum"' data/mods/*/components/*.component.json | \
   xargs grep -L 'validationRules' | \
   wc -l
 # Expected: 0
+
+# Double-check by listing any remaining components
+grep -l '"enum"' data/mods/*/components/*.component.json | \
+  xargs grep -L 'validationRules'
+# Expected: (empty output)
 ```
 
 ## Validation Checklist
 
-- [ ] All remaining components (~25) have validationRules
-- [ ] Error messages use appropriate terminology per mod
-- [ ] Template variables use double braces
-- [ ] All required properties present
-- [ ] `npm run validate` passes
-- [ ] No components remain without validationRules
-- [ ] All changes committed with clear messages per mod
+- [ ] Activity mod component (1) has validationRules
+- [ ] All descriptors mod components (30) have validationRules
+- [ ] Error messages use appropriate descriptor terminology
+- [ ] Template variables use double braces (`{{value}}`, `{{validValues}}`)
+- [ ] All required properties present (generateValidator, errorMessages, suggestions)
+- [ ] `npm run validate` passes after each batch
+- [ ] No components remain without validationRules (verified with grep)
+- [ ] All changes committed with clear messages per batch (4 commits total)
 
 ## Acceptance Criteria
 
-- [ ] ~25 components migrated with validationRules
+- [ ] 31 components migrated with validationRules (1 activity + 30 descriptors)
 - [ ] All components pass schema validation
-- [ ] Error messages customized appropriately per domain
-- [ ] Similarity suggestions enabled for all
-- [ ] Each mod batch committed separately with clear messages
+- [ ] Error messages customized appropriately for anatomy descriptors
+- [ ] Similarity suggestions enabled for all (maxDistance: 3, maxSuggestions: 3)
+- [ ] 4 separate commits:
+  - Batch 1: Activity mod (1 component)
+  - Batch 2: Descriptors A (10 components)
+  - Batch 3: Descriptors B (10 components)
+  - Batch 4: Descriptors C (10 components)
 - [ ] No breaking changes introduced
 - [ ] Migration tracking checklist completed
+- [ ] Final verification shows 0 components without validationRules
 
 ## Common Pitfalls
 
 ### Pitfall 1: Batch Commits Too Large
-**Problem:** Committing all 25 components in one batch
-**Solution:** Commit per mod (5-10 components per batch) for easier review
+**Problem:** Committing all 31 components in one batch
+**Solution:** Commit in 4 batches (activity + 3 descriptor batches of 10 each) for easier review and rollback
 
-### Pitfall 2: Generic Error Messages
-**Problem:** Using same error messages for all mods
-**Solution:** Customize messages with domain-specific terminology per mod
+### Pitfall 2: Generic Error Messages for Descriptors
+**Problem:** Using "Invalid value" for all 30 descriptor components
+**Solution:** Customize messages with specific descriptor names (e.g., "Invalid color", "Invalid shape", "Invalid structural integrity")
 
-### Pitfall 3: Not Tracking Progress
-**Problem:** Losing track of which components are completed
-**Solution:** Update migration tracking checklist after each mod
+### Pitfall 3: Not Tracking Progress Across 30 Components
+**Problem:** Losing track of which of the 30 descriptor components are completed
+**Solution:** Update migration tracking checklist after each batch of 10 components
 
-### Pitfall 4: Skipping Validation Between Mods
-**Problem:** Multiple mods fail validation at once
-**Solution:** Run `npm run validate` after each mod batch
+### Pitfall 4: Skipping Validation Between Batches
+**Problem:** All 30 descriptor components fail validation at once
+**Solution:** Run `npm run validate` after each batch of 10 components
+
+### Pitfall 5: Confusing Body-Level vs Part-Level Descriptors
+**Problem:** Expecting these 30 components to be like the 5 body-level descriptors migrated in ANASYSIMP-019-04-02
+**Solution:** Understand that these are **part-level descriptors** that attach to individual anatomy parts (eyes, hands, etc.), not body-level properties
+
+### Pitfall 6: Assuming Other Mods Need Migration
+**Problem:** Searching for components in items, movement, patrol, or vampirism mods
+**Solution:** Only activity (1) and descriptors (30) mods have components needing migration
 
 ## Time Estimate
 
-- Mod discovery and prioritization: 5 minutes
-- Migration (~25 components × 1 minute each): ~25 minutes
-- Validation per mod (6 batches × 1 minute): 6 minutes
-- Commits per mod (6 batches × 1 minute): 6 minutes
+- Generate current migration list: 2 minutes
+- Phase 1: Activity mod migration (1 component): 2 minutes
+- Phase 2: Descriptors mod migration (30 components):
+  - Batch A (10 components): 10 minutes
+  - Batch B (10 components): 10 minutes
+  - Batch C (10 components): 10 minutes
+- Validation (4 batches × 1 minute): 4 minutes
+- Commits (4 batches × 1 minute): 4 minutes
 - Final verification: 3 minutes
-- **Total:** ~45 minutes (adjusted to 30 with experience from previous batches)
+- **Total:** ~35 minutes
 
 ## Special Considerations
 
-### Domain-Specific Terminology
+### Part-Level Descriptors Context
 
-Each mod has its own domain language:
-- **Items mod**: "item type", "rarity", "quality"
-- **Movement mod**: "movement type", "speed", "direction"
-- **Activity mod**: "activity state", "priority"
-- **Patrol mod**: "patrol state", "behavior"
-- **Vampirism mod**: "vampire state", "feeding state"
+The 30 descriptor components in this migration are **part-level descriptors** used during anatomy generation. They differ from the 5 body-level descriptors migrated in ANASYSIMP-019-04-02:
 
-**Important:** Use terminology that matches the mod's domain for clear error messages.
+**Body-Level Descriptors (already migrated):**
+- Applied to entire body: height, build, body_composition, body_hair
+- Used in Body Descriptor Registry
+- Referenced in anatomy recipes' `bodyDescriptors` field
 
-### Unknown Mods
+**Part-Level Descriptors (this migration):**
+- Applied to individual anatomy parts: eyes, hands, limbs, torso, etc.
+- Examples: color_basic, shape_eye, structural_integrity, texture
+- Used during part generation to describe individual body parts
+- Can represent horror/fantasy/medical scenarios (necrotic, crystalline, ethereal)
 
-During discovery, you may find mods not listed in the initial estimate:
-1. Review the mod's purpose and components
-2. Identify enum properties and valid values
-3. Apply standard migration pattern
-4. Customize error messages with mod-specific terminology
-5. Add to tracking checklist
+### Descriptor Terminology Guidelines
+
+Use clear, specific terminology in error messages:
+- **Color components**: "Invalid color" not "Invalid value"
+- **Shape components**: "Invalid shape" not "Invalid type"
+- **Structural components**: "Invalid structural integrity" not "Invalid state"
+- **Size components**: "Invalid size category" not "Invalid size"
+- **Sensory components**: "Invalid visual capability", "Invalid acoustic property"
+
+### Reference Documentation
+
+When in doubt about descriptor usage or valid values:
+- `docs/anatomy/anatomy-system-guide.md` - Complete anatomy system guide
+- `docs/anatomy/body-descriptors-complete.md` - Body descriptor registry (focus on part-level descriptors section)
+- `src/anatomy/registries/bodyDescriptorRegistry.js` - Source of truth for body-level descriptors
+- Descriptor component files themselves - Check existing enum values
 
 ## Next Steps
 
