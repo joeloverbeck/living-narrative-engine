@@ -351,7 +351,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
       // Character count should update
       const charCount = document.getElementById('char-count');
-      expect(charCount.textContent).toBe(`${userInput.length}/3000`);
+      expect(charCount.textContent).toBe(`${userInput.length}/6000`);
 
       // Save button should be enabled
       const saveBtn = document.getElementById('save-concept-btn');
