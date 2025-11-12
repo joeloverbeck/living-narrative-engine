@@ -5,6 +5,7 @@ describe('RoundManager', () => {
   let mockTurnOrderService;
   let mockEntityManager;
   let mockLogger;
+  let mockDispatcher;
 
   beforeEach(() => {
     mockTurnOrderService = {
@@ -21,10 +22,15 @@ describe('RoundManager', () => {
       error: jest.fn(),
     };
 
+    mockDispatcher = {
+      dispatch: jest.fn(),
+    };
+
     roundManager = new RoundManager(
       mockTurnOrderService,
       mockEntityManager,
-      mockLogger
+      mockLogger,
+      mockDispatcher
     );
   });
 
@@ -737,6 +743,145 @@ describe('RoundManager', () => {
       // Assert
       expect(roundManager.inProgress).toBe(false);
       expect(roundManager.hadSuccess).toBe(false);
+    });
+
+    it('should reset round number to 0', async () => {
+      // Arrange - start a round to increment round number
+      const mockActor = {
+        id: 'actor1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      await roundManager.startRound();
+
+      // Verify round started event was dispatched with round number 1
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:round_started',
+        expect.objectContaining({
+          roundNumber: 1,
+        })
+      );
+
+      // Act
+      roundManager.resetFlags();
+
+      // Start another round after reset
+      mockDispatcher.dispatch.mockClear();
+      await roundManager.startRound();
+
+      // Assert - round number should be 1 again (reset to 0, then incremented)
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:round_started',
+        expect.objectContaining({
+          roundNumber: 1,
+        })
+      );
+    });
+  });
+
+  describe('round_started event dispatch', () => {
+    it('should dispatch core:round_started event when round begins', async () => {
+      // Arrange
+      const mockActor1 = {
+        id: 'actor-1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      const mockActor2 = {
+        id: 'actor-2',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor1, mockActor2];
+
+      // Act
+      await roundManager.startRound('round-robin');
+
+      // Assert
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:round_started',
+        expect.objectContaining({
+          roundNumber: expect.any(Number),
+          actors: expect.any(Array),
+          strategy: 'round-robin',
+        })
+      );
+    });
+
+    it('should include correct round number in event', async () => {
+      // Arrange
+      const mockActor = {
+        id: 'actor-1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+
+      // Act
+      await roundManager.startRound('round-robin');
+      await roundManager.startRound('round-robin'); // Start second round
+
+      // Assert
+      const calls = mockDispatcher.dispatch.mock.calls.filter(
+        (call) => call[0] === 'core:round_started'
+      );
+      expect(calls[0][1].roundNumber).toBe(1);
+      expect(calls[1][1].roundNumber).toBe(2);
+    });
+
+    it('should include actor IDs in correct order', async () => {
+      // Arrange
+      const mockActor1 = {
+        id: 'actor-1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      const mockActor2 = {
+        id: 'actor-2',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      const mockActor3 = {
+        id: 'actor-3',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor1, mockActor2, mockActor3];
+
+      // Act
+      await roundManager.startRound('round-robin');
+
+      // Assert
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:round_started',
+        expect.objectContaining({
+          actors: ['actor-1', 'actor-2', 'actor-3'],
+        })
+      );
+    });
+
+    it('should include strategy in event payload', async () => {
+      // Arrange
+      const mockActor = {
+        id: 'actor-1',
+        hasComponent: jest.fn().mockReturnValue(true),
+      };
+      mockEntityManager.entities = [mockActor];
+      const initiativeData = new Map([['actor-1', 10]]);
+
+      // Act
+      await roundManager.startRound('initiative', initiativeData);
+
+      // Assert
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:round_started',
+        expect.objectContaining({
+          strategy: 'initiative',
+        })
+      );
+    });
+
+    it('should not dispatch event when round fails to start', async () => {
+      // Arrange
+      mockEntityManager.entities = []; // No actors
+
+      // Act & Assert
+      await expect(roundManager.startRound()).rejects.toThrow();
+      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 });
