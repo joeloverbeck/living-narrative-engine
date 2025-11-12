@@ -25,6 +25,11 @@ describe('Blocking System Edge Cases', () => {
     // Arrange: Belt with self-referential blocking (should be ignored)
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
 
+    // Initialize empty equipment component
+    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
+    });
+
     const belt = fixture.createEntity({
       id: 'belt',
       name: 'Self-Blocking Belt',
@@ -45,7 +50,7 @@ describe('Blocking System Edge Cases', () => {
       },
     });
 
-    // Set up equipment state
+    // Set up equipment state with belt
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_lower: {
@@ -67,7 +72,12 @@ describe('Blocking System Edge Cases', () => {
     // Arrange: Actor with no clothing
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
 
-    // Equipment component exists but is empty (created by createStandardActorTarget)
+    // Initialize empty equipment component
+    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
+    });
+
+    // Verify equipment component exists and is empty
     const equipment = fixture.getComponent(actor.id, 'clothing:equipment');
     expect(equipment).toBeDefined();
     expect(equipment.equipped).toEqual({});
@@ -83,6 +93,11 @@ describe('Blocking System Edge Cases', () => {
   it('should handle malformed blocking component', async () => {
     // Arrange: Item with missing fields in blocking component
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+
+    // Initialize empty equipment component
+    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
+    });
 
     const item = fixture.createEntity({
       id: 'malformed_item',
@@ -122,6 +137,11 @@ describe('Blocking System Edge Cases', () => {
     // Arrange
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
 
+    // Initialize empty equipment component
+    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
+    });
+
     const belt = fixture.createEntity({
       id: 'belt',
       name: 'Leather Belt',
@@ -153,7 +173,7 @@ describe('Blocking System Edge Cases', () => {
       },
     });
 
-    // Set up equipment state
+    // Set up equipment state with belt and pants
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_lower: {

@@ -25,6 +25,11 @@ describe('Complex Blocking Scenarios', () => {
     // Arrange: Belt AND suspenders both block pants
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
 
+    // Initialize empty equipment component
+    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
+    });
+
     const belt = fixture.createEntity({
       id: 'belt',
       name: 'Leather Belt',
@@ -76,7 +81,7 @@ describe('Complex Blocking Scenarios', () => {
       },
     });
 
-    // Set up equipment state
+    // Set up equipment state with all items equipped
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_upper: {
@@ -138,6 +143,11 @@ describe('Complex Blocking Scenarios', () => {
     // Arrange: Armor blocks both base and underwear layers
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
 
+    // Initialize empty equipment component
+    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
+    });
+
     const armor = fixture.createEntity({
       id: 'cuirass',
       name: 'Steel Cuirass',
@@ -180,7 +190,7 @@ describe('Complex Blocking Scenarios', () => {
       },
     });
 
-    // Set up equipment state
+    // Set up equipment state with layered clothing
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_upper: {
@@ -205,6 +215,11 @@ describe('Complex Blocking Scenarios', () => {
   it('should handle explicit item ID blocking', async () => {
     // Arrange: Cursed ring blocks specific artifact
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+
+    // Initialize empty equipment component
+    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+      equipped: {},
+    });
 
     const cursedRing = fixture.createEntity({
       id: 'cursed_ring',
