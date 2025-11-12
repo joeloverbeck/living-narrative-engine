@@ -23,5 +23,18 @@
     },
     "required": ["length"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid length category: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Length category is required",
+      "invalidType": "Invalid type for length category: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

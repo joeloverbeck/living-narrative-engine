@@ -20,5 +20,18 @@
     },
     "required": ["count"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid digit count: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Digit count is required",
+      "invalidType": "Invalid type for digit count: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

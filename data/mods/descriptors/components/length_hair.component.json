@@ -14,5 +14,18 @@
     },
     "required": ["length"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid hair length: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Hair length is required",
+      "invalidType": "Invalid type for hair length: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

@@ -24,5 +24,18 @@
     },
     "required": ["style"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid facial hair style: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Facial hair style is required",
+      "invalidType": "Invalid type for facial hair style: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

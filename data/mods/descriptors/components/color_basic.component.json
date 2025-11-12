@@ -26,5 +26,18 @@
     },
     "required": ["color"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid color: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Color is required",
+      "invalidType": "Invalid type for color: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

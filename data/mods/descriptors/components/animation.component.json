@@ -24,5 +24,18 @@
     },
     "required": ["animation"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid animation: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Animation is required",
+      "invalidType": "Invalid type for animation: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

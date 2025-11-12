@@ -26,7 +26,22 @@
         "default": "normal"
       }
     },
-    "required": ["integrity"],
+    "required": [
+      "integrity"
+    ],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid structural integrity: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Structural Integrity is required",
+      "invalidType": "Invalid type for structural integrity: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

@@ -19,7 +19,22 @@
         "default": "round"
       }
     },
-    "required": ["shape"],
+    "required": [
+      "shape"
+    ],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid eye shape: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Eye Shape is required",
+      "invalidType": "Invalid type for eye shape: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

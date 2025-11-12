@@ -20,5 +20,18 @@
     },
     "required": ["temperature"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid temperature: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Temperature is required",
+      "invalidType": "Invalid type for temperature: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
