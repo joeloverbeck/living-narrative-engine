@@ -78,6 +78,15 @@ describe('textUtils integration', () => {
   });
 
   describe('formatTimestamp', () => {
+    it('returns the default fallback when provided a non-string fallback and nullish timestamp', () => {
+      expect(formatTimestamp(null, { message: 'not used' })).toBe('Invalid Date');
+      expect(formatTimestamp(undefined, 42)).toBe('Invalid Date');
+    });
+
+    it('returns the fallback when a string input trims to empty content', () => {
+      expect(formatTimestamp('   ', 'fallback')).toBe('fallback');
+    });
+
     it('formats ISO timestamps through Date#toLocaleString', () => {
       const toLocaleSpy = jest
         .spyOn(Date.prototype, 'toLocaleString')
@@ -86,6 +95,23 @@ describe('textUtils integration', () => {
       expect(result).toBe('mocked-locale');
       expect(toLocaleSpy).toHaveBeenCalledTimes(1);
       toLocaleSpy.mockRestore();
+    });
+
+    it('recovers with the fallback when Date throws during string parsing', () => {
+      const RealDate = Date;
+      const dateSpy = jest.spyOn(global, 'Date').mockImplementation(function (...args) {
+        if (args[0] === 'explode') {
+          throw new TypeError('boom');
+        }
+        return new RealDate(...args);
+      });
+      global.Date.UTC = RealDate.UTC;
+      global.Date.parse = RealDate.parse;
+      global.Date.now = RealDate.now;
+
+      expect(formatTimestamp(' explode ', 'fallback')).toBe('fallback');
+
+      dateSpy.mockRestore();
     });
 
     it('returns the provided fallback when the timestamp cannot be parsed', () => {
@@ -108,6 +134,70 @@ describe('textUtils integration', () => {
 
     it('defaults to "Invalid Date" when no fallback is supplied', () => {
       expect(formatTimestamp('not-a-real-date')).toBe('Invalid Date');
+    });
+
+    it('returns a formatted string for valid Date instances and respects invalid ones', () => {
+      const validDate = new Date('2024-02-29T00:00:00Z');
+      const invalidDate = new Date('invalid');
+
+      expect(formatTimestamp(validDate)).toBe(validDate.toLocaleString());
+      expect(formatTimestamp(invalidDate, 'fallback')).toBe('fallback');
+    });
+
+    it('supports numeric timestamps while guarding against non-finite values', () => {
+      const timestamp = Date.UTC(2024, 0, 15, 12, 34, 56);
+      const expected = new Date(timestamp).toLocaleString();
+
+      expect(formatTimestamp(timestamp)).toBe(expected);
+      expect(formatTimestamp(Number.POSITIVE_INFINITY, 'fallback')).toBe(
+        'fallback',
+      );
+    });
+
+    it('returns the fallback when a finite number produces an invalid date', () => {
+      const outOfRange = 8.64e15 + 1;
+
+      expect(Number.isFinite(outOfRange)).toBe(true);
+      expect(formatTimestamp(outOfRange, 'fallback')).toBe('fallback');
+    });
+
+    it('recovers when Date throws for numeric timestamps', () => {
+      const RealDate = Date;
+      const dateSpy = jest.spyOn(global, 'Date').mockImplementation(function (...args) {
+        if (args[0] === 4242) {
+          throw new TypeError('boom');
+        }
+        return new RealDate(...args);
+      });
+      global.Date.UTC = RealDate.UTC;
+      global.Date.parse = RealDate.parse;
+      global.Date.now = RealDate.now;
+
+      expect(formatTimestamp(4242, 'fallback')).toBe('fallback');
+
+      dateSpy.mockRestore();
+    });
+
+    it('formats other convertible inputs using Date coercion', () => {
+      const isoString = '2025-05-23T10:20:30.000Z';
+      const input = {
+        toString() {
+          return isoString;
+        },
+      };
+      const expected = new Date(input).toLocaleString();
+
+      expect(formatTimestamp(input)).toBe(expected);
+    });
+
+    it('returns the fallback when coercion yields an invalid date in the generic branch', () => {
+      const input = {
+        valueOf() {
+          return Number.NaN;
+        },
+      };
+
+      expect(formatTimestamp(input, 'fallback')).toBe('fallback');
     });
   });
 });
