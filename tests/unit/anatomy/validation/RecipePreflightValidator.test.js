@@ -2751,7 +2751,7 @@ describe('RecipePreflightValidator', () => {
                       properties: {
                         hairDensity: {
                           type: 'string',
-                          enum: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'],
+                          enum: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy', 'furred'],
                         },
                       },
                     },
@@ -2770,7 +2770,7 @@ describe('RecipePreflightValidator', () => {
         recipeId: 'test:recipe',
         blueprintId: 'test:blueprint',
         bodyDescriptors: {
-          hairDensity: 'furred', // Invalid value!
+          hairDensity: 'fluffy', // Invalid value!
         },
         slots: {},
         patterns: [],
@@ -2789,8 +2789,8 @@ describe('RecipePreflightValidator', () => {
       const errors = report.errors.filter((e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE');
       expect(errors).toHaveLength(1);
       expect(errors[0].field).toBe('hairDensity');
-      expect(errors[0].value).toBe('furred');
-      expect(errors[0].message).toContain("Invalid value 'furred'");
+      expect(errors[0].value).toBe('fluffy');
+      expect(errors[0].message).toContain("Invalid value 'fluffy'");
       expect(errors[0].allowedValues).toEqual([
         'hairless',
         'sparse',
@@ -2798,6 +2798,7 @@ describe('RecipePreflightValidator', () => {
         'moderate',
         'hairy',
         'very-hairy',
+        'furred',
       ]);
     });
 
@@ -3221,7 +3222,7 @@ describe('RecipePreflightValidator', () => {
         bodyDescriptors: {
           height: 'gigantic', // Invalid enum value
           build: 123, // Invalid type
-          hairDensity: 'furred', // Invalid enum value
+          hairDensity: 'fluffy', // Invalid enum value
           unknownField: 'test', // Unknown field
         },
         slots: {},
