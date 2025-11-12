@@ -1,459 +1,341 @@
-# Effects Generation Workflow Guide
+# Effects Generation Workflow
 
 ## Overview
 
-This guide provides step-by-step instructions for generating and validating planning effects for GOAP actions. The effects generation workflow automates the creation of planning metadata from action rules, ensuring consistency and reducing manual errors.
+The effects generation system analyzes action rules to automatically generate planning metadata for GOAP. This ensures consistency between rule execution and planning simulation by extracting effects directly from rule operations.
+
+**Implementation Status:**
+- ✅ EffectsAnalyzer: Analyzes rule operations and extracts state changes
+- ✅ EffectsGenerator: Generates planning effects from analyzed operations
+- ✅ EffectsValidator: Validates consistency between effects and rules
+- ✅ CLI scripts: `npm run generate:effects` and `npm run validate:effects`
+- ⚠️  Action files: Currently do not have `planningEffects` defined (must be generated)
 
 ## Prerequisites
 
 - Node.js 16+ installed
 - Project dependencies installed (`npm install`)
-- Basic understanding of GOAP concepts (see [GOAP README](./README.md))
-- Familiarity with the project's mod system
+- Actions must have corresponding rules named: `{modId}:handle_{actionName}`
+- Rules must contain state-changing operations (see [Operation Mapping](./operation-mapping.md))
 
-## Quick Start
+## How It Works
 
-### Generate Effects for All Mods
+### 1. Rule Analysis
 
-```bash
-npm run generate:effects
-```
+The EffectsAnalyzer (`src/goap/analysis/effectsAnalyzer.js`) examines rule operations:
 
-This generates planning effects for all actions across all mods and writes them to action files.
+**State-Changing Operations Analyzed:**
+- Component operations: `ADD_COMPONENT`, `REMOVE_COMPONENT`, `MODIFY_COMPONENT`, `ATOMIC_MODIFY_COMPONENT`
+- Movement: `LOCK_MOVEMENT`, `UNLOCK_MOVEMENT`, `SYSTEM_MOVE_ENTITY`
+- Closeness: `ESTABLISH_SITTING_CLOSENESS`, `REMOVE_SITTING_CLOSENESS`, etc.
+- Items: `TRANSFER_ITEM`, `DROP_ITEM_AT_LOCATION`, `PICK_UP_ITEM_FROM_LOCATION`
+- Containers: `OPEN_CONTAINER`, `TAKE_FROM_CONTAINER`, `PUT_IN_CONTAINER`
+- Others: See full list in `src/goap/analysis/effectsAnalyzer.js:97-150`
 
-### Generate Effects for a Specific Mod
+**Analysis Process:**
+1. Load rule from data registry
+2. Trace execution paths (handle IF/IF_CO_LOCATED conditionals)
+3. Identify state-changing operations in each path
+4. Convert operations to planning effects
+5. Generate abstract preconditions for runtime-dependent conditions
 
-```bash
-npm run generate:effects -- --mod=positioning
-```
+### 2. Effect Generation
 
-### Generate Effects for a Single Action
+Example rule to effect conversion:
 
-```bash
-npm run generate:effects -- --action=positioning:sit_down
-```
-
-### Validate Generated Effects
-
-```bash
-npm run validate:effects
-```
-
-### Validate Effects for a Specific Mod
-
-```bash
-npm run validate:effects -- --mod=positioning
-```
-
-### Generate Validation Report
-
-```bash
-npm run validate:effects -- --report=effects-validation.json
-```
-
-## Detailed Workflow
-
-### Step 1: Understanding the Generation Process
-
-The effects generator analyzes action rules to automatically extract planning effects. For each action:
-
-1. **Finds Associated Rules**: Looks for rules named `{modId}:handle_{actionName}`
-2. **Analyzes Operations**: Examines rule operations to identify state changes
-3. **Generates Effects**: Creates planning effects that describe how the action changes world state
-4. **Validates Effects**: Ensures generated effects match the planning-effects schema
-5. **Writes to File**: Updates action files with the `planningEffects` field
-
-### Step 2: Generating Effects
-
-#### For a Single Action
-
-Use this for testing or when working on a specific action:
-
-```bash
-npm run generate:effects -- --action=positioning:sit_down
-```
-
-**Output:**
-```
-📚 Loading schemas...
-✅ Schemas loaded
-📦 Loading mod data...
-✅ Mod data loaded
-Generating effects for action: positioning:sit_down
-Generated 2 effects
+```javascript
+// Rule: positioning:handle_sit_down
 {
-  "effects": [
-    {
-      "operation": "REMOVE_COMPONENT",
-      "entity": "actor",
-      "component": "positioning:standing"
-    },
-    {
-      "operation": "ADD_COMPONENT",
-      "entity": "actor",
-      "component": "positioning:sitting",
-      "data": {}
-    }
-  ],
-  "cost": 1.2
+  "actions": [
+    { "type": "REMOVE_COMPONENT", "parameters": { "entity": "actor", "component": "positioning:standing" } },
+    { "type": "ADD_COMPONENT", "parameters": { "entity": "actor", "component": "positioning:sitting", "data": {} } }
+  ]
 }
-✓ Updated data/mods/positioning/actions/sit_down.action.json
-✓ Effects generation complete
-```
 
-#### For a Mod
-
-Use this when you've made changes to multiple actions in a mod:
-
-```bash
-npm run generate:effects -- --mod=positioning
-```
-
-**Output:**
-```
-📚 Loading schemas...
-✅ Schemas loaded
-📦 Loading mod data...
-✅ Mod data loaded
-Generating effects for mod: positioning
-Effects generation complete for positioning: 12 success, 3 skipped, 0 failed
-Generated effects for 12 actions
-✓ Effects generation complete
-```
-
-#### For All Mods
-
-Use this when doing a bulk regeneration:
-
-```bash
-npm run generate:effects
-```
-
-**Output:**
-```
-📚 Loading schemas...
-✅ Schemas loaded
-📦 Loading mod data...
-✅ Mod data loaded
-Generating effects for all mods...
-Generated effects for 156 actions across 8 mods
-✓ Effects generation complete
-```
-
-### Step 3: Reviewing Generated Effects
-
-After generation, check the updated action files:
-
-```bash
-cat data/mods/positioning/actions/sit_down.action.json
-```
-
-**Example Output:**
-```json
+// Generated Planning Effects
 {
-  "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "positioning:sit_down",
-  "name": "Sit down",
-  "description": "Sit down on available furniture",
-  "targets": "positioning:available_furniture",
   "planningEffects": {
     "effects": [
-      {
-        "operation": "REMOVE_COMPONENT",
-        "entity": "actor",
-        "component": "positioning:standing"
-      },
-      {
-        "operation": "ADD_COMPONENT",
-        "entity": "actor",
-        "component": "positioning:sitting",
-        "data": {}
-      }
+      { "operation": "REMOVE_COMPONENT", "entity": "actor", "component": "positioning:standing" },
+      { "operation": "ADD_COMPONENT", "entity": "actor", "component": "positioning:sitting", "data": {} }
     ],
     "cost": 1.2
   }
 }
 ```
 
-### Step 4: Validating Effects
+### 3. Conditional Effects
 
-Always validate after generation to ensure consistency:
+When rules contain IF/IF_CO_LOCATED operations, the analyzer generates conditional effects:
+
+```javascript
+// Generated for conditional branches
+{
+  "operation": "CONDITIONAL",
+  "condition": { /* JSON Logic condition */ },
+  "then": [ /* effects for then branch */ ],
+  "else": [ /* effects for else branch */ ]
+}
+```
+
+## Commands
+
+### Generate Effects
 
 ```bash
+# Generate for all mods
+npm run generate:effects
+
+# Generate for specific mod
+npm run generate:effects -- --mod=positioning
+
+# Generate for single action
+npm run generate:effects -- --action=positioning:sit_down
+```
+
+**Process:**
+1. Loads schemas and mod data
+2. Finds rule(s) for action using naming convention: `{modId}:handle_{actionName}`
+3. Analyzes rule operations via EffectsAnalyzer
+4. Validates generated effects against `planning-effects.schema.json`
+5. Writes effects to action file's `planningEffects` field
+
+### Validate Effects
+
+```bash
+# Validate all mods
 npm run validate:effects
-```
 
-**Output:**
-```
-📚 Loading schemas...
-✅ Schemas loaded
-📦 Loading mod data...
-✅ Mod data loaded
+# Validate specific mod
+npm run validate:effects -- --mod=positioning
 
-=== Validation Results ===
-
-✓ positioning:sit_down - effects match rule operations
-✓ positioning:stand_up - effects match rule operations
-⚠ positioning:wave - 1 warnings
-  - No planning effects defined
-✗ positioning:invalid_action - 1 errors
-  - Missing effect: {"operation":"ADD_COMPONENT","entity":"actor","component":"positioning:waving"}
-
-=== Summary ===
-Valid: 150
-Warnings: 5
-Errors: 1
-Total: 156
-```
-
-### Step 5: Fixing Validation Errors
-
-When validation reports errors, review and fix them:
-
-#### Error: Missing Effect
-
-**Problem**: The generated effects don't match what the rule operations produce.
-
-**Solution:**
-1. Check the rule operations in `data/mods/{mod}/rules/handle_{action}.rule.json`
-2. Verify the operations correctly implement the intended behavior
-3. Regenerate effects: `npm run generate:effects -- --action={modId}:{actionName}`
-4. Validate again
-
-#### Warning: No Planning Effects Defined
-
-**Problem**: Action has no planning effects, likely because it has no associated rule.
-
-**Solution:**
-1. If the action should have effects, create a rule for it
-2. If the action is intentionally effect-free (e.g., query actions), this is expected
-
-#### Warning: Unexpected Effect
-
-**Problem**: The action has effects that don't match the rule operations.
-
-**Solution:**
-1. Check if the `planningEffects` were manually edited
-2. Regenerate effects to sync with rule operations
-3. If manual effects are intentional, this warning can be ignored
-
-### Step 6: Generating Validation Reports
-
-For detailed analysis, generate a JSON report:
-
-```bash
+# Generate JSON report
 npm run validate:effects -- --report=validation-report.json
 ```
 
-**Report Structure:**
+**Validation Checks:**
+1. Schema compliance
+2. Component reference format (`{modId}:{componentId}`)
+3. Abstract precondition structure
+4. Effect count > 0
+
+## Workflows
+
+### Adding a New Action
+
+1. Create action file: `data/mods/{mod}/actions/{action_name}.action.json`
+2. Create rule file: `data/mods/{mod}/rules/handle_{action_name}.rule.json`
+3. Implement rule operations (state-changing operations)
+4. Generate effects: `npm run generate:effects -- --action={mod}:{action_name}`
+5. Verify action file has `planningEffects` field
+
+### Updating Rule Operations
+
+1. Modify operations in `data/mods/{mod}/rules/handle_{action}.rule.json`
+2. Regenerate: `npm run generate:effects -- --action={mod}:{action}`
+3. Validate: `npm run validate:effects -- --mod={mod}`
+4. Review diff in action file to ensure effects match intent
+
+### Bulk Generation
+
+1. Implement/update multiple rules in a mod
+2. Generate all: `npm run generate:effects -- --mod={mod}`
+3. Validate: `npm run validate:effects -- --mod={mod}`
+4. Review validation summary for warnings/errors
+5. Fix any issues and regenerate
+
+## Troubleshooting
+
+### No Effects Generated
+
+**Symptoms:**
+- Generation succeeds but action file unchanged
+- Log shows "No state-changing effects"
+
+**Causes & Solutions:**
+- **Rule not found**: Verify rule name matches `{modId}:handle_{actionName}` convention
+- **No state-changing operations**: Ensure rule contains operations from the state-changing list
+- **Only non-state operations**: Rules with only DISPATCH_EVENT, QUERY_*, etc. produce no effects
+
+### Validation Errors
+
+**"Missing effect" error:**
+- Rule operations changed after effects were generated
+- Solution: Regenerate effects for that action
+
+**"No planning effects defined" warning:**
+- Action has no associated rule or rule produces no effects
+- Expected for query-only actions (no state changes)
+
+**Schema validation failure:**
+- Generated effects don't match schema structure
+- Check operation parameters match expected format
+- Verify component IDs use `{modId}:{componentId}` format
+
+## Schema Structure
+
+Effects must conform to `data/schemas/planning-effects.schema.json`:
+
 ```json
 {
-  "actions": [
+  "effects": [
     {
-      "actionId": "positioning:sit_down",
-      "valid": true,
-      "warnings": [],
-      "errors": []
+      "operation": "ADD_COMPONENT",
+      "entity": "actor",           // "actor" | "target" | "tertiary_target"
+      "component": "mod:component", // Must match pattern: ^[a-z0-9_]+:[a-z0-9_]+$
+      "data": {}                    // Optional
     },
     {
-      "actionId": "positioning:invalid_action",
-      "valid": false,
-      "warnings": [],
-      "errors": [
-        {
-          "message": "Missing effect: {\"operation\":\"ADD_COMPONENT\",...}"
-        }
-      ]
+      "operation": "REMOVE_COMPONENT",
+      "entity": "actor",
+      "component": "mod:component"
+    },
+    {
+      "operation": "MODIFY_COMPONENT",
+      "entity": "actor",
+      "component": "mod:component",
+      "updates": {}                 // Required
+    },
+    {
+      "operation": "CONDITIONAL",
+      "condition": {},               // JSON Logic condition
+      "then": [],                    // Array of effects
+      "else": []                     // Optional
     }
   ],
-  "summary": {
-    "total": 156,
-    "valid": 150,
-    "warnings": 5,
-    "errors": 1
+  "cost": 1.0,                       // Optional, defaults to 1.0
+  "abstractPreconditions": {         // Optional
+    "hasComponent": {
+      "description": "Checks if entity has component",
+      "parameters": ["entityId", "componentId"],
+      "simulationFunction": "evaluateAtRuntime"  // "assumeTrue" | "assumeFalse" | "evaluateAtRuntime"
+    }
   }
 }
 ```
 
-## Common Scenarios
+## Implementation Details
 
-### Scenario 1: Adding a New Action
+### EffectsAnalyzer
 
-1. Create action file: `data/mods/{mod}/actions/{action_name}.action.json`
-2. Create rule file: `data/mods/{mod}/rules/handle_{action_name}.rule.json`
-3. Generate effects: `npm run generate:effects -- --action={mod}:{action_name}`
-4. Validate: `npm run validate:effects -- --mod={mod}`
+**Location:** `src/goap/analysis/effectsAnalyzer.js`
 
-### Scenario 2: Updating Action Rules
+**Key Methods:**
+- `analyzeRule(ruleId)`: Main entry point, returns `{ effects, cost, abstractPreconditions }`
+- `isWorldStateChanging(operation)`: Determines if operation modifies world state
+- `operationToEffect(operation)`: Converts rule operation to planning effect
 
-1. Modify rule operations in `data/mods/{mod}/rules/handle_{action}.rule.json`
-2. Regenerate effects: `npm run generate:effects -- --action={mod}:{action}`
-3. Validate: `npm run validate:effects -- --action={mod}:{action}`
-4. Review changes in action file
+**Process Flow:**
+1. `#analyzeDataFlow(operations)`: Tracks context variables produced by operations
+2. `#traceExecutionPaths(operations, dataFlow)`: Follows conditional branches
+3. `#extractEffectsFromPaths(paths)`: Converts operations to effects per path
+4. `#generateAbstractPreconditions(dataFlow)`: Creates preconditions for runtime checks
+5. `#calculateCost(rule, effects)`: Determines planning cost (default 1.2)
 
-### Scenario 3: Bulk Mod Update
+### EffectsGenerator
 
-1. Make changes to multiple actions/rules in a mod
-2. Regenerate all effects: `npm run generate:effects -- --mod={mod}`
-3. Validate: `npm run validate:effects -- --mod={mod}`
-4. Review validation report
-5. Fix any errors
-6. Validate again
+**Location:** `src/goap/generation/effectsGenerator.js`
 
-### Scenario 4: CI/CD Integration
+**Key Methods:**
+- `generateForAction(actionId)`: Generates effects for single action
+- `generateForMod(modId)`: Generates for all actions in mod
+- `validateEffects(actionId, effects)`: Validates generated effects
+- `injectEffects(effectsMap)`: Updates in-memory action definitions (file writing handled by script)
 
-Add to your CI pipeline:
+**Dependencies:**
+- IEffectsAnalyzer: Analyzes rules
+- IDataRegistry: Accesses actions and rules
+- IAjvSchemaValidator: Validates against schema
 
+### EffectsValidator
+
+**Location:** `src/goap/validation/effectsValidator.js`
+
+**Key Methods:**
+- `validateAction(actionId)`: Validates single action
+- `validateMod(modId)`: Validates all actions in mod
+- `validateAllMods()`: Full validation across all mods
+
+**Returns:** `{ actionId, valid, warnings, errors }`
+
+## Best Practices
+
+### 1. Rule Design
+
+- Use descriptive operation parameters
+- Follow established patterns from existing rules
+- Keep rule complexity manageable (avoid deeply nested conditionals)
+- Document non-obvious conditional logic
+
+### 2. Regeneration Discipline
+
+**Always regenerate after:**
+- Modifying rule operations
+- Adding/removing operations from rules
+- Changing conditional branches
+
+**Workflow:**
+```bash
+# Edit rule
+vim data/mods/positioning/rules/handle_sit_down.rule.json
+
+# Regenerate immediately
+npm run generate:effects -- --action=positioning:sit_down
+
+# Validate
+npm run validate:effects -- --mod=positioning
+```
+
+### 3. Validation Integration
+
+Add to CI/CD:
 ```yaml
-- name: Validate Effects
+- name: Validate GOAP Effects
   run: |
-    npm run generate:effects
     npm run validate:effects -- --report=effects-validation.json
-    # Fail if errors > 0
     if [ $(jq '.summary.errors' effects-validation.json) -gt 0 ]; then
-      echo "Effects validation failed"
       exit 1
     fi
 ```
 
-## Troubleshooting
+### 4. Review Generated Effects
 
-### Generation Fails
+- Verify effects match intended behavior
+- Check entity references (actor/target/tertiary_target)
+- Ensure component IDs are correctly namespaced
+- Validate cost is reasonable (typically 1.0-2.0 for simple actions)
 
-**Problem**: `npm run generate:effects` fails with error
+### 5. Documentation
 
-**Possible Causes:**
-1. Missing or invalid rule file
-2. Invalid rule operations
-3. Schema validation failure
+When creating actions with complex effects:
+- Document abstract preconditions in rule comments
+- Explain simulation strategy choices
+- Note any edge cases in conditional effects
 
-**Solutions:**
-1. Check rule file exists and has correct naming convention
-2. Validate rule JSON structure
-3. Run schema validation: `npm run validate`
+## Testing
 
-### No Effects Generated
+### Integration Tests
 
-**Problem**: Generation succeeds but no effects in action file
+**Location:** `tests/integration/goap/effectsGeneration.integration.test.js`
 
-**Possible Causes:**
-1. Rule not found (naming mismatch)
-2. Rule has no state-changing operations
-3. All operations are excluded (e.g., only DISPATCH_EVENT)
+Tests verify:
+- Rule operations convert to correct effects
+- Conditional branches generate CONDITIONAL effects
+- Schema validation passes
 
-**Solutions:**
-1. Verify rule name matches convention: `{modId}:handle_{actionName}`
-2. Check rule operations include state-changing operations
-3. Review [operation mapping](./operation-mapping.md) for state-changing operations
+### E2E Tests
 
-### Validation Always Fails
+**Location:** `tests/e2e/goap/PlanningEffectsMatchRuleExecution.e2e.test.js`
 
-**Problem**: Validation reports errors even after regeneration
-
-**Possible Causes:**
-1. Manual edits to action file after generation
-2. Rule operations changed after generation
-3. Bug in effects analyzer
-
-**Solutions:**
-1. Backup action file, delete `planningEffects`, regenerate
-2. Ensure rule operations are correct
-3. Report issue with minimal reproduction case
-
-## Best Practices
-
-### 1. Always Regenerate After Rule Changes
-
-Whenever you modify rule operations, regenerate effects:
-
-```bash
-# After editing rule
-npm run generate:effects -- --action={mod}:{action}
-npm run validate:effects -- --action={mod}:{action}
-```
-
-### 2. Validate Before Committing
-
-Add pre-commit hook:
-
-```bash
-#!/bin/bash
-# .git/hooks/pre-commit
-npm run validate:effects || exit 1
-```
-
-### 3. Review Generated Effects
-
-Don't blindly accept generated effects. Review them to ensure they make sense:
-
-- Do effects match intended action behavior?
-- Are costs reasonable?
-- Are abstract preconditions necessary?
-
-### 4. Keep Actions and Rules in Sync
-
-Maintain 1:1 relationship between actions and rules when possible:
-- Action: `{mod}:{action_name}`
-- Rule: `{mod}:handle_{action_name}`
-
-### 5. Use Validation Reports for Tracking
-
-Generate reports before and after changes:
-
-```bash
-npm run validate:effects -- --report=before.json
-# Make changes
-npm run generate:effects
-npm run validate:effects -- --report=after.json
-# Compare reports
-```
-
-## Advanced Usage
-
-### Custom Validation Scripts
-
-Create custom validation scripts for specific needs:
-
-```javascript
-// scripts/validate-critical-actions.js
-import { effectsValidator, dataRegistry } from './setup.js';
-
-const criticalActions = ['combat:attack', 'items:give_item'];
-
-for (const actionId of criticalActions) {
-  const result = await effectsValidator.validateAction(actionId);
-  if (!result.valid) {
-    console.error(`Critical action ${actionId} has invalid effects!`);
-    process.exit(1);
-  }
-}
-```
-
-### Batch Processing with Filtering
-
-Generate effects only for actions matching criteria:
-
-```javascript
-// scripts/generate-combat-effects.js
-const actions = dataRegistry.getAll('actions');
-const combatActions = actions.filter(a => a.id.startsWith('combat:'));
-
-for (const action of combatActions) {
-  const effects = effectsGenerator.generateForAction(action.id);
-  // Process effects...
-}
-```
+Tests prove:
+- Planning effects accurately predict actual execution
+- ADD_COMPONENT, REMOVE_COMPONENT, MODIFY_COMPONENT effects work
+- Conditional effects evaluate correctly during simulation
+- No unexpected state changes occur beyond declared effects
 
 ## Related Documentation
 
-- [GOAP System Overview](./README.md)
-- [Effects Analyzer Architecture](./effects-analyzer-architecture.md)
-- [Effects Generator Usage](./effects-generator-usage.md)
-- [Operation Mapping](./operation-mapping.md)
-
-## Support
-
-For issues or questions:
-- Check existing documentation in `docs/goap/`
-- Review test examples in `tests/unit/goap/` and `tests/integration/goap/`
-- Open a GitHub issue with the `goap` label
+- [GOAP System Overview](./README.md) - Architecture and concepts
+- [Effects Analyzer Architecture](./effects-analyzer-architecture.md) - Technical deep dive
+- [Operation Mapping](./operation-mapping.md) - Complete operation → effect mapping
+- [Abstract Preconditions](./abstract-preconditions.md) - Runtime condition handling
