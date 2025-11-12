@@ -4,7 +4,7 @@ import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
 import { resolveConditionRefs } from '../utils/conditionRefResolver.js';
-import { isTestEnvironment } from '../utils/environmentUtils.js';
+import * as environmentUtils from '../utils/environmentUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -457,7 +457,7 @@ class JsonLogicEvaluationService extends BaseService {
         const [op] = Object.keys(resolvedRule);
         const args = resolvedRule[op];
 
-        const isTestEnv = isTestEnvironment();
+        const isTestEnv = environmentUtils.isTestEnvironment();
         if (
           (op === 'and' || op === 'or') &&
           Array.isArray(args) &&
@@ -495,6 +495,8 @@ class JsonLogicEvaluationService extends BaseService {
   addOperation(name, func) {
     try {
       jsonLogic.add_operation(name, func);
+      // Add to allowed operations to pass validation
+      this.#allowedOperations.add(name);
       this.#logger.debug(
         `Custom JSON Logic operation "${name}" added successfully.`
       );
@@ -515,6 +517,8 @@ class JsonLogicEvaluationService extends BaseService {
   removeOperation(name) {
     try {
       jsonLogic.rm_operation(name);
+      // Remove from allowed operations
+      this.#allowedOperations.delete(name);
       this.#logger.debug(
         `Custom JSON Logic operation "${name}" removed successfully.`
       );
