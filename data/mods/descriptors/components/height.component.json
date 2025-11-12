@@ -26,5 +26,18 @@
     },
     "required": ["height"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid height: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Height is required",
+      "invalidType": "Invalid type for height: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
