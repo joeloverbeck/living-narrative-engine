@@ -1066,7 +1066,10 @@ class RecipePreflightValidator {
         );
 
         if (componentValidationMatch) {
-          const failedComponents = componentValidationMatch[1].split(', ');
+          const failedComponents = componentValidationMatch[1]
+            .split(', ')
+            .map((component) => component.trim())
+            .filter(Boolean);
 
           // Try to extract more details about the validation errors
           const validationDetails = this.#extractComponentValidationDetails(
@@ -1087,7 +1090,7 @@ class RecipePreflightValidator {
             },
             fix: validationDetails.length > 0
               ? `Fix validation errors:\n    ${validationDetails.map(d => `${d.component}: ${d.issue}`).join('\n    ')}`
-              : `Check component values in ${filename} for: ${failedComponents.join(', ')}`,
+              : `Check component values in ${filename} for: ${failedComponents.join(', ') || 'unknown components'}`,
           });
         } else {
           // Generic load failure

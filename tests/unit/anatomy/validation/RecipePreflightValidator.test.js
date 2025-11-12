@@ -1792,6 +1792,206 @@ describe('RecipePreflightValidator', () => {
       // Restore
       mockLogger.error = originalError;
     });
+
+    it('should record validation error when body descriptor check throws', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const descriptorError = new Error('registry failure');
+      mockDataRegistry.get = jest.fn((collection, id) => {
+        if (collection === 'components' && id === 'anatomy:body') {
+          throw descriptorError;
+        }
+        if (collection === 'anatomyStructureTemplates') {
+          return undefined;
+        }
+        return undefined;
+      });
+      mockDataRegistry.getAll = jest.fn(() => []);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        additionalSlots: {},
+      }));
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: { size: 'medium' },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        failFast: false,
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Body descriptors check failed',
+        descriptorError
+      );
+      expect(report.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'VALIDATION_ERROR',
+            check: 'body_descriptors',
+            message: 'Failed to validate body descriptors',
+            error: descriptorError.message,
+          }),
+        ])
+      );
+    });
+
+    it('should continue when preferred entity descriptor lookup fails', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const lookupError = new Error('descriptor lookup failure');
+      mockDataRegistry.get = jest.fn((collection, id) => {
+        if (collection === 'components' && id === 'anatomy:body') {
+          return {
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: { properties: {} },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      });
+      mockDataRegistry.getAll = jest.fn(() => {
+        throw lookupError;
+      });
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        additionalSlots: {},
+      }));
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {
+          torso: {
+            preferId: 'anatomy:missing_torso',
+            tags: [],
+            properties: {},
+          },
+        },
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to check descriptors for preferred entity 'anatomy:missing_torso'",
+        lookupError
+      );
+      expect(report.suggestions.length).toBeGreaterThan(0);
+      expect(
+        report.suggestions.some(
+          (suggestion) => suggestion.location?.name === 'torso'
+        )
+      ).toBe(true);
+    });
+
+    it('should log an error when recipe usage inspection fails', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockDataRegistry.get = jest.fn((collection, id) => {
+        if (collection === 'components' && id === 'anatomy:body') {
+          return {
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: { properties: {} },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      });
+
+      const usageError = new Error('recipe usage registry failure');
+      mockDataRegistry.getAll = jest.fn((collection) => {
+        if (collection === 'entityDefinitions') {
+          throw usageError;
+        }
+        return [];
+      });
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        additionalSlots: {},
+      }));
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+      });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Recipe usage check failed',
+        usageError
+      );
+      expect(
+        report.warnings.some((warning) => warning.type === 'RECIPE_UNUSED')
+      ).toBe(false);
+    });
   });
 
   describe('Entity definition load failure diagnostics', () => {
@@ -1900,6 +2100,70 @@ describe('RecipePreflightValidator', () => {
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Found 3 entity definition load failures')
+      );
+    });
+
+    it('should provide generic fix guidance when component details are unavailable', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      const loadFailures = {
+        entityDefinitions: {
+          failures: [
+            {
+              file: 'anatomy/entities/empty.entity.json',
+              error: new Error('Invalid components: []'),
+            },
+          ],
+        },
+      };
+
+      const validatorWithEmptyComponents = new RecipePreflightValidator({
+        dataRegistry: mockDataRegistry,
+        anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
+        schemaValidator: mockSchemaValidator,
+        slotGenerator: mockSlotGenerator,
+        logger: mockLogger,
+        loadFailures,
+      });
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.getAll = jest.fn(() => []);
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validatorWithEmptyComponents.validate(recipe, {
+        skipPatternValidation: true,
+        skipDescriptorChecks: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+      });
+
+      const genericError = report.errors.find(
+        (error) => error.details?.file === 'anatomy/entities/empty.entity.json'
+      );
+      expect(genericError).toBeDefined();
+      expect(genericError.details.validationDetails).toEqual([]);
+      expect(genericError.fix).toBe(
+        'Check component values in anatomy/entities/empty.entity.json for: unknown components'
       );
     });
 
