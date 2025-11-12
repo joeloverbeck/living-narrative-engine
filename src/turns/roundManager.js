@@ -1,16 +1,26 @@
 import { ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
+import { ROUND_STARTED_ID } from '../constants/eventIds.js';
 
 export default class RoundManager {
   #turnOrderService;
   #entityManager;
   #logger;
+  #dispatcher;
   #inProgress = false;
   #hadSuccess = false;
+  #roundNumber = 0;
 
-  constructor(turnOrderService, entityManager, logger) {
+  constructor(turnOrderService, entityManager, logger, dispatcher) {
     this.#turnOrderService = turnOrderService;
     this.#entityManager = entityManager;
     this.#logger = logger;
+
+    if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
+      throw new Error(
+        'RoundManager requires a valid dispatcher with dispatch method'
+      );
+    }
+    this.#dispatcher = dispatcher;
   }
 
   /**
@@ -28,6 +38,10 @@ export default class RoundManager {
     // the turn order service. Reset the flag eagerly so callers never observe a
     // stale "in progress" state when this method throws before completion.
     this.#inProgress = false;
+
+    // Increment round number at the start of each round
+    this.#roundNumber++;
+    this.#logger.debug(`Starting round ${this.#roundNumber}`);
 
     let strategy;
     let initiativeData;
@@ -125,6 +139,13 @@ export default class RoundManager {
     this.#hadSuccess = false;
     this.#inProgress = true;
 
+    // Dispatch round started event for UI components (e.g., turn order ticker)
+    this.#dispatcher.dispatch(ROUND_STARTED_ID, {
+      roundNumber: this.#roundNumber,
+      actors: actorIds,
+      strategy: strategy,
+    });
+
     this.#logger.debug(
       `Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`
     );
@@ -147,6 +168,7 @@ export default class RoundManager {
   resetFlags() {
     this.#inProgress = false;
     this.#hadSuccess = false;
+    this.#roundNumber = 0;
   }
 
   /**

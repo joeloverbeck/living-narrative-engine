@@ -52,12 +52,21 @@ describe('RoundManager integration with real turn order service', () => {
   let turnOrderService;
   /** @type {RoundManager} */
   let roundManager;
+  let mockDispatcher;
 
   beforeEach(() => {
     logger = new CapturingLogger();
     entityManager = new SimpleEntityManager();
     turnOrderService = new TurnOrderService({ logger });
-    roundManager = new RoundManager(turnOrderService, entityManager, logger);
+    mockDispatcher = {
+      dispatch: jest.fn(),
+    };
+    roundManager = new RoundManager(
+      turnOrderService,
+      entityManager,
+      logger,
+      mockDispatcher
+    );
   });
 
   it('normalises complex initiative Maps supplied via options object and starts an initiative round', async () => {
