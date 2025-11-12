@@ -129,5 +129,18 @@
         }
       }
     }
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
