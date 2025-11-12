@@ -48,14 +48,14 @@ describe('GOAP E2E: Goblin Combat', () => {
 
     // Assert: Goblin should make a decision
     expect(decision).toBeDefined();
-    expect(decision).toHaveProperty('index');
+    expect(decision).toHaveProperty('chosenIndex');
 
     // If decision was made, verify it's valid
-    if (decision.index !== null) {
-      expect(typeof decision.index).toBe('number');
-      expect(decision.index).toBeGreaterThanOrEqual(1);
+    if (decision.chosenIndex !== null) {
+      expect(typeof decision.chosenIndex).toBe('number');
+      expect(decision.chosenIndex).toBeGreaterThanOrEqual(1);
 
-      const selectedAction = actions[decision.index - 1];
+      const selectedAction = actions[decision.chosenIndex - 1];
       expect(selectedAction).toBeDefined();
       expect(selectedAction).toHaveProperty('actionId');
     }
@@ -88,11 +88,11 @@ describe('GOAP E2E: Goblin Combat', () => {
 
     // Assert: Decision should be made
     expect(decision).toBeDefined();
-    expect(decision).toHaveProperty('index');
+    expect(decision).toHaveProperty('chosenIndex');
 
     // Goblin may pick up weapon or perform other action
-    if (decision.index !== null) {
-      const selectedAction = actions[decision.index - 1];
+    if (decision.chosenIndex !== null) {
+      const selectedAction = actions[decision.chosenIndex - 1];
       expect(selectedAction).toBeDefined();
     }
   }, 30000);
@@ -115,6 +115,6 @@ describe('GOAP E2E: Goblin Combat', () => {
 
     // Assert: May return null if no relevant goals
     expect(decision).toBeDefined();
-    expect(decision).toHaveProperty('index');
+    expect(decision).toHaveProperty('chosenIndex');
   }, 30000);
 });

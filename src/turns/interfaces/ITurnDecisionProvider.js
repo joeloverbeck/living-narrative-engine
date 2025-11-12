@@ -3,7 +3,7 @@
  * @typedef {import('./ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../dtos/actionComposite.js').ActionComposite} ActionComposite
  * @typedef {object} ITurnDecisionResult
- * @property {number}        chosenIndex  - 1-based selection index
+ * @property {number|null}   chosenIndex  - 1-based selection index, or null if no decision could be made
  * @property {string|null}   speech       - Optional speech the actor utters
  * @property {string|null}   thoughts     - Optional internal monologue
  * @property {Array<{text: string, subject: string, context?: string, timestamp?: string}>|null} notes        - Optional structured notes
