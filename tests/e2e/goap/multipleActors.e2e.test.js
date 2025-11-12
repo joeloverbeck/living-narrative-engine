@@ -62,18 +62,14 @@ describe('GOAP E2E: Multiple Actors', () => {
       const context = testBed.createContext({ actorId: actor.id });
       const actions = await testBed.getAvailableActions(actor);
 
-      // GOAP may return null index when no goals can be satisfied
-      // This will throw from assertValidActionIndex - catch and handle
-      try {
-        const decision = await testBed.makeGoapDecision(actor, context, actions);
-        decisions.push(decision);
-        expect(decision).toBeDefined();
-        expect(decision).toHaveProperty('chosenIndex');
-      } catch (error) {
-        // Expected when no satisfiable goals exist
-        expect(error.message).toContain('Could not resolve the chosen action');
-        decisions.push({ chosenIndex: null, error: true });
-      }
+      const decision = await testBed.makeGoapDecision(actor, context, actions);
+      decisions.push(decision);
+
+      expect(decision).toBeDefined();
+      expect(decision).toHaveProperty('chosenIndex', null);
+      expect(decision.speech).toBeNull();
+      expect(decision.thoughts).toBeNull();
+      expect(decision.notes).toBeNull();
     }
 
     const duration = Date.now() - startTime;
@@ -99,34 +95,44 @@ describe('GOAP E2E: Multiple Actors', () => {
       const context = testBed.createContext({ actorId: actor.id });
       const actions = await testBed.getAvailableActions(actor);
 
-      // Should throw when no relevant goals exist
-      await expect(
-        testBed.makeGoapDecision(actor, context, actions)
-      ).rejects.toThrow('Could not resolve the chosen action');
+      const decision = await testBed.makeGoapDecision(actor, context, actions);
+
+      expect(decision).toEqual({
+        chosenIndex: null,
+        speech: null,
+        thoughts: null,
+        notes: null,
+      });
     }
   }, 30000);
 
-  it('should cache plans across turns for same actor', async () => {
+  it('should reuse cached plans across turns for same actor', async () => {
     // Create actor
     const actor = await testBed.createActor({
       name: 'TestActor',
       type: 'goap',
-      components: { 'core:actor': { hunger: 20 } },
     });
 
     const context = testBed.createContext({ actorId: actor.id });
     const actions = await testBed.getAvailableActions(actor);
 
-    // Both decisions should fail the same way (no satisfiable goals)
-    await expect(
-      testBed.makeGoapDecision(actor, context, actions)
-    ).rejects.toThrow('Could not resolve the chosen action');
+    // Seed plan cache with a precomputed plan to simulate previous turn planning
+    const actionForPlan = { ...actions[0], id: actions[0].actionId };
+    const goal = { id: 'test:cached_goal' };
+    const cachedPlan = testBed.simplePlanner.createPlan(actionForPlan, goal);
+    testBed.planCache.set(actor.id, cachedPlan);
 
-    await expect(
-      testBed.makeGoapDecision(actor, context, actions)
-    ).rejects.toThrow('Could not resolve the chosen action');
+    const decision1 = await testBed.makeGoapDecision(actor, context, actions);
+    expect(decision1.chosenIndex).toBe(actions[0].index);
+    expect(testBed.planCache.has(actor.id)).toBe(true);
 
-    // This test should be updated when proper goal/action setup allows successful planning
+    const decision2 = await testBed.makeGoapDecision(actor, context, actions);
+    expect(decision2.chosenIndex).toBe(actions[0].index);
+
+    // Confirm cached plan remains available
+    const persistedPlan = testBed.planCache.get(actor.id);
+    expect(persistedPlan).not.toBeNull();
+    expect(persistedPlan.goalId).toBe(goal.id);
   }, 30000);
 
   it('should invalidate cache when actor state changes', async () => {
@@ -134,27 +140,26 @@ describe('GOAP E2E: Multiple Actors', () => {
     const actor = await testBed.createActor({
       name: 'TestActor',
       type: 'goap',
-      components: { 'core:actor': { hunger: 20 } },
     });
 
     const context = testBed.createContext({ actorId: actor.id });
     const actions = await testBed.getAvailableActions(actor);
 
-    // First decision - should fail (no satisfiable goals)
-    await expect(
-      testBed.makeGoapDecision(actor, context, actions)
-    ).rejects.toThrow('Could not resolve the chosen action');
+    // Seed cache with plan for the available action
+    const actionForPlan = { ...actions[0], id: actions[0].actionId };
+    const goal = { id: 'test:cached_goal' };
+    const cachedPlan = testBed.simplePlanner.createPlan(actionForPlan, goal);
+    testBed.planCache.set(actor.id, cachedPlan);
 
-    // Invalidate cache to test cache invalidation mechanism
+    const decision1 = await testBed.makeGoapDecision(actor, context, actions);
+    expect(decision1.chosenIndex).toBe(actions[0].index);
+    expect(testBed.planCache.has(actor.id)).toBe(true);
+
+    // Invalidate cache to simulate actor state change requiring replanning
     testBed.planCache.invalidate(actor.id);
+    expect(testBed.planCache.has(actor.id)).toBe(false);
 
-    // Second decision - should still fail (same conditions)
-    const actions2 = await testBed.getAvailableActions(actor);
-    await expect(
-      testBed.makeGoapDecision(actor, context, actions2)
-    ).rejects.toThrow('Could not resolve the chosen action');
-
-    // This test validates that cache invalidation doesn't crash
-    // It should be updated when proper goal/action setup is implemented
+    const decision2 = await testBed.makeGoapDecision(actor, context, actions);
+    expect(decision2.chosenIndex).toBeNull();
   }, 30000);
 });
