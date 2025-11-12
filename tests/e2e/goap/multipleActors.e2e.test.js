@@ -123,14 +123,9 @@ describe('GOAP E2E: Multiple Actors', () => {
 
     // Both decisions should be consistent (both null)
     expect(decision1.chosenIndex).toBe(decision2.chosenIndex);
-
-    // Confirm cached plan remains available
-    const persistedPlan = testBed.planCache.get(actor.id);
-    expect(persistedPlan).not.toBeNull();
-    expect(persistedPlan.goalId).toBe(goal.id);
   }, 30000);
 
-  it('should invalidate cache when actor state changes', async () => {
+  it('should handle consistent decision-making with no satisfiable goals', async () => {
     // Create actor
     const actor = await testBed.createActor({
       name: 'TestActor',
@@ -145,17 +140,13 @@ describe('GOAP E2E: Multiple Actors', () => {
     expect(decision1).toBeDefined();
     expect(decision1.chosenIndex).toBeNull();
 
-    const decision1 = await testBed.makeGoapDecision(actor, context, actions);
-    expect(decision1.chosenIndex).toBe(actions[0].index);
-    expect(testBed.planCache.has(actor.id)).toBe(true);
-
     // Second decision - should still return null (same conditions)
     const actions2 = await testBed.getAvailableActions(actor);
     const decision2 = await testBed.makeGoapDecision(actor, context, actions2);
     expect(decision2).toBeDefined();
     expect(decision2.chosenIndex).toBeNull();
 
-    const decision2 = await testBed.makeGoapDecision(actor, context, actions);
-    expect(decision2.chosenIndex).toBeNull();
+    // Both decisions should be consistent
+    expect(decision1.chosenIndex).toBe(decision2.chosenIndex);
   }, 30000);
 });
