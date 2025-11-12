@@ -31,10 +31,10 @@ export function createEntityContext(entityId, entityManager, logger) {
 }
 
 /**
- * Populates either the `actor` or `target` field on the provided evaluation
- * context by retrieving the entity and creating a component accessor.
+ * Populates a participant field (actor, target, or multi-target keys) on the
+ * provided evaluation context by retrieving the entity and creating a component accessor.
  *
- * @param {'actor' | 'target'} fieldName - Which field to populate on the
+ * @param {'actor' | 'target' | 'primary' | 'secondary' | 'tertiary'} fieldName - Which field to populate on the
  *   evaluation context.
  * @param {EntityId} entityId - Identifier of the entity to retrieve.
  * @param {JsonLogicEvaluationContext} evaluationContext - Context object being
