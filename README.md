@@ -779,11 +779,11 @@ This tool can be integrated into your CI/CD pipeline to automatically validate b
 **Documentation:**
 
 - [Body Descriptors Complete](docs/anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
-- [Anatomy System Guide](docs/anatomy/anatomy-system-guide.md) - System architecture and design
-- [Blueprints and Templates](docs/anatomy/blueprints-and-templates.md) - Blueprint V2 and structure templates
-- [Recipe Pattern Matching](docs/anatomy/recipe-pattern-matching.md) - Pattern matching reference
-- [Non-Human Quickstart](docs/anatomy/non-human-quickstart.md) - End-to-end tutorial
-- [Troubleshooting](docs/anatomy/troubleshooting.md) - Common issues and solutions
+- [Anatomy System Guide](docs/anatomy/anatomy-system-guide.md) - System architecture, design, and validation pipeline
+- [Blueprints and Recipes Guide](docs/anatomy/blueprints-and-recipes.md) - Blueprint V2, structure templates, and recipe patterns
+- [Non-Human Quickstart](docs/anatomy/non-human-quickstart.md) - End-to-end tutorial for creating creatures
+- [Troubleshooting](docs/anatomy/troubleshooting.md) - Error catalog and symptom-based debugging
+- [Anatomy Testing Guide](docs/anatomy/anatomy-testing-guide.md) - Testing patterns and workflows
 
 ## 🎨 Visual Customization
 

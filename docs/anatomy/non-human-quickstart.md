@@ -319,6 +319,5 @@ Load the mod and instantiate this entity (or run the anatomy integration tests) 
 
 ## Further Reading
 
-- [Blueprints and Templates](./blueprints-and-templates.md) – Deep dive into structure templates and slot generation.
-- [Recipe Pattern Matching](./recipe-pattern-matching.md) – Complete pattern reference and debugging advice.
+- [Blueprints and Recipes Guide](./blueprints-and-recipes.md) – Complete guide to blueprints, structure templates, and recipe patterns.
 - [Anatomy Development Guide](../development/anatomy-development-guide.md) – Broader workflow coverage for anatomy authoring.

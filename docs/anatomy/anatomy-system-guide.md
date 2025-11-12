@@ -9,15 +9,16 @@ This guide captures the current shape of the Living Narrative Engine anatomy sta
 3. [Core Architecture](#core-architecture)
 4. [Generation Pipeline](#generation-pipeline)
 5. [Shared Orientation Logic](#shared-orientation-logic)
-6. [Event-Driven Integration](#event-driven-integration)
-7. [Key Services](#key-services)
-8. [Data Flow Snapshot](#data-flow-snapshot)
-9. [Caching Strategy](#caching-strategy)
-10. [Body Descriptor Registry](#body-descriptor-registry)
-11. [Extension Points](#extension-points)
-12. [Performance Notes](#performance-notes)
-13. [Historical Context](#historical-context)
-14. [Related Documentation](#related-documentation)
+6. [Validation Pipeline](#validation-pipeline)
+7. [Event-Driven Integration](#event-driven-integration)
+8. [Key Services](#key-services)
+9. [Data Flow Snapshot](#data-flow-snapshot)
+10. [Caching Strategy](#caching-strategy)
+11. [Body Descriptor Registry](#body-descriptor-registry)
+12. [Extension Points](#extension-points)
+13. [Performance Notes](#performance-notes)
+14. [Historical Context](#historical-context)
+15. [Related Documentation](#related-documentation)
 
 ## System Overview
 
@@ -113,6 +114,63 @@ Each stage short-circuits if its dependencies are missing, so older call sites c
 
 `OrientationResolver` (`src/anatomy/shared/orientationResolver.js`) is the single source of truth for slot and socket orientation naming. It supports `bilateral`, `quadrupedal`, `radial`, `indexed`, and `custom` schemes and always returns deterministic strings. Both generators import it directly, removing the historical divergence that previously caused slot/socket mismatches.
 
+## Validation Pipeline
+
+The anatomy system validates content across four stages, from schema load through runtime graph checks:
+
+### Stage 1: Schema Validation
+
+- **Implementation**: `AjvSchemaValidator.validate(schemaId, data)` in `src/validation/ajvSchemaValidator.js`
+- **Coverage**: Anatomy schemas for recipes, blueprints, structure templates, and related JSON definitions under `data/schemas/`
+- **When it runs**: During mod loading pipeline's schema phase and via `npm run validate:recipe`
+
+### Stage 2: Recipe Pre-flight Validation
+
+`RecipePreflightValidator` (`src/anatomy/validation/RecipePreflightValidator.js`) chains eleven checks:
+
+1. **Component existence** – Confirms every referenced component is registered
+2. **Property schemas** – Validates component property payloads
+3. **Body descriptor fields** – Cross-checks descriptor keys and enums against the `anatomy:body` component schema
+4. **Blueprint existence** – Ensures the referenced blueprint can be resolved
+5. **Socket compatibility** – Confirms blueprint `additionalSlots` reference existing sockets on the root entity
+6. **Pattern dry run** – Resolves patterns against processed blueprint to warn when expressions match nothing
+7. **Descriptor coverage** – Highlights slots without descriptor components
+8. **Explicit part availability** – Verifies entity definitions exist for every explicit slot and pattern requirement
+9. **Generated slot availability** – Simulates pattern expansion and checks for matching entity definitions
+10. **Entity load failures** – Surfaces loaders' recorded entity-definition failures
+11. **Recipe usage hint** – Warns when no entity definition references the recipe ID
+
+Run via: `npm run validate:recipe [--verbose|--json] <path>`
+
+### Stage 3: Runtime Generation Validation
+
+- **Blueprint slot enforcement**: `validateRecipeSlots` throws when a recipe declares slots that the blueprint does not define
+- **Graph integrity**: After graph construction, `GraphIntegrityValidator` runs six rule classes:
+  - Socket limits
+  - Recipe constraints
+  - Cycle detection
+  - Joint completeness
+  - Orphan detection
+  - Part-type compatibility
+- **Location**: `src/anatomy/bodyBlueprintFactory/blueprintValidator.js` and `src/anatomy/graphIntegrityValidator.js`
+
+### Stage 4: Body Descriptor Consistency
+
+- **Runtime enforcement**: `BodyDescriptorValidator.validate(...)` (`src/anatomy/utils/bodyDescriptorValidator.js`) rejects unknown descriptor keys and invalid enum values
+- **Loader checks**: `src/anatomy/validators/bodyDescriptorValidator.js` powers both `AnatomyRecipeLoader` and the CLI script
+- **CLI**: `npm run validate:body-descriptors` verifies formatting configuration
+
+### Descriptor Registry Quick Reference
+
+| Descriptor | Display key | Type | Valid values |
+| --- | --- | --- | --- |
+| `height` | `height` | Enumerated | microscopic, minuscule, tiny, petite, short, average, tall, very-tall, gigantic, colossal, titanic |
+| `skinColor` | `skin_color` | Free-form | Any string |
+| `build` | `build` | Enumerated | skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky, frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky |
+| `composition` | `body_composition` | Enumerated | underweight, lean, average, soft, chubby, overweight, obese, atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting |
+| `hairDensity` | `body_hair` | Enumerated | hairless, sparse, light, moderate, hairy, very-hairy, furred |
+| `smell` | `smell` | Free-form | Any string |
+
 ## Event-Driven Integration
 
 - **Dispatcher**: `eventPublicationStage.js`
@@ -200,13 +258,13 @@ Helpers `getDescriptorMetadata()`, `getAllDescriptorNames()`, `getDescriptorsByD
 - **Orientation Schemes**
   1. Update `src/anatomy/shared/orientationResolver.js`
   2. Extend any schema validation (e.g., `data/schemas/anatomy.structure-template.schema.json`)
-  3. Document the new scheme in `docs/anatomy/blueprints-and-templates.md`
+  3. Document the new scheme in `docs/anatomy/blueprints-and-recipes.md`
 
 - **Pattern Matchers**
   1. Add matcher/validator modules under `src/anatomy/recipePatternResolver/matchers/` and `validators/`
   2. Register them in `patternResolver.js`
   3. Extend schemas like `data/schemas/anatomy.recipe.schema.json`
-  4. Update `docs/anatomy/recipe-pattern-matching.md`
+  4. Update `docs/anatomy/blueprints-and-recipes.md`
 
 - **Event Subscribers**
 
@@ -236,8 +294,7 @@ These refactors are reflected directly in the file layout cited above.
 
 ## Related Documentation
 
-- [Blueprints and Templates](./blueprints-and-templates.md)
-- [Recipe Pattern Matching](./recipe-pattern-matching.md)
+- [Blueprints and Recipes Guide](./blueprints-and-recipes.md)
 - [Body Descriptors Complete](./body-descriptors-complete.md)
 - [Non-Human Quickstart](./non-human-quickstart.md)
 - [Troubleshooting](./troubleshooting.md)

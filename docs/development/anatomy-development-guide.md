@@ -342,7 +342,7 @@ describe('OrientationResolver - myNewScheme', () => {
 
 4. Add contract tests for SlotGenerator ↔ SocketGenerator synchronization
 
-5. Document in [Blueprints and Templates Guide](../anatomy/blueprints-and-templates.md)
+5. Document in [Blueprints and Recipes Guide](../anatomy/blueprints-and-recipes.md)
 
 ### Adding a New Pattern Matcher
 
@@ -373,7 +373,7 @@ async resolve(blueprint, recipe) {
 
 4. Add tests for new matcher
 
-5. Document in [Recipe Pattern Matching Guide](../anatomy/recipe-pattern-matching.md)
+5. Document in [Blueprints and Recipes Guide](../anatomy/blueprints-and-recipes.md)
 
 ### Subscribing to Anatomy Events
 
@@ -691,13 +691,12 @@ Checks:
 
 ### Documentation
 
-- [Anatomy System Guide](../anatomy/anatomy-system-guide.md) - System overview and architecture
-- [Blueprints and Templates](../anatomy/blueprints-and-templates.md) - Blueprint V2 and structure templates
-- [Recipe Pattern Matching](../anatomy/recipe-pattern-matching.md) - Pattern matching reference
+- [Anatomy System Guide](../anatomy/anatomy-system-guide.md) - System overview, architecture, and validation pipeline
+- [Blueprints and Recipes Guide](../anatomy/blueprints-and-recipes.md) - Blueprint V2, structure templates, and recipe patterns
 - [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Body descriptor system
 - [Non-Human Quickstart](../anatomy/non-human-quickstart.md) - End-to-end tutorial
-- [Troubleshooting](../anatomy/troubleshooting.md) - Common issues and solutions
-- [Testing Guide](../testing/anatomy-testing-guide.md) - Testing patterns
+- [Troubleshooting](../anatomy/troubleshooting.md) - Error catalog and symptom-based debugging
+- [Anatomy Testing Guide](../anatomy/anatomy-testing-guide.md) - Testing patterns and workflows
 
 ### Code References
 
