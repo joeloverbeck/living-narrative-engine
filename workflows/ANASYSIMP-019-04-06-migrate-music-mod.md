@@ -2,19 +2,25 @@
 
 **Parent:** ANASYSIMP-019-04 (Migrate Components to Use ValidationRules)
 **Phase:** 2 (Batch Migration - Priority 5)
-**Timeline:** 8 minutes
+**Timeline:** 5 minutes (reduced from 8 - only 1 component needs migration)
 **Status:** Not Started
 **Dependencies:** ANASYSIMP-019-04-05
+**Note:** Corrected after codebase validation - only 1 of 3 components has enum properties
 
 ## Overview
 
-Migrate 3 component schemas in the music mod to use the new `validationRules` feature. This is the fifth priority batch with music system components.
+Migrate 1 component schema in the music mod to use the new `validationRules` feature. This is the fifth priority batch with music system components.
+
+**Note:** Only 1 of the 3 original music mod components can be migrated. The other 2 components (playing_music, is_instrument) have no enum properties and do not require validationRules.
 
 ## Components to Migrate
 
-1. **performance_mood** - Mood/tone of musical performance
-2. **playing_music** - Music playing state and properties
-3. **is_instrument** - Instrument classification and properties
+1. **performance_mood** - Mood/tone of musical performance (HAS ENUMS - can migrate)
+
+## Components NOT Requiring Migration
+
+2. **playing_music** - Uses entity ID pattern validation, not enums (no migration needed)
+3. **is_instrument** - Marker component with no properties (no migration needed)
 
 **Location:** `data/mods/music/components/*.component.json`
 
@@ -66,7 +72,7 @@ done
 **File:** `data/mods/music/components/performance_mood.component.json`
 
 **Expected Enum Values:**
-- Moods: "upbeat", "melancholic", "energetic", "calm", "dramatic", "mysterious"
+- Moods: "cheerful", "solemn", "mournful", "eerie", "tense", "triumphant", "tender", "playful", "aggressive", "meditative"
 
 **Example ValidationRules:**
 ```json
@@ -87,59 +93,34 @@ done
 }
 ```
 
-#### Component: playing_music
+#### Component: playing_music (SKIPPED - No enum properties)
 
 **File:** `data/mods/music/components/playing_music.component.json`
 
-**Expected Enum Values:**
-- Playing states: "playing", "paused", "stopped", "rehearsing"
-- Performance types: "solo", "ensemble", "accompaniment"
+**Reason for Skipping:**
+This component has no enum properties. It only contains:
+- `playing_on` (string): Entity ID with pattern validation
+- `activityMetadata` (object): Activity description metadata
 
-**Example ValidationRules:**
-```json
-{
-  "validationRules": {
-    "generateValidator": true,
-    "errorMessages": {
-      "invalidEnum": "Invalid music state: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Music state is required",
-      "invalidType": "Invalid type for music: expected {{expected}}, got {{actual}}"
-    },
-    "suggestions": {
-      "enableSimilarity": true,
-      "maxDistance": 3,
-      "maxSuggestions": 3
-    }
-  }
-}
-```
+**No migration needed** - component uses entity ID pattern validation, not enum validation.
 
-#### Component: is_instrument
+#### Component: is_instrument (SKIPPED - Marker component)
 
 **File:** `data/mods/music/components/is_instrument.component.json`
 
-**Expected Enum Values:**
-- Instrument types: "string", "wind", "percussion", "keyboard", "brass"
-- Instrument categories: "melodic", "rhythmic", "harmonic"
-
-**Example ValidationRules:**
+**Reason for Skipping:**
+This is a marker component with an empty properties object:
 ```json
 {
-  "validationRules": {
-    "generateValidator": true,
-    "errorMessages": {
-      "invalidEnum": "Invalid instrument type: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Instrument type is required",
-      "invalidType": "Invalid type for instrument: expected {{expected}}, got {{actual}}"
-    },
-    "suggestions": {
-      "enableSimilarity": true,
-      "maxDistance": 3,
-      "maxSuggestions": 3
-    }
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
   }
 }
 ```
+
+**No migration needed** - marker components have no data to validate.
 
 ### Step 3: Validate After Each Component
 
@@ -155,14 +136,14 @@ echo $?  # Should be 0
 
 ```bash
 # Stage changes
-git add data/mods/music/components/*.component.json
+git add data/mods/music/components/performance_mood.component.json
 
 # Commit with descriptive message
-git commit -m "feat(validation): add validationRules to music mod components
+git commit -m "feat(validation): add validationRules to music mod performance_mood component
 
-- Add validationRules to performance_mood, playing_music, is_instrument
+- Add validationRules to performance_mood component
 - Enable enhanced error messages with similarity suggestions
-- Improve music system validation
+- Note: playing_music and is_instrument do not require migration (no enum properties)
 - Part of ANASYSIMP-019-04 migration"
 
 # Verify commit
@@ -171,30 +152,32 @@ git log -1 --stat
 
 ## Validation Checklist
 
-- [ ] All 3 music mod components have validationRules
+- [ ] performance_mood component has validationRules
 - [ ] Error messages use music-specific terminology
 - [ ] Template variables use double braces
 - [ ] All required properties present
 - [ ] `npm run validate` passes
 - [ ] No JSON syntax errors
 - [ ] Changes committed to git
+- [ ] Verified that playing_music and is_instrument do not need migration
 
 ## Acceptance Criteria
 
-- [ ] 3 components migrated with validationRules
+- [ ] 1 component (performance_mood) migrated with validationRules
 - [ ] All components pass schema validation
 - [ ] Error messages customized with music terminology
 - [ ] Similarity suggestions enabled
 - [ ] Batch committed with clear message
 - [ ] No breaking changes to music system
+- [ ] Documented why 2 components were skipped
 
 ## Time Estimate
 
 - Component discovery: 1 minute
-- Migration (3 components × 2 minutes): ~6 minutes
+- Migration (1 component × 2 minutes): ~2 minutes
 - Validation: 1 minute
 - Commit: 1 minute
-- **Total:** ~9 minutes (adjusted to 8)
+- **Total:** ~5 minutes (reduced from 8 due to only 1 component needing migration)
 
 ## Next Steps
 
