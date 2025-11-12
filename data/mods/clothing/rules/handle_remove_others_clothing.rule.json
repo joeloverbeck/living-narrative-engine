@@ -37,50 +37,83 @@
       }
     },
     {
-      "type": "UNEQUIP_CLOTHING",
+      "type": "IF",
       "parameters": {
-        "entity_ref": "primary",
-        "clothing_item_id": "{event.payload.secondaryId}",
-        "cascade_unequip": false,
-        "destination": "ground"
+        "condition": {
+          "!": {
+            "isRemovalBlocked": ["primary", "secondary"]
+          }
+        },
+        "then_actions": [
+          {
+            "type": "UNEQUIP_CLOTHING",
+            "parameters": {
+              "entity_ref": "primary",
+              "clothing_item_id": "{event.payload.secondaryId}",
+              "cascade_unequip": false,
+              "destination": "ground"
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "primary"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} removes {context.primaryName}'s {context.secondaryName}."
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "perceptionType",
+              "value": "action_target_general"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "locationId",
+              "value": "{context.actorPosition.locationId}"
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "targetId",
+              "value": "{event.payload.primaryId}"
+            }
+          },
+          {
+            "macro": "core:logSuccessAndEndTurn"
+          }
+        ],
+        "else_actions": [
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} cannot remove {context.primaryName}'s {context.secondaryName} - it is blocked by other clothing."
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "parameters": {
+              "eventType": "core:action_execution_failed",
+              "payload": {
+                "actorId": "{event.payload.actorId}",
+                "actionId": "{event.payload.actionId}",
+                "reason": "removal_blocked",
+                "message": "{context.logMessage}"
+              }
+            }
+          }
+        ]
       }
-    },
-    {
-      "type": "REGENERATE_DESCRIPTION",
-      "parameters": {
-        "entity_ref": "primary"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "logMessage",
-        "value": "{context.actorName} removes {context.primaryName}'s {context.secondaryName}."
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "perceptionType",
-        "value": "action_target_general"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.primaryId}"
-      }
-    },
-    {
-      "macro": "core:logSuccessAndEndTurn"
     }
   ]
 }
