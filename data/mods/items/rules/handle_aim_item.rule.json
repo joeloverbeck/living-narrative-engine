@@ -1,7 +1,19 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "items:handle_aim_item",
-  "description": "Placeholder rule for aim_item action. To be implemented in WEASYSIMP-007.",
-  "conditions": [],
-  "actions": []
+  "comment": "Placeholder rule for aim_item action. To be implemented in WEASYSIMP-007.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "items:event-is-action-aim-item"
+  },
+  "actions": [
+    {
+      "type": "LOG_MESSAGE",
+      "comment": "Placeholder action - to be replaced with actual aim_item logic in WEASYSIMP-007",
+      "parameters": {
+        "message": "aim_item action attempted - implementation pending",
+        "level": "debug"
+      }
+    }
+  ]
 }
