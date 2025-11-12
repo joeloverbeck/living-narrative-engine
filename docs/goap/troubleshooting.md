@@ -741,8 +741,7 @@ Trying to generate effects for new test action
 
 ## Related Documentation
 
-- [Effects Auto-Generation](./effects-auto-generation.md)
-- [Operation Mapping](./operation-mapping.md)
-- [Macro Resolution](./macro-resolution.md)
-- [Abstract Preconditions](./abstract-preconditions.md)
-- [GOAP README](./README.md)
+- [Effects System](./effects-system.md) - Effects generation, analysis, and runtime placeholders
+- [Operation Mapping](./operation-mapping.md) - Operation-to-effect mapping and result structures
+- [Planning System](./planning-system.md) - Goals, action selection, and abstract preconditions
+- [GOAP README](./README.md) - System overview and architecture
