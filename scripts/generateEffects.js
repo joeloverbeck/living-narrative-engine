@@ -38,18 +38,24 @@ async function main() {
   try {
     // Load schemas
     logger.info('📚 Loading schemas...');
-    const loadContext = createLoadContext({
+    let loadContext = createLoadContext({
       worldName: 'effects-generation',
       requestedMods: args.mods || [],
       registry: dataRegistry
     });
-    await schemaPhase.execute(loadContext);
+    loadContext = await schemaPhase.execute(loadContext);
     logger.info('✅ Schemas loaded');
+
+    // Process manifests
+    logger.info('📋 Processing manifests...');
+    const manifestPhase = container.resolve(tokens.ManifestPhase);
+    loadContext = await manifestPhase.execute(loadContext);
+    logger.info('✅ Manifests processed');
 
     // Load mod data
     logger.info('📦 Loading mod data...');
-    const modsPhase = container.resolve(tokens.ModsPhase);
-    await modsPhase.execute(loadContext);
+    const contentPhase = container.resolve(tokens.ContentPhase);
+    loadContext = await contentPhase.execute(loadContext);
     logger.info('✅ Mod data loaded');
 
     if (args.action) {
