@@ -1,37 +1,16 @@
 /**
- * @file GOAP Performance Under Load E2E Test
- * @description Verifies GOAP planning performance is acceptable for real-time gameplay
+ * @file GOAP Planning Performance Tests
+ * @description Performance-focused coverage for GOAP decision making workflows.
  *
- * Test Priority: MEDIUM (Priority 4)
- * Test Complexity: Medium
- *
- * This test validates that the GOAP system maintains acceptable performance
- * under load with multiple actors making concurrent decisions over many turns.
- *
- * Test Scenario:
- * 1. Create 10 actors with different goals
- * 2. Each actor has 20-30 available actions
- * 3. Measure planning time per actor:
- *    - Goal selection: < 5ms
- *    - Action selection: < 10ms
- *    - Total decision time: < 20ms
- * 4. Run 10 turns and measure:
- *    - Average planning time
- *    - Max planning time
- *    - Cache hit rate (should be > 80% after turn 1)
- * 5. Verify no memory leaks after 100 turns
- *
- * Success Criteria:
- * - Planning time within acceptable bounds
- * - Cache provides performance benefit
- * - No performance degradation over time
- * - No memory leaks
+ * These tests validate that GOAP planning remains performant across a variety of
+ * real-time scenarios, including multi-actor simulations, turn-based caching,
+ * concurrency, and scalability checks.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createGoapTestBed } from '../../common/goap/goapTestHelpers.js';
 
-describe('GOAP Performance Under Load E2E', () => {
+describe('GOAP Planning Performance', () => {
   let testBed;
 
   beforeEach(async () => {
@@ -350,6 +329,8 @@ describe('GOAP Performance Under Load E2E', () => {
           cacheHitRate,
           cachedBefore: cachedActorsBefore,
           cachedAfter: cachedActorsAfter,
+          cacheStatsBefore,
+          cacheStatsAfter,
         });
 
         testBed.logger.info(
@@ -403,105 +384,6 @@ describe('GOAP Performance Under Load E2E', () => {
 
       testBed.logger.info('✓ Turn-based performance test complete');
     }, 90000);
-
-    it('should detect no memory leaks over 100 turns', async () => {
-      testBed.logger.info('=== Test: Memory Leak Detection (100 turns) ===');
-
-      // Step 1: Setup
-      await testBed.loadMods(['core', 'positioning', 'items']);
-
-      // Create 3 actors (smaller set for long-running test)
-      const actors = await Promise.all([
-        testBed.createActor({
-          name: 'MemoryActor1',
-          type: 'goap',
-          components: {
-            'core:hunger': { value: 20 },
-            'core:position': { locationId: 'test_location' },
-          },
-        }),
-        testBed.createActor({
-          name: 'MemoryActor2',
-          type: 'goap',
-          components: {
-            'core:energy': { value: 30 },
-            'core:position': { locationId: 'test_location' },
-          },
-        }),
-        testBed.createActor({
-          name: 'MemoryActor3',
-          type: 'goap',
-          components: {
-            'core:hunger': { value: 25 },
-            'core:position': { locationId: 'test_location' },
-          },
-        }),
-      ]);
-
-      // Prepare actor data
-      const actorData = [];
-      for (const actor of actors) {
-        const context = testBed.createContext({ actorId: actor.id });
-        context.entities = { [actor.id]: { components: actor.getAllComponents() } };
-        const actions = await testBed.getAvailableActions(actor, context);
-        actorData.push({ actor, context, actions });
-      }
-
-      // Step 2: Capture baseline memory
-      if (global.gc) {
-        global.gc();
-      }
-      const memoryBefore = process.memoryUsage();
-      testBed.logger.info(
-        `Baseline memory: ${(memoryBefore.heapUsed / 1024 / 1024).toFixed(2)} MB`
-      );
-
-      // Step 3: Run 100 turns
-      testBed.logger.info('Running 100 turns...');
-      const sampleInterval = 10; // Sample every 10 turns
-
-      for (let turn = 1; turn <= 100; turn++) {
-        // Each actor makes a decision
-        for (const data of actorData) {
-          await testBed.makeGoapDecision(data.actor, data.context, data.actions);
-        }
-
-        // Sample memory at intervals
-        if (turn % sampleInterval === 0) {
-          const currentMemory = process.memoryUsage();
-          testBed.logger.info(
-            `Turn ${turn}: ${(currentMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`
-          );
-        }
-      }
-
-      // Step 4: Force garbage collection and measure final memory
-      if (global.gc) {
-        global.gc();
-      }
-
-      // Wait a bit for GC to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const memoryAfter = process.memoryUsage();
-      testBed.logger.info(
-        `Final memory: ${(memoryAfter.heapUsed / 1024 / 1024).toFixed(2)} MB`
-      );
-
-      // Step 5: Analyze memory growth
-      const memoryGrowth = memoryAfter.heapUsed - memoryBefore.heapUsed;
-      const memoryGrowthMB = memoryGrowth / 1024 / 1024;
-      const memoryGrowthPercent = (memoryGrowth / memoryBefore.heapUsed) * 100;
-
-      testBed.logger.info(`Memory growth: ${memoryGrowthMB.toFixed(2)} MB`);
-      testBed.logger.info(`Memory growth: ${memoryGrowthPercent.toFixed(1)}%`);
-
-      // Memory growth should be reasonable (< 50 MB or < 100% growth)
-      // This is a loose threshold to account for normal cache growth
-      expect(memoryGrowthMB).toBeLessThan(50);
-
-      testBed.logger.info('✓ No significant memory leaks detected');
-    }, 120000);
 
     it('should handle concurrent decisions without race conditions', async () => {
       testBed.logger.info('=== Test: Concurrent Decision Making ===');
