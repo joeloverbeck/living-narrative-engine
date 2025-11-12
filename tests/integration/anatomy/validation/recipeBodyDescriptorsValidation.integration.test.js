@@ -89,8 +89,8 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     );
 
     expect(hairDensityError).toBeDefined();
-    expect(hairDensityError.value).toBe('furred');
-    expect(hairDensityError.message).toContain("Invalid value 'furred'");
+    expect(hairDensityError.value).toBe('fluffy');
+    expect(hairDensityError.message).toContain("Invalid value 'fluffy'");
     expect(hairDensityError.allowedValues).toEqual([
       'hairless',
       'sparse',
@@ -98,8 +98,9 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
       'moderate',
       'hairy',
       'very-hairy',
+      'furred',
     ]);
-    expect(hairDensityError.fix).toContain('hairless, sparse, light, moderate, hairy, very-hairy');
+    expect(hairDensityError.fix).toContain('hairless, sparse, light, moderate, hairy, very-hairy, furred');
   });
 
   it('should pass validation when recipe has valid bodyDescriptors', async () => {
@@ -136,7 +137,7 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
       bodyDescriptors: {
         height: 'super-tall', // Invalid - not in enum
         build: 'athletic', // Valid
-        hairDensity: 'furred', // Invalid - not in enum
+        hairDensity: 'fluffy', // Invalid - not in enum
         unknownField: 'test', // Invalid - unknown field
       },
       slots: {},
@@ -164,7 +165,7 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
       (e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE' && e.field === 'hairDensity'
     );
     expect(hairDensityError).toBeDefined();
-    expect(hairDensityError.value).toBe('furred');
+    expect(hairDensityError.value).toBe('fluffy');
 
     // Check for unknown field error
     const unknownError = report.errors.find((e) => e.type === 'UNKNOWN_BODY_DESCRIPTOR');
