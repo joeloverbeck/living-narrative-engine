@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "items:handle_lower_aim",
+  "rule_id": "handle_lower_aim",
   "comment": "Placeholder rule for lower_aim action. To be implemented in WEASYSIMP-007.",
   "event_type": "core:attempt_action",
   "condition": {

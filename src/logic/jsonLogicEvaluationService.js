@@ -106,7 +106,6 @@ class JsonLogicEvaluationService extends BaseService {
       'has_component',
       // Anatomy/body part operators
       'hasPartWithComponentValue',
-      'hasBodyPartWithComponentValue', // Registered by systemLogicInterpreter
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       // Clothing/equipment operators

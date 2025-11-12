@@ -45,15 +45,15 @@ describe('Legacy Operator Cleanup', () => {
     });
   });
 
-  describe('Operator hasBodyPartWithComponentValue', () => {
-    it('should be in ALLOWED_OPERATIONS whitelist', () => {
+  describe('Operator hasBodyPartWithComponentValue (legacy - now removed)', () => {
+    it('should NOT be in ALLOWED_OPERATIONS whitelist after cleanup', () => {
       const allowedOps = evaluationService.getAllowedOperations();
 
-      // hasBodyPartWithComponentValue is registered by systemLogicInterpreter
-      expect(allowedOps.has('hasBodyPartWithComponentValue')).toBe(true);
+      // hasBodyPartWithComponentValue was a legacy operator that has been removed
+      expect(allowedOps.has('hasBodyPartWithComponentValue')).toBe(false);
     });
 
-    it('should produce warning about hasBodyPartWithComponentValue after registration', () => {
+    it('should NOT produce warning about hasBodyPartWithComponentValue after registration', () => {
       // Register operators
       customOperators.registerOperators(evaluationService);
 
@@ -66,10 +66,8 @@ describe('Legacy Operator Cleanup', () => {
           )
       );
 
-      // Should have warning about hasBodyPartWithComponentValue (registered by systemLogicInterpreter, not JsonLogicCustomOperators)
-      expect(warnings.length).toBe(1);
-      const warningData = warnings[0][1];
-      expect(warningData.operators).toContain('hasBodyPartWithComponentValue');
+      // Should have NO warnings now that the legacy operator has been removed
+      expect(warnings.length).toBe(0);
     });
   });
 
@@ -81,7 +79,7 @@ describe('Legacy Operator Cleanup', () => {
       expect(allowedOps.has('throw_error_operator')).toBe(false);
     });
 
-    it('should not produce warning about throw_error_operator after registration', () => {
+    it('should not produce any warnings after cleanup', () => {
       // Register operators
       customOperators.registerOperators(evaluationService);
 
@@ -94,17 +92,13 @@ describe('Legacy Operator Cleanup', () => {
           )
       );
 
-      // Should have exactly one warning
-      expect(warnings.length).toBe(1);
-
-      // Verify throw_error_operator is not in the warning
-      const warningData = warnings[0][1];
-      expect(warningData.operators).not.toContain('throw_error_operator');
+      // Should have no warnings after cleanup
+      expect(warnings.length).toBe(0);
     });
   });
 
-  describe('Whitelist should have minimal warnings', () => {
-    it('should only warn about operators registered elsewhere', () => {
+  describe('Whitelist should have no warnings after cleanup', () => {
+    it('should not warn about any operators after cleanup', () => {
       // Register operators
       customOperators.registerOperators(evaluationService);
 
@@ -117,12 +111,8 @@ describe('Legacy Operator Cleanup', () => {
           )
       );
 
-      // After cleanup, should only warn about hasBodyPartWithComponentValue (registered by systemLogicInterpreter)
-      expect(warnings.length).toBe(1);
-      const warningData = warnings[0][1];
-      expect(warningData.operators).toContain('hasBodyPartWithComponentValue');
-      expect(warningData.operators).not.toContain('throw_error_operator');
-      expect(warningData.operators).toHaveLength(1);
+      // After cleanup, there should be no warnings about unregistered operators
+      expect(warnings.length).toBe(0);
     });
 
     it('should have the correct operator hasPartWithComponentValue (not hasBodyPartWithComponentValue)', () => {
