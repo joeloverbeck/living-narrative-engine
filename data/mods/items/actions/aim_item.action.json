@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:aim_item",
+  "name": "Aim Item",
+  "description": "Aim an aimable item at a target entity. The item must have items:aimable component and be in actor's inventory.",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory"]
+  },
+  "targets": {
+    "primary": {
+      "scope": "items:aimable_targets",
+      "placeholder": "target",
+      "description": "Entity to aim at"
+    },
+    "secondary": {
+      "scope": "items:aimable_items_in_inventory",
+      "placeholder": "item",
+      "description": "Aimable item to use (weapon, flashlight, camera, etc.)"
+    }
+  },
+  "template": "aim {item} at {target}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
+}
