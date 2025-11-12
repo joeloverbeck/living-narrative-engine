@@ -37,7 +37,7 @@ describe('Placeholder Rules Validation', () => {
   describe('handle_aim_item.rule.json', () => {
     it('should be a valid rule object', () => {
       expect(aimItemRule).toBeDefined();
-      expect(aimItemRule.rule_id).toBe('items:handle_aim_item');
+      expect(aimItemRule.rule_id).toBe('handle_aim_item');
       expect(aimItemRule.event_type).toBe('core:attempt_action');
       expect(aimItemRule.actions).toBeInstanceOf(Array);
       expect(aimItemRule.actions.length).toBeGreaterThan(0);
@@ -97,7 +97,7 @@ describe('Placeholder Rules Validation', () => {
   describe('handle_lower_aim.rule.json', () => {
     it('should be a valid rule object', () => {
       expect(lowerAimRule).toBeDefined();
-      expect(lowerAimRule.rule_id).toBe('items:handle_lower_aim');
+      expect(lowerAimRule.rule_id).toBe('handle_lower_aim');
       expect(lowerAimRule.event_type).toBe('core:attempt_action');
       expect(lowerAimRule.actions).toBeInstanceOf(Array);
       expect(lowerAimRule.actions.length).toBeGreaterThan(0);

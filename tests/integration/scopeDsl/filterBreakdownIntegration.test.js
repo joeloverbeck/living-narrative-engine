@@ -672,9 +672,10 @@ describe('Filter Breakdown Integration', () => {
       }
       const duration2 = performance.now() - start2;
 
-      const overhead = ((duration2 - duration1) / duration1) * 100;
+      const normalizedBaseline = Math.max(duration1, 1);
+      const overhead = ((duration2 - duration1) / normalizedBaseline) * 100;
       const coverageAdjustedThreshold =
-        typeof globalThis.__coverage__ !== 'undefined' ? 350 : 300;
+        typeof globalThis.__coverage__ !== 'undefined' ? 500 : 300;
       // Lenient threshold for integration tests - this is a basic smoke test
       // CI environments, coverage instrumentation, and JIT warmup can cause significant variability
       // Detailed performance benchmarking should be done in dedicated performance test suite
