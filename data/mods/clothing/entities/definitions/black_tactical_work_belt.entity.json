@@ -12,6 +12,16 @@
         "accessories"
       ]
     },
+    "clothing:blocks_removal": {
+      "blockedSlots": [
+        {
+          "slot": "legs",
+          "layers": ["base", "outer"],
+          "blockType": "must_remove_first",
+          "reason": "Belt secures pants at waist"
+        }
+      ]
+    },
     "core:material": {
       "material": "nylon"
     },

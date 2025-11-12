@@ -88,8 +88,11 @@ export class GoapTestBed {
     this.goalManager = this.container.resolve(goapTokens.IGoalManager);
     this.simplePlanner = this.container.resolve(goapTokens.ISimplePlanner);
     this.planCache = this.container.resolve(goapTokens.IPlanCache);
-    // IGoapDecisionProvider is registered with an async factory, so we need to await it
-    this.goapDecisionProvider = await this.container.resolve(tokens.IGoapDecisionProvider);
+    // IGoapDecisionProvider uses an async factory, so we need to await it
+    const goapDecisionProviderPromise = this.container.resolve(tokens.IGoapDecisionProvider);
+    this.goapDecisionProvider = goapDecisionProviderPromise instanceof Promise
+      ? await goapDecisionProviderPromise
+      : goapDecisionProviderPromise;
     this.availableActionsProvider = this.container.resolve(tokens.IAvailableActionsProvider);
     this.actionDiscoveryService = this.container.resolve(tokens.IActionDiscoveryService);
 
@@ -119,27 +122,43 @@ export class GoapTestBed {
    * @param {string} [options.type='goap'] - Player type
    * @param {Object} [options.components={}] - Additional components
    * @param {string} [options.location] - Location ID
-   * @returns {Object} Actor mock object
+   * @returns {Object} Actor entity instance
    */
-  createActor({ name, type = 'goap', components = {}, location }) {
+  async createActor({ name, type = 'goap', components = {}, location }) {
     const entityId = `actor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Create mock actor object
-    const actor = {
+    // Create base actor definition with required components
+    const baseComponents = {
+      'core:actor': { name },
+      'core:player_type': { type },
+      ...components,
+    };
+
+    // Create a simple mock object that implements the Entity interface
+    const mockEntity = {
       id: entityId,
       name,
       location: location || 'default_location',
-      getAllComponents: () => ({
-        'core:actor': { name },
-        'core:player_type': { type },
-        ...components,
-      }),
+      getAllComponents: () => baseComponents,
     };
 
     // Store for cleanup
-    this.entities.set(entityId, actor);
+    this.entities.set(entityId, mockEntity);
 
-    return actor;
+    // Mock entityManager to return this entity when requested
+    const originalGetEntityInstance = this.entityManager.getEntityInstance;
+    this.entityManager.getEntityInstance = (id) => {
+      if (id === entityId) {
+        return mockEntity;
+      }
+      // Fallback to original method for other entities
+      if (this.entities.has(id)) {
+        return this.entities.get(id);
+      }
+      return originalGetEntityInstance.call(this.entityManager, id);
+    };
+
+    return mockEntity;
   }
 
   /**
@@ -149,20 +168,20 @@ export class GoapTestBed {
    * @param {Object} options.components - Components
    * @returns {Object} Entity mock object
    */
-  createEntity({ name, components = {} }) {
+  async createEntity({ name, components = {} }) {
     const entityId = `entity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Create mock entity object
-    const entity = {
+    // For now, return a simple mock object
+    const mockEntity = {
       id: entityId,
       name,
       getAllComponents: () => components,
     };
 
     // Store for cleanup
-    this.entities.set(entityId, entity);
+    this.entities.set(entityId, mockEntity);
 
-    return entity;
+    return mockEntity;
   }
 
   /**

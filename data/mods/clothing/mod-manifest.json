@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
   "id": "clothing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Clothing System",
-  "description": "Comprehensive clothing and equipment system with multi-layer support and gender-flexible design",
+  "description": "Comprehensive clothing and equipment system with multi-layer support, gender-flexible design, and realistic removal blocking",
   "author": "Living Narrative Engine",
   "dependencies": [
     {
