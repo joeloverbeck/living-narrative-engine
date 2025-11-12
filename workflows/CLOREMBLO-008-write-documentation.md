@@ -7,13 +7,43 @@
 
 ---
 
+## Workflow Review Summary (2025-11-12)
+
+**Status**: Workflow reviewed and updated to reflect actual codebase state.
+
+**Key Findings**:
+- ✅ Component, operator, and service implementation exist and are working
+- ⚠️ Integration with action discovery needs verification
+- ❌ `can-remove-item` condition not found (may need creation)
+- ❌ `docs/troubleshooting/` directory doesn't exist (needs creation)
+- ✅ Belt entities already have blocking components
+- ✅ Comprehensive test suite exists
+
+**Corrected Assumptions**:
+- File is `clothing-items.md`, not `clothing-system.md`
+- Blocking logic is in `ClothingAccessibilityService`, not just `SlotAccessResolver`
+- Documentation should reflect partial implementation, not assume complete integration
+
+---
+
 ## Overview
 
 Create comprehensive documentation for the clothing removal blocking system, including user-facing modding guides, developer documentation, troubleshooting guides, and updates to existing documentation.
 
+**Note**: This workflow originally assumed full implementation. It has been updated to reflect the actual state of the codebase, where the blocking system is partially implemented with some integration points needing verification.
+
 ---
 
 ## Background
+
+**Implementation Status**: The blocking system is PARTIALLY IMPLEMENTED:
+- ✅ `clothing:blocks_removal` component (data/mods/clothing/components/)
+- ✅ `IsRemovalBlockedOperator` (src/logic/operators/)
+- ✅ `ClothingAccessibilityService` handles blocking logic
+- ✅ Belt entities updated with blocking components
+- ✅ Test suite exists (tests/integration/clothing/)
+- ⚠️ Integration with action discovery/scope resolution needs verification
+- ❌ `can-remove-item` condition NOT FOUND (may need to be created)
 
 Documentation requirements:
 1. **User-Facing**: How to use blocking in mods
@@ -28,6 +58,7 @@ All documentation must be:
 - Cover common use cases
 - Explain edge cases
 - Provide troubleshooting steps
+- Reflect actual implementation (not planned features)
 
 ---
 
@@ -500,24 +531,27 @@ Some items require help to remove:
 
 - Component Schema: `data/mods/clothing/components/blocks_removal.component.json`
 - Operator Implementation: `src/logic/operators/isRemovalBlockedOperator.js`
-- Scope Integration: `src/scopeDsl/nodes/slotAccessResolver.js`
-- Example Entities: `data/mods/clothing/entities/`
+- Service Integration: `src/clothing/services/clothingAccessibilityService.js` (handles blocking logic)
+- Scope Integration: `src/scopeDsl/nodes/slotAccessResolver.js` (may need blocking integration)
+- Example Entities: `data/mods/clothing/entities/definitions/*_belt.entity.json`
+- Test Suite: `tests/integration/clothing/blockingEdgeCases.integration.test.js`
 
 ## Support
 
 For issues or questions:
 1. Check troubleshooting section above
 2. Review test examples in `tests/integration/clothing/`
-3. Open issue on GitHub with mod configuration
+3. Review specification: `specs/clothing-removal-blocking-system.spec.md`
+4. Open issue on GitHub with mod configuration
 ```
 
 ### Task 2: Update Existing Clothing Documentation
 
-**File**: `docs/modding/clothing-system.md`
+**File**: `docs/modding/clothing-items.md` (NOT clothing-system.md - that doesn't exist)
 
 **Add Section**: "Removal Blocking"
 
-Insert after the existing coverage mapping section:
+Insert after the existing "Coverage Mapping (Advanced)" section (around line 162):
 
 ```markdown
 ## Removal Blocking
@@ -589,16 +623,18 @@ Insert in appropriate location:
 The blocking system enforces realistic clothing physics by preventing removal of items that are secured by other items.
 
 **Key Components**:
-- `clothing:blocks_removal` component (data/mods/clothing/components/)
-- `IsRemovalBlockedOperator` (src/logic/operators/)
-- Scope filtering in `SlotAccessResolver` (src/scopeDsl/nodes/)
-- `can-remove-item` condition (data/mods/clothing/conditions/)
+- `clothing:blocks_removal` component (data/mods/clothing/components/blocks_removal.component.json)
+- `IsRemovalBlockedOperator` (src/logic/operators/isRemovalBlockedOperator.js)
+- `ClothingAccessibilityService` (src/clothing/services/clothingAccessibilityService.js) - **primary blocking logic**
+- Registered in `src/logic/jsonLogicCustomOperators.js`
+- ⚠️ `can-remove-item` condition NOT FOUND - may need to be created
 
 **Integration Points**:
-1. Component defines blocking rules
-2. Operator evaluates blocking in JSON Logic
-3. Resolver filters blocked items from `topmost_clothing`
-4. Condition validates removal at action execution
+1. Component defines blocking rules in entity definitions
+2. Operator evaluates blocking in JSON Logic expressions
+3. `ClothingAccessibilityService` filters blocked items during accessibility queries
+4. Service used by action discovery and scope resolution
+5. ⚠️ Integration with `SlotAccessResolver` needs verification
 
 **Usage Example**:
 ```json
@@ -611,12 +647,16 @@ The blocking system enforces realistic clothing physics by preventing removal of
 }
 ```
 
-**Testing**: See `tests/integration/clothing/` for examples.
+**Real Examples**: See belt entities in `data/mods/clothing/entities/definitions/*_belt.entity.json`
+
+**Testing**: See `tests/integration/clothing/blockingEdgeCases.integration.test.js` for examples.
 
 **Documentation**: See `docs/modding/clothing-blocking-system.md`.
 ```
 
 ### Task 4: Create Troubleshooting Guide
+
+**Directory**: `docs/troubleshooting/` (NEEDS TO BE CREATED - doesn't exist yet)
 
 **File**: `docs/troubleshooting/clothing-blocking.md` (new)
 
@@ -928,50 +968,90 @@ Verify all code examples:
 
 ---
 
+## Pre-Implementation Verification
+
+Before implementing documentation, verify these implementation gaps:
+
+1. **Action Integration**:
+   - [ ] Check if `can-remove-item` condition exists or needs creation
+   - [ ] Verify `remove_clothing` action has blocking prerequisites
+   - [ ] Test action discovery filters blocked items correctly
+
+2. **Scope Resolution**:
+   - [ ] Verify `topmost_clothing` scope uses `ClothingAccessibilityService`
+   - [ ] Check if `SlotAccessResolver` needs blocking integration
+   - [ ] Test scope resolution with blocking scenarios
+
+3. **End-to-End Flow**:
+   - [ ] Belt → Pants blocking scenario works in actual gameplay
+   - [ ] Multiple blockers work correctly
+   - [ ] Self-blocking prevention works
+
+---
+
 ## Acceptance Criteria
 
+- [ ] Pre-implementation verification completed
 - [ ] Modding guide created (`docs/modding/clothing-blocking-system.md`)
-- [ ] Existing clothing docs updated with blocking section
+- [ ] Existing clothing docs updated with blocking section (`clothing-items.md`)
 - [ ] Developer documentation updated in `CLAUDE.md`
-- [ ] Troubleshooting guide created
+- [ ] Troubleshooting directory created (`docs/troubleshooting/`)
+- [ ] Troubleshooting guide created (`docs/troubleshooting/clothing-blocking.md`)
 - [ ] Changelog entry added
-- [ ] All documentation reviewed for clarity
-- [ ] All code examples validated
+- [ ] All documentation reflects actual implementation (not spec assumptions)
+- [ ] All code examples validated against actual files
 - [ ] All internal links working
+- [ ] Warnings included for incomplete/unverified features
 - [ ] No typos or grammatical errors
 
 ---
 
 ## Notes
 
+### Implementation Status Verification Needed
+
+Before finalizing documentation, verify:
+1. ✅ Is `ClothingAccessibilityService` fully integrated into action discovery?
+2. ❌ Does `can-remove-item` condition need to be created?
+3. ⚠️ Is blocking integrated into `SlotAccessResolver` or only in `ClothingAccessibilityService`?
+4. ⚠️ Are there any incomplete integration points mentioned in the spec?
+
 ### Documentation Structure
 
 ```
 docs/
 ├── modding/
-│   ├── clothing-system.md (updated)
-│   └── clothing-blocking-system.md (new)
-├── troubleshooting/
-│   └── clothing-blocking.md (new)
-└── architecture/
-    └── (future: detailed system docs)
+│   ├── clothing-items.md (EXISTS - update with blocking section)
+│   └── clothing-blocking-system.md (NEW - comprehensive guide)
+├── troubleshooting/ (NEEDS TO BE CREATED)
+│   └── clothing-blocking.md (NEW)
+└── anatomy/ (EXISTS)
+    └── clothing-coverage-mapping.md (EXISTS - related doc)
 
-CLAUDE.md (updated)
-CHANGELOG.md (updated)
+CLAUDE.md (update with blocking system section)
+CHANGELOG.md (EXISTS - add entry)
 ```
 
 ### Examples to Include
 
 Use examples from:
 - Specification (specs/clothing-removal-blocking-system.spec.md)
-- Test files (tests/integration/clothing/)
-- Belt entity updates
+- Test files (tests/integration/clothing/blockingEdgeCases.integration.test.js)
+- Belt entity definitions (data/mods/clothing/entities/definitions/*_belt.entity.json)
+- Actual component schema (data/mods/clothing/components/blocks_removal.component.json)
 
 ### Target Audience
 
-- **Modding Guide**: Content creators, mod developers
-- **Developer Docs**: Engine contributors, system integrators
-- **Troubleshooting**: All users experiencing issues
+- **Modding Guide**: Content creators, mod developers (docs/modding/)
+- **Developer Docs**: Engine contributors, system integrators (CLAUDE.md)
+- **Troubleshooting**: All users experiencing issues (docs/troubleshooting/)
+
+### Related Documentation
+
+Since clothing and anatomy are tightly coupled in this codebase:
+- `docs/anatomy/clothing-coverage-mapping.md` - Related coverage system
+- `docs/modding/clothing-items.md` - Base clothing modding guide
+- `docs/modding/body-descriptors-guide.md` - Body characteristics
 
 ---
 
@@ -993,10 +1073,17 @@ Use examples from:
 
 ## Related Tickets
 
-- **CLOREMBLO-001**: Create blocks_removal component (document this)
-- **CLOREMBLO-002**: Implement IsRemovalBlockedOperator (document this)
-- **CLOREMBLO-003**: Register operator in DI (document this)
-- **CLOREMBLO-004**: Integrate into scope resolver (document this)
-- **CLOREMBLO-005**: Create condition and update actions (document this)
-- **CLOREMBLO-006**: Update belt entities (use as examples)
-- **CLOREMBLO-007**: Create comprehensive test suite (reference tests)
+**Implementation Status** (as of workflow review):
+
+- **CLOREMBLO-001**: Create blocks_removal component → ✅ COMPLETED
+- **CLOREMBLO-002**: Implement IsRemovalBlockedOperator → ✅ COMPLETED
+- **CLOREMBLO-003**: Register operator in DI → ✅ COMPLETED (in jsonLogicCustomOperators.js)
+- **CLOREMBLO-004**: Integrate into scope resolver → ⚠️ PARTIAL (ClothingAccessibilityService exists, SlotAccessResolver integration unclear)
+- **CLOREMBLO-005**: Create condition and update actions → ❌ NOT FOUND (can-remove-item condition missing)
+- **CLOREMBLO-006**: Update belt entities → ✅ COMPLETED (examples exist)
+- **CLOREMBLO-007**: Create comprehensive test suite → ✅ COMPLETED (blockingEdgeCases.integration.test.js exists)
+
+**Documentation Dependencies**:
+- Verify CLOREMBLO-004 and CLOREMBLO-005 status before documenting full integration
+- Document actual implementation, not planned features
+- Include warnings about incomplete features in docs
