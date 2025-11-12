@@ -737,3 +737,171 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
     );
   });
 });
+
+describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
+  let renderer;
+  let mockLogger;
+  let mockEntityManager;
+  let mockEntityDisplayDataProvider;
+  let mockContainer;
+  let mockDomElementFactory;
+
+  beforeEach(() => {
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    mockEntityManager = {
+      getComponentData: jest.fn(),
+      hasComponent: jest.fn(),
+      getEntityInstance: jest.fn(),
+    };
+
+    mockEntityDisplayDataProvider = {
+      getEntityName: jest.fn(),
+      getEntityPortraitPath: jest.fn(),
+    };
+
+    mockDomElementFactory = {
+      create: jest.fn((tag) => document.createElement(tag)),
+      div: jest.fn((cls) => {
+        const el = document.createElement('div');
+        if (cls) el.classList.add(cls);
+        return el;
+      }),
+      span: jest.fn((cls, text) => {
+        const el = document.createElement('span');
+        if (cls) el.classList.add(cls);
+        if (text) el.textContent = text;
+        return el;
+      }),
+      img: jest.fn((src, alt, cls) => {
+        const el = document.createElement('img');
+        el.src = src;
+        el.alt = alt;
+        if (cls) el.classList.add(cls);
+        return el;
+      }),
+    };
+
+    mockContainer = document.createElement('div');
+    mockContainer.innerHTML = `
+      <span id="ticker-round-number"></span>
+      <div id="ticker-actor-queue"></div>
+    `;
+
+    renderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: {
+        query: (selector) => mockContainer.querySelector(selector),
+        create: jest.fn((tag) => document.createElement(tag)),
+      },
+      validatedEventDispatcher: {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => 'sub-id'),
+        unsubscribe: jest.fn(),
+      },
+      domElementFactory: mockDomElementFactory,
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+  });
+
+  it('should create element with portrait when available', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Alice');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/alice.jpg');
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const element = renderer.__testCreateActorElement({ id: 'actor-1' });
+
+    expect(element.classList.contains('ticker-actor')).toBe(true);
+    expect(element.getAttribute('data-entity-id')).toBe('actor-1');
+    expect(element.querySelector('.ticker-actor-portrait')).toBeTruthy();
+    expect(element.querySelector('.ticker-actor-portrait').src).toContain('alice.jpg');
+    expect(element.querySelector('.ticker-actor-portrait').alt).toBe('Alice');
+    expect(element.querySelector('.ticker-actor-name').textContent).toBe('Alice');
+  });
+
+  it('should create element with name badge when portrait missing', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Bob');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const element = renderer.__testCreateActorElement({ id: 'actor-2' });
+
+    expect(element.classList.contains('ticker-actor')).toBe(true);
+    expect(element.querySelector('.ticker-actor-portrait')).toBeFalsy();
+    expect(element.querySelector('.ticker-actor-name-badge')).toBeTruthy();
+    expect(element.querySelector('.ticker-actor-name-badge .ticker-actor-name').textContent).toBe('Bob');
+  });
+
+  it('should set participation data attribute', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Charlie');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
+    mockEntityManager.hasComponent.mockReturnValue(true);
+    mockEntityManager.getComponentData.mockReturnValue({ participating: false });
+
+    const element = renderer.__testCreateActorElement({ id: 'actor-3' });
+
+    expect(element.getAttribute('data-participating')).toBe('false');
+  });
+
+  it('should set lazy loading on portrait images', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Diana');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/diana.jpg');
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const element = renderer.__testCreateActorElement({ id: 'actor-4' });
+    const img = element.querySelector('.ticker-actor-portrait');
+
+    expect(img.loading).toBe('lazy');
+  });
+
+  it('should add title attribute for tooltip', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Very Long Actor Name That Will Be Truncated');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const element = renderer.__testCreateActorElement({ id: 'actor-5' });
+    const nameLabel = element.querySelector('.ticker-actor-name');
+
+    expect(nameLabel.title).toBe('Very Long Actor Name That Will Be Truncated');
+  });
+
+  it('should handle image load failure', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Eve');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/invalid.jpg');
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const element = renderer.__testCreateActorElement({ id: 'actor-6' });
+    const img = element.querySelector('.ticker-actor-portrait');
+
+    // Simulate image error
+    img.onerror();
+
+    expect(element.querySelector('.ticker-actor-portrait')).toBeFalsy();
+    expect(element.querySelector('.ticker-actor-name-badge')).toBeTruthy();
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Portrait failed to load, switching to name badge',
+      expect.any(Object)
+    );
+  });
+
+  it('should throw error if entity has no id', () => {
+    expect(() => {
+      renderer.__testCreateActorElement({});
+    }).toThrow('Entity must have an id property');
+
+    expect(mockLogger.error).toHaveBeenCalled();
+  });
+
+  it('should throw error if entity is null', () => {
+    expect(() => {
+      renderer.__testCreateActorElement(null);
+    }).toThrow('Entity must have an id property');
+  });
+});

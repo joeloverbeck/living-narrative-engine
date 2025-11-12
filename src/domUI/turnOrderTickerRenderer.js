@@ -211,6 +211,18 @@ class TurnOrderTickerRenderer {
     return this.#_getActorDisplayData(entityId);
   }
 
+  /**
+   * Test-only helper to access private method for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {object} entity - The actor entity
+   * @returns {HTMLElement} The actor element
+   * @private
+   */
+  __testCreateActorElement(entity) {
+    return this.#_createActorElement(entity);
+  }
+
   // ========== PRIVATE HELPERS ==========
 
   /**
@@ -266,17 +278,97 @@ class TurnOrderTickerRenderer {
 
   /**
    * Create a DOM element for an actor in the ticker.
+   * Renders portrait + name or name badge depending on data availability.
    *
-   * @param {object} _entity - The actor entity
+   * @param {object} entity - The actor entity (must have id property)
    * @returns {HTMLElement} The actor element
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members -- Implementation in TURORDTIC-005
-  #_createActorElement(_entity) {
-    // Implementation in TURORDTIC-005
-    const element = this.#domElementFactory.create('div');
-    element.classList.add('ticker-actor');
-    return element;
+  #_createActorElement(entity) {
+    if (!entity || !entity.id) {
+      this.#logger.error('Cannot create actor element: entity or entity.id missing', { entity });
+      throw new Error('Entity must have an id property');
+    }
+
+    const entityId = entity.id;
+    const displayData = this.#_getActorDisplayData(entityId);
+
+    // Create container
+    const container = this.#domElementFactory.create('div');
+    container.classList.add('ticker-actor');
+    container.setAttribute('data-entity-id', entityId);
+    container.setAttribute('data-participating', displayData.participating.toString());
+
+    if (displayData.portraitPath) {
+      // Render with portrait
+      this.#_createPortraitElement(container, displayData);
+    } else {
+      // Render with name badge
+      this.#_createNameBadgeElement(container, displayData);
+    }
+
+    // Add name label below (always shown)
+    const nameLabel = this.#domElementFactory.create('span');
+    nameLabel.classList.add('ticker-actor-name');
+    nameLabel.textContent = displayData.name;
+    nameLabel.title = displayData.name; // Tooltip for long names
+    container.appendChild(nameLabel);
+
+    this.#logger.debug('Actor element created', {
+      entityId,
+      hasPortrait: !!displayData.portraitPath,
+      name: displayData.name,
+    });
+
+    return container;
+  }
+
+  /**
+   * Create portrait image element with error handling.
+   *
+   * @param {HTMLElement} container - Parent container
+   * @param {object} displayData - Display data with portraitPath and name
+   * @private
+   */
+  #_createPortraitElement(container, displayData) {
+    const img = this.#domElementFactory.img(
+      displayData.portraitPath,
+      displayData.name,
+      'ticker-actor-portrait'
+    );
+    img.loading = 'lazy'; // Performance optimization
+
+    // Handle image load failures
+    img.onerror = () => {
+      this.#logger.warn('Portrait failed to load, switching to name badge', {
+        portraitPath: displayData.portraitPath,
+        name: displayData.name,
+      });
+
+      // Remove failed image
+      img.remove();
+
+      // Replace with name badge
+      this.#_createNameBadgeElement(container, displayData);
+    };
+
+    container.appendChild(img);
+  }
+
+  /**
+   * Create name badge element (no portrait fallback).
+   *
+   * @param {HTMLElement} container - Parent container
+   * @param {object} displayData - Display data with name
+   * @private
+   */
+  #_createNameBadgeElement(container, displayData) {
+    const badge = this.#domElementFactory.div('ticker-actor-name-badge');
+    const nameSpan = this.#domElementFactory.span('ticker-actor-name', displayData.name);
+    nameSpan.title = displayData.name; // Tooltip for long names
+
+    badge.appendChild(nameSpan);
+    container.insertBefore(badge, container.firstChild); // Insert at beginning
   }
 
   /**
