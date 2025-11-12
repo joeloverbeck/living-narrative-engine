@@ -16,6 +16,45 @@ import ActionTraceFilter from '../../../src/actions/tracing/actionTraceFilter.js
 import { JsonTraceFormatter } from '../../../src/actions/tracing/jsonTraceFormatter.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
+class CapturingLogger {
+  constructor() {
+    this.messages = {
+      info: [],
+      warn: [],
+      error: [],
+      debug: [],
+    };
+  }
+
+  info(message, ...args) {
+    this.messages.info.push([message, ...args]);
+  }
+
+  warn(message, ...args) {
+    this.messages.warn.push([message, ...args]);
+  }
+
+  error(message, ...args) {
+    this.messages.error.push([message, ...args]);
+  }
+
+  debug(message, ...args) {
+    this.messages.debug.push([message, ...args]);
+  }
+}
+
+class InclusionAwareActionTraceFilter extends ActionTraceFilter {
+  getInclusionConfig() {
+    const baseConfig = super.getInclusionConfig();
+    return {
+      ...baseConfig,
+      includeComponentData: baseConfig.componentData,
+      includePrerequisites: baseConfig.prerequisites,
+      includeTargets: baseConfig.targets,
+    };
+  }
+}
+
 /**
  * Create a mock storage adapter for testing
  */
@@ -41,7 +80,7 @@ describe('HumanReadableFormatter Integration', () => {
     mockStorageAdapter = createMockStorageAdapter();
 
     // Create real ActionTraceFilter with different configurations
-    actionTraceFilter = new ActionTraceFilter({
+    actionTraceFilter = new InclusionAwareActionTraceFilter({
       enabled: true,
       tracedActions: ['*'],
       excludedActions: [],
@@ -243,7 +282,7 @@ describe('HumanReadableFormatter Integration', () => {
         startTime: now,
         stages: {
           component_filtering: {
-            timestamp: now + 5,
+            timestamp: now + 0.4,
             data: {
               actorComponents: ['combat', 'health', 'weapon'],
               requiredComponents: ['combat', 'weapon'],
@@ -251,7 +290,7 @@ describe('HumanReadableFormatter Integration', () => {
             },
           },
           prerequisite_evaluation: {
-            timestamp: now + 15,
+            timestamp: now + 500,
             data: {
               passed: true,
               prerequisites: [
@@ -261,7 +300,7 @@ describe('HumanReadableFormatter Integration', () => {
             },
           },
           target_resolution: {
-            timestamp: now + 25,
+            timestamp: now + 5500,
             data: {
               targetCount: 1,
               isLegacy: false,
@@ -269,7 +308,7 @@ describe('HumanReadableFormatter Integration', () => {
             },
           },
           formatting: {
-            timestamp: now + 35,
+            timestamp: now + 135000,
             data: {
               template: '{actor} attacks {target} with {weapon}',
               formattedCommand: 'Guard attacks Player with sword',
@@ -279,13 +318,30 @@ describe('HumanReadableFormatter Integration', () => {
         },
       });
 
+      tracedActions.set('core:defend', {
+        actionId: 'core:defend',
+        actorId: 'npc-guard-002',
+        startTime: now + 200000,
+        stages: {
+          component_filtering: {
+            timestamp: now + 200500,
+            data: {
+              actorComponents: ['defense'],
+              requiredComponents: ['defense'],
+              candidateCount: 3,
+            },
+          },
+        },
+      });
+
       const pipelineTrace = {
         constructor: { name: 'ActionAwareStructuredTrace' },
         getTracedActions: () => tracedActions,
         getSpans: () => [
-          { name: 'Validation', startTime: now, endTime: now + 5 },
-          { name: 'Processing', startTime: now + 5, endTime: now + 35 },
-          { name: 'Execution', startTime: now + 35, endTime: now + 50 },
+          { name: 'Validation', startTime: now, endTime: now + 0.4 },
+          { name: 'Filtering', startTime: now + 1, endTime: now + 501 },
+          { name: 'Execution', startTime: now + 1000, endTime: now + 6000 },
+          { name: 'Cleanup', startTime: now + 10000, endTime: now + 75000 },
         ],
       };
 
@@ -299,7 +355,7 @@ describe('HumanReadableFormatter Integration', () => {
       // Check structure
       expect(result).toContain('ACTION PIPELINE TRACE');
       expect(result).toContain('SUMMARY');
-      expect(result).toContain('Total Actions: 1');
+      expect(result).toContain('Total Actions: 2');
 
       // Check action details
       expect(result).toContain('ACTION: core:attack');
@@ -308,26 +364,18 @@ describe('HumanReadableFormatter Integration', () => {
 
       // Check stage details
       expect(result).toContain('Component Filtering');
-      // These details are only shown when includeComponentData is true
-      if (result.includes('Actor Components:')) {
-        expect(result).toContain('Actor Components: 3');
-        expect(result).toContain('Required: combat, weapon');
-        expect(result).toContain('Candidates Found: 5');
-      }
+      expect(result).toContain('Actor Components: 3');
+      expect(result).toContain('Required: combat, weapon');
+      expect(result).toContain('Candidates Found: 15');
 
       expect(result).toContain('Prerequisite Evaluation');
-      // These details are only shown when includePrerequisites is true
-      if (result.includes('Result:')) {
-        expect(result).toContain('Result:');
-        expect(result).toContain('PASSED');
-      }
+      expect(result).toContain('Result:');
+      expect(result).toContain('PASSED');
 
       expect(result).toContain('Target Resolution');
-      // These details are only shown when includeTargets is true
-      if (result.includes('Targets Found:')) {
-        expect(result).toContain('Targets Found: 1');
-        expect(result).toContain('Type: Multi-target');
-      }
+      expect(result).toContain('Targets Found: 1');
+      expect(result).toContain('Type: Multi-target');
+      expect(result).toContain('Target Keys: player-001');
 
       expect(result).toContain('Formatting');
       expect(result).toContain(
@@ -339,12 +387,13 @@ describe('HumanReadableFormatter Integration', () => {
       expect(result).toContain('Total Pipeline Time:');
       expect(result).toContain('TRACE SPANS');
       expect(result).toContain('Validation');
-      expect(result).toContain('Processing');
+      expect(result).toContain('Filtering');
       expect(result).toContain('Execution');
+      expect(result).toContain('Cleanup');
 
       // Check performance summary
       expect(result).toContain('PERFORMANCE SUMMARY');
-      expect(result).toContain('Stages Executed: 4');
+      expect(result).toContain('Stages Executed: 5');
     });
 
     it('should handle color formatting correctly', () => {
@@ -450,6 +499,163 @@ describe('HumanReadableFormatter Integration', () => {
       // Check status shows as failed
       expect(result).toContain('Status');
       expect(result).toContain('FAILED');
+    });
+  });
+
+  describe('Edge case coverage', () => {
+    it('should warn when formatting a null trace', () => {
+      const logger = new CapturingLogger();
+      const filter = new InclusionAwareActionTraceFilter({
+        enabled: true,
+        tracedActions: ['*'],
+        verbosityLevel: 'standard',
+        inclusionConfig: {
+          componentData: true,
+          prerequisites: true,
+          targets: true,
+        },
+        logger,
+      });
+
+      const formatter = new HumanReadableFormatter({
+        logger,
+        actionTraceFilter: filter,
+      });
+
+      const result = formatter.format(null);
+
+      expect(result).toBe('No trace data available\n');
+      expect(
+        logger.messages.warn.some(([message]) =>
+          message.includes('HumanReadableFormatter: Null trace provided')
+        )
+      ).toBe(true);
+    });
+
+    it('should format verbose execution payload variations', () => {
+      const baseTime = 1700000000000;
+      const logger = new CapturingLogger();
+      const filter = new InclusionAwareActionTraceFilter({
+        enabled: true,
+        tracedActions: ['*'],
+        verbosityLevel: 'verbose',
+        inclusionConfig: {
+          componentData: true,
+          prerequisites: true,
+          targets: true,
+        },
+        logger,
+      });
+
+      const formatter = new HumanReadableFormatter(
+        {
+          logger,
+          actionTraceFilter: filter,
+        },
+        {
+          timeProvider: () => baseTime,
+        }
+      );
+
+      const nullPayloadTrace = {
+        constructor: { name: 'ActionExecutionTrace' },
+        actionId: 'core:test-null',
+        actorId: 'player-123',
+        execution: {
+          startTime: baseTime,
+          endTime: baseTime + 1,
+          duration: 0.25,
+          result: {},
+          eventPayload: null,
+        },
+      };
+
+      const nullPayloadOutput = formatter.format(nullPayloadTrace);
+      expect(nullPayloadOutput).toContain('ACTION EXECUTION TRACE');
+      expect(nullPayloadOutput).toContain('UNKNOWN');
+      expect(nullPayloadOutput).toContain('<1ms');
+      expect(nullPayloadOutput).toContain('EVENT PAYLOAD');
+      expect(nullPayloadOutput).toContain('null');
+
+      const stringPayloadTrace = {
+        constructor: { name: 'ActionExecutionTrace' },
+        actionId: 'core:test-string',
+        actorId: 'player-456',
+        execution: {
+          startTime: baseTime + 1000,
+          endTime: baseTime + 1500,
+          duration: 500,
+          result: { success: true },
+          eventPayload: 'payload-string',
+        },
+        turnAction: {
+          commandString: 'test command',
+          actionDefinitionId: 'core:test',
+          targetContexts: [],
+        },
+      };
+
+      const stringPayloadOutput = formatter.format(stringPayloadTrace);
+      expect(stringPayloadOutput).toContain('payload-string');
+      expect(stringPayloadOutput).toContain('500ms');
+      expect(stringPayloadOutput).toContain('SUCCESS');
+    });
+
+    it('should produce structured error output when formatting fails', () => {
+      const logger = new CapturingLogger();
+      const filter = new InclusionAwareActionTraceFilter({
+        enabled: true,
+        tracedActions: ['*'],
+        verbosityLevel: 'standard',
+        inclusionConfig: {
+          componentData: true,
+          prerequisites: true,
+          targets: true,
+        },
+        logger,
+      });
+
+      const formatter = new HumanReadableFormatter({
+        logger,
+        actionTraceFilter: filter,
+      });
+
+      let constructorAccessCount = 0;
+      const problematicTrace = {};
+      Object.defineProperty(problematicTrace, 'constructor', {
+        configurable: true,
+        get() {
+          constructorAccessCount += 1;
+          if (constructorAccessCount > 1) {
+            throw new Error('constructor access failure');
+          }
+          return { name: 'ActionExecutionTrace' };
+        },
+      });
+      Object.defineProperty(problematicTrace, 'execution', {
+        configurable: true,
+        get() {
+          throw new Error('execution failure');
+        },
+      });
+      Object.defineProperty(problematicTrace, 'actionId', {
+        configurable: true,
+        get() {
+          throw new Error('action id failure');
+        },
+      });
+
+      const output = formatter.format(problematicTrace);
+
+      expect(output).toContain('FORMATTING ERROR');
+      expect(output).toContain('Failed to format trace');
+      expect(output).toContain('Action ID: <error accessing property>');
+      expect(output).toContain('Type: <error accessing property>');
+      expect(
+        logger.messages.error.some(([message]) =>
+          message.includes('HumanReadableFormatter: Formatting error')
+        )
+      ).toBe(true);
     });
   });
 });
