@@ -400,48 +400,73 @@ Test cases:
 
 ## Migration Progress Tracking
 
-Use this checklist to track progress by mod:
+Use this checklist to track progress by mod (based on actual findings from ANASYSIMP-019-04-01):
 
-- [ ] **descriptors** (6 components)
-  - [ ] texture-* (already has example, verify others)
-  - [ ] composition
-  - [ ] build
-  - [ ] height
-  - [ ] hairDensity
-  - [ ] smell
+### Priority 1: Core & Anatomy Mods (6 components)
 
-- [ ] **anatomy** (2 components)
-  - [ ] body
-  - [ ] sockets
+#### Core Mod (4 components)
+- [ ] gender
+- [ ] material
+- [ ] notes
+- [ ] player_type
 
-- [ ] **clothing** (7 components)
-  - [ ] wearable
-  - [ ] coverage_mapping
-  - [ ] slot_metadata
-  - [ ] blocks_removal
-  - [ ] equipment
-  - [ ] layer_priority
-  - [ ] equipment_slots
+#### Anatomy Mod (2 components)
+- [ ] body
+- [ ] sockets
 
-- [ ] **core** (5 components)
-  - [ ] gender
-  - [ ] material
-  - [ ] notes
-  - [ ] actor_type
-  - [ ] visibility
+### Priority 2: Clothing Mod (4 components)
+- [ ] wearable
+- [ ] coverage_mapping
+- [ ] slot_metadata
+- [ ] blocks_removal
 
-- [ ] **music** (3 components)
-  - [ ] performance_mood
-  - [ ] playing_music
-  - [ ] is_instrument
+### Priority 3: Activity & Music Mods (2 components)
+- [ ] description_metadata (activity mod)
+- [ ] performance_mood (music mod)
 
-- [ ] **remaining mods** (~25 components)
-  - [ ] activity
-  - [ ] items
-  - [ ] movement
-  - [ ] patrol
-  - [ ] vampirism
-  - [ ] (others as discovered)
+### Priority 4: Descriptors Mod (33 components to migrate)
+
+#### Already Migrated (1 component)
+- [x] texture-with-validation ✓
+
+#### Body-level descriptors (5 components)
+- [ ] body_composition
+- [ ] build
+- [ ] height
+- [ ] body_hair
+- [ ] texture
+
+#### Part-level descriptors (28 components)
+- [ ] acoustic_property
+- [ ] animation
+- [ ] color_basic
+- [ ] color_extended
+- [ ] deformity
+- [ ] digit_count
+- [ ] effect
+- [ ] embellishment
+- [ ] facial_aesthetic
+- [ ] facial_hair
+- [ ] firmness
+- [ ] flexibility
+- [ ] hair_style
+- [ ] length_category
+- [ ] length_hair
+- [ ] luminosity
+- [ ] pattern
+- [ ] projection
+- [ ] secretion
+- [ ] sensory_capability
+- [ ] shape_eye
+- [ ] shape_general
+- [ ] size_category
+- [ ] structural_integrity
+- [ ] temperature
+- [ ] visual_capability
+- [ ] vocal_capability
+- [ ] weight_feel
+
+**Total: 45 components to migrate (46 total - 1 already migrated)**
 
 ## Related Tickets
 
