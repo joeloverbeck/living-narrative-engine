@@ -131,5 +131,18 @@
     },
     "required": ["recipeId"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid body descriptor value: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Body descriptor is required",
+      "invalidType": "Invalid type for body descriptor: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

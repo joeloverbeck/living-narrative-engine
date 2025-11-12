@@ -70,5 +70,18 @@
     },
     "required": ["sockets"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid socket orientation: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Socket orientation is required",
+      "invalidType": "Invalid type for socket orientation: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
