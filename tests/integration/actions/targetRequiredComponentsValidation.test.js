@@ -379,6 +379,122 @@ describe('Target Required Components Validation - Integration', () => {
     });
   });
 
+  describe('target candidate resilience and logging', () => {
+    it('should fail gracefully when target entity map is null', () => {
+      const actionDef = {
+        id: 'test:null_targets',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, null);
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No target entities available for primary validation',
+      });
+      expect(logger.debug).toHaveBeenCalledWith(
+        'No target entities provided for primary validation'
+      );
+    });
+
+    it('should detect and report empty target arrays', () => {
+      const actionDef = {
+        id: 'test:empty_target_array',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, {
+        primary: [],
+      });
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No primary target available for validation',
+      });
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Empty primary target array for required components validation'
+      );
+    });
+
+    it('should handle falsy target candidates without crashing', () => {
+      const actionDef = {
+        id: 'test:falsy_candidate',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, {
+        primary: [null],
+      });
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No primary target available for validation',
+      });
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Invalid primary target candidate encountered during required components validation'
+      );
+    });
+
+    it('should treat wrappers without an entity reference as invalid candidates', () => {
+      const actionDef = {
+        id: 'test:missing_entity_reference',
+        required_components: {
+          primary: ['positioning:closeness'],
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, {
+        primary: [{ entity: null }],
+      });
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'No primary target available for validation',
+      });
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Resolved primary target candidate lacks entity reference'
+      );
+    });
+
+    it('should log hasComponent errors and surface missing component details', () => {
+      const actionDef = {
+        id: 'test:has_component_error',
+        required_components: {
+          primary: ['test:missing_component'],
+        },
+      };
+
+      const problematicEntity = {
+        id: 'problematic',
+        components: {},
+        hasComponent: () => {
+          throw new Error('component lookup failed');
+        },
+      };
+
+      const result = validator.validateTargetRequirements(actionDef, {
+        primary: problematicEntity,
+      });
+
+      expect(result).toEqual({
+        valid: false,
+        reason: 'Target (primary) must have component: test:missing_component',
+      });
+      expect(logger.debug).toHaveBeenCalledWith(
+        "Error checking hasComponent('test:missing_component') on primary target problematic: component lookup failed"
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Target entity problematic missing required component: test:missing_component'
+      );
+    });
+  });
+
   describe('real action files', () => {
     it('should correctly validate straddle_waist_facing.action.json', () => {
       // Load actual action file
