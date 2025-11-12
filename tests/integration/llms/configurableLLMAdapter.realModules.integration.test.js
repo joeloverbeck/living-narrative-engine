@@ -793,48 +793,111 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
   });
 
   it('validates critical dependencies during construction', () => {
-    const errorMapperDeps = createAdapterDependencies();
+    const missingLoggerDeps = createAdapterDependencies();
     expect(() => {
       return new ConfigurableLLMAdapter({
-        logger: errorMapperDeps.adapterLogger,
-        environmentContext: errorMapperDeps.environmentContext,
-        apiKeyProvider: errorMapperDeps.apiKeyProvider,
-        llmStrategyFactory: errorMapperDeps.strategyFactory,
-        configurationManager: errorMapperDeps.configurationManager,
-        requestExecutor: errorMapperDeps.requestExecutor,
-        errorMapper: null,
-        tokenEstimator: errorMapperDeps.tokenEstimator,
+        logger: null,
+        environmentContext: missingLoggerDeps.environmentContext,
+        apiKeyProvider: missingLoggerDeps.apiKeyProvider,
+        llmStrategyFactory: missingLoggerDeps.strategyFactory,
+        configurationManager: missingLoggerDeps.configurationManager,
+        requestExecutor: missingLoggerDeps.requestExecutor,
+        errorMapper: missingLoggerDeps.errorMapper,
+        tokenEstimator: missingLoggerDeps.tokenEstimator,
       });
     }).toThrow(
-      'ConfigurableLLMAdapter: Constructor requires a valid ILLMErrorMapper instance.'
+      'ConfigurableLLMAdapter: Constructor requires a valid ILogger instance.'
     );
-    expect(
-      errorMapperDeps.adapterLogger.has(
-        'error',
-        'requires a valid ILLMErrorMapper instance'
-      )
-    ).toBe(true);
 
-    const tokenEstimatorDeps = createAdapterDependencies();
-    expect(() => {
-      return new ConfigurableLLMAdapter({
-        logger: tokenEstimatorDeps.adapterLogger,
-        environmentContext: tokenEstimatorDeps.environmentContext,
-        apiKeyProvider: tokenEstimatorDeps.apiKeyProvider,
-        llmStrategyFactory: tokenEstimatorDeps.strategyFactory,
-        configurationManager: tokenEstimatorDeps.configurationManager,
-        requestExecutor: tokenEstimatorDeps.requestExecutor,
-        errorMapper: tokenEstimatorDeps.errorMapper,
-        tokenEstimator: null,
-      });
-    }).toThrow(
-      'ConfigurableLLMAdapter: Constructor requires a valid ITokenEstimator instance.'
+    const {
+      environmentContext,
+      apiKeyProvider,
+      strategyFactory,
+      configurationManager,
+      requestExecutor,
+      errorMapper,
+      tokenEstimator,
+    } = createAdapterDependencies();
+
+    /**
+     * @param {object} overrides
+     * @param {string} expectedMessage
+     * @param {string} [loggedSubstring]
+     */
+    const expectFailure = (
+      overrides,
+      expectedMessage,
+      loggedSubstring = expectedMessage
+    ) => {
+      const failureLogger = new TestLogger('Adapter');
+      expect(() => {
+        return new ConfigurableLLMAdapter({
+          logger:
+            Object.prototype.hasOwnProperty.call(overrides, 'logger')
+              ? overrides.logger
+              : failureLogger,
+          environmentContext,
+          apiKeyProvider,
+          llmStrategyFactory: strategyFactory,
+          configurationManager,
+          requestExecutor,
+          errorMapper,
+          tokenEstimator,
+          ...overrides,
+        });
+      }).toThrow(expectedMessage);
+
+      if (loggedSubstring) {
+        expect(failureLogger.has('error', loggedSubstring)).toBe(true);
+      }
+    };
+
+    expectFailure(
+      { environmentContext: null },
+      'ConfigurableLLMAdapter: Constructor requires a valid EnvironmentContext instance.'
     );
-    expect(
-      tokenEstimatorDeps.adapterLogger.has(
-        'error',
-        'requires a valid ITokenEstimator instance'
-      )
-    ).toBe(true);
+    expectFailure(
+      { apiKeyProvider: {} },
+      'ConfigurableLLMAdapter: Constructor requires a valid IApiKeyProvider instance.'
+    );
+    expectFailure(
+      { llmStrategyFactory: {} },
+      'ConfigurableLLMAdapter: Constructor requires a valid LLMStrategyFactory instance.'
+    );
+    expectFailure(
+      { configurationManager: {} },
+      'ConfigurableLLMAdapter: Constructor requires a valid ILLMConfigurationManager instance.'
+    );
+    expectFailure(
+      { requestExecutor: {} },
+      'ConfigurableLLMAdapter: Constructor requires a valid ILLMRequestExecutor instance.'
+    );
+    expectFailure(
+      { errorMapper: null },
+      'ConfigurableLLMAdapter: Constructor requires a valid ILLMErrorMapper instance.',
+      'requires a valid ILLMErrorMapper instance'
+    );
+    expectFailure(
+      { tokenEstimator: null },
+      'ConfigurableLLMAdapter: Constructor requires a valid ITokenEstimator instance.',
+      'requires a valid ITokenEstimator instance'
+    );
+  });
+
+  it('gracefully handles testing helpers when dependencies fail post-init', async () => {
+    const harness = createAdapterHarness();
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    jest
+      .spyOn(harness.configurationManager, 'getActiveConfigId')
+      .mockImplementation(() => {
+        throw new Error('sync failure');
+      });
+
+    expect(harness.adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBeNull();
+
+    expect(harness.adapter.getExecutionEnvironment_FOR_TESTING_ONLY()).toBe(
+      harness.environmentContext.getExecutionEnvironment()
+    );
   });
 });
