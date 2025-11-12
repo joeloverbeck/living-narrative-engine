@@ -407,6 +407,176 @@ describe('Pipeline Performance Tracking Integration (ACTTRA-018)', () => {
     });
   });
 
+  describe('Threshold management and recommendations', () => {
+    it('should expose defaults, apply updates, and validate threshold input', () => {
+      const currentThresholds = analyzer.getStageThresholds();
+      expect(currentThresholds.pipeline_total).toBe(1000);
+      expect(currentThresholds.component_filtering).toBe(100);
+
+      analyzer.updateStageThresholds({
+        component_filtering: 75,
+        pipeline_total: 1500,
+      });
+
+      const updatedThresholds = analyzer.getStageThresholds();
+      expect(updatedThresholds.component_filtering).toBe(75);
+      expect(updatedThresholds.pipeline_total).toBe(1500);
+
+      expect(() => analyzer.updateStageThresholds(null)).toThrow(
+        'Invalid thresholds provided'
+      );
+      expect(() =>
+        analyzer.updateStageThresholds({ pipeline_total: -25 })
+      ).toThrow(
+        'Invalid threshold for stage pipeline_total: must be a non-negative number'
+      );
+    });
+
+    it('should surface layered recommendations when multiple thresholds are breached', () => {
+      const actionId = 'core:threshold-stress';
+      const stageOrder = [
+        'component_filtering',
+        'prerequisite_evaluation',
+        'multi_target_resolution',
+        'target_resolution',
+      ];
+
+      const thresholdError = new Error('threshold monitor offline');
+      const checkThresholdSpy = jest
+        .spyOn(performanceMonitor, 'checkThreshold')
+        .mockImplementation(() => {
+          throw thresholdError;
+        });
+
+      const recordMetricSpy = jest
+        .spyOn(performanceMonitor, 'recordMetric')
+        .mockImplementation(() => {});
+
+      for (const stage of stageOrder) {
+        trace.captureActionData(stage, actionId, { passed: true });
+      }
+
+      const tracedActions = trace.getTracedActions();
+      const actionTrace = tracedActions.get(actionId);
+      const stageTimesByStage = {
+        component_filtering: 1000,
+        prerequisite_evaluation: 1250,
+        multi_target_resolution: 1800,
+        target_resolution: 2200,
+      };
+      const baseTimestamp = Date.now();
+      for (const [index, stage] of stageOrder.entries()) {
+        const stageEntry = actionTrace.stages[stage];
+        stageEntry.data._performance.captureTime = stageTimesByStage[stage];
+        stageEntry.data._performance.timestamp = baseTimestamp + index;
+        stageEntry.timestamp = baseTimestamp + index;
+      }
+
+      const report = analyzer.generatePerformanceReport(trace);
+
+      expect(checkThresholdSpy).toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Performance monitor threshold check failed: threshold monitor offline'
+        )
+      );
+
+      expect(report.bottlenecks).toHaveLength(3);
+      expect(report.bottlenecks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            stage: 'multi_target_resolution',
+            violations: 1,
+          }),
+        ])
+      );
+
+      expect(report.recommendations).toEqual(
+        expect.arrayContaining([
+          {
+            priority: 'high',
+            stage: 'multi_target_resolution',
+            message:
+              'Optimize multi_target_resolution - averaging 550.00ms (threshold: 500ms)',
+          },
+          {
+            priority: 'medium',
+            message:
+              'Total pipeline duration (1200.00ms) exceeds threshold (1000ms)',
+          },
+          {
+            priority: 'medium',
+            message:
+              '3 stages show elevated durations - consider detailed profiling',
+          },
+        ])
+      );
+
+      expect(recordMetricSpy).toHaveBeenCalledWith(
+        'pipeline.stage.multi_target_resolution.violations',
+        1
+      );
+
+      checkThresholdSpy.mockRestore();
+      recordMetricSpy.mockRestore();
+    });
+  });
+
+  describe('Metric recording resilience', () => {
+    it('should skip recording when performance monitor lacks support', () => {
+      const actionId = 'core:metric-skip';
+      const originalPerformanceNow = performance.now;
+      let timestamp = 1000;
+      performance.now = jest.fn(() => (timestamp += 60));
+
+      trace.captureActionData('component_filtering', actionId, { passed: true });
+      trace.captureActionData('prerequisite_evaluation', actionId, {
+        evaluated: true,
+      });
+
+      performanceMonitor.recordMetric = undefined;
+
+      expect(() => analyzer.generatePerformanceReport(trace)).not.toThrow();
+
+      performance.now = originalPerformanceNow;
+    });
+
+    it('should log and continue when metric recording fails', () => {
+      const actionId = 'core:metric-failure';
+      const originalPerformanceNow = performance.now;
+      let timestamp = 2000;
+      performance.now = jest.fn(() => (timestamp += 40));
+
+      trace.captureActionData('component_filtering', actionId, { passed: true });
+      trace.captureActionData('prerequisite_evaluation', actionId, {
+        evaluated: true,
+      });
+
+      const recordMetricSpy = jest
+        .spyOn(performanceMonitor, 'recordMetric')
+        .mockImplementation(() => {
+          throw new Error('metric store unreachable');
+        });
+
+      expect(() => analyzer.generatePerformanceReport(trace)).not.toThrow();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Failed to record metrics in performance monitor: metric store unreachable'
+        )
+      );
+
+      recordMetricSpy.mockRestore();
+      performance.now = originalPerformanceNow;
+    });
+  });
+
+  describe('Invalid trace handling', () => {
+    it('should reject traces that lack required APIs', () => {
+      expect(() => analyzer.analyzeTracePerformance(null)).toThrow(
+        'Invalid trace provided - must have getTracedActions method'
+      );
+    });
+  });
   describe('Error Handling and Resilience', () => {
     it('should continue working when performance monitor fails', async () => {
       // Arrange
