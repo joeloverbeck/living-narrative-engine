@@ -48,5 +48,18 @@
         }
       }
     }
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid performance mood: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Performance mood is required",
+      "invalidType": "Invalid type for mood: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
