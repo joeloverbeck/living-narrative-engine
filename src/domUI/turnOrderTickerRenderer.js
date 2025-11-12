@@ -25,9 +25,7 @@ class TurnOrderTickerRenderer {
   #_documentContext;
   #validatedEventDispatcher;
   #domElementFactory;
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in TURORDTIC-004+
   #_entityManager;
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in TURORDTIC-004+
   #_entityDisplayDataProvider;
   // eslint-disable-next-line no-unused-private-class-members -- Will be used in TURORDTIC-007+
   #_tickerContainerElement;
@@ -201,19 +199,69 @@ class TurnOrderTickerRenderer {
     this.#logger.info('TurnOrderTickerRenderer disposed');
   }
 
+  /**
+   * Test-only helper to access private method for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {string} entityId - Entity ID
+   * @returns {object} Display data
+   * @private
+   */
+  __testGetActorDisplayData(entityId) {
+    return this.#_getActorDisplayData(entityId);
+  }
+
   // ========== PRIVATE HELPERS ==========
 
   /**
    * Extract display data (name, portrait) for an actor.
+   * Handles missing components gracefully with fallbacks.
    *
    * @param {string} entityId - Entity ID of the actor
-   * @returns {{ name: string, portraitPath?: string }} Display data
+   * @returns {{ name: string, portraitPath?: string, participating: boolean }} Display data
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members -- Implementation in TURORDTIC-004
   #_getActorDisplayData(entityId) {
-    // Implementation in TURORDTIC-004
-    return { name: entityId };
+    try {
+      // Use EntityDisplayDataProvider for name and portrait
+      const name = this.#_entityDisplayDataProvider.getEntityName(entityId, entityId);
+      const portraitPath = this.#_entityDisplayDataProvider.getEntityPortraitPath(entityId);
+
+      // Check participation status
+      let participating = true; // Default to true
+      if (this.#_entityManager.hasComponent(entityId, PARTICIPATION_COMPONENT_ID)) {
+        const participationComponent = this.#_entityManager.getComponentData(
+          entityId,
+          PARTICIPATION_COMPONENT_ID
+        );
+        participating = participationComponent?.participating ?? true;
+      }
+
+      this.#logger.debug('Actor display data extracted', {
+        entityId,
+        name,
+        hasPortrait: !!portraitPath,
+        participating,
+      });
+
+      return {
+        name,
+        portraitPath,
+        participating,
+      };
+    } catch (error) {
+      // If any error occurs, return minimal fallback data
+      this.#logger.warn('Failed to extract actor display data, using fallback', {
+        entityId,
+        error: error.message,
+      });
+
+      return {
+        name: entityId,
+        portraitPath: null,
+        participating: true,
+      };
+    }
   }
 
   /**
