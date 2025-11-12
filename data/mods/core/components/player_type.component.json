@@ -14,5 +14,18 @@
     },
     "required": ["type"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid player type: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Player type is required",
+      "invalidType": "Invalid type for player type: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
