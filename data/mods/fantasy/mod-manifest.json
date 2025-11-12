@@ -47,7 +47,9 @@
     "recipes": [
       "vespera_nightwhisper.recipe.json"
     ],
-    "portraits": [],
+    "portraits": [
+      "vespera_nightwhisper.png"
+    ],
     "worlds": []
   }
 }
