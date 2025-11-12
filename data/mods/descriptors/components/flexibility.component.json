@@ -20,5 +20,18 @@
     },
     "required": ["flexibility"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid flexibility: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Flexibility is required",
+      "invalidType": "Invalid type for flexibility: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

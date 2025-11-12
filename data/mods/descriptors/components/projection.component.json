@@ -14,5 +14,18 @@
     },
     "required": ["projection"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid projection: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Projection is required",
+      "invalidType": "Invalid type for projection: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
