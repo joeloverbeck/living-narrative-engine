@@ -34,6 +34,7 @@
       "weight.component.json"
     ],
     "actions": [
+      "aim_item.action.json",
       "apply_lipstick.action.json",
       "drink_entirely.action.json",
       "drink_from.action.json",
@@ -43,6 +44,7 @@
       "give_item.action.json",
       "hug_item_for_comfort.action.json",
       "jot_down_notes.action.json",
+      "lower_aim.action.json",
       "open_container.action.json",
       "pick_up_item.action.json",
       "put_in_container.action.json",
@@ -50,6 +52,7 @@
       "take_from_container.action.json"
     ],
     "rules": [
+      "handle_aim_item.rule.json",
       "handle_apply_lipstick.rule.json",
       "handle_drink_entirely.rule.json",
       "handle_drink_from.rule.json",
@@ -59,6 +62,7 @@
       "handle_give_item.rule.json",
       "handle_hug_item_for_comfort.rule.json",
       "handle_jot_down_notes.rule.json",
+      "handle_lower_aim.rule.json",
       "handle_open_container.rule.json",
       "handle_pick_up_item.rule.json",
       "handle_put_in_container.rule.json",
@@ -66,6 +70,7 @@
       "handle_take_from_container.rule.json"
     ],
     "conditions": [
+      "event-is-action-aim-item.condition.json",
       "event-is-action-apply-lipstick.condition.json",
       "event-is-action-drink-entirely.condition.json",
       "event-is-action-drink-from.condition.json",
@@ -75,6 +80,7 @@
       "event-is-action-give-item.condition.json",
       "event-is-action-hug-item-for-comfort.condition.json",
       "event-is-action-jot-down-notes.condition.json",
+      "event-is-action-lower-aim.condition.json",
       "event-is-action-open-container.condition.json",
       "event-is-action-pick-up-item.condition.json",
       "event-is-action-put-in-container.condition.json",

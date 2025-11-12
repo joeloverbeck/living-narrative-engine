@@ -1,0 +1,53 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "fantasy",
+  "version": "1.0.0",
+  "name": "fantasy",
+  "description": "Scenario.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "movement",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [],
+    "components": [],
+    "conditions": [],
+    "rules": [],
+    "entities": {
+      "definitions": [
+        "vespera_nightwhisper.character.json"
+      ],
+      "instances": [
+        "vespera_nightwhisper.character.json"
+      ]
+    },
+    "events": [],
+    "macros": [],
+    "scopes": [],
+    "recipes": [
+      "vespera_nightwhisper.recipe.json"
+    ],
+    "portraits": [],
+    "worlds": []
+  }
+}
