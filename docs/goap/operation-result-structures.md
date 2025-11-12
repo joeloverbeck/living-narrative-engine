@@ -2,13 +2,14 @@
 
 ## Overview
 
-Many rule operations produce result values that are stored in `result_variable` fields and used by subsequent operations. This document catalogs the structure of these result values for each operation type.
+Operations in the rule execution system can produce result values that are stored in `result_variable` fields and used by subsequent operations. This document catalogs the structure of these result values for each operation type.
+
+**Important Context**: These result structures are used during **rule execution**, not during GOAP planning. The GOAP system analyzes operations to extract `planningEffects`, which is a different structure used for simulating action outcomes during decision-making.
 
 Understanding result structures is essential for:
-1. **Effects Analysis**: Knowing what data operations produce
-2. **Macro Resolution**: Resolving variable references correctly
-3. **Abstract Precondition Generation**: Identifying when results are used in conditions
-4. **Debugging**: Understanding rule execution flow
+1. **Rule Development**: Chaining operations that depend on previous results
+2. **Debugging**: Understanding rule execution flow
+3. **Effects Analysis**: The GOAP EffectsAnalyzer uses these operations to generate planning effects
 
 ## Result Variable Pattern
 
@@ -17,17 +18,22 @@ Operations that produce results follow this pattern:
 ```json
 {
   "type": "OPERATION_NAME",
-  "parameters": {...},
-  "result_variable": "variableName"
+  "parameters": {
+    "result_variable": "variableName",
+    ...
+  }
 }
 ```
 
-The result is stored in the operation context and can be accessed by later operations:
+The result is stored in the execution context and can be accessed by later operations using JSON Logic:
 
 ```json
 {
-  "type": "SOME_OPERATION",
-  "field": {"var": "variableName.someField"}
+  "type": "IF",
+  "parameters": {
+    "condition": {"var": "variableName.someField"},
+    "then_actions": [...]
+  }
 }
 ```
 
@@ -37,47 +43,29 @@ The result is stored in the operation context and can be accessed by later opera
 
 **Purpose:** Checks if entity has inventory space for an item
 
-**Operation:**
-```json
-{
-  "type": "VALIDATE_INVENTORY_CAPACITY",
-  "entity": "target",
-  "itemId": {"var": "itemId"},
-  "result_variable": "validation"
-}
-```
-
 **Result Structure:**
 ```typescript
 {
   valid: boolean,
-  reason?: string
+  reason?: string  // Present only when valid is false
 }
 ```
 
-**Example Success:**
+**Example:**
 ```json
-{
-  "valid": true
-}
+// Success
+{"valid": true}
+
+// Failure
+{"valid": false, "reason": "max_weight_exceeded"}
 ```
 
-**Example Failure:**
-```json
-{
-  "valid": false,
-  "reason": "Inventory is full"
-}
-```
-
-**Usage in Conditionals:**
-```json
-{
-  "type": "IF",
-  "condition": {"==": [{"var": "validation.valid"}, true]},
-  "then": [...]
-}
-```
+**Common Reasons:**
+- `"validation_failed"` - Invalid parameters
+- `"no_inventory"` - Entity has no inventory component
+- `"no_weight"` - Item has no weight component
+- `"max_items_exceeded"` - Inventory item count limit reached
+- `"max_weight_exceeded"` - Inventory weight limit exceeded
 
 ---
 
@@ -85,44 +73,21 @@ The result is stored in the operation context and can be accessed by later opera
 
 **Purpose:** Checks if container has space for an item
 
-**Operation:**
-```json
-{
-  "type": "VALIDATE_CONTAINER_CAPACITY",
-  "containerId": {"var": "containerId"},
-  "itemId": {"var": "itemId"},
-  "result_variable": "containerValidation"
-}
-```
-
 **Result Structure:**
 ```typescript
 {
   valid: boolean,
-  reason?: string,
-  availableSpace?: number,
-  requiredSpace?: number
+  reason?: string  // Present only when valid is false
 }
 ```
 
-**Example Success:**
-```json
-{
-  "valid": true,
-  "availableSpace": 5,
-  "requiredSpace": 1
-}
-```
-
-**Example Failure:**
-```json
-{
-  "valid": false,
-  "reason": "Container is full",
-  "availableSpace": 0,
-  "requiredSpace": 1
-}
-```
+**Common Reasons:**
+- `"no_container"` - Entity has no container component
+- `"container_closed"` - Container must be opened first
+- `"no_capacity_defined"` - Container has no capacity limits
+- `"no_weight"` - Item has no weight component
+- `"max_items_exceeded"` - Container item count limit reached
+- `"max_weight_exceeded"` - Container weight limit exceeded
 
 ---
 
@@ -132,45 +97,26 @@ The result is stored in the operation context and can be accessed by later opera
 
 **Purpose:** Retrieves component data from an entity
 
-**Operation:**
-```json
-{
-  "type": "QUERY_COMPONENT",
-  "entity": "target",
-  "component": "core:inventory",
-  "result_variable": "targetInventory"
-}
-```
-
 **Result Structure:**
 ```typescript
+// Returns the component data directly (structure varies by component)
+// For core:inventory:
 {
-  // Component data structure (varies by component)
-  // For core:inventory:
-  itemCount?: number,
-  capacity?: number,
-  weight?: number,
-  maxWeight?: number
+  items: string[],      // Array of item entity IDs
+  capacity: {
+    maxItems: number,
+    maxWeight: number
+  }
 }
-```
 
-**Example:**
-```json
+// For core:position:
 {
-  "itemCount": 3,
-  "capacity": 10,
-  "weight": 5.5,
-  "maxWeight": 20
+  locationId: string,
+  x?: number,
+  y?: number
 }
-```
 
-**Usage:**
-```json
-{
-  "type": "IF",
-  "condition": {"<": [{"var": "targetInventory.itemCount"}, {"var": "targetInventory.capacity"}]},
-  "then": [...]
-}
+// Returns undefined if component not found (or missing_value parameter if specified)
 ```
 
 ---
@@ -179,22 +125,10 @@ The result is stored in the operation context and can be accessed by later opera
 
 **Purpose:** Retrieves multiple components from an entity
 
-**Operation:**
-```json
-{
-  "type": "QUERY_COMPONENTS",
-  "entity": "actor",
-  "components": ["core:inventory", "core:position"],
-  "result_variable": "actorData"
-}
-```
-
 **Result Structure:**
 ```typescript
 {
-  [componentId: string]: {
-    // Component data
-  }
+  [componentId: string]: ComponentData | undefined
 }
 ```
 
@@ -202,25 +136,11 @@ The result is stored in the operation context and can be accessed by later opera
 ```json
 {
   "core:inventory": {
-    "itemCount": 5,
-    "capacity": 10
+    "items": ["item_1"],
+    "capacity": {"maxItems": 10, "maxWeight": 20}
   },
   "core:position": {
-    "location": "bedroom",
-    "x": 10,
-    "y": 20
-  }
-}
-```
-
-**Usage:**
-```json
-{
-  "type": "MODIFY_COMPONENT",
-  "entity": "target",
-  "component": "core:position",
-  "updates": {
-    "location": {"var": "actorData.core:position.location"}
+    "locationId": "bedroom"
   }
 }
 ```
@@ -231,42 +151,14 @@ The result is stored in the operation context and can be accessed by later opera
 
 **Purpose:** Queries entities matching criteria
 
-**Operation:**
-```json
-{
-  "type": "QUERY_ENTITIES",
-  "filter": {
-    "component": "positioning:sitting",
-    "location": {"var": "currentLocation"}
-  },
-  "result_variable": "nearbyActors"
-}
-```
-
 **Result Structure:**
 ```typescript
-{
-  entities: string[],  // Array of entity IDs
-  count: number
-}
+string[]  // Array of entity IDs
 ```
 
 **Example:**
 ```json
-{
-  "entities": ["npc_1", "npc_2", "npc_3"],
-  "count": 3
-}
-```
-
-**Usage:**
-```json
-{
-  "type": "FOR_EACH",
-  "collection": {"var": "nearbyActors.entities"},
-  "variable": "entity",
-  "operations": [...]
-}
+["npc_1", "npc_2", "npc_3"]
 ```
 
 ---
@@ -275,37 +167,11 @@ The result is stored in the operation context and can be accessed by later opera
 
 **Purpose:** Looks up entity by property
 
-**Operation:**
-```json
-{
-  "type": "QUERY_LOOKUP",
-  "property": "name",
-  "value": "John",
-  "result_variable": "foundEntity"
-}
-```
-
 **Result Structure:**
 ```typescript
 {
   entityId: string | null,
   found: boolean
-}
-```
-
-**Example Found:**
-```json
-{
-  "entityId": "npc_1",
-  "found": true
-}
-```
-
-**Example Not Found:**
-```json
-{
-  "entityId": null,
-  "found": false
 }
 ```
 
@@ -317,33 +183,9 @@ The result is stored in the operation context and can be accessed by later opera
 
 **Purpose:** Checks if entity has a component
 
-**Operation:**
-```json
-{
-  "type": "HAS_COMPONENT",
-  "entity": "target",
-  "component": "positioning:sitting",
-  "result_variable": "isSitting"
-}
-```
-
 **Result Structure:**
 ```typescript
 boolean
-```
-
-**Example:**
-```json
-true
-```
-
-**Usage:**
-```json
-{
-  "type": "IF",
-  "condition": {"var": "isSitting"},
-  "then": [...]
-}
 ```
 
 ---
@@ -352,26 +194,9 @@ true
 
 **Purpose:** Checks if entity has body part with specific component value
 
-**Operation:**
-```json
-{
-  "type": "HAS_BODY_PART_WITH_COMPONENT_VALUE",
-  "entity": "actor",
-  "component": "anatomy:hand",
-  "field": "isFree",
-  "value": true,
-  "result_variable": "hasFreeHand"
-}
-```
-
 **Result Structure:**
 ```typescript
 boolean
-```
-
-**Example:**
-```json
-true
 ```
 
 ---
@@ -382,37 +207,21 @@ true
 
 **Purpose:** Opens a container
 
-**Operation:**
-```json
-{
-  "type": "OPEN_CONTAINER",
-  "entity": "target",
-  "result_variable": "openResult"
-}
-```
-
 **Result Structure:**
 ```typescript
 {
   success: boolean,
-  error?: string
+  error?: string,      // Present when success is false
+  contents?: string[]  // Array of item IDs in container (present when success is true)
 }
 ```
 
-**Example Success:**
-```json
-{
-  "success": true
-}
-```
-
-**Example Failure:**
-```json
-{
-  "success": false,
-  "error": "Container is locked"
-}
-```
+**Common Errors:**
+- `"invalid_parameters"` - Invalid operation parameters
+- `"container_not_openable"` - Entity cannot be opened
+- `"container_missing_component"` - No container component
+- `"already_open"` - Container is already open
+- `"missing_key"` - Required key not in actor's inventory
 
 ---
 
@@ -422,70 +231,35 @@ true
 
 **Purpose:** Performs mathematical calculation
 
-**Operation:**
-```json
-{
-  "type": "MATH",
-  "expression": {
-    "+": [{"var": "currentValue"}, 10]
-  },
-  "result_variable": "newValue"
-}
-```
-
 **Result Structure:**
 ```typescript
-number
+number | null  // Returns null if expression cannot be evaluated
 ```
 
 **Example:**
 ```json
-15
-```
-
-**Usage:**
-```json
-{
-  "type": "MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:stats",
-  "updates": {
-    "health": {"var": "newValue"}
-  }
-}
+15  // Result of successful calculation
+null  // Result when evaluation fails (invalid operators, NaN, etc.)
 ```
 
 ---
 
 ### RESOLVE_DIRECTION
 
-**Purpose:** Resolves facing direction between entities
-
-**Operation:**
-```json
-{
-  "type": "RESOLVE_DIRECTION",
-  "entity": "actor",
-  "target": "target",
-  "result_variable": "direction"
-}
-```
+**Purpose:** Resolves a direction string to a target location ID
 
 **Result Structure:**
 ```typescript
-{
-  direction: "facing" | "facing_away" | "behind" | "side",
-  angle?: number
-}
+string | null  // Target location ID, or null if direction not found
 ```
 
 **Example:**
 ```json
-{
-  "direction": "facing",
-  "angle": 15
-}
+"tavern_main_room"  // Target location for direction "north"
+null  // When no exit exists for the specified direction
 ```
+
+**Note:** This operation queries the `movement:exits` component on a location entity to find the target of a directional exit (e.g., "north", "south"). It does NOT determine facing direction between entities.
 
 ---
 
@@ -495,33 +269,9 @@ number
 
 **Purpose:** Gets display name of entity
 
-**Operation:**
-```json
-{
-  "type": "GET_NAME",
-  "entity": "target",
-  "result_variable": "targetName"
-}
-```
-
 **Result Structure:**
 ```typescript
-string
-```
-
-**Example:**
-```json
-"John Smith"
-```
-
-**Usage:**
-```json
-{
-  "type": "DISPATCH_SPEECH",
-  "text": {
-    "cat": ["Hello, ", {"var": "targetName"}]
-  }
-}
+string  // Entity name from core:name component, or fallback value
 ```
 
 ---
@@ -530,22 +280,9 @@ string
 
 **Purpose:** Gets current timestamp
 
-**Operation:**
-```json
-{
-  "type": "GET_TIMESTAMP",
-  "result_variable": "timestamp"
-}
-```
-
 **Result Structure:**
 ```typescript
 number  // Unix timestamp in milliseconds
-```
-
-**Example:**
-```json
-1640000000000
 ```
 
 ---
@@ -554,197 +291,68 @@ number  // Unix timestamp in milliseconds
 
 ### ATOMIC_MODIFY_COMPONENT
 
-**Purpose:** Atomically modifies component data
-
-**Operation:**
-```json
-{
-  "type": "ATOMIC_MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:inventory",
-  "updates": {"itemCount": 5},
-  "result_variable": "modifyResult"
-}
-```
+**Purpose:** Atomically modifies component data with check-and-set
 
 **Result Structure:**
 ```typescript
-boolean  // Success/failure
-```
-
-**Example Success:**
-```json
-true
-```
-
-**Example Failure:**
-```json
-false
-```
-
-**Usage:**
-```json
-{
-  "type": "IF",
-  "condition": {"var": "modifyResult"},
-  "then": [...],
-  "else": [...]
-}
+boolean  // true if modification succeeded, false if check failed
 ```
 
 ---
 
-## Complex Result Structures
-
-### Multi-Stage Operations
-
-Some operations build on results from previous operations:
-
-```json
-{
-  "actions": [
-    {
-      "type": "QUERY_COMPONENT",
-      "entity": "target",
-      "component": "core:inventory",
-      "result_variable": "inventory"
-    },
-    {
-      "type": "MATH",
-      "expression": {
-        "-": [{"var": "inventory.capacity"}, {"var": "inventory.itemCount"}]
-      },
-      "result_variable": "availableSpace"
-    },
-    {
-      "type": "IF",
-      "condition": {">": [{"var": "availableSpace"}, 0]},
-      "then": [...]
-    }
-  ]
-}
-```
-
-**Data Flow:**
-1. `QUERY_COMPONENT` produces `inventory` object
-2. `MATH` uses `inventory` fields to calculate `availableSpace`
-3. `IF` uses `availableSpace` in condition
-
-### Nested Structures
-
-Query operations can return nested structures:
-
-```json
-{
-  "type": "QUERY_COMPONENT",
-  "entity": "actor",
-  "component": "relationships:connections",
-  "result_variable": "relationships"
-}
-```
-
-**Result:**
-```json
-{
-  "friends": [
-    {"entityId": "npc_1", "trust": 0.8},
-    {"entityId": "npc_2", "trust": 0.6}
-  ],
-  "enemies": [
-    {"entityId": "npc_3", "hostility": 0.9}
-  ]
-}
-```
-
-**Usage:**
-```json
-{
-  "type": "FOR_EACH",
-  "collection": {"var": "relationships.friends"},
-  "variable": "friend",
-  "operations": [
-    {
-      "type": "IF",
-      "condition": {">": [{"var": "friend.trust"}, 0.7]},
-      "then": [...]
-    }
-  ]
-}
-```
-
 ## Best Practices
 
-### 1. Consistent Naming
+### 1. Always Check Success/Validity
 
-Use descriptive, consistent names for result variables:
-
-✓ **Good:**
-- `validation`
-- `targetInventory`
-- `availableSpace`
-
-✗ **Bad:**
-- `r1`
-- `temp`
-- `x`
-
-### 2. Error Handling
-
-Always check success/validity before using results:
+For operations that return success/validity status, always check before proceeding:
 
 ```json
 {
   "type": "VALIDATE_INVENTORY_CAPACITY",
-  "entity": "target",
-  "result_variable": "validation"
-}
+  "parameters": {
+    "targetEntity": "target",
+    "itemEntity": {"var": "itemId"},
+    "result_variable": "validation"
+  }
+},
 {
   "type": "IF",
-  "condition": {"==": [{"var": "validation.valid"}, true]},
-  "then": [
-    // Use result
-  ],
-  "else": [
-    // Handle failure
-  ]
+  "parameters": {
+    "condition": {"==": [{"var": "validation.valid"}, true]},
+    "then_actions": [/* proceed */],
+    "else_actions": [/* handle failure */]
+  }
 }
 ```
 
-### 3. Clear Data Flow
+### 2. Handle Missing Data
 
-Keep data flow simple and traceable:
-
-✓ **Good:**
-```json
-[
-  {"type": "QUERY_COMPONENT", "result_variable": "inv"},
-  {"type": "IF", "condition": {"<": [{"var": "inv.itemCount"}, 10]}}
-]
-```
-
-✗ **Bad:**
-```json
-[
-  {"type": "QUERY_COMPONENT", "result_variable": "a"},
-  {"type": "MATH", "expression": {"var": "a.x"}, "result_variable": "b"},
-  {"type": "MATH", "expression": {"var": "b"}, "result_variable": "c"},
-  {"type": "IF", "condition": {"var": "c"}}
-]
-```
-
-### 4. Document Complex Structures
-
-For complex result structures, add comments in rules:
+Operations like `QUERY_COMPONENT` may return `undefined`. Use the `missing_value` parameter to provide fallbacks:
 
 ```json
 {
   "type": "QUERY_COMPONENT",
-  "entity": "actor",
-  "component": "complex:data",
-  "result_variable": "complexData",
-  "_comment": "Result structure: { field1: number, nested: { field2: string } }"
+  "parameters": {
+    "entity_ref": "actor",
+    "component_type": "core:inventory",
+    "result_variable": "inventory",
+    "missing_value": {"items": [], "capacity": {"maxItems": 0, "maxWeight": 0}}
+  }
 }
 ```
+
+### 3. Clear Variable Names
+
+Use descriptive names that indicate what the variable contains:
+
+✓ Good: `"targetInventory"`, `"validation"`, `"availableActors"`
+✗ Bad: `"r1"`, `"temp"`, `"x"`
+
+### 4. Minimize Data Flow Complexity
+
+Keep operation chains simple and traceable. Avoid deeply nested variable references.
+
+---
 
 ## Troubleshooting
 
@@ -752,47 +360,33 @@ For complex result structures, add comments in rules:
 
 **Symptom:** `Cannot read property 'X' of undefined`
 
-**Causes:**
-1. Result variable not set before use
-2. Operation failed and didn't set result
-3. Typo in variable name
-
-**Solution:**
-1. Ensure operation runs before variable is used
-2. Check operation success before accessing result
-3. Verify variable name matches exactly
+**Causes & Solutions:**
+1. Result variable not set before use → Ensure operation runs before variable is referenced
+2. Operation failed and didn't set result → Check operation success/validity before accessing result
+3. Typo in variable name → Verify variable name matches exactly
 
 ### Type Mismatch Errors
 
 **Symptom:** Unexpected behavior or type errors
 
-**Causes:**
-1. Assuming wrong result structure
-2. Missing field in result
-3. Incorrect type conversion
-
-**Solution:**
-1. Check operation result structure documentation
+**Solutions:**
+1. Verify result structure matches this documentation
 2. Add defensive checks for optional fields
-3. Use explicit type conversions
+3. Use explicit type conversions when needed
 
 ### Null/Undefined Results
 
 **Symptom:** Operations return `null` or `undefined`
 
-**Causes:**
-1. Entity/component not found
-2. Query returned no results
-3. Operation failed silently
-
-**Solution:**
+**Solutions:**
 1. Check entity/component exists before querying
-2. Handle empty query results
-3. Add error logging to operations
+2. Handle empty query results (e.g., `QUERY_ENTITIES` returning `[]`)
+3. Use `missing_value` parameters for fallback values
+
+---
 
 ## Related Documentation
 
-- [Operation Mapping](./operation-mapping.md)
-- [Macro Resolution](./macro-resolution.md)
-- [Effects Auto-Generation](./effects-auto-generation.md)
-- [Troubleshooting](./troubleshooting.md)
+- [Effects Analyzer](../src/goap/analysis/effectsAnalyzer.js) - Converts operations to planning effects
+- [Operation Handlers](../src/logic/operationHandlers/) - Handler implementations
+- [Operation Schemas](../data/schemas/operations/) - JSON schema definitions
