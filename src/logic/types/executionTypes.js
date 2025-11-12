@@ -64,7 +64,10 @@
  *   execution.
  * @property {{ type: string, payload: object | null }} event - Triggering event metadata.
  * @property {JsonLogicEntityContext | null} actor - Primary entity context.
- * @property {JsonLogicEntityContext | null} target - Target entity context.
+ * @property {JsonLogicEntityContext | null} target - Target entity context (for single-target actions).
+ * @property {JsonLogicEntityContext | null} [primary] - Primary target entity context (for multi-target actions).
+ * @property {JsonLogicEntityContext | null} [secondary] - Secondary target entity context (for multi-target actions).
+ * @property {JsonLogicEntityContext | null} [tertiary] - Tertiary target entity context (for multi-target actions).
  * @property {object} context - Temporary variables shared across the action sequence.
  */
 

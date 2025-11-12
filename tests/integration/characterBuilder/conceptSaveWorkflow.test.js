@@ -115,7 +115,7 @@ describe('Character Concept Save Workflow - Integration Test', () => {
   describe('concept save workflow with character limits', () => {
     it('should successfully save concept with 1200 characters (reproduces original error)', async () => {
       // This test reproduces the exact scenario from the error logs
-      const conceptText = 'a'.repeat(1200); // Over old 1000 limit, under new 3000 limit
+      const conceptText = 'a'.repeat(1200); // Over old 1000 limit, under new 6000 limit
 
       const result = await characterBuilderService.createCharacterConcept(
         conceptText,
@@ -130,7 +130,7 @@ describe('Character Concept Save Workflow - Integration Test', () => {
     });
 
     it('should successfully save concept with 2500 characters', async () => {
-      const conceptText = 'a'.repeat(2500); // Well within new 3000 limit
+      const conceptText = 'a'.repeat(2500); // Well within new 6000 limit
 
       const result = await characterBuilderService.createCharacterConcept(
         conceptText,
@@ -143,8 +143,8 @@ describe('Character Concept Save Workflow - Integration Test', () => {
       expect(mockDatabase.saveCharacterConcept).toHaveBeenCalled();
     });
 
-    it('should successfully save concept with exactly 3000 characters', async () => {
-      const conceptText = 'a'.repeat(3000); // At new maximum limit
+    it('should successfully save concept with exactly 6000 characters', async () => {
+      const conceptText = 'a'.repeat(6000); // At new maximum limit
 
       const result = await characterBuilderService.createCharacterConcept(
         conceptText,
@@ -157,14 +157,14 @@ describe('Character Concept Save Workflow - Integration Test', () => {
       expect(mockDatabase.saveCharacterConcept).toHaveBeenCalled();
     });
 
-    it('should fail to save concept with 3001 characters', async () => {
-      const conceptText = 'a'.repeat(3001); // Over new maximum limit
+    it('should fail to save concept with 6001 characters', async () => {
+      const conceptText = 'a'.repeat(6001); // Over new maximum limit
 
       await expect(
         characterBuilderService.createCharacterConcept(conceptText, {
           autoSave: true,
         })
-      ).rejects.toThrow('concept must be no more than 3000 characters long');
+      ).rejects.toThrow('concept must be no more than 6000 characters long');
 
       expect(mockDatabase.saveCharacterConcept).not.toHaveBeenCalled();
     });
@@ -233,13 +233,13 @@ describe('Character Concept Save Workflow - Integration Test', () => {
 
   describe('error handling and reporting', () => {
     it('should provide clear error messages for over-limit concepts', async () => {
-      const conceptText = 'a'.repeat(3100);
+      const conceptText = 'a'.repeat(6100);
 
       await expect(
         characterBuilderService.createCharacterConcept(conceptText, {
           autoSave: true,
         })
-      ).rejects.toThrow(/concept must be no more than 3000 characters long/);
+      ).rejects.toThrow(/concept must be no more than 6000 characters long/);
     });
 
     it('should provide clear error messages for under-limit concepts', async () => {
