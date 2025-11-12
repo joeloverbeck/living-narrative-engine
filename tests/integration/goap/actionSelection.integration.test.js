@@ -130,6 +130,66 @@ describe('ActionSelection Integration', () => {
   });
 
   describe('effect simulation on real world state', () => {
+    it('should apply else branch when abstract precondition fails and resolve tertiary targets', () => {
+      const action = {
+        id: 'conditional:else_resolution',
+        planningEffects: {
+          effects: [
+            {
+              operation: 'CONDITIONAL',
+              condition: {
+                abstractPrecondition: 'hasComponent',
+                params: ['target', 'items:inventory']
+              },
+              then: [
+                {
+                  operation: 'ADD_COMPONENT',
+                  entity: 'target',
+                  component: 'items:received_item',
+                  data: { amount: 1 }
+                }
+              ],
+              else: [
+                {
+                  operation: 'ADD_COMPONENT',
+                  entity: 'actor',
+                  component: 'items:transfer_failed',
+                  data: { reason: 'no_capacity' }
+                },
+                {
+                  operation: 'ADD_COMPONENT',
+                  entity: 'tertiary_target',
+                  component: 'support:escalated',
+                  data: { notified: true }
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      const context = {
+        entities: {
+          actor1: { components: {} },
+          target1: { components: {} },
+          tertiary1: {}
+        },
+        targetId: 'target1',
+        tertiaryTargetId: 'tertiary1'
+      };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(result.entities.actor1.components['items:transfer_failed']).toEqual({
+        reason: 'no_capacity'
+      });
+      expect(result.entities.tertiary1.components['support:escalated']).toEqual({
+        notified: true
+      });
+      expect(result.entities.target1.components['items:received_item']).toBeUndefined();
+      expect(context.entities.tertiary1.components).toBeUndefined();
+    });
+
     it('should accurately simulate multiple effects', () => {
       const action = {
         id: 'complex:action',
@@ -281,6 +341,51 @@ describe('ActionSelection Integration', () => {
       expect(context.entities.actor1.components['test:should_not_add']).toBeUndefined();
     });
 
+    it('should create missing entity structures and ignore absent components during simulation', () => {
+      const action = {
+        id: 'structure:bootstrap',
+        planningEffects: {
+          effects: [
+            {
+              operation: 'REMOVE_COMPONENT',
+              entity: 'target',
+              component: 'ghost:component'
+            },
+            {
+              operation: 'MODIFY_COMPONENT',
+              entity: 'target',
+              component: 'ghost:component',
+              updates: { flag: true }
+            },
+            {
+              operation: 'ADD_COMPONENT',
+              entity: 'target',
+              component: 'quest:status',
+              data: { stage: 'started' }
+            },
+            {
+              operation: 'MODIFY_COMPONENT',
+              entity: 'target',
+              component: 'quest:status',
+              updates: { stage: 'complete' }
+            }
+          ]
+        }
+      };
+
+      const context = {
+        targetId: 'target_bootstrap'
+      };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(result.entities.target_bootstrap.components['quest:status']).toEqual({
+        stage: 'complete'
+      });
+      expect(result.entities.target_bootstrap.components['ghost:component']).toBeUndefined();
+      expect(context.entities).toBeUndefined();
+    });
+
     it('should warn and default to true when evaluating non-abstract conditions', () => {
       const action = {
         id: 'conditional:legacy_condition',
@@ -413,6 +518,44 @@ describe('ActionSelection Integration', () => {
       const resultFail = actionSelector.simulateEffects(action, 'actor1', contextNoCapacity);
       expect(resultFail.entities.target1.components['items:received_item']).toBeUndefined();
       expect(resultFail.entities.actor1.components['items:transfer_failed']).toBeDefined();
+    });
+
+    it('should populate component containers for tertiary targets that lack structure', () => {
+      const action = {
+        id: 'tertiary:component_population',
+        planningEffects: {
+          effects: [
+            {
+              operation: 'ADD_COMPONENT',
+              entity: 'tertiary_target',
+              component: 'support:marker',
+              data: { active: true }
+            },
+            {
+              operation: 'MODIFY_COMPONENT',
+              entity: 'tertiary_target',
+              component: 'support:marker',
+              updates: { active: false, updated: true }
+            }
+          ]
+        }
+      };
+
+      const context = {
+        entities: {
+          actor1: { components: {} },
+          tertiary_support: {}
+        },
+        tertiaryTargetId: 'tertiary_support'
+      };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(result.entities.tertiary_support.components['support:marker']).toEqual({
+        active: false,
+        updated: true
+      });
+      expect(context.entities.tertiary_support.components).toBeUndefined();
     });
   });
 
