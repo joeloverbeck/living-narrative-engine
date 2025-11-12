@@ -20,5 +20,18 @@
     },
     "required": ["effect"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid effect: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Effect is required",
+      "invalidType": "Invalid type for effect: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

@@ -29,5 +29,18 @@
     },
     "required": ["deformity"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid deformity: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Deformity is required",
+      "invalidType": "Invalid type for deformity: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

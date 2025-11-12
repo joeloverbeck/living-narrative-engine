@@ -13,5 +13,18 @@
     },
     "required": ["embellishment"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid embellishment: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Embellishment is required",
+      "invalidType": "Invalid type for embellishment: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

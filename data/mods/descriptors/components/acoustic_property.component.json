@@ -20,5 +20,18 @@
     },
     "required": ["property"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid acoustic property: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Acoustic property is required",
+      "invalidType": "Invalid type for acoustic property: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
