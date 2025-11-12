@@ -6,7 +6,7 @@ The GOAP system for Living Narrative Engine provides AI-driven action selection 
 
 ## Architecture
 
-The GOAP system is organized into three tiers:
+The GOAP system consists of three integrated architectural tiers, all of which are fully implemented:
 
 ### Tier 1: Effects Auto-Generation
 Automated analysis of rule operations to generate planning metadata.
@@ -16,22 +16,22 @@ Automated analysis of rule operations to generate planning metadata.
 - **Effects Generator**: Generates planning effects from analyzed operations
 - **Effects Validator**: Validates generated effects against schemas
 
-### Tier 2: Simple Action Planning
-Basic single-action selection based on goal satisfaction.
+### Tier 2: Goal-Based Action Selection
+Goal-oriented action selection based on world state evaluation.
 
 **Components:**
 - **Goal Manager**: Manages NPC goals and priorities
-- **Goal State Evaluator**: Evaluates if a goal is satisfied by action effects
-- **Action Selector**: Selects the best action to achieve current goal
-- **Simple Planner**: Basic planning that selects single actions
+- **Goal State Evaluator**: Evaluates goal relevance and satisfaction
+- **Action Selector**: Selects actions that best achieve active goals
 
-### Tier 3: Multi-Step Planning
-Advanced planning with action sequences and state simulation.
+### Tier 3: Multi-Step Planning & Optimization
+Advanced planning with action sequences, state simulation, and caching.
 
 **Components:**
-- **Plan Cache**: Caches generated plans for performance
-- **Advanced Planner**: Plans multi-step action sequences
+- **Plan Cache**: Caches generated plans with multiple invalidation strategies
+- **Advanced Planner**: Plans multi-step action sequences across turns
 - **State Simulator**: Simulates world state changes during planning
+- **Error Recovery**: Handles planning failures gracefully
 
 ## Key Concepts
 
@@ -101,6 +101,39 @@ Abstract preconditions are reusable condition functions used in conditional effe
 }
 ```
 
+### Plan Caching
+
+The GOAP system employs intelligent plan caching to improve performance. Plans are cached per actor and can be reused across multiple turns.
+
+**Cache Invalidation Strategies:**
+- **Actor-Specific Invalidation**: Invalidate plans for a single actor when their state changes
+- **Goal-Based Invalidation**: Invalidate plans when specific goals become satisfied or irrelevant
+- **Global Invalidation**: Clear all cached plans when world state changes significantly
+- **Automatic Recreation**: Plans are automatically regenerated after invalidation when needed
+
+**Benefits:**
+- Reduced planning overhead for repeated decision-making
+- Consistent behavior across turns when world state remains stable
+- Efficient handling of multiple actors making concurrent decisions
+
+### Multi-Actor Support
+
+The GOAP system supports multiple actors making independent decisions concurrently:
+
+- **Cache Isolation**: Each actor's plans are cached independently
+- **Concurrent Decisions**: Multiple actors can plan and execute actions simultaneously
+- **Selective Invalidation**: Changes to one actor don't affect others' cached plans unless world state changes
+- **Cross-Mod Goals**: Actors can pursue goals from different mods working together
+
+### Error Recovery
+
+The system handles planning failures gracefully:
+
+- **No Valid Actions**: Returns null when no actions satisfy current goals
+- **Unsatisfiable Goals**: Handles scenarios where goals cannot be achieved with available actions
+- **Degraded Performance**: Continues functioning even under high load or complex scenarios
+- **Consistent Null Responses**: Returns predictable results when planning cannot proceed
+
 ## Operation Mapping
 
 The GOAP system maps rule operations to planning effects. See [operation-mapping.md](./operation-mapping.md) for the complete mapping table.
@@ -126,24 +159,6 @@ The effects analyzer automatically extracts planning effects from rule operation
 - Path tracing for conditionals
 - Abstract precondition identification
 
-## Data Flow
-
-```
-Action Definition (JSON)
-    ↓
-Rule Operations
-    ↓
-Effects Analyzer ← Operation Mapping
-    ↓
-Planning Effects (auto-generated)
-    ↓
-Goal State Evaluator
-    ↓
-Action Selector
-    ↓
-Selected Action → Execution
-```
-
 ## Integration with Existing Systems
 
 ### Action System Integration
@@ -163,20 +178,26 @@ Selected Action → Execution
 
 ## Performance Considerations
 
-### Tier 1 (Auto-Generation)
+### Effects Generation (Tier 1)
 - Analysis happens once during mod loading
 - No runtime performance impact
 - Generated effects cached with action definitions
 
-### Tier 2 (Simple Planning)
+### Action Planning (Tiers 2 & 3)
 - O(n) action evaluation where n = available actions
-- Single-action selection per turn
-- Minimal overhead (<5ms typical)
+- Plan caching significantly reduces repeated planning overhead
+- Multi-actor scenarios: 5 actors can complete decision-making in under 5 seconds
+- Performance scales with:
+  - Number of available actions
+  - Number of relevant goals
+  - World state complexity
+  - Cache hit rate
 
-### Tier 3 (Multi-Step Planning)
-- Plan caching reduces repeated planning
-- Configurable search depth limits
-- Typical planning time: 10-50ms for 3-5 step plans
+### Optimization Strategies
+- **Plan Reuse**: Cached plans are reused across turns when world state is stable
+- **Selective Invalidation**: Only affected plans are cleared when state changes
+- **Lazy Evaluation**: Plans are only generated when needed
+- **Cache Isolation**: Each actor maintains independent cache to avoid interference
 
 ## Schema Validation
 
@@ -207,59 +228,97 @@ constructor({ actionSelector, goalManager }) {
 
 ## Testing
 
+### End-to-End Tests
+
+The GOAP system has comprehensive e2e test coverage in `tests/e2e/goap/`:
+
+**Core System Tests:**
+- `CompleteGoapDecisionWithRealMods.e2e.test.js` - Complete decision workflow with real mods
+- `ActionSelectionWithEffectSimulation.e2e.test.js` - Action selection with future state simulation
+- `GoalPrioritySelectionWorkflow.e2e.test.js` - Goal priority evaluation and selection
+- `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js` - Goal relevance and satisfaction checking
+
+**Planning & Caching Tests:**
+- `PlanCachingAndInvalidation.e2e.test.js` - Cache strategies (actor-specific, goal-based, global)
+- `MultiTurnGoalAchievement.e2e.test.js` - Multi-turn goal pursuit and plan persistence
+- `PlanningEffectsMatchRuleExecution.e2e.test.js` - Validates planning effects accuracy vs actual execution
+
+**Multi-Actor Tests:**
+- `MultiActorConcurrentGoapDecisions.e2e.test.js` - Concurrent decision-making with cache isolation
+- `multipleActors.e2e.test.js` - Performance test with 5 actors (< 5000ms target)
+
+**Advanced Features Tests:**
+- `AbstractPreconditionConditionalEffects.e2e.test.js` - Abstract preconditions and conditional effects
+- `CrossModGoalAndActionInteraction.e2e.test.js` - Cross-mod goal and action compatibility
+- `ErrorRecoveryAndGracefulDegradation.e2e.test.js` - Error handling and graceful failures
+- `GoapPerformanceUnderLoad.e2e.test.js` - Performance validation under load
+
+**Behavior Tests:**
+- `catBehavior.e2e.test.js` - Cat NPC finding food (hunger goal)
+- `goblinBehavior.e2e.test.js` - Goblin NPC combat decisions and weapon pickup
+
 ### Unit Tests
-- `tests/unit/goap/analysis/` - Effects analyzer tests
-- `tests/unit/goap/generation/` - Effects generator tests
-- `tests/unit/goap/validation/` - Effects validator tests
-- `tests/unit/goap/schemas/` - Schema validation tests
+Unit tests cover individual components in `tests/unit/goap/`:
+- Effects analyzer, generator, and validator
+- Schema validation
 - Coverage target: 90%+ branches, 95%+ lines
 
 ### Integration Tests
-- `tests/integration/goap/effectsGeneration.integration.test.js` - Full generation workflow
-- `tests/integration/goap/schemaIntegration.test.js` - Schema integration
-- `tests/integration/goap/effectsValidation.integration.test.js` - Validation integration
-- Tests with real actions and goals
-- Validates end-to-end effects generation flow
+Integration tests validate component interactions in `tests/integration/goap/`:
+- Effects generation workflow
+- Schema integration
+- Validation pipeline
 
 ### Performance Tests
-- `tests/performance/goap/effectsGeneration.performance.test.js` - Performance benchmarks
-- Target: < 5 seconds for 200 actions
-- Target: < 100ms for complex rule analysis
+Performance benchmarks in `tests/performance/goap/`:
+- Effects generation performance
+- Planning performance under load
 - Memory leak detection
 
 ### Running Tests
 
 ```bash
-# Run all GOAP tests
+# Run all e2e GOAP tests
+npm run test:e2e -- tests/e2e/goap/
+
+# Run specific e2e test
+npm run test:e2e -- tests/e2e/goap/CompleteGoapDecisionWithRealMods.e2e.test.js
+
+# Run all GOAP tests (all types)
 npm run test:unit -- tests/unit/goap/
 npm run test:integration -- tests/integration/goap/
+npm run test:e2e -- tests/e2e/goap/
 npm run test:performance -- tests/performance/goap/
-
-# Run specific test suite
-npm run test:unit -- tests/unit/goap/analysis/effectsAnalyzer.test.js
-
-# With coverage
-npm run test:unit -- tests/unit/goap/ --coverage
 ```
 
-## Development Roadmap
+## Implementation Status
 
-### Phase 1: Effects Auto-Generation (Completed)
+All three architectural tiers are fully implemented and tested:
+
+### Phase 1: Effects Auto-Generation ✅ Completed
 - [x] GOAP-TIER1-001: Schema design and DI setup
 - [x] GOAP-TIER1-002: Effects analyzer implementation
 - [x] GOAP-TIER1-003: Effects generator implementation
 - [x] GOAP-TIER1-004: Effects validator implementation
 - [x] GOAP-TIER1-005: Effects testing and documentation
 
-### Phase 2: Simple Action Planning
-- [ ] GOAP-TIER2-001: Goal system implementation
-- [ ] GOAP-TIER2-002: Action selector implementation
-- [ ] GOAP-TIER2-003: Simple planner implementation
+### Phase 2: Goal-Based Action Selection ✅ Completed
+- [x] GOAP-TIER2-001: Goal system implementation
+- [x] GOAP-TIER2-002: Goal evaluation and relevance checking
+- [x] GOAP-TIER2-003: Action selector implementation
+- [x] GOAP-TIER2-004: Priority-based goal selection
 
-### Phase 3: Multi-Step Planning
-- [ ] GOAP-TIER3-001: State simulator implementation
-- [ ] GOAP-TIER3-002: Advanced planner implementation
-- [ ] GOAP-TIER3-003: Plan cache implementation
+**Proven by:** `GoalPrioritySelectionWorkflow.e2e.test.js`, `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js`
+
+### Phase 3: Multi-Step Planning ✅ Completed
+- [x] GOAP-TIER3-001: State simulator implementation
+- [x] GOAP-TIER3-002: Advanced planner implementation
+- [x] GOAP-TIER3-003: Plan cache with multiple invalidation strategies
+- [x] GOAP-TIER3-004: Multi-turn goal achievement
+- [x] GOAP-TIER3-005: Multi-actor concurrent decision-making
+- [x] GOAP-TIER3-006: Error recovery and graceful degradation
+
+**Proven by:** `PlanCachingAndInvalidation.e2e.test.js`, `MultiTurnGoalAchievement.e2e.test.js`, `MultiActorConcurrentGoapDecisions.e2e.test.js`, `CompleteGoapDecisionWithRealMods.e2e.test.js`
 
 ## Related Documentation
 
