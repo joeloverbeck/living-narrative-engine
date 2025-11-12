@@ -10,6 +10,7 @@ import { createComponentAccessor } from '../../../src/logic/componentAccessor.js
 const {
   createEntityContext,
   populateParticipant,
+  createJsonLogicContext,
   createNestedExecutionContext,
   createEvaluationContext,
 } = contextAssembler;
@@ -144,6 +145,60 @@ describe('contextAssembler utility helpers', () => {
     });
   });
 
+  describe('createJsonLogicContext', () => {
+    it('populates multi-target participant fields when payload includes identifiers', () => {
+      const logger = createLoggerMock();
+      const entityManager = createEntityManagerMock({
+        getEntityInstance: jest.fn((requestedId) => ({ id: requestedId })),
+      });
+      const serviceSetup = {
+        setupService: jest.fn(() => logger),
+      };
+      const event = {
+        type: 'COMBO',
+        payload: {
+          primaryId: 'primary-1',
+          secondaryId: 'secondary-1',
+          tertiaryId: 'tertiary-1',
+        },
+      };
+
+      const context = createJsonLogicContext(
+        event,
+        undefined,
+        undefined,
+        entityManager,
+        logger,
+        serviceSetup
+      );
+
+      expect(serviceSetup.setupService).toHaveBeenCalledWith(
+        'createJsonLogicContext',
+        logger,
+        expect.objectContaining({
+          entityManager: expect.objectContaining({ value: entityManager }),
+        })
+      );
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('primary-1');
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('secondary-1');
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('tertiary-1');
+      expect(context.primary).toEqual({
+        id: 'primary-1',
+        components: { accessorFor: 'primary-1' },
+      });
+      expect(context.secondary).toEqual({
+        id: 'secondary-1',
+        components: { accessorFor: 'secondary-1' },
+      });
+      expect(context.tertiary).toEqual({
+        id: 'tertiary-1',
+        components: { accessorFor: 'tertiary-1' },
+      });
+      expect(context.actor).toBeNull();
+      expect(context.target).toBeNull();
+    });
+  });
+
   describe('createNestedExecutionContext', () => {
     it('wraps createJsonLogicContext output with the expected structure', () => {
       const logger = createLoggerMock();
@@ -178,6 +233,34 @@ describe('contextAssembler utility helpers', () => {
       );
       expect(nested.actor).toEqual(nested.evaluationContext.actor);
       expect(nested.target).toEqual(nested.evaluationContext.target);
+    });
+
+    it('attaches trace objects directly on the execution context when provided', () => {
+      const logger = createLoggerMock();
+      const trace = {
+        captureOperationStart: jest.fn(),
+        captureOperationEnd: jest.fn(),
+      };
+      const entityManager = createEntityManagerMock({
+        getEntityInstance: jest.fn((requestedId) => ({ id: requestedId })),
+      });
+      const event = { type: 'TRACE_EVENT', payload: { actorId: 'actor-1' } };
+
+      const executionContext = createNestedExecutionContext(
+        event,
+        'actor-1',
+        undefined,
+        entityManager,
+        logger,
+        trace
+      );
+
+      expect(executionContext.trace).toBe(trace);
+      expect(executionContext.evaluationContext.actor).toEqual({
+        id: 'actor-1',
+        components: { accessorFor: 'actor-1' },
+      });
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('actor-1');
     });
   });
 
