@@ -296,7 +296,7 @@ describe('Character Concepts Manager HTML Structure', () => {
       expect(textarea.classList.contains('cb-textarea')).toBe(true);
       expect(textarea.getAttribute('name')).toBe('conceptText');
       expect(textarea.getAttribute('minlength')).toBe('10');
-      expect(textarea.getAttribute('maxlength')).toBe('3000');
+      expect(textarea.getAttribute('maxlength')).toBe('6000');
       expect(textarea.getAttribute('required')).toBe('');
       expect(textarea.getAttribute('aria-describedby')).toBe(
         'concept-help concept-error'
@@ -315,7 +315,7 @@ describe('Character Concepts Manager HTML Structure', () => {
       const charCount = modal.querySelector('#char-count');
       expect(charCount).toBeTruthy();
       expect(charCount.classList.contains('char-count')).toBe(true);
-      expect(charCount.textContent).toBe('0/3000');
+      expect(charCount.textContent).toBe('0/6000');
 
       const errorDiv = modal.querySelector('#concept-error');
       expect(errorDiv).toBeTruthy();
@@ -449,7 +449,7 @@ describe('Character Concepts Manager HTML Structure', () => {
       const conceptTextarea = document.getElementById('concept-text');
 
       expect(conceptTextarea.getAttribute('minlength')).toBe('10');
-      expect(conceptTextarea.getAttribute('maxlength')).toBe('3000');
+      expect(conceptTextarea.getAttribute('maxlength')).toBe('6000');
       expect(conceptTextarea.hasAttribute('required')).toBe(true);
     });
 

@@ -298,20 +298,20 @@ export const ValidationPatterns = {
   shortText: (value) => FormValidationHelper.validateTextInput(value, 10, 600),
 
   /**
-   * Long text validation (10-3000 characters)
+   * Long text validation (10-6000 characters)
    *
    * @param {string} value - Value to validate
    * @returns {{isValid: boolean, error?: string}} Validation result
    */
-  longText: (value) => FormValidationHelper.validateTextInput(value, 10, 3000),
+  longText: (value) => FormValidationHelper.validateTextInput(value, 10, 6000),
 
   /**
-   * Concept validation (50-3000 characters)
+   * Concept validation (50-6000 characters)
    *
    * @param {string} value - Value to validate
    * @returns {{isValid: boolean, error?: string}} Validation result
    */
-  concept: (value) => FormValidationHelper.validateTextInput(value, 50, 3000),
+  concept: (value) => FormValidationHelper.validateTextInput(value, 50, 6000),
 };
 
 export default FormValidationHelper;

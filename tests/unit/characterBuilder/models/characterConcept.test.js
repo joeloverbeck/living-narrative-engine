@@ -161,10 +161,10 @@ describe('CharacterConcept Model', () => {
         );
       });
 
-      it('should throw error for concept longer than 3000 characters', () => {
-        const longConcept = 'A'.repeat(3001);
+      it('should throw error for concept longer than 6000 characters', () => {
+        const longConcept = 'A'.repeat(6001);
         expect(() => createCharacterConcept(longConcept)).toThrow(
-          'CharacterConcept: concept must be no more than 3000 characters long'
+          'CharacterConcept: concept must be no more than 6000 characters long'
         );
       });
 
@@ -173,8 +173,8 @@ describe('CharacterConcept Model', () => {
         const minConcept = '1234567890';
         expect(() => createCharacterConcept(minConcept)).not.toThrow();
 
-        // Exactly 3000 characters
-        const maxConcept = 'A'.repeat(3000);
+        // Exactly 6000 characters
+        const maxConcept = 'A'.repeat(6000);
         expect(() => createCharacterConcept(maxConcept)).not.toThrow();
       });
     });
@@ -348,14 +348,14 @@ describe('CharacterConcept Model', () => {
         expect(() =>
           updateCharacterConcept(existingConcept, { concept: 'short' })
         ).toThrow(
-          'CharacterConcept: concept must be between 10 and 3000 characters'
+          'CharacterConcept: concept must be between 10 and 6000 characters'
         );
 
-        const longConcept = 'A'.repeat(3001);
+        const longConcept = 'A'.repeat(6001);
         expect(() =>
           updateCharacterConcept(existingConcept, { concept: longConcept })
         ).toThrow(
-          'CharacterConcept: concept must be between 10 and 3000 characters'
+          'CharacterConcept: concept must be between 10 and 6000 characters'
         );
       });
 
