@@ -1,17 +1,36 @@
 # Effects Generator Usage Guide
 
+## ⚠️ Important: Current Status
+
+**The EffectsGenerator is NOT currently used in production.** This document describes an available design pattern and API, not active functionality.
+
+### Reality Check
+
+- ✅ **What exists**: EffectsGenerator and EffectsAnalyzer classes with full API for generating planning effects from rules
+- ✅ **What's registered**: Services are registered in the DI container (`goapTokens.IEffectsGenerator`)
+- ❌ **What's missing**: No integration with mod loading or runtime workflow
+- ❌ **What's missing**: No automatic generation of planning effects
+
+### Current Workflow
+
+1. **For production actions**: Manually add `planningEffects` property to action JSON files
+2. **For tests**: Create mock action objects with `planningEffects` defined programmatically
+3. **GOAP system**: Expects actions to already have `planningEffects` when they reach ActionSelector
+
 ## Overview
 
-The EffectsGenerator is a core component of the GOAP (Goal-Oriented Action Planning) system that automatically generates planning effects for actions by analyzing their associated rules. This guide explains how to use the EffectsGenerator to generate, validate, and inject planning effects.
+The EffectsGenerator can analyze rules and automatically generate planning effects for actions. This guide documents the EffectsGenerator API for potential future integration, manual usage scenarios, or as a reference for understanding the intended design.
 
 ## Quick Start
 
-### Basic Usage
+### Basic Usage (Programmatic)
+
+Since EffectsGenerator is not integrated into the mod loading workflow, you would use it programmatically:
 
 ```javascript
 import { goapTokens } from './dependencyInjection/tokens/tokens-goap.js';
 
-// Resolve from DI container
+// Resolve from DI container (in a script or test context)
 const effectsGenerator = container.resolve(goapTokens.IEffectsGenerator);
 
 // Generate effects for a single action
@@ -19,7 +38,15 @@ const effects = effectsGenerator.generateForAction('positioning:sit_down');
 
 // Generate effects for an entire mod
 const effectsMap = effectsGenerator.generateForMod('positioning');
+
+// Optionally inject into in-memory action objects
+effectsGenerator.injectEffects(effectsMap);
 ```
+
+**Note**: This generates effects at runtime but does not persist them to files. For production use, you would need to either:
+1. Integrate this into mod loading
+2. Run as a preprocessing build step and save to JSON
+3. Manually define `planningEffects` in action files
 
 ## Generating Effects for a Single Action
 
@@ -210,7 +237,7 @@ const action = dataRegistry.get('actions', 'positioning:sit_down');
 console.log(action.planningEffects);
 ```
 
-**Note:** Currently, injection updates the in-memory representation only. File writing is not implemented in this version.
+**Note**: This method updates the in-memory action object only. It does not write changes back to action JSON files. Since this generator is not integrated into the production workflow, this method's practical use is limited to testing or one-off script scenarios.
 
 ## Working with Abstract Preconditions
 
@@ -306,11 +333,23 @@ try {
 }
 ```
 
-## Integration with Mod Loading
+## Current Integration Status
 
-The EffectsGenerator can be integrated into the mod loading pipeline to automatically generate effects during startup:
+**Not Integrated**: The EffectsGenerator is **not** called during mod loading or anywhere in the production codebase. It exists as a standalone service registered in the DI container but is not used.
+
+### Actual Current Workflow
+
+In the current system:
+1. **Planning effects are manually defined** in action JSON files using the `planningEffects` property (which is allowed by `additionalProperties: true` in the action schema)
+2. **For testing**, mock actions with `planningEffects` are created programmatically
+3. The GOAP system expects actions to already have `planningEffects` when they reach the ActionSelector
+
+### Hypothetical Integration Example
+
+If the EffectsGenerator were to be integrated into mod loading, it might look like this:
 
 ```javascript
+// HYPOTHETICAL - NOT CURRENTLY IMPLEMENTED
 // In mod loader
 const mods = ['core', 'positioning', 'items'];
 
@@ -328,6 +367,8 @@ for (const modId of mods) {
   }
 }
 ```
+
+**Note**: This integration does not exist. The above code is illustrative only.
 
 ## Troubleshooting
 
@@ -438,46 +479,31 @@ When an action has multiple rules, effects are merged:
 }
 ```
 
-## Best Practices
+## Best Practices for Potential Integration
 
-### 1. Generate During Mod Loading
+If you were to integrate EffectsGenerator into a production workflow:
 
-Generate effects once during mod loading, not at runtime:
+### 1. Generate at Build Time, Not Runtime
+
+For performance, consider generating effects as a preprocessing step:
 
 ```javascript
-// ✓ Good: Generate during initialization
-async function loadMods(modIds) {
-  for (const modId of modIds) {
-    await loadModContent(modId);
+// Build script (not runtime)
+async function generateEffectsForAllMods() {
+  const mods = ['core', 'positioning', 'items'];
+
+  for (const modId of mods) {
     const effectsMap = effectsGenerator.generateForMod(modId);
-    effectsGenerator.injectEffects(effectsMap);
-  }
-}
 
-// ✗ Bad: Generate on every action execution
-function executeAction(actionId) {
-  const effects = effectsGenerator.generateForAction(actionId); // Too slow!
-  // ...
-}
-```
-
-### 2. Handle Generation Failures Gracefully
-
-```javascript
-const effectsMap = effectsGenerator.generateForMod('positioning');
-
-for (const [actionId, effects] of effectsMap.entries()) {
-  try {
-    // Use effects
-    processEffects(actionId, effects);
-  } catch (error) {
-    logger.error(`Failed to process effects for ${actionId}`, error);
-    // Continue with other actions
+    // Write effects back to action files or to a separate cache file
+    await saveEffectsToFiles(modId, effectsMap);
   }
 }
 ```
 
-### 3. Validate Before Using
+### 2. Validate Generated Effects
+
+Always validate before using:
 
 ```javascript
 const effects = effectsGenerator.generateForAction(actionId);
@@ -485,30 +511,31 @@ const effects = effectsGenerator.generateForAction(actionId);
 if (effects) {
   const validation = effectsGenerator.validateEffects(actionId, effects);
 
-  if (validation.valid) {
-    // Safe to use
-    useEffects(effects);
-  } else {
-    logger.error('Invalid effects', validation.errors);
+  if (!validation.valid) {
+    logger.error('Invalid effects generated', {
+      actionId,
+      errors: validation.errors
+    });
+    return null;
   }
+
+  return effects;
 }
 ```
 
-### 4. Log Generation Statistics
+### 3. Handle Failures Gracefully
 
 ```javascript
-const startTime = Date.now();
 const effectsMap = effectsGenerator.generateForMod('positioning');
-const duration = Date.now() - startTime;
 
-logger.info({
-  mod: 'positioning',
-  actionsProcessed: effectsMap.size,
-  averageEffectsPerAction:
-    Array.from(effectsMap.values())
-      .reduce((sum, e) => sum + e.effects.length, 0) / effectsMap.size,
-  duration: `${duration}ms`
-});
+for (const [actionId, effects] of effectsMap.entries()) {
+  try {
+    processEffects(actionId, effects);
+  } catch (error) {
+    logger.error(`Failed to process ${actionId}`, error);
+    // Continue with other actions
+  }
+}
 ```
 
 ## API Reference
@@ -535,6 +562,65 @@ new EffectsGenerator({ logger, effectsAnalyzer, dataRegistry, schemaValidator })
 - **IDataRegistry**: Data access service
 - **IAjvSchemaValidator**: Schema validation service
 
+## How Planning Effects Actually Work in the Codebase
+
+### E2E Test Behavior
+
+The e2e tests in `tests/e2e/goap/` verify the GOAP system by:
+
+1. **Creating mock actions** with manually-defined `planningEffects` properties
+2. **Passing these actions** to the GOAP decision system
+3. **Verifying** that the ActionSelector uses the planning effects for simulation
+4. **Comparing** simulated effects against actual rule execution outcomes
+
+Example from `AbstractPreconditionConditionalEffects.e2e.test.js`:
+```javascript
+const conditionalAction = {
+  id: 'test:conditional_action',
+  actionId: 'test:conditional_action',
+  planningEffects: {
+    effects: [/* manually defined effects */],
+    abstractPreconditions: {/* manually defined preconditions */}
+  }
+};
+```
+
+### Production Workflow Gap
+
+**Key Finding**: There is currently no automatic generation of planning effects from rules in the production workflow. The EffectsGenerator exists but is unused.
+
+For planning effects to work in production:
+- **Option 1**: Manually add `planningEffects` to action JSON files
+- **Option 2**: Integrate EffectsGenerator into mod loading (requires implementation)
+- **Option 3**: Generate effects via a build/preprocessing step
+
+## Architecture Context
+
+### Components Involved
+
+- **EffectsAnalyzer** (`src/goap/analysis/effectsAnalyzer.js`): Analyzes individual rule operations and extracts state-changing effects
+- **EffectsGenerator** (`src/goap/generation/effectsGenerator.js`): Orchestrates effect generation across actions and mods
+- **EffectsValidator** (`src/goap/validation/effectsValidator.js`): Validates generated or manually-defined effects
+- **ActionSelector** (`src/goap/selection/actionSelector.js`): **Actually uses** planning effects during GOAP decision-making
+
+### Data Flow (If Integrated)
+
+```
+Rule Definitions
+      ↓
+EffectsAnalyzer.analyzeRule()
+      ↓
+EffectsGenerator.generateForAction()
+      ↓
+EffectsValidator.validateEffects()
+      ↓
+Action.planningEffects (in-memory)
+      ↓
+ActionSelector.simulateEffects()
+```
+
+**Current Reality**: The system jumps directly from manually-defined `Action.planningEffects` to `ActionSelector.simulateEffects()`.
+
 ## Related Documentation
 
 - [GOAP System Overview](./README.md)
@@ -545,6 +631,7 @@ new EffectsGenerator({ logger, effectsAnalyzer, dataRegistry, schemaValidator })
 ## Support
 
 For issues or questions:
-- Review test examples in `tests/unit/goap/generation/` and `tests/integration/goap/`
+- Review e2e test examples in `tests/e2e/goap/` to see how planning effects are actually used
+- Check unit tests in `tests/unit/goap/` for EffectsGenerator and EffectsAnalyzer usage patterns
 - Check GOAP documentation in `docs/goap/`
 - Open a GitHub issue with the `goap` label
