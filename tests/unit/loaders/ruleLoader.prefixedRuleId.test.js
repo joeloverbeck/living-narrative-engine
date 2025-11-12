@@ -56,31 +56,27 @@ const createMockSchemaValidator = (overrides = {}) => {
   const loadedSchemas = new Map();
   const schemaValidators = new Map();
 
+  const getOrCreateValidator = (schemaId) => {
+    if (!schemaValidators.has(schemaId)) {
+      schemaValidators.set(schemaId, () => ({ isValid: true, errors: null }));
+    }
+    return schemaValidators.get(schemaId);
+  };
+
   const mockValidator = {
-    addSchema: jest.fn(async (schemaData, schemaId) => {
+    addSchema: jest.fn((schemaData, schemaId) => {
       loadedSchemas.set(schemaId, schemaData);
-      if (!schemaValidators.has(schemaId)) {
-        schemaValidators.set(
-          schemaId,
-          jest.fn(() => ({ isValid: true, errors: null }))
-        );
-      }
+      getOrCreateValidator(schemaId);
     }),
-    validate: jest.fn(async (data, schemaId) => {
-      const validatorFn =
-        schemaValidators.get(schemaId) ||
-        jest.fn(() => ({ isValid: true, errors: null }));
+    validate: jest.fn((schemaId, data) => {
+      const validatorFn = getOrCreateValidator(schemaId);
       return validatorFn(data);
     }),
-    validateAgainstSchema: jest.fn(async (data, schemaId) => {
-      const validatorFn =
-        schemaValidators.get(schemaId) ||
-        jest.fn(() => ({ isValid: true, errors: null }));
+    validateAgainstSchema: jest.fn((schemaId, data) => {
+      const validatorFn = getOrCreateValidator(schemaId);
       return validatorFn(data);
     }),
-    getValidator: jest.fn((schemaId) => {
-      return schemaValidators.get(schemaId) || jest.fn(() => ({ isValid: true, errors: null }));
-    }),
+    getValidator: jest.fn((schemaId) => getOrCreateValidator(schemaId)),
     isSchemaLoaded: jest.fn((schemaId) => loadedSchemas.has(schemaId)),
     _setSchemaLoaded: (schemaId, schemaData = {}) => {
       loadedSchemas.set(schemaId, schemaData);
@@ -136,6 +132,19 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
   beforeEach(() => {
     mockConfig = createMockConfiguration();
     mockPathResolver = createMockPathResolver();
+    mockPathResolver.resolveModContentPath.mockImplementation(
+      (modIdValue, diskFolder, filenameValue) => {
+        const baseDataPath = mockConfig.getBaseDataPath();
+        const modsBasePath = mockConfig.getModsBasePath();
+        const normalizedBase = baseDataPath.endsWith('/')
+          ? baseDataPath.slice(0, -1)
+          : baseDataPath;
+        const normalizedModsBase = modsBasePath.endsWith('/')
+          ? modsBasePath.slice(0, -1)
+          : modsBasePath;
+        return `${normalizedBase}/${normalizedModsBase}/${modIdValue}/${diskFolder}/${filenameValue}`;
+      }
+    );
     mockFetcher = createMockDataFetcher();
     mockValidator = createMockSchemaValidator();
     mockRegistry = createMockDataRegistry();
@@ -160,7 +169,7 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
     it('should warn when rule_id is already prefixed and strip the prefix', async () => {
       const modId = 'items';
       const filename = 'handle_aim_item.rule.json';
-      const resolvedPath = `/data/mods/${modId}/rules/${filename}`;
+      const resolvedPath = `./data/mods/${modId}/rules/${filename}`;
 
       // Rule data with prefixed rule_id
       const ruleData = {
@@ -183,7 +192,9 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
 
       // Configure fetcher to return this data
       mockFetcher = createMockDataFetcher({
-        [resolvedPath]: ruleData,
+        pathToResponse: {
+          [resolvedPath]: ruleData,
+        },
       });
 
       ruleLoader = new RuleLoader(
@@ -205,7 +216,15 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
       };
 
       // Load the rule
-      await ruleLoader.loadItemsForMod(modId, manifest, 'rules', 'rules', 'rules');
+      const loadResult = await ruleLoader.loadItemsForMod(
+        modId,
+        manifest,
+        'rules',
+        'rules',
+        'rules'
+      );
+
+      expect(loadResult.count).toBe(1);
 
       // Verify warning was logged
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -251,10 +270,10 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
       // Configure fetcher with both rules
       const pathToResponse = {};
       rules.forEach(({ filename, data }) => {
-        pathToResponse[`/data/mods/${modId}/rules/${filename}`] = data;
+        pathToResponse[`./data/mods/${modId}/rules/${filename}`] = data;
       });
 
-      mockFetcher = createMockDataFetcher(pathToResponse);
+      mockFetcher = createMockDataFetcher({ pathToResponse });
 
       ruleLoader = new RuleLoader(
         mockConfig,
@@ -273,7 +292,15 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
         },
       };
 
-      await ruleLoader.loadItemsForMod(modId, manifest, 'rules', 'rules', 'rules');
+      const loadResult = await ruleLoader.loadItemsForMod(
+        modId,
+        manifest,
+        'rules',
+        'rules',
+        'rules'
+      );
+
+      expect(loadResult.count).toBe(rules.length);
 
       // Verify warnings were logged for both rules
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -287,7 +314,7 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
     it('should not warn for unprefixed rule_id', async () => {
       const modId = 'items';
       const filename = 'valid_rule.rule.json';
-      const resolvedPath = `/data/mods/${modId}/rules/${filename}`;
+      const resolvedPath = `./data/mods/${modId}/rules/${filename}`;
 
       const ruleData = {
         $schema: 'schema://living-narrative-engine/rule.schema.json',
@@ -298,7 +325,9 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
       };
 
       mockFetcher = createMockDataFetcher({
-        [resolvedPath]: ruleData,
+        pathToResponse: {
+          [resolvedPath]: ruleData,
+        },
       });
 
       ruleLoader = new RuleLoader(
@@ -318,7 +347,15 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
         },
       };
 
-      await ruleLoader.loadItemsForMod(modId, manifest, 'rules', 'rules', 'rules');
+      const loadResult = await ruleLoader.loadItemsForMod(
+        modId,
+        manifest,
+        'rules',
+        'rules',
+        'rules'
+      );
+
+      expect(loadResult.count).toBe(1);
 
       // Verify NO warning about prefixed rule_id
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
