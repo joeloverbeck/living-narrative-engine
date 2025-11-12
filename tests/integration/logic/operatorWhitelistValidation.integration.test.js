@@ -47,7 +47,7 @@ describe('Operator Whitelist Validation - Integration', () => {
     });
   });
 
-  it('should only warn about operators registered elsewhere or test-only operators', () => {
+  it('should only warn about operators registered elsewhere', () => {
     // Act - register operators
     customOperators.registerOperators(evaluationService);
 
@@ -57,23 +57,16 @@ describe('Operator Whitelist Validation - Integration', () => {
         call[0] && call[0].includes('Operators in ALLOWED_OPERATIONS whitelist but not registered')
     );
 
-    // After fixing the validator, there should be exactly one warning
-    // for operators registered elsewhere or test-only operators
-    expect(warnings.length).toBe(1);
-
-    const warningData = warnings[0][1];
-    expect(warningData).toHaveProperty('operators');
+    // After cleanup of throw_error_operator, should only warn about hasBodyPartWithComponentValue
     // hasBodyPartWithComponentValue is registered by systemLogicInterpreter
-    // throw_error_operator is test-only and registered dynamically in tests
+    expect(warnings.length).toBe(1);
+    const warningData = warnings[0][1];
     expect(warningData.operators).toContain('hasBodyPartWithComponentValue');
-    expect(warningData.operators).toContain('throw_error_operator');
-    // condition_ref is now excluded from warnings (it's special syntax, not an operator)
-    expect(warningData.operators).not.toContain('condition_ref');
-    // Should only have these 2 operators
-    expect(warningData.operators).toHaveLength(2);
+    expect(warningData.operators).not.toContain('throw_error_operator');
+    expect(warningData.operators).toHaveLength(1);
   });
 
-  it('should identify operators not registered by JsonLogicCustomOperators', () => {
+  it('should only have hasBodyPartWithComponentValue unregistered (registered by systemLogicInterpreter)', () => {
     // Get the allowed operations before registration
     const allowedOps = evaluationService.getAllowedOperations();
 
@@ -100,15 +93,11 @@ describe('Operator Whitelist Validation - Integration', () => {
       }
     }
 
-    // After cleanup, only these should remain:
-    // - hasBodyPartWithComponentValue (registered by systemLogicInterpreter)
-    // - throw_error_operator (test-only, registered dynamically in tests)
+    // After cleanup, only hasBodyPartWithComponentValue should be unregistered
+    // (it's registered by systemLogicInterpreter, not JsonLogicCustomOperators)
     expect(unregisteredOps).toContain('hasBodyPartWithComponentValue');
-    expect(unregisteredOps).toContain('throw_error_operator');
-    // condition_ref is excluded as special syntax
-    expect(unregisteredOps).not.toContain('condition_ref');
-    // Should only have these 2 operators
-    expect(unregisteredOps).toHaveLength(2);
+    expect(unregisteredOps).not.toContain('throw_error_operator');
+    expect(unregisteredOps).toHaveLength(1);
   });
 
   it('should verify that registered operators are all in whitelist', () => {

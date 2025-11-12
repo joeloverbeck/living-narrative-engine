@@ -116,12 +116,12 @@ describe('JsonLogicEvaluationService uncovered branches', () => {
     spy.mockRestore();
   });
 
-  test('allows hasBodyPartWithComponentValue operator during validation', () => {
+  test('allows hasPartWithComponentValue operator during validation', () => {
     const operation = jest.fn(() => true);
-    service.addOperation('hasBodyPartWithComponentValue', operation);
+    service.addOperation('hasPartWithComponentValue', operation);
 
     const rule = {
-      hasBodyPartWithComponentValue: [
+      hasPartWithComponentValue: [
         'actor',
         'core:movement',
         'locked',
@@ -134,7 +134,7 @@ describe('JsonLogicEvaluationService uncovered branches', () => {
     expect(result).toBe(true);
     expect(operation).toHaveBeenCalled();
 
-    service.removeOperation('hasBodyPartWithComponentValue');
+    service.removeOperation('hasPartWithComponentValue');
   });
 });
 
