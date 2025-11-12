@@ -1,302 +1,205 @@
 # Anatomy System Troubleshooting
 
-This guide helps diagnose and resolve common issues with the anatomy system.
+This guide maps common anatomy-system symptoms to the actual modules, data files, and tooling that exist in the repository today. Each section references concrete code paths so you can confirm assumptions quickly.
 
 ## Quick Diagnostics Checklist
 
-Before diving into specific issues:
+1. **Enable verbose logging** – All anatomy services inherit from `BaseService`, so setting the injected logger to `debug` (for example through the integration test bed or dependency container overrides) surfaces slot generation, pattern resolution, and socket indexing steps.
+2. **Verify content load** – Confirm the anatomy mod finished loading without schema errors by inspecting loader output or running `npm run test:integration -- anatomy`, which exercises the loader pipeline end-to-end.
+3. **Check generated slots** – Read the processed blueprint from `dataRegistry.get('anatomyBlueprints', blueprintId)` and inspect `blueprint.slots` to confirm slot IDs and optional flags.
+4. **Confirm optional integrations** – The `ANATOMY_GENERATED` event and socket indexing only run when the workflow receives an event bus and `AnatomySocketIndex`. If clothing or downstream systems rely on them, ensure those dependencies were provided during initialization.
 
-1. **Enable Debug Logging**: Check logger configuration for anatomy services
-2. **Check Mod Loading**: Verify mods loaded successfully without schema errors
-3. **Inspect Generated Slots**: Use explicit slot definitions to verify blueprint structure
-4. **Review Event Logs**: Check for ANATOMY_GENERATED event dispatch
-5. **Verify Socket Index**: Confirm socket index was built after anatomy generation
+## Body parts are missing after generation
 
-## Problem: Body parts not generated
+**Symptom**: The entity owns an anatomy graph, but expected parts never appear.
 
-**Symptoms**: Entity has anatomy component but missing body parts in the entity graph
+### Cause 1 – Recipe pattern matching returned zero slots
 
-### Root Causes
+**Evidence**: Debug logs from `RecipePatternResolver` mention `Pattern matched zero slots`.
 
-#### 1. Recipe pattern matching failed
+**Why it happens**
+- Structure-template socket patterns and recipe patterns are out of sync.
+- Orientation schemes differ (for example the template uses `bilateral` while the recipe assumes `indexed`).
+- Template variables were renamed without updating recipes.
 
-**Check logs for**: "Pattern matched zero slots" debug messages
-
-**Common causes**:
-- Structure template socket pattern doesn't match recipe pattern
-- Orientation scheme mismatch (e.g., template uses `bilateral` but recipe expects `indexed`)
-- Template variable naming changed without updating recipes
-
-**Debugging steps**:
+**How to debug**
 ```javascript
-// 1. Enable debug logging
-// Check logger configuration for anatomy services
+// Inspect the resolved blueprint and recipe
+const blueprint = dataRegistry.get('anatomyBlueprints', 'anatomy:giant_spider');
+console.log(Object.keys(blueprint.slots));
 
-// 2. Inspect blueprint slots manually
-const blueprint = dataRegistry.get('anatomyBlueprints', 'anatomy:spider_common');
-console.log('Blueprint slots:', Object.keys(blueprint.slots));
+const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:giant_forest_spider');
+console.log(recipe.patterns);
 
-// 3. Test pattern matching
-const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:spider_garden');
-console.log('Recipe patterns:', recipe.patterns);
-
-// 4. Check structure template
-const template = dataRegistry.get('anatomyStructureTemplates', 'anatomy:structure_spider');
-console.log('Socket patterns:', template.topology.limbSets.map(ls => ls.socketPattern));
+// Review the structure template used by the blueprint
+const template = dataRegistry.get('anatomyStructureTemplates', 'anatomy:structure_arachnid_8leg');
+console.log(template.topology.limbSets.map((set) => set.socketPattern));
 ```
 
-**Solution**:
-- Use `matchesGroup: "limbSet:leg"` for resilience against template naming changes
-- Verify template's `orientationScheme` matches expected slot keys
-- Update recipe patterns when structure templates change
-- See [Recipe Pattern Matching - Best Practices](./recipe-pattern-matching.md#part-3-best-practices)
+**Fixes**
+- Prefer `matchesGroup` selectors such as `"limbSet:leg"` so recipes survive socket renames.
+- Align `orientationScheme` values (see `orientationResolver` below for valid options).
+- Update recipe patterns whenever template topology changes.
+- Run `checkBlueprintRecipeCompatibility` (see below) to surface slots with no matching pattern coverage.
 
-#### 2. Blueprint-recipe mismatch
+### Cause 2 – Blueprint/recipe references are inconsistent
 
-**Check logs for**: Schema validation errors, missing blueprint warnings
+**Evidence**: Loader or workflow logs emit schema validation errors or warnings such as `Recipe 'X' does not specify a blueprintId`.
 
-**Common causes**:
-- Recipe references non-existent blueprint ID
-- Blueprint missing required fields
-- Recipe's `blueprintId` doesn't match actual blueprint
+**How to confirm**
+1. Ensure the blueprint exists: `dataRegistry.get('anatomyBlueprints', blueprintId)`.
+2. Confirm the recipe points at the correct blueprint ID.
+3. Use the implemented validator: `validateRecipeSlots(processedRecipe, blueprint, eventBus)` from `src/anatomy/bodyBlueprintFactory/blueprintValidator.js` to catch missing slots.
+4. Run `checkBlueprintRecipeCompatibility(blueprint, recipe, deps)` to list missing or unexpected slots. Both utilities ship with dedicated tests in `tests/unit/anatomy/bodyBlueprintFactory/`.
 
-**Debugging steps**:
-1. Verify blueprint exists: `dataRegistry.get('anatomyBlueprints', blueprintId)`
-2. Check recipe's `blueprintId` field matches actual blueprint
-3. Validate blueprint against schema: `data/schemas/anatomy.blueprint.schema.json`
+**Fixes**
+- Correct the `blueprintId` on the recipe.
+- Make sure loader order in `data/mods/anatomy/mod-manifest.json` loads blueprints before recipes.
+- Treat validator errors as blocking; the modules are active, not “planned”.
 
-**Solution**:
-- Correct recipe's `blueprintId` reference
-- Ensure blueprint is loaded before recipe
-- Check mod loading order in `game.json`
+### Cause 3 – Structure template failed validation
 
-#### 3. Structure template error
+**Evidence**: `anatomyStructureTemplateLoader` logs schema violations, or `BodyBlueprintFactory` throws during template resolution.
 
-**Check logs for**: Template validation errors, schema violations
+**Common pitfalls**
+- Limb/appendage counts exceed schema bounds.
+- Socket patterns omit required properties.
+- `topology.rootType` or `id` is missing.
+- Orientation schemes use unsupported values (allowed: `bilateral`, `quadrupedal`, `radial`, `indexed`, or `custom`).
 
-**Common causes**:
-- Invalid count ranges (limbSets > 100, appendages > 10)
-- Malformed socket patterns
-- Missing required fields (id, topology.rootType)
-- Invalid orientation schemes
+**How to confirm**
+- Validate the JSON against `data/schemas/anatomy.structure-template.schema.json`.
+- Inspect the processed template via `dataRegistry.get('anatomyStructureTemplates', templateId)`.
 
-**Debugging steps**:
-1. Validate template against schema: `data/schemas/anatomy.structure-template.schema.json`
-2. Check required fields are present
-3. Verify count ranges are within limits
-4. Ensure orientation scheme is valid: `bilateral`, `radial`, `indexed`, `custom`, `quadrupedal`
+**Fixes**
+- Bring the template back into schema compliance.
+- When introducing new orientation schemes, extend `src/anatomy/shared/orientationResolver.js` instead of rolling ad-hoc logic.
 
-**Solution**:
-- Fix template schema violations
-- Use valid orientation schemes
-- Keep counts within schema limits
-- See [Blueprints and Templates Guide](./blueprints-and-templates.md#part-2-structure-templates)
+### Cause 4 – Part selection rejected every candidate
 
-#### 4. Part selection failure
+**Evidence**: Logs from `PartSelectionService` show messages like `subType 'leg' not in allowedTypes`. The service ultimately throws `No entity definitions found matching anatomy requirements.`
 
-**Check logs for**: "No valid parts found" or part selection errors
-
-**Common causes**:
-- No entity definitions match `partType` requirement
-- Part entities missing required components
-- Part entity definitions have invalid schemas
-
-**Debugging steps**:
+**How to confirm**
 ```javascript
-// Check if part entities exist for required type
 const partType = 'spider_leg';
-const partDefs = dataRegistry.getAll('entityDefinitions').filter(
-  def => def.partType === partType
-);
-console.log(`Found ${partDefs.length} part definitions for ${partType}`);
+const defs = dataRegistry
+  .getAll('entityDefinitions')
+  .filter((def) => def.components?.['anatomy:part']?.subType === partType);
+console.log(`${defs.length} definitions expose subType ${partType}`);
 ```
 
-**Solution**:
-- Create entity definitions for required part types
-- Ensure part entities have `anatomy:part` component
-- Verify entity definitions validate against schemas
+**Fixes**
+- Ensure every required `partType` has a matching entity definition with `components['anatomy:part'].subType` set to the same value.
+- Align socket `allowedTypes` with the specific subType the recipe expects (see the table later in this document).
+- Use `tests/unit/anatomy/partSelectionService*.test.js` as patterns for regression tests.
 
-**Note**: Some validation features (e.g., BlueprintRecipeValidator, zero-match warnings) are planned improvements from ANASYSREF-002 and may not yet be implemented. Check [Anatomy System Guide - Evolution History](./anatomy-system-guide.md) for implementation status.
+## Clothing fails to attach
 
-## Problem: Clothing not attaching to body parts
+**Symptom**: Clothing entities spawn but do not bind to sockets, or instantiation throws slot errors.
 
-**Symptoms**: Clothing items created but not attached to sockets, or clothing instantiation fails
+### Cause 1 – Slot IDs diverged from socket IDs
 
-### Root Causes
+**Evidence**: `ClothingInstantiationService` logs `Socket not found` warnings.
 
-#### 1. Socket IDs don't match clothing slot expectations
-
-**Check logs for**: "Socket not found" warnings in clothing instantiation
-
-**Common causes**:
-- Clothing slot mappings reference non-existent socket IDs
-- Socket IDs changed due to template modifications
-- SlotResolver couldn't resolve clothing slots
-
-**Debugging steps**:
+**How to confirm**
 ```javascript
-// 1. Check socket index for entity
 const sockets = await anatomySocketIndex.getEntitySockets(entityId);
-console.log('Available sockets:', sockets.map(s => s.id));
+console.log(sockets.map((s) => s.id));
 
-// 2. Check clothing slot mappings
 const slotMetadata = await entityManager.getComponentData(
   entityId,
   'clothing:slot_metadata'
 );
-console.log('Clothing slot mappings:', slotMetadata?.slotMappings);
-
-// 3. Verify SlotResolver strategies
-// Check SlotResolver service logs for strategy resolution
+console.log(slotMetadata?.slotMappings);
 ```
 
-**Solution**:
-- Verify socket IDs in AnatomySocketIndex match expected clothing slots
-- Update clothing slot mappings when templates change
-- Ensure anatomy generation completes before clothing instantiation
-- See [Anatomy System Guide](./anatomy-system-guide.md) for clothing integration details
+`SlotResolver` logs messages such as `Resolved slot 'torso' to ... using BlueprintSlotStrategy` while working through mappings. Those logs prove whether strategies execute.
 
-#### 2. Cache invalidation timing issue
+**Fixes**
+- Regenerate clothing slot metadata via `executeSlotEntityCreation` (part of the workflow) after altering templates.
+- Update clothing slot mappings in mods to use the new socket IDs.
+- Confirm `SlotResolver` is registered in `dependencyInjection/registrations/worldAndEntityRegistrations.js` so `ClothingInstantiationService` receives it.
 
-**Check logs for**: Stale cache warnings, missing socket index entries
+### Cause 2 – Cache invalidation lagged behind anatomy updates
 
-**Common causes**:
-- Cache not invalidated after anatomy changes
-- Socket index not rebuilt after template modifications
-- Race condition between anatomy generation and clothing instantiation
+**Evidence**: `AnatomySocketIndex` reports stale or missing entries even after regeneration.
 
-**Debugging steps**:
+**How to confirm**
 ```javascript
-// Check if socket index is current
-const hasIndex = await anatomySocketIndex.getEntitiesWithSockets(rootEntityId);
-console.log('Entities with sockets:', hasIndex);
-
-// Manually rebuild index if needed
 await anatomySocketIndex.buildIndex(rootEntityId);
+const entities = await anatomySocketIndex.getEntitiesWithSockets(rootEntityId);
+console.log(entities);
 ```
 
-**Solution**:
-- Ensure cache coordinator properly registers anatomy caches
-- Socket index auto-builds on first access if missing
-- Invalidate caches when anatomy structure changes
-- See `src/anatomy/services/anatomySocketIndex.js:51-68` for cache registration
+`buildIndex` repopulates the internal Maps used by `findEntityWithSocket`. Methods like `getEntitySockets` cache per-entity results automatically, but cross-entity lookups require the index.
 
-#### 3. Missing ANATOMY_GENERATED event
+**Fixes**
+- Call `invalidateIndex(rootEntityId)` after structural changes, then `buildIndex` before querying.
+- Ensure any cache coordinator registers the socket-index caches (see the constructor of `src/anatomy/services/anatomySocketIndex.js`).
 
-**Check logs for**: Event dispatch logs, missing event subscribers
+### Cause 3 – `ANATOMY_GENERATED` event never fired
 
-**Common causes**:
-- EventBus not provided to AnatomyGenerationWorkflow
-- Event subscribers not registered before anatomy generation
-- Event dispatch failed silently
+**Evidence**: No logs from `EventPublicationStage` and downstream listeners never run.
 
-**Debugging steps**:
+**How to confirm**
+- Verify `AnatomyGenerationWorkflow` received an event bus and socket index; otherwise the stage short-circuits.
+- Inspect `src/anatomy/workflows/stages/eventPublicationStage.js` to confirm `eventBus.dispatch('ANATOMY_GENERATED', …)` executed without errors.
+
+**Fixes**
+- Pass an `ISafeEventDispatcher` into the workflow during composition.
+- Register clothing or gameplay listeners before triggering anatomy generation so they catch the event.
+
+## Slot/socket orientation mismatch
+
+**Symptom**: Parts or clothing attach to unexpected sides (left/right swapped, fore/hind reversed).
+
+**Diagnosis**
+- Both `src/anatomy/slotGenerator.js` and `src/anatomy/socketGenerator.js` import `OrientationResolver`. If either diverges, slot keys and socket IDs desynchronize.
+- Run quick checks in a REPL:
 ```javascript
-// Check if ANATOMY_GENERATED event was dispatched
-// Look for logs from anatomyGenerationWorkflow.js around line 197
-
-// Verify event subscribers
-// Check clothing instantiation service registered event handlers
+import { OrientationResolver } from 'src/anatomy/shared/orientationResolver.js';
+OrientationResolver.resolveOrientation('bilateral', 1, 2); // 'left'
+OrientationResolver.resolveOrientation('bilateral', 4, 4); // 'right_rear'
 ```
 
-**Solution**:
-- Ensure AnatomyGenerationWorkflow receives eventBus dependency
-- Register clothing event subscribers during initialization
-- Check event bus configuration
-- See `src/anatomy/workflows/anatomyGenerationWorkflow.js:187-217` for event dispatch
+**Fixes**
+- Never duplicate orientation math; extend `OrientationResolver` when adding schemes.
+- Re-run blueprints through the loader after modifying orientation logic so cached slots refresh.
 
-**Implementation note**: The ANATOMY_GENERATED event is dispatched from `anatomyGenerationWorkflow.js` after successful anatomy generation, including socket information for clothing integration.
+## Tests fail after template changes
 
-## Problem: Orientation mismatch between slots and sockets
+**Symptom**: Anatomy integration or contract tests start failing after modifying templates or recipes.
 
-**Symptoms**: Clothing attaches to wrong body parts, or part names don't match expected orientation
+**Actions**
+1. Review recent changes to `data/mods/anatomy/structure-templates/` and note any renamed sockets.
+2. Sync recipes and tests with the new slot keys (for example, `leg_1` → `leg_left`).
+3. Execute the focused suites:
+   - `npm run test:integration -- anatomy` for loader + generation coverage.
+   - `npm run test:unit -- anatomy` (uses Jest projects) when unit fixtures need updates.
+4. Update fixtures under `tests/integration/anatomy/` to mirror the new topology.
 
-### Root Causes
+**Fixes**
+- Prefer `matchesGroup` patterns in recipes so topology tweaks require fewer test changes.
+- Re-run blueprint compatibility tests to ensure `checkBlueprintRecipeCompatibility` reports zero missing required slots.
 
-**Common cause**: SlotGenerator and SocketGenerator using different orientation resolution logic
+## partType/subType mismatches
 
-**Critical requirement**: Both generators MUST use OrientationResolver (`src/anatomy/shared/orientationResolver.js`)
+**Symptom**: Errors such as `No entity definitions found matching anatomy requirements. Need part type: 'spider_leg'. Allowed types: ["leg"]`.
 
-**Debugging steps**:
-```javascript
-// Verify both use OrientationResolver
-// Check imports in:
-// - src/anatomy/slotGenerator.js (line 8)
-// - src/anatomy/socketGenerator.js (line 8)
+**The three-layer contract**
 
-// Test orientation resolution
-import { OrientationResolver } from './src/anatomy/shared/orientationResolver.js';
+| Layer | Location | Purpose | Example |
+| --- | --- | --- | --- |
+| Socket `allowedTypes` | Generated by `SocketGenerator` | What the socket physically accepts | `["leg", "spider_leg"]` |
+| Recipe `partType` | `data/mods/anatomy/recipes/*.recipe.json` | What selectors request | `"spider_leg"` |
+| Entity `subType` | `data/mods/anatomy/entities/definitions/*.entity.json` | What the entity advertises | `"spider_leg"` |
 
-const bilateral = OrientationResolver.resolveOrientation('bilateral', 1, 2);
-console.log('Bilateral result:', bilateral); // Should be 'left'
+**Rule**: `partType` **must exactly match** `subType`. Socket `allowedTypes` can be broader, but cannot exclude the specific value.
 
-const quadrupedal = OrientationResolver.resolveOrientation('bilateral', 1, 4);
-console.log('Quadrupedal result:', quadrupedal); // Should be 'left_front'
-```
-
-**Solution**:
-- Verify both generators import and use OrientationResolver
-- Never duplicate orientation logic
-- Update OrientationResolver for new orientation schemes
-- See [Anatomy System Guide](./anatomy-system-guide.md) for orientation resolution architecture
-
-## Problem: Tests failing after template changes
-
-**Symptoms**: Previously passing tests now fail with missing body parts or incorrect anatomy structure
-
-### Root Causes
-
-**Common cause**: Template changes broke recipe pattern matching without updating tests
-
-**Debugging steps**:
-1. Review recent template changes
-2. Check if slot key format changed (e.g., `leg_1` → `leg_left`)
-3. Verify recipe patterns still match new slot format
-4. Update test fixtures to match new template structure
-
-**Solution**:
-- Update recipes when templates change
-- Use `matchesGroup` for template-independent patterns
-- Update test fixtures to reflect new slot structure
-- Run integration tests after template modifications
-- See [Testing Guide](anatomy-testing-guide.md) for contract testing patterns
-
-## Problem: partType/subType Mismatches
-
-**Symptoms**: Errors like "No entity definitions found matching anatomy requirements. Need part type: 'spider_leg'. Allowed types: [leg]"
-
-This indicates a **partType/subType mismatch** between recipe requirements and entity definitions.
-
-### Understanding the Three-Layer Type System
-
-The anatomy system uses a three-layer type hierarchy for validation:
-
-#### Layer 1: Socket Layer (`allowedTypes`)
-Defines what **CAN** physically attach to a socket (most permissive).
-
-**Example:**
-```json
-{
-  "id": "leg_socket_1",
-  "allowedTypes": ["leg", "spider_leg", "dragon_leg"]
-}
-```
-
-#### Layer 2: Selection Layer (`partType`)
-Defines what **SHOULD** be selected for a slot (from recipe).
-
-**Example:**
-```json
-{
-  "partType": "spider_leg",
-  "components": ["anatomy:part"]
-}
-```
-
-#### Layer 3: Entity Layer (`subType`)
-Defines what an entity **IS** (runtime classification).
-
-**Example:**
+**Troubleshooting steps**
+1. Locate the recipe entry, e.g. `grep -r "partType.*spider_leg" data/mods/anatomy/recipes/`.
+2. Inspect the entity definition such as `data/mods/anatomy/entities/definitions/spider_leg.entity.json`.
+3. Update the entity to advertise the precise `subType`:
 ```json
 {
   "id": "anatomy:spider_leg",
@@ -307,277 +210,33 @@ Defines what an entity **IS** (runtime classification).
   }
 }
 ```
+4. If using structure templates, align `socketPattern.allowedTypes` so it includes `"spider_leg"`.
+5. Add or update a regression test similar to `tests/unit/anatomy/partSelectionService*.test.js` to lock in the expectation.
 
-### The Critical Rule
+## Performance dips with complex anatomy
 
-**`partType` must EQUAL `subType`** for entity selection to work.
+**Symptom**: Anatomy generation slows dramatically or consumes excessive memory.
 
-**Relationship:** `allowedTypes ⊇ partType = subType`
+**Common drivers**
+- Templates define very large limb sets or deep hierarchies. `buildIndex` amplifies work as it enumerates every entity.
+- Recipes use broad patterns (`matchesPattern: "*"`) causing `RecipePatternResolver` to scan the entire slot set repeatedly.
 
-- `allowedTypes` can contain multiple values (e.g., `["leg", "spider_leg"]`)
-- `partType` must be a single specific value (e.g., `"spider_leg"`)
-- Entity's `subType` must match `partType` exactly (e.g., `"spider_leg"`)
+**Mitigations**
+- Keep limb counts realistic (existing creatures stay below ~20 limbs).
+- Reuse `AnatomySocketIndex` instead of traversing entity graphs manually; the service offers O(1) lookups once built.
+- Narrow recipe patterns with specific `matchesGroup` or `matchesPattern` filters.
+- Profile long-running generation by toggling debug logs on `RecipePatternResolver` and `AnatomyGenerationWorkflow`.
 
-### Why Two Separate Concepts?
+## Diagnostic utilities
 
-While `partType` and `subType` must have identical **values**, they serve different **architectural roles**:
+- **Verbose logging**: Every major service logs at `debug` level, including `RecipePatternResolver`, `SlotGenerator`, `SocketGenerator`, `PartSelectionService`, and `AnatomySocketIndex`.
+- **Socket inspection**: `AnatomySocketIndex` exposes `getEntitySockets`, `findEntityWithSocket`, and `getEntitiesWithSockets` for runtime introspection (`src/anatomy/services/anatomySocketIndex.js`).
+- **Event tracing**: `src/anatomy/workflows/stages/eventPublicationStage.js` records when `ANATOMY_GENERATED` events publish, including the payload contents.
+- **Blueprint/recipe validation**: `src/anatomy/bodyBlueprintFactory/blueprintValidator.js` provides `validateRecipeSlots` and `checkBlueprintRecipeCompatibility`, both covered by unit and integration tests.
 
-**`partType` (Specification Layer)**:
-- **Purpose**: "What to select"
-- **Context**: Recipe requirements
-- **Audience**: Part selection system
-- **Meaning**: "I want a spider leg specifically"
+## Additional references
 
-**`subType` (Classification Layer)**:
-- **Purpose**: "What it is"
-- **Context**: Entity definition
-- **Audience**: Runtime type system
-- **Meaning**: "This entity is a spider leg"
-
-This separation allows:
-1. Recipes to specify requirements independently of entity implementation
-2. Entity types to be classified independently of usage context
-3. Future extensibility (e.g., multiple recipes using same entity type)
-
-### Validation Flow
-
-```javascript
-// PartSelectionService validation (src/anatomy/partSelectionService.js:271-305)
-
-// Step 1: Check if subType is allowed by socket (with wildcard support)
-if (
-  !allowedTypes.includes('*') &&
-  !allowedTypes.includes(anatomyPart.subType)
-) {
-  return false; // Entity rejected
-}
-
-// Step 2: Check if subType matches recipe partType
-if (
-  requirements.partType &&
-  anatomyPart.subType !== requirements.partType
-) {
-  return false; // Entity rejected
-}
-
-// Both checks passed - entity is valid candidate
-return true;
-```
-
-### Common Mistakes
-
-**❌ Mistake 1: Generic Entity, Specific Recipe**
-```json
-// Recipe (WRONG)
-{
-  "partType": "spider_leg"  // Specific
-}
-
-// Entity (WRONG)
-{
-  "subType": "leg"  // Generic - MISMATCH!
-}
-```
-
-**✅ Solution: Both Specific (Spider Pattern)**
-```json
-// Recipe (CORRECT)
-{
-  "partType": "spider_leg"  // Specific
-}
-
-// Entity (CORRECT)
-{
-  "subType": "spider_leg"  // Specific - MATCH!
-}
-```
-
-### Design Philosophy
-
-**Either approach is valid** (generic or specific types), but you must be **consistent** between recipe and entity.
-
-**When to Use Generic Types**:
-- Reusable across multiple creatures
-- Simple anatomy with few variations
-- Example: Kraken uses `"tentacle"`, `"head"`, `"mantle"`
-
-**When to Use Specific Types**:
-- Creature-specific anatomy parts
-- Distinct variations requiring different behaviors
-- Example: Spider uses `"spider_leg"`, `"spider_pedipalp"`, `"spider_abdomen"`
-
-### Diagnostic Steps
-
-If you encounter a `partType`/`subType` mismatch:
-
-1. **Find the recipe** that defines the requirements:
-   ```bash
-   grep -r "partType.*spider_leg" data/mods/anatomy/recipes/
-   ```
-
-2. **Find the entity** definition:
-   ```bash
-   ls data/mods/anatomy/entities/definitions/spider_leg.entity.json
-   ```
-
-3. **Compare values**:
-   - Recipe `partType`: `"spider_leg"`
-   - Entity `subType`: `"leg"` ← **MISMATCH!**
-
-4. **Fix the mismatch** by updating entity `subType` to match recipe `partType`:
-   ```json
-   {
-     "id": "anatomy:spider_leg",
-     "components": {
-       "anatomy:part": {
-         "subType": "spider_leg"  // Changed from "leg"
-       }
-     }
-   }
-   ```
-
-5. **Update structure templates** if using V2 blueprints:
-   ```json
-   {
-     "socketPattern": {
-       "allowedTypes": ["spider_leg"]  // Changed from ["leg"]
-     }
-   }
-   ```
-
-### Testing Pattern
-
-Create unit tests to reproduce and verify fixes:
-
-```javascript
-describe('PartSelectionService - partType/subType Matching', () => {
-  it('should reject entity when subType does not match partType', async () => {
-    const defs = [
-      {
-        id: 'anatomy:spider_leg',
-        components: {
-          'anatomy:part': {
-            subType: 'leg', // Generic type (WRONG)
-          },
-        },
-      },
-    ];
-
-    const requirements = {
-      partType: 'spider_leg', // Expects specific type
-      components: ['anatomy:part'],
-    };
-
-    // Should throw because subType "leg" !== partType "spider_leg"
-    await expect(
-      service.selectPart(requirements, allowedTypes, undefined, Math.random)
-    ).rejects.toThrow('No entity definitions found matching anatomy requirements');
-  });
-});
-```
-
-### Quick Reference
-
-| Component | Role | Example Value |
-|-----------|------|---------------|
-| `allowedTypes` (socket) | What CAN attach | `["leg", "spider_leg"]` |
-| `partType` (recipe) | What SHOULD be selected | `"spider_leg"` |
-| `subType` (entity) | What it IS | `"spider_leg"` |
-
-**Remember:** `allowedTypes ⊇ partType = subType`
-
-**References**:
-- **Anatomy System Guide**: [anatomy-system-guide.md](./anatomy-system-guide.md)
-- **Part Selection Service**: `src/anatomy/partSelectionService.js:271-305`
-
-## Problem: Performance degradation with complex anatomy
-
-**Symptoms**: Slow anatomy generation, high memory usage, or timeout errors
-
-### Root Causes
-
-#### 1. Excessive limb counts
-
-**Common causes**:
-- Templates with very high limb counts (> 20)
-- Deep nesting in body graph
-- Redundant socket index rebuilds
-
-**Solution**:
-- Keep limb counts reasonable (most creatures need ≤ 20 limbs)
-- Use socket index for O(1) lookups instead of graph traversal
-- Cache socket index, invalidate only when structure changes
-
-#### 2. Inefficient pattern matching
-
-**Common causes**:
-- Overly broad patterns (e.g., `matchesPattern: "*"`)
-- Multiple overlapping patterns
-- Complex `matchesAll` filters
-
-**Solution**:
-- Use specific patterns (matchesGroup > matchesPattern > matchesAll)
-- Minimize pattern overlap
-- Profile pattern resolution performance
-- See [Recipe Pattern Matching](./recipe-pattern-matching.md)
-
-## Diagnostic Tools
-
-### Enable Debug Logging
-
-Check logger configuration for anatomy services:
-```javascript
-// Logger shows:
-// - Pattern matching resolution
-// - Socket index operations
-// - Anatomy generation workflow steps
-// - Event dispatch
-```
-
-### Inspect Socket Index
-
-Available at `src/anatomy/services/anatomySocketIndex.js`:
-```javascript
-// Get all sockets for entity
-const sockets = await anatomySocketIndex.getEntitySockets(entityId);
-
-// Find entity with specific socket
-const entityId = await anatomySocketIndex.findEntityWithSocket(rootEntityId, socketId);
-
-// Get all entities with sockets in hierarchy
-const entities = await anatomySocketIndex.getEntitiesWithSockets(rootEntityId);
-```
-
-### Check Event Dispatch
-
-Monitor ANATOMY_GENERATED events:
-```javascript
-// Event payload includes:
-// - entityId: Owner entity
-// - blueprintId: Blueprint used
-// - sockets: Array of socket objects {id, orientation}
-// - timestamp: Generation timestamp
-// - bodyParts: Array of part entity IDs
-// - partsMap: Object mapping part names to entity IDs
-// - slotEntityMappings: Object mapping slot IDs to entity IDs
-```
-
-## Related Documentation
-
-- [Anatomy System Guide](./anatomy-system-guide.md) - System architecture and event flow
-- [Blueprints and Templates](./blueprints-and-templates.md) - Blueprint V2 and structure templates
-- [Recipe Pattern Matching](./recipe-pattern-matching.md) - Pattern matching and debugging
-- [Body Descriptors Complete](./body-descriptors-complete.md) - Body descriptor system
-- [Non-Human Quickstart](./non-human-quickstart.md) - End-to-end tutorial
-- [Testing Guide](anatomy-testing-guide.md) - Contract testing patterns
-
-## Getting Help
-
-If you're still stuck:
-
-1. Check recent commits for breaking changes
-2. Review [Anatomy System Guide](./anatomy-system-guide.md) for architectural changes
-3. Enable debug logging and examine output
-4. Verify all schemas validate correctly
-5. Check integration tests for similar scenarios
-6. Review [Anatomy System Guide](./anatomy-system-guide.md) for system overview
+- [Anatomy System Guide](./anatomy-system-guide.md) – Architectural overview and event flow.
+- [Blueprints and Templates](./blueprints-and-templates.md) – Template topology rules and schema links.
+- [Recipe Pattern Matching](./recipe-pattern-matching.md) – Pattern authoring strategies and debugging commands.
+- [Anatomy Testing Guide](./anatomy-testing-guide.md) – Maintaining unit and integration coverage.
