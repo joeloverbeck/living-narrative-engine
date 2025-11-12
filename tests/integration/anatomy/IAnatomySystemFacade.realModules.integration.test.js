@@ -680,6 +680,7 @@ async function createIntegrationContext() {
     anatomyGenerationService,
     bodyBlueprintFactory,
     anatomyDescriptionService,
+    descriptionAdapter,
     unifiedCache,
     eventBus,
     facade,
@@ -957,5 +958,305 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     expect(validationResponse.success).toBe(true);
     expect(validationResponse.data.valid).toBe(true);
     expect(Array.isArray(validationResponse.data.errors)).toBe(true);
+  });
+
+  it('falls back to safe defaults when collaborators fail', async () => {
+    const {
+      facade,
+      actorId,
+      bodyGraphAdapter,
+      graphValidator,
+      descriptionAdapter,
+      unifiedCache,
+      ids,
+    } = context;
+
+    unifiedCache.clear();
+
+    jest.spyOn(bodyGraphAdapter, 'getBodyParts').mockRejectedValueOnce(new Error('parts failure'));
+    const partsResponse = await facade.getBodyParts(actorId, {
+      requestId: 'fallback-parts',
+    });
+    expect(partsResponse.success).toBe(true);
+    expect(partsResponse.data).toEqual([]);
+    expect(partsResponse.pagination.total).toBe(0);
+
+    jest.spyOn(bodyGraphAdapter, 'buildGraph').mockRejectedValueOnce(new Error('graph failure'));
+    jest.spyOn(bodyGraphAdapter, 'analyzeGraph').mockRejectedValueOnce(new Error('analysis failure'));
+    const graphResponse = await facade.getBodyGraph(actorId);
+    expect(graphResponse.success).toBe(true);
+    expect(graphResponse.data.nodes).toEqual([]);
+    expect(graphResponse.data.edges).toEqual([]);
+
+    jest
+      .spyOn(bodyGraphAdapter, 'getPartsByType')
+      .mockRejectedValueOnce(new Error('parts by type failure'));
+    const byTypeResponse = await facade.getPartByType(actorId, 'limb');
+    expect(byTypeResponse.success).toBe(true);
+    expect(byTypeResponse.data).toEqual([]);
+    expect(byTypeResponse.pagination.total).toBe(0);
+
+    jest
+      .spyOn(bodyGraphAdapter, 'getConnectedParts')
+      .mockRejectedValueOnce(new Error('connected failure'));
+    const connectedResponse = await facade.getConnectedParts(actorId, ids.leftArmId);
+    expect(connectedResponse.success).toBe(true);
+    expect(connectedResponse.data).toEqual([]);
+
+    jest
+      .spyOn(graphValidator, 'validateEntityGraph')
+      .mockRejectedValueOnce(new Error('validator failure'));
+    const validationFallback = await facade.validateGraph(actorId, {
+      requestId: 'fallback-validation',
+    });
+    expect(validationFallback.success).toBe(true);
+    expect(validationFallback.data.valid).toBe(false);
+    expect(validationFallback.data.errors[0].message).toBe('Graph validation service unavailable');
+
+    jest.spyOn(bodyGraphAdapter, 'getConstraints').mockRejectedValueOnce(new Error('constraints failure'));
+    const constraintsResponse = await facade.getGraphConstraints(actorId);
+    expect(constraintsResponse.success).toBe(true);
+    expect(constraintsResponse.data.rules).toEqual([]);
+    expect(constraintsResponse.data.limits).toEqual({});
+
+    jest
+      .spyOn(descriptionAdapter, 'generateEntityDescription')
+      .mockRejectedValueOnce(new Error('description failure'));
+    const descriptionResponse = await facade.generateDescription(actorId, {
+      style: 'fallback',
+      perspective: 'first',
+      requestId: 'fallback-description',
+      ttl: 5,
+    });
+    expect(descriptionResponse.success).toBe(true);
+    expect(descriptionResponse.data.description).toBe('Description unavailable');
+
+    jest
+      .spyOn(descriptionAdapter, 'generatePartDescription')
+      .mockRejectedValueOnce(new Error('part description failure'));
+    const partDescriptionResponse = await facade.getPartDescription(actorId, ids.leftArmId, {
+      style: 'fallback',
+      perspective: 'first',
+      requestId: 'fallback-part-description',
+      ttl: 5,
+    });
+    expect(partDescriptionResponse.success).toBe(true);
+    expect(partDescriptionResponse.data.description).toBe('Part description unavailable');
+  });
+
+  it('validates input payloads and blueprints before performing operations', async () => {
+    const { facade, actorId, ids } = context;
+
+    const invalidModify = await facade.modifyPart(actorId, ids.leftArmId, null);
+    expect(invalidModify.success).toBe(false);
+    expect(invalidModify.error.message).toContain('Modifications must be an object');
+
+    const invalidBlueprint = await facade.buildBodyGraph(actorId, null);
+    expect(invalidBlueprint.success).toBe(false);
+    expect(invalidBlueprint.error.message).toContain('Blueprint must be an object');
+
+    const invalidValidatedBlueprint = await facade.buildBodyGraph(
+      actorId,
+      {
+        type: 'invalid-blueprint',
+        parts: [
+          {
+            id: 'floating-part',
+            parentId: 'missing-parent',
+            partType: 'extremity',
+            subType: 'finger',
+          },
+        ],
+      },
+      { validate: true },
+    );
+    expect(invalidValidatedBlueprint.success).toBe(false);
+    expect(invalidValidatedBlueprint.error.message).toContain('Invalid blueprint');
+
+    const invalidBulkAttach = await facade.attachMultipleParts(actorId, { invalid: 'payload' });
+    expect(invalidBulkAttach.success).toBe(false);
+    expect(invalidBulkAttach.error.message).toContain('Parts must be an array');
+
+    const invalidBulkDetach = await facade.detachMultipleParts(actorId, 'invalid payload');
+    expect(invalidBulkDetach.success).toBe(false);
+    expect(invalidBulkDetach.error.message).toContain('Part IDs must be an array');
+
+    const invalidRebuild = await facade.rebuildFromBlueprint(actorId, null);
+    expect(invalidRebuild.success).toBe(false);
+    expect(invalidRebuild.error.message).toContain('Blueprint must be an object');
+  });
+
+  it('sorts body parts in descending order while handling duplicate keys', async () => {
+    const { facade, actorId, entityManager, ids } = context;
+
+    const duplicateId = 'duplicate-arm';
+    entityManager.addComponent(duplicateId, 'anatomy:part', { partType: 'limb', subType: 'arm' });
+    entityManager.addComponent(duplicateId, 'core:name', { text: 'Left Arm' });
+
+    await facade.attachPart(actorId, duplicateId, ids.leftArmId, { notifyOnChange: false });
+
+    const response = await facade.getBodyParts(actorId, {
+      sortBy: 'name',
+      sortOrder: 'desc',
+      requestId: 'descending-sort',
+    });
+
+    expect(response.success).toBe(true);
+    const names = response.data.map((part) => part.name);
+    const expected = [...names].sort((a, b) => b.localeCompare(a));
+    expect(names).toEqual(expected);
+    expect(names.filter((name) => name === 'Left Arm').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('supports parallel bulk attachments with partial failures and progress updates', async () => {
+    const { facade, actorId, entityManager, ids } = context;
+
+    const validId = 'bulk-valid-finger';
+    entityManager.addComponent(validId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(validId, 'core:name', { text: 'Valid Finger' });
+
+    const invalidId = 'bulk-invalid-finger';
+    entityManager.addComponent(invalidId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(invalidId, 'anatomy:joint', {
+      parentId: ids.rightArmId,
+      socketId: 'mismatched-socket',
+    });
+    entityManager.addComponent(invalidId, 'core:name', { text: 'Miswired Finger' });
+
+    const progressSpy = jest.fn();
+
+    const originalAttachPart = facade.attachPart.bind(facade);
+    const attachSpy = jest.spyOn(facade, 'attachPart');
+    attachSpy.mockImplementationOnce(async () => {
+      throw new Error('forced attach failure');
+    });
+    attachSpy.mockImplementation(originalAttachPart);
+
+    const response = await facade.attachMultipleParts(
+      actorId,
+      [
+        { partId: validId, parentPartId: ids.leftArmId },
+        { partId: invalidId, parentPartId: ids.leftArmId },
+      ],
+      {
+        validate: true,
+        notifyOnChange: false,
+        batchSize: 1,
+        parallel: true,
+        returnResults: true,
+        onProgress: progressSpy,
+        stopOnError: false,
+      },
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.data.successful).toBe(1);
+    expect(response.data.failed).toBe(1);
+    expect(response.data.errors[0].error).toBe('forced attach failure');
+    expect(response.partial).toBe(true);
+    expect(progressSpy).toHaveBeenCalled();
+  });
+
+  it('stops bulk attachment immediately when stopOnError is enabled', async () => {
+    const { facade, actorId, entityManager, ids } = context;
+
+    const invalidId = 'bulk-stop-finger';
+    entityManager.addComponent(invalidId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(invalidId, 'anatomy:joint', {
+      parentId: ids.rightArmId,
+      socketId: 'occupied-socket',
+    });
+    entityManager.addComponent(invalidId, 'core:name', { text: 'Stop Finger' });
+
+    const originalAttachPart = facade.attachPart.bind(facade);
+    const attachSpy = jest.spyOn(facade, 'attachPart');
+    attachSpy.mockImplementationOnce(async () => {
+      throw new Error('forced stop attach');
+    });
+    attachSpy.mockImplementation(originalAttachPart);
+
+    const response = await facade.attachMultipleParts(
+      actorId,
+      [{ partId: invalidId, parentPartId: ids.leftArmId }],
+      {
+        validate: true,
+        notifyOnChange: false,
+        stopOnError: true,
+      },
+    );
+
+    expect(response.success).toBe(false);
+    expect(response.error.message).toBe('forced stop attach');
+  });
+
+  it('handles partial detach failures with parallel execution and progress reporting', async () => {
+    const { facade, actorId, entityManager, ids } = context;
+
+    const partA = 'bulk-detach-part-a';
+    const partB = 'bulk-detach-part-b';
+    entityManager.addComponent(partA, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(partA, 'core:name', { text: 'Detach Finger A' });
+    entityManager.addComponent(partB, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(partB, 'core:name', { text: 'Detach Finger B' });
+
+    await facade.attachPart(actorId, partA, ids.leftArmId, { notifyOnChange: false });
+    await facade.attachPart(actorId, partB, ids.leftArmId, { notifyOnChange: false });
+
+    const originalDetach = facade.detachPart.bind(facade);
+    const detachSpy = jest.spyOn(facade, 'detachPart');
+    detachSpy.mockImplementationOnce(async () => {
+      throw new Error('forced detach failure');
+    });
+    detachSpy.mockImplementation(originalDetach);
+
+    const progressSpy = jest.fn();
+    const response = await facade.detachMultipleParts(
+      actorId,
+      [partA, partB],
+      {
+        notifyOnChange: false,
+        batchSize: 1,
+        parallel: true,
+        returnResults: true,
+        onProgress: progressSpy,
+        stopOnError: false,
+      },
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.data.failed).toBe(1);
+    expect(response.data.successful).toBe(1);
+    expect(response.data.errors[0].error).toBe('forced detach failure');
+    expect(response.partial).toBe(true);
+    expect(progressSpy).toHaveBeenCalled();
+  });
+
+  it('stops bulk detachment immediately when stopOnError is enabled', async () => {
+    const { facade, actorId, entityManager, ids } = context;
+
+    const partId = 'bulk-stop-detach';
+    entityManager.addComponent(partId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(partId, 'core:name', { text: 'Stop Detach Finger' });
+
+    await facade.attachPart(actorId, partId, ids.leftArmId, { notifyOnChange: false });
+
+    const originalDetach = facade.detachPart.bind(facade);
+    const detachSpy = jest.spyOn(facade, 'detachPart');
+    detachSpy.mockImplementationOnce(async () => {
+      throw new Error('forced stop detach');
+    });
+    detachSpy.mockImplementation(originalDetach);
+
+    const response = await facade.detachMultipleParts(
+      actorId,
+      [partId],
+      {
+        notifyOnChange: false,
+        stopOnError: true,
+      },
+    );
+
+    expect(response.success).toBe(false);
+    expect(response.error.message).toBe('forced stop detach');
   });
 });
