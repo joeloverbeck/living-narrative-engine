@@ -167,19 +167,12 @@ These actions reference scopes that will be created in WEASYSIMP-005:
 ### Validation Commands
 
 ```bash
-# Validate JSON syntax
-node -e "JSON.parse(require('fs').readFileSync('data/mods/items/actions/aim_item.action.json'))" && echo "✓ aim_item valid JSON"
-node -e "JSON.parse(require('fs').readFileSync('data/mods/items/actions/lower_aim.action.json'))" && echo "✓ lower_aim valid JSON"
-
-# Validate against schema
+# Primary validation (validates JSON syntax, schema compliance, and mod structure)
 npm run validate
 
-# Check action IDs
+# Optional: Check action IDs (npm run validate covers this)
 grep -q '"id": "items:aim_item"' data/mods/items/actions/aim_item.action.json && echo "✓ Correct ID for aim_item"
 grep -q '"id": "items:lower_aim"' data/mods/items/actions/lower_aim.action.json && echo "✓ Correct ID for lower_aim"
-
-# Verify generateCombinations
-grep -q '"generateCombinations": true' data/mods/items/actions/aim_item.action.json && echo "✓ generateCombinations enabled"
 ```
 
 ### Color Contrast Validation
@@ -188,36 +181,142 @@ Use WebAIM contrast checker or similar tool:
 - Background #004d61 vs Text #e0f7fa = Expected 12.74:1 (AAA)
 - Hover #006978 vs Hover Text #ffffff = Expected 11.12:1 (AAA)
 
-### Unit Test Stub
+### Integration Tests
 
-**File:** `tests/unit/mods/items/actions/aimingActions.test.js`
+Following the established items mod testing pattern (see `giveItemActionDiscovery.test.js`, `dropItemActionDiscovery.test.js`), create two integration test files:
+
+**File 1:** `tests/integration/mods/items/aimItemActionDiscovery.test.js`
 
 ```javascript
-import { describe, it, expect } from '@jest/globals';
+/**
+ * @file Integration tests for the items:aim_item action definition.
+ * @description Tests that the aim_item action is properly defined and structured.
+ */
 
-describe('Items Mod - Aiming Actions', () => {
-  describe('items:aim_item action', () => {
-    it('should have correct structure for dual-target aiming', () => {
-      const action = require('../../../../../data/mods/items/actions/aim_item.action.json');
-      expect(action.id).toBe('items:aim_item');
-      expect(action.targets.primary.scope).toBe('items:aimable_targets');
-      expect(action.targets.secondary.scope).toBe('items:aimable_items_in_inventory');
-      expect(action.template).toBe('aim {item} at {target}');
-      expect(action.generateCombinations).toBe(true);
-    });
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import aimItemAction from '../../../../data/mods/items/actions/aim_item.action.json' assert { type: 'json' };
+
+describe('items:aim_item action definition', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction('items', 'items:aim_item');
   });
 
-  describe('items:lower_aim action', () => {
-    it('should have correct structure for lowering aim', () => {
-      const action = require('../../../../../data/mods/items/actions/lower_aim.action.json');
-      expect(action.id).toBe('items:lower_aim');
-      expect(action.targets.primary.scope).toBe('items:aimed_items_in_inventory');
-      expect(action.template).toBe('lower {item}');
-      expect(action.generateCombinations).toBe(true);
-    });
+  afterEach(() => {
+    if (testFixture) {
+      testFixture.cleanup();
+    }
+  });
+
+  it('should have correct action structure', () => {
+    expect(aimItemAction).toBeDefined();
+    expect(aimItemAction.id).toBe('items:aim_item');
+    expect(aimItemAction.name).toBe('Aim Item');
+    expect(aimItemAction.description).toBe(
+      'Aim an aimable item at a target entity. The item must have items:aimable component and be in actor\'s inventory.'
+    );
+    expect(aimItemAction.template).toBe('aim {item} at {target}');
+  });
+
+  it('should use correct scope for primary targets', () => {
+    expect(aimItemAction.targets).toBeDefined();
+    expect(aimItemAction.targets.primary).toBeDefined();
+    expect(aimItemAction.targets.primary.scope).toBe('items:aimable_targets');
+    expect(aimItemAction.targets.primary.placeholder).toBe('target');
+    expect(aimItemAction.targets.primary.description).toBe('Entity to aim at');
+  });
+
+  it('should use correct scope for secondary targets (aimable items)', () => {
+    expect(aimItemAction.targets).toBeDefined();
+    expect(aimItemAction.targets.secondary).toBeDefined();
+    expect(aimItemAction.targets.secondary.scope).toBe(
+      'items:aimable_items_in_inventory'
+    );
+    expect(aimItemAction.targets.secondary.placeholder).toBe('item');
+    expect(aimItemAction.targets.secondary.description).toBe(
+      'Aimable item to use (weapon, flashlight, camera, etc.)'
+    );
+  });
+
+  it('should generate combinations for multiple targets', () => {
+    expect(aimItemAction.generateCombinations).toBe(true);
+  });
+
+  it('should require actor to have inventory', () => {
+    expect(aimItemAction.required_components).toBeDefined();
+    expect(aimItemAction.required_components.actor).toEqual(['items:inventory']);
   });
 });
 ```
+
+**File 2:** `tests/integration/mods/items/lowerAimActionDiscovery.test.js`
+
+```javascript
+/**
+ * @file Integration tests for the items:lower_aim action definition.
+ * @description Tests that the lower_aim action is properly defined and structured.
+ */
+
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import lowerAimAction from '../../../../data/mods/items/actions/lower_aim.action.json' assert { type: 'json' };
+
+describe('items:lower_aim action definition', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction('items', 'items:lower_aim');
+  });
+
+  afterEach(() => {
+    if (testFixture) {
+      testFixture.cleanup();
+    }
+  });
+
+  it('should have correct action structure', () => {
+    expect(lowerAimAction).toBeDefined();
+    expect(lowerAimAction.id).toBe('items:lower_aim');
+    expect(lowerAimAction.name).toBe('Lower Aim');
+    expect(lowerAimAction.description).toBe(
+      'Stop aiming an item. Removes the items:aimed_at component from the item, ending the aimed state.'
+    );
+    expect(lowerAimAction.template).toBe('lower {item}');
+  });
+
+  it('should use correct scope for primary targets (aimed items)', () => {
+    expect(lowerAimAction.targets).toBeDefined();
+    expect(lowerAimAction.targets.primary).toBeDefined();
+    expect(lowerAimAction.targets.primary.scope).toBe(
+      'items:aimed_items_in_inventory'
+    );
+    expect(lowerAimAction.targets.primary.placeholder).toBe('item');
+    expect(lowerAimAction.targets.primary.description).toBe(
+      'Item currently being aimed (has items:aimed_at component)'
+    );
+  });
+
+  it('should generate combinations for multiple targets', () => {
+    expect(lowerAimAction.generateCombinations).toBe(true);
+  });
+
+  it('should require actor to have inventory', () => {
+    expect(lowerAimAction.required_components).toBeDefined();
+    expect(lowerAimAction.required_components.actor).toEqual(['items:inventory']);
+  });
+});
+```
+
+**Testing Notes:**
+- Tests follow the established items mod pattern (see existing action discovery tests)
+- Use `ModTestFixture.forAction('items', 'items:action_name')` with full namespaced ID
+- Import action JSON with ES6 `import ... assert { type: 'json' }` syntax
+- Test file names follow `{actionName}ActionDiscovery.test.js` pattern (camelCase)
+- Tests are integration tests, not unit tests (located in `tests/integration/mods/items/`)
+- Focus on action structure validation; detailed discovery behavior tests can be added later
+- Reference: `docs/testing/mod-testing-guide.md` for complete testing patterns
 
 ## Additional Notes
 
