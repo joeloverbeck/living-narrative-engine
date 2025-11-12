@@ -103,7 +103,7 @@ describe('GOAP E2E: Cat Finding Food', () => {
     const context = testBed.createContext({ actorId: cat.id });
     const decision = await testBed.makeGoapDecision(cat, context, []);
 
-    // Assert: Should return null index for no actions
+    // Assert: Should return null chosenIndex for no actions
     expect(decision).toBeDefined();
     expect(decision.chosenIndex).toBeNull();
   }, 30000);

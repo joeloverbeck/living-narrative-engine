@@ -110,4 +110,104 @@ describe('GenericTurnStrategy', () => {
       extractedData: { speech: 'wait', thoughts: null, notes: null },
     });
   });
+
+  it('throws NoDecisionMadeError when decisionProvider returns null chosenIndex and no fallback factory', async () => {
+    // Arrange
+    const fakeActor = { id: 'actor3' };
+    const fakeContext = {
+      getActor: () => fakeActor,
+      getPromptSignal: () => null,
+    };
+
+    const fakeComposite = { actionDefinitionId: 'testAction' };
+    const choicePipeline = {
+      buildChoices: jest.fn().mockResolvedValue([fakeComposite]),
+    };
+    const decisionProvider = {
+      decide: jest
+        .fn()
+        .mockResolvedValue({ chosenIndex: null, speech: null, thoughts: null }),
+    };
+    const turnActionFactory = { create: jest.fn() };
+    const logger = { debug: jest.fn() };
+
+    const strategy = new GenericTurnStrategy({
+      choicePipeline,
+      decisionProvider,
+      turnActionFactory,
+      logger,
+      fallbackFactory: null,
+    });
+
+    // Act & Assert
+    await expect(strategy.decideAction(fakeContext)).rejects.toThrow(
+      'No decision could be made for actor actor3'
+    );
+    await expect(strategy.decideAction(fakeContext)).rejects.toMatchObject({
+      name: 'NoDecisionMadeError',
+    });
+
+    // Verify that turnActionFactory.create was never called with undefined
+    expect(turnActionFactory.create).not.toHaveBeenCalled();
+  });
+
+  it('returns fallback decision when decisionProvider returns null chosenIndex and fallback factory provided', async () => {
+    // Arrange
+    const fakeActor = { id: 'actor4' };
+    const fakeContext = {
+      getActor: () => fakeActor,
+      getPromptSignal: () => null,
+    };
+
+    const fakeComposite = { actionDefinitionId: 'testAction' };
+    const choicePipeline = {
+      buildChoices: jest.fn().mockResolvedValue([fakeComposite]),
+    };
+    const decisionProvider = {
+      decide: jest.fn().mockResolvedValue({
+        chosenIndex: null,
+        speech: 'I am uncertain what to do.',
+        thoughts: null,
+        notes: null,
+      }),
+    };
+    const turnActionFactory = { create: jest.fn() };
+    const fallbackAction = {
+      actionDefinitionId: 'fallback:wait',
+      speech: 'fallback speech',
+    };
+    const fallbackFactory = {
+      create: jest.fn().mockReturnValue(fallbackAction),
+    };
+    const logger = { debug: jest.fn() };
+
+    const strategy = new GenericTurnStrategy({
+      choicePipeline,
+      decisionProvider,
+      turnActionFactory,
+      logger,
+      fallbackFactory,
+    });
+
+    // Act
+    const result = await strategy.decideAction(fakeContext);
+
+    // Assert
+    expect(result).toEqual({
+      kind: 'fallback',
+      action: fallbackAction,
+      extractedData: { speech: 'fallback speech', thoughts: null, notes: null },
+    });
+
+    // Verify fallback factory was called with correct parameters
+    expect(fallbackFactory.create).toHaveBeenCalledWith(
+      'NoDecisionMadeError',
+      expect.any(Error),
+      'actor4',
+      {}
+    );
+
+    // Verify that turnActionFactory.create was never called with undefined
+    expect(turnActionFactory.create).not.toHaveBeenCalled();
+  });
 });

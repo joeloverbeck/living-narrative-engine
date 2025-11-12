@@ -42,3 +42,16 @@ export class LLMTimeoutError extends Error {
     this.name = 'LLMTimeoutError';
   }
 }
+
+/**
+ * @class NoDecisionMadeError
+ * @augments Error
+ * @description Thrown when a decision provider cannot make a decision (returns null index).
+ * @param {string} actorId - The ID of the actor for whom no decision could be made.
+ */
+export class NoDecisionMadeError extends Error {
+  constructor(actorId) {
+    super(`No decision could be made for actor ${actorId}`);
+    this.name = 'NoDecisionMadeError';
+  }
+}
