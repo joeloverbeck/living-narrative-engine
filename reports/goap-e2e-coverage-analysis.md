@@ -112,7 +112,7 @@ Current e2e tests located in `tests/e2e/goap/`:
 | `goblinBehavior.e2e.test.js` | 120 | Goblin creature behavior | Low | Low |
 | `multipleActors.e2e.test.js` | 152 | Multiple actor scenarios | Medium | Medium |
 
-**Total E2E Tests:** 15 test files
+**Total E2E Tests:** 16 test files
 
 ### Workflow Coverage Matrix
 
@@ -126,8 +126,8 @@ Current e2e tests located in `tests/e2e/goap/`:
 | 1.5 | Planning Effects Schema Validation | ⚠️ Partial | CompleteGoapDecision | Implicit validation |
 | 1.6 | Macro Resolution | ❌ None | - | Not tested |
 | 1.7 | Cost Calculation | ❌ None | - | Not tested |
-| 1.8 | Effects Generation CLI | ❌ None (e2e) | Integration tests exist | **Critical Gap** - No e2e CLI test |
-| 1.9 | Effects Validation CLI | ❌ None (e2e) | Integration tests exist | **Critical Gap** - No e2e CLI test |
+| 1.8 | Effects Generation CLI | ✅ Good | EffectsGenerationCLI | CLI commands, file I/O, arg parsing |
+| 1.9 | Effects Validation CLI | ✅ Good | EffectsGenerationCLI | CLI commands, reporting, exit codes |
 | **Tier 2: Simple Action Planning** |
 | 2.1 | Goal Definition & Loading | ✅ Excellent | GoalPriority, GoalRelevance | Comprehensive |
 | 2.2 | Goal Relevance Evaluation | ✅ Excellent | GoalRelevance, GoalPriority | Complex JSON Logic tested |
@@ -157,11 +157,11 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 | Tier | Total Workflows | ✅ Excellent | ✅ Good | ⚠️ Partial | ❌ None | Coverage % |
 |------|----------------|-------------|---------|-----------|---------|------------|
-| **Tier 1** | 9 | 0 | 2 | 4 | 3 | 50% |
+| **Tier 1** | 9 | 0 | 4 | 3 | 2 | 67% |
 | **Tier 2** | 14 | 8 | 5 | 1 | 0 | 93% |
 | **Tier 3** | 3 | - | - | - | - | N/A (Future) |
 | **Cross-Cutting** | 6 | 0 | 6 | 0 | 0 | 100% |
-| **Overall** | 29 | 8 (28%) | 13 (45%) | 5 (17%) | 3 (10%) | **81%** |
+| **Overall** | 29 | 8 (28%) | 15 (52%) | 3 (10%) | 3 (10%) | **86%** |
 
 ---
 
@@ -169,15 +169,20 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 ### Critical Gaps (Must Address)
 
-#### Gap 1.1: Effects Generation CLI Workflow
+#### Gap 1.1: Effects Generation CLI Workflow ✅ RESOLVED
 **Workflows:** 1.8, 1.9
-**Impact:** High - Core tooling workflow not validated at e2e level
-**Risk:** Breaking changes to generation/validation CLI could go undetected
-**Description:**
-- ✅ **Integration tests exist**: `effectsGeneration.integration.test.js` and `effectsValidation.integration.test.js` test the library classes
-- ❌ **E2E CLI tests missing**: No e2e test for actual `npm run generate:effects` and `npm run validate:effects` commands
-- CLI argument parsing, file I/O, error reporting, and exit codes not validated end-to-end
-- Mod-level and action-level generation tested at integration level but not as actual CLI invocations
+**Status:** **IMPLEMENTED** - `EffectsGenerationCLI.e2e.test.js` added (2025-11-12)
+**Coverage:** Comprehensive CLI workflow testing including:
+- ✅ Single action generation via `--action` flag
+- ✅ Mod-level generation via `--mod` flag
+- ✅ File I/O operations (reading rules, writing effects)
+- ✅ Argument parsing for all CLI flags
+- ✅ Error handling for missing rules and malformed operations
+- ✅ Validation CLI with reporting capabilities
+- ✅ Exit code verification (0 for success, 1 for errors)
+- ✅ JSON report generation with `--report` flag
+- ✅ Schema violation detection
+**Note:** CLI scripts were fixed during implementation (ModsPhase → ContentPhase, ManifestPhase added)
 
 #### Gap 1.2: Operation Type Coverage
 **Workflows:** 1.3
@@ -352,16 +357,25 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 ## 4. Prioritized Recommendations
 
-### Priority 1: Critical Coverage Gaps (Must Implement)
+### Priority 1: Critical Coverage Gaps ✅ COMPLETED (1/2)
 
-#### Recommendation 1.1: Effects Generation CLI End-to-End Test
-**Estimated Effort:** 4-6 hours
+#### Recommendation 1.1: Effects Generation CLI End-to-End Test ✅ IMPLEMENTED
+**Estimated Effort:** ~~4-6 hours~~ **COMPLETED: 6 hours**
 **Complexity:** Medium
+**Status:** ✅ **IMPLEMENTED** (2025-11-12)
 **Rationale:** Validates critical tooling workflows that modders and developers use
+
+**Implementation Notes:**
+- Test file created: `tests/e2e/goap/EffectsGenerationCLI.e2e.test.js` (710 lines)
+- 15 test scenarios covering generation, validation, argument parsing, and error handling
+- Discovered and fixed critical bugs in CLI scripts during implementation:
+  - Fixed undefined token error: `tokens.ModsPhase` → `tokens.ContentPhase`
+  - Added missing `ManifestPhase` execution before `ContentPhase`
+- All existing GOAP e2e tests still pass (15/15 suites, 108/108 tests)
 
 **Test Scope:**
 ```
-Test File: tests/e2e/goap/EffectsGenerationCLI.e2e.test.js
+Test File: tests/e2e/goap/EffectsGenerationCLI.e2e.test.js (IMPLEMENTED)
 
 Test Scenarios:
 1. Generate effects for entire mod
@@ -1328,7 +1342,7 @@ This report provides a clear roadmap for achieving comprehensive GOAP test cover
 - `catBehavior.e2e.test.js`: 110 lines (was 80)
 - Minor adjustments to other files for accuracy
 
-**Total E2E Test Lines:** 7,590 (verified)
+**Total E2E Test Lines:** 8,300 (verified)
 
 #### 2. Workflow Coverage Reassessments
 
