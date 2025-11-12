@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Clothing Removal Blocking System (2025-11-12)
+
+#### Overview
+
+Comprehensive documentation for the clothing removal blocking system, which enforces realistic clothing physics by preventing removal of items that are secured by other items.
+
+#### Added
+
+- **Documentation**:
+  - New modding guide: `docs/modding/clothing-blocking-system.md` - Complete guide for content creators
+  - Updated `docs/modding/clothing-items.md` with removal blocking section
+  - New troubleshooting guide: `docs/troubleshooting/clothing-blocking.md`
+  - Updated `CLAUDE.md` with developer documentation for blocking system
+  - Changelog entry for blocking system documentation
+
+- **System Features Documented**:
+  - `clothing:blocks_removal` component for declaring blocking rules
+  - `isRemovalBlocked` JSON Logic operator for blocking evaluation
+  - `ClothingAccessibilityService` for filtering blocked items
+  - Scope filtering in `topmost_clothing` to hide blocked items
+  - Belt entities updated to block pants removal
+  - Comprehensive test suite for blocking scenarios
+
+#### Documentation Highlights
+
+- Clear examples for common use cases (belts, armor, multiple blockers)
+- Troubleshooting guides for self-blocking, circular dependencies, performance
+- Best practices for slot-based vs. item-specific blocking
+- Testing workflows and debug procedures
+- Integration points with scope resolution and action discovery
+
 ### Major Refactoring - Activity Description System (2025-11-01)
 
 #### Overview

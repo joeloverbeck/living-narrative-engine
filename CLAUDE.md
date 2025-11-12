@@ -405,6 +405,41 @@ import {
 **Documentation**:
 - [Body Descriptors Complete](docs/anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
+### Clothing Removal Blocking System
+
+The blocking system enforces realistic clothing physics by preventing removal of items that are secured by other items.
+
+**Key Components**:
+- `clothing:blocks_removal` component (data/mods/clothing/components/blocks_removal.component.json)
+- `IsRemovalBlockedOperator` (src/logic/operators/isRemovalBlockedOperator.js)
+- `ClothingAccessibilityService` (src/clothing/services/clothingAccessibilityService.js) - **primary blocking logic**
+- Registered in `src/logic/jsonLogicCustomOperators.js`
+- ⚠️ `can-remove-item` condition NOT FOUND - may need to be created
+
+**Integration Points**:
+1. Component defines blocking rules in entity definitions
+2. Operator evaluates blocking in JSON Logic expressions
+3. `ClothingAccessibilityService` filters blocked items during accessibility queries
+4. Service used by action discovery and scope resolution
+5. ⚠️ Integration with `SlotAccessResolver` needs verification
+
+**Usage Example**:
+```json
+{
+  "clothing:blocks_removal": {
+    "blockedSlots": [
+      { "slot": "legs", "layers": ["base"], "blockType": "must_remove_first" }
+    ]
+  }
+}
+```
+
+**Real Examples**: See belt entities in `data/mods/clothing/entities/definitions/*_belt.entity.json`
+
+**Testing**: See `tests/integration/clothing/blockingEdgeCases.integration.test.js` for examples.
+
+**Documentation**: See `docs/modding/clothing-blocking-system.md`.
+
 ## 🔄 Development Workflow
 
 ### Essential Commands
