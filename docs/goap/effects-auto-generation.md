@@ -2,7 +2,9 @@
 
 ## Overview
 
-The effects auto-generation system is a core feature of GOAP Tier 1 that automatically creates planning metadata from action rules. This eliminates the need for manual effect authoring, ensures consistency between execution code and planning metadata, and reduces maintenance burden.
+The effects auto-generation system is a **development-time tool** that analyzes action rules and generates planning metadata. Generated effects are committed to the repository alongside action definitions. This eliminates manual effect authoring, ensures consistency between execution code and planning metadata, and reduces maintenance burden.
+
+**Key Distinction**: Effects generation runs during development (via `npm run generate:effects`), not at runtime. The GOAP planner uses pre-generated effects stored in action files.
 
 ## Table of Contents
 
@@ -20,19 +22,19 @@ The effects auto-generation system is a core feature of GOAP Tier 1 that automat
 
 ## How It Works
 
-The effects auto-generation system analyzes rule operations to extract planning effects. The process follows these steps:
+The effects generator analyzes rule operations offline (during development) to produce planning metadata that is committed to the repository. At runtime, the GOAP planner reads these pre-generated effects from action files.
 
-### Step 1: Load Action and Rule
+### Generation Workflow
 
+**Step 1: Developer runs generation command**
+```bash
+npm run generate:effects -- --action=positioning:sit_down
+```
+
+**Step 2: Generator loads action and finds associated rule**
 ```javascript
-// Action definition
-{
-  "id": "positioning:sit_down",
-  "name": "Sit down",
-  "targets": "positioning:available_furniture"
-}
-
-// Associated rule (positioning:handle_sit_down)
+// Action: positioning:sit_down
+// Rule: positioning:handle_sit_down
 {
   "id": "positioning:handle_sit_down",
   "event": { "type": "ACTION_DECIDED" },
@@ -43,41 +45,27 @@ The effects auto-generation system analyzes rule operations to extract planning 
 }
 ```
 
-### Step 2: Analyze Operations
+**Step 3: Analyzer processes operations**
+- Identifies state-changing operations (ADD/REMOVE/MODIFY_COMPONENT)
+- Skips non-state operations (events, logging, queries)
+- Traces conditional branches (IF/THEN/ELSE)
+- Resolves macros where possible
 
-The analyzer examines each operation in the rule:
-
-1. **Identify State-Changing Operations**: Operations that modify world state
-2. **Skip Non-State Operations**: Events, logging, queries
-3. **Trace Conditionals**: Follow IF/THEN/ELSE branches
-4. **Resolve Macros**: Replace variable references with concrete values
-
-### Step 3: Generate Planning Effects
-
+**Step 4: Generator produces planning effects**
 ```javascript
-// Generated planning effects
 {
   "planningEffects": {
     "effects": [
-      {
-        "operation": "REMOVE_COMPONENT",
-        "entity": "actor",
-        "component": "positioning:standing"
-      },
-      {
-        "operation": "ADD_COMPONENT",
-        "entity": "actor",
-        "component": "positioning:sitting"
-      }
+      { "operation": "REMOVE_COMPONENT", "entity": "actor", "component": "positioning:standing" },
+      { "operation": "ADD_COMPONENT", "entity": "actor", "component": "positioning:sitting" }
     ],
-    "cost": 1.2
+    "cost": 1.0
   }
 }
 ```
 
-### Step 4: Validate and Inject
-
-The generated effects are validated against the schema and injected into the action definition.
+**Step 5: Developer commits changes**
+The generated effects are written to the action file and committed to the repository. At runtime, the planner reads these effects without regeneration.
 
 ## Operation Mapping
 
@@ -162,154 +150,47 @@ The analyzer traces data flow through operations to understand state changes.
 
 The generator traces all possible execution paths through conditional operations.
 
-### Simple Conditional
+### Conditional Operations
+
+The generator handles `IF/THEN/ELSE` operations by creating `CONDITIONAL` effects with abstract preconditions:
 
 ```json
+// Rule with conditional
 {
   "type": "IF",
   "condition": {"var": "hasSpace"},
-  "then": [
-    { "type": "ADD_COMPONENT", "entity": "actor", "component": "test:happy" }
-  ],
-  "else": [
-    { "type": "ADD_COMPONENT", "entity": "actor", "component": "test:sad" }
-  ]
+  "then": [{ "type": "ADD_COMPONENT", "entity": "actor", "component": "test:happy" }],
+  "else": [{ "type": "ADD_COMPONENT", "entity": "actor", "component": "test:sad" }]
 }
-```
 
-**Generated Effect:**
-
-```json
+// Generated effect (then branch only, else represents no change)
 {
   "operation": "CONDITIONAL",
-  "condition": {
-    "abstractPrecondition": "actorHasSpace",
-    "params": ["actor"]
-  },
-  "then": [
-    { "operation": "ADD_COMPONENT", "entity": "actor", "component": "test:happy" }
-  ]
+  "condition": { "abstractPrecondition": "actorHasSpace", "params": ["actor"] },
+  "then": [{ "operation": "ADD_COMPONENT", "entity": "actor", "component": "test:happy" }]
 }
 ```
 
-**Note:** Only the `then` branch is included in effects. The `else` branch represents no change from the current state, so it's omitted.
-
-### Nested Conditionals
-
-```json
-{
-  "type": "IF",
-  "condition": {"var": "isDay"},
-  "then": [
-    {
-      "type": "IF",
-      "condition": {"var": "isRaining"},
-      "then": [
-        { "type": "ADD_COMPONENT", "entity": "actor", "component": "test:wet" }
-      ]
-    }
-  ]
-}
-```
-
-**Generated Effect:**
-
-```json
-{
-  "operation": "CONDITIONAL",
-  "condition": {
-    "abstractPrecondition": "isDay",
-    "params": []
-  },
-  "then": [
-    {
-      "operation": "CONDITIONAL",
-      "condition": {
-        "abstractPrecondition": "isRaining",
-        "params": []
-      },
-      "then": [
-        { "operation": "ADD_COMPONENT", "entity": "actor", "component": "test:wet" }
-      ]
-    }
-  ]
-}
-```
-
-### Multiple Paths
-
-When multiple paths lead to the same effect, the generator creates a single conditional with all paths:
-
-```json
-{
-  "actions": [
-    { "type": "IF", "condition": {"var": "pathA"}, "then": [
-      { "type": "ADD_COMPONENT", "entity": "actor", "component": "test:component" }
-    ]},
-    { "type": "IF", "condition": {"var": "pathB"}, "then": [
-      { "type": "ADD_COMPONENT", "entity": "actor", "component": "test:component" }
-    ]}
-  ]
-}
-```
-
-**Generated Effects:**
-
-Two conditional effects are created (one per path). The planner can choose either path to achieve the goal.
+Nested conditionals produce nested `CONDITIONAL` effects. Multiple paths to the same effect create separate conditional effects.
 
 ## Macro Resolution
 
 Macros are placeholders for runtime values in rule operations. The generator resolves them when possible.
 
-### Resolvable Macros
+### Macro Resolution
 
-**Action Parameters:**
-
+**Resolvable**: Action parameters and context variables known at generation time are resolved to concrete values:
 ```json
-// Action definition
-{
-  "id": "test:action",
-  "parameters": {
-    "targetComponent": "positioning:sitting"
-  }
-}
-
-// Rule operation
-{ "type": "ADD_COMPONENT", "entity": "actor", "component": {"var": "targetComponent"} }
-
-// Resolved effect
-{ "operation": "ADD_COMPONENT", "entity": "actor", "component": "positioning:sitting" }
+// Rule: { "type": "ADD_COMPONENT", "entity": "actor", "component": {"var": "targetComponent"} }
+// If action.parameters.targetComponent = "positioning:sitting"
+// Effect: { "operation": "ADD_COMPONENT", "entity": "actor", "component": "positioning:sitting" }
 ```
 
-**Context Variables:**
-
+**Unresolvable**: Runtime-only data becomes parameterized:
 ```json
-// Rule operations
-{ "type": "SET_VARIABLE", "name": "location", "value": "bedroom" }
-{ "type": "MODIFY_COMPONENT", "entity": "actor", "component": "core:position", "updates": {"location": {"var": "location"}} }
-
-// Resolved effect
-{ "operation": "MODIFY_COMPONENT", "entity": "actor", "component": "core:position", "updates": {"location": "bedroom"} }
+// Rule: { "type": "TRANSFER_ITEM", "itemId": {"var": "selectedItem"}, ... }
+// Effect: { "operation": "REMOVE_COMPONENT", "entity": "actor", "component": "items:in_inventory", "componentId": "{selectedItem}" }
 ```
-
-### Unresolvable Macros
-
-When a macro references runtime-only data, it's parameterized:
-
-```json
-// Rule operation
-{ "type": "TRANSFER_ITEM", "itemId": {"var": "selectedItem"}, "fromEntity": "actor", "toEntity": "target" }
-
-// Parameterized effect
-{
-  "operation": "REMOVE_COMPONENT",
-  "entity": "actor",
-  "component": "items:in_inventory",
-  "componentId": "{selectedItem}"
-}
-```
-
-The planner will bind `{selectedItem}` at runtime.
 
 ## Abstract Preconditions
 
@@ -323,195 +204,100 @@ Abstract preconditions represent conditions that can't be evaluated during analy
 
 ### Auto-Generated Preconditions
 
-The generator automatically creates abstract preconditions when it encounters:
+The generator creates abstract preconditions for runtime-dependent conditions:
 
-1. **Unresolvable Condition Variables**:
-   ```json
-   { "condition": {"var": "target.relationship.trust"} }
-   // → abstractPrecondition: "targetTrustsActor"
-   ```
+| Trigger | Generated Precondition | Default Strategy |
+|---------|----------------------|------------------|
+| Unresolvable variable | Descriptive name (e.g., `targetTrustsActor`) | `assumeTrue` |
+| `VALIDATE_INVENTORY_CAPACITY` | `{entity}HasInventorySpace` | `assumeTrue` |
+| `HAS_COMPONENT` check | `{entity}HasComponent_{componentId}` | `evaluateAtRuntime` |
 
-2. **Capacity Checks**:
-   ```json
-   { "type": "VALIDATE_INVENTORY_CAPACITY", "entity": "target" }
-   // → abstractPrecondition: "targetHasInventorySpace"
-   ```
-
-3. **Component Existence Checks**:
-   ```json
-   { "type": "HAS_COMPONENT", "entity": "target", "component": "positioning:sitting" }
-   // → abstractPrecondition: "targetHasComponent_positioning_sitting"
-   ```
-
-### Precondition Naming
-
-The generator uses descriptive names:
-
-- `targetHasInventorySpace` (from capacity validation)
-- `targetTrustsActor` (from relationship check)
-- `actorIsStanding` (from component check)
-- `locationIsAccessible` (from location check)
-
-### Simulation Functions
-
-Each abstract precondition includes a simulation function:
-
-- `assumeTrue`: Optimistic planning (default)
-- `assumeFalse`: Pessimistic planning
-- `assumeRandom`: Probabilistic planning
-- `evaluateAtRuntime`: Defer to runtime
+**Simulation Strategies**:
+- `assumeTrue`: Optimistic (default)
+- `assumeFalse`: Pessimistic
+- `evaluateAtRuntime`: Check actual runtime state
+- `assumeRandom`: Probabilistic
 
 ## Hypothetical Data
 
-When operations produce data used by later operations, the generator tracks it as hypothetical data.
-
-### Example: Query Result Used in Condition
+Query operations that produce data for later operations result in abstract preconditions:
 
 ```json
-{
-  "actions": [
-    { "type": "QUERY_COMPONENT", "entity": "target", "component": "core:inventory", "result_variable": "inv" },
-    { "type": "IF", "condition": {"<": [{"var": "inv.itemCount"}, 10]}, "then": [
-      { "type": "ADD_COMPONENT", "entity": "target", "component": "items:inventory_item" }
-    ]}
-  ]
-}
+// QUERY_COMPONENT → IF condition referencing query result
+// Becomes: CONDITIONAL effect with abstract precondition
+{ "operation": "CONDITIONAL", "condition": { "abstractPrecondition": "targetHasLessThan10Items" }, ... }
 ```
-
-**Analysis:**
-1. `QUERY_COMPONENT` produces hypothetical `inv` data
-2. Condition references `inv.itemCount` (hypothetical)
-3. Generator creates abstract precondition: `targetHasLessThan10Items`
-4. Effect is conditional on abstract precondition
 
 ## Running the Generator
 
-### Generate for Single Action
+**During Development**: Run generation after creating or modifying action rules.
 
 ```bash
+# Single action
 npm run generate:effects -- --action=positioning:sit_down
-```
 
-### Generate for Mod
-
-```bash
+# Entire mod
 npm run generate:effects -- --mod=positioning
-```
 
-### Generate for All Mods
-
-```bash
+# All mods
 npm run generate:effects
 ```
 
-### Programmatic Usage
+**Workflow**:
+1. Developer modifies action rule
+2. Runs generation command
+3. Reviews generated effects
+4. Commits action file with updated `planningEffects`
+5. At runtime, planner reads pre-generated effects
 
+**Programmatic Usage** (for build scripts):
 ```javascript
-import { goapTokens } from './dependencyInjection/tokens/tokens-goap.js';
-
 const effectsGenerator = container.resolve(goapTokens.IEffectsGenerator);
-
-// Generate for single action
 const effects = effectsGenerator.generateForAction('positioning:sit_down');
-
-// Generate for mod
-const effectsMap = effectsGenerator.generateForMod('positioning');
-
-// Inject into action definitions
-effectsGenerator.injectEffects(effectsMap);
+// Note: Write effects to file manually; injectEffects() only updates in-memory data
 ```
 
 ## Validation
 
-The generator validates effects before injection.
+The generator validates effects during generation:
 
-### Schema Validation
-
-Ensures effects match `planning-effects.schema.json`:
-
-- All required fields present
-- Types correct (string, number, object, etc.)
+**Schema Validation**: Checks against `planning-effects.schema.json`
+- Required fields present
+- Correct types
 - Valid operation types
-- Proper nesting structure
 
-### Semantic Validation
-
-Ensures effects make semantic sense:
-
+**Semantic Validation**:
 - Component IDs use `modId:componentId` format
-- Entity values are valid (`actor`, `target`, `tertiary_target`, or entity ID)
-- Abstract preconditions have required fields
-- Cost is reasonable (< 100)
+- Entity values are `actor`, `target`, `tertiary_target`, or entity ID
+- Abstract preconditions have `description`, `parameters`, `simulationFunction`
+- Cost < 100
 
-### Validation Errors
-
-Common validation errors:
-
-```
-Error: Invalid component reference: positioning_sitting
-Fix: Use colon separator: positioning:sitting
-
-Error: Missing required field 'operation' in effect
-Fix: Ensure all effects have 'operation' field
-
-Error: Invalid entity value: 'actorr'
-Fix: Use valid entity value: 'actor'
-
-Error: Abstract precondition missing 'simulationFunction'
-Fix: Add simulationFunction: 'assumeTrue'
-```
+**Common Errors**:
+| Error | Fix |
+|-------|-----|
+| `positioning_sitting` | Use `positioning:sitting` |
+| Missing `operation` | Add to all effects |
+| Invalid entity `actorr` | Use `actor` |
+| Precondition missing `simulationFunction` | Add `assumeTrue` or other strategy |
 
 ## Troubleshooting
 
-See [troubleshooting.md](./troubleshooting.md) for detailed troubleshooting guide.
-
-### Common Issues
+See [troubleshooting.md](./troubleshooting.md) for detailed guide.
 
 **No Effects Generated**
+- Check rule exists: `{modId}:handle_{actionName}`
+- Verify rule has state-changing operations (not just events/queries)
+- Ensure rule references action in conditions
 
-**Symptom:** Generator returns `null` or empty effects
-
-**Causes:**
-1. No rule found for action
-2. Rule has only non-state operations
-3. Rule naming mismatch
-
-**Solution:**
-1. Verify rule exists: `{modId}:handle_{actionName}`
-2. Check rule has state-changing operations
-3. Ensure rule references action in conditions
-
----
-
-**Effects Don't Match Rules**
-
-**Symptom:** Validation reports mismatches
-
-**Causes:**
-1. Manual edits to action file
-2. Stale generated effects
-3. Rule changed after generation
-
-**Solution:**
-1. Regenerate effects
-2. Check git diff for unexpected changes
-3. Validate after generation
-
----
+**Validation Failures**
+- Regenerate effects after rule changes
+- Check component IDs use `mod:component` format
+- Verify abstract preconditions have required fields
 
 **Missing Operations**
-
-**Symptom:** Expected operations not in effects
-
-**Causes:**
-1. Operation is non-state (excluded)
-2. Operation in skipped branch
-3. Bug in operation analyzer
-
-**Solution:**
-1. Check operation mapping table
-2. Verify operation is in executed path
-3. Report issue with minimal reproduction
+- Check [operation-mapping.md](./operation-mapping.md) - operation may be non-state
+- Verify operation is in executed path (not skipped branch)
+- Report issue if state-changing operation is excluded
 
 ## Manual Overrides
 
@@ -525,52 +311,20 @@ While auto-generation is recommended, manual overrides are supported for edge ca
 
 ### How to Override
 
-1. Generate initial effects:
-   ```bash
-   npm run generate:effects -- --action=my_mod:my_action
-   ```
+1. Generate initial effects: `npm run generate:effects -- --action=my_mod:my_action`
+2. Edit action file, adding `"_manual": true` and `"_manualReason"`
+3. Document why override is needed
+4. Keep manually synced with rule changes
 
-2. Edit action file manually:
-   ```json
-   {
-     "planningEffects": {
-       "effects": [...],
-       "cost": 2.5,
-       "_manual": true
-     }
-   }
-   ```
-
-3. Add `_manual: true` flag to prevent regeneration
-
-### Manual Override Best Practices
-
-1. **Document Why**: Add comment explaining why manual override is needed
-2. **Keep in Sync**: Update manually when rule changes
-3. **Consider Alternatives**: Can the rule be restructured for auto-generation?
-4. **Test Thoroughly**: Manually-defined effects bypass validation
-
-### Example Manual Override
-
+**Example**:
 ```json
 {
   "id": "combat:complex_attack",
   "planningEffects": {
-    "effects": [
-      {
-        "operation": "CONDITIONAL",
-        "condition": {
-          "abstractPrecondition": "targetIsVulnerable",
-          "params": ["target"]
-        },
-        "then": [
-          { "operation": "MODIFY_COMPONENT", "entity": "target", "component": "combat:health", "updates": {"value": "{calculatedDamage}"} }
-        ]
-      }
-    ],
+    "effects": [...],
     "abstractPreconditions": {
       "targetIsVulnerable": {
-        "description": "Checks if target is vulnerable to attack (custom logic)",
+        "description": "Custom vulnerability check",
         "parameters": ["target"],
         "simulationFunction": "evaluateAtRuntime"
       }
