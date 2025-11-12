@@ -50,6 +50,19 @@ describe('Effects Validation CLI E2E', () => {
       name: 'Test GOAP Validation Mod',
       description: 'Test mod for GOAP validation CLI e2e testing',
       dependencies: [{ id: 'core', version: '1.0.0' }],
+      content: {
+        actions: [
+          'valid_action.action.json',
+          'action_missing_effects.action.json',
+          'action_invalid_effects.action.json',
+          'action_mismatched_effects.action.json',
+        ],
+        rules: [
+          'handle_valid_action.rule.json',
+          'handle_action_missing_effects.rule.json',
+          'handle_action_mismatched_effects.rule.json',
+        ],
+      },
     };
     await fs.writeFile(
       path.join(testModPath, 'mod-manifest.json'),
@@ -557,6 +570,10 @@ describe('Effects Validation CLI E2E', () => {
             version: '1.0.0',
             name: 'Test Clean Mod',
             dependencies: [{ id: 'core', version: '1.0.0' }],
+            content: {
+              actions: ['clean_action.action.json'],
+              rules: ['handle_clean_action.rule.json'],
+            },
           },
           null,
           2

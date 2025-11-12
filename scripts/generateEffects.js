@@ -213,6 +213,11 @@ function parseArgs(argv) {
       args.mods = [args.mod];
     } else if (arg.startsWith('--action=')) {
       args.action = arg.substring(9);
+      // Extract mod ID from action ID (format: modId:actionName)
+      const modId = args.action.split(':')[0];
+      if (modId && !args.mods.includes(modId)) {
+        args.mods.push(modId);
+      }
     }
   }
 

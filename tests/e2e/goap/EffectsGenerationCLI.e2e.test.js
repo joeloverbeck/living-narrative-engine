@@ -56,7 +56,19 @@ describe('Effects Generation CLI E2E', () => {
       version: '1.0.0',
       name: 'Test GOAP CLI Mod',
       description: 'Test mod for GOAP CLI e2e testing',
-      dependencies: ['core'],
+      dependencies: [{ id: 'core', version: '1.0.0' }],
+      content: {
+        actions: [
+          'simple_test_action.action.json',
+          'action_without_rule.action.json',
+          'action_with_bad_rule.action.json',
+          'action_with_invalid_effects.action.json',
+        ],
+        rules: [
+          'handle_simple_test_action.rule.json',
+          'handle_action_with_bad_rule.rule.json',
+        ],
+      },
     };
     await fs.writeFile(
       path.join(testModPath, 'mod-manifest.json'),
@@ -174,6 +186,34 @@ describe('Effects Generation CLI E2E', () => {
     await fs.writeFile(
       path.join(testRulePath, 'handle_action_with_bad_rule.rule.json'),
       JSON.stringify(malformedRule, null, 2),
+      'utf8'
+    );
+
+    // Create test action with invalid effects: action_with_invalid_effects
+    const invalidAction = {
+      $schema: 'schema://living-narrative-engine/action.schema.json',
+      id: 'test_goap_cli:action_with_invalid_effects',
+      name: 'Action With Invalid Effects',
+      description: 'An action with schema-violating effects',
+      targets: 'none',
+      template: 'perform action with invalid effects',
+      visual: {
+        backgroundColor: '#000000',
+        textColor: '#ffffff',
+      },
+      planningEffects: {
+        effects: [
+          {
+            // Invalid: missing required 'operation' field
+            entity: 'actor',
+            component: 'core:test',
+          },
+        ],
+      },
+    };
+    await fs.writeFile(
+      path.join(testActionPath, 'action_with_invalid_effects.action.json'),
+      JSON.stringify(invalidAction, null, 2),
       'utf8'
     );
 
@@ -511,34 +551,7 @@ describe('Effects Generation CLI E2E', () => {
     }, CLI_TIMEOUT);
 
     it('should detect schema violations', async () => {
-      // Create action with invalid planningEffects (violates schema)
-      const invalidAction = {
-        $schema: 'schema://living-narrative-engine/action.schema.json',
-        id: 'test_goap_cli:action_with_invalid_effects',
-        name: 'Action With Invalid Effects',
-        description: 'An action with schema-violating effects',
-        targets: 'none',
-        template: 'perform action with invalid effects',
-        visual: {
-          backgroundColor: '#000000',
-          textColor: '#ffffff',
-        },
-        planningEffects: {
-          effects: [
-            {
-              // Invalid: missing required 'operation' field
-              entity: 'actor',
-              component: 'core:test',
-            },
-          ],
-        },
-      };
-
-      await fs.writeFile(
-        path.join(testActionPath, 'action_with_invalid_effects.action.json'),
-        JSON.stringify(invalidAction, null, 2),
-        'utf8'
-      );
+      // action_with_invalid_effects is already created in beforeAll with invalid planningEffects
 
       // Execute validation CLI
       let stdout;
