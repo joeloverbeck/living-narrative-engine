@@ -78,11 +78,14 @@ export class GoapDecisionProvider extends DelegatingDecisionProvider {
    */
   async #decideActionInternal(actor, turnContext, actions) {
     const actorId = actor.id;
+    const actionCount = Array.isArray(actions) ? actions.length : 0;
 
-    this.#logger.debug(`GOAP decision for ${actorId} with ${actions.length} actions`);
+    this.#logger.debug(
+      `GOAP decision for ${actorId} with ${actionCount} actions`
+    );
 
     // Step 1: Validate input
-    if (!Array.isArray(actions) || actions.length === 0) {
+    if (!Array.isArray(actions) || actionCount === 0) {
       this.#logger.debug(`No actions available for ${actorId}`);
       return { index: null };
     }
