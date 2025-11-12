@@ -121,6 +121,59 @@ update the recorded baselines when altering algorithms.
 
 Re-use these utilities to avoid duplicating boilerplate and to keep tests aligned with existing patterns.
 
+## Recipe Testing Patterns
+
+### Unit Testing Patterns
+
+Unit suites build lightweight doubles in place rather than relying on the shared test beds. `tests/unit/anatomy/recipeProcessor.test.js` shows the standard structure: create plain Jest mocks, instantiate the service, and assert on observable behaviour.
+
+```javascript
+import { RecipeProcessor } from '../../../src/anatomy/recipeProcessor.js';
+
+const mockDataRegistry = { get: jest.fn() };
+const mockLogger = { debug: jest.fn() };
+
+const processor = new RecipeProcessor({
+  dataRegistry: mockDataRegistry,
+  logger: mockLogger,
+});
+```
+
+Use that pattern for most services. When real data is helpful, prefer `InMemoryDataRegistry` from `src/data/inMemoryDataRegistry.js`, which is already exercised throughout the integration test beds.
+
+### Integration Testing Patterns
+
+#### AnatomyIntegrationTestBed
+
+`tests/common/anatomy/anatomyIntegrationTestBed.js` creates a complete anatomy environment: it wires an `EntityManager`, `InMemoryDataRegistry`, `BodyBlueprintFactory`, `AnatomyGenerationService`, the description pipeline, clothing support, and validation rules. Call `await loadAnatomyModData()` before executing workflows so that components, entities, blueprints, recipes, and clothing metadata mirror `data/mods/anatomy/` fixtures.
+
+The existing giant spider integration suite demonstrates the recommended usage pattern: build the test bed, load mod data, construct the service you want to exercise, then assert on entity graph contents and socket compatibility.
+
+#### Simplified and Enhanced Variants
+
+- `simplifiedAnatomyTestBed.js` constructs a lighter environment that you can expand on demand. It helps when you only need the anatomy description service or minimal component definitions without loading every mod fixture.
+- `enhancedAnatomyTestBed.js` extends the integration test bed with complex blueprint generators, clothing orchestration, and optional error injection for stress scenarios.
+- `anatomyVisualizerTestBed.js` supplies DOM and event mocks for the anatomy visualizer unit tests.
+
+### Validation and CLI Checks
+
+Use the shipped npm scripts whenever you need to validate recipes or run the test matrix:
+
+- `npm run test:unit` and `npm run test:integration` execute the anatomy suites alongside the rest of the project. Target a single file with Jest's `--testPathPattern` option if you need to focus on one scenario.
+- `npm run validate:recipe` invokes `scripts/validate-recipe.js`, which loads the required mods and runs the pre-flight validator (`RecipePreflightValidator`) across eleven checks covering component existence, schema validation, body descriptors, blueprint and socket compatibility, pattern matching, descriptor coverage, part availability, generated slot coverage, entity definition load failures, and recipe usage.
+- `npm run validate:body-descriptors` runs `scripts/validate-body-descriptors.js` to cross-check descriptor registries with formatting configuration.
+- `npm run validate` triggers the full mod validation pipeline in `scripts/validateMods.js`, which is the same entry point used in CI.
+
+`GraphIntegrityValidator` enforces the runtime rules that the integration suites assert against: socket limits, recipe constraint checks, cycle detection, joint consistency, orphan detection, and part-type compatibility. The integration tests in `tests/integration/anatomy/graphIntegrityValidator.*.test.js` cover those behaviours end-to-end.
+
+### Recommended Workflow
+
+1. Start with `npm run validate:recipe path/to/recipe.recipe.json` to ensure the recipe passes the pre-flight validator before you write or update tests.
+2. Add or adjust the relevant unit suites in `tests/unit/anatomy/` to pin the service-level behaviour.
+3. Cover the complete flow with integration tests that use `AnatomyIntegrationTestBed` (or one of its variants) inside `tests/integration/anatomy/`.
+4. Execute `npm run test:unit`, `npm run test:integration`, and—when you touch descriptors—`npm run validate:body-descriptors` to confirm nothing regresses.
+5. Finish with `npm run validate` before shipping to ensure the broader mod ecosystem still loads correctly.
+
 ## Targetless Action Testing Notes
 
 Targetless seduction actions rely on anatomy prerequisites and clothing coverage checks. The authoritative references
