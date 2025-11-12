@@ -5,6 +5,7 @@
 
 import { DelegatingDecisionProvider } from './delegatingDecisionProvider.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 
 /** @typedef {import('./delegatingDecisionProvider.js').DecisionDelegate} DecisionDelegate */
 
@@ -41,6 +42,25 @@ export class HumanDecisionProvider extends DelegatingDecisionProvider {
       });
 
       const { chosenIndex, speech, thoughts, notes } = res;
+
+      // Validate that human player provided a valid integer index
+      if (
+        typeof chosenIndex !== 'number' ||
+        !Number.isInteger(chosenIndex) ||
+        chosenIndex === null
+      ) {
+        logger.error(
+          `HumanDecisionProvider: Did not receive a valid integer 'chosenIndex' from prompt. Got: ${chosenIndex}`
+        );
+        safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: `HumanDecisionProvider: Did not receive a valid integer 'chosenIndex' from prompt. Got: ${chosenIndex}`,
+          context: 'HumanDecisionProvider.delegate',
+        });
+        throw new Error(
+          'Could not resolve the chosen action to a valid index.'
+        );
+      }
+
       return { index: chosenIndex, speech, thoughts, notes };
     };
 
