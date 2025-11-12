@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:pupil_shape",
+  "description": "Describes the shape of the pupil in an eye",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "shape": {
+        "type": "string",
+        "description": "The shape of the pupil",
+        "enum": [
+          "round",
+          "slit-vertical",
+          "slit-horizontal",
+          "rectangular",
+          "keyhole",
+          "star-shaped",
+          "cross-shaped"
+        ],
+        "default": "round"
+      }
+    },
+    "required": ["shape"],
+    "additionalProperties": false
+  }
+}

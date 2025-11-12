@@ -25,6 +25,7 @@
         "beak.entity.json",
         "blueprint_slot.entity.json",
         "cat_ear.entity.json",
+        "cat_ear_decorated.entity.json",
         "cat_girl_torso.entity.json",
         "cat_tail.entity.json",
         "centaur_head.entity.json",
@@ -53,6 +54,8 @@
         "eldritch_vestigial_arm.entity.json",
         "eldritch_vocal_sac.entity.json",
         "equipment_mount.entity.json",
+        "feline_eye_amber_slit.entity.json",
+        "feline_eye_ice_blue_slit.entity.json",
         "horse_tail.entity.json",
         "human_ass_cheek.entity.json",
         "human_ass_cheek_bubbly.entity.json",
@@ -195,6 +198,7 @@
       "human_male.recipe.json",
       "kraken.recipe.json",
       "red_dragon.recipe.json",
+      "vespera_nightwhisper.recipe.json",
       "writhing_observer.recipe.json"
     ],
     "anatomyFormatting": [

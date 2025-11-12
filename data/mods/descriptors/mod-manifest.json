@@ -30,6 +30,7 @@
       "luminosity.component.json",
       "pattern.component.json",
       "projection.component.json",
+      "pupil_shape.component.json",
       "secretion.component.json",
       "sensory_capability.component.json",
       "shape_eye.component.json",

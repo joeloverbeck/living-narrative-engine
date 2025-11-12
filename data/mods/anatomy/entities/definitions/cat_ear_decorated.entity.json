@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:cat_ear_decorated",
+  "description": "Feline ear decorated with silver hoops and small charms",
+  "components": {
+    "anatomy:part": {
+      "subType": "ear"
+    },
+    "core:name": {
+      "text": "cat ear"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    },
+    "descriptors:embellishment": {
+      "embellishment": "silver-hoops"
+    }
+  }
+}
