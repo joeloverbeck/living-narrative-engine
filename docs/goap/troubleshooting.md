@@ -145,18 +145,15 @@ This guide helps diagnose and resolve common issues with the GOAP effects auto-g
    - Add to action parameters if static
    - Check variable name for typos
 
-3. **Operation Analyzer Not Registered**
+3. **Operation Not Recognized as State-Changing**
 
-   Custom or new operations may not have analyzers.
+   Custom or new operations may not be recognized as state-changing.
 
    **Check:**
-   ```javascript
-   // In operation registry
-   this.register('MY_OPERATION', analyzeMyOperation, 'state-changing');
-   ```
+   Look at `src/goap/analysis/effectsAnalyzer.js` in the `isWorldStateChanging()` method to see if your operation is listed.
 
    **Solution:**
-   Register the operation analyzer in `OperationRegistry`.
+   Add the operation type to the `stateChangingOperations` array in `effectsAnalyzer.js` at line 97. Then implement a corresponding `#convert<OperationName>` method (like `#convertAddComponent`) to handle the conversion to planning effects.
 
 ---
 
@@ -534,44 +531,48 @@ Ensure action schema includes:
 
 **Possible Causes:**
 
-1. **Planner Not Implemented Yet**
+1. **Effects Not Loaded Into Action Definitions**
 
-   Tier 1 only generates effects; Tier 2/3 implement planning.
+   Generated effects may not be injected into action objects at runtime.
 
-   **Solution:**
-   Wait for Tier 2 (Simple Planning) implementation.
-
-2. **Effects Not Loaded**
-
-   Generated effects not injected into actions.
+   **Check:**
+   Verify that actions returned by `getAvailableActions()` have the `planningEffects` property populated.
 
    **Solution:**
+   Effects should be auto-loaded during mod loading. If testing in isolation, ensure you call:
    ```javascript
    const effectsMap = effectsGenerator.generateForMod(modId);
    effectsGenerator.injectEffects(effectsMap);
    ```
 
-3. **Goal-Effect Mismatch**
+2. **Goal-Effect Mismatch**
 
-   Effects don't satisfy any goals.
+   Effects don't satisfy any goals, so the planner can't find a path.
 
    **Solution:**
-   Verify effects produce components that goals require.
+   - Verify that action effects produce components that goals require
+   - Check goal relevance conditions are triggering for the actor's state
+   - Verify goal state conditions match the components produced by action effects
 
 ---
 
 ## Debugging Tips
 
-### Enable Verbose Logging
+### Enable Debug Logging
+
+Set your logger to debug level to see detailed analysis output:
 
 ```javascript
-// In effects analyzer
+// Use a logger configured for debug level
+const logger = container.resolve('ILogger');
+// The EffectsAnalyzer will log detailed information at debug level
 const analyzer = new EffectsAnalyzer({
-  logger: consoleLogger,  // Use console logger
-  dataRegistry: dataRegistry,
-  verbose: true
+  logger: logger,
+  dataRegistry: dataRegistry
 });
 ```
+
+Note: The `EffectsAnalyzer` does not have a `verbose` option. Use logger debug level for detailed output.
 
 ### Inspect Generated Effects
 
@@ -617,15 +618,19 @@ npm run generate:effects -- --action=test:action
 npm run validate:effects -- --action=test:action
 ```
 
-### Check Operation Registry
+### Check if Operation is State-Changing
+
+To verify if an operation is recognized as state-changing:
 
 ```javascript
-// Check if operation has analyzer
-const hasAnalyzer = operationRegistry.getAnalyzer('MY_OPERATION');
-console.log('Has analyzer:', hasAnalyzer !== null);
+// Check the EffectsAnalyzer source code
+// Look at src/goap/analysis/effectsAnalyzer.js:97
+// The isWorldStateChanging() method lists all recognized state-changing operations
 
-// Check operation category
-const isStateChanging = operationRegistry.isStateChanging('MY_OPERATION');
+// Or test directly:
+import EffectsAnalyzer from './src/goap/analysis/effectsAnalyzer.js';
+const analyzer = new EffectsAnalyzer({ logger, dataRegistry });
+const isStateChanging = analyzer.isWorldStateChanging({ type: 'MY_OPERATION' });
 console.log('State-changing:', isStateChanging);
 ```
 
@@ -655,16 +660,21 @@ npm run generate:effects -- --action=test:minimal
 npm run validate:effects -- --action=test:minimal
 ```
 
-### Use Test Bed
+### Use GOAP Test Bed
+
+For testing GOAP-specific functionality, use the GOAP test helper:
 
 ```javascript
-import { createTestBed } from '../../common/testBed.js';
+import { createGoapTestBed } from '../../common/goap/goapTestHelpers.js';
 
-const testBed = createTestBed();
-const effectsGenerator = testBed.resolve('IEffectsGenerator');
+const testBed = await createGoapTestBed();
+const effectsGenerator = testBed.container.resolve('IEffectsGenerator');
 
 const effects = effectsGenerator.generateForAction('test:action');
 console.log(effects);
+
+// Don't forget cleanup
+testBed.cleanup();
 ```
 
 ### Check Schema Validity
@@ -683,7 +693,10 @@ npx ajv validate -s data/schemas/action.schema.json -d data/mods/test/actions/te
 
 1. **Check This Guide**: Review relevant sections
 2. **Check Documentation**: Read related docs in `docs/goap/`
-3. **Check Tests**: Look at test examples in `tests/unit/goap/` and `tests/integration/goap/`
+3. **Check Tests**: Look at test examples in:
+   - `tests/unit/goap/` - Unit tests for individual components
+   - `tests/integration/goap/` - Integration tests for GOAP workflows
+   - `tests/e2e/goap/` - End-to-end tests showing complete GOAP decision-making
 4. **Create Minimal Reproduction**: Isolate the issue with minimal example
 
 ### When Reporting Issues
