@@ -1,11 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
+import removeClothingAction from '../../../data/mods/clothing/actions/remove_clothing.action.json';
 
 describe('Complete Clothing Removal Workflow - E2E', () => {
   let fixture;
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction('clothing', 'clothing:remove_clothing');
+    // Register the action for discovery
+    fixture.testEnv.actionIndex.buildIndex([removeClothingAction]);
   });
 
   afterEach(() => {
@@ -13,148 +17,176 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
   });
 
   it('should enforce removal order in full outfit', async () => {
-    // Arrange: Actor wearing jacket, shirt, belt, pants
-    const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
+    // Arrange: Create room
+    const room = new ModEntityBuilder('room1')
+      .withName('Test Room')
+      .withComponent('core:location', { description: 'A test room' })
+      .build();
 
-    const jacket = fixture.createEntity({
-      id: 'jacket',
-      name: 'Leather Jacket',
-      components: {
-        'clothing:wearable': {
-          layer: 'outer',
-          equipmentSlots: { primary: 'torso_upper' },
-        },
-      },
-    });
+    // Create actor with clothing equipment
+    const actor = new ModEntityBuilder('actor1')
+      .withName('John')
+      .atLocation('room1')
+      .withLocationComponent('room1')
+      .asActor()
+      .withComponent('clothing:equipment', { equipped: {} })
+      .build();
 
-    const shirt = fixture.createEntity({
-      id: 'shirt',
-      name: 'T-Shirt',
-      components: {
-        'clothing:wearable': {
-          layer: 'base',
-          equipmentSlots: { primary: 'torso_upper' },
-        },
-      },
-    });
+    // Create clothing items with proper components
+    const jacket = new ModEntityBuilder('jacket')
+      .withName('Leather Jacket')
+      .atLocation('room1')
+      .withComponent('clothing:item', {
+        name: 'Leather Jacket',
+        slot: 'torso_upper',
+        layer: 'outer',
+      })
+      .withComponent('clothing:coverage_mapping', {
+        covers: ['torso_upper'],
+        coveragePriority: 'outer',
+      })
+      .build();
 
-    const belt = fixture.createEntity({
-      id: 'belt',
-      name: 'Leather Belt',
-      components: {
-        'clothing:wearable': {
-          layer: 'accessories',
-          equipmentSlots: { primary: 'torso_lower' },
-        },
-        'clothing:blocks_removal': {
-          blockedSlots: [
-            {
-              slot: 'legs',
-              layers: ['base'],
-              blockType: 'must_remove_first',
-            },
-          ],
-        },
-      },
-    });
+    const shirt = new ModEntityBuilder('shirt')
+      .withName('T-Shirt')
+      .atLocation('room1')
+      .withComponent('clothing:item', {
+        name: 'T-Shirt',
+        slot: 'torso_upper',
+        layer: 'base',
+      })
+      .withComponent('clothing:coverage_mapping', {
+        covers: ['torso_upper'],
+        coveragePriority: 'base',
+      })
+      .build();
 
-    const pants = fixture.createEntity({
-      id: 'pants',
-      name: 'Jeans',
-      components: {
-        'clothing:wearable': {
-          layer: 'base',
-          equipmentSlots: { primary: 'legs' },
-        },
-      },
-    });
+    const belt = new ModEntityBuilder('belt')
+      .withName('Leather Belt')
+      .atLocation('room1')
+      .withComponent('clothing:item', {
+        name: 'Leather Belt',
+        slot: 'torso_lower',
+        layer: 'accessories',
+      })
+      .withComponent('clothing:coverage_mapping', {
+        covers: ['torso_lower'],
+        coveragePriority: 'accessories',
+      })
+      .withComponent('clothing:blocks_removal', {
+        blockedSlots: [
+          {
+            slot: 'legs',
+            layers: ['base'],
+            blockType: 'must_remove_first',
+          },
+        ],
+      })
+      .build();
 
-    // Set up equipment state via component modification
-    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
+    const pants = new ModEntityBuilder('pants')
+      .withName('Jeans')
+      .atLocation('room1')
+      .withComponent('clothing:item', {
+        name: 'Jeans',
+        slot: 'legs',
+        layer: 'base',
+      })
+      .withComponent('clothing:coverage_mapping', {
+        covers: ['legs'],
+        coveragePriority: 'base',
+      })
+      .build();
+
+    // Reset fixture with all entities
+    fixture.reset([room, actor, jacket, shirt, belt, pants]);
+
+    // Set up equipment state - actor wearing all items
+    await fixture.modifyComponent('actor1', 'clothing:equipment', {
       equipped: {
         torso_upper: {
-          outer: jacket.id,
-          base: shirt.id,
+          outer: 'jacket',
+          base: 'shirt',
         },
         torso_lower: {
-          accessories: belt.id,
+          accessories: 'belt',
         },
         legs: {
-          base: pants.id,
+          base: 'pants',
         },
       },
     });
 
     // Act & Assert: Validate removal sequence
     // Test scope behavior indirectly via action discovery
-    let actions = fixture.discoverActions(actor.id);
+    let actions = fixture.discoverActions('actor1');
     let removeActions = actions.filter(
       (a) => a.id === 'clothing:remove_clothing'
     );
     let removableItems = removeActions.map((a) => a.targetId);
 
     // Initially: jacket, shirt, belt removable (pants blocked)
-    expect(removableItems).toContain(jacket.id);
-    expect(removableItems).toContain(shirt.id);
-    expect(removableItems).toContain(belt.id);
-    expect(removableItems).not.toContain(pants.id);
+    expect(removableItems).toContain('jacket');
+    expect(removableItems).toContain('shirt');
+    expect(removableItems).toContain('belt');
+    expect(removableItems).not.toContain('pants');
 
     // Remove jacket
-    await fixture.executeAction(actor.id, jacket.id);
+    await fixture.executeAction('actor1', 'jacket');
 
     // Verify action succeeded via component state
-    const equipmentAfterJacket = fixture.getComponent(actor.id, 'clothing:equipment');
+    const equipmentAfterJacket = fixture.getComponent('actor1', 'clothing:equipment');
     expect(equipmentAfterJacket.equipped.torso_upper.outer).toBeUndefined();
 
-    actions = fixture.discoverActions(actor.id);
+    actions = fixture.discoverActions('actor1');
     removeActions = actions.filter(
       (a) => a.id === 'clothing:remove_clothing'
     );
     removableItems = removeActions.map((a) => a.targetId);
 
     // Now: shirt, belt removable (pants still blocked)
-    expect(removableItems).not.toContain(jacket.id);
-    expect(removableItems).toContain(shirt.id);
-    expect(removableItems).toContain(belt.id);
-    expect(removableItems).not.toContain(pants.id);
+    expect(removableItems).not.toContain('jacket');
+    expect(removableItems).toContain('shirt');
+    expect(removableItems).toContain('belt');
+    expect(removableItems).not.toContain('pants');
 
     // Remove belt
-    await fixture.executeAction(actor.id, belt.id);
+    await fixture.executeAction('actor1', 'belt');
 
     // Verify belt removal
-    const equipmentAfterBelt = fixture.getComponent(actor.id, 'clothing:equipment');
+    const equipmentAfterBelt = fixture.getComponent('actor1', 'clothing:equipment');
     expect(equipmentAfterBelt.equipped.torso_lower.accessories).toBeUndefined();
 
-    actions = fixture.discoverActions(actor.id);
+    actions = fixture.discoverActions('actor1');
     removeActions = actions.filter(
       (a) => a.id === 'clothing:remove_clothing'
     );
     removableItems = removeActions.map((a) => a.targetId);
 
     // Now: shirt, pants removable (belt removed)
-    expect(removableItems).not.toContain(jacket.id);
-    expect(removableItems).toContain(shirt.id);
-    expect(removableItems).not.toContain(belt.id);
-    expect(removableItems).toContain(pants.id);
+    expect(removableItems).not.toContain('jacket');
+    expect(removableItems).toContain('shirt');
+    expect(removableItems).not.toContain('belt');
+    expect(removableItems).toContain('pants');
 
     // Remove pants
-    await fixture.executeAction(actor.id, pants.id);
+    await fixture.executeAction('actor1', 'pants');
 
     // Verify pants removal
-    const equipmentAfterPants = fixture.getComponent(actor.id, 'clothing:equipment');
+    const equipmentAfterPants = fixture.getComponent('actor1', 'clothing:equipment');
     expect(equipmentAfterPants.equipped.legs.base).toBeUndefined();
 
-    actions = fixture.discoverActions(actor.id);
+    actions = fixture.discoverActions('actor1');
     removeActions = actions.filter(
       (a) => a.id === 'clothing:remove_clothing'
     );
     removableItems = removeActions.map((a) => a.targetId);
 
     // Now: only shirt removable
-    expect(removableItems).not.toContain(jacket.id);
-    expect(removableItems).toContain(shirt.id);
-    expect(removableItems).not.toContain(belt.id);
-    expect(removableItems).not.toContain(pants.id);
+    expect(removableItems).not.toContain('jacket');
+    expect(removableItems).toContain('shirt');
+    expect(removableItems).not.toContain('belt');
+    expect(removableItems).not.toContain('pants');
   });
 
   it('should prevent removal of blocked items via action discovery', async () => {
