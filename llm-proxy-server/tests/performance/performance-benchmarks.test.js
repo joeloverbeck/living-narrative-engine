@@ -18,6 +18,7 @@ import { LlmRequestService } from '../../src/services/llmRequestService.js';
 import CacheService from '../../src/services/cacheService.js';
 import HttpAgentService from '../../src/services/httpAgentService.js';
 import { RetryManager } from '../../src/utils/proxyApiUtils.js';
+import { HTTP_AGENT_TIMEOUT } from '../../src/config/constants.js';
 import { createRequestTrackingMiddleware } from '../../src/middleware/requestTracking.js';
 import express from 'express';
 import request from 'supertest';
@@ -52,7 +53,7 @@ const createMockAppConfigService = () => ({
     keepAlive: true,
     maxSockets: 50,
     maxFreeSockets: 10,
-    timeout: 60000,
+    timeout: HTTP_AGENT_TIMEOUT,
     freeSocketTimeout: 30000,
     maxTotalSockets: 500,
   })),
@@ -109,7 +110,7 @@ describe('Performance Benchmarks', () => {
       keepAlive: true,
       maxSockets: 50,
       maxFreeSockets: 10,
-      timeout: 60000,
+      timeout: HTTP_AGENT_TIMEOUT,
       freeSocketTimeout: 30000,
     });
 

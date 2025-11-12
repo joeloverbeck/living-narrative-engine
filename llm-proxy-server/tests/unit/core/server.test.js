@@ -12,6 +12,7 @@ import {
   HTTP_METHOD_POST,
   LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
   LOG_LLM_ID_UNHANDLED_ERROR,
+  HTTP_AGENT_TIMEOUT,
 } from '../../../src/config/constants.js';
 import {
   TestServerManager,
@@ -172,7 +173,7 @@ describe('Server - Comprehensive Tests', () => {
         keepAlive: true,
         maxSockets: 50,
         maxFreeSockets: 10,
-        timeout: 60000,
+        timeout: HTTP_AGENT_TIMEOUT,
         freeSocketTimeout: 30000,
         maxTotalSockets: 500,
         maxIdleTime: 60000,
@@ -604,7 +605,7 @@ describe('Server - Comprehensive Tests', () => {
         keepAlive: true,
         maxSockets: 50,
         maxFreeSockets: 10,
-        timeout: 60000,
+        timeout: HTTP_AGENT_TIMEOUT,
         freeSocketTimeout: 30000,
         maxTotalSockets: 500,
         maxIdleTime: 60000,
@@ -618,7 +619,7 @@ describe('Server - Comprehensive Tests', () => {
         'LLM Proxy Server: Cache ENABLED - TTL: 300000ms, Max Size: 1000 entries, API Key TTL: 300000ms'
       );
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
-        'LLM Proxy Server: HTTP Agent Pooling ENABLED - Keep-Alive: true, Max Sockets: 50, Timeout: 60000ms'
+        `LLM Proxy Server: HTTP Agent Pooling ENABLED - Keep-Alive: true, Max Sockets: 50, Timeout: ${HTTP_AGENT_TIMEOUT}ms`
       );
     });
 

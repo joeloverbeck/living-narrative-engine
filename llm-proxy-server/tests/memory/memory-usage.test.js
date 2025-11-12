@@ -17,6 +17,7 @@ import { ApiKeyService } from '../../src/services/apiKeyService.js';
 import CacheService from '../../src/services/cacheService.js';
 import HttpAgentService from '../../src/services/httpAgentService.js';
 import { RetryManager } from '../../src/utils/proxyApiUtils.js';
+import { HTTP_AGENT_TIMEOUT } from '../../src/config/constants.js';
 
 const createMockLogger = () => ({
   debug: jest.fn(),
@@ -48,7 +49,7 @@ const createMockAppConfigService = () => ({
     keepAlive: true,
     maxSockets: 50,
     maxFreeSockets: 10,
-    timeout: 60000,
+    timeout: HTTP_AGENT_TIMEOUT,
     freeSocketTimeout: 30000,
     maxTotalSockets: 500,
   })),
@@ -102,7 +103,7 @@ describe('Memory Usage Tests', () => {
       keepAlive: true,
       maxSockets: 50,
       maxFreeSockets: 10,
-      timeout: 60000,
+      timeout: HTTP_AGENT_TIMEOUT,
       freeSocketTimeout: 30000,
     });
 
