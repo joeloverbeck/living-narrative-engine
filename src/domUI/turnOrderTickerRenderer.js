@@ -31,7 +31,6 @@ class TurnOrderTickerRenderer {
   #_tickerContainerElement;
   #roundNumberElement;
   #actorQueueElement;
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in TURORDTIC-008+
   #_currentActorId = null;
   #unsubscribeFunctions = [];
 
@@ -221,6 +220,54 @@ class TurnOrderTickerRenderer {
    */
   __testCreateActorElement(entity) {
     return this.#_createActorElement(entity);
+  }
+
+  /**
+   * Test-only helper to access private event handler for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {object} event - Event object
+   * @returns {void}
+   * @private
+   */
+  __testHandleRoundStarted(event) {
+    return this.#handleRoundStarted(event);
+  }
+
+  /**
+   * Test-only helper to access private event handler for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {object} event - Event object
+   * @returns {void}
+   * @private
+   */
+  __testHandleTurnStarted(event) {
+    return this.#handleTurnStarted(event);
+  }
+
+  /**
+   * Test-only helper to access private event handler for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {object} event - Event object
+   * @returns {void}
+   * @private
+   */
+  __testHandleTurnEnded(event) {
+    return this.#handleTurnEnded(event);
+  }
+
+  /**
+   * Test-only helper to access private event handler for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {object} event - Event object
+   * @returns {void}
+   * @private
+   */
+  __testHandleParticipationChanged(event) {
+    return this.#handleParticipationChanged(event);
   }
 
   // ========== PRIVATE HELPERS ==========
@@ -414,59 +461,169 @@ class TurnOrderTickerRenderer {
 
   /**
    * Handle round_started event.
+   * Fetches actor entities and triggers full queue render.
    *
    * @param {object} event - Event object
    * @param {object} event.payload - Event payload
    * @param {number} event.payload.roundNumber - Round number
-   * @param {string[]} event.payload.actors - Actor entity IDs
-   * @param {string} event.payload.strategy - Turn order strategy ('round-robin' or 'initiative')
+   * @param {string[]} event.payload.actors - Actor entity IDs in turn order
+   * @param {string} event.payload.strategy - Turn order strategy
    * @private
    */
   #handleRoundStarted(event) {
-    // Implementation in TURORDTIC-007
-    this.#logger.debug('Round started event received', event.payload);
+    try {
+      const { roundNumber, actors, strategy } = event.payload || {};
+
+      if (!roundNumber || !Array.isArray(actors)) {
+        this.#logger.warn('Invalid round_started event payload', { payload: event.payload });
+        return;
+      }
+
+      this.#logger.info('Round started', { roundNumber, actorCount: actors.length, strategy });
+
+      // Update round number display
+      if (this.#roundNumberElement) {
+        this.#roundNumberElement.textContent = `ROUND ${roundNumber}`;
+      }
+
+      // Convert actor IDs to entity objects for render method
+      // The render method expects entity objects with id property
+      const actorEntities = actors.map(actorId => ({ id: actorId }));
+
+      // Render the full queue with animations
+      this.render(actorEntities);
+
+      // Reset current actor tracking
+      this.#_currentActorId = null;
+
+    } catch (error) {
+      this.#logger.error('Failed to handle round_started event', {
+        error: error.message,
+        payload: event.payload,
+      });
+    }
   }
 
   /**
    * Handle turn_started event.
+   * Highlights the current actor in the ticker.
    *
    * @param {object} event - Event object
    * @param {object} event.payload - Event payload
    * @param {string} event.payload.entityId - Current actor ID
-   * @param {string} event.payload.entityType - Actor type ('player' or 'ai')
+   * @param {string} event.payload.entityType - Entity type ('player' or 'ai')
    * @private
    */
   #handleTurnStarted(event) {
-    // Implementation in TURORDTIC-008
-    this.#logger.debug('Turn started event received', event.payload);
+    try {
+      const { entityId, entityType } = event.payload || {};
+
+      if (!entityId) {
+        this.#logger.warn('Invalid turn_started event payload: missing entityId', {
+          payload: event.payload,
+        });
+        return;
+      }
+
+      // Only process actor turns (entityType will be 'player' or 'ai' for actors)
+      // Non-actor entities would have different entityType values
+      if (entityType && entityType !== 'player' && entityType !== 'ai') {
+        this.#logger.debug('Ignoring non-actor turn', { entityId, entityType });
+        return;
+      }
+
+      this.#logger.debug('Turn started', { entityId });
+
+      // Update current actor highlight
+      this.updateCurrentActor(entityId);
+      this.#_currentActorId = entityId;
+
+    } catch (error) {
+      this.#logger.error('Failed to handle turn_started event', {
+        error: error.message,
+        payload: event.payload,
+      });
+    }
   }
 
   /**
    * Handle turn_ended event.
+   * Removes the actor from the ticker after their turn completes.
    *
    * @param {object} event - Event object
    * @param {object} event.payload - Event payload
    * @param {string} event.payload.entityId - Completed actor ID
-   * @param {boolean} event.payload.success - Whether turn completed successfully
-   * @param {Error} [event.payload.error] - Optional error if turn failed
    * @private
    */
   #handleTurnEnded(event) {
-    // Implementation in TURORDTIC-009
-    this.#logger.debug('Turn ended event received', event.payload);
+    try {
+      const { entityId } = event.payload || {};
+
+      if (!entityId) {
+        this.#logger.warn('Invalid turn_ended event payload: missing entityId', {
+          payload: event.payload,
+        });
+        return;
+      }
+
+      this.#logger.debug('Turn ended', { entityId });
+
+      // Remove actor from ticker
+      this.removeActor(entityId);
+
+      // Clear current actor tracking if it was this actor
+      if (this.#_currentActorId === entityId) {
+        this.#_currentActorId = null;
+      }
+
+    } catch (error) {
+      this.#logger.error('Failed to handle turn_ended event', {
+        error: error.message,
+        payload: event.payload,
+      });
+    }
   }
 
   /**
    * Handle participation component changes.
+   * Updates visual state when actors are enabled/disabled.
    *
    * @param {object} event - Event object
    * @param {object} event.payload - Event payload
+   * @param {string} event.payload.entityId - Entity ID
+   * @param {string} event.payload.componentId - Component ID
+   * @param {object} event.payload.data - Component data
    * @private
    */
   #handleParticipationChanged(event) {
-    // Implementation in TURORDTIC-010
-    if (event.payload?.componentId === PARTICIPATION_COMPONENT_ID) {
-      this.#logger.debug('Participation changed', event.payload);
+    try {
+      const { entityId, componentId, data } = event.payload || {};
+
+      // Only process participation component changes
+      if (componentId !== PARTICIPATION_COMPONENT_ID) {
+        return;
+      }
+
+      if (!entityId) {
+        this.#logger.warn('Invalid component event payload: missing entityId', {
+          payload: event.payload,
+        });
+        return;
+      }
+
+      // Extract participation status
+      const participating = data?.participating ?? true;
+
+      this.#logger.debug('Participation changed', { entityId, participating });
+
+      // Update visual state
+      this.updateActorParticipation(entityId, participating);
+
+    } catch (error) {
+      this.#logger.error('Failed to handle participation change event', {
+        error: error.message,
+        payload: event.payload,
+      });
     }
   }
 }

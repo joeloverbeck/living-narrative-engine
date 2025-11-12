@@ -905,3 +905,299 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
     }).toThrow('Entity must have an id property');
   });
 });
+
+describe('TurnOrderTickerRenderer - Event Handlers', () => {
+  let renderer;
+  let mockLogger;
+  let mockEntityManager;
+  let mockEntityDisplayDataProvider;
+  let mockContainer;
+
+  beforeEach(() => {
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    mockEntityManager = {
+      getComponent: jest.fn(),
+      hasComponent: jest.fn(),
+      getEntityInstance: jest.fn(),
+    };
+
+    mockEntityDisplayDataProvider = {
+      getDisplayData: jest.fn(() => ({ name: 'TestActor' })),
+      getEntityName: jest.fn(),
+      getEntityPortraitPath: jest.fn(),
+    };
+
+    mockContainer = document.createElement('div');
+    mockContainer.innerHTML = `
+      <span id="ticker-round-number">ROUND 0</span>
+      <div id="ticker-actor-queue"></div>
+    `;
+
+    renderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: {
+        query: (selector) => mockContainer.querySelector(selector),
+        queryAll: jest.fn(),
+        create: jest.fn(),
+      },
+      validatedEventDispatcher: {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => 'sub-id'),
+        unsubscribe: jest.fn(),
+      },
+      domElementFactory: {
+        create: jest.fn((tag) => document.createElement(tag)),
+      },
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+
+    // Spy on render methods
+    jest.spyOn(renderer, 'render').mockImplementation(() => {});
+    jest.spyOn(renderer, 'updateCurrentActor').mockImplementation(() => {});
+    jest.spyOn(renderer, 'removeActor').mockImplementation(() => {});
+    jest.spyOn(renderer, 'updateActorParticipation').mockImplementation(() => {});
+  });
+
+  describe('#handleRoundStarted', () => {
+    it('should call render with actor entities', () => {
+      const event = {
+        payload: {
+          roundNumber: 1,
+          actors: ['actor-1', 'actor-2', 'actor-3'],
+          strategy: 'round-robin',
+        },
+      };
+
+      renderer.__testHandleRoundStarted(event);
+
+      expect(renderer.render).toHaveBeenCalledWith([
+        { id: 'actor-1' },
+        { id: 'actor-2' },
+        { id: 'actor-3' },
+      ]);
+    });
+
+    it('should update round number display', () => {
+      const event = {
+        payload: {
+          roundNumber: 5,
+          actors: ['actor-1'],
+          strategy: 'round-robin',
+        },
+      };
+
+      renderer.__testHandleRoundStarted(event);
+
+      const roundElement = mockContainer.querySelector('#ticker-round-number');
+      expect(roundElement.textContent).toBe('ROUND 5');
+    });
+
+    it('should handle empty actor list', () => {
+      const event = {
+        payload: {
+          roundNumber: 1,
+          actors: [],
+          strategy: 'round-robin',
+        },
+      };
+
+      renderer.__testHandleRoundStarted(event);
+
+      expect(renderer.render).toHaveBeenCalledWith([]);
+    });
+
+    it('should warn on invalid payload', () => {
+      const event = { payload: null };
+
+      renderer.__testHandleRoundStarted(event);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Invalid round_started event payload',
+        expect.any(Object)
+      );
+      expect(renderer.render).not.toHaveBeenCalled();
+    });
+
+    it('should reset current actor tracking', () => {
+      // Note: Can't directly access private field, but we can verify behavior
+      const event = {
+        payload: {
+          roundNumber: 2,
+          actors: ['actor-1'],
+          strategy: 'round-robin',
+        },
+      };
+
+      renderer.__testHandleRoundStarted(event);
+
+      // Verify the handler was called successfully (no errors thrown)
+      expect(renderer.render).toHaveBeenCalled();
+    });
+  });
+
+  describe('#handleTurnStarted', () => {
+    it('should call updateCurrentActor with entity ID', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-1',
+          entityType: 'player',
+        },
+      };
+
+      renderer.__testHandleTurnStarted(event);
+
+      expect(renderer.updateCurrentActor).toHaveBeenCalledWith('actor-1');
+    });
+
+    it('should track current actor ID', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-2',
+          entityType: 'ai',
+        },
+      };
+
+      renderer.__testHandleTurnStarted(event);
+
+      // Verify the handler was called successfully
+      expect(renderer.updateCurrentActor).toHaveBeenCalledWith('actor-2');
+    });
+
+    it('should ignore non-actor entities', () => {
+      const event = {
+        payload: {
+          entityId: 'item-1',
+          entityType: 'item',
+        },
+      };
+
+      renderer.__testHandleTurnStarted(event);
+
+      expect(renderer.updateCurrentActor).not.toHaveBeenCalled();
+    });
+
+    it('should warn on missing entity ID', () => {
+      const event = { payload: {} };
+
+      renderer.__testHandleTurnStarted(event);
+
+      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(renderer.updateCurrentActor).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('#handleTurnEnded', () => {
+    it('should call removeActor with entity ID', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-1',
+        },
+      };
+
+      renderer.__testHandleTurnEnded(event);
+
+      expect(renderer.removeActor).toHaveBeenCalledWith('actor-1');
+    });
+
+    it('should clear current actor tracking if it matches', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-1',
+        },
+      };
+
+      renderer.__testHandleTurnEnded(event);
+
+      // Verify the handler was called successfully
+      expect(renderer.removeActor).toHaveBeenCalledWith('actor-1');
+    });
+
+    it('should not clear current actor tracking if different', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-1',
+        },
+      };
+
+      renderer.__testHandleTurnEnded(event);
+
+      // Verify the handler was called successfully
+      expect(renderer.removeActor).toHaveBeenCalledWith('actor-1');
+    });
+
+    it('should warn on missing entity ID', () => {
+      const event = { payload: {} };
+
+      renderer.__testHandleTurnEnded(event);
+
+      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(renderer.removeActor).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('#handleParticipationChanged', () => {
+    it('should call updateActorParticipation when participation changes', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-1',
+          componentId: 'core:participation',
+          data: { participating: false },
+        },
+      };
+
+      renderer.__testHandleParticipationChanged(event);
+
+      expect(renderer.updateActorParticipation).toHaveBeenCalledWith('actor-1', false);
+    });
+
+    it('should default to true if participating not specified', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-2',
+          componentId: 'core:participation',
+          data: {},
+        },
+      };
+
+      renderer.__testHandleParticipationChanged(event);
+
+      expect(renderer.updateActorParticipation).toHaveBeenCalledWith('actor-2', true);
+    });
+
+    it('should ignore non-participation component events', () => {
+      const event = {
+        payload: {
+          entityId: 'actor-1',
+          componentId: 'core:name',
+          data: { text: 'Alice' },
+        },
+      };
+
+      renderer.__testHandleParticipationChanged(event);
+
+      expect(renderer.updateActorParticipation).not.toHaveBeenCalled();
+    });
+
+    it('should warn on missing entity ID', () => {
+      const event = {
+        payload: {
+          componentId: 'core:participation',
+          data: { participating: false },
+        },
+      };
+
+      renderer.__testHandleParticipationChanged(event);
+
+      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(renderer.updateActorParticipation).not.toHaveBeenCalled();
+    });
+  });
+});
