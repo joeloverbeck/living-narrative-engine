@@ -323,16 +323,9 @@ All three architectural tiers are fully implemented and tested:
 ## Related Documentation
 
 ### Core Documentation
-- [Effects Auto-Generation](./effects-auto-generation.md) - Complete guide to auto-generation system
-- [Operation Mapping](./operation-mapping.md) - Complete operation-to-effect mapping
-- [Effects Analyzer Architecture](./effects-analyzer-architecture.md) - Analyzer design
-- [Effects Generator Usage](./effects-generator-usage.md) - How to use the effects generator
-- [Effects Generation Workflow](./effects-generation-workflow.md) - Step-by-step workflow guide
-
-### Advanced Topics
-- [Abstract Preconditions](./abstract-preconditions.md) - Complete catalog and usage guide
-- [Operation Result Structures](./operation-result-structures.md) - Result variable documentation
-- [Macro Resolution](./macro-resolution.md) - How macros work and are resolved
+- [Effects System](./effects-system.md) - Complete guide to effects generation, analysis, and runtime placeholders
+- [Operation Mapping](./operation-mapping.md) - Complete operation-to-effect mapping and result structures
+- [Planning System](./planning-system.md) - Goals, action selection, abstract preconditions, and SimplePlanner
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions
 
 ### External Resources
