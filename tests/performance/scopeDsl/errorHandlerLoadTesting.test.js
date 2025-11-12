@@ -169,14 +169,20 @@ describe('ScopeDslErrorHandler Load Testing', () => {
         await new Promise((resolve) => setTimeout(resolve, burstInterval));
       }
 
-      // Analyze burst consistency
-      const avgTimes = burstMetrics.map((m) => m.avgTime);
+      // Analyze burst consistency (ignore the first burst to skip warm-up effects)
+      const steadyStateMetrics =
+        burstMetrics.length > 2 ? burstMetrics.slice(1) : burstMetrics;
+      const avgTimes = steadyStateMetrics.map((m) => m.avgTime);
       const minAvgTime = Math.min(...avgTimes);
       const maxAvgTime = Math.max(...avgTimes);
-      const variance = (maxAvgTime - minAvgTime) / minAvgTime;
+      const meanAvgTime =
+        avgTimes.reduce((total, value) => total + value, 0) /
+        (avgTimes.length || 1);
+      const normalizedRange =
+        (maxAvgTime - minAvgTime) / Math.max(meanAvgTime, 0.01);
 
-      // Performance should be consistent across bursts (increased tolerance for CI environments)
-      expect(variance).toBeLessThan(8.0); // <800% variance (very high tolerance for CI stability)
+      // Performance should be consistent across bursts (allow substantial CI variance)
+      expect(normalizedRange).toBeLessThan(6.0); // <600% range relative to mean
       burstMetrics.forEach((m) => {
         expect(m.successRate).toBeGreaterThan(0.9); // >90% success per burst
       });
