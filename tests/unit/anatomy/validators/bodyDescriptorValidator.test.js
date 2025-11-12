@@ -165,7 +165,15 @@ describe('BodyDescriptorValidator', () => {
     });
 
     it('should accept all valid hairDensity values', () => {
-      const validHairDensities = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'];
+      const validHairDensities = [
+        'hairless',
+        'sparse',
+        'light',
+        'moderate',
+        'hairy',
+        'very-hairy',
+        'furred',
+      ];
       for (const hairDensity of validHairDensities) {
         const result = validator.validateRecipeDescriptors({ hairDensity });
         expect(result.valid).toBe(true);

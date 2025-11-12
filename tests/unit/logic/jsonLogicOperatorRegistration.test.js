@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { JsonLogicCustomOperators } from '../../../src/logic/jsonLogicCustomOperators.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import { validateOperatorWhitelist } from '../../../src/logic/operatorRegistrationValidator.js';
+import {
+  validateOperatorWhitelist,
+  generateAllowedOperations,
+} from '../../../src/logic/operatorRegistrationValidator.js';
 
 describe('JSON Logic Operator Registration', () => {
   let logger;
@@ -240,6 +243,41 @@ describe('JSON Logic Operator Registration', () => {
     });
   });
 
+  describe('validateOperatorWhitelist edge cases', () => {
+    beforeEach(() => {
+      logger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+    });
+
+    it('should ignore standard json-logic operators that are not registered', () => {
+      const mockRegisteredOps = new Set();
+      const mockAllowedOps = new Set(['and']);
+
+      expect(() =>
+        validateOperatorWhitelist(mockRegisteredOps, mockAllowedOps, logger)
+      ).not.toThrow();
+
+      expect(logger.warn).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('should ignore special syntax entries that are not actual operators', () => {
+      const mockRegisteredOps = new Set();
+      const mockAllowedOps = new Set(['condition_ref']);
+
+      expect(() =>
+        validateOperatorWhitelist(mockRegisteredOps, mockAllowedOps, logger)
+      ).not.toThrow();
+
+      expect(logger.warn).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Operator Validation', () => {
     beforeEach(() => {
       customOperators = new JsonLogicCustomOperators({
@@ -379,6 +417,31 @@ describe('JSON Logic Operator Registration', () => {
       expect(
         evaluationService.isOperatorAllowed('hasOtherActorsAtLocation')
       ).toBe(true);
+    });
+  });
+
+  describe('generateAllowedOperations', () => {
+    it('should combine registered, standard, and additional operators into one whitelist', () => {
+      const registered = new Set(['customOperator']);
+      const additional = ['extraOperator', 'var'];
+
+      const allowed = generateAllowedOperations(registered, additional);
+
+      expect(allowed.has('customOperator')).toBe(true);
+      expect(allowed.has('extraOperator')).toBe(true);
+      expect(allowed.has('and')).toBe(true);
+
+      // Ensure duplicates from additional operators do not break the Set
+      const occurrences = Array.from(allowed).filter((op) => op === 'var');
+      expect(occurrences).toHaveLength(1);
+    });
+
+    it('should handle empty registered operators but still include standards', () => {
+      const allowed = generateAllowedOperations(new Set());
+
+      expect(allowed.size).toBeGreaterThan(0);
+      expect(allowed.has('var')).toBe(true);
+      expect(allowed.has('toUpperCase')).toBe(true);
     });
   });
 });

@@ -255,6 +255,7 @@ describe('bodyDescriptorRegistry', () => {
           'moderate',
           'hairy',
           'very-hairy',
+          'furred',
         ]);
       });
 
@@ -511,7 +512,15 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid hairDensity values', () => {
-        const validDensities = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'];
+        const validDensities = [
+          'hairless',
+          'sparse',
+          'light',
+          'moderate',
+          'hairy',
+          'very-hairy',
+          'furred',
+        ];
         for (const value of validDensities) {
           const result = validateDescriptorValue('hairDensity', value);
           expect(result.valid).toBe(true);

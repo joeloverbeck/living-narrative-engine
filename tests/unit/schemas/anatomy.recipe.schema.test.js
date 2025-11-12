@@ -446,6 +446,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         'moderate',
         'hairy',
         'very-hairy',
+        'furred',
       ];
 
       densities.forEach((hairDensity) => {
