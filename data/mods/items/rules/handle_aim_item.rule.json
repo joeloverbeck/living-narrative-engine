@@ -8,7 +8,7 @@
   },
   "actions": [
     {
-      "type": "LOG_MESSAGE",
+      "type": "LOG",
       "comment": "Placeholder action - to be replaced with actual aim_item logic in WEASYSIMP-007",
       "parameters": {
         "message": "aim_item action attempted - implementation pending",
