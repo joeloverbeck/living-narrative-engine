@@ -157,6 +157,142 @@ describe('Goal Selection - Integration', () => {
     });
   });
 
+  describe('goal availability edge cases', () => {
+    it('should return null and log when no goals are available', () => {
+      const actorId = entityManager.createEntity();
+      entityManager.addComponent(actorId, 'core:actor', { name: 'Explorer' });
+
+      const result = goalManager.selectGoal(actorId, {});
+
+      expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `No goals available for ${actorId}`
+      );
+    });
+
+    it('should log an error and return null when goal data is malformed', () => {
+      const actorId = entityManager.createEntity();
+      entityManager.addComponent(actorId, 'core:actor', { name: 'Explorer' });
+
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue(null);
+
+      const result = goalManager.selectGoal(actorId, {});
+
+      expect(result).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Failed to select goal for ${actorId}`,
+        expect.any(TypeError)
+      );
+    });
+  });
+
+  describe('goals without explicit relevance rules', () => {
+    it('should treat goals with no relevance condition as always relevant', () => {
+      const actorId = entityManager.createEntity();
+      entityManager.addComponent(actorId, 'core:actor', { name: 'Explorer' });
+      entityManager.addComponent(actorId, 'core:energy', { value: 25 });
+
+      const stretchGoal = {
+        id: 'core:stretch',
+        priority: 40,
+        goalState: {
+          '==': [{ var: 'actor.components.core:energy.value' }, 100]
+        }
+      };
+
+      gameDataRepository.getAllGoalDefinitions.mockReturnValue([stretchGoal]);
+
+      const result = goalManager.selectGoal(actorId, {});
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe('core:stretch');
+    });
+  });
+
+  describe('relevance evaluation failures', () => {
+    it('should return false and log when relevance evaluation throws', () => {
+      const actorId = entityManager.createEntity();
+      const goal = {
+        id: 'core:investigate_noise',
+        relevance: { '==': [1, 1] },
+        goalState: { '==': [1, 1] }
+      };
+
+      entityManager.getEntityInstance.mockImplementation(() => {
+        throw new Error('entity lookup failed');
+      });
+
+      const result = goalManager.isRelevant(goal, actorId, {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Failed to evaluate relevance for goal ${goal.id}`,
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('goal satisfaction evaluation failures', () => {
+    it('should return false and log when goal state evaluation throws', () => {
+      const actorId = entityManager.createEntity();
+      entityManager.addComponent(actorId, 'core:actor', { name: 'Explorer' });
+
+      const failingGoalStateEvaluator = {
+        evaluate: jest.fn(() => {
+          throw new Error('goal state failure');
+        }),
+        calculateDistance: jest.fn()
+      };
+
+      const failingGoalManager = new GoalManager({
+        logger: mockLogger,
+        gameDataRepository,
+        goalStateEvaluator: failingGoalStateEvaluator,
+        jsonLogicEvaluator,
+        entityManager
+      });
+
+      const goal = {
+        id: 'core:secure_area',
+        goalState: { '==': [true, true] }
+      };
+
+      const result = failingGoalManager.isGoalSatisfied(goal, actorId, {});
+
+      expect(result).toBe(false);
+      expect(failingGoalStateEvaluator.evaluate).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        `Failed to evaluate goal state for ${goal.id}`,
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('goal retrieval edge cases', () => {
+    it('should warn and return an empty array when actor is missing', () => {
+      const result = goalManager.getGoalsForActor('unknown-actor');
+
+      expect(result).toEqual([]);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Actor not found: unknown-actor'
+      );
+    });
+
+    it('should log and return empty array when entity lookup throws', () => {
+      entityManager.getEntityInstance.mockImplementation(() => {
+        throw new Error('lookup failure');
+      });
+
+      const result = goalManager.getGoalsForActor('entity-99');
+
+      expect(result).toEqual([]);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to get goals for entity-99',
+        expect.any(Error)
+      );
+    });
+  });
+
   describe('selectGoal for cat actor (tired)', () => {
     it('should select rest_safely goal when cat is tired', () => {
       // Arrange - Create a tired cat
