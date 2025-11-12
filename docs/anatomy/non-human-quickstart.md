@@ -2,45 +2,48 @@
 
 ## Overview
 
-This guide walks you through creating your first non-human creature using the Blueprint V2 system with Structure Templates. We'll create a complete spider anatomy from scratch.
+This quick start shows how to author a Blueprint V2 creature by mirroring the shipped giant spider assets. You will:
 
-**What You'll Learn**:
-- Creating a structure template
-- Creating a Blueprint V2
-- Creating a recipe with pattern matching
-- Testing your anatomy
+1. Author a structure template that describes the creature's topology.
+2. Define entity parts for the root body and its attachments.
+3. Reference the template from a Blueprint V2 file (plus any extra sockets the template cannot create).
+4. Create a recipe that fills every generated slot through pattern matching.
+5. Register the files in your mod manifest and spin up a test entity instance.
 
-**Prerequisites**:
-- Basic understanding of JSON
-- Familiarity with mod structure (see [mod documentation](../mods/))
-- Text editor with JSON support
+The runtime merges template-generated sockets into the root entity before attaching parts, so V2 blueprints stay concise while still honouring your existing entity definitions.【F:src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js†L200-L235】
 
-**Related Documentation**:
-- [Recipe Pattern Matching](./recipe-pattern-matching.md) - Complete pattern matching reference
-- [Common Creature Patterns](./recipe-pattern-matching.md#part-4-common-creature-patterns) - Tested creature patterns
-- [Pattern Reference](./recipe-pattern-matching.md#part-2-pattern-reference) - Advanced filtering techniques
+### Prerequisites
 
-## The Workflow
+- Comfort editing JSON.
+- Familiarity with the mod folder layout (see [../mods/](../mods/)).
+- A text editor that validates JSON against schemas.
+
+### Files You'll Create
 
 ```
-
-`structure-templates` must be defined inside the manifest's `content` object using the dashed key so that the loader can register your templates.
-1. Structure Template → 2. Blueprint V2 → 3. Recipe → 4. Test Entity
+data/mods/your_mod/
+├── structure-templates/spider.structure-template.json
+├── entities/definitions/spider_cephalothorax.entity.json
+├── entities/definitions/spider_leg.entity.json
+├── entities/definitions/spider_pedipalp.entity.json
+├── entities/definitions/spider_abdomen.entity.json
+├── entities/definitions/spider_spinneret.entity.json
+├── blueprints/spider.blueprint.json
+├── recipes/spider.recipe.json
+└── entities/test_spider.instance.json
 ```
 
-## Step 1: Create Structure Template
+The paths mirror those used by the core anatomy mod so that your content slots directly into the loader's expectations.【F:data/mods/anatomy/mod-manifest.json†L158-L205】
 
-Structure templates define the body topology. For our spider, we need:
-- 8 legs arranged radially
-- 1 abdomen
+## Step 1: Create the Structure Template
 
-**Create**: `data/mods/your_mod/structure-templates/spider.structure-template.json`
+Structure templates describe the procedural socket layout for Blueprint V2. Create `data/mods/your_mod/structure-templates/spider.structure-template.json`:
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
   "id": "your_mod:structure_spider",
-  "description": "Spider body structure with 8 radially arranged legs and posterior abdomen",
+  "description": "Eight-legged arachnid body plan with pedipalps and posterior abdomen",
   "topology": {
     "rootType": "cephalothorax",
     "limbSets": [
@@ -48,22 +51,33 @@ Structure templates define the body topology. For our spider, we need:
         "type": "leg",
         "count": 8,
         "arrangement": "radial",
+        "arrangementHint": "four_pairs_bilateral",
         "socketPattern": {
           "idTemplate": "leg_{{index}}",
           "orientationScheme": "indexed",
           "allowedTypes": ["spider_leg"],
           "nameTpl": "leg {{index}}"
-        },
-        "arrangementHint": "octagonal_radial"
+        }
       }
     ],
     "appendages": [
       {
-        "type": "abdomen",
+        "type": "pedipalp",
+        "count": 2,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "pedipalp_{{orientation}}",
+          "orientationScheme": "bilateral",
+          "allowedTypes": ["spider_pedipalp"],
+          "nameTpl": "pedipalp ({{orientation}})"
+        }
+      },
+      {
+        "type": "torso",
         "count": 1,
         "attachment": "posterior",
         "socketPattern": {
-          "idTemplate": "abdomen",
+          "idTemplate": "posterior_torso",
           "allowedTypes": ["spider_abdomen"],
           "nameTpl": "abdomen"
         }
@@ -73,21 +87,15 @@ Structure templates define the body topology. For our spider, we need:
 }
 ```
 
-**What This Does**:
-- Creates 8 leg sockets: `leg_1`, `leg_2`, ... `leg_8` (via limbSet)
-- Creates 2 pedipalp sockets: `pedipalp_1`, `pedipalp_2` (via appendages)
-- Creates 1 abdomen/torso socket: `posterior_torso` (via appendages)
-- Each socket knows what part types it accepts
+This configuration matches the production arachnid template, except that the pedipalp pattern now relies on the bilateral orientation scheme and an orientation-based ID template so the generated sockets (`pedipalp_left`, `pedipalp_right`) align with current entity data.【F:data/mods/anatomy/structure-templates/structure_arachnid_8leg.structure-template.json†L1-L42】【F:data/mods/anatomy/entities/definitions/spider_cephalothorax.entity.json†L29-L64】
 
-**Note**: The structure template in the anatomy mod uses `type: "torso"` for the abdomen appendage, so the socket will be generated as `posterior_torso` and pattern matching should use `"appendage:torso"` not `"appendage:abdomen"`.
+## Step 2: Define the Parts
 
-## Step 2: Create Entity Definitions
+Create entity definitions for the root body and each attachment.
 
-Before creating the blueprint, we need entity definitions for the body parts.
+### Cephalothorax (root)
 
-### Root Part: Cephalothorax
-
-**Create**: `data/mods/your_mod/entities/definitions/spider_cephalothorax.entity.json`
+`data/mods/your_mod/entities/definitions/spider_cephalothorax.entity.json`:
 
 ```json
 {
@@ -96,54 +104,24 @@ Before creating the blueprint, we need entity definitions for the body parts.
   "description": "Root cephalothorax for an eight-legged spider",
   "components": {
     "anatomy:part": {
-      "subType": "cephalothorax"
+      "subType": "spider_cephalothorax"
     },
     "anatomy:sockets": {
       "sockets": [
         {
-          "id": "leg_1",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
+          "id": "pedipalp_left",
+          "allowedTypes": ["spider_pedipalp"],
+          "nameTpl": "left pedipalp"
         },
         {
-          "id": "leg_2",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
+          "id": "pedipalp_right",
+          "allowedTypes": ["spider_pedipalp"],
+          "nameTpl": "right pedipalp"
         },
         {
-          "id": "leg_3",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
-        },
-        {
-          "id": "leg_4",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
-        },
-        {
-          "id": "leg_5",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
-        },
-        {
-          "id": "leg_6",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
-        },
-        {
-          "id": "leg_7",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
-        },
-        {
-          "id": "leg_8",
-          "allowedTypes": ["spider_leg"],
-          "nameTpl": "leg"
-        },
-        {
-          "id": "abdomen",
-          "allowedTypes": ["spider_abdomen"],
-          "nameTpl": "abdomen"
+          "id": "spinnerets",
+          "allowedTypes": ["spinneret"],
+          "nameTpl": "spinnerets"
         }
       ]
     },
@@ -154,51 +132,61 @@ Before creating the blueprint, we need entity definitions for the body parts.
 }
 ```
 
-### Leg Part
+Only the sockets that the template cannot create (spinnerets) are required. The bilateral pedipalp sockets above reflect the shipped anatomy data; the Blueprint V2 loader replaces them with the template-generated `pedipalp_left` and `pedipalp_right` definitions at runtime to keep everything in sync.【F:data/mods/anatomy/entities/definitions/spider_cephalothorax.entity.json†L29-L70】【F:src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js†L200-L235】
 
-**Create**: `data/mods/your_mod/entities/definitions/spider_leg.entity.json`
+### Legs, Pedipalps, Abdomen, Spinnerets
 
-```json
+```
+data/mods/your_mod/entities/definitions/spider_leg.entity.json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "your_mod:spider_leg",
   "description": "A segmented spider leg",
   "components": {
-    "anatomy:part": {
-      "subType": "spider_leg"
-    },
-    "core:name": {
-      "text": "spider leg"
-    }
+    "anatomy:part": { "subType": "spider_leg" },
+    "core:name": { "text": "spider leg" }
   }
 }
-```
 
-### Abdomen Part
+data/mods/your_mod/entities/definitions/spider_pedipalp.entity.json
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "your_mod:spider_pedipalp",
+  "description": "A spider pedipalp for sensory input",
+  "components": {
+    "anatomy:part": { "subType": "spider_pedipalp" },
+    "core:name": { "text": "spider pedipalp" }
+  }
+}
 
-**Create**: `data/mods/your_mod/entities/definitions/spider_abdomen.entity.json`
-
-```json
+data/mods/your_mod/entities/definitions/spider_abdomen.entity.json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "your_mod:spider_abdomen",
   "description": "The bulbous abdomen of a spider",
   "components": {
-    "anatomy:part": {
-      "subType": "spider_abdomen"
-    },
-    "core:name": {
-      "text": "spider abdomen"
-    }
+    "anatomy:part": { "subType": "spider_abdomen" },
+    "core:name": { "text": "spider abdomen" }
+  }
+}
+
+data/mods/your_mod/entities/definitions/spider_spinneret.entity.json
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "your_mod:spider_spinneret",
+  "description": "Silk-producing spinnerets",
+  "components": {
+    "anatomy:part": { "subType": "spinneret" },
+    "core:name": { "text": "spinnerets" }
   }
 }
 ```
 
-## Step 3: Create Blueprint V2
+These definitions mirror the production anatomy entities so that the recipe can reuse their `subType` values directly.【F:data/mods/anatomy/entities/definitions/spider_leg.entity.json†L1-L12】【F:data/mods/anatomy/entities/definitions/spider_pedipalp.entity.json†L1-L12】【F:data/mods/anatomy/entities/definitions/spider_abdomen.entity.json†L1-L12】【F:data/mods/anatomy/entities/definitions/spider_spinneret.entity.json†L1-L12】
 
-The blueprint references the structure template and specifies the root part.
+## Step 3: Create the Blueprint V2
 
-**Create**: `data/mods/your_mod/blueprints/spider.blueprint.json`
+`data/mods/your_mod/blueprints/spider.blueprint.json`:
 
 ```json
 {
@@ -206,28 +194,45 @@ The blueprint references the structure template and specifies the root part.
   "id": "your_mod:spider_garden",
   "schemaVersion": "2.0",
   "root": "your_mod:spider_cephalothorax",
-  "structureTemplate": "your_mod:structure_spider"
+  "structureTemplate": "your_mod:structure_spider",
+  "additionalSlots": {
+    "spinnerets": {
+      "socket": "spinnerets",
+      "requirements": {
+        "partType": "spinneret",
+        "components": ["anatomy:part"]
+      }
+    }
+  }
 }
 ```
 
-**That's It!** This 6-line blueprint generates all 9 sockets automatically.
+The template generates sockets and slot definitions for the legs, pedipalps, and abdomen. The explicit `spinnerets` slot demonstrates how to wire in sockets that live only on the entity definition (the shipped blueprint does the same).【F:data/mods/anatomy/blueprints/giant_spider.blueprint.json†L1-L20】
 
-## Step 4: Create Recipe
+## Step 4: Author the Recipe
 
-The recipe specifies what body parts to use for each slot.
-
-**Create**: `data/mods/your_mod/recipes/spider.recipe.json`
+`data/mods/your_mod/recipes/spider.recipe.json`:
 
 ```json
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "your_mod:spider_garden_recipe",
   "blueprintId": "your_mod:spider_garden",
-  "slots": {},
+  "slots": {
+    "spinnerets": {
+      "partType": "spinneret",
+      "tags": ["anatomy:part"]
+    }
+  },
   "patterns": [
     {
       "matchesGroup": "limbSet:leg",
       "partType": "spider_leg",
+      "tags": ["anatomy:part"]
+    },
+    {
+      "matchesGroup": "appendage:pedipalp",
+      "partType": "spider_pedipalp",
       "tags": ["anatomy:part"]
     },
     {
@@ -243,17 +248,11 @@ The recipe specifies what body parts to use for each slot.
 }
 ```
 
-**What This Does**:
-- `matchesGroup: "limbSet:leg"` matches all 8 leg slots → uses `spider_leg` entity
-- `matchesGroup: "appendage:torso"` matches the posterior torso/abdomen slot → uses `spider_abdomen` entity
+`matchesGroup` uses the limb-set metadata generated from the structure template, so one pattern can fill every related slot. This is the same mechanism used by the shipped spider recipe (which additionally sets cosmetic properties per part).【F:data/mods/anatomy/recipes/giant_forest_spider.recipe.json†L1-L67】
 
-**Note**: The appendage type in the structure template is `"torso"`, so use `"appendage:torso"` not `"appendage:abdomen"` in your pattern matcher.
+## Step 5: Update the Mod Manifest
 
-## Step 5: Update Mod Manifest
-
-Add your new files to the mod manifest.
-
-**Edit**: `data/mods/your_mod/mod-manifest.json`
+Add the new files under the manifest's `content` object in `data/mods/your_mod/mod-manifest.json`:
 
 ```json
 {
@@ -266,9 +265,13 @@ Add your new files to the mod manifest.
       "definitions": [
         "entities/definitions/spider_cephalothorax.entity.json",
         "entities/definitions/spider_leg.entity.json",
-        "entities/definitions/spider_abdomen.entity.json"
+        "entities/definitions/spider_pedipalp.entity.json",
+        "entities/definitions/spider_abdomen.entity.json",
+        "entities/definitions/spider_spinneret.entity.json"
       ],
-      "instances": []
+      "instances": [
+        "entities/test_spider.instance.json"
+      ]
     },
     "blueprints": [
       "blueprints/spider.blueprint.json"
@@ -283,13 +286,11 @@ Add your new files to the mod manifest.
 }
 ```
 
-`structure-templates` must stay under the manifest's `content` object with the dashed key so the loader can register your templates.
+The loader reads the dashed `structure-templates` key under `content`, matching both the schema and the shipping anatomy mod.【F:data/schemas/mod-manifest.schema.json†L130-L177】【F:data/mods/anatomy/mod-manifest.json†L158-L205】
 
-## Step 6: Test Your Anatomy
+## Step 6: Create a Test Instance
 
-### Option A: Create Test Entity Instance
-
-**Create**: `data/mods/your_mod/entities/test_spider.instance.json`
+`data/mods/your_mod/entities/test_spider.instance.json`:
 
 ```json
 {
@@ -308,311 +309,16 @@ Add your new files to the mod manifest.
 }
 ```
 
-### Option B: Use Character Builder
-
-1. Open Character Builder in the game
-2. Select your blueprint: `your_mod:spider_garden`
-3. Select your recipe: `your_mod:spider_garden_recipe`
-4. Generate and inspect the anatomy
-
-### Verification Checklist
-
-✅ **Blueprint loads** without validation errors
-✅ **Recipe loads** without validation errors
-✅ **8 leg slots** are populated with `spider_leg` entities
-✅ **1 abdomen slot** is populated with `spider_abdomen` entity
-✅ **Entity instantiates** successfully
-✅ **Anatomy graph** is complete and connected
+Load the mod and instantiate this entity (or run the anatomy integration tests) to confirm that the generated body graph contains eight legs, two pedipalps, a spinneret assembly, and the abdomen.【F:tests/integration/anatomy/validation/socketSlotCompatibility.integration.test.js†L135-L156】
 
 ## Common Pitfalls
 
-### Pitfall 1: Mismatched Socket Names
+- **Manifest key mismatch** – Ensure the manifest uses `"structure-templates"` inside `content`; the loader ignores the camelCase variant.【F:src/loaders/loaderMeta.js†L112-L115】
+- **Socket ID drift** – Keep entity-defined socket IDs aligned with the template output so the runtime merge replaces older data instead of duplicating sockets.【F:src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js†L200-L235】
+- **Recipe type typos** – `partType` values in patterns must match the `anatomy:part.subType` of your entities. The shipped spider recipe is a reliable reference point.【F:data/mods/anatomy/recipes/giant_forest_spider.recipe.json†L24-L67】
 
-**Problem**: Sockets in entity definition don't match template-generated sockets.
+## Further Reading
 
-**Wrong**:
-```json
-// Template generates: leg_1, leg_2, ...
-// But entity has:
-"anatomy:sockets": {
-  "sockets": [
-    { "id": "left_leg", /* ... */ },  // ❌ Doesn't match
-    { "id": "right_leg", /* ... */ }
-  ]
-}
-```
-
-**Fix**: Match socket IDs exactly to template output:
-```json
-"anatomy:sockets": {
-  "sockets": [
-    { "id": "leg_1", /* ... */ },  // ✅ Matches template
-    { "id": "leg_2", /* ... */ }
-  ]
-}
-```
-
-### Pitfall 2: Wrong Part Type
-
-**Problem**: Recipe specifies part type that doesn't exist.
-
-**Wrong**:
-```json
-"patterns": [
-  {
-    "matchesGroup": "limbSet:leg",
-    "partType": "leg"  // ❌ Entity has subType: "spider_leg"
-  }
-]
-```
-
-**Fix**: Match entity's `subType` exactly (the `partType` in recipe patterns must match the `subType` field in the entity's `anatomy:part` component):
-```json
-"patterns": [
-  {
-    "matchesGroup": "limbSet:leg",
-    "partType": "spider_leg"  // ✅ Matches entity's subType
-  }
-]
-```
-
-### Pitfall 3: Missing Schema Version
-
-**Problem**: Using V2 features without declaring `schemaVersion: "2.0"`.
-
-**Wrong**:
-```json
-{
-  "id": "your_mod:spider",
-  "root": "your_mod:spider_cephalothorax",
-  "structureTemplate": "your_mod:structure_spider"  // ❌ Missing schemaVersion
-}
-```
-
-**Fix**: Always declare V2:
-```json
-{
-  "id": "your_mod:spider",
-  "schemaVersion": "2.0",  // ✅ Required
-  "root": "your_mod:spider_cephalothorax",
-  "structureTemplate": "your_mod:structure_spider"
-}
-```
-
-### Pitfall 4: Pattern Doesn't Match
-
-**Problem**: Pattern matcher doesn't align with template output.
-
-**Wrong**:
-```json
-// Template generates: leg_1, leg_2, ...
-"patterns": [
-  {
-    "matchesPattern": "limb_*",  // ❌ No sockets named "limb_"
-    "partType": "spider_leg"
-  }
-]
-```
-
-**Fix**: Use correct pattern or `matchesGroup`:
-```json
-"patterns": [
-  {
-    "matchesGroup": "limbSet:leg",  // ✅ Matches all legs from template
-    "partType": "spider_leg"
-  }
-]
-```
-
-### Pitfall 5: Forgotten Components
-
-**Problem**: Recipe requires components that entity doesn't have.
-
-**Wrong**:
-```json
-// Entity doesn't have custom component
-"patterns": [
-  {
-    "matchesGroup": "limbSet:leg",
-    "partType": "spider_leg",
-    "tags": ["anatomy:part", "your_mod:venomous"]  // ❌ Entity missing your_mod:venomous
-  }
-]
-```
-
-**Fix**: Add component to entity or remove from recipe:
-```json
-// Option 1: Add to entity
-{
-  "id": "your_mod:spider_leg",
-  "components": {
-    "anatomy:part": { "subType": "spider_leg" },
-    "your_mod:venomous": { "potency": "moderate" }  // ✅ Added
-  }
-}
-
-// Option 2: Remove from recipe
-"patterns": [
-  {
-    "matchesGroup": "limbSet:leg",
-    "partType": "spider_leg",
-    "tags": ["anatomy:part"]  // ✅ Only required tags
-  }
-]
-```
-
-## Troubleshooting
-
-### Blueprint Validation Error
-
-**Symptom**: Error loading blueprint file.
-
-**Check**:
-1. `schemaVersion: "2.0"` is present
-2. `structureTemplate` references existing template ID
-3. No forbidden V1 properties (`slots`, `parts`, `compose`)
-4. Blueprint has required fields: `id`, `root`, `schemaVersion`, `structureTemplate`
-
-### Recipe Validation Error
-
-**Symptom**: Error loading recipe file.
-
-**Check**:
-1. `blueprintId` matches your blueprint's `id`
-2. Pattern uses exactly one of `matches`, `matchesGroup`, `matchesPattern`, or `matchesAll`
-3. `partType` values match entity `partType` values
-4. Required fields present: `recipeId`, `blueprintId`, `slots` (can be empty)
-
-### No Slots Generated
-
-**Symptom**: Blueprint loads but anatomy has no limbs.
-
-**Check**:
-1. Structure template is loaded before blueprint
-2. Template `id` matches blueprint's `structureTemplate` reference
-3. Template has `limbSets` or `appendages` defined
-4. Mod manifest includes structure template file
-
-### Pattern Doesn't Match Any Slots
-
-**Symptom**: Recipe loads but some slots remain unfilled.
-
-**Check**:
-1. Pattern matcher aligns with template output (use debugging)
-2. `partType` in pattern matches entity `partType`
-3. Try using explicit `slots` temporarily to verify slot keys
-4. Check for typos in pattern syntax
-
-## Next Steps
-
-### Add More Features
-
-1. **Add Eyes**: Create entity, add to cephalothorax sockets, update recipe
-2. **Add Venom Glands**: Use `additionalSlots` in blueprint
-3. **Variations**: Create multiple recipes for different spider species
-4. **Visual Properties**: Add anatomy formatting components
-
-### Explore Advanced Features
-
-- **Pattern Exclusions**: Filter pattern matches
-- **Clothing Slot Mappings**: Define where clothing attaches
-- **Body Descriptors**: Customize appearance
-- **Constraints**: Add co-presence or mutual exclusion rules
-
-### Create More Creatures
-
-Use the same workflow for:
-- **Dragons**: Wings, quadrupedal legs, tail
-- **Centaurs**: Humanoid upper body, horse lower body
-- **Octopi**: Tentacles, mantle, head
-- **Insects**: 6 legs, wings, segmented body
-
-## Reference Documentation
-
-- **Blueprints and Templates**: [blueprints-and-templates.md](./blueprints-and-templates.md) - Blueprint V2, structure templates, and migration guide
-- **Recipe Pattern Matching**: [recipe-pattern-matching.md](./recipe-pattern-matching.md) - Pattern matching guide
-- **Anatomy Formatting**: [../mods/anatomy-formatting.md](../mods/anatomy-formatting.md) - Description generation
-
-## Example: Humanoid Reference
-
-For comparison, here's how humanoid anatomy works in V1:
-
-**Humanoid Blueprint V1** (excerpt from `data/mods/anatomy/blueprints/human_male.blueprint.json`):
-```json
-{
-  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
-  "id": "anatomy:human_male",
-  "root": "anatomy:human_male_torso",
-  "compose": [
-    {
-      "part": "anatomy:humanoid_core",
-      "include": ["slots", "clothingSlotMappings"]
-    }
-  ],
-  "slots": {
-    "penis": {
-      "socket": "penis",
-      "requirements": {
-        "partType": "penis",
-        "components": ["anatomy:part"]
-      }
-    }
-    // ... many more manual slots
-  }
-}
-```
-
-Humanoids use V1 because:
-- Asymmetric designs (different hands, unique features)
-- Historical compatibility
-- No repeating limbs that benefit from templates
-
-## Complete File Structure
-
-Your mod should look like this:
-
-```
-data/mods/your_mod/
-├── mod-manifest.json
-├── structure-templates/
-│   └── spider.structure-template.json
-├── blueprints/
-│   └── spider.blueprint.json
-├── recipes/
-│   └── spider.recipe.json
-└── entities/
-    └── definitions/
-        ├── spider_cephalothorax.entity.json
-        ├── spider_leg.entity.json
-        └── spider_abdomen.entity.json
-```
-
-**Note**: Entity definitions go in the `entities/definitions/` subdirectory. The mod manifest should reference them as `"entities/definitions/spider_cephalothorax.entity.json"` etc.
-
-## Tips for Success
-
-1. **Start Simple**: Get basic anatomy working before adding complexity
-2. **Test Incrementally**: Test after each step (template → blueprint → recipe)
-3. **Use Debugging**: Create test entities to verify slot generation
-4. **Follow Naming Conventions**: Use consistent, descriptive names
-5. **Read Error Messages**: Validation errors are specific and helpful
-6. **Reference Examples**: Study existing humanoid blueprints for patterns
-7. **Ask for Help**: Check documentation when stuck
-
-## What You've Learned
-
-✅ Structure templates generate sockets automatically
-✅ Blueprint V2 is concise for non-human creatures
-✅ Recipes use patterns to populate slots efficiently
-✅ Template → Blueprint → Recipe workflow
-✅ Common pitfalls and how to avoid them
-
-## Next Tutorial
-
-Ready for more advanced features? Try:
-- **Multi-Limb Set Creatures**: Dragons with legs AND wings
-- **Hybrid Creatures**: Centaurs with humanoid and quadruped parts
-- **Clothing Integration**: Define clothing slot mappings
-- **Recipe Variations**: Multiple recipes for one blueprint
-
-Happy creature creation! 🕷️
+- [Blueprints and Templates](./blueprints-and-templates.md) – Deep dive into structure templates and slot generation.
+- [Recipe Pattern Matching](./recipe-pattern-matching.md) – Complete pattern reference and debugging advice.
+- [Anatomy Development Guide](../development/anatomy-development-guide.md) – Broader workflow coverage for anatomy authoring.
