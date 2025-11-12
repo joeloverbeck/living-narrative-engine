@@ -11,6 +11,8 @@ import GoalManager from '../../goap/goals/goalManager.js';
 import GoalStateEvaluator from '../../goap/goals/goalStateEvaluator.js';
 import ActionSelector from '../../goap/selection/actionSelector.js';
 import AbstractPreconditionSimulator from '../../goap/simulation/abstractPreconditionSimulator.js';
+import SimplePlanner from '../../goap/planning/simplePlanner.js';
+import PlanCache from '../../goap/planning/planCache.js';
 
 /**
  * Registers GOAP services in the DI container
@@ -79,7 +81,18 @@ export function registerGoapServices(container) {
     }
   });
 
-  // Planning (to be implemented in later tickets)
-  // container.register(goapTokens.ISimplePlanner, SimplePlanner);
-  // container.register(goapTokens.IPlanCache, PlanCache);
+  // Planning
+  container.register(goapTokens.ISimplePlanner, SimplePlanner, {
+    dependencies: {
+      logger: coreTokens.ILogger,
+      actionSelector: goapTokens.IActionSelector,
+      goalManager: goapTokens.IGoalManager
+    }
+  });
+
+  container.register(goapTokens.IPlanCache, PlanCache, {
+    dependencies: {
+      logger: coreTokens.ILogger
+    }
+  });
 }
