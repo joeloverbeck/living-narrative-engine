@@ -1,10 +1,10 @@
 # Clothing Coverage Mapping Component
 
-## Overview
+## Purpose
 
-The `clothing:coverage_mapping` component defines which body regions clothing items cover when equipped, enabling intelligent clothing resolution for action text generation.
+`clothing:coverage_mapping` extends a clothing entity with the extra body regions it covers when equipped. The component is defined in [`data/mods/clothing/components/coverage_mapping.component.json`](../../data/mods/clothing/components/coverage_mapping.component.json) and is consumed by coverage-aware systems such as the slot access resolver and coverage analyzer.
 
-## Component Schema
+## Data shape
 
 ```json
 {
@@ -15,38 +15,31 @@ The `clothing:coverage_mapping` component defines which body regions clothing it
 }
 ```
 
-## Properties
-
 ### covers
 
-- **Type**: Array of strings
-- **Required**: Yes
-- **Description**: Body regions this item covers when worn
-- **Valid Values**: `torso_upper`, `torso_lower`, `legs`, `feet`, `head_gear`, `hands`, `left_arm_clothing`, `right_arm_clothing`
+- Required array of unique strings.
+- Values must be chosen from `torso_upper`, `torso_lower`, `legs`, `feet`, `head_gear`, `hands`, `left_arm_clothing`, or `right_arm_clothing`. The schema enforces at least one region.
 
 ### coveragePriority
 
-- **Type**: String
-- **Required**: Yes
-- **Description**: Priority level for coverage resolution
-- **Valid Values**:
-  - `outer`: Outer layer coverage (coats, jackets)
-  - `base`: Base layer coverage (pants, shirts)
-  - `underwear`: Underwear layer coverage (bras, panties)
-  - `accessories`: Accessory items (belts, gloves, etc.)
+- Required string describing the intended coverage tier.
+- The schema accepts `outer`, `base`, `underwear`, and `accessories`.
+- Runtime priority logic recognises `outer`, `base`, `underwear`, and `direct`. Any other value—including `accessories`—is treated as `direct`, the lowest priority tier, before sorting coverage candidates.
 
-## Usage Examples
+## Runtime behaviour
 
-### Basic Pants Coverage
+- `slotAccessResolver` pulls every equipped item's `coverage_mapping`, tags each candidate with its layer, and scores it via the priority calculator, which orders coverage priority as `outer` → `base` → `underwear` → fallback `direct` and resolves ties with the layer order `outer` → `base` → `underwear` → `accessories`.
+- `coverageAnalyzer` uses the same priority constants; if a value is missing it falls back to the item's layer, and if the value is unrecognised the item neither blocks nor is blocked because no priority score is assigned.
+- Because of the mismatch between the schema and runtime constants, items authored with `coveragePriority: "accessories"` (for example, the layered pearl choker) are effectively evaluated as `direct` during resolution.
 
-```json
+## Example
+
+Dark indigo denim jeans cover the wearer's lower torso and are treated as base-layer coverage:
+
+```jsonc
 {
-  "id": "clothing:denim_jeans",
+  "id": "clothing:dark_indigo_denim_jeans",
   "components": {
-    "clothing:wearable": {
-      "layer": "base",
-      "equipmentSlots": { "primary": "legs" }
-    },
     "clothing:coverage_mapping": {
       "covers": ["torso_lower"],
       "coveragePriority": "base"
@@ -55,68 +48,8 @@ The `clothing:coverage_mapping` component defines which body regions clothing it
 }
 ```
 
-### Multi-Region Coverage (Winter Coat)
+## Authoring tips
 
-```json
-{
-  "clothing:coverage_mapping": {
-    "covers": ["torso_upper", "torso_lower", "legs"],
-    "coveragePriority": "outer"
-  }
-}
-```
-
-### Underwear Coverage (Thigh-High Socks)
-
-```json
-{
-  "clothing:coverage_mapping": {
-    "covers": ["torso_lower"],
-    "coveragePriority": "underwear"
-  }
-}
-```
-
-## Priority System
-
-Coverage resolution uses a two-tier priority system:
-
-1. **Coverage Priority** (Primary): `outer` < `base` < `underwear` < `accessories` < `direct`
-2. **Layer Priority** (Secondary): `outer` < `base` < `underwear` < `accessories`
-
-### Resolution Examples
-
-| Scenario        | Items                                         | Result  | Reasoning              |
-| --------------- | --------------------------------------------- | ------- | ---------------------- |
-| Jeans + Panties | Jeans (base coverage) + Panties (direct)      | Jeans   | Base coverage > Direct |
-| Coat + Jeans    | Coat (outer coverage) + Jeans (base coverage) | Coat    | Outer > Base           |
-| Only Panties    | Panties (direct)                              | Panties | Direct fallback        |
-
-## Best Practices
-
-1. **Logical Coverage**: Only cover regions that make real-world sense
-2. **Appropriate Priority**: Match priority to item's typical usage layer
-3. **Consistent Patterns**: Follow established patterns for similar items
-4. **Performance**: Avoid unnecessary coverage mappings for items that don't need them
-
-## Troubleshooting
-
-### Common Issues
-
-**Coverage Not Working**:
-
-- Verify component schema is correct
-- Check that `covers` array includes target slot
-- Ensure `coveragePriority` is valid
-
-**Wrong Item Selected**:
-
-- Review priority system rules
-- Check for conflicting coverage mappings
-- Verify layer assignments match expectations
-
-**Performance Issues**:
-
-- Limit coverage mappings to items that need them
-- Use appropriate priority levels
-- Consider caching implications for frequently accessed items
+- Match `coveragePriority` to `outer`, `base`, or `underwear` whenever possible to avoid the automatic downgrade to `direct`.
+- Only include regions in `covers` that the item truly obscures; redundant mappings slow the priority calculation without changing outcomes.
+- When debugging unexpected access, confirm both the coverage priority and the item's equip layer, since the analyzer falls back to the layer when coverage data is missing.
