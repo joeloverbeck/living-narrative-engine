@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "items:lower_aim",
+  "name": "Lower Aim",
+  "description": "Stop aiming an item. Removes the items:aimed_at component from the item, ending the aimed state.",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory"]
+  },
+  "targets": {
+    "primary": {
+      "scope": "items:aimed_items_in_inventory",
+      "placeholder": "item",
+      "description": "Item currently being aimed (has items:aimed_at component)"
+    }
+  },
+  "template": "lower {item}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
+}

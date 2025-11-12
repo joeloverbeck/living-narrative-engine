@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "items:event-is-action-aim-item",
+  "description": "Placeholder condition for aim_item action. To be implemented in WEASYSIMP-007.",
+  "condition": {
+    "==": [
+      {
+        "var": "event.type"
+      },
+      "ATTEMPT_ACTION"
+    ]
+  }
+}
