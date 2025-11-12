@@ -1,0 +1,5 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:vespera_nightwhisper_instance",
+    "definitionId": "fantasy:vespera_nightwhisper"
+}

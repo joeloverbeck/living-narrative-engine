@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-  "recipeId": "anatomy:vespera_nightwhisper",
+  "recipeId": "fantasy:vespera_nightwhisper_recipe",
   "blueprintId": "anatomy:cat_girl",
   "bodyDescriptors": {
     "height": "average",
