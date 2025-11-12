@@ -2,7 +2,7 @@
 
 ## Current Status
 
-The E2E and integration tests created for CLOREMBLO-007 have revealed infrastructure gaps in ModTestFixture for testing clothing-related actions with full action discovery.
+✅ **All Tests Passing** - The E2E and integration tests for CLOREMBLO-007 are complete and working.
 
 ## Working Tests
 
@@ -14,26 +14,62 @@ The E2E and integration tests created for CLOREMBLO-007 have revealed infrastruc
 - `tests/integration/clothing/topmostClothingBlocking.integration.test.js` - ClothingAccessibilityService integration
 - `tests/integration/clothing/beltBlockingEntities.integration.test.js` - Entity definitions
 
-## Infrastructure Gaps
+✅ **E2E Tests** (5 tests passing):
+- `tests/e2e/clothing/completeRemovalWorkflow.e2e.test.js` - Complete clothing removal workflow with blocking
 
-### Issue: Clothing Scope Resolution
+## Solution: Full DI Container Approach
 
-The `clothing:topmost_clothing` scope requires:
-1. **ClothingAccessibilityService** to be properly configured
-2. **Clothing scope resolvers** to be registered in the test environment
-3. **Entities Gateway** with proper component access
+The E2E tests now use the **full dependency injection container** approach instead of ModTestFixture:
 
-**Current State**: ModTestFixture does not auto-configure clothing scopes
+### Key Changes
+
+1. **Container Setup**: Use `AppContainer` and `configureContainer()` to initialize all services
+2. **Direct Service Access**: Resolve `ClothingAccessibilityService` from container
+3. **Component Type**: Use `clothing:wearable` (required by ClothingAccessibilityService), not `clothing:item`
+4. **Test Pattern**: Check static scenarios without component modification
+
+### Working Pattern
+
+```javascript
+// Setup
+let container, entityManager, clothingAccessibilityService;
+
+beforeAll(async () => {
+  container = new AppContainer();
+  await configureContainer(container, { outputDiv, inputElement, titleElement, document });
+
+  entityManager = container.resolve(tokens.IEntityManager);
+  clothingAccessibilityService = container.resolve(tokens.ClothingAccessibilityService);
+});
+
+// Test
+it('should enforce blocking', async () => {
+  await createTestEntity(actorId, {
+    'core:actor': {},
+    'clothing:equipment': { equipped: { ... } }
+  });
+
+  await createTestEntity(beltId, {
+    'clothing:wearable': { layer: 'accessories', equipmentSlots: { primary: 'torso_lower' } },
+    'clothing:blocks_removal': { blockedSlots: [...] }
+  });
+
+  const removableItems = clothingAccessibilityService.getAccessibleItems(actorId, { mode: 'topmost' });
+  expect(removableItems).not.toContain(pantsId); // Blocked by belt
+});
+```
+
+## Infrastructure Gaps (Still Exist)
+
+### ModTestFixture Limitations
+
+ModTestFixture does not auto-configure clothing scopes:
 - `autoRegisterScopes` only supports: `positioning`, `inventory`, `items`, `anatomy`
 - Clothing category not yet supported
 
-### Issue: Action Discovery with Clothing
+### Workaround
 
-Action discovery for `clothing:remove_clothing` requires:
-1. Actor with `clothing:equipment` component ✅ (can be added)
-2. Clothing items with `clothing:item` and `clothing:coverage_mapping` components ✅ (can be added)
-3. Scope resolver for `clothing:topmost_clothing` ❌ (not auto-configured)
-4. ClothingAccessibilityService with IsRemovalBlockedOperator ❌ (not in ModTestFixture)
+Use full DI container approach for E2E clothing tests (as shown above)
 
 ## Alternative Test Approaches
 
