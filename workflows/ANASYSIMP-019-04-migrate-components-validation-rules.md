@@ -16,14 +16,14 @@ Migrate existing component schemas with enum properties to use the new `validati
 
 ### Current State
 - **128 total** component schemas in `data/mods/`
-- **46 components** with enum properties (migration candidates)
+- **48 components** with enum properties (migration candidates)
 - **1 component** already uses validationRules (`descriptors:texture-with-validation`)
-- **45 components** need migration
+- **47 components** need migration
 
 ### Why Not Build Migration Utilities?
 
 Migration utilities were considered but deemed **not cost-effective**:
-- **Scale:** Only 45 components (not 100+ as initially estimated)
+- **Scale:** Only 47 components (not 100+ as initially estimated)
 - **Simplicity:** Pattern is straightforward and repetitive
 - **One-time task:** Not a recurring migration pattern
 - **Time trade-off:** 1 day to build tools vs. 1.5 hours to migrate manually
@@ -33,7 +33,7 @@ Migration utilities were considered but deemed **not cost-effective**:
 
 ## Objectives
 
-1. Add `validationRules` to 45 component schemas with enum properties
+1. Add `validationRules` to 47 component schemas with enum properties
 2. Validate all migrated schemas pass validation
 3. Test that enhanced validation works at runtime
 4. Document the migration pattern for future reference
@@ -152,7 +152,7 @@ grep -L 'validationRules' $(cat migration-candidates.txt) > components-to-migrat
 cat components-to-migrate.txt
 ```
 
-**Expected:** ~45 component files
+**Expected:** ~47 component files
 
 **Step 1.2: Group by mod**
 Organize components by mod for batch processing:
@@ -183,11 +183,12 @@ Organize components by mod for batch processing:
    ```
 
 **Recommended order:**
-1. Descriptors mod (6 components) - simple, well-defined
-2. Anatomy mod (2-3 components) - reference body descriptor docs
-3. Clothing mod (7 components) - moderate complexity
-4. Core mod (5 components) - foundational
-5. Remaining mods (25 components) - by priority
+1. Descriptors mod (35 components) - simple, well-defined
+2. Anatomy mod (2 components) - reference body descriptor docs
+3. Clothing mod (4 components) - moderate complexity
+4. Core mod (4 components) - foundational
+5. Activity mod (1 component) - simple
+6. Music mod (1 component) - simple
 
 ### Phase 3: Testing & Validation (30 minutes)
 
@@ -333,7 +334,7 @@ Test cases:
 
 ## Acceptance Criteria
 
-- [ ] All 45 components with enum properties have `validationRules` sections
+- [ ] All 47 components with enum properties have `validationRules` sections
 - [ ] All migrated components pass schema validation (`npm run validate`)
 - [ ] Integration test demonstrates enhanced validation works
 - [ ] Error messages use appropriate property names (not generic)
@@ -369,7 +370,7 @@ Test cases:
 
 ## Success Metrics
 
-- ✅ 45 components migrated in ~1.5 hours (not 1 day)
+- ✅ 47 components migrated in ~1.5 hours (not 1 day)
 - ✅ Zero schema validation errors after migration
 - ✅ Enhanced error messages visible in integration tests
 - ✅ Similarity suggestions working for typos
@@ -424,7 +425,7 @@ Use this checklist to track progress by mod (based on actual findings from ANASY
 - [ ] description_metadata (activity mod)
 - [ ] performance_mood (music mod)
 
-### Priority 4: Descriptors Mod (33 components to migrate)
+### Priority 4: Descriptors Mod (35 components to migrate)
 
 #### Already Migrated (1 component)
 - [x] texture-with-validation ✓
@@ -436,7 +437,7 @@ Use this checklist to track progress by mod (based on actual findings from ANASY
 - [ ] body_hair
 - [ ] texture
 
-#### Part-level descriptors (28 components)
+#### Part-level descriptors (29 components)
 - [ ] acoustic_property
 - [ ] animation
 - [ ] color_basic
@@ -455,6 +456,7 @@ Use this checklist to track progress by mod (based on actual findings from ANASY
 - [ ] luminosity
 - [ ] pattern
 - [ ] projection
+- [ ] pupil_shape
 - [ ] secretion
 - [ ] sensory_capability
 - [ ] shape_eye
@@ -466,7 +468,7 @@ Use this checklist to track progress by mod (based on actual findings from ANASY
 - [ ] vocal_capability
 - [ ] weight_feel
 
-**Total: 45 components to migrate (46 total - 1 already migrated)**
+**Total: 47 components to migrate (48 total - 1 already migrated)**
 
 ## Related Tickets
 
