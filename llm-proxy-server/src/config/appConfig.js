@@ -84,7 +84,7 @@ class AppConfigService {
   /** @type {number} @private */
   _httpAgentMaxFreeSockets = 10;
   /** @type {number} @private */
-  _httpAgentTimeout = 60000;
+  _httpAgentTimeout = 120000;
   /** @type {number} @private */
   _httpAgentFreeSocketTimeout = 4000;
   /** @type {number} @private */
