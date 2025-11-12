@@ -24,6 +24,8 @@ Integrate the complete GOAP Tier 1 system with the existing turn system by updat
 
 **File:** `src/turns/providers/goapDecisionProvider.js`
 
+**Note:** Goals are already being loaded via `src/loaders/goalLoader.js` through the ContentPhase in modsLoader, so no changes to modsLoader are needed.
+
 Replace placeholder implementation with complete GOAP logic:
 
 ```javascript
@@ -32,24 +34,27 @@ Replace placeholder implementation with complete GOAP logic:
  * Uses goal-oriented action planning for creature AI
  */
 
-import DelegatingDecisionProvider from './delegatingDecisionProvider.js';
+import { DelegatingDecisionProvider } from './delegatingDecisionProvider.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * Decision provider using GOAP (Goal-Oriented Action Planning)
+ *
+ * @augments DelegatingDecisionProvider
  */
-class GoapDecisionProvider extends DelegatingDecisionProvider {
+export class GoapDecisionProvider extends DelegatingDecisionProvider {
   #goalManager;
   #simplePlanner;
   #planCache;
+  #entityManager;
   #logger;
-  #safeEventDispatcher;
 
   /**
    * @param {Object} params - Dependencies
-   * @param {Object} params.goalManager - Goal manager service
-   * @param {Object} params.simplePlanner - Simple planner service
-   * @param {Object} params.planCache - Plan cache service
+   * @param {Object} params.goalManager - Goal manager service (IGoalManager from goapTokens)
+   * @param {Object} params.simplePlanner - Simple planner service (ISimplePlanner from goapTokens)
+   * @param {Object} params.planCache - Plan cache service (IPlanCache from goapTokens)
+   * @param {Object} params.entityManager - Entity manager (IEntityManager from coreTokens)
    * @param {Object} params.logger - Logger instance
    * @param {Object} params.safeEventDispatcher - Safe event dispatcher
    */
@@ -57,12 +62,13 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
     goalManager,
     simplePlanner,
     planCache,
+    entityManager,
     logger,
     safeEventDispatcher
   }) {
     // Create delegate function for GOAP decision logic
-    const delegate = async (actor, context, actions) => {
-      return this.#decideActionInternal(actor, context, actions);
+    const delegate = async (actor, turnContext, actions) => {
+      return this.#decideActionInternal(actor, turnContext, actions);
     };
 
     super({ delegate, logger, safeEventDispatcher });
@@ -76,23 +82,26 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
     validateDependency(planCache, 'IPlanCache', logger, {
       requiredMethods: ['get', 'set', 'invalidate']
     });
+    validateDependency(entityManager, 'IEntityManager', logger, {
+      requiredMethods: ['getEntityInstance', 'hasComponent', 'getComponentData']
+    });
 
     this.#goalManager = goalManager;
     this.#simplePlanner = simplePlanner;
     this.#planCache = planCache;
+    this.#entityManager = entityManager;
     this.#logger = logger;
-    this.#safeEventDispatcher = safeEventDispatcher;
   }
 
   /**
    * Internal decision logic for GOAP agent
    * @param {Object} actor - Actor entity object
-   * @param {Object} context - Decision context
-   * @param {Array<Object>} actions - Available indexed actions
-   * @returns {Promise<Object>} Decision result with { index: number|null }
+   * @param {Object} turnContext - Turn context from turn system
+   * @param {Array<ActionComposite>} actions - Available actions (ActionComposite array with index, actionId, params, etc.)
+   * @returns {Promise<Object>} Decision result { index: number|null, speech?: string, thoughts?: string, notes?: Array }
    * @private
    */
-  async #decideActionInternal(actor, context, actions) {
+  async #decideActionInternal(actor, turnContext, actions) {
     const actorId = actor.id;
 
     this.#logger.debug(`GOAP decision for ${actorId} with ${actions.length} actions`);
@@ -103,20 +112,24 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
       return { index: null };
     }
 
-    // Step 2: Check cached plan
+    // Step 2: Build planning context from turn context
+    // SimplePlanner expects: { entities: { [id]: { components: {...} } } }
+    const planningContext = this.#buildPlanningContext(actor, actions, turnContext);
+
+    // Step 3: Check cached plan
     let plan = this.#planCache.get(actorId);
 
-    // Step 3: Validate cached plan
-    if (plan && !this.#simplePlanner.validatePlan(plan, context)) {
+    // Step 4: Validate cached plan
+    if (plan && !this.#simplePlanner.validatePlan(plan, planningContext)) {
       this.#logger.debug(`Cached plan for ${actorId} invalid, replanning`);
       this.#planCache.invalidate(actorId);
       plan = null;
     }
 
-    // Step 4: If no valid plan, create new one
+    // Step 5: If no valid plan, create new one
     if (!plan) {
       // Select goal
-      const goal = this.#goalManager.selectGoal(actorId, context);
+      const goal = this.#goalManager.selectGoal(actorId, planningContext);
 
       if (!goal) {
         this.#logger.debug(`No relevant goal for ${actorId}, no action`);
@@ -124,37 +137,39 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
       }
 
       // Check if goal already satisfied
-      if (this.#goalManager.isGoalSatisfied(goal, actorId, context)) {
+      if (this.#goalManager.isGoalSatisfied(goal, actorId, planningContext)) {
         this.#logger.debug(`Goal ${goal.id} already satisfied for ${actorId}`);
         return { index: null };
       }
 
-      // Plan action - extract action data from indexed actions
-      const actionData = actions.map(a => ({
-        id: a.id,
-        targetId: a.targetId,
-        tertiaryTargetId: a.tertiaryTargetId,
-        planningEffects: a.planningEffects,
-        index: a.index
-      }));
+      // Plan action - SimplePlanner.plan() takes ActionComposite array directly
+      // ActionSelector will filter for actions with planningEffects internally
+      const selectedAction = this.#simplePlanner.plan(
+        goal,
+        actions,  // Pass ActionComposite array directly
+        actorId,
+        planningContext
+      );
 
-      const plannedAction = this.#simplePlanner.plan(goal, actionData, actorId, context);
-
-      if (!plannedAction) {
+      if (!selectedAction) {
         this.#logger.debug(`No action found for goal ${goal.id}`);
         return { index: null };
       }
 
-      // Create and cache plan
-      plan = this.#simplePlanner.createPlan(plannedAction, goal);
+      // Create and cache plan (two-step process)
+      plan = this.#simplePlanner.createPlan(selectedAction, goal);
       this.#planCache.set(actorId, plan);
     }
 
-    // Step 5: Execute first step of plan
+    // Step 6: Execute first step of plan
     const step = plan.steps[0];
 
-    // Find action in indexed actions array
-    const actionMatch = actions.find(a => a.id === step.actionId);
+    // Find action in ActionComposite array by actionId and targetId
+    // ActionComposite structure: { index, actionId, params: { targetId, ... }, ... }
+    const actionMatch = actions.find(a =>
+      a.actionId === step.actionId &&
+      a.params.targetId === step.targetId
+    );
 
     if (!actionMatch) {
       this.#logger.warn(`Planned action ${step.actionId} not in available actions`);
@@ -166,59 +181,103 @@ class GoapDecisionProvider extends DelegatingDecisionProvider {
       `Actor ${actorId} executing ${step.actionId} for goal ${plan.goalId}`
     );
 
-    return { index: actionMatch.index };
+    // Return full decision structure expected by DelegatingDecisionProvider
+    return {
+      index: actionMatch.index,
+      speech: null,
+      thoughts: null,
+      notes: null
+    };
+  }
+
+  /**
+   * Builds planning context structure from turn context and entity manager
+   * SimplePlanner/ActionSelector expect: { entities: { [id]: { components: {...} } } }
+   * @param {Object} actor - Actor entity
+   * @param {Array<ActionComposite>} actions - Available actions
+   * @param {Object} turnContext - Turn context
+   * @returns {Object} Planning context for SimplePlanner/ActionSelector
+   * @private
+   */
+  #buildPlanningContext(actor, actions, turnContext) {
+    const context = {
+      entities: {},
+      // Include turn context data for goal evaluation
+      game: turnContext?.game || {}
+    };
+
+    // Add actor to context
+    const actorEntity = this.#entityManager.getEntityInstance(actor.id);
+    if (actorEntity) {
+      context.entities[actor.id] = {
+        components: actorEntity.getAllComponents()
+      };
+    }
+
+    // Add all entities referenced in actions (targets, tertiary targets)
+    const entityIds = new Set();
+    for (const action of actions) {
+      if (action.params.targetId) {
+        entityIds.add(action.params.targetId);
+      }
+      if (action.params.tertiaryTargetId) {
+        entityIds.add(action.params.tertiaryTargetId);
+      }
+    }
+
+    // Populate entities in context
+    for (const entityId of entityIds) {
+      const entity = this.#entityManager.getEntityInstance(entityId);
+      if (entity) {
+        context.entities[entityId] = {
+          components: entity.getAllComponents()
+        };
+      }
+    }
+
+    return context;
   }
 }
 
 export default GoapDecisionProvider;
 ```
 
-### 2. Update Available Actions Provider
+### 2. Update DI Registrations
 
-**File:** `src/data/providers/availableActionsProvider.js`
+**File:** `src/dependencyInjection/registrations/aiRegistrations.js`
 
-Filter actions for GOAP actors:
-
-```javascript
-async function getAvailableActions(actor) {
-  const validActions = await this.#actionDiscovery.discover(actor);
-
-  const playerType = determineSpecificPlayerType(actor);
-
-  if (playerType === 'goap') {
-    // Filter to actions with planning effects only
-    const plannableActions = validActions.filter(action => action.planningEffects);
-
-    this.#logger.debug(
-      `Filtered ${validActions.length} actions to ${plannableActions.length} plannable actions for GOAP actor`
-    );
-
-    return plannableActions;
-  }
-
-  return validActions;
-}
-```
-
-### 3. Update Mods Loader
-
-**File:** `src/loaders/modsLoader.js`
-
-Ensure goal loading:
+Update GoapDecisionProvider registration to include GOAP dependencies:
 
 ```javascript
-async function loadMods(modList) {
-  // ... existing loaders ...
+import { goapTokens } from '../tokens/tokens-goap.js';
 
-  // Load goals
-  this.#logger.info('Loading goals...');
-  await this.#goalLoader.load(modList);
-
-  // ... continue ...
-}
+// In registerDecisionProviders function, update GoapDecisionProvider registration:
+registrar.singletonFactory(
+  tokens.IGoapDecisionProvider,
+  (c) =>
+    new GoapDecisionProvider({
+      goalManager: c.resolve(goapTokens.IGoalManager),
+      simplePlanner: c.resolve(goapTokens.ISimplePlanner),
+      planCache: c.resolve(goapTokens.IPlanCache),
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    })
+);
 ```
+
+**Note:** No changes needed to AvailableActionsProvider. ActionSelector already filters for actions with planningEffects internally (line 74 in `src/goap/selection/actionSelector.js`).
 
 ## End-to-End Test Scenarios
+
+**Important Test Infrastructure Notes:**
+
+The test scenarios below use a simplified test bed API for clarity. The actual implementation will need to:
+1. Use existing test bed classes from `tests/common/` (e.g., `EntityManagerTestBed`, `ContainerTestBed`)
+2. Set up the full DI container with GOAP services registered
+3. Use actual entity creation methods and turn system integration
+4. The methods shown (`createTestBed()`, `testBed.loadMods()`, `testBed.createActor()`, etc.) are illustrative and will need to be implemented or mapped to existing test infrastructure
+5. Reference existing E2E patterns in `tests/e2e/` for proper setup
 
 ### Scenario 1: Cat Finding Food
 
@@ -226,13 +285,15 @@ async function loadMods(modList) {
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createTestBed } from '../../common/testBed.js';
+// Note: Actual test bed import will depend on what exists in tests/common/
+// This is a placeholder showing the intended API
+import { createGoapTestBed } from '../../common/goap/goapTestHelpers.js';
 
 describe('GOAP E2E: Cat Finding Food', () => {
   let testBed;
 
   beforeEach(async () => {
-    testBed = createTestBed();
+    testBed = await createGoapTestBed();
     await testBed.loadMods(['core', 'positioning', 'items']);
   });
 
@@ -267,9 +328,10 @@ describe('GOAP E2E: Cat Finding Food', () => {
     // Assert: Cat should pick up food
     expect(decision.index).not.toBeNull();
 
-    const selectedAction = actions[decision.index];
-    expect(selectedAction.id).toBe('items:pick_up_item');
-    expect(selectedAction.targetId).toBe(food.id);
+    // ActionComposite uses 1-based indexing, and has actionId not id
+    const selectedAction = actions[decision.index - 1]; // Convert to 0-based for array access
+    expect(selectedAction.actionId).toBe('items:pick_up_item');
+    expect(selectedAction.params.targetId).toBe(food.id);
 
     // Execute action
     await testBed.executeAction(cat.id, selectedAction);
@@ -307,13 +369,13 @@ describe('GOAP E2E: Cat Finding Food', () => {
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { createTestBed } from '../../common/testBed.js';
+import { createGoapTestBed } from '../../common/goap/goapTestHelpers.js';
 
 describe('GOAP E2E: Goblin Combat', () => {
   let testBed;
 
   beforeEach(async () => {
-    testBed = createTestBed();
+    testBed = await createGoapTestBed();
     await testBed.loadMods(['core', 'positioning', 'combat', 'items']);
   });
 
@@ -354,9 +416,9 @@ describe('GOAP E2E: Goblin Combat', () => {
 
     expect(decision1.index).not.toBeNull();
 
-    const action1 = actions1[decision1.index];
-    expect(action1.id).toBe('items:pick_up_item');
-    expect(action1.targetId).toBe(weapon.id);
+    const action1 = actions1[decision1.index - 1]; // Convert to 0-based
+    expect(action1.actionId).toBe('items:pick_up_item');
+    expect(action1.params.targetId).toBe(weapon.id);
 
     await testBed.executeAction(goblin.id, action1);
 
@@ -367,9 +429,9 @@ describe('GOAP E2E: Goblin Combat', () => {
 
     expect(decision2.index).not.toBeNull();
 
-    const action2 = actions2[decision2.index];
-    expect(action2.id).toBe('combat:attack');
-    expect(action2.targetId).toBe(enemy.id);
+    const action2 = actions2[decision2.index - 1]; // Convert to 0-based
+    expect(action2.actionId).toBe('combat:attack');
+    expect(action2.params.targetId).toBe(enemy.id);
   });
 });
 ```
@@ -379,9 +441,11 @@ describe('GOAP E2E: Goblin Combat', () => {
 **File:** `tests/e2e/goap/multipleActors.e2e.test.js`
 
 ```javascript
+import { createGoapTestBed } from '../../common/goap/goapTestHelpers.js';
+
 describe('GOAP E2E: Multiple Actors', () => {
   it('should handle 5 GOAP actors with different goals', async () => {
-    const testBed = createTestBed();
+    const testBed = await createGoapTestBed();
     await testBed.loadMods(['core', 'positioning', 'items']);
 
     // Create 5 actors with different needs
@@ -416,9 +480,7 @@ describe('GOAP E2E: Multiple Actors', () => {
 ## Files to Update
 
 - [ ] `src/turns/providers/goapDecisionProvider.js` - Complete implementation
-- [ ] `src/data/providers/availableActionsProvider.js` - Filter for GOAP
-- [ ] `src/loaders/modsLoader.js` - Ensure goal loading
-- [ ] `src/dependencyInjection/registrations/turnsRegistrations.js` - Update GoapDecisionProvider registration
+- [ ] `src/dependencyInjection/registrations/aiRegistrations.js` - Update GoapDecisionProvider registration with GOAP dependencies
 
 ## Files to Create
 
@@ -434,7 +496,11 @@ describe('GOAP E2E: Multiple Actors', () => {
 - [ ] `tests/integration/goap/actionDiscoveryIntegration.test.js`
 
 ### Test Helpers
-- [ ] `tests/common/goap/goapTestHelpers.js`
+- [ ] `tests/common/goap/goapTestHelpers.js` - Create test bed factory that sets up GOAP services
+  - Factory function `createGoapTestBed()` that extends existing test bed infrastructure
+  - Helpers for creating GOAP actors with player_type component
+  - Context builders for planning operations
+  - Utilities for verifying goal selection and plan execution
 
 ## Testing Requirements
 
@@ -471,9 +537,11 @@ describe('GOAP E2E: Multiple Actors', () => {
 **File:** `tests/performance/goap/goapWorkflow.performance.test.js`
 
 ```javascript
+import { createGoapTestBed } from '../../common/goap/goapTestHelpers.js';
+
 describe('GOAP Workflow Performance', () => {
   it('should complete decision in < 100ms per actor', async () => {
-    const testBed = createTestBed();
+    const testBed = await createGoapTestBed();
     const actor = testBed.createActor({ type: 'goap' });
 
     const iterations = 100;
