@@ -60,15 +60,12 @@ Add a method to clear transient state without destroying the container:
  * @returns {void}
  */
 clearTransientState() {
-  // Clear event tracking
+  // Clear event tracking (events, entityEvents, componentEvents, performanceMetrics)
   this.clearRecordedData();
 
   // Clear entity tracking
   this.createdEntities.clear();
   this.removedEntities.clear();
-
-  // Clear performance metrics
-  this.performanceMetrics.clear();
 
   // DO NOT clear:
   // - this.container (expensive to rebuild)
@@ -77,7 +74,7 @@ clearTransientState() {
   // - this.registry (expensive to rebuild)
   // - this.logger (expensive to rebuild)
   // - this.validator (expensive to rebuild)
-  // - Event subscriptions (keep these active)
+  // - this.eventSubscriptions (keep these active)
 
   this.logger?.debug('EntityWorkflowTestBed transient state cleared');
 }
@@ -189,6 +186,10 @@ verifyCleanState() {
 
   if (this.entityEvents.length > 0) {
     issues.push(`${this.entityEvents.length} entity events still tracked`);
+  }
+
+  if (this.componentEvents.length > 0) {
+    issues.push(`${this.componentEvents.length} component events still tracked`);
   }
 
   // Check for leftover entity tracking
