@@ -2,16 +2,18 @@
 
 ## Overview
 
-This document defines the mapping between rule operations and planning effects for the GOAP system. The Effects Analyzer uses these mappings to automatically generate planning metadata from action rules.
+This document defines how rule operations map to planning effects in the GOAP system. The `EffectsAnalyzer` (`src/goap/analysis/effectsAnalyzer.js`) automatically generates planning metadata by analyzing rule operations.
+
+**Important**: Planning effects are generated at runtime from rules, not stored in action files. The analyzer examines rule operations and produces effects conforming to `data/schemas/planning-effects.schema.json`.
 
 ## Operation Categories
 
 Operations are categorized by their impact on planning:
 
-1. **State-Changing Operations**: Generate planning effects
-2. **Context Operations**: Produce data used by other operations (no direct effects)
-3. **Control Flow Operations**: Structure operation execution (analyzed for contained operations)
-4. **Excluded Operations**: No planning impact (events, logging, etc.)
+1. **State-Changing Operations** (51 operations): Modify world state and generate planning effects
+2. **Context Operations** (13 operations): Produce data for other operations but don't change state
+3. **Control Flow Operations** (3 operations): Structure execution (IF, IF_CO_LOCATED, SEQUENCE)
+4. **Excluded Operations** (24 operations): No planning impact (events, logging, turn control)
 
 ## State-Changing Operations
 
@@ -19,971 +21,422 @@ These operations modify world state and generate planning effects.
 
 ### Core Component Operations
 
+These operations directly manipulate ECS components and map 1:1 to planning effects.
+
 #### ADD_COMPONENT
 
-**Purpose**: Adds a component to an entity
+Adds a component to an entity. Maps directly to ADD_COMPONENT effect.
 
-**Rule Operation:**
-```json
-{
-  "type": "ADD_COMPONENT",
-  "entity": "actor",
-  "component": "positioning:sitting",
-  "data": {}
-}
+```javascript
+// Rule operation
+{ type: "ADD_COMPONENT", parameters: { entity: "actor", component: "positioning:sitting", data: {} } }
+
+// Planning effect
+{ operation: "ADD_COMPONENT", entity: "actor", component: "positioning:sitting", data: {} }
 ```
-
-**Planning Effect:**
-```json
-{
-  "operation": "ADD_COMPONENT",
-  "entity": "actor",
-  "component": "positioning:sitting",
-  "data": {}
-}
-```
-
-**Mapping**: Direct 1:1 mapping
-
----
 
 #### REMOVE_COMPONENT
 
-**Purpose**: Removes a component from an entity
+Removes a component from an entity. Maps directly to REMOVE_COMPONENT effect.
 
-**Rule Operation:**
-```json
-{
-  "type": "REMOVE_COMPONENT",
-  "entity": "target",
-  "component": "positioning:standing"
-}
+```javascript
+// Rule operation
+{ type: "REMOVE_COMPONENT", parameters: { entity: "target", component: "positioning:standing" } }
+
+// Planning effect
+{ operation: "REMOVE_COMPONENT", entity: "target", component: "positioning:standing" }
 ```
 
-**Planning Effect:**
-```json
-{
-  "operation": "REMOVE_COMPONENT",
-  "entity": "target",
-  "component": "positioning:standing"
-}
+#### MODIFY_COMPONENT / ATOMIC_MODIFY_COMPONENT
+
+Modifies component data. Both map to MODIFY_COMPONENT effect (atomicity is an execution detail, not a planning concern).
+
+```javascript
+// Rule operation
+{ type: "MODIFY_COMPONENT", parameters: { entity: "actor", component: "core:position", updates: { location: "bedroom" } } }
+
+// Planning effect
+{ operation: "MODIFY_COMPONENT", entity: "actor", component: "core:position", updates: { location: "bedroom" } }
 ```
 
-**Mapping**: Direct 1:1 mapping
+**Note**: Runtime placeholders like `{var: "location"}` are preserved in effects as parameterized values
 
 ---
 
-#### MODIFY_COMPONENT
+### High-Level Operations
 
-**Purpose**: Modifies component data
+These operations map to component operations internally.
 
-**Rule Operation:**
-```json
-{
-  "type": "MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:position",
-  "updates": {
-    "location": "bedroom"
-  }
-}
+#### Movement Locking
+
+```javascript
+// LOCK_MOVEMENT → ADD positioning:movement_locked
+{ operation: "ADD_COMPONENT", entity: "actor", component: "positioning:movement_locked" }
+
+// UNLOCK_MOVEMENT → REMOVE positioning:movement_locked
+{ operation: "REMOVE_COMPONENT", entity: "actor", component: "positioning:movement_locked" }
 ```
 
-**Planning Effect:**
-```json
-{
-  "operation": "MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:position",
-  "updates": {
-    "location": "bedroom"
-  }
-}
+#### Mouth Engagement Locking
+
+```javascript
+// LOCK_MOUTH_ENGAGEMENT → ADD positioning:mouth_engagement_locked
+{ operation: "ADD_COMPONENT", entity: "actor", component: "positioning:mouth_engagement_locked" }
+
+// UNLOCK_MOUTH_ENGAGEMENT → REMOVE positioning:mouth_engagement_locked
+{ operation: "REMOVE_COMPONENT", entity: "actor", component: "positioning:mouth_engagement_locked" }
 ```
 
-**Mapping**: Direct 1:1 mapping
+#### Closeness Operations
 
-**Note**: If `updates` contains macros (e.g., `{var: "newLocation"}`), these are resolved during analysis.
+Bidirectional relationships that create components on both entities.
 
----
-
-#### ATOMIC_MODIFY_COMPONENT
-
-**Purpose**: Atomically modifies component data (thread-safe)
-
-**Rule Operation:**
-```json
-{
-  "type": "ATOMIC_MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:inventory",
-  "updates": {
-    "itemCount": 5
-  }
-}
-```
-
-**Planning Effect:**
-```json
-{
-  "operation": "MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:inventory",
-  "updates": {
-    "itemCount": 5
-  }
-}
-```
-
-**Mapping**: Maps to `MODIFY_COMPONENT` effect (atomic behavior is execution detail)
-
----
-
-### Component-Based Operations
-
-These operations are implemented via component changes and map to multiple effects.
-
-#### LOCK_MOVEMENT
-
-**Purpose**: Prevents entity movement
-
-**Rule Operation:**
-```json
-{
-  "type": "LOCK_MOVEMENT",
-  "entity": "actor"
-}
-```
-
-**Planning Effect:**
-```json
-{
-  "operation": "ADD_COMPONENT",
-  "entity": "actor",
-  "component": "positioning:movement_locked"
-}
-```
-
----
-
-#### UNLOCK_MOVEMENT
-
-**Purpose**: Allows entity movement
-
-**Rule Operation:**
-```json
-{
-  "type": "UNLOCK_MOVEMENT",
-  "entity": "actor"
-}
-```
-
-**Planning Effect:**
-```json
-{
-  "operation": "REMOVE_COMPONENT",
-  "entity": "actor",
-  "component": "positioning:movement_locked"
-}
-```
-
----
-
-#### ESTABLISH_SITTING_CLOSENESS
-
-**Purpose**: Establishes sitting proximity relationship
-
-**Rule Operation:**
-```json
-{
-  "type": "ESTABLISH_SITTING_CLOSENESS",
-  "entity": "actor",
-  "target": "target"
-}
-```
-
-**Planning Effects:**
-```json
+```javascript
+// ESTABLISH_SITTING_CLOSENESS
 [
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "actor",
-    "component": "positioning:sitting_close_to",
-    "data": {
-      "targetId": "{targetId}"
-    }
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "target",
-    "component": "positioning:sitting_close_to",
-    "data": {
-      "targetId": "{actorId}"
-    }
-  }
+  { operation: "ADD_COMPONENT", entity: "actor", component: "positioning:sitting_close_to", data: { targetId: "{target.id}" } },
+  { operation: "ADD_COMPONENT", entity: "target", component: "positioning:sitting_close_to", data: { targetId: "{actor.id}" } }
+]
+
+// ESTABLISH_LYING_CLOSENESS
+[
+  { operation: "ADD_COMPONENT", entity: "actor", component: "positioning:lying_close_to", data: { targetId: "{target.id}" } },
+  { operation: "ADD_COMPONENT", entity: "target", component: "positioning:lying_close_to", data: { targetId: "{actor.id}" } }
+]
+
+// REMOVE_SITTING_CLOSENESS
+{ operation: "REMOVE_COMPONENT", entity: "actor", component: "positioning:sitting_close_to" }
+
+// REMOVE_LYING_CLOSENESS
+{ operation: "REMOVE_COMPONENT", entity: "actor", component: "positioning:lying_close_to" }
+
+// BREAK_CLOSENESS_WITH_TARGET (removes both)
+[
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "positioning:sitting_close_to" },
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "positioning:lying_close_to" }
 ]
 ```
 
-**Note**: Generates symmetric relationship effects
+**Schema Constraint**: Entity references are limited to "actor", "target", or "tertiary_target" as defined in `planning-effects.schema.json`
 
 ---
 
 ### Inventory & Item Operations
 
-#### TRANSFER_ITEM
+**Important**: Items use `items:inventory_item` component (with `itemId` in data), not `items:in_inventory`.
 
-**Purpose**: Transfers item from one entity to another
-
-**Rule Operation:**
-```json
-{
-  "type": "TRANSFER_ITEM",
-  "itemId": "{itemId}",
-  "fromEntity": "actor",
-  "toEntity": "target"
-}
-```
-
-**Planning Effects:**
-```json
+```javascript
+// TRANSFER_ITEM
 [
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "{itemId}"
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "target",
-    "component": "items:in_inventory",
-    "componentId": "{itemId}"
-  }
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "items:inventory_item", data: { itemId: "{itemId}" } },
+  { operation: "ADD_COMPONENT", entity: "target", component: "items:inventory_item", data: { itemId: "{itemId}" } }
+]
+
+// DROP_ITEM_AT_LOCATION
+[
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "items:inventory_item", data: { itemId: "{itemId}" } },
+  { operation: "ADD_COMPONENT", entity: "actor", component: "items:at_location", data: { location: "{actor.location}" } }
+]
+
+// PICK_UP_ITEM_FROM_LOCATION
+[
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "items:at_location" },
+  { operation: "ADD_COMPONENT", entity: "actor", component: "items:inventory_item", data: { itemId: "{itemId}" } }
 ]
 ```
 
-**Note**: Requires tracking which specific component instance is affected (componentId)
+**Schema Limitation**: The schema restricts entity to "actor"/"target"/"tertiary_target". The EffectsAnalyzer generates effects with item IDs like `entity: "{itemId}"`, but these may not validate against the current schema
 
 ---
 
-#### DROP_ITEM_AT_LOCATION
+### Container Operations
 
-**Purpose**: Drops item from inventory to location
+```javascript
+// OPEN_CONTAINER
+{ operation: "MODIFY_COMPONENT", entity: "target", component: "items:container", updates: { isOpen: true } }
 
-**Rule Operation:**
-```json
-{
-  "type": "DROP_ITEM_AT_LOCATION",
-  "entity": "actor",
-  "itemId": "{itemId}",
-  "location": "{currentLocation}"
-}
-```
-
-**Planning Effects:**
-```json
+// TAKE_FROM_CONTAINER
 [
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "{itemId}"
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "{itemId}",
-    "component": "items:at_location",
-    "data": {
-      "location": "{currentLocation}"
-    }
-  }
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "items:contained_in" },
+  { operation: "ADD_COMPONENT", entity: "actor", component: "items:inventory_item", data: { itemId: "{itemId}" } }
+]
+
+// PUT_IN_CONTAINER
+[
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "items:inventory_item", data: { itemId: "{itemId}" } },
+  { operation: "ADD_COMPONENT", entity: "actor", component: "items:contained_in", data: { containerId: "target" } }
 ]
 ```
 
----
-
-#### PICK_UP_ITEM_FROM_LOCATION
-
-**Purpose**: Picks up item from location into inventory
-
-**Rule Operation:**
-```json
-{
-  "type": "PICK_UP_ITEM_FROM_LOCATION",
-  "entity": "actor",
-  "itemId": "{itemId}"
-}
-```
-
-**Planning Effects:**
-```json
-[
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "{itemId}",
-    "component": "items:at_location"
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "{itemId}"
-  }
-]
-```
-
----
-
-#### OPEN_CONTAINER
-
-**Purpose**: Opens a container
-
-**Rule Operation:**
-```json
-{
-  "type": "OPEN_CONTAINER",
-  "entity": "target"
-}
-```
-
-**Planning Effect:**
-```json
-{
-  "operation": "MODIFY_COMPONENT",
-  "entity": "target",
-  "component": "items:container",
-  "updates": {
-    "isOpen": true
-  }
-}
-```
-
----
-
-#### TAKE_FROM_CONTAINER
-
-**Purpose**: Takes item from container to inventory
-
-**Rule Operation:**
-```json
-{
-  "type": "TAKE_FROM_CONTAINER",
-  "entity": "actor",
-  "containerId": "{containerId}",
-  "itemId": "{itemId}"
-}
-```
-
-**Planning Effects:**
-```json
-[
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "{containerId}",
-    "component": "items:contains",
-    "componentId": "{itemId}"
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "{itemId}"
-  }
-]
-```
-
----
-
-#### PUT_IN_CONTAINER
-
-**Purpose**: Puts item from inventory into container
-
-**Rule Operation:**
-```json
-{
-  "type": "PUT_IN_CONTAINER",
-  "entity": "actor",
-  "containerId": "{containerId}",
-  "itemId": "{itemId}"
-}
-```
-
-**Planning Effects:**
-```json
-[
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "{itemId}"
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "{containerId}",
-    "component": "items:contains",
-    "componentId": "{itemId}"
-  }
-]
-```
+**Note**: Container operations use `items:contained_in` to track which container holds an item.
 
 ---
 
 ### Clothing Operations
 
-#### UNEQUIP_CLOTHING
-
-**Purpose**: Removes equipped clothing
-
-**Rule Operation:**
-```json
-{
-  "type": "UNEQUIP_CLOTHING",
-  "entity": "actor",
-  "clothingId": "{clothingId}"
-}
-```
-
-**Planning Effects:**
-```json
+```javascript
+// UNEQUIP_CLOTHING
 [
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "actor",
-    "component": "clothing:equipped",
-    "componentId": "{clothingId}"
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "{clothingId}"
-  }
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "clothing:equipped", data: { clothingId: "{clothingId}" } },
+  { operation: "ADD_COMPONENT", entity: "actor", component: "items:inventory_item", data: { itemId: "{clothingId}" } }
 ]
 ```
 
 ---
 
-### Consumption Operations
+### Other State-Changing Operations
 
-#### DRINK_FROM
+The following operations are recognized as state-changing but lack conversion methods in `EffectsAnalyzer`:
 
-**Purpose**: Drinks from a container (partial consumption)
+- `DRINK_FROM` - Partial consumption from container
+- `DRINK_ENTIRELY` - Full consumption from container
+- `SYSTEM_MOVE_ENTITY` - System-level entity movement
+- `MODIFY_ARRAY_FIELD` - Array field modifications
+- `REMOVE_FROM_CLOSENESS_CIRCLE` - Closeness circle management
+- `MERGE_CLOSENESS_CIRCLE` - Closeness circle merging
+- `ESTABLISH_FOLLOW_RELATION` - Following relationships
+- `BREAK_FOLLOW_RELATION` - Break following relationships
+- `REBUILD_LEADER_LIST_CACHE` - Cache maintenance
+- `AUTO_MOVE_CLOSENESS_PARTNERS` - Automatic positioning
+- `AUTO_MOVE_FOLLOWERS` - Automatic follower movement
+- `ADD_PERCEPTION_LOG_ENTRY` - Perception logging
 
-**Rule Operation:**
-```json
-{
-  "type": "DRINK_FROM",
-  "entity": "actor",
-  "containerId": "{containerId}",
-  "amount": 100
-}
-```
-
-**Planning Effect:**
-```json
-{
-  "operation": "MODIFY_COMPONENT",
-  "entity": "{containerId}",
-  "component": "items:liquid_container",
-  "updates": {
-    "currentVolume": "{currentVolume - amount}"
-  }
-}
-```
-
-**Note**: Requires macro resolution for volume calculation
-
----
-
-#### DRINK_ENTIRELY
-
-**Purpose**: Consumes all liquid from container
-
-**Rule Operation:**
-```json
-{
-  "type": "DRINK_ENTIRELY",
-  "entity": "actor",
-  "containerId": "{containerId}"
-}
-```
-
-**Planning Effect:**
-```json
-{
-  "operation": "MODIFY_COMPONENT",
-  "entity": "{containerId}",
-  "component": "items:liquid_container",
-  "updates": {
-    "currentVolume": 0,
-    "isEmpty": true
-  }
-}
-```
+**Implementation Status**: These operations are in `isWorldStateChanging()` but don't have `operationToEffect()` conversion methods yet
 
 ---
 
 ## Context Operations
 
-These operations produce data used by other operations but don't directly change world state.
+These operations produce data for other operations but don't change world state. They generate no planning effects.
 
-### Query Operations
+**Complete List** (from `EffectsAnalyzer.isContextProducing()`):
 
-| Operation | Purpose | Planning Impact |
-|-----------|---------|-----------------|
-| `QUERY_COMPONENT` | Retrieves component data | None (data operation) |
-| `QUERY_COMPONENTS` | Retrieves multiple components | None (data operation) |
-| `QUERY_ENTITIES` | Queries entities by criteria | None (data operation) |
-| `QUERY_LOOKUP` | Looks up entity by property | None (data operation) |
-
-**Note**: These operations provide context for state-changing operations but don't generate effects themselves.
-
-### Utility Operations
-
-| Operation | Purpose | Planning Impact |
-|-----------|---------|-----------------|
-| `GET_NAME` | Gets entity name | None (data operation) |
-| `GET_TIMESTAMP` | Gets current timestamp | None (data operation) |
-| `SET_VARIABLE` | Sets context variable | None (execution detail) |
-| `VALIDATE_INVENTORY_CAPACITY` | Checks inventory space | None (validation only) |
-| `VALIDATE_CONTAINER_CAPACITY` | Checks container space | None (validation only) |
-| `HAS_COMPONENT` | Checks component existence | None (query only) |
-| `HAS_BODY_PART_WITH_COMPONENT_VALUE` | Checks body part state | None (query only) |
-| `RESOLVE_DIRECTION` | Resolves facing direction | None (calculation only) |
-| `MATH` | Performs calculation | None (calculation only) |
+- `QUERY_COMPONENT` - Retrieves component data
+- `QUERY_COMPONENTS` - Retrieves multiple components
+- `QUERY_ENTITIES` - Queries entities by criteria
+- `QUERY_LOOKUP` - Looks up entity by property
+- `GET_NAME` - Gets entity name
+- `GET_TIMESTAMP` - Gets current timestamp
+- `SET_VARIABLE` - Sets context variable
+- `MODIFY_CONTEXT_ARRAY` - Modifies context arrays
+- `VALIDATE_INVENTORY_CAPACITY` - Checks inventory space (may generate abstract precondition)
+- `VALIDATE_CONTAINER_CAPACITY` - Checks container space (may generate abstract precondition)
+- `HAS_COMPONENT` - Checks component existence (may generate abstract precondition)
+- `HAS_BODY_PART_WITH_COMPONENT_VALUE` - Checks body part state
+- `RESOLVE_DIRECTION` - Resolves facing direction
+- `MATH` - Performs calculations
+- `CHECK_FOLLOW_CYCLE` - Checks for following cycles (may generate abstract precondition)
 
 ---
 
 ## Control Flow Operations
 
-These operations structure the execution of other operations.
+These operations structure execution and are analyzed recursively.
 
 ### IF
 
-**Purpose**: Conditional execution
+Conditional execution. Both `then` and `else` branches are analyzed. The analyzer creates CONDITIONAL effects containing the analyzed branches.
 
-**Rule Operation:**
-```json
+```javascript
+// Rule operation
 {
-  "type": "IF",
-  "condition": {"==": [{"var": "x"}, 5]},
-  "then": [
-    {"type": "ADD_COMPONENT", "entity": "actor", "component": "test:component"}
-  ],
-  "else": [
-    {"type": "REMOVE_COMPONENT", "entity": "actor", "component": "test:component"}
-  ]
+  type: "IF",
+  parameters: {
+    condition: { "==": [{"var": "x"}, 5] },
+    then_actions: [/* operations */],
+    else_actions: [/* operations */]
+  }
+}
+
+// Planning effect
+{
+  operation: "CONDITIONAL",
+  condition: { "==": [{"var": "x"}, 5] },
+  then: [/* analyzed effects from then_actions */]
+  // Note: else branch also analyzed and may be included
 }
 ```
 
-**Planning Effect:**
-```json
-{
-  "operation": "CONDITIONAL",
-  "condition": {"==": [{"var": "x"}, 5]},
-  "then": [
-    {
-      "operation": "ADD_COMPONENT",
-      "entity": "actor",
-      "component": "test:component"
-    }
-  ]
-}
-```
-
-**Analysis Approach:**
-- Analyze both branches
-- Create conditional effect with analyzed then/else branches
-- If condition references unknown variables, create abstract precondition
-- Note: Only `then` branch is included in effects (else branch represents no change from current state)
-
----
+**Important**: Contrary to common assumptions, the `EffectsAnalyzer` DOES analyze and include else branches (see `effectsAnalyzer.js:324-335`).
 
 ### IF_CO_LOCATED
 
-**Purpose**: Conditional based on entity location matching
+Specialized conditional for location checks. Converted to standard IF with location comparison.
 
-**Rule Operation:**
-```json
+```javascript
+// Converted condition
 {
-  "type": "IF_CO_LOCATED",
-  "entityA": "actor",
-  "entityB": "target",
-  "then": [...],
-  "else": [...]
-}
-```
-
-**Planning Effect:**
-```json
-{
-  "operation": "CONDITIONAL",
-  "condition": {"==": [
-    {"var": "actor.location"},
-    {"var": "target.location"}
-  ]},
-  "then": [...]
-}
-```
-
-**Note**: Maps to standard conditional with location comparison
-
----
-
-### FOR_EACH
-
-**Purpose**: Iterates over collection
-
-**Rule Operation:**
-```json
-{
-  "type": "FOR_EACH",
-  "collection": {"var": "items"},
-  "variable": "item",
-  "operations": [
-    {"type": "ADD_COMPONENT", "entity": {"var": "item"}, "component": "test:processed"}
+  "==": [
+    { var: "actor.location" },
+    { var: "target.location" }
   ]
 }
 ```
-
-**Planning Approach:**
-- **Conservative**: Assume 0-N iterations (no specific effects)
-- **Optimistic**: If collection is determinable, generate N effects
-- **Abstract**: Create abstract "for each processed" effect
-
-**Default**: Conservative approach (no effects unless collection is static)
-
----
 
 ### SEQUENCE
 
-**Purpose**: Executes operations in sequence
+Structural operation only. The analyzer processes SEQUENCE operations by flattening them - each operation inside is analyzed individually. SEQUENCE itself generates no effects.
 
-**Rule Operation:**
-```json
-{
-  "type": "SEQUENCE",
-  "operations": [
-    {"type": "ADD_COMPONENT", ...},
-    {"type": "MODIFY_COMPONENT", ...}
-  ]
-}
-```
+### FOR_EACH
 
-**Planning Effect:**
-```json
-[
-  {"operation": "ADD_COMPONENT", ...},
-  {"operation": "MODIFY_COMPONENT", ...}
-]
-```
-
-**Note**: Flattens to array of effects
+**Not Currently Implemented**: FOR_EACH is NOT handled by `EffectsAnalyzer`. It's in the whitelist but has no conversion logic. Collections are not analyzed for planning purposes.
 
 ---
 
 ## Excluded Operations
 
-These operations have no impact on planning and are excluded from analysis.
+These operations have no impact on planning. They don't change world state in ways relevant to GOAP.
 
-### Event Operations
+**Event Dispatching** (Side effects, no direct state changes):
+- `DISPATCH_EVENT`
+- `DISPATCH_PERCEPTIBLE_EVENT`
+- `DISPATCH_SPEECH`
+- `DISPATCH_THOUGHT`
 
-| Operation | Purpose | Exclusion Reason |
-|-----------|---------|------------------|
-| `DISPATCH_EVENT` | Dispatches event | Side effect, no state change |
-| `DISPATCH_PERCEPTIBLE_EVENT` | Dispatches perceptible event | Side effect, no state change |
-| `DISPATCH_SPEECH` | Dispatches speech event | Side effect, no state change |
-| `DISPATCH_THOUGHT` | Dispatches thought event | Side effect, no state change |
+**Turn Control** (Execution flow, not state):
+- `END_TURN`
+- `REGENERATE_DESCRIPTION`
 
-**Note**: Events may trigger other actions, but those actions plan independently.
+**Logging** (Debug only):
+- `LOG`
 
----
-
-### Turn Control Operations
-
-| Operation | Purpose | Exclusion Reason |
-|-----------|---------|------------------|
-| `END_TURN` | Ends current turn | Execution control only |
-| `REGENERATE_DESCRIPTION` | Regenerates description | UI concern only |
+**Note**: Events may trigger actions, but those actions plan independently
 
 ---
 
-### Logging Operations
+## Runtime Placeholders
 
-| Operation | Purpose | Exclusion Reason |
-|-----------|---------|------------------|
-| `LOG` | Logs message | Debugging only |
+**Critical Understanding**: Macros are expanded BEFORE the analyzer runs (by `RuleLoader`). What the analyzer sees are runtime placeholders like `{var: "itemId"}` or `{param: "targetId"}`.
 
----
+These placeholders are:
+1. **Preserved in effects** as parameterized values (e.g., `"{itemId}"`)
+2. **Resolved during execution** by `contextUtils.resolvePlaceholders()`
+3. **Not resolved during planning** - the planner works with parameterized effects
 
-## Macro Resolution
+```javascript
+// What EffectsAnalyzer receives (after macro expansion)
+{ type: "TRANSFER_ITEM", parameters: { item_id: "{itemId}", from_entity: "actor", to_entity: "target" } }
 
-Many operations reference context variables using macros (e.g., `{var: "itemId"}`). The Effects Analyzer must resolve these during analysis.
-
-### Direct Resolution
-When macro value is determinable from action context:
-```json
-// Rule operation
-{"type": "ADD_COMPONENT", "entity": "actor", "component": {"var": "componentType"}}
-
-// If componentType = "positioning:sitting" in action context
-// Planning effect
-{"operation": "ADD_COMPONENT", "entity": "actor", "component": "positioning:sitting"}
+// What it produces (placeholders preserved)
+[
+  { operation: "REMOVE_COMPONENT", entity: "actor", component: "items:inventory_item", data: { itemId: "{itemId}" } },
+  { operation: "ADD_COMPONENT", entity: "target", component: "items:inventory_item", data: { itemId: "{itemId}" } }
+]
 ```
 
-### Parameterized Effects
-When macro value is not determinable (depends on runtime):
-```json
-// Rule operation
-{"type": "TRANSFER_ITEM", "itemId": {"var": "selectedItem"}, ...}
+---
 
-// Planning effect (parameterized)
-{
-  "operation": "REMOVE_COMPONENT",
-  "entity": "actor",
-  "component": "items:in_inventory",
-  "componentId": "{selectedItem}"  // Parameter placeholder
-}
-```
+## Abstract Preconditions
 
-### Abstract Preconditions
-When condition involves unknown runtime values:
-```json
-// Rule operation with unknown condition
-{
-  "type": "IF",
-  "condition": {"var": "target.relationship.trust"},
-  "then": [...]
-}
+Abstract preconditions handle runtime conditions that cannot be evaluated during static analysis. They are defined in the planning effects and simulated during planning.
 
-// Planning effect with abstract precondition
+### Implemented Simulators
+
+The `AbstractPreconditionSimulator` (`src/goap/simulation/abstractPreconditionSimulator.js`) implements 3 preconditions:
+
+1. **hasInventoryCapacity** - Checks if actor can carry item
+   - Calculates: `(current weight + item weight) <= max weight`
+   - Used for item pickup operations
+
+2. **hasContainerCapacity** - Checks if container has space
+   - Calculates: `current count < max capacity`
+   - Used for container operations
+
+3. **hasComponent** - Checks if entity has component
+   - Simple presence check: `!!entity.components[componentId]`
+   - Used for conditional logic
+
+### Simulation Strategies
+
+Defined in action planning effects (not in EffectsAnalyzer):
+
+- **assumeTrue** - Optimistically assume condition is met
+- **assumeFalse** - Pessimistically assume condition fails
+- **assumeRandom** - Randomly choose true/false
+- **evaluateAtRuntime** - Actually evaluate using simulated world state
+
+### Auto-Generation
+
+The `EffectsAnalyzer` can auto-generate abstract preconditions for validation operations:
+
+```javascript
+// From EffectsAnalyzer.#operationToAbstractPrecondition()
 {
-  "operation": "CONDITIONAL",
-  "condition": {
-    "abstractPrecondition": "targetTrustsActor",
-    "params": ["actor", "target"]
+  'VALIDATE_INVENTORY_CAPACITY': {
+    description: 'Checks if actor can carry the item',
+    parameters: ['actorId', 'itemId'],
+    simulationFunction: 'assumeTrue'
   },
-  "then": [...]
-}
-
-// Abstract precondition definition (auto-generated)
-{
-  "abstractPreconditions": {
-    "targetTrustsActor": {
-      "description": "Checks if target trusts actor",
-      "parameters": ["actor", "target"],
-      "simulationFunction": "assumeTrue"
-    }
+  'HAS_COMPONENT': {
+    description: 'Checks if entity has component',
+    parameters: ['entityId', 'componentId'],
+    simulationFunction: 'assumeTrue'
   }
+  // etc.
 }
 ```
 
 ---
 
-## Complete Operation List
+## Operation Count Summary
 
-### State-Changing (17 operations)
-1. ADD_COMPONENT
-2. REMOVE_COMPONENT
-3. MODIFY_COMPONENT
-4. ATOMIC_MODIFY_COMPONENT
-5. LOCK_MOVEMENT
-6. UNLOCK_MOVEMENT
-7. ESTABLISH_SITTING_CLOSENESS
-8. TRANSFER_ITEM
-9. DROP_ITEM_AT_LOCATION
-10. PICK_UP_ITEM_FROM_LOCATION
-11. OPEN_CONTAINER
-12. TAKE_FROM_CONTAINER
-13. PUT_IN_CONTAINER
-14. UNEQUIP_CLOTHING
-15. DRINK_FROM
-16. DRINK_ENTIRELY
-17. *(Additional component-based operations as discovered)*
+**Total operations in system**: 91 (from `preValidationUtils.js:KNOWN_OPERATION_TYPES`)
 
-### Context Operations (12 operations)
-1. QUERY_COMPONENT
-2. QUERY_COMPONENTS
-3. QUERY_ENTITIES
-4. QUERY_LOOKUP
-5. GET_NAME
-6. GET_TIMESTAMP
-7. SET_VARIABLE
-8. VALIDATE_INVENTORY_CAPACITY
-9. VALIDATE_CONTAINER_CAPACITY
-10. HAS_COMPONENT
-11. HAS_BODY_PART_WITH_COMPONENT_VALUE
-12. RESOLVE_DIRECTION
-13. MATH
-
-### Control Flow (4 operations)
-1. IF
-2. IF_CO_LOCATED
-3. FOR_EACH
-4. SEQUENCE
-
-### Excluded (6 operations)
-1. DISPATCH_EVENT
-2. DISPATCH_PERCEPTIBLE_EVENT
-3. DISPATCH_SPEECH
-4. DISPATCH_THOUGHT
-5. END_TURN
-6. REGENERATE_DESCRIPTION
-7. LOG
-
-**Total: 39+ operations categorized**
+- **State-changing**: 51 operations (in `EffectsAnalyzer.isWorldStateChanging()`)
+  - With converters: ~20 operations
+  - Without converters: ~31 operations (recognized but not converted)
+- **Context-producing**: 15 operations (in `EffectsAnalyzer.isContextProducing()`)
+- **Control flow**: 3 operations (IF, IF_CO_LOCATED, SEQUENCE)
+- **Excluded**: 22 operations (events, logging, turn control, etc.)
 
 ---
 
-## Usage Examples
+## Implementation Architecture
 
-### Example 1: Simple Sit Down Action
+### Analysis Pipeline
 
-**Rule Operations:**
-```json
-{
-  "operations": [
-    {
-      "type": "REMOVE_COMPONENT",
-      "entity": "actor",
-      "component": "positioning:standing"
-    },
-    {
-      "type": "ADD_COMPONENT",
-      "entity": "actor",
-      "component": "positioning:sitting"
-    }
-  ]
-}
-```
+1. **Rule Loading** (`src/loaders/ruleLoader.js`)
+   - Expands macros (e.g., `{macro: "modId:macroId"}`)
+   - Results in operations with runtime placeholders
 
-**Generated Planning Effects:**
-```json
-{
-  "effects": [
-    {
-      "operation": "REMOVE_COMPONENT",
-      "entity": "actor",
-      "component": "positioning:standing"
-    },
-    {
-      "operation": "ADD_COMPONENT",
-      "entity": "actor",
-      "component": "positioning:sitting"
-    }
-  ],
-  "cost": 1.0
-}
-```
+2. **Effects Analysis** (`src/goap/analysis/effectsAnalyzer.js`)
+   - Analyzes rule operations
+   - Traces execution paths through conditionals
+   - Converts operations to planning effects
+   - Generates abstract preconditions
 
----
+3. **Effect Simulation** (`src/goap/selection/actionSelector.js`)
+   - Simulates effects on world state
+   - Evaluates abstract preconditions
+   - Calculates progress toward goals
 
-### Example 2: Conditional Give Item
+4. **Action Selection** (`src/goap/selection/actionSelector.js`)
+   - Compares actions by progress
+   - Selects best action for active goal
 
-**Rule Operations:**
-```json
-{
-  "operations": [
-    {
-      "type": "IF",
-      "condition": {
-        "==": [{"var": "targetInventorySpace"}, true]
-      },
-      "then": [
-        {
-          "type": "TRANSFER_ITEM",
-          "itemId": {"var": "selectedItem"},
-          "fromEntity": "actor",
-          "toEntity": "target"
-        }
-      ]
-    }
-  ]
-}
-```
+### Key Files
 
-**Generated Planning Effects:**
-```json
-{
-  "effects": [
-    {
-      "operation": "CONDITIONAL",
-      "condition": {
-        "abstractPrecondition": "targetHasInventorySpace",
-        "params": ["target"]
-      },
-      "then": [
-        {
-          "operation": "REMOVE_COMPONENT",
-          "entity": "actor",
-          "component": "items:in_inventory",
-          "componentId": "{selectedItem}"
-        },
-        {
-          "operation": "ADD_COMPONENT",
-          "entity": "target",
-          "component": "items:in_inventory",
-          "componentId": "{selectedItem}"
-        }
-      ]
-    }
-  ],
-  "abstractPreconditions": {
-    "targetHasInventorySpace": {
-      "description": "Checks if target has inventory space",
-      "parameters": ["target"],
-      "simulationFunction": "assumeTrue"
-    }
-  },
-  "cost": 1.0
-}
-```
+- **Schema**: `data/schemas/planning-effects.schema.json`
+- **Analyzer**: `src/goap/analysis/effectsAnalyzer.js`
+- **Simulator**: `src/goap/simulation/abstractPreconditionSimulator.js`
+- **Selector**: `src/goap/selection/actionSelector.js`
+- **Validator**: `src/goap/validation/effectsValidator.js`
+- **Whitelist**: `src/utils/preValidationUtils.js` (KNOWN_OPERATION_TYPES)
+
+### Testing
+
+E2E tests in `tests/e2e/goap/` demonstrate:
+- Effect simulation accuracy (`ActionSelectionWithEffectSimulation.e2e.test.js`)
+- Planning vs execution matching (`PlanningEffectsMatchRuleExecution.e2e.test.js`)
+- Abstract preconditions (`AbstractPreconditionConditionalEffects.e2e.test.js`)
+- Complete workflows (`CompleteGoapDecisionWithRealMods.e2e.test.js`)
 
 ---
 
-## Implementation Notes
+## Known Limitations
 
-### For Effects Analyzer Implementation
-
-1. **Operation Registry**: Create registry mapping operation types to analyzer functions
-2. **Recursive Analysis**: Handle nested operations (IF, SEQUENCE, etc.) recursively
-3. **Macro Resolution**: Build macro resolution context from action parameters
-4. **Abstract Detection**: Detect when conditions reference unknown runtime values
-5. **Effect Deduplication**: Merge duplicate effects from multiple paths
-6. **Validation**: Validate generated effects against planning-effects schema
-
-### For Effects Generator Implementation
-
-1. **Schema Compliance**: Ensure all generated effects match schema structure
-2. **Cost Estimation**: Calculate default cost based on effect complexity
-3. **Precondition Extraction**: Auto-name and document abstract preconditions
-4. **Effect Ordering**: Preserve operation order where it matters
-5. **Documentation**: Generate human-readable descriptions of effects
-
----
-
-## Future Extensions
-
-### Planned Additional Operations
-
-- **EQUIP_CLOTHING**: Equips clothing item
-- **MOVE_TO_LOCATION**: Moves entity to location
-- **ENTER_VEHICLE**: Enters vehicle
-- **EXIT_VEHICLE**: Exits vehicle
-- **LOCK_DOOR**: Locks door
-- **UNLOCK_DOOR**: Unlocks door
-
-### Advanced Effect Types
-
-- **PROBABILISTIC_EFFECT**: Effects with success probability
-- **DELAYED_EFFECT**: Effects that occur after delay
-- **PERSISTENT_EFFECT**: Effects that require maintenance
-- **REVERSIBLE_EFFECT**: Effects that auto-reverse after duration
-
----
-
-## References
-
-- [Planning Effects Schema](../../data/schemas/planning-effects.schema.json)
-- [Effects Analyzer Architecture](./effects-analyzer-architecture.md)
-- [Operation Handler Registry](../../src/logic/operationHandlers/)
+1. **Schema Restrictions**: Entity field limited to "actor"/"target"/"tertiary_target" - arbitrary entity IDs don't validate
+2. **Missing Converters**: 31+ state-changing operations recognized but lack conversion methods
+3. **FOR_EACH**: Not implemented - collections not analyzed
+4. **Effect Types**: Only 3 effect types (ADD/REMOVE/MODIFY_COMPONENT) + CONDITIONAL
+5. **Component Names**: EffectsAnalyzer uses actual component IDs (e.g., `items:inventory_item`), which may differ from documentation assumptions
