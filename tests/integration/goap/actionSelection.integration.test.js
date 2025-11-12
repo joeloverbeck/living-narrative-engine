@@ -73,6 +73,60 @@ describe('ActionSelection Integration', () => {
 
       expect(selected.id).toBe('action:high_progress');
     });
+
+    it('should log and return null when action selection fails unexpectedly', () => {
+      const goal = {
+        id: 'test:goal:error',
+        goalState: {}
+      };
+
+      const brokenAction = {
+        id: 'action:broken',
+        get planningEffects() {
+          throw new Error('planning effects misconfigured');
+        }
+      };
+
+      const context = { entities: {} };
+
+      const result = actionSelector.selectAction([brokenAction], goal, 'actor1', context);
+
+      expect(result).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to select action',
+        expect.objectContaining({ message: 'planning effects misconfigured' })
+      );
+    });
+  });
+
+  describe('progress calculation error handling', () => {
+    it('should log and return zero progress when future distance calculation fails', () => {
+      const goal = {
+        id: 'test:goal:progress-error',
+        goalState: {}
+      };
+
+      const action = {
+        id: 'action:failing_progress',
+        planningEffects: { effects: [] }
+      };
+
+      const context = { entities: {} };
+
+      mockGoalStateEvaluator.calculateDistance
+        .mockReturnValueOnce(10)
+        .mockImplementationOnce(() => {
+          throw new Error('distance calculation failed');
+        });
+
+      const progress = actionSelector.calculateProgress(action, goal, 'actor1', context);
+
+      expect(progress).toBe(0);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to calculate progress for action:failing_progress',
+        expect.objectContaining({ message: 'distance calculation failed' })
+      );
+    });
   });
 
   describe('effect simulation on real world state', () => {
@@ -170,6 +224,107 @@ describe('ActionSelection Integration', () => {
       const result = actionSelector.simulateEffects(action, 'actor1', context);
 
       expect(result.entities.actor1.components['test:result']).toBeDefined();
+    });
+
+    it('should return current state unchanged when action has no planning effects', () => {
+      const action = {
+        id: 'noop:action'
+      };
+
+      const context = { entities: { actor1: { components: {} } } };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(result).toBe(context);
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+
+    it('should log and return current state when effect application throws', () => {
+      const action = {
+        id: 'conditional:malformed_then',
+        planningEffects: {
+          effects: [
+            {
+              operation: 'CONDITIONAL',
+              condition: {
+                abstractPrecondition: 'hasComponent',
+                params: ['actor', 'items:inventory']
+              },
+              then: {
+                operation: 'ADD_COMPONENT',
+                entity: 'actor',
+                component: 'test:should_not_add',
+                data: {}
+              }
+            }
+          ]
+        }
+      };
+
+      const context = {
+        entities: {
+          actor1: {
+            components: {
+              'items:inventory': {}
+            }
+          }
+        }
+      };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(result).toBe(context);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to simulate effects for conditional:malformed_then',
+        expect.any(Error)
+      );
+      expect(context.entities.actor1.components['test:should_not_add']).toBeUndefined();
+    });
+
+    it('should warn and default to true when evaluating non-abstract conditions', () => {
+      const action = {
+        id: 'conditional:legacy_condition',
+        planningEffects: {
+          effects: [
+            {
+              operation: 'CONDITIONAL',
+              condition: { field: 'status', equals: 'active' },
+              then: [
+                {
+                  operation: 'ADD_COMPONENT',
+                  entity: 'actor',
+                  component: 'test:legacy_then',
+                  data: { triggered: true }
+                }
+              ],
+              else: [
+                {
+                  operation: 'ADD_COMPONENT',
+                  entity: 'actor',
+                  component: 'test:legacy_else',
+                  data: { triggered: false }
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      const context = {
+        entities: {
+          actor1: {
+            components: {}
+          }
+        }
+      };
+
+      const result = actionSelector.simulateEffects(action, 'actor1', context);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Condition evaluation without abstract precondition not fully implemented'
+      );
+      expect(result.entities.actor1.components['test:legacy_then']).toEqual({ triggered: true });
+      expect(result.entities.actor1.components['test:legacy_else']).toBeUndefined();
     });
   });
 
