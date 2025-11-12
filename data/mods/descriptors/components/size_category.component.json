@@ -23,7 +23,22 @@
         "default": "medium"
       }
     },
-    "required": ["size"],
+    "required": [
+      "size"
+    ],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid size category: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Size Category is required",
+      "invalidType": "Invalid type for size category: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
