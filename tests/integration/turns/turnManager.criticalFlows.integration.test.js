@@ -61,7 +61,11 @@ class IntegrationValidatedEventDispatcher extends IValidatedEventDispatcher {
     this.calls.push({ eventName, payload });
     await this.eventBus.dispatch(eventName, payload);
     if (this.dispatchOverrides.has(eventName)) {
-      return this.dispatchOverrides.get(eventName);
+      const override = this.dispatchOverrides.get(eventName);
+      if (typeof override === 'function') {
+        return override(payload, eventName);
+      }
+      return override;
     }
     return true;
   }
@@ -153,16 +157,30 @@ function createTurnManagerEnvironment({
   fixedHandler = null,
   dispatchOverrides = [],
   scheduler = null,
+  dispatcherFactory = null,
+  turnOrderServiceFactory = null,
+  entities = null,
 } = {}) {
   const logger = new CapturingLogger();
   const entityManager = new SimpleEntityManager();
-  const turnOrderService = new TurnOrderService({ logger });
+  if (Array.isArray(entities)) {
+    entityManager.setEntities(entities);
+  }
+  const turnOrderService = turnOrderServiceFactory
+    ? turnOrderServiceFactory({ logger, entityManager })
+    : new TurnOrderService({ logger });
   const eventBus = new EventBus({ logger });
-  const dispatcher = new IntegrationValidatedEventDispatcher({
-    eventBus,
-    logger,
-    dispatchOverrides: new Map(dispatchOverrides),
-  });
+  const dispatcher = dispatcherFactory
+    ? dispatcherFactory({
+        eventBus,
+        logger,
+        dispatchOverrides: new Map(dispatchOverrides),
+      })
+    : new IntegrationValidatedEventDispatcher({
+        eventBus,
+        logger,
+        dispatchOverrides: new Map(dispatchOverrides),
+      });
 
   const env = {
     logger,
@@ -393,5 +411,177 @@ describe('TurnManager integration coverage', () => {
         msg.includes('System Error: No progress made in the last round.')
       ),
     ).toBe(true);
+  });
+
+  it('handles subscription failures by reporting system errors and leaving the manager stopped', async () => {
+    class SubscribeFailDispatcher extends IntegrationValidatedEventDispatcher {
+      subscribe() {
+        throw new Error('subscribe failed');
+      }
+
+      unsubscribe() {}
+    }
+
+    env = createTurnManagerEnvironment({
+      dispatcherFactory: (deps) => new SubscribeFailDispatcher(deps),
+      entities: [createActorEntity('hero')],
+    });
+
+    await env.manager.start();
+
+    const systemErrors = env.dispatcher.calls.filter(
+      (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID,
+    );
+    expect(systemErrors.length).toBeGreaterThanOrEqual(2);
+    expect(systemErrors[0].payload.message).toContain('Failed to subscribe to');
+    expect(systemErrors[systemErrors.length - 1].payload.message).toContain(
+      'Game cannot proceed reliably',
+    );
+    expect(env.manager.getCurrentActor()).toBeNull();
+
+    await env.manager.stop();
+  });
+
+  it('prevents duplicate start and stop actions when already in the desired state', async () => {
+    let resolveTurn;
+    env = createTurnManagerEnvironment({
+      handlerFactory: (context) =>
+        new RecordingTurnHandler({
+          onStart: async (actor) => {
+            await context.dispatcher.dispatch(TURN_ENDED_ID, {
+              entityId: actor.id,
+              success: true,
+            });
+            if (resolveTurn) {
+              resolveTurn();
+            }
+          },
+        }),
+      entities: [createActorEntity('hero')],
+    });
+
+    const turnCompleted = new Promise((resolve) => {
+      resolveTurn = resolve;
+    });
+
+    const startPromise = env.manager.start();
+    await env.manager.start();
+
+    await turnCompleted;
+    await env.manager.stop();
+    await env.manager.stop();
+    await startPromise;
+
+    const startedEvents = env.dispatcher.calls.filter(
+      (call) => call.eventName === TURN_PROCESSING_STARTED,
+    );
+    expect(startedEvents).toHaveLength(1);
+  });
+
+  it('schedules advancement when no handler can be resolved', async () => {
+    const scheduler = new SingleExecutionScheduler({ allowAdditional: false });
+    env = createTurnManagerEnvironment({
+      handlerFactory: () => ({}),
+      scheduler,
+      entities: [createActorEntity('hero')],
+    });
+
+    const startPromise = env.manager.start();
+
+    await waitForCondition(() =>
+      env.dispatcher.calls.some(
+        (call) => call.eventName === TURN_PROCESSING_ENDED,
+      ),
+    );
+
+    expect(scheduler.callCount).toBe(1);
+    await env.manager.stop();
+    await startPromise;
+  });
+
+  it('ignores malformed turn end events until a valid payload completes the turn', async () => {
+    env = createTurnManagerEnvironment({
+      handlerFactory: (context) =>
+        new RecordingTurnHandler({
+          onStart: async (actor) => {
+            await context.dispatcher.dispatch(TURN_ENDED_ID);
+            await context.dispatcher.dispatch(TURN_ENDED_ID, {
+              entityId: 'villain',
+              success: 'maybe',
+            });
+            await context.dispatcher.dispatch(TURN_ENDED_ID, {
+              entityId: `  ${actor.id}  `,
+              success: { uncertain: true },
+            });
+          },
+        }),
+      entities: [createActorEntity('hero')],
+    });
+
+    await env.manager.start();
+
+    const processingEndedCall = env.dispatcher.calls.find(
+      (call) => call.eventName === TURN_PROCESSING_ENDED,
+    );
+    expect(processingEndedCall.payload).toEqual({
+      entityId: 'hero',
+      actorType: 'player',
+    });
+
+    await env.manager.stop();
+  });
+
+  it('dispatches system errors when a new round cannot be started', async () => {
+    env = createTurnManagerEnvironment({
+      entities: [{ id: 'bystander', components: {} }],
+    });
+
+    await env.manager.start();
+
+    const systemErrorMessages = env.dispatcher.calls
+      .filter((call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID)
+      .map((call) => call.payload.message);
+    expect(systemErrorMessages).toEqual(
+      expect.arrayContaining([
+        'System Error: No active actors found to start a round. Stopping game.',
+      ]),
+    );
+
+    await env.manager.stop();
+  });
+
+  it('reports dispatcher exceptions while ensuring processing continues', async () => {
+    const dispatchError = new Error('dispatch fail');
+    env = createTurnManagerEnvironment({
+      dispatchOverrides: [
+        [
+          TURN_PROCESSING_ENDED,
+          () => {
+            throw dispatchError;
+          },
+        ],
+      ],
+      handlerFactory: (context) =>
+        new RecordingTurnHandler({
+          onStart: async (actor) => {
+            await context.dispatcher.dispatch(TURN_ENDED_ID, {
+              entityId: actor.id,
+              success: true,
+            });
+          },
+        }),
+      entities: [createActorEntity('hero')],
+    });
+
+    await env.manager.start();
+
+    const failureDetails = env.dispatcher.calls.find(
+      (call) =>
+        call.eventName === SYSTEM_ERROR_OCCURRED_ID &&
+        call.payload.details?.error === dispatchError.message,
+    );
+    expect(failureDetails).toBeDefined();
+
+    await env.manager.stop();
   });
 });

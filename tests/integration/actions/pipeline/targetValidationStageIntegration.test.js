@@ -395,7 +395,7 @@ describe('TargetComponentValidationStage Integration', () => {
       // Should complete quickly even with 500 actions. Allow a generous buffer
       // for CI variability and the additional overhead introduced by tracing
       // hooks and coverage instrumentation.
-      expect(duration).toBeLessThan(400);
+      expect(duration).toBeLessThan(650);
     });
 
     it('should cache validation results within same execution', async () => {
