@@ -1,758 +1,233 @@
-# Macro Resolution Guide
+# Runtime Placeholder Resolution in GOAP Planning
 
 ## Overview
 
-Macros are placeholders in rule operations that reference runtime values. The effects analyzer must resolve these macros during analysis to generate accurate planning effects. This guide explains how macros work, how they're resolved, and how to handle unresolvable macros.
+During GOAP planning effects analysis, rule operations contain **runtime placeholders** - references to values that won't be known until execution time. The effects analyzer preserves these placeholders in generated planning effects using a special notation. This guide explains how runtime placeholders work in the GOAP system and how they're handled during effects generation.
 
-## What Are Macros?
+**Important Terminology**: This document discusses "runtime placeholders" (e.g., `{actor.id}`, `{itemId}`). These are distinct from "macros" (`{"macro": "modId:macroId"}`), which are reusable action array references expanded during rule loading by `macroUtils.js`.
 
-Macros are JSON objects that serve as placeholders for values that may not be known when the rule is authored:
+## What Are Runtime Placeholders?
 
-```json
+Runtime placeholders are string references that will be resolved during rule execution, not during planning:
+
+```
+{actor.id}
+{target.location}
+{itemId}
+{componentType}
+```
+
+These appear in rule operations within string values and are resolved at execution time by `resolvePlaceholders()` in `src/utils/contextUtils.js`.
+
+## How Effects Analysis Handles Runtime Values
+
+The effects analyzer (`src/goap/analysis/effectsAnalyzer.js`) processes rule operations and converts them to planning effects. When it encounters references to runtime values, it preserves them using placeholder notation:
+
+### During Effects Analysis
+
+1. **Rule operations are analyzed** to identify state-changing operations (ADD_COMPONENT, REMOVE_COMPONENT, etc.)
+2. **Runtime placeholders are NOT resolved** - they're preserved in the generated effects
+3. **Placeholder notation** is used: `"{variableName}"`, `"{actor.location}"`, `"{itemId}"`
+
+**Example from `effectsAnalyzer.js` (lines 544, 594, 674, 693):**
+
+```javascript
+// Establish closeness operation
 {
-  "var": "variableName"
-}
-```
-
-Instead of hardcoding a value, macros allow rules to be flexible and data-driven.
-
-## Macro Types
-
-### 1. Variable References (`var`)
-
-**Purpose:** References a variable in the operation context
-
-**Syntax:**
-```json
-{"var": "variableName"}
-```
-
-**Example:**
-```json
-{
-  "type": "ADD_COMPONENT",
-  "entity": "actor",
-  "component": {"var": "componentType"}
-}
-```
-
-**Resolution Sources:**
-- Action parameters
-- Previous operation results (via `result_variable`)
-- Context variables set by `SET_VARIABLE`
-
----
-
-### 2. Parameter References (`param`)
-
-**Purpose:** References an action parameter
-
-**Syntax:**
-```json
-{"param": "parameterName"}
-```
-
-**Example:**
-```json
-{
-  "type": "MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:position",
-  "updates": {
-    "location": {"param": "targetLocation"}
+  operation: 'ADD_COMPONENT',
+  entity: 'actor',
+  component: 'positioning:sitting_close_to',
+  data: {
+    targetId: `{${targetEntity}.id}`  // Runtime placeholder preserved
   }
 }
+
+// Item transfer operation
+const itemId = operation.parameters.item_id || '{itemId}';  // Placeholder if not specified
 ```
 
-**Resolution Source:** Action definition's `parameters` field
+### At Execution Time
 
----
+When an action is actually executed:
 
-### 3. Lookup References (`lookup`)
+1. **Placeholders are resolved** using `resolvePlaceholders()` from `src/utils/contextUtils.js`
+2. **Context is built** from:
+   - Action parameters from the action definition
+   - Context variables set during execution (SET_VARIABLE operations)
+   - Entity data from world state
+   - Event data from the triggering event
+3. **Placeholders replaced** with actual runtime values
 
-**Purpose:** Looks up a value from world state
+## Common Placeholder Patterns
 
-**Syntax:**
-```json
+### Simple Entity References
+
+```javascript
+// In rule operation
+entity: "actor"  // Resolved during execution to actual actor entity ID
+entity: "target"  // Resolved to target entity ID from action context
+```
+
+### Component ID Placeholders
+
+```javascript
+// Item operations
 {
-  "lookup": {
-    "entity": "actor",
-    "field": "location"
-  }
+  operation: 'ADD_COMPONENT',
+  entity: 'actor',
+  component: 'items:inventory_item',
+  data: { itemId: '{itemId}' }  // Resolved at execution time
 }
 ```
 
-**Example:**
-```json
+### Location Placeholders
+
+```javascript
+// Drop item at actor's location
 {
-  "type": "SET_VARIABLE",
-  "name": "actorLocation",
-  "value": {
-    "lookup": {
-      "entity": "actor",
-      "field": "location"
-    }
-  }
+  operation: 'ADD_COMPONENT',
+  entity: '{itemId}',
+  component: 'items:at_location',
+  data: { location: '{actor.location}' }  // Actor's current location
 }
 ```
 
-**Resolution:** Requires world state access (may be unresolvable during analysis)
+### Entity ID Placeholders
 
----
-
-### 4. JSON Logic Expressions
-
-**Purpose:** Computes values using JSON Logic
-
-**Syntax:**
-```json
+```javascript
+// Closeness relationships
 {
-  "+": [{"var": "count"}, 1]
+  operation: 'ADD_COMPONENT',
+  entity: 'actor',
+  component: 'positioning:sitting_close_to',
+  data: { targetId: '{target.id}' }  // Target entity's ID
 }
 ```
 
-**Example:**
-```json
-{
-  "type": "MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:stats",
-  "updates": {
-    "score": {
-      "+": [{"var": "currentScore"}, 10]
-    }
-  }
-}
-```
+## Abstract Preconditions
 
-**Resolution:** Evaluated using JSON Logic engine if all referenced variables are resolved
+For conditionals that cannot be evaluated during effects analysis, the system uses **abstract preconditions**:
 
----
+### What Are Abstract Preconditions?
 
-## Macro Resolution Process
+Abstract preconditions represent runtime checks that the planner cannot evaluate statically. They're generated when IF operations have conditions that depend on runtime state.
 
-### Step 1: Build Resolution Context
-
-The analyzer builds a context containing all available values:
+**Example from `effectsAnalyzer.js` (lines 400-443):**
 
 ```javascript
 {
-  // Action parameters
-  parameters: {
-    targetComponent: "positioning:sitting",
-    targetLocation: "bedroom"
+  'VALIDATE_INVENTORY_CAPACITY': {
+    description: 'Checks if actor can carry the item',
+    parameters: ['actorId', 'itemId'],
+    simulationFunction: 'assumeTrue'  // Optimistic assumption during planning
   },
-
-  // Previous operation results
-  variables: {
-    validation: { valid: true },
-    currentLocation: "livingroom"
-  },
-
-  // Entity data (if available)
-  entities: {
-    actor: { location: "bedroom", name: "John" }
+  'HAS_COMPONENT': {
+    description: 'Checks if entity has component',
+    parameters: ['entityId', 'componentId'],
+    simulationFunction: 'assumeTrue'
   }
 }
 ```
 
-### Step 2: Attempt Resolution
+### How They Work
 
-For each macro, the analyzer attempts to resolve it:
+1. **During analysis**: IF operations with runtime-dependent conditions generate CONDITIONAL effects
+2. **During simulation**: The planner uses the `simulationFunction` strategy to predict which branch will execute
+3. **Simulation strategies**:
+   - `assumeTrue`: Optimistically assume condition passes (for capacity checks)
+   - `assumeFalse`: Pessimistically assume condition fails
+   - `evaluateAtRuntime`: Attempt to evaluate using available entity data
 
-```javascript
-// Macro
-{"var": "targetComponent"}
-
-// Resolution attempt
-context.parameters.targetComponent → "positioning:sitting"
-
-// Result
-"positioning:sitting"  // Resolved!
-```
-
-### Step 3: Handle Unresolvable Macros
-
-If resolution fails, the analyzer marks the macro for parameterization:
-
-```javascript
-// Macro
-{"var": "selectedItem"}
-
-// Resolution attempt
-context.parameters.selectedItem → undefined
-context.variables.selectedItem → undefined
-
-// Result
-"{selectedItem}"  // Parameterized
-```
-
-## Resolvable vs. Unresolvable Macros
-
-### Resolvable Macros
-
-Macros that can be resolved during analysis:
-
-**1. Static Action Parameters:**
-```json
-// Action definition
-{
-  "parameters": {
-    "componentType": "positioning:sitting"
-  }
-}
-
-// Rule operation
-{"var": "componentType"}
-
-// Resolved to
-"positioning:sitting"
-```
-
-**2. Set Variables:**
-```json
-// Previous operation
-{
-  "type": "SET_VARIABLE",
-  "name": "location",
-  "value": "bedroom"
-}
-
-// Later operation
-{"var": "location"}
-
-// Resolved to
-"bedroom"
-```
-
-**3. Operation Results (Sometimes):**
-```json
-// Previous operation
-{
-  "type": "GET_NAME",
-  "entity": "actor",
-  "result_variable": "actorName"
-}
-
-// Later operation
-{"var": "actorName"}
-
-// May resolve to
-"John"  // If entity data is available during analysis
-```
-
-### Unresolvable Macros
-
-Macros that cannot be resolved during analysis:
-
-**1. Runtime-Dependent Variables:**
-```json
-// Selected by player at runtime
-{"var": "selectedItem"}
-
-// Cannot resolve - depends on player choice
-// Parameterized as: "{selectedItem}"
-```
-
-**2. Dynamic Query Results:**
-```json
-// Previous operation
-{
-  "type": "QUERY_COMPONENT",
-  "entity": "target",
-  "component": "core:inventory",
-  "result_variable": "inventory"
-}
-
-// Later operation
-{"var": "inventory.itemCount"}
-
-// Cannot resolve - target inventory unknown at analysis time
-// Parameterized as: "{inventory.itemCount}"
-```
-
-**3. Computed Values:**
-```json
-{
-  "+": [{"var": "dynamicValue"}, 10]
-}
-
-// If dynamicValue is unresolvable, entire expression is unresolvable
-// Parameterized as: "{dynamicValue + 10}"
-```
-
-## Common Macros in Rules
-
-### Component Type Selection
-
-```json
-{
-  "type": "ADD_COMPONENT",
-  "entity": "actor",
-  "component": {"var": "componentType"}
-}
-```
-
-**Typical Resolution:**
-- Action parameter: `componentType = "positioning:sitting"`
-- Resolved effect: `component: "positioning:sitting"`
-
----
-
-### Entity References
-
-```json
-{
-  "type": "MODIFY_COMPONENT",
-  "entity": {"var": "targetEntity"},
-  "component": "core:position"
-}
-```
-
-**Typical Resolution:**
-- Action parameter: `targetEntity = "target"`
-- Resolved effect: `entity: "target"`
-
----
-
-### Item IDs
-
-```json
-{
-  "type": "TRANSFER_ITEM",
-  "itemId": {"var": "itemId"},
-  "fromEntity": "actor",
-  "toEntity": "target"
-}
-```
-
-**Typical Resolution:**
-- Usually unresolvable (player-selected item)
-- Parameterized effect: `componentId: "{itemId}"`
-
----
-
-### Location Updates
-
-```json
-{
-  "type": "MODIFY_COMPONENT",
-  "entity": "actor",
-  "component": "core:position",
-  "updates": {
-    "location": {"var": "newLocation"}
-  }
-}
-```
-
-**Typical Resolution:**
-- If `newLocation` is set by previous operation: Resolved
-- If `newLocation` is dynamic: Parameterized as `"{newLocation}"`
-
----
-
-## Macro Resolution in Conditionals
-
-Conditionals present special challenges for macro resolution:
-
-### Resolvable Condition
-
-```json
-{
-  "type": "IF",
-  "condition": {
-    "==": [{"var": "targetType"}, "actor"]
-  },
-  "then": [...]
-}
-```
-
-**Resolution:**
-- If `targetType` is in context: Evaluate condition
-- Result: `true` or `false`
-- **Effect:** Only include executed branch in effects
-
-### Unresolvable Condition
-
-```json
-{
-  "type": "IF",
-  "condition": {
-    ">": [{"var": "target.trust"}, 0.5]
-  },
-  "then": [...]
-}
-```
-
-**Resolution:**
-- `target.trust` is runtime-dependent
-- Cannot evaluate condition
-- **Effect:** Create conditional effect with abstract precondition
+**Example conditional effect:**
 
 ```json
 {
   "operation": "CONDITIONAL",
   "condition": {
-    "abstractPrecondition": "targetTrustAbove50",
-    "params": ["target"]
+    "abstractPrecondition": "hasComponent",
+    "params": ["actor", "positioning:standing"]
   },
-  "then": [...]
-}
-```
-
-## Parameterized Effects
-
-When macros cannot be resolved, effects use parameterized placeholders:
-
-### Parameter Syntax
-
-Unresolved macros are converted to parameters:
-
-```
-{"var": "itemId"} → "{itemId}"
-```
-
-### Example: Parameterized Item Transfer
-
-**Rule Operation:**
-```json
-{
-  "type": "TRANSFER_ITEM",
-  "itemId": {"var": "selectedItem"},
-  "fromEntity": "actor",
-  "toEntity": "target"
-}
-```
-
-**Generated Effects:**
-```json
-[
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "{selectedItem}"
-  },
-  {
-    "operation": "ADD_COMPONENT",
-    "entity": "target",
-    "component": "items:in_inventory",
-    "componentId": "{selectedItem}"
-  }
-]
-```
-
-### Parameter Binding
-
-At planning time, the planner binds parameters:
-
-```javascript
-// Planning time
-const selectedItem = "sword_1";
-const effects = bindParameters(planningEffects, { selectedItem });
-
-// Result
-[
-  {
-    "operation": "REMOVE_COMPONENT",
-    "entity": "actor",
-    "component": "items:in_inventory",
-    "componentId": "sword_1"
-  },
-  ...
-]
-```
-
-## Impact on Effects Generation
-
-### Macro Resolution Determines Effect Specificity
-
-**Fully Resolved:**
-```json
-{
-  "operation": "ADD_COMPONENT",
-  "entity": "actor",
-  "component": "positioning:sitting"
-}
-```
-- Effect is specific and concrete
-- Planner knows exactly what will happen
-
-**Partially Resolved:**
-```json
-{
-  "operation": "ADD_COMPONENT",
-  "entity": "actor",
-  "component": "{componentType}"
-}
-```
-- Effect is parameterized
-- Planner needs to bind parameter
-
-**Unresolvable Condition:**
-```json
-{
-  "operation": "CONDITIONAL",
-  "condition": {
-    "abstractPrecondition": "checkSomething",
-    "params": ["actor"]
-  },
-  "then": [...]
-}
-```
-- Effect is conditional
-- Planner must simulate or defer evaluation
-
-## Troubleshooting Macro Resolution
-
-### Macro Not Resolved
-
-**Symptom:** Expected macro to resolve but got parameterized effect
-
-**Causes:**
-1. Variable not in context
-2. Typo in variable name
-3. Operation producing variable not run before usage
-
-**Solution:**
-1. Check variable is set before use
-2. Verify variable name matches exactly (case-sensitive)
-3. Reorder operations if needed
-
-**Example:**
-```json
-// ✗ Wrong order
-[
-  {
-    "type": "ADD_COMPONENT",
-    "component": {"var": "componentType"}
-  },
-  {
-    "type": "SET_VARIABLE",
-    "name": "componentType",
-    "value": "positioning:sitting"
-  }
-]
-
-// ✓ Correct order
-[
-  {
-    "type": "SET_VARIABLE",
-    "name": "componentType",
-    "value": "positioning:sitting"
-  },
-  {
-    "type": "ADD_COMPONENT",
-    "component": {"var": "componentType"}
-  }
-]
-```
-
----
-
-### Circular Reference
-
-**Symptom:** Macro references itself or creates circular dependency
-
-**Causes:**
-1. Variable depends on itself
-2. Circular variable chain
-
-**Solution:**
-1. Break circular dependency
-2. Use intermediate variables
-
-**Example:**
-```json
-// ✗ Circular
-{
-  "type": "SET_VARIABLE",
-  "name": "x",
-  "value": {"+": [{"var": "x"}, 1]}
-}
-
-// ✓ Fixed with initial value
-{
-  "type": "SET_VARIABLE",
-  "name": "x",
-  "value": 0
-}
-{
-  "type": "SET_VARIABLE",
-  "name": "x",
-  "value": {"+": [{"var": "x"}, 1]}
-}
-```
-
----
-
-### Incorrect Type After Resolution
-
-**Symptom:** Resolved value has wrong type
-
-**Causes:**
-1. Variable contains unexpected type
-2. Type conversion needed
-3. Wrong variable referenced
-
-**Solution:**
-1. Check variable type
-2. Add explicit type conversion
-3. Verify variable name
-
-**Example:**
-```json
-// Variable is string "5" but number expected
-{
-  "type": "MODIFY_COMPONENT",
-  "updates": {
-    "count": {"var": "count"}  // String "5" instead of number 5
-  }
-}
-
-// Fix with type conversion
-{
-  "type": "SET_VARIABLE",
-  "name": "countNumber",
-  "value": {
-    "*": [{"var": "count"}, 1]  // Converts to number
-  }
-}
-```
-
----
-
-## Best Practices
-
-### 1. Use Descriptive Variable Names
-
-```json
-// ✓ Good
-{"var": "targetComponent"}
-{"var": "selectedItemId"}
-{"var": "newLocation"}
-
-// ✗ Bad
-{"var": "x"}
-{"var": "temp"}
-{"var": "v1"}
-```
-
-### 2. Set Variables Early
-
-```json
-// ✓ Good - Set all variables at the start
-[
-  {"type": "SET_VARIABLE", "name": "componentType", "value": "..."},
-  {"type": "SET_VARIABLE", "name": "location", "value": "..."},
-  {"type": "ADD_COMPONENT", "component": {"var": "componentType"}},
-  {"type": "MODIFY_COMPONENT", "updates": {"location": {"var": "location"}}}
-]
-```
-
-### 3. Check Variable Existence
-
-```json
-// ✓ Good - Check before using
-{
-  "type": "IF",
-  "condition": {"!!": [{"var": "optionalValue"}]},
   "then": [
-    {"type": "USE_VALUE", "value": {"var": "optionalValue"}}
-  ]
+    {
+      "operation": "REMOVE_COMPONENT",
+      "entity": "actor",
+      "component": "positioning:standing"
+    }
+  ],
+  "else": []
 }
 ```
 
-### 4. Document Unresolvable Macros
+## Best Practices for Rule Authors
 
-```json
+### Use Concrete Values When Possible
+
+```javascript
+// Good - concrete component reference
 {
-  "type": "TRANSFER_ITEM",
-  "itemId": {"var": "selectedItem"},
-  "_comment": "selectedItem is determined by player at runtime, will be parameterized in effects"
+  type: 'ADD_COMPONENT',
+  entity: 'actor',
+  component: 'positioning:sitting'  // Known at authoring time
+}
+
+// Only use placeholders when truly runtime-dependent
+{
+  type: 'TRANSFER_ITEM',
+  itemId: '{itemId}'  // Player selects at runtime
 }
 ```
 
-### 5. Use Action Parameters for Static Values
+### Standard Entity Aliases
 
-```json
-// ✓ Good - Use action parameter
+Use standard aliases that the execution context understands:
+- `actor` - The entity performing the action
+- `target` - The primary target of the action (secondary_target_id parameter)
+- `tertiary` - The tertiary target (tertiary_target_id parameter)
+
+```javascript
 {
-  "id": "test:action",
-  "parameters": {
-    "componentType": "positioning:sitting"
-  }
-}
-
-// In rule
-{"var": "componentType"}  // Will resolve to "positioning:sitting"
-
-// ✗ Bad - Hardcode in rule
-"positioning:sitting"  // Less flexible
-```
-
-## Advanced Macro Patterns
-
-### Nested Resolution
-
-```json
-{
-  "type": "SET_VARIABLE",
-  "name": "location",
-  "value": {"var": "targetLocation"}
-}
-{
-  "type": "MODIFY_COMPONENT",
-  "updates": {
-    "location": {"var": "location"}
-  }
+  type: 'ADD_COMPONENT',
+  entity: 'target',  // Will resolve to actual target entity ID
+  component: 'items:received_item'
 }
 ```
 
-**Resolution:**
-1. Resolve `targetLocation` to `"bedroom"`
-2. Resolve `location` to `"bedroom"`
-3. Final effect: `"location": "bedroom"`
+### Document Complex Placeholders
 
-### Conditional Resolution
+When using nested placeholders, add comments for clarity:
 
-```json
+```javascript
 {
-  "type": "SET_VARIABLE",
-  "name": "componentType",
-  "value": {
-    "if": [
-      {"var": "isSitting"},
-      "positioning:sitting",
-      "positioning:standing"
-    ]
+  type: 'ADD_COMPONENT',
+  entity: 'actor',
+  component: 'positioning:sitting_close_to',
+  data: {
+    // target.id will resolve to the actual entity ID of the target
+    targetId: '{target.id}'
   }
 }
 ```
 
-**Resolution:**
-- If `isSitting` is resolvable: Resolve to concrete value
-- If `isSitting` is not resolvable: Parameterize entire expression
+## Implementation References
 
-### Lookup Chain
+### Key Source Files
 
-```json
-{
-  "type": "SET_VARIABLE",
-  "name": "actorLocation",
-  "value": {"lookup": {"entity": "actor", "field": "location"}}
-}
-{
-  "type": "QUERY_ENTITIES",
-  "filter": {
-    "location": {"var": "actorLocation"}
-  }
-}
-```
+- **Effects Analysis**: `src/goap/analysis/effectsAnalyzer.js` - Converts rule operations to planning effects
+- **Effects Generation**: `src/goap/generation/effectsGenerator.js` - Orchestrates effects generation for actions
+- **Runtime Resolution**: `src/utils/contextUtils.js` - Resolves placeholders during execution
+- **Placeholder Resolver**: `src/utils/executionPlaceholderResolver.js` - Core placeholder resolution logic
+- **Macro Expansion**: `src/utils/macroUtils.js` - Expands `{"macro": "..."}` references (different from runtime placeholders)
+
+### Test Coverage
+
+The GOAP system's handling of runtime placeholders and effects is validated by e2e tests in `tests/e2e/goap/`:
+
+- `CompleteGoapDecisionWithRealMods.e2e.test.js` - Full workflow with real mod data
+- `AbstractPreconditionConditionalEffects.e2e.test.js` - Conditional effects with abstract preconditions
+- `PlanningEffectsMatchRuleExecution.e2e.test.js` - Verifies planning effects match actual execution
+- `ActionSelectionWithEffectSimulation.e2e.test.js` - Tests effect simulation during planning
 
 ## Related Documentation
 
-- [Effects Auto-Generation](./effects-auto-generation.md)
-- [Operation Result Structures](./operation-result-structures.md)
-- [Abstract Preconditions](./abstract-preconditions.md)
-- [Troubleshooting](./troubleshooting.md)
+- [Effects Auto-Generation](./effects-auto-generation.md) - How planning effects are generated from rules
+- [GOAP Architecture Overview](./README.md) - High-level GOAP system architecture
