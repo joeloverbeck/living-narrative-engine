@@ -6,7 +6,7 @@ import {
   toSchemaFileName,
   toTokenName,
   toHandlerClassName,
-} from '../utils/preValidationUtils.js';
+} from '../utils/operationNamingUtils.js';
 
 /**
  * Error thrown when operation validation fails
