@@ -3,7 +3,8 @@
  */
 
 import { goapTokens } from '../tokens/tokens-goap.js';
-import { coreTokens } from '../tokens/tokens-core.js';
+import { tokens } from '../tokens.js';
+import { Registrar } from '../../utils/registrarHelpers.js';
 import EffectsAnalyzer from '../../goap/analysis/effectsAnalyzer.js';
 import EffectsGenerator from '../../goap/generation/effectsGenerator.js';
 import EffectsValidator from '../../goap/validation/effectsValidator.js';
@@ -20,79 +21,83 @@ import PlanCache from '../../goap/planning/planCache.js';
  * @param {object} container - DI container
  */
 export function registerGoapServices(container) {
+  const registrar = new Registrar(container);
+
   // Analysis
-  container.register(goapTokens.IEffectsAnalyzer, EffectsAnalyzer, {
-    dependencies: {
-      logger: coreTokens.ILogger,
-      dataRegistry: coreTokens.IDataRegistry
-    }
+  registrar.singletonFactory(goapTokens.IEffectsAnalyzer, (c) => {
+    return new EffectsAnalyzer({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+    });
   });
 
-  container.register(goapTokens.IEffectsGenerator, EffectsGenerator, {
-    dependencies: {
-      logger: coreTokens.ILogger,
-      effectsAnalyzer: goapTokens.IEffectsAnalyzer,
-      dataRegistry: coreTokens.IDataRegistry,
-      schemaValidator: coreTokens.IAjvSchemaValidator
-    }
+  registrar.singletonFactory(goapTokens.IEffectsGenerator, (c) => {
+    return new EffectsGenerator({
+      logger: c.resolve(tokens.ILogger),
+      effectsAnalyzer: c.resolve(goapTokens.IEffectsAnalyzer),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+    });
   });
 
-  container.register(goapTokens.IEffectsValidator, EffectsValidator, {
-    dependencies: {
-      logger: coreTokens.ILogger,
-      effectsAnalyzer: goapTokens.IEffectsAnalyzer,
-      dataRegistry: coreTokens.IDataRegistry
-    }
+  registrar.singletonFactory(goapTokens.IEffectsValidator, (c) => {
+    return new EffectsValidator({
+      logger: c.resolve(tokens.ILogger),
+      effectsAnalyzer: c.resolve(goapTokens.IEffectsAnalyzer),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+    });
   });
 
   // Goals
-  container.register(goapTokens.IGoalStateEvaluator, GoalStateEvaluator, {
-    dependencies: {
-      logger: coreTokens.ILogger,
-      jsonLogicEvaluator: coreTokens.JsonLogicEvaluationService,
-      entityManager: coreTokens.IEntityManager
-    }
+  registrar.singletonFactory(goapTokens.IGoalStateEvaluator, (c) => {
+    return new GoalStateEvaluator({
+      logger: c.resolve(tokens.ILogger),
+      jsonLogicEvaluator: c.resolve(tokens.JsonLogicEvaluationService),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
   });
 
-  container.register(goapTokens.IGoalManager, GoalManager, {
-    dependencies: {
-      logger: coreTokens.ILogger,
-      gameDataRepository: coreTokens.IGameDataRepository,
-      goalStateEvaluator: goapTokens.IGoalStateEvaluator,
-      jsonLogicEvaluator: coreTokens.JsonLogicEvaluationService,
-      entityManager: coreTokens.IEntityManager
-    }
+  registrar.singletonFactory(goapTokens.IGoalManager, (c) => {
+    return new GoalManager({
+      logger: c.resolve(tokens.ILogger),
+      gameDataRepository: c.resolve(tokens.IGameDataRepository),
+      goalStateEvaluator: c.resolve(goapTokens.IGoalStateEvaluator),
+      jsonLogicEvaluator: c.resolve(tokens.JsonLogicEvaluationService),
+      entityManager: c.resolve(tokens.IEntityManager),
+    });
   });
 
   // Simulation
-  container.register(goapTokens.IAbstractPreconditionSimulator, AbstractPreconditionSimulator, {
-    dependencies: {
-      logger: coreTokens.ILogger
-    }
+  registrar.singletonFactory(goapTokens.IAbstractPreconditionSimulator, (c) => {
+    return new AbstractPreconditionSimulator({
+      logger: c.resolve(tokens.ILogger),
+    });
   });
 
   // Selection
-  container.register(goapTokens.IActionSelector, ActionSelector, {
-    dependencies: {
-      logger: coreTokens.ILogger,
-      goalStateEvaluator: goapTokens.IGoalStateEvaluator,
-      entityManager: coreTokens.IEntityManager,
-      abstractPreconditionSimulator: goapTokens.IAbstractPreconditionSimulator
-    }
+  registrar.singletonFactory(goapTokens.IActionSelector, (c) => {
+    return new ActionSelector({
+      logger: c.resolve(tokens.ILogger),
+      goalStateEvaluator: c.resolve(goapTokens.IGoalStateEvaluator),
+      entityManager: c.resolve(tokens.IEntityManager),
+      abstractPreconditionSimulator: c.resolve(
+        goapTokens.IAbstractPreconditionSimulator
+      ),
+    });
   });
 
   // Planning
-  container.register(goapTokens.ISimplePlanner, SimplePlanner, {
-    dependencies: {
-      logger: coreTokens.ILogger,
-      actionSelector: goapTokens.IActionSelector,
-      goalManager: goapTokens.IGoalManager
-    }
+  registrar.singletonFactory(goapTokens.ISimplePlanner, (c) => {
+    return new SimplePlanner({
+      logger: c.resolve(tokens.ILogger),
+      actionSelector: c.resolve(goapTokens.IActionSelector),
+      goalManager: c.resolve(goapTokens.IGoalManager),
+    });
   });
 
-  container.register(goapTokens.IPlanCache, PlanCache, {
-    dependencies: {
-      logger: coreTokens.ILogger
-    }
+  registrar.singletonFactory(goapTokens.IPlanCache, (c) => {
+    return new PlanCache({
+      logger: c.resolve(tokens.ILogger),
+    });
   });
 }

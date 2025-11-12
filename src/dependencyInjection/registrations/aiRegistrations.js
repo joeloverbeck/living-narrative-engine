@@ -389,14 +389,19 @@ export function registerAITurnPipeline(registrar, logger) {
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
   );
 
-  registrar.singletonFactory(
-    tokens.IGoapDecisionProvider,
-    (c) =>
-      new GoapDecisionProvider({
-        logger: c.resolve(tokens.ILogger),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      })
-  );
+  registrar.singletonFactory(tokens.IGoapDecisionProvider, async (c) => {
+    // Import goapTokens dynamically to avoid circular dependencies
+    const goapTokensModule = await import('../tokens/tokens-goap.js');
+    const { goapTokens } = goapTokensModule;
+    return new GoapDecisionProvider({
+      goalManager: c.resolve(goapTokens.IGoalManager),
+      simplePlanner: c.resolve(goapTokens.ISimplePlanner),
+      planCache: c.resolve(goapTokens.IPlanCache),
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
   logger.debug(
     `AI Systems Registration: Registered ${tokens.IGoapDecisionProvider}.`
   );
@@ -462,10 +467,12 @@ export function registerMinimalAIForCharacterBuilder(container, logger) {
   registerLlmInfrastructure(registrar, logger);
 
   // Register LlmJsonService which is specifically needed by ThematicDirectionGenerator
-  registrar.singletonFactory(tokens.LlmJsonService, (c) => {
+  registrar.singletonFactory(tokens.LlmJsonService, () => {
     const service = new LlmJsonService();
     // Add a mock generateContent method for testing
-    if (process.env.NODE_ENV === 'test') {
+    /* eslint-disable no-undef */
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'test') {
+      /* eslint-enable no-undef */
       service.generateContent = async () => ({
         thematic_directions: [
           {
