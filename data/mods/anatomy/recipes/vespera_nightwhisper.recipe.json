@@ -1,0 +1,128 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy:vespera_nightwhisper",
+  "blueprintId": "anatomy:cat_girl",
+  "bodyDescriptors": {
+    "height": "average",
+    "build": "athletic",
+    "composition": "lean",
+    "skinColor": "pale-cream",
+    "hairDensity": "furred"
+  },
+  "slots": {
+    "left_eye": {
+      "partType": "eye",
+      "preferId": "anatomy:feline_eye_amber_slit",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "amber"
+        },
+        "descriptors:pupil_shape": {
+          "shape": "slit-vertical"
+        },
+        "descriptors:shape_eye": {
+          "shape": "hooded"
+        }
+      }
+    },
+    "right_eye": {
+      "partType": "eye",
+      "preferId": "anatomy:feline_eye_ice_blue_slit",
+      "properties": {
+        "descriptors:color_extended": {
+          "color": "ice-blue"
+        },
+        "descriptors:pupil_shape": {
+          "shape": "slit-vertical"
+        },
+        "descriptors:shape_eye": {
+          "shape": "hooded"
+        }
+      }
+    },
+    "left_ear": {
+      "partType": "ear",
+      "preferId": "anatomy:cat_ear_decorated",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        },
+        "descriptors:embellishment": {
+          "embellishment": "silver-hoops"
+        }
+      }
+    },
+    "right_ear": {
+      "partType": "ear",
+      "preferId": "anatomy:cat_ear_decorated",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        },
+        "descriptors:embellishment": {
+          "embellishment": "silver-hoops"
+        }
+      }
+    },
+    "tail": {
+      "partType": "tail",
+      "preferId": "anatomy:cat_tail",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        },
+        "descriptors:length_category": {
+          "length": "long"
+        }
+      }
+    },
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:cat_girl_torso",
+      "properties": {
+        "descriptors:build": {
+          "build": "toned"
+        }
+      }
+    },
+    "left_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_average"
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_average"
+    },
+    "vagina": {
+      "partType": "vagina",
+      "preferId": "anatomy:human_vagina"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg"
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "hand",
+      "preferId": "anatomy:human_hand"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": ["hair"],
+      "partType": "hair",
+      "preferId": "anatomy:human_hair"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:feline_eye_amber_slit",
+  "description": "Feline eye with amber-gold iris and vertical slit pupil",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye"
+    },
+    "descriptors:color_extended": {
+      "color": "amber"
+    },
+    "descriptors:shape_eye": {
+      "shape": "hooded"
+    },
+    "descriptors:pupil_shape": {
+      "shape": "slit-vertical"
+    },
+    "core:name": {
+      "text": "eye"
+    }
+  }
+}
