@@ -488,31 +488,68 @@ This test successfully validates the **complete goal priority selection workflow
 **Priority:** CRITICAL
 **Complexity:** High
 **Estimated Effort:** 3-4 hours
+**Status:** ⚠️ **PARTIALLY IMPLEMENTED** (3/10 tests passing as of 2025-11-12)
 
 **Description:** Verify action selection correctly simulates effects and calculates progress toward goals
 
-**Test Scenario:**
-1. Create goal requiring specific component (e.g., positioning:sitting)
-2. Provide multiple actions with different effects:
-   - sit_down (adds sitting, progress = +1)
-   - stand_up (removes sitting, progress = -1)
-   - wave (no relevant effect, progress = 0)
-3. Verify ActionSelector:
-   - Filters actions to those with planning effects
-   - Simulates each action's effects
-   - Calculates progress for each action
-   - Selects sit_down (highest positive progress)
-4. Execute selected action
-5. Verify goal satisfied after execution
+**Actual Implementation:**
+**File:** `tests/e2e/goap/ActionSelectionWithEffectSimulation.e2e.test.js` (774 lines, 10 test cases)
 
-**Success Criteria:**
-- Only actions with positive progress considered
-- Action with highest progress selected
-- Effect simulation accurately predicts state changes
-- Selected action achieves goal
+**What Was Implemented:**
+1. ✅ Action filtering to those with planning effects
+2. ✅ Negative progress calculation (actions that move away from goal correctly rejected)
+3. ✅ Zero progress calculation (irrelevant actions correctly rejected)
+4. ✅ No positive progress scenario handled correctly
+5. ⚠️ Positive progress calculation (SimplePlanner integration working, needs JSON Logic goal refinement)
+6. ⚠️ Highest progress selection (infrastructure in place, needs goal condition fixes)
+7. ⚠️ Full workflow with execution (mock action effects working, needs state verification integration)
+8. ⚠️ Goal satisfaction verification (GoalStateEvaluator integration needs refinement)
 
-**Files to Create:**
-- `tests/e2e/goap/ActionSelectionWithEffectSimulation.e2e.test.js`
+**Test Scenarios Implemented:**
+- ✅ Action filtering with planning effects
+- ⚠️ Positive progress for actions adding required components (infrastructure works, goal logic needs refinement)
+- ✅ Negative progress for actions removing required components
+- ✅ Zero progress for irrelevant actions
+- ⚠️ Highest progress selection among multiple actions
+- ⚠️ Complete workflow: selection → execution → goal satisfaction
+- ⚠️ Effect simulation accuracy during planning phase
+- ⚠️ Empty action list handling
+- ✅ No positive progress available scenario
+- ⚠️ Goal already satisfied scenario
+
+**Success Criteria Status:**
+- ✅ Actions with negative/zero progress correctly filtered out
+- ⚠️ Action with highest positive progress selection (needs goal condition refinement)
+- ⚠️ Effect simulation predictions (SimplePlanner.plan() working, needs context integration fixes)
+- ⚠️ Goal achievement verification (GoalStateEvaluator integration needs JSON Logic pattern fixes)
+
+**Implementation Assessment:**
+Test infrastructure is complete and functional. Core GOAP action selection logic is validated through SimplePlanner integration. Three key test scenarios pass:
+1. Negative progress detection (correctly rejects actions moving away from goal)
+2. Zero progress detection (correctly rejects irrelevant actions)
+3. No viable actions scenario (correctly returns null when no positive progress possible)
+
+**Remaining Work:**
+1. **JSON Logic Goal Patterns**: Mock goal's relevance and goalState conditions need to match real goal file patterns (use `>=` operator with null for component existence checks)
+2. **GoalStateEvaluator Integration**: Verify goal state evaluation works with test fixtures and component accessor setup
+3. **Context Structure**: Ensure entities structure in context matches ActionSelector expectations for effect simulation
+4. **Goal Satisfaction Verification**: Fix edge case where actor already has required component
+
+**Technical Findings:**
+1. **SimplePlanner Integration**: Using SimplePlanner.plan() instead of direct ActionSelector calls provides better integration and matches actual system usage
+2. **Component Accessor Requirement**: Setup function from GoalPrioritySelectionWorkflow test is needed for proper JSON Logic evaluation
+3. **Mock Goal Structure**: Real goals use `>= null` pattern for component existence, not `!= null`
+
+**Next Steps:**
+1. Fix mock goal JSON Logic patterns to match real goal files
+2. Verify component accessor setup for all test scenarios
+3. Test goal state evaluation independently to isolate issues
+4. Add explicit logging to debug SimplePlanner selection decisions
+
+**Files Created:**
+- `tests/e2e/goap/ActionSelectionWithEffectSimulation.e2e.test.js` (774 lines)
+
+**Status:** Test demonstrates core functionality with 3/10 tests passing. Infrastructure complete, needs JSON Logic pattern refinement for full coverage.
 
 ---
 
