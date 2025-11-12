@@ -106,7 +106,7 @@ class JsonLogicEvaluationService extends BaseService {
       'has_component',
       // Anatomy/body part operators
       'hasPartWithComponentValue',
-      'hasBodyPartWithComponentValue',
+      'hasBodyPartWithComponentValue', // Registered by systemLogicInterpreter
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       // Clothing/equipment operators
@@ -121,8 +121,6 @@ class JsonLogicEvaluationService extends BaseService {
       'canScootCloser',
       'isClosestLeftOccupant',
       'isClosestRightOccupant',
-      // Test-only operators (registered dynamically in test suites)
-      'throw_error_operator',
     ]);
 
     // --- ADDED: Register the 'not' operator alias upon instantiation ---
