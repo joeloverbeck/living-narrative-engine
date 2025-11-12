@@ -196,6 +196,41 @@ export function createJsonLogicContext(
     logger
   );
 
+  // --- Populate Multi-Target Participants (primary, secondary, tertiary) ---
+  const primaryId = event.payload?.primaryId;
+  const secondaryId = event.payload?.secondaryId;
+  const tertiaryId = event.payload?.tertiaryId;
+
+  if (primaryId !== undefined && primaryId !== null) {
+    populateParticipant(
+      'primary',
+      primaryId,
+      evaluationContext,
+      entityManager,
+      logger
+    );
+  }
+
+  if (secondaryId !== undefined && secondaryId !== null) {
+    populateParticipant(
+      'secondary',
+      secondaryId,
+      evaluationContext,
+      entityManager,
+      logger
+    );
+  }
+
+  if (tertiaryId !== undefined && tertiaryId !== null) {
+    populateParticipant(
+      'tertiary',
+      tertiaryId,
+      evaluationContext,
+      entityManager,
+      logger
+    );
+  }
+
   return evaluationContext;
 }
 

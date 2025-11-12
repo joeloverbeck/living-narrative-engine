@@ -14,7 +14,7 @@ import { createCharacterConcept } from '../../../src/characterBuilder/models/cha
 
 describe('Character Concepts Manager - Character Limit Integration', () => {
   describe('Frontend HTML Validation', () => {
-    it('should have maxlength=3000 in HTML', () => {
+    it('should have maxlength=6000 in HTML', () => {
       // Load the HTML file
       const htmlPath = path.join(
         process.cwd(),
@@ -29,20 +29,20 @@ describe('Character Concepts Manager - Character Limit Integration', () => {
       // Check the textarea
       const conceptTextarea = document.getElementById('concept-text');
       expect(conceptTextarea).toBeTruthy();
-      expect(conceptTextarea.getAttribute('maxlength')).toBe('3000');
+      expect(conceptTextarea.getAttribute('maxlength')).toBe('6000');
       expect(conceptTextarea.getAttribute('minlength')).toBe('10');
 
       // Check the character counter
       const charCount = document.getElementById('char-count');
       expect(charCount).toBeTruthy();
-      expect(charCount.textContent).toBe('0/3000');
+      expect(charCount.textContent).toBe('0/6000');
 
       dom.window.close();
     });
   });
 
   describe('Backend Model Validation', () => {
-    it('should accept concepts up to 3000 characters matching frontend', () => {
+    it('should accept concepts up to 6000 characters matching frontend', () => {
       // Test various lengths up to the frontend limit
       const testCases = [
         { length: 10, description: 'minimum length' },
@@ -50,11 +50,14 @@ describe('Character Concepts Manager - Character Limit Integration', () => {
         { length: 1157, description: 'problematic length from error log' },
         { length: 1500, description: 'mid-range length' },
         { length: 2000, description: 'higher length' },
-        { length: 2500, description: 'near maximum' },
-        { length: 3000, description: 'exact maximum matching frontend' },
+        { length: 2500, description: 'near old maximum' },
+        { length: 3000, description: 'old maximum' },
+        { length: 4000, description: 'mid-range in new limit' },
+        { length: 5000, description: 'near new maximum' },
+        { length: 6000, description: 'exact maximum matching frontend' },
       ];
 
-      testCases.forEach(({ length, description }) => {
+      testCases.forEach(({ length }) => {
         const concept = 'a'.repeat(length);
         const result = createCharacterConcept(concept);
 
@@ -66,11 +69,11 @@ describe('Character Concepts Manager - Character Limit Integration', () => {
       });
     });
 
-    it('should reject concepts over 3000 characters', () => {
-      const tooLongConcept = 'a'.repeat(3001);
+    it('should reject concepts over 6000 characters', () => {
+      const tooLongConcept = 'a'.repeat(6001);
 
       expect(() => createCharacterConcept(tooLongConcept)).toThrow(
-        'CharacterConcept: concept must be no more than 3000 characters long'
+        'CharacterConcept: concept must be no more than 6000 characters long'
       );
     });
 
@@ -101,7 +104,7 @@ describe('Character Concepts Manager - Character Limit Integration', () => {
 
       expect(result).toBeDefined();
       expect(result.concept).toBe(realWorldConcept.trim());
-      expect(result.concept.length).toBeLessThanOrEqual(3000);
+      expect(result.concept.length).toBeLessThanOrEqual(6000);
       expect(result.concept.length).toBeGreaterThanOrEqual(10);
     });
   });
