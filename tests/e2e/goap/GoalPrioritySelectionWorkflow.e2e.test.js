@@ -29,6 +29,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createGoapTestBed } from '../../common/goap/goapTestHelpers.js';
+import { createComponentAccessor } from '../../../src/logic/componentAccessor.js';
 
 describe('Goal Priority Selection Workflow E2E', () => {
   let testBed;
@@ -43,63 +44,113 @@ describe('Goal Priority Selection Workflow E2E', () => {
     }
   });
 
+  /**
+   * Helper function to set up component accessor for an actor
+   * Required for JSON Logic to properly evaluate component references
+   */
+  const setupComponentAccessor = (actor) => {
+    // Store original methods
+    const originalGetEntityInstance = testBed.entityManager.getEntityInstance;
+    const originalHasComponent = testBed.entityManager.hasComponent;
+    const originalGetComponentData = testBed.entityManager.getComponentData;
+
+    // Override getEntityInstance to return entity with component accessor
+    testBed.entityManager.getEntityInstance = (id) => {
+      if (id === actor.id) {
+        return {
+          id: actor.id,
+          components: createComponentAccessor(actor.id, testBed.entityManager, testBed.logger)
+        };
+      }
+      return originalGetEntityInstance ? originalGetEntityInstance.call(testBed.entityManager, id) : null;
+    };
+
+    // Override hasComponent to check actor's components
+    testBed.entityManager.hasComponent = (entityId, componentId) => {
+      if (entityId === actor.id) {
+        return actor.hasComponent(componentId);
+      }
+      return originalHasComponent ? originalHasComponent.call(testBed.entityManager, entityId, componentId) : false;
+    };
+
+    // Override getComponentData to return actor's component data
+    testBed.entityManager.getComponentData = (entityId, componentId) => {
+      if (entityId === actor.id) {
+        return actor.getComponent(componentId);
+      }
+      return originalGetComponentData ? originalGetComponentData.call(testBed.entityManager, entityId, componentId) : null;
+    };
+  };
+
+  /**
+   * Helper function to mock goal definitions
+   * Returns standard test goals with simplified relevance checks
+   * Note: Uses != for component existence checks instead of >= for better JSON Logic compatibility
+   */
+  const setupMockGoals = () => {
+    const mockGoals = [
+      {
+        id: 'core:defeat_enemy',
+        priority: 90,
+        relevance: {
+          and: [
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.combat:in_combat' }, null] },
+            { '!=': [{ var: 'actor.components.core:health' }, null] },
+            { '>': [{ var: 'actor.components.core:health.value' }, 20] }
+          ]
+        },
+        goalState: {
+          '==': [{ var: 'actor.components.combat:in_combat' }, null]
+        }
+      },
+      {
+        id: 'core:find_food',
+        priority: 80,
+        relevance: {
+          and: [
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.core:hunger' }, null] },
+            { '<': [{ var: 'actor.components.core:hunger.value' }, 30] },
+            { '==': [{ var: 'actor.components.items:has_food' }, null] }
+          ]
+        },
+        goalState: {
+          '!=': [{ var: 'actor.components.items:has_food' }, null]
+        }
+      },
+      {
+        id: 'core:rest_safely',
+        priority: 60,
+        relevance: {
+          and: [
+            { '!=': [{ var: 'actor.components.core:actor' }, null] },
+            { '!=': [{ var: 'actor.components.core:energy' }, null] },
+            { '<': [{ var: 'actor.components.core:energy.value' }, 40] }
+          ]
+        },
+        goalState: {
+          and: [
+            { '!=': [{ var: 'actor.components.positioning:lying_down' }, null] },
+            { '!=': [{ var: 'actor.components.core:energy' }, null] },
+            { '>=': [{ var: 'actor.components.core:energy.value' }, 80] }
+          ]
+        }
+      }
+    ];
+
+    const gameDataRepository = testBed.container.resolve('IGameDataRepository');
+    gameDataRepository.getAllGoalDefinitions = () => mockGoals;
+
+    return mockGoals;
+  };
+
   describe('Priority-Based Goal Selection', () => {
     it('should select highest-priority goal when multiple goals are relevant', async () => {
       testBed.logger.info('=== Test: Highest-Priority Goal Selection ===');
 
-      // Step 1: Mock goal definitions (simulating loaded goals from mods)
-      // Goals are based on actual goal definitions from data/mods/core/goals/
-      const mockGoals = [
-        {
-          id: 'core:defeat_enemy',
-          priority: 90,
-          relevance: {
-            and: [
-              { '>=': [{ var: 'actor.components.core:actor' }, null] },
-              { '>=': [{ var: 'actor.components.combat:in_combat' }, null] },
-              { '>': [{ var: 'actor.components.core:health.value' }, 20] }
-            ]
-          },
-          goalState: {
-            '!': [{ var: 'actor.components.combat:in_combat' }]
-          }
-        },
-        {
-          id: 'core:find_food',
-          priority: 80,
-          relevance: {
-            and: [
-              { '>=': [{ var: 'actor.components.core:actor' }, null] },
-              { '<': [{ var: 'actor.components.core:hunger.value' }, 30] },
-              { '!': [{ var: 'actor.components.items:has_food' }] }
-            ]
-          },
-          goalState: {
-            '>=': [{ var: 'actor.components.items:has_food' }, null]
-          }
-        },
-        {
-          id: 'core:rest_safely',
-          priority: 60,
-          relevance: {
-            and: [
-              { '>=': [{ var: 'actor.components.core:actor' }, null] },
-              { '<': [{ var: 'actor.components.core:energy.value' }, 40] }
-            ]
-          },
-          goalState: {
-            and: [
-              { '>=': [{ var: 'actor.components.positioning:lying_down' }, null] },
-              { '>=': [{ var: 'actor.components.core:energy.value' }, 80] }
-            ]
-          }
-        }
-      ];
-
-      // Mock the gameDataRepository to return our goals
-      const gameDataRepository = testBed.container.resolve('IGameDataRepository');
-      const originalGetAllGoalDefinitions = gameDataRepository.getAllGoalDefinitions;
-      gameDataRepository.getAllGoalDefinitions = () => mockGoals;
+      // Step 1: Set up mock goals first
+      setupMockGoals();
 
       // Step 2: Create actor with ALL goal triggers
       // - combat:in_combat component + health > 20 triggers defeat_enemy (priority 90)
@@ -117,57 +168,19 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
-      // Add updateComponent method to actor mock
-      actor.updateComponent = (componentId, data) => {
-        const existing = actor.getComponent(componentId);
-        if (existing) {
-          Object.assign(existing, data);
-        } else {
-          actor.addComponent(componentId, data);
-        }
-      };
+      // Step 3: Set up component accessor for JSON Logic evaluation
+      setupComponentAccessor(actor);
 
       testBed.logger.info(`Actor created with 3 goal triggers: ${actor.id}`);
 
-      // Log actor components for debugging
-      testBed.logger.debug(`Actor components: ${JSON.stringify(actor.getAllComponents(), null, 2)}`);
-
-      // Step 3: Build planning context
+      // Step 4: Build planning context
       const context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
-
-      // Step 4: Select goal using GoalManager
+      // Step 5: Select goal using GoalManager
       testBed.logger.info('=== Selecting highest-priority goal ===');
-
-      // Debug: Check goal relevance
-      console.log('\n=== DEBUG: Checking goal relevance ===');
-      console.log('Actor ID:', actor.id);
-      console.log('Actor components:', JSON.stringify(actor.getAllComponents(), null, 2));
-      console.log('Actor.components property:', actor.components);
-
-      // Check what the entity manager returns
-      const retrievedActor = testBed.entityManager.getEntityInstance(actor.id);
-      console.log('Retrieved actor:', retrievedActor);
-      console.log('Retrieved actor components:', retrievedActor ? retrievedActor.components : 'N/A');
-
-      for (const goal of mockGoals) {
-        const relevant = testBed.goalManager.isRelevant(goal, actor.id, context);
-        console.log(`Goal ${goal.id} (priority ${goal.priority}): relevant=${relevant}`);
-        if (relevant) {
-          const satisfied = testBed.goalManager.isGoalSatisfied(goal, actor.id, context);
-          console.log(`  - satisfied=${satisfied}`);
-        }
-      }
-
       const selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
-      console.log(`\n=== DEBUG: Selected goal: ${selectedGoal ? selectedGoal.id : 'null'} ===\n`);
 
-      // Step 5: Verify defeat_enemy (priority 90) is selected
+      // Step 6: Verify defeat_enemy (priority 90) is selected
       expect(selectedGoal).toBeDefined();
       expect(selectedGoal).not.toBeNull();
       expect(selectedGoal.id).toBe('core:defeat_enemy');
@@ -180,8 +193,8 @@ describe('Goal Priority Selection Workflow E2E', () => {
     it('should select next-priority goal after highest-priority goal is satisfied', async () => {
       testBed.logger.info('=== Test: Goal Satisfaction and Re-Selection ===');
 
-      // Step 1: Load mods
-      await testBed.loadMods(['core', 'positioning', 'items']);
+      // Step 1: Set up mock goals
+      setupMockGoals();
 
       // Step 2: Create actor with multiple goal triggers
       const actor = await testBed.createActor({
@@ -196,15 +209,23 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
+      // Set up component accessor
+      setupComponentAccessor(actor);
+
+      // Add updateComponent method for actor state changes
+      actor.updateComponent = (componentId, data) => {
+        const existing = actor.getComponent(componentId);
+        if (existing) {
+          Object.assign(existing, data);
+        } else {
+          actor.addComponent(componentId, data);
+        }
+      };
+
       testBed.logger.info('=== Phase 1: Initial goal selection ===');
 
       // Step 3: Create initial context
       let context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       // Step 4: Select first goal (should be defeat_enemy)
       let selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
@@ -221,11 +242,6 @@ describe('Goal Priority Selection Workflow E2E', () => {
 
       // Update context with new state
       context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       testBed.logger.info('Removed combat:in_combat component - defeat_enemy goal now satisfied');
 
@@ -244,11 +260,6 @@ describe('Goal Priority Selection Workflow E2E', () => {
 
       // Update context with new state
       context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       testBed.logger.info('Added items:has_food component - find_food goal now satisfied');
 
@@ -268,11 +279,6 @@ describe('Goal Priority Selection Workflow E2E', () => {
 
       // Update context with new state
       context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       testBed.logger.info('Added positioning:lying_down and restored energy - rest_safely goal now satisfied');
 
@@ -288,8 +294,8 @@ describe('Goal Priority Selection Workflow E2E', () => {
     it('should not select irrelevant goals even if unsatisfied', async () => {
       testBed.logger.info('=== Test: Irrelevant Goal Filtering ===');
 
-      // Step 1: Load mods
-      await testBed.loadMods(['core', 'positioning', 'items']);
+      // Step 1: Set up mock goals
+      setupMockGoals();
 
       // Step 2: Create actor with only ONE goal trigger
       // - hunger < 30 + no has_food triggers find_food (priority 80)
@@ -306,15 +312,12 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
+      setupComponentAccessor(actor);
+
       testBed.logger.info('Actor created with only find_food trigger');
 
       // Step 3: Build planning context
       const context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       // Step 4: Select goal
       const selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
@@ -331,8 +334,8 @@ describe('Goal Priority Selection Workflow E2E', () => {
     it('should not re-select already satisfied goals', async () => {
       testBed.logger.info('=== Test: Satisfied Goal Filtering ===');
 
-      // Step 1: Load mods
-      await testBed.loadMods(['core', 'positioning', 'items']);
+      // Step 1: Set up mock goals
+      setupMockGoals();
 
       // Step 2: Create actor with find_food trigger BUT goal already satisfied
       // - hunger < 30 (relevant)
@@ -348,15 +351,12 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
+      setupComponentAccessor(actor);
+
       testBed.logger.info('Actor created with satisfied find_food goal');
 
       // Step 3: Build planning context
       const context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       // Step 4: Select goal
       const selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
@@ -371,8 +371,8 @@ describe('Goal Priority Selection Workflow E2E', () => {
     it('should handle complex JSON Logic goal state evaluation', async () => {
       testBed.logger.info('=== Test: Complex Goal State Evaluation ===');
 
-      // Step 1: Load mods
-      await testBed.loadMods(['core', 'positioning', 'items']);
+      // Step 1: Set up mock goals
+      setupMockGoals();
 
       // Step 2: Create actor to test rest_safely goal's complex goal state
       // rest_safely goal state requires:
@@ -387,15 +387,22 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
+      setupComponentAccessor(actor);
+
+      // Add updateComponent method for actor state changes
+      actor.updateComponent = (componentId, data) => {
+        const existing = actor.getComponent(componentId);
+        if (existing) {
+          Object.assign(existing, data);
+        } else {
+          actor.addComponent(componentId, data);
+        }
+      };
+
       testBed.logger.info('Actor created for complex goal state testing');
 
       // Step 3: Build initial context
       let context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       // Step 4: Select goal (rest_safely should be selected)
       let selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
@@ -411,11 +418,6 @@ describe('Goal Priority Selection Workflow E2E', () => {
       // Energy still 35 (< 80), goal NOT satisfied yet
 
       context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       // Verify goal still selected (not satisfied with only 1 of 2 conditions)
       selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
@@ -430,11 +432,6 @@ describe('Goal Priority Selection Workflow E2E', () => {
       actor.updateComponent('core:energy', { value: 80 });
 
       context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       // Verify goal no longer selected (both conditions met)
       selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
@@ -448,8 +445,8 @@ describe('Goal Priority Selection Workflow E2E', () => {
     it('should maintain priority ordering with varying relevance conditions', async () => {
       testBed.logger.info('=== Test: Priority Ordering with Varying Relevance ===');
 
-      // Step 1: Load mods
-      await testBed.loadMods(['core', 'positioning', 'items']);
+      // Step 1: Set up mock goals
+      setupMockGoals();
 
       // Create multiple scenarios testing priority system robustness
 
@@ -467,12 +464,9 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
+      setupComponentAccessor(actor);
+
       let context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       let selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
 
@@ -496,12 +490,9 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
+      setupComponentAccessor(actor);
+
       context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
 
@@ -525,12 +516,9 @@ describe('Goal Priority Selection Workflow E2E', () => {
         },
       });
 
+      setupComponentAccessor(actor);
+
       context = testBed.createContext({ actorId: actor.id });
-      context.entities = {
-        [actor.id]: {
-          components: actor.getAllComponents(),
-        },
-      };
 
       selectedGoal = testBed.goalManager.selectGoal(actor.id, context);
 
