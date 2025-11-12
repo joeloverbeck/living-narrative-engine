@@ -47,26 +47,20 @@ describe('Operator Whitelist Validation - Integration', () => {
     });
   });
 
-  it('should only warn about operators registered elsewhere', () => {
+  it('should not warn about unregistered operators when whitelist matches registrations', () => {
     // Act - register operators
     customOperators.registerOperators(evaluationService);
 
-    // Assert - check for warning about unregistered operators
+    // Assert - check that no warning about unregistered operators was emitted
     const warnings = mockLogger.warn.mock.calls.filter(
       (call) =>
         call[0] && call[0].includes('Operators in ALLOWED_OPERATIONS whitelist but not registered')
     );
 
-    // After cleanup of throw_error_operator, should only warn about hasBodyPartWithComponentValue
-    // hasBodyPartWithComponentValue is registered by systemLogicInterpreter
-    expect(warnings.length).toBe(1);
-    const warningData = warnings[0][1];
-    expect(warningData.operators).toContain('hasBodyPartWithComponentValue');
-    expect(warningData.operators).not.toContain('throw_error_operator');
-    expect(warningData.operators).toHaveLength(1);
+    expect(warnings.length).toBe(0);
   });
 
-  it('should only have hasBodyPartWithComponentValue unregistered (registered by systemLogicInterpreter)', () => {
+  it('should not have any unregistered operators after registration', () => {
     // Get the allowed operations before registration
     const allowedOps = evaluationService.getAllowedOperations();
 
@@ -93,11 +87,8 @@ describe('Operator Whitelist Validation - Integration', () => {
       }
     }
 
-    // After cleanup, only hasBodyPartWithComponentValue should be unregistered
-    // (it's registered by systemLogicInterpreter, not JsonLogicCustomOperators)
-    expect(unregisteredOps).toContain('hasBodyPartWithComponentValue');
-    expect(unregisteredOps).not.toContain('throw_error_operator');
-    expect(unregisteredOps).toHaveLength(1);
+    // After cleanup, there should be no unregistered operators remaining
+    expect(unregisteredOps).toHaveLength(0);
   });
 
   it('should verify that registered operators are all in whitelist', () => {
