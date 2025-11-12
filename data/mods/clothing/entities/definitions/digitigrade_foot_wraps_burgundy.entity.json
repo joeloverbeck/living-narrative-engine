@@ -1,0 +1,47 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:digitigrade_foot_wraps_burgundy",
+  "description": "Custom wraps designed for digitigrade feet",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": [
+        "base",
+        "outer"
+      ]
+    },
+    "core:material": {
+      "material": "linen",
+      "properties": [
+        "breathable",
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "digitigrade foot wraps"
+    },
+    "core:description": {
+      "text": "Custom-designed wraps crafted specifically for digitigrade feet, accommodating their unique structure and toe-walking gait. Made from supple linen strips dyed a deep burgundy to coordinate with performance attire, these wraps wind securely around the ankle and lower leg while leaving the paw pads exposed for natural traction. The flexible fabric moves with feline grace, providing protection without restricting movement. Reinforced sections over pressure points ensure durability during active performances. A practical solution that honors non-human anatomy while maintaining aesthetic appeal."
+    },
+    "descriptors:color_extended": {
+      "color": "crimson"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "feet"
+      ],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.18
+    }
+  }
+}
