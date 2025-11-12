@@ -148,7 +148,7 @@ function createControllerDependencies() {
   };
 }
 
-function setupController() {
+function setupController(ControllerClass = TestCharacterBuilderController) {
   document.body.innerHTML = `
     <div id="empty-state" class="state-container"></div>
     <div id="loading-state" class="state-container"></div>
@@ -157,7 +157,7 @@ function setupController() {
   `;
 
   const dependencies = createControllerDependencies();
-  const controller = new TestCharacterBuilderController(dependencies);
+  const controller = new ControllerClass(dependencies);
 
   return { controller, dependencies };
 }
@@ -394,5 +394,224 @@ describe('BaseCharacterBuilderController utility behaviours (integration)', () =
       'Cleanup task must be a function'
     );
     controller.destroy();
+  });
+
+  it('logs warnings when performance APIs fail or marks are missing', () => {
+    const { controller, dependencies } = setupController();
+    const warnSpy = jest.spyOn(dependencies.logger, 'warn');
+
+    const originalMark = jest
+      .spyOn(performance, 'mark')
+      .mockImplementation(() => {
+        throw new Error('mark failure');
+      });
+
+    controller.performanceMark('problem-mark');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to create performance mark: problem-mark'),
+      expect.any(Error)
+    );
+
+    originalMark.mockRestore();
+    warnSpy.mockClear();
+
+    const measurement = controller.performanceMeasure(
+      'missing-measurement',
+      'missing-start',
+      'missing-end'
+    );
+
+    expect(measurement).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Performance marks not found for measurement: missing-measurement'
+      ),
+      expect.objectContaining({
+        startMark: 'missing-start',
+        endMark: 'missing-end',
+        hasStartMark: false,
+        hasEndMark: false,
+      })
+    );
+
+    warnSpy.mockRestore();
+    controller.destroy();
+  });
+
+  it('recovers from performance measurement failures triggered by event dispatch errors', () => {
+    const { controller, dependencies } = setupController();
+    const warnSpy = jest.spyOn(dependencies.logger, 'warn');
+    const nowSpy = jest.spyOn(performance, 'now');
+
+    nowSpy.mockReturnValueOnce(125);
+    controller.performanceMark('phase-start');
+
+    nowSpy.mockReturnValueOnce(340);
+    controller.performanceMark('phase-end');
+
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockClear();
+
+    const dispatchSpy = jest
+      .spyOn(controller.eventBus, 'dispatch')
+      .mockImplementation(() => {
+        throw new Error('dispatch failure');
+      });
+
+    const result = controller.performanceMeasure(
+      'phase',
+      'phase-start',
+      'phase-end'
+    );
+
+    expect(result).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to measure performance: phase'),
+      expect.any(Error)
+    );
+
+    dispatchSpy.mockRestore();
+    nowSpy.mockRestore();
+    warnSpy.mockRestore();
+    controller.destroy();
+  });
+
+  it('manages debounce timers when maxWait forces immediate execution, cancellation, and flushing', () => {
+    const { controller } = setupController();
+    jest.useFakeTimers({ doNotFake: ['Date'] });
+
+    let fakeNow = 100;
+    const dateNowSpy = jest
+      .spyOn(Date, 'now')
+      .mockImplementation(() => fakeNow);
+    const clearSpy = jest.spyOn(controller, '_clearTimeout');
+
+    const immediateHandler = jest.fn();
+    const immediateDebounced = controller.createDebounced(
+      immediateHandler,
+      10,
+      { maxWait: 1 }
+    );
+
+    immediateDebounced('first');
+    fakeNow = 220;
+    immediateDebounced('second');
+    expect(immediateHandler).toHaveBeenCalledTimes(2);
+
+    const cancelHandler = jest.fn();
+    const cancelDebounced = controller.createDebounced(
+      cancelHandler,
+      50,
+      { maxWait: 120 }
+    );
+
+    fakeNow = 400;
+    const clearCallsBeforeCancel = clearSpy.mock.calls.length;
+    cancelDebounced('cancel-me');
+    cancelDebounced.cancel();
+    expect(clearSpy.mock.calls.length).toBeGreaterThan(clearCallsBeforeCancel);
+
+    const flushHandler = jest.fn();
+    const flushDebounced = controller.createDebounced(
+      flushHandler,
+      30,
+      { maxWait: 200 }
+    );
+
+    fakeNow = 520;
+    flushDebounced('queued-1');
+    fakeNow = 640;
+    flushDebounced('queued-2');
+    flushDebounced.flush();
+    expect(flushHandler).toHaveBeenCalledWith('queued-2');
+
+    clearSpy.mockRestore();
+    dateNowSpy.mockRestore();
+    jest.runOnlyPendingTimers();
+    controller.destroy();
+  });
+
+  it('clears throttled timers when executing immediately and via cancellation', () => {
+    const { controller } = setupController();
+    jest.useFakeTimers({ doNotFake: ['Date'] });
+
+    let fakeNow = 150;
+    const dateNowSpy = jest
+      .spyOn(Date, 'now')
+      .mockImplementation(() => fakeNow);
+    const clearSpy = jest.spyOn(controller, '_clearTimeout');
+    const handler = jest.fn();
+    const throttled = controller.createThrottled(
+      handler,
+      50,
+      { leading: true, trailing: true }
+    );
+
+    throttled('initial');
+    fakeNow = 170;
+    throttled('queued');
+    fakeNow = 250;
+    throttled('trigger');
+
+    expect(handler).toHaveBeenCalledTimes(2);
+
+    fakeNow = 260;
+    const clearCallsBeforeCancel = clearSpy.mock.calls.length;
+    throttled('final');
+    throttled.cancel();
+    expect(clearSpy.mock.calls.length).toBeGreaterThan(clearCallsBeforeCancel);
+
+    jest.runOnlyPendingTimers();
+    expect(handler).toHaveBeenCalledTimes(2);
+
+    clearSpy.mockRestore();
+    dateNowSpy.mockRestore();
+    controller.destroy();
+  });
+
+  it('warns when destroy is invoked during an ongoing destruction cycle', () => {
+    class ReentrantDestroyController extends TestCharacterBuilderController {
+      constructor(dependencies) {
+        super(dependencies);
+        this._reentered = false;
+      }
+
+      _preDestroy() {
+        if (!this._reentered) {
+          this._reentered = true;
+          this.destroy();
+        }
+      }
+    }
+
+    const { controller, dependencies } = setupController(
+      ReentrantDestroyController
+    );
+    const warnSpy = jest.spyOn(dependencies.logger, 'warn');
+
+    controller.destroy();
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Destruction already in progress')
+    );
+    expect(controller.isDestroyed).toBe(true);
+
+    warnSpy.mockRestore();
+  });
+
+  it('propagates errors from destruction phases while marking the controller as destroyed', () => {
+    const { controller } = setupController();
+    const error = new Error('phase failure');
+    const phaseSpy = jest
+      .spyOn(controller, '_executePhase')
+      .mockImplementation(() => {
+        throw error;
+      });
+
+    expect(() => controller.destroy()).toThrow(error);
+    expect(controller.isDestroyed).toBe(true);
+    expect(controller.isDestroying).toBe(false);
+
+    phaseSpy.mockRestore();
   });
 });
