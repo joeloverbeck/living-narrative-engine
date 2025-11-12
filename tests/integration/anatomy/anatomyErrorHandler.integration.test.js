@@ -106,6 +106,34 @@ describe('AnatomyErrorHandler integration', () => {
     expect(errorEvents.some((event) => event.payload?.errorType === 'AnatomyGenerationError')).toBe(true);
   });
 
+  it('returns the wrapped anatomy error when the central sync fallback flags a recovered state', () => {
+    const { anatomyErrorHandler, centralErrorHandler } = harness;
+
+    const syncStrategy = () => {
+      throw new Error('sync strategy execution should rely on fallback metadata');
+    };
+    syncStrategy.sync = true;
+    syncStrategy.fallback = (errorInfo) => ({
+      recovered: true,
+      recoveryId: errorInfo.id,
+      contextOperation: errorInfo.context.operation,
+    });
+
+    centralErrorHandler.registerRecoveryStrategy('AnatomyGenerationError', syncStrategy);
+
+    const upstreamError = new Error('bio-generator overheated');
+    const result = anatomyErrorHandler.handle(upstreamError, {
+      operation: 'generation',
+      entityId: 'entity-recovered',
+      recipeId: 'recipe-recovered',
+    });
+
+    expect(result).toBeInstanceOf(AnatomyGenerationError);
+    expect(result.entityId).toBe('entity-recovered');
+    expect(result.recipeId).toBe('recipe-recovered');
+    expect(result.cause).toBe(upstreamError);
+  });
+
   it('wraps errors in graph-specific metadata and falls back to local handling when central sync handling fails', () => {
     const { anatomyErrorHandler } = harness;
 
@@ -228,5 +256,60 @@ describe('AnatomyErrorHandler integration', () => {
         { id: 'rightArm', description: 'rightArm part' },
       ],
     });
+  });
+
+  it('falls back to local graph handling when the central async handler surfaces an unrecoverable error', async () => {
+    const { anatomyErrorHandler } = harness;
+
+    const rootError = new Error('graph topology corruption');
+
+    const result = await anatomyErrorHandler.handleAsync(rootError, {
+      operation: 'graphBuilding',
+      rootId: 'root-critical',
+    });
+
+    expect(result).toBeInstanceOf(GraphBuildingError);
+    expect(result.rootId).toBe('root-critical');
+    expect(result.cause).toBe(rootError);
+  });
+
+  it('preserves metadata when handling pre-wrapped anatomy errors without central collaborators', () => {
+    const localHarness = createHarness({ includeCentral: false });
+    const { anatomyErrorHandler: localErrorHandler } = localHarness;
+
+    const generationCause = new Error('thermal runaway');
+    const wrappedGenerationError = new AnatomyGenerationError(
+      'generation failed decisively',
+      'entity-local',
+      'recipe-local',
+      generationCause,
+    );
+
+    const generationResult = localErrorHandler.handle(wrappedGenerationError, {
+      operation: 'generation',
+      entityId: 'entity-local',
+      recipeId: 'recipe-local',
+    });
+
+    expect(generationResult).toBe(wrappedGenerationError);
+    expect(generationResult.cause).toBe(generationCause);
+
+    const descriptionCause = new Error('narrative subsystem offline');
+    const wrappedDescriptionError = new DescriptionGenerationError(
+      'description failed catastrophically',
+      'entity-desc',
+      ['arm', 'torso'],
+      descriptionCause,
+    );
+
+    const descriptionResult = localErrorHandler.handleSync(wrappedDescriptionError, {
+      operation: 'description',
+      entityId: 'entity-desc',
+      partIds: ['arm', 'torso'],
+    });
+
+    expect(descriptionResult).toBe(wrappedDescriptionError);
+    expect(descriptionResult.partIds).toEqual(['arm', 'torso']);
+    expect(descriptionResult.cause).toBe(descriptionCause);
   });
 });
