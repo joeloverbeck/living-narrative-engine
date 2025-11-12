@@ -1,13 +1,11 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "items:event-is-action-lower-aim",
-  "description": "Placeholder condition for lower_aim action. To be implemented in WEASYSIMP-007.",
-  "condition": {
+  "description": "True when event is attempting the lower_aim action",
+  "logic": {
     "==": [
-      {
-        "var": "event.type"
-      },
-      "ATTEMPT_ACTION"
+      { "var": "event.payload.actionId" },
+      "items:lower_aim"
     ]
   }
 }

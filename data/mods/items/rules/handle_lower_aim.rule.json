@@ -1,7 +1,19 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "items:handle_lower_aim",
-  "description": "Placeholder rule for lower_aim action. To be implemented in WEASYSIMP-007.",
-  "conditions": [],
-  "actions": []
+  "comment": "Placeholder rule for lower_aim action. To be implemented in WEASYSIMP-007.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "items:event-is-action-lower-aim"
+  },
+  "actions": [
+    {
+      "type": "LOG_MESSAGE",
+      "comment": "Placeholder action - to be replaced with actual lower_aim logic in WEASYSIMP-007",
+      "parameters": {
+        "message": "lower_aim action attempted - implementation pending",
+        "level": "debug"
+      }
+    }
+  ]
 }
