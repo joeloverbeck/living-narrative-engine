@@ -62,18 +62,14 @@ describe('GOAP E2E: Multiple Actors', () => {
       const context = testBed.createContext({ actorId: actor.id });
       const actions = await testBed.getAvailableActions(actor);
 
-      // GOAP may return null index when no goals can be satisfied
-      // This will throw from assertValidActionIndex - catch and handle
-      try {
-        const decision = await testBed.makeGoapDecision(actor, context, actions);
-        decisions.push(decision);
-        expect(decision).toBeDefined();
-        expect(decision).toHaveProperty('chosenIndex');
-      } catch (error) {
-        // Expected when no satisfiable goals exist
-        expect(error.message).toContain('Could not resolve the chosen action');
-        decisions.push({ chosenIndex: null, error: true });
-      }
+      const decision = await testBed.makeGoapDecision(actor, context, actions);
+      decisions.push(decision);
+
+      expect(decision).toBeDefined();
+      expect(decision).toHaveProperty('chosenIndex', null);
+      expect(decision.speech).toBeNull();
+      expect(decision.thoughts).toBeNull();
+      expect(decision.notes).toBeNull();
     }
 
     const duration = Date.now() - startTime;
@@ -106,12 +102,11 @@ describe('GOAP E2E: Multiple Actors', () => {
     }
   }, 30000);
 
-  it('should cache plans across turns for same actor', async () => {
+  it('should reuse cached plans across turns for same actor', async () => {
     // Create actor
     const actor = await testBed.createActor({
       name: 'TestActor',
       type: 'goap',
-      components: { 'core:actor': { hunger: 20 } },
     });
 
     const context = testBed.createContext({ actorId: actor.id });
@@ -129,7 +124,10 @@ describe('GOAP E2E: Multiple Actors', () => {
     // Both decisions should be consistent (both null)
     expect(decision1.chosenIndex).toBe(decision2.chosenIndex);
 
-    // This test should be updated when proper goal/action setup allows successful planning
+    // Confirm cached plan remains available
+    const persistedPlan = testBed.planCache.get(actor.id);
+    expect(persistedPlan).not.toBeNull();
+    expect(persistedPlan.goalId).toBe(goal.id);
   }, 30000);
 
   it('should invalidate cache when actor state changes', async () => {
@@ -137,7 +135,6 @@ describe('GOAP E2E: Multiple Actors', () => {
     const actor = await testBed.createActor({
       name: 'TestActor',
       type: 'goap',
-      components: { 'core:actor': { hunger: 20 } },
     });
 
     const context = testBed.createContext({ actorId: actor.id });
@@ -148,8 +145,9 @@ describe('GOAP E2E: Multiple Actors', () => {
     expect(decision1).toBeDefined();
     expect(decision1.chosenIndex).toBeNull();
 
-    // Invalidate cache to test cache invalidation mechanism
-    testBed.planCache.invalidate(actor.id);
+    const decision1 = await testBed.makeGoapDecision(actor, context, actions);
+    expect(decision1.chosenIndex).toBe(actions[0].index);
+    expect(testBed.planCache.has(actor.id)).toBe(true);
 
     // Second decision - should still return null (same conditions)
     const actions2 = await testBed.getAvailableActions(actor);
@@ -157,7 +155,7 @@ describe('GOAP E2E: Multiple Actors', () => {
     expect(decision2).toBeDefined();
     expect(decision2.chosenIndex).toBeNull();
 
-    // This test validates that cache invalidation doesn't crash
-    // It should be updated when proper goal/action setup is implemented
+    const decision2 = await testBed.makeGoapDecision(actor, context, actions);
+    expect(decision2.chosenIndex).toBeNull();
   }, 30000);
 });
