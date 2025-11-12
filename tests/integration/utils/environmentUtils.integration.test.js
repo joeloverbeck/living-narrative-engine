@@ -1,3 +1,4 @@
+import * as environmentUtils from '../../../src/utils/environmentUtils.js';
 import {
   detectEnvironment,
   isNodeEnvironment,
@@ -5,6 +6,7 @@ import {
   isTestEnvironment,
   getEnvironmentVariable,
   getEnvironmentMode,
+  getBooleanEnvironmentVariable,
   shouldSkipDebugConfig,
   getEnvironmentConfig,
   hasEnvironmentVariable,
@@ -241,6 +243,31 @@ describe('environmentUtils integration behavior', () => {
       );
     });
 
+    it('falls back to defaults when global env values are explicitly null', () => {
+      Object.defineProperty(globalThis, 'env', {
+        configurable: true,
+        value: { FEATURE_TOGGLE_FROM_GLOBAL: null },
+      });
+
+      expect(
+        getEnvironmentVariable('FEATURE_TOGGLE_FROM_GLOBAL', 'fallback-value')
+      ).toBe('fallback-value');
+    });
+
+    it('interprets environment presence across boolean string variants', () => {
+      process.env.HAS_ENVIRONMENTAL_FLAG = '   ';
+      expect(hasEnvironmentVariable('HAS_ENVIRONMENTAL_FLAG')).toBe(false);
+
+      process.env.HAS_ENVIRONMENTAL_FLAG = 'NO';
+      expect(hasEnvironmentVariable('HAS_ENVIRONMENTAL_FLAG')).toBe(false);
+
+      process.env.HAS_ENVIRONMENTAL_FLAG = 'YeS';
+      expect(hasEnvironmentVariable('HAS_ENVIRONMENTAL_FLAG')).toBe(true);
+
+      process.env.HAS_ENVIRONMENTAL_FLAG = 'production';
+      expect(hasEnvironmentVariable('HAS_ENVIRONMENTAL_FLAG')).toBe(true);
+    });
+
     it('handles getters that throw when checking for variable presence', () => {
       Object.defineProperty(globalThis, 'env', {
         configurable: true,
@@ -269,6 +296,28 @@ describe('environmentUtils integration behavior', () => {
 
       process.env.NODE_ENV = 'DEV';
       expect(getEnvironmentMode()).toBe('development');
+
+      if (originalJest !== undefined) {
+        globalThis.jest = originalJest;
+      }
+    });
+
+    it('normalizes testing aliases and boolean environment toggles', () => {
+      const originalJest = globalThis.jest;
+      delete globalThis.jest;
+
+      process.env.NODE_ENV = 'testing';
+      expect(getEnvironmentMode()).toBe('test');
+
+      process.env.FEATURE_DEFAULTING = '   ';
+      expect(getBooleanEnvironmentVariable('FEATURE_DEFAULTING', true)).toBe(
+        true
+      );
+
+      process.env.FEATURE_DEFAULTING = 'maybe';
+      expect(getBooleanEnvironmentVariable('FEATURE_DEFAULTING', false)).toBe(
+        false
+      );
 
       if (originalJest !== undefined) {
         globalThis.jest = originalJest;
@@ -330,6 +379,18 @@ describe('environmentUtils integration behavior', () => {
 
       if (typeof window !== 'undefined') {
         window._document = previousInternalDocument;
+      }
+    });
+
+    it('reports absence of garbage collection hooks safely', () => {
+      const originalGc = global.gc;
+      delete global.gc;
+
+      expect(isGarbageCollectionAvailable()).toBe(false);
+      expect(triggerGarbageCollection()).toBe(false);
+
+      if (originalGc) {
+        global.gc = originalGc;
       }
     });
 
