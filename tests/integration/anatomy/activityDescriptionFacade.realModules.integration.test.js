@@ -171,7 +171,7 @@ function createComponentDefinition(id, properties = {}) {
   };
 }
 
-async function buildFacadeEnvironment() {
+async function buildFacadeEnvironment({ includeEventBus = true } = {}) {
   const testBed = new AnatomyIntegrationTestBed();
   testBed.loadCoreTestData();
 
@@ -182,6 +182,26 @@ async function buildFacadeEnvironment() {
     }),
     [closenessComponent.id]: closenessComponent,
     [handHoldingComponent.id]: handHoldingComponent,
+    'test:conditional_activity': {
+      id: 'test:conditional_activity',
+      dataSchema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          activityMetadata: { type: 'object' },
+        },
+      },
+    },
+    'test:simple_activity': {
+      id: 'test:simple_activity',
+      dataSchema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          activityMetadata: { type: 'object' },
+        },
+      },
+    },
     'test:quiet_presence': {
       id: 'test:quiet_presence',
       dataSchema: {
@@ -213,7 +233,7 @@ async function buildFacadeEnvironment() {
   });
 
   const logger = testBed.mocks.logger;
-  const eventBus = new EventBus({ logger });
+  const eventBus = includeEventBus ? new EventBus({ logger }) : null;
 
   const anatomyFormattingService = new AnatomyFormattingService({
     dataRegistry: testBed.registry,
@@ -222,7 +242,7 @@ async function buildFacadeEnvironment() {
   });
   anatomyFormattingService.initialize();
 
-  const cacheManager = new ActivityCacheManager({ logger, eventBus });
+  const cacheManager = new ActivityCacheManager({ logger, eventBus: eventBus ?? undefined });
   const indexManager = new ActivityIndexManager({ cacheManager, logger });
   const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
     entityManager: testBed.entityManager,
@@ -292,6 +312,8 @@ async function buildFacadeEnvironment() {
     anatomyFormattingService,
     rawContextBuildingSystem,
     rawNlgSystem,
+    groupingSystem,
+    filteringSystem,
   };
 }
 
@@ -448,7 +470,19 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
       facade.clearAllCaches();
       expect(cacheManager.get('entityName', 'gamma')).toBeUndefined();
 
+      cacheManager.set('entityName', 'hooked', 'Hooked');
       const hooks = facade.getTestHooks();
+      hooks.clearAllCaches();
+      expect(cacheManager.get('entityName', 'hooked')).toBeUndefined();
+
+      cacheManager.set('entityName', 'hook-single', 'Hook Single');
+      hooks.invalidateCache('hook-single');
+      expect(cacheManager.get('entityName', 'hook-single')).toBeUndefined();
+
+      cacheManager.set('entityName', 'hook-multi', 'Hook Multi');
+      hooks.invalidateEntities(['hook-multi']);
+      expect(cacheManager.get('entityName', 'hook-multi')).toBeUndefined();
+
       hooks.registerEventUnsubscriber(() => {});
       hooks.registerEventUnsubscriber(() => {
         throw new Error('unsubscribe failure');
@@ -470,6 +504,180 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
       expect(destroySpy).toHaveBeenCalled();
     } finally {
       jest.restoreAllMocks();
+      await env.testBed.cleanup();
+    }
+  });
+
+  it('returns empty string when metadata conditions filter everything out', async () => {
+    const env = await buildFacadeEnvironment();
+    try {
+      const { testBed, facade } = env;
+      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: 'actor_conditions_filtered',
+      });
+
+      await testBed.entityManager.addComponent(actor.id, 'core:name', {
+        text: 'Conditionally Silent',
+      });
+      await testBed.entityManager.addComponent(actor.id, 'test:conditional_activity', {
+        activityMetadata: {
+          template: '{actor} attempts to invoke a hidden rune',
+          shouldDescribeInActivity: true,
+          conditions: {
+            requiredComponents: ['test:nonexistent_component'],
+          },
+        },
+      });
+
+      const description = await facade.generateActivityDescription(actor);
+      expect(description).toBe('');
+    } finally {
+      await env.facade.destroy();
+      jest.restoreAllMocks();
+      await env.testBed.cleanup();
+    }
+  });
+
+  it('returns empty string when grouping system yields no activity groups', async () => {
+    const env = await buildFacadeEnvironment();
+    try {
+      const { testBed, facade, groupingSystem } = env;
+      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: 'actor_no_groups',
+      });
+
+      await testBed.entityManager.addComponent(actor.id, 'core:name', {
+        text: 'Ungrouped Performer',
+      });
+      await testBed.entityManager.addComponent(actor.id, 'test:simple_activity', {
+        activityMetadata: {
+          template: '{actor} hums a solitary tune',
+          shouldDescribeInActivity: true,
+        },
+      });
+
+      const groupingSpy = jest
+        .spyOn(groupingSystem, 'groupActivities')
+        .mockReturnValue([]);
+
+      const description = await facade.generateActivityDescription(actor);
+
+      expect(groupingSpy).toHaveBeenCalled();
+      expect(description).toBe('');
+    } finally {
+      await env.facade.destroy();
+      jest.restoreAllMocks();
+      await env.testBed.cleanup();
+    }
+  });
+
+  it('does not dispatch errors when event bus is unavailable', async () => {
+    const env = await buildFacadeEnvironment({ includeEventBus: false });
+    try {
+      const { testBed, facade, metadataCollectionSystem } = env;
+      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: 'actor_no_event_bus',
+      });
+
+      await testBed.entityManager.addComponent(actor.id, 'core:name', {
+        text: 'Disconnected Actor',
+      });
+
+      jest
+        .spyOn(metadataCollectionSystem, 'collectActivityMetadata')
+        .mockImplementation(() => {
+          throw new Error('metadata failure without bus');
+        });
+
+      const description = await facade.generateActivityDescription(actor);
+      expect(description).toBe('');
+    } finally {
+      await env.facade.destroy();
+      jest.restoreAllMocks();
+      await env.testBed.cleanup();
+    }
+  });
+
+  it('warns when event bus dispatch throws during error handling', async () => {
+    const env = await buildFacadeEnvironment();
+    try {
+      const { testBed, facade, metadataCollectionSystem, eventBus } = env;
+      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
+        instanceId: 'actor_dispatch_failure',
+      });
+
+      await testBed.entityManager.addComponent(actor.id, 'core:name', {
+        text: 'Dispatcher',
+      });
+
+      jest
+        .spyOn(metadataCollectionSystem, 'collectActivityMetadata')
+        .mockImplementation(() => {
+          throw new Error('metadata failure with bus');
+        });
+
+      const dispatchSpy = jest
+        .spyOn(eventBus, 'dispatch')
+        .mockImplementation(() => {
+          throw new Error('dispatch boom');
+        });
+
+      const description = await facade.generateActivityDescription(actor);
+      expect(description).toBe('');
+      expect(dispatchSpy).toHaveBeenCalled();
+    } finally {
+      await env.facade.destroy();
+      jest.restoreAllMocks();
+      await env.testBed.cleanup();
+    }
+  });
+
+  it('handles cache lifecycle errors gracefully', async () => {
+    const env = await buildFacadeEnvironment();
+    try {
+      const { facade, cacheManager } = env;
+
+      const clearAllSpy = jest
+        .spyOn(cacheManager, 'clearAll')
+        .mockImplementation(() => {
+          throw new Error('clear failure');
+        });
+      expect(() => facade.clearAllCaches()).not.toThrow();
+      expect(clearAllSpy).toHaveBeenCalled();
+
+      jest.spyOn(cacheManager, 'invalidate').mockImplementation(() => {
+        throw new Error('invalidate failure');
+      });
+
+      facade.invalidateCache();
+      facade.invalidateCache('entity_error');
+      facade.invalidateEntities([]);
+    } finally {
+      await env.facade.destroy();
+      jest.restoreAllMocks();
+      await env.testBed.cleanup();
+    }
+  });
+
+  it('logs errors when cache manager destroy fails', async () => {
+    const env = await buildFacadeEnvironment();
+    let destroyed = false;
+    try {
+      const { facade, cacheManager } = env;
+      const originalDestroy = cacheManager.destroy.bind(cacheManager);
+      const destroySpy = jest.spyOn(cacheManager, 'destroy').mockImplementation(() => {
+        throw new Error('destroy failure');
+      });
+
+      expect(() => facade.destroy()).not.toThrow();
+      destroyed = true;
+      destroySpy.mockRestore();
+      await originalDestroy();
+    } finally {
+      jest.restoreAllMocks();
+      if (!destroyed) {
+        await env.facade.destroy();
+      }
       await env.testBed.cleanup();
     }
   });
