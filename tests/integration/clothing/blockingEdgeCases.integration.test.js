@@ -25,11 +25,6 @@ describe('Blocking System Edge Cases', () => {
     // Arrange: Belt with self-referential blocking (should be ignored)
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
 
-    // Initialize empty equipment component
-    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
-      equipped: {},
-    });
-
     const belt = fixture.createEntity({
       id: 'belt',
       name: 'Self-Blocking Belt',
@@ -54,18 +49,23 @@ describe('Blocking System Edge Cases', () => {
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_lower: {
-          accessories: belt.id,
+          accessories: belt,
         },
       },
     });
 
-    // Act: Check removable items via action discovery
+    // Act: Check that action is discovered
     const actions = fixture.discoverActions(actor.id);
-    const removeActions = actions.filter((a) => a.id === 'clothing:remove_clothing');
-    const removableItems = removeActions.map((a) => a.targetId);
+    const removeAction = actions.find((a) => a.id === 'clothing:remove_clothing');
+    expect(removeAction).toBeDefined();
+
+    // Resolve the scope to get removable items
+    const testContext = { actor: { id: actor.id, components: {} } };
+    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync('clothing:topmost_clothing', testContext);
+    const removableItems = Array.from(scopeResult.value);
 
     // Assert: Belt should still be removable (not blocking itself)
-    expect(removableItems).toContain(belt.id);
+    expect(removableItems).toContain(belt);
   });
 
   it('should handle empty equipment gracefully', async () => {
@@ -94,11 +94,6 @@ describe('Blocking System Edge Cases', () => {
     // Arrange: Item with missing fields in blocking component
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
 
-    // Initialize empty equipment component
-    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
-      equipped: {},
-    });
-
     const item = fixture.createEntity({
       id: 'malformed_item',
       name: 'Malformed Item',
@@ -118,29 +113,29 @@ describe('Blocking System Edge Cases', () => {
       await fixture.modifyComponent(actor.id, 'clothing:equipment', {
         equipped: {
           torso_upper: {
-            base: item.id,
+            base: item,
           },
         },
       });
 
       // Action discovery should handle this gracefully
       const actions = fixture.discoverActions(actor.id);
-      const removeActions = actions.filter((a) => a.id === 'clothing:remove_clothing');
+      const removeAction = actions.find((a) => a.id === 'clothing:remove_clothing');
+      expect(removeAction).toBeDefined();
+
+      // Resolve the scope to get removable items
+      const testContext = { actor: { id: actor.id, components: {} } };
+      const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync('clothing:topmost_clothing', testContext);
+      const removableItems = Array.from(scopeResult.value);
 
       // Item should be removable (empty blockedSlots means it blocks nothing)
-      const removableItems = removeActions.map((a) => a.targetId);
-      expect(removableItems).toContain(item.id);
+      expect(removableItems).toContain(item);
     }).resolves.not.toThrow();
   });
 
   it('should handle state changes between discovery and execution', async () => {
     // Arrange
     const { actor } = fixture.createStandardActorTarget(['John', 'Unused']);
-
-    // Initialize empty equipment component
-    await fixture.modifyComponent(actor.id, 'clothing:equipment', {
-      equipped: {},
-    });
 
     const belt = fixture.createEntity({
       id: 'belt',
@@ -177,29 +172,30 @@ describe('Blocking System Edge Cases', () => {
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         torso_lower: {
-          accessories: belt.id,
+          accessories: belt,
         },
         legs: {
-          base: pants.id,
+          base: pants,
         },
       },
     });
 
-    // Discover actions
+    // Verify action is discovered and belt is removable
     const actions = fixture.discoverActions(actor.id);
+    const removeAction = actions.find((a) => a.id === 'clothing:remove_clothing');
+    expect(removeAction).toBeDefined();
 
-    // Belt removal action should be available
-    const beltAction = actions.find(
-      (a) => a.id === 'clothing:remove_clothing' && a.targetId === belt.id
-    );
-
-    expect(beltAction).toBeDefined();
+    // Resolve scope to verify belt is removable
+    const testContext = { actor: { id: actor.id, components: {} } };
+    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync('clothing:topmost_clothing', testContext);
+    const removableItems = Array.from(scopeResult.value);
+    expect(removableItems).toContain(belt);
 
     // Simulate: Another actor removes belt during AI turn
     await fixture.modifyComponent(actor.id, 'clothing:equipment', {
       equipped: {
         legs: {
-          base: pants.id,
+          base: pants,
         },
         // torso_lower removed (belt unequipped)
       },
@@ -211,7 +207,7 @@ describe('Blocking System Edge Cases', () => {
 
     // Act: Try to execute belt removal action
     // This should handle the missing item gracefully (item no longer equipped)
-    await fixture.executeAction(actor.id, belt.id);
+    await fixture.executeAction(actor.id, belt);
 
     // Assert: Check events for handling of this edge case
     // The action should either fail gracefully or be a no-op
