@@ -116,6 +116,11 @@ describe('ActorParticipationController - Integration Tests', () => {
     return id; // Return the entity ID
   }
 
+  async function flushMicrotasks() {
+    await Promise.resolve();
+    await Promise.resolve();
+  }
+
   describe('Participation Toggle with Real EntityManager', () => {
     it('should update participation component when toggled', async () => {
       const actorId = await createTestActor('actor1', 'Hero', true);
@@ -196,7 +201,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       // Toggle off
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       let participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
       expect(participation.participating).toBe(false);
@@ -212,7 +217,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       // Toggle off again
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
       expect(participation.participating).toBe(false);
@@ -235,7 +240,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       const checkbox = document.querySelector('input[data-actor-id="actor4"]');
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Verify change persisted
       let participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
@@ -243,7 +248,7 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       // Trigger panel refresh by dispatching ENGINE_READY_UI again
       await eventBus.dispatch(ENGINE_READY_UI, {});
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Verify checkbox still reflects persisted state
       const refreshedCheckbox = document.querySelector('input[data-actor-id="actor4"]');
@@ -391,7 +396,7 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       // Dispatch ENGINE_READY_UI
       await eventBus.dispatch(ENGINE_READY_UI, {});
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Panel should now contain actors
       checkboxes = document.querySelectorAll('input[type="checkbox"]');
@@ -414,7 +419,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       controller.initialize();
 
       await eventBus.dispatch(ENGINE_READY_UI, {});
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       const checkboxes = document.querySelectorAll('input[type="checkbox"]');
       expect(checkboxes.length).toBe(5);
@@ -434,7 +439,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       controller.initialize();
 
       await eventBus.dispatch(ENGINE_READY_UI, {});
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       expect(document.querySelector('[data-actor-id="actor1"]').checked).toBe(true);
       expect(document.querySelector('[data-actor-id="actor2"]').checked).toBe(false);
@@ -454,7 +459,7 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       // First ENGINE_READY_UI
       await eventBus.dispatch(ENGINE_READY_UI, {});
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       let checkboxes = document.querySelectorAll('input[type="checkbox"]');
       expect(checkboxes.length).toBe(1);
@@ -464,7 +469,7 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       // Second ENGINE_READY_UI
       await eventBus.dispatch(ENGINE_READY_UI, {});
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Should now show both actors
       checkboxes = document.querySelectorAll('input[type="checkbox"]');
@@ -494,7 +499,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       const checkbox = document.querySelector('input[data-actor-id="actor1"]');
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Verify persistence through direct entity manager access
       const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
@@ -519,7 +524,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       const checkbox = document.querySelector('input[data-actor-id="actor2"]');
       checkbox.checked = true;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Retrieve via getComponentData
       const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
@@ -544,7 +549,7 @@ describe('ActorParticipationController - Integration Tests', () => {
       const checkbox = document.querySelector('input[data-actor-id="actor3"]');
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Verify data structure
       const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
@@ -577,12 +582,394 @@ describe('ActorParticipationController - Integration Tests', () => {
       // Toggle should create component
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await flushMicrotasks();
 
       // Now should have component
       expect(entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID)).toBe(true);
       const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
       expect(participation.participating).toBe(false);
+    });
+  });
+
+  describe('Resilience and Edge Cases', () => {
+    it('logs warnings when DOM structure is missing and defensive load fails gracefully', () => {
+      const sparseDom = new JSDOM(
+        '<!DOCTYPE html><html><body><div id="unrelated"></div></body></html>'
+      );
+      document = sparseDom.window.document;
+      window = sparseDom.window;
+      global.document = document;
+      global.window = window;
+      documentContext = new DocumentContext(document);
+
+      const failingEventBus = {
+        subscribe: jest.fn(() => undefined),
+        unsubscribe: jest.fn(),
+        dispatch: jest.fn(),
+      };
+
+      entityManager = new SimpleEntityManager();
+      const loadError = new Error('Load failure');
+      const originalGetEntities = entityManager.getEntitiesWithComponent.bind(entityManager);
+      entityManager.getEntitiesWithComponent = jest.fn(() => {
+        throw loadError;
+      });
+
+      controller = new ActorParticipationController({
+        eventBus: failingEventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+
+      expect(() => controller.initialize()).not.toThrow();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ActorParticipation] Widget element not found (#actor-participation-widget)'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ActorParticipation] List element not found (#actor-participation-list-container)'
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ActorParticipation] Status element not found (#actor-participation-status)'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[ActorParticipation] Defensive actor loading failed (expected if actors not yet loaded)',
+        loadError
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] CRITICAL: Failed to subscribe to ENGINE_READY_UI'
+      );
+
+      entityManager.getEntitiesWithComponent = originalGetEntities;
+
+      sparseDom.window.close();
+      delete global.document;
+      delete global.window;
+    });
+
+    it('propagates initialization errors when DOM querying fails', () => {
+      const faultyDocumentContext = {
+        query: jest.fn(() => {
+          throw new Error('query failure');
+        }),
+        create: jest.fn(),
+      };
+
+      const safeEventBus = {
+        subscribe: jest.fn(() => () => {}),
+        unsubscribe: jest.fn(),
+        dispatch: jest.fn(),
+      };
+
+      entityManager = new SimpleEntityManager();
+
+      controller = new ActorParticipationController({
+        eventBus: safeEventBus,
+        documentContext: faultyDocumentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+
+      expect(() => controller.initialize()).toThrow('query failure');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Failed to initialize',
+        expect.any(Error)
+      );
+    });
+
+    it('ignores non-checkbox change events and logs missing data attributes', async () => {
+      await createTestActor('edge-actor', 'Edge Case', true);
+
+      controller = new ActorParticipationController({
+        eventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+      controller.initialize();
+
+      await eventBus.dispatch(ENGINE_READY_UI, {});
+      await flushMicrotasks();
+
+      const checkbox = document.querySelector('input[data-actor-id="edge-actor"]');
+      const label = document.querySelector('label[for="actor-participation-edge-actor"]');
+
+      label.dispatchEvent(new window.Event('change', { bubbles: true }));
+
+      checkbox.removeAttribute('data-actor-id');
+      checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ActorParticipation] Checkbox missing data-actor-id attribute'
+      );
+
+      checkbox.dataset.actorId = 'edge-actor';
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(
+        entityManager.getComponentData('edge-actor', PARTICIPATION_COMPONENT_ID).participating
+      ).toBe(false);
+    });
+
+    it('reverts checkbox and reports error when participation updates fail', async () => {
+      await createTestActor('failure-actor', 'Broken Toggle', true);
+
+      const originalAddComponent = entityManager.addComponent.bind(entityManager);
+      entityManager.addComponent = jest.fn(async (id, type, data) => {
+        if (type === PARTICIPATION_COMPONENT_ID && data.participating === false) {
+          return false;
+        }
+        return SimpleEntityManager.prototype.addComponent.call(
+          entityManager,
+          id,
+          type,
+          data
+        );
+      });
+
+      controller = new ActorParticipationController({
+        eventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+      controller.initialize();
+
+      await eventBus.dispatch(ENGINE_READY_UI, {});
+      await flushMicrotasks();
+
+      const checkbox = document.querySelector('input[data-actor-id="failure-actor"]');
+
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ActorParticipation] Failed to update participation component for actor failure-actor'
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Error updating participation for actor failure-actor',
+        expect.any(Error)
+      );
+      expect(checkbox.checked).toBe(true);
+      const statusEl = document.querySelector('#actor-participation-status');
+      expect(statusEl.textContent).toBe('Error updating participation');
+      expect(statusEl.className).toBe('status-message status-error');
+      expect(
+        entityManager.getComponentData('failure-actor', PARTICIPATION_COMPONENT_ID).participating
+      ).toBe(true);
+
+      entityManager.addComponent = originalAddComponent;
+    });
+
+    it('handles entity manager exceptions when updating participation', async () => {
+      await createTestActor('exception-actor', 'Exception', true);
+
+      const originalAddComponent = entityManager.addComponent.bind(entityManager);
+      entityManager.addComponent = jest.fn(async () => {
+        throw new Error('mutation failure');
+      });
+
+      controller = new ActorParticipationController({
+        eventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+      controller.initialize();
+
+      await eventBus.dispatch(ENGINE_READY_UI, {});
+      await flushMicrotasks();
+
+      const checkbox = document.querySelector('input[data-actor-id="exception-actor"]');
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Error updating participation component for actor exception-actor',
+        expect.any(Error)
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Error updating participation for actor exception-actor',
+        expect.any(Error)
+      );
+      expect(checkbox.checked).toBe(true);
+
+      entityManager.addComponent = originalAddComponent;
+    });
+
+    it('displays and clears status messages over time', async () => {
+      jest.useFakeTimers();
+      try {
+        await createTestActor('status-actor', 'Status Hero', true);
+
+        controller = new ActorParticipationController({
+          eventBus,
+          documentContext,
+          logger: mockLogger,
+          entityManager,
+        });
+        controller.initialize();
+
+        await eventBus.dispatch(ENGINE_READY_UI, {});
+        await flushMicrotasks();
+
+        const checkbox = document.querySelector('input[data-actor-id="status-actor"]');
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
+        await flushMicrotasks();
+
+        const statusEl = document.querySelector('#actor-participation-status');
+        expect(statusEl.textContent).toBe('Disabled participation for status-actor');
+        expect(statusEl.className).toBe('status-message status-success');
+
+        jest.advanceTimersByTime(3000);
+        await flushMicrotasks();
+
+        expect(statusEl.textContent).toBe('');
+        expect(statusEl.className).toBe('status-message');
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('warns when status element is missing during status updates', async () => {
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <body>
+            <div id="actor-participation-widget">
+              <div id="actor-participation-list-container"></div>
+            </div>
+          </body>
+        </html>
+      `;
+      dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
+      document = dom.window.document;
+      window = dom.window;
+      global.document = document;
+      global.window = window;
+      documentContext = new DocumentContext(document);
+
+      entityManager = new SimpleEntityManager();
+      await entityManager.addComponent('actor-no-status', ACTOR_COMPONENT_ID, {});
+      await entityManager.addComponent('actor-no-status', NAME_COMPONENT_ID, { text: 'No Status' });
+      await entityManager.addComponent('actor-no-status', PARTICIPATION_COMPONENT_ID, {
+        participating: true,
+      });
+
+      controller = new ActorParticipationController({
+        eventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+      controller.initialize();
+
+      await eventBus.dispatch(ENGINE_READY_UI, {});
+      await flushMicrotasks();
+
+      const checkbox = document.querySelector('input[data-actor-id="actor-no-status"]');
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[ActorParticipation] Cannot show status: status element not found'
+      );
+
+      dom.window.close();
+      delete global.document;
+      delete global.window;
+    });
+
+    it('refreshes the panel with newly added actors', async () => {
+      await createTestActor('initial-actor', 'Initial', true);
+
+      controller = new ActorParticipationController({
+        eventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+      controller.initialize();
+
+      await eventBus.dispatch(ENGINE_READY_UI, {});
+      await flushMicrotasks();
+
+      expect(document.querySelectorAll('input[type="checkbox"]').length).toBe(1);
+
+      await entityManager.addComponent('new-actor', ACTOR_COMPONENT_ID, {});
+      await entityManager.addComponent('new-actor', NAME_COMPONENT_ID, { text: 'New Actor' });
+
+      controller.refresh();
+
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      expect(checkboxes.length).toBe(2);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[ActorParticipation] Refreshing actor participation panel'
+      );
+    });
+
+    it('logs errors if actor loading fails during ENGINE_READY_UI handling', async () => {
+      const loadError = new Error('handleGameReady failure');
+
+      controller = new ActorParticipationController({
+        eventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+
+      const originalGetEntities = entityManager.getEntitiesWithComponent.bind(entityManager);
+      entityManager.getEntitiesWithComponent = jest.fn(() => {
+        throw loadError;
+      });
+
+      controller.initialize();
+
+      await eventBus.dispatch(ENGINE_READY_UI, {});
+      await flushMicrotasks();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Failed to load actors',
+        loadError
+      );
+
+      entityManager.getEntitiesWithComponent = originalGetEntities;
+    });
+
+    it('handles cleanup errors gracefully', async () => {
+      await createTestActor('cleanup-actor', 'Cleanup', true);
+
+      controller = new ActorParticipationController({
+        eventBus,
+        documentContext,
+        logger: mockLogger,
+        entityManager,
+      });
+      controller.initialize();
+
+      await eventBus.dispatch(ENGINE_READY_UI, {});
+      await flushMicrotasks();
+
+      const originalUnsubscribe = eventBus.unsubscribe;
+      eventBus.unsubscribe = jest.fn(() => {
+        throw new Error('unsubscribe failure');
+      });
+
+      controller.cleanup();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[ActorParticipation] Error during cleanup',
+        expect.any(Error)
+      );
+
+      eventBus.unsubscribe = originalUnsubscribe;
     });
   });
 });
