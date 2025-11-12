@@ -268,4 +268,105 @@ describe('SafeErrorLogger integration with real dispatcher stack', () => {
       consoleWarnSpy.mockRestore();
     }
   });
+
+  it('throws a descriptive error when dispatcher dependencies are missing', () => {
+    const logger = new RecordingLogger();
+
+    expect(() => createSafeErrorLogger({ logger })).toThrow(
+      'SafeErrorLogger requires either safeEventDispatcher or eventBus parameter'
+    );
+  });
+
+  it('normalizes option inputs and avoids scheduling when timeouts are invalid', () => {
+    jest.useFakeTimers();
+
+    const env = createEnvironment();
+    const safeErrorLogger = createSafeErrorLogger({
+      logger: env.logger,
+      safeEventDispatcher: env.safeEventDispatcher,
+    });
+
+    try {
+      // No-op disable call when nothing is active exercises guard branch
+      safeErrorLogger.disableGameLoadingMode();
+      expect(env.eventBus.isBatchModeEnabled()).toBe(false);
+
+      safeErrorLogger.enableGameLoadingMode({ context: 123, timeoutMs: null });
+      expect(env.eventBus.getBatchModeOptions()).toMatchObject({
+        context: 'game-load',
+        timeoutMs: 60000,
+      });
+      safeErrorLogger.disableGameLoadingMode({
+        force: true,
+        reason: 'cleanup-1',
+      });
+      expect(jest.getTimerCount()).toBe(0);
+
+      safeErrorLogger.enableGameLoadingMode({
+        context: '  game-initialization  ',
+        timeoutMs: { bogus: true },
+      });
+      expect(env.eventBus.getBatchModeOptions()).toMatchObject({
+        context: 'game-initialization',
+        timeoutMs: 60000,
+        maxGlobalRecursion: 200,
+      });
+      safeErrorLogger.disableGameLoadingMode({
+        force: true,
+        reason: 'cleanup-2',
+      });
+
+      safeErrorLogger.enableGameLoadingMode(true);
+      expect(env.eventBus.getBatchModeOptions()).toMatchObject({
+        context: 'game-load',
+        timeoutMs: 60000,
+      });
+      safeErrorLogger.disableGameLoadingMode({
+        force: true,
+        reason: 'cleanup-3',
+      });
+
+      safeErrorLogger.enableGameLoadingMode({ timeoutMs: 0 });
+      expect(env.eventBus.getBatchModeOptions()).toMatchObject({
+        context: 'game-load',
+        timeoutMs: 0,
+      });
+      expect(jest.getTimerCount()).toBe(0);
+      safeErrorLogger.disableGameLoadingMode({
+        force: true,
+        reason: 'cleanup-4',
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('restores state when enabling batch mode fails', () => {
+    class EnablingFailsEventBus extends EventBus {
+      setBatchMode(enabled, options = {}) {
+        if (enabled) {
+          throw new Error('enable failure for integration test');
+        }
+
+        return super.setBatchMode(enabled, options);
+      }
+    }
+
+    const logger = new RecordingLogger();
+    const eventBus = new EnablingFailsEventBus({ logger });
+    const safeErrorLogger = createSafeErrorLogger({
+      logger,
+      eventBus,
+    });
+
+    expect(() =>
+      safeErrorLogger.enableGameLoadingMode({
+        context: 'failing-phase',
+        timeoutMs: 500,
+      })
+    ).toThrow('enable failure for integration test');
+
+    expect(eventBus.isBatchModeEnabled()).toBe(false);
+    expect(safeErrorLogger.isGameLoadingActive()).toBe(false);
+  });
 });
