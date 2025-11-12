@@ -648,7 +648,7 @@ export class ModTestFixture {
         throw new Error('scopeCategories must be an array');
       }
 
-      const validCategories = ['positioning', 'inventory', 'items', 'anatomy'];
+      const validCategories = ['positioning', 'inventory', 'items', 'anatomy', 'clothing'];
       const invalidCategories = scopeCategories.filter(
         (cat) => !validCategories.includes(cat)
       );
@@ -685,9 +685,13 @@ export class ModTestFixture {
           ScopeResolverHelpers.registerAnatomyScopes(testEnv);
           break;
 
+        case 'clothing':
+          ScopeResolverHelpers.registerClothingScopes(testEnv);
+          break;
+
         default:
           console.warn(
-            `Unknown scope category "${category}". Valid categories: positioning, inventory, anatomy`
+            `Unknown scope category "${category}". Valid categories: positioning, inventory, anatomy, clothing`
           );
       }
     }

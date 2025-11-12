@@ -7,7 +7,16 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('clothing', 'clothing:remove_clothing');
+    fixture = await ModTestFixture.forAction(
+      'clothing',
+      'clothing:remove_clothing',
+      null,  // ruleFile - auto-loaded
+      null,  // conditionFile - auto-loaded
+      {
+        autoRegisterScopes: true,
+        scopeCategories: ['clothing']
+      }
+    );
     // Register the action for discovery
     fixture.testEnv.actionIndex.buildIndex([removeClothingAction]);
   });

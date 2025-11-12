@@ -5,7 +5,16 @@ describe('Complex Blocking Scenarios', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('clothing', 'clothing:remove_clothing');
+    fixture = await ModTestFixture.forAction(
+      'clothing',
+      'clothing:remove_clothing',
+      null,  // ruleFile - auto-loaded
+      null,  // conditionFile - auto-loaded
+      {
+        autoRegisterScopes: true,
+        scopeCategories: ['clothing']
+      }
+    );
   });
 
   afterEach(() => {
