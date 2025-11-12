@@ -61,7 +61,7 @@ Replace the stub with:
     this.render(actorEntities);
 
     // Reset current actor tracking
-    this.#currentActorId = null;
+    this.#_currentActorId = null;
 
   } catch (error) {
     this.#logger.error('Failed to handle round_started event', {
@@ -84,7 +84,7 @@ Replace the stub with:
  * @param {Object} event - Event object
  * @param {Object} event.payload - Event payload
  * @param {string} event.payload.entityId - Current actor ID
- * @param {string} event.payload.entityType - Entity type (should be 'actor')
+ * @param {string} event.payload.entityType - Entity type ('player' or 'ai')
  * @private
  */
 #handleTurnStarted(event) {
@@ -98,8 +98,9 @@ Replace the stub with:
       return;
     }
 
-    // Only process actor turns
-    if (entityType && entityType !== 'actor') {
+    // Only process actor turns (entityType will be 'player' or 'ai' for actors)
+    // Non-actor entities would have different entityType values
+    if (entityType && entityType !== 'player' && entityType !== 'ai') {
       this.#logger.debug('Ignoring non-actor turn', { entityId, entityType });
       return;
     }
@@ -108,7 +109,7 @@ Replace the stub with:
 
     // Update current actor highlight
     this.updateCurrentActor(entityId);
-    this.#currentActorId = entityId;
+    this.#_currentActorId = entityId;
 
   } catch (error) {
     this.#logger.error('Failed to handle turn_started event', {
@@ -150,8 +151,8 @@ Replace the stub with:
     this.removeActor(entityId);
 
     // Clear current actor tracking if it was this actor
-    if (this.#currentActorId === entityId) {
-      this.#currentActorId = null;
+    if (this.#_currentActorId === entityId) {
+      this.#_currentActorId = null;
     }
 
   } catch (error) {
@@ -218,35 +219,33 @@ The constructor (from TURORDTIC-003) should already have these subscriptions:
 
 ```javascript
 #subscribeToEvents() {
-  const roundStartedSub = this.#validatedEventDispatcher.subscribe(
+  const unsubRoundStarted = this.#validatedEventDispatcher.subscribe(
     ROUND_STARTED_ID,
     this.#handleRoundStarted.bind(this)
   );
-  this.#subscriptionIds.push(roundStartedSub);
+  if (unsubRoundStarted) this.#unsubscribeFunctions.push(unsubRoundStarted);
 
-  const turnStartedSub = this.#validatedEventDispatcher.subscribe(
+  const unsubTurnStarted = this.#validatedEventDispatcher.subscribe(
     TURN_STARTED_ID,
     this.#handleTurnStarted.bind(this)
   );
-  this.#subscriptionIds.push(turnStartedSub);
+  if (unsubTurnStarted) this.#unsubscribeFunctions.push(unsubTurnStarted);
 
-  const turnEndedSub = this.#validatedEventDispatcher.subscribe(
+  const unsubTurnEnded = this.#validatedEventDispatcher.subscribe(
     TURN_ENDED_ID,
     this.#handleTurnEnded.bind(this)
   );
-  this.#subscriptionIds.push(turnEndedSub);
+  if (unsubTurnEnded) this.#unsubscribeFunctions.push(unsubTurnEnded);
 
-  const componentAddedSub = this.#validatedEventDispatcher.subscribe(
+  const unsubComponentAdded = this.#validatedEventDispatcher.subscribe(
     COMPONENT_ADDED_ID,
     this.#handleParticipationChanged.bind(this)
   );
-  this.#subscriptionIds.push(componentAddedSub);
+  if (unsubComponentAdded) this.#unsubscribeFunctions.push(unsubComponentAdded);
 
-  const componentUpdatedSub = this.#validatedEventDispatcher.subscribe(
-    COMPONENT_UPDATED_ID,
-    this.#handleParticipationChanged.bind(this)
-  );
-  this.#subscriptionIds.push(componentUpdatedSub);
+  // Note: COMPONENT_UPDATED_ID does not exist in the system.
+  // Component updates are treated as COMPONENT_ADDED_ID events,
+  // so subscribing to COMPONENT_ADDED_ID is sufficient.
 }
 ```
 
@@ -300,7 +299,7 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
         unsubscribe: jest.fn(),
       },
       domElementFactory: {
-        createElement: jest.fn((tag) => document.createElement(tag)),
+        create: jest.fn((tag) => document.createElement(tag)),
       },
       entityManager: mockEntityManager,
       entityDisplayDataProvider: mockEntityDisplayDataProvider,
@@ -375,7 +374,7 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
     });
 
     it('should reset current actor tracking', () => {
-      renderer['#currentActorId'] = 'previous-actor';
+      renderer['#_currentActorId'] = 'previous-actor';
 
       const event = {
         payload: {
@@ -387,7 +386,7 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
 
       renderer['#handleRoundStarted'](event);
 
-      expect(renderer['#currentActorId']).toBeNull();
+      expect(renderer['#_currentActorId']).toBeNull();
     });
   });
 
@@ -396,7 +395,7 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
       const event = {
         payload: {
           entityId: 'actor-1',
-          entityType: 'actor',
+          entityType: 'player',
         },
       };
 
@@ -409,13 +408,13 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
       const event = {
         payload: {
           entityId: 'actor-2',
-          entityType: 'actor',
+          entityType: 'ai',
         },
       };
 
       renderer['#handleTurnStarted'](event);
 
-      expect(renderer['#currentActorId']).toBe('actor-2');
+      expect(renderer['#_currentActorId']).toBe('actor-2');
     });
 
     it('should ignore non-actor entities', () => {
@@ -455,7 +454,7 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
     });
 
     it('should clear current actor tracking if it matches', () => {
-      renderer['#currentActorId'] = 'actor-1';
+      renderer['#_currentActorId'] = 'actor-1';
 
       const event = {
         payload: {
@@ -465,11 +464,11 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
 
       renderer['#handleTurnEnded'](event);
 
-      expect(renderer['#currentActorId']).toBeNull();
+      expect(renderer['#_currentActorId']).toBeNull();
     });
 
     it('should not clear current actor tracking if different', () => {
-      renderer['#currentActorId'] = 'actor-2';
+      renderer['#_currentActorId'] = 'actor-2';
 
       const event = {
         payload: {
@@ -479,7 +478,7 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
 
       renderer['#handleTurnEnded'](event);
 
-      expect(renderer['#currentActorId']).toBe('actor-2');
+      expect(renderer['#_currentActorId']).toBe('actor-2');
     });
 
     it('should warn on missing entity ID', () => {
@@ -594,8 +593,11 @@ Each handler includes:
 - Handlers are private methods (use `#` prefix)
 - Handlers are bound to `this` in `#subscribeToEvents()`
 - The `render()` method expects entity objects with `id` property, not plain strings
+- Component "updates" are treated as COMPONENT_ADDED_ID events (no separate COMPONENT_UPDATED_ID exists)
 - Participation events fire for ALL component changes, so we filter by component ID
-- Current actor tracking (`#currentActorId`) helps with cleanup and debugging
+- Current actor tracking (`#_currentActorId`) helps with cleanup and debugging
+- Event subscriptions return unsubscribe functions, stored in `#unsubscribeFunctions` array
+- The `entityType` field in turn_started events will be 'player' or 'ai' for actors
 
 ## Next Ticket
 TURORDTIC-007: Implement render method for full queue display
