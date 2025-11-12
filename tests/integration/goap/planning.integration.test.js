@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import SimplePlanner from '../../../src/goap/planning/simplePlanner.js';
 import PlanCache from '../../../src/goap/planning/planCache.js';
 import ActionSelector from '../../../src/goap/selection/actionSelector.js';
@@ -61,6 +61,10 @@ describe('Planning Integration', () => {
     });
 
     planCache = new PlanCache({ logger: mockLogger });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('plan for find_food goal', () => {
@@ -449,6 +453,93 @@ describe('Planning Integration', () => {
       // Step 8: Invalidate after execution
       planCache.invalidate('actor1');
       expect(planCache.has('actor1')).toBe(false);
+    });
+  });
+
+  describe('error handling and validation edge cases', () => {
+    it('should return null and log error when action selection throws', () => {
+      const goal = {
+        id: 'error:goal',
+        goalState: {}
+      };
+
+      const actions = [
+        {
+          id: 'error:action',
+          planningEffects: {
+            effects: [
+              {
+                operation: 'ADD_COMPONENT',
+                entity: 'actor',
+                component: 'error:component',
+                data: {}
+              }
+            ]
+          }
+        }
+      ];
+
+      const context = { entities: {} };
+
+      jest
+        .spyOn(actionSelector, 'selectAction')
+        .mockImplementation(() => {
+          throw new Error('selector failure');
+        });
+
+      const result = simplePlanner.plan(goal, actions, 'actor1', context);
+
+      expect(result).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to plan for goal error:goal',
+        expect.any(Error)
+      );
+    });
+
+    it('should invalidate expired plans', () => {
+      const plan = {
+        goalId: 'expired:goal',
+        steps: [{ actionId: 'expired:action' }],
+        createdAt: Date.now() - 2000,
+        validUntil: Date.now() - 1000
+      };
+
+      const isValid = simplePlanner.validatePlan(plan, { entities: {} });
+
+      expect(isValid).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith('Plan expired');
+    });
+
+    it('should invalidate plans without steps', () => {
+      const plan = {
+        goalId: 'empty:goal',
+        steps: [],
+        createdAt: Date.now(),
+        validUntil: null
+      };
+
+      const isValid = simplePlanner.validatePlan(plan, { entities: {} });
+
+      expect(isValid).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith('Plan has no steps');
+    });
+
+    it('should catch unexpected errors during validation', () => {
+      const plan = {
+        goalId: 'broken:goal',
+        validUntil: null,
+        get steps() {
+          throw new Error('broken plan');
+        }
+      };
+
+      const isValid = simplePlanner.validatePlan(plan, { entities: {} });
+
+      expect(isValid).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to validate plan',
+        expect.any(Error)
+      );
     });
   });
 });
