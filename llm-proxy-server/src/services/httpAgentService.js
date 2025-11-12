@@ -7,6 +7,15 @@ import https from 'https';
 import http from 'http';
 import { URL } from 'url';
 
+import {
+  HTTP_AGENT_KEEP_ALIVE,
+  HTTP_AGENT_MAX_SOCKETS,
+  HTTP_AGENT_MAX_FREE_SOCKETS,
+  HTTP_AGENT_TIMEOUT,
+  HTTP_AGENT_FREE_SOCKET_TIMEOUT,
+  HTTP_AGENT_MAX_TOTAL_SOCKETS,
+} from '../config/constants.js';
+
 /**
  * @typedef {object} AgentConfig
  * @property {boolean} keepAlive - Whether to keep sockets alive between requests
@@ -47,12 +56,14 @@ class HttpAgentService {
 
     // Default configuration for agents
     this.#config = {
-      keepAlive: config.keepAlive !== undefined ? config.keepAlive : true,
-      maxSockets: config.maxSockets || 50,
-      maxFreeSockets: config.maxFreeSockets || 10,
-      timeout: config.timeout || 60000, // 60 seconds
-      freeSocketTimeout: config.freeSocketTimeout || 30000, // 30 seconds
-      maxTotalSockets: config.maxTotalSockets || 500,
+      keepAlive:
+        config.keepAlive !== undefined ? config.keepAlive : HTTP_AGENT_KEEP_ALIVE,
+      maxSockets: config.maxSockets || HTTP_AGENT_MAX_SOCKETS,
+      maxFreeSockets: config.maxFreeSockets || HTTP_AGENT_MAX_FREE_SOCKETS,
+      timeout: config.timeout || HTTP_AGENT_TIMEOUT, // 120 seconds default
+      freeSocketTimeout:
+        config.freeSocketTimeout || HTTP_AGENT_FREE_SOCKET_TIMEOUT, // 30 seconds
+      maxTotalSockets: config.maxTotalSockets || HTTP_AGENT_MAX_TOTAL_SOCKETS,
       ...config,
     };
 

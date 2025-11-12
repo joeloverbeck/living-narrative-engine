@@ -6,6 +6,7 @@ import { jest } from '@jest/globals';
 import https from 'https';
 import http from 'http';
 import HttpAgentService from '../../../src/services/httpAgentService.js';
+import { HTTP_AGENT_TIMEOUT } from '../../../src/config/constants.js';
 
 const createMockLogger = () => ({
   debug: jest.fn(),
@@ -79,7 +80,7 @@ describe('HttpAgentService', () => {
           keepAlive: true,
           maxSockets: 50,
           maxFreeSockets: 10,
-          timeout: 60000,
+          timeout: HTTP_AGENT_TIMEOUT,
           freeSocketTimeout: 30000,
           maxTotalSockets: 500,
           adaptiveCleanup: expect.objectContaining({

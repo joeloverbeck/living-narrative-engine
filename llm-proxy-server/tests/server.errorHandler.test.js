@@ -1,4 +1,7 @@
-import { LOG_LLM_ID_UNHANDLED_ERROR } from '../src/config/constants.js';
+import {
+  LOG_LLM_ID_UNHANDLED_ERROR,
+  HTTP_AGENT_TIMEOUT,
+} from '../src/config/constants.js';
 import {
   describe,
   test,
@@ -190,7 +193,7 @@ beforeEach(() => {
       keepAlive: true,
       maxSockets: 50,
       maxFreeSockets: 10,
-      timeout: 60000,
+      timeout: HTTP_AGENT_TIMEOUT,
       freeSocketTimeout: 30000,
       maxTotalSockets: 500,
     })),

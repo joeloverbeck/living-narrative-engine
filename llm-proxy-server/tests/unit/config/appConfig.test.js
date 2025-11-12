@@ -16,6 +16,7 @@ import {
   DEBUG_LOGGING_DEFAULT_WRITE_BUFFER_SIZE,
   DEBUG_LOGGING_DEFAULT_FLUSH_INTERVAL,
   DEBUG_LOGGING_DEFAULT_MAX_CONCURRENT_WRITES,
+  HTTP_AGENT_TIMEOUT,
 } from '../../../src/config/constants.js';
 import { TestEnvironmentManager } from '../../common/testServerUtils.js';
 
@@ -238,7 +239,7 @@ describe('AppConfigService - Comprehensive Tests', () => {
     test('getHttpAgentTimeout returns default value', () => {
       const service = getAppConfigService(logger);
 
-      expect(service.getHttpAgentTimeout()).toBe(60000); // Default from constants
+      expect(service.getHttpAgentTimeout()).toBe(HTTP_AGENT_TIMEOUT); // Default from constants
     });
 
     test('getHttpAgentTimeout returns custom value when HTTP_AGENT_TIMEOUT is set', () => {

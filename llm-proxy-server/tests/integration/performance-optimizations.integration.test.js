@@ -9,6 +9,7 @@ import { LlmRequestService } from '../../src/services/llmRequestService.js';
 import CacheService from '../../src/services/cacheService.js';
 import HttpAgentService from '../../src/services/httpAgentService.js';
 import * as proxyApiUtils from '../../src/utils/proxyApiUtils.js';
+import { HTTP_AGENT_TIMEOUT } from '../../src/config/constants.js';
 
 const createMockLogger = () => ({
   debug: jest.fn(),
@@ -67,7 +68,7 @@ describe('Performance Optimizations Integration Tests', () => {
           keepAlive: true,
           maxSockets: 50,
           maxFreeSockets: 10,
-          timeout: 60000,
+          timeout: HTTP_AGENT_TIMEOUT,
           freeSocketTimeout: 30000,
           maxTotalSockets: 500,
         }),
@@ -86,7 +87,7 @@ describe('Performance Optimizations Integration Tests', () => {
         keepAlive: true,
         maxSockets: 50,
         maxFreeSockets: 10,
-        timeout: 60000,
+        timeout: HTTP_AGENT_TIMEOUT,
         freeSocketTimeout: 30000,
       });
 
