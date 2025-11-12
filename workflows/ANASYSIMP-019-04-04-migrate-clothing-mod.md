@@ -8,26 +8,66 @@
 
 ## Overview
 
-Migrate 7 component schemas in the clothing mod to use the new `validationRules` feature. This is the third priority batch with moderate complexity due to the clothing system's layering and equipment mechanics.
+Migrate 4 component schemas in the clothing mod to use the new `validationRules` feature. This is the third priority batch with moderate complexity due to the clothing system's layering and equipment mechanics.
 
 ## Components to Migrate
 
-1. **wearable** - Clothing item properties and equipment behavior
-2. **coverage_mapping** - Body part coverage definitions
-3. **slot_metadata** - Equipment slot metadata
-4. **blocks_removal** - Removal blocking relationships
-5. **equipment** - Equipment state and properties
-6. **layer_priority** - Layer stacking priority
-7. **equipment_slots** - Available equipment slots
+1. **wearable** - Clothing item properties and equipment behavior (2 enum properties)
+2. **coverage_mapping** - Body part coverage definitions (2 enum properties)
+3. **slot_metadata** - Equipment slot metadata (1 enum property)
+4. **blocks_removal** - Removal blocking relationships (3 enum properties)
+
+**Total Enum Properties:** 8 enum properties across 4 components
 
 **Location:** `data/mods/clothing/components/*.component.json`
+
+**Note:** The `clothing:equipment` component exists but uses `patternProperties` with regex patterns, not enums, so it does not require validationRules migration.
+
+## Workflow Corrections Applied
+
+**Date:** 2025-11-12
+
+This workflow has been updated to correct assumptions about the clothing mod structure:
+
+### What Changed:
+1. **Component Count:** Corrected from 7 to 4 components with enums
+   - Removed: `equipment` (exists but has no enums), `layer_priority` (doesn't exist), `equipment_slots` (doesn't exist)
+   - Retained: `wearable`, `coverage_mapping`, `slot_metadata`, `blocks_removal`
+
+2. **Enum Properties:** Documented actual enum properties for each component (8 total)
+   - `wearable`: 2 enum properties (layer, allowedLayers items)
+   - `coverage_mapping`: 2 enum properties (covers items, coveragePriority)
+   - `slot_metadata`: 1 enum property (allowedLayers items)
+   - `blocks_removal`: 3 enum properties (slot, layers items, blockType)
+
+3. **Coverage Mapping:** Corrected enum values to match actual schema
+   - Actual covers: ["torso_upper", "torso_lower", "legs", "feet", "head_gear", "hands", "left_arm_clothing", "right_arm_clothing"]
+   - Actual coveragePriority: ["outer", "base", "underwear", "accessories"]
+
+4. **Slot Metadata:** Corrected to reflect actual structure
+   - No enum for slot names (uses patternProperties)
+   - Only `allowedLayers` has enum: ["underwear", "base", "outer", "accessory", "armor"]
+   - Noted inconsistency: "accessory" vs "accessories" across components
+
+5. **Blocks Removal:** Documented all 3 enum properties with correct values
+   - Added reference to CLAUDE.md Clothing Removal Blocking System
+
+6. **Added Notes:**
+   - Component-level validationRules vs nested enum validation
+   - Layer terminology inconsistencies across components
+   - Integration with anatomy system (coverage slots)
+
+### Verified Against:
+- Actual component files in `data/mods/clothing/components/`
+- `docs/anatomy/clothing-coverage-mapping.md`
+- `workflows/ANASYSIMP-019-04-01-identify-migration-candidates.md` (correctly shows 4 components)
 
 ## Reference Documentation
 
 Before starting, review:
-- **Clothing System Documentation** (if available in `docs/`)
+- **Clothing Coverage Mapping:** `docs/anatomy/clothing-coverage-mapping.md`
+- **Clothing Blocking System:** See CLAUDE.md section on "Clothing Removal Blocking System"
 - **Parent Workflow**: `workflows/ANASYSIMP-019-04-migrate-components-validation-rules.md`
-  - Example migration with wearable component (lines 67-121)
 
 ## Standard ValidationRules Template
 
@@ -80,33 +120,23 @@ For each component file:
 
 **File:** `data/mods/clothing/components/wearable.component.json`
 
-**Expected Enum Properties:**
-- `layer` - Layer priority for stacking (e.g., "underwear", "base", "outer", "accessories")
+**Enum Properties (2):**
+1. `layer` - Layer priority for stacking: ["underwear", "base", "outer", "accessories"]
+2. `allowedLayers` (array items) - Layers allowed for this item: ["underwear", "base", "outer", "accessories"]
 
-**Example (from parent workflow lines 68-121):**
+**Migration Strategy:**
+- Use generic error messages since component has multiple enum properties with overlapping values
+- Provide clear context about which property is invalid
+
+**Example ValidationRules:**
 ```json
 {
-  "$schema": "schema://living-narrative-engine/component.schema.json",
-  "id": "clothing:wearable",
-  "description": "Defines clothing item properties and equipment behavior",
-  "dataSchema": {
-    "type": "object",
-    "properties": {
-      "layer": {
-        "type": "string",
-        "enum": ["underwear", "base", "outer", "accessories"],
-        "description": "Layer priority for stacking"
-      }
-    },
-    "required": ["layer"],
-    "additionalProperties": false
-  },
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid layer: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Layer is required",
-      "invalidType": "Invalid type for layer: expected {{expected}}, got {{actual}}"
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}"
     },
     "suggestions": {
       "enableSimilarity": true,
@@ -121,9 +151,13 @@ For each component file:
 
 **File:** `data/mods/clothing/components/coverage_mapping.component.json`
 
-**Expected Enum Properties:**
-- Body parts (e.g., "head", "torso", "arms", "legs")
-- Coverage levels (e.g., "full", "partial", "none")
+**Enum Properties (2):**
+1. `covers` (array items) - Body slots covered by this item: ["torso_upper", "torso_lower", "legs", "feet", "head_gear", "hands", "left_arm_clothing", "right_arm_clothing"]
+2. `coveragePriority` - Priority level for coverage resolution: ["outer", "base", "underwear", "accessories"]
+
+**Migration Strategy:**
+- Use generic error messages for multiple enum properties
+- Note: Coverage slots align with anatomy sockets (see `docs/anatomy/clothing-coverage-mapping.md`)
 
 **Example ValidationRules:**
 ```json
@@ -131,9 +165,9 @@ For each component file:
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid coverage value: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Coverage mapping is required",
-      "invalidType": "Invalid type for coverage: expected {{expected}}, got {{actual}}"
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}"
     },
     "suggestions": {
       "enableSimilarity": true,
@@ -148,9 +182,13 @@ For each component file:
 
 **File:** `data/mods/clothing/components/slot_metadata.component.json`
 
-**Expected Enum Properties:**
-- Slot types (e.g., "head", "torso", "hands", "feet")
-- Slot states or priorities
+**Enum Properties (1):**
+1. `allowedLayers` (nested in patternProperties) - Layers allowed for this slot: ["underwear", "base", "outer", "accessory", "armor"]
+
+**Migration Strategy:**
+- Single enum property, can use specific error messages
+- Note: Slot names are defined via patternProperties (dynamic), not enums
+- Note: "accessory" (singular) vs "accessories" (plural) - inconsistency with other components!
 
 **Example ValidationRules:**
 ```json
@@ -158,9 +196,9 @@ For each component file:
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid slot type: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Slot metadata is required",
-      "invalidType": "Invalid type for slot: expected {{expected}}, got {{actual}}"
+      "invalidEnum": "Invalid allowed layer: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Allowed layers are required",
+      "invalidType": "Invalid type for allowedLayers: expected {{expected}}, got {{actual}}"
     },
     "suggestions": {
       "enableSimilarity": true,
@@ -175,9 +213,15 @@ For each component file:
 
 **File:** `data/mods/clothing/components/blocks_removal.component.json`
 
-**Expected Enum Properties:**
-- Blocking relationships or states
-- Review actual schema for specific enum values
+**Enum Properties (3):**
+1. `slot` (nested in blockedSlots array) - Equipment slot that is blocked: ["feet", "full_body", "hands", "head_gear", "left_arm_clothing", "legs", "right_arm_clothing", "torso_lower", "torso_upper"]
+2. `layers` (nested array items in blockedSlots) - Layers in the blocked slot: ["underwear", "base", "outer", "accessories"]
+3. `blockType` (nested in blockedSlots array) - Type of blocking behavior: ["must_remove_first", "must_loosen_first", "full_block"]
+
+**Migration Strategy:**
+- Multiple enum properties at different nesting levels
+- Use generic error messages for clarity
+- This component enforces realistic clothing physics (see `CLAUDE.md` Clothing Removal Blocking System)
 
 **Example ValidationRules:**
 ```json
@@ -185,90 +229,9 @@ For each component file:
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid blocking state: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Blocking state is required",
-      "invalidType": "Invalid type for blocking: expected {{expected}}, got {{actual}}"
-    },
-    "suggestions": {
-      "enableSimilarity": true,
-      "maxDistance": 3,
-      "maxSuggestions": 3
-    }
-  }
-}
-```
-
-#### Component: equipment
-
-**File:** `data/mods/clothing/components/equipment.component.json`
-
-**Expected Enum Properties:**
-- Equipment states (e.g., "equipped", "unequipped", "broken")
-- Equipment types or categories
-
-**Example ValidationRules:**
-```json
-{
-  "validationRules": {
-    "generateValidator": true,
-    "errorMessages": {
-      "invalidEnum": "Invalid equipment state: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Equipment state is required",
-      "invalidType": "Invalid type for equipment: expected {{expected}}, got {{actual}}"
-    },
-    "suggestions": {
-      "enableSimilarity": true,
-      "maxDistance": 3,
-      "maxSuggestions": 3
-    }
-  }
-}
-```
-
-#### Component: layer_priority
-
-**File:** `data/mods/clothing/components/layer_priority.component.json`
-
-**Expected Enum Properties:**
-- Layer priorities or ordering values
-- Priority levels (e.g., "lowest", "low", "normal", "high", "highest")
-
-**Example ValidationRules:**
-```json
-{
-  "validationRules": {
-    "generateValidator": true,
-    "errorMessages": {
-      "invalidEnum": "Invalid layer priority: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Layer priority is required",
-      "invalidType": "Invalid type for priority: expected {{expected}}, got {{actual}}"
-    },
-    "suggestions": {
-      "enableSimilarity": true,
-      "maxDistance": 3,
-      "maxSuggestions": 3
-    }
-  }
-}
-```
-
-#### Component: equipment_slots
-
-**File:** `data/mods/clothing/components/equipment_slots.component.json`
-
-**Expected Enum Properties:**
-- Slot names (e.g., "head", "chest", "hands", "feet")
-- Slot categories or types
-
-**Example ValidationRules:**
-```json
-{
-  "validationRules": {
-    "generateValidator": true,
-    "errorMessages": {
-      "invalidEnum": "Invalid equipment slot: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Equipment slot is required",
-      "invalidType": "Invalid type for slot: expected {{expected}}, got {{actual}}"
+      "invalidEnum": "Invalid {propertyName}: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "{PropertyLabel} is required",
+      "invalidType": "Invalid type for {propertyName}: expected {{expected}}, got {{actual}}"
     },
     "suggestions": {
       "enableSimilarity": true,
@@ -302,9 +265,10 @@ git add data/mods/clothing/components/*.component.json
 # Commit with descriptive message
 git commit -m "feat(validation): add validationRules to clothing mod components
 
-- Add validationRules to wearable, coverage_mapping, slot_metadata, blocks_removal, equipment, layer_priority, equipment_slots
+- Add validationRules to wearable, coverage_mapping, slot_metadata, blocks_removal
 - Enable enhanced error messages with similarity suggestions
 - Improve clothing system validation error clarity
+- 8 total enum properties migrated across 4 components
 - Part of ANASYSIMP-019-04 migration"
 
 # Verify commit
@@ -315,8 +279,9 @@ git log -1 --stat
 
 After migration, verify:
 
-- [ ] All 7 clothing mod components have validationRules
-- [ ] Error messages use clothing-specific terminology
+- [ ] All 4 clothing mod components have validationRules (wearable, coverage_mapping, slot_metadata, blocks_removal)
+- [ ] All 8 enum properties covered by validationRules
+- [ ] Error messages use appropriate terminology (generic for multi-enum components)
 - [ ] Template variables use double braces: `{{value}}`, `{{validValues}}`
 - [ ] All required properties present: generateValidator, errorMessages, suggestions
 - [ ] `npm run validate` passes (exit code 0)
@@ -325,12 +290,13 @@ After migration, verify:
 
 ## Acceptance Criteria
 
-- [ ] 7 components migrated with validationRules
+- [ ] 4 components migrated with validationRules (8 total enum properties)
 - [ ] All components pass schema validation
-- [ ] Error messages customized with clothing-specific property names
+- [ ] Error messages follow the recommended patterns for single vs multi-enum components
 - [ ] Similarity suggestions enabled (maxDistance: 3, maxSuggestions: 3)
 - [ ] Batch committed to git with clear message
 - [ ] No breaking changes to clothing system introduced
+- [ ] `clothing:equipment` component correctly excluded (uses patternProperties, not enums)
 
 ## Common Pitfalls
 
@@ -344,11 +310,16 @@ After migration, verify:
 
 ### Pitfall 3: Not Customizing for Multiple Enums
 **Problem:** Component has multiple enum properties but error messages reference only one
-**Solution:** Use generic messages like "Invalid value: {{value}}" or add separate messages per property
+**Solution:** Use generic messages like "Invalid {propertyName}: {{value}}" that work for all properties
 
-### Pitfall 4: Forgetting Layer Terminology
-**Problem:** Inconsistent terminology for clothing layers
-**Solution:** Use standard layer terms: "underwear", "base", "outer", "accessories"
+### Pitfall 4: Layer Terminology Inconsistencies
+**Problem:** Inconsistent terminology for clothing layers across components
+**Known Issue:** `slot_metadata` uses "accessory" (singular) while other components use "accessories" (plural)
+**Solution:** Keep existing terminology consistent within each component; document discrepancies
+
+### Pitfall 5: Nested Enum Properties
+**Problem:** Components like `blocks_removal` have enums nested in arrays and objects
+**Solution:** ValidationRules apply at the component level; nested enum validation still works automatically
 
 ## Special Considerations
 
@@ -383,10 +354,14 @@ Coverage mapping defines which body parts are covered:
 ## Time Estimate
 
 - Component discovery: 2 minutes
-- Migration (7 components × 1.5 minutes each): ~10 minutes
+- Migration (4 components, 8 enum properties total): ~8 minutes
+  - wearable: 2 minutes (2 enum properties)
+  - coverage_mapping: 2 minutes (2 enum properties)
+  - slot_metadata: 1.5 minutes (1 enum property)
+  - blocks_removal: 2.5 minutes (3 enum properties, more complex nesting)
 - Validation: 1 minute
 - Commit: 1 minute
-- **Total:** ~14 minutes (adjusted to 12 for efficiency)
+- **Total:** ~12 minutes
 
 ## Next Steps
 
