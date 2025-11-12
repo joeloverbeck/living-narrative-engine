@@ -10,10 +10,11 @@ This report analyzes the Goal-Oriented Action Planning (GOAP) system within the 
 
 ### Key Findings
 
-1. **Current E2E Coverage:** 0% - No dedicated GOAP e2e tests exist in `tests/e2e/`
-2. **Existing Coverage:** Basic integration test (`goapWorkflow.integration.test.js`) and minimal unit tests
-3. **Critical Gap:** Complete lack of e2e tests for a complex, newly implemented system
-4. **Recommendation:** Implement 12 prioritized e2e tests covering 7 major workflows
+1. **Current E2E Coverage:** ~20% (Partial) - Priority 1 Test 1 implemented but with significant gaps
+2. **Existing Coverage:** Basic integration test (`goapWorkflow.integration.test.js`), minimal unit tests, and partial e2e test
+3. **Critical Gap:** True end-to-end validation missing - no rule execution or state verification
+4. **Status Update (2025-11-12):** Test 1 implemented as GOAP integration test. Validates decision provider interface but not complete workflow with real mods and rule execution.
+5. **Recommendation:** Complete Test 1 implementation with real mod integration, then implement remaining 11 prioritized e2e tests
 
 ## GOAP System Architecture Overview
 
@@ -219,12 +220,27 @@ The GOAP system is organized into three tiers:
 **Assessment:** Good integration test coverage for basic scenarios. However, tests use mocked data and don't exercise real mod content or action discovery.
 
 ### E2E Tests
-**Location:** `tests/e2e/` (searched for `*goap*`)
+**Location:** `tests/e2e/goap/`
 
-**Coverage:**
-- ❌ No GOAP-specific e2e tests found
+**Files:**
+- ✅ `CompleteGoapDecisionWithRealMods.e2e.test.js` (656 lines, 9 test cases)
+- ✅ `catBehavior.e2e.test.js` (existing behavior test)
+- ✅ `goblinBehavior.e2e.test.js` (existing behavior test)
+- ✅ `multipleActors.e2e.test.js` (existing multi-actor test)
 
-**Assessment:** Critical gap. The GOAP system has zero e2e test coverage.
+**Coverage - CompleteGoapDecisionWithRealMods.e2e.test.js:**
+- ✅ GOAP decision provider interface integration
+- ✅ Goal selection with priority ordering
+- ✅ Action selection with mocked planning effects
+- ✅ Plan caching and invalidation
+- ✅ Multi-actor independent decisions
+- ✅ Conditional effects structure validation
+- ✅ Edge cases (empty actions, no goals)
+- ❌ Real action discovery from mods
+- ❌ Rule execution and state changes
+- ❌ Planning effects vs actual effects verification
+
+**Assessment:** Partial e2e coverage implemented. Test validates GOAP decision provider interface and core planning logic but lacks true end-to-end integration with real mod loading, action discovery, rule execution, and state verification. Current implementation is more accurately described as an integration test.
 
 ## Coverage Gaps and Risks
 
@@ -290,10 +306,11 @@ The GOAP system is organized into three tiers:
 **Priority:** CRITICAL
 **Complexity:** High
 **Estimated Effort:** 3-4 hours
+**Status:** ✅ **PARTIALLY IMPLEMENTED** (See implementation notes below)
 
 **Description:** Full e2e test using real actions, goals, and rules from loaded mods (core, positioning, items)
 
-**Test Scenario:**
+**Original Test Scenario (as planned):**
 1. Load real mods (core, positioning, items)
 2. Create actor with hunger component (triggers `core:find_food` goal)
 3. Create food item in location
@@ -303,15 +320,58 @@ The GOAP system is organized into three tiers:
 7. Verify actor has food component after execution
 8. Verify planning effects matched actual state changes
 
+**Actual Implementation:**
+**File:** `tests/e2e/goap/CompleteGoapDecisionWithRealMods.e2e.test.js` (656 lines, 9 test cases)
 
-**Success Criteria:**
-- Goal selected matches expected priority
-- Action selected moves toward goal
-- Rule execution produces same state changes as planning effects predicted
-- Actor satisfies goal after action execution
+**What Was Implemented:**
+1. ✅ GOAP decision provider interface integration test
+2. ✅ Goal selection workflow with `rest_safely` and `find_food` goals
+3. ✅ Action selection returns valid action indices
+4. ✅ Plan caching across multiple decision calls
+5. ✅ Plan invalidation when cache is cleared
+6. ✅ Multi-actor independent decision making
+7. ✅ Conditional planning effects handling (structure validated)
+8. ✅ Edge cases (empty actions, no relevant goals)
+9. ✅ Action selection based on planning effects
 
-**Files to Create:**
-- `tests/e2e/goap/CompleteGoapDecisionWithRealMods.e2e.test.js`
+**What Was NOT Implemented (Gaps):**
+1. ❌ Real action discovery from mods - actions are manually mocked with `planningEffects`
+2. ❌ Rule execution through rule system - no actual operation handlers invoked
+3. ❌ State change verification - no comparison between planned vs actual component changes
+4. ❌ Goal satisfaction verification after execution - only decision structure verified
+5. ❌ Real mod loading - `testBed.loadMods()` is a placeholder (see line 108-116 of goapTestHelpers.js)
+
+**Test Scenarios Implemented:**
+- Full workflow (goal → action → plan → decision structure)
+- Multiple competing goals (hunger priority 80 vs energy priority 60)
+- Plan caching and reuse across turns
+- Manual cache invalidation
+- No relevant goals scenario
+- Conditional effects structure
+- Multiple independent actors
+- Empty action list handling
+- Action selection with progress calculation
+
+**Actual Success Criteria Validated:**
+- ✅ Goal selection executes without errors
+- ✅ Action selection returns valid indices when applicable
+- ✅ Decision structure includes speech, thoughts, notes fields
+- ✅ Plan caching mechanism works
+- ✅ Multiple actors make independent decisions
+- ❌ Rule execution NOT validated
+- ❌ State changes NOT validated
+- ❌ Goal satisfaction after execution NOT validated
+
+**Implementation Assessment:**
+This test is more accurately described as a **GOAP Integration Test** rather than a true end-to-end test. It validates the GOAP decision provider interface and core planning logic but does not test the complete workflow from action discovery through rule execution to state verification. The test uses mocked actions with `planningEffects` rather than real mod data.
+
+**Remaining Work for True E2E Coverage:**
+1. Integrate real action discovery system
+2. Execute selected actions through rule system
+3. Capture state changes before and after execution
+4. Compare planned effects (from `planningEffects`) with actual effects (from rule execution)
+5. Verify goal satisfaction after execution
+6. Load and use real mod definitions (not just goal definitions)
 
 ---
 
@@ -678,32 +738,57 @@ The GOAP system is organized into three tiers:
 ## Testing Infrastructure Requirements
 
 ### Test Helpers (Existing)
-- ✅ `createGoapTestBed()` from `tests/common/goap/goapTestHelpers.js`
-- ✅ GoapTestBed class with GOAP service access
-- ✅ Mock actor/entity creation
-- ✅ Plan cache access
+**File:** `tests/common/goap/goapTestHelpers.js` (306 lines)
+
+**Available Utilities:**
+- ✅ `createGoapTestBed()` factory function
+- ✅ `GoapTestBed` class with full DI container
+- ✅ Mock actor/entity creation (`createActor`, `createEntity`)
+- ✅ Plan cache direct access
+- ✅ Context creation helper (`createContext`)
+- ✅ Component getter/checker (`hasComponent`, `getComponent`)
+- ✅ Mock GOAP decision invocation (`makeGoapDecision`)
+- ✅ Cleanup handlers for test isolation
+
+**Current Limitations:**
+- ❌ `loadMods()` is a placeholder (lines 108-116) - does not load actual mod files
+- ❌ `getAvailableActions()` returns hardcoded mocks (lines 206-226) - not integrated with action discovery
+- ❌ `executeAction()` is a stub (lines 241-249) - does not invoke rule processor
+- ❌ Entity mocking overrides `entityManager.getEntityInstance` but doesn't use real ECS
+- ❌ No state diff/comparison utilities
+- ❌ No performance monitoring hooks
 
 ### Additional Test Utilities Needed
 
-1. **Real Mod Loader**
-   - Load actual mod data (not mocks)
-   - Initialize full game systems
-   - Enable action discovery
+1. **Real Mod Loader** ⚠️ HIGH PRIORITY
+   - Load actual mod files from `data/mods/`
+   - Initialize full game systems (modsLoader, actionDiscoveryService, ruleProcessor)
+   - Enable real action discovery with `planningEffects`
+   - Integration point: Replace `loadMods()` placeholder in GoapTestBed
 
-2. **State Comparison Utilities**
-   - Compare simulated vs. actual state changes
-   - Deep component comparison
-   - Component diff reporting
+2. **State Comparison Utilities** ⚠️ HIGH PRIORITY
+   - Snapshot entity state before action execution
+   - Capture component changes during rule execution
+   - Compare simulated effects (from ActionSelector) vs actual effects (from rule operations)
+   - Deep component comparison with diff reporting
+   - Validation: Assert planned effects match actual effects
 
-3. **Performance Monitoring**
-   - Timing instrumentation
-   - Memory usage tracking
-   - Cache statistics collection
+3. **Rule Execution Integration** ⚠️ CRITICAL
+   - Execute selected actions through RuleProcessor
+   - Capture operation handlers invoked
+   - Track component mutations (ADD_COMPONENT, REMOVE_COMPONENT, MODIFY_COMPONENT)
+   - Validate state changes against planning effects
 
-4. **Goal/Action Definition Helpers**
-   - Programmatic goal creation
+4. **Performance Monitoring**
+   - Timing instrumentation for planning phases
+   - Memory usage tracking across turns
+   - Cache statistics collection (hit rate, invalidation rate)
+   - Performance regression detection
+
+5. **Goal/Action Definition Helpers**
+   - Programmatic goal creation (avoiding JSON files for test-specific goals)
    - Programmatic action creation with planning effects
-   - Rule definition helpers
+   - Rule definition helpers for test scenarios
 
 ### Test Data Requirements
 
@@ -731,6 +816,23 @@ The GOAP system is organized into three tiers:
 **Focus:** Verify core GOAP functionality works with real data
 **Dependencies:** None
 **Outcome:** Confidence in basic GOAP decision-making
+
+**Current Status:**
+- ✅ Test 1: Partially implemented (decision provider interface validated)
+- ⚠️ Test 1: Needs completion (real mod loading, rule execution, state verification)
+- ❌ Test 2: Not started
+- ❌ Test 3: Not started
+- ❌ Test 4: Not started
+
+**Next Steps for Test 1 Completion:**
+1. Implement real mod loading in GoapTestBed.loadMods()
+2. Integrate ActionDiscoveryService for real action discovery
+3. Execute selected actions through RuleProcessor
+4. Implement state snapshot and comparison utilities
+5. Verify planning effects match actual rule execution outcomes
+6. Validate goal satisfaction after execution
+
+**Estimated Effort for Test 1 Completion:** 4-6 hours
 
 ### Phase 2: Critical Integration (1 week)
 **Tests:** 5-7
@@ -893,6 +995,82 @@ The GOAP system is a complex, newly implemented AI decision-making framework tha
 - 80%+ workflow coverage achieved
 - 0 production incidents in first 3 months
 - Developer confidence in GOAP system established
+
+---
+
+## Implementation History and Lessons Learned
+
+### Test 1 Implementation (2025-11-12)
+
+**What Was Built:**
+- **File:** `tests/e2e/goap/CompleteGoapDecisionWithRealMods.e2e.test.js`
+- **Size:** 656 lines, 9 comprehensive test cases
+- **Scope:** GOAP decision provider interface integration test
+- **Test Cases:** Full workflow, multi-goal priority, caching, invalidation, conditional effects, multi-actor, edge cases, progress-based selection
+
+**Key Insights:**
+
+1. **Interface vs Implementation Testing:**
+   - The test successfully validates that the GOAP decision provider interface works correctly
+   - However, it does not validate the complete e2e workflow with real mods
+   - Lesson: Interface testing is valuable but insufficient for true e2e validation
+
+2. **Test Infrastructure Gaps:**
+   - `GoapTestBed.loadMods()` is a placeholder - no actual mod loading implemented
+   - `getAvailableActions()` returns hardcoded mocks - no action discovery integration
+   - `executeAction()` is a stub - no rule processor integration
+   - Lesson: Test infrastructure must be completed before true e2e tests can be written
+
+3. **Mocking vs Real Integration:**
+   - Test uses manually created mock actions with `planningEffects`
+   - This validates planning logic but not the integration with real mod content
+   - Lesson: Mocking is useful for isolation but hides integration issues
+
+4. **State Verification Gap:**
+   - No comparison between simulated effects (during planning) and actual effects (during execution)
+   - This is the most critical missing piece for validating GOAP correctness
+   - Lesson: State verification utilities are essential for validating planning systems
+
+5. **Partial Success is Still Progress:**
+   - Despite gaps, the test provides value by validating core GOAP interfaces
+   - It serves as a foundation for completing true e2e testing
+   - All 9 test cases pass, providing confidence in decision provider logic
+   - Lesson: Incremental progress is valuable even if full goals aren't achieved
+
+**Recommendations for Future Implementation:**
+
+1. **Complete Test Infrastructure First:**
+   - Implement real mod loading in `GoapTestBed`
+   - Integrate `ActionDiscoveryService` for real action discovery
+   - Integrate `RuleProcessor` for real rule execution
+   - Create state snapshot/comparison utilities
+
+2. **Then Enhance Test 1:**
+   - Replace mocked actions with real action discovery
+   - Execute selected actions through rule system
+   - Capture before/after state
+   - Compare planned effects vs actual effects
+   - Validate goal satisfaction after execution
+
+3. **Document Integration Points:**
+   - Clearly distinguish between integration tests and e2e tests
+   - Document which systems are mocked vs real in each test
+   - Set clear expectations for what each test validates
+
+4. **Incremental E2E Testing:**
+   - Start with single action execution e2e test
+   - Then add goal selection e2e test
+   - Finally combine into complete workflow e2e test
+   - Each step provides incremental value and learning
+
+**Status Summary:**
+- ✅ GOAP decision provider interface validated
+- ✅ Core planning logic validated with mocked data
+- ⚠️ Integration with real mods partially validated (goals exist, but actions/rules mocked)
+- ❌ Complete e2e workflow not yet validated
+- ❌ Planning effects vs actual effects verification not implemented
+
+**Next Priority:** Complete test infrastructure (real mod loading, action discovery, rule execution) before implementing remaining tests.
 
 ---
 
