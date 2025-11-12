@@ -248,4 +248,218 @@ describe('ActivityNLGSystem integration coverage', () => {
       'Activity: Alex charts the nebula | They catalog new stars!'
     );
   });
+
+  it('covers fallback branches, additional phrase flows, and test hook exposure', async () => {
+    const captain = await createActor(entityManager, {
+      id: 'captain-1',
+      name: 'Captain Flux',
+      gender: 'male',
+    });
+    await entityManager.addComponent(captain.id, ACTOR_COMPONENT_ID, {
+      role: 'captain',
+    });
+
+    const partner = await createActor(entityManager, {
+      id: 'partner-1',
+      name: 'Lady Aurora',
+      gender: 'female',
+    });
+    await entityManager.addComponent(partner.id, ACTOR_COMPONENT_ID, {
+      role: 'navigator',
+    });
+
+    const captainPronouns = nlgSystem.getPronounSet(
+      nlgSystem.detectEntityGender(captain.id)
+    );
+
+    const inlineDescriptionPhrase = nlgSystem.generateActivityPhrase(
+      'Captain Flux',
+      {
+        type: 'inline',
+        targetEntityId: captain.id,
+        description: 'salutes',
+      },
+      true,
+      {
+        actorId: captain.id,
+        actorName: 'Captain Flux',
+        actorPronouns: captainPronouns,
+        preferReflexivePronouns: false,
+      }
+    );
+    expect(inlineDescriptionPhrase).toBe('Captain Flux salutes him');
+
+    const dedicatedNoTarget = nlgSystem.generateActivityPhrase(
+      'Captain Flux',
+      {
+        type: 'dedicated',
+        verb: 'scouting',
+        adverb: 'silently',
+      },
+      false
+    );
+    expect(dedicatedNoTarget).toBe('Captain Flux is scouting silently');
+
+    const customDescriptionWithTarget = nlgSystem.generateActivityPhrase(
+      'Captain Flux',
+      {
+        type: 'custom',
+        description: 'observes carefully',
+        targetEntityId: partner.id,
+      },
+      false,
+      {
+        actorId: captain.id,
+      }
+    );
+    expect(customDescriptionWithTarget).toBe(
+      'Captain Flux observes carefully Lady Aurora'
+    );
+
+    const verbOnlyWithPronoun = nlgSystem.generateActivityPhrase(
+      'Captain Flux',
+      {
+        verb: 'reassures',
+        targetEntityId: partner.id,
+      },
+      true,
+      {
+        actorId: captain.id,
+      }
+    );
+    expect(verbOnlyWithPronoun).toBe('Captain Flux reassures her');
+
+    const emptyDecomposition = nlgSystem.generateActivityPhrase(
+      '',
+      { type: 'inline' },
+      false,
+      { omitActor: true }
+    );
+    expect(emptyDecomposition).toEqual({ fullPhrase: '', verbPhrase: '' });
+
+    expect(nlgSystem.sanitizeVerbPhrase(null)).toBe('');
+    expect(nlgSystem.sanitizeVerbPhrase('   ')).toBe('');
+    expect(nlgSystem.sanitizeVerbPhrase(' were waiting')).toBe('waiting');
+
+    const commonContext = {
+      actorName: 'Captain Flux',
+      actorReference: 'Captain Flux',
+      actorPronouns: captainPronouns,
+      pronounsEnabled: false,
+    };
+
+    expect(
+      nlgSystem.buildRelatedActivityFragment('and', null, commonContext)
+    ).toBe('');
+
+    expect(
+      nlgSystem.buildRelatedActivityFragment(
+        'and',
+        { fullPhrase: '', verbPhrase: '   ' },
+        commonContext
+      )
+    ).toBe('');
+
+    const whileWithSubject = nlgSystem.buildRelatedActivityFragment(
+      'while',
+      { fullPhrase: 'Captain Flux patrols the rim', verbPhrase: 'patrols the rim' },
+      {
+        actorName: 'Captain Flux',
+        actorReference: '',
+        actorPronouns: captainPronouns,
+        pronounsEnabled: true,
+      }
+    );
+    expect(whileWithSubject).toBe('while he patrols the rim');
+
+    const whileFallback = nlgSystem.buildRelatedActivityFragment(
+      'while',
+      { fullPhrase: 'Captain Flux hums softly', verbPhrase: '' },
+      {
+        actorName: 'Captain Flux',
+        actorReference: '',
+        actorPronouns: captainPronouns,
+        pronounsEnabled: false,
+      }
+    );
+    expect(whileFallback).toBe('while Captain Flux hums softly');
+
+    const whileWithoutSubject = nlgSystem.buildRelatedActivityFragment(
+      'while',
+      { fullPhrase: '', verbPhrase: 'observing quietly' },
+      {
+        actorName: '',
+        actorReference: '',
+        actorPronouns: captainPronouns,
+        pronounsEnabled: false,
+      }
+    );
+    expect(whileWithoutSubject).toBe('while observing quietly');
+
+    const defaultConjunction = nlgSystem.buildRelatedActivityFragment(
+      undefined,
+      { fullPhrase: 'Captain Flux scans the horizon', verbPhrase: 'scanning the horizon' },
+      commonContext
+    );
+    expect(defaultConjunction).toBe('and scanning the horizon');
+
+    expect(nlgSystem.mergeAdverb('', 'carefully')).toBe('carefully');
+
+    expect(nlgSystem.injectSoftener('{actor} greets {target}', '')).toBe(
+      '{actor} greets {target}'
+    );
+    expect(nlgSystem.injectSoftener('{actor} greets {target}', '   ')).toBe(
+      '{actor} greets {target}'
+    );
+    expect(
+      nlgSystem.injectSoftener('{actor} greets {target}', 'warmly')
+    ).toBe('{actor} greets warmly {target}');
+    expect(
+      nlgSystem.injectSoftener(
+        '{actor} greets warmly {target}',
+        'warmly'
+      )
+    ).toBe('{actor} greets warmly {target}');
+    expect(nlgSystem.injectSoftener(null, 'warmly')).toBeNull();
+
+    expect(nlgSystem.truncateDescription(12345, 10)).toBe('');
+    expect(nlgSystem.truncateDescription('   ', 10)).toBe('');
+    expect(nlgSystem.truncateDescription('Short sentence', 0)).toBe(
+      'Short sentence'
+    );
+    expect(
+      nlgSystem.truncateDescription(
+        'No period but definitely long enough to be shortened',
+        10
+      )
+    ).toBe('No peri...');
+
+    expect(nlgSystem.formatActivityDescription(null)).toBe('');
+    expect(nlgSystem.formatActivityDescription([])).toBe('');
+    expect(
+      nlgSystem.formatActivityDescription(
+        ['', '   ', null, { description: '   ' }],
+        {}
+      )
+    ).toBe('');
+
+    const hooks = nlgSystem.getTestHooks();
+    expect(hooks).toEqual(
+      expect.objectContaining({
+        resolveEntityName: expect.any(Function),
+        sanitizeEntityName: expect.any(Function),
+        generateActivityPhrase: expect.any(Function),
+        truncateDescription: expect.any(Function),
+      })
+    );
+
+    expect(hooks.mergeAdverb('', 'carefully')).toBe('carefully');
+    expect(hooks.injectSoftener('{actor} meets {target}', 'warmly')).toBe(
+      '{actor} meets warmly {target}'
+    );
+    expect(hooks.truncateDescription('Condensed statement here.', 15)).toBe(
+      'Condensed st...'
+    );
+    expect(hooks.shouldUsePronounForTarget(partner.id)).toBe(true);
+  });
 });
