@@ -38,7 +38,7 @@ Create new file with complete class structure:
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { ROUND_STARTED_ID } from '../constants/eventIds.js';
 import { TURN_STARTED_ID, TURN_ENDED_ID } from '../constants/eventIds.js';
-import { COMPONENT_ADDED_ID, COMPONENT_UPDATED_ID } from '../constants/eventIds.js';
+import { COMPONENT_ADDED_ID } from '../constants/eventIds.js';
 import { PARTICIPATION_COMPONENT_ID } from '../constants/componentIds.js';
 
 /**
@@ -57,7 +57,7 @@ class TurnOrderTickerRenderer {
   #roundNumberElement;
   #actorQueueElement;
   #currentActorId = null;
-  #subscriptionIds = [];
+  #unsubscribeFunctions = [];
 
   /**
    * Creates a new TurnOrderTickerRenderer.
@@ -85,19 +85,19 @@ class TurnOrderTickerRenderer {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     validateDependency(documentContext, 'IDocumentContext', logger, {
-      requiredMethods: ['query', 'queryAll'],
+      requiredMethods: ['query', 'create'],
     });
     validateDependency(validatedEventDispatcher, 'IValidatedEventDispatcher', logger, {
       requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
     });
     validateDependency(domElementFactory, 'DomElementFactory', logger, {
-      requiredMethods: ['createElement'],
+      requiredMethods: ['create'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getComponent', 'hasComponent'],
+      requiredMethods: ['getEntityInstance', 'hasComponent'],
     });
     validateDependency(entityDisplayDataProvider, 'EntityDisplayDataProvider', logger, {
-      requiredMethods: ['getDisplayData'],
+      requiredMethods: ['getEntityName', 'getEntityPortraitPath'],
     });
 
     if (!tickerContainerElement || !(tickerContainerElement instanceof HTMLElement)) {
@@ -130,37 +130,31 @@ class TurnOrderTickerRenderer {
    */
   #subscribeToEvents() {
     // Subscribe to round lifecycle
-    const roundStartedSub = this.#validatedEventDispatcher.subscribe(
+    const unsubRoundStarted = this.#validatedEventDispatcher.subscribe(
       ROUND_STARTED_ID,
       this.#handleRoundStarted.bind(this)
     );
-    this.#subscriptionIds.push(roundStartedSub);
+    if (unsubRoundStarted) this.#unsubscribeFunctions.push(unsubRoundStarted);
 
     // Subscribe to turn lifecycle
-    const turnStartedSub = this.#validatedEventDispatcher.subscribe(
+    const unsubTurnStarted = this.#validatedEventDispatcher.subscribe(
       TURN_STARTED_ID,
       this.#handleTurnStarted.bind(this)
     );
-    this.#subscriptionIds.push(turnStartedSub);
+    if (unsubTurnStarted) this.#unsubscribeFunctions.push(unsubTurnStarted);
 
-    const turnEndedSub = this.#validatedEventDispatcher.subscribe(
+    const unsubTurnEnded = this.#validatedEventDispatcher.subscribe(
       TURN_ENDED_ID,
       this.#handleTurnEnded.bind(this)
     );
-    this.#subscriptionIds.push(turnEndedSub);
+    if (unsubTurnEnded) this.#unsubscribeFunctions.push(unsubTurnEnded);
 
     // Subscribe to participation changes
-    const componentAddedSub = this.#validatedEventDispatcher.subscribe(
+    const unsubComponentAdded = this.#validatedEventDispatcher.subscribe(
       COMPONENT_ADDED_ID,
       this.#handleParticipationChanged.bind(this)
     );
-    this.#subscriptionIds.push(componentAddedSub);
-
-    const componentUpdatedSub = this.#validatedEventDispatcher.subscribe(
-      COMPONENT_UPDATED_ID,
-      this.#handleParticipationChanged.bind(this)
-    );
-    this.#subscriptionIds.push(componentUpdatedSub);
+    if (unsubComponentAdded) this.#unsubscribeFunctions.push(unsubComponentAdded);
 
     this.#logger.debug('TurnOrderTickerRenderer event subscriptions established');
   }
@@ -219,10 +213,12 @@ class TurnOrderTickerRenderer {
    * @public
    */
   dispose() {
-    this.#subscriptionIds.forEach(subId => {
-      this.#validatedEventDispatcher.unsubscribe(subId);
+    this.#unsubscribeFunctions.forEach(unsubFn => {
+      if (typeof unsubFn === 'function') {
+        unsubFn();
+      }
     });
-    this.#subscriptionIds = [];
+    this.#unsubscribeFunctions = [];
     this.#logger.info('TurnOrderTickerRenderer disposed');
   }
 
@@ -249,7 +245,7 @@ class TurnOrderTickerRenderer {
    */
   #createActorElement(entity) {
     // Implementation in TURORDTIC-005
-    const element = this.#domElementFactory.createElement('div');
+    const element = this.#domElementFactory.create('div');
     element.classList.add('ticker-actor');
     return element;
   }
@@ -299,6 +295,7 @@ class TurnOrderTickerRenderer {
    * @param {Object} event.payload - Event payload
    * @param {number} event.payload.roundNumber - Round number
    * @param {string[]} event.payload.actors - Actor entity IDs
+   * @param {string} event.payload.strategy - Turn order strategy ('round-robin' or 'initiative')
    * @private
    */
   #handleRoundStarted(event) {
@@ -312,6 +309,7 @@ class TurnOrderTickerRenderer {
    * @param {Object} event - Event object
    * @param {Object} event.payload - Event payload
    * @param {string} event.payload.entityId - Current actor ID
+   * @param {string} event.payload.entityType - Actor type ('player' or 'ai')
    * @private
    */
   #handleTurnStarted(event) {
@@ -325,6 +323,8 @@ class TurnOrderTickerRenderer {
    * @param {Object} event - Event object
    * @param {Object} event.payload - Event payload
    * @param {string} event.payload.entityId - Completed actor ID
+   * @param {boolean} event.payload.success - Whether turn completed successfully
+   * @param {Error} [event.payload.error] - Optional error if turn failed
    * @private
    */
   #handleTurnEnded(event) {
@@ -438,11 +438,11 @@ describe('TurnOrderTickerRenderer - Constructor', () => {
 - [ ] Class has complete JSDoc documentation
 - [ ] Constructor validates all dependencies
 - [ ] Constructor caches DOM child elements
-- [ ] Constructor subscribes to 5 events (round_started, turn_started, turn_ended, component_added, component_updated)
+- [ ] Constructor subscribes to 4 events (round_started, turn_started, turn_ended, component_added)
 - [ ] All public methods defined with correct signatures
 - [ ] All private helper methods defined (stubs acceptable)
 - [ ] All event handler methods defined (stubs acceptable)
-- [ ] `dispose()` method unsubscribes from all events
+- [ ] `dispose()` method unsubscribes from all events by calling unsubscribe functions
 - [ ] File passes TypeScript type checking
 - [ ] Constructor validation tests pass
 
