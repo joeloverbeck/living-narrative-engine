@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "clothing:black_leather_collar_silver_bell",
+  "description": "Black leather collar with a small silver bell",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": [
+        "accessories"
+      ]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": [
+        "flexible"
+      ]
+    },
+    "core:name": {
+      "text": "leather collar with bell"
+    },
+    "core:description": {
+      "text": "A sleek black leather collar that sits snugly around the neck, featuring a small silver bell that chimes softly with every movement. The supple leather is both comfortable and durable, secured with a simple buckle closure. The delicate bell dangles from a silver loop at the front, its clear tone announcing the wearer's presence with a musical quality perfectly suited to a performer. The collar walks the line between playful and elegant, embracing feline nature while maintaining sophistication. A distinctive accessory that adds personality and charm to any ensemble."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "head_gear"
+      ],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.15
+    }
+  }
+}
