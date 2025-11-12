@@ -16,6 +16,15 @@
   </head>
 
   <body>
+    <div id="turn-order-ticker" role="region" aria-label="Turn order" aria-live="polite">
+      <div class="ticker-round-label">
+        <span id="ticker-round-number">ROUND 1</span>
+      </div>
+      <div id="ticker-actor-queue" class="ticker-actor-queue">
+        <!-- Actor elements dynamically inserted here -->
+      </div>
+    </div>
+
     <h1 id="title-element">Adventure Game</h1>
 
     <div id="app-layout-container">

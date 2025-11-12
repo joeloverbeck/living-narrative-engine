@@ -4,6 +4,7 @@ export {
   SYSTEM_WARNING_OCCURRED_ID,
 } from './systemEventIds.js';
 export const GAME_SAVED_ID = 'core:game_saved';
+export const ROUND_STARTED_ID = 'core:round_started';
 export const TURN_STARTED_ID = 'core:turn_started';
 export const TURN_ENDED_ID = 'core:turn_ended';
 export const PLAYER_TURN_PROMPT_ID = 'core:player_turn_prompt';
