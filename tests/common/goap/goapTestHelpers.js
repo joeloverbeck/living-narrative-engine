@@ -110,9 +110,14 @@ export class GoapTestBed {
    * @returns {Promise<void>}
    */
   async loadMods(modIds) {
-    // Note: Mods are loaded during base container configuration
-    // This is a placeholder for explicit mod loading if needed
-    // In practice, mods should be loaded via modsLoader during container setup
+    // Note: In the test environment, mods are loaded during base container configuration
+    // via the registerLoaders phase. We don't need to explicitly load them again here.
+    // This method is kept for API compatibility and logging purposes.
+
+    this.logger.info(`Test environment: Mods (${modIds.join(', ')}) available via base container setup`);
+
+    // Store requested mods for reference
+    this.requestedMods = modIds;
   }
 
   /**
@@ -122,27 +127,37 @@ export class GoapTestBed {
    * @param {string} [options.type='goap'] - Player type
    * @param {Object} [options.components={}] - Additional components
    * @param {string} [options.location] - Location ID
-   * @returns {Object} Actor entity instance
+   * @returns {Object} Actor entity instance (mock object with required interface)
    */
   async createActor({ name, type = 'goap', components = {}, location }) {
     const entityId = `actor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Create base actor definition with required components
-    const baseComponents = {
+    const allComponents = {
       'core:actor': { name },
       'core:player_type': { type },
       ...components,
     };
 
-    // Create a simple mock object that implements the Entity interface
+    // Create a mock entity object that implements the required interface
     const mockEntity = {
       id: entityId,
       name,
       location: location || 'default_location',
-      getAllComponents: () => baseComponents,
+      getAllComponents: () => allComponents,
+      getComponent: (componentId) => allComponents[componentId] || null,
+      hasComponent: (componentId) => componentId in allComponents,
+      addComponent: (componentId, data) => {
+        allComponents[componentId] = data;
+      },
+      removeComponent: (componentId) => {
+        delete allComponents[componentId];
+      },
+      // Additional methods that might be needed
+      components: allComponents,
     };
 
-    // Store for cleanup
+    // Store for tracking and cleanup
     this.entities.set(entityId, mockEntity);
 
     // Mock entityManager to return this entity when requested
@@ -151,12 +166,18 @@ export class GoapTestBed {
       if (id === entityId) {
         return mockEntity;
       }
-      // Fallback to original method for other entities
+      // Check our local entity map
       if (this.entities.has(id)) {
         return this.entities.get(id);
       }
-      return originalGetEntityInstance.call(this.entityManager, id);
+      // Fallback to original method
+      if (originalGetEntityInstance && typeof originalGetEntityInstance === 'function') {
+        return originalGetEntityInstance.call(this.entityManager, id);
+      }
+      return null;
     };
+
+    this.logger.debug(`Created mock actor entity: ${entityId} (${name})`);
 
     return mockEntity;
   }
@@ -199,30 +220,54 @@ export class GoapTestBed {
   }
 
   /**
-   * Gets available actions for an actor (mock for E2E tests)
-   * @param {Object} actor - Actor object
-   * @returns {Promise<Array>} Mock available actions
+   * Gets available actions for an actor using real action discovery
+   * @param {Object} actor - Actor object (must have id property)
+   * @param {Object} [context] - Optional turn context
+   * @returns {Promise<Array>} Real available actions with planning effects
    */
-  async getAvailableActions(actor) {
-    // Return mock actions for testing
-    // In real implementation, this would use actionDiscoveryService
-    return [
-      {
-        index: 1,
-        actionId: 'core:wait',
-        params: { targetId: null },
-        planningEffects: {
-          effects: [
-            {
-              operation: 'ADD_COMPONENT',
-              entity: 'actor',
-              component: 'core:waited',
-              data: {},
-            },
-          ],
-        },
-      },
-    ];
+  async getAvailableActions(actor, context) {
+    // Get the real entity instance
+    const actorEntity = this.entityManager.getEntityInstance(actor.id);
+
+    if (!actorEntity) {
+      this.logger.warn(`Actor entity not found: ${actor.id}`);
+      return [];
+    }
+
+    // Create default context if not provided
+    const discoveryContext = context || this.createContext({ actorId: actor.id });
+
+    // Ensure required context properties
+    discoveryContext.game = discoveryContext.game || {};
+    discoveryContext.turn = discoveryContext.turn || 1;
+
+    try {
+      const actions = await this.actionDiscoveryService.discoverActions(
+        actorEntity,
+        discoveryContext
+      );
+
+      this.logger.debug(
+        `Discovered ${actions.length} actions for actor ${actor.id}`
+      );
+
+      // Filter to actions with planning effects (GOAP requirement)
+      const plannableActions = actions.filter(
+        (action) => action.planningEffects && action.planningEffects.effects
+      );
+
+      this.logger.debug(
+        `${plannableActions.length} actions have planning effects`
+      );
+
+      return plannableActions;
+    } catch (error) {
+      this.logger.error(
+        `Error discovering actions for actor ${actor.id}:`,
+        error
+      );
+      return [];
+    }
   }
 
   /**
@@ -237,15 +282,198 @@ export class GoapTestBed {
   }
 
   /**
-   * Executes an action (simplified for E2E tests)
+   * Executes an action using the real rule system
    * @param {string} actorId - Actor ID
-   * @param {Object} action - Action to execute
-   * @returns {Promise<void>}
+   * @param {Object} action - Action to execute (must have actionId, params with targetId and optionally tertiaryTargetId)
+   * @returns {Promise<Object>} Execution result with state changes
    */
   async executeAction(actorId, action) {
-    // Simplified execution for E2E tests
-    // In real implementation, this would use ruleProcessor
-    this.logger.info(`Executed action ${action.actionId} for actor ${actorId}`);
+    // Get the operation interpreter for executing rule operations
+    const operationInterpreter = this.container.resolve(
+      tokens.IOperationInterpreter
+    );
+    const eventBus = this.container.resolve(tokens.IEventBus);
+
+    this.logger.info(
+      `Executing action ${action.actionId} for actor ${actorId}`
+    );
+
+    // Capture state before execution
+    const stateBefore = this.captureEntityState(actorId);
+
+    // Dispatch the attempt_action event which will trigger the rule
+    const actionEvent = {
+      type: 'core:attempt_action',
+      payload: {
+        actorId,
+        actionId: action.actionId,
+        targetId: action.params?.targetId || action.targetId || null,
+        tertiaryTargetId:
+          action.params?.tertiaryTargetId || action.tertiaryTargetId || null,
+        turn: 1,
+      },
+    };
+
+    // The event bus will trigger the appropriate rule
+    await eventBus.dispatch(actionEvent);
+
+    // Allow async operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Capture state after execution
+    const stateAfter = this.captureEntityState(actorId);
+
+    // Compare states
+    const stateChanges = this.compareStates(stateBefore, stateAfter);
+
+    this.logger.info(`Action execution complete. State changes detected:`, {
+      added: stateChanges.added.length,
+      removed: stateChanges.removed.length,
+      modified: stateChanges.modified.length,
+    });
+
+    return {
+      success: true,
+      stateBefore,
+      stateAfter,
+      stateChanges,
+    };
+  }
+
+  /**
+   * Captures the current state of an entity
+   * @param {string} entityId - Entity ID
+   * @returns {Object} State snapshot
+   */
+  captureEntityState(entityId) {
+    const entity = this.entities.get(entityId);
+    if (!entity || !entity.getAllComponents) {
+      return { components: {} };
+    }
+
+    const components = entity.getAllComponents();
+
+    // Deep clone to avoid reference issues
+    return {
+      components: JSON.parse(JSON.stringify(components)),
+    };
+  }
+
+  /**
+   * Compares two entity states and identifies changes
+   * @param {Object} before - State before
+   * @param {Object} after - State after
+   * @returns {Object} State changes
+   */
+  compareStates(before, after) {
+    const changes = {
+      added: [],
+      removed: [],
+      modified: [],
+    };
+
+    const beforeComponents = before.components || {};
+    const afterComponents = after.components || {};
+
+    // Find added and modified components
+    for (const [componentId, afterData] of Object.entries(afterComponents)) {
+      if (!beforeComponents[componentId]) {
+        changes.added.push({
+          component: componentId,
+          data: afterData,
+        });
+      } else {
+        // Check if modified
+        const beforeData = beforeComponents[componentId];
+        if (JSON.stringify(beforeData) !== JSON.stringify(afterData)) {
+          changes.modified.push({
+            component: componentId,
+            before: beforeData,
+            after: afterData,
+          });
+        }
+      }
+    }
+
+    // Find removed components
+    for (const componentId of Object.keys(beforeComponents)) {
+      if (!afterComponents[componentId]) {
+        changes.removed.push({
+          component: componentId,
+          data: beforeComponents[componentId],
+        });
+      }
+    }
+
+    return changes;
+  }
+
+  /**
+   * Verifies that planning effects match actual state changes
+   * @param {Object} action - Action with planningEffects
+   * @param {Object} stateChanges - Actual state changes from execution
+   * @returns {Object} Verification result
+   */
+  verifyPlanningEffects(action, stateChanges) {
+    if (!action.planningEffects || !action.planningEffects.effects) {
+      return {
+        verified: false,
+        reason: 'No planning effects to verify',
+      };
+    }
+
+    const effects = action.planningEffects.effects;
+    const mismatches = [];
+
+    for (const effect of effects) {
+      if (effect.operation === 'ADD_COMPONENT') {
+        const component = effect.component;
+        const wasAdded = stateChanges.added.some(
+          (change) => change.component === component
+        );
+
+        if (!wasAdded) {
+          mismatches.push({
+            effect,
+            issue: `Expected component ${component} to be added but it wasn't`,
+          });
+        }
+      } else if (effect.operation === 'REMOVE_COMPONENT') {
+        const component = effect.component;
+        const wasRemoved = stateChanges.removed.some(
+          (change) => change.component === component
+        );
+
+        if (!wasRemoved) {
+          mismatches.push({
+            effect,
+            issue: `Expected component ${component} to be removed but it wasn't`,
+          });
+        }
+      } else if (effect.operation === 'MODIFY_COMPONENT') {
+        const component = effect.component;
+        const wasModified = stateChanges.modified.some(
+          (change) => change.component === component
+        );
+
+        if (!wasModified) {
+          mismatches.push({
+            effect,
+            issue: `Expected component ${component} to be modified but it wasn't`,
+          });
+        }
+      }
+    }
+
+    return {
+      verified: mismatches.length === 0,
+      mismatches,
+      effectsCount: effects.length,
+      changesCount:
+        stateChanges.added.length +
+        stateChanges.removed.length +
+        stateChanges.modified.length,
+    };
   }
 
   /**
