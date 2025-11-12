@@ -1,291 +1,284 @@
-# CLOREMBLO-005: Create can-remove-item Condition and Update Actions
+# CLOREMBLO-005: Add Execution-Time Blocking Validation to Removal Rules
 
 **Category**: Clothing System Enhancement
 **Priority**: High
-**Estimated Effort**: 1-2 hours
-**Phase**: 4 - Action Integration
+**Estimated Effort**: 2-3 hours
+**Phase**: 4 - Rule Integration
 
 ---
 
 ## Overview
 
-Create the `can-remove-item` condition that validates item removal is not blocked, and update clothing removal actions to include this condition in their prerequisites. This provides a second layer of validation (in addition to scope filtering) and enables clear error messaging.
+Add execution-time validation to clothing removal rules using IF operations with the `isRemovalBlocked` operator. This provides a second layer of validation (in addition to scope filtering) and enables clear error messaging when removal is blocked.
 
 ---
 
 ## Background
 
 The blocking system has two layers of protection:
-1. **Scope Filtering** (CLOREMBLO-004): Blocked items don't appear in `topmost_clothing`
-2. **Condition Validation** (this ticket): Double-check removal is allowed before execution
+1. **Scope Filtering** (CLOREMBLO-004): Blocked items don't appear in `topmost_clothing` scope during action discovery
+2. **Execution Validation** (this ticket): Double-check removal is allowed before unequipping during rule execution
 
 This dual approach:
-- Prevents blocked items from appearing in action discovery
-- Validates removal is still allowed at execution time (in case state changed)
+- **Discovery Time**: Prevents blocked items from appearing in action lists (scope filtering)
+- **Execution Time**: Validates removal is still allowed when rule executes (IF operation check)
 - Provides clear error messages when removal fails
-- Follows defense-in-depth principle
+- Follows defense-in-depth principle (state could change between discovery and execution)
+
+### Why NOT Use Action Prerequisites?
+
+Action prerequisites are evaluated during action DISCOVERY (before target resolution), so they:
+- Cannot access target information (targets not yet resolved)
+- Only have `actor` context available, not target item context
+- Are unsuitable for validating specific target items
+
+Instead, we use IF operations in the RULE to check blocking during EXECUTION when both actor and target are known.
 
 ---
 
 ## Requirements
 
-### Condition Definition
+### Approach: IF Operations in Rules
 
-**File**: `data/mods/clothing/conditions/can-remove-item.condition.json`
+We'll add IF operations at the start of each removal rule to:
+1. Check if the target item's removal is blocked using `isRemovalBlocked` operator
+2. If blocked, emit an error message and skip the unequip operation
+3. If not blocked, proceed with normal unequip flow
 
-**Purpose**: Validates that the target clothing item can be removed (not blocked by other equipped items).
-
-**Full Definition**:
-
-```json
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "clothing:can-remove-item",
-  "description": "Validates that the target clothing item can be removed (not blocked by other equipped items)",
-  "type": "inline",
-  "expression": {
-    "!": {
-      "isRemovalBlocked": [
-        "{actorId}",
-        "{targetId}"
-      ]
-    }
-  }
-}
-```
-
-**Design Rationale**:
-- Uses negation (`!`) because operator returns `true` when blocked
-- Condition returns `true` when removal is allowed (not blocked)
-- Uses `{actorId}` and `{targetId}` placeholders from action context
-- Simple inline condition (no separate expression file needed)
+**Operator Context Paths**:
+- `remove_clothing` rule: Uses `actor` (wearer) and `target` (item) paths
+- `remove_others_clothing` rule: Uses `primary` (wearer) and `secondary` (item) paths
 
 ---
 
 ## Implementation Tasks
 
-### 1. Create Condition File
+### 1. Update remove_clothing Rule
 
-Create `data/mods/clothing/conditions/can-remove-item.condition.json` with the definition above.
+**File**: `data/mods/clothing/rules/handle_remove_clothing.rule.json`
 
-### 2. Update remove_clothing Action
+**Changes**: Wrap the UNEQUIP_CLOTHING operation in an IF operation that checks blocking.
 
-**File**: `data/mods/clothing/actions/remove_clothing.action.json`
-
-**Changes**: Add `can-remove-item` condition to prerequisites.
-
-**Before**:
+**Current UNEQUIP_CLOTHING operation** (line 31-38):
 ```json
 {
-  "prerequisites": [
-    {
-      "condition_ref": "clothing:event-is-action-remove-clothing"
-    }
-  ]
+  "type": "UNEQUIP_CLOTHING",
+  "parameters": {
+    "entity_ref": "actor",
+    "clothing_item_id": "{event.payload.targetId}",
+    "cascade_unequip": false,
+    "destination": "ground"
+  }
 }
 ```
 
-**After**:
+**New structure with IF operation**:
 ```json
 {
-  "prerequisites": [
-    {
-      "condition_ref": "clothing:event-is-action-remove-clothing"
+  "type": "IF",
+  "parameters": {
+    "condition": {
+      "!": {
+        "isRemovalBlocked": ["actor", "target"]
+      }
     },
-    {
-      "condition_ref": "clothing:can-remove-item"
-    }
-  ]
+    "then_actions": [
+      {
+        "type": "UNEQUIP_CLOTHING",
+        "parameters": {
+          "entity_ref": "actor",
+          "clothing_item_id": "{event.payload.targetId}",
+          "cascade_unequip": false,
+          "destination": "ground"
+        }
+      },
+      {
+        "type": "REGENERATE_DESCRIPTION",
+        "parameters": {
+          "entity_ref": "actor"
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "logMessage",
+          "value": "{context.actorName} removes their {context.targetName}."
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "perceptionType",
+          "value": "action_target_general"
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "locationId",
+          "value": "{context.actorPosition.locationId}"
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "targetId",
+          "value": "{event.payload.targetId}"
+        }
+      },
+      {
+        "macro": "core:logSuccessAndEndTurn"
+      }
+    ],
+    "else_actions": [
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "logMessage",
+          "value": "{context.actorName} cannot remove their {context.targetName} - it is blocked by other clothing."
+        }
+      },
+      {
+        "type": "DISPATCH_EVENT",
+        "parameters": {
+          "event_type": "core:action_failed",
+          "payload": {
+            "actorId": "{event.payload.actorId}",
+            "actionId": "{event.payload.actionId}",
+            "reason": "removal_blocked",
+            "message": "{context.logMessage}"
+          }
+        }
+      }
+    ]
+  }
 }
 ```
 
-### 3. Update remove_others_clothing Action
+**Rationale**:
+- Checks `!isRemovalBlocked(actor, target)` - returns true if NOT blocked
+- Uses entity ref paths: `actor` (the wearer) and `target` (the clothing item)
+- If not blocked: proceeds with unequip and success messaging
+- If blocked: emits error message and action_failed event, skips unequip
 
-**File**: `data/mods/clothing/actions/remove_others_clothing.action.json`
+### 2. Update remove_others_clothing Rule
 
-**Changes**: Add same validation to prerequisites.
+**File**: `data/mods/clothing/rules/handle_remove_others_clothing.rule.json`
 
-**Before**:
+**Changes**: Similar IF operation wrapping, using `primary` and `secondary` entity refs.
+
+**Current UNEQUIP_CLOTHING operation** (line 40-47):
 ```json
 {
-  "prerequisites": [
-    {
-      "condition_ref": "clothing:event-is-action-remove-others-clothing"
-    }
-  ]
+  "type": "UNEQUIP_CLOTHING",
+  "parameters": {
+    "entity_ref": "primary",
+    "clothing_item_id": "{event.payload.secondaryId}",
+    "cascade_unequip": false,
+    "destination": "ground"
+  }
 }
 ```
 
-**After**:
+**New structure with IF operation**:
 ```json
 {
-  "prerequisites": [
-    {
-      "condition_ref": "clothing:event-is-action-remove-others-clothing"
+  "type": "IF",
+  "parameters": {
+    "condition": {
+      "!": {
+        "isRemovalBlocked": ["primary", "secondary"]
+      }
     },
-    {
-      "condition_ref": "clothing:can-remove-item"
-    }
-  ]
+    "then_actions": [
+      {
+        "type": "UNEQUIP_CLOTHING",
+        "parameters": {
+          "entity_ref": "primary",
+          "clothing_item_id": "{event.payload.secondaryId}",
+          "cascade_unequip": false,
+          "destination": "ground"
+        }
+      },
+      {
+        "type": "REGENERATE_DESCRIPTION",
+        "parameters": {
+          "entity_ref": "primary"
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "logMessage",
+          "value": "{context.actorName} removes {context.primaryName}'s {context.secondaryName}."
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "perceptionType",
+          "value": "action_target_general"
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "locationId",
+          "value": "{context.actorPosition.locationId}"
+        }
+      },
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "targetId",
+          "value": "{event.payload.primaryId}"
+        }
+      },
+      {
+        "macro": "core:logSuccessAndEndTurn"
+      }
+    ],
+    "else_actions": [
+      {
+        "type": "SET_VARIABLE",
+        "parameters": {
+          "variable_name": "logMessage",
+          "value": "{context.actorName} cannot remove {context.primaryName}'s {context.secondaryName} - it is blocked by other clothing."
+        }
+      },
+      {
+        "type": "DISPATCH_EVENT",
+        "parameters": {
+          "event_type": "core:action_failed",
+          "payload": {
+            "actorId": "{event.payload.actorId}",
+            "actionId": "{event.payload.actionId}",
+            "reason": "removal_blocked",
+            "message": "{context.logMessage}"
+          }
+        }
+      }
+    ]
+  }
 }
 ```
 
-### 4. Create Unit Tests
+**Rationale**:
+- Uses entity ref paths: `primary` (the person wearing the clothes) and `secondary` (the clothing item)
+- Same validation logic as remove_clothing
+- Adjusted error message for "other person" context
 
-**File**: `tests/unit/mods/clothing/conditions/canRemoveItem.test.js`
+### 3. Create Integration Tests
 
-**Test Coverage**:
+**File**: `tests/integration/clothing/removeClothingRuleBlocking.integration.test.js`
 
-```javascript
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createTestBed } from '../../../../common/testBed.js';
-
-describe('clothing:can-remove-item Condition', () => {
-  let testBed;
-  let condition;
-
-  beforeEach(async () => {
-    testBed = createTestBed();
-    await testBed.loadCondition('clothing:can-remove-item');
-    condition = testBed.getCondition('clothing:can-remove-item');
-  });
-
-  describe('Schema Validation', () => {
-    it('should have valid condition schema', () => {
-      expect(condition).toBeDefined();
-      expect(condition.id).toBe('clothing:can-remove-item');
-      expect(condition.type).toBe('inline');
-      expect(condition.expression).toBeDefined();
-    });
-
-    it('should use isRemovalBlocked operator with negation', () => {
-      expect(condition.expression).toHaveProperty('!');
-      expect(condition.expression['!']).toHaveProperty('isRemovalBlocked');
-    });
-  });
-
-  describe('Evaluation', () => {
-    it('should return true when item is not blocked', () => {
-      // Arrange
-      const actor = testBed.createEntity('actor1', ['clothing:equipment']);
-      const shirt = testBed.createEntity('shirt1', ['clothing:wearable'], {
-        'clothing:wearable': {
-          layer: 'base',
-          equipmentSlots: { primary: 'torso_upper' },
-        },
-      });
-
-      testBed.equipItem(actor.id, shirt.id);
-
-      // Act
-      const result = testBed.evaluateCondition('clothing:can-remove-item', {
-        actorId: actor.id,
-        targetId: shirt.id,
-      });
-
-      // Assert
-      expect(result).toBe(true);
-    });
-
-    it('should return false when item is blocked', () => {
-      // Arrange
-      const actor = testBed.createEntity('actor1', ['clothing:equipment']);
-      const belt = testBed.createEntity('belt1', [
-        'clothing:wearable',
-        'clothing:blocks_removal',
-      ], {
-        'clothing:wearable': {
-          layer: 'accessories',
-          equipmentSlots: { primary: 'torso_lower' },
-        },
-        'clothing:blocks_removal': {
-          blockedSlots: [
-            {
-              slot: 'legs',
-              layers: ['base'],
-              blockType: 'must_remove_first',
-            },
-          ],
-        },
-      });
-      const pants = testBed.createEntity('pants1', ['clothing:wearable'], {
-        'clothing:wearable': {
-          layer: 'base',
-          equipmentSlots: { primary: 'legs' },
-        },
-      });
-
-      testBed.equipItem(actor.id, belt.id);
-      testBed.equipItem(actor.id, pants.id);
-
-      // Act
-      const result = testBed.evaluateCondition('clothing:can-remove-item', {
-        actorId: actor.id,
-        targetId: pants.id,
-      });
-
-      // Assert
-      expect(result).toBe(false);
-    });
-
-    it('should return true after blocking item removed', () => {
-      // Arrange
-      const actor = testBed.createEntity('actor1', ['clothing:equipment']);
-      const belt = testBed.createEntity('belt1', [
-        'clothing:wearable',
-        'clothing:blocks_removal',
-      ], {
-        'clothing:wearable': {
-          layer: 'accessories',
-          equipmentSlots: { primary: 'torso_lower' },
-        },
-        'clothing:blocks_removal': {
-          blockedSlots: [
-            {
-              slot: 'legs',
-              layers: ['base'],
-              blockType: 'must_remove_first',
-            },
-          ],
-        },
-      });
-      const pants = testBed.createEntity('pants1', ['clothing:wearable'], {
-        'clothing:wearable': {
-          layer: 'base',
-          equipmentSlots: { primary: 'legs' },
-        },
-      });
-
-      testBed.equipItem(actor.id, belt.id);
-      testBed.equipItem(actor.id, pants.id);
-
-      // Remove belt
-      testBed.unequipItem(actor.id, belt.id);
-
-      // Act
-      const result = testBed.evaluateCondition('clothing:can-remove-item', {
-        actorId: actor.id,
-        targetId: pants.id,
-      });
-
-      // Assert
-      expect(result).toBe(true);
-    });
-  });
-});
-```
-
-### 5. Create Integration Tests
-
-**File**: `tests/integration/clothing/removeClothingActionBlocking.integration.test.js`
-
-**Test Coverage**:
+**Test Coverage**: Verify that rules correctly check blocking and emit appropriate events.
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
-describe('Remove Clothing Action - Blocking Integration', () => {
+describe('Remove Clothing Rule - Blocking Integration', () => {
   let fixture;
 
   beforeEach(async () => {
@@ -296,171 +289,204 @@ describe('Remove Clothing Action - Blocking Integration', () => {
     fixture.cleanup();
   });
 
-  it('should prevent remove_clothing action when item is blocked', async () => {
-    // Arrange
-    const actor = fixture.createStandardActor('John');
-    const belt = fixture.createEntity('belt', [
-      'clothing:wearable',
-      'clothing:blocks_removal',
-    ], {
-      'clothing:wearable': {
-        layer: 'accessories',
-        equipmentSlots: { primary: 'torso_lower' },
-      },
-      'clothing:blocks_removal': {
-        blockedSlots: [
-          {
+  it('should emit action_failed event when trying to remove blocked clothing', async () => {
+    // Arrange: Create actor with belt blocking pants
+    const actor = fixture.createEntity({
+      id: 'actor1',
+      components: [
+        { componentId: 'core:name', text: 'John' },
+        { componentId: 'core:position', locationId: 'room1' },
+        {
+          componentId: 'clothing:equipment',
+          equipped: {
+            torso_lower: { accessories: ['belt1'] },
+            legs: { base: ['pants1'] }
+          }
+        }
+      ]
+    });
+
+    const belt = fixture.createEntity({
+      id: 'belt1',
+      components: [
+        { componentId: 'core:name', text: 'belt' },
+        {
+          componentId: 'clothing:wearable',
+          layer: 'accessories',
+          equipmentSlots: { primary: 'torso_lower' }
+        },
+        {
+          componentId: 'clothing:blocks_removal',
+          blockedSlots: [{
             slot: 'legs',
             layers: ['base'],
-            blockType: 'must_remove_first',
-            reason: 'Belt secures pants at waist',
-          },
-        ],
-      },
-    });
-    const pants = fixture.createEntity('pants', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'legs' },
-      },
+            blockType: 'must_remove_first'
+          }]
+        }
+      ]
     });
 
-    fixture.equipItem(actor.id, belt.id);
-    fixture.equipItem(actor.id, pants.id);
+    const pants = fixture.createEntity({
+      id: 'pants1',
+      components: [
+        { componentId: 'core:name', text: 'pants' },
+        {
+          componentId: 'clothing:wearable',
+          layer: 'base',
+          equipmentSlots: { primary: 'legs' }
+        }
+      ]
+    });
 
-    // Act: Try to remove pants
-    const result = await fixture.executeAction(actor.id, pants.id);
+    fixture.reset([actor, belt, pants]);
 
-    // Assert: Action should fail due to blocking
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('blocked');
+    // Act: Try to remove pants via action
+    await fixture.eventBus.dispatch('core:attempt_action', {
+      eventName: 'core:attempt_action',
+      actorId: 'actor1',
+      actionId: 'clothing:remove_clothing',
+      targetId: 'pants1',
+      originalInput: 'remove pants'
+    });
+
+    // Assert: Should have action_failed event, not perceptible_event
+    const failedEvent = fixture.events.find(e => e.eventType === 'core:action_failed');
+    expect(failedEvent).toBeDefined();
+    expect(failedEvent.payload.reason).toBe('removal_blocked');
+    expect(failedEvent.payload.message).toContain('blocked');
+
+    // Should NOT have perceptible event (action didn't succeed)
+    const perceptibleEvent = fixture.events.find(e => e.eventType === 'core:perceptible_event');
+    expect(perceptibleEvent).toBeUndefined();
   });
 
-  it('should allow remove_clothing action when item is not blocked', async () => {
-    // Arrange
-    const actor = fixture.createStandardActor('John');
-    const shirt = fixture.createEntity('shirt', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'torso_upper' },
-      },
+  it('should successfully remove clothing when not blocked', async () => {
+    // Arrange: Create actor with just a shirt (no blockers)
+    const actor = fixture.createEntity({
+      id: 'actor1',
+      components: [
+        { componentId: 'core:name', text: 'John' },
+        { componentId: 'core:position', locationId: 'room1' },
+        {
+          componentId: 'clothing:equipment',
+          equipped: {
+            torso_upper: { base: ['shirt1'] }
+          }
+        }
+      ]
     });
 
-    fixture.equipItem(actor.id, shirt.id);
+    const shirt = fixture.createEntity({
+      id: 'shirt1',
+      components: [
+        { componentId: 'core:name', text: 'shirt' },
+        {
+          componentId: 'clothing:wearable',
+          layer: 'base',
+          equipmentSlots: { primary: 'torso_upper' }
+        }
+      ]
+    });
+
+    fixture.reset([actor, shirt]);
 
     // Act: Remove shirt
-    const result = await fixture.executeAction(actor.id, shirt.id);
-
-    // Assert: Action should succeed
-    expect(result.success).toBe(true);
-  });
-
-  it('should allow removal after blocking item removed', async () => {
-    // Arrange
-    const actor = fixture.createStandardActor('John');
-    const belt = fixture.createEntity('belt', [
-      'clothing:wearable',
-      'clothing:blocks_removal',
-    ], {
-      'clothing:wearable': {
-        layer: 'accessories',
-        equipmentSlots: { primary: 'torso_lower' },
-      },
-      'clothing:blocks_removal': {
-        blockedSlots: [
-          {
-            slot: 'legs',
-            layers: ['base'],
-            blockType: 'must_remove_first',
-          },
-        ],
-      },
-    });
-    const pants = fixture.createEntity('pants', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'legs' },
-      },
+    await fixture.eventBus.dispatch('core:attempt_action', {
+      eventName: 'core:attempt_action',
+      actorId: 'actor1',
+      actionId: 'clothing:remove_clothing',
+      targetId: 'shirt1',
+      originalInput: 'remove shirt'
     });
 
-    fixture.equipItem(actor.id, belt.id);
-    fixture.equipItem(actor.id, pants.id);
-
-    // Act: Remove belt first
-    const beltResult = await fixture.executeAction(actor.id, belt.id);
-
-    // Then remove pants
-    const pantsResult = await fixture.executeAction(actor.id, pants.id);
-
-    // Assert
-    expect(beltResult.success).toBe(true);
-    expect(pantsResult.success).toBe(true);
+    // Assert: Should have perceptible_event (success)
+    const perceptibleEvent = fixture.events.find(e => e.eventType === 'core:perceptible_event');
+    expect(perceptibleEvent).toBeDefined();
+    expect(perceptibleEvent.payload.descriptionText).toContain('John');
+    expect(perceptibleEvent.payload.descriptionText).toContain('shirt');
   });
 });
 
-describe('Remove Others Clothing Action - Blocking Integration', () => {
+describe('Remove Others Clothing Rule - Blocking Integration', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'clothing',
-      'clothing:remove_others_clothing'
-    );
+    fixture = await ModTestFixture.forAction('clothing', 'clothing:remove_others_clothing');
   });
 
   afterEach(() => {
     fixture.cleanup();
   });
 
-  it('should prevent removing others clothing when blocked', async () => {
-    // Arrange
-    const [actor, target] = fixture.createStandardActorTarget(['John', 'Jane']);
-    const belt = fixture.createEntity('belt', [
-      'clothing:wearable',
-      'clothing:blocks_removal',
-    ], {
-      'clothing:wearable': {
-        layer: 'accessories',
-        equipmentSlots: { primary: 'torso_lower' },
-      },
-      'clothing:blocks_removal': {
-        blockedSlots: [
-          {
+  it('should emit action_failed when trying to remove blocked clothing from another person', async () => {
+    // Arrange: Create actor and target with blocked clothing
+    const scenario = fixture.createStandardActorTarget(['John', 'Jane']);
+
+    const belt = fixture.createEntity({
+      id: 'belt1',
+      components: [
+        { componentId: 'core:name', text: 'belt' },
+        {
+          componentId: 'clothing:wearable',
+          layer: 'accessories',
+          equipmentSlots: { primary: 'torso_lower' }
+        },
+        {
+          componentId: 'clothing:blocks_removal',
+          blockedSlots: [{
             slot: 'legs',
             layers: ['base'],
-            blockType: 'must_remove_first',
-          },
-        ],
-      },
-    });
-    const pants = fixture.createEntity('pants', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'legs' },
-      },
+            blockType: 'must_remove_first'
+          }]
+        }
+      ]
     });
 
-    fixture.equipItem(target.id, belt.id);
-    fixture.equipItem(target.id, pants.id);
+    const pants = fixture.createEntity({
+      id: 'pants1',
+      components: [
+        { componentId: 'core:name', text: 'pants' },
+        {
+          componentId: 'clothing:wearable',
+          layer: 'base',
+          equipmentSlots: { primary: 'legs' }
+        }
+      ]
+    });
 
-    // Act: John tries to remove Jane's pants (blocked by belt)
-    const result = await fixture.executeAction(actor.id, target.id, pants.id);
+    // Add equipment to Jane
+    fixture.testEnv.entityManager.addComponent(scenario.target.id, 'clothing:equipment', {
+      equipped: {
+        torso_lower: { accessories: ['belt1'] },
+        legs: { base: ['pants1'] }
+      }
+    });
+
+    fixture.reset([scenario.actor, scenario.target, belt, pants]);
+
+    // Act: John tries to remove Jane's pants
+    await fixture.eventBus.dispatch('core:attempt_action', {
+      eventName: 'core:attempt_action',
+      actorId: scenario.actor.id,
+      actionId: 'clothing:remove_others_clothing',
+      primaryId: scenario.target.id,
+      secondaryId: 'pants1',
+      originalInput: "remove Jane's pants"
+    });
 
     // Assert
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('blocked');
+    const failedEvent = fixture.events.find(e => e.eventType === 'core:action_failed');
+    expect(failedEvent).toBeDefined();
+    expect(failedEvent.payload.reason).toBe('removal_blocked');
   });
 });
 ```
 
-### 6. Run Tests
+### 4. Run Tests
 
 ```bash
-# Unit tests
-NODE_ENV=test npm run test:unit -- tests/unit/mods/clothing/conditions/canRemoveItem.test.js
-
 # Integration tests
-NODE_ENV=test npm run test:integration -- tests/integration/clothing/removeClothingActionBlocking.integration.test.js
+NODE_ENV=test npm run test:integration -- tests/integration/clothing/removeClothingRuleBlocking.integration.test.js
 ```
 
 ---
@@ -473,23 +499,15 @@ NODE_ENV=test npm run test:integration -- tests/integration/clothing/removeCloth
 npm run validate
 ```
 
-Expected: All schemas valid, including new condition.
-
-### Unit Tests
-
-```bash
-NODE_ENV=test npm run test:unit -- tests/unit/mods/clothing/conditions/canRemoveItem.test.js
-```
-
-Expected: All tests pass.
+Expected: All rule schemas valid with IF operation structure.
 
 ### Integration Tests
 
 ```bash
-NODE_ENV=test npm run test:integration -- tests/integration/clothing/removeClothingActionBlocking.integration.test.js
+NODE_ENV=test npm run test:integration -- tests/integration/clothing/removeClothingRuleBlocking.integration.test.js
 ```
 
-Expected: All tests pass.
+Expected: All tests pass, blocking properly prevents unequip and emits action_failed events.
 
 ### Type Checking
 
@@ -498,6 +516,13 @@ npm run typecheck
 ```
 
 Expected: No errors.
+
+### Manual Testing
+
+1. Equip belt and pants on a character
+2. Try to remove pants - should fail with error message
+3. Remove belt first
+4. Try to remove pants again - should succeed
 
 ### Full Test Suite
 
@@ -511,13 +536,13 @@ Expected: No regressions, all tests pass.
 
 ## Acceptance Criteria
 
-- [ ] `can-remove-item` condition created with correct schema
-- [ ] Condition uses `isRemovalBlocked` operator with negation
-- [ ] Condition validates successfully
-- [ ] `remove_clothing` action updated with new prerequisite
-- [ ] `remove_others_clothing` action updated with new prerequisite
-- [ ] Actions validate successfully
-- [ ] Unit tests created and passing
+- [ ] `remove_clothing` rule updated with IF operation for blocking validation
+- [ ] `remove_others_clothing` rule updated with IF operation for blocking validation
+- [ ] IF operations use correct entity ref paths (`actor`/`target` and `primary`/`secondary`)
+- [ ] IF operations use `isRemovalBlocked` operator with negation
+- [ ] Blocked removal emits `action_failed` event with appropriate message
+- [ ] Successful removal proceeds with normal unequip flow
+- [ ] Rules validate successfully
 - [ ] Integration tests created and passing
 - [ ] Schema validation passes
 - [ ] Type checking passes
@@ -527,78 +552,131 @@ Expected: No regressions, all tests pass.
 
 ## Notes
 
-### Why Both Scope Filtering AND Condition Validation?
+### Why Both Scope Filtering AND Execution Validation?
 
-1. **Scope Filtering** (Primary): Prevents blocked items from appearing in UI
-2. **Condition Validation** (Secondary): Safety check at execution time
+1. **Scope Filtering** (Discovery Time): Prevents blocked items from appearing in action lists
+2. **Execution Validation** (Execution Time): Safety check when rule actually runs
 
 **Benefits of Dual Approach**:
 - **Defense in Depth**: Two layers of protection
 - **State Changes**: Validates blocking hasn't changed between discovery and execution
-- **Clear Errors**: Condition provides specific error messages
-- **Fail-Safe**: If scope filtering fails, condition still prevents invalid removal
+- **Clear Errors**: IF operation provides specific error messages via action_failed events
+- **Fail-Safe**: If scope filtering somehow fails, execution validation still prevents invalid removal
 
-### Placeholder Mapping
+### Entity Reference Paths
 
-The condition uses these placeholders:
-- `{actorId}`: Resolved from action context (actor performing action)
-- `{targetId}`: Resolved from action context (item being removed)
+The IF operations use entity reference paths available in rule execution context:
 
-These are automatically populated by the action execution system.
+**remove_clothing rule**:
+- `actor`: The entity wearing the clothing (from `event.payload.actorId`)
+- `target`: The clothing item being removed (from `event.payload.targetId`)
+
+**remove_others_clothing rule**:
+- `primary`: The entity wearing the clothing (from `event.payload.primaryId`)
+- `secondary`: The clothing item being removed (from `event.payload.secondaryId`)
+
+These entity refs are automatically resolved by the rule execution system to actual entity objects.
 
 ### Error Handling
 
-When the condition fails (returns `false`):
-- Action execution is blocked
-- Error message should indicate blocking (implementation in action executor)
-- Player sees clear feedback about why removal failed
+When blocking is detected:
+- IF operation's `else_actions` branch executes
+- Emits `core:action_failed` event with:
+  - `reason: "removal_blocked"`
+  - User-friendly error message
+- Skips the UNEQUIP_CLOTHING operation entirely
+- Prevents state corruption from partial unequipping
 
 ---
 
 ## Common Pitfalls
 
-**Pitfall**: Forgetting negation operator
-**Solution**: Condition must use `!` because operator returns `true` when blocked
+**Pitfall**: Forgetting negation operator in IF condition
+**Solution**: Must use `"!": { "isRemovalBlocked": [...] }` because operator returns `true` when blocked
 
-**Pitfall**: Wrong placeholder names
-**Solution**: Use exactly `{actorId}` and `{targetId}` to match action context
+**Pitfall**: Wrong entity ref paths for each rule
+**Solution**:
+- `remove_clothing`: Use `actor` and `target`
+- `remove_others_clothing`: Use `primary` and `secondary`
 
-**Pitfall**: Not updating both actions
-**Solution**: Update both `remove_clothing` and `remove_others_clothing`
+**Pitfall**: Not moving all success operations into `then_actions`
+**Solution**: Move UNEQUIP, REGENERATE_DESCRIPTION, SET_VARIABLE, and macro into `then_actions` block
 
-**Pitfall**: Breaking existing prerequisites
-**Solution**: Add new condition to array, don't replace existing ones
+**Pitfall**: Forgetting to emit action_failed event in else branch
+**Solution**: Always include DISPATCH_EVENT with action_failed in `else_actions`
 
 ---
 
-## Example Action Discovery Flow
+## Example Execution Flow
 
-### Before This Implementation
-
-```
-1. Actor wearing: belt, pants
-2. topmost_clothing scope resolves to: [belt, pants]
-3. Actions discovered: remove belt, remove pants
-4. Player can attempt to remove pants (blocked at scope level in CLOREMBLO-004)
-```
-
-### After This Implementation
+### Scenario: Trying to Remove Blocked Pants
 
 ```
-1. Actor wearing: belt, pants
-2. topmost_clothing scope resolves to: [belt] (pants filtered by CLOREMBLO-004)
-3. Actions discovered: remove belt only
-4. Condition also validates: if somehow pants action executed, condition blocks it
+1. Actor wearing: belt (blocks legs/base), pants (legs/base)
+2. User selects "remove pants" action (pants appears in action list due to topmost_clothing scope)
+3. Rule executes: handle_remove_clothing fires for attempt_action event
+4. IF operation evaluates: isRemovalBlocked(actor, pants) = true
+5. Negation: !true = false
+6. IF condition fails, else_actions branch executes:
+   - Sets error message in context
+   - Dispatches action_failed event
+7. UNEQUIP_CLOTHING is skipped (only in then_actions)
+8. Player sees error message: "cannot remove pants - blocked by other clothing"
 ```
 
-**Result**: Belt must be removed before pants appear as removable.
+### Scenario: Removing Unblocked Shirt
+
+```
+1. Actor wearing: shirt (torso_upper/base), no blockers
+2. User selects "remove shirt" action
+3. Rule executes: handle_remove_clothing fires
+4. IF operation evaluates: isRemovalBlocked(actor, shirt) = false
+5. Negation: !false = true
+6. IF condition passes, then_actions branch executes:
+   - Unequips shirt
+   - Regenerates description
+   - Sets success message
+   - Logs perceptible event
+7. Player sees success: "John removes their shirt"
+```
 
 ---
 
 ## Related Tickets
 
-- **CLOREMBLO-002**: Implement IsRemovalBlockedOperator (prerequisite)
-- **CLOREMBLO-003**: Register operator in DI container (prerequisite)
-- **CLOREMBLO-004**: Integrate blocking into scope resolver (complementary)
+- **CLOREMBLO-002**: Implement IsRemovalBlockedOperator (prerequisite) - REQUIRED
+- **CLOREMBLO-003**: Register operator in DI container (prerequisite) - REQUIRED
+- **CLOREMBLO-004**: Integrate blocking into scope resolver (complementary) - Works at discovery time
 - **CLOREMBLO-006**: Update belt entities (uses this validation)
 - **CLOREMBLO-007**: Create comprehensive test suite (validates this)
+
+---
+
+## Implementation Checklist
+
+### Pre-Implementation Verification
+- [ ] Verify CLOREMBLO-002 completed (isRemovalBlocked operator exists)
+- [ ] Verify CLOREMBLO-003 completed (operator registered in DI)
+- [ ] Review IF operation schema structure
+- [ ] Review current rule files to understand structure
+
+### Implementation
+- [ ] Update `handle_remove_clothing.rule.json` with IF operation
+- [ ] Update `handle_remove_others_clothing.rule.json` with IF operation
+- [ ] Validate rule JSON structure
+
+### Testing
+- [ ] Create integration tests
+- [ ] Run integration tests locally
+- [ ] Manual testing with belt/pants scenario
+- [ ] Verify action_failed events emit correctly
+
+### Validation
+- [ ] Run `npm run validate`
+- [ ] Run `npm run typecheck`
+- [ ] Run `npm run test:ci`
+- [ ] No regressions in existing tests
+
+### Documentation
+- [ ] Update related workflow tickets if needed
+- [ ] Document any edge cases discovered during testing
