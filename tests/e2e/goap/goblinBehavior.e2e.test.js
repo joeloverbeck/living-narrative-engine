@@ -22,7 +22,7 @@ describe('GOAP E2E: Goblin Combat', () => {
 
   it('should make combat-related decisions for hostile goblin', async () => {
     // Setup: Hostile goblin and enemy
-    const goblin = testBed.createActor({
+    const goblin = await testBed.createActor({
       name: 'Gruk',
       type: 'goap',
       components: {
@@ -30,7 +30,7 @@ describe('GOAP E2E: Goblin Combat', () => {
       },
     });
 
-    const enemy = testBed.createActor({
+    const enemy = await testBed.createActor({
       name: 'Hero',
       components: {
         'core:enemy': true,
@@ -63,7 +63,7 @@ describe('GOAP E2E: Goblin Combat', () => {
 
   it('should handle weapon pickup before combat', async () => {
     // Setup: Goblin with weapon nearby
-    const goblin = testBed.createActor({
+    const goblin = await testBed.createActor({
       name: 'Gruk',
       type: 'goap',
       components: {
@@ -71,7 +71,7 @@ describe('GOAP E2E: Goblin Combat', () => {
       },
     });
 
-    const weapon = testBed.createEntity({
+    const weapon = await testBed.createEntity({
       name: 'Sword',
       components: {
         'items:item': { weight: 3 },
@@ -99,7 +99,7 @@ describe('GOAP E2E: Goblin Combat', () => {
 
   it('should handle no relevant goals gracefully', async () => {
     // Setup: Goblin with no pressing needs
-    const goblin = testBed.createActor({
+    const goblin = await testBed.createActor({
       name: 'Gruk',
       type: 'goap',
       components: {
