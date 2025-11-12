@@ -462,4 +462,136 @@ describe('ActivityNLGSystem integration coverage', () => {
     );
     expect(hooks.shouldUsePronounForTarget(partner.id)).toBe(true);
   });
+
+  it('handles error flows for name/gender resolution and exercises remaining hooks', async () => {
+    const originalGetEntityInstance = entityManager.getEntityInstance.bind(
+      entityManager
+    );
+    const getEntityInstanceSpy = jest
+      .spyOn(entityManager, 'getEntityInstance')
+      .mockImplementation((...args) => originalGetEntityInstance(...args));
+
+    expect(nlgSystem.sanitizeEntityName(123)).toBe('Unknown entity');
+    expect(nlgSystem.sanitizeEntityName(' \u200B\u200C ')).toBe('Unknown entity');
+    expect(nlgSystem.resolveEntityName('')).toBe('Unknown entity');
+
+    const glitchActor = await createActor(entityManager, {
+      id: 'glitch-actor',
+      name: 'Glitch Actor',
+      gender: 'male',
+    });
+    await entityManager.addComponent(glitchActor.id, ACTOR_COMPONENT_ID, {
+      role: 'glitch',
+    });
+
+    const glitchEntity = originalGetEntityInstance(glitchActor.id);
+    jest.spyOn(glitchEntity, 'getComponentData').mockImplementation(() => {
+      throw new Error('component failure');
+    });
+
+    expect(nlgSystem.resolveEntityName(glitchActor.id)).toBe(glitchActor.id);
+
+    getEntityInstanceSpy.mockImplementationOnce(() => {
+      throw new Error('lookup failure');
+    });
+    expect(nlgSystem.resolveEntityName('problematic-id')).toBe('problematic-id');
+
+    expect(nlgSystem.shouldUsePronounForTarget()).toBe(false);
+    expect(nlgSystem.shouldUsePronounForTarget('missing-target')).toBe(false);
+
+    const pronounTarget = await createActor(entityManager, {
+      id: 'pronoun-target',
+      name: 'Pronoun Target',
+      gender: 'female',
+    });
+    await entityManager.addComponent(pronounTarget.id, ACTOR_COMPONENT_ID, {
+      role: 'ally',
+    });
+
+    const pronounEntity = originalGetEntityInstance(pronounTarget.id);
+    pronounEntity.hasComponent = undefined;
+    expect(nlgSystem.shouldUsePronounForTarget(pronounTarget.id)).toBe(true);
+
+    getEntityInstanceSpy.mockImplementationOnce(() => {
+      throw new Error('target lookup failure');
+    });
+    expect(nlgSystem.shouldUsePronounForTarget('error-target')).toBe(false);
+
+    expect(nlgSystem.detectEntityGender()).toBe('unknown');
+    expect(nlgSystem.detectEntityGender('missing-gender')).toBe('unknown');
+
+    const neutralEntity = await createActor(entityManager, {
+      id: 'neutral-entity',
+      name: 'Neutral Entity',
+    });
+    await entityManager.addComponent(neutralEntity.id, ACTOR_COMPONENT_ID, {
+      role: 'observer',
+    });
+
+    expect(nlgSystem.detectEntityGender(neutralEntity.id)).toBe('neutral');
+
+    getEntityInstanceSpy.mockImplementationOnce(() => {
+      throw new Error('gender failure');
+    });
+    expect(nlgSystem.detectEntityGender('error-gender')).toBe('neutral');
+
+    expect(nlgSystem.getReflexivePronoun({ subject: 'it' })).toBe('itself');
+    expect(nlgSystem.getReflexivePronoun({ subject: 'I' })).toBe('myself');
+    expect(nlgSystem.getReflexivePronoun({ subject: 'you' })).toBe('yourself');
+    expect(nlgSystem.getReflexivePronoun({ subject: 'we' })).toBe('ourselves');
+    expect(nlgSystem.getReflexivePronoun({ subject: 'unknown' })).toBe(
+      'themselves'
+    );
+
+    const hooks = nlgSystem.getTestHooks();
+    expect(hooks.sanitizeEntityName(456)).toBe('Unknown entity');
+    expect(hooks.resolveEntityName(neutralEntity.id)).toBe('Neutral Entity');
+    expect(hooks.shouldUsePronounForTarget(pronounTarget.id)).toBe(true);
+    expect(hooks.detectEntityGender(pronounTarget.id)).toBe('female');
+
+    const hookPronouns = hooks.getPronounSet('female');
+    expect(hooks.getReflexivePronoun(hookPronouns)).toBe('herself');
+
+    const hookPhrase = hooks.generateActivityPhrase(
+      'Pronoun Target',
+      {
+        type: 'dedicated',
+        verb: 'coordinating',
+        targetEntityId: pronounTarget.id,
+      },
+      true,
+      {
+        actorId: pronounTarget.id,
+        actorPronouns: hookPronouns,
+      }
+    );
+    expect(hookPhrase).toBe('Pronoun Target is coordinating herself');
+
+    expect(hooks.sanitizeVerbPhrase(' are coordinating')).toBe('coordinating');
+    expect(
+      hooks.buildRelatedActivityFragment(
+        'and',
+        { fullPhrase: 'Pronoun Target studies charts', verbPhrase: '' },
+        {
+          actorName: 'Pronoun Target',
+          actorReference: '',
+          actorPronouns: hookPronouns,
+          pronounsEnabled: false,
+        }
+      )
+    ).toBe('and Pronoun Target studies charts');
+
+    expect(hooks.mergeAdverb('swiftly', 'carefully')).toBe(
+      'swiftly carefully'
+    );
+    expect(
+      hooks.injectSoftener('{actor} reviews {target}', 'thoughtfully')
+    ).toBe('{actor} reviews thoughtfully {target}');
+    expect(
+      hooks.truncateDescription(
+        'Pronoun Target studies charts and prepares reports.',
+        30
+      )
+    ).toBe('Pronoun Target studies char...');
+  });
 });
