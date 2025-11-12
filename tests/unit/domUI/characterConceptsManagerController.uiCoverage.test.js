@@ -203,7 +203,7 @@ describe('CharacterConceptsManagerController additional coverage', () => {
       {
         debounceMs: 300,
         countElement: controller._getElement('charCount'),
-        maxLength: 3000,
+        maxLength: 6000,
       }
     );
 
@@ -214,7 +214,7 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     expect(FormValidationHelper.updateCharacterCount).toHaveBeenCalledWith(
       updatedTextarea,
       controller._getElement('charCount'),
-      3000
+      6000
     );
     expect(saveButton.disabled).toBe(false);
   });
@@ -229,7 +229,7 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     controller._resetConceptForm();
 
     expect(conceptForm.reset).toHaveBeenCalled();
-    expect(controller._getElement('charCount').textContent).toBe('0/3000');
+    expect(controller._getElement('charCount').textContent).toBe('0/6000');
     expect(FormValidationHelper.clearFieldError).toHaveBeenCalledWith(
       conceptText
     );

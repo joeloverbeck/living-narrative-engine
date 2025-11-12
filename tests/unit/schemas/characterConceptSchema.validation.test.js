@@ -1,6 +1,6 @@
 /**
  * @file Focused test suite for character concept schema validation issue
- * @description Tests to reproduce and verify the fix for the 1000 vs 3000 character limit mismatch
+ * @description Tests to reproduce and verify the fix for the 1000 vs 6000 character limit mismatch
  * @see /data/schemas/character-concept.schema.json
  * @see /src/characterBuilder/models/characterConcept.js
  */
@@ -12,6 +12,8 @@ import { createCharacterConcept } from '../../../src/characterBuilder/models/cha
 import { serializeCharacterConcept } from '../../../src/characterBuilder/models/characterConcept.js';
 import fs from 'fs';
 import path from 'path';
+
+const MAX_CONCEPT_LENGTH = 6000;
 
 describe('Character Concept Schema Validation - Character Limit Issue', () => {
   let testBed;
@@ -63,7 +65,7 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
       const serializedConcept = serializeCharacterConcept(concept);
 
       // This test documents the original bug - concepts over 1000 chars were rejected
-      // With the fix, this should now pass since the schema allows 3000 chars
+      // With the fix, this should now pass since the schema allows 6000 chars
       const isValid = schemaValidator.validateAgainstSchema(
         serializedConcept,
         'schema://living-narrative-engine/character-concept.schema.json'
@@ -73,7 +75,7 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
     });
 
     it('should accept concepts with exactly 1500 characters (middle range)', () => {
-      // Create concept with 1500 characters (between old 1000 and new 3000 limit)
+      // Create concept with 1500 characters (between old 1000 and new 6000 limit)
       const mediumConcept = 'a'.repeat(1500);
       const concept = createCharacterConcept(mediumConcept);
       const serializedConcept = serializeCharacterConcept(concept);
@@ -86,9 +88,9 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
       expect(isValid).toBe(true);
     });
 
-    it('should accept concepts with exactly 3000 characters (new upper limit)', () => {
-      // Create concept with exactly 3000 characters (at new limit)
-      const longConcept = 'a'.repeat(3000);
+    it('should accept concepts with exactly 6000 characters (new upper limit)', () => {
+      // Create concept with exactly 6000 characters (at new limit)
+      const longConcept = 'a'.repeat(MAX_CONCEPT_LENGTH);
       const concept = createCharacterConcept(longConcept);
       const serializedConcept = serializeCharacterConcept(concept);
 
@@ -100,11 +102,11 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
       expect(isValid).toBe(true);
     });
 
-    it('should reject concepts with 3001 characters (over new limit)', () => {
+    it('should reject concepts with 6001 characters (over new limit)', () => {
       // This should fail both model validation and schema validation
       expect(() => {
-        createCharacterConcept('a'.repeat(3001));
-      }).toThrow('concept must be no more than 3000 characters long');
+        createCharacterConcept('a'.repeat(MAX_CONCEPT_LENGTH + 1));
+      }).toThrow('concept must be no more than 6000 characters long');
     });
 
     it('should accept the exact concept from error logs (1190 characters)', () => {
@@ -150,12 +152,12 @@ describe('Character Concept Schema Validation - Character Limit Issue', () => {
   describe('schema error messages for debugging', () => {
     it('should provide clear error message for over-limit concepts', () => {
       // This test verifies error messages are clear when validation fails
-      const overLimitConcept = 'a'.repeat(3001);
+      const overLimitConcept = 'a'.repeat(MAX_CONCEPT_LENGTH + 1);
 
       // Model validation should catch this first
       expect(() => {
         createCharacterConcept(overLimitConcept);
-      }).toThrow('concept must be no more than 3000 characters long');
+      }).toThrow('concept must be no more than 6000 characters long');
     });
   });
 });
