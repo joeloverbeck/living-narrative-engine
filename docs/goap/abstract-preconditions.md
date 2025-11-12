@@ -2,650 +2,18 @@
 
 ## Overview
 
-Abstract preconditions are reusable condition functions used in conditional planning effects. They represent conditions that cannot be fully evaluated during static analysis but must be simulated or deferred to runtime during planning.
+Abstract preconditions are condition functions used in conditional planning effects during GOAP decision-making. They evaluate conditions against simulated world state during planning to predict action outcomes.
 
 ## What Are Abstract Preconditions?
 
 Abstract preconditions are named, parameterized functions that:
 
-1. **Represent Runtime Conditions**: Conditions that depend on world state not available during analysis
-2. **Enable Conditional Effects**: Allow effects to be applied conditionally during planning
-3. **Support Simulation**: Provide simulation behavior for the planner
-4. **Are Reusable**: Same precondition can be used across multiple actions
+1. **Evaluate Runtime Conditions**: Check conditions against simulated world state during planning
+2. **Enable Conditional Effects**: Control which effect branches (then/else) are applied during simulation
+3. **Support Planning Simulation**: Allow the planner to predict action outcomes before execution
+4. **Must Be Defined Inline**: Each action that uses abstract preconditions must define them in its `planningEffects.abstractPreconditions` object
 
 ### Example
-
-```json
-{
-  "abstractPreconditions": {
-    "targetHasInventorySpace": {
-      "description": "Checks if target has inventory space for an item",
-      "parameters": ["target", "itemId"],
-      "simulationFunction": "assumeTrue"
-    }
-  }
-}
-```
-
-## Why Are They Needed?
-
-### Problem: Unknown Runtime Values
-
-During effects analysis, certain conditions reference runtime-only data:
-
-```json
-// Rule condition
-{
-  "type": "IF",
-  "condition": { ">": [{"var": "target.inventory.capacity"}, {"var": "target.inventory.itemCount"}] },
-  "then": [...]
-}
-```
-
-**Issues:**
-- `target.inventory.capacity` is unknown at analysis time
-- `target.inventory.itemCount` changes during gameplay
-- Cannot pre-compute result
-
-### Solution: Abstract Preconditions
-
-Create an abstract precondition to represent the condition:
-
-```json
-{
-  "operation": "CONDITIONAL",
-  "condition": {
-    "abstractPrecondition": "targetHasInventorySpace",
-    "params": ["target"]
-  },
-  "then": [...]
-}
-```
-
-The planner will:
-1. Recognize the precondition by name
-2. Use the simulation function to decide if it's satisfied
-3. Apply the `then` effects if satisfied
-
-## Abstract Precondition Structure
-
-### Required Fields
-
-```json
-{
-  "preconditionName": {
-    "description": "Human-readable description of what this checks",
-    "parameters": ["param1", "param2"],
-    "simulationFunction": "assumeTrue|assumeFalse|assumeRandom|evaluateAtRuntime"
-  }
-}
-```
-
-**Fields:**
-
-- `description` (string): Clear description of the condition
-- `parameters` (array of strings): List of entity/value parameters
-- `simulationFunction` (string): How the planner should simulate this condition
-
-### Optional Fields
-
-```json
-{
-  "preconditionName": {
-    "description": "...",
-    "parameters": ["..."],
-    "simulationFunction": "...",
-    "metadata": {
-      "estimatedProbability": 0.8,
-      "affectsPlanning": true,
-      "category": "inventory"
-    }
-  }
-}
-```
-
-## Simulation Functions
-
-Simulation functions define how the planner treats the precondition when it can't evaluate it fully.
-
-### assumeTrue (Optimistic)
-
-**Behavior:** Always assumes the condition is true
-
-**Use Cases:**
-- Friendly NPC interactions (assume cooperation)
-- Player-initiated actions (assume player knows what they're doing)
-- Generally permissive scenarios
-
-**Example:**
-```json
-{
-  "targetWillAcceptItem": {
-    "description": "Checks if target will accept the item",
-    "parameters": ["target", "itemId"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Planning Behavior:**
-- Planner assumes target will always accept items
-- Generates plans that include giving items to targets
-- May fail at runtime if target refuses
-
-### assumeFalse (Pessimistic)
-
-**Behavior:** Always assumes the condition is false
-
-**Use Cases:**
-- Hostile NPC interactions (assume refusal)
-- Dangerous actions (assume failure)
-- Conservative planning scenarios
-
-**Example:**
-```json
-{
-  "targetIsFriendly": {
-    "description": "Checks if target is friendly towards actor",
-    "parameters": ["actor", "target"],
-    "simulationFunction": "assumeFalse"
-  }
-}
-```
-
-**Planning Behavior:**
-- Planner assumes targets are never friendly
-- Avoids plans requiring cooperation
-- May miss opportunities at runtime if target is actually friendly
-
-### assumeRandom (Probabilistic)
-
-**Behavior:** Randomly returns true or false (50/50 by default)
-
-**Use Cases:**
-- Uncertain outcomes
-- Balanced planning
-- Exploration scenarios
-
-**Example:**
-```json
-{
-  "weatherIsClear": {
-    "description": "Checks if weather is clear enough for outdoor activities",
-    "parameters": [],
-    "simulationFunction": "assumeRandom"
-  }
-}
-```
-
-**Planning Behavior:**
-- Planner explores both branches (clear and not clear)
-- Generates multiple plan variants
-- Higher computational cost
-
-### evaluateAtRuntime (Deferred)
-
-**Behavior:** Defers evaluation to runtime, always returns true during planning
-
-**Use Cases:**
-- Complex conditions requiring full world state
-- Conditions with side effects
-- When simulation would be inaccurate
-
-**Example:**
-```json
-{
-  "complexCombatCheck": {
-    "description": "Complex combat readiness check requiring full state",
-    "parameters": ["actor", "target"],
-    "simulationFunction": "evaluateAtRuntime"
-  }
-}
-```
-
-**Planning Behavior:**
-- Planner assumes condition is satisfied
-- Actual evaluation happens when plan is executed
-- Plan may fail at execution if condition not met
-
-## Catalog of Common Abstract Preconditions
-
-### Inventory & Items
-
-#### hasInventoryCapacity
-
-```json
-{
-  "hasInventoryCapacity": {
-    "description": "Checks if entity has inventory space for an item",
-    "parameters": ["entityId", "itemId"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- `VALIDATE_INVENTORY_CAPACITY` operations
-- Conditions checking `inventory.capacity > inventory.itemCount`
-
-**Used In:**
-- `items:pick_up_item`
-- `items:give_item`
-- `items:take_from_container`
-
----
-
-#### hasContainerCapacity
-
-```json
-{
-  "hasContainerCapacity": {
-    "description": "Checks if container has space for an item",
-    "parameters": ["containerId", "itemId"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- `VALIDATE_CONTAINER_CAPACITY` operations
-- Container space checks
-
-**Used In:**
-- `items:put_in_container`
-
----
-
-#### itemIsAccessible
-
-```json
-{
-  "itemIsAccessible": {
-    "description": "Checks if item is accessible to entity",
-    "parameters": ["entityId", "itemId"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Location checks for items
-- Reachability conditions
-
-**Used In:**
-- `items:pick_up_item`
-- `items:examine_item`
-
----
-
-### Component Checks
-
-#### hasComponent
-
-```json
-{
-  "hasComponent": {
-    "description": "Checks if entity has a specific component",
-    "parameters": ["entityId", "componentId"],
-    "simulationFunction": "evaluateAtRuntime"
-  }
-}
-```
-
-**Generated From:**
-- `HAS_COMPONENT` operations
-- Component existence conditionals
-
-**Used In:**
-- Many actions checking entity state
-
----
-
-#### componentValueMatches
-
-```json
-{
-  "componentValueMatches": {
-    "description": "Checks if component field matches expected value",
-    "parameters": ["entityId", "componentId", "field", "expectedValue"],
-    "simulationFunction": "evaluateAtRuntime"
-  }
-}
-```
-
-**Generated From:**
-- Component value comparisons in conditions
-- State verification checks
-
----
-
-### Relationships & Social
-
-#### targetTrustsActor
-
-```json
-{
-  "targetTrustsActor": {
-    "description": "Checks if target trusts actor enough for interaction",
-    "parameters": ["actor", "target"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Trust level checks
-- Relationship conditions
-
-**Used In:**
-- Social actions requiring trust
-- Item exchanges
-
----
-
-#### targetIsFriendly
-
-```json
-{
-  "targetIsFriendly": {
-    "description": "Checks if target is friendly towards actor",
-    "parameters": ["actor", "target"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Friendship checks
-- Hostility conditions (negated)
-
----
-
-#### targetWillCooperate
-
-```json
-{
-  "targetWillCooperate": {
-    "description": "Checks if target will cooperate with action",
-    "parameters": ["target", "actionId"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Cooperation checks in multi-actor actions
-
----
-
-### Position & Movement
-
-#### targetIsReachable
-
-```json
-{
-  "targetIsReachable": {
-    "description": "Checks if target is within reach of actor",
-    "parameters": ["actor", "target"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Distance checks
-- Proximity conditions
-
-**Used In:**
-- Physical interaction actions
-- Combat actions
-
----
-
-#### pathIsUnobstructed
-
-```json
-{
-  "pathIsUnobstructed": {
-    "description": "Checks if path between locations is unobstructed",
-    "parameters": ["fromLocation", "toLocation"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Movement validation
-- Pathfinding conditions
-
-**Used In:**
-- Movement actions
-- Navigation planning
-
----
-
-#### locationIsAccessible
-
-```json
-{
-  "locationIsAccessible": {
-    "description": "Checks if location is accessible to entity",
-    "parameters": ["entityId", "locationId"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Location accessibility checks
-- Door/barrier conditions
-
----
-
-### Containers & Objects
-
-#### containerIsOpen
-
-```json
-{
-  "containerIsOpen": {
-    "description": "Checks if container is open",
-    "parameters": ["containerId"],
-    "simulationFunction": "evaluateAtRuntime"
-  }
-}
-```
-
-**Generated From:**
-- Container state checks
-- Pre-operation validation
-
-**Used In:**
-- `items:take_from_container`
-- `items:look_in_container`
-
----
-
-#### containerIsLocked
-
-```json
-{
-  "containerIsLocked": {
-    "description": "Checks if container is locked",
-    "parameters": ["containerId"],
-    "simulationFunction": "evaluateAtRuntime"
-  }
-}
-```
-
-**Generated From:**
-- Lock state checks
-
-**Used In:**
-- `items:open_container`
-- `items:unlock_container`
-
----
-
-#### actorHasKey
-
-```json
-{
-  "actorHasKey": {
-    "description": "Checks if actor has key for locked object",
-    "parameters": ["actor", "objectId"],
-    "simulationFunction": "assumeFalse"
-  }
-}
-```
-
-**Generated From:**
-- Key possession checks
-- Unlock preconditions
-
----
-
-### Combat & Damage
-
-#### targetIsVulnerable
-
-```json
-{
-  "targetIsVulnerable": {
-    "description": "Checks if target is vulnerable to attack",
-    "parameters": ["target"],
-    "simulationFunction": "assumeTrue"
-  }
-}
-```
-
-**Generated From:**
-- Vulnerability checks
-- Defense state analysis
-
----
-
-#### actorCanAttack
-
-```json
-{
-  "actorCanAttack": {
-    "description": "Checks if actor can perform attack action",
-    "parameters": ["actor"],
-    "simulationFunction": "evaluateAtRuntime"
-  }
-}
-```
-
-**Generated From:**
-- Attack capability checks
-- Weapon readiness conditions
-
----
-
-## Implementation Requirements
-
-### For Planner Implementation
-
-When implementing a planner that uses abstract preconditions:
-
-1. **Registry**: Maintain registry of all abstract preconditions
-2. **Simulation**: Implement simulation functions
-3. **Binding**: Bind parameters to concrete entities during planning
-4. **Caching**: Cache precondition results within a planning session
-5. **Runtime Evaluation**: Support `evaluateAtRuntime` preconditions
-
-### Example Planner Code
-
-```javascript
-class Planner {
-  constructor({ abstractPreconditionRegistry, worldState }) {
-    this.preconditions = abstractPreconditionRegistry;
-    this.worldState = worldState;
-  }
-
-  evaluatePrecondition(name, params) {
-    const precondition = this.preconditions.get(name);
-
-    switch (precondition.simulationFunction) {
-      case 'assumeTrue':
-        return true;
-
-      case 'assumeFalse':
-        return false;
-
-      case 'assumeRandom':
-        return Math.random() > 0.5;
-
-      case 'evaluateAtRuntime':
-        return this.evaluateAtRuntime(name, params);
-
-      default:
-        throw new Error(`Unknown simulation function: ${precondition.simulationFunction}`);
-    }
-  }
-
-  evaluateAtRuntime(name, params) {
-    // Access world state to evaluate condition
-    // This is implementation-specific
-    return this.worldState.checkCondition(name, params);
-  }
-}
-```
-
-## Simulation Function Guide
-
-### Choosing the Right Simulation Function
-
-Use this decision tree:
-
-```
-Is the condition likely to be true in most cases?
-├─ Yes: assumeTrue
-└─ No
-   └─ Is the condition likely to be false in most cases?
-      ├─ Yes: assumeFalse
-      └─ No
-         └─ Is the outcome uncertain/balanced?
-            ├─ Yes: assumeRandom
-            └─ No
-               └─ Does it require complex world state?
-                  └─ Yes: evaluateAtRuntime
-```
-
-### Examples
-
-**Player giving item to friendly NPC:**
-- **Precondition:** `targetWillAcceptItem`
-- **Simulation:** `assumeTrue` (NPCs usually accept gifts)
-
-**Enemy allowing player to pass:**
-- **Precondition:** `targetWillLetPass`
-- **Simulation:** `assumeFalse` (enemies usually block)
-
-**Weather-dependent action:**
-- **Precondition:** `weatherIsClear`
-- **Simulation:** `assumeRandom` (weather is unpredictable)
-
-**Complex combat calculation:**
-- **Precondition:** `canWinCombat`
-- **Simulation:** `evaluateAtRuntime` (requires full combat system)
-
-## Adding New Abstract Preconditions
-
-### Auto-Generated Preconditions
-
-The effects analyzer automatically generates preconditions when it encounters:
-
-1. **Unresolvable condition variables**
-2. **Validation operations** (inventory capacity, etc.)
-3. **Component checks** with runtime-dependent values
-
-No manual definition needed for these cases.
-
-### Manual Precondition Definition
-
-For custom preconditions, add to action's `planningEffects`:
 
 ```json
 {
@@ -654,16 +22,17 @@ For custom preconditions, add to action's `planningEffects`:
       {
         "operation": "CONDITIONAL",
         "condition": {
-          "abstractPrecondition": "myCustomPrecondition",
+          "abstractPrecondition": "hasInventoryCapacity",
           "params": ["actor", "target"]
         },
-        "then": [...]
+        "then": [...],
+        "else": [...]
       }
     ],
     "abstractPreconditions": {
-      "myCustomPrecondition": {
-        "description": "Custom precondition for special case",
-        "parameters": ["actor", "target"],
+      "hasInventoryCapacity": {
+        "description": "Checks if actor has inventory space for item",
+        "parameters": ["actorId", "itemId"],
         "simulationFunction": "assumeTrue"
       }
     }
@@ -671,120 +40,323 @@ For custom preconditions, add to action's `planningEffects`:
 }
 ```
 
-### Best Practices
+## Why Are They Needed?
 
-1. **Descriptive Names**: Use clear, descriptive names
-   - ✓ `targetHasInventorySpace`
-   - ✗ `check1`
+### Problem: Conditional Rule Effects Need Planning Simulation
 
-2. **Complete Descriptions**: Explain what the precondition checks
-   - ✓ "Checks if target has inventory space for an item"
-   - ✗ "inventory check"
+During planning, the GOAP system needs to predict which effects an action will produce. When rules contain conditional operations, the planner must evaluate conditions against simulated world state to determine which effect branch will execute.
 
-3. **Minimal Parameters**: Only include necessary parameters
-   - ✓ `["entityId", "componentId"]`
-   - ✗ `["entityId", "componentId", "timestamp", "source", "debugInfo"]`
-
-4. **Appropriate Simulation**: Choose simulation function that matches typical usage
-   - Player actions: `assumeTrue` (player knows what they're doing)
-   - Enemy actions: `assumeFalse` (enemies usually resist)
-   - Complex logic: `evaluateAtRuntime`
-
-5. **Reusability**: Design preconditions to be reusable across actions
-   - ✓ `hasInventoryCapacity` (general)
-   - ✗ `canPickUpSwordFromTable` (too specific)
-
-## Common Patterns
-
-### Capacity Checks
+**Example Scenario:**
+A `pick_up_item` action might conditionally add the item to inventory only if there's capacity:
 
 ```json
 {
-  "hasSpace": {
-    "description": "Checks if entity has capacity for more items",
-    "parameters": ["entityId"],
+  "operation": "CONDITIONAL",
+  "condition": {
+    "abstractPrecondition": "hasInventoryCapacity",
+    "params": ["actor", "target"]
+  },
+  "then": [
+    { "operation": "ADD_COMPONENT", "entity": "actor", "component": "items:has_item", "data": {...} }
+  ],
+  "else": [
+    { "operation": "ADD_COMPONENT", "entity": "actor", "component": "items:inventory_full", "data": {...} }
+  ]
+}
+```
+
+### How Abstract Preconditions Work
+
+During planning simulation:
+
+1. **ActionSelector** encounters a CONDITIONAL effect
+2. Extracts the abstract precondition name and parameters
+3. Resolves parameter entity references (e.g., "actor" → actual entity ID)
+4. Calls **AbstractPreconditionSimulator** with the precondition name and resolved parameters
+5. Simulator checks the simulated world state and returns true/false
+6. ActionSelector applies the appropriate effect branch (then/else)
+7. Resulting future state is used to calculate progress toward goal
+
+## Abstract Precondition Structure
+
+Abstract preconditions are defined within each action's `planningEffects.abstractPreconditions` object.
+
+### Required Fields
+
+```json
+{
+  "preconditionName": {
+    "description": "Human-readable description of what this checks",
+    "parameters": ["param1", "param2"],
     "simulationFunction": "assumeTrue"
   }
 }
 ```
 
-**Used In:** inventory, container, location capacity checks
+**Fields:**
 
-### Permission Checks
+- `description` (string, required): Clear description of the condition's purpose
+- `parameters` (array of strings, required): List of entity parameter names (e.g., ["actorId", "itemId"])
+- `simulationFunction` (string, required): Simulation strategy hint (validated but currently not used by simulator)
 
+**Important Notes:**
+- The precondition name determines simulation behavior (e.g., "hasInventoryCapacity" triggers specific capacity calculation logic)
+- The `simulationFunction` field is validated but the actual simulation logic is determined by the precondition name
+- Parameters must match the expected parameter count and types for the given precondition name
+
+## Implemented Abstract Preconditions
+
+The GOAP system currently implements **3 abstract preconditions**. Each has specific simulation logic hardcoded based on its name.
+
+### hasInventoryCapacity
+
+**Implementation:** `src/goap/simulation/abstractPreconditionSimulator.js`
+
+**Description:** Calculates if an actor's inventory can hold an item based on weight
+
+**Parameters:** `["actorId", "itemId"]`
+
+**Simulation Logic:**
+1. Retrieves actor's `items:inventory` component from simulated world state
+2. Retrieves item's `items:item` component
+3. Calculates current total weight of all items in inventory
+4. Checks if `currentWeight + itemWeight <= max_weight`
+5. Returns `true` if there's capacity, `false` otherwise
+
+**Returns:**
+- `true` if actor has no inventory component (unlimited capacity assumed)
+- `true` if adding the item would not exceed max_weight
+- `false` if item doesn't exist or would exceed capacity
+
+**Usage in Planning Effects:**
 ```json
 {
-  "hasPermission": {
-    "description": "Checks if entity has permission for action",
-    "parameters": ["entityId", "actionId", "targetId"],
-    "simulationFunction": "assumeFalse"
+  "condition": {
+    "abstractPrecondition": "hasInventoryCapacity",
+    "params": ["actor", "target"]
   }
 }
 ```
 
-**Used In:** access control, security systems
+---
 
-### State Checks
+### hasContainerCapacity
 
+**Implementation:** `src/goap/simulation/abstractPreconditionSimulator.js`
+
+**Description:** Checks if a container has room for another item
+
+**Parameters:** `["containerId", "itemId"]`
+
+**Simulation Logic:**
+1. Retrieves container's `items:container` component
+2. Checks current item count in container
+3. Compares against `max_capacity`
+4. Returns `true` if `currentCount < maxCapacity`
+
+**Returns:**
+- `false` if entity is not a container or item doesn't exist
+- `true` if container has room (current count < max capacity)
+- `true` if container has no capacity limit (Infinity)
+
+---
+
+### hasComponent
+
+**Implementation:** `src/goap/simulation/abstractPreconditionSimulator.js`
+
+**Description:** Checks if an entity has a specific component in simulated world state
+
+**Parameters:** `["entityId", "componentId"]`
+
+**Simulation Logic:**
+1. Looks up entity in `worldState.entities[entityId]`
+2. Checks if `components[componentId]` exists
+3. Returns boolean result
+
+**Returns:**
+- `true` if entity has the component
+- `false` if entity doesn't exist or lacks the component
+
+**Usage in Planning Effects:**
 ```json
 {
-  "inCorrectState": {
-    "description": "Checks if entity is in required state",
-    "parameters": ["entityId", "requiredState"],
-    "simulationFunction": "evaluateAtRuntime"
+  "condition": {
+    "abstractPrecondition": "hasComponent",
+    "params": ["actor", "positioning:standing"]
   }
 }
 ```
 
-**Used In:** state machine transitions, animation systems
+---
 
-## Troubleshooting
+## Simulation Function Field (Metadata Only)
 
-### Precondition Not Recognized
+The `simulationFunction` field is **validated but not currently used** by the simulator. Values like `"assumeTrue"`, `"assumeFalse"`, `"assumeRandom"`, and `"evaluateAtRuntime"` are accepted during validation but do not affect simulation behavior.
 
-**Symptom:** Planner fails with "Unknown precondition: X"
+**Current Behavior:**
+- All simulation logic is determined by the precondition **name**, not the `simulationFunction` value
+- `hasInventoryCapacity` always calculates actual capacity
+- `hasContainerCapacity` always calculates actual capacity
+- `hasComponent` always checks actual component existence
 
-**Causes:**
-1. Precondition not in registry
-2. Typo in precondition name
-3. Missing precondition definition
+**Example:** Both of these have identical behavior despite different `simulationFunction` values:
 
-**Solution:**
-1. Check precondition is defined in `abstractPreconditions`
-2. Verify name matches exactly (case-sensitive)
-3. Ensure precondition is registered with planner
+```json
+// Both behave identically - actual capacity is calculated
+{
+  "hasInventoryCapacity": {
+    "simulationFunction": "assumeTrue"  // Ignored
+  }
+}
 
-### Planner Ignores Precondition
+{
+  "hasInventoryCapacity": {
+    "simulationFunction": "evaluateAtRuntime"  // Also ignored
+  }
+}
+```
 
-**Symptom:** Planner generates plan without checking precondition
+## Adding New Abstract Preconditions
 
-**Causes:**
-1. Simulation function always returns true
-2. Precondition in wrong place in effect tree
-3. Precondition parameters not bound
+To add a new abstract precondition to the GOAP system:
 
-**Solution:**
-1. Check simulation function is appropriate
-2. Verify precondition is in conditional effect
-3. Ensure parameters are bound to entities
+### 1. Add Simulator Function
 
-### Runtime Evaluation Fails
+Edit `src/goap/simulation/abstractPreconditionSimulator.js`:
 
-**Symptom:** Plan fails at runtime due to precondition
+```javascript
+simulate(functionName, parameters, worldState) {
+  const simulators = {
+    hasInventoryCapacity: this.#simulateInventoryCapacity.bind(this),
+    hasContainerCapacity: this.#simulateContainerCapacity.bind(this),
+    hasComponent: this.#simulateHasComponent.bind(this),
+    myNewPrecondition: this.#simulateMyNewPrecondition.bind(this)  // Add here
+  };
 
-**Causes:**
-1. Runtime evaluator not implemented
-2. World state missing required data
-3. Precondition too complex to evaluate
+  const simulator = simulators[functionName];
+  if (!simulator) {
+    this.#logger.warn(`No simulator for abstract function: ${functionName}`);
+    return false;
+  }
 
-**Solution:**
-1. Implement runtime evaluator for precondition
-2. Ensure world state has necessary data
-3. Consider simpler precondition or more conservative simulation
+  return simulator(parameters, worldState);
+}
+
+// Add implementation
+#simulateMyNewPrecondition([param1, param2], worldState) {
+  // Implement simulation logic using worldState
+  // Return true/false based on condition
+}
+```
+
+### 2. (Optional) Register in Effects Analyzer
+
+If the precondition should be auto-generated from specific operation types, add to `src/goap/analysis/effectsAnalyzer.js`:
+
+```javascript
+#operationToAbstractPrecondition(operation) {
+  const preconditionMap = {
+    'MY_OPERATION_TYPE': {
+      description: 'Description of what this checks',
+      parameters: ['param1', 'param2'],
+      simulationFunction: 'assumeTrue'
+    }
+  };
+
+  return preconditionMap[operation.type] || null;
+}
+```
+
+### 3. Use in Action Planning Effects
+
+Define the precondition in action's `planningEffects.abstractPreconditions`:
+
+```json
+{
+  "planningEffects": {
+    "effects": [
+      {
+        "operation": "CONDITIONAL",
+        "condition": {
+          "abstractPrecondition": "myNewPrecondition",
+          "params": ["actor", "target"]
+        },
+        "then": [...],
+        "else": [...]
+      }
+    ],
+    "abstractPreconditions": {
+      "myNewPrecondition": {
+        "description": "Clear description of condition",
+        "parameters": ["param1", "param2"],
+        "simulationFunction": "assumeTrue"
+      }
+    }
+  }
+}
+```
+
+## Auto-Generated Preconditions (Effects Analyzer)
+
+The `EffectsAnalyzer` (`src/goap/analysis/effectsAnalyzer.js`) automatically generates abstract precondition definitions when analyzing rules that contain certain operation types:
+
+### Currently Auto-Generated
+
+| Operation Type | Generated Precondition | Parameters | simulationFunction |
+|---|---|---|---|
+| `VALIDATE_INVENTORY_CAPACITY` | `hasInventoryCapacity` | `["actorId", "itemId"]` | `"assumeTrue"` |
+| `VALIDATE_CONTAINER_CAPACITY` | `hasContainerCapacity` | `["containerId", "itemId"]` | `"assumeTrue"` |
+| `HAS_COMPONENT` | `hasComponent` | `["entityId", "componentId"]` | `"assumeTrue"` |
+| `CHECK_FOLLOW_CYCLE` | (name from data flow) | `["leaderId", "followerId"]` | `"assumeFalse"` |
+
+**Note:** These are generated when the EffectsAnalyzer encounters these operation types during rule analysis. The generated definitions are added to the action's `planningEffects.abstractPreconditions` object.
+
+## Implementation Details
+
+### World State Structure
+
+During planning simulation, abstract preconditions receive a `worldState` object with the following structure:
+
+```javascript
+{
+  entities: {
+    [entityId]: {
+      components: {
+        [componentId]: componentData
+      }
+    }
+  },
+  targetId: string,         // Optional
+  tertiaryTargetId: string  // Optional
+}
+```
+
+This is a **simulated snapshot** used for planning calculations, not live EntityManager queries.
+
+### Key Implementation Classes
+
+| Class | Location | Purpose |
+|---|---|---|
+| `AbstractPreconditionSimulator` | `src/goap/simulation/abstractPreconditionSimulator.js` | Evaluates abstract preconditions during planning |
+| `ActionSelector` | `src/goap/selection/actionSelector.js` | Calls simulator when encountering CONDITIONAL effects |
+| `EffectsAnalyzer` | `src/goap/analysis/effectsAnalyzer.js` | Auto-generates precondition definitions from rules |
+| `EffectsValidator` | `src/goap/validation/effectsValidator.js` | Validates precondition structure (description, parameters, simulationFunction) |
+
+## Testing
+
+E2E tests for abstract preconditions are located in:
+- `tests/e2e/goap/AbstractPreconditionConditionalEffects.e2e.test.js`
+
+These tests verify:
+- `hasComponent` precondition correctly evaluates component existence
+- `hasInventoryCapacity` precondition correctly calculates capacity
+- Conditional effects apply correct branches (then/else)
+- Nested conditional effects work correctly
+- Multiple independent conditional effects in single action
 
 ## Related Documentation
 
-- [Effects Auto-Generation](./effects-auto-generation.md)
-- [Operation Mapping](./operation-mapping.md)
-- [Troubleshooting](./troubleshooting.md)
 - [GOAP System Overview](./README.md)
+- [Effects Analysis and Generation](./effects-auto-generation.md)
+- [Action Selection and Planning](./action-selection.md)
