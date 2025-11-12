@@ -182,7 +182,7 @@ describe('CharacterConceptsManagerController event handlers', () => {
     expect(FormValidationHelper.updateCharacterCount).toHaveBeenCalledWith(
       conceptText,
       charCount,
-      3000,
+      6000,
     );
   });
 });

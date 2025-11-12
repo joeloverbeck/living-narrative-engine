@@ -54,9 +54,9 @@ export function createCharacterConcept(concept, options = {}) {
     );
   }
 
-  if (concept.length > 3000) {
+  if (concept.length > 6000) {
     throw new Error(
-      'CharacterConcept: concept must be no more than 3000 characters long'
+      'CharacterConcept: concept must be no more than 6000 characters long'
     );
   }
 
@@ -108,9 +108,9 @@ export function updateCharacterConcept(existingConcept, updates) {
     ) {
       throw new Error('CharacterConcept: concept must be a non-empty string');
     }
-    if (updates.concept.length < 10 || updates.concept.length > 3000) {
+    if (updates.concept.length < 10 || updates.concept.length > 6000) {
       throw new Error(
-        'CharacterConcept: concept must be between 10 and 3000 characters'
+        'CharacterConcept: concept must be between 10 and 6000 characters'
       );
     }
     updatedConcept.concept = updates.concept.trim();

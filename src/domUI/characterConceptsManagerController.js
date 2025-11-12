@@ -421,7 +421,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       {
         debounceMs: 300,
         countElement: this._getElement('charCount'),
-        maxLength: 3000,
+        maxLength: 6000,
       }
     );
 
@@ -431,7 +431,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       FormValidationHelper.updateCharacterCount(
         this._getElement('conceptText'),
         this._getElement('charCount'),
-        3000
+        6000
       );
 
       // Validate and update button state
@@ -448,8 +448,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     const conceptForm = this._getElement('conceptForm');
     if (conceptForm) conceptForm.reset();
 
-    // Reset character count (ValidationPatterns.concept uses 50-3000 chars)
-    this._setElementText('charCount', '0/3000');
+    // Reset character count (ValidationPatterns.concept uses 50-6000 chars)
+    this._setElementText('charCount', '0/6000');
     this._removeElementClass('charCount', 'warning');
     this._removeElementClass('charCount', 'error');
 
@@ -3939,7 +3939,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     const charCount = this._getElement('charCount');
 
     if (conceptText && charCount) {
-      FormValidationHelper.updateCharacterCount(conceptText, charCount, 3000);
+      FormValidationHelper.updateCharacterCount(conceptText, charCount, 6000);
     }
   }
 }

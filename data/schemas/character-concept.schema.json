@@ -13,7 +13,7 @@
     "concept": {
       "type": "string",
       "minLength": 10,
-      "maxLength": 3000,
+      "maxLength": 6000,
       "description": "User-provided character concept text"
     },
     "status": {

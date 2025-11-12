@@ -1,6 +1,6 @@
 /**
  * @file Focused test suite for character limit issue in Character Concepts Manager
- * @description Tests to verify the 3000 character limit is enforced correctly
+ * @description Tests to verify the 6000 character limit is enforced correctly
  * @see ../../../character-concepts-manager.html
  * @see ../../../src/domUI/characterConceptsManagerController.js
  */
@@ -40,16 +40,16 @@ describe('Character Concepts Manager - Character Limit Issue', () => {
   });
 
   describe('HTML Character Limit Validation', () => {
-    it('should have maxlength attribute set to 3000 on concept textarea', () => {
+    it('should have maxlength attribute set to 6000 on concept textarea', () => {
       const conceptTextarea = document.getElementById('concept-text');
       expect(conceptTextarea).toBeTruthy();
-      expect(conceptTextarea.getAttribute('maxlength')).toBe('3000');
+      expect(conceptTextarea.getAttribute('maxlength')).toBe('6000');
     });
 
-    it('should display 0/3000 in character counter', () => {
+    it('should display 0/6000 in character counter', () => {
       const charCount = document.getElementById('char-count');
       expect(charCount).toBeTruthy();
-      expect(charCount.textContent).toBe('0/3000');
+      expect(charCount.textContent).toBe('0/6000');
     });
 
     it('should have minlength of 10 characters', () => {
@@ -60,30 +60,30 @@ describe('Character Concepts Manager - Character Limit Issue', () => {
   });
 
   describe('Character Limit Behavior', () => {
-    it('should accept text up to 3000 characters', () => {
+    it('should accept text up to 6000 characters', () => {
       const conceptTextarea = document.getElementById('concept-text');
-      const longText = 'a'.repeat(3000);
+      const longText = 'a'.repeat(6000);
 
       // Simulate typing the text
       conceptTextarea.value = longText;
 
       // Verify the value is accepted
       expect(conceptTextarea.value).toBe(longText);
-      expect(conceptTextarea.value.length).toBe(3000);
+      expect(conceptTextarea.value.length).toBe(6000);
     });
 
-    it('should not accept text over 3000 characters due to maxlength', () => {
+    it('should not accept text over 6000 characters due to maxlength', () => {
       const conceptTextarea = document.getElementById('concept-text');
-      const tooLongText = 'a'.repeat(3001);
+      const tooLongText = 'a'.repeat(6001);
 
       // Try to set text longer than maxlength
       conceptTextarea.value = tooLongText;
 
-      // Due to maxlength attribute, the value should be truncated to 3000
+      // Due to maxlength attribute, the value should be truncated to 6000
       // Note: In real browsers, maxlength prevents typing beyond the limit
       // JSDOM doesn't enforce maxlength, so we're testing the attribute exists
       const maxLength = parseInt(conceptTextarea.getAttribute('maxlength'));
-      expect(maxLength).toBe(3000);
+      expect(maxLength).toBe(6000);
     });
 
     it('should have proper validation attributes for character limits', () => {
@@ -91,7 +91,7 @@ describe('Character Concepts Manager - Character Limit Issue', () => {
 
       // Check all validation-related attributes
       expect(conceptTextarea.getAttribute('minlength')).toBe('10');
-      expect(conceptTextarea.getAttribute('maxlength')).toBe('3000');
+      expect(conceptTextarea.getAttribute('maxlength')).toBe('6000');
       expect(conceptTextarea.hasAttribute('required')).toBe(true);
     });
   });
@@ -106,7 +106,7 @@ describe('Character Concepts Manager - Character Limit Issue', () => {
       expect(conceptTextarea).toBeTruthy();
 
       // Check initial state
-      expect(charCount.textContent).toMatch(/0\/3000/);
+      expect(charCount.textContent).toMatch(/0\/6000/);
       expect(charCount.classList.contains('char-count')).toBe(true);
     });
 

@@ -1025,7 +1025,7 @@ describe('FormValidationHelper', () => {
     });
 
     describe('longText validation', () => {
-      it('should validate long text with correct length (10-3000 chars)', () => {
+      it('should validate long text with correct length (10-6000 chars)', () => {
         const result = ValidationPatterns.longText(
           'Valid long text input for testing'
         );
@@ -1039,15 +1039,15 @@ describe('FormValidationHelper', () => {
       });
 
       it('should reject long text too long', () => {
-        const longText = 'A'.repeat(3001);
+        const longText = 'A'.repeat(6001);
         const result = ValidationPatterns.longText(longText);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Input must be no more than 3000 characters');
+        expect(result.error).toBe('Input must be no more than 6000 characters');
       });
     });
 
     describe('concept validation', () => {
-      it('should validate concept with correct length (50-3000 chars)', () => {
+      it('should validate concept with correct length (50-6000 chars)', () => {
         const validConcept =
           'This is a valid concept description that meets the minimum length requirements for testing purposes and provides sufficient detail.';
         const result = ValidationPatterns.concept(validConcept);
@@ -1061,10 +1061,10 @@ describe('FormValidationHelper', () => {
       });
 
       it('should reject concept too long', () => {
-        const longConcept = 'A'.repeat(3001);
+        const longConcept = 'A'.repeat(6001);
         const result = ValidationPatterns.concept(longConcept);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Input must be no more than 3000 characters');
+        expect(result.error).toBe('Input must be no more than 6000 characters');
       });
     });
   });
