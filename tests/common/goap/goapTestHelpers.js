@@ -88,7 +88,8 @@ export class GoapTestBed {
     this.goalManager = this.container.resolve(goapTokens.IGoalManager);
     this.simplePlanner = this.container.resolve(goapTokens.ISimplePlanner);
     this.planCache = this.container.resolve(goapTokens.IPlanCache);
-    this.goapDecisionProvider = this.container.resolve(tokens.IGoapDecisionProvider);
+    // IGoapDecisionProvider is registered with an async factory, so we need to await it
+    this.goapDecisionProvider = await this.container.resolve(tokens.IGoapDecisionProvider);
     this.availableActionsProvider = this.container.resolve(tokens.IAvailableActionsProvider);
     this.actionDiscoveryService = this.container.resolve(tokens.IActionDiscoveryService);
 

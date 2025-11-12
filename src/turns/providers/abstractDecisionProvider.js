@@ -78,15 +78,18 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
       abortSignal
     );
 
-    await assertValidActionIndex(
-      index,
-      actions.length,
-      this.constructor.name,
-      actor.id,
-      this.#safeEventDispatcher,
-      this.#logger,
-      { result: { index, speech, thoughts, notes } }
-    );
+    // Only validate non-null indexes (null means no decision could be made)
+    if (index !== null) {
+      await assertValidActionIndex(
+        index,
+        actions.length,
+        this.constructor.name,
+        actor.id,
+        this.#safeEventDispatcher,
+        this.#logger,
+        { result: { index, speech, thoughts, notes } }
+      );
+    }
 
     return {
       chosenIndex: index,
