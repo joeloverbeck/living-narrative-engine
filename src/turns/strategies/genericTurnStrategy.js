@@ -1,5 +1,6 @@
 import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
 import { buildDecisionResult } from '../../utils/decisionResultUtils.js';
+import { NoDecisionMadeError } from '../errors/aiStrategyErrors.js';
 
 /**
  * @class GenericTurnStrategy
@@ -50,6 +51,11 @@ export class GenericTurnStrategy {
         actions,
         context.getPromptSignal()
       );
+
+      // Handle the case where no decision could be made (null index)
+      if (meta.chosenIndex === null) {
+        throw new NoDecisionMadeError(actor.id);
+      }
 
       const composite = actions[meta.chosenIndex - 1];
       const turnAction = this.turnActionFactory.create(
