@@ -10,6 +10,22 @@
 
 Identify all component schemas with enum properties that need migration to the new `validationRules` feature. Generate a categorized list organized by mod for efficient batch processing.
 
+### Scope Clarification
+
+This workflow identifies **ECS component definition files** (*.component.json) in `data/mods/*/components/` that contain enum properties. These files define the structure and validation rules for components that can be attached to entities.
+
+**Total Scope**: 46 component files with enum properties across all mods
+- Already migrated: 1 (texture-with-validation)
+- To migrate: 45
+
+**Distribution by Mod**:
+- Descriptors: 34 components (largest group)
+- Core: 4 components
+- Clothing: 4 components
+- Anatomy: 2 components
+- Activity: 1 component
+- Music: 1 component
+
 ## Objectives
 
 1. Generate list of all components with enum properties
@@ -72,29 +88,35 @@ done | sort | uniq -c | sort -rn
 
 Based on complexity and dependencies, document recommended migration order:
 
-**Priority 1: Descriptors Mod (6 components)**
-- Simple, well-defined enum values
-- Reference: `docs/anatomy/body-descriptors-complete.md`
-- Components: texture, composition, build, height, hairDensity, smell
+**Priority 1: Core & Anatomy Mods (6 components)**
+- Foundational components with simple enums
+- **Core Mod (4 components)**: gender, material, notes, player_type
+- **Anatomy Mod (2 components)**: body, sockets
 
-**Priority 2: Anatomy Mod (2-3 components)**
-- Reference body descriptor docs
-- Components: body, sockets
+**Priority 2: Clothing Mod (4 components)**
+- Moderate complexity, clothing system integration
+- Components: wearable, coverage_mapping, slot_metadata, blocks_removal
 
-**Priority 3: Clothing Mod (7 components)**
-- Moderate complexity
-- Components: wearable, coverage_mapping, slot_metadata, blocks_removal, equipment, layer_priority, equipment_slots
+**Priority 3: Activity & Music Mods (2 components)**
+- Single components with straightforward enums
+- **Activity Mod (1 component)**: description_metadata
+- **Music Mod (1 component)**: performance_mood
 
-**Priority 4: Core Mod (5 components)**
-- Foundational components
-- Components: gender, material, notes, actor_type, visibility
+**Priority 4: Descriptors Mod (33 components to migrate)**
+- Largest group - descriptors for anatomy parts
+- Already migrated: texture-with-validation (example component)
+- Reference: `docs/anatomy/body-descriptors-complete.md` for body descriptor context
+- **Body-level descriptors (5 components)**:
+  - body_composition, build, height, body_hair, texture
+- **Part-level descriptors (28 components)**:
+  - acoustic_property, animation, color_basic, color_extended, deformity
+  - digit_count, effect, embellishment, facial_aesthetic, facial_hair
+  - firmness, flexibility, hair_style, length_category, length_hair
+  - luminosity, pattern, projection, secretion, sensory_capability
+  - shape_eye, shape_general, size_category, size_specific, structural_integrity
+  - temperature, visual_capability, vocal_capability, weight_feel
 
-**Priority 5: Music Mod (3 components)**
-- Components: performance_mood, playing_music, is_instrument
-
-**Priority 6: Remaining Mods (~25 components)**
-- Activity, items, movement, patrol, vampirism, etc.
-- Process by priority as needed
+**Note on Body Descriptors**: The 6 body descriptors mentioned in `body-descriptors-complete.md` (height, skinColor, build, composition, hairDensity, smell) are RECIPE properties used in anatomy recipes, not component files. Only 5 of these have corresponding component files with enums: build, body_composition, height, body_hair, and texture. The skinColor and smell properties are free-form strings in recipes and have no corresponding component files.
 
 ### Step 5: Create Migration Tracking Checklist
 
@@ -103,46 +125,72 @@ Generate a detailed checklist for tracking progress:
 ```markdown
 ## Migration Progress Tracking
 
-### Descriptors Mod (6 components)
-- [ ] texture-* (verify, already has example)
-- [ ] composition
-- [ ] build
-- [ ] height
-- [ ] hairDensity
-- [ ] smell
+### Priority 1: Core & Anatomy Mods (6 components)
 
-### Anatomy Mod (2 components)
+#### Core Mod (4 components)
+- [ ] gender
+- [ ] material
+- [ ] notes
+- [ ] player_type
+
+#### Anatomy Mod (2 components)
 - [ ] body
 - [ ] sockets
 
-### Clothing Mod (7 components)
+### Priority 2: Clothing Mod (4 components)
 - [ ] wearable
 - [ ] coverage_mapping
 - [ ] slot_metadata
 - [ ] blocks_removal
-- [ ] equipment
-- [ ] layer_priority
-- [ ] equipment_slots
 
-### Core Mod (5 components)
-- [ ] gender
-- [ ] material
-- [ ] notes
-- [ ] actor_type
-- [ ] visibility
+### Priority 3: Activity & Music Mods (2 components)
+- [ ] description_metadata (activity mod)
+- [ ] performance_mood (music mod)
 
-### Music Mod (3 components)
-- [ ] performance_mood
-- [ ] playing_music
-- [ ] is_instrument
+### Priority 4: Descriptors Mod (33 components)
 
-### Remaining Mods (~25 components)
-- [ ] Activity mod
-- [ ] Items mod
-- [ ] Movement mod
-- [ ] Patrol mod
-- [ ] Vampirism mod
-- [ ] (Others as discovered)
+#### Already Migrated (1 component)
+- [x] texture-with-validation ✓
+
+#### Body-level descriptors (5 components)
+- [ ] body_composition
+- [ ] build
+- [ ] height
+- [ ] body_hair
+- [ ] texture
+
+#### Part-level descriptors (28 components)
+- [ ] acoustic_property
+- [ ] animation
+- [ ] color_basic
+- [ ] color_extended
+- [ ] deformity
+- [ ] digit_count
+- [ ] effect
+- [ ] embellishment
+- [ ] facial_aesthetic
+- [ ] facial_hair
+- [ ] firmness
+- [ ] flexibility
+- [ ] hair_style
+- [ ] length_category
+- [ ] length_hair
+- [ ] luminosity
+- [ ] pattern
+- [ ] projection
+- [ ] secretion
+- [ ] sensory_capability
+- [ ] shape_eye
+- [ ] shape_general
+- [ ] size_category
+- [ ] size_specific
+- [ ] structural_integrity
+- [ ] temperature
+- [ ] visual_capability
+- [ ] vocal_capability
+- [ ] weight_feel
+
+**Total: 45 components to migrate (46 total - 1 already migrated)**
 ```
 
 ## Acceptance Criteria
@@ -168,8 +216,24 @@ Generate a detailed checklist for tracking progress:
 ## Notes
 
 - These are **temporary files** - add to .gitignore or delete before committing
-- Use this list to guide subsequent migration tickets (ANASYSIMP-019-04-02 through ANASYSIMP-019-04-07)
+- Use this list to guide subsequent migration tickets (ANASYSIMP-019-04-02 through ANASYSIMP-019-04-05)
 - Update tracking checklist as each mod is completed
+
+### Important Distinction: Body Descriptors vs Descriptor Components
+
+**Body Descriptors** (6 properties in anatomy recipes):
+- These are properties in the `bodyDescriptors` field of anatomy recipe files
+- Defined in `data/schemas/anatomy.recipe.schema.json`
+- Used during anatomy generation to describe body characteristics
+- List: height, skinColor, build, composition, hairDensity, smell
+
+**Descriptor Components** (34 component files in descriptors mod):
+- These are ECS component definition files in `data/mods/descriptors/components/`
+- Applied to individual anatomy parts during generation
+- Include both body-level (5 files) and part-level (28 files) descriptors
+- Only some correspond to body descriptor properties (build, body_composition, height, body_hair, texture)
+
+This workflow migrates **component files**, not recipe properties. The descriptors mod has 34 component files with enums that need migration, not just 6.
 
 ## Validation
 
@@ -190,4 +254,7 @@ echo "To migrate: $(wc -l < components-to-migrate.txt)"
 ## Next Steps
 
 After completion, proceed to:
-- **ANASYSIMP-019-04-02**: Migrate descriptors mod components (Priority 1)
+- **ANASYSIMP-019-04-02**: Migrate Core & Anatomy mod components (Priority 1)
+- **ANASYSIMP-019-04-03**: Migrate Clothing mod components (Priority 2)
+- **ANASYSIMP-019-04-04**: Migrate Activity & Music mod components (Priority 3)
+- **ANASYSIMP-019-04-05**: Migrate Descriptors mod components (Priority 4)
