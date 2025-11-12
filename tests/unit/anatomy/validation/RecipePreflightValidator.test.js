@@ -2648,4 +2648,609 @@ describe('RecipePreflightValidator', () => {
       expect(usageWarning.message).toContain('not referenced by any entity definitions');
     });
   });
+
+  describe('Body descriptors validation', () => {
+    it('should pass when bodyDescriptors have valid enum values', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: {
+                      properties: {
+                        height: { type: 'string', enum: ['tall', 'average', 'short'] },
+                        build: { type: 'string', enum: ['slim', 'athletic', 'stocky'] },
+                        hairDensity: {
+                          type: 'string',
+                          enum: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {
+          height: 'average',
+          build: 'athletic',
+          hairDensity: 'moderate',
+        },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(report.isValid).toBe(true);
+      const bodyDescriptorsCheck = report.passed.find((p) => p.check === 'body_descriptors');
+      expect(bodyDescriptorsCheck).toBeDefined();
+      expect(bodyDescriptorsCheck.message).toContain('3 body descriptor(s) valid');
+    });
+
+    it('should fail when bodyDescriptors contain invalid enum value', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: {
+                      properties: {
+                        hairDensity: {
+                          type: 'string',
+                          enum: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {
+          hairDensity: 'furred', // Invalid value!
+        },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(report.isValid).toBe(false);
+      const errors = report.errors.filter((e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE');
+      expect(errors).toHaveLength(1);
+      expect(errors[0].field).toBe('hairDensity');
+      expect(errors[0].value).toBe('furred');
+      expect(errors[0].message).toContain("Invalid value 'furred'");
+      expect(errors[0].allowedValues).toEqual([
+        'hairless',
+        'sparse',
+        'light',
+        'moderate',
+        'hairy',
+        'very-hairy',
+      ]);
+    });
+
+    it('should fail when bodyDescriptors contain unknown field', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: {
+                      properties: {
+                        height: { type: 'string', enum: ['tall', 'average', 'short'] },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {
+          unknownField: 'someValue', // Unknown field!
+        },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(report.isValid).toBe(false);
+      const errors = report.errors.filter((e) => e.type === 'UNKNOWN_BODY_DESCRIPTOR');
+      expect(errors).toHaveLength(1);
+      expect(errors[0].field).toBe('unknownField');
+      expect(errors[0].value).toBe('someValue');
+      expect(errors[0].message).toContain("Unknown body descriptor 'unknownField'");
+      expect(errors[0].allowedDescriptors).toEqual(['height']);
+    });
+
+    it('should fail when bodyDescriptors have invalid type', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: {
+                      properties: {
+                        height: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {
+          height: 123, // Should be string, not number!
+        },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(report.isValid).toBe(false);
+      const errors = report.errors.filter((e) => e.type === 'INVALID_BODY_DESCRIPTOR_TYPE');
+      expect(errors).toHaveLength(1);
+      expect(errors[0].field).toBe('height');
+      expect(errors[0].expectedType).toBe('string');
+      expect(errors[0].actualType).toBe('number');
+    });
+
+    it('should pass when recipe has no bodyDescriptors', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: {
+                      properties: {
+                        height: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        slots: {},
+        patterns: [],
+        // No bodyDescriptors field
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(report.isValid).toBe(true);
+      const bodyDescriptorsCheck = report.passed.find((p) => p.check === 'body_descriptors');
+      expect(bodyDescriptorsCheck).toBeDefined();
+      expect(bodyDescriptorsCheck.message).toContain('No bodyDescriptors to validate');
+    });
+
+    it('should pass when bodyDescriptors is empty object', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: {
+                      properties: {
+                        height: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {}, // Empty object
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(report.isValid).toBe(true);
+      const bodyDescriptorsCheck = report.passed.find((p) => p.check === 'body_descriptors');
+      expect(bodyDescriptorsCheck).toBeDefined();
+      expect(bodyDescriptorsCheck.message).toContain('0 body descriptor(s) valid');
+    });
+
+    it('should skip validation when anatomy:body component is not found', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.get = () => undefined; // anatomy:body not found
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {
+          height: 'average',
+        },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      // Should pass - validation is skipped
+      expect(report.isValid).toBe(true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'anatomy:body component not found, skipping bodyDescriptors validation'
+      );
+    });
+
+    it('should skip validation when anatomy:body component has no descriptors schema', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(socketSlotCompatibilityValidator, 'validateSocketSlotCompatibility')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      }));
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                // No body.descriptors here
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {
+          height: 'average',
+        },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      // Should pass - validation is skipped
+      expect(report.isValid).toBe(true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'anatomy:body component missing descriptors schema, skipping bodyDescriptors validation'
+      );
+    });
+
+    it('should report multiple validation errors for bodyDescriptors', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      mockAnatomyBlueprintRepository.getBlueprint = async () => ({
+        id: 'test:blueprint',
+        root: 'test:root',
+        structureTemplate: null,
+        additionalSlots: {},
+      });
+
+      mockDataRegistry.get = (type, id) => {
+        if (type === 'components' && id === 'anatomy:body') {
+          return {
+            id: 'anatomy:body',
+            dataSchema: {
+              properties: {
+                body: {
+                  properties: {
+                    descriptors: {
+                      properties: {
+                        height: { type: 'string', enum: ['tall', 'average', 'short'] },
+                        build: { type: 'string', enum: ['slim', 'athletic', 'stocky'] },
+                        hairDensity: {
+                          type: 'string',
+                          enum: ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return undefined;
+      };
+
+      mockDataRegistry.getAll = () => [];
+
+      const recipe = {
+        recipeId: 'test:recipe',
+        blueprintId: 'test:blueprint',
+        bodyDescriptors: {
+          height: 'gigantic', // Invalid enum value
+          build: 123, // Invalid type
+          hairDensity: 'furred', // Invalid enum value
+          unknownField: 'test', // Unknown field
+        },
+        slots: {},
+        patterns: [],
+      };
+
+      const report = await validator.validate(recipe, {
+        skipDescriptorChecks: true,
+        skipPatternValidation: true,
+        skipPartAvailabilityChecks: true,
+        skipGeneratedSlotChecks: true,
+        skipLoadFailureChecks: true,
+        skipRecipeUsageCheck: true,
+      });
+
+      expect(report.isValid).toBe(false);
+      expect(report.errors.length).toBeGreaterThanOrEqual(4);
+
+      // Check for invalid enum value errors
+      const enumErrors = report.errors.filter((e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE');
+      expect(enumErrors.length).toBeGreaterThanOrEqual(2);
+
+      // Check for unknown field error
+      const unknownErrors = report.errors.filter((e) => e.type === 'UNKNOWN_BODY_DESCRIPTOR');
+      expect(unknownErrors).toHaveLength(1);
+
+      // Check for invalid type error
+      const typeErrors = report.errors.filter((e) => e.type === 'INVALID_BODY_DESCRIPTOR_TYPE');
+      expect(typeErrors).toHaveLength(1);
+    });
+  });
 });

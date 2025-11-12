@@ -101,42 +101,47 @@ class RecipePreflightValidator {
       await this.#checkPropertySchemas(recipe, results);
     }
 
-    // 3. Blueprint Validation (Critical - P0)
+    // 3. Body Descriptors Validation (Critical - P0)
+    if (results.errors.length === 0 || !options.failFast) {
+      await this.#checkBodyDescriptors(recipe, results);
+    }
+
+    // 4. Blueprint Validation (Critical - P0)
     await this.#checkBlueprintExists(recipe, results);
 
-    // 4. Socket/Slot Compatibility (Critical - P0)
+    // 5. Socket/Slot Compatibility (Critical - P0)
     if (this.#blueprintExists(results)) {
       await this.#checkSocketSlotCompatibility(recipe, results);
     }
 
-    // 5. Pattern Matching Dry-Run (Warning - P1)
+    // 6. Pattern Matching Dry-Run (Warning - P1)
     if (!options.skipPatternValidation) {
       await this.#checkPatternMatching(recipe, results);
     }
 
-    // 6. Descriptor Coverage (Suggestion - P1)
+    // 7. Descriptor Coverage (Suggestion - P1)
     if (!options.skipDescriptorChecks) {
       this.#checkDescriptorCoverage(recipe, results);
     }
 
-    // 7. Part Availability (Critical - P0)
+    // 8. Part Availability (Critical - P0)
     if (!options.skipPartAvailabilityChecks) {
       await this.#checkPartAvailability(recipe, results);
     }
 
-    // 8. Generated Slot Part Availability (Critical - P0)
+    // 9. Generated Slot Part Availability (Critical - P0)
     // Check that entity definitions exist for ALL slots that patterns will match
     if (!options.skipGeneratedSlotChecks && this.#blueprintExists(results)) {
       await this.#checkGeneratedSlotPartAvailability(recipe, results);
     }
 
-    // 9. Entity Definition Load Failures (Critical - P0)
+    // 10. Entity Definition Load Failures (Critical - P0)
     // This check runs last to provide context for missing entity definitions
     if (!options.skipLoadFailureChecks) {
       this.#checkEntityDefinitionLoadFailures(results);
     }
 
-    // 10. Recipe Usage Check (Warning - P1)
+    // 11. Recipe Usage Check (Warning - P1)
     // Verify that entity definitions actually reference this recipe
     if (!options.skipRecipeUsageCheck) {
       this.#checkRecipeUsage(recipe, results);
@@ -211,6 +216,108 @@ class RecipePreflightValidator {
         type: 'VALIDATION_ERROR',
         check: 'property_schemas',
         message: 'Failed to validate property schemas',
+        error: error.message,
+      });
+    }
+  }
+
+  async #checkBodyDescriptors(recipe, results) {
+    try {
+      // Get the anatomy:body component definition to retrieve the schema
+      const bodyComponent = this.#dataRegistry.get('components', 'anatomy:body');
+
+      if (!bodyComponent) {
+        this.#logger.warn('anatomy:body component not found, skipping bodyDescriptors validation');
+        return;
+      }
+
+      // Extract the descriptors schema from anatomy:body component
+      const descriptorsSchema = bodyComponent.dataSchema?.properties?.body?.properties?.descriptors;
+
+      if (!descriptorsSchema) {
+        this.#logger.warn(
+          'anatomy:body component missing descriptors schema, skipping bodyDescriptors validation'
+        );
+        return;
+      }
+
+      // Get bodyDescriptors from recipe
+      const bodyDescriptors = recipe.bodyDescriptors;
+
+      if (!bodyDescriptors || typeof bodyDescriptors !== 'object') {
+        // No bodyDescriptors to validate (this is allowed)
+        results.passed.push({
+          check: 'body_descriptors',
+          message: 'No bodyDescriptors to validate',
+        });
+        return;
+      }
+
+      // Validate each descriptor field against the schema
+      const errors = [];
+      const descriptorProperties = descriptorsSchema.properties || {};
+
+      for (const [descriptorKey, descriptorValue] of Object.entries(bodyDescriptors)) {
+        const propertySchema = descriptorProperties[descriptorKey];
+
+        if (!propertySchema) {
+          errors.push({
+            type: 'UNKNOWN_BODY_DESCRIPTOR',
+            severity: 'error',
+            field: descriptorKey,
+            value: descriptorValue,
+            message: `Unknown body descriptor '${descriptorKey}'`,
+            fix: `Remove '${descriptorKey}' from bodyDescriptors or add it to the anatomy:body component schema`,
+            allowedDescriptors: Object.keys(descriptorProperties),
+          });
+          continue;
+        }
+
+        // Validate enum values
+        if (propertySchema.enum) {
+          if (!propertySchema.enum.includes(descriptorValue)) {
+            errors.push({
+              type: 'INVALID_BODY_DESCRIPTOR_VALUE',
+              severity: 'error',
+              field: descriptorKey,
+              value: descriptorValue,
+              message: `Invalid value '${descriptorValue}' for body descriptor '${descriptorKey}'`,
+              fix: `Use one of the allowed values: ${propertySchema.enum.join(', ')}`,
+              allowedValues: propertySchema.enum,
+            });
+          }
+        }
+
+        // Validate type
+        if (propertySchema.type && typeof descriptorValue !== propertySchema.type) {
+          errors.push({
+            type: 'INVALID_BODY_DESCRIPTOR_TYPE',
+            severity: 'error',
+            field: descriptorKey,
+            value: descriptorValue,
+            message: `Invalid type for body descriptor '${descriptorKey}': expected ${propertySchema.type}, got ${typeof descriptorValue}`,
+            fix: `Change value to type ${propertySchema.type}`,
+            expectedType: propertySchema.type,
+            actualType: typeof descriptorValue,
+          });
+        }
+      }
+
+      if (errors.length === 0) {
+        const descriptorCount = Object.keys(bodyDescriptors).length;
+        results.passed.push({
+          check: 'body_descriptors',
+          message: `All ${descriptorCount} body descriptor(s) valid`,
+        });
+      } else {
+        results.errors.push(...errors);
+      }
+    } catch (error) {
+      this.#logger.error('Body descriptors check failed', error);
+      results.errors.push({
+        type: 'VALIDATION_ERROR',
+        check: 'body_descriptors',
+        message: 'Failed to validate body descriptors',
         error: error.message,
       });
     }
