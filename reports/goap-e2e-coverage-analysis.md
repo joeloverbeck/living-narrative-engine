@@ -8,21 +8,23 @@
 
 ## Executive Summary
 
-The GOAP (Goal-Oriented Action Planning) system is a sophisticated AI decision-making framework comprising **3 tiers** with approximately **25+ distinct workflows**. Current e2e test coverage is **strong for core functionality** (Tier 2) but has **significant gaps in Tier 1 tooling workflows** and **advanced integration scenarios**.
+The GOAP (Goal-Oriented Action Planning) system is a sophisticated AI decision-making framework comprising **3 tiers** with approximately **25+ distinct workflows**. Current e2e test coverage is **strong for core functionality** (Tier 2) but has **gaps in Tier 1 CLI tooling e2e tests** (though integration tests exist). Overall e2e coverage is comprehensive with **7,590 lines of test code** across 15 test files.
 
 ### Coverage Highlights
 
-- **✅ Excellent Coverage:** Core planning workflows (goal selection, action selection, plan caching)
-- **✅ Good Coverage:** Error handling, multi-actor scenarios, basic creature behaviors
-- **⚠️ Partial Coverage:** Effects generation, complex conditional paths, operation type diversity
-- **❌ Missing Coverage:** CLI tooling workflows, schema evolution, advanced goal scenarios, resource management
+- **✅ Excellent Coverage:** Core planning workflows (goal selection, action selection, plan caching), complex goal evaluation (AND/OR/NOT)
+- **✅ Good Coverage:** Error handling, multi-actor scenarios (including 5+ concurrent actors), conditional path tracing, planning effects verification
+- **⚠️ Partial Coverage:** Operation type diversity (mostly ADD/REMOVE/MODIFY tested), deep rule conditionals (3+ levels)
+- **❌ Missing E2E Coverage:** CLI tooling workflows (`npm run generate:effects`, `npm run validate:effects` - though integration tests exist), schema evolution, advanced real-world scenarios
 
 ### Key Recommendations
 
-**Priority 1 (Critical):** Add 4 tests covering effects generation CLI workflow and schema evolution
-**Priority 2 (High):** Add 6 tests for advanced goal scenarios and action cost variation
-**Priority 3 (Medium):** Add 5 tests for complex real-world scenarios and resource management
+**Priority 1 (Critical):** Add 2 e2e tests for CLI workflows (effects generation and validation commands)
+**Priority 2 (High):** Add 4 tests for operation type diversity, schema evolution, and action cost variation
+**Priority 3 (Medium):** Add 5 tests for complex real-world scenarios (combat, resources, social interactions)
 **Priority 4 (Nice-to-Have):** Add 3 tests for performance edge cases and long-term stability
+
+**Note:** Complex goal evaluation is already comprehensively covered and doesn't need additional tests.
 
 ---
 
@@ -94,21 +96,21 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 | Test File | Lines | Focus Area | Priority | Complexity |
 |-----------|-------|------------|----------|------------|
-| `CompleteGoapDecisionWithRealMods.e2e.test.js` | 495 | Full workflow integration | Critical | High |
-| `ActionSelectionWithEffectSimulation.e2e.test.js` | 323 | Action selection & simulation | Critical | High |
-| `GoalPrioritySelectionWorkflow.e2e.test.js` | 535 | Goal priority system | Critical | Medium |
-| `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js` | ? | Goal evaluation logic | Critical | High |
-| `PlanCachingAndInvalidation.e2e.test.js` | 100+ | Plan caching strategies | High | Medium |
-| `AbstractPreconditionConditionalEffects.e2e.test.js` | 100+ | Conditional effects | High | High |
-| `PlanningEffectsMatchRuleExecution.e2e.test.js` | ? | Planning vs. execution consistency | Critical | High |
-| `MultiTurnGoalAchievement.e2e.test.js` | 100+ | Multi-turn goal pursuit | Medium | Medium |
-| `ErrorRecoveryAndGracefulDegradation.e2e.test.js` | 100+ | Error handling | Medium | Medium |
-| `MultiActorConcurrentGoapDecisions.e2e.test.js` | ? | Concurrent planning | High | High |
-| `CrossModGoalAndActionInteraction.e2e.test.js` | ? | Cross-mod compatibility | High | Medium |
-| `GoapPerformanceUnderLoad.e2e.test.js` | ? | Performance testing | Medium | High |
-| `catBehavior.e2e.test.js` | 80 | Cat creature behavior | Low | Low |
-| `goblinBehavior.e2e.test.js` | ? | Goblin creature behavior | Low | Low |
-| `multipleActors.e2e.test.js` | ? | Multiple actor scenarios | Medium | Medium |
+| `CompleteGoapDecisionWithRealMods.e2e.test.js` | 494 | Full workflow integration | Critical | High |
+| `ActionSelectionWithEffectSimulation.e2e.test.js` | 322 | Action selection & simulation | Critical | High |
+| `GoalPrioritySelectionWorkflow.e2e.test.js` | 534 | Goal priority system | Critical | Medium |
+| `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js` | 756 | Goal evaluation logic | Critical | High |
+| `PlanCachingAndInvalidation.e2e.test.js` | 594 | Plan caching strategies | High | Medium |
+| `AbstractPreconditionConditionalEffects.e2e.test.js` | 652 | Conditional effects | High | High |
+| `PlanningEffectsMatchRuleExecution.e2e.test.js` | 591 | Planning vs. execution consistency | Critical | High |
+| `MultiTurnGoalAchievement.e2e.test.js` | 584 | Multi-turn goal pursuit | Medium | Medium |
+| `ErrorRecoveryAndGracefulDegradation.e2e.test.js` | 743 | Error handling | Medium | Medium |
+| `MultiActorConcurrentGoapDecisions.e2e.test.js` | 747 | Concurrent planning | High | High |
+| `CrossModGoalAndActionInteraction.e2e.test.js` | 471 | Cross-mod compatibility | High | Medium |
+| `GoapPerformanceUnderLoad.e2e.test.js` | 720 | Performance testing | Medium | High |
+| `catBehavior.e2e.test.js` | 110 | Cat creature behavior | Low | Low |
+| `goblinBehavior.e2e.test.js` | 120 | Goblin creature behavior | Low | Low |
+| `multipleActors.e2e.test.js` | 152 | Multiple actor scenarios | Medium | Medium |
 
 **Total E2E Tests:** 15 test files
 
@@ -117,15 +119,15 @@ Current e2e tests located in `tests/e2e/goap/`:
 | Workflow ID | Workflow Name | Test Coverage | Test File(s) | Coverage Quality |
 |-------------|---------------|---------------|--------------|------------------|
 | **Tier 1: Effects Auto-Generation** |
-| 1.1 | Rule Operation Analysis | ⚠️ Partial | CompleteGoapDecision | Indirect only |
-| 1.2 | Conditional Path Tracing | ⚠️ Partial | AbstractPrecondition | Basic branches only |
+| 1.1 | Rule Operation Analysis | ⚠️ Partial | CompleteGoapDecision, PlanningEffectsMatch | Indirect testing via execution |
+| 1.2 | Conditional Path Tracing | ✅ Good | AbstractPrecondition, GoalRelevance | Complex AND/OR/NOT tested |
 | 1.3 | Operation Type Mapping | ⚠️ Partial | PlanningEffectsMatch | Limited operation types |
 | 1.4 | Abstract Precondition Generation | ✅ Good | AbstractPrecondition | hasComponent, hasInventoryCapacity |
 | 1.5 | Planning Effects Schema Validation | ⚠️ Partial | CompleteGoapDecision | Implicit validation |
 | 1.6 | Macro Resolution | ❌ None | - | Not tested |
 | 1.7 | Cost Calculation | ❌ None | - | Not tested |
-| 1.8 | Effects Generation CLI | ❌ None | - | **Critical Gap** |
-| 1.9 | Effects Validation CLI | ❌ None | - | **Critical Gap** |
+| 1.8 | Effects Generation CLI | ❌ None (e2e) | Integration tests exist | **Critical Gap** - No e2e CLI test |
+| 1.9 | Effects Validation CLI | ❌ None (e2e) | Integration tests exist | **Critical Gap** - No e2e CLI test |
 | **Tier 2: Simple Action Planning** |
 | 2.1 | Goal Definition & Loading | ✅ Excellent | GoalPriority, GoalRelevance | Comprehensive |
 | 2.2 | Goal Relevance Evaluation | ✅ Excellent | GoalRelevance, GoalPriority | Complex JSON Logic tested |
@@ -155,11 +157,11 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 | Tier | Total Workflows | ✅ Excellent | ✅ Good | ⚠️ Partial | ❌ None | Coverage % |
 |------|----------------|-------------|---------|-----------|---------|------------|
-| **Tier 1** | 9 | 0 | 1 | 5 | 3 | 44% |
+| **Tier 1** | 9 | 0 | 2 | 4 | 3 | 50% |
 | **Tier 2** | 14 | 8 | 5 | 1 | 0 | 93% |
 | **Tier 3** | 3 | - | - | - | - | N/A (Future) |
 | **Cross-Cutting** | 6 | 0 | 6 | 0 | 0 | 100% |
-| **Overall** | 29 | 8 (28%) | 12 (41%) | 6 (21%) | 3 (10%) | **79%** |
+| **Overall** | 29 | 8 (28%) | 13 (45%) | 5 (17%) | 3 (10%) | **81%** |
 
 ---
 
@@ -169,13 +171,13 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 #### Gap 1.1: Effects Generation CLI Workflow
 **Workflows:** 1.8, 1.9
-**Impact:** High - Core tooling workflow not validated
+**Impact:** High - Core tooling workflow not validated at e2e level
 **Risk:** Breaking changes to generation/validation CLI could go undetected
 **Description:**
-- No e2e test for `npm run generate:effects` command
-- No e2e test for `npm run validate:effects` command
-- CLI behavior, error handling, and output not validated
-- Mod-level and action-level generation not tested end-to-end
+- ✅ **Integration tests exist**: `effectsGeneration.integration.test.js` and `effectsValidation.integration.test.js` test the library classes
+- ❌ **E2E CLI tests missing**: No e2e test for actual `npm run generate:effects` and `npm run validate:effects` commands
+- CLI argument parsing, file I/O, error reporting, and exit codes not validated end-to-end
+- Mod-level and action-level generation tested at integration level but not as actual CLI invocations
 
 #### Gap 1.2: Operation Type Coverage
 **Workflows:** 1.3
@@ -200,13 +202,17 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 #### Gap 2.1: Complex Goal State Evaluation
 **Workflows:** 2.3
-**Impact:** Medium - Advanced goal scenarios
-**Risk:** Complex goals may not evaluate correctly
+**Impact:** Low - Actually well-covered
+**Risk:** Low - Comprehensive tests exist
 **Description:**
-- Goals with multiple component requirements not thoroughly tested
-- Nested AND/OR conditions in goal states have limited coverage
-- Range checks and threshold buffers not comprehensively tested
-- Negative conditions (component must NOT exist) need more testing
+- ✅ **EXTENSIVE COVERAGE**: `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js` (756 lines) provides comprehensive testing
+- ✅ Goals with multiple component requirements thoroughly tested (AND conditions)
+- ✅ Nested AND/OR conditions comprehensively covered with multiple test scenarios
+- ✅ NOT conditions tested (component must NOT exist)
+- ✅ Range checks and threshold buffers tested with boundary conditions
+- ✅ Null/undefined edge cases covered
+- ✅ Priority selection with complex conditions validated
+- **Note:** This gap assessment was incorrect in original analysis - coverage is actually **excellent**
 
 #### Gap 2.2: Action Cost Variation
 **Workflows:** 1.7, 2.10
@@ -240,13 +246,15 @@ Current e2e tests located in `tests/e2e/goap/`:
 
 #### Gap 2.5: Deep Conditional Path Tracing
 **Workflows:** 1.2
-**Impact:** Medium-Low - Complex rule structures
-**Risk:** Deeply nested conditionals may not trace correctly
+**Impact:** Low - Good coverage exists
+**Risk:** Low - Complex conditionals well-tested
 **Description:**
-- Basic IF/IF_CO_LOCATED branches tested
-- Deeply nested conditionals (3+ levels) not tested
-- Complex condition combinations not thoroughly covered
-- Conditional effects with multiple branches need more testing
+- ✅ Basic IF/IF_CO_LOCATED branches tested in `AbstractPreconditionConditionalEffects.e2e.test.js`
+- ✅ Complex nested conditions (AND, OR, NOT) tested in `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js`
+- ⚠️ Deeply nested conditionals (3+ levels in rules) not directly tested in e2e
+- ✅ Complex condition combinations thoroughly covered for goal evaluation
+- ⚠️ Conditional effects with multiple branches need more testing at the rule level
+- **Note:** Coverage is better than originally assessed, though 3+ level rule nesting still needs validation
 
 #### Gap 2.6: Schema Evolution and Backward Compatibility
 **Workflows:** 1.5
@@ -1202,23 +1210,23 @@ Success Criteria:
 
 ### Appendix A: Test File Details
 
-| Test File | Tests | Assertions | Runtime | Last Updated |
-|-----------|-------|------------|---------|--------------|
-| CompleteGoapDecisionWithRealMods | 7 | 50+ | ~8s | Recent |
-| ActionSelectionWithEffectSimulation | 9 | 35+ | ~6s | Recent |
-| GoalPrioritySelectionWorkflow | 6 | 40+ | ~7s | Recent |
-| GoalRelevanceAndSatisfactionEvaluation | ? | ? | ? | Recent |
-| PlanCachingAndInvalidation | 6+ | 25+ | ~5s | Recent |
-| AbstractPreconditionConditionalEffects | 6+ | 30+ | ~6s | Recent |
-| PlanningEffectsMatchRuleExecution | ? | ? | ? | Recent |
-| MultiTurnGoalAchievement | 5+ | 20+ | ~7s | Recent |
-| ErrorRecoveryAndGracefulDegradation | 6+ | 25+ | ~6s | Recent |
-| MultiActorConcurrentGoapDecisions | ? | ? | ? | Recent |
-| CrossModGoalAndActionInteraction | ? | ? | ? | Recent |
-| GoapPerformanceUnderLoad | ? | ? | ? | Recent |
-| catBehavior | 2 | 10+ | ~3s | Recent |
-| goblinBehavior | ? | ? | ? | Recent |
-| multipleActors | ? | ? | ? | Recent |
+| Test File | Lines | Tests | Assertions | Key Coverage Areas |
+|-----------|-------|-------|------------|-------------------|
+| CompleteGoapDecisionWithRealMods | 494 | 7 | 50+ | Full workflow, multi-goal, caching, invalidation |
+| ActionSelectionWithEffectSimulation | 322 | 9 | 35+ | Effect simulation, progress calculation |
+| GoalPrioritySelectionWorkflow | 534 | 6 | 40+ | Priority selection, urgency-based goals |
+| GoalRelevanceAndSatisfactionEvaluation | 756 | 11+ | 60+ | AND/OR/NOT conditions, nested logic, edge cases |
+| PlanCachingAndInvalidation | 594 | 6+ | 25+ | Cache creation, reuse, invalidation strategies |
+| AbstractPreconditionConditionalEffects | 652 | 6+ | 30+ | hasComponent, hasInventoryCapacity, conditionals |
+| PlanningEffectsMatchRuleExecution | 591 | 7 | 40+ | ADD/REMOVE/MODIFY component verification |
+| MultiTurnGoalAchievement | 584 | 5+ | 20+ | Goal pursuit across multiple turns |
+| ErrorRecoveryAndGracefulDegradation | 743 | 6+ | 25+ | Malformed data, missing goals, error handling |
+| MultiActorConcurrentGoapDecisions | 747 | 6 | 45+ | Concurrent planning, cache isolation, 5+ actors |
+| CrossModGoalAndActionInteraction | 471 | 5+ | 30+ | Cross-mod goal/action compatibility |
+| GoapPerformanceUnderLoad | 720 | 4+ | 20+ | Performance benchmarks, load testing |
+| catBehavior | 110 | 3 | 10+ | Basic creature behavior (hungry cat) |
+| goblinBehavior | 120 | 3+ | 10+ | Basic creature behavior (goblin) |
+| multipleActors | 152 | 4 | 15+ | 5+ actors, cache reuse, consistency |
 
 ---
 
@@ -1295,5 +1303,108 @@ This report provides a clear roadmap for achieving comprehensive GOAP test cover
 ---
 
 **Report Generated:** 2025-11-12
-**Document Version:** 1.0
+**Document Version:** 1.1 (Corrected 2025-11-12)
 **Next Review:** After Priority 1 completion
+
+---
+
+## Report Corrections and Verification (Version 1.1)
+
+**Date:** 2025-11-12
+**Verified By:** Analysis of actual test files and codebase
+
+### Corrections Made
+
+#### 1. Test File Line Counts
+**Issue:** Multiple test files had line counts listed as "?"
+**Correction:** All line counts verified and updated:
+- `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js`: 756 lines (was "?")
+- `PlanningEffectsMatchRuleExecution.e2e.test.js`: 591 lines (was "?")
+- `MultiActorConcurrentGoapDecisions.e2e.test.js`: 747 lines (was "?")
+- `CrossModGoalAndActionInteraction.e2e.test.js`: 471 lines (was "?")
+- `GoapPerformanceUnderLoad.e2e.test.js`: 720 lines (was "?")
+- `goblinBehavior.e2e.test.js`: 120 lines (was "?")
+- `multipleActors.e2e.test.js`: 152 lines (was "?")
+- `catBehavior.e2e.test.js`: 110 lines (was 80)
+- Minor adjustments to other files for accuracy
+
+**Total E2E Test Lines:** 7,590 (verified)
+
+#### 2. Workflow Coverage Reassessments
+
+**Workflow 1.2 - Conditional Path Tracing:**
+- **Original:** ⚠️ Partial - "Basic branches only"
+- **Corrected:** ✅ Good - "Complex AND/OR/NOT tested"
+- **Reason:** `GoalRelevanceAndSatisfactionEvaluation.e2e.test.js` provides extensive testing of complex nested conditions with AND/OR/NOT logic across 756 lines and 11+ test cases
+
+**Workflow 2.3 - Goal Satisfaction Evaluation:**
+- **Original:** Listed as gap needing more testing
+- **Corrected:** Already has excellent coverage
+- **Reason:** Same test file (756 lines) comprehensively covers:
+  - Multiple component requirements (AND conditions)
+  - Alternative paths (OR conditions)
+  - Negative conditions (NOT)
+  - Range checks and thresholds
+  - Boundary conditions
+  - Null/undefined edge cases
+  - Priority selection with complex conditions
+
+#### 3. CLI Workflow Coverage Clarification
+
+**Workflows 1.8 & 1.9 - Effects Generation/Validation CLI:**
+- **Original:** ❌ None - "**Critical Gap**"
+- **Corrected:** ❌ None (e2e) - "Integration tests exist - **Critical Gap** - No e2e CLI test"
+- **Clarification:**
+  - Integration tests DO exist: `effectsGeneration.integration.test.js` and `effectsValidation.integration.test.js`
+  - These test the library classes (`EffectsGenerator`, `EffectsValidator`) directly
+  - **Gap remains:** No e2e tests for actual CLI commands (`npm run generate:effects`, `npm run validate:effects`)
+  - What's missing: CLI argument parsing, file I/O, error reporting, exit codes
+
+#### 4. Coverage Percentages Updated
+
+**Tier 1 Coverage:**
+- **Original:** 44% (0 excellent, 1 good, 5 partial, 3 none)
+- **Corrected:** 50% (0 excellent, 2 good, 4 partial, 3 none)
+- **Reason:** Workflow 1.2 upgraded from Partial to Good
+
+**Overall Coverage:**
+- **Original:** 79% (8 excellent, 12 good, 6 partial, 3 none)
+- **Corrected:** 81% (8 excellent, 13 good, 5 partial, 3 none)
+
+#### 5. Appendix A Enhancement
+
+**Original:** Basic file listing with many "?" values
+**Updated:** Complete table with:
+- Verified line counts for all files
+- Actual test counts
+- Assertion estimates
+- Key coverage areas described
+
+### Verification Methods Used
+
+1. **Line Count Verification:** `wc -l tests/e2e/goap/*.test.js` - verified all 15 files
+2. **Test Content Analysis:** Read full source of 4 major test files to verify coverage claims
+3. **Integration Test Discovery:** Searched codebase for `*effects*generation*.test.js` and `*effects*validation*.test.js`
+4. **Operation Coverage Check:** Searched for operation types mentioned in test files
+5. **Documentation Cross-Reference:** Verified against `docs/goap/README.md`
+
+### Confidence Level
+
+- **High Confidence (95%+):** Line counts, test file existence, basic coverage assessments
+- **Medium Confidence (70-95%):** Specific test scenario coverage, operation diversity
+- **Needs Runtime Verification:** Performance benchmarks, actual CLI behavior, edge case handling
+
+### Remaining Uncertainties
+
+1. **Actual operation types tested:** Report claims "basic operations only" but verification requires running tests or deeper code analysis
+2. **Performance metrics:** Actual performance numbers (e.g., "5 actors in < 5 seconds") not verified through test execution
+3. **Test assertions:** Exact assertion counts estimated from code review, not test runner output
+
+### Recommendations for Future Report Updates
+
+1. **Run test suite:** Execute `npm run test:e2e -- tests/e2e/goap/` to capture actual test counts, assertions, and runtime
+2. **Coverage instrumentation:** Use Jest coverage to get exact line/branch coverage percentages
+3. **Operation mapping audit:** Cross-reference `PlanningEffectsMatchRuleExecution.e2e.test.js` with `docs/goap/operation-mapping.md`
+4. **CLI test creation:** Add e2e tests for CLI workflows as Priority 1 task
+
+---
