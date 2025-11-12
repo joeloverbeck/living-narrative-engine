@@ -1,7 +1,7 @@
 /**
  * @file Integration test for has_component operator with missing entities
- * @description Reproduces the warning "No entity found at path patrol:dimensional_rift_blocker_instance"
- * that occurs when checking if an entity has a component but the entity doesn't exist in the entity manager.
+ * @description Documents how the has_component operator handles missing entities without
+ * logging warnings, ensuring it treats unresolved paths as raw entity identifiers.
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
@@ -293,7 +293,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
   });
 
   describe('Root Cause Analysis', () => {
-    it('should demonstrate that the warning occurs because entity is not loaded', () => {
+    it('should demonstrate that missing entities are handled without warnings', () => {
       // This test documents the root cause:
       // The dimensional_rift_blocker_instance is referenced in the world definition
       // but may not be loaded into the entity manager before the scope is evaluated
@@ -314,9 +314,16 @@ describe('has_component Operator - Missing Entity Warning', () => {
       const result1 = jsonLogicEvaluationService.evaluate(rule, context);
       expect(result1).toBe(false);
 
-      // Verify warning was logged
+      // Verify no warning was logged – unresolved entity IDs are treated as raw IDs
       const firstWarnCount = logger.warn.mock.calls.length;
-      expect(firstWarnCount).toBeGreaterThan(0);
+      expect(firstWarnCount).toBe(0);
+
+      // Debug log should indicate the fallback to treating the string as an entity ID
+      const firstDebugCalls = logger.debug.mock.calls;
+      const hasEntityIdFallbackDebug = firstDebugCalls.some((call) =>
+        call[0].includes('Could not resolve') && call[0].includes('treating as entity ID')
+      );
+      expect(hasEntityIdFallbackDebug).toBe(true);
 
       // Now simulate entity being loaded
       logger.warn.mockClear();
