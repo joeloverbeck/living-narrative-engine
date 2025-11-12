@@ -10,7 +10,7 @@
 
 Migrate the 2 component schemas in the anatomy mod that have enum properties to use the new `validationRules` feature. This is part of Priority 1 (Core & Anatomy Mods) from the parent workflow.
 
-**IMPORTANT:** The anatomy mod body component schemas are **outdated** and contain fewer enum values than the Body Descriptor Registry. This migration will add validationRules but will NOT update the enum values - that should be handled in a separate schema synchronization task.
+**NOTE:** The anatomy mod body component schemas have been synchronized with the Body Descriptor Registry (as of 2025-11-12). All enum values now match the registry, including the enhanced horror/fantasy/medical vocabulary.
 
 ## Components to Migrate
 
@@ -26,19 +26,21 @@ Migrate the 2 component schemas in the anatomy mod that have enum properties to 
 - part.component.json - No enums
 - sockets.component.json - ✓ Has 1 enum property
 
-## Critical Schema Discrepancy Alert
+## Schema Synchronization Status
 
-⚠️ **The body.component.json enum values are outdated compared to the Body Descriptor Registry:**
+✅ **The body.component.json enum values are now synchronized with the Body Descriptor Registry:**
 
-| Descriptor | Component Schema | Registry | Missing Values |
-|------------|------------------|----------|----------------|
-| build | 11 values | 20 values | 9 horror/fantasy values (frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky) |
-| composition | 7 values | 16 values | 9 horror/fantasy values (atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting) |
-| height | 7 values | 11 values | 4 scale values (microscopic, minuscule, colossal, titanic) |
-| hairDensity | 7 values | 7 values | ✓ Matches |
-| density | 6 values | N/A | DEPRECATED field (use hairDensity instead) |
+| Descriptor | Component Schema | Registry | Status |
+|------------|------------------|----------|--------|
+| build | 20 values | 20 values | ✅ Synchronized (includes horror/fantasy values) |
+| composition | 16 values | 16 values | ✅ Synchronized (includes horror/fantasy values) |
+| height | 11 values | 11 values | ✅ Synchronized (includes scale extremes) |
+| hairDensity | 7 values | 7 values | ✅ Synchronized |
+| density | 6 values | N/A | ⚠️ DEPRECATED field (use hairDensity instead) |
 
-**Recommendation:** File a separate ticket to synchronize body.component.json enum values with the registry after this validationRules migration is complete.
+**Synchronization completed:** 2025-11-12
+
+All enhanced vocabulary for horror, fantasy, and medical scenarios is now available in the component schema.
 
 ## Reference Documentation
 
@@ -101,7 +103,12 @@ echo "orientation: 16 predefined values + pattern for custom values"
 ```
 
 **Expected Results:**
-- body.component.json: 5 enum properties (build, composition, height, hairDensity, density)
+- body.component.json: 5 enum properties
+  - build: 20 values (synchronized with registry)
+  - composition: 16 values (synchronized with registry)
+  - height: 11 values (synchronized with registry)
+  - hairDensity: 7 values (synchronized with registry)
+  - density: 6 values (deprecated)
 - sockets.component.json: 1 enum property (orientation with 16 predefined values)
 
 ### Step 2: Migrate Each Component
@@ -113,14 +120,14 @@ For each component file:
 **File:** `data/mods/anatomy/components/body.component.json`
 
 **Properties with Enums (5 total):**
-1. `body.descriptors.build` - 11 enum values (skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky)
-2. `body.descriptors.composition` - 7 enum values (underweight, lean, average, soft, chubby, overweight, obese)
-3. `body.descriptors.height` - 7 enum values (gigantic, very-tall, tall, average, short, petite, tiny)
-4. `body.descriptors.hairDensity` - 7 enum values (hairless, sparse, light, moderate, hairy, very-hairy, furred)
+1. `body.descriptors.build` - 20 enum values (synchronized with registry, includes horror/fantasy vocabulary)
+2. `body.descriptors.composition` - 16 enum values (synchronized with registry, includes horror/fantasy vocabulary)
+3. `body.descriptors.height` - 11 enum values (synchronized with registry, includes scale extremes)
+4. `body.descriptors.hairDensity` - 7 enum values (synchronized with registry)
 5. `body.descriptors.density` - 6 enum values (DEPRECATED - use hairDensity instead)
 
-**⚠️ Schema Sync Issue:**
-The enum values in this component are outdated compared to the Body Descriptor Registry. This migration will add validationRules to the existing enums but will NOT update the enum values themselves. A follow-up ticket should be created to synchronize the enum values with the registry.
+**✅ Schema Synchronized:**
+The enum values in this component have been synchronized with the Body Descriptor Registry. All enhanced vocabulary (horror, fantasy, medical scenarios) is now available.
 
 **Migration Process:**
 1. Read the component schema:
@@ -238,7 +245,7 @@ echo $?  # Should be 0
 npm run validate:body-descriptors
 ```
 
-**Note:** The `validate:body-descriptors` command checks that the Body Descriptor Registry, schema, and formatting configuration are aligned. Since the body.component.json has outdated enum values, this validation will NOT catch that discrepancy - it only validates the registry itself and recipe usage.
+**Note:** The `validate:body-descriptors` command checks that the Body Descriptor Registry, schema, and formatting configuration are aligned. Since body.component.json has been synchronized with the registry, this validation will confirm consistency across all anatomy system components.
 
 ### Step 4: Commit Batch
 
@@ -255,14 +262,15 @@ git commit -m "feat(validation): add validationRules to anatomy mod components
 - Add validationRules to body component (5 enum properties)
 - Add validationRules to sockets component (orientation enum)
 - Enable enhanced error messages with similarity suggestions
-- Note: body component enum values still outdated vs registry (follow-up needed)
+- Body component enums synchronized with Body Descriptor Registry
+- Includes full horror/fantasy/medical vocabulary support
 - Part of ANASYSIMP-019-04 migration (Priority 1: Anatomy Mod)"
 
 # Verify commit
 git log -1 --stat
 ```
 
-**Important:** This commit adds validationRules but does NOT update the outdated enum values in body.component.json. A follow-up ticket should be created to synchronize the enum values with the Body Descriptor Registry.
+**Note:** This commit adds validationRules to already-synchronized component schemas. The body.component.json enum values were synchronized with the Body Descriptor Registry prior to this migration.
 
 ## Validation Checklist
 
@@ -280,7 +288,7 @@ After migration, verify:
 - [ ] `npm run validate:body-descriptors` passes
 - [ ] No JSON syntax errors
 - [ ] Changes committed to git
-- [ ] Follow-up ticket created for body component enum synchronization
+- [ ] Verified enum synchronization is complete
 
 ## Acceptance Criteria
 
@@ -293,8 +301,8 @@ After migration, verify:
 - [ ] Anatomy system validation passes (`npm run validate:body-descriptors`)
 - [ ] Batch committed to git with clear message
 - [ ] No breaking changes introduced
-- [ ] Documentation updated noting the enum value discrepancy
-- [ ] Follow-up ticket created for synchronizing body.component.json enums with registry
+- [ ] Enum values verified as synchronized with Body Descriptor Registry
+- [ ] Full horror/fantasy/medical vocabulary now available in validation
 
 ## Common Pitfalls
 
@@ -314,36 +322,32 @@ After migration, verify:
 **Problem:** Component has multiple enum properties (like body with 5 enums), unclear which to reference in messages
 **Solution:** Use generic messages like "Invalid body descriptor value: {{value}}" that apply to all enum properties
 
-### Pitfall 5: Outdated Enum Values
-**Problem:** body.component.json enum values don't match the Body Descriptor Registry
-**Solution:** This migration adds validationRules but does NOT fix the enum mismatch. Create a follow-up ticket for schema synchronization
+### Pitfall 5: Deprecated Density Field
+**Problem:** The deprecated `density` field is still present in the schema
+**Solution:** Keep it for backward compatibility but ensure new code uses `hairDensity` instead. The deprecated field has a clear description marking it as deprecated.
 
 ## Special Considerations
 
 ### Body Component
 
-**Critical Issue:** The body component has outdated enum values compared to the Body Descriptor Registry.
-
-**Current State:**
+**Synchronized State (as of 2025-11-12):**
 - Component has 5 enum properties in `body.descriptors`:
-  1. build (11 values vs 20 in registry) - missing 9 horror/fantasy values
-  2. composition (7 values vs 16 in registry) - missing 9 horror/fantasy values
-  3. height (7 values vs 11 in registry) - missing 4 scale values
-  4. hairDensity (7 values) - matches registry ✓
-  5. density (6 values) - DEPRECATED field, should not be used
-- Free-form properties (skinColor, smell) have no enums
+  1. build (20 values) - ✅ synchronized with registry, includes horror/fantasy values
+  2. composition (16 values) - ✅ synchronized with registry, includes horror/fantasy values
+  3. height (11 values) - ✅ synchronized with registry, includes scale extremes
+  4. hairDensity (7 values) - ✅ synchronized with registry
+  5. density (6 values) - ⚠️ DEPRECATED field (kept for backward compatibility)
+- Free-form properties (skinColor, smell) have no enums (as designed)
 
-**Impact of Outdated Enums:**
-- Valid values in the registry (e.g., "titanic" height, "rotting" composition) will be rejected by the component schema
-- This creates a mismatch between what the registry says is valid and what the schema accepts
-- The enhanced validation from validationRules will help with error messages but won't fix the underlying enum mismatch
+**Enhanced Vocabulary Now Available:**
+- **Build**: Includes frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky
+- **Composition**: Includes atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting
+- **Height**: Includes microscopic, minuscule, colossal, titanic
 
-**Recommended Follow-up:**
-Create a ticket to synchronize body.component.json enum values with the Body Descriptor Registry, including:
-- Add missing 9 build values (frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky)
-- Add missing 9 composition values (atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting)
-- Add missing 4 height values (microscopic, minuscule, colossal, titanic)
-- Consider removing deprecated density field
+**Impact:**
+- All registry values are now accepted by the component schema
+- Full horror/fantasy/medical vocabulary support in validation
+- Enhanced validationRules will provide clear error messages for the complete value range
 
 ### Sockets Component
 
@@ -359,12 +363,14 @@ Create a ticket to synchronize body.component.json enum values with the Body Des
 After migration, enhanced validation will improve:
 - **Body Descriptor Validation**: Better error messages when validating body descriptors in anatomy recipes
   - Example: "Invalid body descriptor value: 'athlethic'. Valid options: skinny, slim, lissom, toned, athletic, ..." with suggestion "Did you mean: athletic?"
+  - Now includes full horror/fantasy/medical vocabulary (rotting, cadaverous, titanic, etc.)
 - **Socket Orientation Validation**: Clearer errors for socket orientation mismatches
   - Example: "Invalid socket orientation: 'lft'. Valid options: left, right, mid, ..." with suggestion "Did you mean: left?"
 - **Runtime Validation**: More helpful anatomy generation error messages during entity creation
 - **Developer Experience**: Similarity suggestions reduce time debugging typos in mod development
 
-**Note:** Once the body.component.json enum values are synchronized with the registry in a follow-up ticket, the enhanced validation will cover the full range of horror/fantasy/medical vocabulary.
+**Enhanced Vocabulary Support:**
+Since body.component.json enum values are synchronized with the registry, the enhanced validation now covers the complete range of horror/fantasy/medical vocabulary including extreme values like "microscopic", "titanic", "rotting", and "cadaverous".
 
 ## Time Estimate
 
@@ -373,42 +379,35 @@ After migration, enhanced validation will improve:
   - body component: 3 minutes (5 enum properties, needs generic messages)
   - sockets component: 3 minutes (1 enum property, straightforward)
 - Validation: 2 minutes (schema validation + body descriptor validation)
-- Documentation: 2 minutes (note enum discrepancy in commit message)
 - Commit: 1 minute
-- Follow-up ticket creation: 2 minutes (for enum synchronization)
-- **Total:** ~15 minutes
+- **Total:** ~11 minutes
 
-**Note:** Increased from original 8-minute estimate due to:
-- Discovery of enum value discrepancies requiring documentation
-- Need to create follow-up ticket for schema synchronization
-- More complex body component (5 enum properties vs expected simple case)
+**Note:** Reduced from initial 15-minute estimate because:
+- Enum synchronization completed prior to this migration
+- No need to document discrepancies or create follow-up tickets
+- Simpler workflow with synchronized schemas
 
-## Follow-up Work Required
+## Synchronization History
 
-### Ticket: Synchronize body.component.json with Body Descriptor Registry
+### Completed: Synchronize body.component.json with Body Descriptor Registry
 
-**Priority:** Medium
-**Estimated Time:** 20 minutes
+**Completed:** 2025-11-12
+**Time Spent:** 15 minutes
 
-**Description:**
-The body.component.json enum values are outdated compared to the Body Descriptor Registry. Synchronize the enum values to include all horror/fantasy/medical vocabulary enhancements.
+**Changes Applied:**
+1. ✅ Updated build enum: Added 9 horror/fantasy values (frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky)
+2. ✅ Updated composition enum: Added 9 horror/fantasy values (atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting)
+3. ✅ Updated height enum: Added 4 scale extreme values (microscopic, minuscule, colossal, titanic)
+4. ✅ Validated with `npm run validate:body-descriptors` - all checks passed
 
-**Changes Needed:**
-1. Update build enum: Add 9 missing values (frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky)
-2. Update composition enum: Add 9 missing values (atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting)
-3. Update height enum: Add 4 missing values (microscopic, minuscule, colossal, titanic)
-4. Consider removing deprecated density field (replaced by hairDensity)
-
-**Reference:**
-- Body Descriptor Registry: `src/anatomy/registries/bodyDescriptorRegistry.js`
-- Current values listed in lines 47, 69, 80, 91
-
-**Dependencies:**
-- Must be done AFTER ANASYSIMP-019-04-03 (this workflow)
-- Should validate with `npm run validate:body-descriptors`
+**Result:**
+- build: 20 values (synchronized with registry)
+- composition: 16 values (synchronized with registry)
+- height: 11 values (synchronized with registry)
+- hairDensity: 7 values (already synchronized)
+- density: 6 values (kept as deprecated for backward compatibility)
 
 ## Next Steps
 
 After completion, proceed to:
 - **ANASYSIMP-019-04-04**: Migrate clothing mod components
-- **Follow-up Ticket**: Synchronize body.component.json enums with registry

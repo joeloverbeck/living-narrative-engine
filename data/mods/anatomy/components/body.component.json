@@ -42,7 +42,16 @@
                   "thick",
                   "muscular",
                   "hulking",
-                  "stocky"
+                  "stocky",
+                  "frail",
+                  "gaunt",
+                  "skeletal",
+                  "atrophied",
+                  "cadaverous",
+                  "massive",
+                  "willowy",
+                  "barrel-chested",
+                  "lanky"
                 ]
               },
               "hairDensity": {
@@ -78,7 +87,16 @@
                   "soft",
                   "chubby",
                   "overweight",
-                  "obese"
+                  "obese",
+                  "atrophied",
+                  "emaciated",
+                  "skeletal",
+                  "malnourished",
+                  "dehydrated",
+                  "wasted",
+                  "desiccated",
+                  "bloated",
+                  "rotting"
                 ]
               },
               "skinColor": {
@@ -90,13 +108,17 @@
               "height": {
                 "type": "string",
                 "enum": [
-                  "gigantic",
-                  "very-tall",
-                  "tall",
-                  "average",
-                  "short",
+                  "microscopic",
+                  "minuscule",
+                  "tiny",
                   "petite",
-                  "tiny"
+                  "short",
+                  "average",
+                  "tall",
+                  "very-tall",
+                  "gigantic",
+                  "colossal",
+                  "titanic"
                 ]
               }
             },
