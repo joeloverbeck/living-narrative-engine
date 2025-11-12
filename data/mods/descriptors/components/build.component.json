@@ -35,5 +35,18 @@
     },
     "required": ["build"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid build: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Build is required",
+      "invalidType": "Invalid type for build: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

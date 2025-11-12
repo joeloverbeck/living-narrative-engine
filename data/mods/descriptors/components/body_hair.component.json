@@ -35,5 +35,18 @@
     },
     "required": [],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid hair density: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Hair density is required",
+      "invalidType": "Invalid type for hair density: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }

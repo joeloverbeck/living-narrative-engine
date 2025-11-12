@@ -31,5 +31,18 @@
     },
     "required": ["composition"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid composition: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Composition is required",
+      "invalidType": "Invalid type for composition: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
   }
 }
