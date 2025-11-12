@@ -32,16 +32,16 @@ Add `clothing:blocks_removal` component to all belt entities with:
 - **Blocked Slot**: `legs`
 - **Blocked Layers**: `["base", "outer"]` (covers both regular pants and outer layer pants like chaps)
 - **Block Type**: `must_remove_first`
-- **Reason**: `"Belt secures pants at waist"`
+- **Reason**: `"Belt secures pants at waist"` (optional but recommended for clarity)
 
 ### Affected Entities
 
-**Directory**: `data/mods/clothing/entities/`
+**Directory**: `data/mods/clothing/entities/definitions/`
 
 **Belt Entity Files** (update all that exist):
 - `black_calfskin_belt.entity.json`
-- `brown_leather_belt.entity.json`
-- Any other belt entities found in directory
+- `dark_brown_leather_belt.entity.json`
+- `black_tactical_work_belt.entity.json`
 
 ---
 
@@ -52,10 +52,15 @@ Add `clothing:blocks_removal` component to all belt entities with:
 Search for all belt entity files in the clothing mod:
 
 ```bash
-find data/mods/clothing/entities/ -name "*belt*.entity.json"
+find data/mods/clothing/entities/definitions/ -name "*belt*.entity.json"
 ```
 
-Expected output: List of belt entity files.
+Expected output:
+```
+data/mods/clothing/entities/definitions/black_calfskin_belt.entity.json
+data/mods/clothing/entities/definitions/dark_brown_leather_belt.entity.json
+data/mods/clothing/entities/definitions/black_tactical_work_belt.entity.json
+```
 
 ### 2. Read Existing Belt Entities
 
@@ -83,20 +88,17 @@ For each belt entity, add the `clothing:blocks_removal` component to the `compon
 }
 ```
 
-**Placement**: Add after `clothing:coverage_mapping` component for consistency.
+**Placement**: Add after `clothing:wearable` component for consistency.
 
 ### 4. Complete Belt Entity Example
 
-**Before** (example):
+**Before** (actual current structure):
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "clothing:black_calfskin_belt",
   "description": "Black calfskin belt with brushed-brass buckle",
   "components": {
-    "core:name": {
-      "text": "belt"
-    },
     "clothing:wearable": {
       "layer": "accessories",
       "equipmentSlots": {
@@ -104,40 +106,43 @@ For each belt entity, add the `clothing:blocks_removal` component to the `compon
       },
       "allowedLayers": ["accessories"]
     },
-    "clothing:coverage_mapping": {
-      "covers": ["torso_lower"],
-      "coveragePriority": "accessories"
-    },
     "core:material": {
       "material": "calfskin"
     },
-    "core:color": {
-      "colorName": "black"
+    "core:name": {
+      "text": "belt"
+    },
+    "core:description": {
+      "text": "A sleek black calfskin belt featuring a sophisticated brushed-brass buckle..."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.32
     }
   }
 }
 ```
 
-**After**:
+**After** (with blocking component added):
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "clothing:black_calfskin_belt",
   "description": "Black calfskin belt with brushed-brass buckle",
   "components": {
-    "core:name": {
-      "text": "belt"
-    },
     "clothing:wearable": {
       "layer": "accessories",
       "equipmentSlots": {
         "primary": "torso_lower"
       },
       "allowedLayers": ["accessories"]
-    },
-    "clothing:coverage_mapping": {
-      "covers": ["torso_lower"],
-      "coveragePriority": "accessories"
     },
     "clothing:blocks_removal": {
       "blockedSlots": [
@@ -152,8 +157,22 @@ For each belt entity, add the `clothing:blocks_removal` component to the `compon
     "core:material": {
       "material": "calfskin"
     },
-    "core:color": {
-      "colorName": "black"
+    "core:name": {
+      "text": "belt"
+    },
+    "core:description": {
+      "text": "A sleek black calfskin belt featuring a sophisticated brushed-brass buckle..."
+    },
+    "descriptors:color_basic": {
+      "color": "black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 0.32
     }
   }
 }
@@ -205,121 +224,107 @@ Check if the mod manifest needs updating:
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { promises as fs } from 'fs';
+import { resolve } from 'path';
 
-describe('Belt Entities - Blocking Integration', () => {
-  let fixture;
+describe('Belt Entities - Blocking Component', () => {
+  let blackBelt;
+  let brownBelt;
+  let tacticalBelt;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('clothing', 'clothing:remove_clothing');
+    // Load belt entity definitions from files
+    const blackBeltPath = resolve('data/mods/clothing/entities/definitions/black_calfskin_belt.entity.json');
+    const brownBeltPath = resolve('data/mods/clothing/entities/definitions/dark_brown_leather_belt.entity.json');
+    const tacticalBeltPath = resolve('data/mods/clothing/entities/definitions/black_tactical_work_belt.entity.json');
+
+    blackBelt = JSON.parse(await fs.readFile(blackBeltPath, 'utf-8'));
+    brownBelt = JSON.parse(await fs.readFile(brownBeltPath, 'utf-8'));
+    tacticalBelt = JSON.parse(await fs.readFile(tacticalBeltPath, 'utf-8'));
   });
 
-  afterEach(() => {
-    fixture.cleanup();
+  describe('Black Calfskin Belt', () => {
+    it('should have blocking component defined', () => {
+      expect(blackBelt.components['clothing:blocks_removal']).toBeDefined();
+    });
+
+    it('should block legs slot with base and outer layers', () => {
+      const blocking = blackBelt.components['clothing:blocks_removal'];
+      expect(blocking.blockedSlots).toHaveLength(1);
+      expect(blocking.blockedSlots[0].slot).toBe('legs');
+      expect(blocking.blockedSlots[0].layers).toContain('base');
+      expect(blocking.blockedSlots[0].layers).toContain('outer');
+    });
+
+    it('should use must_remove_first block type', () => {
+      const blocking = blackBelt.components['clothing:blocks_removal'];
+      expect(blocking.blockedSlots[0].blockType).toBe('must_remove_first');
+    });
+
+    it('should have descriptive reason', () => {
+      const blocking = blackBelt.components['clothing:blocks_removal'];
+      expect(blocking.blockedSlots[0].reason).toBe('Belt secures pants at waist');
+    });
   });
 
-  it('should load black calfskin belt with blocking component', () => {
-    // Act
-    const belt = fixture.loadEntity('clothing:black_calfskin_belt');
+  describe('Dark Brown Leather Belt', () => {
+    it('should have blocking component defined', () => {
+      expect(brownBelt.components['clothing:blocks_removal']).toBeDefined();
+    });
 
-    // Assert
-    expect(belt).toBeDefined();
-    expect(belt.components['clothing:blocks_removal']).toBeDefined();
-    expect(belt.components['clothing:blocks_removal'].blockedSlots).toHaveLength(1);
-    expect(belt.components['clothing:blocks_removal'].blockedSlots[0].slot).toBe('legs');
-    expect(belt.components['clothing:blocks_removal'].blockedSlots[0].layers).toContain(
-      'base'
-    );
-    expect(belt.components['clothing:blocks_removal'].blockedSlots[0].layers).toContain(
-      'outer'
-    );
+    it('should block legs slot with base and outer layers', () => {
+      const blocking = brownBelt.components['clothing:blocks_removal'];
+      expect(blocking.blockedSlots).toHaveLength(1);
+      expect(blocking.blockedSlots[0].slot).toBe('legs');
+      expect(blocking.blockedSlots[0].layers).toContain('base');
+      expect(blocking.blockedSlots[0].layers).toContain('outer');
+    });
+
+    it('should use must_remove_first block type', () => {
+      const blocking = brownBelt.components['clothing:blocks_removal'];
+      expect(blocking.blockedSlots[0].blockType).toBe('must_remove_first');
+    });
   });
 
-  it('should block pants removal when black belt equipped', async () => {
-    // Arrange
-    const actor = fixture.createStandardActor('John');
-    const belt = fixture.loadAndSpawnEntity('clothing:black_calfskin_belt');
-    const pants = fixture.createEntity('pants', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'legs' },
-      },
+  describe('Black Tactical Work Belt', () => {
+    it('should have blocking component defined', () => {
+      expect(tacticalBelt.components['clothing:blocks_removal']).toBeDefined();
     });
 
-    fixture.equipItem(actor.id, belt.id);
-    fixture.equipItem(actor.id, pants.id);
-
-    // Act
-    const topmostClothing = fixture.resolveScope('clothing:topmost_clothing', {
-      entityId: actor.id,
+    it('should block legs slot with base and outer layers', () => {
+      const blocking = tacticalBelt.components['clothing:blocks_removal'];
+      expect(blocking.blockedSlots).toHaveLength(1);
+      expect(blocking.blockedSlots[0].slot).toBe('legs');
+      expect(blocking.blockedSlots[0].layers).toContain('base');
+      expect(blocking.blockedSlots[0].layers).toContain('outer');
     });
 
-    // Assert
-    expect(topmostClothing).toContain(belt.id);
-    expect(topmostClothing).not.toContain(pants.id);
+    it('should use must_remove_first block type', () => {
+      const blocking = tacticalBelt.components['clothing:blocks_removal'];
+      expect(blocking.blockedSlots[0].blockType).toBe('must_remove_first');
+    });
   });
 
-  it('should load brown leather belt with blocking component', () => {
-    // Act
-    const belt = fixture.loadEntity('clothing:brown_leather_belt');
+  describe('All Belts Consistency', () => {
+    it('should all have consistent blocking configuration', () => {
+      const belts = [blackBelt, brownBelt, tacticalBelt];
 
-    // Assert
-    expect(belt).toBeDefined();
-    expect(belt.components['clothing:blocks_removal']).toBeDefined();
-  });
-
-  it('should block pants removal when brown belt equipped', async () => {
-    // Arrange
-    const actor = fixture.createStandardActor('John');
-    const belt = fixture.loadAndSpawnEntity('clothing:brown_leather_belt');
-    const pants = fixture.createEntity('pants', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'legs' },
-      },
+      for (const belt of belts) {
+        const blocking = belt.components['clothing:blocks_removal'];
+        expect(blocking).toBeDefined();
+        expect(blocking.blockedSlots).toHaveLength(1);
+        expect(blocking.blockedSlots[0].slot).toBe('legs');
+        expect(blocking.blockedSlots[0].layers).toEqual(['base', 'outer']);
+        expect(blocking.blockedSlots[0].blockType).toBe('must_remove_first');
+      }
     });
-
-    fixture.equipItem(actor.id, belt.id);
-    fixture.equipItem(actor.id, pants.id);
-
-    // Act
-    const topmostClothing = fixture.resolveScope('clothing:topmost_clothing', {
-      entityId: actor.id,
-    });
-
-    // Assert
-    expect(topmostClothing).toContain(belt.id);
-    expect(topmostClothing).not.toContain(pants.id);
-  });
-
-  it('should allow pants removal after belt removed', async () => {
-    // Arrange
-    const actor = fixture.createStandardActor('John');
-    const belt = fixture.loadAndSpawnEntity('clothing:black_calfskin_belt');
-    const pants = fixture.createEntity('pants', ['clothing:wearable'], {
-      'clothing:wearable': {
-        layer: 'base',
-        equipmentSlots: { primary: 'legs' },
-      },
-    });
-
-    fixture.equipItem(actor.id, belt.id);
-    fixture.equipItem(actor.id, pants.id);
-
-    // Act: Remove belt
-    await fixture.executeAction(actor.id, belt.id);
-
-    // Resolve topmost clothing again
-    const topmostClothing = fixture.resolveScope('clothing:topmost_clothing', {
-      entityId: actor.id,
-    });
-
-    // Assert
-    expect(topmostClothing).toContain(pants.id);
-    expect(topmostClothing).not.toContain(belt.id);
   });
 });
 ```
+
+**Note**: This test validates the entity definition files directly. For runtime behavior testing (actual blocking in action), see the existing tests:
+- `tests/integration/clothing/topmostClothingBlocking.integration.test.js`
+- `tests/integration/clothing/removeClothingRuleBlocking.integration.test.js`
 
 ### 8. Run Tests
 
@@ -385,16 +390,16 @@ npm run dev
 
 ## Acceptance Criteria
 
-- [ ] All belt entities identified
+- [ ] All three belt entities identified (black_calfskin_belt, dark_brown_leather_belt, black_tactical_work_belt)
 - [ ] `clothing:blocks_removal` component added to all belt entities
 - [ ] Component blocks `legs` slot, `base` and `outer` layers
 - [ ] Block type is `must_remove_first`
-- [ ] Reason field provides clear explanation
-- [ ] All entities validate successfully
+- [ ] Reason field provides clear explanation (optional but recommended)
+- [ ] All entities validate successfully (`npm run validate`)
 - [ ] Mod manifest updated with version bump and changelog
-- [ ] Integration tests created and passing
-- [ ] Manual testing confirms blocking works
-- [ ] No regressions in existing tests
+- [ ] Entity definition tests created and passing
+- [ ] All existing blocking system tests pass
+- [ ] No regressions in existing test suite (`npm run test:ci`)
 
 ---
 
@@ -409,7 +414,7 @@ Both types require belt removal for full removal.
 
 ### Optional: Create Example Armor Entity
 
-**File**: `data/mods/clothing/entities/plate_cuirass.entity.json` (new, optional)
+**File**: `data/mods/clothing/entities/definitions/plate_cuirass.entity.json` (new, optional)
 
 Demonstrates `full_block` type for armor:
 
@@ -419,19 +424,12 @@ Demonstrates `full_block` type for armor:
   "id": "clothing:plate_cuirass",
   "description": "Heavy plate armor chest piece",
   "components": {
-    "core:name": {
-      "text": "plate cuirass"
-    },
     "clothing:wearable": {
       "layer": "outer",
       "equipmentSlots": {
         "primary": "torso_upper"
       },
       "allowedLayers": ["outer"]
-    },
-    "clothing:coverage_mapping": {
-      "covers": ["torso_upper"],
-      "coveragePriority": "outer"
     },
     "clothing:blocks_removal": {
       "blockedSlots": [
@@ -445,12 +443,23 @@ Demonstrates `full_block` type for armor:
     },
     "core:material": {
       "material": "steel"
+    },
+    "core:name": {
+      "text": "plate cuirass"
+    },
+    "core:description": {
+      "text": "A heavy plate armor chest piece designed for maximum protection in combat."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "items:weight": {
+      "weight": 15.0
     }
   }
 }
 ```
 
-This demonstrates another use case for the blocking system.
+**Note**: This demonstrates another use case for the blocking system. The armor would need to be placed in `data/mods/clothing/entities/definitions/` to match the project structure.
 
 ---
 
