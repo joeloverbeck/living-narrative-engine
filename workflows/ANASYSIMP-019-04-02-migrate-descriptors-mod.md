@@ -1,25 +1,29 @@
-# ANASYSIMP-019-04-02: Migrate Descriptors Mod Components
+# ANASYSIMP-019-04-02: Migrate Body-Descriptor-Related Components (Descriptors Mod)
 
 **Parent:** ANASYSIMP-019-04 (Migrate Components to Use ValidationRules)
 **Phase:** 2 (Batch Migration - Priority 1)
-**Timeline:** 10 minutes
+**Timeline:** 8 minutes
 **Status:** Not Started
 **Dependencies:** ANASYSIMP-019-04-01
 
 ## Overview
 
-Migrate 6 component schemas in the descriptors mod to use the new `validationRules` feature. This is the first priority batch due to its simple, well-defined structure and relationship to the body descriptor system.
+Migrate the 4 body-descriptor-related component schemas in the descriptors mod to use the new `validationRules` feature. These components correspond to body descriptor properties defined in the Body Descriptor Registry and are used during anatomy generation.
+
+**Note:** The Body Descriptor Registry defines 6 body descriptors (height, skinColor, build, composition, hairDensity, smell), but only 4 have corresponding component files with enums in the descriptors mod. The other 2 (skinColor and smell) are free-form strings at the recipe level and have no component files.
 
 ## Components to Migrate
 
-1. **texture** (may already have validation - verify)
-2. **composition**
-3. **build**
-4. **height**
-5. **hairDensity**
-6. **smell** (note: free-form descriptor, but component may have enums)
+1. **height** - Height categories (microscopic through titanic)
+2. **build** - Body build descriptors (skinny, athletic, muscular, etc.)
+3. **body_composition** - Body fat levels and composition (underweight through rotting)
+4. **body_hair** - Body hair density including fur (hairless through furred)
 
 **Location:** `data/mods/descriptors/components/*.component.json`
+
+**Note on texture:** There are TWO texture component files:
+- `texture.component.json` - Production component (will be migrated separately with other descriptor components)
+- `texture-with-validation.component.json` - Example component demonstrating validationRules (already has validation)
 
 ## Reference Documentation
 
@@ -59,43 +63,51 @@ Use this template for all components:
 
 ### Step 1: Review Existing Example
 
-Check if texture-with-validation already exists:
+Review the texture-with-validation example (already has validationRules):
 
 ```bash
-# Check for existing validationRules
-grep -l 'validationRules' data/mods/descriptors/components/texture*.component.json
-
-# Review the example
+# Review the example component (already migrated)
 cat data/mods/descriptors/components/texture-with-validation.component.json
+
+# Note: This is a separate example file, not the production texture.component.json
 ```
 
-### Step 2: Identify Descriptors Mod Components
+### Step 2: Verify Body-Descriptor Components
 
-List all descriptor components with enums:
+Verify the 4 body-descriptor-related component files:
 
 ```bash
-# List all descriptors mod components
-ls -la data/mods/descriptors/components/
+# Verify the components we need to migrate
+ls -la data/mods/descriptors/components/height.component.json
+ls -la data/mods/descriptors/components/build.component.json
+ls -la data/mods/descriptors/components/body_composition.component.json
+ls -la data/mods/descriptors/components/body_hair.component.json
 
-# Find components with enum properties
-grep -l '"enum"' data/mods/descriptors/components/*.component.json
+# Verify they have enums and not validationRules yet
+for file in height build body_composition body_hair; do
+  echo "=== $file ==="
+  grep -q '"enum"' "data/mods/descriptors/components/${file}.component.json" && echo "✓ Has enum" || echo "✗ No enum"
+  grep -q 'validationRules' "data/mods/descriptors/components/${file}.component.json" && echo "✗ Already migrated" || echo "✓ Needs migration"
+done
 ```
 
 ### Step 3: Migrate Each Component
 
 For each component file:
 
-#### Component: composition
+#### Component: body_composition
 
-**File:** `data/mods/descriptors/components/composition.component.json`
+**File:** `data/mods/descriptors/components/body_composition.component.json`
 
-**Valid Values (from body-descriptors-complete.md:78-79):**
+**Registry Reference:** `composition` property in bodyDescriptorRegistry.js (lines 75-84)
+
+**Valid Values (from bodyDescriptorRegistry.js:80):**
 - Original: underweight, lean, average, soft, chubby, overweight, obese
 - Horror/Medical: atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting
 
 **Migration:**
 1. Read current component schema
-2. Identify enum property and values
+2. Identify enum property (property name is "composition" not "body_composition")
 3. Add validationRules block after dataSchema
 4. Customize error messages with property name "composition"
 
@@ -122,7 +134,9 @@ For each component file:
 
 **File:** `data/mods/descriptors/components/build.component.json`
 
-**Valid Values (from body-descriptors-complete.md:77-78):**
+**Registry Reference:** `build` property in bodyDescriptorRegistry.js (lines 64-73)
+
+**Valid Values (from bodyDescriptorRegistry.js:69):**
 - Original: skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky
 - Extreme/Fantasy: frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky
 
@@ -149,7 +163,9 @@ For each component file:
 
 **File:** `data/mods/descriptors/components/height.component.json`
 
-**Valid Values (from body-descriptors-complete.md:75):**
+**Registry Reference:** `height` property in bodyDescriptorRegistry.js (lines 42-52)
+
+**Valid Values (from bodyDescriptorRegistry.js:47):**
 - Original: gigantic, very-tall, tall, average, short, petite, tiny
 - Extreme: colossal, titanic (giants/kaiju), minuscule, microscopic (fairies/magical)
 
@@ -172,12 +188,16 @@ For each component file:
 }
 ```
 
-#### Component: hairDensity
+#### Component: body_hair
 
-**File:** `data/mods/descriptors/components/hairDensity.component.json`
+**File:** `data/mods/descriptors/components/body_hair.component.json`
 
-**Valid Values (from body-descriptors-complete.md:79):**
-- hairless, sparse, light, moderate, hairy, very-hairy
+**Registry Reference:** `hairDensity` property in bodyDescriptorRegistry.js (lines 86-95)
+
+**Valid Values (from bodyDescriptorRegistry.js:91):**
+- hairless, sparse, light, moderate, hairy, very-hairy, furred
+
+**Note:** This component has two properties: `hairDensity` (current) and `density` (deprecated). The validationRules will apply to both enum properties.
 
 **Example ValidationRules:**
 ```json
@@ -198,32 +218,8 @@ For each component file:
 }
 ```
 
-#### Component: smell
-
-**File:** `data/mods/descriptors/components/smell.component.json`
-
-**Note:** Smell is a free-form descriptor (from body-descriptors-complete.md:76, 80)
-- If component has enum: Add validationRules
-- If component is free-form string: Still add validationRules (will apply to type validation)
-
-**Example ValidationRules:**
-```json
-{
-  "validationRules": {
-    "generateValidator": true,
-    "errorMessages": {
-      "invalidEnum": "Invalid smell: {{value}}. Valid options: {{validValues}}",
-      "missingRequired": "Smell is required",
-      "invalidType": "Invalid type for smell: expected {{expected}}, got {{actual}}"
-    },
-    "suggestions": {
-      "enableSimilarity": true,
-      "maxDistance": 3,
-      "maxSuggestions": 3
-    }
-  }
-}
-```
+**Note on Smell and SkinColor:**
+These two body descriptors (smell and skinColor) from the Body Descriptor Registry do NOT have corresponding component files in the descriptors mod. They are free-form string properties defined only at the recipe level in `data/schemas/anatomy.recipe.schema.json`.
 
 ### Step 4: Validate After Each Component
 
@@ -239,19 +235,22 @@ echo $?  # Should be 0
 
 ### Step 5: Commit Batch
 
-After all descriptors mod components are migrated:
+After all body-descriptor-related components are migrated:
 
 ```bash
-# Stage changes
-git add data/mods/descriptors/components/*.component.json
+# Stage changes (only the 4 body-descriptor components)
+git add data/mods/descriptors/components/body_composition.component.json
+git add data/mods/descriptors/components/build.component.json
+git add data/mods/descriptors/components/height.component.json
+git add data/mods/descriptors/components/body_hair.component.json
 
 # Commit with descriptive message
-git commit -m "feat(validation): add validationRules to descriptors mod components
+git commit -m "feat(validation): add validationRules to body-descriptor components
 
-- Add validationRules to composition, build, height, hairDensity, smell components
+- Add validationRules to body_composition, build, height, body_hair components
 - Enable enhanced error messages with similarity suggestions
-- Reference body descriptor valid values from registry
-- Part of ANASYSIMP-019-04 migration"
+- Align with Body Descriptor Registry valid values
+- Part of ANASYSIMP-019-04 migration (batch 1: body descriptors)"
 
 # Verify commit
 git log -1 --stat
@@ -261,8 +260,8 @@ git log -1 --stat
 
 After migration, verify:
 
-- [ ] All 6 descriptors mod components have validationRules
-- [ ] Error messages use correct property names
+- [ ] All 4 body-descriptor components have validationRules
+- [ ] Error messages use correct property names (composition, build, height, hairDensity)
 - [ ] Template variables use double braces: `{{value}}`, `{{validValues}}`
 - [ ] All required properties present: generateValidator, errorMessages, suggestions
 - [ ] `npm run validate` passes (exit code 0)
@@ -271,11 +270,12 @@ After migration, verify:
 
 ## Acceptance Criteria
 
-- [ ] 6 components migrated with validationRules
+- [ ] 4 components migrated with validationRules (body_composition, build, height, body_hair)
 - [ ] All components pass schema validation
-- [ ] Error messages customized with property names
+- [ ] Error messages customized with correct property names
 - [ ] Similarity suggestions enabled (maxDistance: 3, maxSuggestions: 3)
-- [ ] Valid values align with body descriptor registry
+- [ ] Valid values align with Body Descriptor Registry
+- [ ] Enum values match exactly between component schemas and registry
 - [ ] Batch committed to git with clear message
 - [ ] No breaking changes introduced
 
@@ -293,15 +293,28 @@ After migration, verify:
 **Problem:** "composition is required" vs "Composition is required"
 **Solution:** Capitalize property name in user-facing messages (missingRequired)
 
+### Pitfall 4: Wrong Component File Names
+**Problem:** Using "composition.component.json" instead of "body_composition.component.json"
+**Solution:** Component file names: body_composition, body_hair (with underscores); Property names inside: composition, hairDensity (no underscores)
+
+### Pitfall 5: Expecting smell.component.json
+**Problem:** Assuming smell has a component file because it's in the Body Descriptor Registry
+**Solution:** Only 4 of the 6 body descriptors have component files; smell and skinColor are recipe-level only
+
 ## Time Estimate
 
-- Component review: 2 minutes
-- Migration (6 components × 1 minute each): 6 minutes
-- Validation: 1 minute
+- Component review: 1 minute
+- Migration (4 components × 1 minute each): 4 minutes
+- Validation: 2 minutes
 - Commit: 1 minute
-- **Total:** ~10 minutes
+- **Total:** ~8 minutes
+
+## Scope Note
+
+This workflow migrates only the 4 body-descriptor-related components. The descriptors mod contains 35 total component files with enums (34 to migrate after excluding texture-with-validation). The remaining 30 descriptor components (part-level descriptors like color_basic, shape_general, etc.) will be migrated separately.
 
 ## Next Steps
 
 After completion, proceed to:
-- **ANASYSIMP-019-04-03**: Migrate anatomy mod components (Priority 2)
+- **ANASYSIMP-019-04-03**: Migrate remaining descriptors mod components (30 part-level descriptors)
+- **ANASYSIMP-019-04-04**: Migrate anatomy mod components (Priority 2)
