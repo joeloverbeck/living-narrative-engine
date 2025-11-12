@@ -287,7 +287,6 @@ export class LegacyStrategy {
 
   /**
    * Formats a single target with error handling.
-   * Uses #createError directly (FormattingErrorHandler not yet integrated).
    *
    * @private
    * @param {object} params - Formatting parameters
