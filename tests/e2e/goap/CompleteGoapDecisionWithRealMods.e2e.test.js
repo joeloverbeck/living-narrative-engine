@@ -138,16 +138,72 @@ describe('Complete GOAP Decision with Real Mods E2E', () => {
         // Step 7: Execute the selected action
         testBed.logger.info('=== Step 7: Executing action through rule system ===');
 
-        // For now, skip execution since it requires more complex setup
-        // TODO: Implement full rule execution once entity and rule systems are fully integrated
+        try {
+          const executionResult = await testBed.executeAction(actor.id, selectedAction);
 
-        testBed.logger.info('Action execution would happen here in full implementation');
+          testBed.logger.info('Action executed successfully');
+          testBed.logger.info(
+            `State changes: ${executionResult.stateChanges.added.length} added, ` +
+              `${executionResult.stateChanges.removed.length} removed, ` +
+              `${executionResult.stateChanges.modified.length} modified`
+          );
 
-        // Step 8: Verify planning effects would match (placeholder)
-        testBed.logger.info('=== Step 8: Verification complete ===');
+          // Step 8: Verify planning effects match actual state changes
+          testBed.logger.info('=== Step 8: Verifying planning effects ===');
 
-        // Mark test as successful
-        expect(true).toBe(true);
+          const verification = testBed.verifyPlanningEffects(
+            selectedAction,
+            executionResult.stateChanges
+          );
+
+          testBed.logger.info(
+            `Planning effects verification: ${verification.verified ? 'PASSED' : 'FAILED'}`
+          );
+
+          if (verification.verified) {
+            testBed.logger.info(
+              `All ${verification.effectsCount} planning effects matched actual state changes`
+            );
+          } else {
+            testBed.logger.warn(
+              `Found ${verification.mismatches.length} mismatches between planning and execution:`
+            );
+            verification.mismatches.forEach((mismatch) => {
+              testBed.logger.warn(`  - ${mismatch.issue}`);
+            });
+          }
+
+          // Verify planning effects matched execution
+          // eslint-disable-next-line jest/no-conditional-expect
+          expect(verification.verified).toBe(true);
+          // eslint-disable-next-line jest/no-conditional-expect
+          expect(verification.mismatches).toHaveLength(0);
+
+          // Step 9: Verify goal progress
+          testBed.logger.info('=== Step 9: Verifying goal progress ===');
+
+          // Re-evaluate goal state after action execution
+          // Note: The goal system should detect if we're closer to the goal
+          // For a complete verification, we could check if the goal is now satisfied
+          // or if progress was made toward the goal state
+
+          // Update context with new state
+          context.entities = {
+            [actor.id]: {
+              components: actor.getAllComponents(),
+            },
+          };
+
+          testBed.logger.info('Goal progress check: Context updated with post-execution state');
+          testBed.logger.info(
+            'Note: Goal satisfaction is implicitly verified through planning effects verification'
+          );
+
+          testBed.logger.info('=== Step 10: Verification complete ===');
+        } catch (error) {
+          testBed.logger.error('Action execution or verification failed:', error);
+          throw error;
+        }
       } else {
         // No action selected - this might be okay if goal is already satisfied or no relevant goals
         testBed.logger.info('No action was selected (goal may be satisfied or not relevant)');
