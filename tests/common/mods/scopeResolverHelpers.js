@@ -11,6 +11,7 @@ import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionPars
 import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
 import { ParameterValidator } from '../../../src/scopeDsl/core/parameterValidator.js';
 import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
+import { ClothingAccessibilityService } from '../../../src/clothing/services/clothingAccessibilityService.js';
 
 /**
  * Resolves an entity reference from a scope context.
@@ -1013,6 +1014,64 @@ export class ScopeResolverHelpers {
 
     // Register all resolvers
     this._registerResolvers(testEnv, entityManager, resolvers);
+  }
+
+  /**
+   * Register all clothing-related scope resolvers.
+   * Covers common clothing mod scopes used in tests.
+   *
+   * @param {object} testEnv - Test environment from ModTestFixture
+   */
+  static registerClothingScopes(testEnv) {
+    const logger = testEnv.logger || console;
+
+    const resolvers = {
+      // "topmost clothing items worn by actor"
+      'clothing:topmost_clothing': function (context) {
+        // Get CURRENT entityManager from testEnv (not captured at registration time)
+        const currentEntityManager = testEnv.entityManager;
+
+        const { entityId: actorEntityId } = resolveContextEntity(
+          context,
+          'actor',
+          currentEntityManager
+        );
+
+        if (!actorEntityId) {
+          return { success: true, value: new Set() };
+        }
+
+        try {
+          // Create ClothingAccessibilityService with CURRENT entityManager
+          const clothingService = new ClothingAccessibilityService({
+            logger,
+            entityManager: currentEntityManager,
+            entitiesGateway: testEnv.entitiesGateway || null
+          });
+
+          // Use ClothingAccessibilityService to get accessible items
+          const accessibleItems = clothingService.getAccessibleItems(
+            actorEntityId,
+            { mode: 'topmost', context: 'removal' }
+          );
+
+          // Convert array to Set
+          return {
+            success: true,
+            value: new Set(accessibleItems)
+          };
+        } catch (error) {
+          logger.warn('Failed to resolve clothing:topmost_clothing scope', {
+            actorId: actorEntityId,
+            error: error.message
+          });
+          return { success: true, value: new Set() };
+        }
+      },
+    };
+
+    // Register all resolvers
+    this._registerResolvers(testEnv, testEnv.entityManager, resolvers);
   }
 
   /**
