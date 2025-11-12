@@ -187,74 +187,123 @@ function createLoaderWithFixtures(fixtures, overrides = {}) {
   });
 }
 
-function createAdapterHarness({
+function createAdapterDependencies({
   fixtureConfig = baseFixtureConfig,
   httpResponder,
   apiKeys = { default: 'integration-test-api-key' },
   initialLlmId = undefined,
   executionEnvironment = 'server',
+  overrides = {},
 } = {}) {
-  const loader = createLoaderWithFixtures({
-    [FIXTURE_PATH]: fixtureConfig,
-  });
+  const loader =
+    overrides.loader ??
+    createLoaderWithFixtures({
+      [FIXTURE_PATH]: fixtureConfig,
+    });
 
-  const httpClient = new TestHttpClient((url, options) => {
-    if (httpResponder) {
-      return httpResponder(url, options);
-    }
-    const payload = JSON.parse(options.body);
-    const toolName =
-      payload?.tool_choice?.function?.name ?? 'function_call_default';
-    return {
-      choices: [
-        {
-          message: {
-            tool_calls: [
-              {
-                type: 'function',
-                function: {
-                  name: toolName,
-                  arguments: JSON.stringify({
-                    action: 'advance',
-                    target: 'integration-default',
-                  }),
+  const httpClient =
+    overrides.httpClient ??
+    new TestHttpClient((url, options) => {
+      if (httpResponder) {
+        return httpResponder(url, options);
+      }
+      const payload = JSON.parse(options.body);
+      const toolName =
+        payload?.tool_choice?.function?.name ?? 'function_call';
+      return {
+        choices: [
+          {
+            message: {
+              tool_calls: [
+                {
+                  type: 'function',
+                  function: {
+                    name: toolName,
+                    arguments: JSON.stringify({
+                      action: 'advance',
+                      target: 'integration-default',
+                    }),
+                  },
                 },
-              },
-            ],
+              ],
+            },
           },
-        },
-      ],
-    };
-  });
+        ],
+      };
+    });
 
-  const strategyFactory = new LLMStrategyFactory({
+  const strategyFactory =
+    overrides.strategyFactory ??
+    new LLMStrategyFactory({
+      httpClient,
+      logger: new TestLogger('StrategyFactory'),
+    });
+
+  const environmentContext =
+    overrides.environmentContext ??
+    new EnvironmentContext({
+      logger: new TestLogger('EnvironmentContext'),
+      executionEnvironment,
+      projectRootPath:
+        executionEnvironment === 'server' ? process.cwd() : undefined,
+      proxyServerUrl: 'https://proxy.integration.test',
+    });
+
+  const configurationManager =
+    overrides.configurationManager ??
+    new LLMConfigurationManager({
+      logger: new TestLogger('ConfigurationManager'),
+      initialLlmId,
+    });
+
+  const errorMapper =
+    overrides.errorMapper ??
+    new LLMErrorMapper({
+      logger: new TestLogger('ErrorMapper'),
+    });
+
+  const tokenEstimator =
+    overrides.tokenEstimator ??
+    new TokenEstimator({
+      logger: new TestLogger('TokenEstimator'),
+    });
+
+  const apiKeyProvider =
+    overrides.apiKeyProvider ?? new TestApiKeyProvider(apiKeys);
+  const adapterLogger = overrides.adapterLogger ?? new TestLogger('Adapter');
+  const requestExecutor =
+    overrides.requestExecutor ??
+    new LLMRequestExecutor({
+      logger: new TestLogger('RequestExecutor'),
+    });
+
+  return {
+    loader,
     httpClient,
-    logger: new TestLogger('StrategyFactory'),
-  });
+    strategyFactory,
+    environmentContext,
+    configurationManager,
+    errorMapper,
+    tokenEstimator,
+    apiKeyProvider,
+    adapterLogger,
+    requestExecutor,
+  };
+}
 
-  const environmentContext = new EnvironmentContext({
-    logger: new TestLogger('EnvironmentContext'),
-    executionEnvironment,
-    projectRootPath:
-      executionEnvironment === 'server' ? process.cwd() : undefined,
-    proxyServerUrl: 'https://proxy.integration.test',
-  });
-
-  const configurationManager = new LLMConfigurationManager({
-    logger: new TestLogger('ConfigurationManager'),
-    initialLlmId,
-  });
-
-  const errorMapper = new LLMErrorMapper({
-    logger: new TestLogger('ErrorMapper'),
-  });
-
-  const tokenEstimator = new TokenEstimator({
-    logger: new TestLogger('TokenEstimator'),
-  });
-
-  const apiKeyProvider = new TestApiKeyProvider(apiKeys);
-  const adapterLogger = new TestLogger('Adapter');
+function createAdapterHarness(options = {}) {
+  const {
+    loader,
+    httpClient,
+    strategyFactory,
+    environmentContext,
+    configurationManager,
+    errorMapper,
+    tokenEstimator,
+    apiKeyProvider,
+    adapterLogger,
+    requestExecutor,
+  } = createAdapterDependencies(options);
 
   const adapter = new ConfigurableLLMAdapter({
     logger: adapterLogger,
@@ -262,12 +311,10 @@ function createAdapterHarness({
     apiKeyProvider,
     llmStrategyFactory: strategyFactory,
     configurationManager,
-    requestExecutor: new LLMRequestExecutor({
-      logger: new TestLogger('RequestExecutor'),
-    }),
+    requestExecutor,
     errorMapper,
     tokenEstimator,
-    initialLlmId,
+    initialLlmId: options.initialLlmId,
   });
 
   return {
@@ -281,6 +328,7 @@ function createAdapterHarness({
     apiKeyProvider,
     strategyFactory,
     adapterLogger,
+    requestExecutor,
   };
 }
 
@@ -572,5 +620,221 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
 
     budgetSpy.mockRestore();
     validateSpy.mockRestore();
+  });
+
+  it('normalizes invalid initialLlmId values and logs helpful warnings', async () => {
+    const invalidTypeHarness = createAdapterHarness({ initialLlmId: 123 });
+    expect(
+      invalidTypeHarness.adapterLogger.has(
+        'warn',
+        'invalid type for initialLlmId'
+      )
+    ).toBe(true);
+
+    await invalidTypeHarness.adapter.init({
+      llmConfigLoader: invalidTypeHarness.loader,
+    });
+    expect(
+      await invalidTypeHarness.adapter.getActiveLlmId_FOR_TESTING_ONLY()
+    ).toBe('openrouter-primary');
+
+    const emptyValueHarness = createAdapterHarness({ initialLlmId: '   ' });
+    expect(
+      emptyValueHarness.adapterLogger.has(
+        'warn',
+        'empty string for initialLlmId'
+      )
+    ).toBe(true);
+
+    await emptyValueHarness.adapter.init({
+      llmConfigLoader: emptyValueHarness.loader,
+    });
+    expect(
+      await emptyValueHarness.adapter.getActiveLlmId_FOR_TESTING_ONLY()
+    ).toBe('openrouter-primary');
+  });
+
+  it('skips redundant initialization attempts once ready', async () => {
+    const harness = createAdapterHarness();
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    expect(
+      harness.adapterLogger.has(
+        'debug',
+        'Already initialized. Skipping re-initialization.'
+      )
+    ).toBe(true);
+  });
+
+  it('captures configuration manager failures during initialization', async () => {
+    const harness = createAdapterHarness();
+    const initError = new Error('configuration explosion');
+    const initSpy = jest
+      .spyOn(harness.configurationManager, 'init')
+      .mockRejectedValue(initError);
+
+    await expect(
+      harness.adapter.init({ llmConfigLoader: harness.loader })
+    ).rejects.toThrow('configuration explosion');
+
+    expect(harness.adapter.isOperational()).toBe(false);
+    expect(
+      harness.adapterLogger.has(
+        'error',
+        'ConfigurableLLMAdapter: Initialization failed.'
+      )
+    ).toBe(true);
+
+    initSpy.mockRestore();
+  });
+
+  it('logs prompt details on clients and tolerates missing API keys when safe', async () => {
+    const harness = createAdapterHarness({
+      executionEnvironment: 'client',
+      apiKeys: {},
+    });
+
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    const response = await harness.adapter.getAIDecision(
+      'Client-side prompt logging scenario'
+    );
+
+    expect(response).toContain('integration-default');
+    expect(
+      harness.adapterLogger.has('info', 'Final prompt sent to proxy')
+    ).toBe(true);
+    expect(
+      harness.adapterLogger.has(
+        'debug',
+        'API key not required or not found for LLM'
+      )
+    ).toBe(true);
+  });
+
+  it('surfaces validation failures for malformed active configurations', async () => {
+    const invalidFixture = {
+      defaultConfigId: 'broken-config',
+      configs: {
+        'broken-config': {
+          configId: 'broken-config',
+          displayName: 'Broken Config',
+          modelIdentifier: '',
+          endpointUrl: '',
+          apiType: '',
+          jsonOutputStrategy: null,
+        },
+      },
+    };
+
+    const harness = createAdapterHarness({ fixtureConfig: invalidFixture });
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    await expect(
+      harness.adapter.getAIDecision('Invalid configuration prompt')
+    ).rejects.toThrow(/Active LLM config 'broken-config' is invalid/);
+  });
+
+  it('throws a configuration error when no strategy can be created', async () => {
+    const harness = createAdapterHarness();
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    const strategySpy = jest
+      .spyOn(harness.strategyFactory, 'getStrategy')
+      .mockReturnValue(null);
+
+    await expect(
+      harness.adapter.getAIDecision('Missing strategy scenario')
+    ).rejects.toThrow(/No suitable LLM strategy could be created/);
+
+    strategySpy.mockRestore();
+  });
+
+  it('requires initialization before issuing decisions', async () => {
+    const harness = createAdapterHarness();
+
+    await expect(
+      harness.adapter.getAIDecision('Uninitialized usage')
+    ).rejects.toThrow(
+      'ConfigurableLLMAdapter: Initialization was never started. Call init() before using the adapter.'
+    );
+  });
+
+  it('returns null from testing helper when configuration retrieval fails', async () => {
+    const harness = createAdapterHarness();
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    const configsSpy = jest
+      .spyOn(harness.configurationManager, 'getAllConfigurations')
+      .mockRejectedValue(new Error('boom configs'));
+
+    await expect(
+      harness.adapter.getLoadedConfigs_FOR_TESTING_ONLY()
+    ).resolves.toBeNull();
+
+    configsSpy.mockRestore();
+  });
+
+  it('supports synchronous fallbacks from the active LLM helper', async () => {
+    const harness = createAdapterHarness();
+    await harness.adapter.init({ llmConfigLoader: harness.loader });
+
+    const idSpy = jest
+      .spyOn(harness.configurationManager, 'getActiveConfigId')
+      .mockReturnValue('sync-config');
+
+    expect(harness.adapter.getActiveLlmId_FOR_TESTING_ONLY()).toBe(
+      'sync-config'
+    );
+
+    idSpy.mockRestore();
+  });
+
+  it('validates critical dependencies during construction', () => {
+    const errorMapperDeps = createAdapterDependencies();
+    expect(() => {
+      return new ConfigurableLLMAdapter({
+        logger: errorMapperDeps.adapterLogger,
+        environmentContext: errorMapperDeps.environmentContext,
+        apiKeyProvider: errorMapperDeps.apiKeyProvider,
+        llmStrategyFactory: errorMapperDeps.strategyFactory,
+        configurationManager: errorMapperDeps.configurationManager,
+        requestExecutor: errorMapperDeps.requestExecutor,
+        errorMapper: null,
+        tokenEstimator: errorMapperDeps.tokenEstimator,
+      });
+    }).toThrow(
+      'ConfigurableLLMAdapter: Constructor requires a valid ILLMErrorMapper instance.'
+    );
+    expect(
+      errorMapperDeps.adapterLogger.has(
+        'error',
+        'requires a valid ILLMErrorMapper instance'
+      )
+    ).toBe(true);
+
+    const tokenEstimatorDeps = createAdapterDependencies();
+    expect(() => {
+      return new ConfigurableLLMAdapter({
+        logger: tokenEstimatorDeps.adapterLogger,
+        environmentContext: tokenEstimatorDeps.environmentContext,
+        apiKeyProvider: tokenEstimatorDeps.apiKeyProvider,
+        llmStrategyFactory: tokenEstimatorDeps.strategyFactory,
+        configurationManager: tokenEstimatorDeps.configurationManager,
+        requestExecutor: tokenEstimatorDeps.requestExecutor,
+        errorMapper: tokenEstimatorDeps.errorMapper,
+        tokenEstimator: null,
+      });
+    }).toThrow(
+      'ConfigurableLLMAdapter: Constructor requires a valid ITokenEstimator instance.'
+    );
+    expect(
+      tokenEstimatorDeps.adapterLogger.has(
+        'error',
+        'requires a valid ITokenEstimator instance'
+      )
+    ).toBe(true);
   });
 });
