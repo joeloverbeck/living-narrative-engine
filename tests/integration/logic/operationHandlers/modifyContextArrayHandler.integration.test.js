@@ -15,6 +15,13 @@ import GameDataRepository from '../../../../src/data/gameDataRepository.js';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import ModifyContextArrayHandler from '../../../../src/logic/operationHandlers/modifyContextArrayHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
+import {
+  advancedArrayModify,
+  applyArrayModification,
+} from '../../../../src/utils/arrayModifyUtils.js';
+import ConsoleLogger, {
+  LogLevel,
+} from '../../../../src/logging/consoleLogger.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
@@ -412,6 +419,184 @@ describe('ModifyContextArrayHandler integration', () => {
     ).toBe(circular);
   });
 
+  test('push_unique honors deep equality for complex nested structures and avoids duplicates', () => {
+    const primitiveEntry = 'existing text';
+    const nestedArrayEntry = ['alpha'];
+    const minimalObject = {
+      id: 'alpha',
+      meta: { score: 42 },
+      tags: ['rogue'],
+    };
+    const mismatchedKeys = {
+      id: 'alpha',
+      meta: { score: 42, history: [] },
+      tags: ['rogue'],
+      createdAt: new Date('2023-12-31T00:00:00.000Z'),
+      other: 'mismatch',
+    };
+
+    const createNarrativeEntry = (score = 42) => {
+      const createdAt = new Date('2024-01-01T00:00:00.000Z');
+      const entry = {
+        id: 'alpha',
+        meta: {
+          score,
+          history: [
+            { stage: 'intro', flags: ['start'] },
+            { stage: 'conflict', flags: ['middle'] },
+          ],
+        },
+        tags: ['rogue', { nested: { label: 'A' } }],
+        createdAt,
+      };
+      entry.self = entry;
+      entry.meta.owner = entry;
+      entry.meta.history[1].flags.push({ twist: true });
+      entry.meta.history[1].loop = entry.meta.history;
+      return entry;
+    };
+
+    const variantScore = createNarrativeEntry(99);
+    const duplicate = createNarrativeEntry();
+    const candidate = createNarrativeEntry();
+
+    class CustomNote {
+      constructor(payload) {
+        Object.assign(this, payload);
+      }
+    }
+
+    const customPrototypeEntry = new CustomNote({
+      id: 'alpha',
+      meta: { score: 42 },
+      tags: ['rogue'],
+    });
+    customPrototypeEntry.createdAt = new Date('2024-01-02T00:00:00.000Z');
+    customPrototypeEntry.self = customPrototypeEntry;
+
+    executionContext.evaluationContext.context = {
+      story: {
+        notes: [
+          primitiveEntry,
+          nestedArrayEntry,
+          minimalObject,
+          mismatchedKeys,
+          variantScore,
+          customPrototypeEntry,
+          duplicate,
+        ],
+      },
+    };
+
+    handler.execute(
+      {
+        variable_path: 'story.notes',
+        mode: 'push_unique',
+        value: candidate,
+        result_variable: 'last_operation',
+      },
+      executionContext
+    );
+
+    const updatedNotes =
+      executionContext.evaluationContext.context.story.notes;
+
+    expect(updatedNotes).toHaveLength(7);
+    expect(updatedNotes[0]).toBe(primitiveEntry);
+    expect(updatedNotes[1]).toEqual(nestedArrayEntry);
+    expect(updatedNotes[1]).not.toBe(nestedArrayEntry);
+    expect(updatedNotes[2]).toMatchObject({
+      id: 'alpha',
+      meta: { score: 42 },
+    });
+    expect(updatedNotes[3]).toHaveProperty('other', 'mismatch');
+    expect(updatedNotes[4].meta.score).toBe(99);
+    expect(updatedNotes[6]).toEqual(duplicate);
+    expect(updatedNotes[6]).not.toBe(duplicate);
+
+    expect(
+      executionContext.evaluationContext.context.last_operation
+    ).toBe(updatedNotes);
+    expect(env.logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Value: [unable to stringify].')
+    );
+    expect(systemErrorEvents).toHaveLength(0);
+  });
+
+  test('remove_by_value leverages deep equality to remove complex payloads', () => {
+    const createMember = (id, xp) => {
+      const createdAt = new Date('2024-02-01T15:30:00.000Z');
+      const member = {
+        id,
+        traits: {
+          stats: { xp },
+          badges: ['veteran', { detail: 'scout' }],
+        },
+        createdAt,
+      };
+      member.self = member;
+      member.traits.owner = member;
+      member.traits.stats.milestones = [
+        { stage: 'intro', notes: ['start'] },
+        { stage: 'climax', notes: ['peak'] },
+      ];
+      member.traits.stats.milestones[1].loop =
+        member.traits.stats.milestones;
+      return member;
+    };
+
+    const memberToRemove = createMember('member-2', 15);
+    const memberCloneForRemoval = createMember('member-2', 15);
+    const memberMismatch = createMember('member-2', 20);
+    const supportingMember = createMember('member-3', 30);
+
+    executionContext.evaluationContext.context = {
+      roster: {
+        members: [memberToRemove, supportingMember],
+      },
+    };
+
+    handler.execute(
+      {
+        variable_path: 'roster.members',
+        mode: 'remove_by_value',
+        value: memberMismatch,
+        result_variable: 'removal_result',
+      },
+      executionContext
+    );
+
+    let members =
+      executionContext.evaluationContext.context.roster.members;
+
+    expect(members).toHaveLength(2);
+    expect(members[0]).toEqual(memberToRemove);
+    expect(
+      executionContext.evaluationContext.context.removal_result
+    ).toEqual(members);
+    expect(systemErrorEvents).toHaveLength(0);
+
+    handler.execute(
+      {
+        variable_path: 'roster.members',
+        mode: 'remove_by_value',
+        value: memberCloneForRemoval,
+        result_variable: 'removal_result',
+      },
+      executionContext
+    );
+
+    members =
+      executionContext.evaluationContext.context.roster.members;
+
+    expect(members).toHaveLength(1);
+    expect(members[0]).toEqual(supportingMember);
+    expect(
+      executionContext.evaluationContext.context.removal_result
+    ).toEqual(members);
+    expect(systemErrorEvents).toHaveLength(0);
+  });
+
   test('falls back to handler logger when execution context lacks a logger', () => {
     const contextWithoutLogger = createExecutionContext(env);
     delete contextWithoutLogger.logger;
@@ -428,5 +613,53 @@ describe('ModifyContextArrayHandler integration', () => {
     expect(env.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining("MODIFY_CONTEXT_ARRAY: Performing 'push_unique' on context variable 'story.notes'.")
     );
+  });
+});
+
+describe('arrayModifyUtils integration with ConsoleLogger', () => {
+  let logger;
+
+  beforeEach(() => {
+    jest.spyOn(console, 'debug').mockImplementation(() => {});
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    logger = new ConsoleLogger(LogLevel.DEBUG);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('advancedArrayModify logs an error when provided array input is invalid', () => {
+    const errorSpy = jest.spyOn(logger, 'error');
+    const outcome = advancedArrayModify('push', 'not-an-array', { id: 'x' }, logger);
+
+    expect(outcome).toEqual({
+      nextArray: 'not-an-array',
+      result: undefined,
+      modified: false,
+    });
+    expect(errorSpy).toHaveBeenCalledWith(
+      'advancedArrayModify: provided value is not an array'
+    );
+  });
+
+  test('applyArrayModification and advancedArrayModify fall back on unknown modes', () => {
+    const errorSpy = jest.spyOn(logger, 'error');
+    const base = ['alpha'];
+
+    const modified = applyArrayModification('mystery-mode', base, 'beta', logger);
+    expect(modified).toBe(base);
+    expect(errorSpy).toHaveBeenCalledWith('Unknown mode: mystery-mode');
+
+    errorSpy.mockClear();
+    const advancedResult = advancedArrayModify('obscure-mode', base, 'beta', logger);
+    expect(advancedResult).toEqual({
+      nextArray: base,
+      result: undefined,
+      modified: false,
+    });
+    expect(errorSpy).toHaveBeenCalledWith('Unknown mode: obscure-mode');
   });
 });
