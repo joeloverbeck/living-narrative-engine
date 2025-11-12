@@ -66,7 +66,7 @@ export class BodyBlueprintFactory {
   #socketGenerator;
   /** @type {SlotGenerator} */
   #slotGenerator;
-  /** @type {import('../recipePatternResolver.js').default} */
+  /** @type {import('../recipePatternResolver/patternResolver.js').default} */
   #recipePatternResolver;
 
   /**
@@ -86,7 +86,7 @@ export class BodyBlueprintFactory {
    * @param {GraphIntegrityValidator} deps.validator - Graph integrity validator
    * @param {SocketGenerator} deps.socketGenerator - Socket generator
    * @param {SlotGenerator} deps.slotGenerator - Slot generator
-   * @param {import('../recipePatternResolver.js').default} deps.recipePatternResolver - Recipe pattern resolver
+   * @param {import('../recipePatternResolver/patternResolver.js').default} deps.recipePatternResolver - Recipe pattern resolver
    */
   constructor({
     entityManager,
