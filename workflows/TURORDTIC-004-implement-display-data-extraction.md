@@ -18,7 +18,7 @@ Implement the `#getActorDisplayData()` private method that extracts actor name a
 ## Current Behavior
 The method stub returns only the entity ID:
 ```javascript
-#getActorDisplayData(entityId) {
+#_getActorDisplayData(entityId) {
   return { name: entityId };
 }
 ```
@@ -40,21 +40,16 @@ Replace the stub with:
  * @returns {{ name: string, portraitPath?: string, participating: boolean }} Display data
  * @private
  */
-#getActorDisplayData(entityId) {
+#_getActorDisplayData(entityId) {
   try {
     // Use EntityDisplayDataProvider for name and portrait
-    const displayData = this.#entityDisplayDataProvider.getDisplayData(entityId);
-
-    // Extract name (fallback to entity ID if not available)
-    const name = displayData?.name || entityId;
-
-    // Extract portrait path (optional)
-    const portraitPath = displayData?.portraitPath || null;
+    const name = this.#_entityDisplayDataProvider.getEntityName(entityId, entityId);
+    const portraitPath = this.#_entityDisplayDataProvider.getEntityPortraitPath(entityId);
 
     // Check participation status
     let participating = true; // Default to true
-    if (this.#entityManager.hasComponent(entityId, PARTICIPATION_COMPONENT_ID)) {
-      const participationComponent = this.#entityManager.getComponent(
+    if (this.#_entityManager.hasComponent(entityId, PARTICIPATION_COMPONENT_ID)) {
+      const participationComponent = this.#_entityManager.getComponentData(
         entityId,
         PARTICIPATION_COMPONENT_ID
       );
@@ -98,27 +93,23 @@ import { PARTICIPATION_COMPONENT_ID } from '../constants/componentIds.js';
 
 ## Edge Cases Handled
 
-### 1. Missing EntityDisplayDataProvider Data
-**Scenario:** `getDisplayData()` returns null or undefined
-**Solution:** Fallback to entity ID for name
-
-### 2. Missing Name Component
+### 1. Missing Name Component
 **Scenario:** Actor has no `core:name` component
-**Solution:** EntityDisplayDataProvider should handle this, but we fallback to entity ID as secondary safeguard
+**Solution:** EntityDisplayDataProvider.getEntityName() returns the default (entity ID) when name component is missing
 
-### 3. Missing Portrait Component
+### 2. Missing Portrait Component
 **Scenario:** Actor has no `core:portrait` component
-**Solution:** Return `portraitPath: null`, caller will render name badge instead
+**Solution:** EntityDisplayDataProvider.getEntityPortraitPath() returns `null`, caller will render name badge instead
 
-### 4. Invalid Portrait Path
+### 3. Invalid Portrait Path
 **Scenario:** Portrait path is empty string or invalid
 **Solution:** Treat as `null`, will be handled by image `onerror` in next ticket
 
-### 5. Missing Participation Component
+### 4. Missing Participation Component
 **Scenario:** Actor has no `core:participation` component
 **Solution:** Default to `participating: true` (actors participate by default)
 
-### 6. Exception During Data Extraction
+### 5. Exception During Data Extraction
 **Scenario:** Any method call throws an error
 **Solution:** Catch and return minimal fallback data, log warning
 
@@ -146,12 +137,13 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
     };
 
     mockEntityManager = {
-      getComponent: jest.fn(),
+      getComponentData: jest.fn(),
       hasComponent: jest.fn(),
     };
 
     mockEntityDisplayDataProvider = {
-      getDisplayData: jest.fn(),
+      getEntityName: jest.fn(),
+      getEntityPortraitPath: jest.fn(),
     };
 
     mockContainer = document.createElement('div');
@@ -181,13 +173,11 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
   });
 
   it('should extract name and portrait when both exist', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Alice',
-      portraitPath: '/path/to/alice.jpg',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Alice');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/alice.jpg');
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const result = renderer['#getActorDisplayData']('actor-1');
+    const result = renderer['#_getActorDisplayData']('actor-1');
 
     expect(result).toEqual({
       name: 'Alice',
@@ -197,23 +187,21 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
   });
 
   it('should fallback to entity ID when name missing', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      portraitPath: '/path/to/portrait.jpg',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('actor-1');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/portrait.jpg');
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const result = renderer['#getActorDisplayData']('actor-1');
+    const result = renderer['#_getActorDisplayData']('actor-1');
 
     expect(result.name).toBe('actor-1');
   });
 
   it('should handle missing portrait gracefully', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Bob',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Bob');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const result = renderer['#getActorDisplayData']('actor-2');
+    const result = renderer['#_getActorDisplayData']('actor-2');
 
     expect(result).toEqual({
       name: 'Bob',
@@ -223,49 +211,34 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
   });
 
   it('should extract participation status when component exists', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Charlie',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Charlie');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(true);
-    mockEntityManager.getComponent.mockReturnValue({
+    mockEntityManager.getComponentData.mockReturnValue({
       participating: false,
     });
 
-    const result = renderer['#getActorDisplayData']('actor-3');
+    const result = renderer['#_getActorDisplayData']('actor-3');
 
     expect(result.participating).toBe(false);
   });
 
   it('should default to participating true when component missing', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Diana',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Diana');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const result = renderer['#getActorDisplayData']('actor-4');
+    const result = renderer['#_getActorDisplayData']('actor-4');
 
     expect(result.participating).toBe(true);
   });
 
-  it('should handle null display data provider result', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue(null);
-    mockEntityManager.hasComponent.mockReturnValue(false);
-
-    const result = renderer['#getActorDisplayData']('actor-5');
-
-    expect(result).toEqual({
-      name: 'actor-5',
-      portraitPath: null,
-      participating: true,
-    });
-  });
-
   it('should handle exception and return fallback', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockImplementation(() => {
+    mockEntityDisplayDataProvider.getEntityName.mockImplementation(() => {
       throw new Error('Service unavailable');
     });
 
-    const result = renderer['#getActorDisplayData']('actor-6');
+    const result = renderer['#_getActorDisplayData']('actor-6');
 
     expect(result).toEqual({
       name: 'actor-6',
@@ -282,13 +255,11 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
   });
 
   it('should log debug information for successful extraction', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Eve',
-      portraitPath: '/path/to/eve.jpg',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Eve');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/eve.jpg');
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    renderer['#getActorDisplayData']('actor-7');
+    renderer['#_getActorDisplayData']('actor-7');
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'Actor display data extracted',
@@ -313,11 +284,11 @@ NODE_ENV=test npm run test:unit -- tests/unit/domUI/turnOrderTickerRenderer.test
 ```
 
 ## Acceptance Criteria
-- [ ] Method extracts name from `EntityDisplayDataProvider`
-- [ ] Method extracts portrait path from `EntityDisplayDataProvider`
-- [ ] Method extracts participation status from entity components
-- [ ] Fallback to entity ID when name missing
-- [ ] Return `null` for portrait when missing
+- [ ] Method extracts name using `EntityDisplayDataProvider.getEntityName()`
+- [ ] Method extracts portrait path using `EntityDisplayDataProvider.getEntityPortraitPath()`
+- [ ] Method extracts participation status using `EntityManager.getComponentData()`
+- [ ] Fallback to entity ID when name missing (handled by getEntityName default)
+- [ ] Return `null` for portrait when missing (handled by getEntityPortraitPath)
 - [ ] Default to `participating: true` when component missing
 - [ ] Handle exceptions gracefully with fallback data
 - [ ] Log debug information for successful extraction
@@ -331,15 +302,16 @@ NODE_ENV=test npm run test:unit -- tests/unit/domUI/turnOrderTickerRenderer.test
 - No DOM operations in this method (pure data extraction)
 
 ## Integration Points
-- **EntityDisplayDataProvider:** Provides name and portrait
-- **EntityManager:** Provides participation component
-- **PARTICIPATION_COMPONENT_ID:** Constant for component lookup
+- **EntityDisplayDataProvider:** Provides name via `getEntityName()` and portrait via `getEntityPortraitPath()`
+- **EntityManager:** Provides component data via `hasComponent()` and `getComponentData()`
+- **PARTICIPATION_COMPONENT_ID:** Constant for component lookup (already imported)
 
 ## Notes
-- This method is private (`#getActorDisplayData`) and called by `#createActorElement()`
+- This method is private (`#_getActorDisplayData`) and called by `#_createActorElement()`
 - The method returns an object, not a string, for flexibility
-- Participation status will be used by `#applyParticipationState()` in TURORDTIC-010
+- Participation status will be used by `#_applyParticipationState()` in TURORDTIC-010
 - Portrait path validation (file existence) is NOT done here - handled by image `onerror` in DOM
+- Private fields use underscore prefix (`#_entityManager`, `#_entityDisplayDataProvider`) per class convention
 
 ## Next Ticket
 TURORDTIC-005: Implement DOM element creation for actors
