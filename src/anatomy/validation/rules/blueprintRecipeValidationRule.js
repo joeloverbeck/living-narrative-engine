@@ -10,8 +10,8 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../constants/systemEventIds.js';
 
 /** @typedef {import('../loadTimeValidationContext.js').LoadTimeValidationContext} LoadTimeValidationContext */
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../recipePatternResolver.js').default} RecipePatternResolver */
-/** @typedef {import('../../../events/eventDispatchService.js').default} EventDispatchService */
+/** @typedef {import('../../recipePatternResolver/patternResolver.js').default} RecipePatternResolver */
+/** @typedef {import('../../../utils/eventDispatchService.js').default} EventDispatchService */
 
 /**
  * Validates blueprint-recipe coverage and pattern matching at load time

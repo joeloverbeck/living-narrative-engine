@@ -11,7 +11,7 @@ import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').default} ISafeEventDispatcher */
 /** @typedef {import('./documentContext.js').default} IDocumentContext */
-/** @typedef {import('../logging/logger.js').default} ILogger */
+/** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../entities/entityManager.js').default} IEntityManager */
 /** @typedef {import('../logic/operationInterpreter.js').default} IOperationInterpreter */
 
