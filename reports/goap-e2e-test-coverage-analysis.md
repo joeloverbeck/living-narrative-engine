@@ -303,6 +303,7 @@ The GOAP system is organized into three tiers:
 7. Verify actor has food component after execution
 8. Verify planning effects matched actual state changes
 
+
 **Success Criteria:**
 - Goal selected matches expected priority
 - Action selected moves toward goal
