@@ -19,8 +19,8 @@ Implement the `#createActorElement()` private method that creates DOM elements f
 ## Current Behavior
 The method stub creates an empty div:
 ```javascript
-#createActorElement(entity) {
-  const element = this.#domElementFactory.createElement('div');
+#_createActorElement(_entity) {
+  const element = this.#domElementFactory.create('div');
   element.classList.add('ticker-actor');
   return element;
 }
@@ -53,6 +53,21 @@ From spec lines 250-266:
 
 ## Implementation
 
+### Key API Notes
+
+**IMPORTANT**: The following APIs are used in this implementation:
+
+1. **Private method naming**: All private methods use underscore prefix (`#_methodName`)
+2. **DomElementFactory API**:
+   - Generic: `create(tag)` or `create(tag, options)`
+   - Specialized: `div(cls)`, `span(cls, text)`, `img(src, alt, cls)`
+3. **EntityDisplayDataProvider API**:
+   - `getEntityName(entityId, fallback)` - Returns actor name
+   - `getEntityPortraitPath(entityId)` - Returns portrait path or null
+   - Note: NO single `getDisplayData()` method exists
+4. **EntityManager API**: Uses `getComponentData(entityId, componentId)` not `getComponent()`
+5. **Test Access**: Use bracket notation `renderer['#_createActorElement']` to access private methods in tests
+
 ### Replace Method Implementation
 
 **Location:** `src/domUI/turnOrderTickerRenderer.js`
@@ -68,31 +83,31 @@ Replace the stub with:
  * @returns {HTMLElement} The actor element
  * @private
  */
-#createActorElement(entity) {
+#_createActorElement(entity) {
   if (!entity || !entity.id) {
     this.#logger.error('Cannot create actor element: entity or entity.id missing', { entity });
     throw new Error('Entity must have an id property');
   }
 
   const entityId = entity.id;
-  const displayData = this.#getActorDisplayData(entityId);
+  const displayData = this.#_getActorDisplayData(entityId);
 
   // Create container
-  const container = this.#domElementFactory.createElement('div');
+  const container = this.#domElementFactory.create('div');
   container.classList.add('ticker-actor');
   container.setAttribute('data-entity-id', entityId);
   container.setAttribute('data-participating', displayData.participating.toString());
 
   if (displayData.portraitPath) {
     // Render with portrait
-    this.#createPortraitElement(container, displayData);
+    this.#_createPortraitElement(container, displayData);
   } else {
     // Render with name badge
-    this.#createNameBadgeElement(container, displayData);
+    this.#_createNameBadgeElement(container, displayData);
   }
 
   // Add name label below (always shown)
-  const nameLabel = this.#domElementFactory.createElement('span');
+  const nameLabel = this.#domElementFactory.create('span');
   nameLabel.classList.add('ticker-actor-name');
   nameLabel.textContent = displayData.name;
   nameLabel.title = displayData.name; // Tooltip for long names
@@ -114,11 +129,12 @@ Replace the stub with:
  * @param {Object} displayData - Display data with portraitPath and name
  * @private
  */
-#createPortraitElement(container, displayData) {
-  const img = this.#domElementFactory.createElement('img');
-  img.classList.add('ticker-actor-portrait');
-  img.src = displayData.portraitPath;
-  img.alt = displayData.name;
+#_createPortraitElement(container, displayData) {
+  const img = this.#domElementFactory.img(
+    displayData.portraitPath,
+    displayData.name,
+    'ticker-actor-portrait'
+  );
   img.loading = 'lazy'; // Performance optimization
 
   // Handle image load failures
@@ -132,7 +148,7 @@ Replace the stub with:
     img.remove();
 
     // Replace with name badge
-    this.#createNameBadgeElement(container, displayData);
+    this.#_createNameBadgeElement(container, displayData);
   };
 
   container.appendChild(img);
@@ -145,13 +161,9 @@ Replace the stub with:
  * @param {Object} displayData - Display data with name
  * @private
  */
-#createNameBadgeElement(container, displayData) {
-  const badge = this.#domElementFactory.createElement('div');
-  badge.classList.add('ticker-actor-name-badge');
-
-  const nameSpan = this.#domElementFactory.createElement('span');
-  nameSpan.classList.add('ticker-actor-name');
-  nameSpan.textContent = displayData.name;
+#_createNameBadgeElement(container, displayData) {
+  const badge = this.#domElementFactory.div('ticker-actor-name-badge');
+  const nameSpan = this.#domElementFactory.span('ticker-actor-name', displayData.name);
 
   badge.appendChild(nameSpan);
   container.insertBefore(badge, container.firstChild); // Insert at beginning
@@ -207,16 +219,36 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
     };
 
     mockEntityManager = {
-      getComponent: jest.fn(),
+      getComponentData: jest.fn(),
       hasComponent: jest.fn(),
+      getEntityInstance: jest.fn(),
     };
 
     mockEntityDisplayDataProvider = {
-      getDisplayData: jest.fn(),
+      getEntityName: jest.fn(),
+      getEntityPortraitPath: jest.fn(),
     };
 
     mockDomElementFactory = {
-      createElement: jest.fn((tag) => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
+      div: jest.fn((cls) => {
+        const el = document.createElement('div');
+        if (cls) el.classList.add(cls);
+        return el;
+      }),
+      span: jest.fn((cls, text) => {
+        const el = document.createElement('span');
+        if (cls) el.classList.add(cls);
+        if (text) el.textContent = text;
+        return el;
+      }),
+      img: jest.fn((src, alt, cls) => {
+        const el = document.createElement('img');
+        el.src = src;
+        el.alt = alt;
+        if (cls) el.classList.add(cls);
+        return el;
+      }),
     };
 
     mockContainer = document.createElement('div');
@@ -244,13 +276,11 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
   });
 
   it('should create element with portrait when available', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Alice',
-      portraitPath: '/path/to/alice.jpg',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Alice');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/alice.jpg');
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const element = renderer['#createActorElement']({ id: 'actor-1' });
+    const element = renderer['#_createActorElement']({ id: 'actor-1' });
 
     expect(element.classList.contains('ticker-actor')).toBe(true);
     expect(element.getAttribute('data-entity-id')).toBe('actor-1');
@@ -261,12 +291,11 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
   });
 
   it('should create element with name badge when portrait missing', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Bob',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Bob');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const element = renderer['#createActorElement']({ id: 'actor-2' });
+    const element = renderer['#_createActorElement']({ id: 'actor-2' });
 
     expect(element.classList.contains('ticker-actor')).toBe(true);
     expect(element.querySelector('.ticker-actor-portrait')).toBeFalsy();
@@ -275,50 +304,44 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
   });
 
   it('should set participation data attribute', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Charlie',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Charlie');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(true);
-    mockEntityManager.getComponent.mockReturnValue({ participating: false });
+    mockEntityManager.getComponentData.mockReturnValue({ participating: false });
 
-    const element = renderer['#createActorElement']({ id: 'actor-3' });
+    const element = renderer['#_createActorElement']({ id: 'actor-3' });
 
     expect(element.getAttribute('data-participating')).toBe('false');
   });
 
   it('should set lazy loading on portrait images', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Diana',
-      portraitPath: '/path/to/diana.jpg',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Diana');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/diana.jpg');
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const element = renderer['#createActorElement']({ id: 'actor-4' });
+    const element = renderer['#_createActorElement']({ id: 'actor-4' });
     const img = element.querySelector('.ticker-actor-portrait');
 
     expect(img.loading).toBe('lazy');
   });
 
   it('should add title attribute for tooltip', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Very Long Actor Name That Will Be Truncated',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Very Long Actor Name That Will Be Truncated');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const element = renderer['#createActorElement']({ id: 'actor-5' });
+    const element = renderer['#_createActorElement']({ id: 'actor-5' });
     const nameLabel = element.querySelector('.ticker-actor-name');
 
     expect(nameLabel.title).toBe('Very Long Actor Name That Will Be Truncated');
   });
 
   it('should handle image load failure', () => {
-    mockEntityDisplayDataProvider.getDisplayData.mockReturnValue({
-      name: 'Eve',
-      portraitPath: '/path/to/invalid.jpg',
-    });
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Eve');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/invalid.jpg');
     mockEntityManager.hasComponent.mockReturnValue(false);
 
-    const element = renderer['#createActorElement']({ id: 'actor-6' });
+    const element = renderer['#_createActorElement']({ id: 'actor-6' });
     const img = element.querySelector('.ticker-actor-portrait');
 
     // Simulate image error
@@ -334,7 +357,7 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
 
   it('should throw error if entity has no id', () => {
     expect(() => {
-      renderer['#createActorElement']({});
+      renderer['#_createActorElement']({});
     }).toThrow('Entity must have an id property');
 
     expect(mockLogger.error).toHaveBeenCalled();
@@ -342,7 +365,7 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
 
   it('should throw error if entity is null', () => {
     expect(() => {
-      renderer['#createActorElement'](null);
+      renderer['#_createActorElement'](null);
     }).toThrow('Entity must have an id property');
   });
 });
@@ -350,6 +373,8 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
 
 ### Integration Test
 **File:** `tests/integration/domUI/turnOrderTicker.integration.test.js`
+
+**NOTE:** This file does NOT currently exist and will need to be created.
 
 ```javascript
 describe('Turn Order Ticker - Actor Rendering', () => {
@@ -360,12 +385,16 @@ describe('Turn Order Ticker - Actor Rendering', () => {
     const actor1 = await entityManager.createEntity('actor-1', ['core:actor', 'core:name', 'core:portrait']);
     const actor2 = await entityManager.createEntity('actor-2', ['core:actor', 'core:name']);
 
-    entityDisplayDataProvider.getDisplayData
-      .mockReturnValueOnce({ name: 'Alice', portraitPath: '/portraits/alice.jpg' })
-      .mockReturnValueOnce({ name: 'Bob' });
+    // Mock display data provider methods
+    entityDisplayDataProvider.getEntityName
+      .mockReturnValueOnce('Alice')
+      .mockReturnValueOnce('Bob');
+    entityDisplayDataProvider.getEntityPortraitPath
+      .mockReturnValueOnce('/portraits/alice.jpg')
+      .mockReturnValueOnce(null);
 
-    const element1 = renderer['#createActorElement'](actor1);
-    const element2 = renderer['#createActorElement'](actor2);
+    const element1 = renderer['#_createActorElement'](actor1);
+    const element2 = renderer['#_createActorElement'](actor2);
 
     expect(element1.querySelector('.ticker-actor-portrait')).toBeTruthy();
     expect(element2.querySelector('.ticker-actor-name-badge')).toBeTruthy();
@@ -411,8 +440,10 @@ NODE_ENV=test npm run test:integration -- tests/integration/domUI/turnOrderTicke
 ## Notes
 - The method creates elements but does NOT append them to the DOM (caller's responsibility)
 - Portrait aspect ratios handled by CSS (from TURORDTIC-001)
-- Participation visual state applied by `#applyParticipationState()` (TURORDTIC-010)
-- Animation classes added by `#animateActorEntry()` (TURORDTIC-011)
+- **New helper methods added**: `#_createPortraitElement()` and `#_createNameBadgeElement()` (not in current codebase)
+- Participation visual state applied by `#_applyParticipationState()` (TURORDTIC-010)
+- Animation classes added by `#_animateActorEntry()` (TURORDTIC-011)
+- All private methods follow underscore naming convention: `#_methodName`
 
 ## Next Ticket
 TURORDTIC-006: Implement event subscription and handling
