@@ -584,3 +584,156 @@ describe('TurnOrderTickerRenderer - Public API', () => {
     });
   });
 });
+
+describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
+  let renderer;
+  let mockLogger;
+  let mockEntityManager;
+  let mockEntityDisplayDataProvider;
+  let mockContainer;
+
+  beforeEach(() => {
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    mockEntityManager = {
+      getComponentData: jest.fn(),
+      hasComponent: jest.fn(),
+      getEntityInstance: jest.fn(),
+    };
+
+    mockEntityDisplayDataProvider = {
+      getEntityName: jest.fn(),
+      getEntityPortraitPath: jest.fn(),
+    };
+
+    mockContainer = document.createElement('div');
+    mockContainer.innerHTML = `
+      <span id="ticker-round-number"></span>
+      <div id="ticker-actor-queue"></div>
+    `;
+
+    renderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: {
+        query: selector => mockContainer.querySelector(selector),
+        create: jest.fn(),
+      },
+      validatedEventDispatcher: {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => 'sub-id'),
+        unsubscribe: jest.fn(),
+      },
+      domElementFactory: {
+        create: jest.fn(() => document.createElement('div')),
+      },
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+  });
+
+  it('should extract name and portrait when both exist', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Alice');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/alice.jpg');
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const result = renderer.__testGetActorDisplayData('actor-1');
+
+    expect(result).toEqual({
+      name: 'Alice',
+      portraitPath: '/path/to/alice.jpg',
+      participating: true,
+    });
+  });
+
+  it('should fallback to entity ID when name missing', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('actor-1');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/portrait.jpg');
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const result = renderer.__testGetActorDisplayData('actor-1');
+
+    expect(result.name).toBe('actor-1');
+  });
+
+  it('should handle missing portrait gracefully', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Bob');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const result = renderer.__testGetActorDisplayData('actor-2');
+
+    expect(result).toEqual({
+      name: 'Bob',
+      portraitPath: null,
+      participating: true,
+    });
+  });
+
+  it('should extract participation status when component exists', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Charlie');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
+    mockEntityManager.hasComponent.mockReturnValue(true);
+    mockEntityManager.getComponentData.mockReturnValue({
+      participating: false,
+    });
+
+    const result = renderer.__testGetActorDisplayData('actor-3');
+
+    expect(result.participating).toBe(false);
+  });
+
+  it('should default to participating true when component missing', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Diana');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    const result = renderer.__testGetActorDisplayData('actor-4');
+
+    expect(result.participating).toBe(true);
+  });
+
+  it('should handle exception and return fallback', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockImplementation(() => {
+      throw new Error('Service unavailable');
+    });
+
+    const result = renderer.__testGetActorDisplayData('actor-6');
+
+    expect(result).toEqual({
+      name: 'actor-6',
+      portraitPath: null,
+      participating: true,
+    });
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Failed to extract actor display data, using fallback',
+      expect.objectContaining({
+        entityId: 'actor-6',
+        error: 'Service unavailable',
+      })
+    );
+  });
+
+  it('should log debug information for successful extraction', () => {
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Eve');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/eve.jpg');
+    mockEntityManager.hasComponent.mockReturnValue(false);
+
+    renderer.__testGetActorDisplayData('actor-7');
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Actor display data extracted',
+      expect.objectContaining({
+        entityId: 'actor-7',
+        name: 'Eve',
+        hasPortrait: true,
+        participating: true,
+      })
+    );
+  });
+});
