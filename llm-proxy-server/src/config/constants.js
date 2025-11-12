@@ -173,10 +173,12 @@ export const HTTP_AGENT_MAX_SOCKETS = 50;
 export const HTTP_AGENT_MAX_FREE_SOCKETS = 10;
 
 /**
- * Default socket timeout in milliseconds - 60 seconds.
+ * Default socket timeout in milliseconds - 120 seconds.
+ * Increased to 120 seconds to align with LLM API endpoint timeout
+ * and prevent premature timeout during long-running LLM generations.
  * @type {number}
  */
-export const HTTP_AGENT_TIMEOUT = 60000;
+export const HTTP_AGENT_TIMEOUT = 120000;
 
 /**
  * Default free socket timeout in milliseconds - 30 seconds.
