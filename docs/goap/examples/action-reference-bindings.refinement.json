@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../data/schemas/refinement-method.schema.json",
+  "refinementMethodId": "example:consume_food_simple",
+  "taskId": "task:consume_nourishing_item",
+  "description": "Example: Simple action reference with target binding. Demonstrates how to reference a primitive action and bind its target placeholder to a task parameter.",
+  "fallbackBehavior": "fail",
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:pick_up_item",
+      "targetBindings": {
+        "item": "task.params.item"
+      },
+      "description": "Pick up the food item. Note: 'item' placeholder name comes from items:pick_up_item action definition."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:consume_item",
+      "targetBindings": {
+        "item": "task.params.item"
+      },
+      "description": "Consume the food item. Both steps bind to the same task parameter."
+    }
+  ],
+  "_notes": [
+    "This example demonstrates:",
+    "1. Basic action reference using modId:actionId format",
+    "2. Simple target binding from task parameter to action placeholder",
+    "3. Sequential primitive action execution",
+    "4. Method-level failure handling with fallbackBehavior",
+    "",
+    "Key Points:",
+    "- Both actions use 'item' placeholder (must match action definitions)",
+    "- Bindings reference task.params.item (resolved at runtime)",
+    "- No parameter overrides (actions use default parameters)",
+    "- If either action fails, entire method fails (fallbackBehavior: 'fail')"
+  ]
+}

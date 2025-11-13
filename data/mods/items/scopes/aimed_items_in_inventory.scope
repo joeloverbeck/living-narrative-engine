@@ -1,0 +1,1 @@
+items:aimed_items_in_inventory := actor.components.items:inventory.items[][{"!!": {"var": "entity.components.items:aimed_at"}}]

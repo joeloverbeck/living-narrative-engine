@@ -1,0 +1,113 @@
+{
+  "$schema": "../../../data/schemas/refinement-method.schema.json",
+  "refinementMethodId": "example:social_gift_giving",
+  "taskId": "task:improve_relationship",
+  "description": "Example: Complete demonstration of action references with multiple target bindings, parameter overrides, and complex task parameter mapping.",
+  "fallbackBehavior": "fail",
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:pick_up_item",
+      "targetBindings": {
+        "item": "task.params.gift"
+      },
+      "parameters": {
+        "gentle": true
+      },
+      "description": "Pick up the gift item gently. Single target binding."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "positioning:approach",
+      "targetBindings": {
+        "target": "task.params.recipient"
+      },
+      "parameters": {
+        "speed": "casual",
+        "posture": "friendly"
+      },
+      "description": "Approach the recipient casually with friendly posture. Note: 'target' placeholder name from positioning:approach action."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "social:greet",
+      "targetBindings": {
+        "person": "task.params.recipient"
+      },
+      "parameters": {
+        "formality": "casual",
+        "warmth": "high"
+      },
+      "description": "Greet the recipient warmly. Note: 'person' placeholder name from social:greet action."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:transfer_item",
+      "targetBindings": {
+        "item": "task.params.gift",
+        "recipient": "task.params.recipient"
+      },
+      "parameters": {
+        "gentle": true,
+        "with_message": true
+      },
+      "description": "Transfer the gift to recipient. Multiple target bindings: both 'item' and 'recipient' placeholders."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "social:express_sentiment",
+      "targetBindings": {
+        "target": "task.params.recipient"
+      },
+      "parameters": {
+        "sentiment": "appreciation",
+        "intensity": "medium"
+      },
+      "description": "Express appreciation to the recipient. Final social interaction step."
+    }
+  ],
+  "_notes": [
+    "This example demonstrates:",
+    "1. Complete action reference workflow",
+    "2. Multiple different placeholder names from different actions",
+    "3. Actions with multiple target bindings (items:transfer_item)",
+    "4. Consistent parameter overrides across steps",
+    "5. Complex task parameter mapping",
+    "",
+    "Placeholder Name Variations:",
+    "- items:pick_up_item uses 'item'",
+    "- positioning:approach uses 'target'",
+    "- social:greet uses 'person'",
+    "- items:transfer_item uses 'item' AND 'recipient'",
+    "- social:express_sentiment uses 'target'",
+    "",
+    "Key Observations:",
+    "- Each action defines its own placeholder names",
+    "- Same task parameter (recipient) binds to different placeholders",
+    "- Multi-target action requires bindings for all placeholders",
+    "- Parameter overrides customize behavior at each step",
+    "",
+    "Task Parameter Usage:",
+    "- task.params.gift → item placeholder (2 actions)",
+    "- task.params.recipient → target/person/recipient placeholders (4 actions)",
+    "",
+    "Execution Flow:",
+    "1. Actor picks up gift item",
+    "2. Actor approaches recipient",
+    "3. Actor greets recipient",
+    "4. Actor transfers gift to recipient",
+    "5. Actor expresses sentiment to recipient",
+    "",
+    "Failure Behavior:",
+    "- fallbackBehavior: 'fail' means any step failure aborts entire method",
+    "- Critical for social interaction (partial execution would be awkward)",
+    "- All-or-nothing approach ensures social coherence",
+    "",
+    "Real-World Mapping:",
+    "In actual implementation, you would:",
+    "1. Check action definitions for exact placeholder names",
+    "2. Verify task defines all required parameters",
+    "3. Match parameter types with action schemas",
+    "4. Test with action execution system"
+  ]
+}

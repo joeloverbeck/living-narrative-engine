@@ -1,0 +1,66 @@
+{
+  "$schema": "../../../data/schemas/refinement-method.schema.json",
+  "refinementMethodId": "example:stealthy_item_acquisition",
+  "taskId": "task:acquire_item_quietly",
+  "description": "Example: Action reference with parameter overrides. Demonstrates how to customize action behavior by overriding default parameters.",
+  "fallbackBehavior": "fail",
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "positioning:crawl_to",
+      "targetBindings": {
+        "target": "task.params.location"
+      },
+      "parameters": {
+        "speed": "slow",
+        "silent": true
+      },
+      "description": "Crawl to the item location silently and slowly. Overrides default speed and silent parameters."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:pick_up_item",
+      "targetBindings": {
+        "item": "task.params.item"
+      },
+      "parameters": {
+        "silent": true,
+        "gentle": true
+      },
+      "description": "Pick up the item silently and gently to avoid noise. Both parameters override action defaults."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "positioning:crawl_to",
+      "targetBindings": {
+        "target": "task.params.escape_location"
+      },
+      "parameters": {
+        "speed": "normal",
+        "silent": false
+      },
+      "description": "Return to escape location at normal speed. Different parameter overrides than first crawl step."
+    }
+  ],
+  "_notes": [
+    "This example demonstrates:",
+    "1. Parameter overrides to customize action behavior",
+    "2. Different parameters for same action in different contexts",
+    "3. Multiple target bindings for different locations",
+    "4. Chaining actions with different behavioral flags",
+    "",
+    "Parameter Override Mechanics:",
+    "- Only parameters defined by the action can be overridden",
+    "- Omitted parameters use action's default values",
+    "- Parameter values must match action's parameter types",
+    "- Same action (crawl_to) used twice with different parameters",
+    "",
+    "Placeholder Names Used:",
+    "- positioning:crawl_to uses 'target' placeholder",
+    "- items:pick_up_item uses 'item' placeholder",
+    "- Names must match action definitions exactly",
+    "",
+    "Note: The actual parameter names (speed, silent, gentle) are",
+    "examples. Real actions define their own parameter schemas."
+  ]
+}

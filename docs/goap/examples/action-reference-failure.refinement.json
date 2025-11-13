@@ -1,0 +1,84 @@
+{
+  "$schema": "../../../data/schemas/refinement-method.schema.json",
+  "refinementMethodId": "example:opportunistic_healing",
+  "taskId": "task:heal_self",
+  "description": "Example: Failure handling with fallbackBehavior. Demonstrates how method-level failure handling works when primitive actions fail.",
+  "fallbackBehavior": "continue",
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:pick_up_item",
+      "targetBindings": {
+        "item": "task.params.medical_supplies"
+      },
+      "description": "Attempt to pick up medical supplies. If this fails, method continues (not critical)."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:consume_item",
+      "targetBindings": {
+        "item": "task.params.medical_supplies"
+      },
+      "description": "Attempt to use medical supplies. May fail if pickup failed, but method continues."
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "positioning:rest",
+      "targetBindings": {
+        "location": "task.params.safe_location"
+      },
+      "parameters": {
+        "duration": "long"
+      },
+      "description": "Rest at safe location. This always executes regardless of previous step failures."
+    }
+  ],
+  "_notes": [
+    "This example demonstrates:",
+    "1. Method-level failure handling with fallbackBehavior: 'continue'",
+    "2. Graceful degradation when optional steps fail",
+    "3. Sequential execution even when earlier steps fail",
+    "",
+    "Failure Handling Behavior:",
+    "- fallbackBehavior applies to ALL steps in the method",
+    "- 'continue' means: log error, continue to next step",
+    "- 'fail' means: stop execution, propagate failure to planner",
+    "- NO step-level onFailure handlers exist",
+    "",
+    "Execution Scenarios:",
+    "",
+    "Scenario 1: All steps succeed",
+    "  1. Pick up medical supplies ✓",
+    "  2. Consume medical supplies ✓",
+    "  3. Rest at location ✓",
+    "  Result: Method succeeds, actor healed optimally",
+    "",
+    "Scenario 2: Pickup fails",
+    "  1. Pick up medical supplies ✗ (item not accessible)",
+    "  2. Consume medical supplies ✗ (no item to consume)",
+    "  3. Rest at location ✓",
+    "  Result: Method continues, actor partially healed via rest",
+    "",
+    "Scenario 3: All fail",
+    "  1. Pick up medical supplies ✗",
+    "  2. Consume medical supplies ✗",
+    "  3. Rest at location ✗ (location unsafe)",
+    "  Result: Method completes but with all failures logged",
+    "",
+    "Use Cases for 'continue':",
+    "- Opportunistic optimizations (try if available, continue otherwise)",
+    "- Graceful degradation (prefer best, accept second-best)",
+    "- Optional preparation steps (nice to have, not required)",
+    "",
+    "Use Cases for 'fail':",
+    "- Critical path operations (must succeed or abort)",
+    "- Safety-critical steps (failure means plan invalid)",
+    "- Resource acquisition (can't proceed without it)",
+    "",
+    "Important Notes:",
+    "- Failure handling is method-wide, not per-step",
+    "- Actions report success/failure after execution",
+    "- Refinement engine respects fallbackBehavior setting",
+    "- Future versions may add step-level handlers if needed"
+  ]
+}
