@@ -44,6 +44,9 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
 const originalAlert = global.alert;
 const originalConsoleError = console.error;
 
+/**
+ *
+ */
 function createUiElements() {
   return {
     outputDiv: document.getElementById('outputDiv'),
@@ -205,7 +208,6 @@ describe('main.js fallback coverage', () => {
       expect(elements).toMatchObject({
         outputDiv: expect.anything(),
         errorDiv: expect.anything(),
-        titleElement: expect.anything(),
         inputElement: expect.anything(),
         document: expect.anything(),
       });

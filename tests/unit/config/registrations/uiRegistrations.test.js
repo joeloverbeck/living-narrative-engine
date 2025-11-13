@@ -83,11 +83,7 @@ describe('registerUI', () => {
       mockUiElements.inputElement,
       { lifecycle: 'singleton', isInstance: true }
     );
-    expect(mockRegister).toHaveBeenCalledWith(
-      tokens.titleElement,
-      mockUiElements.titleElement,
-      { lifecycle: 'singleton', isInstance: true }
-    );
+    // titleElement removed with title banner
   });
 
   it('should register core utilities via register()', () => {
@@ -120,11 +116,7 @@ describe('registerUI', () => {
   });
 
   it('should register all other UI components', () => {
-    expect(mockRegister).toHaveBeenCalledWith(
-      tokens.TitleRenderer,
-      expect.any(Function),
-      { lifecycle: 'singletonFactory' }
-    );
+    // TitleRenderer removed with title banner
     expect(mockRegister).toHaveBeenCalledWith(
       tokens.InputStateController,
       expect.any(Function),

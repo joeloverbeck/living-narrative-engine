@@ -4,7 +4,6 @@ const INITIAL_DOM = `
   <div id="outputDiv"></div>
   <div id="error-output"></div>
   <input id="speech-input" />
-  <h1>Original Title</h1>
 `;
 
 describe('main.js beginGame fallback integration', () => {
@@ -39,7 +38,6 @@ describe('main.js beginGame fallback integration', () => {
     expect(getElementSpy).toHaveBeenCalledWith('outputDiv');
     expect(getElementSpy).toHaveBeenCalledWith('error-output');
     expect(getElementSpy).toHaveBeenCalledWith('speech-input');
-    expect(querySelectorSpy).toHaveBeenCalledWith('h1');
 
     const errorDiv = document.getElementById('error-output');
     expect(errorDiv).not.toBeNull();
@@ -52,10 +50,6 @@ describe('main.js beginGame fallback integration', () => {
     expect(inputElement).not.toBeNull();
     expect(inputElement.disabled).toBe(true);
     expect(inputElement.placeholder).toBe('Application failed to start.');
-
-    const titleElement = document.querySelector('h1');
-    expect(titleElement).not.toBeNull();
-    expect(titleElement.textContent).toBe('Fatal Error!');
 
     expect(global.alert).not.toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith(

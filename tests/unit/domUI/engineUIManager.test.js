@@ -50,9 +50,6 @@ describe('EngineUIManager', () => {
     };
 
     mockDomUiFacade = {
-      title: {
-        set: jest.fn(),
-      },
       input: {
         setEnabled: jest.fn(),
       },
@@ -208,13 +205,12 @@ describe('EngineUIManager', () => {
         payload,
       });
 
-      it('should set title and disable input with correct messages on valid payload', () => {
+      it('should disable input with correct message on valid payload', () => {
         handler()(mockEvent(validPayload));
-        const expectedTitle = `Initializing ${worldName}...`;
-        expect(mockDomUiFacade.title.set).toHaveBeenCalledWith(expectedTitle);
+        const expectedMessage = `Initializing ${worldName}...`;
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           false,
-          expectedTitle
+          expectedMessage
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           `EngineUIManager: Received ${ENGINE_INITIALIZING_UI}`,
@@ -228,7 +224,6 @@ describe('EngineUIManager', () => {
           `EngineUIManager: Invalid or missing payload for ${ENGINE_INITIALIZING_UI}.`,
           null
         );
-        expect(mockDomUiFacade.title.set).not.toHaveBeenCalled();
         expect(mockDomUiFacade.input.setEnabled).not.toHaveBeenCalled();
       });
 
@@ -239,7 +234,6 @@ describe('EngineUIManager', () => {
           `EngineUIManager: Invalid or missing payload for ${ENGINE_INITIALIZING_UI}.`,
           invalidPayload
         );
-        expect(mockDomUiFacade.title.set).not.toHaveBeenCalled();
         expect(mockDomUiFacade.input.setEnabled).not.toHaveBeenCalled();
       });
     });
@@ -250,20 +244,18 @@ describe('EngineUIManager', () => {
       const activeWorld = 'TerraNova';
       const mockEvent = (payload) => ({ eventId: ENGINE_READY_UI, payload });
 
-      it('should set title to activeWorld and enable input with message', () => {
+      it('should enable input with message', () => {
         const payload = { activeWorld, message };
         handler()(mockEvent(payload));
-        expect(mockDomUiFacade.title.set).toHaveBeenCalledWith(activeWorld);
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           true,
           message
         );
       });
 
-      it('should set title to "Game Ready" if activeWorld is null', () => {
+      it('should enable input with message even if activeWorld is null', () => {
         const payload = { activeWorld: null, message };
         handler()(mockEvent(payload));
-        expect(mockDomUiFacade.title.set).toHaveBeenCalledWith('Game Ready');
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           true,
           message
@@ -276,7 +268,6 @@ describe('EngineUIManager', () => {
           `EngineUIManager: Invalid or missing payload for ${ENGINE_READY_UI}.`,
           null
         );
-        expect(mockDomUiFacade.title.set).not.toHaveBeenCalled();
       });
 
       it('should log warning on invalid payload (missing message)', () => {
@@ -300,9 +291,8 @@ describe('EngineUIManager', () => {
         payload,
       });
 
-      it('should set title and disable input with provided messages', () => {
+      it('should disable input with provided message', () => {
         handler()(mockEvent(validPayload));
-        expect(mockDomUiFacade.title.set).toHaveBeenCalledWith(titleMessage);
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           false,
           inputDisabledMessage
@@ -316,7 +306,6 @@ describe('EngineUIManager', () => {
           `EngineUIManager: Invalid or missing payload for ${ENGINE_OPERATION_IN_PROGRESS_UI}.`,
           invalidPayload
         );
-        expect(mockDomUiFacade.title.set).not.toHaveBeenCalled();
       });
     });
 
@@ -330,13 +319,12 @@ describe('EngineUIManager', () => {
         payload,
       });
 
-      it('should disable input and set error title', () => {
+      it('should disable input on operation failure', () => {
         handler()(mockEvent(validPayload));
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           false,
           'Operation failed.'
         );
-        expect(mockDomUiFacade.title.set).toHaveBeenCalledWith(errorTitle);
         expect(mockLogger.error).toHaveBeenCalledWith(
           `EngineUIManager: Handled ${ENGINE_OPERATION_FAILED_UI}. Error Title: "${errorTitle}", Message: "${errorMessage}".`
         );
@@ -358,13 +346,12 @@ describe('EngineUIManager', () => {
       const validPayload = { inputDisabledMessage };
       const mockEvent = (payload) => ({ eventId: ENGINE_STOPPED_UI, payload });
 
-      it('should disable input and set title to "Game Stopped"', () => {
+      it('should disable input when game is stopped', () => {
         handler()(mockEvent(validPayload));
         expect(mockDomUiFacade.input.setEnabled).toHaveBeenCalledWith(
           false,
           inputDisabledMessage
         );
-        expect(mockDomUiFacade.title.set).toHaveBeenCalledWith('Game Stopped');
       });
 
       it('should log warning on invalid payload (missing inputDisabledMessage)', () => {

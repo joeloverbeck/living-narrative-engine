@@ -43,6 +43,7 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
 
 /**
  * Helper to execute all DOM helper utilities passed to displayFatalStartupError.
+ *
  * @param {object} helpers
  * @param {{text?: string, color?: string, alertMessage?: string}} [options]
  */
@@ -315,7 +316,6 @@ describe('main.js uncovered branches', () => {
       );
       expect(elements).toHaveProperty('outputDiv');
       expect(elements).toHaveProperty('errorDiv');
-      expect(elements).toHaveProperty('titleElement');
       expect(elements).toHaveProperty('inputElement');
       expect(errorDetails.phase).toBe('Start Game');
       expect(errorDetails.userMessage).toContain('Critical: GameEngine not initialized');

@@ -51,7 +51,6 @@ describe('main.js bootstrap fallback DOM integration', () => {
       <main id="root">
         <div id="outputDiv"></div>
         <input id="speech-input" />
-        <h1>Story Engine</h1>
       </main>
     `;
 
@@ -89,8 +88,9 @@ describe('main.js bootstrap fallback DOM integration', () => {
     expect(fallbackElement).toBeInstanceOf(HTMLElement);
     expect(fallbackElement?.textContent).toContain('Application failed to start due to a critical error');
 
+    // Title element no longer exists in game.html - verify it's absent
     const title = document.querySelector('h1');
-    expect(title?.textContent).toContain('Fatal Error');
+    expect(title).toBeNull();
 
     const input = document.getElementById('speech-input');
     expect(input).toBeInstanceOf(HTMLInputElement);
@@ -104,13 +104,11 @@ describe('main.js bootstrap fallback DOM integration', () => {
       <div id="outputDiv"></div>
       <div id="error-output"></div>
       <input id="speech-input" />
-      <h1>Story Engine</h1>
     `;
 
     const domUiElements = {
       outputDiv: document.getElementById('outputDiv'),
       errorDiv: document.getElementById('error-output'),
-      titleElement: document.querySelector('h1'),
       inputElement: document.getElementById('speech-input'),
       document,
     };
@@ -157,8 +155,6 @@ describe('main.js bootstrap fallback DOM integration', () => {
     ).toBe(true);
 
     expect(domUiElements.errorDiv?.textContent).toContain('Critical: GameEngine not initialized');
-
-    expect(domUiElements.titleElement?.textContent).toContain('Fatal Error');
 
     expect(domUiElements.inputElement).toBeInstanceOf(HTMLInputElement);
     expect(domUiElements.inputElement?.disabled).toBe(true);

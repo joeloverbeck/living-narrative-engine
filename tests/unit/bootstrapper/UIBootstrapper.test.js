@@ -42,7 +42,6 @@ describe('UIBootstrapper.gatherEssentialElements', () => {
       <div id="outputDiv"></div>
       <div id="error-output"></div>
       <input id="speech-input" />
-      <h1>Title</h1>
     `);
     const bootstrapper = new UIBootstrapper();
     const result = bootstrapper.gatherEssentialElements(document);
@@ -50,7 +49,6 @@ describe('UIBootstrapper.gatherEssentialElements', () => {
     expect(result.outputDiv).toBe(document.querySelector('#outputDiv'));
     expect(result.errorDiv).toBe(document.querySelector('#error-output'));
     expect(result.inputElement).toBe(document.querySelector('#speech-input'));
-    expect(result.titleElement).toBe(document.querySelector('h1'));
     expect(result.document).toBe(document);
   });
 
@@ -61,9 +59,9 @@ describe('UIBootstrapper.gatherEssentialElements', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => bootstrapper.gatherEssentialElements(document)).toThrow(
-      'Fatal Error: Cannot find required HTML elements: errorDiv (ID: error-output), inputElement (ID: speech-input), titleElement (Selector: h1). Application cannot start.'
+      'Fatal Error: Cannot find required HTML elements: errorDiv (ID: error-output), inputElement (ID: speech-input). Application cannot start.'
     );
-    expect(warnSpy).toHaveBeenCalledTimes(3);
+    expect(warnSpy).toHaveBeenCalledTimes(2);
     expect(errorSpy).toHaveBeenCalled();
   });
 
@@ -79,7 +77,6 @@ describe('UIBootstrapper.gatherEssentialElements', () => {
       <div id="outputDiv"></div>
       <div id="error-output"></div>
       <input id="speech-input" />
-      <h1>Title</h1>
     `);
     global.__queryMock = jest
       .fn()
@@ -94,9 +91,9 @@ describe('UIBootstrapper.gatherEssentialElements', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     expect(() => bootstrapper.gatherEssentialElements(document)).toThrow(
-      'Fatal Error: Cannot find required HTML elements: errorDiv (ID: error-output) (query failed), inputElement (ID: speech-input), titleElement (Selector: h1). Application cannot start.'
+      'Fatal Error: Cannot find required HTML elements: errorDiv (ID: error-output) (query failed), inputElement (ID: speech-input). Application cannot start.'
     );
     expect(errorSpy).toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledTimes(2);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 });

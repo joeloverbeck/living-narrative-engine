@@ -50,7 +50,7 @@ export async function configureContainer(container, uiElements) {
     bootstrapLog.debug('[ContainerConfig] Starting container configuration...');
 
     const registrar = new Registrar(container);
-    const { outputDiv, inputElement, titleElement, document: doc } = uiElements;
+    const { outputDiv, inputElement, document: doc } = uiElements;
 
     // Log initial state - container should be empty at this point
     bootstrapLog.debug(
@@ -100,7 +100,6 @@ export async function configureContainer(container, uiElements) {
         uiElements: {
           outputDiv,
           inputElement,
-          titleElement,
           document: doc,
         },
         logger: logger,

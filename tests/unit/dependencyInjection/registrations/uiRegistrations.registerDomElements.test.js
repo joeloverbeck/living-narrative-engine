@@ -84,14 +84,6 @@ describe('registerDomElements', () => {
       mockLogger
     );
 
-    // Verify titleElement registration
-    expect(mockRegisterWithLog).toHaveBeenCalledWith(
-      mockRegistrar,
-      tokens.titleElement,
-      mockUiElements.titleElement,
-      { lifecycle: 'singleton', isInstance: true },
-      mockLogger
-    );
   });
 
   it('should register IDocumentContext as singleton factory', () => {
@@ -145,10 +137,10 @@ describe('registerDomElements', () => {
   it('should register correct number of services', () => {
     registerDomElements(mockRegistrar, mockUiElements, mockLogger);
 
-    // Should register 8 services total:
-    // WindowDocument, outputDiv, inputElement, titleElement,
+    // Should register 7 services total (titleElement removed):
+    // WindowDocument, outputDiv, inputElement,
     // IDocumentContext, DomElementFactory, IUserPrompt, AlertRouter
-    expect(mockRegisterWithLog).toHaveBeenCalledTimes(8);
+    expect(mockRegisterWithLog).toHaveBeenCalledTimes(7);
   });
 
   describe('factory function behavior', () => {
@@ -231,8 +223,8 @@ describe('registerDomElements', () => {
         registerDomElements(mockRegistrar, incompleteUiElements, mockLogger);
       }).not.toThrow();
 
-      // Should still register all services
-      expect(mockRegisterWithLog).toHaveBeenCalledTimes(8);
+      // Should still register all services (7 without titleElement)
+      expect(mockRegisterWithLog).toHaveBeenCalledTimes(7);
     });
 
     it('should handle missing logger gracefully', () => {

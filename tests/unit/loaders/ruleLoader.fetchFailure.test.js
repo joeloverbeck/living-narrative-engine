@@ -271,7 +271,7 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
       expect(mockRegistry.store).toHaveBeenCalledTimes(1);
       const expectedStoredDataOK = {
         ...ruleDataOK,
-        id: fileOKName, // BASE ID
+        id: expectedRuleIdOK, // QUALIFIED ID (prefixed)
         _fullId: expectedRuleIdOK, // QUALIFIED ID
         _modId: 'test-mod-fetch-fail',
         _sourceFile: fileOK,

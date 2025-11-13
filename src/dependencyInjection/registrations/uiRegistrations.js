@@ -17,7 +17,6 @@ import AlertRouter from '../../alerting/alertRouter.js';
 import {
   ActorParticipationController,
   SpeechBubbleRenderer,
-  TitleRenderer,
   InputStateController,
   LocationRenderer,
   ActionButtonsRenderer,
@@ -64,14 +63,13 @@ import PerceptibleEventSenderController from '../../domUI/perceptibleEventSender
  * @param {object} uiElements - UI elements from the bootstrapper.
  * @param {HTMLElement} uiElements.outputDiv - Output container.
  * @param {HTMLInputElement} uiElements.inputElement - Input element.
- * @param {HTMLElement} uiElements.titleElement - Title element.
  * @param {Document} uiElements.document - The global document.
  * @param {ILogger} logger - Logger instance.
  * @returns {void}
  */
 export function registerDomElements(
   registrar,
-  { outputDiv, inputElement, titleElement, document: doc },
+  { outputDiv, inputElement, document: doc },
   logger
 ) {
   registerWithLog(
@@ -92,13 +90,6 @@ export function registerDomElements(
     registrar,
     tokens.inputElement,
     inputElement,
-    { lifecycle: 'singleton', isInstance: true },
-    logger
-  );
-  registerWithLog(
-    registrar,
-    tokens.titleElement,
-    titleElement,
     { lifecycle: 'singleton', isInstance: true },
     logger
   );
@@ -172,20 +163,6 @@ export function registerRenderers(registrar, logger) {
         tokens.PortraitModalRenderer,
       ],
     },
-    logger
-  );
-
-  registerWithLog(
-    registrar,
-    tokens.TitleRenderer,
-    (c) =>
-      new TitleRenderer({
-        logger: c.resolve(tokens.ILogger),
-        documentContext: c.resolve(tokens.IDocumentContext),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        titleElement: c.resolve(tokens.titleElement),
-      }),
-    { lifecycle: 'singletonFactory' },
     logger
   );
 
@@ -491,7 +468,6 @@ export function registerFacadeAndManager(registrar, logger) {
         tokens.ActionButtonsRenderer,
         tokens.ActionResultRenderer,
         tokens.LocationRenderer,
-        tokens.TitleRenderer,
         tokens.InputStateController,
         tokens.SpeechBubbleRenderer,
         tokens.PerceptionLogRenderer,
@@ -551,12 +527,11 @@ export function registerLegacyInputHandler(registrar, logger) {
  * @param {object} uiElements - An object containing references to essential UI elements passed from bootstrap.
  * @param {HTMLElement} uiElements.outputDiv - The main output area element.
  * @param {HTMLInputElement} uiElements.inputElement - The user command input element.
- * @param {HTMLElement} uiElements.titleElement - The title display element.
  * @param {Document} uiElements.document - The global document object.
  */
 export function registerUI(
   container,
-  { outputDiv, inputElement, titleElement, document: doc }
+  { outputDiv, inputElement, document: doc }
 ) {
   const registrar = new Registrar(container);
   /** @type {ILogger} */
@@ -565,7 +540,7 @@ export function registerUI(
 
   registerDomElements(
     registrar,
-    { outputDiv, inputElement, titleElement, document: doc },
+    { outputDiv, inputElement, document: doc },
     logger
   );
   registerRenderers(registrar, logger);

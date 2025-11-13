@@ -153,7 +153,6 @@ describe('main.js fallback DOM helper coverage', () => {
     expect(fallbackElements).toMatchObject({
       outputDiv: expect.anything(),
       errorDiv: expect.anything(),
-      titleElement: expect.anything(),
       inputElement: expect.anything(),
       document: expect.anything(),
     });

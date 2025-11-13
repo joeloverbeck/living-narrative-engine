@@ -359,7 +359,6 @@ describe('main.js bootstrap orchestration', () => {
       outputDiv: document.getElementById('outputDiv'),
       errorDiv: document.getElementById('error-output'),
       inputElement: document.getElementById('speech-input'),
-      titleElement: document.querySelector('h1'),
       document,
     });
     expect(errorDetailsArg).toEqual(

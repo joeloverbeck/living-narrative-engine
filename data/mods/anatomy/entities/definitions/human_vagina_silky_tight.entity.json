@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_vagina_silky_tight",
+  "description": "A human female genital organ with small size, firm muscle tone, and silky texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "vagina"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "core:name": {
+      "text": "vagina"
+    }
+  }
+}

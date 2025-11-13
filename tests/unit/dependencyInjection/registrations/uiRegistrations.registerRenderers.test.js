@@ -125,53 +125,6 @@ describe('registerRenderers', () => {
     });
   });
 
-  describe('TitleRenderer factory', () => {
-    it('should register TitleRenderer as singleton factory', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const titleRendererCall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.TitleRenderer
-      );
-
-      expect(titleRendererCall).toBeDefined();
-      expect(titleRendererCall[3].lifecycle).toBe('singletonFactory');
-    });
-
-    it('should create TitleRenderer with correct dependencies', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const titleRendererCall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.TitleRenderer
-      );
-
-      const factory = titleRendererCall[2];
-      const mockContainer = {
-        resolve: jest.fn((token) => {
-          const mocks = {
-            [tokens.ILogger]: mockLogger,
-            [tokens.IDocumentContext]: { query: jest.fn() },
-            [tokens.ISafeEventDispatcher]: { dispatch: jest.fn() },
-            [tokens.titleElement]: document.createElement('h1'),
-          };
-          return mocks[token] || jest.fn();
-        }),
-      };
-
-      const MockTitleRenderer =
-        require('../../../../src/domUI/index.js').TitleRenderer;
-      const result = factory(mockContainer);
-
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.IDocumentContext
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ISafeEventDispatcher
-      );
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.titleElement);
-      expect(MockTitleRenderer).toHaveBeenCalled();
-    });
-  });
 
   describe('LocationRenderer factory', () => {
     it('should register LocationRenderer as singleton factory', () => {
@@ -686,8 +639,8 @@ describe('registerRenderers', () => {
   it('should register all renderers', () => {
     registerRenderers(mockRegistrar, mockLogger);
 
-    // Count total registrations
-    expect(mockRegisterWithLog).toHaveBeenCalledTimes(13);
+    // Count total registrations (TitleRenderer removed)
+    expect(mockRegisterWithLog).toHaveBeenCalledTimes(12);
 
     // Verify all tokens were registered
     const registeredTokens = mockRegisterWithLog.mock.calls.map(
@@ -695,7 +648,6 @@ describe('registerRenderers', () => {
     );
     expect(registeredTokens).toContain(tokens.PortraitModalRenderer);
     expect(registeredTokens).toContain(tokens.SpeechBubbleRenderer);
-    expect(registeredTokens).toContain(tokens.TitleRenderer);
     expect(registeredTokens).toContain(tokens.LocationRenderer);
     expect(registeredTokens).toContain(tokens.ActionButtonsRenderer);
     expect(registeredTokens).toContain(tokens.PerceptionLogRenderer);

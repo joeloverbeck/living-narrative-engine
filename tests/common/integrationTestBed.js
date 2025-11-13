@@ -67,7 +67,6 @@ export class IntegrationTestBed extends BaseTestBed {
     const mockUIElements = {
       outputDiv: outputDiv,
       inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
       document: document,
     };
 

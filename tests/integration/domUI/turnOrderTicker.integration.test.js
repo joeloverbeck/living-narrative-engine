@@ -25,6 +25,8 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     // Create container with required elements
     mockActorQueue = document.createElement('div');
     mockActorQueue.id = 'ticker-actor-queue';
+    // Add scrollTo method that jsdom doesn't provide
+    mockActorQueue.scrollTo = jest.fn();
 
     mockRoundNumber = document.createElement('span');
     mockRoundNumber.id = 'ticker-round-number';
@@ -55,6 +57,44 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
 
     const mockDomElementFactory = {
       create: jest.fn(tag => document.createElement(tag)),
+      div: jest.fn((cls) => {
+        const el = document.createElement('div');
+        if (cls) {
+          if (Array.isArray(cls)) {
+            el.classList.add(...cls);
+          } else {
+            el.classList.add(...cls.split(' ').filter(c => c));
+          }
+        }
+        return el;
+      }),
+      span: jest.fn((cls, text) => {
+        const el = document.createElement('span');
+        if (cls) {
+          if (Array.isArray(cls)) {
+            el.classList.add(...cls);
+          } else {
+            el.classList.add(...cls.split(' ').filter(c => c));
+          }
+        }
+        if (text !== undefined) {
+          el.textContent = text;
+        }
+        return el;
+      }),
+      img: jest.fn((src, alt, cls) => {
+        const el = document.createElement('img');
+        el.src = src;
+        el.alt = alt;
+        if (cls) {
+          if (Array.isArray(cls)) {
+            el.classList.add(...cls);
+          } else {
+            el.classList.add(...cls.split(' ').filter(c => c));
+          }
+        }
+        return el;
+      }),
     };
 
     const mockEntityManager = {
@@ -211,6 +251,44 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
       },
       domElementFactory: {
         create: jest.fn(tag => document.createElement(tag)),
+        div: jest.fn((cls) => {
+          const el = document.createElement('div');
+          if (cls) {
+            if (Array.isArray(cls)) {
+              el.classList.add(...cls);
+            } else {
+              el.classList.add(...cls.split(' ').filter(c => c));
+            }
+          }
+          return el;
+        }),
+        span: jest.fn((cls, text) => {
+          const el = document.createElement('span');
+          if (cls) {
+            if (Array.isArray(cls)) {
+              el.classList.add(...cls);
+            } else {
+              el.classList.add(...cls.split(' ').filter(c => c));
+            }
+          }
+          if (text !== undefined) {
+            el.textContent = text;
+          }
+          return el;
+        }),
+        img: jest.fn((src, alt, cls) => {
+          const el = document.createElement('img');
+          el.src = src;
+          el.alt = alt;
+          if (cls) {
+            if (Array.isArray(cls)) {
+              el.classList.add(...cls);
+            } else {
+              el.classList.add(...cls.split(' ').filter(c => c));
+            }
+          }
+          return el;
+        }),
       },
       entityManager: {
         getEntityInstance: jest.fn(id => ({ id })),

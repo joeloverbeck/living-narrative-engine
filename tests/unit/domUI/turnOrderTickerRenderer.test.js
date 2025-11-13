@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import TurnOrderTickerRenderer from '../../../src/domUI/turnOrderTickerRenderer.js';
+import { TurnOrderTickerRenderer } from '../../../src/domUI/turnOrderTickerRenderer.js';
 
 describe('TurnOrderTickerRenderer - Class Import', () => {
   it('should be importable', () => {

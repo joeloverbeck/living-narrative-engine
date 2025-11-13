@@ -10,34 +10,7 @@ const createLogger = () => ({
 
 const createDispatcher = () => ({ dispatch: jest.fn() });
 
-const createEntity = () => ({
-  getAllComponents: jest.fn().mockReturnValue({}),
-});
-
 const createDependencies = (overrides = {}) => ({
-  goalManager: {
-    selectGoal: jest.fn(),
-    isGoalSatisfied: jest.fn(),
-    ...(overrides.goalManager ?? {}),
-  },
-  simplePlanner: {
-    plan: jest.fn(),
-    validatePlan: jest.fn().mockReturnValue(true),
-    createPlan: jest.fn(),
-    ...(overrides.simplePlanner ?? {}),
-  },
-  planCache: {
-    get: jest.fn().mockReturnValue(null),
-    set: jest.fn(),
-    invalidate: jest.fn(),
-    ...(overrides.planCache ?? {}),
-  },
-  entityManager: {
-    getEntityInstance: jest.fn().mockReturnValue(createEntity()),
-    hasComponent: jest.fn(),
-    getComponentData: jest.fn(),
-    ...(overrides.entityManager ?? {}),
-  },
   logger: overrides.logger ?? createLogger(),
   safeEventDispatcher: overrides.safeEventDispatcher ?? createDispatcher(),
 });
@@ -50,11 +23,7 @@ describe('GoapDecisionProvider', () => {
     baseDeps = createDependencies();
   });
 
-  it('returns the first planned action index when a valid cached plan exists', async () => {
-    const plannedStep = { actionId: 'core:test', targetId: 'target-1' };
-    const cachedPlan = { goalId: 'goal-1', steps: [plannedStep] };
-
-    baseDeps.planCache.get.mockReturnValue(cachedPlan);
+  it('returns the first action index when actions are available', async () => {
     const provider = new GoapDecisionProvider(baseDeps);
 
     const decision = await provider.decide(
@@ -86,11 +55,7 @@ describe('GoapDecisionProvider', () => {
       thoughts: null,
       notes: null,
     });
-    expect(baseDeps.planCache.invalidate).not.toHaveBeenCalled();
-    expect(baseDeps.simplePlanner.validatePlan).toHaveBeenCalledWith(
-      cachedPlan,
-      expect.any(Object)
-    );
+    expect(baseDeps.logger.debug).toHaveBeenCalled();
   });
 
   it('returns null when no actions are available', async () => {
@@ -104,7 +69,7 @@ describe('GoapDecisionProvider', () => {
       thoughts: null,
       notes: null,
     });
-    expect(baseDeps.planCache.get).not.toHaveBeenCalled();
+    expect(baseDeps.logger.debug).toHaveBeenCalledWith('No actions available for GOAP actor');
   });
 
   it('returns null when actions input is not an array', async () => {
@@ -123,6 +88,6 @@ describe('GoapDecisionProvider', () => {
       thoughts: null,
       notes: null,
     });
-    expect(baseDeps.planCache.get).not.toHaveBeenCalled();
+    expect(baseDeps.logger.debug).toHaveBeenCalledWith('No actions available for GOAP actor');
   });
 });

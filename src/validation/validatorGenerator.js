@@ -309,10 +309,15 @@ class ValidatorGenerator {
    *
    * @private
    * @param {*} value - Value to validate
-   * @param {string} expectedType - Expected JSON Schema type
+   * @param {string|string[]} expectedType - Expected JSON Schema type (string or array of types)
    * @returns {boolean} True if value matches expected type
    */
   #isTypeValid(value, expectedType) {
+    // Handle array-based type definitions (e.g., ["object", "null"])
+    if (Array.isArray(expectedType)) {
+      return expectedType.some((type) => this.#isTypeValid(value, type));
+    }
+
     const actualType = this.#getJavaScriptType(value);
 
     switch (expectedType) {

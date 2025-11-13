@@ -32,7 +32,6 @@ function createMinimalDOMElements() {
   // Check if elements already exist
   let outputDiv = document.getElementById('outputDiv');
   let inputElement = document.getElementById('inputBox');
-  let titleElement = document.getElementById('gameTitle');
 
   if (!outputDiv) {
     outputDiv = document.createElement('div');
@@ -49,13 +48,7 @@ function createMinimalDOMElements() {
     document.body.appendChild(inputElement);
   }
 
-  if (!titleElement) {
-    titleElement = document.createElement('h1');
-    titleElement.id = 'gameTitle';
-    document.body.appendChild(titleElement);
-  }
-
-  return { outputDiv, inputElement, titleElement };
+  return { outputDiv, inputElement };
 }
 
 /**
@@ -92,7 +85,7 @@ export async function createPerformanceContainer(options = {}) {
   container.register(tokens.ILogger, () => logger);
 
   // Create minimal DOM elements
-  const { outputDiv, inputElement, titleElement } = createMinimalDOMElements();
+  const { outputDiv, inputElement } = createMinimalDOMElements();
 
   // Configure container with minimal services
   await configureBaseContainer(container, {
@@ -102,7 +95,6 @@ export async function createPerformanceContainer(options = {}) {
     uiElements: {
       outputDiv,
       inputElement,
-      titleElement,
       document: document,
     },
     logger: logger,
@@ -264,11 +256,9 @@ export function forceCleanup() {
   // Clear DOM elements
   const outputDiv = document.getElementById('outputDiv');
   const inputElement = document.getElementById('inputBox');
-  const titleElement = document.getElementById('gameTitle');
 
   if (outputDiv) outputDiv.remove();
   if (inputElement) inputElement.remove();
-  if (titleElement) titleElement.remove();
 
   // Force garbage collection
   if (global.gc) {

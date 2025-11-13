@@ -60,7 +60,6 @@ describe('registerFacadeAndManager', () => {
           tokens.ActionButtonsRenderer,
           tokens.ActionResultRenderer,
           tokens.LocationRenderer,
-          tokens.TitleRenderer,
           tokens.InputStateController,
           tokens.SpeechBubbleRenderer,
           tokens.PerceptionLogRenderer,
@@ -68,6 +67,7 @@ describe('registerFacadeAndManager', () => {
           tokens.LoadGameUI,
           tokens.LlmSelectionModal,
           // EntityLifecycleMonitor is commented out for performance
+          // TitleRenderer removed with title banner
         ],
       });
     });
@@ -329,14 +329,14 @@ describe('registerFacadeAndManager', () => {
   });
 
   describe('DomUiFacade dependencies', () => {
-    it('should have exactly 10 dependencies (EntityLifecycleMonitor disabled)', () => {
+    it('should have exactly 9 dependencies (TitleRenderer and EntityLifecycleMonitor removed)', () => {
       registerFacadeAndManager(mockRegistrar, mockLogger);
 
       const domUiFacadeCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.DomUiFacade
       );
 
-      expect(domUiFacadeCall[3].dependencies).toHaveLength(10);
+      expect(domUiFacadeCall[3].dependencies).toHaveLength(9);
     });
 
     it('should include all required renderer dependencies', () => {
@@ -348,11 +348,10 @@ describe('registerFacadeAndManager', () => {
 
       const dependencies = domUiFacadeCall[3].dependencies;
 
-      // Verify all expected dependencies are present
+      // Verify all expected dependencies are present (TitleRenderer removed)
       expect(dependencies).toContain(tokens.ActionButtonsRenderer);
       expect(dependencies).toContain(tokens.ActionResultRenderer);
       expect(dependencies).toContain(tokens.LocationRenderer);
-      expect(dependencies).toContain(tokens.TitleRenderer);
       expect(dependencies).toContain(tokens.InputStateController);
       expect(dependencies).toContain(tokens.SpeechBubbleRenderer);
       expect(dependencies).toContain(tokens.PerceptionLogRenderer);

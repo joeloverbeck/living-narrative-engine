@@ -132,7 +132,6 @@ class StaticConfiguration {
       'event.schema.json',
       'game.schema.json',
       'goal.schema.json',
-      'planning-effects.schema.json',
       'mod-manifest.schema.json',
       'nested-operation.schema.json',
       'operation.schema.json',

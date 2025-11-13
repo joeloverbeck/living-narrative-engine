@@ -79,10 +79,16 @@ const originalFetch = global.fetch;
 const originalConsoleError = console.error;
 const originalAlert = global.alert;
 
+/**
+ *
+ */
 function resetStageMocks() {
   Object.values(mockStageImplementations).forEach((mockFn) => mockFn.mockReset());
 }
 
+/**
+ *
+ */
 function makeUiElements() {
   return {
     outputDiv: document.getElementById('outputDiv'),
@@ -95,6 +101,13 @@ function makeUiElements() {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.uiElements
+ * @param root0.logger
+ * @param root0.gameEngine
+ */
 function configureHappyPathStages({ uiElements, logger, gameEngine }) {
   mockStageImplementations.ensureCriticalDOMElementsStage.mockResolvedValue({
     success: true,
@@ -649,7 +662,6 @@ describe('main.js focused bootstrap coverage', () => {
     expect(errorDetails.phase).toBe('UI Element Validation');
     expect(fallbackElements.outputDiv).toBe(document.getElementById('outputDiv'));
     expect(fallbackElements.errorDiv).toBe(document.getElementById('error-output'));
-    expect(fallbackElements.titleElement).toBe(document.querySelector('h1'));
     expect(fallbackElements.inputElement).toBe(
       document.getElementById('speech-input')
     );

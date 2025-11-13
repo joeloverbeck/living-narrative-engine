@@ -389,15 +389,8 @@ export function registerAITurnPipeline(registrar, logger) {
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
   );
 
-  registrar.singletonFactory(tokens.IGoapDecisionProvider, async (c) => {
-    // Import goapTokens dynamically to avoid circular dependencies
-    const goapTokensModule = await import('../tokens/tokens-goap.js');
-    const { goapTokens } = goapTokensModule;
+  registrar.singletonFactory(tokens.IGoapDecisionProvider, (c) => {
     return new GoapDecisionProvider({
-      goalManager: c.resolve(goapTokens.IGoalManager),
-      simplePlanner: c.resolve(goapTokens.ISimplePlanner),
-      planCache: c.resolve(goapTokens.IPlanCache),
-      entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });

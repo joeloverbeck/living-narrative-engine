@@ -42,7 +42,6 @@ describe('main.js catastrophic bootstrap scenarios', () => {
   it('falls back to DOM helpers when early bootstrap stages fail', async () => {
     document.body.innerHTML = `
       <div id="outputDiv"></div>
-      <h1>Original Title</h1>
       <input id="speech-input" />
     `;
 
@@ -79,7 +78,8 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     expect(fallbackError).not.toBeNull();
     expect(fallbackError?.textContent).toContain('Application failed to start due to a critical error:');
     expect(fallbackError?.style.border).toBe('1px solid red');
-    expect(document.querySelector('h1')?.textContent).toBe('Fatal Error!');
+    // Title element no longer exists in game.html - verify it's absent
+    expect(document.querySelector('h1')).toBeNull();
     expect(global.alert).not.toHaveBeenCalled();
   });
 

@@ -53,7 +53,6 @@ describe('main.js beginGame without bootstrap', () => {
     expect(elements).toMatchObject({
       outputDiv: expect.anything(),
       errorDiv: expect.anything(),
-      titleElement: expect.anything(),
       inputElement: expect.anything(),
       document: expect.anything(),
     });

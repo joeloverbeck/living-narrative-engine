@@ -78,6 +78,10 @@ describe('main.js high fidelity coverage', () => {
   /** @type {{ showLoadGameUI: jest.Mock }} */
   let gameEngine;
 
+  /**
+   *
+   * @param doc
+   */
   function buildUiElements(doc = document) {
     return {
       outputDiv: doc.getElementById('outputDiv'),
@@ -88,10 +92,16 @@ describe('main.js high fidelity coverage', () => {
     };
   }
 
+  /**
+   *
+   */
   async function importMainModule() {
     return import('../../../src/main.js');
   }
 
+  /**
+   *
+   */
   function prepareHappyPathStages() {
     logger = {
       debug: jest.fn(),
@@ -204,7 +214,7 @@ describe('main.js high fidelity coverage', () => {
     const main = await importMainModule();
     const setPhase = main.__TEST_ONLY__setCurrentPhaseForError;
 
-    mockStages.ensure.mockImplementation(async (...args) => {
+    mockStages.ensure.mockImplementation(async () => {
       setPhase(null);
       return { success: false, error: stageError };
     });
@@ -218,7 +228,6 @@ describe('main.js high fidelity coverage', () => {
     expect(fallbackElements.outputDiv).toBeInstanceOf(HTMLElement);
     expect(fallbackElements.errorDiv).toBeInstanceOf(HTMLElement);
     expect(fallbackElements.inputElement).toBeInstanceOf(HTMLElement);
-    expect(fallbackElements.titleElement).toBeInstanceOf(HTMLElement);
     expect(fallbackElements.document).toBe(document);
     expect(errorDetails.phase).toBe(
       'Bootstrap Orchestration - UI Element Validation'
@@ -346,7 +355,6 @@ describe('main.js high fidelity coverage', () => {
     expect(elements).toMatchObject({
       outputDiv: expect.anything(),
       errorDiv: expect.anything(),
-      titleElement: expect.anything(),
       inputElement: expect.anything(),
       document: expect.anything(),
     });
