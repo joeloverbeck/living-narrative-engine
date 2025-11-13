@@ -103,18 +103,40 @@ export function setupEntityCacheInvalidation(eventBus) {
  * @param {string} entityId - Identifier of the entity.
  * @param {object|null} entity - Entity instance or null to look up via gateway.
  * @param {EntityGateway} gateway - Gateway used to fetch entity/component data.
- * @param {object} [trace] - Optional trace logger with `addLog` method.
+ * @param {object} [_trace] - Optional trace logger with `addLog` method (unused but kept for API compatibility).
  * @returns {object|null} Components object or null if the entity was not found.
  */
-export function getOrBuildComponents(entityId, entity, gateway, trace) {
+export function getOrBuildComponents(entityId, entity, gateway, _trace) {
   const instance = entity ?? gateway.getEntityInstance(entityId);
   if (!instance) return null;
 
-  if (!Array.isArray(instance.componentTypeIds)) {
-    return {};
+  const hasComponentTypeIds = 'componentTypeIds' in instance;
+  const hasComponents = instance.components && typeof instance.components === 'object' && !Array.isArray(instance.components);
+
+  // FAST PATH: If entity has components object (from getEntity()), return it directly
+  // This is the preferred path for entities that come from getEntity() which returns { id, components }
+  if (hasComponents) {
+    return instance.components;
   }
 
-  return buildComponents(entityId, instance, gateway);
+  // VALIDATION: If entity has componentTypeIds, it must be an array
+  if (hasComponentTypeIds) {
+    const componentTypeIdsValue = instance.componentTypeIds;
+    if (!Array.isArray(componentTypeIdsValue)) {
+      return {}; // Malformed: componentTypeIds exists but is not an array
+    }
+
+    // If entity also has pre-built components, return them (optimization for getters)
+    if (hasComponents) {
+      return instance.components;
+    }
+
+    // Build components from componentTypeIds
+    return buildComponents(entityId, instance, gateway);
+  }
+
+  // Entity has neither components nor componentTypeIds - malformed
+  return {};
 }
 
 /**
@@ -139,7 +161,7 @@ export function createEvaluationContext(
   processedActor = null
 ) {
   // Fast path: null/undefined items
-  if (item == null) return null;
+  if (item === null || item === undefined) return null;
 
   // Normalize inventory reference objects ({ itemId, ... }) into entity-like objects
   if (
@@ -280,9 +302,11 @@ export function createEvaluationContext(
 
   // Helper function to add components while preserving prototype chain
   /**
+   * Adds components to an entity while preserving its prototype chain.
    *
-   * @param entity
-   * @param entityId
+   * @param {object} entity - The entity to add components to
+   * @param {string} entityId - The entity identifier
+   * @returns {object} Entity with components added
    */
   function addComponentsToEntity(entity, entityId) {
     // Convert Map-based components to plain object if needed
@@ -444,9 +468,11 @@ export function preprocessActorForEvaluation(actorEntity, gateway) {
 
   // Helper function copied from createEvaluationContext for consistency
   /**
+   * Adds components to an entity while preserving its prototype chain.
    *
-   * @param entity
-   * @param entityId
+   * @param {object} entity - The entity to add components to
+   * @param {string} entityId - The entity identifier
+   * @returns {object} Entity with components added
    */
   function addComponentsToEntity(entity, entityId) {
     // Convert Map-based components to plain object if needed

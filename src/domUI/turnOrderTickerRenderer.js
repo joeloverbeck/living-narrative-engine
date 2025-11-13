@@ -415,8 +415,47 @@ export class TurnOrderTickerRenderer {
    * @public
    */
   updateActorParticipation(entityId, participating) {
-    // Implementation in TURORDTIC-010
-    this.#logger.debug('updateActorParticipation() called', { entityId, participating });
+    if (!entityId || typeof entityId !== 'string') {
+      this.#logger.warn('updateActorParticipation requires a valid entity ID', { entityId });
+      return;
+    }
+
+    if (typeof participating !== 'boolean') {
+      this.#logger.warn('updateActorParticipation requires a boolean participating value', {
+        entityId,
+        participating,
+      });
+      return;
+    }
+
+    this.#logger.debug('Updating actor participation state', { entityId, participating });
+
+    try {
+      // Find the actor element
+      const actorElement = this.#actorQueueElement?.querySelector(
+        `[data-entity-id="${entityId}"]`
+      );
+
+      if (!actorElement) {
+        this.#logger.debug('Actor element not found in ticker', {
+          entityId,
+          reason: 'May not be in current round or already removed',
+        });
+        return;
+      }
+
+      // Apply participation state
+      this.#_applyParticipationState(actorElement, participating);
+
+      this.#logger.debug('Actor participation state updated', { entityId, participating });
+
+    } catch (error) {
+      this.#logger.error('Failed to update actor participation state', {
+        entityId,
+        participating,
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -714,27 +753,128 @@ export class TurnOrderTickerRenderer {
 
   /**
    * Apply participation visual state to an actor element.
+   * Updates data attribute which triggers CSS filter and opacity changes.
    *
    * @param {HTMLElement} element - The actor element
    * @param {boolean} participating - Whether the actor is participating
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members -- Implementation in TURORDTIC-010
   #_applyParticipationState(element, participating) {
-    // Implementation in TURORDTIC-010
+    if (!element || !(element instanceof HTMLElement)) {
+      this.#logger.warn('applyParticipationState requires a valid HTMLElement', { element });
+      return;
+    }
+
+    // Set data attribute (CSS will apply visual changes)
     element.setAttribute('data-participating', participating.toString());
+
+    // Add transition class for smooth visual change
+    element.classList.add('participation-updating');
+
+    // Remove transition class after animation completes
+    setTimeout(() => {
+      element.classList.remove('participation-updating');
+    }, 300); // Match CSS transition duration
+
+    this.#logger.debug('Participation state applied to element', {
+      entityId: element.getAttribute('data-entity-id'),
+      participating,
+    });
   }
 
   /**
    * Animate an actor entering the ticker.
    *
    * @param {HTMLElement} element - The actor element
-   * @param {number} _index - Position in queue (for stagger delay)
+   * @param {number} index - Position in queue (for stagger delay)
    * @private
    */
-  #_animateActorEntry(element, _index) {
-    // Implementation in TURORDTIC-011
+  #_animateActorEntry(element, index) {
+    // Validate element parameter
+    if (!element || !(element instanceof HTMLElement)) {
+      this.#logger.warn(
+        'TurnOrderTickerRenderer: Invalid element provided to _animateActorEntry',
+        { element, index }
+      );
+      return;
+    }
+
+    // Validate and normalize index parameter
+    let normalizedIndex = index;
+    if (
+      typeof index !== 'number' ||
+      !Number.isFinite(index) ||
+      index < 0
+    ) {
+      this.#logger.warn(
+        'TurnOrderTickerRenderer: Invalid index provided to _animateActorEntry, defaulting to 0',
+        { providedIndex: index, element: element.className }
+      );
+      normalizedIndex = 0;
+    }
+
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+
+    if (prefersReducedMotion) {
+      // Simplified animation for accessibility
+      this.#logger.debug(
+        'TurnOrderTickerRenderer: Using reduced motion animation for actor entry'
+      );
+      element.style.transition = 'opacity 0.1s ease-out';
+      element.style.opacity = '0';
+
+      // Force reflow to ensure transition applies
+      void element.offsetHeight;
+
+      element.style.opacity = '1';
+
+      // Clean up inline styles after animation
+      setTimeout(() => {
+        element.style.transition = '';
+        element.style.opacity = '';
+      }, 150);
+
+      return;
+    }
+
+    // Apply stagger delay based on position
+    const staggerDelay = normalizedIndex * 100; // 100ms per actor
+    element.style.animationDelay = `${staggerDelay}ms`;
+
+    this.#logger.debug(
+      `TurnOrderTickerRenderer: Animating actor entry with ${staggerDelay}ms delay`,
+      { index: normalizedIndex, element: element.className }
+    );
+
+    // Add entering class to trigger CSS animation
     element.classList.add('entering');
+
+    // Calculate total animation time: duration + stagger + buffer
+    const animationDuration = 500; // matches CSS animation duration
+    const buffer = 50; // small buffer for safety
+    const totalTime = animationDuration + staggerDelay + buffer;
+
+    // Remove entering class and clear inline styles after animation completes
+    setTimeout(() => {
+      try {
+        element.classList.remove('entering');
+        element.style.animationDelay = '';
+
+        this.#logger.debug(
+          'TurnOrderTickerRenderer: Completed actor entry animation',
+          { index: normalizedIndex }
+        );
+      } catch (err) {
+        // Non-critical failure, log but don't throw
+        this.#logger.warn(
+          'TurnOrderTickerRenderer: Failed to clean up after actor entry animation',
+          { error: err.message, index: normalizedIndex }
+        );
+      }
+    }, totalTime);
   }
 
   /**

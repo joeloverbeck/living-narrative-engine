@@ -19,6 +19,21 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     // Reset DOM
     document.body.innerHTML = '';
 
+    // Mock window.matchMedia for animation tests
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: jest.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      })),
+    });
+
     // Create mock logger
     mockLogger = createMockLogger();
 
@@ -522,5 +537,231 @@ describe('TurnOrderTickerRenderer - Integration: Current Actor Highlighting', ()
     const allHighlighted = mockActorQueue.querySelectorAll('.ticker-actor.current');
     expect(allHighlighted.length).toBe(1);
     expect(allHighlighted[0].getAttribute('data-entity-id')).toBe('actor-3');
+  });
+});
+
+describe('Turn Order Ticker - Participation Updates', () => {
+  let renderer;
+  let mockLogger;
+  let mockContainer;
+  let mockActorQueue;
+  let mockRoundNumber;
+  let subscribedHandlers;
+
+  beforeEach(() => {
+    // Reset DOM
+    document.body.innerHTML = '';
+
+    // Create mock logger
+    mockLogger = createMockLogger();
+
+    // Create container with required elements
+    mockActorQueue = document.createElement('div');
+    mockActorQueue.id = 'ticker-actor-queue';
+    mockActorQueue.scrollTo = jest.fn();
+
+    mockRoundNumber = document.createElement('span');
+    mockRoundNumber.id = 'ticker-round-number';
+
+    mockContainer = document.createElement('div');
+    mockContainer.id = 'turn-order-ticker';
+    mockContainer.appendChild(mockRoundNumber);
+    mockContainer.appendChild(mockActorQueue);
+    document.body.appendChild(mockContainer);
+
+    // Track event subscriptions
+    subscribedHandlers = {};
+
+    // Create production-like dependencies (matching existing pattern)
+    const mockDocumentContext = {
+      query: jest.fn(selector => document.querySelector(selector)),
+      create: jest.fn(tag => document.createElement(tag)),
+    };
+
+    const mockValidatedEventDispatcher = {
+      dispatch: jest.fn(),
+      subscribe: jest.fn((eventType, handler) => {
+        subscribedHandlers[eventType] = handler;
+        return jest.fn(); // Unsubscribe function
+      }),
+      unsubscribe: jest.fn(),
+    };
+
+    const mockDomElementFactory = {
+      create: jest.fn(tag => document.createElement(tag)),
+      div: jest.fn((cls) => {
+        const el = document.createElement('div');
+        if (cls) {
+          if (Array.isArray(cls)) {
+            el.classList.add(...cls);
+          } else {
+            el.classList.add(...cls.split(' ').filter(c => c));
+          }
+        }
+        return el;
+      }),
+      span: jest.fn((cls, text) => {
+        const el = document.createElement('span');
+        if (cls) {
+          if (Array.isArray(cls)) {
+            el.classList.add(...cls);
+          } else {
+            el.classList.add(...cls.split(' ').filter(c => c));
+          }
+        }
+        if (text !== undefined) {
+          el.textContent = text;
+        }
+        return el;
+      }),
+      img: jest.fn((src, alt, cls) => {
+        const el = document.createElement('img');
+        el.src = src;
+        el.alt = alt;
+        if (cls) {
+          if (Array.isArray(cls)) {
+            el.classList.add(...cls);
+          } else {
+            el.classList.add(...cls.split(' ').filter(c => c));
+          }
+        }
+        return el;
+      }),
+    };
+
+    const mockEntityManager = {
+      getEntityInstance: jest.fn(id => ({ id })),
+      hasComponent: jest.fn(() => false),
+      getComponentData: jest.fn(),
+    };
+
+    const mockEntityDisplayDataProvider = {
+      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityPortraitPath: jest.fn(() => null),
+    };
+
+    // Create renderer with real dependencies
+    renderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: mockDocumentContext,
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      domElementFactory: mockDomElementFactory,
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+  });
+
+  afterEach(() => {
+    if (renderer) {
+      renderer.dispose();
+    }
+    document.body.innerHTML = '';
+  });
+
+  it('should update visual state when participation changes', () => {
+    // Render actors
+    const roundStartedEvent = {
+      type: 'core:round_started',
+      payload: {
+        roundNumber: 1,
+        actors: ['actor-1'],
+        strategy: 'sequential',
+      },
+    };
+    subscribedHandlers['core:round_started'](roundStartedEvent);
+
+    const actorElement = mockActorQueue.querySelector('[data-entity-id="actor-1"]');
+
+    // Initially participating
+    expect(actorElement.getAttribute('data-participating')).toBe('true');
+
+    // Dispatch component_added event
+    const componentAddedEvent = {
+      type: 'core:component_added',
+      payload: {
+        entityId: 'actor-1',
+        componentId: 'core:participation',
+        data: { participating: false },
+      },
+    };
+    subscribedHandlers['core:component_added'](componentAddedEvent);
+
+    expect(actorElement.getAttribute('data-participating')).toBe('false');
+  });
+
+  it('should handle participation toggle during round', () => {
+    // Render actors
+    const roundStartedEvent = {
+      type: 'core:round_started',
+      payload: {
+        roundNumber: 1,
+        actors: ['actor-1', 'actor-2'],
+        strategy: 'sequential',
+      },
+    };
+    subscribedHandlers['core:round_started'](roundStartedEvent);
+
+    // Start actor-1's turn
+    subscribedHandlers['core:turn_started']({
+      type: 'core:turn_started',
+      payload: { entityId: 'actor-1', roundNumber: 1 },
+    });
+
+    // Disable actor-2 mid-round
+    subscribedHandlers['core:component_added']({
+      type: 'core:component_added',
+      payload: {
+        entityId: 'actor-2',
+        componentId: 'core:participation',
+        data: { participating: false },
+      },
+    });
+
+    const actor2Element = mockActorQueue.querySelector('[data-entity-id="actor-2"]');
+    expect(actor2Element.getAttribute('data-participating')).toBe('false');
+  });
+
+  describe('Entry Animations', () => {
+    it('should animate all actors entering when round starts', () => {
+      jest.useFakeTimers();
+
+      // Dispatch round_started event which should trigger actor rendering
+      const event = {
+        type: 'core:round_started',
+        payload: {
+          roundNumber: 1,
+          actors: ['actor-1', 'actor-2', 'actor-3'],
+          strategy: 'sequential',
+        },
+      };
+
+      subscribedHandlers['core:round_started'](event);
+
+      // Get the rendered actor elements
+      const actorElements = Array.from(mockActorQueue.querySelectorAll('.ticker-actor'));
+      expect(actorElements.length).toBe(3);
+
+      // Verify all actors have entering class
+      actorElements.forEach((element, index) => {
+        expect(element.classList.contains('entering')).toBe(true);
+
+        // Verify stagger delays
+        const expectedDelay = `${index * 100}ms`;
+        expect(element.style.animationDelay).toBe(expectedDelay);
+      });
+
+      // Fast-forward past all animations
+      // Max delay is 200ms (for actor-3), plus 500ms animation, plus 50ms buffer = 750ms
+      jest.advanceTimersByTime(1000);
+
+      // Verify all entering classes are removed
+      actorElements.forEach(element => {
+        expect(element.classList.contains('entering')).toBe(false);
+        expect(element.style.animationDelay).toBe('');
+      });
+
+      jest.useRealTimers();
+    });
   });
 });

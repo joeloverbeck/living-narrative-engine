@@ -13,6 +13,7 @@ import { registerEventBusAdapters } from './registrations/eventBusAdapterRegistr
 import { registerInitializers } from './registrations/initializerRegistrations.js';
 import { registerRuntime } from './registrations/runtimeRegistrations.js';
 import { registerPipelineServices } from './registrations/pipelineServiceRegistrations.js';
+import { registerGoapServices } from './registrations/goapRegistrations.js';
 
 // Game-specific registrations (conditionally imported)
 import {
@@ -135,6 +136,15 @@ export async function configureBaseContainer(container, options = {}) {
       registerInterpreters(container);
     } catch (error) {
       const errorMessage = `Failed to register interpreters: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
+
+    if (logger) logger.debug('[BaseContainerConfig] Registering GOAP services...');
+    try {
+      registerGoapServices(container);
+    } catch (error) {
+      const errorMessage = `Failed to register GOAP services: ${error.message}`;
       if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
       throw new Error(errorMessage);
     }
