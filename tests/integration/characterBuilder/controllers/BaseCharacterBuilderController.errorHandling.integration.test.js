@@ -349,7 +349,10 @@ describe('BaseCharacterBuilderController lifecycle and error handling (integrati
       'schema://integration/tests/simple-character'
     );
     expect(invalidResult.isValid).toBe(false);
-    expect(invalidResult.errors[0]).toContain('name');
+    const firstError = invalidResult.errors[0];
+    const errorMessage =
+      typeof firstError === 'string' ? firstError : firstError?.message;
+    expect(errorMessage).toContain('name');
     expect(invalidResult.errorMessage).toContain("must have required property 'name'");
 
     const validResult = controller.validateDataExposed(
