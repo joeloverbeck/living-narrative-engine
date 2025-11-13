@@ -1,0 +1,204 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:invalid_parameter_type",
+  "version": "1.0.0",
+  "description": "Edge case example: Type validation for task parameters. Demonstrates checking parameter types and values before using them in refinement steps.",
+
+  "applicability": {
+    "description": "Task parameters are provided",
+    "condition": {
+      "and": [
+        {"!=": [{"var": "task.params"}, null]},
+        {"!=": [{"var": "task.params.targetItem"}, null]}
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "description": "VALIDATION: Check parameter type and format before use",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {
+            "!=": [{"var": "task.params.targetItem"}, null]
+          },
+          {
+            "!=": [{"var": "task.params.targetItem"}, ""]
+          },
+          {
+            "===": [
+              {"typeof": {"var": "task.params.targetItem"}},
+              "string"
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "description": "ADDITIONAL: Validate entity exists before using as target",
+          "stepType": "conditional",
+          "condition": {
+            "has_component": [
+              {"var": "task.params.targetItem"},
+              "core:identity"
+            ]
+          },
+          "thenSteps": [
+            {
+              "description": "Parameter valid and entity exists - proceed",
+              "stepType": "primitive_action",
+              "actionId": "items:pick_up_item",
+              "targetBindings": {
+                "item": "task.params.targetItem"
+              }
+            }
+          ],
+          "elseSteps": [
+            {
+              "description": "Entity doesn't exist",
+              "stepType": "fail",
+              "reason": "Target item entity does not exist in world"
+            }
+          ]
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "VALIDATION FAILURE: Parameter invalid type or value",
+          "stepType": "fail",
+          "reason": "Task parameter 'targetItem' is null, empty, or not a string"
+        }
+      ],
+      "onFailure": "fail"
+    }
+  ],
+
+  "fallbackBehavior": "fail",
+
+  "commonErrors": [
+    {
+      "error": "Invalid entity ID used as target",
+      "cause": "Not validating parameter type before using as entity ID",
+      "wrongCode": {
+        "targetBindings": {
+          "item": "task.params.targetItem"
+        }
+      },
+      "fix": "Validate parameter type and entity existence first"
+    },
+    {
+      "error": "NaN used in numeric comparison",
+      "cause": "Not validating numeric parameters",
+      "wrongCode": {
+        "condition": {
+          ">": [{"var": "task.params.quantity"}, 0]
+        }
+      },
+      "fix": "Check typeof === 'number' AND !isNaN before comparisons"
+    },
+    {
+      "error": "Empty string passed to action",
+      "cause": "Only checking != null, not checking for empty strings",
+      "wrongCode": {
+        "condition": {
+          "!=": [{"var": "task.params.targetItem"}, null]
+        }
+      },
+      "fix": "Also check != \"\" for string parameters"
+    }
+  ],
+
+  "typeValidationPatterns": {
+    "stringValidation": {
+      "description": "Validate string parameter is non-empty string",
+      "pattern": {
+        "and": [
+          {"!=": [{"var": "param"}, null]},
+          {"!=": [{"var": "param"}, ""]},
+          {"===": [{"typeof": {"var": "param"}}, "string"]}
+        ]
+      }
+    },
+    "numberValidation": {
+      "description": "Validate number parameter is valid number",
+      "pattern": {
+        "and": [
+          {"!=": [{"var": "param"}, null]},
+          {"===": [{"typeof": {"var": "param"}}, "number"]},
+          {"===": [{"isNaN": {"var": "param"}}, false]}
+        ]
+      }
+    },
+    "entityIdValidation": {
+      "description": "Validate entity ID and entity exists",
+      "pattern": {
+        "and": [
+          {"!=": [{"var": "param"}, null]},
+          {"!=": [{"var": "param"}, ""]},
+          {"===": [{"typeof": {"var": "param"}}, "string"]},
+          {"has_component": [{"var": "param"}, "core:identity"]}
+        ]
+      }
+    },
+    "booleanValidation": {
+      "description": "Validate boolean parameter",
+      "pattern": {
+        "and": [
+          {"!=": [{"var": "param"}, null]},
+          {"===": [{"typeof": {"var": "param"}}, "boolean"]}
+        ]
+      }
+    },
+    "arrayValidation": {
+      "description": "Validate array parameter has elements",
+      "pattern": {
+        "and": [
+          {"!=": [{"var": "param"}, null]},
+          {"===": [{"typeof": {"var": "param"}}, "array"]},
+          {">": [{"var": "param.length"}, 0]}
+        ]
+      }
+    }
+  },
+
+  "parameterValidationChecklist": {
+    "description": "Validation steps for task parameters",
+    "steps": [
+      "1. Check parameter != null",
+      "2. Check parameter type with typeof",
+      "3. For strings: check != \"\" (not empty)",
+      "4. For numbers: check !isNaN and in valid range",
+      "5. For entity IDs: validate entity exists with has_component",
+      "6. For arrays: check .length > 0",
+      "7. For enums: check value in allowed set"
+    ]
+  },
+
+  "failureBehaviorGuidance": {
+    "parameterValidation": {
+      "fallbackBehavior": "fail",
+      "rationale": "Invalid parameters indicate planner or task setup error - can't recover"
+    },
+    "entityExistence": {
+      "fallbackBehavior": "replan",
+      "rationale": "Entity might have been destroyed - planner can find alternative"
+    },
+    "runtimeStateCheck": {
+      "fallbackBehavior": "replan",
+      "rationale": "World state changed - planner can adapt"
+    }
+  },
+
+  "notes": [
+    "RULE: Validate ALL task parameters before use",
+    "RULE: Check type with typeof operator",
+    "RULE: For entity IDs, validate entity exists with has_component",
+    "DEFENSIVE: Parameters from planner may be incorrect",
+    "TYPE SAFETY: typeof checks prevent type coercion errors",
+    "EMPTY STRINGS: Always check != \"\" for string parameters",
+    "NAN: Check isNaN for numeric parameters",
+    "FAILURE MODE: Use 'fail' not 'replan' for parameter validation failures",
+    "ERROR MESSAGES: Provide specific reason about which parameter is invalid"
+  ]
+}

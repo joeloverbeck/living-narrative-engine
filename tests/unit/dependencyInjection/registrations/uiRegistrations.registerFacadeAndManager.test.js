@@ -66,6 +66,7 @@ describe('registerFacadeAndManager', () => {
           tokens.SaveGameUI,
           tokens.LoadGameUI,
           tokens.LlmSelectionModal,
+          tokens.TurnOrderTickerRenderer,
           // EntityLifecycleMonitor is commented out for performance
           // TitleRenderer removed with title banner
         ],
@@ -329,14 +330,14 @@ describe('registerFacadeAndManager', () => {
   });
 
   describe('DomUiFacade dependencies', () => {
-    it('should have exactly 9 dependencies (TitleRenderer and EntityLifecycleMonitor removed)', () => {
+    it('should have exactly 10 dependencies (TitleRenderer removed, EntityLifecycleMonitor removed, TurnOrderTickerRenderer added)', () => {
       registerFacadeAndManager(mockRegistrar, mockLogger);
 
       const domUiFacadeCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.DomUiFacade
       );
 
-      expect(domUiFacadeCall[3].dependencies).toHaveLength(9);
+      expect(domUiFacadeCall[3].dependencies).toHaveLength(10);
     });
 
     it('should include all required renderer dependencies', () => {
@@ -348,7 +349,7 @@ describe('registerFacadeAndManager', () => {
 
       const dependencies = domUiFacadeCall[3].dependencies;
 
-      // Verify all expected dependencies are present (TitleRenderer removed)
+      // Verify all expected dependencies are present (TitleRenderer removed, TurnOrderTickerRenderer added)
       expect(dependencies).toContain(tokens.ActionButtonsRenderer);
       expect(dependencies).toContain(tokens.ActionResultRenderer);
       expect(dependencies).toContain(tokens.LocationRenderer);
@@ -358,6 +359,7 @@ describe('registerFacadeAndManager', () => {
       expect(dependencies).toContain(tokens.SaveGameUI);
       expect(dependencies).toContain(tokens.LoadGameUI);
       expect(dependencies).toContain(tokens.LlmSelectionModal);
+      expect(dependencies).toContain(tokens.TurnOrderTickerRenderer);
     });
   });
 });

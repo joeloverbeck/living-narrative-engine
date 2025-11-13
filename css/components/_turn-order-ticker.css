@@ -34,7 +34,6 @@
   align-items: center;
   gap: 1rem;
   flex: 1;
-  overflow-x: auto;
   padding: 0.25rem 0;
 }
 

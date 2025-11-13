@@ -13,6 +13,7 @@
 /** @typedef {import('./speechBubbleRenderer').SpeechBubbleRenderer} SpeechBubbleRenderer */
 /** @typedef {import('./actionResultRenderer.js').ActionResultRenderer} ActionResultRenderer */
 /** @typedef {import('./entityLifecycleMonitor.js').EntityLifecycleMonitor} EntityLifecycleMonitor */
+/** @typedef {import('./turnOrderTickerRenderer.js').TurnOrderTickerRenderer} TurnOrderTickerRenderer */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -31,6 +32,7 @@ export class DomUiFacade {
   #speechBubbleRenderer;
   #actionResultRenderer;
   #entityLifecycleMonitor;
+  #turnOrderTickerRenderer;
 
   /**
    * Creates an instance of DomUiFacade.
@@ -45,6 +47,7 @@ export class DomUiFacade {
    * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
    * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
    * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
+   * @param {TurnOrderTickerRenderer} deps.turnOrderTickerRenderer - Renderer for turn order ticker.
    * @param {EntityLifecycleMonitor} [deps.entityLifecycleMonitor] - The Entity Lifecycle Monitor component (optional, disabled for performance).
    * @throws {Error} If any required dependency is missing or invalid.
    */
@@ -58,6 +61,7 @@ export class DomUiFacade {
     saveGameUI,
     loadGameUI,
     llmSelectionModal,
+    turnOrderTickerRenderer,
     entityLifecycleMonitor = null, // OPTIONAL - disabled for performance
   }) {
     // Basic validation to ensure all renderers are provided
@@ -105,6 +109,13 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Missing or invalid llmSelectionModal dependency.'
       );
+    if (
+      !turnOrderTickerRenderer ||
+      typeof turnOrderTickerRenderer.render !== 'function'
+    )
+      throw new Error(
+        'DomUiFacade: Missing or invalid turnOrderTickerRenderer dependency.'
+      );
     // EntityLifecycleMonitor is now optional (disabled for performance)
     if (
       entityLifecycleMonitor &&
@@ -123,6 +134,7 @@ export class DomUiFacade {
     this.#saveGameUI = saveGameUI;
     this.#loadGameUI = loadGameUI;
     this.#llmSelectionModal = llmSelectionModal;
+    this.#turnOrderTickerRenderer = turnOrderTickerRenderer;
     this.#entityLifecycleMonitor = entityLifecycleMonitor;
   }
 
@@ -217,6 +229,15 @@ export class DomUiFacade {
   }
 
   /**
+   * Provides the TurnOrderTickerRenderer instance.
+   *
+   * @returns {TurnOrderTickerRenderer} Renderer for the turn order ticker.
+   */
+  get turnOrderTicker() {
+    return this.#turnOrderTickerRenderer;
+  }
+
+  /**
    * Optional: Dispose method to potentially call dispose on all managed renderers.
    * Useful if the facade's lifecycle manages the renderers' lifecycle.
    */
@@ -230,6 +251,7 @@ export class DomUiFacade {
     this.#saveGameUI?.dispose?.();
     this.#loadGameUI?.dispose?.();
     this.#llmSelectionModal?.dispose?.();
+    this.#turnOrderTickerRenderer?.dispose?.();
     this.#entityLifecycleMonitor?.dispose?.();
   }
 }

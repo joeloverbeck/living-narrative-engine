@@ -91,6 +91,33 @@ Implemented complete task file format system:
 - `find_instrument` - Knowledge-gated task
 - `arm_self` - Multi-precondition combat task
 
+#### GOAPIMPL-007: Complete Refinement Examples
+**Status**: ✅ COMPLETED
+**Completed**: 2024-11-13
+**Dependencies**: GOAPIMPL-005 ✅
+
+Comprehensive refinement method examples, templates, and edge case documentation for modders.
+
+**Deliverables**:
+- **Templates** (4 files): Ready-to-use templates with placeholders and inline documentation
+  - `docs/goap/templates/simple-sequential-task.template.json`
+  - `docs/goap/templates/conditional-acquisition-task.template.json`
+  - `docs/goap/templates/multi-step-state-task.template.json`
+  - `docs/goap/templates/multiple-methods-task.template.json`
+  - `docs/goap/templates/README.md` (comprehensive usage guide)
+
+- **Edge Cases** (5 files): Common error scenarios and defensive programming patterns
+  - `docs/goap/examples/edge-cases/empty-inventory-conditional.refinement.json`
+  - `docs/goap/examples/edge-cases/unreachable-location.refinement.json`
+  - `docs/goap/examples/edge-cases/missing-component.refinement.json`
+  - `docs/goap/examples/edge-cases/invalid-parameter-type.refinement.json`
+  - `docs/goap/examples/edge-cases/condition-evaluation-error.refinement.json`
+  - `docs/goap/examples/edge-cases/README.md` (troubleshooting guide)
+
+- **Documentation Updates**: Cross-references added to examples README
+
+**Note**: Example tasks and refinement methods already exist from GOAPIMPL-005. This ticket completes the modder-facing deliverables (templates + edge cases).
+
 ### 🔄 In Progress
 
 *None currently*
@@ -108,14 +135,6 @@ Define how refinement methods bind parameters from planning context to task para
 **Dependencies**: GOAPIMPL-004, GOAPIMPL-005 ✅
 
 Define how to assemble execution context from world state, actor state, and task parameters.
-
-#### GOAPIMPL-007: Complete Examples
-**Status**: Planned
-**Dependencies**: GOAPIMPL-005 ✅
-
-Create complete working examples showing full task → refinement → action flow.
-
-**Note**: Example tasks and refinement methods already exist (GOAPIMPL-005), but full execution flow examples pending GOAP planner implementation.
 
 ## Current System State
 

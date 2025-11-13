@@ -365,9 +365,36 @@ The refinement method system is designed for extensibility. Future versions will
 - **Cross-reference validation**: Verify actionId references exist in action registry
 - **Runtime nesting depth validation**: Enforce 3-level limit programmatically
 
+## Additional Resources
+
+### Templates for Modders
+**Location**: `docs/goap/templates/`
+
+Ready-to-use templates for creating your own refinement methods:
+- `simple-sequential-task.template.json` - Linear action sequences
+- `conditional-acquisition-task.template.json` - If-then-else branching
+- `multi-step-state-task.template.json` - State accumulation with storeResultAs
+- `multiple-methods-task.template.json` - Complete task with multiple refinement methods
+
+Each template includes placeholder markers, inline documentation, and usage instructions. See `docs/goap/templates/README.md` for quick start guide.
+
+### Edge Cases & Error Prevention
+**Location**: `docs/goap/examples/edge-cases/`
+
+Common error scenarios and defensive programming patterns:
+- `empty-inventory-conditional.refinement.json` - Safe array access
+- `unreachable-location.refinement.json` - Precondition validation
+- `missing-component.refinement.json` - Component existence checks
+- `invalid-parameter-type.refinement.json` - Parameter type validation
+- `condition-evaluation-error.refinement.json` - Safe property access
+
+See `docs/goap/examples/edge-cases/README.md` for troubleshooting guide and error message reference.
+
 ## Questions or Issues?
 
 For questions about refinement methods or GOAP system design, refer to:
 - Main GOAP specification: `specs/goap-system-specs.md`
 - Schema definition: `data/schemas/refinement-method.schema.json`
 - Implementation tickets: `tickets/GOAPIMPL-*.md`
+- **Templates**: `docs/goap/templates/README.md` (NEW - quick start for modders)
+- **Edge Cases**: `docs/goap/examples/edge-cases/README.md` (NEW - error prevention)

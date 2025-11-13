@@ -1,0 +1,180 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:unreachable_location",
+  "version": "1.0.0",
+  "description": "Edge case example: Handling unreachable locations. Demonstrates precondition validation and graceful failure when target locations are inaccessible.",
+
+  "applicability": {
+    "description": "Actor can move and target location exists",
+    "condition": {
+      "and": [
+        {"has_component": ["actor", "positioning:can_move"]},
+        {"has_component": ["task.params.location", "positioning:location"]}
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "description": "PRECONDITION CHECK: Validate location is accessible before attempting movement",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              {"var": "task.params.location"},
+              "positioning:accessible"
+            ]
+          },
+          {
+            "not": {
+              "has_component": [
+                {"var": "task.params.location"},
+                "positioning:blocked"
+              ]
+            }
+          },
+          {
+            "not": {
+              "has_component": [
+                {"var": "task.params.location"},
+                "positioning:out_of_bounds"
+              ]
+            }
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "description": "Location accessible - attempt movement",
+          "stepType": "primitive_action",
+          "actionId": "positioning:move_to",
+          "targetBindings": {
+            "target": "task.params.location"
+          },
+          "storeResultAs": "moveResult"
+        },
+        {
+          "description": "Validate movement succeeded",
+          "stepType": "conditional",
+          "condition": {
+            "==": [{"var": "refinement.localState.moveResult.success"}, true]
+          },
+          "thenSteps": [
+            {
+              "description": "Movement succeeded - perform interaction",
+              "stepType": "primitive_action",
+              "actionId": "interaction:interact_with_location",
+              "targetBindings": {
+                "target": "task.params.location"
+              }
+            }
+          ],
+          "elseSteps": [
+            {
+              "description": "Movement failed - replan",
+              "stepType": "fail",
+              "reason": "Failed to reach target location despite it being accessible"
+            }
+          ]
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "GRACEFUL FAILURE: Location not accessible - don't attempt movement",
+          "stepType": "fail",
+          "reason": "Target location is inaccessible, blocked, or out of bounds"
+        }
+      ],
+      "onFailure": "replan"
+    }
+  ],
+
+  "fallbackBehavior": "replan",
+
+  "commonErrors": [
+    {
+      "error": "Movement action fails repeatedly",
+      "cause": "Not checking if location is accessible before attempting movement",
+      "wrongCode": {
+        "steps": [
+          {
+            "stepType": "primitive_action",
+            "actionId": "positioning:move_to",
+            "targetBindings": {"target": "task.params.location"}
+          }
+        ]
+      },
+      "fix": "Add precondition check for accessibility (see example above)"
+    },
+    {
+      "error": "Planner keeps selecting unreachable locations",
+      "cause": "Task planning preconditions don't filter out inaccessible locations",
+      "wrongCode": {
+        "planningPreconditions": [
+          {"condition": {"has_component": ["target", "positioning:location"]}}
+        ]
+      },
+      "fix": "Add accessibility check in task planningPreconditions"
+    }
+  ],
+
+  "accessibilityPatterns": {
+    "basicAccessible": {
+      "description": "Check if location has accessible component",
+      "pattern": {
+        "has_component": ["task.params.location", "positioning:accessible"]
+      }
+    },
+    "notBlocked": {
+      "description": "Ensure location is not blocked",
+      "pattern": {
+        "not": {
+          "has_component": ["task.params.location", "positioning:blocked"]
+        }
+      }
+    },
+    "withinRange": {
+      "description": "Check if location is within movement range",
+      "pattern": {
+        "<=": [
+          {"var": "task.params.location.components.positioning:location.distance"},
+          {"var": "actor.components.positioning:movement_range.maxDistance"}
+        ]
+      }
+    },
+    "pathExists": {
+      "description": "Validate path to location exists",
+      "pattern": {
+        "has_component": [
+          {"var": "task.params.location"},
+          "positioning:path_to_actor"
+        ]
+      }
+    }
+  },
+
+  "planningIntegration": {
+    "description": "Accessibility checks should also be in task planning preconditions",
+    "taskPreconditionExample": {
+      "description": "Target location must be accessible",
+      "condition": {
+        "and": [
+          {"has_component": ["task.params.location", "positioning:accessible"]},
+          {"not": {"has_component": ["task.params.location", "positioning:blocked"]}}
+        ]
+      }
+    },
+    "rationale": "Prevents planner from selecting inaccessible locations in the first place"
+  },
+
+  "notes": [
+    "RULE: Always validate preconditions before expensive operations like movement",
+    "PATTERN: Check accessible AND NOT blocked AND NOT out_of_bounds",
+    "PERFORMANCE: Precondition checks are cheaper than failed movement attempts",
+    "PLANNING: Add accessibility checks to task planningPreconditions too",
+    "GRACEFUL: Use fail step with descriptive reason for replanning",
+    "VALIDATION: Check movement result success before continuing",
+    "FALLBACK: replan allows planner to find alternative locations"
+  ]
+}

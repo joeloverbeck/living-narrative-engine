@@ -1,0 +1,194 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:missing_component",
+  "version": "1.0.0",
+  "description": "Edge case example: Safe component access. Demonstrates defensive checks when accessing component data to avoid null/undefined errors.",
+
+  "applicability": {
+    "description": "Actor exists and has identity",
+    "condition": {
+      "has_component": [
+        {"var": "actor"},
+        "core:identity"
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "description": "SAFE: Check component exists before accessing its properties",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              {"var": "actor"},
+              "items:inventory"
+            ]
+          },
+          {
+            "!=": [
+              {"var": "actor.components.items:inventory.capacity"},
+              null
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "description": "Component exists with capacity - check if space available",
+          "stepType": "conditional",
+          "condition": {
+            "<": [
+              {"var": "actor.components.items:inventory.items.length"},
+              {"var": "actor.components.items:inventory.capacity"}
+            ]
+          },
+          "thenSteps": [
+            {
+              "description": "Space available - pick up item",
+              "stepType": "primitive_action",
+              "actionId": "items:pick_up_item",
+              "targetBindings": {
+                "item": "task.params.item"
+              }
+            }
+          ],
+          "elseSteps": [
+            {
+              "description": "Inventory full",
+              "stepType": "fail",
+              "reason": "Inventory at capacity - no space for item"
+            }
+          ]
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "GRACEFUL: Actor doesn't have inventory or capacity undefined",
+          "stepType": "fail",
+          "reason": "Actor lacks inventory system or inventory capacity not configured"
+        }
+      ],
+      "onFailure": "replan"
+    }
+  ],
+
+  "fallbackBehavior": "replan",
+
+  "commonErrors": [
+    {
+      "error": "Cannot read property 'capacity' of undefined",
+      "cause": "Accessing component property without checking component exists",
+      "wrongCode": {
+        "condition": {
+          "<": [
+            {"var": "actor.components.items:inventory.items.length"},
+            {"var": "actor.components.items:inventory.capacity"}
+          ]
+        }
+      },
+      "fix": "Add has_component check before accessing properties"
+    },
+    {
+      "error": "TypeError: Cannot read properties of null (reading 'items')",
+      "cause": "Component exists but specific property is null/undefined",
+      "wrongCode": {
+        "condition": {
+          "and": [
+            {"has_component": ["actor", "items:inventory"]},
+            {">": [{"var": "actor.components.items:inventory.items.length"}, 0]}
+          ]
+        }
+      },
+      "fix": "Also check property != null before accessing nested properties"
+    },
+    {
+      "error": "Component data structure mismatch",
+      "cause": "Assuming component schema without validation",
+      "wrongCode": {
+        "targetBindings": {
+          "target": "actor.components.combat:weapon.equippedItem"
+        }
+      },
+      "fix": "Check component exists and property exists before binding"
+    }
+  ],
+
+  "safeAccessPatterns": {
+    "componentWithProperty": {
+      "description": "Check component and property both exist",
+      "pattern": {
+        "and": [
+          {"has_component": ["actor", "items:inventory"]},
+          {"!=": [{"var": "actor.components.items:inventory.capacity"}, null]}
+        ]
+      }
+    },
+    "nestedPropertyAccess": {
+      "description": "Chain checks for nested properties",
+      "pattern": {
+        "and": [
+          {"has_component": ["actor", "combat:stats"]},
+          {"!=": [{"var": "actor.components.combat:stats.attributes"}, null]},
+          {"!=": [{"var": "actor.components.combat:stats.attributes.strength"}, null]}
+        ]
+      }
+    },
+    "optionalComponentHandling": {
+      "description": "Provide fallback for optional components",
+      "pattern": {
+        "if": [
+          {"has_component": ["actor", "items:equipped"]},
+          {"var": "actor.components.items:equipped.weaponId"},
+          "none"
+        ]
+      }
+    },
+    "componentExistenceCheck": {
+      "description": "Use has_component before any property access",
+      "pattern": {
+        "has_component": ["entity", "component:id"]
+      }
+    }
+  },
+
+  "validationLevels": {
+    "level1_componentExists": {
+      "description": "Minimum validation - check component exists",
+      "condition": {
+        "has_component": ["actor", "items:inventory"]
+      }
+    },
+    "level2_propertyExists": {
+      "description": "Check component AND property not null",
+      "condition": {
+        "and": [
+          {"has_component": ["actor", "items:inventory"]},
+          {"!=": [{"var": "actor.components.items:inventory.capacity"}, null]}
+        ]
+      }
+    },
+    "level3_propertyValid": {
+      "description": "Check component, property exists, AND property has valid value",
+      "condition": {
+        "and": [
+          {"has_component": ["actor", "items:inventory"]},
+          {"!=": [{"var": "actor.components.items:inventory.capacity"}, null]},
+          {">": [{"var": "actor.components.items:inventory.capacity"}, 0]}
+        ]
+      }
+    }
+  },
+
+  "notes": [
+    "RULE: Always use has_component before accessing component properties",
+    "RULE: Check property != null before accessing nested properties",
+    "DEFENSIVE: Components may be added/removed at runtime",
+    "DEFENSIVE: Component schemas may evolve - don't assume structure",
+    "PATTERN: has_component AND property != null before property access",
+    "ERROR PREVENTION: Null checks prevent TypeError exceptions",
+    "GRACEFUL FAILURE: Provide clear reason in fail step",
+    "SCHEMA AWARENESS: Validate against component schema expectations"
+  ]
+}

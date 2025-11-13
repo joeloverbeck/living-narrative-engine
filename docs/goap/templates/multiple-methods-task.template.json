@@ -1,0 +1,171 @@
+{
+  "$schema": "schema://living-narrative-engine/task.schema.json",
+  "id": "{{MOD_ID}}:{{TASK_ID}}",
+  "description": "{{TASK_DESCRIPTION: What does this task accomplish overall?}}",
+
+  "structuralGates": {
+    "description": "{{STRUCTURAL_GATES_DESCRIPTION: Fundamental requirements}}",
+    "condition": {
+      "and": [
+        {"has_component": ["actor", "{{REQUIRED_COMPONENT_1}}"]},
+        {"or": [
+          {"has_component": ["actor", "{{CAPABILITY_OPTION_1}}"]},
+          {"has_component": ["actor", "{{CAPABILITY_OPTION_2}}"]}
+        ]}
+      ]
+    }
+  },
+
+  "planningScope": "{{PLANNING_SCOPE_ID}}",
+
+  "planningPreconditions": [
+    {
+      "description": "{{PRECONDITION_1_DESCRIPTION}}",
+      "condition": {
+        "{{OPERATOR}}": [
+          {"has_component": ["actor", "{{COMPONENT_1}}"]},
+          {"has_component": ["actor", "{{COMPONENT_2}}"]}
+        ]
+      }
+    },
+    {
+      "description": "{{PRECONDITION_2_DESCRIPTION}}",
+      "condition": {
+        "not": {"has_component": ["actor", "{{UNDESIRED_COMPONENT}}"]}
+      }
+    }
+  ],
+
+  "planningEffects": [
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entityId": "actor",
+        "componentId": "{{RESULT_COMPONENT_ID}}",
+        "data": {
+          "{{RESULT_PROPERTY_1}}": "{{RESULT_VALUE_1}}",
+          "{{RESULT_PROPERTY_2}}": "{{RESULT_VALUE_2}}"
+        }
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entityId": "actor",
+        "componentId": "{{COMPONENT_TO_REMOVE}}"
+      }
+    }
+  ],
+
+  "refinementMethods": [
+    {
+      "methodId": "{{MOD_ID}}:{{TASK_ID}}.{{METHOD_1_NAME}}",
+      "$ref": "./refinement-methods/{{TASK_ID}}.{{METHOD_1_NAME}}.refinement.json"
+    },
+    {
+      "methodId": "{{MOD_ID}}:{{TASK_ID}}.{{METHOD_2_NAME}}",
+      "$ref": "./refinement-methods/{{TASK_ID}}.{{METHOD_2_NAME}}.refinement.json"
+    }
+  ],
+
+  "cost": {{COST_NUMBER}},
+  "priority": {{PRIORITY_NUMBER}}
+}
+
+// ============================================================================
+// HOW TO USE THIS TEMPLATE
+// ============================================================================
+//
+// 1. Replace all {{PLACEHOLDER}} markers with your actual values
+// 2. Create corresponding refinement method files in refinement-methods/
+// 3. Remove this comment block before saving
+// 4. Validate your JSON with: npm run validate
+//
+// CUSTOMIZATION CHECKLIST:
+// ☐ {{MOD_ID}} - Your mod identifier
+// ☐ {{TASK_ID}} - Unique task identifier
+// ☐ {{TASK_DESCRIPTION}} - What this task accomplishes
+// ☐ {{STRUCTURAL_GATES_DESCRIPTION}} - Fundamental requirements
+// ☐ {{REQUIRED_COMPONENT_1}} - Required capability component
+// ☐ {{CAPABILITY_OPTION_1}} - First capability option
+// ☐ {{CAPABILITY_OPTION_2}} - Second capability option
+// ☐ {{PLANNING_SCOPE_ID}} - Scope for finding targets
+// ☐ {{PRECONDITION_1_DESCRIPTION}} - First precondition description
+// ☐ {{OPERATOR}} - JSON Logic operator ("and", "or")
+// ☐ {{COMPONENT_1}} - First component to check
+// ☐ {{COMPONENT_2}} - Second component to check
+// ☐ {{PRECONDITION_2_DESCRIPTION}} - Second precondition description
+// ☐ {{UNDESIRED_COMPONENT}} - Component that should not exist
+// ☐ {{RESULT_COMPONENT_ID}} - Component added by task
+// ☐ {{RESULT_PROPERTY_1}} - First property of result
+// ☐ {{RESULT_VALUE_1}} - First property value
+// ☐ {{RESULT_PROPERTY_2}} - Second property of result
+// ☐ {{RESULT_VALUE_2}} - Second property value
+// ☐ {{COMPONENT_TO_REMOVE}} - Component to remove
+// ☐ {{METHOD_1_NAME}} - First refinement method name
+// ☐ {{METHOD_2_NAME}} - Second refinement method name
+// ☐ {{COST_NUMBER}} - Planning cost (1-100, lower = cheaper)
+// ☐ {{PRIORITY_NUMBER}} - Planning priority (0-100, higher = more important)
+//
+// PATTERN: Task with Multiple Refinement Methods
+// Use this template when a task can be accomplished in different ways.
+//
+// KEY CONCEPT: Multiple Methods
+// Each refinement method represents a different way to accomplish the task:
+// - Method 1: For scenario A (e.g., item already in inventory)
+// - Method 2: For scenario B (e.g., item needs to be acquired first)
+// - Method 3: For scenario C (e.g., item needs to be crafted)
+//
+// The planner will try methods in order until one succeeds.
+//
+// TASK STRUCTURE:
+// 1. structuralGates - Fundamental ability checks (can actor do this at all?)
+// 2. planningScope - What targets the planner considers
+// 3. planningPreconditions - Conditions for planner to select this task
+// 4. planningEffects - Expected world state changes
+// 5. refinementMethods - Array of different execution approaches
+// 6. cost/priority - Planning heuristics
+//
+// STRUCTURAL GATES vs PLANNING PRECONDITIONS:
+// - Structural gates: Permanent capabilities ("has hands", "can see")
+// - Planning preconditions: Dynamic state ("has weapon", "location accessible")
+//
+// REFINEMENT METHOD FILES:
+// Each method needs its own .refinement.json file:
+// - {{TASK_ID}}.{{METHOD_1_NAME}}.refinement.json
+// - {{TASK_ID}}.{{METHOD_2_NAME}}.refinement.json
+//
+// Example file structure:
+// tasks/
+//   arm_self.task.json
+//   refinement-methods/
+//     arm_self.pick_up_and_wield.refinement.json
+//     arm_self.draw_from_inventory.refinement.json
+//
+// PLANNING EFFECTS:
+// Effects tell the planner what state changes to expect:
+// - ADD_COMPONENT: Adds new component to entity
+// - REMOVE_COMPONENT: Removes component from entity
+// - MODIFY_COMPONENT: Updates component data
+//
+// COST AND PRIORITY:
+// - cost: How expensive to execute (affects pathfinding)
+// - priority: How important (affects task selection)
+// Lower cost = planner prefers this task
+// Higher priority = planner selects earlier
+//
+// WHEN TO USE MULTIPLE METHODS:
+// ✅ Item could be in inventory OR on ground → 2 methods
+// ✅ Door could be unlocked OR locked → 2 methods
+// ✅ Resource could be found, bought, or crafted → 3 methods
+// ❌ Only one way to accomplish task → Use simple template instead
+//
+// EXAMPLES:
+// - arm_self: pick_up_and_wield OR draw_from_inventory
+// - consume_item: simple_consume OR acquire_then_consume
+// - secure_shelter: find_existing OR build_new OR rent
+//
+// SEE ALSO:
+// - data/mods/core/tasks/arm_self.task.json (complete example)
+// - docs/goap/task-loading.md (task specification)
+// - docs/goap/examples/README.md (all examples)

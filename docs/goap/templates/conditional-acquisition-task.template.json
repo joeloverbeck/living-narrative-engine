@@ -1,0 +1,134 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "{{MOD_ID}}:{{TASK_ID}}.{{METHOD_NAME}}",
+  "taskId": "{{MOD_ID}}:{{TASK_ID}}",
+  "description": "{{DESCRIPTION: Describe what this refinement method does}}",
+
+  "applicability": {
+    "description": "{{APPLICABILITY_DESCRIPTION}}",
+    "condition": {
+      "has_component": [
+        { "var": "{{ENTITY_PATH}}" },
+        "{{COMPONENT_ID}}"
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "stepType": "conditional",
+      "description": "{{CONDITION_DESCRIPTION: What condition are we checking?}}",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "{{ENTITY_TO_CHECK}}" },
+              "{{COMPONENT_TO_CHECK}}"
+            ]
+          },
+          {
+            "{{COMPARISON_OPERATOR}}": [
+              { "var": "{{VALUE_PATH_1}}" },
+              { "var": "{{VALUE_PATH_2}}" }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "stepType": "primitive_action",
+          "actionId": "{{SUCCESS_ACTION_ID}}",
+          "targetBindings": {
+            "{{SUCCESS_TARGET_NAME}}": "{{SUCCESS_TARGET_PATH}}"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "stepType": "primitive_action",
+          "actionId": "{{ACQUIRE_ACTION_ID}}",
+          "targetBindings": {
+            "{{ACQUIRE_TARGET_NAME}}": "{{ACQUIRE_TARGET_PATH}}"
+          }
+        },
+        {
+          "stepType": "primitive_action",
+          "actionId": "{{FOLLOWUP_ACTION_ID}}",
+          "targetBindings": {
+            "{{FOLLOWUP_TARGET_NAME}}": "{{FOLLOWUP_TARGET_PATH}}"
+          }
+        }
+      ],
+      "onFailure": "replan"
+    }
+  ],
+
+  "fallbackBehavior": "replan"
+}
+
+// ============================================================================
+// HOW TO USE THIS TEMPLATE
+// ============================================================================
+//
+// 1. Replace all {{PLACEHOLDER}} markers with your actual values
+// 2. Remove this comment block before saving
+// 3. Validate your JSON with: npm run validate
+//
+// CUSTOMIZATION CHECKLIST:
+// ☐ {{MOD_ID}} - Your mod identifier
+// ☐ {{TASK_ID}} - Task identifier
+// ☐ {{METHOD_NAME}} - Unique method name
+// ☐ {{DESCRIPTION}} - Full description
+// ☐ {{APPLICABILITY_DESCRIPTION}} - When this method applies
+// ☐ {{ENTITY_PATH}} - Entity for applicability check
+// ☐ {{COMPONENT_ID}} - Component for applicability
+// ☐ {{CONDITION_DESCRIPTION}} - What the conditional checks
+// ☐ {{ENTITY_TO_CHECK}} - Entity to check in condition
+// ☐ {{COMPONENT_TO_CHECK}} - Component to check
+// ☐ {{COMPARISON_OPERATOR}} - Operator ("==", "in", ">", etc.)
+// ☐ {{VALUE_PATH_1}} - First value to compare
+// ☐ {{VALUE_PATH_2}} - Second value to compare
+// ☐ {{SUCCESS_ACTION_ID}} - Action when condition is true
+// ☐ {{SUCCESS_TARGET_NAME}} - Target name for success action
+// ☐ {{SUCCESS_TARGET_PATH}} - Target path for success action
+// ☐ {{ACQUIRE_ACTION_ID}} - First action when condition is false
+// ☐ {{ACQUIRE_TARGET_NAME}} - Target name for acquire action
+// ☐ {{ACQUIRE_TARGET_PATH}} - Target path for acquire action
+// ☐ {{FOLLOWUP_ACTION_ID}} - Second action in else branch
+// ☐ {{FOLLOWUP_TARGET_NAME}} - Target name for followup action
+// ☐ {{FOLLOWUP_TARGET_PATH}} - Target path for followup action
+//
+// PATTERN: Conditional Acquisition
+// Use this template when you need different action sequences based on a condition.
+// Common pattern: "If I already have it, use it. Otherwise, acquire it first."
+//
+// EXAMPLES:
+// - Check if item in inventory → consume directly OR pick up then consume
+// - Check if door unlocked → open directly OR unlock then open
+// - Check if location reached → interact OR move then interact
+//
+// CONDITIONAL STRUCTURE:
+// - condition: JSON Logic expression (uses {"var": "..."})
+// - thenSteps: Execute when condition is TRUE
+// - elseSteps: Execute when condition is FALSE
+//
+// COMMON OPERATORS:
+// - "and" - All conditions must be true
+// - "or" - At least one condition must be true
+// - "==" - Equality check
+// - "in" - Check if value in array
+// - "has_component" - Check if entity has component
+//
+// FAILURE HANDLING:
+// - onFailure: "replan" (try different method)
+// - onFailure: "skip" (continue despite failure)
+// - onFailure: "fail" (abort entire task)
+//
+// NESTING:
+// You can nest conditionals up to 3 levels deep. See conditional-nested.refinement.json
+// for examples.
+//
+// SEE ALSO:
+// - docs/goap/examples/conditional-simple.refinement.json (complete example)
+// - docs/goap/condition-patterns-guide.md (condition patterns)
+// - docs/goap/examples/conditional-patterns.refinement.json (pattern reference)

@@ -28,7 +28,7 @@
         ]
       }
     }
-  },
+  ],
   "planningEffects": [
     {
       "type": "REMOVE_COMPONENT",

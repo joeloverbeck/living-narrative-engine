@@ -329,4 +329,5 @@ export const coreTokens = freeze({
   ICircuitBreaker: 'ICircuitBreaker',
   // GOAP System Services
   IContextAssemblyService: 'IContextAssemblyService',
+  IParameterResolutionService: 'IParameterResolutionService',
 });

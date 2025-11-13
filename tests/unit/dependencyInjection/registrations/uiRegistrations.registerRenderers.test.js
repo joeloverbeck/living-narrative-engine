@@ -639,8 +639,8 @@ describe('registerRenderers', () => {
   it('should register all renderers', () => {
     registerRenderers(mockRegistrar, mockLogger);
 
-    // Count total registrations (TitleRenderer removed)
-    expect(mockRegisterWithLog).toHaveBeenCalledTimes(12);
+    // Count total registrations (TitleRenderer removed, TurnOrderTickerRenderer added)
+    expect(mockRegisterWithLog).toHaveBeenCalledTimes(13);
 
     // Verify all tokens were registered
     const registeredTokens = mockRegisterWithLog.mock.calls.map(
@@ -658,5 +658,6 @@ describe('registerRenderers', () => {
     expect(registeredTokens).toContain(tokens.CurrentTurnActorRenderer);
     expect(registeredTokens).toContain(tokens.ChatAlertRenderer);
     expect(registeredTokens).toContain(tokens.ActionResultRenderer);
+    expect(registeredTokens).toContain(tokens.TurnOrderTickerRenderer);
   });
 });

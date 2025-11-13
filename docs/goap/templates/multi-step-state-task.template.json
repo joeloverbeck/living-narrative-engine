@@ -1,0 +1,169 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "{{MOD_ID}}:{{TASK_ID}}.{{METHOD_NAME}}",
+  "taskId": "{{MOD_ID}}:{{TASK_ID}}",
+  "description": "{{DESCRIPTION: Multi-step task with state accumulation}}",
+
+  "applicability": {
+    "description": "{{APPLICABILITY_DESCRIPTION}}",
+    "condition": {
+      "{{OPERATOR}}": [
+        {
+          "has_component": [
+            { "var": "{{ENTITY_PATH}}" },
+            "{{COMPONENT_ID}}"
+          ]
+        }
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "description": "{{STEP_1_DESCRIPTION: First step - stores result}}",
+      "stepType": "primitive_action",
+      "actionId": "{{ACTION_1_ID}}",
+      "targetBindings": {
+        "{{TARGET_1_NAME}}": "{{TARGET_1_PATH}}"
+      },
+      "storeResultAs": "{{STATE_KEY_1}}"
+    },
+    {
+      "description": "{{VALIDATION_DESCRIPTION: Check if first step succeeded}}",
+      "stepType": "conditional",
+      "condition": {
+        "==": [{"var": "refinement.localState.{{STATE_KEY_1}}.success"}, true]
+      },
+      "thenSteps": [
+        {
+          "description": "{{STEP_2_DESCRIPTION: Second step - uses previous result}}",
+          "stepType": "primitive_action",
+          "actionId": "{{ACTION_2_ID}}",
+          "targetBindings": {
+            "{{TARGET_2_NAME}}": "{{TARGET_2_PATH_OR_STATE_REFERENCE}}"
+          },
+          "storeResultAs": "{{STATE_KEY_2}}"
+        },
+        {
+          "description": "{{STEP_3_DESCRIPTION: Third step - uses accumulated state}}",
+          "stepType": "primitive_action",
+          "actionId": "{{ACTION_3_ID}}",
+          "targetBindings": {
+            "{{TARGET_3_NAME}}": "refinement.localState.{{STATE_KEY_2}}.data.{{PROPERTY_NAME}}"
+          },
+          "condition": {
+            "==": [{"var": "refinement.localState.{{STATE_KEY_2}}.success"}, true]
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "{{FAILURE_DESCRIPTION: Handle first step failure}}",
+          "stepType": "fail",
+          "reason": "{{FAILURE_REASON}}"
+        }
+      ]
+    }
+  ],
+
+  "fallbackBehavior": "replan"
+}
+
+// ============================================================================
+// HOW TO USE THIS TEMPLATE
+// ============================================================================
+//
+// 1. Replace all {{PLACEHOLDER}} markers with your actual values
+// 2. Remove this comment block before saving
+// 3. Validate your JSON with: npm run validate
+//
+// CUSTOMIZATION CHECKLIST:
+// ☐ {{MOD_ID}} - Your mod identifier
+// ☐ {{TASK_ID}} - Task identifier
+// ☐ {{METHOD_NAME}} - Unique method name
+// ☐ {{DESCRIPTION}} - Full description
+// ☐ {{APPLICABILITY_DESCRIPTION}} - When this method applies
+// ☐ {{OPERATOR}} - JSON Logic operator
+// ☐ {{ENTITY_PATH}} - Entity reference
+// ☐ {{COMPONENT_ID}} - Component to check
+// ☐ {{STEP_1_DESCRIPTION}} - What first step does
+// ☐ {{ACTION_1_ID}} - First action ID
+// ☐ {{TARGET_1_NAME}} - First action's target name
+// ☐ {{TARGET_1_PATH}} - First action's target path
+// ☐ {{STATE_KEY_1}} - Name to store first result (e.g., "moveResult")
+// ☐ {{VALIDATION_DESCRIPTION}} - What validation checks
+// ☐ {{STEP_2_DESCRIPTION}} - What second step does
+// ☐ {{ACTION_2_ID}} - Second action ID
+// ☐ {{TARGET_2_NAME}} - Second action's target name
+// ☐ {{TARGET_2_PATH_OR_STATE_REFERENCE}} - Path or state reference
+// ☐ {{STATE_KEY_2}} - Name to store second result
+// ☐ {{STEP_3_DESCRIPTION}} - What third step does
+// ☐ {{ACTION_3_ID}} - Third action ID
+// ☐ {{TARGET_3_NAME}} - Third action's target name
+// ☐ {{PROPERTY_NAME}} - Property from stored state
+// ☐ {{FAILURE_DESCRIPTION}} - Failure handling description
+// ☐ {{FAILURE_REASON}} - Why failure occurred
+//
+// PATTERN: State Accumulation
+// Use this template when later steps need data from earlier steps.
+//
+// KEY CONCEPT: storeResultAs
+// - Each action can store its result in refinement.localState
+// - Later steps can access these results
+// - Results are scoped to this refinement method execution
+//
+// RESULT STRUCTURE:
+// When you use storeResultAs: "myResult", you get:
+// {
+//   "success": true/false,
+//   "data": { ... action-specific data ... },
+//   "error": "error message if failed"
+// }
+//
+// ACCESSING STORED RESULTS:
+// - Success flag: "refinement.localState.{{STATE_KEY}}.success"
+// - Data object: "refinement.localState.{{STATE_KEY}}.data"
+// - Specific property: "refinement.localState.{{STATE_KEY}}.data.propertyName"
+//
+// COMMON PATTERNS:
+// 1. Store entity ID from action result:
+//    storeResultAs: "pickupResult"
+//    Later use: "refinement.localState.pickupResult.data.item"
+//
+// 2. Store location from movement:
+//    storeResultAs: "moveResult"
+//    Later use: "refinement.localState.moveResult.data.position"
+//
+// 3. Chain multiple actions:
+//    Step 1 stores "result1"
+//    Step 2 uses result1, stores "result2"
+//    Step 3 uses both result1 and result2
+//
+// VALIDATION PATTERN:
+// Always check .success before using stored data:
+// {
+//   "condition": {
+//     "==": [{"var": "refinement.localState.myResult.success"}, true]
+//   }
+// }
+//
+// STATE FLOW EXAMPLE:
+// Step 1: refinement.localState = {}
+// Step 1 stores: refinement.localState = {"moveResult": {...}}
+// Step 2 stores: refinement.localState = {"moveResult": {...}, "pickupResult": {...}}
+// Step 3 accesses both stored results
+//
+// VISIBILITY RULES:
+// - Each step can only access results from PREVIOUS steps
+// - Cannot access results from steps that haven't executed yet
+// - Cannot access results from parallel branches
+//
+// EXAMPLES:
+// - Move to location, pick up item using location from move result
+// - Search area, interact with discovered entity from search result
+// - Unlock door, open door using lock state from unlock result
+//
+// SEE ALSO:
+// - docs/goap/examples/parameter-state.refinement.json (complete example)
+// - docs/goap/refinement-parameter-binding.md (state accumulation details)
+// - docs/goap/examples/parameter-transformation.refinement.json (property extraction)
