@@ -1,0 +1,208 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:parameter_state",
+  "version": "1.0.0",
+  "description": "Example: State accumulation with storeResultAs. Demonstrates how to capture step results and use them in subsequent steps.",
+  "steps": [
+    {
+      "description": "Move to the item location and store the movement result",
+      "stepType": "primitive_action",
+      "actionId": "positioning:move_to",
+      "targetBindings": {
+        "target": "task.params.itemLocation"
+      },
+      "storeResultAs": "moveResult"
+    },
+    {
+      "description": "Validate movement succeeded before proceeding",
+      "stepType": "conditional",
+      "condition": {
+        "==": [{"var": "refinement.localState.moveResult.success"}, true]
+      },
+      "trueBranch": [
+        {
+          "description": "Pick up the item and store result",
+          "stepType": "primitive_action",
+          "actionId": "items:pick_up_item",
+          "targetBindings": {
+            "item": "task.params.targetItem"
+          },
+          "storeResultAs": "pickupResult"
+        },
+        {
+          "description": "Validate pickup succeeded",
+          "stepType": "conditional",
+          "condition": {
+            "==": [{"var": "refinement.localState.pickupResult.success"}, true]
+          },
+          "trueBranch": [
+            {
+              "description": "Move to consumption location",
+              "stepType": "primitive_action",
+              "actionId": "positioning:move_to",
+              "targetBindings": {
+                "target": "task.params.consumptionLocation"
+              },
+              "storeResultAs": "moveToConsumeResult"
+            },
+            {
+              "description": "Consume the item using entity ID from pickup result",
+              "stepType": "primitive_action",
+              "actionId": "items:consume_item",
+              "targetBindings": {
+                "item": "refinement.localState.pickupResult.data.item"
+              },
+              "condition": {
+                "==": [{"var": "refinement.localState.moveToConsumeResult.success"}, true]
+              },
+              "storeResultAs": "consumeResult"
+            },
+            {
+              "description": "Log success with accumulated state information",
+              "stepType": "primitive_action",
+              "actionId": "system:log_event",
+              "targetBindings": {
+                "message": "task.params.successMessage"
+              },
+              "parameters": {
+                "metadata": {
+                  "originalLocation": "refinement.localState.moveResult.data.previousPosition",
+                  "itemAcquired": "refinement.localState.pickupResult.data.item",
+                  "consumptionLocation": "refinement.localState.moveToConsumeResult.data.position",
+                  "consumptionSuccess": "refinement.localState.consumeResult.success"
+                }
+              }
+            }
+          ],
+          "falseBranch": [
+            {
+              "description": "Pickup failed - replan",
+              "stepType": "fail",
+              "reason": "Failed to acquire item"
+            }
+          ]
+        }
+      ],
+      "falseBranch": [
+        {
+          "description": "Movement failed - replan",
+          "stepType": "fail",
+          "reason": "Failed to reach item location"
+        }
+      ]
+    }
+  ],
+  "expectedParameters": {
+    "targetItem": {
+      "type": "entityId",
+      "description": "Entity ID of the item to acquire and consume",
+      "required": true,
+      "example": "health_potion_5"
+    },
+    "itemLocation": {
+      "type": "entityId",
+      "description": "Entity ID of the room containing the item",
+      "required": true,
+      "example": "storage_room"
+    },
+    "consumptionLocation": {
+      "type": "entityId",
+      "description": "Entity ID of the room where consumption should occur",
+      "required": true,
+      "example": "bedroom"
+    },
+    "successMessage": {
+      "type": "string",
+      "description": "Message to log on successful completion",
+      "required": false,
+      "example": "Successfully consumed health potion"
+    }
+  },
+  "exampleTaskParams": {
+    "targetItem": "health_potion_5",
+    "itemLocation": "storage_room",
+    "consumptionLocation": "bedroom",
+    "successMessage": "Health restored with potion"
+  },
+  "stateFlowDiagram": {
+    "description": "This example demonstrates the evolution of refinement.localState",
+    "timeline": [
+      {
+        "step": 0,
+        "description": "Initial state",
+        "localState": {}
+      },
+      {
+        "step": 1,
+        "description": "After moveResult stored",
+        "localState": {
+          "moveResult": {
+            "success": true,
+            "data": {
+              "previousPosition": "starting_room",
+              "position": "storage_room"
+            }
+          }
+        }
+      },
+      {
+        "step": 2,
+        "description": "After pickupResult stored",
+        "localState": {
+          "moveResult": "...",
+          "pickupResult": {
+            "success": true,
+            "data": {
+              "item": "health_potion_5",
+              "actor": "player_1",
+              "location": "storage_room"
+            }
+          }
+        }
+      },
+      {
+        "step": 3,
+        "description": "After moveToConsumeResult stored",
+        "localState": {
+          "moveResult": "...",
+          "pickupResult": "...",
+          "moveToConsumeResult": {
+            "success": true,
+            "data": {
+              "previousPosition": "storage_room",
+              "position": "bedroom"
+            }
+          }
+        }
+      },
+      {
+        "step": 4,
+        "description": "After consumeResult stored",
+        "localState": {
+          "moveResult": "...",
+          "pickupResult": "...",
+          "moveToConsumeResult": "...",
+          "consumeResult": {
+            "success": true,
+            "data": {
+              "item": "health_potion_5",
+              "effect": "health_restored",
+              "amount": 50
+            }
+          }
+        }
+      }
+    ]
+  },
+  "notes": [
+    "This example demonstrates state accumulation using storeResultAs",
+    "Each step stores its result in refinement.localState",
+    "Subsequent steps access previous results via refinement.localState.{resultName}",
+    "Conditional steps validate success before proceeding",
+    "Failure branches trigger replanning when critical steps fail",
+    "Final step uses multiple accumulated state values for logging",
+    "Shows visibility rules: each step can only access results from previous steps",
+    "Demonstrates chaining: pickup result used in consume action",
+    "Result structure includes success flag, data object, and error message"
+  ]
+}

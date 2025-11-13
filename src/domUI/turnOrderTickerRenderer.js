@@ -232,8 +232,118 @@ export class TurnOrderTickerRenderer {
    * @public
    */
   updateCurrentActor(entityId) {
-    // Implementation in TURORDTIC-008
     this.#logger.debug('updateCurrentActor() called', { entityId });
+
+    // Validate entity ID parameter
+    if (!entityId || typeof entityId !== 'string') {
+      this.#logger.warn('updateCurrentActor: Invalid entity ID provided', {
+        entityId,
+        type: typeof entityId,
+      });
+      return;
+    }
+
+    // Clear previous highlight
+    this.#clearCurrentHighlight();
+
+    // Find the target actor element
+    const actorElement = this.#actorQueueElement?.querySelector(
+      `[data-entity-id="${entityId}"]`
+    );
+
+    if (!actorElement) {
+      this.#logger.warn('updateCurrentActor: Actor element not found in ticker', {
+        entityId,
+      });
+      return;
+    }
+
+    // Add current class to highlight the actor
+    actorElement.classList.add('current');
+    this.#logger.debug('updateCurrentActor: Added .current class to actor', {
+      entityId,
+    });
+
+    // Scroll actor into view if needed
+    this.#scrollToActor(actorElement);
+
+    // Update internal tracking
+    this.#_currentActorId = entityId;
+    this.#logger.debug('updateCurrentActor: Updated current actor tracking', {
+      entityId,
+    });
+  }
+
+  /**
+   * Clear the current highlight from all actors.
+   * Removes the .current class from any actor elements that have it.
+   *
+   * @private
+   */
+  #clearCurrentHighlight() {
+    if (!this.#actorQueueElement) {
+      this.#logger.debug('clearCurrentHighlight: No actor queue element available');
+      return;
+    }
+
+    const currentActors = this.#actorQueueElement.querySelectorAll('.ticker-actor.current');
+    const clearedCount = currentActors.length;
+
+    currentActors.forEach(actor => {
+      actor.classList.remove('current');
+    });
+
+    if (clearedCount > 0) {
+      this.#logger.debug('clearCurrentHighlight: Cleared current class from actors', {
+        count: clearedCount,
+      });
+    }
+  }
+
+  /**
+   * Scroll an actor element into view if it's not visible.
+   * Only scrolls if the element is outside the visible viewport.
+   *
+   * @param {HTMLElement} actorElement - The actor element to scroll to
+   * @private
+   */
+  #scrollToActor(actorElement) {
+    if (!actorElement || !this.#actorQueueElement) {
+      this.#logger.debug('scrollToActor: Missing required elements');
+      return;
+    }
+
+    try {
+      // Check if element is visible in viewport
+      const containerRect = this.#actorQueueElement.getBoundingClientRect();
+      const elementRect = actorElement.getBoundingClientRect();
+
+      const isVisible =
+        elementRect.left >= containerRect.left &&
+        elementRect.right <= containerRect.right &&
+        elementRect.top >= containerRect.top &&
+        elementRect.bottom <= containerRect.bottom;
+
+      if (!isVisible) {
+        // Element is not fully visible, scroll it into view
+        actorElement.scrollIntoView({
+          behavior: 'smooth',
+          inline: 'center',
+          block: 'nearest',
+        });
+
+        this.#logger.debug('scrollToActor: Scrolled actor into view', {
+          entityId: actorElement.getAttribute('data-entity-id'),
+        });
+      } else {
+        this.#logger.debug('scrollToActor: Actor already visible, skipping scroll');
+      }
+    } catch (err) {
+      // Scroll failure is non-critical
+      this.#logger.debug('scrollToActor: Scroll operation failed (non-critical)', {
+        error: err.message,
+      });
+    }
   }
 
   /**
