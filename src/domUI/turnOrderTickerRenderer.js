@@ -145,8 +145,84 @@ class TurnOrderTickerRenderer {
    * @public
    */
   render(actors) {
-    // Implementation in TURORDTIC-007
-    this.#logger.debug('render() called', { actorCount: actors.length });
+    try {
+      // Validate input
+      if (!Array.isArray(actors)) {
+        const errorMsg = 'render() requires an array of actors';
+        this.#logger.error(errorMsg, { receivedType: typeof actors });
+        throw new TypeError(errorMsg);
+      }
+
+      // Clear existing queue before rendering
+      this.#_clearQueue();
+
+      // Handle empty actor array
+      if (actors.length === 0) {
+        this.#logger.info('Rendering empty turn order queue');
+        this.#_renderEmptyQueue();
+        return;
+      }
+
+      // Log rendering activity
+      const actorIds = actors.map(actor => actor?.id).filter(Boolean);
+      this.#logger.info('Rendering turn order queue', {
+        actorCount: actors.length,
+        actorIds,
+      });
+
+      // Render each actor element
+      const elements = [];
+      for (let i = 0; i < actors.length; i++) {
+        const actor = actors[i];
+
+        // Validate actor object
+        if (!actor || typeof actor !== 'object' || !actor.id) {
+          this.#logger.warn('Skipping invalid actor in render', {
+            index: i,
+            actor,
+          });
+          continue;
+        }
+
+        try {
+          // Create actor element
+          const element = this.#_createActorElement(actor);
+          if (element) {
+            elements.push({ element, index: i });
+          }
+        } catch (error) {
+          // Catch per-actor failures and continue with others
+          this.#logger.error('Failed to create actor element, continuing with others', {
+            actorId: actor.id,
+            index: i,
+            error: error.message,
+          });
+        }
+      }
+
+      // Batch append all elements and apply animations
+      for (const { element, index } of elements) {
+        this.#actorQueueElement.appendChild(element);
+        this.#_animateActorEntry(element, index);
+      }
+
+      // Auto-scroll to start after rendering
+      this.#_scrollToStart();
+
+    } catch (error) {
+      // Handle catastrophic render failures
+      this.#logger.error('Failed to render turn order queue', {
+        error: error.message,
+      });
+
+      // Recover by clearing the queue
+      this.#_clearQueue();
+
+      // Re-throw TypeError for invalid input (non-recoverable)
+      if (error instanceof TypeError) {
+        throw error;
+      }
+    }
   }
 
   /**
@@ -268,6 +344,52 @@ class TurnOrderTickerRenderer {
    */
   __testHandleParticipationChanged(event) {
     return this.#handleParticipationChanged(event);
+  }
+
+  /**
+   * Test-only helper to access private method for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @returns {void}
+   * @private
+   */
+  __testClearQueue() {
+    return this.#_clearQueue();
+  }
+
+  /**
+   * Test-only helper to access private method for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @returns {void}
+   * @private
+   */
+  __testRenderEmptyQueue() {
+    return this.#_renderEmptyQueue();
+  }
+
+  /**
+   * Test-only helper to access private method for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @returns {void}
+   * @private
+   */
+  __testScrollToStart() {
+    return this.#_scrollToStart();
+  }
+
+  /**
+   * Test-only helper to access private method for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {HTMLElement} element - The actor element
+   * @param {number} index - Position in queue
+   * @returns {void}
+   * @private
+   */
+  __testAnimateActorEntry(element, index) {
+    return this.#_animateActorEntry(element, index);
   }
 
   // ========== PRIVATE HELPERS ==========
@@ -438,7 +560,6 @@ class TurnOrderTickerRenderer {
    * @param {number} _index - Position in queue (for stagger delay)
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members -- Implementation in TURORDTIC-011
   #_animateActorEntry(element, _index) {
     // Implementation in TURORDTIC-011
     element.classList.add('entering');
@@ -455,6 +576,48 @@ class TurnOrderTickerRenderer {
   #_animateActorExit(_element) {
     // Implementation in TURORDTIC-012
     return Promise.resolve();
+  }
+
+  /**
+   * Clear all actor elements from the queue.
+   * Efficiently removes all children using replaceChildren().
+   *
+   * @private
+   */
+  #_clearQueue() {
+    if (this.#actorQueueElement) {
+      this.#actorQueueElement.replaceChildren();
+    }
+  }
+
+  /**
+   * Render an empty queue message when no actors are present.
+   * Creates and appends a styled empty state message.
+   *
+   * @private
+   */
+  #_renderEmptyQueue() {
+    if (!this.#actorQueueElement) {
+      return;
+    }
+
+    const emptyMessage = this.#domElementFactory.create('div');
+    emptyMessage.className = 'ticker-empty-message';
+    emptyMessage.textContent = 'No participating actors';
+
+    this.#actorQueueElement.appendChild(emptyMessage);
+  }
+
+  /**
+   * Scroll the actor queue to the beginning.
+   * Uses smooth scrolling behavior for better UX.
+   *
+   * @private
+   */
+  #_scrollToStart() {
+    if (this.#actorQueueElement) {
+      this.#actorQueueElement.scrollTo({ left: 0, behavior: 'smooth' });
+    }
   }
 
   // ========== EVENT HANDLERS ==========
