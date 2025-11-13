@@ -1,0 +1,67 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:consume_nourishing_item.conditional_acquire",
+  "taskId": "core:consume_nourishing_item",
+  "description": "Refinement that handles both scenarios: item already in inventory (consume directly) or item needs to be acquired first (pick up then consume). Uses simple conditional branching.",
+
+  "applicability": {
+    "description": "Actor knows about a nourishing item (either in inventory or in known location)",
+    "condition": {
+      "has_component": [
+        { "var": "task.params.item" },
+        "items:nourishing"
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "stepType": "conditional",
+      "description": "Check if item is already in actor's inventory",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "items:inventory"
+            ]
+          },
+          {
+            "in": [
+              { "var": "task.params.item" },
+              { "var": "actor.components.items:inventory.items" }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "stepType": "primitive_action",
+          "actionId": "items:consume_item",
+          "targetBindings": {
+            "target": "task.params.item"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "stepType": "primitive_action",
+          "actionId": "items:pick_up_item",
+          "targetBindings": {
+            "target": "task.params.item"
+          }
+        },
+        {
+          "stepType": "primitive_action",
+          "actionId": "items:consume_item",
+          "targetBindings": {
+            "target": "task.params.item"
+          }
+        }
+      ],
+      "onFailure": "replan"
+    }
+  ],
+
+  "fallbackBehavior": "replan"
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:consume_nourishing_item.full_acquisition",
+  "taskId": "core:consume_nourishing_item",
+  "description": "Comprehensive refinement with nested conditionals handling multiple scenarios: item in inventory, item in current location, or item in different location. Demonstrates nested branching up to 2 levels.",
+
+  "applicability": {
+    "description": "Actor knows about a nourishing item somewhere in the world",
+    "condition": {
+      "has_component": [
+        { "var": "task.params.item" },
+        "items:nourishing"
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "stepType": "conditional",
+      "description": "Check if item is already in actor's inventory",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "items:inventory"
+            ]
+          },
+          {
+            "in": [
+              { "var": "task.params.item" },
+              { "var": "actor.components.items:inventory.items" }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "stepType": "primitive_action",
+          "actionId": "items:consume_item",
+          "targetBindings": {
+            "target": "task.params.item"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "stepType": "conditional",
+          "description": "Check if item is in actor's current location",
+          "condition": {
+            "and": [
+              {
+                "has_component": [
+                  { "var": "actor" },
+                  "positioning:position"
+                ]
+              },
+              {
+                "has_component": [
+                  { "var": "task.params.item" },
+                  "positioning:position"
+                ]
+              },
+              {
+                "==": [
+                  { "var": "actor.components.positioning:position.location" },
+                  { "var": "task.params.item.components.positioning:position.location" }
+                ]
+              }
+            ]
+          },
+          "thenSteps": [
+            {
+              "stepType": "primitive_action",
+              "actionId": "items:pick_up_item",
+              "targetBindings": {
+                "target": "task.params.item"
+              }
+            },
+            {
+              "stepType": "primitive_action",
+              "actionId": "items:consume_item",
+              "targetBindings": {
+                "target": "task.params.item"
+              }
+            }
+          ],
+          "elseSteps": [
+            {
+              "stepType": "primitive_action",
+              "actionId": "world:move_to_location",
+              "targetBindings": {
+                "location": "task.params.item.components.positioning:position.location"
+              }
+            },
+            {
+              "stepType": "primitive_action",
+              "actionId": "items:pick_up_item",
+              "targetBindings": {
+                "target": "task.params.item"
+              }
+            },
+            {
+              "stepType": "primitive_action",
+              "actionId": "items:consume_item",
+              "targetBindings": {
+                "target": "task.params.item"
+              }
+            }
+          ],
+          "onFailure": "replan"
+        }
+      ],
+      "onFailure": "replan"
+    }
+  ],
+
+  "fallbackBehavior": "replan"
+}

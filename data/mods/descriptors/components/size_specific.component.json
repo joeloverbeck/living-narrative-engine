@@ -7,10 +7,35 @@
     "properties": {
       "size": {
         "type": "string",
-        "description": "The specific size descriptor"
+        "description": "The specific size descriptor",
+        "enum": [
+          "A-cup",
+          "B-cup",
+          "C-cup",
+          "D-cup",
+          "DD-cup",
+          "E-cup",
+          "F-cup",
+          "G-cup",
+          "H-cup",
+          "I-cup",
+          "J-cup"
+        ]
       }
     },
     "required": ["size"],
     "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid size descriptor: \"{{value}}\". Valid cup sizes: {{validValues}}",
+      "missingRequired": "Size descriptor is required"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 2,
+      "maxSuggestions": 1
+    }
   }
 }

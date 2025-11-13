@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/refinement-method.schema.json",
+  "title": "Refinement Method Schema",
+  "description": "Defines how planning-tasks decompose into sequences of primitive actions in the GOAP system. Each refinement method specifies when it applies (applicability conditions) and the sequential steps to execute.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IDE support and validation"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_]+$",
+      "description": "Unique identifier for this refinement method. Format: modId:task_id.method_name (e.g., 'core:consume_nourishing_item.simple_consume'). The period separates the task ID from the method name."
+    },
+    "taskId": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Reference to the planning-task this method refines. Format: modId:task_id (e.g., 'core:consume_nourishing_item'). The task schema will define available planning-tasks."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable explanation of what this refinement method does and when it should be used. Should clarify the specific circumstances this method handles."
+    },
+    "applicability": {
+      "type": "object",
+      "description": "Defines the conditions under which this refinement method should be selected. If omitted or null, the method is always applicable. Evaluated using JSON Logic expressions with access to actor state, world state, task parameters, and knowledge-limited facts.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable explanation of when this method applies (e.g., 'Actor has nourishing item in inventory')"
+        },
+        "condition": {
+          "$ref": "./condition-container.schema.json#",
+          "description": "JSON Logic expression defining applicability conditions. Can check for component existence, entity state, task parameters, etc."
+        }
+      },
+      "required": ["condition"],
+      "additionalProperties": false
+    },
+    "steps": {
+      "type": "array",
+      "description": "Ordered sequence of steps to execute when refining this task. Steps execute sequentially; each must complete before the next begins. Step failure triggers the fallbackBehavior.",
+      "items": {
+        "$ref": "#/$defs/StepDefinition"
+      },
+      "minItems": 1
+    },
+    "fallbackBehavior": {
+      "type": "string",
+      "enum": ["replan", "fail", "continue"],
+      "default": "replan",
+      "description": "Action to take if refinement fails during execution. 'replan': Invalidate current plan and ask GOAP to replan from current state (recommended default). 'fail': Abort the current goal entirely and choose a new goal. 'continue': Skip this task and proceed to next task in plan (use with caution, only for optional tasks)."
+    }
+  },
+  "required": ["id", "taskId", "description", "steps"],
+  "additionalProperties": false,
+  "$defs": {
+    "StepDefinition": {
+      "description": "A single step in the refinement method. Supports primitive_action steps for direct action execution and conditional steps for branching logic based on world state.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PrimitiveActionStep"
+        },
+        {
+          "$ref": "#/$defs/ConditionalStep"
+        }
+      ]
+    },
+    "PrimitiveActionStep": {
+      "type": "object",
+      "description": "References a primitive action to execute. The action must exist in the action registry and will be executed with the provided target bindings and parameters.",
+      "properties": {
+        "stepType": {
+          "const": "primitive_action",
+          "description": "Step type discriminator. Must be 'primitive_action' for this step type."
+        },
+        "actionId": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "Reference to a primitive action defined in mods (e.g., 'items:pick_up_item', 'items:consume_item'). The action must be registered in the action system."
+        },
+        "targetBindings": {
+          "type": "object",
+          "description": "Maps action target placeholders to concrete entity references. Keys are placeholder names from the action definition (e.g., 'item', 'target', 'location'), values are entity IDs or references from the task's bound parameters.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Additional parameters to pass to the action execution. Structure depends on the specific action being called. This is extensible and action-specific.",
+          "additionalProperties": true
+        }
+      },
+      "required": ["stepType", "actionId"],
+      "additionalProperties": false
+    },
+    "ConditionalStep": {
+      "type": "object",
+      "description": "Conditional branching step that evaluates a condition and executes different step sequences based on the result. Supports if-then-else logic with optional failure handling. Nesting is limited to 3 levels to prevent complexity explosion.",
+      "properties": {
+        "stepType": {
+          "const": "conditional",
+          "description": "Step type discriminator. Must be 'conditional' for this step type."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable explanation of what this conditional checks (e.g., 'Check if item is in actor inventory'). Helpful for debugging and understanding refinement logic."
+        },
+        "condition": {
+          "$ref": "./condition-container.schema.json#",
+          "description": "JSON Logic expression to evaluate. Has access to: 'actor' (current actor entity with components), 'world' (world state), 'task.params' (bound parameters from planning scope), 'task.state' (transient refinement state). Uses existing custom operators: has_component, hasPartWithComponentValue, etc."
+        },
+        "thenSteps": {
+          "type": "array",
+          "description": "Steps to execute when condition evaluates to truthy. Executes sequentially; each step must complete before the next begins.",
+          "items": {
+            "$ref": "#/$defs/StepDefinition"
+          },
+          "minItems": 1
+        },
+        "elseSteps": {
+          "type": "array",
+          "description": "Optional steps to execute when condition evaluates to falsy. If omitted, execution continues to the next step in the parent sequence. Executes sequentially.",
+          "items": {
+            "$ref": "#/$defs/StepDefinition"
+          },
+          "minItems": 1
+        },
+        "onFailure": {
+          "type": "string",
+          "enum": ["replan", "skip", "fail"],
+          "default": "replan",
+          "description": "Behavior when condition evaluation fails (e.g., missing variables, evaluation error). 'replan': Invalidate plan and trigger replanning (default, safest). 'skip': Skip this conditional block and continue to next step. 'fail': Fail entire refinement, trigger fallback behavior."
+        }
+      },
+      "required": ["stepType", "condition", "thenSteps"],
+      "additionalProperties": false
+    }
+  },
+  "$comment": "Schema Version 1.1.0 - Added ConditionalStep support for branching logic. Nesting depth should be validated at runtime (max 3 levels recommended). Future extensions may add: ParallelStep (concurrent primitive actions), SubtaskStep (nested planning-task references). Extension point: Add new step types to the StepDefinition oneOf array."
+}
