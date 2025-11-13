@@ -1450,3 +1450,238 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
     });
   });
 });
+
+describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
+  let renderer;
+  let mockLogger;
+  let mockDocumentContext;
+  let mockValidatedEventDispatcher;
+  let mockDomElementFactory;
+  let mockEntityManager;
+  let mockEntityDisplayDataProvider;
+  let mockContainer;
+  let mockActorQueue;
+
+  beforeEach(() => {
+    // Create valid mock dependencies
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    mockContainer = document.createElement('div');
+    mockActorQueue = document.createElement('div');
+    mockActorQueue.id = 'ticker-actor-queue';
+    // Add scrollTo method that jsdom doesn't provide
+    mockActorQueue.scrollTo = jest.fn();
+    mockContainer.appendChild(mockActorQueue);
+
+    const mockRoundNumber = document.createElement('span');
+    mockRoundNumber.id = 'ticker-round-number';
+    mockContainer.appendChild(mockRoundNumber);
+
+    mockDocumentContext = {
+      query: jest.fn(selector => mockContainer.querySelector(selector)),
+      create: jest.fn(),
+    };
+
+    mockValidatedEventDispatcher = {
+      dispatch: jest.fn(),
+      subscribe: jest.fn(() => jest.fn()),
+      unsubscribe: jest.fn(),
+    };
+
+    mockDomElementFactory = {
+      create: jest.fn(config => {
+        const el = document.createElement(config.tag || 'div');
+        if (config.classes) el.className = config.classes.join(' ');
+        if (config.attributes) {
+          Object.entries(config.attributes).forEach(([key, value]) => {
+            el.setAttribute(key, value);
+          });
+        }
+        if (config.children) {
+          config.children.forEach(child => el.appendChild(child));
+        }
+        return el;
+      }),
+      div: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'div' })),
+      span: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'span' })),
+      img: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'img' })),
+    };
+
+    mockEntityManager = {
+      getEntityInstance: jest.fn(id => ({ id })),
+      hasComponent: jest.fn(() => true),
+      getComponentData: jest.fn(() => ({})),
+    };
+
+    mockEntityDisplayDataProvider = {
+      getEntityName: jest.fn(id => `Actor ${id}`),
+      getEntityPortraitPath: jest.fn(() => '/path/to/portrait.png'),
+    };
+
+    renderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: mockDocumentContext,
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      domElementFactory: mockDomElementFactory,
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+
+    // Render some actors to work with
+    renderer.render([{ id: 'actor-1' }, { id: 'actor-2' }, { id: 'actor-3' }]);
+  });
+
+  it('should add .current class to specified actor', () => {
+    renderer.updateCurrentActor('actor-2');
+
+    const actor2 = mockActorQueue.querySelector('[data-entity-id="actor-2"]');
+    expect(actor2.classList.contains('current')).toBe(true);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'updateCurrentActor: Added .current class to actor',
+      { entityId: 'actor-2' }
+    );
+  });
+
+  it('should remove .current class from previous actor', () => {
+    // Highlight first actor
+    renderer.updateCurrentActor('actor-1');
+    const actor1 = mockActorQueue.querySelector('[data-entity-id="actor-1"]');
+    expect(actor1.classList.contains('current')).toBe(true);
+
+    // Highlight second actor
+    renderer.updateCurrentActor('actor-2');
+    const actor2 = mockActorQueue.querySelector('[data-entity-id="actor-2"]');
+
+    // First actor should no longer be highlighted
+    expect(actor1.classList.contains('current')).toBe(false);
+    // Second actor should be highlighted
+    expect(actor2.classList.contains('current')).toBe(true);
+  });
+
+  it('should update internal #currentActorId tracking', () => {
+    renderer.updateCurrentActor('actor-3');
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'updateCurrentActor: Updated current actor tracking',
+      { entityId: 'actor-3' }
+    );
+  });
+
+  it('should handle actor not found gracefully', () => {
+    renderer.updateCurrentActor('non-existent-actor');
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'updateCurrentActor: Actor element not found in ticker',
+      { entityId: 'non-existent-actor' }
+    );
+
+    // Should not crash or throw
+    const highlightedActors = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    expect(highlightedActors.length).toBe(0);
+  });
+
+  it('should validate entity ID parameter', () => {
+    // Test null
+    renderer.updateCurrentActor(null);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'updateCurrentActor: Invalid entity ID provided',
+      { entityId: null, type: 'object' }
+    );
+
+    // Test undefined
+    renderer.updateCurrentActor(undefined);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'updateCurrentActor: Invalid entity ID provided',
+      { entityId: undefined, type: 'undefined' }
+    );
+
+    // Test non-string
+    renderer.updateCurrentActor(123);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'updateCurrentActor: Invalid entity ID provided',
+      { entityId: 123, type: 'number' }
+    );
+
+    // No actors should be highlighted
+    const highlightedActors = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    expect(highlightedActors.length).toBe(0);
+  });
+
+  it('should clear all current highlights when called', () => {
+    // Manually add current class to multiple actors (simulating a bug scenario)
+    const actor1 = mockActorQueue.querySelector('[data-entity-id="actor-1"]');
+    const actor2 = mockActorQueue.querySelector('[data-entity-id="actor-2"]');
+    actor1.classList.add('current');
+    actor2.classList.add('current');
+
+    // Call updateCurrentActor should clear both
+    renderer.updateCurrentActor('actor-3');
+
+    expect(actor1.classList.contains('current')).toBe(false);
+    expect(actor2.classList.contains('current')).toBe(false);
+
+    const actor3 = mockActorQueue.querySelector('[data-entity-id="actor-3"]');
+    expect(actor3.classList.contains('current')).toBe(true);
+  });
+
+  it('should handle sequential updates correctly', () => {
+    // Update sequence: actor-1 → actor-2 → actor-3
+    renderer.updateCurrentActor('actor-1');
+    let currentActor = mockActorQueue.querySelector('.ticker-actor.current');
+    expect(currentActor.getAttribute('data-entity-id')).toBe('actor-1');
+
+    renderer.updateCurrentActor('actor-2');
+    currentActor = mockActorQueue.querySelector('.ticker-actor.current');
+    expect(currentActor.getAttribute('data-entity-id')).toBe('actor-2');
+
+    renderer.updateCurrentActor('actor-3');
+    currentActor = mockActorQueue.querySelector('.ticker-actor.current');
+    expect(currentActor.getAttribute('data-entity-id')).toBe('actor-3');
+
+    // Only one actor should be highlighted at the end
+    const allHighlighted = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    expect(allHighlighted.length).toBe(1);
+  });
+
+  it('should not crash if queue is empty', () => {
+    // Create new renderer with empty queue
+    const emptyContainer = document.createElement('div');
+    const emptyQueue = document.createElement('div');
+    emptyQueue.id = 'ticker-actor-queue';
+    emptyContainer.appendChild(emptyQueue);
+
+    const emptyRoundNumber = document.createElement('span');
+    emptyRoundNumber.id = 'ticker-round-number';
+    emptyContainer.appendChild(emptyRoundNumber);
+
+    const emptyRenderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: {
+        query: jest.fn(selector => emptyContainer.querySelector(selector)),
+        create: jest.fn(),
+      },
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      domElementFactory: mockDomElementFactory,
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: emptyContainer,
+    });
+
+    // Call updateCurrentActor on empty queue should not crash
+    expect(() => {
+      emptyRenderer.updateCurrentActor('actor-1');
+    }).not.toThrow();
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'updateCurrentActor: Actor element not found in ticker',
+      { entityId: 'actor-1' }
+    );
+  });
+});

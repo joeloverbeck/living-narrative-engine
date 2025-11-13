@@ -1,0 +1,238 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:parameter_validation",
+  "version": "1.0.0",
+  "description": "Example: Parameter validation and error handling. Demonstrates how to validate parameters and handle validation failures gracefully.",
+  "steps": [
+    {
+      "description": "Validate required parameters exist",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "task.params.targetItem"}, null]},
+          {"!=": [{"var": "task.params.targetItem"}, ""]}
+        ]
+      },
+      "trueBranch": [
+        {
+          "description": "Validate item entity exists",
+          "stepType": "conditional",
+          "condition": {
+            "entity-exists": [{"var": "task.params.targetItem"}]
+          },
+          "trueBranch": [
+            {
+              "description": "Validate item has required components",
+              "stepType": "conditional",
+              "condition": {
+                "and": [
+                  {"entity-has-component": [{"var": "task.params.targetItem"}, "items:item"]},
+                  {"entity-has-component": [{"var": "task.params.targetItem"}, "items:pickupable"]}
+                ]
+              },
+              "trueBranch": [
+                {
+                  "description": "Validate actor has inventory space",
+                  "stepType": "conditional",
+                  "condition": {
+                    "<": [
+                      {"var": "actor.inventory.length"},
+                      {"var": "actor.inventory.maxSize"}
+                    ]
+                  },
+                  "trueBranch": [
+                    {
+                      "description": "All validations passed - proceed with pickup",
+                      "stepType": "primitive_action",
+                      "actionId": "items:pick_up_item",
+                      "targetBindings": {
+                        "item": "task.params.targetItem"
+                      },
+                      "storeResultAs": "pickupResult",
+                      "onFailure": "fail"
+                    },
+                    {
+                      "description": "Validate pickup succeeded",
+                      "stepType": "conditional",
+                      "condition": {
+                        "==": [{"var": "refinement.localState.pickupResult.success"}, true]
+                      },
+                      "trueBranch": [
+                        {
+                          "description": "Consume the acquired item",
+                          "stepType": "primitive_action",
+                          "actionId": "items:consume_item",
+                          "targetBindings": {
+                            "item": "refinement.localState.pickupResult.data.item"
+                          },
+                          "onFailure": "replan"
+                        }
+                      ],
+                      "falseBranch": [
+                        {
+                          "stepType": "fail",
+                          "reason": "Pickup action failed despite passing validation"
+                        }
+                      ]
+                    }
+                  ],
+                  "falseBranch": [
+                    {
+                      "stepType": "fail",
+                      "reason": "Actor inventory is full - cannot pick up item"
+                    }
+                  ]
+                }
+              ],
+              "falseBranch": [
+                {
+                  "stepType": "fail",
+                  "reason": "Item missing required components (items:item or items:pickupable)"
+                }
+              ]
+            }
+          ],
+          "falseBranch": [
+            {
+              "stepType": "fail",
+              "reason": "Item entity does not exist in game world"
+            }
+          ]
+        }
+      ],
+      "falseBranch": [
+        {
+          "stepType": "fail",
+          "reason": "Required parameter 'targetItem' is missing, null, or empty"
+        }
+      ]
+    }
+  ],
+  "expectedParameters": {
+    "targetItem": {
+      "type": "entityId",
+      "description": "Entity ID of the item to acquire and consume",
+      "required": true,
+      "validation": {
+        "notNull": true,
+        "notEmpty": true,
+        "entityMustExist": true,
+        "requiredComponents": ["items:item", "items:pickupable"]
+      }
+    }
+  },
+  "exampleTaskParams": {
+    "valid": {
+      "targetItem": "apple_7"
+    },
+    "invalidCases": {
+      "missing": {},
+      "null": {
+        "targetItem": null
+      },
+      "empty": {
+        "targetItem": ""
+      },
+      "nonexistent": {
+        "targetItem": "invalid_entity_999"
+      },
+      "wrongComponents": {
+        "targetItem": "wall_decoration_3"
+      }
+    }
+  },
+  "validationScenarios": [
+    {
+      "scenario": "Valid parameters",
+      "params": {"targetItem": "apple_7"},
+      "expectedResult": "Success - item picked up and consumed",
+      "stepsExecuted": 5
+    },
+    {
+      "scenario": "Missing parameter",
+      "params": {},
+      "expectedResult": "Fail - 'Required parameter targetItem is missing'",
+      "stepsExecuted": 1
+    },
+    {
+      "scenario": "Null parameter",
+      "params": {"targetItem": null},
+      "expectedResult": "Fail - 'Required parameter targetItem is missing'",
+      "stepsExecuted": 1
+    },
+    {
+      "scenario": "Entity doesn't exist",
+      "params": {"targetItem": "nonexistent_999"},
+      "expectedResult": "Fail - 'Item entity does not exist in game world'",
+      "stepsExecuted": 2
+    },
+    {
+      "scenario": "Missing required component",
+      "params": {"targetItem": "wall_decoration_3"},
+      "expectedResult": "Fail - 'Item missing required components'",
+      "stepsExecuted": 3
+    },
+    {
+      "scenario": "Inventory full",
+      "params": {"targetItem": "apple_7"},
+      "actorState": {"inventory": {"length": 10, "maxSize": 10}},
+      "expectedResult": "Fail - 'Actor inventory is full'",
+      "stepsExecuted": 4
+    },
+    {
+      "scenario": "Pickup action fails",
+      "params": {"targetItem": "locked_item_5"},
+      "expectedResult": "Fail - 'Pickup action failed despite passing validation'",
+      "stepsExecuted": 5
+    }
+  ],
+  "errorHandlingPatterns": {
+    "pattern1": {
+      "name": "Early validation with fail",
+      "description": "Validate all parameters at the beginning, fail immediately if invalid",
+      "advantages": ["Fast failure", "Clear error messages", "No wasted work"],
+      "disadvantages": ["Longer initial step chain", "Less flexible"]
+    },
+    "pattern2": {
+      "name": "Just-in-time validation with replan",
+      "description": "Validate parameters right before use, trigger replanning on failure",
+      "advantages": ["Flexible", "Can adapt to runtime changes", "Less upfront validation"],
+      "disadvantages": ["May waste work", "Slower failure detection"]
+    },
+    "pattern3": {
+      "name": "Tiered validation with fallbacks",
+      "description": "Validate parameters, attempt alternative approaches on failure",
+      "advantages": ["Resilient", "Can recover from errors", "Multiple paths to success"],
+      "disadvantages": ["Complex logic", "Harder to debug"]
+    }
+  },
+  "onFailureBehaviors": {
+    "fail": {
+      "description": "Fail the entire refinement method immediately",
+      "useCase": "Critical validation failures where no recovery is possible",
+      "example": "Missing required parameter, entity doesn't exist"
+    },
+    "replan": {
+      "description": "Trigger replanning to find alternative approach",
+      "useCase": "Recoverable failures where alternative plans might succeed",
+      "example": "Action failed but different approach might work"
+    },
+    "continue": {
+      "description": "Skip the failed step and continue to next step",
+      "useCase": "Optional steps where failure is acceptable",
+      "example": "Optional notification step fails but main workflow continues"
+    }
+  },
+  "notes": [
+    "This example demonstrates comprehensive parameter validation",
+    "Validation occurs at multiple levels: existence, entity validity, components, runtime state",
+    "Uses nested conditionals to create validation chain",
+    "Each validation failure has a specific error message",
+    "Different onFailure behaviors for different types of failures",
+    "Shows defensive programming approach to parameter handling",
+    "Validates early to fail fast and provide clear feedback",
+    "Demonstrates how to validate both task parameters and actor state",
+    "Uses entity-exists and entity-has-component custom JSON Logic operators",
+    "Shows best practice: validate before executing expensive operations"
+  ]
+}

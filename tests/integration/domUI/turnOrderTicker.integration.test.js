@@ -337,3 +337,190 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     expect(mockActorQueue.children[1].classList.contains('entering')).toBe(true);
   });
 });
+
+describe('TurnOrderTickerRenderer - Integration: Current Actor Highlighting', () => {
+  // eslint-disable-next-line no-unused-vars -- Renderer must be instantiated to register event handlers
+  let renderer;
+  let mockLogger;
+  let mockContainer;
+  let mockActorQueue;
+  let mockRoundNumber;
+  let subscribedHandlers;
+
+  beforeEach(() => {
+    // Reset DOM
+    document.body.innerHTML = '';
+
+    // Create mock logger
+    mockLogger = createMockLogger();
+
+    // Create container with required elements
+    mockActorQueue = document.createElement('div');
+    mockActorQueue.id = 'ticker-actor-queue';
+    mockActorQueue.scrollTo = jest.fn();
+
+    mockRoundNumber = document.createElement('span');
+    mockRoundNumber.id = 'ticker-round-number';
+
+    mockContainer = document.createElement('div');
+    mockContainer.id = 'turn-order-ticker';
+    mockContainer.appendChild(mockRoundNumber);
+    mockContainer.appendChild(mockActorQueue);
+    document.body.appendChild(mockContainer);
+
+    // Track event subscriptions
+    subscribedHandlers = {};
+
+    // Create production-like dependencies
+    const mockDocumentContext = {
+      query: jest.fn(selector => document.querySelector(selector)),
+      create: jest.fn(tag => document.createElement(tag)),
+    };
+
+    const mockValidatedEventDispatcher = {
+      dispatch: jest.fn(),
+      subscribe: jest.fn((eventType, handler) => {
+        subscribedHandlers[eventType] = handler;
+        return jest.fn(); // Unsubscribe function
+      }),
+      unsubscribe: jest.fn(),
+    };
+
+    const mockDomElementFactory = {
+      create: jest.fn(config => {
+        const el = document.createElement(config.tag || 'div');
+        if (config.classes) el.className = config.classes.join(' ');
+        if (config.attributes) {
+          Object.entries(config.attributes).forEach(([key, value]) => {
+            el.setAttribute(key, value);
+          });
+        }
+        if (config.children) {
+          config.children.forEach(child => el.appendChild(child));
+        }
+        return el;
+      }),
+      div: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'div' })),
+      span: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'span' })),
+      img: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'img' })),
+    };
+
+    const mockEntityManager = {
+      getEntityInstance: jest.fn(id => ({ id })),
+      hasComponent: jest.fn(() => true),
+      getComponentData: jest.fn(() => ({})),
+    };
+
+    const mockEntityDisplayDataProvider = {
+      getEntityName: jest.fn(id => `Actor ${id}`),
+      getEntityPortraitPath: jest.fn(() => '/path/to/portrait.jpg'),
+    };
+
+    renderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: mockDocumentContext,
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      domElementFactory: mockDomElementFactory,
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('should highlight current actor on core:turn_started event', () => {
+    // First, render actors via round_started event
+    const roundStartedEvent = {
+      type: 'core:round_started',
+      payload: {
+        roundNumber: 1,
+        actors: ['actor-1', 'actor-2', 'actor-3'],
+        strategy: 'sequential',
+      },
+    };
+    subscribedHandlers['core:round_started'](roundStartedEvent);
+
+    // Verify actors are rendered
+    expect(mockActorQueue.children.length).toBe(3);
+
+    // Now trigger turn_started event
+    const turnStartedEvent = {
+      type: 'core:turn_started',
+      payload: {
+        entityId: 'actor-2',
+        roundNumber: 1,
+      },
+    };
+    subscribedHandlers['core:turn_started'](turnStartedEvent);
+
+    // Verify correct actor is highlighted
+    const actor1 = mockActorQueue.querySelector('[data-entity-id="actor-1"]');
+    const actor2 = mockActorQueue.querySelector('[data-entity-id="actor-2"]');
+    const actor3 = mockActorQueue.querySelector('[data-entity-id="actor-3"]');
+
+    expect(actor1.classList.contains('current')).toBe(false);
+    expect(actor2.classList.contains('current')).toBe(true);
+    expect(actor3.classList.contains('current')).toBe(false);
+
+    // Verify debug logging
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'updateCurrentActor: Added .current class to actor',
+      { entityId: 'actor-2' }
+    );
+  });
+
+  it('should move highlight between actors across multiple turns', () => {
+    // Render actors
+    const roundStartedEvent = {
+      type: 'core:round_started',
+      payload: {
+        roundNumber: 1,
+        actors: ['actor-1', 'actor-2', 'actor-3'],
+        strategy: 'sequential',
+      },
+    };
+    subscribedHandlers['core:round_started'](roundStartedEvent);
+
+    // Turn 1: actor-1
+    subscribedHandlers['core:turn_started']({
+      type: 'core:turn_started',
+      payload: { entityId: 'actor-1', roundNumber: 1 },
+    });
+
+    let actor1 = mockActorQueue.querySelector('[data-entity-id="actor-1"]');
+    let actor2 = mockActorQueue.querySelector('[data-entity-id="actor-2"]');
+    let actor3 = mockActorQueue.querySelector('[data-entity-id="actor-3"]');
+
+    expect(actor1.classList.contains('current')).toBe(true);
+    expect(actor2.classList.contains('current')).toBe(false);
+    expect(actor3.classList.contains('current')).toBe(false);
+
+    // Turn 2: actor-2
+    subscribedHandlers['core:turn_started']({
+      type: 'core:turn_started',
+      payload: { entityId: 'actor-2', roundNumber: 1 },
+    });
+
+    expect(actor1.classList.contains('current')).toBe(false);
+    expect(actor2.classList.contains('current')).toBe(true);
+    expect(actor3.classList.contains('current')).toBe(false);
+
+    // Turn 3: actor-3
+    subscribedHandlers['core:turn_started']({
+      type: 'core:turn_started',
+      payload: { entityId: 'actor-3', roundNumber: 1 },
+    });
+
+    expect(actor1.classList.contains('current')).toBe(false);
+    expect(actor2.classList.contains('current')).toBe(false);
+    expect(actor3.classList.contains('current')).toBe(true);
+
+    // Verify only one actor is highlighted at the end
+    const allHighlighted = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    expect(allHighlighted.length).toBe(1);
+    expect(allHighlighted[0].getAttribute('data-entity-id')).toBe('actor-3');
+  });
+});

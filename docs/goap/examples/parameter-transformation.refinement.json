@@ -1,0 +1,143 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:parameter_transformation",
+  "version": "1.0.0",
+  "description": "Example: Parameter transformation and property access. Demonstrates extracting nested properties from complex task parameters.",
+  "steps": [
+    {
+      "description": "Move to the item's current location (extracted from item object)",
+      "stepType": "primitive_action",
+      "actionId": "positioning:move_to",
+      "targetBindings": {
+        "target": "task.params.item.location"
+      },
+      "condition": {
+        "!=": [
+          {"var": "actor.position.room"},
+          {"var": "task.params.item.location"}
+        ]
+      }
+    },
+    {
+      "description": "Approach the item's owner if present",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "task.params.item.owner"}, null]},
+          {"!=": [{"var": "task.params.item.owner.id"}, {"var": "actor.id"}]}
+        ]
+      },
+      "trueBranch": [
+        {
+          "description": "Move close to the owner",
+          "stepType": "primitive_action",
+          "actionId": "positioning:move_close_to",
+          "targetBindings": {
+            "target": "task.params.item.owner.id"
+          }
+        },
+        {
+          "description": "Request the item from the owner",
+          "stepType": "primitive_action",
+          "actionId": "social:request_item",
+          "targetBindings": {
+            "npc": "task.params.item.owner.id",
+            "item": "task.params.item.entityId"
+          }
+        }
+      ],
+      "falseBranch": [
+        {
+          "description": "Pick up the item directly (no owner)",
+          "stepType": "primitive_action",
+          "actionId": "items:pick_up_item",
+          "targetBindings": {
+            "item": "task.params.item.entityId"
+          }
+        }
+      ]
+    },
+    {
+      "description": "Use the item according to its type",
+      "stepType": "conditional",
+      "condition": {
+        "==": [{"var": "task.params.item.itemType"}, "consumable"]
+      },
+      "trueBranch": [
+        {
+          "description": "Consume the item",
+          "stepType": "primitive_action",
+          "actionId": "items:consume_item",
+          "targetBindings": {
+            "item": "task.params.item.entityId"
+          }
+        }
+      ],
+      "falseBranch": [
+        {
+          "description": "Equip the item",
+          "stepType": "primitive_action",
+          "actionId": "items:equip_item",
+          "targetBindings": {
+            "item": "task.params.item.entityId"
+          }
+        }
+      ]
+    }
+  ],
+  "expectedParameters": {
+    "item": {
+      "type": "object",
+      "description": "Complex item object with nested properties",
+      "required": true,
+      "schema": {
+        "entityId": {
+          "type": "string",
+          "description": "Entity ID of the item"
+        },
+        "location": {
+          "type": "string",
+          "description": "Entity ID of the room containing the item"
+        },
+        "owner": {
+          "type": "object",
+          "description": "Owner information (null if no owner)",
+          "schema": {
+            "id": {
+              "type": "string",
+              "description": "Entity ID of the owner"
+            },
+            "name": {
+              "type": "string",
+              "description": "Display name of the owner"
+            }
+          }
+        },
+        "itemType": {
+          "type": "string",
+          "description": "Type of item (consumable, equipment, etc.)",
+          "enum": ["consumable", "equipment", "key", "misc"]
+        }
+      }
+    }
+  },
+  "exampleTaskParams": {
+    "item": {
+      "entityId": "health_potion_3",
+      "location": "tavern_main_room",
+      "owner": {
+        "id": "bartender_1",
+        "name": "Barkeep Bob"
+      },
+      "itemType": "consumable"
+    }
+  },
+  "notes": [
+    "This example demonstrates property extraction from nested objects",
+    "Uses dot notation to access nested properties: task.params.item.location",
+    "Multiple levels of nesting: task.params.item.owner.id",
+    "Conditional logic checks property values to determine workflow",
+    "Different workflows based on item properties (owner presence, item type)",
+    "Shows how to handle optional properties (owner may be null)"
+  ]
+}

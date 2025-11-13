@@ -1,0 +1,63 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:parameter_simple",
+  "version": "1.0.0",
+  "description": "Example: Simple parameter passing from task to actions. Demonstrates basic parameter binding with task.params and actor context.",
+  "steps": [
+    {
+      "description": "Move to the location where the item is located",
+      "stepType": "primitive_action",
+      "actionId": "positioning:move_to",
+      "targetBindings": {
+        "target": "task.params.itemLocation"
+      },
+      "condition": {
+        "!=": [
+          {"var": "actor.position.room"},
+          {"var": "task.params.itemLocation"}
+        ]
+      }
+    },
+    {
+      "description": "Pick up the target item",
+      "stepType": "primitive_action",
+      "actionId": "items:pick_up_item",
+      "targetBindings": {
+        "item": "task.params.targetItem"
+      }
+    },
+    {
+      "description": "Consume the item",
+      "stepType": "primitive_action",
+      "actionId": "items:consume_item",
+      "targetBindings": {
+        "item": "task.params.targetItem"
+      }
+    }
+  ],
+  "expectedParameters": {
+    "targetItem": {
+      "type": "entityId",
+      "description": "Entity ID of the item to acquire and consume",
+      "required": true,
+      "example": "apple_7"
+    },
+    "itemLocation": {
+      "type": "entityId",
+      "description": "Entity ID of the room/location containing the item",
+      "required": true,
+      "example": "room_12"
+    }
+  },
+  "exampleTaskParams": {
+    "targetItem": "apple_7",
+    "itemLocation": "room_12"
+  },
+  "notes": [
+    "This example demonstrates basic parameter passing using task.params",
+    "The first step uses a condition to check if movement is needed",
+    "Parameters are passed directly to action target bindings",
+    "No state accumulation is used - each step gets parameters from task.params",
+    "The actor context is accessed in conditions to check current position"
+  ]
+}
