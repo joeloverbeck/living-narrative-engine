@@ -90,6 +90,9 @@
     ],
     "scopes": [
       "actor_inventory_items.scope",
+      "aimable_items_in_inventory.scope",
+      "aimable_targets.scope",
+      "aimed_items_in_inventory.scope",
       "close_actors_with_inventory.scope",
       "container_contents.scope",
       "examinable_items.scope",
