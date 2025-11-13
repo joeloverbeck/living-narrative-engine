@@ -1917,4 +1917,204 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
       expect(element3.style.animationDelay).toBe('200ms');
     });
   });
+
+  describe('Exit Animations', () => {
+    let renderer;
+    let mockLogger;
+    let mockEntityManager;
+    let mockEntityDisplayDataProvider;
+    let mockContainer;
+
+    beforeEach(() => {
+      mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      mockEntityManager = {
+        getEntityInstance: jest.fn(),
+        hasComponent: jest.fn(() => false),
+        getComponentData: jest.fn(),
+      };
+
+      mockEntityDisplayDataProvider = {
+        getEntityName: jest.fn((id) => `Actor ${id}`),
+        getEntityPortraitPath: jest.fn(),
+      };
+
+      mockContainer = document.createElement('div');
+      mockContainer.innerHTML = `
+        <span id="ticker-round-number">ROUND 1</span>
+        <div id="ticker-actor-queue"></div>
+      `;
+
+      const mockDocumentContext = {
+        query: (selector) => mockContainer.querySelector(selector),
+        create: (tag) => document.createElement(tag),
+      };
+
+      const mockValidatedEventDispatcher = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => jest.fn()),
+        unsubscribe: jest.fn(),
+      };
+
+      const mockDomElementFactory = {
+        create: jest.fn((tag) => document.createElement(tag)),
+        div: jest.fn((cls) => {
+          const el = document.createElement('div');
+          if (cls) {
+            el.className = cls;
+          }
+          return el;
+        }),
+        span: jest.fn((cls, text) => {
+          const el = document.createElement('span');
+          if (cls) {
+            el.className = cls;
+          }
+          if (text !== undefined) {
+            el.textContent = text;
+          }
+          return el;
+        }),
+        img: jest.fn((src, alt, cls) => {
+          const el = document.createElement('img');
+          el.src = src;
+          el.alt = alt;
+          if (cls) {
+            el.className = cls;
+          }
+          return el;
+        }),
+      };
+
+      renderer = new TurnOrderTickerRenderer({
+        logger: mockLogger,
+        documentContext: mockDocumentContext,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+        domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
+        entityDisplayDataProvider: mockEntityDisplayDataProvider,
+        tickerContainerElement: mockContainer,
+      });
+    });
+
+    it('should return a Promise', () => {
+      const element = document.createElement('div');
+      const result = renderer.__testAnimateActorExit(element);
+
+      expect(result).toBeInstanceOf(Promise);
+    });
+
+    it('should add exiting class to element', async () => {
+      const element = document.createElement('div');
+      const promise = renderer.__testAnimateActorExit(element);
+
+      expect(element.classList.contains('exiting')).toBe(true);
+
+      await promise;
+    });
+
+    it('should resolve after animation duration', async () => {
+      const element = document.createElement('div');
+      const startTime = Date.now();
+
+      await renderer.__testAnimateActorExit(element);
+
+      const elapsed = Date.now() - startTime;
+      expect(elapsed).toBeGreaterThanOrEqual(390); // ~400ms with small margin
+      expect(elapsed).toBeLessThan(600); // Should not take much longer (500ms fallback + margin)
+    });
+
+    it('should remove exiting class after completion', async () => {
+      const element = document.createElement('div');
+
+      await renderer.__testAnimateActorExit(element);
+
+      expect(element.classList.contains('exiting')).toBe(false);
+    });
+
+    it('should handle invalid element gracefully', async () => {
+      await expect(renderer.__testAnimateActorExit(null)).resolves.toBeUndefined();
+      await expect(renderer.__testAnimateActorExit('not-an-element')).resolves.toBeUndefined();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'animateActorExit requires a valid HTMLElement',
+        expect.any(Object)
+      );
+    });
+
+    it('should respect prefers-reduced-motion', async () => {
+      // Mock matchMedia
+      const originalMatchMedia = window.matchMedia;
+      window.matchMedia = jest.fn().mockImplementation((query) => ({
+        matches: query === '(prefers-reduced-motion: reduce)',
+        media: query,
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }));
+
+      const element = document.createElement('div');
+      const startTime = Date.now();
+
+      await renderer.__testAnimateActorExit(element);
+
+      const elapsed = Date.now() - startTime;
+      expect(elapsed).toBeLessThan(200); // Should be ~100ms
+      expect(element.classList.contains('exiting')).toBe(false);
+      expect(element.style.opacity).toBe('0');
+
+      window.matchMedia = originalMatchMedia;
+    });
+
+    it('should handle multiple sequential exits', async () => {
+      const element1 = document.createElement('div');
+      const element2 = document.createElement('div');
+      const element3 = document.createElement('div');
+
+      await renderer.__testAnimateActorExit(element1);
+      await renderer.__testAnimateActorExit(element2);
+      await renderer.__testAnimateActorExit(element3);
+
+      expect(element1.classList.contains('exiting')).toBe(false);
+      expect(element2.classList.contains('exiting')).toBe(false);
+      expect(element3.classList.contains('exiting')).toBe(false);
+    });
+
+    it('should allow parallel exits', async () => {
+      const element1 = document.createElement('div');
+      const element2 = document.createElement('div');
+
+      const promise1 = renderer.__testAnimateActorExit(element1);
+      const promise2 = renderer.__testAnimateActorExit(element2);
+
+      await Promise.all([promise1, promise2]);
+
+      expect(element1.classList.contains('exiting')).toBe(false);
+      expect(element2.classList.contains('exiting')).toBe(false);
+    });
+
+    it('should handle exception during animation setup', async () => {
+      const element = document.createElement('div');
+
+      // Mock classList.add to throw
+      const originalAdd = element.classList.add;
+      element.classList.add = jest.fn(() => {
+        throw new Error('classList error');
+      });
+
+      await expect(renderer.__testAnimateActorExit(element)).resolves.toBeUndefined();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to apply exit animation',
+        expect.any(Object)
+      );
+
+      // Restore
+      element.classList.add = originalAdd;
+    });
+  });
 });

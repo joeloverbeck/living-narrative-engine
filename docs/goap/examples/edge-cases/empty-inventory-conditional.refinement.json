@@ -1,0 +1,122 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:empty_inventory_conditional",
+  "version": "1.0.0",
+  "description": "Edge case example: Safe handling of empty inventory arrays. Demonstrates defensive programming when checking array properties to avoid runtime errors.",
+
+  "applicability": {
+    "description": "Actor has inventory system (may be empty)",
+    "condition": {
+      "has_component": [
+        { "var": "actor" },
+        "items:inventory"
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "description": "SAFE: Check if inventory exists and has items before accessing",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "items:inventory"
+            ]
+          },
+          {
+            ">": [
+              { "var": "actor.components.items:inventory.items.length" },
+              0
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "description": "Inventory has items - proceed with item action",
+          "stepType": "primitive_action",
+          "actionId": "items:use_first_item",
+          "targetBindings": {
+            "item": "actor.components.items:inventory.items[0]"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "Inventory empty - handle gracefully",
+          "stepType": "fail",
+          "reason": "No items available in inventory"
+        }
+      ],
+      "onFailure": "replan"
+    }
+  ],
+
+  "fallbackBehavior": "replan",
+
+  "commonErrors": [
+    {
+      "error": "Cannot read property '0' of undefined",
+      "cause": "Accessing array element without checking array exists/length",
+      "wrongCode": {
+        "targetBindings": {
+          "item": "actor.components.items:inventory.items[0]"
+        }
+      },
+      "fix": "Add conditional to check array length first (see example above)"
+    },
+    {
+      "error": "TypeError: Cannot read properties of null",
+      "cause": "Component exists but items array is null/undefined",
+      "wrongCode": {
+        "condition": {
+          "has_component": ["actor", "items:inventory"]
+        }
+      },
+      "fix": "Also check items.length > 0, not just component existence"
+    }
+  ],
+
+  "safeAccessPatterns": {
+    "checkArrayLength": {
+      "description": "Always check array length before accessing elements",
+      "pattern": {
+        "and": [
+          {"has_component": ["actor", "items:inventory"]},
+          {">": [{"var": "actor.components.items:inventory.items.length"}, 0]}
+        ]
+      }
+    },
+    "checkArrayElement": {
+      "description": "Check specific array index exists",
+      "pattern": {
+        "and": [
+          {">": [{"var": "actor.components.items:inventory.items.length"}, 2]},
+          {"!=": [{"var": "actor.components.items:inventory.items[2]"}, null]}
+        ]
+      }
+    },
+    "filterThenCheck": {
+      "description": "Filter array, then check filtered result has items",
+      "pattern": {
+        ">": [
+          {"var": "actor.components.items:inventory.items.filter(item => item.type === 'weapon').length"},
+          0
+        ]
+      }
+    }
+  },
+
+  "notes": [
+    "RULE: Never access array[index] without checking array.length first",
+    "RULE: has_component only checks component exists, not that arrays are populated",
+    "DEFENSIVE: Always validate array length before element access",
+    "PATTERN: and([has_component, array.length > 0]) before accessing array[0]",
+    "FALLBACK: Use else branch or fail step for empty array scenarios",
+    "ALTERNATIVE: Use JSON Logic 'filter' then check result.length",
+    "ERROR MESSAGE: Empty inventory triggers replan with clear reason"
+  ]
+}

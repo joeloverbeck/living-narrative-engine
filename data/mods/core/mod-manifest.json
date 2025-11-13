@@ -193,10 +193,10 @@
       "rest_safely.goal.json"
     ],
     "tasks": [
-      "tasks/arm_self.task.json",
-      "tasks/consume_nourishing_item.task.json",
-      "tasks/find_instrument.task.json",
-      "tasks/secure_shelter.task.json"
+      "arm_self.task.json",
+      "consume_nourishing_item.task.json",
+      "find_instrument.task.json",
+      "secure_shelter.task.json"
     ]
   }
 }

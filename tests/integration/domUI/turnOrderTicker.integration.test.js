@@ -764,4 +764,168 @@ describe('Turn Order Ticker - Participation Updates', () => {
       jest.useRealTimers();
     });
   });
+
+  describe('Exit Animations', () => {
+    let mockLogger;
+    let mockContainer;
+    let mockActorQueue;
+    let mockRoundNumber;
+    let subscribedHandlers;
+    // Renderer is used indirectly via subscribedHandlers populated during construction
+    // eslint-disable-next-line no-unused-vars
+    let renderer;
+
+    beforeEach(() => {
+      // Reset DOM
+      document.body.innerHTML = '';
+
+      // Mock window.matchMedia for animation tests
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: jest.fn().mockImplementation((query) => ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addListener: jest.fn(),
+          removeListener: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+          dispatchEvent: jest.fn(),
+        })),
+      });
+
+      mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      // Create container with required elements
+      mockActorQueue = document.createElement('div');
+      mockActorQueue.id = 'ticker-actor-queue';
+      mockActorQueue.scrollTo = jest.fn();
+
+      mockRoundNumber = document.createElement('span');
+      mockRoundNumber.id = 'ticker-round-number';
+
+      mockContainer = document.createElement('div');
+      mockContainer.id = 'turn-order-ticker';
+      mockContainer.appendChild(mockRoundNumber);
+      mockContainer.appendChild(mockActorQueue);
+      document.body.appendChild(mockContainer);
+
+      subscribedHandlers = {};
+
+      const mockDocumentContext = {
+        query: jest.fn((selector) => document.querySelector(selector)),
+        create: jest.fn((tag) => document.createElement(tag)),
+      };
+
+      const mockValidatedEventDispatcher = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn((eventType, handler) => {
+          subscribedHandlers[eventType] = handler;
+          return jest.fn();
+        }),
+        unsubscribe: jest.fn(),
+      };
+
+      const mockDomElementFactory = {
+        create: jest.fn((tag) => document.createElement(tag)),
+        div: jest.fn((cls) => {
+          const el = document.createElement('div');
+          if (cls) {
+            if (Array.isArray(cls)) {
+              el.classList.add(...cls);
+            } else {
+              el.classList.add(...cls.split(' ').filter((c) => c));
+            }
+          }
+          return el;
+        }),
+        span: jest.fn((cls, text) => {
+          const el = document.createElement('span');
+          if (cls) {
+            if (Array.isArray(cls)) {
+              el.classList.add(...cls);
+            } else {
+              el.classList.add(...cls.split(' ').filter((c) => c));
+            }
+          }
+          if (text !== undefined) {
+            el.textContent = text;
+          }
+          return el;
+        }),
+        img: jest.fn((src, alt, cls) => {
+          const el = document.createElement('img');
+          el.src = src;
+          el.alt = alt;
+          if (cls) {
+            if (Array.isArray(cls)) {
+              el.classList.add(...cls);
+            } else {
+              el.classList.add(...cls.split(' ').filter((c) => c));
+            }
+          }
+          return el;
+        }),
+      };
+
+      const mockEntityManager = {
+        getEntityInstance: jest.fn(),
+        hasComponent: jest.fn(() => false),
+        getComponentData: jest.fn(),
+      };
+
+      const mockEntityDisplayDataProvider = {
+        getEntityName: jest.fn((id) => `Actor ${id}`),
+        getEntityPortraitPath: jest.fn(),
+      };
+
+      renderer = new TurnOrderTickerRenderer({
+        logger: mockLogger,
+        documentContext: mockDocumentContext,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+        domElementFactory: mockDomElementFactory,
+        entityManager: mockEntityManager,
+        entityDisplayDataProvider: mockEntityDisplayDataProvider,
+        tickerContainerElement: mockContainer,
+      });
+    });
+
+    it('should animate actor removal on turn end', async () => {
+      // Start round with actors
+      const roundStartedHandler = subscribedHandlers['core:round_started'];
+      roundStartedHandler({
+        payload: {
+          roundNumber: 1,
+          actors: ['actor-1', 'actor-2'],
+          strategy: 'round-robin',
+        },
+      });
+
+      const queueElement = document.querySelector('#ticker-actor-queue');
+      expect(queueElement.querySelectorAll('.ticker-actor').length).toBe(2);
+
+      // End turn
+      const turnEndedHandler = subscribedHandlers['core:turn_ended'];
+      const turnEndedPromise = turnEndedHandler({
+        payload: { entityId: 'actor-1' },
+      });
+
+      // Should have exiting class during animation
+      const actor1Element = queueElement.querySelector('[data-entity-id="actor-1"]');
+      expect(actor1Element?.classList.contains('exiting')).toBe(true);
+
+      // Wait for animation
+      await turnEndedPromise;
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Extra buffer
+
+      // Should be removed after animation
+      expect(queueElement.querySelector('[data-entity-id="actor-1"]')).toBeNull();
+      expect(queueElement.querySelectorAll('.ticker-actor').length).toBe(1);
+    });
+  });
 });

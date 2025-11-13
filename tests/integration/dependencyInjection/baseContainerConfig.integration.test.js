@@ -77,6 +77,10 @@ function setupUiDom() {
       <button id="delete-save-button" type="button">Delete</button>
       <div id="load-game-status-message"></div>
     </div>
+    <div id="turn-order-ticker" role="region" aria-label="Turn order" aria-live="polite">
+      <span id="ticker-round-number">ROUND 1</span>
+      <div id="ticker-actor-queue" class="ticker-actor-queue"></div>
+    </div>
   `;
 }
 

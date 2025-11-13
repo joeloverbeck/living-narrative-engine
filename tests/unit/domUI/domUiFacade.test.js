@@ -16,6 +16,7 @@ const createDependencies = (overrides = {}) => ({
   saveGameUI: createRenderer({ show: jest.fn() }),
   loadGameUI: createRenderer({ show: jest.fn() }),
   llmSelectionModal: createRenderer({ show: jest.fn() }),
+  turnOrderTickerRenderer: createRenderer({ render: jest.fn() }),
   entityLifecycleMonitor: createRenderer({ clearEvents: jest.fn() }),
   ...overrides,
 });
@@ -34,6 +35,7 @@ describe('DomUiFacade', () => {
     expect(facade.saveGame).toBe(deps.saveGameUI);
     expect(facade.loadGame).toBe(deps.loadGameUI);
     expect(facade.llmSelectionModal).toBe(deps.llmSelectionModal);
+    expect(facade.turnOrderTicker).toBe(deps.turnOrderTickerRenderer);
     expect(facade.entityLifecycleMonitor).toBe(deps.entityLifecycleMonitor);
   });
 
@@ -44,6 +46,7 @@ describe('DomUiFacade', () => {
   });
 
   it('uses the default entityLifecycleMonitor when the dependency is omitted', () => {
+    // eslint-disable-next-line no-unused-vars
     const { entityLifecycleMonitor: _unused, ...rest } = createDependencies();
     const facade = new DomUiFacade(rest);
     expect(facade.entityLifecycleMonitor).toBeNull();
@@ -97,6 +100,11 @@ describe('DomUiFacade', () => {
         'DomUiFacade: Missing or invalid llmSelectionModal dependency.',
       ],
       [
+        'turnOrderTickerRenderer',
+        { turnOrderTickerRenderer: createRenderer({}) },
+        'DomUiFacade: Missing or invalid turnOrderTickerRenderer dependency.',
+      ],
+      [
         'entityLifecycleMonitor',
         { entityLifecycleMonitor: { dispose: jest.fn() } },
         'DomUiFacade: Invalid entityLifecycleMonitor dependency.',
@@ -123,6 +131,7 @@ describe('DomUiFacade', () => {
     expect(deps.saveGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(deps.loadGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(deps.llmSelectionModal.dispose).toHaveBeenCalledTimes(1);
+    expect(deps.turnOrderTickerRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(deps.entityLifecycleMonitor.dispose).toHaveBeenCalledTimes(1);
   });
 
@@ -137,6 +146,7 @@ describe('DomUiFacade', () => {
       saveGameUI: { show: jest.fn() },
       loadGameUI: { show: jest.fn() },
       llmSelectionModal: { show: jest.fn() },
+      turnOrderTickerRenderer: { render: jest.fn() },
       entityLifecycleMonitor: null,
     });
 

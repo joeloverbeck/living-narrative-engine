@@ -4,6 +4,7 @@
 
 import { tokens } from '../tokens.js';
 import ContextAssemblyService from '../../goap/services/contextAssemblyService.js';
+import ParameterResolutionService from '../../goap/services/parameterResolutionService.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -18,5 +19,10 @@ export function registerGoapServices(container) {
       tokens.ILogger,
       { optional: true, parameter: 'enableKnowledgeLimitation', defaultValue: false },
     ],
+  });
+
+  // Parameter Resolution Service
+  container.register(tokens.IParameterResolutionService, ParameterResolutionService, {
+    dependencies: [tokens.IEntityManager, tokens.ILogger],
   });
 }

@@ -1,0 +1,254 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "examples:condition_evaluation_error",
+  "version": "1.0.0",
+  "description": "Edge case example: Safe condition evaluation. Demonstrates patterns to prevent condition evaluation errors from null/undefined values and property access failures.",
+
+  "applicability": {
+    "description": "Actor exists (minimal requirement)",
+    "condition": {
+      "has_component": [
+        {"var": "actor"},
+        "core:identity"
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "description": "SAFE PATTERN 1: Guard against null/undefined before property access",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "actor"}, null]},
+          {"!=": [{"var": "actor.components"}, null]},
+          {"!=": [{"var": "actor.components.positioning:location"}, null]},
+          {"!=": [{"var": "actor.components.positioning:location.room"}, null]},
+          {"==": [
+            {"var": "actor.components.positioning:location.room"},
+            {"var": "task.params.targetRoom"}
+          ]}
+        ]
+      },
+      "thenSteps": [
+        {
+          "description": "All properties valid - proceed",
+          "stepType": "primitive_action",
+          "actionId": "interaction:interact_with_room",
+          "targetBindings": {
+            "room": "task.params.targetRoom"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "Property chain broken - move to room first",
+          "stepType": "primitive_action",
+          "actionId": "positioning:move_to",
+          "targetBindings": {
+            "target": "task.params.targetRoom"
+          }
+        }
+      ]
+    },
+    {
+      "description": "SAFE PATTERN 2: Use has_component for component existence",
+      "stepType": "conditional",
+      "condition": {
+        "and": [
+          {"has_component": ["actor", "items:inventory"]},
+          {"has_component": ["task.params.item", "items:consumable"]},
+          {
+            "in": [
+              {"var": "task.params.item"},
+              {"var": "actor.components.items:inventory.items"}
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "description": "Item in inventory and consumable - consume it",
+          "stepType": "primitive_action",
+          "actionId": "items:consume_item",
+          "targetBindings": {
+            "item": "task.params.item"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "Item not in inventory or not consumable",
+          "stepType": "fail",
+          "reason": "Cannot consume item - either not in inventory or not consumable"
+        }
+      ]
+    },
+    {
+      "description": "SAFE PATTERN 3: Default values for missing properties",
+      "stepType": "conditional",
+      "condition": {
+        ">=": [
+          {
+            "if": [
+              {"!=": [{"var": "actor.components.resources:health.current"}, null]},
+              {"var": "actor.components.resources:health.current"},
+              100
+            ]
+          },
+          {"var": "task.params.minimumHealth"}
+        ]
+      },
+      "thenSteps": [
+        {
+          "description": "Health sufficient (or default 100)",
+          "stepType": "primitive_action",
+          "actionId": "combat:engage",
+          "targetBindings": {
+            "target": "task.params.enemy"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "description": "Health too low - need healing",
+          "stepType": "fail",
+          "reason": "Health below minimum required for combat"
+        }
+      ]
+    }
+  ],
+
+  "fallbackBehavior": "replan",
+
+  "commonErrors": [
+    {
+      "error": "Cannot read property 'room' of undefined",
+      "cause": "Accessing nested property without checking intermediate properties exist",
+      "wrongCode": {
+        "condition": {
+          "==": [
+            {"var": "actor.components.positioning:location.room"},
+            {"var": "task.params.targetRoom"}
+          ]
+        }
+      },
+      "fix": "Check each level of property chain: actor != null, components != null, location != null, room != null"
+    },
+    {
+      "error": "Condition evaluation throws during 'in' operator",
+      "cause": "Using 'in' operator without validating array exists",
+      "wrongCode": {
+        "condition": {
+          "in": [
+            {"var": "task.params.item"},
+            {"var": "actor.components.items:inventory.items"}
+          ]
+        }
+      },
+      "fix": "Use has_component to check inventory exists first"
+    },
+    {
+      "error": "Comparison with null/undefined produces unexpected results",
+      "cause": "Not guarding against null/undefined before comparisons",
+      "wrongCode": {
+        "condition": {
+          ">": [{"var": "actor.components.resources:health.current"}, 50]
+        }
+      },
+      "fix": "Check != null AND provide default value with if-then-else"
+    }
+  ],
+
+  "safeOperatorPatterns": {
+    "safePropertyAccess": {
+      "description": "Chain null checks for nested properties",
+      "pattern": {
+        "and": [
+          {"!=": [{"var": "obj"}, null]},
+          {"!=": [{"var": "obj.prop1"}, null]},
+          {"!=": [{"var": "obj.prop1.prop2"}, null]},
+          {"operation": [{"var": "obj.prop1.prop2"}, "value"]}
+        ]
+      }
+    },
+    "safeArrayIn": {
+      "description": "Validate array before 'in' operator",
+      "pattern": {
+        "and": [
+          {"!=": [{"var": "array"}, null]},
+          {"===": [{"typeof": {"var": "array"}}, "array"]},
+          {"in": [{"var": "value"}, {"var": "array"}]}
+        ]
+      }
+    },
+    "safeComparison": {
+      "description": "Provide default for comparisons",
+      "pattern": {
+        ">": [
+          {"if": [
+            {"!=": [{"var": "value"}, null]},
+            {"var": "value"},
+            0
+          ]},
+          50
+        ]
+      }
+    },
+    "safeComponentPropertyAccess": {
+      "description": "Use has_component before property access",
+      "pattern": {
+        "and": [
+          {"has_component": ["entity", "component:id"]},
+          {"!=": [{"var": "entity.components.component:id.property"}, null]},
+          {"operation": [{"var": "entity.components.component:id.property"}, "value"]}
+        ]
+      }
+    }
+  },
+
+  "jsonLogicSafeOperators": {
+    "hasComponent": {
+      "usage": "has_component([entity, componentId])",
+      "safe": true,
+      "description": "Safe way to check component existence"
+    },
+    "notEqualNull": {
+      "usage": "!= [value, null]",
+      "safe": true,
+      "description": "Guard against null/undefined"
+    },
+    "ifThenElse": {
+      "usage": "if [condition, thenValue, elseValue]",
+      "safe": true,
+      "description": "Provide default values"
+    },
+    "typeof": {
+      "usage": "typeof [value]",
+      "safe": true,
+      "description": "Check value type before operations"
+    },
+    "directPropertyAccess": {
+      "usage": "var [\"obj.prop1.prop2\"]",
+      "safe": false,
+      "description": "UNSAFE - can throw if intermediate properties are null"
+    },
+    "inOperator": {
+      "usage": "in [value, array]",
+      "safe": false,
+      "description": "UNSAFE without validating array exists and is array type"
+    }
+  },
+
+  "notes": [
+    "RULE: Always check intermediate properties != null before accessing nested properties",
+    "RULE: Use has_component before accessing component properties",
+    "RULE: Validate arrays exist before 'in' operator",
+    "DEFENSIVE: JSON Logic doesn't prevent null access errors",
+    "PATTERN: and([!= null checks, actual operation])",
+    "DEFAULT VALUES: Use if-then-else to provide safe defaults",
+    "SAFE OPERATORS: has_component, !=, typeof are inherently safe",
+    "UNSAFE OPERATORS: Direct property access, 'in' need guards",
+    "ERROR PREVENTION: Proper guards prevent condition evaluation exceptions"
+  ]
+}

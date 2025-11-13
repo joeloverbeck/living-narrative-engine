@@ -41,6 +41,7 @@ import LoadGameUI from '../../domUI/loadGameUI.js';
 import { PortraitModalRenderer } from '../../domUI/portraitModalRenderer.js';
 import { EngineUIManager } from '../../domUI/engineUIManager.js';
 import PerceptibleEventSenderController from '../../domUI/perceptibleEventSenderController.js';
+import { TurnOrderTickerRenderer } from '../../domUI/turnOrderTickerRenderer.js';
 
 // --- JSDoc Imports ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
@@ -345,6 +346,37 @@ export function registerRenderers(registrar, logger) {
     { lifecycle: 'singletonFactory' },
     logger
   );
+
+  registerWithLog(
+    registrar,
+    tokens.TurnOrderTickerRenderer,
+    (c) => {
+      const docContext = c.resolve(tokens.IDocumentContext);
+      const resolvedLogger = c.resolve(tokens.ILogger);
+
+      // Query ticker container element
+      const tickerContainerElement = docContext.query('#turn-order-ticker');
+
+      if (!tickerContainerElement) {
+        resolvedLogger.error(
+          'UI Registrations: Could not find #turn-order-ticker element for TurnOrderTickerRenderer.'
+        );
+        throw new Error('Required DOM element #turn-order-ticker not found');
+      }
+
+      return new TurnOrderTickerRenderer({
+        logger: resolvedLogger,
+        documentContext: docContext,
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+        entityManager: c.resolve(tokens.IEntityManager),
+        entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
+        tickerContainerElement,
+      });
+    },
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
 }
 
 /**
@@ -474,6 +506,7 @@ export function registerFacadeAndManager(registrar, logger) {
         tokens.SaveGameUI,
         tokens.LoadGameUI,
         tokens.LlmSelectionModal,
+        tokens.TurnOrderTickerRenderer,
         // tokens.EntityLifecycleMonitor, // DISABLED FOR PERFORMANCE
       ],
     },

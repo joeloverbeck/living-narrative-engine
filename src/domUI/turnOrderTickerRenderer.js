@@ -879,14 +879,77 @@ export class TurnOrderTickerRenderer {
 
   /**
    * Animate an actor exiting the ticker.
+   * Returns a Promise that resolves when the animation completes.
    *
-   * @param {HTMLElement} _element - The actor element
+   * @param {HTMLElement} element - The actor element
    * @returns {Promise<void>} Resolves when animation completes
    * @private
    */
-  #_animateActorExit(_element) {
-    // Implementation in TURORDTIC-012
-    return Promise.resolve();
+  #_animateActorExit(element) {
+    if (!element || !(element instanceof HTMLElement)) {
+      this.#logger.warn('animateActorExit requires a valid HTMLElement', { element });
+      return Promise.resolve(); // Resolve immediately for invalid input
+    }
+
+    return new Promise((resolve) => {
+      try {
+        // Check if user prefers reduced motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (prefersReducedMotion) {
+          // Skip animation, just fade out quickly
+          element.style.transition = 'opacity 0.1s';
+          element.style.opacity = '0';
+
+          setTimeout(() => {
+            this.#logger.debug('Exit animation skipped (reduced motion)', {
+              entityId: element.getAttribute('data-entity-id'),
+            });
+            resolve();
+          }, 100);
+          return;
+        }
+
+        // Set up animation end listener
+        const handleAnimationEnd = (event) => {
+          if (event.target === element) {
+            element.removeEventListener('animationend', handleAnimationEnd);
+            element.classList.remove('exiting');
+            this.#logger.debug('Exit animation completed', {
+              entityId: element.getAttribute('data-entity-id'),
+            });
+            resolve();
+          }
+        };
+
+        element.addEventListener('animationend', handleAnimationEnd);
+
+        // Add exiting class to trigger animation
+        element.classList.add('exiting');
+
+        // Fallback timeout in case animationend doesn't fire
+        setTimeout(() => {
+          element.removeEventListener('animationend', handleAnimationEnd);
+          element.classList.remove('exiting');
+          this.#logger.debug('Exit animation completed (fallback timeout)', {
+            entityId: element.getAttribute('data-entity-id'),
+          });
+          resolve();
+        }, 500); // Slightly longer than animation duration
+
+        this.#logger.debug('Exit animation applied', {
+          entityId: element.getAttribute('data-entity-id'),
+        });
+
+      } catch (error) {
+        this.#logger.warn('Failed to apply exit animation', {
+          entityId: element.getAttribute('data-entity-id'),
+          error: error.message,
+        });
+        // Resolve anyway so removal can proceed
+        resolve();
+      }
+    });
   }
 
   /**

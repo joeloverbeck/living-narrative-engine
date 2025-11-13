@@ -50,4 +50,5 @@ export const uiTokens = freeze({
   VisualizationComposer: 'VisualizationComposer',
   // Thematic Direction Generator
   ThematicDirectionController: 'ThematicDirectionController',
+  TurnOrderTickerRenderer: 'TurnOrderTickerRenderer',
 });

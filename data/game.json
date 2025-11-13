@@ -27,7 +27,7 @@
     "music",
     "fantasy",
     "patrol",
-    "p_erotica_irun"
+    "p_erotica"
   ],
-  "startWorld": "patrol:patrol"
+  "startWorld": "p_erotica:volleyball"
 }
