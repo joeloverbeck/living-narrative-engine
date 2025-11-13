@@ -7,7 +7,6 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { SimpleEntityManager } from '../common/entities/index.js';
 import { ActionDiscoveryService } from '../../src/actions/actionDiscoveryService.js';
-import { ActionPipelineOrchestrator } from '../../src/actions/actionPipelineOrchestrator.js';
 import ActionCommandFormatter from '../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
 import { SafeEventDispatcher } from '../../src/events/safeEventDispatcher.js';
@@ -275,6 +274,7 @@ describe('Singleton Scope Engine Location Context', () => {
     entityManager.addComponent('hero', POSITION_COMPONENT_ID, {
       locationId: 'town',
     });
+    clearEntityCache(); // Clear cache after entity modification
 
     // Get actions with new location
     actions = await actionDiscoveryService.getValidActions(heroActor, {
@@ -305,6 +305,7 @@ describe('Singleton Scope Engine Location Context', () => {
     entityManager.addComponent('hero', POSITION_COMPONENT_ID, {
       locationId: 'town',
     });
+    clearEntityCache(); // Clear cache after entity modification
 
     actions = await actionDiscoveryService.getValidActions(heroActor, {
       currentLocation: townLocation,
@@ -317,6 +318,7 @@ describe('Singleton Scope Engine Location Context', () => {
     entityManager.addComponent('ninja', POSITION_COMPONENT_ID, {
       locationId: 'town',
     });
+    clearEntityCache(); // Clear cache after entity modification
 
     actions = await actionDiscoveryService.getValidActions(heroActor, {
       currentLocation: townLocation,
@@ -344,6 +346,7 @@ describe('Singleton Scope Engine Location Context', () => {
     for (let i = 0; i < locations.length; i++) {
       const locationId = locations[i].id;
       entityManager.addComponent('hero', POSITION_COMPONENT_ID, { locationId });
+      clearEntityCache(); // Clear cache after entity modification
 
       const actions = await actionDiscoveryService.getValidActions(heroActor, {
         currentLocation: locations[i],
@@ -376,6 +379,7 @@ describe('Singleton Scope Engine Location Context', () => {
     entityManager.addComponent('hero', POSITION_COMPONENT_ID, {
       locationId: 'town',
     });
+    clearEntityCache(); // Clear cache after entity modification
 
     // Check hero's actions (should see guild exit, not town)
     let heroActions = await actionDiscoveryService.getValidActions(heroActor, {

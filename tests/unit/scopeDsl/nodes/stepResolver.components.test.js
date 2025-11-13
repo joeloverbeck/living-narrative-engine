@@ -89,32 +89,34 @@ describe('StepResolver - components edge access', () => {
       });
     });
 
-    it('should return empty components and log warning for entities without componentTypeIds', () => {
+    it('should return components directly for entities from getEntity() (without componentTypeIds)', () => {
       const node = { type: 'Step', field: 'components', parent: {} };
       const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
       const ctx = { dispatcher, trace, actorEntity };
 
-      // Mock an entity without componentTypeIds (invalid entity)
-      const invalidEntity = {
+      // Mock an entity from getEntity() - has components but no componentTypeIds
+      // This is a VALID format returned by entityManager.getEntity()
+      const entityFromGetEntity = {
         id: 'entity1',
         components: {
-          'core:name': { first: 'Invalid', last: 'Entity' },
+          'core:name': { first: 'Valid', last: 'Entity' },
           'core:position': { location: 'loc3' },
         },
-        // No componentTypeIds or getComponentData - this is invalid
+        // No componentTypeIds - this is expected for entities from getEntity()
       };
 
       dispatcher.resolve.mockReturnValue(new Set(['entity1']));
-      entitiesGateway.getEntityInstance.mockReturnValue(invalidEntity);
+      entitiesGateway.getEntityInstance.mockReturnValue(entityFromGetEntity);
 
       const result = resolver.resolve(node, ctx);
 
       expect(result.size).toBe(1);
       const components = [...result][0];
-      // Should return empty components object, not the entity's components
-      expect(components).toEqual({});
-
-      // Should log a warning
+      // Should return the entity's components directly (fast path optimization)
+      expect(components).toEqual({
+        'core:name': { first: 'Valid', last: 'Entity' },
+        'core:position': { location: 'loc3' },
+      });
     });
 
     it('should fallback to entitiesGateway.getComponentData when entity lacks getComponentData method', () => {

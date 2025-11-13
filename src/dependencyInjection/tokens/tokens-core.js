@@ -327,4 +327,6 @@ export const coreTokens = freeze({
   IAnatomySystemFacade: 'IAnatomySystemFacade',
   // Circuit Breaker (optional dependency for facades)
   ICircuitBreaker: 'ICircuitBreaker',
+  // GOAP System Services
+  IContextAssemblyService: 'IContextAssemblyService',
 });

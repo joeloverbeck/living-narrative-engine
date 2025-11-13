@@ -584,11 +584,45 @@ describe('TurnOrderTickerRenderer - Public API', () => {
     });
   });
 
-  it('updateActorParticipation method should log debug message (stub implementation)', () => {
-    renderer.updateActorParticipation('test-actor-id', true);
-    expect(mockLogger.debug).toHaveBeenCalledWith('updateActorParticipation() called', {
-      entityId: 'test-actor-id',
-      participating: true,
+  describe('updateActorParticipation method', () => {
+    it('should validate entity ID parameter', () => {
+      renderer.updateActorParticipation(null, true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'updateActorParticipation requires a valid entity ID',
+        { entityId: null }
+      );
+    });
+
+    it('should validate entity ID is a string', () => {
+      renderer.updateActorParticipation(123, true);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'updateActorParticipation requires a valid entity ID',
+        { entityId: 123 }
+      );
+    });
+
+    it('should validate participating parameter is boolean', () => {
+      renderer.updateActorParticipation('test-actor-id', 'not-a-boolean');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'updateActorParticipation requires a boolean participating value',
+        { entityId: 'test-actor-id', participating: 'not-a-boolean' }
+      );
+    });
+
+    it('should log debug message when updating participation state', () => {
+      renderer.updateActorParticipation('test-actor-id', true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Updating actor participation state',
+        { entityId: 'test-actor-id', participating: true }
+      );
+    });
+
+    it('should log debug when actor element not found', () => {
+      renderer.updateActorParticipation('non-existent-actor', false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Actor element not found in ticker',
+        expect.objectContaining({ entityId: 'non-existent-actor' })
+      );
     });
   });
 });
@@ -1225,6 +1259,21 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
       debug: jest.fn(),
     };
 
+    // Mock window.matchMedia for animation tests
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: jest.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      })),
+    });
+
     mockActorQueue = document.createElement('div');
     mockActorQueue.id = 'ticker-actor-queue';
     // Mock scrollTo for jsdom compatibility
@@ -1474,6 +1523,21 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
       debug: jest.fn(),
     };
 
+    // Mock window.matchMedia for animation tests
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: jest.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      })),
+    });
+
     mockContainer = document.createElement('div');
     mockActorQueue = document.createElement('div');
     mockActorQueue.id = 'ticker-actor-queue';
@@ -1686,5 +1750,171 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
       'updateCurrentActor: Actor element not found in ticker',
       { entityId: 'actor-1' }
     );
+  });
+
+  describe('Entry Animations', () => {
+    let mockElement;
+
+    beforeEach(() => {
+      // Create a real DOM element for animation tests
+      mockElement = document.createElement('div');
+      mockElement.className = 'ticker-actor';
+      document.body.appendChild(mockElement);
+
+      // Reset matchMedia mock for each test
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: jest.fn().mockImplementation(query => ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addListener: jest.fn(),
+          removeListener: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+          dispatchEvent: jest.fn(),
+        })),
+      });
+    });
+
+    afterEach(() => {
+      if (mockElement && mockElement.parentNode) {
+        document.body.removeChild(mockElement);
+      }
+      jest.clearAllTimers();
+    });
+
+    it('should add entering class to element', () => {
+      renderer.__testAnimateActorEntry(mockElement, 0);
+
+      expect(mockElement.classList.contains('entering')).toBe(true);
+    });
+
+    it('should apply correct stagger delay based on index', () => {
+      renderer.__testAnimateActorEntry(mockElement, 2);
+
+      expect(mockElement.style.animationDelay).toBe('200ms');
+    });
+
+    it('should remove entering class after animation completes', () => {
+      jest.useFakeTimers();
+
+      renderer.__testAnimateActorEntry(mockElement, 1);
+
+      expect(mockElement.classList.contains('entering')).toBe(true);
+
+      // Animation duration (500ms) + stagger (100ms) + buffer (50ms) = 650ms
+      jest.advanceTimersByTime(650);
+
+      expect(mockElement.classList.contains('entering')).toBe(false);
+      expect(mockElement.style.animationDelay).toBe('');
+
+      jest.useRealTimers();
+    });
+
+    it('should handle null element gracefully', () => {
+      expect(() => {
+        renderer.__testAnimateActorEntry(null, 0);
+      }).not.toThrow();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'TurnOrderTickerRenderer: Invalid element provided to _animateActorEntry',
+        { element: null, index: 0 }
+      );
+    });
+
+    it('should handle invalid index by defaulting to 0', () => {
+      renderer.__testAnimateActorEntry(mockElement, -5);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'TurnOrderTickerRenderer: Invalid index provided to _animateActorEntry, defaulting to 0',
+        expect.objectContaining({ providedIndex: -5 })
+      );
+
+      // Should use index 0, so no delay
+      expect(mockElement.style.animationDelay).toBe('0ms');
+    });
+
+    it('should handle NaN index by defaulting to 0', () => {
+      renderer.__testAnimateActorEntry(mockElement, NaN);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'TurnOrderTickerRenderer: Invalid index provided to _animateActorEntry, defaulting to 0',
+        expect.objectContaining({ providedIndex: NaN })
+      );
+
+      expect(mockElement.style.animationDelay).toBe('0ms');
+    });
+
+    it('should respect prefers-reduced-motion setting', () => {
+      // Mock matchMedia to return reduced motion preference
+      window.matchMedia = jest.fn().mockImplementation(query => ({
+        matches: query === '(prefers-reduced-motion: reduce)',
+        media: query,
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      }));
+
+      renderer.__testAnimateActorEntry(mockElement, 0);
+
+      // Should NOT add entering class for reduced motion
+      expect(mockElement.classList.contains('entering')).toBe(false);
+
+      // Should use opacity transition instead
+      expect(mockElement.style.transition).toBe('opacity 0.1s ease-out');
+      expect(mockElement.style.opacity).toBe('1');
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'TurnOrderTickerRenderer: Using reduced motion animation for actor entry'
+      );
+    });
+
+    it('should handle multiple rapid animations on same element', () => {
+      jest.useFakeTimers();
+
+      // First animation (index 0: 0ms delay, 500ms duration, 50ms buffer = 550ms total)
+      renderer.__testAnimateActorEntry(mockElement, 0);
+      expect(mockElement.classList.contains('entering')).toBe(true);
+
+      // Second animation before first completes (index 1: 100ms delay, 500ms duration, 50ms buffer = 650ms total)
+      renderer.__testAnimateActorEntry(mockElement, 1);
+      expect(mockElement.classList.contains('entering')).toBe(true);
+      expect(mockElement.style.animationDelay).toBe('100ms');
+
+      // Fast-forward past first animation timeout (550ms)
+      // The first timeout will try to remove the class, but the element still has it from second animation
+      jest.advanceTimersByTime(550);
+
+      // The first animation's timeout fired and removed the class, but the second animation re-added it
+      // In reality, both timeouts are independent and will both fire
+      // After 550ms, the first timeout fires and removes the class
+      expect(mockElement.classList.contains('entering')).toBe(false);
+
+      // Fast-forward past second animation timeout (100ms more to reach 650ms total)
+      jest.advanceTimersByTime(100);
+
+      // Both timeouts have fired, class should be removed (already was removed)
+      expect(mockElement.classList.contains('entering')).toBe(false);
+
+      jest.useRealTimers();
+    });
+
+    it('should apply different stagger delays for different indices', () => {
+      const element1 = document.createElement('div');
+      const element2 = document.createElement('div');
+      const element3 = document.createElement('div');
+
+      renderer.__testAnimateActorEntry(element1, 0);
+      renderer.__testAnimateActorEntry(element2, 1);
+      renderer.__testAnimateActorEntry(element3, 2);
+
+      expect(element1.style.animationDelay).toBe('0ms');
+      expect(element2.style.animationDelay).toBe('100ms');
+      expect(element3.style.animationDelay).toBe('200ms');
+    });
   });
 });

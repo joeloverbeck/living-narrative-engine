@@ -53,6 +53,23 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Retrieves raw entity data by id (for IEntityManager interface).
+   *
+   * @param {string} id - Entity id.
+   * @returns {object|undefined} The entity object with id and components, or undefined if not found.
+   */
+  getEntity(id) {
+    const entity = this.entitiesMap.get(id);
+    if (!entity) {
+      return undefined;
+    }
+    return {
+      id: entity.id,
+      components: { ...entity.components },
+    };
+  }
+
+  /**
    * Retrieves an entity instance by id.
    *
    * @param {string} id - Entity id.
