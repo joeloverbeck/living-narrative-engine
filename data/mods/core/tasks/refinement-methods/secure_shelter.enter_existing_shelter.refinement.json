@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:secure_shelter.enter_existing_shelter",
+  "taskId": "core:secure_shelter",
+  "description": "Enter an existing, unoccupied shelter structure. This is the simplest and most reliable method when suitable shelter already exists. The actor moves to the shelter location and enters it, gaining protection from environmental hazards.",
+  "applicability": {
+    "description": "Shelter must exist, be unoccupied, and not be blocked",
+    "condition": {
+      "and": [
+        {"has_component": ["task.params.shelter", "core:structure"]},
+        {"not": {"has_component": ["task.params.shelter", "core:occupied"]}},
+        {"not": {"has_component": ["task.params.shelter", "core:blocked"]}}
+      ]
+    }
+  },
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "movement:move_to_location",
+      "targetBindings": {
+        "location": "task.params.shelter"
+      },
+      "description": "Move to the shelter location"
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "interaction:enter_structure",
+      "targetBindings": {
+        "structure": "task.params.shelter"
+      },
+      "description": "Enter the shelter structure"
+    }
+  ],
+  "fallbackBehavior": "replan"
+}

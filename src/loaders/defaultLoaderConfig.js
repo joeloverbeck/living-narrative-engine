@@ -54,6 +54,7 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {BaseManifestItemLoaderInterface} deps.actionLoader - Action loader.
  * @param {BaseManifestItemLoaderInterface} deps.ruleLoader - Rule loader.
  * @param {BaseManifestItemLoaderInterface} deps.goalLoader - Goal loader.
+ * @param {BaseManifestItemLoaderInterface} deps.taskLoader - Task loader.
  * @param {BaseManifestItemLoaderInterface} deps.scopeLoader - Scope loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityDefinitionLoader - Entity definition loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityInstanceLoader - Entity instance loader.
@@ -74,6 +75,7 @@ export function createDefaultContentLoadersConfig({
   actionLoader,
   ruleLoader,
   goalLoader,
+  taskLoader,
   scopeLoader,
   entityDefinitionLoader,
   entityInstanceLoader,
@@ -93,6 +95,7 @@ export function createDefaultContentLoadersConfig({
     actions: actionLoader,
     rules: ruleLoader,
     goals: goalLoader,
+    tasks: taskLoader,
     scopes: scopeLoader,
     entityDefinitions: entityDefinitionLoader,
     entityInstances: entityInstanceLoader,

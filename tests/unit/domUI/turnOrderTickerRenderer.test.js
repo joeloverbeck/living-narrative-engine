@@ -574,9 +574,12 @@ describe('TurnOrderTickerRenderer - Public API', () => {
     });
   });
 
-  it('removeActor method should log debug message (stub implementation)', () => {
-    renderer.removeActor('test-actor-id');
-    expect(mockLogger.debug).toHaveBeenCalledWith('removeActor() called', {
+  it('removeActor method should handle actor not found gracefully', async () => {
+    // Call removeActor (async) without setting up DOM
+    await renderer.removeActor('test-actor-id');
+
+    // Should log debug message when actor not found
+    expect(mockLogger.debug).toHaveBeenCalledWith('Actor element not found for removal', {
       entityId: 'test-actor-id',
     });
   });

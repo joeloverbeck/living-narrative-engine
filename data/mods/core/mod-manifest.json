@@ -191,6 +191,12 @@
       "defeat_enemy.goal.json",
       "find_food.goal.json",
       "rest_safely.goal.json"
+    ],
+    "tasks": [
+      "tasks/arm_self.task.json",
+      "tasks/consume_nourishing_item.task.json",
+      "tasks/find_instrument.task.json",
+      "tasks/secure_shelter.task.json"
     ]
   }
 }

@@ -129,6 +129,16 @@
         },
         "structure-templates": {
           "$ref": "#/definitions/contentFileList"
+        },
+        "tasks": {
+          "description": "Array of relative paths to .task.json files included in this mod. Tasks define planning-tasks for the GOAP system. Paths must not start with '/' or contain '..'.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*\\.\\.)[^\\s]+\\.task\\.json$",
+            "description": "Relative path to a task definition file, e.g., 'tasks/consume_nourishing_item.task.json'."
+          }
         }
       },
       "additionalProperties": false

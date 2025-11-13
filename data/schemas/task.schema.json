@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/task.schema.json",
+  "title": "Planning Task Schema",
+  "description": "Defines a planning-task for the GOAP (Goal-Oriented Action Planning) system. Planning-tasks represent abstract goals that can be decomposed into sequences of primitive actions via refinement methods. Each task specifies when it's relevant (structural gates), what preconditions must hold before planning (planning preconditions), what effects it achieves (planning effects), and how it can be refined into executable steps (refinement methods).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IDE support and validation"
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Unique identifier for this planning-task. Format: modId:task_id (e.g., 'core:consume_nourishing_item', 'survival:secure_shelter'). Must be unique across all loaded mods. Used by refinement methods to reference this task."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable explanation of what this task accomplishes and when it should be used. Should describe the high-level goal this task achieves (e.g., 'Consume a nourishing item to satisfy hunger', 'Secure shelter to protect from weather'). Helpful for debugging, documentation, and understanding the task's role in the planning system."
+    },
+    "structuralGates": {
+      "type": "object",
+      "description": "Coarse-grained relevance check evaluated during task library construction. This is a lightweight 'is this task even relevant to consider?' check that filters tasks before they enter the planning search space. Evaluated once when building the task library for a specific actor/situation. Use for structural checks like 'does this actor have a digestive system?' or 'is there weather in this world?'. Should NOT depend on transient state like current hunger level - use planningPreconditions for that instead. If omitted, task is always structurally relevant.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable explanation of what structural requirements this task has (e.g., 'Actor must have digestive system', 'World must have weather system')"
+        },
+        "condition": {
+          "$ref": "./condition-container.schema.json#",
+          "description": "JSON Logic expression for structural relevance check. Has access to: 'actor' (actor entity with components), 'world' (world state), 'knowledge' (actor's knowledge-limited facts). Uses custom operators: has_component, hasPartWithComponentValue, etc. Should check for structural features, not transient state. Examples: {'has_component': ['actor', 'core:digestive_system']}, {'and': [{'has_component': ['world', 'core:weather']}, {'has_component': ['actor', 'core:shelter_need']}]}"
+        }
+      },
+      "required": ["condition"],
+      "additionalProperties": false
+    },
+    "planningScope": {
+      "type": "string",
+      "description": "Reference to a scopeDsl file that defines the search space for task parameters during planning. This scope determines what entities/objects this task can operate on. CRITICAL: The scope MUST be knowledge-limited - it should only return entities the actor knows about via the 'core:known_to' component. Omniscient scopes violate the knowledge limitation principle. Format: 'modId:scope_name' where scope_name matches a .scope file (e.g., 'core:known_consumable_items' references 'scopes/known_consumable_items.scope'). The scope's output variables become task parameters accessible in refinement methods as 'task.params.<variable>'.",
+      "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$",
+      "examples": [
+        "core:known_consumable_items",
+        "core:known_shelter_locations",
+        "core:known_weapons_nearby"
+      ]
+    },
+    "planningPreconditions": {
+      "type": "array",
+      "description": "Conditions that must be satisfied for this task to be applicable during planning. Evaluated against the current world state during planning search. Each precondition is checked when the planner considers adding this task to a plan. If any precondition fails, the task is not applicable. Use for state-dependent conditions like 'actor is hungry', 'item is accessible', 'actor has free hands'. Has access to task parameters bound from planningScope (via 'task.params.<variable>').",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Human-readable explanation of this precondition (e.g., 'Actor must be hungry', 'Item must be in reach', 'Actor hands must be free')"
+          },
+          "condition": {
+            "$ref": "./condition-container.schema.json#",
+            "description": "JSON Logic expression for the precondition. Has access to: 'actor' (current actor entity), 'world' (world state), 'task.params' (parameters bound from planningScope), 'knowledge' (actor's knowledge-limited facts). Uses custom operators: has_component, hasPartWithComponentValue, isRemovalBlocked, etc. Examples: {'has_component': ['actor', 'core:hungry']}, {'>': [{'var': 'actor.core:nutrition.hungerLevel'}, 50]}, {'has_component': ['task.params.item', 'core:in_reach']}"
+          }
+        },
+        "required": ["condition"],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "planningEffects": {
+      "type": "array",
+      "description": "Effects this task achieves when successfully executed. These are the state changes the planner assumes will occur if this task completes successfully. Effects are used by the planner to determine if a task helps achieve a goal or satisfies another task's preconditions. Each effect is an operation from the operation handler system (same operations used in rules). The planner simulates these effects during planning search but does NOT execute them - execution happens through refinement methods.",
+      "items": {
+        "$ref": "./operation.schema.json#/$defs/Operation",
+        "description": "An operation that represents a state change this task achieves. Must use valid operation types from the operation handler registry (e.g., ADD_COMPONENT, MODIFY_COMPONENT, REMOVE_COMPONENT, DISPATCH_EVENT). Can reference task parameters via 'task.params.<variable>'. Examples: {type: 'ADD_COMPONENT', parameters: {entityId: 'actor', componentId: 'core:satiated', data: {}}}, {type: 'MODIFY_COMPONENT', parameters: {entityId: 'actor', componentId: 'core:nutrition', updates: {hungerLevel: 0}}}, {type: 'REMOVE_COMPONENT', parameters: {entityId: 'task.params.item', componentId: 'core:exists'}}"
+      },
+      "minItems": 1
+    },
+    "refinementMethods": {
+      "type": "array",
+      "description": "List of refinement methods that can decompose this task into executable steps. Each method specifies a different way to accomplish this task (e.g., 'eat from inventory' vs 'pick up and eat'). The planner will consider all applicable methods when refining this task during plan execution. Methods are evaluated in order until one with satisfied applicability conditions is found. Refinement methods are defined in separate .refinement.json files and referenced here via $ref.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "methodId": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_]+$",
+            "description": "Unique identifier for this refinement method. Format: modId:task_id.method_name (e.g., 'core:consume_nourishing_item.simple_consume', 'core:consume_nourishing_item.pick_up_and_consume'). The task_id portion must match this task's ID. The method_name portion distinguishes different approaches to accomplishing this task."
+          },
+          "$ref": {
+            "type": "string",
+            "description": "Relative path to the refinement method file from the task file's location. By convention, refinement methods are stored in a 'refinement-methods/' subdirectory within the 'tasks/' directory. Path must resolve to a valid .refinement.json file. Example: './refinement-methods/consume_nourishing_item.simple_consume.refinement.json'"
+          }
+        },
+        "required": ["methodId", "$ref"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "cost": {
+      "type": "number",
+      "description": "Base computational cost for planning with this task. Used by the planner to prefer simpler plans over complex ones when both achieve the same goal. Higher cost means the planner will prefer other tasks if available. Default is 10. Use higher values (20-50) for complex or time-consuming tasks, lower values (5-15) for simple tasks. This is a planning-time heuristic, not execution time - it guides search, not runtime.",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 100
+    },
+    "priority": {
+      "type": "number",
+      "description": "Planning priority hint for task ordering when multiple tasks are applicable. Higher priority tasks are considered first during planning search. Useful for tasks that should be strongly preferred (e.g., emergency responses, critical survival needs). Default is 50 (neutral priority). Range: 0-100, where 0 is lowest priority and 100 is highest. Use sparingly - most tasks should use default priority and let the planner decide based on goals and preconditions.",
+      "default": 50,
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "required": ["id", "description", "planningScope", "planningEffects", "refinementMethods"],
+  "additionalProperties": false,
+  "$comment": "Schema Version 1.0.0 - Initial task schema for GOAP system. Planning tasks represent abstract goals that decompose into primitive actions via refinement methods. Tasks are used during planning search to build goal-directed plans. The planner evaluates preconditions, simulates effects, and selects refinement methods for execution. Future extensions may add: task decomposition hierarchies (subtasks), dynamic cost calculation, priority rules based on context, additional gate types (motivation gates, resource gates). Extension points: Add new gate types alongside structuralGates, extend effect types with custom operation handlers, add metadata fields for UI/debugging."
+}

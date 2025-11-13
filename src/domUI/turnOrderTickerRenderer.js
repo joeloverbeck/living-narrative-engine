@@ -348,13 +348,63 @@ export class TurnOrderTickerRenderer {
 
   /**
    * Remove an actor from the ticker after their turn completes.
+   * Plays exit animation before removing the element from DOM.
    *
    * @param {string} entityId - ID of the actor to remove
+   * @returns {Promise<void>}
    * @public
    */
-  removeActor(entityId) {
-    // Implementation in TURORDTIC-009
-    this.#logger.debug('removeActor() called', { entityId });
+  async removeActor(entityId) {
+    // Validate entity ID parameter
+    if (typeof entityId !== 'string' || entityId.trim() === '') {
+      this.#logger.warn('removeActor() called with invalid entityId', { entityId });
+      return;
+    }
+
+    try {
+      // Find actor element in the queue
+      const actorElement = this.#actorQueueElement?.querySelector(
+        `[data-entity-id="${entityId}"]`
+      );
+
+      // Handle case where actor is not found
+      if (!actorElement) {
+        // Debug level - this can happen legitimately if actor was already removed
+        this.#logger.debug('Actor element not found for removal', { entityId });
+        return;
+      }
+
+      // Await exit animation completion
+      try {
+        await this.#_animateActorExit(actorElement);
+      } catch (animationError) {
+        // Log animation failure but continue with removal
+        this.#logger.error('Exit animation failed, performing fallback removal', {
+          entityId,
+          error: animationError.message,
+        });
+      }
+
+      // Remove element from DOM (idempotent - safe to call even if already removed)
+      actorElement.remove();
+
+      // Count remaining actors for logging
+      const remainingCount = this.#actorQueueElement?.children.length || 0;
+
+      if (remainingCount === 0) {
+        this.#logger.info('Last actor removed from ticker', { entityId });
+      } else {
+        this.#logger.debug('Actor removed from ticker', {
+          entityId,
+          remainingActors: remainingCount,
+        });
+      }
+    } catch (error) {
+      this.#logger.error('Failed to remove actor from ticker', {
+        entityId,
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -500,6 +550,18 @@ export class TurnOrderTickerRenderer {
    */
   __testAnimateActorEntry(element, index) {
     return this.#_animateActorEntry(element, index);
+  }
+
+  /**
+   * Test-only helper to access private method for unit testing.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {HTMLElement} element - The actor element to animate out
+   * @returns {Promise<void>}
+   * @private
+   */
+  __testAnimateActorExit(element) {
+    return this.#_animateActorExit(element);
   }
 
   // ========== PRIVATE HELPERS ==========
@@ -682,7 +744,6 @@ export class TurnOrderTickerRenderer {
    * @returns {Promise<void>} Resolves when animation completes
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members -- Implementation in TURORDTIC-012
   #_animateActorExit(_element) {
     // Implementation in TURORDTIC-012
     return Promise.resolve();
@@ -826,9 +887,10 @@ export class TurnOrderTickerRenderer {
    * @param {object} event - Event object
    * @param {object} event.payload - Event payload
    * @param {string} event.payload.entityId - Completed actor ID
+   * @returns {Promise<void>}
    * @private
    */
-  #handleTurnEnded(event) {
+  async #handleTurnEnded(event) {
     try {
       const { entityId } = event.payload || {};
 
@@ -842,7 +904,7 @@ export class TurnOrderTickerRenderer {
       this.#logger.debug('Turn ended', { entityId });
 
       // Remove actor from ticker
-      this.removeActor(entityId);
+      await this.removeActor(entityId);
 
       // Clear current actor tracking if it was this actor
       if (this.#_currentActorId === entityId) {

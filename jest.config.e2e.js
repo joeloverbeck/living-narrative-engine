@@ -19,7 +19,7 @@ module.exports = {
   ],
   // E2E tests may take even longer
   testTimeout: 60000,
-  maxWorkers: 8, // Limit concurrent workers
+  maxWorkers: 6, // Limit concurrent workers
   // Enable force exit to prevent hanging
   forceExit: true,
   // Increase memory limits for E2E tests

@@ -80,6 +80,7 @@ import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import RuleLoader from '../../loaders/ruleLoader.js';
 import SchemaLoader from '../../loaders/schemaLoader.js';
 import ScopeLoader from '../../loaders/scopeLoader.js';
+import TaskLoader from '../../loaders/taskLoader.js';
 import WorldLoader from '../../loaders/worldLoader.js';
 import AnatomyRecipeLoader from '../../loaders/anatomyRecipeLoader.js';
 import AnatomyBlueprintLoader from '../../loaders/anatomyBlueprintLoader.js';
@@ -277,6 +278,7 @@ export async function registerLoaders(container) {
   registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
   registerLoader(tokens.WorldLoader, WorldLoader);
   registerLoader(tokens.GoalLoader, GoalLoader);
+  registerLoader(tokens.TaskLoader, TaskLoader);
   registerLoader(tokens.AnatomyRecipeLoader, AnatomyRecipeLoader);
   registerLoader(tokens.AnatomyBlueprintLoader, AnatomyBlueprintLoader);
   registerLoader(tokens.AnatomyBlueprintPartLoader, AnatomyBlueprintPartLoader);
@@ -375,6 +377,7 @@ export async function registerLoaders(container) {
           actionLoader: c.resolve(tokens.ActionLoader),
           ruleLoader: c.resolve(tokens.RuleLoader),
           goalLoader: c.resolve(tokens.GoalLoader),
+          taskLoader: c.resolve(tokens.TaskLoader),
           scopeLoader: c.resolve(tokens.ScopeLoader),
           entityDefinitionLoader: c.resolve(tokens.EntityLoader),
           entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader),

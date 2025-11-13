@@ -66,7 +66,8 @@ export function storeItemInRegistry(
     isEntityInstance ||
     isScope ||
     category === 'actions' ||
-    category === 'rules'
+    category === 'rules' ||
+    category === 'tasks'
   ) {
     finalId = qualifiedId;
   }
