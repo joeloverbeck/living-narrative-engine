@@ -60,6 +60,12 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'goals',
   },
+  tasks: {
+    contentKey: 'tasks',
+    diskFolder: 'tasks',
+    phase: 'definitions',
+    registryKey: 'tasks',
+  },
   scopes: {
     contentKey: 'scopes',
     diskFolder: 'scopes',

@@ -1,26 +1,14 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "descriptors:size_specific",
-  "description": "Context-specific size descriptors (e.g., cup sizes for anatomy)",
+  "description": "Context-specific size descriptors (e.g., cup sizes for anatomy, heel heights for footwear, lengths for jewelry). Note: Domain-specific validation (such as restricting to specific cup sizes) should be applied at the usage level (recipes, rules, or domain-specific validators) rather than in this generic component schema.",
   "dataSchema": {
     "type": "object",
     "properties": {
       "size": {
         "type": "string",
-        "description": "The specific size descriptor",
-        "enum": [
-          "A-cup",
-          "B-cup",
-          "C-cup",
-          "D-cup",
-          "DD-cup",
-          "E-cup",
-          "F-cup",
-          "G-cup",
-          "H-cup",
-          "I-cup",
-          "J-cup"
-        ]
+        "description": "The specific size descriptor (context-dependent)",
+        "minLength": 1
       }
     },
     "required": ["size"],
@@ -29,13 +17,7 @@
   "validationRules": {
     "generateValidator": true,
     "errorMessages": {
-      "invalidEnum": "Invalid size descriptor: \"{{value}}\". Valid cup sizes: {{validValues}}",
       "missingRequired": "Size descriptor is required"
-    },
-    "suggestions": {
-      "enableSimilarity": true,
-      "maxDistance": 2,
-      "maxSuggestions": 1
     }
   }
 }

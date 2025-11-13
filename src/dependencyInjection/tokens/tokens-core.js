@@ -61,6 +61,7 @@ export const coreTokens = freeze({
   WorldLoader: 'WorldLoader',
   GoalLoader: 'GoalLoader',
   ScopeLoader: 'ScopeLoader',
+  TaskLoader: 'TaskLoader',
   ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',

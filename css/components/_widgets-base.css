@@ -8,7 +8,6 @@
 #perception-log-widget {
   margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md);
-  border: var(--border-width) solid var(--border-color-subtle);
   border-radius: var(--border-radius-md);
   background-color: var(--panel-bg-color);
   flex-shrink: 0;

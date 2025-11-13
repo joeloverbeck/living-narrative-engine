@@ -1,0 +1,54 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:secure_shelter.build_temporary_shelter",
+  "taskId": "core:secure_shelter",
+  "description": "Build a temporary shelter structure from available materials. This method is used when no existing shelter is available but the actor has the knowledge, resources, and time to construct one. The shelter provides basic protection from environmental hazards.",
+  "applicability": {
+    "description": "Actor must have construction knowledge and required materials must be available",
+    "condition": {
+      "and": [
+        {"has_component": ["actor", "core:construction_knowledge"]},
+        {"has_component": ["task.params.shelter", "core:construction_site"]},
+        {">": [
+          {"var": "actor.core:inventory.materials_count"},
+          3
+        ]}
+      ]
+    }
+  },
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "movement:move_to_location",
+      "targetBindings": {
+        "location": "task.params.shelter"
+      },
+      "description": "Move to the construction site"
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "crafting:gather_materials",
+      "targetBindings": {
+        "location": "task.params.shelter"
+      },
+      "parameters": {
+        "materialType": "construction",
+        "quantity": 5
+      },
+      "description": "Gather construction materials from the area"
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "crafting:construct_shelter",
+      "targetBindings": {
+        "site": "task.params.shelter"
+      },
+      "parameters": {
+        "shelterType": "temporary",
+        "size": "small"
+      },
+      "description": "Construct the temporary shelter"
+    }
+  ],
+  "fallbackBehavior": "replan"
+}

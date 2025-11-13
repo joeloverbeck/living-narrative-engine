@@ -1,6 +1,6 @@
 # GOAP System Implementation Status
 
-**Last Updated**: 2025-01-13
+**Last Updated**: 2025-11-13
 
 ## Overview
 
@@ -55,6 +55,42 @@ Comprehensive documentation and examples for primitive action references:
 **Schema Enhanced**:
 - `data/schemas/refinement-method.schema.json` (inline documentation improved)
 
+#### GOAPIMPL-005: Task File Format & Loading
+**Status**: ✅ COMPLETED
+**Completed**: 2025-11-13
+**Schema**: `data/schemas/task.schema.json` v1.0.0
+
+Implemented complete task file format system:
+- Task schema definition with validation rules
+- TaskLoader extending SimpleItemLoader
+- Mod manifest integration (tasks field)
+- Directory structure for tasks and refinement methods
+- Example task files (4 complete tasks)
+- Example refinement method files (8 methods)
+- Dependency injection registration
+- Comprehensive documentation
+
+**Key Files Created**:
+- `data/schemas/task.schema.json` (task schema)
+- `src/loaders/taskLoader.js` (loader implementation)
+- `data/mods/core/tasks/*.task.json` (4 example tasks)
+- `data/mods/core/tasks/refinement-methods/*.refinement.json` (8 methods)
+- `docs/goap/task-loading.md` (technical specification)
+- `docs/modding/authoring-planning-tasks.md` (modder guide)
+
+**Schema Updated**:
+- `data/schemas/mod-manifest.schema.json` (added tasks field)
+- `src/loaders/loaderMeta.js` (added tasks metadata)
+- `src/dependencyInjection/tokens/tokens-core.js` (TaskLoader token)
+- `src/dependencyInjection/registrations/loadersRegistrations.js` (TaskLoader registration)
+- `src/loaders/defaultLoaderConfig.js` (TaskLoader in content config)
+
+**Example Tasks**:
+- `consume_nourishing_item` - Simple consumption task
+- `secure_shelter` - Complex multi-method task
+- `find_instrument` - Knowledge-gated task
+- `arm_self` - Multi-precondition combat task
+
 ### 🔄 In Progress
 
 *None currently*
@@ -63,50 +99,52 @@ Comprehensive documentation and examples for primitive action references:
 
 #### GOAPIMPL-004: Parameter Binding
 **Status**: Planned
-**Dependencies**: GOAPIMPL-003 ✅
+**Dependencies**: GOAPIMPL-003 ✅, GOAPIMPL-005 ✅
 
 Define how refinement methods bind parameters from planning context to task parameters and action parameters.
 
-#### GOAPIMPL-005: Task Schema
-**Status**: Planned
-**Dependencies**: GOAPIMPL-001 ✅
-
-Define the task schema for planning-level tasks that refinement methods decompose.
-
 #### GOAPIMPL-006: Context Assembly
 **Status**: Planned
-**Dependencies**: GOAPIMPL-004, GOAPIMPL-005
+**Dependencies**: GOAPIMPL-004, GOAPIMPL-005 ✅
 
 Define how to assemble execution context from world state, actor state, and task parameters.
 
 #### GOAPIMPL-007: Complete Examples
 **Status**: Planned
-**Dependencies**: GOAPIMPL-005 (task schema)
+**Dependencies**: GOAPIMPL-005 ✅
 
 Create complete working examples showing full task → refinement → action flow.
+
+**Note**: Example tasks and refinement methods already exist (GOAPIMPL-005), but full execution flow examples pending GOAP planner implementation.
 
 ## Current System State
 
 ### ✅ What Exists
 
-1. **Schema**: Complete refinement method schema v1.1.0
-   - Primitive action steps
-   - Conditional steps
-   - Target bindings
-   - Parameter support
-   - Fallback behavior
+1. **Schemas**: Complete GOAP schemas
+   - Refinement method schema v1.1.0 (primitive actions, conditionals, bindings)
+   - Task schema v1.0.0 (structural gates, planning scope, preconditions, effects)
 
-2. **Documentation**: Comprehensive action reference guide
-   - 500+ line main reference
-   - Troubleshooting guide
-   - Modder quick reference
-   - 4 complete examples
+2. **Loading System**: Full task/refinement loading infrastructure
+   - `TaskLoader` extending `SimpleItemLoader`
+   - Mod manifest integration
+   - Task validation (scope refs, method IDs, effects)
+   - Directory structure support
+   - DI registration complete
 
-3. **Examples**: Working refinement method examples
+3. **Documentation**: Comprehensive guides
+   - Technical specification (`docs/goap/task-loading.md`)
+   - Modder guide (`docs/modding/authoring-planning-tasks.md`)
+   - Action reference guide (`docs/goap/refinement-action-references.md`)
+   - Implementation status tracking
+
+4. **Examples**: Working task and refinement examples
+   - 4 complete task files (`consume_nourishing_item`, `secure_shelter`, `find_instrument`, `arm_self`)
+   - 8 refinement method files (2-3 methods per task)
    - Simple example: `data/goap/refinement-method-simple.json`
    - Action reference examples (4 files in `docs/goap/examples/`)
 
-4. **Infrastructure**: Supporting systems
+5. **Infrastructure**: Supporting systems
    - Action system (already implemented)
    - Action loading (`src/loaders/actionLoader.js`)
    - Scope DSL (`src/scopeDsl/`)
@@ -114,20 +152,19 @@ Create complete working examples showing full task → refinement → action flo
 
 ### ❌ What Doesn't Exist Yet
 
-1. **Task Schema**: No task definitions yet
-2. **Task Loader**: No task loading system
-3. **Refinement Method Loader**: No refinement method loading
-4. **Refinement Engine**: No execution engine
-5. **GOAP Planner**: No planning algorithm
-6. **Context Assembly**: No context building service
-7. **World State API**: No world state access layer
+1. **Refinement Engine**: No execution engine for refinement methods
+2. **GOAP Planner**: No planning algorithm for task selection
+3. **Context Assembly**: No context building service for planner
+4. **World State API**: No world state access layer for planning
+5. **Parameter Binding**: No runtime parameter binding system
+6. **Planner Integration**: No integration with action execution system
 
 ## Next Steps
 
 1. **GOAPIMPL-004**: Define parameter binding system
-2. **GOAPIMPL-005**: Create task schema
-3. **GOAPIMPL-006**: Design context assembly service
-4. **GOAPIMPL-007**: Create complete working examples
+2. **GOAPIMPL-006**: Design context assembly service
+3. **Create unit and integration tests** for task loading system
+4. **GOAPIMPL-007**: Create full execution flow examples (pending planner)
 
 ## Key Design Decisions
 
@@ -150,21 +187,32 @@ Create complete working examples showing full task → refinement → action flo
 
 ### Documentation
 - **Main Spec**: `specs/goap-system-specs.md`
+- **Task Loading**: `docs/goap/task-loading.md`
+- **Authoring Tasks**: `docs/modding/authoring-planning-tasks.md`
 - **Action References**: `docs/goap/refinement-action-references.md`
 - **Base Schema**: `docs/goap/refinement-method-base-schema.md`
 - **Conditional Logic**: `docs/goap/refinement-conditional-logic.md`
 
 ### Schemas
+- **Task**: `data/schemas/task.schema.json` v1.0.0
 - **Refinement Method**: `data/schemas/refinement-method.schema.json` v1.1.0
+- **Mod Manifest**: `data/schemas/mod-manifest.schema.json` (tasks field added)
 - **Action**: `data/schemas/action.schema.json`
 - **Condition**: `data/schemas/condition-container.schema.json`
 
-### Examples
+### Task Examples
+- **Consumption**: `data/mods/core/tasks/consume_nourishing_item.task.json`
+- **Shelter**: `data/mods/core/tasks/secure_shelter.task.json`
+- **Knowledge**: `data/mods/core/tasks/find_instrument.task.json`
+- **Combat**: `data/mods/core/tasks/arm_self.task.json`
+
+### Refinement Method Examples
 - **Simple**: `data/goap/refinement-method-simple.json`
 - **Bindings**: `docs/goap/examples/action-reference-bindings.refinement.json`
 - **Parameters**: `docs/goap/examples/action-reference-parameters.refinement.json`
 - **Failure**: `docs/goap/examples/action-reference-failure.refinement.json`
 - **Complete**: `docs/goap/examples/action-reference-complete.refinement.json`
+- **Task Methods**: 8 files in `data/mods/core/tasks/refinement-methods/`
 
 ---
 

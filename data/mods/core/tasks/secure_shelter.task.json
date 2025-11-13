@@ -1,0 +1,82 @@
+{
+  "$schema": "schema://living-narrative-engine/task.schema.json",
+  "id": "core:secure_shelter",
+  "description": "Secure shelter to protect from environmental hazards like weather, temperature extremes, or hostile entities. This is a complex task with multiple possible approaches: finding existing shelter, building temporary shelter, or fortifying current location. The task requires knowledge of potential shelter locations and appropriate resources.",
+  "structuralGates": {
+    "description": "Actor must have shelter needs and world must have environmental hazards",
+    "condition": {
+      "and": [
+        {"has_component": ["actor", "core:shelter_need"]},
+        {"has_component": ["world", "core:environmental_hazards"]}
+      ]
+    }
+  },
+  "planningScope": "core:known_shelter_locations",
+  "planningPreconditions": [
+    {
+      "description": "Actor must be exposed to environmental hazards or anticipate exposure",
+      "condition": {
+        "or": [
+          {"has_component": ["actor", "core:exposed"]},
+          {"has_component": ["actor", "core:anticipating_exposure"]}
+        ]
+      }
+    },
+    {
+      "description": "Shelter location must be accessible (not blocked or too far)",
+      "condition": {
+        "and": [
+          {"has_component": ["task.params.shelter", "core:accessible"]},
+          {"not": {"has_component": ["task.params.shelter", "core:blocked"]}}
+        ]
+      }
+    }
+  ],
+  "planningEffects": [
+    {
+      "type": "ADD_COMPONENT",
+      "parameters": {
+        "entityId": "actor",
+        "componentId": "core:sheltered",
+        "data": {
+          "shelterId": "task.params.shelter",
+          "protectionLevel": "adequate"
+        }
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "parameters": {
+        "entityId": "actor",
+        "componentId": "core:exposed"
+      }
+    },
+    {
+      "type": "MODIFY_COMPONENT",
+      "parameters": {
+        "entityId": "task.params.shelter",
+        "componentId": "core:occupancy",
+        "updates": {
+          "occupied": true,
+          "occupantId": "actor"
+        }
+      }
+    }
+  ],
+  "refinementMethods": [
+    {
+      "methodId": "core:secure_shelter.enter_existing_shelter",
+      "$ref": "./refinement-methods/secure_shelter.enter_existing_shelter.refinement.json"
+    },
+    {
+      "methodId": "core:secure_shelter.build_temporary_shelter",
+      "$ref": "./refinement-methods/secure_shelter.build_temporary_shelter.refinement.json"
+    },
+    {
+      "methodId": "core:secure_shelter.fortify_current_location",
+      "$ref": "./refinement-methods/secure_shelter.fortify_current_location.refinement.json"
+    }
+  ],
+  "cost": 30,
+  "priority": 60
+}

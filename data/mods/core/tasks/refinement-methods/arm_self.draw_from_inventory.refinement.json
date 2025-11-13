@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:arm_self.draw_from_inventory",
+  "taskId": "core:arm_self",
+  "description": "Draw and wield a weapon that the actor already possesses in their inventory. This is the fastest method for arming oneself when a suitable weapon is already available. The actor simply retrieves the weapon and readies it for combat.",
+  "applicability": {
+    "description": "Weapon must be in actor's inventory",
+    "condition": {
+      "and": [
+        {"has_component": ["task.params.weapon", "core:in_inventory"]},
+        {"not": {"has_component": ["task.params.weapon", "core:equipped"]}},
+        {"has_component": ["actor", "core:free_hands"]}
+      ]
+    }
+  },
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "equipment:equip_weapon",
+      "targetBindings": {
+        "weapon": "task.params.weapon"
+      },
+      "parameters": {
+        "hand": "primary",
+        "ready": true,
+        "quick_draw": true
+      },
+      "description": "Draw and equip weapon from inventory"
+    }
+  ],
+  "fallbackBehavior": "replan"
+}

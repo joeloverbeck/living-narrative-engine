@@ -4,6 +4,9 @@ const actualTokens = jest
   .requireActual('../../../../src/dependencyInjection/tokens.js')
   .tokens;
 
+/**
+ *
+ */
 function createLogger() {
   return {
     debug: jest.fn(),
@@ -204,6 +207,7 @@ describe('registerLoaders additional coverage', () => {
       [actualTokens.ActionLoader, { id: 'action' }],
       [actualTokens.RuleLoader, { id: 'rule' }],
       [actualTokens.GoalLoader, { id: 'goal' }],
+      [actualTokens.TaskLoader, { id: 'task' }],
       [actualTokens.ScopeLoader, { id: 'scope' }],
       [actualTokens.EntityLoader, { id: 'entityDefinition' }],
       [actualTokens.EntityInstanceLoader, { id: 'entityInstance' }],

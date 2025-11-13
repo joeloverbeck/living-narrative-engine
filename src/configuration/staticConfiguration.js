@@ -198,6 +198,7 @@ class StaticConfiguration {
         'schema://living-narrative-engine/anatomy.structure-template.schema.json',
       'thematic-direction':
         'schema://living-narrative-engine/thematic-direction.schema.json',
+      tasks: 'schema://living-narrative-engine/task.schema.json',
       // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,
       // not by JSON schema validation. Explicitly return null to indicate no schema validation.
       scopes: null,

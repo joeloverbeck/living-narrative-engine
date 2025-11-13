@@ -4,22 +4,9 @@
 .panel {
   padding: var(--spacing-lg);
   overflow-y: auto;
-  border: var(--border-width) solid var(--panel-border-color);
+  border-top: var(--border-width) solid var(--panel-border-color);
+  border-bottom: var(--border-width) solid var(--panel-border-color);
   background-color: var(--panel-bg-color);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Border adjustments for adjacent panels */
-#app-layout-container > .panel + .panel {
-  border-left-width: 0;
-}
-
-#app-layout-container > .panel:first-child {
-  border-left-width: var(--border-width);
-}
-
-#app-layout-container > .panel:last-child {
-  border-right-width: var(--border-width);
 }
 
 /* Consistent Paragraph Spacing within Panels */
@@ -81,9 +68,6 @@
     max-width: 100%;
     min-width: initial; /* This remains appropriate as it stacks */
     margin-top: var(--spacing-lg);
-    border-left-width: var(
-      --border-width
-    ); /* Overrides .panel + .panel behavior at this breakpoint */
   }
 }
 
@@ -101,10 +85,7 @@
     margin-right: 0;
     margin-top: 0;
     box-shadow: none;
-    border-left-width: var(--border-width);
-    border-right-width: var(--border-width);
-    border-top-width: 0; /* Base is handled by general panel rules, this might be specific */
-    border-bottom-width: var(--border-width);
+    border-top-width: 0; /* First panel has no top border */
     order: 1;
   }
 
@@ -117,10 +98,7 @@
     margin-right: 0;
     margin-top: 0;
     box-shadow: none;
-    border-left-width: var(--border-width);
-    border-right-width: var(--border-width);
-    border-top-width: 0;
-    border-bottom-width: var(--border-width);
+    border-top-width: 0; /* Middle panel has no top border */
     order: 2;
   }
 
@@ -133,10 +111,7 @@
     margin-right: 0;
     margin-top: 0; /* Overrides 1024px margin-top */
     box-shadow: none;
-    border-left-width: var(--border-width);
-    border-right-width: var(--border-width);
-    border-top-width: 0; /* Ensure consistency with other panes at this breakpoint */
-    border-bottom-width: var(--border-width);
+    border-top-width: 0; /* Last panel has no top border */
     order: 3;
   }
 
