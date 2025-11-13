@@ -1,0 +1,109 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:heal_self.conditional_healing",
+  "taskId": "core:heal_self",
+  "description": "Demonstrates different failure handling strategies for conditionals. Shows how to use 'replan', 'skip', and 'fail' behaviors in different contexts to handle edge cases gracefully.",
+
+  "applicability": {
+    "description": "Actor has low health and needs healing",
+    "condition": {
+      "and": [
+        {
+          "has_component": [
+            { "var": "actor" },
+            "core:health"
+          ]
+        },
+        {
+          "<": [
+            { "var": "actor.components.core:health.current" },
+            { "var": "actor.components.core:health.maximum" }
+          ]
+        }
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "stepType": "conditional",
+      "description": "Try to use medical item from inventory (critical healing)",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "items:inventory"
+            ]
+          },
+          {
+            "has_component": [
+              { "var": "task.params.medical_item" },
+              "items:healing"
+            ]
+          },
+          {
+            "in": [
+              { "var": "task.params.medical_item" },
+              { "var": "actor.components.items:inventory.items" }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [
+        {
+          "stepType": "primitive_action",
+          "actionId": "items:use_medical_item",
+          "targetBindings": {
+            "item": "task.params.medical_item"
+          }
+        }
+      ],
+      "elseSteps": [
+        {
+          "stepType": "conditional",
+          "description": "Try to rest/recover naturally (optional fallback)",
+          "condition": {
+            "has_component": [
+              { "var": "actor" },
+              "core:can_rest"
+            ]
+          },
+          "thenSteps": [
+            {
+              "stepType": "primitive_action",
+              "actionId": "world:rest",
+              "targetBindings": {}
+            }
+          ],
+          "onFailure": "skip"
+        }
+      ],
+      "onFailure": "replan"
+    },
+    {
+      "stepType": "conditional",
+      "description": "Verify healing was successful (quality check)",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "core:health"
+            ]
+          },
+          {
+            ">": [
+              { "var": "actor.components.core:health.current" },
+              50
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "fail"
+    }
+  ],
+
+  "fallbackBehavior": "replan"
+}

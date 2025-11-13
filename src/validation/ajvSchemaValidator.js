@@ -1060,6 +1060,29 @@ class AjvSchemaValidator {
   }
 
   /**
+   * Gets all loaded component schemas from the data registry
+   *
+   * @returns {Array<object>} Array of component schema objects
+   */
+  getLoadedComponentSchemas() {
+    if (!this.#dataRegistry) {
+      this.#logger.debug('No data registry available for retrieving component schemas');
+      return [];
+    }
+
+    try {
+      const schemas = this.#dataRegistry.getAllComponentDefinitions();
+      return Array.isArray(schemas) ? schemas : [];
+    } catch (error) {
+      this.#logger.warn(
+        `Failed to retrieve component schemas: ${error.message}`,
+        error
+      );
+      return [];
+    }
+  }
+
+  /**
    * Pre-generates validators for all component schemas
    * Call during initialization for better first-run performance
    *

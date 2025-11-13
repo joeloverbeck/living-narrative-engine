@@ -1,0 +1,230 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:example_patterns.common_checks",
+  "taskId": "core:example_patterns",
+  "description": "Demonstrates common condition patterns using correct operator names and best practices. This is a reference example showing typical condition structures that modders can adapt for their own refinement methods.",
+
+  "applicability": {
+    "description": "Always applicable - this is a pattern reference example",
+    "condition": {
+      "==": [1, 1]
+    }
+  },
+
+  "steps": [
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 1: Check if entity has specific component",
+      "condition": {
+        "has_component": [
+          { "var": "actor" },
+          "items:inventory"
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 2: Check if item is in inventory",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "items:inventory"
+            ]
+          },
+          {
+            "in": [
+              { "var": "task.params.item" },
+              { "var": "actor.components.items:inventory.items" }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 3: Check if two entities are in same location",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "positioning:position"
+            ]
+          },
+          {
+            "has_component": [
+              { "var": "task.params.target" },
+              "positioning:position"
+            ]
+          },
+          {
+            "==": [
+              { "var": "actor.components.positioning:position.location" },
+              { "var": "task.params.target.components.positioning:position.location" }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 4: Check entity visibility (using core:visible component)",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "task.params.item" },
+              "core:visible"
+            ]
+          },
+          {
+            "==": [
+              { "var": "task.params.item.components.core:visible" },
+              true
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 5: Check if actor knows about entity (via core:known_to)",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "task.params.item" },
+              "core:known_to"
+            ]
+          },
+          {
+            "in": [
+              { "var": "actor.id" },
+              { "var": "task.params.item.components.core:known_to" }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 6: Check numeric threshold (health check example)",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "core:health"
+            ]
+          },
+          {
+            "<": [
+              { "var": "actor.components.core:health.current" },
+              50
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 7: Multiple conditions with OR logic",
+      "condition": {
+        "or": [
+          {
+            "has_component": [
+              { "var": "actor" },
+              "items:weapon_equipped"
+            ]
+          },
+          {
+            "and": [
+              {
+                "has_component": [
+                  { "var": "actor" },
+                  "items:inventory"
+                ]
+              },
+              {
+                "in": [
+                  { "var": "task.params.weapon" },
+                  { "var": "actor.components.items:inventory.items" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 8: Check if actor is wearing clothing in slot",
+      "condition": {
+        "hasClothingInSlot": [
+          { "var": "actor" },
+          "torso"
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 9: Check if item removal is blocked by other clothing",
+      "condition": {
+        "isRemovalBlocked": [
+          { "var": "actor" },
+          { "var": "task.params.clothing_item" }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    },
+    {
+      "stepType": "conditional",
+      "description": "PATTERN 10: Safe nested property access with existence checks",
+      "condition": {
+        "and": [
+          {
+            "has_component": [
+              { "var": "task.params.item" },
+              "items:food"
+            ]
+          },
+          {
+            "!=": [
+              { "var": "task.params.item.components.items:food.nutrition_value" },
+              null
+            ]
+          },
+          {
+            ">": [
+              { "var": "task.params.item.components.items:food.nutrition_value" },
+              10
+            ]
+          }
+        ]
+      },
+      "thenSteps": [],
+      "onFailure": "skip"
+    }
+  ],
+
+  "fallbackBehavior": "continue"
+}

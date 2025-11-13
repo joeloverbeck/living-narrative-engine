@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
+  "id": "core:consume_nourishing_item.simple_consume",
+  "taskId": "core:consume_nourishing_item",
+  "description": "Simple refinement for consuming a nourishing food item that is already in the actor's inventory. This is the most straightforward path when the actor already possesses the food item.",
+
+  "applicability": {
+    "description": "Actor has a nourishing item in their inventory",
+    "condition": {
+      "and": [
+        {
+          "has_component": [
+            { "var": "target" },
+            "items:nourishing"
+          ]
+        }
+      ]
+    }
+  },
+
+  "steps": [
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:consume_item",
+      "targetBindings": {
+        "item": "target"
+      }
+    }
+  ],
+
+  "fallbackBehavior": "replan"
+}

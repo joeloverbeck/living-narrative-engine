@@ -68,6 +68,37 @@ export default class SchemaPhase extends LoaderPhase {
         'SchemaPhase: All schemas loaded and essential schemas verified.'
       );
 
+      // Pre-generate validators for improved startup performance
+      // This optimizes validation by creating validators for all component schemas upfront
+      try {
+        if (
+          typeof this.validator.preGenerateValidators === 'function' &&
+          typeof this.validator.getLoadedComponentSchemas === 'function'
+        ) {
+          const componentSchemas =
+            this.validator.getLoadedComponentSchemas();
+          if (componentSchemas && componentSchemas.length > 0) {
+            this.logger.debug(
+              `SchemaPhase: Pre-generating validators for ${componentSchemas.length} component schemas...`
+            );
+            const startTime = Date.now();
+
+            this.validator.preGenerateValidators(componentSchemas);
+
+            const duration = Date.now() - startTime;
+            this.logger.info(
+              `SchemaPhase: Pre-generated validators for ${componentSchemas.length} components in ${duration}ms`
+            );
+          }
+        }
+      } catch (preGenError) {
+        // Log but don't fail - pre-generation is an optimization, not critical
+        this.logger.warn(
+          'SchemaPhase: Failed to pre-generate validators (continuing without optimization):',
+          preGenError
+        );
+      }
+
       // Return frozen context (no modifications in this phase)
       return Object.freeze({ ...ctx });
     } catch (e) {
