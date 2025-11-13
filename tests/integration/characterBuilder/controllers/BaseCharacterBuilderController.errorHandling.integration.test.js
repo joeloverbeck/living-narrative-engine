@@ -348,6 +348,8 @@ describe('BaseCharacterBuilderController lifecycle and error handling (integrati
       {},
       'schema://integration/tests/simple-character'
     );
+    // _validateData formats Ajv error objects into human-readable strings, so assertions
+    // need to inspect the string content instead of object fields.
     expect(invalidResult.isValid).toBe(false);
     expect(invalidResult.errors[0]).toContain('name');
     expect(invalidResult.errorMessage).toContain("must have required property 'name'");
