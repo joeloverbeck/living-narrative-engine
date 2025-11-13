@@ -19,7 +19,7 @@ import { PARTICIPATION_COMPONENT_ID } from '../constants/componentIds.js';
  * Displays actor portraits/names in turn order, animates round transitions,
  * and visually indicates participation status.
  */
-class TurnOrderTickerRenderer {
+export class TurnOrderTickerRenderer {
   #logger;
   // eslint-disable-next-line no-unused-private-class-members -- Will be used in TURORDTIC-004+
   #_documentContext;
@@ -790,5 +790,3 @@ class TurnOrderTickerRenderer {
     }
   }
 }
-
-export default TurnOrderTickerRenderer;

@@ -9,7 +9,6 @@ const createRenderer = (methods = {}) => ({
 const createDependencies = (overrides = {}) => ({
   actionButtonsRenderer: createRenderer({ refreshList: jest.fn() }),
   locationRenderer: createRenderer({ render: jest.fn() }),
-  titleRenderer: createRenderer({ set: jest.fn() }),
   inputStateController: createRenderer({ setEnabled: jest.fn() }),
   speechBubbleRenderer: createRenderer({ renderSpeech: jest.fn() }),
   perceptionLogRenderer: createRenderer({ refreshList: jest.fn() }),
@@ -28,7 +27,6 @@ describe('DomUiFacade', () => {
 
     expect(facade.actionButtons).toBe(deps.actionButtonsRenderer);
     expect(facade.location).toBe(deps.locationRenderer);
-    expect(facade.title).toBe(deps.titleRenderer);
     expect(facade.input).toBe(deps.inputStateController);
     expect(facade.speechBubble).toBe(deps.speechBubbleRenderer);
     expect(facade.perceptionLog).toBe(deps.perceptionLogRenderer);
@@ -62,11 +60,6 @@ describe('DomUiFacade', () => {
         'locationRenderer',
         { locationRenderer: createRenderer({}) },
         'DomUiFacade: Missing or invalid locationRenderer dependency.',
-      ],
-      [
-        'titleRenderer',
-        { titleRenderer: createRenderer({}) },
-        'DomUiFacade: Missing or invalid titleRenderer dependency.',
       ],
       [
         'inputStateController',
@@ -123,7 +116,6 @@ describe('DomUiFacade', () => {
 
     expect(deps.actionButtonsRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(deps.locationRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(deps.titleRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(deps.inputStateController.dispose).toHaveBeenCalledTimes(1);
     expect(deps.speechBubbleRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(deps.perceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
@@ -138,7 +130,6 @@ describe('DomUiFacade', () => {
     const depsWithoutDispose = createDependencies({
       actionButtonsRenderer: { refreshList: jest.fn() },
       locationRenderer: { render: jest.fn() },
-      titleRenderer: { set: jest.fn() },
       inputStateController: { setEnabled: jest.fn() },
       speechBubbleRenderer: { renderSpeech: jest.fn() },
       perceptionLogRenderer: { refreshList: jest.fn() },

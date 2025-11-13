@@ -15,7 +15,6 @@ describe('UIBootstrapper gatherEssentialElements integration', () => {
       <div id="outputDiv"></div>
       <div id="error-output"></div>
       <input id="speech-input" />
-      <h1>Living Narrative Engine</h1>
     `;
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -29,7 +28,6 @@ describe('UIBootstrapper gatherEssentialElements integration', () => {
     expect(result.outputDiv).toBe(document.getElementById('outputDiv'));
     expect(result.errorDiv).toBe(document.getElementById('error-output'));
     expect(result.inputElement).toBe(document.getElementById('speech-input'));
-    expect(result.titleElement).toBe(document.querySelector('h1'));
     expect(result.document).toBe(document);
 
     expect(warnSpy).not.toHaveBeenCalled();
@@ -40,7 +38,6 @@ describe('UIBootstrapper gatherEssentialElements integration', () => {
     document.body.innerHTML = `
       <div id="outputDiv"></div>
       <input id="speech-input" />
-      <h1>Living Narrative Engine</h1>
     `;
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});

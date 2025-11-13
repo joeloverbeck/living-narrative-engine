@@ -323,7 +323,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         RULE_TYPE_NAME,
         `${modId}:${ruleNameA}`, // Derived ID
         expect.objectContaining({
-          id: ruleNameA, // BASE ID
+          id: `${modId}:${ruleNameA}`, // QUALIFIED ID (prefixed)
           _fullId: `${modId}:${ruleNameA}`, // QUALIFIED ID
           _modId: modId,
           _sourceFile: ruleFileA,
@@ -335,7 +335,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         RULE_TYPE_NAME,
         `${modId}:${ruleNameB}`, // Derived ID
         expect.objectContaining({
-          id: ruleNameB, // BASE ID
+          id: `${modId}:${ruleNameB}`, // QUALIFIED ID (prefixed)
           _fullId: `${modId}:${ruleNameB}`, // QUALIFIED ID
           _modId: modId,
           _sourceFile: ruleFileB,
@@ -410,7 +410,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         `${modId}:${ruleNameA}`, // Derived ID
         expect.objectContaining({
           _fullId: `${modId}:${ruleNameA}`,
-          id: ruleNameA,
+          id: `${modId}:${ruleNameA}`, // QUALIFIED ID (prefixed)
           _modId: modId,
           _sourceFile: ruleFileA,
           event_type: 'core:dummy_event', // Corrected to match general mockFetcher
@@ -478,7 +478,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         `${modId}:${ruleNameB}`, // Derived ID
         expect.objectContaining({
           _fullId: `${modId}:${ruleNameB}`,
-          id: ruleNameB,
+          id: `${modId}:${ruleNameB}`, // QUALIFIED ID (prefixed)
           _modId: modId,
           _sourceFile: ruleFileB,
           event_type: 'core:dummy_event', // Corrected to match general mockFetcher

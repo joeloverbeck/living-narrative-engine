@@ -38,7 +38,6 @@ describe('UIBootstrapper integration with bootstrap stages', () => {
       <div id="outputDiv"></div>
       <div id="error-output"></div>
       <input id="speech-input" />
-      <h1>Living Narrative Engine</h1>
       <button id="open-save-game-button"></button>
       <button id="open-load-game-button"></button>
     `;
@@ -57,7 +56,6 @@ describe('UIBootstrapper integration with bootstrap stages', () => {
     expect(elements.outputDiv).toBe(document.getElementById('outputDiv'));
     expect(elements.errorDiv).toBe(document.getElementById('error-output'));
     expect(elements.inputElement).toBe(document.getElementById('speech-input'));
-    expect(elements.titleElement).toBe(document.querySelector('h1'));
     expect(elements.document).toBe(document);
 
     const gameEngine = {

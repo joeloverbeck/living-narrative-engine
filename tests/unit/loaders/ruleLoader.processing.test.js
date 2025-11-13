@@ -266,7 +266,7 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
     // This is what _storeItemInRegistry actually stores
     const expectedStoredDataA = {
       ...ruleDataA, // Original data
-      id: ruleDataA.rule_id, // BASE ID
+      id: `${modId}:${ruleDataA.rule_id}`, // QUALIFIED ID (prefixed)
       _fullId: `${modId}:${ruleDataA.rule_id}`, // QUALIFIED ID
       _modId: 'test-mod-processing',
       _sourceFile: fileA, // Added by helper
@@ -274,7 +274,7 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
 
     const expectedStoredDataB = {
       ...ruleDataB, // Original data
-      id: fileBBasename, // BASE ID (derived from filename)
+      id: `${modId}:${fileBBasename}`, // QUALIFIED ID (prefixed, derived from filename)
       _fullId: `${modId}:${fileBBasename}`, // QUALIFIED ID
       _modId: 'test-mod-processing',
       _sourceFile: fileBRelative.trim(), // Added by helper (uses trimmed filename)
@@ -449,14 +449,14 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
 
       const expectedStoredExplicit = {
         ...dataWithId,
-        id: dataWithId.rule_id, // BASE ID
+        id: finalExplicitId, // QUALIFIED ID (prefixed)
         _fullId: finalExplicitId, // QUALIFIED ID
         _modId: 'test-mod-processing',
         _sourceFile: fileWithId,
       };
       const expectedStoredDerived = {
         ...dataWithoutId,
-        id: deriveRuleBasename, // BASE ID
+        id: finalDerivedId, // QUALIFIED ID (prefixed)
         _fullId: finalDerivedId, // QUALIFIED ID
         _modId: 'test-mod-processing',
         _sourceFile: fileWithoutId,

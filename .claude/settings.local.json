@@ -607,7 +607,14 @@
       "Bash([ -f \"$file\" ])",
       "Bash(NODE_ENV=test npm test:*)",
       "Bash(timeout 10 node:*)",
-      "Bash(NODE_ENV=test npm run test:single:*)"
+      "Bash(NODE_ENV=test npm run test:single:*)",
+      "Bash(tickets/audit-goap-tokens.txt)",
+      "Bash(tickets/audit-goap-interfaces.txt)",
+      "Bash(tickets/audit-goap-imports.txt)",
+      "Bash(tickets/audit-goap-registrations.txt)",
+      "Bash(tickets/audit-goal-references.txt)",
+      "Bash(tickets/GOADISANA-003-audit-results.txt)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

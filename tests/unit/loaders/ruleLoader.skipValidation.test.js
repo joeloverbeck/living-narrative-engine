@@ -279,7 +279,7 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
       const expectedStoredRuleId = `${modId}:${ruleBasename}`; // "test-mod-skip-validation:ruleToSkip"
       const expectedStoredData = {
         ...ruleDataSkip, // Original data properties
-        id: ruleBasename, // BASE ID
+        id: expectedStoredRuleId, // QUALIFIED ID (prefixed)
         _fullId: expectedStoredRuleId, // QUALIFIED ID
         _modId: 'test-mod-skip-validation',
         _sourceFile: ruleFile, // Augmented with source file

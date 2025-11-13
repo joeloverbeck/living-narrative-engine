@@ -8,7 +8,6 @@ import DocumentContext from '../domUI/documentContext.js'; // Adjusted path base
  * @property {HTMLElement | null} outputDiv - The main output area element.
  * @property {HTMLElement | null} errorDiv - The element for displaying errors.
  * @property {HTMLInputElement | null} inputElement - The user command input element.
- * @property {HTMLElement | null} titleElement - The title display element.
  * @property {Document} document - The global document object.
  */
 
@@ -45,11 +44,6 @@ export class UIBootstrapper {
         key: 'inputElement',
         selector: '#speech-input',
         name: 'inputElement (ID: speech-input)',
-      },
-      {
-        key: 'titleElement',
-        selector: 'h1',
-        name: 'titleElement (Selector: h1)',
       },
     ];
 

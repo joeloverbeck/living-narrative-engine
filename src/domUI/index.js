@@ -15,7 +15,6 @@ export { default as DocumentContext } from './documentContext.js';
 export { default as DomElementFactory } from './domElementFactory.js';
 export * from '../utils/domUtils.js'; // Assuming DomUtils are exported like this
 
-export * from './titleRenderer.js';
 export * from './inputStateController.js';
 export * from './locationRenderer.js';
 export { renderCharacterListItem } from './location/renderCharacterListItem.js';

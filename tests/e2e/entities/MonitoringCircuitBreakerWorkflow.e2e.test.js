@@ -14,18 +14,47 @@
  * - Resource protection and monitoring overhead validation
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Monitoring & Circuit Breaker E2E Workflow', () => {
   let testBed;
+  let MonitoringCoordinator;
+  let monitoringCoordinator;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+    // Initialize test bed once for entire suite
     testBed = new EntityWorkflowTestBed();
     await testBed.initialize();
+
+    // Import MonitoringCoordinator once for all tests
+    MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
   });
 
-  afterEach(async () => {
+  beforeEach(() => {
+    // Fast state clearing instead of full reinitialization
+    if (testBed) {
+      testBed.clearTransientState();
+    }
+
+    // Create or reset monitoring coordinator
+    if (!monitoringCoordinator) {
+      monitoringCoordinator = new MonitoringCoordinator({
+        logger: testBed.logger,
+        enabled: true,
+        checkInterval: 30000,
+        circuitBreakerOptions: {
+          failureThreshold: 5,
+          timeout: 60000,
+        },
+      });
+    } else {
+      monitoringCoordinator.reset();
+    }
+  });
+
+  afterAll(async () => {
+    // Cleanup once after all tests
     if (testBed) {
       await testBed.cleanup();
     }
@@ -38,21 +67,9 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       await testBed.ensureEntityDefinitionExists(definitionId);
 
       const entityManager = testBed.entityManager;
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
 
-      // Reset monitoring metrics to start fresh
+      // Get performance monitor from shared coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
-      performanceMonitor.reset();
 
       const initialStats = monitoringCoordinator.getStats();
       expect(initialStats.performance.totalOperations).toBe(0);
@@ -114,17 +131,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       const definitionId = 'test:slow_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
 
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
       
       // Set a very low threshold to trigger slow operation detection
@@ -139,7 +146,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
           'slowOperation',
           async () => {
             // Simulate slow operation
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise(resolve => setTimeout(resolve, 2));
             return await testBed.entityManager.createEntityInstance(definitionId, {
               instanceId: `slow_entity_${i + 1}`,
             });
@@ -149,7 +156,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       }
 
       // Wait for health check to process
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 20));
 
       // Assert slow operations were detected
       const finalStats = monitoringCoordinator.getStats();
@@ -168,17 +175,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
     it('should track memory usage and issue warnings when appropriate', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
 
       const initialStats = monitoringCoordinator.getStats();
@@ -202,17 +199,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       const definitionId = 'test:report_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
 
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
 
       // Act - Perform some operations for reporting
       await monitoringCoordinator.executeMonitored(
@@ -245,22 +232,12 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
   describe('Circuit Breaker Trigger and Recovery', () => {
     it('should transition through circuit breaker states correctly', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       
       // Create a circuit breaker with low thresholds for testing
       const circuitBreaker = monitoringCoordinator.getCircuitBreaker('testOperation', {
         failureThreshold: 2,
-        timeout: 1000, // 1 second timeout for faster testing
+        timeout: 50, // 50ms timeout for faster testing
         successThreshold: 1,
       });
 
@@ -309,7 +286,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       }
 
       // Wait for timeout to allow transition to HALF_OPEN
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise(resolve => setTimeout(resolve, 60));
 
       // Next successful request should transition to HALF_OPEN and then CLOSED
       const result = await circuitBreaker.execute(async () => {
@@ -323,20 +300,10 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
     it('should handle synchronous operations with circuit breaker protection', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const circuitBreaker = monitoringCoordinator.getCircuitBreaker('syncOperation', {
         failureThreshold: 1,
-        timeout: 500,
+        timeout: 50,
       });
 
       // Act & Assert - Test synchronous failure
@@ -363,7 +330,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       }
 
       // Wait for timeout and test recovery
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise(resolve => setTimeout(resolve, 60));
 
       const result = circuitBreaker.executeSync(() => {
         return 'sync success';
@@ -376,17 +343,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
     it('should provide detailed circuit breaker statistics and reports', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const circuitBreaker = monitoringCoordinator.getCircuitBreaker('statsTest', {
         failureThreshold: 3,
         successThreshold: 2,
@@ -436,17 +393,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
     it('should handle circuit breaker reset and enable/disable operations', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const circuitBreaker = monitoringCoordinator.getCircuitBreaker('resetTest', {
         failureThreshold: 1,
       });
@@ -492,20 +439,10 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       const definitionId = 'test:load_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
 
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const circuitBreaker = monitoringCoordinator.getCircuitBreaker('loadTest', {
         failureThreshold: 5,
-        timeout: 2000,
+        timeout: 100,
       });
 
       // Act - Perform high-volume operations with some failures mixed in
@@ -572,17 +509,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       const definitionId = 'test:concurrent_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
 
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       
       // Reset monitoring for clean test
       monitoringCoordinator.reset();
@@ -596,7 +523,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
           `concurrentOp${i}`,
           async () => {
             // Simulate varying operation times
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+            await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
             return await testBed.entityManager.createEntityInstance(definitionId, {
               instanceId: `concurrent_entity_${i + 1}`,
             });
@@ -635,17 +562,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
     it('should trigger health check alerts for degraded performance', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
       
       // Set very low threshold to trigger alerts
@@ -660,14 +577,14 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
           'degradedPerformance',
           async () => {
             // Simulate degraded performance
-            await new Promise(resolve => setTimeout(resolve, 20));
+            await new Promise(resolve => setTimeout(resolve, 2));
             return `Degraded operation ${i + 1}`;
           }
         );
       }
 
       // Trigger manual health check to process alerts
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 20));
 
       // Assert health check system detected performance degradation
       const finalStats = monitoringCoordinator.getStats();
@@ -692,17 +609,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
   describe('Resource Protection', () => {
     it('should monitor and limit monitoring system resource usage', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
 
       // Measure resource usage before operations
@@ -745,17 +652,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
     it('should clean up monitoring resources properly', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
 
       // Act - Create and clean up multiple circuit breakers
@@ -791,17 +688,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
     it('should handle monitoring system disable/enable without resource leaks', async () => {
       // Arrange
-      // For E2E testing, create our own monitoring coordinator instance
-      const MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
-      const monitoringCoordinator = new MonitoringCoordinator({
-        logger: testBed.logger,
-        enabled: true,
-        checkInterval: 30000,
-        circuitBreakerOptions: {
-          failureThreshold: 5,
-          timeout: 60000,
-        },
-      });
+      // Use shared monitoring coordinator (already reset in beforeEach)
 
       // Act - Disable monitoring
       monitoringCoordinator.setEnabled(false);

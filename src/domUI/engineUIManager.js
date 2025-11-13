@@ -191,7 +191,6 @@ export class EngineUIManager {
     }
 
     const titleMessage = `Initializing ${payload.worldName}...`;
-    this.#domUiFacade.title.set(titleMessage);
     this.#domUiFacade.input.setEnabled(false, titleMessage);
     this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_INITIALIZING_UI}. UI updated for world: ${payload.worldName}.`
@@ -216,7 +215,6 @@ export class EngineUIManager {
       return;
     }
 
-    this.#domUiFacade.title.set(payload.activeWorld || 'Game Ready');
     this.#domUiFacade.input.setEnabled(true, payload.message);
     this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_READY_UI}. UI set to ready state. Active world: ${payload.activeWorld || 'N/A'}.`
@@ -248,7 +246,6 @@ export class EngineUIManager {
       return;
     }
 
-    this.#domUiFacade.title.set(payload.titleMessage);
     this.#domUiFacade.input.setEnabled(false, payload.inputDisabledMessage);
     this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_OPERATION_IN_PROGRESS_UI}. Title: "${payload.titleMessage}". Input disabled.`
@@ -284,7 +281,6 @@ export class EngineUIManager {
       `EngineUIManager: ${payload.errorTitle} - ${payload.errorMessage}`
     );
     this.#domUiFacade.input.setEnabled(false, 'Operation failed.'); // As per ticket spec
-    this.#domUiFacade.title.set(payload.errorTitle);
     this.#logger.error(
       `EngineUIManager: Handled ${ENGINE_OPERATION_FAILED_UI}. Error Title: "${payload.errorTitle}", Message: "${payload.errorMessage}".`
     );
@@ -312,7 +308,6 @@ export class EngineUIManager {
     }
 
     this.#domUiFacade.input.setEnabled(false, payload.inputDisabledMessage);
-    this.#domUiFacade.title.set('Game Stopped'); // Optional update as per ticket
     this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_STOPPED_UI}. Input disabled. Title set to "Game Stopped".`
     );

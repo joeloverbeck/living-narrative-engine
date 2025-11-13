@@ -11,13 +11,11 @@ const baseDom = `
   <div id="outputDiv"></div>
   <div id="error-output"></div>
   <input id="speech-input" />
-  <h1>Title</h1>
 `;
 
 const domWithoutErrorDiv = `
   <div id="outputDiv"></div>
   <input id="speech-input" />
-  <h1>Title</h1>
 `;
 
 function createLogger() {
@@ -127,7 +125,6 @@ describe('main.js error handling integration', () => {
       uiFactory: () => ({
         outputDiv: document.getElementById('outputDiv'),
         errorDiv: null,
-        titleElement: document.querySelector('h1'),
         inputElement: document.getElementById('speech-input'),
         document,
       }),
@@ -150,8 +147,9 @@ describe('main.js error handling integration', () => {
       'Application failed to start due to a critical error: UI stage failed'
     );
 
+    // Title element no longer exists in game.html - verify it's absent
     const titleElement = document.querySelector('h1');
-    expect(titleElement?.textContent).toBe('Fatal Error!');
+    expect(titleElement).toBeNull();
 
     const inputElement = document.getElementById('speech-input');
     expect(inputElement?.disabled).toBe(true);
@@ -169,7 +167,6 @@ describe('main.js error handling integration', () => {
     const uiElements = {
       outputDiv: document.getElementById('outputDiv'),
       errorDiv: document.getElementById('error-output'),
-      titleElement: document.querySelector('h1'),
       inputElement: document.getElementById('speech-input'),
       document,
     };
@@ -223,9 +220,6 @@ describe('main.js error handling integration', () => {
     expect(errorOutput?.textContent).toContain(
       'Critical: GameEngine not initialized before attempting Start Game stage.'
     );
-
-    const titleElement = document.querySelector('h1');
-    expect(titleElement?.textContent).toBe('Fatal Error!');
 
     const inputElement = document.getElementById('speech-input');
     expect(inputElement?.disabled).toBe(true);

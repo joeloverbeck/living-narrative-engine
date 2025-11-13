@@ -11,7 +11,6 @@
 /* 3. Layout Styles */
 @import url('layout/_grid.css');
 @import url('layout/_panes.css');
-@import url('layout/_header.css');
 @import url('layout/_footer.css');
 
 /* 4. Components */

@@ -38,6 +38,15 @@ describe('main.js bootstrap orchestration', () => {
     document.body.innerHTML = '';
   });
 
+  /**
+   *
+   * @param root0
+   * @param root0.fetchImpl
+   * @param root0.stageImplementations
+   * @param root0.tokens
+   * @param root0.logger
+   * @param root0.gameEngineInstance
+   */
   async function loadMain({
     fetchImpl,
     stageImplementations = {},
@@ -141,6 +150,11 @@ describe('main.js bootstrap orchestration', () => {
     };
   }
 
+  /**
+   *
+   * @param helpers
+   * @param tag
+   */
   function exerciseHelperUtilities(helpers, tag = 'div') {
     const anchor = document.createElement('div');
     document.body.appendChild(anchor);
@@ -250,7 +264,6 @@ describe('main.js bootstrap orchestration', () => {
       expect.objectContaining({
         outputDiv: expect.any(HTMLElement),
         errorDiv: expect.any(HTMLElement),
-        titleElement: expect.any(HTMLElement),
         inputElement: expect.any(HTMLElement),
         document,
       })

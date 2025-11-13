@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_vagina_petite_firm",
+  "description": "A human female genital organ with tiny size, firm muscle tone, and smooth texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "vagina"
+    },
+    "descriptors:size_category": {
+      "size": "tiny"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "core:name": {
+      "text": "vagina"
+    }
+  }
+}

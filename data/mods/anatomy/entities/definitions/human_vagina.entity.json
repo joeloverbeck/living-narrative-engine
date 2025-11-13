@@ -1,10 +1,19 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "anatomy:human_vagina",
-  "description": "A human female genital organ",
+  "description": "A human female genital organ with medium size, firm muscle tone, and smooth texture",
   "components": {
     "anatomy:part": {
       "subType": "vagina"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
     },
     "core:name": {
       "text": "vagina"

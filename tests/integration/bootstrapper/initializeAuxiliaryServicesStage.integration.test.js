@@ -63,11 +63,10 @@ async function createContainerAndLogger() {
   const uiElements = {
     outputDiv: document.getElementById('outputDiv'),
     inputElement: document.getElementById('speech-input'),
-    titleElement: document.getElementById('title-element'),
     document,
   };
 
-  if (!uiElements.outputDiv || !uiElements.inputElement || !uiElements.titleElement) {
+  if (!uiElements.outputDiv || !uiElements.inputElement) {
     throw new Error('Required UI elements missing from DOM setup.');
   }
 

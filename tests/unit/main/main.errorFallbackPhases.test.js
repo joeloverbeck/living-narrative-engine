@@ -77,7 +77,6 @@ function createUiElements() {
   return {
     outputDiv: document.getElementById('outputDiv'),
     errorDiv: document.getElementById('error-output'),
-    titleElement: document.querySelector('h1'),
     inputElement: document.getElementById('speech-input'),
     document,
   };
@@ -99,7 +98,6 @@ describe('main.js bootstrap error fallbacks', () => {
       <div id="outputDiv"></div>
       <div id="error-output"></div>
       <input id="speech-input" />
-      <h1>Title</h1>
     `;
   });
 
@@ -256,7 +254,6 @@ describe('main.js bootstrap error fallbacks', () => {
     expect(uiArg).toMatchObject({
       outputDiv: expect.anything(),
       errorDiv: expect.anything(),
-      titleElement: expect.anything(),
       inputElement: expect.anything(),
       document: expect.anything(),
     });

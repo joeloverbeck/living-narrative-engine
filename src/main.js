@@ -45,7 +45,6 @@ function resolveFatalErrorUIElements() {
   return {
     outputDiv: document.getElementById('outputDiv'),
     errorDiv: document.getElementById('error-output'),
-    titleElement: document.querySelector('h1'),
     inputElement: document.getElementById('speech-input'),
     document,
   };
@@ -291,7 +290,6 @@ export async function beginGame(showLoadUI = false) {
         // Provide default UI elements if uiElements is undefined
         outputDiv: document.getElementById('outputDiv'),
         errorDiv: document.getElementById('error-output'),
-        titleElement: document.querySelector('h1'),
         inputElement: document.getElementById('speech-input'),
         document: document,
       },

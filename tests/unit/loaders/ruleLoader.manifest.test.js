@@ -341,7 +341,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         expect.objectContaining({
           // finalData
           ...dataForRule1, // Original data
-          id: ruleFile1Name, // BASE ID
+          id: `${modId}:${ruleFile1Name}`, // QUALIFIED ID (prefixed)
           _fullId: `${modId}:${ruleFile1Name}`, // QUALIFIED ID
           _modId: modId,
           _sourceFile: ruleFile1, // Source file added
@@ -353,7 +353,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         expect.objectContaining({
           // finalData
           ...dataForRule2, // Original data
-          id: ruleFile2Name, // BASE ID
+          id: `${modId}:${ruleFile2Name}`, // QUALIFIED ID (prefixed)
           _fullId: `${modId}:${ruleFile2Name}`, // QUALIFIED ID
           _modId: modId,
           _sourceFile: ruleFile2Relative.trim(), // Source file added
@@ -699,7 +699,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         `${modId}:${validFileName}`, // ID derived from filename
         expect.objectContaining({
           ...dataForValidFile,
-          id: validFileName, // BASE ID
+          id: `${modId}:${validFileName}`, // QUALIFIED ID (prefixed)
           _fullId: `${modId}:${validFileName}`, // QUALIFIED ID
           _modId: modId,
           _sourceFile: validFile, // Corrected to use the full filename variable

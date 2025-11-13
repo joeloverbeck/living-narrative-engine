@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_vagina_soft_pliant",
+  "description": "A human female genital organ with medium size, pliant muscle tone, and velvety texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "vagina"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:firmness": {
+      "firmness": "pliant"
+    },
+    "descriptors:texture": {
+      "texture": "velvety"
+    },
+    "core:name": {
+      "text": "vagina"
+    }
+  }
+}

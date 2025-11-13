@@ -34,6 +34,9 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
   configureContainer: jest.fn(),
 }));
 
+/**
+ *
+ */
 function createUiElements() {
   document.body.innerHTML = `
     <div id="outputDiv"></div>
@@ -187,7 +190,6 @@ describe('main.js error phase fallbacks', () => {
         mockDisplayFatal.mock.calls[0];
       expect(fallbackElements.outputDiv).toBeInstanceOf(HTMLElement);
       expect(fallbackElements.errorDiv).toBeInstanceOf(HTMLElement);
-      expect(fallbackElements.titleElement).toBeInstanceOf(HTMLElement);
       expect(fallbackElements.inputElement).toBeInstanceOf(HTMLElement);
       expect(fallbackElements.document).toBe(document);
       expect(errorDetails.phase).toBe(

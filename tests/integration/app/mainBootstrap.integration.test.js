@@ -84,14 +84,12 @@ const baseDom = `
   <div id="outputDiv"></div>
   <div id="error-output"></div>
   <input id="speech-input" />
-  <h1>Title</h1>
   <button id="back-button"></button>
 `;
 
 const createUIElements = () => ({
   outputDiv: document.getElementById('outputDiv'),
   errorDiv: document.getElementById('error-output'),
-  titleElement: document.querySelector('h1'),
   inputElement: document.getElementById('speech-input'),
   document,
 });
@@ -223,8 +221,6 @@ describe('main bootstrap integration', () => {
       outputDiv: document.getElementById('outputDiv'),
       errorDiv: document.getElementById('error-output'),
       inputElement: document.getElementById('speech-input'),
-      titleElement: document.querySelector('h1'),
-      document,
     });
     expect(details).toMatchObject({
       userMessage:
@@ -309,7 +305,6 @@ describe('main bootstrap integration', () => {
       outputDiv: document.getElementById('outputDiv'),
       errorDiv: document.getElementById('error-output'),
       inputElement: document.getElementById('speech-input'),
-      titleElement: document.querySelector('h1'),
     });
 
     consoleErrorSpy.mockRestore();

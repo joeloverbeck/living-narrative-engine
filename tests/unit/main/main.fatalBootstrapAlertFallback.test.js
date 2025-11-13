@@ -124,7 +124,6 @@ describe('main.js fatal bootstrap fallback behaviour', () => {
     expect(capturedUIElements).toMatchObject({
       outputDiv: null,
       errorDiv: null,
-      titleElement: null,
       inputElement: null,
       document,
     });

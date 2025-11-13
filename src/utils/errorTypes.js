@@ -8,7 +8,6 @@
  * @property {HTMLElement | null | undefined} outputDiv - The main output area element.
  * @property {HTMLElement | null | undefined} errorDiv - The element for displaying errors.
  * @property {HTMLInputElement | null | undefined} inputElement - The user command input element.
- * @property {HTMLElement | null | undefined} titleElement - The title display element.
  */
 
 /**

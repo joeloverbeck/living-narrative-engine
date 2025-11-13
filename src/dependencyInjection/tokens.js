@@ -11,7 +11,6 @@ import { testingTokens } from './tokens/tokens-testing.js';
 import { pipelineTokens } from './tokens/tokens-pipeline.js';
 import { actionTracingTokens } from './tokens/actionTracingTokens.js';
 import { monitoringTokens } from './tokens/tokens-monitoring.js';
-import { goapTokens } from './tokens/tokens-goap.js';
 
 /**
  * @typedef {string} DiToken
@@ -30,5 +29,4 @@ export const tokens = freeze({
   ...pipelineTokens,
   ...actionTracingTokens,
   ...monitoringTokens,
-  ...goapTokens,
 });

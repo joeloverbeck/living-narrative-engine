@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_vagina_large_soft",
+  "description": "A human female genital organ with large size, soft muscle tone, and smooth texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "vagina"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:firmness": {
+      "firmness": "soft"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "core:name": {
+      "text": "vagina"
+    }
+  }
+}

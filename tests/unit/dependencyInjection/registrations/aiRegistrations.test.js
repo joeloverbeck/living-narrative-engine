@@ -750,19 +750,11 @@ describe('aiRegistrations', () => {
       );
       await goapCall[1](
         createFactoryContext({
-          IGoalManager: { goal: true },
-          ISimplePlanner: { planner: true },
-          IPlanCache: { cache: true },
-          [tokens.IEntityManager]: { entityManager: true },
           [tokens.ILogger]: logger,
           [tokens.ISafeEventDispatcher]: { dispatcher: true },
         })
       );
       expect(GoapDecisionProviderMock).toHaveBeenCalledWith({
-        goalManager: { goal: true },
-        simplePlanner: { planner: true },
-        planCache: { cache: true },
-        entityManager: { entityManager: true },
         logger,
         safeEventDispatcher: { dispatcher: true },
       });

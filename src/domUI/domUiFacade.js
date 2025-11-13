@@ -5,7 +5,6 @@
 
 /** @typedef {import('./actionButtonsRenderer').ActionButtonsRenderer} ActionButtonsRenderer */
 /** @typedef {import('./location/typedefs.js').LocationRenderer} LocationRenderer */
-/** @typedef {import('./titleRenderer').TitleRenderer} TitleRenderer */
 /** @typedef {import('./inputStateController').InputStateController} InputStateController */
 /** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */
 /** @typedef {import('./saveGameUI').default} SaveGameUI */
@@ -24,7 +23,6 @@
 export class DomUiFacade {
   #actionButtonsRenderer;
   #locationRenderer;
-  #titleRenderer;
   #inputStateController;
   #perceptionLogRenderer;
   #saveGameUI;
@@ -40,7 +38,6 @@ export class DomUiFacade {
    * @param {object} deps - Dependencies object containing all required renderers/controllers.
    * @param {ActionButtonsRenderer} deps.actionButtonsRenderer - Renderer for action buttons.
    * @param {LocationRenderer} deps.locationRenderer - Renderer for location details.
-   * @param {TitleRenderer} deps.titleRenderer - Renderer for the main game title.
    * @param {InputStateController} deps.inputStateController - Controller for the player input element's state.
    * @param {SpeechBubbleRenderer} deps.speechBubbleRenderer - Renderer for speech bubbles.
    * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs.
@@ -54,7 +51,6 @@ export class DomUiFacade {
   constructor({
     actionButtonsRenderer,
     locationRenderer,
-    titleRenderer,
     inputStateController,
     speechBubbleRenderer,
     perceptionLogRenderer,
@@ -75,10 +71,6 @@ export class DomUiFacade {
     if (!locationRenderer || typeof locationRenderer.render !== 'function')
       throw new Error(
         'DomUiFacade: Missing or invalid locationRenderer dependency.'
-      );
-    if (!titleRenderer || typeof titleRenderer.set !== 'function')
-      throw new Error(
-        'DomUiFacade: Missing or invalid titleRenderer dependency.'
       );
     if (
       !inputStateController ||
@@ -124,7 +116,6 @@ export class DomUiFacade {
 
     this.#actionButtonsRenderer = actionButtonsRenderer;
     this.#locationRenderer = locationRenderer;
-    this.#titleRenderer = titleRenderer;
     this.#inputStateController = inputStateController;
     this.#speechBubbleRenderer = speechBubbleRenderer;
     this.#perceptionLogRenderer = perceptionLogRenderer;
@@ -151,15 +142,6 @@ export class DomUiFacade {
    */
   get location() {
     return this.#locationRenderer;
-  }
-
-  /**
-   * Provides the TitleRenderer instance.
-   *
-   * @returns {TitleRenderer} Renderer for the main title.
-   */
-  get title() {
-    return this.#titleRenderer;
   }
 
   /**
@@ -241,7 +223,6 @@ export class DomUiFacade {
   dispose() {
     this.#actionButtonsRenderer?.dispose?.();
     this.#locationRenderer?.dispose?.();
-    this.#titleRenderer?.dispose?.();
     this.#inputStateController?.dispose?.();
     this.#speechBubbleRenderer?.dispose?.();
     this.#perceptionLogRenderer?.dispose?.();
