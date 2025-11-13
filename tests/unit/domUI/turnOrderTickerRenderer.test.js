@@ -495,6 +495,11 @@ describe('TurnOrderTickerRenderer - Public API', () => {
       <span id="ticker-round-number"></span>
       <div id="ticker-actor-queue"></div>
     `;
+    // Mock scrollTo for jsdom compatibility
+    const actorQueue = mockContainer.querySelector('#ticker-actor-queue');
+    if (actorQueue) {
+      actorQueue.scrollTo = jest.fn();
+    }
 
     const mockDocumentContext = {
       query: jest.fn(selector => mockContainer.querySelector(selector)),
@@ -557,9 +562,9 @@ describe('TurnOrderTickerRenderer - Public API', () => {
     expect(typeof renderer.dispose).toBe('function');
   });
 
-  it('render method should log debug message (stub implementation)', () => {
+  it('render method should render empty queue message when no actors', () => {
     renderer.render([]);
-    expect(mockLogger.debug).toHaveBeenCalledWith('render() called', { actorCount: 0 });
+    expect(mockLogger.info).toHaveBeenCalledWith('Rendering empty turn order queue');
   });
 
   it('updateCurrentActor method should log debug message (stub implementation)', () => {
@@ -1198,6 +1203,250 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
 
       expect(mockLogger.warn).toHaveBeenCalled();
       expect(renderer.updateActorParticipation).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('TurnOrderTickerRenderer - Render Method', () => {
+  let renderer;
+  let mockLogger;
+  let mockContainer;
+  let mockActorQueue;
+  let mockDomElementFactory;
+
+  beforeEach(() => {
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    mockActorQueue = document.createElement('div');
+    mockActorQueue.id = 'ticker-actor-queue';
+    // Mock scrollTo for jsdom compatibility
+    mockActorQueue.scrollTo = jest.fn();
+
+    mockContainer = document.createElement('div');
+    mockContainer.innerHTML = '<span id="ticker-round-number"></span>';
+    mockContainer.appendChild(mockActorQueue);
+
+    const mockDocumentContext = {
+      query: jest.fn(selector => mockContainer.querySelector(selector)),
+      create: jest.fn(),
+    };
+
+    const mockValidatedEventDispatcher = {
+      dispatch: jest.fn(),
+      subscribe: jest.fn(() => jest.fn()),
+      unsubscribe: jest.fn(),
+    };
+
+    mockDomElementFactory = {
+      create: jest.fn((tag) => document.createElement(tag)),
+      div: jest.fn((cls) => {
+        const el = document.createElement('div');
+        if (cls) el.classList.add(cls);
+        return el;
+      }),
+      span: jest.fn((cls, text) => {
+        const el = document.createElement('span');
+        if (cls) el.classList.add(cls);
+        if (text) el.textContent = text;
+        return el;
+      }),
+      img: jest.fn((src) => {
+        const el = document.createElement('img');
+        if (src) el.src = src;
+        return el;
+      }),
+    };
+
+    const mockEntityManager = {
+      getEntityInstance: jest.fn(),
+      hasComponent: jest.fn(),
+      getComponentData: jest.fn(),
+    };
+
+    const mockEntityDisplayDataProvider = {
+      getEntityName: jest.fn(id => `Actor ${id}`),
+      getEntityPortraitPath: jest.fn(),
+    };
+
+    renderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: mockDocumentContext,
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      domElementFactory: mockDomElementFactory,
+      entityManager: mockEntityManager,
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+
+    // Spy on animation method
+    jest.spyOn(renderer, '__testAnimateActorEntry');
+  });
+
+  it('should render all actors in order', () => {
+    const actors = [
+      { id: 'actor-1' },
+      { id: 'actor-2' },
+      { id: 'actor-3' },
+    ];
+
+    renderer.render(actors);
+
+    expect(mockActorQueue.children.length).toBe(3);
+    expect(mockActorQueue.children[0].dataset.entityId).toBe('actor-1');
+    expect(mockActorQueue.children[1].dataset.entityId).toBe('actor-2');
+    expect(mockActorQueue.children[2].dataset.entityId).toBe('actor-3');
+    expect(mockLogger.info).toHaveBeenCalledWith('Rendering turn order queue', {
+      actorCount: 3,
+      actorIds: ['actor-1', 'actor-2', 'actor-3'],
+    });
+  });
+
+  it('should clear existing actors before rendering', () => {
+    // Add existing elements
+    const existing1 = document.createElement('div');
+    const existing2 = document.createElement('div');
+    mockActorQueue.appendChild(existing1);
+    mockActorQueue.appendChild(existing2);
+
+    expect(mockActorQueue.children.length).toBe(2);
+
+    const actors = [{ id: 'actor-1' }];
+    renderer.render(actors);
+
+    // Should only have new actors
+    expect(mockActorQueue.children.length).toBe(1);
+    expect(mockActorQueue.children[0].dataset.entityId).toBe('actor-1');
+  });
+
+  it('should render empty queue message when no actors', () => {
+    renderer.render([]);
+
+    expect(mockActorQueue.children.length).toBe(1);
+    expect(mockActorQueue.children[0].className).toBe('ticker-empty-message');
+    expect(mockActorQueue.children[0].textContent).toBe('No participating actors');
+    expect(mockLogger.info).toHaveBeenCalledWith('Rendering empty turn order queue');
+  });
+
+  it('should skip invalid actors and continue rendering', () => {
+    const actors = [
+      { id: 'actor-1' },
+      null, // Invalid
+      { id: 'actor-2' },
+      { }, // No id
+      { id: 'actor-3' },
+    ];
+
+    renderer.render(actors);
+
+    expect(mockActorQueue.children.length).toBe(3);
+    expect(mockActorQueue.children[0].dataset.entityId).toBe('actor-1');
+    expect(mockActorQueue.children[1].dataset.entityId).toBe('actor-2');
+    expect(mockActorQueue.children[2].dataset.entityId).toBe('actor-3');
+    expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+  });
+
+  it('should throw TypeError for non-array input', () => {
+    expect(() => renderer.render('not-an-array')).toThrow(TypeError);
+    expect(() => renderer.render('not-an-array')).toThrow('render() requires an array of actors');
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'render() requires an array of actors',
+      { receivedType: 'string' }
+    );
+  });
+
+  it('should handle single actor', () => {
+    const actors = [{ id: 'actor-1' }];
+
+    renderer.render(actors);
+
+    expect(mockActorQueue.children.length).toBe(1);
+    expect(mockActorQueue.children[0].dataset.entityId).toBe('actor-1');
+  });
+
+  it('should apply animation classes to each actor', () => {
+    const actors = [
+      { id: 'actor-1' },
+      { id: 'actor-2' },
+      { id: 'actor-3' },
+    ];
+
+    renderer.render(actors);
+
+    // Verify all actors were rendered
+    expect(mockActorQueue.children.length).toBe(3);
+
+    // Verify animation class was added to each actor element
+    // (the stub implementation adds 'entering' class)
+    expect(mockActorQueue.children[0].classList.contains('entering')).toBe(true);
+    expect(mockActorQueue.children[1].classList.contains('entering')).toBe(true);
+    expect(mockActorQueue.children[2].classList.contains('entering')).toBe(true);
+  });
+
+  it('should handle display data extraction failures with fallback', () => {
+    // Mock getEntityName to throw an error to test fallback behavior
+    const mockEntityDisplayDataProvider = {
+      getEntityName: jest.fn(() => {
+        throw new Error('Name extraction failed');
+      }),
+      getEntityPortraitPath: jest.fn(() => null),
+    };
+
+    // Create new renderer with failing dependency
+    const failingRenderer = new TurnOrderTickerRenderer({
+      logger: mockLogger,
+      documentContext: {
+        query: jest.fn(selector => mockContainer.querySelector(selector)),
+        create: jest.fn(),
+      },
+      validatedEventDispatcher: {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => jest.fn()),
+        unsubscribe: jest.fn(),
+      },
+      domElementFactory: mockDomElementFactory,
+      entityManager: {
+        getEntityInstance: jest.fn(id => ({ id })),
+        hasComponent: jest.fn(() => false),
+        getComponentData: jest.fn(),
+      },
+      entityDisplayDataProvider: mockEntityDisplayDataProvider,
+      tickerContainerElement: mockContainer,
+    });
+
+    const actors = [{ id: 'actor-1' }];
+
+    // Should not throw, should use fallback data
+    failingRenderer.render(actors);
+
+    // Actor element is still created using fallback data (entity ID as name)
+    expect(mockActorQueue.children.length).toBe(1);
+    expect(mockActorQueue.children[0].dataset.entityId).toBe('actor-1');
+
+    // Warning logged about fallback to minimal data
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Failed to extract actor display data, using fallback',
+      expect.objectContaining({
+        entityId: 'actor-1',
+      })
+    );
+  });
+
+  it('should log rendering info with actor IDs', () => {
+    const actors = [
+      { id: 'actor-1' },
+      { id: 'actor-2' },
+    ];
+
+    renderer.render(actors);
+
+    expect(mockLogger.info).toHaveBeenCalledWith('Rendering turn order queue', {
+      actorCount: 2,
+      actorIds: ['actor-1', 'actor-2'],
     });
   });
 });
