@@ -268,7 +268,7 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
     // Verify the base rule is stored correctly
     const expectedStoredBaseData = {
       ...baseRuleData,
-      id: commonRuleIdInFile, // BASE ID
+      id: finalBaseRuleId, // Fully qualified ID is now stored on the item
       _fullId: finalBaseRuleId, // QUALIFIED ID
       _modId: 'BaseMod',
       _sourceFile: commonFileName,
@@ -295,7 +295,7 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
     // Verify the override rule is now stored and has replaced the base version
     const expectedStoredOverrideData = {
       ...overrideRuleData,
-      id: commonRuleIdInFile, // BASE ID
+      id: finalOverrideRuleId, // Fully qualified ID is now stored on the item
       _fullId: finalOverrideRuleId, // QUALIFIED ID
       _modId: 'OverrideMod',
       _sourceFile: commonFileName,
