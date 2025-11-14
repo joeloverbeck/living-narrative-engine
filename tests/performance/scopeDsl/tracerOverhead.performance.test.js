@@ -88,16 +88,21 @@ describe('Tracer Performance Overhead', () => {
     }
     const duration2 = performance.now() - start2;
 
-    const overhead = ((duration2 - duration1) / duration1) * 100;
+    const overheadMs = duration2 - duration1;
+    const overhead = (overheadMs / duration1) * 100;
 
     console.log('Enabled tracer overhead: ' + overhead.toFixed(2) + '%');
+    console.log('Enabled tracer overhead (ms): ' + overheadMs.toFixed(2) + 'ms');
 
     console.log('Baseline: ' + duration1.toFixed(2) + 'ms, With tracer enabled: ' + duration2.toFixed(2) + 'ms');
 
-    // Tracing overhead of 400% is acceptable for detailed debugging features
-    // Increased from 350% to account for system load variance in CI environments
-    // The tracer performs: Set serialization, metadata capture, timestamp recording per node
-    expect(overhead).toBeLessThan(400); // Less than 400% overhead with tracing
+    // Tracer work is dominated by serialization, metadata capture, and timestamp recording for
+    // each resolver node. Those costs are roughly constant per resolution, so percent overhead
+    // swings wildly when the baseline duration is tiny (±5ms of scheduler variance can mean ±100%).
+    // Use an absolute ceiling for day-to-day noise, plus a generous percentage guardrail to catch
+    // catastrophic regressions.
+    expect(overheadMs).toBeLessThan(150); // Less than 150ms extra across 100 resolutions
+    expect(overhead).toBeLessThan(1000); // Less than 10x slower overall
   });
 
   it('should not leak memory with repeated tracing', () => {
