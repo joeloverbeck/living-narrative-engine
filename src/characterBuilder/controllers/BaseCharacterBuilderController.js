@@ -14,6 +14,7 @@ import {
   UI_STATES,
 } from '../../shared/characterBuilder/uiStateManager.js';
 import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
+import { DOMElementManager } from '../services/domElementManager.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -73,6 +74,9 @@ export class BaseCharacterBuilderController {
 
   /** @private @type {object} */
   #elements = {};
+
+  /** @private @type {DOMElementManager|null} */
+  #domElementManager = null;
 
   /** @private @type {boolean} */
   #isInitialized = false;
@@ -393,7 +397,7 @@ export class BaseCharacterBuilderController {
    * @returns {object}
    */
   get elements() {
-    return { ...this.#elements };
+    return this._getDomManager().getElementsSnapshot();
   }
 
   /**
@@ -538,12 +542,7 @@ export class BaseCharacterBuilderController {
    * @protected
    */
   _clearElementCache() {
-    const count = Object.keys(this.#elements).length;
-    this.#elements = {};
-
-    this.#logger.debug(
-      `${this.constructor.name}: Cleared ${count} cached element references`
-    );
+    this._getDomManager().clearCache();
   }
 
   /**
@@ -553,26 +552,7 @@ export class BaseCharacterBuilderController {
    * @returns {object} Validation results
    */
   _validateElementCache() {
-    const results = {
-      valid: [],
-      invalid: [],
-      total: 0,
-    };
-
-    for (const [key, element] of Object.entries(this.#elements)) {
-      results.total++;
-
-      if (element && document.body.contains(element)) {
-        results.valid.push(key);
-      } else {
-        results.invalid.push(key);
-        this.#logger.warn(
-          `${this.constructor.name}: Cached element '${key}' no longer in DOM`
-        );
-      }
-    }
-
-    return results;
+    return this._getDomManager().validateElementCache();
   }
 
   /**
@@ -596,85 +576,7 @@ export class BaseCharacterBuilderController {
    * this._cacheElement('tooltip', '#tooltip', false);
    */
   _cacheElement(key, selector, required = true) {
-    if (!key || typeof key !== 'string') {
-      throw new Error(
-        `${this.constructor.name}: Invalid element key provided: ${key}`
-      );
-    }
-
-    if (!selector || typeof selector !== 'string') {
-      throw new Error(
-        `${this.constructor.name}: Invalid selector provided for key '${key}': ${selector}`
-      );
-    }
-
-    const startTime = performance.now();
-    let element = null;
-
-    try {
-      // Optimize for ID selectors
-      if (selector.startsWith('#') && !selector.includes(' ')) {
-        const id = selector.slice(1);
-        element = document.getElementById(id);
-
-        if (!element && required) {
-          throw new Error(`Required element with ID '${id}' not found in DOM`);
-        }
-      } else {
-        // Use querySelector for complex selectors
-        element = document.querySelector(selector);
-
-        if (!element && required) {
-          throw new Error(
-            `Required element matching selector '${selector}' not found in DOM`
-          );
-        }
-      }
-
-      // Validate element if found
-      if (element) {
-        this._validateElement(element, key);
-      }
-
-      // Cache the element (even if null for optional elements)
-      this.#elements[key] = element;
-
-      const cacheTime = performance.now() - startTime;
-
-      if (element) {
-        this.#logger.debug(
-          `${this.constructor.name}: Cached element '${key}' ` +
-            `(${element.tagName}${element.id ? '#' + element.id : ''}) ` +
-            `in ${cacheTime.toFixed(2)}ms`
-        );
-      } else {
-        this.#logger.debug(
-          `${this.constructor.name}: Optional element '${key}' not found ` +
-            `(selector: ${selector})`
-        );
-      }
-
-      return element;
-    } catch (error) {
-      const enhancedError = new Error(
-        `${this.constructor.name}: Failed to cache element '${key}'. ${error.message}`
-      );
-      enhancedError.originalError = error;
-      enhancedError.elementKey = key;
-      enhancedError.selector = selector;
-
-      this.#logger.error(
-        `${this.constructor.name}: Element caching failed`,
-        enhancedError
-      );
-
-      if (required) {
-        throw enhancedError;
-      }
-
-      // For optional elements, just return null
-      return null;
-    }
+    return this._getDomManager().cacheElement(key, selector, required);
   }
 
   /**
@@ -686,20 +588,7 @@ export class BaseCharacterBuilderController {
    * @throws {Error} If element is invalid
    */
   _validateElement(element, key) {
-    // Check if element is actually an HTMLElement
-    if (!(element instanceof HTMLElement)) {
-      throw new Error(`Element '${key}' is not a valid HTMLElement`);
-    }
-
-    // Check if element is attached to DOM
-    if (!document.body.contains(element)) {
-      this.#logger.warn(
-        `${this.constructor.name}: Element '${key}' is not attached to DOM`
-      );
-    }
-
-    // Additional validation can be added here
-    // e.g., check for specific attributes, element types, etc.
+    this._getDomManager().validateElement(element, key);
   }
 
   /**
@@ -729,85 +618,7 @@ export class BaseCharacterBuilderController {
    * });
    */
   _cacheElementsFromMap(elementMap, options = {}) {
-    const { continueOnError = true, stopOnFirstError = false } = options;
-    const results = {
-      cached: {},
-      errors: [],
-      stats: {
-        total: 0,
-        cached: 0,
-        failed: 0,
-        optional: 0,
-      },
-    };
-
-    const startTime = performance.now();
-
-    for (const [key, config] of Object.entries(elementMap)) {
-      results.stats.total++;
-
-      try {
-        // Normalize config
-        const elementConfig = this._normalizeElementConfig(config);
-        const { selector, required, validate } = elementConfig;
-
-        // Cache the element
-        const element = this._cacheElement(key, selector, required);
-
-        if (element) {
-          // Run custom validation if provided
-          if (validate && typeof validate === 'function') {
-            if (!validate(element)) {
-              throw new Error(`Custom validation failed for element '${key}'`);
-            }
-          }
-
-          results.cached[key] = element;
-          results.stats.cached++;
-        } else if (!required) {
-          results.stats.optional++;
-        }
-      } catch (error) {
-        results.stats.failed++;
-        results.errors.push({
-          key,
-          error: error.message,
-          selector: typeof config === 'string' ? config : config.selector,
-        });
-
-        if (
-          stopOnFirstError ||
-          (!continueOnError && config.required !== false)
-        ) {
-          const batchError = new Error(
-            `Element caching failed for '${key}': ${error.message}`
-          );
-          batchError.results = results;
-          throw batchError;
-        }
-
-        this.#logger.warn(
-          `${this.constructor.name}: Failed to cache element '${key}': ${error.message}`
-        );
-      }
-    }
-
-    const cacheTime = performance.now() - startTime;
-
-    this.#logger.info(
-      `${this.constructor.name}: Cached ${results.stats.cached}/${results.stats.total} elements ` +
-        `(${results.stats.optional} optional, ${results.stats.failed} failed) ` +
-        `in ${cacheTime.toFixed(2)}ms`
-    );
-
-    if (results.errors.length > 0) {
-      this.#logger.warn(
-        `${this.constructor.name}: Element caching errors:`,
-        results.errors
-      );
-    }
-
-    return results;
+    return this._getDomManager().cacheElementsFromMap(elementMap, options);
   }
 
   /**
@@ -818,19 +629,7 @@ export class BaseCharacterBuilderController {
    * @returns {object} Normalized configuration
    */
   _normalizeElementConfig(config) {
-    if (typeof config === 'string') {
-      return {
-        selector: config,
-        required: true,
-        validate: null,
-      };
-    }
-
-    return {
-      selector: config.selector,
-      required: config.required !== false,
-      validate: config.validate || null,
-    };
+    return this._getDomManager().normalizeElementConfig(config);
   }
 
   /**
@@ -841,7 +640,7 @@ export class BaseCharacterBuilderController {
    * @returns {HTMLElement|null} The cached element or null
    */
   _getElement(key) {
-    return this.#elements[key] || null;
+    return this._getDomManager().getElement(key);
   }
 
   /**
@@ -852,8 +651,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if element exists and is in DOM
    */
   _hasElement(key) {
-    const element = this.#elements[key];
-    return !!(element && document.body.contains(element));
+    return this._getDomManager().hasElement(key);
   }
 
   /**
@@ -864,11 +662,7 @@ export class BaseCharacterBuilderController {
    * @returns {object} Object with requested elements
    */
   _getElements(keys) {
-    const elements = {};
-    for (const key of keys) {
-      elements[key] = this._getElement(key);
-    }
-    return elements;
+    return this._getDomManager().getElements(keys);
   }
 
   /**
@@ -880,13 +674,7 @@ export class BaseCharacterBuilderController {
    * @returns {HTMLElement|null} The refreshed element
    */
   _refreshElement(key, selector) {
-    this.#logger.debug(`${this.constructor.name}: Refreshing element '${key}'`);
-
-    // Remove from cache
-    delete this.#elements[key];
-
-    // Re-cache
-    return this._cacheElement(key, selector, false);
+    return this._getDomManager().refreshElement(key, selector);
   }
 
   /**
@@ -898,12 +686,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if element was shown
    */
   _showElement(key, displayType = 'block') {
-    const element = this._getElement(key);
-    if (element) {
-      element.style.display = displayType;
-      return true;
-    }
-    return false;
+    return this._getDomManager().showElement(key, displayType);
   }
 
   /**
@@ -914,12 +697,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if element was hidden
    */
   _hideElement(key) {
-    const element = this._getElement(key);
-    if (element) {
-      element.style.display = 'none';
-      return true;
-    }
-    return false;
+    return this._getDomManager().hideElement(key);
   }
 
   /**
@@ -931,15 +709,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} New visibility state
    */
   _toggleElement(key, visible) {
-    const element = this._getElement(key);
-    if (!element) return false;
-
-    if (visible === undefined) {
-      visible = element.style.display === 'none';
-    }
-
-    element.style.display = visible ? 'block' : 'none';
-    return visible;
+    return this._getDomManager().toggleElement(key, visible);
   }
 
   /**
@@ -951,12 +721,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if state was changed
    */
   _setElementEnabled(key, enabled = true) {
-    const element = this._getElement(key);
-    if (element && 'disabled' in element) {
-      element.disabled = !enabled;
-      return true;
-    }
-    return false;
+    return this._getDomManager().setElementEnabled(key, enabled);
   }
 
   /**
@@ -968,12 +733,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if text was set
    */
   _setElementText(key, text) {
-    const element = this._getElement(key);
-    if (element) {
-      element.textContent = text;
-      return true;
-    }
-    return false;
+    return this._getDomManager().setElementText(key, text);
   }
 
   /**
@@ -985,12 +745,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if class was added
    */
   _addElementClass(key, className) {
-    const element = this._getElement(key);
-    if (element) {
-      element.classList.add(className);
-      return true;
-    }
-    return false;
+    return this._getDomManager().addElementClass(key, className);
   }
 
   /**
@@ -1002,12 +757,29 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if class was removed
    */
   _removeElementClass(key, className) {
-    const element = this._getElement(key);
-    if (element) {
-      element.classList.remove(className);
-      return true;
+    return this._getDomManager().removeElementClass(key, className);
+  }
+
+  /**
+   * Lazily create or retrieve DOMElementManager instance.
+   *
+   * @protected
+   * @returns {DOMElementManager}
+   */
+  _getDomManager() {
+    if (!this.#domElementManager) {
+      // TODO(BASCHACUICONREF-010): Allow subclasses to inject DOMElementManager instances directly
+      // once the remaining DOM helper wrappers are removed.
+      this.#domElementManager = new DOMElementManager({
+        logger: this.#logger,
+        documentRef: document,
+        performanceRef: performance,
+        elementsRef: this.#elements,
+        contextName: this.constructor.name,
+      });
     }
-    return false;
+
+    return this.#domElementManager;
   }
 
   /**

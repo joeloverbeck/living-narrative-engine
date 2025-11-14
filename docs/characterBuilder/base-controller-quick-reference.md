@@ -57,6 +57,16 @@ this._setElementEnabled('key', true / false);
 this._setElementText('key', 'text');
 ```
 
+#### DOMElementManager service
+
+DOM caching and manipulation now flow through the shared
+`DOMElementManager` (`src/characterBuilder/services/domElementManager.js`).
+Controllers still call `_cacheElementsFromMap()` and related helpers, but
+the underlying service provides consistent logging, validation, and
+performance metrics. If you need advanced behaviors (e.g., conditional
+refreshing) you can access the service via `this._getDomManager()` and
+call the same helper methods directly.
+
 ### Event Handling
 
 ```javascript
