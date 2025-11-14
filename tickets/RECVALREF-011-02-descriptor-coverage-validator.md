@@ -11,7 +11,7 @@ Extract the `#checkDescriptorCoverage` inline method (and helper methods) from `
 
 ## Background
 
-This validator suggests body descriptors that could enhance the recipe. It's a suggestion-only validator that helps mod developers improve their character anatomy definitions.
+This validator suggests body descriptors that could enhance the recipe. It's a suggestion-only validator that helps mod developers improve their character anatomy definitions. Descriptor components live under the `descriptors:*` namespace defined in the anatomy system docs, and missing components mean a part will never surface in the generated description output.
 
 ## Current Implementation
 
@@ -24,9 +24,10 @@ This validator suggests body descriptors that could enhance the recipe. It's a s
 - `#preferredEntityHasDescriptors` (lines 576-599)
 
 **Logic:**
-- For each slot/pattern, checks if properties have descriptor components
-- If not, checks if preferId entity has descriptors
-- Suggests adding descriptor components if none found
+- Iterates over every slot declared in the recipe and inspects `slot.properties`
+- Checks whether any property/component keys start with the `descriptors:` prefix
+- If the slot itself lacks descriptor components, looks up the `preferId` entity via `dataRegistry.getAll('entityDefinitions')` and inspects that entity's components for descriptor coverage
+- Adds a suggestion when neither the slot nor its preferred entity provide descriptors; records a passed check otherwise
 
 ## Implementation Tasks
 
@@ -57,7 +58,7 @@ export class DescriptorCoverageValidator extends BaseValidator {
     });
 
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getAllEntityDefinitions', 'getComponent'],
+      requiredMethods: ['getAll'],
     });
 
     this.#dataRegistry = dataRegistry;
@@ -65,25 +66,26 @@ export class DescriptorCoverageValidator extends BaseValidator {
 
   async performValidation(recipe, options, builder) {
     // Extract logic from lines 513-563
+    // Iterate only over recipe slots (patterns are not part of the current check)
     // Use builder.addSuggestion() for descriptor recommendations
     // Use builder.addPassed() if coverage is good
   }
 
   #hasDescriptorComponents(tags) {
-    // Extract from lines 565-567
+    // Extract from lines 565-567 (expects an array of component/property keys)
   }
 
   #preferredEntityHasDescriptors(entityId) {
-    // Extract from lines 576-599
+    // Extract from lines 576-599 (calls dataRegistry.getAll('entityDefinitions'))
   }
 }
 ```
 
 **Key Extraction Points:**
-- Lines 517-519: Process all slots
-- Lines 521-528: Check for descriptor components in properties
-- Lines 530-541: Check if preferId entity has descriptors
-- Lines 543-560: Generate suggestion messages
+- Lines 520-549: Loop through slots and compute descriptor presence
+- Lines 522-532: Check for descriptor components in `slot.properties`
+- Lines 526-533 & 576-592: Fallback to preferred entity descriptor detection via data registry
+- Lines 534-557: Generate suggestion or passed messages
 
 ### 2. Create Unit Tests (45 min)
 
@@ -95,11 +97,11 @@ export class DescriptorCoverageValidator extends BaseValidator {
    - Should validate dataRegistry dependency
 
 2. Main validation scenarios
-   - Should pass when all slots have descriptor components
-   - Should suggest when slot lacks descriptors but preferId has them
-   - Should suggest when neither slot nor preferId have descriptors
-   - Should handle slots without properties correctly
-   - Should handle recipes without slots
+  - Should pass when all slots have descriptor components
+  - Should suggest when slot lacks descriptors but preferId has them
+  - Should suggest when neither slot nor preferId have descriptors
+  - Should handle slots without properties correctly (empty object)
+  - Should handle recipes without slots (no suggestions, passed message)
 
 3. Helper method tests: `#hasDescriptorComponents`
    - Should return true when tags contain descriptor components
@@ -108,15 +110,15 @@ export class DescriptorCoverageValidator extends BaseValidator {
    - Should handle empty tags array
 
 4. Helper method tests: `#preferredEntityHasDescriptors`
-   - Should return true when preferred entity has descriptors
-   - Should return false when no descriptors
-   - Should handle missing entity definition
-   - Should handle entity without anatomy:body component
+  - Should return true when preferred entity has descriptors (based on component IDs)
+  - Should return false when no descriptors
+  - Should handle missing entity definition (dataRegistry returns array without matching id)
+  - Should handle entity without descriptor components despite having other anatomy data
 
 5. Edge cases
    - Should handle recipes with mixed slot types (with/without descriptors)
    - Should handle malformed component data
-   - Should handle getComponent returning null
+   - Should handle dataRegistry.getAll throwing or returning non-array values
 
 **Coverage Target:** 80%+ branch coverage
 
@@ -132,7 +134,7 @@ npm run test:unit -- validators/DescriptorCoverageValidator.test.js
 ## Dependencies
 
 **Service Dependencies:**
-- `IDataRegistry` - For accessing entity definitions and components
+- `IDataRegistry` - Must expose `getAll('entityDefinitions')` for scanning entity component IDs
 - `ILogger` - For logging (inherited)
 
 **Code Dependencies:**
@@ -172,7 +174,7 @@ npx eslint src/anatomy/validation/validators/DescriptorCoverageValidator.js
 - Helper 2: `RecipePreflightValidator.js:576-599`
 
 **Key Logic to Preserve:**
-- Line 526: `tags.some(tag => tag.startsWith('descriptor:'))`
+- Line 526: `tags.some(tag => tag.startsWith('descriptors:'))`
 - Line 534: Check preferId entity for descriptors
 - Line 545-558: Suggestion message construction
 
