@@ -18,6 +18,11 @@ const createConsoleLoggerInstance = () => ({
   flush: jest.fn(),
   updateCategories: jest.fn(),
   getBuffer: jest.fn().mockReturnValue([]),
+  enableDebugNamespace: jest.fn(),
+  disableDebugNamespace: jest.fn(),
+  clearDebugNamespaces: jest.fn(),
+  getEnabledNamespaces: jest.fn().mockReturnValue([]),
+  setGlobalDebug: jest.fn(),
 });
 
 const createNoOpLoggerInstance = () => ({
@@ -447,6 +452,127 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(() => strategy.groupCollapsed('label')).not.toThrow();
     expect(() => strategy.groupEnd()).not.toThrow();
     expect(() => strategy.table([], ['col'])).not.toThrow();
+  });
+
+  it('logs existing debug namespaces at startup and passes namespace options to the console logger', () => {
+    const namespaceSet = new Set(['engine:init', 'ai:memory']);
+    const providedLogger = createConsoleLoggerInstance();
+    providedLogger.getEnabledNamespaces.mockReturnValue([...namespaceSet]);
+
+    const strategy = createStrategy({
+      mode: LoggerMode.CONSOLE,
+      config: { debugNamespaces: { enabled: namespaceSet, global: true } },
+      dependencies: { consoleLogger: providedLogger },
+    });
+
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Debug namespaces enabled (2): engine:init, ai:memory'
+    );
+    expect(mockConsoleLoggerFactory).not.toHaveBeenCalled();
+    expect(strategy.getCurrentLogger()).toBe(providedLogger);
+
+    mockConsoleLoggerFactory.mockClear();
+    createStrategy({
+      mode: LoggerMode.CONSOLE,
+      config: { debugNamespaces: { enabled: namespaceSet, global: true } },
+    });
+
+    expect(mockConsoleLoggerFactory).toHaveBeenCalledWith(
+      'INFO',
+      expect.objectContaining({
+        enabledNamespaces: namespaceSet,
+        globalDebug: true,
+      })
+    );
+  });
+
+  it('delegates debug namespace helper methods and reports status back to callers', () => {
+    const providedLogger = createConsoleLoggerInstance();
+    providedLogger.getEnabledNamespaces.mockReturnValue(['ai:memory']);
+    const strategy = createStrategy({
+      mode: LoggerMode.CONSOLE,
+      dependencies: { consoleLogger: providedLogger },
+    });
+
+    strategy.enableDebugNamespace('engine:init');
+    expect(providedLogger.enableDebugNamespace).toHaveBeenCalledWith('engine:init');
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Debug namespace enabled: engine:init'
+    );
+
+    strategy.disableDebugNamespace('engine:init');
+    expect(providedLogger.disableDebugNamespace).toHaveBeenCalledWith('engine:init');
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Debug namespace disabled: engine:init'
+    );
+
+    strategy.clearDebugNamespaces();
+    expect(providedLogger.clearDebugNamespaces).toHaveBeenCalled();
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] All debug namespaces cleared'
+    );
+
+    expect(strategy.getEnabledNamespaces()).toEqual(['ai:memory']);
+    providedLogger.getEnabledNamespaces = undefined;
+    expect(strategy.getEnabledNamespaces()).toEqual([]);
+
+    strategy.setGlobalDebug(true);
+    expect(providedLogger.setGlobalDebug).toHaveBeenCalledWith(true);
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Global debug mode enabled'
+    );
+  });
+
+  it('handles /debug special commands for namespace management comprehensively', () => {
+    const providedLogger = createConsoleLoggerInstance();
+    providedLogger.getEnabledNamespaces.mockReturnValue([]);
+    const strategy = createStrategy({
+      mode: LoggerMode.CONSOLE,
+      dependencies: { consoleLogger: providedLogger },
+    });
+
+    strategy.setLogLevel('/debug:enable');
+    expect(providedLogger.warn).toHaveBeenCalledWith(
+      '[LoggerStrategy] Usage: /debug:enable <category:namespace> (e.g., /debug:enable engine:init)'
+    );
+
+    strategy.setLogLevel('/debug:enable engine:init');
+    expect(providedLogger.enableDebugNamespace).toHaveBeenCalledWith('engine:init');
+
+    strategy.setLogLevel('/debug:disable');
+    expect(providedLogger.warn).toHaveBeenCalledWith(
+      '[LoggerStrategy] Usage: /debug:disable <category:namespace>'
+    );
+
+    strategy.setLogLevel('/debug:disable engine:init');
+    expect(providedLogger.disableDebugNamespace).toHaveBeenCalledWith('engine:init');
+
+    strategy.setLogLevel('/debug:clear');
+    expect(providedLogger.clearDebugNamespaces).toHaveBeenCalled();
+
+    const emptyNamespaces = strategy.setLogLevel('/debug:list');
+    expect(emptyNamespaces).toEqual([]);
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] No debug namespaces enabled. Use /debug:enable <category:namespace> to enable.'
+    );
+
+    providedLogger.getEnabledNamespaces.mockReturnValue(['engine:init']);
+    const namespaces = strategy.setLogLevel('/debug:list');
+    expect(namespaces).toEqual(['engine:init']);
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Enabled debug namespaces (1):',
+      ['engine:init']
+    );
+
+    strategy.setLogLevel('/debug:help');
+    expect(providedLogger.info).toHaveBeenCalledWith(
+      expect.stringContaining('[LoggerStrategy] Debug Namespace Commands:')
+    );
+
+    strategy.setLogLevel('/debug:unknown');
+    expect(providedLogger.warn).toHaveBeenCalledWith(
+      '[LoggerStrategy] Unknown debug command: /debug:unknown. Use /debug:help for available commands.'
+    );
   });
 
   it('replays buffered logs individually when new logger lacks batch processing support', () => {
