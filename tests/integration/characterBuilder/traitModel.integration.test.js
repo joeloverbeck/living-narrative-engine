@@ -57,6 +57,21 @@ function buildValidTraitData(overrides = {}) {
 }
 
 describe('Trait model integration', () => {
+  it('rejects missing or invalid data inputs during construction', () => {
+    expect(() => new Trait()).toThrow('Trait data is required');
+    expect(() => new Trait(null)).toThrow('Trait data is required');
+    expect(() => new Trait('traits')).toThrow('Trait data must be an object');
+  });
+
+  it('requires structured raw responses before transforming LLM output', () => {
+    expect(() => Trait.fromLLMResponse(null)).toThrow(
+      'Raw traits data is required and must be an object'
+    );
+    expect(() => Trait.fromLLMResponse('persona')).toThrow(
+      'Raw traits data is required and must be an object'
+    );
+  });
+
   it('creates an immutable trait instance and exports consistent JSON snapshots', () => {
     const trait = new Trait(buildValidTraitData());
 
@@ -142,6 +157,59 @@ describe('Trait model integration', () => {
     expect(validation.warnings).toEqual([]);
   });
 
+  it('captures targeted validation issues and surfaces guidance warnings', () => {
+    const trait = new Trait(
+      buildValidTraitData({
+        physicalDescription: 'Intricate description '.repeat(40),
+        names: [
+          { name: '   ', justification: 'Placeholder needs refinement' },
+          { name: 'Waypoint Advocate', justification: '   ' },
+          { name: 'Cartographer Lyss', justification: 'Complete entry for control case' },
+        ],
+        personality: [
+          { trait: '   ', explanation: 'Absorbs nuances but never shares them' },
+          { trait: 'Diplomatic', explanation: '   ' },
+          { trait: 'Patient', explanation: 'Balances mission urgency with empathy' },
+        ],
+        strengths: ['Analytical courage', '   '],
+        weaknesses: ['Keeps secrets for too long', '   '],
+        likes: ['Field sketching', '   ', 'Deep conversations'],
+        dislikes: ['Sensationalism', '   ', 'Atmospheric pollution'],
+        fears: ['Losing her findings', '   '],
+        goals: {
+          shortTerm: ['Broker peace between rival expeditions', '   '],
+          longTerm: '',
+        },
+        notes: ['Keeps letters from former students', '   '],
+        secrets: ['Protects a hidden sanctuary', '   '],
+      })
+    );
+
+    const validation = trait.validate();
+
+    expect(validation.valid).toBe(false);
+    expect(validation.warnings).toEqual([
+      'Physical description is very long (max recommended 700 characters)',
+    ]);
+    expect(validation.errors).toEqual(
+      expect.arrayContaining([
+        'Names[0].name is required and must be a non-empty string',
+        'Names[1].justification is required and must be a non-empty string',
+        'Personality[0].trait is required and must be a non-empty string',
+        'Personality[1].explanation is required and must be a non-empty string',
+        'Strengths[1] must be a non-empty string',
+        'Weaknesses[1] must be a non-empty string',
+        'Likes[1] must be a non-empty string',
+        'Dislikes[1] must be a non-empty string',
+        'Fears[1] must be a non-empty string',
+        'Goals.shortTerm[1] must be a non-empty string',
+        'Goals.longTerm is required and must be a non-empty string',
+        'Notes[1] must be a non-empty string',
+        'Secrets[1] must be a non-empty string',
+      ])
+    );
+  });
+
   it('reports detailed validation errors when content does not meet quality standards', () => {
     const trait = new Trait({
       names: [{ name: '', justification: '' }],
@@ -225,5 +293,34 @@ describe('Trait model integration', () => {
     const restored = Trait.fromRawData(stored);
     expect(restored.names).toHaveLength(4);
     expect(restored.matchesSearch('Added after serialization')).toBe(true);
+  });
+
+  it('hydrates defaults for optional fields and keeps derived data immutable', () => {
+    const trait = new Trait(
+      buildValidTraitData({
+        id: undefined,
+        generatedAt: undefined,
+        metadata: undefined,
+        goals: undefined,
+      })
+    );
+
+    expect(trait.id).not.toBe('trait-001');
+    expect(trait.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    );
+    expect(typeof trait.generatedAt).toBe('string');
+    expect(new Date(trait.generatedAt).toString()).not.toBe('Invalid Date');
+    expect(trait.metadata).toEqual({});
+    expect(Object.isFrozen(trait.metadata)).toBe(true);
+    expect(Object.isFrozen(trait.goals)).toBe(true);
+    expect(Array.isArray(trait.goals.shortTerm)).toBe(true);
+    expect(trait.goals.shortTerm).toHaveLength(0);
+    expect(Object.isFrozen(trait.goals.shortTerm)).toBe(true);
+    expect(trait.goals.longTerm).toBe('');
+
+    const summary = trait.getSummary(1000);
+    expect(summary.physicalDescription.endsWith('...')).toBe(false);
+    expect(summary.profile.endsWith('...')).toBe(false);
   });
 });
