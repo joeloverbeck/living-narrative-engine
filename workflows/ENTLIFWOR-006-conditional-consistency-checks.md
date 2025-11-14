@@ -416,6 +416,6 @@ None. Can be implemented independently.
 
 ## References
 
-- Current method: `tests/e2e/entities/common/entityWorkflowTestBed.js:525-585`
-- Test usage: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js:171,290,318,373`
+- Current method: `tests/e2e/entities/common/entityWorkflowTestBed.js:685-749`
+- Test usage: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js:189,308,336,391`
 - Related: Performance testing patterns in `tests/performance/`
