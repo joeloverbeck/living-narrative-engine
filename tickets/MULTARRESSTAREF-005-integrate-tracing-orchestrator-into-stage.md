@@ -35,13 +35,14 @@ export class MultiTargetResolutionStage extends PipelineStage {
   #tracingOrchestrator; // ADD THIS
 
   constructor({
-    dependencyResolver,
-    legacyLayer,
-    contextBuilder,
-    nameResolver,
+    targetDependencyResolver,
+    legacyTargetCompatibilityLayer,
+    scopeContextBuilder,
+    targetDisplayNameResolver,
     unifiedScopeResolver,
     entityManager,
     targetResolver,
+    targetContextBuilder,
     logger,
     tracingOrchestrator, // ADD THIS
   }) {
@@ -53,7 +54,18 @@ export class MultiTargetResolutionStage extends PipelineStage {
       'ITargetResolutionTracingOrchestrator',
       logger,
       {
-        requiredMethods: ['isActionAwareTrace', 'captureResolutionData'],
+        requiredMethods: [
+          'isActionAwareTrace',
+          'captureLegacyDetection',
+          'captureLegacyConversion',
+          'captureScopeEvaluation',
+          'captureMultiTargetResolution',
+          'captureResolutionData',
+          'captureResolutionError',
+          'capturePostResolutionSummary',
+          'capturePerformanceData',
+          'analyzeLegacyFormat',
+        ],
       }
     );
     this.#tracingOrchestrator = tracingOrchestrator;
@@ -99,8 +111,11 @@ if (isActionAwareTrace && trace.captureLegacyDetection) {
 if (isActionAwareTrace) {
   this.#tracingOrchestrator.captureLegacyDetection(trace, actionDef.id, {
     isLegacy,
-    hasStringTarget,
-    // ... more data
+    hasStringTargets: typeof actionDef.targets === 'string',
+    hasScopeOnly: !!(actionDef.scope && !actionDef.targets),
+    hasLegacyFields: !!(actionDef.targetType || actionDef.targetCount),
+    detectedFormat: this.#tracingOrchestrator.analyzeLegacyFormat(actionDef),
+    requiresConversion: isLegacy,
   });
 }
 ```
@@ -114,7 +129,11 @@ if (isActionAwareTrace && trace.captureLegacyConversion) {
 
 // NEW:
 if (isActionAwareTrace) {
-  this.#tracingOrchestrator.captureLegacyConversion(trace, actionDef.id, conversionData);
+  this.#tracingOrchestrator.captureLegacyConversion(
+    trace,
+    actionDef.id,
+    conversionData
+  );
 }
 ```
 
@@ -127,7 +146,12 @@ if (isActionAwareTrace && trace.captureScopeEvaluation) {
 
 // NEW:
 if (isActionAwareTrace) {
-  this.#tracingOrchestrator.captureScopeEvaluation(trace, actionDef.id, targetKey, evaluationData);
+  this.#tracingOrchestrator.captureScopeEvaluation(
+    trace,
+    actionDef.id,
+    targetKey,
+    evaluationData
+  );
 }
 ```
 
@@ -140,37 +164,56 @@ if (isActionAwareTrace && trace.captureMultiTargetResolution) {
 
 // NEW:
 if (isActionAwareTrace) {
-  this.#tracingOrchestrator.captureMultiTargetResolution(trace, actionDef.id, resolutionData);
+  this.#tracingOrchestrator.captureMultiTargetResolution(
+    trace,
+    actionDef.id,
+    resolutionData
+  );
 }
 ```
 
-**Replace resolution data captures** (lines ~250-284):
+**Replace legacy and multi-target resolution data captures** (lines ~220-320):
 ```javascript
 // OLD:
-if (isActionAwareTrace) {
-  await this.#captureTargetResolutionData(
-    trace, actionDef, actor, resolvedTargets, detailedResults
+if (isActionAwareTrace && trace.captureActionData) {
+  this.#captureTargetResolutionData(
+    trace,
+    actionDef,
+    actor,
+    resolutionData,
+    detailedResults
   );
+  tracedActionCount++;
 }
 
 // NEW:
 if (isActionAwareTrace) {
   this.#tracingOrchestrator.captureResolutionData(
-    trace, actionDef, actor, resolvedTargets, detailedResults
+    trace,
+    actionDef,
+    actor,
+    resolutionData,
+    detailedResults
   );
+  tracedActionCount++;
 }
 ```
 
 **Replace error captures:**
 ```javascript
 // OLD:
-if (isActionAwareTrace) {
-  await this.#captureTargetResolutionError(trace, actionDef, actor, error);
+if (isActionAwareTrace && trace.captureActionData) {
+  this.#captureTargetResolutionError(trace, actionDef, actor, error);
 }
 
 // NEW:
 if (isActionAwareTrace) {
-  this.#tracingOrchestrator.captureResolutionError(trace, actionDef, actor, error);
+  this.#tracingOrchestrator.captureResolutionError(
+    trace,
+    actionDef,
+    actor,
+    error
+  );
 }
 ```
 
@@ -178,12 +221,20 @@ if (isActionAwareTrace) {
 ```javascript
 // OLD:
 if (isActionAwareTrace && tracedActionCount > 0) {
-  await this.#capturePostResolutionSummary(trace, actor, summaryData);
+  this.#capturePostResolutionSummary(trace, actor, summaryData);
 }
 
 // NEW:
 if (isActionAwareTrace && tracedActionCount > 0) {
-  this.#tracingOrchestrator.capturePostResolutionSummary(trace, actor, summaryData);
+  this.#tracingOrchestrator.capturePostResolutionSummary(
+    trace,
+    actor,
+    candidateActions.length,
+    allActionsWithTargets.length,
+    hasLegacyActions,
+    hasMultiTargetActions,
+    Date.now() - stageStartTime
+  );
 }
 ```
 
@@ -193,7 +244,14 @@ if (isActionAwareTrace && tracedActionCount > 0) {
 await this.#capturePerformanceData(trace, actionDef, performanceMetrics);
 
 // NEW:
-this.#tracingOrchestrator.capturePerformanceData(trace, actionDef, performanceMetrics);
+await this.#tracingOrchestrator.capturePerformanceData(
+  trace,
+  actionDef,
+  startPerformanceTime,
+  endPerformanceTime,
+  candidateActions.length,
+  allActionsWithTargets.length
+);
 ```
 
 **Replace legacy format analysis:**
