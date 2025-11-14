@@ -329,8 +329,10 @@ export const coreTokens = freeze({
   // Circuit Breaker (optional dependency for facades)
   ICircuitBreaker: 'ICircuitBreaker',
   // GOAP System Services
+  IConditionalStepExecutor: 'IConditionalStepExecutor',
   IContextAssemblyService: 'IContextAssemblyService',
   IMethodSelectionService: 'IMethodSelectionService',
   IParameterResolutionService: 'IParameterResolutionService',
+  IPrimitiveActionStepExecutor: 'IPrimitiveActionStepExecutor',
   IRefinementStateManager: 'IRefinementStateManager',
 });

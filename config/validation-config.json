@@ -1,0 +1,92 @@
+{
+  "mods": {
+    "essential": ["core", "descriptors", "anatomy"],
+    "optional": [],
+    "autoDetect": true
+  },
+  "validators": [
+    {
+      "name": "component_existence",
+      "enabled": true,
+      "priority": 0,
+      "failFast": true
+    },
+    {
+      "name": "property_schemas",
+      "enabled": true,
+      "priority": 1,
+      "failFast": true
+    },
+    {
+      "name": "body_descriptors",
+      "enabled": true,
+      "priority": 2,
+      "failFast": true
+    },
+    {
+      "name": "blueprint_existence",
+      "enabled": true,
+      "priority": 3,
+      "failFast": true
+    },
+    {
+      "name": "socket_slot_compatibility",
+      "enabled": true,
+      "priority": 4,
+      "failFast": false
+    },
+    {
+      "name": "pattern_matching",
+      "enabled": true,
+      "priority": 5,
+      "failFast": false,
+      "config": {
+        "skipIfDisabled": true
+      }
+    },
+    {
+      "name": "descriptor_coverage",
+      "enabled": true,
+      "priority": 6,
+      "failFast": false
+    },
+    {
+      "name": "part_availability",
+      "enabled": true,
+      "priority": 7,
+      "failFast": false
+    },
+    {
+      "name": "generated_slot_parts",
+      "enabled": true,
+      "priority": 8,
+      "failFast": false
+    },
+    {
+      "name": "load_failures",
+      "enabled": true,
+      "priority": 9,
+      "failFast": false
+    },
+    {
+      "name": "recipe_usage",
+      "enabled": true,
+      "priority": 10,
+      "failFast": false
+    }
+  ],
+  "errorHandling": {
+    "defaultSeverity": "error",
+    "severityOverrides": {
+      "socket_slot_compatibility": "warning",
+      "descriptor_coverage": "info",
+      "recipe_usage": "info"
+    },
+    "continueOnError": true
+  },
+  "output": {
+    "format": "text",
+    "verbose": false,
+    "colorize": true
+  }
+}

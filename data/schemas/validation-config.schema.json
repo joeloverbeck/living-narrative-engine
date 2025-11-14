@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/validation-config.schema.json",
+  "title": "Recipe Validation Configuration",
+  "description": "Configuration schema for the recipe validation system, controlling mod loading, validator execution, error handling, and output formatting",
+  "type": "object",
+  "required": ["mods", "validators"],
+  "additionalProperties": false,
+  "properties": {
+    "mods": {
+      "type": "object",
+      "description": "Configuration for mod loading during validation",
+      "required": ["essential", "autoDetect"],
+      "additionalProperties": false,
+      "properties": {
+        "essential": {
+          "type": "array",
+          "description": "Mods that must be loaded for validation to proceed. Validation fails if these are not available.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "optional": {
+          "type": "array",
+          "description": "Mods that should be loaded if available, but validation continues if they are missing",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+$"
+          },
+          "uniqueItems": true,
+          "default": []
+        },
+        "autoDetect": {
+          "type": "boolean",
+          "description": "Whether to automatically detect and load mods referenced in the recipe file path"
+        }
+      }
+    },
+    "validators": {
+      "type": "array",
+      "description": "Configuration for individual validators that check recipe integrity",
+      "items": {
+        "type": "object",
+        "required": ["name", "enabled", "priority"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique identifier for the validator",
+            "enum": [
+              "component_existence",
+              "property_schemas",
+              "body_descriptors",
+              "blueprint_existence",
+              "socket_slot_compatibility",
+              "pattern_matching",
+              "descriptor_coverage",
+              "part_availability",
+              "generated_slot_parts",
+              "load_failures",
+              "recipe_usage"
+            ]
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this validator should be executed"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Execution order priority (lower values execute first)",
+            "minimum": 0
+          },
+          "failFast": {
+            "type": "boolean",
+            "description": "Whether to stop validation immediately if this validator fails",
+            "default": false
+          },
+          "config": {
+            "type": "object",
+            "description": "Validator-specific configuration options",
+            "additionalProperties": true,
+            "default": {}
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "errorHandling": {
+      "type": "object",
+      "description": "Configuration for error severity and handling behavior",
+      "additionalProperties": false,
+      "properties": {
+        "defaultSeverity": {
+          "type": "string",
+          "description": "Default severity level for validation issues",
+          "enum": ["error", "warning", "info"],
+          "default": "error"
+        },
+        "severityOverrides": {
+          "type": "object",
+          "description": "Override severity levels for specific validators",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^(component_existence|property_schemas|body_descriptors|blueprint_existence|socket_slot_compatibility|pattern_matching|descriptor_coverage|part_availability|generated_slot_parts|load_failures|recipe_usage)$": {
+              "type": "string",
+              "enum": ["error", "warning", "info"]
+            }
+          },
+          "default": {}
+        },
+        "continueOnError": {
+          "type": "boolean",
+          "description": "Whether to continue validation after encountering errors",
+          "default": false
+        }
+      },
+      "default": {
+        "defaultSeverity": "error",
+        "severityOverrides": {},
+        "continueOnError": false
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Configuration for validation output formatting",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "type": "string",
+          "description": "Output format for validation results",
+          "enum": ["text", "json", "junit"],
+          "default": "text"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Whether to include detailed diagnostic information in output",
+          "default": false
+        },
+        "colorize": {
+          "type": "boolean",
+          "description": "Whether to use ANSI color codes in text output",
+          "default": true
+        }
+      },
+      "default": {
+        "format": "text",
+        "verbose": false,
+        "colorize": true
+      }
+    }
+  }
+}

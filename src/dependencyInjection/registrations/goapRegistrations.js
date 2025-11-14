@@ -7,6 +7,8 @@ import ContextAssemblyService from '../../goap/services/contextAssemblyService.j
 import ParameterResolutionService from '../../goap/services/parameterResolutionService.js';
 import RefinementStateManager from '../../goap/refinement/refinementStateManager.js';
 import MethodSelectionService from '../../goap/refinement/methodSelectionService.js';
+import PrimitiveActionStepExecutor from '../../goap/refinement/steps/primitiveActionStepExecutor.js';
+import ConditionalStepExecutor from '../../goap/refinement/steps/conditionalStepExecutor.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -44,5 +46,31 @@ export function registerGoapServices(container) {
       tokens.JsonLogicEvaluationService,
       tokens.ILogger,
     ],
+  });
+
+  // Primitive Action Step Executor
+  container.register(tokens.IPrimitiveActionStepExecutor, PrimitiveActionStepExecutor, {
+    dependencies: [
+      tokens.IParameterResolutionService,
+      tokens.IRefinementStateManager,
+      tokens.OperationInterpreter,
+      tokens.ActionIndex,
+      tokens.GameDataRepository,
+      tokens.ILogger,
+    ],
+  });
+
+  // Conditional Step Executor
+  // IMPORTANT: singleton lifecycle required for self-reference to work properly
+  // Self-reference enables recursive handling of nested conditionals
+  container.register(tokens.IConditionalStepExecutor, ConditionalStepExecutor, {
+    dependencies: [
+      tokens.IContextAssemblyService,
+      tokens.IPrimitiveActionStepExecutor,
+      tokens.IConditionalStepExecutor, // Self-reference for nested conditionals
+      tokens.JsonLogicEvaluationService,
+      tokens.ILogger,
+    ],
+    lifecycle: 'singleton',
   });
 }
