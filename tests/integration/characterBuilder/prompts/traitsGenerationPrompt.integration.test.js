@@ -7,9 +7,11 @@ import { describe, expect, it } from '@jest/globals';
 import traitSchema from '../../../../data/schemas/trait.schema.json' with { type: 'json' };
 import {
   buildTraitsGenerationPrompt,
+  createTraitsGenerationLlmConfig,
   PROMPT_VERSION_INFO,
   TRAITS_GENERATION_LLM_PARAMS,
   TRAITS_RESPONSE_SCHEMA,
+  validateTraitsGenerationResponse,
 } from '../../../../src/characterBuilder/prompts/traitsGenerationPrompt.js';
 
 describe('traitsGenerationPrompt integration', () => {
@@ -314,5 +316,509 @@ describe('traitsGenerationPrompt integration', () => {
         );
       });
     });
+
+    it('should merge schema-driven defaults into a provided LLM config', () => {
+      const baseConfig = {
+        transport: 'openrouter',
+        defaultParameters: {
+          temperature: 0.2,
+          top_p: 0.85,
+        },
+      };
+
+      const enhanced = createTraitsGenerationLlmConfig(baseConfig);
+
+      expect(enhanced).toMatchObject({
+        transport: 'openrouter',
+        jsonOutputStrategy: {
+          method: 'openrouter_json_schema',
+          jsonSchema: TRAITS_RESPONSE_SCHEMA,
+        },
+        defaultParameters: {
+          temperature: 0.8,
+          top_p: 0.85,
+          max_tokens: 6000,
+        },
+      });
+
+      // Ensure we are not mutating the source config when composing integrations
+      expect(baseConfig).toEqual({
+        transport: 'openrouter',
+        defaultParameters: {
+          temperature: 0.2,
+          top_p: 0.85,
+        },
+      });
+    });
+
+    it('should guard against invalid base configs', () => {
+      expect(() => createTraitsGenerationLlmConfig(null)).toThrow(
+        'TraitsGenerationPrompt: baseLlmConfig must be a valid object'
+      );
+    });
+  });
+
+  describe('response validation integration', () => {
+    const buildValidResponse = () => ({
+      names: [
+        {
+          name: 'Marell Vance',
+          justification:
+            'Uses a clipped cadence that hints at scholastic roots rather than noir clichés.',
+        },
+        {
+          name: 'Ivo Kestrel',
+          justification:
+            'Feels like a field name acquired through work, not gritty angst.',
+        },
+        {
+          name: 'Risa Calder',
+          justification:
+            'Pairs softness with angular syllables to dodge femme fatale expectations.',
+        },
+      ],
+      physicalDescription:
+        'Intentional posture softened by tremors, ink stained fingertips, bespoke brace etched with field equations, and a voice that rasps from years of cold storage briefings.',
+      personality: [
+        {
+          trait: 'Pattern Stoic',
+          explanation:
+            'Holds stillness specifically so anomalous details reveal themselves.',
+        },
+        {
+          trait: 'Ethical Contrarian',
+          explanation:
+            'Interrogates every consensus, forcing allies to articulate why their plan is moral.',
+        },
+        {
+          trait: 'Reckless Archivist',
+          explanation:
+            'Will risk physical safety if it means preserving contested histories.',
+        },
+      ],
+      strengths: [
+        'Can cross-reference mythic and scientific frameworks in real time.',
+        'Empathy training lets them diffuse cult indoctrination scripts.',
+      ],
+      weaknesses: [
+        'Sleeps so little that perception sometimes fractures mid-mission.',
+        'Collects dangerous artifacts despite promising to destroy them.',
+      ],
+      likes: [
+        'Libraries that allow annotation in the margins.',
+        'Street food vendors who improvise entire menus.',
+        'Radio static that hides coded confessions.',
+      ],
+      dislikes: [
+        'Corporate security slogans.',
+        'Museum plaques that omit labor strikes.',
+        'Uniforms that pretend neutrality equals safety.',
+      ],
+      fears: [
+        'Being remembered only through curated propaganda.',
+      ],
+      goals: {
+        shortTerm: [
+          'Secure the final witness testimony before it is weaponised.',
+          'Map which conspirators profit from identity theft rituals.',
+        ],
+        longTerm:
+          'Design an identity commons where no narrative can be stolen without consent.',
+      },
+      notes: [
+        'Certified in diplomatic courier protocols used during interstellar ceasefires.',
+        'Memorised the folklore of three underground cities to earn safe passage.',
+      ],
+      profile:
+        'Raised inside a remote research cooperative, they learned early that stories could be extracted and sold the way minerals were. When the cooperative was raided for its memory-mapping tech, they fled with the prototypes and have been rebuilding the archive in transit ever since, trading favors with smugglers and ethicists alike.',
+      secrets: [
+        'Quietly leaked an ally’s biography to bait the true thief, and the ally still does not know.',
+      ],
+    });
+
+    it('accepts a fully compliant LLM response payload', () => {
+      const response = buildValidResponse();
+      expect(validateTraitsGenerationResponse(response)).toBe(true);
+    });
+
+    const invalidResponseCases = [
+      {
+        label: 'is not an object',
+        mutate: () => null,
+        message: 'TraitsGenerationPrompt: Response must be an object',
+      },
+      {
+        label: 'is missing the names array',
+        mutate: (response) => {
+          delete response.names;
+          return response;
+        },
+        message: 'TraitsGenerationPrompt: Response must contain names array',
+      },
+      {
+        label: 'provides too few names',
+        mutate: (response) => {
+          response.names = response.names.slice(0, 2);
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Names array must contain 3-5 items',
+      },
+      {
+        label: 'uses a primitive for a name entry',
+        mutate: (response) => {
+          response.names[0] = 'Cipher';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Name at index 0 must be an object',
+      },
+      {
+        label: 'includes a blank name string',
+        mutate: (response) => {
+          response.names[0] = { ...response.names[0], name: '   ' };
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Name at index 0 must have a non-empty name string',
+      },
+      {
+        label: 'includes a blank justification string',
+        mutate: (response) => {
+          response.names[0] = { ...response.names[0], justification: '' };
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Name at index 0 must have a non-empty justification string',
+      },
+      {
+        label: 'omits the physical description',
+        mutate: (response) => {
+          delete response.physicalDescription;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain physicalDescription string',
+      },
+      {
+        label: 'provides an undersized physical description',
+        mutate: (response) => {
+          response.physicalDescription = 'Too short';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: physicalDescription must be 100-700 characters',
+      },
+      {
+        label: 'is missing the personality array',
+        mutate: (response) => {
+          delete response.personality;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain personality array',
+      },
+      {
+        label: 'provides too few personality entries',
+        mutate: (response) => {
+          response.personality = response.personality.slice(0, 2);
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Personality array must contain 3-8 items',
+      },
+      {
+        label: 'uses a primitive for a personality entry',
+        mutate: (response) => {
+          response.personality[0] = 'blunt';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Personality at index 0 must be an object',
+      },
+      {
+        label: 'omits the personality trait string',
+        mutate: (response) => {
+          response.personality[0] = { ...response.personality[0], trait: ' ' };
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Personality at index 0 must have a non-empty trait string',
+      },
+      {
+        label: 'omits the personality explanation string',
+        mutate: (response) => {
+          response.personality[0] = {
+            ...response.personality[0],
+            explanation: '',
+          };
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Personality at index 0 must have a non-empty explanation string',
+      },
+      {
+        label: 'is missing the strengths array',
+        mutate: (response) => {
+          delete response.strengths;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain strengths array',
+      },
+      {
+        label: 'provides too few strengths',
+        mutate: (response) => {
+          response.strengths = ['One'];
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Strengths array must contain 2-6 items',
+      },
+      {
+        label: 'includes an empty strength entry',
+        mutate: (response) => {
+          response.strengths[0] = ' ';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Strength at index 0 must be a non-empty string',
+      },
+      {
+        label: 'is missing the weaknesses array',
+        mutate: (response) => {
+          delete response.weaknesses;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain weaknesses array',
+      },
+      {
+        label: 'provides too few weaknesses',
+        mutate: (response) => {
+          response.weaknesses = ['Only one'];
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Weaknesses array must contain 2-6 items',
+      },
+      {
+        label: 'includes an empty weakness entry',
+        mutate: (response) => {
+          response.weaknesses[0] = '';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Weakness at index 0 must be a non-empty string',
+      },
+      {
+        label: 'is missing the likes array',
+        mutate: (response) => {
+          delete response.likes;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain likes array',
+      },
+      {
+        label: 'provides too few likes',
+        mutate: (response) => {
+          response.likes = response.likes.slice(0, 2);
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Likes array must contain 3-8 items',
+      },
+      {
+        label: 'includes an empty like entry',
+        mutate: (response) => {
+          response.likes[0] = '   ';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Like at index 0 must be a non-empty string',
+      },
+      {
+        label: 'is missing the dislikes array',
+        mutate: (response) => {
+          delete response.dislikes;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain dislikes array',
+      },
+      {
+        label: 'provides too few dislikes',
+        mutate: (response) => {
+          response.dislikes = response.dislikes.slice(0, 2);
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Dislikes array must contain 3-8 items',
+      },
+      {
+        label: 'includes an empty dislike entry',
+        mutate: (response) => {
+          response.dislikes[0] = '';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Dislike at index 0 must be a non-empty string',
+      },
+      {
+        label: 'is missing the fears array',
+        mutate: (response) => {
+          delete response.fears;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain fears array',
+      },
+      {
+        label: 'provides an empty fears array',
+        mutate: (response) => {
+          response.fears = [];
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Fears array must contain 1-2 items',
+      },
+      {
+        label: 'includes an empty fear entry',
+        mutate: (response) => {
+          response.fears[0] = '';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Fear at index 0 must be a non-empty string',
+      },
+      {
+        label: 'is missing the goals object',
+        mutate: (response) => {
+          response.goals = null;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain goals object',
+      },
+      {
+        label: 'is missing the short-term goals array',
+        mutate: (response) => {
+          response.goals.shortTerm = null;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Goals must contain shortTerm array',
+      },
+      {
+        label: 'provides too many or too few short-term goals',
+        mutate: (response) => {
+          response.goals.shortTerm = [];
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Short-term goals array must contain 1-3 items',
+      },
+      {
+        label: 'includes an empty short-term goal entry',
+        mutate: (response) => {
+          response.goals.shortTerm[0] = '';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Short-term goal at index 0 must be a non-empty string',
+      },
+      {
+        label: 'omits the long-term goal string',
+        mutate: (response) => {
+          response.goals.longTerm = ' ';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Goals must contain a non-empty longTerm string',
+      },
+      {
+        label: 'is missing the notes array',
+        mutate: (response) => {
+          delete response.notes;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain notes array',
+      },
+      {
+        label: 'provides too few notes',
+        mutate: (response) => {
+          response.notes = ['Only'];
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Notes array must contain 2-6 items',
+      },
+      {
+        label: 'includes an empty note entry',
+        mutate: (response) => {
+          response.notes[0] = '';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Note at index 0 must be a non-empty string',
+      },
+      {
+        label: 'is missing the profile string',
+        mutate: (response) => {
+          delete response.profile;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain profile string',
+      },
+      {
+        label: 'provides an undersized profile',
+        mutate: (response) => {
+          response.profile = 'Short bio';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Profile must be at least 200 characters',
+      },
+      {
+        label: 'is missing the secrets array',
+        mutate: (response) => {
+          delete response.secrets;
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Response must contain secrets array',
+      },
+      {
+        label: 'provides too many or too few secrets',
+        mutate: (response) => {
+          response.secrets = [];
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Secrets array must contain 1-2 items',
+      },
+      {
+        label: 'includes an empty secret entry',
+        mutate: (response) => {
+          response.secrets[0] = '';
+          return response;
+        },
+        message:
+          'TraitsGenerationPrompt: Secret at index 0 must be a non-empty string',
+      },
+    ];
+
+    it.each(invalidResponseCases)(
+      'rejects responses when the payload $label',
+      ({ mutate, message }) => {
+        const candidate = mutate(buildValidResponse());
+        expect(() =>
+          validateTraitsGenerationResponse(candidate)
+        ).toThrow(message);
+      }
+    );
   });
 });
