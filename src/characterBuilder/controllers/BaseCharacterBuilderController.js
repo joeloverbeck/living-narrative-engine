@@ -16,11 +16,17 @@ import {
 import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
 import { DOMElementManager } from '../services/domElementManager.js';
 import { EventListenerRegistry } from '../services/eventListenerRegistry.js';
+import {
+  ControllerLifecycleOrchestrator,
+  LIFECYCLE_PHASES,
+  DESTRUCTION_PHASES,
+} from '../services/controllerLifecycleOrchestrator.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../services/controllerLifecycleOrchestrator.js').ControllerLifecycleOrchestrator} ControllerLifecycleOrchestrator */
 
 /**
  * Error categories for consistent handling
@@ -79,11 +85,8 @@ export class BaseCharacterBuilderController {
   /** @private @type {DOMElementManager|null} */
   #domElementManager = null;
 
-  /** @private @type {boolean} */
-  #isInitialized = false;
-
-  /** @private @type {boolean} */
-  #isInitializing = false;
+  /** @private @type {ControllerLifecycleOrchestrator} */
+  #lifecycle;
 
   /** @private @type {EventListenerRegistry|null} */
   #eventListenerRegistry = null;
@@ -93,15 +96,6 @@ export class BaseCharacterBuilderController {
 
   /** @private @type {object|null} */
   #lastError = null;
-
-  /** @private @type {boolean} */
-  #isDestroyed = false;
-
-  /** @private @type {boolean} */
-  #isDestroying = false;
-
-  /** @private @type {Array<{task: Function, description: string}>} */
-  #cleanupTasks = [];
 
   /** @private @type {Set<number>} */
   #pendingTimers = new Set();
@@ -137,6 +131,8 @@ export class BaseCharacterBuilderController {
     characterBuilderService,
     eventBus,
     schemaValidator,
+    controllerLifecycleOrchestrator = null,
+    lifecycleHooks = {},
     ...additionalServices
   }) {
     try {
@@ -162,6 +158,17 @@ export class BaseCharacterBuilderController {
         validationRules
       );
 
+      this.#lifecycle =
+        controllerLifecycleOrchestrator ??
+        new ControllerLifecycleOrchestrator({
+          logger: this.#logger,
+          eventBus: this.#eventBus,
+          hooks: lifecycleHooks,
+        });
+
+      this.#lifecycle.setControllerName(this.constructor.name);
+      this.#configureLifecycleHooks();
+
       // Log successful initialization
       this.#logger.info(
         `${this.constructor.name}: Successfully created with dependencies`,
@@ -179,6 +186,101 @@ export class BaseCharacterBuilderController {
       // Re-throw validation errors - they already have detailed messages
       throw error;
     }
+  }
+
+  /**
+   * Configure lifecycle orchestrator bridges.
+   *
+   * @private
+   */
+  #configureLifecycleHooks() {
+    if (!this.#lifecycle) {
+      return;
+    }
+
+    const createAsyncHook = (methodName, phaseName, options = {}) =>
+      this.#lifecycle.createControllerMethodHook(
+        this,
+        methodName,
+        phaseName,
+        options
+      );
+
+    const createSyncHook = (methodName, phaseName) =>
+      this.#lifecycle.createControllerMethodHook(this, methodName, phaseName, {
+        synchronous: true,
+      });
+
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.PRE_INIT,
+      createAsyncHook('_preInitialize', 'pre-initialization')
+    );
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.CACHE_ELEMENTS,
+      createAsyncHook('_cacheElements', 'element caching', { required: true })
+    );
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.INIT_SERVICES,
+      createAsyncHook('_initializeServices', 'service initialization')
+    );
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.SETUP_EVENT_LISTENERS,
+      createAsyncHook('_setupEventListeners', 'event listener setup', {
+        required: true,
+      })
+    );
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.LOAD_DATA,
+      createAsyncHook('_loadInitialData', 'initial data loading')
+    );
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.INIT_UI,
+      createAsyncHook('_initializeUIState', 'UI state initialization')
+    );
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.POST_INIT,
+      createAsyncHook('_postInitialize', 'post-initialization')
+    );
+    this.#lifecycle.registerHook(
+      LIFECYCLE_PHASES.INIT_ERROR,
+      createAsyncHook(
+        '_handleInitializationError',
+        'initialization error handling',
+        { forwardArguments: true }
+      )
+    );
+
+    this.#lifecycle.registerHook(
+      DESTRUCTION_PHASES.PRE_DESTROY,
+      createSyncHook('_preDestroy', 'pre-destruction')
+    );
+    this.#lifecycle.registerHook(
+      DESTRUCTION_PHASES.CANCEL_OPERATIONS,
+      createSyncHook(
+        '_cancelPendingOperations',
+        'pending operations cancellation'
+      )
+    );
+    this.#lifecycle.registerHook(
+      DESTRUCTION_PHASES.REMOVE_LISTENERS,
+      createSyncHook('_removeAllEventListeners', 'event listener removal')
+    );
+    this.#lifecycle.registerHook(
+      DESTRUCTION_PHASES.CLEANUP_SERVICES,
+      createSyncHook('_cleanupServices', 'service cleanup')
+    );
+    this.#lifecycle.registerHook(
+      DESTRUCTION_PHASES.CLEAR_ELEMENTS,
+      createSyncHook('_clearElementCache', 'element cache clearing')
+    );
+    this.#lifecycle.registerHook(
+      DESTRUCTION_PHASES.CLEAR_REFERENCES,
+      createSyncHook('_clearReferences', 'reference clearing')
+    );
+    this.#lifecycle.registerHook(
+      DESTRUCTION_PHASES.POST_DESTROY,
+      createSyncHook('_postDestroy', 'post-destruction')
+    );
   }
 
   /**
@@ -396,7 +498,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean}
    */
   get isInitialized() {
-    return this.#isInitialized;
+    return this.#lifecycle?.isInitialized ?? false;
   }
 
   /**
@@ -508,19 +610,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean}
    */
   get isInitializing() {
-    return this.#isInitializing;
-  }
-
-  /**
-   * Set initialization state
-   *
-   * @protected
-   * @param {boolean} initializing
-   * @param {boolean} initialized
-   */
-  _setInitializationState(initializing, initialized = false) {
-    this.#isInitializing = initializing;
-    this.#isInitialized = initialized;
+    return this.#lifecycle?.isInitializing ?? false;
   }
 
   /**
@@ -529,9 +619,9 @@ export class BaseCharacterBuilderController {
    * @protected
    */
   _resetInitializationState() {
-    this.#isInitialized = false;
-    this.#isInitializing = false;
-    this._clearElementCache();
+    this.#lifecycle?.resetInitializationState(() => {
+      this._clearElementCache();
+    });
   }
 
   /**
@@ -1439,153 +1529,9 @@ export class BaseCharacterBuilderController {
    * @throws {Error} If initialization fails
    */
   async initialize() {
-    if (this.isInitialized) {
-      this.logger.warn(
-        `${this.constructor.name}: Already initialized, skipping re-initialization`
-      );
-      return;
-    }
-
-    if (this.isInitializing) {
-      this.logger.warn(
-        `${this.constructor.name}: Initialization already in progress, skipping concurrent initialization`
-      );
-      return;
-    }
-
-    const startTime = performance.now();
-
-    try {
-      // Set initializing state
-      this._setInitializationState(true, false);
-
-      this.logger.info(`${this.constructor.name}: Starting initialization`);
-
-      // Pre-initialization hook
-      await this._executeLifecycleMethod(
-        '_preInitialize',
-        'pre-initialization'
-      );
-
-      // Step 1: Cache DOM elements
-      await this._executeLifecycleMethod(
-        '_cacheElements',
-        'element caching',
-        true
-      );
-
-      // Step 2: Initialize services
-      await this._executeLifecycleMethod(
-        '_initializeServices',
-        'service initialization'
-      );
-
-      // Step 3: Set up event listeners
-      await this._executeLifecycleMethod(
-        '_setupEventListeners',
-        'event listener setup',
-        true
-      );
-
-      // Step 4: Load initial data
-      await this._executeLifecycleMethod(
-        '_loadInitialData',
-        'initial data loading'
-      );
-
-      // Step 5: Initialize UI state
-      await this._executeLifecycleMethod(
-        '_initializeUIState',
-        'UI state initialization'
-      );
-
-      // Post-initialization hook
-      await this._executeLifecycleMethod(
-        '_postInitialize',
-        'post-initialization'
-      );
-
-      // Set initialized state
-      this._setInitializationState(false, true);
-
-      const initTime = performance.now() - startTime;
-      this.logger.info(
-        `${this.constructor.name}: Initialization completed in ${initTime.toFixed(2)}ms`
-      );
-
-      // Dispatch initialization complete event
-      if (this.eventBus) {
-        this.eventBus.dispatch('core:controller_initialized', {
-          controllerName: this.constructor.name,
-          initializationTime: initTime,
-        });
-      }
-    } catch (error) {
-      const initTime = performance.now() - startTime;
-      this.logger.error(
-        `${this.constructor.name}: Initialization failed after ${initTime.toFixed(2)}ms`,
-        error
-      );
-
-      // Reset initializing state on error
-      this._setInitializationState(false, false);
-
-      await this._handleInitializationError(error);
-      throw error;
-    }
-  }
-
-  /**
-   * Execute a lifecycle method with error handling and logging
-   *
-   * @private
-   * @param {string} methodName - Name of the method to execute
-   * @param {string} phaseName - Human-readable name of the phase
-   * @param {boolean} [required] - Whether this method must be implemented
-   * @returns {Promise<void>}
-   * @throws {Error} If required method is not implemented or execution fails
-   */
-  async _executeLifecycleMethod(methodName, phaseName, required = false) {
-    const startTime = performance.now();
-
-    try {
-      this.logger.debug(`${this.constructor.name}: Starting ${phaseName}`);
-
-      // Check if method exists
-      if (typeof this[methodName] !== 'function') {
-        if (required) {
-          throw new Error(
-            `${this.constructor.name} must implement ${methodName}() method`
-          );
-        }
-        // Optional method not implemented - skip
-        this.logger.debug(
-          `${this.constructor.name}: Skipping ${phaseName} (method not implemented)`
-        );
-        return;
-      }
-
-      // Execute the method
-      await this[methodName]();
-
-      const duration = performance.now() - startTime;
-      this.logger.debug(
-        `${this.constructor.name}: Completed ${phaseName} in ${duration.toFixed(2)}ms`
-      );
-    } catch (error) {
-      const duration = performance.now() - startTime;
-      this.logger.error(
-        `${this.constructor.name}: Failed ${phaseName} after ${duration.toFixed(2)}ms`,
-        error
-      );
-
-      // Re-throw with more context
-      const enhancedError = new Error(`${phaseName} failed: ${error.message}`);
-      enhancedError.originalError = error;
-      enhancedError.phase = phaseName;
-      enhancedError.methodName = methodName;
-      throw enhancedError;
-    }
+    await this.#lifecycle.initialize({
+      controllerName: this.constructor.name,
+    });
   }
 
   /**
@@ -1773,15 +1719,10 @@ export class BaseCharacterBuilderController {
    * @returns {Promise<void>}
    */
   async _reinitialize() {
-    this.logger.warn(
-      `${this.constructor.name}: Force re-initialization requested`
-    );
-
-    // Reset initialization state
-    this._resetInitializationState();
-
-    // Re-run initialization
-    await this.initialize();
+    await this.#lifecycle.reinitialize({
+      controllerName: this.constructor.name,
+      onReset: () => this._clearElementCache(),
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2454,26 +2395,6 @@ export class BaseCharacterBuilderController {
   // ─────────────────────────────────────────────────────────────────────────
 
   /**
-   * Execute a destruction phase with error handling
-   *
-   * @private
-   * @param {string} phaseName - Name of the phase
-   * @param {Function} phaseFunction - Function to execute
-   */
-  _executePhase(phaseName, phaseFunction) {
-    try {
-      this.#logger.debug(`${this.constructor.name}: Executing ${phaseName}`);
-      phaseFunction.call(this);
-    } catch (error) {
-      this.#logger.error(
-        `${this.constructor.name}: Error in ${phaseName}`,
-        error
-      );
-      // Continue with destruction even if a phase fails
-    }
-  }
-
-  /**
    * Cancel all pending operations (timers, intervals, animation frames)
    *
    * @protected
@@ -2529,37 +2450,6 @@ export class BaseCharacterBuilderController {
 
     // Clear service references
     this.#additionalServices = {};
-  }
-
-  /**
-   * Execute all registered cleanup tasks in LIFO order
-   *
-   * @protected
-   */
-  _executeCleanupTasks() {
-    const taskCount = this.#cleanupTasks.length;
-    if (taskCount === 0) return;
-
-    this.#logger.debug(
-      `${this.constructor.name}: Executing ${taskCount} cleanup tasks`
-    );
-
-    // Execute in reverse order (LIFO)
-    while (this.#cleanupTasks.length > 0) {
-      const { task, description } = this.#cleanupTasks.pop();
-      try {
-        this.#logger.debug(
-          `${this.constructor.name}: Executing cleanup task: ${description}`
-        );
-        task();
-      } catch (error) {
-        this.#logger.error(
-          `${this.constructor.name}: Cleanup task failed: ${description}`,
-          error
-        );
-        // Continue with other tasks
-      }
-    }
   }
 
   /**
@@ -3173,10 +3063,8 @@ export class BaseCharacterBuilderController {
       throw new TypeError('Cleanup task must be a function');
     }
 
-    this.#cleanupTasks.push({ task, description });
-    this.#logger.debug(
-      `${this.constructor.name}: Registered cleanup task: ${description}`
-    );
+    const boundTask = (...args) => task.apply(this, args);
+    this.#lifecycle?.registerCleanupTask(boundTask, description);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -3192,15 +3080,7 @@ export class BaseCharacterBuilderController {
    * @throws {Error} If operation provided and controller is destroyed
    */
   _checkDestroyed(operation) {
-    if (this.#isDestroyed) {
-      if (operation) {
-        throw new Error(
-          `${this.constructor.name}: Cannot ${operation} - controller is destroyed`
-        );
-      }
-      return true;
-    }
-    return false;
+    return this.#lifecycle?.checkDestroyed(operation) ?? false;
   }
 
   /**
@@ -3210,7 +3090,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean}
    */
   get isDestroyed() {
-    return this.#isDestroyed;
+    return this.#lifecycle?.isDestroyed ?? false;
   }
 
   /**
@@ -3220,7 +3100,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean}
    */
   get isDestroying() {
-    return this.#isDestroying;
+    return this.#lifecycle?.isDestroying ?? false;
   }
 
   /**
@@ -3232,10 +3112,8 @@ export class BaseCharacterBuilderController {
    * @returns {Function} Wrapped method
    */
   _makeDestructionSafe(method, methodName) {
-    return (...args) => {
-      this._checkDestroyed(`call ${methodName}`);
-      return method.apply(this, args);
-    };
+    const boundMethod = (...args) => method.apply(this, args);
+    return this.#lifecycle.makeDestructionSafe(boundMethod, methodName);
   }
 
   /**
@@ -3246,95 +3124,7 @@ export class BaseCharacterBuilderController {
    * @returns {void}
    */
   destroy() {
-    const startTime = performance.now();
-
-    // Check if already destroyed
-    if (this.#isDestroyed) {
-      this.#logger.warn(
-        `${this.constructor.name}: Already destroyed, skipping destruction`
-      );
-      return;
-    }
-
-    // Check if destruction in progress
-    if (this.#isDestroying) {
-      this.#logger.warn(
-        `${this.constructor.name}: Destruction already in progress`
-      );
-      return;
-    }
-
-    this.#isDestroying = true;
-    this.#logger.info(`${this.constructor.name}: Starting destruction`);
-
-    try {
-      // Phase 1: Pre-destruction hook
-      this._executePhase('pre-destruction', () => this._preDestroy());
-
-      // Phase 2: Cancel pending operations
-      this._executePhase('pending operations cancellation', () =>
-        this._cancelPendingOperations()
-      );
-
-      // Phase 3: Remove all event listeners
-      this._executePhase('event listener removal', () =>
-        this._removeAllEventListeners()
-      );
-
-      // Phase 4: Cleanup services
-      this._executePhase('service cleanup', () => this._cleanupServices());
-
-      // Phase 5: Clear element caches
-      this._executePhase('element cache clearing', () =>
-        this._clearElementCache()
-      );
-
-      // Phase 6: Execute registered cleanup tasks
-      this._executePhase('cleanup task execution', () =>
-        this._executeCleanupTasks()
-      );
-
-      // Phase 7: Clear remaining references
-      this._executePhase('reference clearing', () => this._clearReferences());
-
-      // Phase 8: Post-destruction hook
-      this._executePhase('post-destruction', () => this._postDestroy());
-
-      // Mark as destroyed
-      this.#isDestroyed = true;
-      this.#isDestroying = false;
-
-      const duration = performance.now() - startTime;
-      this.#logger.info(
-        `${this.constructor.name}: Destruction completed in ${duration.toFixed(2)}ms`
-      );
-
-      // Dispatch destruction event
-      if (this.#eventBus) {
-        try {
-          this.#eventBus.dispatch('CONTROLLER_DESTROYED', {
-            controllerName: this.constructor.name,
-            destructionTime: duration,
-            timestamp: new Date().toISOString(),
-          });
-        } catch (error) {
-          // Log but don't throw - destruction should complete
-          this.#logger.error(
-            `${this.constructor.name}: Failed to dispatch destruction event`,
-            error
-          );
-        }
-      }
-    } catch (error) {
-      this.#logger.error(
-        `${this.constructor.name}: Error during destruction`,
-        error
-      );
-      // Still mark as destroyed even if there were errors
-      this.#isDestroyed = true;
-      this.#isDestroying = false;
-      throw error;
-    }
+    this.#lifecycle.destroy({ controllerName: this.constructor.name });
   }
 }
 
