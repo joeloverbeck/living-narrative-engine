@@ -50,6 +50,19 @@ import humanFemaleRecipe from '../../../data/mods/anatomy/recipes/human_female.r
 import humanoidSlotLibrary from '../../../data/mods/anatomy/libraries/humanoid.slot-library.json';
 import humanoidCorePart from '../../../data/mods/anatomy/parts/humanoid_core.part.json';
 
+const createCompleteAnatomyData = () => ({
+  recipeId: 'anatomy:human_male',
+  body: {
+    root: 'torso_instance_id',
+    parts: {
+      head: 'head_instance_id',
+      left_arm: 'left_arm_instance_id',
+      right_arm: 'right_arm_instance_id',
+      torso: 'torso_instance_id',
+    },
+  },
+});
+
 describe('AnatomyLoadingDetector Integration Tests', () => {
   // Shared setup - initialized once
   let sharedContainer;
@@ -331,6 +344,111 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       expect(bodyComponent.recipeId).toBe('anatomy:human_male');
       // The body structure should be missing
       expect(bodyComponent.body).toBeUndefined();
+    });
+  });
+
+  describe('Edge cases and error handling', () => {
+    it('should validate entity identifiers before waiting for anatomy readiness', async () => {
+      await expect(
+        anatomyLoadingDetector.waitForAnatomyReady('', {
+          timeout: 50,
+        })
+      ).rejects.toThrow('Entity ID must be a non-empty string');
+    });
+
+    it('should validate waitForEntityCreation arguments', () => {
+      expect(() =>
+        anatomyLoadingDetector.waitForEntityCreation('', () => {})
+      ).toThrow('Entity ID must be a non-empty string');
+
+      expect(() =>
+        anatomyLoadingDetector.waitForEntityCreation('valid-id', null)
+      ).toThrow('Callback must be a function');
+    });
+
+    it('should recover from transient lookup failures and complete after entity creation', async () => {
+      const deferredEntityId = `test:deferred_${Date.now()}_${Math.random()}`;
+      const originalGet = entityManager.getEntityInstance.bind(entityManager);
+      const getEntitySpy = jest
+        .spyOn(entityManager, 'getEntityInstance')
+        .mockRejectedValueOnce(new Error('transient registry error'))
+        .mockImplementation((...args) => originalGet(...args));
+
+      try {
+        const waitPromise = anatomyLoadingDetector.waitForEntityWithAnatomy(
+          deferredEntityId,
+          { timeout: 2000, retryInterval: 25 }
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        const createdEntity = await entityManager.createEntityInstance('test:actor', {
+          instanceId: deferredEntityId,
+        });
+        await entityManager.addComponent(
+          createdEntity.id,
+          'anatomy:body',
+          createCompleteAnatomyData()
+        );
+        await entityManager.addComponent(createdEntity.id, 'core:description', {
+          text: 'Generated description after deferred creation',
+        });
+
+        const result = await waitPromise;
+        expect(result).toBe(true);
+        expect(getEntitySpy).toHaveBeenCalled();
+      } finally {
+        getEntitySpy.mockRestore();
+      }
+    });
+
+    it('should timeout when waiting for entity creation that never happens', async () => {
+      const pendingEntityId = `test:pending_${Date.now()}`;
+      const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
+        pendingEntityId,
+        { timeout: 150, retryInterval: 25 }
+      );
+      expect(isReady).toBe(false);
+    });
+
+    it('should return false when entity never exists', async () => {
+      const result = await anatomyLoadingDetector.waitForAnatomyReady(
+        'missing-entity',
+        {
+          timeout: 150,
+          retryInterval: 25,
+          maxRetries: 2,
+          useExponentialBackoff: false,
+        }
+      );
+      expect(result).toBe(false);
+    });
+
+    it('should dispose active subscriptions and guard against reuse', async () => {
+      const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      const subscribeSpy = jest
+        .spyOn(eventDispatcher, 'subscribe')
+        .mockImplementation(() => {
+          return () => {
+            throw new Error('unsubscribe failure');
+          };
+        });
+
+      try {
+        anatomyLoadingDetector.waitForEntityCreation('entity-for-dispose', () => {});
+        anatomyLoadingDetector.dispose();
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          'Error unsubscribing from event:',
+          expect.any(Error)
+        );
+
+        await expect(
+          anatomyLoadingDetector.waitForAnatomyReady('entity-for-dispose')
+        ).rejects.toThrow('AnatomyLoadingDetector has been disposed');
+      } finally {
+        warnSpy.mockRestore();
+        subscribeSpy.mockRestore();
+      }
     });
   });
 });
