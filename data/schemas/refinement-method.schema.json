@@ -98,6 +98,11 @@
         "description": {
           "type": "string",
           "description": "Optional human-readable description of what this step does in the context of this refinement method. Helpful for debugging and understanding the refinement flow."
+        },
+        "storeResultAs": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "description": "Optional variable name to store the execution result of this step. The result will be stored in refinement.localState under this key name. Must be a valid JavaScript identifier (alphanumeric + underscore, cannot start with digit). The stored result has the structure: { success: boolean, data: object, error: string | null, timestamp: number, actionId: string }. Subsequent steps can reference stored results via 'refinement.localState.<storeResultAs>.data.<field>' in parameters and conditions. Example: If storeResultAs is 'pickupResult', you can reference 'refinement.localState.pickupResult.data.item' in later steps."
         }
       },
       "required": ["stepType", "actionId"],

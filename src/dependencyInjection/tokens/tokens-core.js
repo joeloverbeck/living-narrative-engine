@@ -330,4 +330,5 @@ export const coreTokens = freeze({
   // GOAP System Services
   IContextAssemblyService: 'IContextAssemblyService',
   IParameterResolutionService: 'IParameterResolutionService',
+  IRefinementStateManager: 'IRefinementStateManager',
 });
