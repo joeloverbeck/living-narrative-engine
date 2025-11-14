@@ -8,9 +8,9 @@
 
 ## Problem Statement
 
-Several tests in the EntityLifecycleWorkflow suite perform entity operations (creation, removal) sequentially using for-loops, even when these operations are independent and could safely run in parallel.
+Several tests in the EntityLifecycleWorkflow suite perform entity operations (creation, removal) sequentially using for-loops, even when these operations are independent and could safely run in parallel. While portions of the suite already use `Promise.all`/`Promise.allSettled` for concurrent creation scenarios (see `it('should handle multiple concurrent entity creations safely'...)` at lines 141-190 and `it('should handle concurrent entity operations safely'...)` at lines 348-386), the removal-focused tests and the shared cleanup hook still run sequentially and therefore remain bottlenecks.
 
-**Current Pattern** (`EntityLifecycleWorkflow.e2e.test.js:264-280`):
+**Current Pattern** (`tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js:271-309`):
 ```javascript
 // Create multiple entities sequentially
 for (const entityId of entityIds) {
@@ -31,9 +31,11 @@ for (const entityId of entityIds) {
 - 3 sequential removals @ 30ms each = 90ms (could be 30ms parallel)
 - Savings: ~140ms per affected test
 
-**Affected Tests**:
-1. "should handle multiple entity removals in sequence" (lines 253-291)
-2. Test cleanup operations in `beforeEach` (various)
+**Affected Areas**:
+1. `it('should handle multiple entity removals in sequence', ...)` (lines 271-309)
+2. Suite-level `beforeEach` cleanup that iterates over `testBed.entityManager.getEntityIds()` sequentially (lines 24-37)
+
+These sections have no ordering requirements beyond finishing all removals before assertions, so they can adopt the same parallel patterns already proven elsewhere in the suite.
 
 ## Solution
 
@@ -50,7 +52,7 @@ Use `Promise.all()` to parallelize independent operations while maintaining safe
 
 ### Step 1: Update "Multiple Removals" Test
 
-**File**: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js:253-291`
+**File**: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js:271-309`
 
 Replace sequential removals with parallel:
 
@@ -115,7 +117,7 @@ it('should handle multiple entity removals in sequence', async () => {
 
 ### Step 2: Update beforeEach Cleanup
 
-**File**: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js`
+**File**: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js (lines 24-37)`
 
 If cleanup operations are present in `beforeEach`, parallelize them:
 
@@ -152,7 +154,7 @@ beforeEach(async () => {
 
 **File**: `tests/e2e/entities/common/entityWorkflowTestBed.js`
 
-Add a convenience method for parallel entity operations:
+This test bed already provides `createTestEntitiesBatch()` for sequential batches, so add a complementary helper dedicated to parallelizing independent operations:
 
 ```javascript
 /**
@@ -442,7 +444,7 @@ None. Can be implemented independently.
 
 ## References
 
-- Affected test: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js:253-291`
+- Affected test: `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js:271-309`
 - Promise.all: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
 - Promise.allSettled: [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
 - Related: Concurrent operation patterns in production code
