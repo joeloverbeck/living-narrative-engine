@@ -181,17 +181,24 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
       });
     }
 
-    if (typeof propertySchema.type === 'string') {
-      const actualType = typeof descriptorValue;
-      if (actualType !== propertySchema.type) {
+    if (propertySchema.type) {
+      const allowedTypes = Array.isArray(propertySchema.type)
+        ? propertySchema.type
+        : [propertySchema.type];
+
+      // Handle JavaScript quirk: typeof null === 'object'
+      const actualType =
+        descriptorValue === null ? 'null' : typeof descriptorValue;
+
+      if (!allowedTypes.includes(actualType)) {
         issues.push({
           type: 'INVALID_BODY_DESCRIPTOR_TYPE',
-          message: `Invalid type for body descriptor '${descriptorName}': expected ${propertySchema.type}, got ${actualType}`,
+          message: `Invalid type for body descriptor '${descriptorName}': expected one of [${allowedTypes.join(', ')}], got ${actualType}`,
           metadata: {
             field: descriptorName,
             value: descriptorValue,
-            fix: `Change value to type ${propertySchema.type}`,
-            expectedType: propertySchema.type,
+            fix: `Change value to one of these types: ${allowedTypes.join(', ')}`,
+            expectedTypes: allowedTypes,
             actualType,
           },
         });

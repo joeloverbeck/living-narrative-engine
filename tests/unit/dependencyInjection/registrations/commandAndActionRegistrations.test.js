@@ -53,6 +53,7 @@ describe('registerCommandAndAction', () => {
   const mockLegacyTargetCompatibilityLayer = mockDeep();
   const mockScopeContextBuilder = mockDeep();
   const mockTargetDisplayNameResolver = mockDeep();
+  const mockTargetResolutionTracingOrchestrator = mockDeep();
 
   // Additional mocks for comprehensive coverage
   const mockTraceConfiguration = mockDeep();
@@ -113,6 +114,10 @@ describe('registerCommandAndAction', () => {
     container.register(
       tokens.ITargetDisplayNameResolver,
       () => mockTargetDisplayNameResolver
+    );
+    container.register(
+      tokens.ITargetResolutionTracingOrchestrator,
+      () => mockTargetResolutionTracingOrchestrator
     );
 
     // Register additional dependencies for comprehensive coverage

@@ -14,6 +14,9 @@ describe('GoapPlanner - Task Library Construction', () => {
   let mockJsonLogicService;
   let mockRepository;
   let mockEntityManager;
+  let mockScopeRegistry;
+  let mockScopeEngine;
+  let mockSpatialIndexManager;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -23,6 +26,9 @@ describe('GoapPlanner - Task Library Construction', () => {
     ]);
     mockRepository = testBed.createMock('repository', ['get']);
     mockEntityManager = testBed.createMock('entityManager', ['getEntityInstance']);
+    mockScopeRegistry = testBed.createMock('scopeRegistry', ['getScopeAst']);
+    mockScopeEngine = testBed.createMock('scopeEngine', ['resolve']);
+    mockSpatialIndexManager = testBed.createMock('spatialIndexManager', []);
 
     // Default mock implementations
     mockRepository.get.mockImplementation(key => {
@@ -70,6 +76,9 @@ describe('GoapPlanner - Task Library Construction', () => {
       jsonLogicService: mockJsonLogicService,
       gameDataRepository: mockRepository,
       entityManager: mockEntityManager,
+      scopeRegistry: mockScopeRegistry,
+      scopeEngine: mockScopeEngine,
+      spatialIndexManager: mockSpatialIndexManager,
     });
   });
 
