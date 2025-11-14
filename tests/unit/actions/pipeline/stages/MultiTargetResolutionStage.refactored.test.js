@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
+import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 describe('MultiTargetResolutionStage - Refactored with Services', () => {
   let stage;
@@ -27,6 +28,7 @@ describe('MultiTargetResolutionStage - Refactored with Services', () => {
     mockLegacyLayer = {
       isLegacyAction: jest.fn(),
       convertLegacyFormat: jest.fn(),
+      getMigrationSuggestion: jest.fn(),
     };
 
     mockContextBuilder = {
@@ -68,6 +70,9 @@ describe('MultiTargetResolutionStage - Refactored with Services', () => {
       targetResolver: mockTargetResolver,
       targetContextBuilder: {}, // Not used directly in refactored version
       logger: mockLogger,
+      tracingOrchestrator: new TargetResolutionTracingOrchestrator({
+        logger: mockLogger,
+      }),
     });
   });
 

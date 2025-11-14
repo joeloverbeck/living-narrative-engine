@@ -8,6 +8,7 @@ import {
 } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { MultiTargetResolutionStage } from '../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
+import TargetResolutionTracingOrchestrator from '../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 import ActionAwareStructuredTrace from '../../../../src/actions/tracing/actionAwareStructuredTrace.js';
 import ActionTraceFilter from '../../../../src/actions/tracing/actionTraceFilter.js';
 
@@ -23,6 +24,7 @@ describe('Multi-Target Resolution Tracing Integration', () => {
   let mockEntityManager;
   let mockTargetResolver;
   let mockTargetContextBuilder;
+  let tracingOrchestrator;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -74,6 +76,10 @@ describe('Multi-Target Resolution Tracing Integration', () => {
       buildContext: jest.fn(),
     };
 
+    tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: testBed.mockLogger,
+    });
+
     // Create the stage with mocks
     stage = new MultiTargetResolutionStage({
       targetDependencyResolver: mockDependencyResolver,
@@ -85,6 +91,7 @@ describe('Multi-Target Resolution Tracing Integration', () => {
       targetResolver: mockTargetResolver,
       targetContextBuilder: mockTargetContextBuilder,
       logger: testBed.mockLogger,
+      tracingOrchestrator,
     });
   });
 

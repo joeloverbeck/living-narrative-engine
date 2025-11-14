@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
+import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
   let stage;
@@ -22,6 +23,7 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       legacyTargetCompatibilityLayer: {
         isLegacyAction: jest.fn(),
         convertLegacyFormat: jest.fn(),
+        getMigrationSuggestion: jest.fn(),
       },
       scopeContextBuilder: {
         buildScopeContext: jest.fn(),
@@ -52,6 +54,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       },
     };
 
+    mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
+
     stage = new MultiTargetResolutionStage({
       targetDependencyResolver: mockDeps.targetDependencyResolver,
       legacyTargetCompatibilityLayer: mockDeps.legacyTargetCompatibilityLayer,
@@ -62,6 +68,7 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       targetResolver: mockDeps.targetResolver,
       targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
+      tracingOrchestrator: mockDeps.tracingOrchestrator,
     });
 
     mockActor = {

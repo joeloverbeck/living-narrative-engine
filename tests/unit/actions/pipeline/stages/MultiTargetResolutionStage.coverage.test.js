@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
+import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 /**
  * @file Additional test coverage for MultiTargetResolutionStage to achieve 100% branch coverage
@@ -22,6 +23,7 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
       legacyTargetCompatibilityLayer: {
         isLegacyAction: jest.fn(),
         convertLegacyFormat: jest.fn(),
+        getMigrationSuggestion: jest.fn(),
       },
       scopeContextBuilder: {
         buildScopeContext: jest.fn(),
@@ -51,6 +53,10 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
         error: jest.fn(),
       },
     };
+
+    mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
 
     // Setup default mock behaviors
     mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
@@ -90,6 +96,7 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
       targetResolver: mockDeps.targetResolver,
       targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
+      tracingOrchestrator: mockDeps.tracingOrchestrator,
     });
 
     // Create mock context

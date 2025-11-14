@@ -3,6 +3,7 @@ import { ActionTargetContext } from '../../../../../src/models/actionTargetConte
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
+import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 describe('MultiTargetResolutionStage', () => {
   let stage;
@@ -56,6 +57,7 @@ describe('MultiTargetResolutionStage', () => {
       legacyTargetCompatibilityLayer: {
         isLegacyAction: jest.fn(),
         convertLegacyFormat: jest.fn(),
+        getMigrationSuggestion: jest.fn(),
       },
       scopeContextBuilder: {
         buildScopeContext: jest.fn(),
@@ -85,6 +87,10 @@ describe('MultiTargetResolutionStage', () => {
         error: jest.fn(),
       },
     };
+
+    mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
 
     // Setup default mock behaviors
     mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
@@ -147,6 +153,7 @@ describe('MultiTargetResolutionStage', () => {
       targetResolver: mockDeps.targetResolver,
       targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
+      tracingOrchestrator: mockDeps.tracingOrchestrator,
     });
 
     // Create mock context

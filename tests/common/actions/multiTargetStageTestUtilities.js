@@ -10,6 +10,7 @@ import { TargetDependencyResolver } from '../../../src/actions/pipeline/services
 import { LegacyTargetCompatibilityLayer } from '../../../src/actions/pipeline/services/implementations/LegacyTargetCompatibilityLayer.js';
 import { ScopeContextBuilder } from '../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import { TargetDisplayNameResolver } from '../../../src/actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
+import TargetResolutionTracingOrchestrator from '../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 /**
  * Creates a fully configured MultiTargetResolutionStage for testing
@@ -82,6 +83,12 @@ export function createMultiTargetResolutionStage({
       logger,
     });
 
+  const tracingOrchestrator =
+    overrides.tracingOrchestrator ||
+    new TargetResolutionTracingOrchestrator({
+      logger,
+    });
+
   // Create and return the stage with all required dependencies
   return new MultiTargetResolutionStage({
     targetDependencyResolver,
@@ -93,6 +100,7 @@ export function createMultiTargetResolutionStage({
     targetResolver: defaultTargetResolver,
     targetContextBuilder,
     logger,
+    tracingOrchestrator,
   });
 }
 
@@ -110,6 +118,7 @@ export function createMockMultiTargetServices(logger) {
     legacyTargetCompatibilityLayer: {
       isLegacyAction: jest.fn(),
       convertLegacyFormat: jest.fn(),
+      getMigrationSuggestion: jest.fn(),
     },
     scopeContextBuilder: {
       buildScopeContext: jest.fn(),

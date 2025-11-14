@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
+import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 /**
  * @file Full coverage tests for MultiTargetResolutionStage
@@ -52,6 +53,10 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
       },
     };
 
+    mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
+
     // Setup default mock behaviors
     mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
       actor: { id: 'player', components: {} },
@@ -90,6 +95,7 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
       targetResolver: mockDeps.targetResolver,
       targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
+      tracingOrchestrator: mockDeps.tracingOrchestrator,
     });
 
     // Create mock context
@@ -491,6 +497,10 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
         captureActionData: jest.fn().mockImplementation(() => {
           throw new Error('Trace capture failed');
         }),
+        captureLegacyDetection: jest.fn(),
+        captureLegacyConversion: jest.fn(),
+        captureScopeEvaluation: jest.fn(),
+        captureMultiTargetResolution: jest.fn(),
         step: jest.fn(),
         info: jest.fn(),
       };
@@ -527,7 +537,7 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
       // Verify warning was logged when trace capture failed (line 899)
       expect(mockDeps.logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Failed to capture target resolution error data'
+          'TargetResolutionTracingOrchestrator: Failed to capture target resolution error'
         ),
         expect.any(Error)
       );
