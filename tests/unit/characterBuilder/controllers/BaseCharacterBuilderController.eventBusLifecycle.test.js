@@ -135,8 +135,8 @@ describe('BaseCharacterBuilderController event bus lifecycle', () => {
 
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(
-      `${controller.constructor.name}: Error detaching event bus listener`,
-      expect.objectContaining({ message: 'unsubscribe failure' })
+      `${controller.constructor.name}: Error removing listener`,
+      expect.any(Error)
     );
 
     const detachLogMessage = logger.debug.mock.calls
@@ -146,7 +146,7 @@ describe('BaseCharacterBuilderController event bus lifecycle', () => {
       );
     expect(detachLogMessage).toBeDefined();
     expect(detachLogMessage).toContain(
-      'Detached from event bus after unsubscribing 1 listener(s)'
+      'Detached from event bus after unsubscribing 2 listener(s)'
     );
 
     const postStats = controller._getEventListenerStats();

@@ -17,6 +17,8 @@ describe('GoapPlanner - State Management Helpers', () => {
   let mockScopeRegistry;
   let mockScopeEngine;
   let mockSpatialIndexManager;
+  let mockEffectsSimulator;
+  let mockHeuristicRegistry;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -29,6 +31,12 @@ describe('GoapPlanner - State Management Helpers', () => {
     mockScopeRegistry = testBed.createMock('scopeRegistry', ['getScopeAst']);
     mockScopeEngine = testBed.createMock('scopeEngine', ['resolve']);
     mockSpatialIndexManager = testBed.createMock('spatialIndexManager', []);
+    mockEffectsSimulator = testBed.createMock('effectsSimulator', [
+      'simulateEffects',
+    ]);
+    mockHeuristicRegistry = testBed.createMock('heuristicRegistry', [
+      'calculate',
+    ]);
 
     planner = new GoapPlanner({
       logger: mockLogger,
@@ -38,6 +46,8 @@ describe('GoapPlanner - State Management Helpers', () => {
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       spatialIndexManager: mockSpatialIndexManager,
+      effectsSimulator: mockEffectsSimulator,
+      heuristicRegistry: mockHeuristicRegistry,
     });
   });
 

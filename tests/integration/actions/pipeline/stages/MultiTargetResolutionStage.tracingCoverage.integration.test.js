@@ -384,7 +384,7 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
       ).toBe(true);
 
       expect(
-        logger.logs.debug.some((entry) =>
+        logger.logs.warn.some((entry) =>
           typeof entry.message === 'string' &&
           entry.message.includes('Failed to capture performance data for action')
         )
@@ -612,7 +612,7 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
 
       expect(
         logger.logs.warn.some((entry) =>
-          entry.message.includes('Failed to capture target resolution error data')
+          entry.message.includes('Failed to capture target resolution error')
         )
       ).toBe(true);
 
