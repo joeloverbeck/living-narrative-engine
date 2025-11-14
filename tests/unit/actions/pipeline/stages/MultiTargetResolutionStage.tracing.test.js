@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
+import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 describe('MultiTargetResolutionStage - Action Tracing', () => {
   let stage;
@@ -20,6 +21,10 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
       captureActionData: jest.fn((stage, actionId, data) => {
         capturedTraceData.push({ stage, actionId, data });
       }),
+      captureLegacyDetection: jest.fn(),
+      captureLegacyConversion: jest.fn(),
+      captureScopeEvaluation: jest.fn(),
+      captureMultiTargetResolution: jest.fn(),
     };
 
     // Create mock dependencies
@@ -30,6 +35,7 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
       legacyTargetCompatibilityLayer: {
         isLegacyAction: jest.fn(),
         convertLegacyFormat: jest.fn(),
+        getMigrationSuggestion: jest.fn(),
       },
       scopeContextBuilder: {
         buildScopeContext: jest.fn().mockReturnValue({
@@ -78,6 +84,10 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
         error: jest.fn(),
       },
     };
+
+    mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
 
     // Create stage instance
     stage = new MultiTargetResolutionStage(mockDeps);

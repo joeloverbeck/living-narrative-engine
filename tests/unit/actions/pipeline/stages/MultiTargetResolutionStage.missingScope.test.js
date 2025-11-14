@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
+import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
 
 describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
@@ -17,6 +18,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       legacyTargetCompatibilityLayer: {
         isLegacyAction: jest.fn(),
         convertLegacyFormat: jest.fn(),
+        getMigrationSuggestion: jest.fn(),
       },
       scopeContextBuilder: {
         buildScopeContext: jest.fn(),
@@ -46,6 +48,10 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
         error: jest.fn(),
       },
     };
+
+    mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
 
     // Setup default mock behaviors
     mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
