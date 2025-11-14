@@ -8,24 +8,46 @@
 
 ## Problem Statement
 
-The EntityWorkflowTestBed performs expensive deep cloning of all event payloads using `JSON.parse(JSON.stringify())`. This operation is:
-- Computationally expensive
-- Synchronous (blocks execution)
-- Unnecessary for read-only test assertions
-- Potentially problematic (can fail on circular references, functions, symbols)
+The latest `EntityWorkflowTestBed` implementation already defaults to shallow cloning when event monitoring is enabled, and entity/component lifecycle events now push raw references for read-only assertions. However, the helper still exposes a `deepClonePayloads` option that reintroduces `JSON.parse(JSON.stringify())` cloning whenever a test enables it (either intentionally or by accident). Because that branch still exists in production code, the workflow continues to assume deep cloning always happens—an outdated assumption that no longer matches reality.
 
-**Current Code** (`entityWorkflowTestBed.js:272`):
+**Current Code** (`tests/e2e/entities/common/entityWorkflowTestBed.js:42-116, 268-317`):
 ```javascript
-const allEventsSubscription = this.eventBus.subscribe('*', (event) => {
-  this.events.push({
-    timestamp: Date.now(),
-    type: event.type,
-    payload: JSON.parse(JSON.stringify(event.payload)), // EXPENSIVE
+// Constructor defaults
+this.eventMonitoringOptions = {
+  monitorAll: options.monitorAll ?? false,
+  specificEvents: options.specificEvents ?? [],
+  deepClonePayloads: options.deepClonePayloads ?? false, // opt-in
+  enablePerformanceTracking: options.enablePerformanceTracking ?? true,
+  monitorComponentEvents: options.monitorComponentEvents ?? false,
+};
+
+// setupEventMonitoring()
+const { monitorAll, specificEvents, deepClonePayloads } = this.eventMonitoringOptions;
+const clonePayload = (payload) => {
+  if (!payload) return null;
+  if (!deepClonePayloads) {
+    return { ...payload }; // shallow clone (default)
+  }
+  try {
+    return JSON.parse(JSON.stringify(payload)); // only if deepClonePayloads=true
+  } catch (error) {
+    this.logger?.warn('Failed to deep clone event payload:', error);
+    return { ...payload };
+  }
+};
+
+if (monitorAll) {
+  this.eventBus.subscribe('*', (event) => {
+    this.events.push({
+      timestamp: Date.now(),
+      type: event.type,
+      payload: clonePayload(event.payload),
+    });
   });
-});
+}
 ```
 
-**Impact**: Deep cloning ~100+ events per test × 12 tests = ~600ms wasted
+**Impact**: Deep cloning is now opt-in rather than automatic, but it is still easy to flip on accidentally. When enabled, every monitored event (≈100 per test) still pays the same synchronous JSON-clone penalty, erasing 0.5-0.8 seconds of gains.
 
 ## Why Deep Cloning Was Used
 
@@ -39,141 +61,30 @@ Deep cloning was likely added to:
 1. **Read-only usage**: Tests only read event data, never modify it
 2. **Test isolation**: Tests don't share state between each other
 3. **Event immutability**: Event payloads are effectively immutable after dispatch
-4. **Modern alternatives**: Shallow cloning is sufficient for isolation
+4. **Existing defaults already use shallow cloning**: Leaving the deep-clone branch around only invites regressions
 
 ## Solution
 
-Replace deep cloning with shallow cloning or direct references, depending on usage patterns.
+Remove the deep-clone branch entirely so general event monitoring always uses shallow clones, document the read-only expectations in the API, and verify that no tests rely on mutating event payloads. This ensures the workflow description matches current production behavior and prevents the performance regression from being reintroduced accidentally.
 
 ### Strategy
 
-1. **No cloning** for entity lifecycle events (already isolated)
-2. **Shallow cloning** for general events (if mutation is a concern)
-3. **Deep cloning** only when explicitly requested (opt-in)
+1. **Always shallow clone** monitored events (general event stream)
+2. **Continue passing references** for entity/component lifecycle events (already isolated)
+3. **Document read-only expectations** so tests never mutate returned objects
 
 ## Implementation Steps
 
-### Step 1: Remove Deep Cloning from Event Monitoring
+### Step 1: Simplify Event Monitoring and Remove the Deep Clone Branch
 
-**File**: `tests/e2e/entities/common/entityWorkflowTestBed.js:268-274`
+**File**: `tests/e2e/entities/common/entityWorkflowTestBed.js`
 
-If ENTLIFWOR-002 has been implemented, the deep cloning logic is already in `setupEventMonitoring()`. Update it:
+Action items:
+1. Remove the `deepClonePayloads` option from `eventMonitoringOptions`.
+2. Delete the `JSON.parse(JSON.stringify(payload))` branch inside `clonePayload()` and always return a shallow clone (`payload ? { ...payload } : null`).
+3. Keep entity/component lifecycle subscriptions untouched (they already push references and are read-only).
 
-```javascript
-setupEventMonitoring() {
-  const { monitorAll, specificEvents, deepClonePayloads } = this.eventMonitoringOptions;
-
-  // Helper to safely clone event data
-  const clonePayload = (payload) => {
-    if (!payload) return null;
-
-    // Default: Shallow clone (FAST and sufficient for read-only tests)
-    if (!deepClonePayloads) {
-      // Shallow clone - spreads top-level properties
-      // This is 10-20x faster than JSON.parse/stringify
-      return { ...payload };
-    }
-
-    // Deep clone only when explicitly requested (opt-in for special cases)
-    try {
-      return JSON.parse(JSON.stringify(payload));
-    } catch (error) {
-      this.logger?.warn('Failed to deep clone event payload:', error);
-      return { ...payload }; // Fallback to shallow clone
-    }
-  };
-
-  // ... rest of monitoring setup
-}
-```
-
-If ENTLIFWOR-002 has NOT been implemented yet, directly update the current code:
-
-```javascript
-/**
- * Set up comprehensive event monitoring for entity operations
- */
-setupEventMonitoring() {
-  // Monitor all events for general tracking
-  const allEventsSubscription = this.eventBus.subscribe('*', (event) => {
-    this.events.push({
-      timestamp: Date.now(),
-      type: event.type,
-      // Changed: Shallow clone instead of deep clone
-      // This is sufficient because tests only read event data
-      payload: event.payload ? { ...event.payload } : null,
-    });
-  });
-  this.eventSubscriptions.push(allEventsSubscription);
-
-  // Entity lifecycle events don't need cloning at all
-  // (they're already isolated and immutable)
-  const entityCreatedSubscription = this.eventBus.subscribe(
-    'core:entity_created',
-    (event) => {
-      this.entityEvents.push({
-        type: 'ENTITY_CREATED',
-        entityId: event.payload.entity?.id,
-        definitionId: event.payload.definitionId,
-        timestamp: Date.now(),
-        payload: event.payload, // No cloning needed - read-only
-      });
-
-      if (event.payload.entity?.id) {
-        this.createdEntities.add(event.payload.entity.id);
-      }
-    }
-  );
-  this.eventSubscriptions.push(entityCreatedSubscription);
-
-  const entityRemovedSubscription = this.eventBus.subscribe(
-    'core:entity_removed',
-    (event) => {
-      this.entityEvents.push({
-        type: 'ENTITY_REMOVED',
-        entityId: event.payload.instanceId,
-        timestamp: Date.now(),
-        payload: event.payload, // No cloning needed - read-only
-      });
-
-      const entityId = event.payload.instanceId;
-      if (entityId) {
-        this.removedEntities.add(entityId);
-        this.createdEntities.delete(entityId);
-      }
-    }
-  );
-  this.eventSubscriptions.push(entityRemovedSubscription);
-
-  // Component events also don't need deep cloning
-  const componentAddedSubscription = this.eventBus.subscribe(
-    'core:component_added',
-    (event) => {
-      this.componentEvents.push({
-        type: 'COMPONENT_ADDED',
-        entityId: event.payload.entity?.id,
-        componentId: event.payload.componentTypeId,
-        componentData: event.payload.componentData, // No cloning needed
-        timestamp: Date.now(),
-      });
-    }
-  );
-  this.eventSubscriptions.push(componentAddedSubscription);
-
-  const componentRemovedSubscription = this.eventBus.subscribe(
-    'core:component_removed',
-    (event) => {
-      this.componentEvents.push({
-        type: 'COMPONENT_REMOVED',
-        entityId: event.payload.entity?.id,
-        componentId: event.payload.componentTypeId,
-        timestamp: Date.now(),
-      });
-    }
-  );
-  this.eventSubscriptions.push(componentRemovedSubscription);
-}
-```
+This aligns the workflow description with the actual implementation and prevents the expensive code path from being re-enabled.
 
 ### Step 2: Add JSDoc Warning About Mutation
 
@@ -222,11 +133,13 @@ getComponentEvents(entityId) {
 }
 ```
 
-### Step 3: Verify Tests Don't Modify Event Data
+### Step 3: Verify Tests Don't Enable Deep Cloning or Modify Event Data
 
-**File**: Review `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js`
+**Files**: Review `tests/e2e/entities/EntityLifecycleWorkflow.e2e.test.js` and any helpers that instantiate the test bed.
 
-Audit all tests to ensure they only read event data, never modify it:
+Audit all tests to ensure they:
+- Never pass `deepClonePayloads: true` (after Step 1, that option should not exist)
+- Only read event data, never modify it
 
 ```bash
 # Search for potential mutations
@@ -250,44 +163,16 @@ const event = testBed.getEntityEvents(entityId)[0];
 const localPayload = { ...event.payload, modified: true };
 ```
 
-### Step 4: Add Optional Deep Clone Helper
+### Step 4: Provide Guidance for Rare Mutation Needs
 
-**File**: `tests/e2e/entities/common/entityWorkflowTestBed.js`
-
-For rare cases where deep cloning is genuinely needed:
-
-```javascript
-/**
- * Deep clone an event payload for safe mutation.
- * Use this only when you need to modify event data in tests.
- *
- * @param {object} event - Event object to clone
- * @returns {object} Deep cloned event
- * @throws {Error} If cloning fails (circular references, etc.)
- */
-deepCloneEvent(event) {
-  try {
-    return JSON.parse(JSON.stringify(event));
-  } catch (error) {
-    this.logger?.error('Failed to deep clone event:', error);
-    throw new Error(`Cannot deep clone event: ${error.message}`);
-  }
-}
-```
-
-Usage in tests (if needed):
-```javascript
-const event = testBed.getEntityEvents(entityId)[0];
-const clonedEvent = testBed.deepCloneEvent(event);
-clonedEvent.payload.canModifySafely = true;
-```
+If a test truly needs to mutate event data, instruct engineers to create local copies at the test site (e.g., `const mutable = JSON.parse(JSON.stringify(event.payload));`) instead of reintroducing cloning hooks back into the test bed. Document this guidance in the workflow notes or test comments rather than adding new helper APIs that could be misused globally.
 
 ## Validation Criteria
 
 ### Performance Requirements
 
-- [ ] Event processing overhead reduced by 80%+
-- [ ] Test suite runs 0.5-0.8 seconds faster
+- [ ] Event processing overhead reduced by 80%+ when compared to enabling deepClonePayloads
+- [ ] Test suite runs 0.5-0.8 seconds faster (relative to deep clone enabled runs)
 - [ ] No increase in memory usage
 
 ### Functional Requirements
@@ -295,7 +180,7 @@ clonedEvent.payload.canModifySafely = true;
 - [ ] All 12 tests pass without modification
 - [ ] Event assertions work correctly
 - [ ] No test flakiness introduced
-- [ ] getEventsByType() returns correct events
+- [ ] `getEventsByType()` returns correct events
 
 ### Code Quality Requirements
 
@@ -358,7 +243,7 @@ setupEventMonitoring() {
 }
 ```
 
-Expected results:
+Expected results (when comparing a branch that forces deep cloning to the simplified implementation):
 - **Before**: ~5-8ms per deep clone × 100 events = 500-800ms
 - **After**: ~0.1-0.2ms per shallow clone × 100 events = 10-20ms
 - **Savings**: ~480-780ms per test suite
@@ -390,6 +275,6 @@ If issues arise:
 
 ## References
 
-- Current deep cloning: `tests/e2e/entities/common/entityWorkflowTestBed.js:272`
+- Current event monitoring implementation: `tests/e2e/entities/common/entityWorkflowTestBed.js`
 - Related ticket: ENTLIFWOR-002 (lazy event monitoring)
 - JavaScript performance: [Shallow vs Deep Clone](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
