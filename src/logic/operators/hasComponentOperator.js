@@ -146,7 +146,7 @@ export class HasComponentOperator {
         return false;
       }
 
-      return this.#evaluateInternal(entityId, componentId);
+      return this.#evaluateInternal(entityId, componentId, context);
     } catch (error) {
       this.#logger.error(
         `${this.#operatorName}: Error during evaluation`,
@@ -199,9 +199,24 @@ export class HasComponentOperator {
    * @private
    * @param {string|number} entityId - The entity ID
    * @param {string} componentId - The component ID to check for
+   * @param {object} context - Evaluation context (may contain planning state)
    * @returns {boolean} True if the entity has the specified component
    */
-  #evaluateInternal(entityId, componentId) {
+  #evaluateInternal(entityId, componentId, context = {}) {
+    // Check if we're in planning mode (context has a 'state' object)
+    // During planning, check the planning state instead of EntityManager
+    if (context.state && typeof context.state === 'object') {
+      const stateKey = `${entityId}:${componentId}`;
+      const hasComponent = Object.hasOwn(context.state, stateKey) && context.state[stateKey];
+
+      this.#logger.debug(
+        `${this.#operatorName}: [Planning Mode] Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId} in planning state`
+      );
+
+      return hasComponent;
+    }
+
+    // Normal runtime mode: check EntityManager
     const hasComponent = this.#entityManager.hasComponent(
       entityId,
       componentId

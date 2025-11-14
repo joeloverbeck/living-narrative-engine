@@ -340,4 +340,8 @@ export const coreTokens = freeze({
   IPrimitiveActionStepExecutor: 'IPrimitiveActionStepExecutor',
   IRefinementEngine: 'IRefinementEngine',
   IRefinementStateManager: 'IRefinementStateManager',
+  // GOAP Heuristics (GOAPIMPL-017)
+  IGoalDistanceHeuristic: 'IGoalDistanceHeuristic',
+  IRelaxedPlanningGraphHeuristic: 'IRelaxedPlanningGraphHeuristic',
+  IHeuristicRegistry: 'IHeuristicRegistry',
 });

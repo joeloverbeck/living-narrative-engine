@@ -980,14 +980,15 @@ describe('PlanningEffectsSimulator - Error Handling', () => {
       {
         type: 'ADD_COMPONENT',
         parameters: {
-          entity_ref: 'nonexistent',
+          entity_ref: 'actor', // Use a reference that exists in context to trigger resolution
           component_type: 'core:test',
           value: {},
         },
       },
     ];
-    const context = {};
+    const context = { actor: 'entity-1' }; // Context entry makes it a reference, not literal
 
+    // Mock the resolution to throw an error
     mockParameterResolution.resolve.mockImplementationOnce(() => {
       throw new Error('Entity not found');
     });

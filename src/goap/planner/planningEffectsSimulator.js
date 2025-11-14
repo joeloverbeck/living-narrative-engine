@@ -241,37 +241,45 @@ class PlanningEffectsSimulator {
     const { type, parameters } = effect;
     const resolved = {};
 
-    // Resolve entity_ref (required for all operations)
-    if (!parameters.entity_ref) {
-      throw new Error(`Critical: ${type} effect missing entity_ref parameter`);
+    // Resolve entity reference (supports both entity_ref and entityId for backwards compatibility)
+    const entityRef = parameters.entity_ref || parameters.entityId;
+    if (!entityRef) {
+      throw new Error(`Critical: ${type} effect missing entity_ref or entityId parameter`);
     }
 
     try {
-      resolved.entityId = this.#parameterResolutionService.resolve(
-        parameters.entity_ref,
-        context,
-        { validateEntity: true, contextType: 'planning' }
-      );
+      // Check if entityRef is a variable reference (contains dot or is a known variable)
+      // Otherwise treat as literal entity ID (for testing and direct entity references)
+      const isReference = entityRef.includes('.') || context[entityRef] !== undefined;
+
+      resolved.entityId = isReference
+        ? this.#parameterResolutionService.resolve(
+            entityRef,
+            context,
+            { validateEntity: true, contextType: 'planning' }
+          )
+        : entityRef; // Use literal entity ID directly
     } catch (err) {
       throw new Error(
-        `Critical: Failed to resolve entity_ref "${parameters.entity_ref}": ${err.message}`
+        `Critical: Failed to resolve entity reference "${entityRef}": ${err.message}`
       );
     }
 
-    // Resolve component_type (required for all operations)
-    if (!parameters.component_type) {
+    // Resolve component type (supports both component_type and componentId for backwards compatibility)
+    const componentType = parameters.component_type || parameters.componentId;
+    if (!componentType) {
       throw new Error(
-        `Critical: ${type} effect missing component_type parameter`
+        `Critical: ${type} effect missing component_type or componentId parameter`
       );
     }
 
     // Component type is usually literal, but could be a reference
-    resolved.componentType = parameters.component_type.includes('.')
+    resolved.componentType = componentType.includes('.')
       ? this.#parameterResolutionService.resolve(
-          parameters.component_type,
+          componentType,
           context
         )
-      : parameters.component_type;
+      : componentType;
 
     // Resolve operation-specific parameters
     switch (type) {
@@ -357,8 +365,6 @@ class PlanningEffectsSimulator {
         // 2. If component exists as object, modify object property
         // 3. Otherwise, create new component object with field
         const hasNestedFieldKey = state[fieldKey] !== undefined;
-        const hasComponentObject =
-          state[baseKey] !== undefined && typeof state[baseKey] === 'object';
 
         if (hasNestedFieldKey) {
           // Direct nested field modification (rare case)

@@ -112,15 +112,36 @@ class ConsoleLogger {
   #currentLogLevel = LogLevel.INFO; // Default log level
 
   /**
+   * @private
+   * @type {Set<string>}
+   */
+  #enabledDebugNamespaces = new Set(); // Enabled debug namespaces
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  #globalDebugEnabled = false; // If true, all debug logs are enabled
+
+  /**
    * Creates an instance of ConsoleLogger.
    *
    * @param {string | number} [logLevelInput] - The desired initial log level.
    * Can be a string (e.g., "DEBUG", "INFO", "WARN", "ERROR", "NONE")
    * or a number corresponding to LogLevel enum (0-4).
    * Defaults to LogLevel.INFO if not provided or invalid.
+   * @param {object} [options] - Additional options
+   * @param {Set<string>} [options.enabledNamespaces] - Set of enabled debug namespaces
+   * @param {boolean} [options.globalDebug] - Enable all debug logs
    */
-  constructor(logLevelInput = LogLevel.INFO) {
+  constructor(logLevelInput = LogLevel.INFO, options = {}) {
     this.setLogLevel(logLevelInput);
+    if (options.enabledNamespaces instanceof Set) {
+      this.#enabledDebugNamespaces = options.enabledNamespaces;
+    }
+    if (typeof options.globalDebug === 'boolean') {
+      this.#globalDebugEnabled = options.globalDebug;
+    }
     // Initial log message to confirm logger setup and its level.
     // This message itself will be subject to the just-set log level.
     this.debug(
@@ -245,13 +266,96 @@ class ConsoleLogger {
   /**
    * Logs a debug message to the console if the current log level allows DEBUG.
    *
+   * IMPORTANT: Debug logs must be activated individually using namespaces to prevent
+   * console overload (~25,000 logs on startup can hang the browser).
+   *
+   * Usage:
+   *   logger.debug('message')  // Only logs if log level is DEBUG
+   *   logger.debug('message', 'namespace')  // Requires namespace to be enabled
+   *   logger.debug('message', 'namespace', data)  // With additional data
+   *
+   * Enable namespaces via:
+   *   /debug:enable category:namespace
+   *   DEBUG_NAMESPACES=engine:init,ai:memory environment variable
+   *
    * @param {string} message - The primary debug message string.
+   * @param {string} [namespace] - Optional namespace for selective activation
    * @param {...any} args - Additional arguments or objects to include in the debug output.
    */
-  debug(message, ...args) {
-    if (this.#currentLogLevel <= LogLevel.DEBUG) {
+  debug(message, namespace, ...args) {
+    // Early return if debug level not enabled
+    if (this.#currentLogLevel > LogLevel.DEBUG) {
+      return;
+    }
+
+    // If no namespace provided, use traditional behavior (log if DEBUG level)
+    if (typeof namespace !== 'string') {
+      // namespace is actually part of args in this case
+      const allArgs = namespace !== undefined ? [namespace, ...args] : args;
+      console.debug(message, ...allArgs);
+      return;
+    }
+
+    // Namespace provided - check if it's enabled
+    if (this.#globalDebugEnabled || this.#enabledDebugNamespaces.has(namespace)) {
       console.debug(message, ...args);
     }
+  }
+
+  /**
+   * Enables a debug namespace for selective logging.
+   *
+   * @param {string} namespace - The namespace to enable (e.g., "engine:init")
+   */
+  enableDebugNamespace(namespace) {
+    if (typeof namespace === 'string' && namespace.trim()) {
+      this.#enabledDebugNamespaces.add(namespace.trim());
+    }
+  }
+
+  /**
+   * Disables a debug namespace.
+   *
+   * @param {string} namespace - The namespace to disable
+   */
+  disableDebugNamespace(namespace) {
+    if (typeof namespace === 'string') {
+      this.#enabledDebugNamespaces.delete(namespace.trim());
+    }
+  }
+
+  /**
+   * Clears all enabled debug namespaces.
+   */
+  clearDebugNamespaces() {
+    this.#enabledDebugNamespaces.clear();
+  }
+
+  /**
+   * Gets the list of enabled debug namespaces.
+   *
+   * @returns {string[]} Array of enabled namespaces
+   */
+  getEnabledNamespaces() {
+    return Array.from(this.#enabledDebugNamespaces);
+  }
+
+  /**
+   * Sets the global debug mode.
+   *
+   * @param {boolean} enabled - Whether to enable all debug logs
+   */
+  setGlobalDebug(enabled) {
+    this.#globalDebugEnabled = !!enabled;
+  }
+
+  /**
+   * Gets the global debug mode status.
+   *
+   * @returns {boolean} Whether global debug is enabled
+   */
+  isGlobalDebugEnabled() {
+    return this.#globalDebugEnabled;
   }
 
   /**

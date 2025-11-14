@@ -44,7 +44,17 @@ const MODE_SWITCH_MAP = {
  * @private
  * @type {string[]}
  */
-const SPECIAL_COMMANDS = ['reload', 'reset', 'flush', 'status'];
+const SPECIAL_COMMANDS = [
+  'reload',
+  'reset',
+  'flush',
+  'status',
+  '/debug:enable',
+  '/debug:disable',
+  '/debug:list',
+  '/debug:clear',
+  '/debug:help',
+];
 
 /**
  * Valid log levels for backward compatibility
@@ -154,11 +164,29 @@ class LoggerStrategy {
     if (
       this.#mode !== LoggerMode.NONE &&
       this.#logger &&
-      typeof this.#logger.debug === 'function'
+      typeof this.#logger.info === 'function'
     ) {
-      this.#logger.debug(
+      this.#logger.info(
         `[LoggerStrategy] Initialized with mode: ${this.#mode}`
       );
+
+      // Show helpful message about debug namespaces in development mode
+      if (
+        this.#mode === LoggerMode.DEVELOPMENT ||
+        this.#mode === LoggerMode.CONSOLE
+      ) {
+        const enabledNamespaces = this.getEnabledNamespaces();
+        if (enabledNamespaces.length === 0) {
+          this.#logger.info(
+            '[LoggerStrategy] Debug logging disabled by default to prevent console overload (~25,000 logs). ' +
+              'Use /debug:enable <category:namespace> or /debug:help for commands.'
+          );
+        } else {
+          this.#logger.info(
+            `[LoggerStrategy] Debug namespaces enabled (${enabledNamespaces.length}): ${enabledNamespaces.join(', ')}`
+          );
+        }
+      }
     }
   }
 
@@ -180,7 +208,7 @@ class LoggerStrategy {
     // then fall back to globalThis.process
     let processRef;
     try {
-      // eslint-disable-next-line no-undef
+       
       if (typeof process !== 'undefined') {
         // eslint-disable-next-line no-undef
         processRef = process;
@@ -424,9 +452,20 @@ class LoggerStrategy {
       return this.#dependencies.consoleLogger;
     }
 
-    // Create new instance
+    // Create new instance with namespace support
     const logLevel = config.logLevel || 'INFO';
-    return new ConsoleLogger(logLevel);
+    const options = {};
+
+    // Pass debug namespace configuration if available
+    if (config.debugNamespaces) {
+      options.enabledNamespaces =
+        config.debugNamespaces.enabled instanceof Set
+          ? config.debugNamespaces.enabled
+          : new Set();
+      options.globalDebug = config.debugNamespaces.global || false;
+    }
+
+    return new ConsoleLogger(logLevel, options);
   }
 
   /**
@@ -552,7 +591,11 @@ class LoggerStrategy {
    */
   #isSpecialCommand(input) {
     if (typeof input !== 'string') return false;
-    return SPECIAL_COMMANDS.includes(input.toLowerCase());
+    const lowerInput = input.toLowerCase();
+    // Check if it's a direct match or a debug command
+    return (
+      SPECIAL_COMMANDS.includes(lowerInput) || lowerInput.startsWith('/debug:')
+    );
   }
 
   /**
@@ -727,6 +770,76 @@ class LoggerStrategy {
     }
   }
 
+  // Debug Namespace Management Methods
+
+  /**
+   * Enables a debug namespace for selective logging.
+   *
+   * @param {string} namespace - The namespace to enable (e.g., "engine:init")
+   */
+  enableDebugNamespace(namespace) {
+    if (typeof this.#logger.enableDebugNamespace === 'function') {
+      this.#logger.enableDebugNamespace(namespace);
+      if (this.#logger && typeof this.#logger.info === 'function') {
+        this.#logger.info(`[LoggerStrategy] Debug namespace enabled: ${namespace}`);
+      }
+    }
+  }
+
+  /**
+   * Disables a debug namespace.
+   *
+   * @param {string} namespace - The namespace to disable
+   */
+  disableDebugNamespace(namespace) {
+    if (typeof this.#logger.disableDebugNamespace === 'function') {
+      this.#logger.disableDebugNamespace(namespace);
+      if (this.#logger && typeof this.#logger.info === 'function') {
+        this.#logger.info(`[LoggerStrategy] Debug namespace disabled: ${namespace}`);
+      }
+    }
+  }
+
+  /**
+   * Clears all enabled debug namespaces.
+   */
+  clearDebugNamespaces() {
+    if (typeof this.#logger.clearDebugNamespaces === 'function') {
+      this.#logger.clearDebugNamespaces();
+      if (this.#logger && typeof this.#logger.info === 'function') {
+        this.#logger.info('[LoggerStrategy] All debug namespaces cleared');
+      }
+    }
+  }
+
+  /**
+   * Gets the list of enabled debug namespaces.
+   *
+   * @returns {string[]} Array of enabled namespaces
+   */
+  getEnabledNamespaces() {
+    if (typeof this.#logger.getEnabledNamespaces === 'function') {
+      return this.#logger.getEnabledNamespaces();
+    }
+    return [];
+  }
+
+  /**
+   * Sets the global debug mode.
+   *
+   * @param {boolean} enabled - Whether to enable all debug logs
+   */
+  setGlobalDebug(enabled) {
+    if (typeof this.#logger.setGlobalDebug === 'function') {
+      this.#logger.setGlobalDebug(enabled);
+      if (this.#logger && typeof this.#logger.info === 'function') {
+        this.#logger.info(
+          `[LoggerStrategy] Global debug mode ${enabled ? 'enabled' : 'disabled'}`
+        );
+      }
+    }
+  }
+
   /**
    * Sets the log level or switches logger mode.
    * Supports traditional log levels, mode switching, configuration objects, and special commands.
@@ -836,6 +949,11 @@ class LoggerStrategy {
    * @param {string} command - The command to handle
    */
   #handleSpecialCommand(command) {
+    // Handle debug namespace commands
+    if (command.startsWith('/debug:')) {
+      return this.#handleDebugCommand(command);
+    }
+
     switch (command) {
       case 'reload': {
         // Reload configuration from defaults
@@ -891,7 +1009,94 @@ class LoggerStrategy {
         }
         return status;
       }
+    }
+  }
 
+  /**
+   * Handles debug namespace commands.
+   *
+   * @private
+   * @param {string} command - The debug command to handle
+   */
+  #handleDebugCommand(command) {
+    const parts = command.split(/\s+/);
+    const action = parts[0];
+    const namespace = parts[1];
+
+    switch (action) {
+      case '/debug:enable':
+        if (!namespace) {
+          if (this.#logger && typeof this.#logger.warn === 'function') {
+            this.#logger.warn(
+              '[LoggerStrategy] Usage: /debug:enable <category:namespace> (e.g., /debug:enable engine:init)'
+            );
+          }
+          return;
+        }
+        this.enableDebugNamespace(namespace);
+        break;
+
+      case '/debug:disable':
+        if (!namespace) {
+          if (this.#logger && typeof this.#logger.warn === 'function') {
+            this.#logger.warn(
+              '[LoggerStrategy] Usage: /debug:disable <category:namespace>'
+            );
+          }
+          return;
+        }
+        this.disableDebugNamespace(namespace);
+        break;
+
+      case '/debug:clear':
+        this.clearDebugNamespaces();
+        break;
+
+      case '/debug:list': {
+        const namespaces = this.getEnabledNamespaces();
+        if (this.#logger && typeof this.#logger.info === 'function') {
+          if (namespaces.length === 0) {
+            this.#logger.info(
+              '[LoggerStrategy] No debug namespaces enabled. Use /debug:enable <category:namespace> to enable.'
+            );
+          } else {
+            this.#logger.info(
+              `[LoggerStrategy] Enabled debug namespaces (${namespaces.length}):`,
+              namespaces
+            );
+          }
+        }
+        return namespaces;
+      }
+
+      case '/debug:help':
+        if (this.#logger && typeof this.#logger.info === 'function') {
+          this.#logger.info(`
+[LoggerStrategy] Debug Namespace Commands:
+
+/debug:enable <category:namespace>  - Enable specific debug namespace
+/debug:disable <category:namespace> - Disable specific debug namespace
+/debug:list                         - List all enabled namespaces
+/debug:clear                        - Clear all enabled namespaces
+/debug:help                         - Show this help message
+
+Examples:
+  /debug:enable engine:init     - Enable engine initialization logs
+  /debug:enable ai:memory       - Enable AI memory system logs
+  /debug:list                   - Show all active namespaces
+
+Note: Debug logging disabled by default to prevent ~25,000 logs from hanging console.
+Use namespaces for targeted debugging of specific areas.
+          `);
+        }
+        break;
+
+      default:
+        if (this.#logger && typeof this.#logger.warn === 'function') {
+          this.#logger.warn(
+            `[LoggerStrategy] Unknown debug command: ${action}. Use /debug:help for available commands.`
+          );
+        }
     }
   }
 

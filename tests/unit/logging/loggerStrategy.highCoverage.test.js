@@ -148,7 +148,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(mockConsoleLoggerFactory).not.toHaveBeenCalled();
     expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
     expect(strategy.getCurrentLogger()).toBe(providedLogger);
-    expect(providedLogger.debug).toHaveBeenCalledWith(
+    expect(providedLogger.info).toHaveBeenCalledWith(
       expect.stringContaining('[LoggerStrategy] Initialized with mode: console'),
     );
     expect(mockCreateSafeErrorLogger).toHaveBeenCalledWith({ logger: providedLogger, eventBus });
@@ -174,10 +174,10 @@ describe('LoggerStrategy near-complete coverage', () => {
       config: { console: { showTimestamp: true } },
     });
 
-    expect(mockConsoleLoggerFactory).toHaveBeenCalledWith('INFO');
+    expect(mockConsoleLoggerFactory).toHaveBeenCalledWith('INFO', {});
     const createdLogger = strategy.getCurrentLogger();
     expect(createdLogger).toBe(consoleLoggerInstances[0]);
-    expect(createdLogger.debug).toHaveBeenCalledWith(
+    expect(createdLogger.info).toHaveBeenCalledWith(
       expect.stringContaining('[LoggerStrategy] Initialized with mode:'),
     );
     expect(mockCreateSafeErrorLogger).not.toHaveBeenCalled();

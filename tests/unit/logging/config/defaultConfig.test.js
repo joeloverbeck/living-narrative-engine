@@ -174,14 +174,21 @@ describe('Default Configuration', () => {
         expect(development.mode).toBe('hybrid');
         expect(development.console.enabled).toBe(true);
         expect(development.console.showTimestamp).toBe(true);
-        expect(development.logLevel).toBe('DEBUG');
+        expect(development.logLevel).toBe('INFO'); // Changed from DEBUG to prevent console overload
       });
 
-      it('should have debug levels for most categories', () => {
-        const debugCategories = Object.values(development.categories).filter(
-          (cat) => cat.level === 'debug'
+      it('should have info levels for most categories', () => {
+        // Development now uses INFO by default with namespace-based debug logging
+        const infoCategories = Object.values(development.categories).filter(
+          (cat) => cat.level === 'info'
         );
-        expect(debugCategories.length).toBeGreaterThan(5);
+        expect(infoCategories.length).toBeGreaterThan(5);
+      });
+
+      it('should have debugNamespaces configuration', () => {
+        expect(development.debugNamespaces).toBeDefined();
+        expect(development.debugNamespaces.enabled).toBeInstanceOf(Set);
+        expect(development.debugNamespaces.global).toBe(false);
       });
     });
 
@@ -324,6 +331,7 @@ describe('Default Configuration', () => {
         'performance.slowLogThreshold',
         'criticalLogging.soundEnabled',
         'criticalLogging.minimumLevel',
+        'debugNamespaces', // Namespace-based debug logging
       ];
 
       Object.values(ENV_VAR_MAPPINGS).forEach((path) => {
@@ -331,9 +339,14 @@ describe('Default Configuration', () => {
       });
     });
 
-    it('should have DEBUG_LOG prefix for all variables', () => {
+    it('should have DEBUG_LOG prefix for all variables except DEBUG_NAMESPACES', () => {
       Object.keys(ENV_VAR_MAPPINGS).forEach((envVar) => {
-        expect(envVar.startsWith('DEBUG_LOG_')).toBe(true);
+        // DEBUG_NAMESPACES is an exception - it's a legacy/alternative prefix for namespace control
+        if (envVar === 'DEBUG_NAMESPACES') {
+          expect(envVar).toBe('DEBUG_NAMESPACES');
+        } else {
+          expect(envVar.startsWith('DEBUG_LOG_')).toBe(true);
+        }
       });
     });
 

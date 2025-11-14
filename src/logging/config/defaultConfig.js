@@ -15,6 +15,10 @@ export const DEFAULT_CONFIG = {
   mode: 'development',
   fallbackToConsole: true,
   logLevel: 'INFO', // Legacy support
+  debugNamespaces: {
+    enabled: new Set(), // Set of enabled namespaces (format: "category:namespace")
+    global: false, // If true, all debug logs are enabled regardless of namespace
+  },
   remote: {
     endpoint: getEndpointConfig().getDebugLogEndpoint(),
     batchSize: 100,
@@ -136,7 +140,7 @@ export const CONFIG_PRESETS = {
   development: {
     mode: 'hybrid',
     fallbackToConsole: true,
-    logLevel: 'DEBUG',
+    logLevel: 'INFO', // Changed from DEBUG to prevent console overload - use namespaces for debug logging
     console: {
       enabled: true,
       showCategory: true,
@@ -144,24 +148,29 @@ export const CONFIG_PRESETS = {
       showTimestamp: true,
     },
     categories: {
-      // Full debugging in development
-      engine: { enabled: true, level: 'debug' },
-      ui: { enabled: true, level: 'debug' },
-      ecs: { enabled: true, level: 'debug' },
-      ai: { enabled: true, level: 'debug' },
-      persistence: { enabled: true, level: 'debug' },
-      anatomy: { enabled: true, level: 'debug' },
-      actions: { enabled: true, level: 'debug' },
-      turns: { enabled: true, level: 'debug' },
+      // INFO by default to prevent ~25K debug logs from hanging console
+      // Use debug namespaces for targeted debugging (e.g., /debug:enable engine:init)
+      engine: { enabled: true, level: 'info' },
+      ui: { enabled: true, level: 'info' },
+      ecs: { enabled: true, level: 'info' },
+      ai: { enabled: true, level: 'info' },
+      persistence: { enabled: true, level: 'info' },
+      anatomy: { enabled: true, level: 'info' },
+      actions: { enabled: true, level: 'info' },
+      turns: { enabled: true, level: 'info' },
       events: { enabled: true, level: 'info' },
       validation: { enabled: true, level: 'info' },
-      general: { enabled: true, level: 'debug' },
-      entities: { enabled: true, level: 'debug' },
-      llm: { enabled: true, level: 'debug' },
+      general: { enabled: true, level: 'info' },
+      entities: { enabled: true, level: 'info' },
+      llm: { enabled: true, level: 'info' },
     },
     performance: {
       enableMetrics: true,
       slowLogThreshold: 500, // Lower threshold for development
+    },
+    debugNamespaces: {
+      enabled: new Set(), // Empty by default - activate specific namespaces as needed
+      global: false, // Set to true to enable all debug logs (not recommended)
     },
   },
 
@@ -320,4 +329,5 @@ export const ENV_VAR_MAPPINGS = {
   DEBUG_LOG_CRITICAL_SOUND_ENABLED: 'criticalLogging.soundEnabled',
   DEBUG_LOG_CRITICAL_MINIMUM_LEVEL: 'criticalLogging.minimumLevel',
   DEBUG_LOG_LEVEL: 'logLevel', // Legacy support
+  DEBUG_NAMESPACES: 'debugNamespaces', // Comma-separated list (e.g., "engine:init,ai:memory")
 };
