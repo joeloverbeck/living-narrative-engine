@@ -12,7 +12,13 @@ Create the interface definition for `ITargetResolutionResultBuilder` to establis
 
 ## Background
 
-Result assembly logic is currently duplicated in three places (lines 379-399, 525-556, 903-922) totaling ~80 lines. This causes inconsistencies and makes backward compatibility maintenance difficult. The interface will enable extraction into a single, reusable service.
+Result assembly logic is currently duplicated in three places inside `src/actions/pipeline/stages/MultiTargetResolutionStage.js`:
+
+- **Final stage result:** lines 426-447 build the top-level `PipelineResult` by combining `allActionsWithTargets`, aggregated `targetContexts`, and the captured `errors` array.
+- **Legacy path:** lines 563-603 create the legacy-compatible result payload returned from `#resolveLegacyTarget`, including conversion of scope results into `resolvedTargets`, `actionsWithTargets`, and compatibility metadata.
+- **Multi-target path:** lines 964-983 build the multi-target result returned from `#resolveMultiTargets`, including `detailedResolutionResults` that the tracing system depends on.
+
+Together these blocks total ~90 lines and share identical structure requirements (consistent `actionsWithTargets`, legacy compatibility fields, and error propagation). This duplication causes drift and makes backward compatibility maintenance difficult. The interface will enable extraction into a single, reusable service that all three call sites use.
 
 ## Technical Requirements
 
@@ -27,24 +33,24 @@ Result assembly logic is currently duplicated in three places (lines 379-399, 52
  */
 export default {
   /**
-   * Build result for legacy single-target action
+   * Build result for legacy single-target action (currently lines 563-603)
    * @param {object} context - Pipeline context
-   * @param {object} resolvedTargets - Resolved targets map
+   * @param {object} resolvedTargets - Resolved targets map generated from legacy scope resolution
    * @param {Array} targetContexts - Target contexts for backward compatibility
-   * @param {object} conversionResult - Legacy conversion result
+   * @param {object} conversionResult - Legacy conversion result with target definitions
    * @param {object} actionDef - Action definition
    * @returns {object} Action result with targets
    */
   buildLegacyResult(context, resolvedTargets, targetContexts, conversionResult, actionDef) {},
 
   /**
-   * Build result for multi-target action
+   * Build result for multi-target action (currently lines 964-983)
    * @param {object} context - Pipeline context
-   * @param {object} resolvedTargets - Resolved targets map
-   * @param {Array} targetContexts - Target contexts
+   * @param {object} resolvedTargets - Resolved targets map keyed by target key
+   * @param {Array} targetContexts - Flattened target contexts for backward compatibility
    * @param {object} targetDefinitions - Target definitions
    * @param {object} actionDef - Action definition
-   * @param {object} [detailedResults] - Detailed resolution results
+   * @param {object} [detailedResults] - Detailed resolution results captured for tracing
    * @returns {object} Action result with targets
    */
   buildMultiTargetResult(
@@ -57,12 +63,13 @@ export default {
   ) {},
 
   /**
-   * Build final pipeline result with all actions
+   * Build final pipeline result with all actions (currently lines 426-447)
    * @param {object} context - Pipeline context
    * @param {Array} allActionsWithTargets - All actions with resolved targets
    * @param {Array} allTargetContexts - All target contexts
-   * @param {object} lastResolvedTargets - Last resolved targets (backward compat)
-   * @param {object} lastTargetDefinitions - Last target definitions (backward compat)
+   * @param {object|null} lastResolvedTargets - Last resolved targets (backward compat)
+   * @param {object|null} lastTargetDefinitions - Last target definitions (backward compat)
+   * @param {Array} errors - Errors collected during processing
    * @returns {PipelineResult} Pipeline result
    */
   buildFinalResult(
@@ -70,11 +77,12 @@ export default {
     allActionsWithTargets,
     allTargetContexts,
     lastResolvedTargets,
-    lastTargetDefinitions
+    lastTargetDefinitions,
+    errors
   ) {},
 
   /**
-   * Attach metadata to action with targets
+   * Attach metadata to action with targets (currently lines 328-338)
    * @param {object} actionWithTargets - Action with targets object
    * @param {object} resolvedTargets - Resolved targets
    * @param {object} targetDefinitions - Target definitions
