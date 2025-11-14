@@ -336,6 +336,7 @@ export const coreTokens = freeze({
   IContextAssemblyService: 'IContextAssemblyService',
   IMethodSelectionService: 'IMethodSelectionService',
   IParameterResolutionService: 'IParameterResolutionService',
+  IPlanningEffectsSimulator: 'IPlanningEffectsSimulator',
   IPrimitiveActionStepExecutor: 'IPrimitiveActionStepExecutor',
   IRefinementEngine: 'IRefinementEngine',
   IRefinementStateManager: 'IRefinementStateManager',

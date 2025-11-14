@@ -70,6 +70,16 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Checks whether an entity exists.
+   *
+   * @param {string} id - Entity id.
+   * @returns {boolean} True if the entity exists.
+   */
+  hasEntity(id) {
+    return this.entitiesMap.has(id);
+  }
+
+  /**
    * Retrieves an entity instance by id.
    *
    * @param {string} id - Entity id.
