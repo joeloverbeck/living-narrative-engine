@@ -7,7 +7,7 @@
 
 ## Objective
 
-Migrate the external `validateSocketSlotCompatibility` function from `socketSlotCompatibilityValidator.js` into a standalone `SocketSlotCompatibilityValidator` class extending `BaseValidator`.
+Migrate the existing `validateSocketSlotCompatibility` helper from `src/anatomy/validation/socketSlotCompatibilityValidator.js` into a standalone `SocketSlotCompatibilityValidator` class that extends `BaseValidator`.
 
 ## Background
 
@@ -16,17 +16,20 @@ This validator ensures that blueprint `additionalSlots` reference valid sockets 
 ## Current Implementation
 
 **Location:** `src/anatomy/validation/socketSlotCompatibilityValidator.js`
-**Function:** `validateSocketSlotCompatibility(recipe, blueprint, dataRegistry, logger)`
+**Function:** `validateSocketSlotCompatibility(blueprint, dataRegistry)`
 
-**Helper Functions in Same File:**
-- `extractSocketsFromEntity(entityDef, dataRegistry)` - Extracts sockets from entity definitions
-- Uses `levenshteinDistance` from utils
+**Helper Functions:**
+- `extractSocketsFromEntity(entity)` (lives in `src/anatomy/validation/socketExtractor.js`) - Extracts sockets from the root entity
+- Local helpers `findSimilarSocketName` and `suggestSocketFix`
+- Uses `levenshteinDistance` from `src/utils/stringUtils.js`
 
 **Logic:**
-- Extracts all valid sockets from blueprint entities
-- Validates each additionalSlot references a valid socket
+- Looks up the root entity via `dataRegistry.get('entityDefinitions', blueprint.root)` and reports `ROOT_ENTITY_NOT_FOUND` when missing
+- Extracts sockets from the root entity's `anatomy:sockets` component (see `docs/anatomy/blueprints-and-recipes.md`)
+- Validates that each `additionalSlots.*.socket` references an available socket
+- Skips optional slots (`slot.optional === true`) instead of erroring when sockets are missing (mirrors runtime `slotResolutionOrchestrator` behavior)
 - Suggests similar socket names using Levenshtein distance
-- Reports errors for invalid socket references
+- Reports errors for invalid socket references and replays placeholder structure-template checks via `validateStructureTemplateSockets`
 
 ## Implementation Tasks
 
@@ -38,14 +41,9 @@ This validator ensures that blueprint `additionalSlots` reference valid sockets 
 ```javascript
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { extractSocketsFromEntity } from '../../validation/socketExtractor.js';
 import { levenshteinDistance } from '../../../utils/stringUtils.js';
 
-/**
- * Validates that blueprint additionalSlots reference valid sockets
- *
- * Priority: 20 - After blueprint existence check
- * Fail Fast: false - Report all socket issues
- */
 export class SocketSlotCompatibilityValidator extends BaseValidator {
   #dataRegistry;
   #anatomyBlueprintRepository;
@@ -59,49 +57,60 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
     });
 
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getComponent', 'getEntityDefinition'],
+      requiredMethods: ['getEntityDefinition'],
     });
 
-    validateDependency(anatomyBlueprintRepository, 'IAnatomyBlueprintRepository', logger, {
-      requiredMethods: ['getBlueprint'],
-    });
+    validateDependency(
+      anatomyBlueprintRepository,
+      'IAnatomyBlueprintRepository',
+      logger,
+      {
+        requiredMethods: ['getBlueprint'],
+      }
+    );
 
     this.#dataRegistry = dataRegistry;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
   }
 
   async performValidation(recipe, options, builder) {
-    // Get blueprint first
-    const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
+    const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(
+      recipe.blueprintId
+    );
 
     if (!blueprint) {
-      // Blueprint should have been validated by BlueprintExistenceValidator
-      // Skip this validation if blueprint is missing
+      // BlueprintExistenceValidator runs first; skip quietly when it already reported the issue.
       return;
     }
 
-    // Extract logic from validateSocketSlotCompatibility function
-    // Use builder.addError() for invalid socket references
-    // Use builder.addPassed() when all valid
-  }
+    const rootEntity = this.#dataRegistry.getEntityDefinition(blueprint.root);
 
-  #extractSocketsFromEntity(entityDef) {
-    // Migrate from external helper function
-    // Extract sockets from entity anatomy:socket_provider component
-  }
+    if (!rootEntity) {
+      builder.addError(
+        'ROOT_ENTITY_NOT_FOUND',
+        `Root entity '${blueprint.root}' not found`,
+        {
+          blueprintId: blueprint.id,
+          rootEntityId: blueprint.root,
+          fix: `Create entity at data/mods/*/entities/definitions/${blueprint.root.split(':')[1]}.entity.json`,
+        }
+      );
+      return;
+    }
 
-  #findSimilarSockets(invalidSocket, validSockets) {
-    // Use Levenshtein distance to find similar socket names
-    // For suggestions in error messages
+    const sockets = extractSocketsFromEntity(rootEntity);
+
+    // Port the rest of validateSocketSlotCompatibility: check additionalSlots, skip optional slots,
+    // reuse findSimilarSocketName/suggestSocketFix for error payloads, and call validateStructureTemplateSockets when needed.
   }
 }
 ```
 
 **Key Migration Points:**
-- External function `validateSocketSlotCompatibility` → `performValidation` method
-- Helper function `extractSocketsFromEntity` → private method
-- Levenshtein distance logic for suggestions
-- Error message formatting with suggestions
+- Move the existing `validateSocketSlotCompatibility` logic into `performValidation`, including optional-slot handling
+- Reuse `extractSocketsFromEntity` from `socketExtractor.js` instead of duplicating it
+- Keep Levenshtein-based suggestions (`findSimilarSocketName` and `suggestSocketFix`)
+- Maintain the `validateStructureTemplateSockets` placeholder logic so behavior stays identical until RECVALREF-011-10 removes the legacy file
 
 ### 2. Create Unit Tests (30 min)
 
@@ -110,20 +119,20 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
 **Test Cases:**
 1. Constructor validation
    - Should initialize with correct configuration
-   - Should validate dataRegistry dependency
+   - Should validate dataRegistry dependency (requires `getEntityDefinition`)
    - Should validate anatomyBlueprintRepository dependency
 
 2. Basic validation scenarios
-   - Should pass when all additionalSlots reference valid sockets
+   - Should pass when all additionalSlots reference valid sockets on the root entity
    - Should error when additionalSlot references invalid socket
    - Should error for multiple invalid socket references
    - Should handle blueprint with no sockets
    - Should handle recipe with no additionalSlots
+   - Should skip optional additionalSlots referencing missing sockets
 
-3. Socket extraction
-   - Should extract sockets from entity with anatomy:socket_provider
-   - Should handle entity without socket_provider component
-   - Should handle multiple entities with sockets
+3. Socket extraction (via `socketExtractor`)
+   - Should extract sockets from entity with `anatomy:sockets`
+   - Should handle entity without `anatomy:sockets`
    - Should collect all unique socket names
 
 4. Suggestion generation
@@ -133,13 +142,13 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
    - Should handle no similar sockets
 
 5. Blueprint integration
-   - Should skip validation if blueprint is null
-   - Should load blueprint via repository
-   - Should handle blueprint loading errors gracefully
+   - Should skip validation if the repository returns null (BlueprintExistenceValidator already emitted the error)
+   - Should load blueprint via `anatomyBlueprintRepository.getBlueprint`
+   - Should emit `ROOT_ENTITY_NOT_FOUND` when the blueprint root entity is missing
 
 6. Edge cases
-   - Should handle empty additionalSlots array
-   - Should handle malformed socket definitions
+   - Should handle empty additionalSlots object
+   - Should continue calling `validateStructureTemplateSockets` even though it currently returns an empty array
    - Should handle case-sensitive socket names
 
 **Coverage Target:** 80%+ branch coverage
@@ -151,13 +160,14 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
 ## Dependencies
 
 **Service Dependencies:**
-- `IDataRegistry` - For accessing components and entity definitions
+- `IDataRegistry` - For accessing root entity definitions via `getEntityDefinition`
 - `IAnatomyBlueprintRepository` - For loading blueprints
 - `ILogger` - For logging (inherited)
 
 **Code Dependencies:**
 - `BaseValidator` - Base class
 - `validateDependency` - Dependency validation
+- `extractSocketsFromEntity` - Socket extraction helper (`src/anatomy/validation/socketExtractor.js`)
 - `levenshteinDistance` - String similarity (from utils/stringUtils.js)
 
 ## Acceptance Criteria
@@ -165,7 +175,7 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
 - [ ] SocketSlotCompatibilityValidator class created
 - [ ] Extends BaseValidator with priority: 20, failFast: false
 - [ ] All logic from external function migrated
-- [ ] Helper function `extractSocketsFromEntity` migrated as private method
+- [ ] Validator reuses `extractSocketsFromEntity` helper from `socketExtractor.js` (do not duplicate logic)
 - [ ] Levenshtein distance suggestions work correctly
 - [ ] Constructor validates all dependencies
 - [ ] Unit tests achieve 80%+ branch coverage
@@ -192,11 +202,10 @@ npx eslint src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js
 `src/anatomy/validation/socketSlotCompatibilityValidator.js`
 
 **Functions to Migrate:**
-- `validateSocketSlotCompatibility(recipe, blueprint, dataRegistry, logger)` (main function)
-- `extractSocketsFromEntity(entityDef, dataRegistry)` (helper)
+- `validateSocketSlotCompatibility(blueprint, dataRegistry)` (main function)
 
 **Key Logic to Preserve:**
-- Socket extraction from anatomy:socket_provider components
+- Socket extraction from `anatomy:sockets` components (via shared helper)
 - Validation of additionalSlots against extracted sockets
 - Levenshtein distance for suggestions (threshold ~3)
 - Error message format with suggestions
