@@ -177,7 +177,7 @@ describe('RefinementEngine E2E Tests', () => {
 
     refinementEngine = new RefinementEngine({
       methodSelectionService,
-      refinementStateManager,
+      container: mockContainer,
       primitiveActionStepExecutor,
       conditionalStepExecutor,
       contextAssemblyService,

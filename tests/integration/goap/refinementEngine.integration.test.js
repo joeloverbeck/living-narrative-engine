@@ -256,7 +256,7 @@ describe('RefinementEngine Integration Tests', () => {
     // Create RefinementEngine with real services
     refinementEngine = new RefinementEngine({
       methodSelectionService,
-      refinementStateManager,
+      container: mockContainer,
       primitiveActionStepExecutor,
       conditionalStepExecutor,
       contextAssemblyService,

@@ -11,6 +11,7 @@ describe('RefinementEngine', () => {
   let refinementEngine;
   let mockMethodSelectionService;
   let mockRefinementStateManager;
+  let mockContainer;
   let mockPrimitiveActionStepExecutor;
   let mockConditionalStepExecutor;
   let mockContextAssemblyService;
@@ -29,6 +30,17 @@ describe('RefinementEngine', () => {
       store: jest.fn(),
       getSnapshot: jest.fn(() => ({})),
       clear: jest.fn(),
+    };
+
+    // Create mock container that resolves IRefinementStateManager
+    mockContainer = {
+      resolve: jest.fn((token) => {
+        // Return state manager when IRefinementStateManager is requested
+        if (token === 'IRefinementStateManager') {
+          return mockRefinementStateManager;
+        }
+        throw new Error(`Unexpected token resolution: ${token}`);
+      }),
     };
 
     mockPrimitiveActionStepExecutor = {
@@ -65,7 +77,7 @@ describe('RefinementEngine', () => {
 
     refinementEngine = new RefinementEngine({
       methodSelectionService: mockMethodSelectionService,
-      refinementStateManager: mockRefinementStateManager,
+      container: mockContainer,
       primitiveActionStepExecutor: mockPrimitiveActionStepExecutor,
       conditionalStepExecutor: mockConditionalStepExecutor,
       contextAssemblyService: mockContextAssemblyService,
@@ -80,7 +92,7 @@ describe('RefinementEngine', () => {
       expect(() => {
         new RefinementEngine({
           methodSelectionService: null,
-          refinementStateManager: mockRefinementStateManager,
+          container: mockContainer,
           primitiveActionStepExecutor: mockPrimitiveActionStepExecutor,
           conditionalStepExecutor: mockConditionalStepExecutor,
           contextAssemblyService: mockContextAssemblyService,

@@ -1,9 +1,7 @@
 /**
  * @file RefinementEngine - Orchestrates the complete refinement process
- *
  * The RefinementEngine is the main entry point for task-to-action decomposition.
  * It coordinates method selection, step execution, state management, and event dispatching.
- *
  * Workflow:
  * 1. Load task definition
  * 2. Select applicable refinement method
@@ -12,7 +10,6 @@
  * 5. Handle failures per fallbackBehavior
  * 6. Dispatch lifecycle events
  * 7. Return step execution results
- *
  * @see specs/goap-system-specs.md lines 163-195 for refinement pipeline
  */
 
@@ -27,7 +24,7 @@ import RefinementError from '../errors/refinementError.js';
  */
 class RefinementEngine {
   #methodSelectionService;
-  #refinementStateManager;
+  #container;
   #primitiveActionStepExecutor;
   #conditionalStepExecutor;
   #contextAssemblyService;
@@ -36,9 +33,11 @@ class RefinementEngine {
   #logger;
 
   /**
+   * Creates a new RefinementEngine instance.
+   *
    * @param {object} dependencies - Required services
    * @param {object} dependencies.methodSelectionService - IMethodSelectionService
-   * @param {object} dependencies.refinementStateManager - IRefinementStateManager (TRANSIENT)
+   * @param {object} dependencies.container - AppContainer (for lazy IRefinementStateManager resolution)
    * @param {object} dependencies.primitiveActionStepExecutor - IPrimitiveActionStepExecutor
    * @param {object} dependencies.conditionalStepExecutor - IConditionalStepExecutor
    * @param {object} dependencies.contextAssemblyService - IContextAssemblyService
@@ -48,7 +47,7 @@ class RefinementEngine {
    */
   constructor({
     methodSelectionService,
-    refinementStateManager,
+    container,
     primitiveActionStepExecutor,
     conditionalStepExecutor,
     contextAssemblyService,
@@ -64,14 +63,9 @@ class RefinementEngine {
         requiredMethods: ['selectMethod'],
       }
     );
-    validateDependency(
-      refinementStateManager,
-      'IRefinementStateManager',
-      logger,
-      {
-        requiredMethods: ['initialize', 'store', 'getSnapshot', 'clear'],
-      }
-    );
+    validateDependency(container, 'AppContainer', logger, {
+      requiredMethods: ['resolve'],
+    });
     validateDependency(
       primitiveActionStepExecutor,
       'IPrimitiveActionStepExecutor',
@@ -107,7 +101,7 @@ class RefinementEngine {
     });
 
     this.#methodSelectionService = methodSelectionService;
-    this.#refinementStateManager = refinementStateManager;
+    this.#container = container;
     this.#primitiveActionStepExecutor = primitiveActionStepExecutor;
     this.#conditionalStepExecutor = conditionalStepExecutor;
     this.#contextAssemblyService = contextAssemblyService;
@@ -181,8 +175,7 @@ class RefinementEngine {
         return this.#handleNoApplicableMethod(
           task,
           actorId,
-          diagnostics,
-          startTime
+          diagnostics
         );
       }
 
@@ -299,12 +292,11 @@ class RefinementEngine {
    * @param {object} task - Task definition
    * @param {string} actorId - Actor ID
    * @param {object} diagnostics - Method selection diagnostics
-   * @param {number} startTime - Refinement start timestamp
    * @returns {object} Fallback result
    * @throws {RefinementError} If fallbackBehavior is 'fail'
    * @private
    */
-  #handleNoApplicableMethod(task, actorId, diagnostics, startTime) {
+  #handleNoApplicableMethod(task, actorId, diagnostics) {
     const fallbackBehavior = task.fallbackBehavior || 'fail';
 
     this.#logger.warn('No applicable method, applying fallback', {
@@ -359,6 +351,7 @@ class RefinementEngine {
    * Execute all steps of a refinement method.
    *
    * Manages the complete step execution loop:
+   * - Resolves fresh transient state manager for isolation
    * - Initializes refinement state
    * - Builds context for each step
    * - Routes to appropriate executor
@@ -375,8 +368,15 @@ class RefinementEngine {
    * @private
    */
   async #executeMethodSteps(selectedMethod, task, actorId, taskParams) {
+    // CRITICAL: Resolve fresh transient RefinementStateManager to prevent state leakage
+    // Each refinement execution gets its own isolated state manager instance
+    const tokens = await import('../../dependencyInjection/tokens.js');
+    const refinementStateManager = this.#container.resolve(
+      tokens.tokens.IRefinementStateManager
+    );
+
     // Initialize refinement state
-    this.#refinementStateManager.initialize();
+    refinementStateManager.initialize();
 
     try {
       const stepResults = [];
@@ -396,7 +396,7 @@ class RefinementEngine {
             id: task.id,
             params: taskParams,
           },
-          this.#refinementStateManager.getSnapshot()
+          refinementStateManager.getSnapshot()
         );
 
         // Execute step based on type
@@ -461,7 +461,7 @@ class RefinementEngine {
       return stepResults;
     } finally {
       // Always clear state after method execution, even on error
-      this.#refinementStateManager.clear();
+      refinementStateManager.clear();
     }
   }
 }
