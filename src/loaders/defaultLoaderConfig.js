@@ -55,6 +55,7 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {BaseManifestItemLoaderInterface} deps.ruleLoader - Rule loader.
  * @param {BaseManifestItemLoaderInterface} deps.goalLoader - Goal loader.
  * @param {BaseManifestItemLoaderInterface} deps.taskLoader - Task loader.
+ * @param {BaseManifestItemLoaderInterface} deps.refinementMethodLoader - Refinement method loader.
  * @param {BaseManifestItemLoaderInterface} deps.scopeLoader - Scope loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityDefinitionLoader - Entity definition loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityInstanceLoader - Entity instance loader.
@@ -76,6 +77,7 @@ export function createDefaultContentLoadersConfig({
   ruleLoader,
   goalLoader,
   taskLoader,
+  refinementMethodLoader,
   scopeLoader,
   entityDefinitionLoader,
   entityInstanceLoader,
@@ -96,6 +98,7 @@ export function createDefaultContentLoadersConfig({
     rules: ruleLoader,
     goals: goalLoader,
     tasks: taskLoader,
+    refinementMethods: refinementMethodLoader,
     scopes: scopeLoader,
     entityDefinitions: entityDefinitionLoader,
     entityInstances: entityInstanceLoader,

@@ -6,6 +6,7 @@ import { tokens } from '../tokens.js';
 import ContextAssemblyService from '../../goap/services/contextAssemblyService.js';
 import ParameterResolutionService from '../../goap/services/parameterResolutionService.js';
 import RefinementStateManager from '../../goap/refinement/refinementStateManager.js';
+import MethodSelectionService from '../../goap/refinement/methodSelectionService.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -28,7 +29,20 @@ export function registerGoapServices(container) {
   });
 
   // Refinement State Manager
+  // IMPORTANT: transient lifecycle required to prevent shared state across concurrent actor refinements
+  // Each refinement execution needs isolated state (#state, #initialized fields are mutable)
   container.register(tokens.IRefinementStateManager, RefinementStateManager, {
     dependencies: [tokens.ILogger],
+    lifecycle: 'transient',
+  });
+
+  // Method Selection Service
+  container.register(tokens.IMethodSelectionService, MethodSelectionService, {
+    dependencies: [
+      tokens.GameDataRepository,
+      tokens.IContextAssemblyService,
+      tokens.JsonLogicEvaluationService,
+      tokens.ILogger,
+    ],
   });
 }

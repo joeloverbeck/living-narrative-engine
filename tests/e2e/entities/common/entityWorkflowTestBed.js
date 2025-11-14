@@ -15,6 +15,12 @@ import {
   assertPresent,
   assertNonBlankString,
 } from '../../../../src/utils/dependencyUtils.js';
+import {
+  ENTITY_CREATED_ID,
+  ENTITY_REMOVED_ID,
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
+} from '../../../../src/constants/eventIds.js';
 
 /**
  * Test bed for entity lifecycle workflow testing
@@ -28,8 +34,17 @@ import {
  * - Comprehensive cleanup and resource management
  */
 export class EntityWorkflowTestBed extends BaseTestBed {
-  constructor() {
+  constructor(options = {}) {
     super();
+
+    // Event monitoring configuration (NEW)
+    this.eventMonitoringOptions = {
+      monitorAll: options.monitorAll ?? false, // Default: don't monitor all events
+      specificEvents: options.specificEvents ?? [], // Only monitor these event types
+      deepClonePayloads: options.deepClonePayloads ?? false, // Default: shallow clone
+      enablePerformanceTracking: options.enablePerformanceTracking ?? true,
+      monitorComponentEvents: options.monitorComponentEvents ?? false, // Default: don't monitor component events
+    };
 
     // Core services
     this.container = null;
@@ -89,12 +104,13 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   }
 
   /**
-   * Register required component schemas for testing
+   * Register required component schemas for testing.
+   * Uses batch registration for better performance.
    */
   async registerTestComponentSchemas() {
-    // Register core:position schema
-    await this.validator.addSchema(
+    const schemas = [
       {
+        $id: 'core:position',
         type: 'object',
         properties: {
           locationId: { type: 'string' },
@@ -102,12 +118,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         required: ['locationId'],
         additionalProperties: false,
       },
-      'core:position'
-    );
 
-    // Register core:name schema
-    await this.validator.addSchema(
       {
+        $id: 'core:name',
         type: 'object',
         properties: {
           text: { type: 'string' },
@@ -115,12 +128,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         required: ['text'],
         additionalProperties: false,
       },
-      'core:name'
-    );
 
-    // Register core:description schema
-    await this.validator.addSchema(
       {
+        $id: 'core:description',
         type: 'object',
         properties: {
           text: { type: 'string' },
@@ -128,12 +138,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         required: ['text'],
         additionalProperties: false,
       },
-      'core:description'
-    );
 
-    // Register core:stats schema
-    await this.validator.addSchema(
       {
+        $id: 'core:stats',
         type: 'object',
         properties: {
           health: {
@@ -195,12 +202,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         required: ['health', 'maxHealth'],
         additionalProperties: false,
       },
-      'core:stats'
-    );
 
-    // Register core:inventory schema
-    await this.validator.addSchema(
       {
+        $id: 'core:inventory',
         type: 'object',
         properties: {
           items: {
@@ -222,12 +226,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         required: ['items'],
         additionalProperties: false,
       },
-      'core:inventory'
-    );
 
-    // Register core:actor schema
-    await this.validator.addSchema(
       {
+        $id: 'core:actor',
         type: 'object',
         properties: {
           name: { type: 'string', default: '' },
@@ -237,12 +238,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         },
         additionalProperties: false,
       },
-      'core:actor'
-    );
 
-    // Register core:item schema
-    await this.validator.addSchema(
       {
+        $id: 'core:item',
         type: 'object',
         properties: {
           name: { type: 'string', default: '' },
@@ -258,36 +256,101 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         },
         additionalProperties: false,
       },
-      'core:item'
-    );
+    ];
 
-    this.logger.debug('Registered test component schemas successfully');
+    // Batch registration using existing AjvSchemaValidator.addSchemas()
+    await this.validator.addSchemas(schemas);
+
+    this.logger.debug(`Registered ${schemas.length} test component schemas in batch`);
   }
 
   /**
-   * Set up comprehensive event monitoring for entity operations
+   * Set up event monitoring based on configuration.
+   * Only subscribes to events that tests actually need.
+   *
+   * @private
    */
   setupEventMonitoring() {
-    // Monitor all events for general tracking
-    const allEventsSubscription = this.eventBus.subscribe('*', (event) => {
-      this.events.push({
-        timestamp: Date.now(),
-        type: event.type,
-        payload: JSON.parse(JSON.stringify(event.payload)), // Deep clone
-      });
-    });
-    this.eventSubscriptions.push(allEventsSubscription);
+    const startTime = performance.now();
 
-    // Monitor entity lifecycle events specifically
+    const { monitorAll, specificEvents, deepClonePayloads } = this.eventMonitoringOptions;
+
+    // Helper to safely clone event data
+    const clonePayload = (payload) => {
+      if (!payload) return null;
+      if (!deepClonePayloads) {
+        // Shallow clone is much faster and sufficient for most tests
+        return { ...payload };
+      }
+      // Deep clone only when explicitly requested
+      try {
+        return JSON.parse(JSON.stringify(payload));
+      } catch (error) {
+        this.logger?.warn('Failed to deep clone event payload:', error);
+        return { ...payload }; // Fallback to shallow clone
+      }
+    };
+
+    // Option 1: Monitor all events (only if explicitly requested)
+    if (monitorAll) {
+      const allEventsSubscription = this.eventBus.subscribe('*', (event) => {
+        this.events.push({
+          timestamp: Date.now(),
+          type: event.type,
+          payload: clonePayload(event.payload),
+        });
+      });
+      this.eventSubscriptions.push(allEventsSubscription);
+      this.logger?.debug('Event monitoring: ALL events (monitorAll=true)');
+    }
+
+    // Option 2: Monitor specific events only
+    else if (specificEvents.length > 0) {
+      specificEvents.forEach((eventType) => {
+        const subscription = this.eventBus.subscribe(eventType, (event) => {
+          this.events.push({
+            timestamp: Date.now(),
+            type: event.type,
+            payload: clonePayload(event.payload),
+          });
+        });
+        this.eventSubscriptions.push(subscription);
+      });
+      this.logger?.debug(`Event monitoring: Specific events [${specificEvents.join(', ')}]`);
+    }
+
+    // Option 3: No general event monitoring (fastest)
+    else {
+      this.logger?.debug('Event monitoring: Disabled (best performance)');
+    }
+
+    // ALWAYS monitor entity lifecycle events (these are needed for test assertions)
+    this._setupEntityLifecycleMonitoring();
+
+    const endTime = performance.now();
+    if (this.eventMonitoringOptions.enablePerformanceTracking) {
+      this.recordPerformanceMetric('event_monitoring_setup', endTime - startTime);
+      this.logger?.debug(`Event monitoring setup took ${(endTime - startTime).toFixed(2)}ms`);
+    }
+  }
+
+  /**
+   * Set up monitoring for entity lifecycle events.
+   * These are always monitored because entity tests depend on them.
+   *
+   * @private
+   */
+  _setupEntityLifecycleMonitoring() {
+    // Monitor entity created events
     const entityCreatedSubscription = this.eventBus.subscribe(
-      'core:entity_created',
+      ENTITY_CREATED_ID,
       (event) => {
         this.entityEvents.push({
           type: 'ENTITY_CREATED',
           entityId: event.payload.entity?.id,
           definitionId: event.payload.definitionId,
           timestamp: Date.now(),
-          payload: event.payload,
+          payload: event.payload, // Don't clone - not needed for assertions
         });
 
         if (event.payload.entity?.id) {
@@ -297,14 +360,15 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     );
     this.eventSubscriptions.push(entityCreatedSubscription);
 
+    // Monitor entity removed events
     const entityRemovedSubscription = this.eventBus.subscribe(
-      'core:entity_removed',
+      ENTITY_REMOVED_ID,
       (event) => {
         this.entityEvents.push({
           type: 'ENTITY_REMOVED',
           entityId: event.payload.instanceId,
           timestamp: Date.now(),
-          payload: event.payload,
+          payload: event.payload, // Don't clone - not needed for assertions
         });
 
         const entityId = event.payload.instanceId;
@@ -316,9 +380,21 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     );
     this.eventSubscriptions.push(entityRemovedSubscription);
 
-    // Monitor component mutation events
+    // Only monitor component events if explicitly requested
+    if (this.eventMonitoringOptions.monitorComponentEvents) {
+      this._setupComponentEventMonitoring();
+    }
+  }
+
+  /**
+   * Set up monitoring for component mutation events.
+   * Only called if explicitly enabled via options.
+   *
+   * @private
+   */
+  _setupComponentEventMonitoring() {
     const componentAddedSubscription = this.eventBus.subscribe(
-      'core:component_added',
+      COMPONENT_ADDED_ID,
       (event) => {
         this.componentEvents.push({
           type: 'COMPONENT_ADDED',
@@ -332,7 +408,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     this.eventSubscriptions.push(componentAddedSubscription);
 
     const componentRemovedSubscription = this.eventBus.subscribe(
-      'core:component_removed',
+      COMPONENT_REMOVED_ID,
       (event) => {
         this.componentEvents.push({
           type: 'COMPONENT_REMOVED',
@@ -634,7 +710,27 @@ export class EntityWorkflowTestBed extends BaseTestBed {
    * @returns {Array<object>} Matching events
    */
   getEventsByType(eventType) {
-    return this.events.filter((event) => event.type === eventType);
+    // Map event type to internal type names used in specialized arrays
+    const typeMapping = {
+      'core:entity_created': 'ENTITY_CREATED',
+      'core:entity_removed': 'ENTITY_REMOVED',
+      'core:component_added': 'COMPONENT_ADDED',
+      'core:component_removed': 'COMPONENT_REMOVED',
+    };
+
+    const internalType = typeMapping[eventType];
+
+    // Search in all event arrays
+    const allEvents = [
+      ...this.events,
+      ...this.entityEvents,
+      ...this.componentEvents,
+    ];
+
+    // Filter by either the requested type or its internal mapping
+    return allEvents.filter(
+      (event) => event.type === eventType || event.type === internalType
+    );
   }
 
   /**
@@ -685,6 +781,47 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         }
       });
     });
+  }
+
+  /**
+   * Enable monitoring for specific events.
+   * Useful when a test needs to verify events that aren't monitored by default.
+   *
+   * @param {string[]} eventTypes - Event types to monitor
+   * @returns {Function} Unsubscribe function to stop monitoring
+   */
+  enableEventMonitoring(eventTypes) {
+    assertPresent(eventTypes, 'eventTypes');
+    if (!Array.isArray(eventTypes) || eventTypes.length === 0) {
+      throw new Error('eventTypes must be a non-empty array');
+    }
+
+    const subscriptions = eventTypes.map((eventType) => {
+      return this.eventBus.subscribe(eventType, (event) => {
+        this.events.push({
+          timestamp: Date.now(),
+          type: event.type,
+          payload: { ...event.payload }, // Shallow clone
+        });
+      });
+    });
+
+    this.eventSubscriptions.push(...subscriptions);
+
+    this.logger?.debug(`Enabled monitoring for: ${eventTypes.join(', ')}`);
+
+    // Return unsubscribe function
+    return () => {
+      subscriptions.forEach((sub) => {
+        const index = this.eventSubscriptions.indexOf(sub);
+        if (index > -1) {
+          this.eventSubscriptions.splice(index, 1);
+        }
+        if (typeof sub === 'function') {
+          sub(); // Unsubscribe
+        }
+      });
+    };
   }
 
   /**

@@ -17,7 +17,9 @@ describe('Batch Operations E2E Workflow', () => {
   let testBed;
 
   beforeEach(async () => {
-    testBed = new EntityWorkflowTestBed();
+    testBed = new EntityWorkflowTestBed({
+      monitorComponentEvents: true, // Required for component operation tests
+    });
     await testBed.initialize();
   });
 

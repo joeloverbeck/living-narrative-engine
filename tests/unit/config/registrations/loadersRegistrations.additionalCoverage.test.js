@@ -208,6 +208,7 @@ describe('registerLoaders additional coverage', () => {
       [actualTokens.RuleLoader, { id: 'rule' }],
       [actualTokens.GoalLoader, { id: 'goal' }],
       [actualTokens.TaskLoader, { id: 'task' }],
+      [actualTokens.RefinementMethodLoader, { id: 'refinementMethod' }],
       [actualTokens.ScopeLoader, { id: 'scope' }],
       [actualTokens.EntityLoader, { id: 'entityDefinition' }],
       [actualTokens.EntityInstanceLoader, { id: 'entityInstance' }],

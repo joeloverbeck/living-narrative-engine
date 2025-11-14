@@ -82,6 +82,7 @@ describe('defaultLoaderConfig', () => {
       ruleLoader: stubLoader,
       goalLoader: stubLoader,
       taskLoader: stubLoader,
+      refinementMethodLoader: stubLoader,
       scopeLoader: stubLoader,
       entityDefinitionLoader: stubLoader,
       entityInstanceLoader: stubLoader,
