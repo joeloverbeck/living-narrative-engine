@@ -1,6 +1,25 @@
 // Jest is assumed as the test runner
 
 describe('ModsLoader', () => {
+  it('throws when constructed without a valid session', async () => {
+    const cache = { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
+    const invalidSession = {};
+    const { default: ModsLoader } = await import(
+      '../../../src/loaders/modsLoader.js'
+    );
+
+    expect(
+      () => new ModsLoader({ logger, cache, session: invalidSession, registry })
+    ).toThrow('A valid session object with a run() method must be provided.');
+  });
+
   it('calls cache.clear once (pre) when loadMods is called', async () => {
     const clearSpy = jest.fn();
     const cache = { clear: clearSpy, snapshot: jest.fn(), restore: jest.fn() };
@@ -131,5 +150,35 @@ describe('ModsLoader', () => {
     // Verify the returned object is immutable
     expect(Object.isFrozen(result.totals)).toBe(true);
     expect(Array.isArray(result.finalModOrder)).toBe(true);
+  });
+
+  it('logs and rethrows ModsLoaderPhaseError failures', async () => {
+    const cache = { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
+    const { ModsLoaderPhaseError, ModsLoaderErrorCode } = await import(
+      '../../../src/errors/modsLoaderPhaseError.js'
+    );
+    const rejection = new ModsLoaderPhaseError(
+      ModsLoaderErrorCode.CONTENT,
+      'content boom',
+      'ContentPhase'
+    );
+    const session = { run: jest.fn().mockRejectedValue(rejection) };
+    const { default: ModsLoader } = await import(
+      '../../../src/loaders/modsLoader.js'
+    );
+    const loader = new ModsLoader({ logger, cache, session, registry });
+
+    await expect(loader.loadMods('world')).rejects.toBe(rejection);
+    expect(logger.error).toHaveBeenCalledWith(
+      "ModsLoader: CRITICAL failure during phase 'ContentPhase'. Code: [content]. Error: content boom",
+      { error: rejection }
+    );
   });
 });
