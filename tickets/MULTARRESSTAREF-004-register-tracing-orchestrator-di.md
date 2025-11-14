@@ -19,52 +19,61 @@ The new tracing orchestrator service needs to be registered in the DI container 
 ### Files to Modify
 
 #### 1. Define DI Token
-**File:** `src/dependencyInjection/tokens/tokens-core.js`
+**File:** `src/dependencyInjection/tokens/tokens-pipeline.js`
 
-**Change:**
+**Change:** Add the token to the pipeline-specific collection that already groups the extracted multi-target services. This file feeds into `src/dependencyInjection/tokens.js`, so no additional wiring is needed.
+
 ```javascript
-export const tokens = {
-  // ... existing tokens ...
-
-  // Target Resolution Pipeline Services
+export const pipelineTokens = freeze({
+  // Multi-Target Resolution Stage Services
+  ITargetDependencyResolver: 'ITargetDependencyResolver',
+  ILegacyTargetCompatibilityLayer: 'ILegacyTargetCompatibilityLayer',
+  IScopeContextBuilder: 'IScopeContextBuilder',
+  ITargetDisplayNameResolver: 'ITargetDisplayNameResolver',
   ITargetResolutionTracingOrchestrator: 'ITargetResolutionTracingOrchestrator',
 
-  // ... existing tokens ...
-};
+  // Service Infrastructure
+  IPipelineServiceFactory: 'IPipelineServiceFactory',
+  IPipelineServiceRegistry: 'IPipelineServiceRegistry',
+});
 ```
 
 #### 2. Register Service Factory
 **File:** `src/dependencyInjection/registrations/pipelineServiceRegistrations.js`
 
-**Note:** If this file doesn't exist, it may be in a related registration file. Check:
-- `src/dependencyInjection/registrations/actionRegistrations.js`
-- `src/dependencyInjection/registrations/serviceRegistrations.js`
-- Or create `pipelineServiceRegistrations.js` if appropriate
+This registration file already exists and uses the `Registrar` helper. Follow the existing singleton factory pattern so the orchestrator sits alongside the other extracted services.
 
-**Change:**
 ```javascript
 import TargetResolutionTracingOrchestrator from '../../actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
-import { tokens } from '../tokens/tokens-core.js';
+import { tokens } from '../tokens.js';
 
-// In registration function:
-container.register(
-  tokens.ITargetResolutionTracingOrchestrator,
-  ({ resolve }) => {
+// Inside registerPipelineServices(container):
+  registrar.singletonFactory(tokens.ITargetResolutionTracingOrchestrator, (c) => {
     return new TargetResolutionTracingOrchestrator({
-      logger: resolve(tokens.ILogger),
+      logger: c.resolve(tokens.ILogger),
     });
-  }
-);
+  });
 ```
 
 #### 3. Update Stage Registration
-**File:** `src/dependencyInjection/registrations/pipelineStageRegistrations.js` (or similar)
+**File:** `src/dependencyInjection/registrations/commandAndActionRegistrations.js`
 
-**Change:** Add `ITargetResolutionTracingOrchestrator` to `MultiTargetResolutionStage` dependencies (will be used in MULTARRESSTAREF-005)
+`MultiTargetResolutionStage` is registered inside `registerCommandAndAction()`. Update that factory so it resolves the new service and passes it to the stage constructor (the stage will start using it in MULTARRESSTAREF-005).
+
+```javascript
+  registrar.singletonFactory(tokens.IMultiTargetResolutionStage, (c) => {
+    return new MultiTargetResolutionStage({
+      targetDependencyResolver: c.resolve(tokens.ITargetDependencyResolver),
+      // ... existing dependencies ...
+      logger: c.resolve(tokens.ILogger),
+      tracingOrchestrator: c.resolve(tokens.ITargetResolutionTracingOrchestrator),
+    });
+  });
+```
 
 ## Acceptance Criteria
 
-- [ ] Token defined in `tokens-core.js`
+- [ ] Token defined in `tokens-pipeline.js`
 - [ ] Service registered with factory pattern
 - [ ] Factory injects `ILogger` dependency
 - [ ] Registration follows project DI patterns
