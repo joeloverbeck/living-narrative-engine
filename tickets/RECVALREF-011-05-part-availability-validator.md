@@ -13,16 +13,18 @@ Extract the `#checkPartAvailability` inline method from `RecipePreflightValidato
 
 This validator ensures that entity definitions exist for all recipe slots. It uses the `EntityMatcherService` to find matching entities for each slot/pattern configuration.
 
+Per the Anatomy System Guide, this work corresponds to Recipe Pre-flight Validation stage 8 (explicit part availability) and must preserve parity with the legacy inline check until the wider RECVALREF-011 plan is complete.
+
 ## Current Implementation
 
 **Location:** `src/anatomy/validation/RecipePreflightValidator.js`
-**Method:** `#checkPartAvailability` (lines 554-670)
+**Method:** `#checkPartAvailability` (lines 601-670)
 
 **Logic:**
-- Gets all entity definitions from dataRegistry
-- For each slot/pattern in recipe, calls `entityMatcherService.findMatchingEntities()`
-- Reports errors if no matching entities found
-- Includes detailed information about what was searched for
+- Calls `this.#dataRegistry.getAll('entityDefinitions')` to load every anatomy part definition currently registered
+- Iterates all explicit `recipe.slots` and `recipe.patterns`, calling `entityMatcherService.findMatchingEntities(criteria, allEntityDefs)` for each
+- Adds a `PART_UNAVAILABLE` error when no entities match, including `location`, `details`, and the number of definitions checked
+- Pushes the success message `{ check: 'part_availability', message: 'All slots and patterns have matching entity definitions' }` when every slot and pattern has at least one match
 
 ## Implementation Tasks
 
@@ -54,7 +56,7 @@ export class PartAvailabilityValidator extends BaseValidator {
     });
 
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getAllEntityDefinitions'],
+      requiredMethods: ['getAll'],
     });
 
     validateDependency(entityMatcherService, 'IEntityMatcherService', logger, {
@@ -67,26 +69,18 @@ export class PartAvailabilityValidator extends BaseValidator {
 
   async performValidation(recipe, options, builder) {
     // Extract logic from lines 601-670
-    // Use builder.addError() for missing entities
-    // Use builder.addPassed() when all slots have matches
-  }
-
-  #getSlotIdentifier(slot, index) {
-    // Helper to create slot description for error messages
-  }
-
-  #formatEntityCriteria(criteria) {
-    // Helper to format search criteria for error messages
+    // Use builder.addIssues([...]) for accumulated PART_UNAVAILABLE errors
+    // Use builder.addPassed('All slots and patterns have matching entity definitions', { check: 'part_availability' }) on success
+    // Wrap thrown exceptions with builder.addError('VALIDATION_ERROR', 'Failed to validate part availability', { check: 'part_availability', error: error.message })
   }
 }
 ```
 
 **Key Extraction Points:**
-- Lines 601-603: Get all entity definitions
-- Lines 605-610: Process all slots (both patterns and direct slots)
-- Lines 612-646: Call findMatchingEntities for each slot
-- Lines 648-666: Error reporting for missing entities
-- Lines 668-670: Success message
+- Lines 603-604: Load all entity definitions via `getAll('entityDefinitions')`
+- Lines 606-627: Iterate explicit slots and build PART_UNAVAILABLE errors when no matches exist
+- Lines 629-650: Repeat the process for recipe patterns
+- Lines 653-667: Emit either the success message or the aggregated errors
 
 ### 2. Create Unit Tests (1 hour)
 
@@ -95,36 +89,27 @@ export class PartAvailabilityValidator extends BaseValidator {
 **Test Cases:**
 1. Constructor validation
    - Should initialize with correct configuration
-   - Should validate dataRegistry dependency
-   - Should validate entityMatcherService dependency
+   - Should validate that `dataRegistry` exposes `getAll`
+   - Should validate that `entityMatcherService` exposes `findMatchingEntities`
 
 2. Basic validation scenarios
-   - Should pass when all slots have matching entities
-   - Should error when no entities match a slot
-   - Should error when multiple slots have no matches
-   - Should handle slots with preferId
-   - Should handle slots with partType
+   - Should pass when every slot and pattern produces at least one entity
+   - Should add a PART_UNAVAILABLE error when a slot has zero matches
+   - Should aggregate multiple PART_UNAVAILABLE errors before returning
+   - Should respect slot criteria that only include `partType`, `tags`, or `properties`
 
-3. Pattern slot handling
-   - Should validate pattern-based slots
-   - Should handle patterns with multiple criteria
-   - Should handle patterns with no matches
+3. Pattern handling
+   - Should invoke `findMatchingEntities` for each pattern entry
+   - Should record PART_UNAVAILABLE errors for patterns without matches, including their index
 
 4. Entity matcher integration
-   - Should call findMatchingEntities with correct criteria
-   - Should handle entityMatcherService returning empty array
-   - Should handle entityMatcherService throwing errors
+   - Should pass the slot/pattern criteria object directly to `findMatchingEntities`
+   - Should propagate matcher exceptions by recording the VALIDATION_ERROR block (from the catch path)
 
 5. Edge cases
-   - Should handle recipe with no slots
-   - Should handle recipe with empty slots array
-   - Should handle slots with partial criteria
-   - Should handle entity definitions list being empty
-
-6. Error message formatting
-   - Should include slot identifier in error messages
-   - Should include search criteria in error messages
-   - Should format criteria readably
+   - Should treat `recipe.slots` and `recipe.patterns` as optional (missing or empty arrays yield the success message)
+   - Should handle the registry returning an empty entity list
+   - Should support recipes that only declare slots or only patterns
 
 **Coverage Target:** 80%+ branch coverage
 
@@ -176,19 +161,14 @@ npx eslint src/anatomy/validation/validators/PartAvailabilityValidator.js
 ## Code Reference
 
 **Original Method Location:**
-`src/anatomy/validation/RecipePreflightValidator.js:554-670`
+`src/anatomy/validation/RecipePreflightValidator.js:601-670`
 
 **Key Logic to Preserve:**
-- Line 601: `getAllEntityDefinitions()`
-- Line 608: Process both `recipe.slots` and pattern-generated slots
-- Lines 612-646: Entity matching logic
-- Line 620: `findMatchingEntities(entityDefs, criteria)`
-- Lines 628-644: Error message construction
-- Lines 648-666: Aggregated error reporting
-
-**Helper References:**
-- `#getSlotIdentifier` logic: Lines 630-633
-- Criteria formatting: Lines 638-642
+- Lines 603-604: `const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');`
+- Lines 606-627: Iterate explicit slots, calling `findMatchingEntities(slot, allEntityDefs)`
+- Lines 629-650: Repeat the matcher call for each pattern index
+- Lines 614-648: Build `PART_UNAVAILABLE` errors with `location` and `details.totalEntitiesChecked`
+- Lines 653-667: Emit the success message or push accumulated errors, and capture thrown exceptions as `VALIDATION_ERROR`
 
 ## Critical Notes
 
