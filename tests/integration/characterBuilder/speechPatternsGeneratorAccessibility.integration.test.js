@@ -511,6 +511,86 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
 
     validateInputSpy.mockRestore();
   });
+
+  it('shows a good validation success message when the quality score is high but not excellent', async () => {
+    jest.useFakeTimers();
+    setupDom();
+
+    const schemaValidator = createSchemaValidator();
+    const speechPatternsGenerator = {
+      getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
+      generateSpeechPatterns: jest.fn().mockResolvedValue(createSuccessfulResult()),
+    };
+
+    const validationResult = {
+      isValid: true,
+      errors: [],
+      warnings: [],
+      suggestions: [],
+      quality: { overallScore: 0.7 },
+    };
+
+    const validateInputSpy = jest
+      .spyOn(EnhancedSpeechPatternsValidator.prototype, 'validateInput')
+      .mockResolvedValue(validationResult);
+
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      createDependencies({ speechPatternsGenerator, schemaValidator })
+    );
+    activeControllers.add(controller);
+    await controller.initialize();
+
+    await enterValidCharacterDefinition({ useFakeTimers: true });
+
+    const errorContainer = document.getElementById('character-input-error');
+    expect(errorContainer.textContent).toContain('Good character definition');
+
+    const textarea = document.getElementById('character-definition');
+    expect(textarea.classList.contains('success')).toBe(true);
+
+    validateInputSpy.mockRestore();
+  });
+
+  it('renders excellent quality metrics when warnings are present', async () => {
+    jest.useFakeTimers();
+    setupDom();
+
+    const schemaValidator = createSchemaValidator();
+    const speechPatternsGenerator = {
+      getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
+      generateSpeechPatterns: jest.fn().mockResolvedValue(createSuccessfulResult()),
+    };
+
+    const validationResult = {
+      isValid: false,
+      errors: [],
+      warnings: ['Consider adding more context for tense scenes.'],
+      suggestions: [],
+      quality: { overallScore: 0.88 },
+    };
+
+    const validateInputSpy = jest
+      .spyOn(EnhancedSpeechPatternsValidator.prototype, 'validateInput')
+      .mockResolvedValue(validationResult);
+
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      createDependencies({ speechPatternsGenerator, schemaValidator })
+    );
+    activeControllers.add(controller);
+    await controller.initialize();
+
+    await enterValidCharacterDefinition({ useFakeTimers: true });
+
+    const errorContainer = document.getElementById('character-input-error');
+    const qualityScore = errorContainer.querySelector('.quality-score.excellent');
+    expect(qualityScore.textContent).toContain('88%');
+    expect(errorContainer.querySelector('.quality-level').textContent).toContain('Excellent');
+
+    const textarea = document.getElementById('character-definition');
+    expect(textarea.classList.contains('warning')).toBe(true);
+
+    validateInputSpy.mockRestore();
+  });
 });
 
 describe('SpeechPatternsGeneratorController integration - keyboard accessibility and navigation', () => {
