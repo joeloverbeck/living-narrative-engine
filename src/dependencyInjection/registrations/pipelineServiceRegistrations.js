@@ -11,6 +11,7 @@ import { TargetDependencyResolver } from '../../actions/pipeline/services/implem
 import { LegacyTargetCompatibilityLayer } from '../../actions/pipeline/services/implementations/LegacyTargetCompatibilityLayer.js';
 import { ScopeContextBuilder } from '../../actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import { TargetDisplayNameResolver } from '../../actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
+import TargetResolutionTracingOrchestrator from '../../actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 
 /**
  * Register pipeline services for multi-target resolution
@@ -77,6 +78,12 @@ export function registerPipelineServices(container) {
     });
   });
 
+  registrar.singletonFactory(tokens.ITargetResolutionTracingOrchestrator, (c) => {
+    return new TargetResolutionTracingOrchestrator({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
   logger.debug('Pipeline Service Registration: Completed', {
     registeredServices: [
       'IPipelineServiceFactory',
@@ -85,6 +92,7 @@ export function registerPipelineServices(container) {
       'ILegacyTargetCompatibilityLayer',
       'IScopeContextBuilder',
       'ITargetDisplayNameResolver',
+      'ITargetResolutionTracingOrchestrator',
     ],
   });
 }
