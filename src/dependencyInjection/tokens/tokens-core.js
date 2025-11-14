@@ -62,6 +62,7 @@ export const coreTokens = freeze({
   GoalLoader: 'GoalLoader',
   ScopeLoader: 'ScopeLoader',
   TaskLoader: 'TaskLoader',
+  RefinementMethodLoader: 'RefinementMethodLoader',
   ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',
@@ -329,6 +330,7 @@ export const coreTokens = freeze({
   ICircuitBreaker: 'ICircuitBreaker',
   // GOAP System Services
   IContextAssemblyService: 'IContextAssemblyService',
+  IMethodSelectionService: 'IMethodSelectionService',
   IParameterResolutionService: 'IParameterResolutionService',
   IRefinementStateManager: 'IRefinementStateManager',
 });

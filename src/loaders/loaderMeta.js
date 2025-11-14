@@ -66,6 +66,12 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'tasks',
   },
+  refinementMethods: {
+    contentKey: 'refinement-methods',
+    diskFolder: 'tasks/refinement-methods',
+    phase: 'definitions',
+    registryKey: 'refinement-methods',
+  },
   scopes: {
     contentKey: 'scopes',
     diskFolder: 'scopes',
