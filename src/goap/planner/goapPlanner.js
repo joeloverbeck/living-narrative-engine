@@ -7,6 +7,8 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import MinHeap from './minHeap.js';
+import PlanningNode from './planningNode.js';
 
 /**
  * GOAP planner using A* algorithm to find action sequences achieving goals
@@ -40,6 +42,12 @@ class GoapPlanner {
   /** @type {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} */
   #spatialIndexManager;
 
+  /** @type {import('./planningEffectsSimulator.js').default} */
+  #effectsSimulator;
+
+  /** @type {import('./heuristicRegistry.js').default} */
+  #heuristicRegistry;
+
   /**
    * Create new GOAP planner instance
    *
@@ -51,8 +59,10 @@ class GoapPlanner {
    * @param {import('../../scopeDsl/scopeRegistry.js').default} deps.scopeRegistry - Scope registry for retrieving scope ASTs
    * @param {import('../../scopeDsl/engine.js').default} deps.scopeEngine - Scope engine for resolving scopes
    * @param {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} deps.spatialIndexManager - Spatial index manager for runtime context
+   * @param {import('./planningEffectsSimulator.js').default} deps.effectsSimulator - Effects simulator for state transformation
+   * @param {import('./heuristicRegistry.js').default} deps.heuristicRegistry - Heuristic registry for A* estimates
    */
-  constructor({ logger, jsonLogicService, gameDataRepository, entityManager, scopeRegistry, scopeEngine, spatialIndexManager }) {
+  constructor({ logger, jsonLogicService, gameDataRepository, entityManager, scopeRegistry, scopeEngine, spatialIndexManager, effectsSimulator, heuristicRegistry }) {
     this.#logger = ensureValidLogger(logger);
 
     validateDependency(jsonLogicService, 'JsonLogicEvaluationService', this.#logger, {
@@ -84,6 +94,16 @@ class GoapPlanner {
       requiredMethods: [], // Spatial index manager just needs to exist for runtime context
     });
     this.#spatialIndexManager = spatialIndexManager;
+
+    validateDependency(effectsSimulator, 'IPlanningEffectsSimulator', this.#logger, {
+      requiredMethods: ['simulateEffects'],
+    });
+    this.#effectsSimulator = effectsSimulator;
+
+    validateDependency(heuristicRegistry, 'IHeuristicRegistry', this.#logger, {
+      requiredMethods: ['calculate'],
+    });
+    this.#heuristicRegistry = heuristicRegistry;
 
     this.#logger.info('GoapPlanner initialized');
   }
@@ -509,6 +529,283 @@ class GoapPlanner {
     });
 
     return applicableTasks;
+  }
+
+  /**
+   * Find optimal task sequence to achieve goal using A* search
+   *
+   * Implements classic A* algorithm with:
+   * - MinHeap-based open list (prioritized by fScore)
+   * - Set-based closed list (visited state hashes)
+   * - State deduplication via hashing
+   * - Open list duplicate detection with path replacement
+   * - Search limits (maxNodes, maxTime, maxDepth)
+   * - Heuristic calculation for admissible estimates
+   * - Effect simulation for state prediction
+   *
+   * @param {string} actorId - Acting entity ID (UUID format)
+   * @param {object} goal - Goal definition with goalState JSON Logic condition
+   * @param {object} initialState - Starting world state (symbolic facts hash)
+   * @param {object} options - Search configuration
+   * @param {string} options.heuristic - Heuristic name (default: 'goal-distance')
+   * @param {number} options.maxNodes - Max nodes to explore (default: 1000)
+   * @param {number} options.maxTime - Max time in ms (default: 5000)
+   * @param {number} options.maxDepth - Max plan length (default: 20)
+   * @returns {Array<{taskId: string, parameters: object}>|null} Plan or null if unsolvable
+   * @example
+   * const plan = planner.plan('actor-123', {
+   *   id: 'reduce-hunger',
+   *   goalState: { '==': [{ 'var': 'actor.core.hungry' }, false] }
+   * }, initialState);
+   * // Returns: [
+   * //   { taskId: 'core:acquire_food', parameters: { target: 'apple-456' } },
+   * //   { taskId: 'core:consume_food', parameters: { target: 'apple-456' } }
+   * // ]
+   */
+  plan(actorId, goal, initialState, options = {}) {
+    // 1. Extract and validate options
+    const heuristic = options.heuristic || 'goal-distance';
+    const maxNodes = options.maxNodes || 1000;
+    const maxTime = options.maxTime || 5000;
+    const maxDepth = options.maxDepth || 20;
+
+    this.#logger.info('Starting A* search', {
+      actorId,
+      goalId: goal.id,
+      heuristic,
+      limits: { maxNodes, maxTime, maxDepth },
+    });
+
+    // 2. Get task library for actor
+    const taskLibrary = this.#getTaskLibrary(actorId);
+    if (taskLibrary.length === 0) {
+      this.#logger.warn('No tasks available for actor', { actorId });
+      return null;
+    }
+
+    // 3. Calculate initial heuristic
+    let initialHeuristic;
+    try {
+      initialHeuristic = this.#heuristicRegistry.calculate(
+        heuristic,
+        initialState,
+        goal,
+        taskLibrary
+      );
+    } catch (err) {
+      this.#logger.error('Initial heuristic calculation failed', err);
+      return null;
+    }
+
+    // 4. Create start node
+    const startNode = new PlanningNode({
+      state: initialState,
+      gScore: 0,
+      hScore: initialHeuristic,
+      parent: null,
+      task: null,
+      taskParameters: null,
+    });
+
+    // 5. Initialize A* data structures
+    const openList = new MinHeap((a, b) => a.fScore - b.fScore);
+    const closedSet = new Set(); // Set of state hashes
+
+    openList.push(startNode);
+
+    // 6. Track performance
+    const startTime = Date.now();
+    let nodesExpanded = 0;
+
+    // 7. Main A* loop
+    while (!openList.isEmpty()) {
+      // 7.1 Check time limit
+      const elapsed = Date.now() - startTime;
+      if (elapsed > maxTime) {
+        this.#logger.warn('Search timeout', {
+          elapsed,
+          maxTime,
+          nodesExpanded,
+        });
+        return null;
+      }
+
+      // 7.2 Check node limit
+      if (nodesExpanded >= maxNodes) {
+        this.#logger.warn('Node limit reached', {
+          nodesExpanded,
+          maxNodes,
+        });
+        return null;
+      }
+
+      // 7.3 Get node with lowest fScore
+      const current = openList.pop();
+      nodesExpanded++;
+
+      // Log progress every 100 nodes
+      if (nodesExpanded % 100 === 0) {
+        this.#logger.info('Search progress', {
+          nodesExpanded,
+          openListSize: openList.size,
+          closedSetSize: closedSet.size,
+          currentFScore: current.fScore,
+        });
+      }
+
+      this.#logger.debug('Expanding node', {
+        gScore: current.gScore,
+        hScore: current.hScore,
+        fScore: current.fScore,
+        task: current.task?.id,
+      });
+
+      // 7.4 Goal check - BEFORE adding to closed set
+      if (this.#goalSatisfied(current.state, goal)) {
+        this.#logger.info('Goal reached', {
+          nodesExpanded,
+          planLength: current.gScore,
+          timeElapsed: Date.now() - startTime,
+        });
+        return current.getPath();
+      }
+
+      // 7.5 Add to closed set
+      const currentHash = this.#hashState(current.state);
+      closedSet.add(currentHash);
+
+      // 7.6 Check depth limit
+      if (current.gScore >= maxDepth) {
+        this.#logger.debug('Depth limit reached for node', {
+          depth: current.gScore,
+          maxDepth,
+        });
+        continue; // Skip expanding this node
+      }
+
+      // 7.7 Generate successors
+      const applicableTasks = this.#getApplicableTasks(
+        taskLibrary,
+        current.state,
+        actorId
+      );
+
+      for (const task of applicableTasks) {
+        // 7.7.1 Build effect simulation context
+        const effectContext = {
+          actorId,
+          taskId: task.id,
+          parameters: task.boundParams || {},
+        };
+
+        // 7.7.2 Simulate effects
+        let simulationResult;
+        try {
+          simulationResult = this.#effectsSimulator.simulateEffects(
+            current.state,
+            task.planningEffects || [],
+            effectContext
+          );
+        } catch (err) {
+          this.#logger.warn('Effect simulation failed', {
+            taskId: task.id,
+            error: err.message,
+          });
+          continue; // Skip this task
+        }
+
+        if (!simulationResult.success) {
+          this.#logger.debug('Effect simulation unsuccessful', {
+            taskId: task.id,
+            error: simulationResult.error,
+          });
+          continue; // Skip this task
+        }
+
+        const successorState = simulationResult.state;
+        const successorHash = this.#hashState(successorState);
+
+        // 7.7.3 Skip if already in closed set
+        if (closedSet.has(successorHash)) {
+          this.#logger.debug('State already visited', {
+            taskId: task.id,
+          });
+          continue;
+        }
+
+        // 7.7.4 Calculate scores
+        const taskCost = task.cost || 1; // Default cost is 1
+        const successorGScore = current.gScore + taskCost;
+
+        // 7.7.5 Calculate heuristic
+        let successorHScore;
+        try {
+          successorHScore = this.#heuristicRegistry.calculate(
+            heuristic,
+            successorState,
+            goal,
+            taskLibrary
+          );
+        } catch (err) {
+          this.#logger.warn('Heuristic calculation failed, using Infinity', {
+            taskId: task.id,
+            error: err.message,
+          });
+          successorHScore = Infinity; // Inadmissible - will be deprioritized
+        }
+
+        // 7.7.6 Create successor node
+        const successor = new PlanningNode({
+          state: successorState,
+          gScore: successorGScore,
+          hScore: successorHScore,
+          parent: current,
+          task: task,
+          taskParameters: task.boundParams || null,
+        });
+
+        // 7.7.7 Check if already in open list
+        const existingIndex = openList.findIndex(node => {
+          const existingHash = this.#hashState(node.state);
+          return existingHash === successorHash;
+        });
+
+        if (existingIndex !== -1) {
+          // State already in open list
+          const existing = openList.get(existingIndex);
+          if (successor.gScore < existing.gScore) {
+            // Found better path - replace
+            this.#logger.debug('Replacing path in open list', {
+              taskId: task.id,
+              oldGScore: existing.gScore,
+              newGScore: successor.gScore,
+            });
+            openList.remove(existingIndex);
+            openList.push(successor);
+          } else {
+            this.#logger.debug('Keeping existing better path', {
+              taskId: task.id,
+            });
+          }
+        } else {
+          // New state - add to open list
+          this.#logger.debug('Adding successor to open list', {
+            taskId: task.id,
+            gScore: successor.gScore,
+            hScore: successor.hScore,
+            fScore: successor.fScore,
+          });
+          openList.push(successor);
+        }
+      }
+    }
+
+    // 8. Open list exhausted - no solution
+    this.#logger.warn('Goal unsolvable - open list exhausted', {
+      nodesExpanded,
+      timeElapsed: Date.now() - startTime,
+    });
+    return null;
   }
 
   /**

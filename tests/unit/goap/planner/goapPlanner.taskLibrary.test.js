@@ -17,6 +17,8 @@ describe('GoapPlanner - Task Library Construction', () => {
   let mockScopeRegistry;
   let mockScopeEngine;
   let mockSpatialIndexManager;
+  let mockEffectsSimulator;
+  let mockHeuristicRegistry;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -29,6 +31,12 @@ describe('GoapPlanner - Task Library Construction', () => {
     mockScopeRegistry = testBed.createMock('scopeRegistry', ['getScopeAst']);
     mockScopeEngine = testBed.createMock('scopeEngine', ['resolve']);
     mockSpatialIndexManager = testBed.createMock('spatialIndexManager', []);
+    mockEffectsSimulator = testBed.createMock('effectsSimulator', [
+      'simulateEffects',
+    ]);
+    mockHeuristicRegistry = testBed.createMock('heuristicRegistry', [
+      'calculate',
+    ]);
 
     // Default mock implementations
     mockRepository.get.mockImplementation(key => {
@@ -79,6 +87,8 @@ describe('GoapPlanner - Task Library Construction', () => {
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       spatialIndexManager: mockSpatialIndexManager,
+      effectsSimulator: mockEffectsSimulator,
+      heuristicRegistry: mockHeuristicRegistry,
     });
   });
 

@@ -15,6 +15,8 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
   let mockScopeRegistry;
   let mockScopeEngine;
   let mockSpatialIndexManager;
+  let mockEffectsSimulator;
+  let mockHeuristicRegistry;
 
   beforeEach(() => {
     // Create mock logger
@@ -56,6 +58,16 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
       // Minimal - just needs to exist for runtime context
     };
 
+    // Create mock effects simulator
+    mockEffectsSimulator = {
+      simulateEffects: jest.fn(),
+    };
+
+    // Create mock heuristic registry
+    mockHeuristicRegistry = {
+      calculate: jest.fn(),
+    };
+
     // Create planner instance
     planner = new GoapPlanner({
       logger: mockLogger,
@@ -65,6 +77,8 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       spatialIndexManager: mockSpatialIndexManager,
+      effectsSimulator: mockEffectsSimulator,
+      heuristicRegistry: mockHeuristicRegistry,
     });
   });
 
@@ -79,6 +93,8 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
           scopeRegistry: {}, // Missing getScopeAst
           scopeEngine: mockScopeEngine,
           spatialIndexManager: mockSpatialIndexManager,
+      effectsSimulator: mockEffectsSimulator,
+      heuristicRegistry: mockHeuristicRegistry,
         });
       }).toThrow();
     });
@@ -93,6 +109,8 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
           scopeRegistry: mockScopeRegistry,
           scopeEngine: {}, // Missing resolve
           spatialIndexManager: mockSpatialIndexManager,
+      effectsSimulator: mockEffectsSimulator,
+      heuristicRegistry: mockHeuristicRegistry,
         });
       }).toThrow();
     });
