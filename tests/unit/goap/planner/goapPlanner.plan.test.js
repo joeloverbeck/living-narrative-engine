@@ -518,6 +518,54 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       // Note: Path replacement logging may or may not trigger depending on task ordering
       // The important thing is the planner chooses the optimal path (cheapest)
     });
+
+    it('should log when replacing an inferior path already queued', () => {
+      mockRepository.get.mockReturnValue({
+        core: {
+          'core:expensive_duplicate': {
+            id: 'core:expensive_duplicate',
+            cost: 5,
+            planningEffects: [],
+          },
+          'core:cheap_duplicate': {
+            id: 'core:cheap_duplicate',
+            cost: 1,
+            planningEffects: [],
+          },
+        },
+      });
+
+      const initialState = { 'actor:core:hungry': true };
+      const goal = {
+        id: 'still-hungry',
+        goalState: { '==': [{ var: 'actor.core.hungry' }, false] },
+      };
+
+      mockJsonLogicService.evaluateCondition.mockReturnValue(false);
+      mockHeuristicRegistry.calculate.mockReturnValue(0);
+      mockEffectsSimulator.simulateEffects.mockImplementation((currentState) => ({
+        success: true,
+        state: {
+          ...currentState,
+          'world:progress': (currentState['world:progress'] || 0) + 1,
+        },
+      }));
+
+      const plan = planner.plan('actor-123', goal, initialState, {
+        maxNodes: 1,
+        maxDepth: 10,
+      });
+
+      expect(plan).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Replacing path in open list',
+        expect.objectContaining({
+          taskId: 'core:cheap_duplicate',
+          oldGScore: 5,
+          newGScore: 1,
+        })
+      );
+    });
   });
 
   describe('10. Heuristic errors handled', () => {
@@ -713,6 +761,87 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Effect simulation failed',
         expect.any(Object)
+      );
+    });
+  });
+
+  describe('13. Planner logging and instrumentation coverage', () => {
+    it('should abort search when initial heuristic calculation throws', () => {
+      mockRepository.get.mockReturnValue({
+        core: {
+          'core:noop': { id: 'core:noop', cost: 1, planningEffects: [] },
+        },
+      });
+
+      const initialState = { 'actor:core:hungry': true };
+      const goal = {
+        id: 'satiate',
+        goalState: { '==': [{ var: 'actor.core.hungry' }, false] },
+      };
+
+      mockHeuristicRegistry.calculate.mockImplementation(() => {
+        throw new Error('Failed heuristic');
+      });
+
+      const plan = planner.plan('actor-123', goal, initialState);
+
+      expect(plan).toBeNull();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Initial heuristic calculation failed',
+        expect.any(Error)
+      );
+    });
+
+    it('should log search progress each time 100 nodes are expanded', () => {
+      mockRepository.get.mockReturnValue({
+        core: {
+          'core:endless': { id: 'core:endless', cost: 1, planningEffects: [] },
+        },
+      });
+
+      const initialState = { 'actor:core:hungry': true };
+      const goal = {
+        id: 'never-finish',
+        goalState: { '==': [{ var: 'actor.core.hungry' }, false] },
+      };
+
+      mockJsonLogicService.evaluateCondition.mockReturnValue(false);
+      mockHeuristicRegistry.calculate.mockReturnValue(0);
+
+      let stateCounter = 0;
+      mockEffectsSimulator.simulateEffects.mockImplementation((currentState) => {
+        stateCounter += 1;
+        return {
+          success: true,
+          state: {
+            ...currentState,
+            [`node:${stateCounter}`]: stateCounter,
+          },
+        };
+      });
+
+      const plan = planner.plan('actor-123', goal, initialState, {
+        maxNodes: 100,
+        maxDepth: 500,
+        maxTime: 1000,
+      });
+
+      expect(plan).toBeNull();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Search progress',
+        expect.objectContaining({
+          nodesExpanded: 100,
+          openListSize: expect.any(Number),
+          closedSetSize: expect.any(Number),
+          currentFScore: expect.any(Number),
+        })
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Node limit reached',
+        expect.objectContaining({
+          nodesExpanded: 100,
+          maxNodes: 100,
+        })
       );
     });
   });

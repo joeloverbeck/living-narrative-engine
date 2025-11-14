@@ -149,6 +149,27 @@ describe('GoapPlanner - State Management Helpers', () => {
       expect(hash).toContain('actor-1');
       expect(hash).toContain('actor-2');
     });
+
+    it('should log error and fall back to empty hash when property access fails', () => {
+      const problematicState = {};
+      Object.defineProperty(problematicState, 'unstable', {
+        enumerable: true,
+        configurable: true,
+        get() {
+          throw new Error('Hashing failure');
+        },
+      });
+
+      const hash = planner.testHashState(problematicState);
+
+      expect(hash).toBe('{}');
+      const errorCall = mockLogger.error.mock.calls.find(
+        call => call[0] === 'State hashing failed'
+      );
+      expect(errorCall).toBeDefined();
+      expect(errorCall[1]).toBeInstanceOf(Error);
+      expect(errorCall[2].state).toBe(problematicState);
+    });
   });
 
   describe('#goalSatisfied', () => {
