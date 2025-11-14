@@ -344,4 +344,6 @@ export const coreTokens = freeze({
   IGoalDistanceHeuristic: 'IGoalDistanceHeuristic',
   IRelaxedPlanningGraphHeuristic: 'IRelaxedPlanningGraphHeuristic',
   IHeuristicRegistry: 'IHeuristicRegistry',
+  // GOAP Planner (GOAPIMPL-018)
+  IGoapPlanner: 'IGoapPlanner',
 });

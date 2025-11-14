@@ -7,7 +7,8 @@
  * @see tickets/GOAPIMPL-015-planning-node-structure.md
  */
 
-import { isEqual } from 'lodash';
+import lodash from 'lodash';
+const { isEqual } = lodash;
 import { deepClone } from '../../utils/cloneUtils.js';
 
 /**

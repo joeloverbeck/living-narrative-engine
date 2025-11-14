@@ -29,10 +29,15 @@ const scriptPath = path.join(projectRoot, 'scripts/validate-recipe.js');
  */
 function executeCLI(args) {
   try {
+    // Create env without NODE_ENV=test (which blocks script execution)
+    const env = { ...process.env };
+    delete env.NODE_ENV; // Remove NODE_ENV entirely so the script will run
+
     const stdout = execSync(`node ${scriptPath} ${args.join(' ')}`, {
       cwd: projectRoot,
       encoding: 'utf-8',
       stdio: 'pipe',
+      env,
     });
 
     return {

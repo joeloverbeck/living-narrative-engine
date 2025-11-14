@@ -14,6 +14,7 @@ import RefinementEngine from '../../goap/refinement/refinementEngine.js';
 import GoalDistanceHeuristic from '../../goap/planner/goalDistanceHeuristic.js';
 import RelaxedPlanningGraphHeuristic from '../../goap/planner/relaxedPlanningGraphHeuristic.js';
 import HeuristicRegistry from '../../goap/planner/heuristicRegistry.js';
+import GoapPlanner from '../../goap/planner/goapPlanner.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -153,6 +154,24 @@ export function registerGoapServices(container) {
       tokens.IGoalDistanceHeuristic,
       tokens.IRelaxedPlanningGraphHeuristic,
       tokens.ILogger,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // GOAP Planner (GOAPIMPL-018)
+  // A* search planner for goal-directed task sequence planning
+  // Evaluates tasks against world state and constructs optimal plans
+  container.register(tokens.IGoapPlanner, GoapPlanner, {
+    dependencies: [
+      tokens.ILogger,
+      tokens.JsonLogicEvaluationService,
+      tokens.GameDataRepository,
+      tokens.IEntityManager,
+      tokens.IScopeRegistry,
+      tokens.IScopeEngine,
+      tokens.ISpatialIndexManager,
+      tokens.IPlanningEffectsSimulator,
+      tokens.IHeuristicRegistry,
     ],
     lifecycle: 'singleton',
   });
