@@ -14,6 +14,9 @@ import {
 import EntityFactory from '../../../../src/entities/factories/entityFactory.js';
 import Entity from '../../../../src/entities/entity.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
+import EntityValidationFactory from '../../../../src/entities/factories/EntityValidationFactory.js';
+import EntityConstructionFactory from '../../../../src/entities/factories/EntityConstructionFactory.js';
+import EntityDefinitionLookupFactory from '../../../../src/entities/factories/EntityDefinitionLookupFactory.js';
 import { DefinitionNotFoundError } from '../../../../src/errors/definitionNotFoundError.js';
 import { SerializedEntityError } from '../../../../src/errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../../../../src/errors/invalidInstanceIdError.js';
@@ -655,6 +658,34 @@ describe('EntityFactory', () => {
       });
 
       expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(false);
+    });
+  });
+
+  describe('specialized factory getters', () => {
+    it('should expose the existing validation factory instance', () => {
+      const firstCall = factory.getValidationFactory();
+      const secondCall = factory.getValidationFactory();
+
+      expect(firstCall).toBeInstanceOf(EntityValidationFactory);
+      expect(firstCall).toBe(secondCall);
+    });
+
+    it('should expose the construction factory used internally', () => {
+      const constructionFactory = factory.getConstructionFactory();
+
+      expect(constructionFactory).toBeInstanceOf(EntityConstructionFactory);
+      expect(typeof constructionFactory.constructEntity).toBe('function');
+    });
+
+    it('should expose the definition lookup factory for advanced usage', () => {
+      const definitionLookupFactory = factory.getDefinitionLookupFactory();
+
+      expect(definitionLookupFactory).toBeInstanceOf(
+        EntityDefinitionLookupFactory
+      );
+      expect(typeof definitionLookupFactory.getDefinitionOrThrow).toBe(
+        'function'
+      );
     });
   });
 });
