@@ -10,7 +10,7 @@
 
 The EntityWorkflowTestBed creates entity definitions on-demand using `ensureEntityDefinitionExists()`. When using the shared test fixture pattern (ENTLIFWOR-001), the test bed is reused across all tests, but entity definitions are still checked and potentially recreated for each test.
 
-**Current Pattern** (`entityWorkflowTestBed.js:491-518`):
+**Current Pattern** (`tests/e2e/entities/common/entityWorkflowTestBed.js`, current implementation around lines 562-599):
 ```javascript
 async ensureEntityDefinitionExists(definitionId, customDefinition = null) {
   // Check if definition already exists
@@ -29,6 +29,7 @@ async ensureEntityDefinitionExists(definitionId, customDefinition = null) {
     : createEntityDefinition(definitionId, { /* ... */ });
 
   this.registry.store('entityDefinitions', definitionId, definition);
+  this.logger.debug(`Created entity definition: ${definitionId}`);
 }
 ```
 
@@ -87,8 +88,8 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     this.eventMonitoringOptions = {
       monitorAll: options.monitorAll ?? false,
       specificEvents: options.specificEvents ?? [],
-      deepClonePayloads: options.deepClonePayloads ?? false,
       enablePerformanceTracking: options.enablePerformanceTracking ?? true,
+      monitorComponentEvents: options.monitorComponentEvents ?? false,
     };
 
     // ... rest of constructor
@@ -243,18 +244,22 @@ Ensure `clearTransientState()` does NOT clear the definition cache:
  * @returns {void}
  */
 clearTransientState() {
-  // Clear event tracking
+  // Clear event, component, and performance tracking
   this.clearRecordedData();
 
   // Clear entity tracking
   this.createdEntities.clear();
   this.removedEntities.clear();
 
-  // Clear performance metrics
-  this.performanceMetrics.clear();
-
-  // DO NOT clear definition cache - it's shared and improves performance
-  // To clear cache manually: EntityWorkflowTestBed.clearDefinitionCache()
+  // DO NOT clear:
+  // - this.container (expensive to rebuild)
+  // - this.entityManager (expensive to rebuild)
+  // - this.eventBus (expensive to rebuild)
+  // - this.registry (expensive to rebuild)
+  // - this.logger (expensive to rebuild)
+  // - this.validator (expensive to rebuild)
+  // - this.eventSubscriptions (keep active)
+  // - EntityWorkflowTestBed.#definitionCache (shared across tests)
 
   this.logger?.debug('EntityWorkflowTestBed transient state cleared');
 }
