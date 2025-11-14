@@ -55,6 +55,33 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
 
       expect(result).toBe(0);
     });
+
+    it('should short-circuit when goal already satisfied even if tasks exist', () => {
+      const state = { 'entity-1:core:satiated': {} };
+      const goal = {
+        conditions: [{ condition: { has_component: ['entity-1', 'core:satiated'] } }],
+      };
+      const tasks = [
+        {
+          planningPreconditions: [
+            { condition: { has_component: ['entity-1', 'core:satiated'] } },
+          ],
+          planningEffects: [
+            {
+              type: 'REMOVE_COMPONENT',
+              parameters: { entityId: 'entity-1', componentId: 'core:satiated' },
+            },
+          ],
+        },
+      ];
+
+      mockEvaluator.evaluate.mockReturnValue(true);
+
+      const result = heuristic.calculate(state, goal, tasks);
+
+      expect(result).toBe(0);
+      expect(mockSimulator.simulateEffects).not.toHaveBeenCalled();
+    });
   });
 
   describe('Single Layer Expansion', () => {
@@ -325,6 +352,31 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
       expect(result).toBe(Infinity); // No progress possible
     });
 
+    it('should treat preconditions missing condition as not applicable', () => {
+      const state = { 'entity-1:core:hungry': true };
+      const goal = {
+        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+      };
+      const tasks = [
+        {
+          planningPreconditions: [{ description: 'missing condition field' }],
+          planningEffects: [
+            {
+              type: 'ADD_COMPONENT',
+              parameters: { entityId: 'entity-1', componentId: 'core:shelter', data: {} },
+            },
+          ],
+        },
+      ];
+
+      mockEvaluator.evaluate.mockReturnValue(false);
+
+      const result = heuristic.calculate(state, goal, tasks);
+
+      expect(result).toBe(Infinity);
+      expect(mockSimulator.simulateEffects).not.toHaveBeenCalled();
+    });
+
     it('should handle effect simulation failures gracefully', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
@@ -351,6 +403,38 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
       const result = heuristic.calculate(state, goal, tasks);
 
       expect(result).toBe(Infinity); // Failed effects mean no progress
+    });
+
+    it('should warn and continue when effect simulation throws', () => {
+      const state = { 'entity-1:core:hungry': true };
+      const goal = {
+        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+      };
+      const tasks = [
+        {
+          planningPreconditions: [
+            { condition: { has_component: ['entity-1', 'core:hungry'] } },
+          ],
+          planningEffects: [
+            { type: 'ADD_COMPONENT', parameters: { entityId: 'entity-1', componentId: 'core:shelter' } },
+          ],
+        },
+      ];
+
+      mockEvaluator.evaluate
+        .mockReturnValueOnce(false) // goal not satisfied initially
+        .mockReturnValueOnce(true); // task precondition satisfied
+
+      mockSimulator.simulateEffects.mockImplementation(() => {
+        throw new Error('simulation failed');
+      });
+
+      const result = heuristic.calculate(state, goal, tasks);
+
+      expect(result).toBe(Infinity);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('RelaxedPlanningGraphHeuristic: Failed to apply effects for task, skipping')
+      );
     });
 
     it('should handle evaluation errors in preconditions', () => {
@@ -435,6 +519,40 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
 
       expect(heuristic.calculate(state, goal, null)).toBe(Infinity);
       expect(heuristic.calculate(state, goal, 'not-array')).toBe(Infinity);
+    });
+
+    it('should detect progress when state values change without adding keys', () => {
+      const state = { 'entity-1:core:status': { level: 1 } };
+      const goal = {
+        conditions: [{ condition: { has_component: ['entity-1', 'core:status'] } }],
+      };
+      const tasks = [
+        {
+          planningPreconditions: [
+            { condition: { has_component: ['entity-1', 'core:status'] } },
+          ],
+          planningEffects: [
+            {
+              type: 'MODIFY_COMPONENT',
+              parameters: { entityId: 'entity-1', componentId: 'core:status', data: { level: 2 } },
+            },
+          ],
+        },
+      ];
+
+      mockEvaluator.evaluate
+        .mockReturnValueOnce(false) // goal not satisfied initially
+        .mockReturnValueOnce(true) // precondition satisfied
+        .mockReturnValueOnce(true); // goal satisfied after value change
+
+      mockSimulator.simulateEffects.mockReturnValue({
+        success: true,
+        state: { 'entity-1:core:status': { level: 2 } },
+      });
+
+      const result = heuristic.calculate(state, goal, tasks);
+
+      expect(result).toBe(1);
     });
   });
 
