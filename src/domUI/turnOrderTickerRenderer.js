@@ -607,6 +607,43 @@ export class TurnOrderTickerRenderer {
     return this.#_animateActorExit(element);
   }
 
+  /**
+   * Test-only helper that exposes the screen reader announcement utility.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {string} message - Announcement message
+   * @returns {void}
+   * @private
+   */
+  __testAnnounceToScreenReader(message) {
+    return this.#announceToScreenReader(message);
+  }
+
+  /**
+   * Test-only helper that exposes the participation state helper.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {HTMLElement} element - Target element
+   * @param {boolean} participating - Participation state
+   * @returns {void}
+   * @private
+   */
+  __testApplyParticipationState(element, participating) {
+    return this.#_applyParticipationState(element, participating);
+  }
+
+  /**
+   * Test-only helper to override the cached actor queue element.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @param {HTMLElement|null} element - Replacement queue element
+   * @returns {void}
+   * @private
+   */
+  __testSetActorQueueElement(element) {
+    this.#actorQueueElement = element;
+  }
+
   // ========== PRIVATE HELPERS ==========
 
   /**
