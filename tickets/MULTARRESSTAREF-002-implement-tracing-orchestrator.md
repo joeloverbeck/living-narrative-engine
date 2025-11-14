@@ -8,7 +8,7 @@
 
 ## Objective
 
-Implement `TargetResolutionTracingOrchestrator` class that extracts all tracing logic from `MultiTargetResolutionStage`, removing ~200 lines of tracing code from the orchestrator.
+Implement `TargetResolutionTracingOrchestrator` class that extracts all tracing logic from `MultiTargetResolutionStage` (currently 1,220 lines per MULTARRESSTAREF-000), removing ~200 lines of tracing code from the stage orchestrator.
 
 ## Background
 
@@ -43,35 +43,35 @@ export default class TargetResolutionTracingOrchestrator {
 
 Extract from `MultiTargetResolutionStage.js`:
 
-1. **`#isActionAwareTrace`** (lines ~139-141)
+1. **`#isActionAwareTrace`** (lines ~129-141)
    - Move to `isActionAwareTrace(trace)`
-   - Check for action-aware capabilities
+   - Ensure we only call capture methods when `captureActionData` exists
 
-2. **`#captureTargetResolutionData`** (lines ~1031-1069)
+2. **`#captureTargetResolutionData`** (lines ~1043-1088)
    - Move to `captureResolutionData(trace, actionDef, actor, resolutionData, detailedResults)`
-   - Capture target resolution data
+   - Preserve the current payload fields (`stage`, `actorId`, `resolutionSuccess`, `targetKeys`, `resolvedTargetCounts`, optional `targetResolutionDetails`, etc.)
 
-3. **`#captureTargetResolutionError`** (lines ~1071-1095)
+3. **`#captureTargetResolutionError`** (lines ~1092-1124)
    - Move to `captureResolutionError(trace, actionDef, actor, error)`
-   - Capture resolution errors
+   - Continue capturing `error`, `errorType`, and `scopeName` metadata without interrupting stage flow
 
-4. **`#capturePostResolutionSummary`** (lines ~1097-1132)
-   - Move to `capturePostResolutionSummary(trace, actor, summaryData)`
-   - Capture post-resolution summary
+4. **`#capturePostResolutionSummary`** (lines ~1130-1170)
+   - Move to `capturePostResolutionSummary(trace, actor, originalCount, resolvedCount, hasLegacy, hasMultiTarget, stageDurationMs)`
+   - Maintain the `resolutionSuccessRate` calculation and timestamp logging
 
-5. **`#capturePerformanceData`** (lines ~1134-1157)
-   - Move to `capturePerformanceData(trace, actionDef, performanceMetrics)`
-   - Capture performance metrics
+5. **`#capturePerformanceData`** (lines ~1193-1220)
+   - Move to `capturePerformanceData(trace, actionDef, startTime, endTime, totalCandidates, actionsWithTargets)`
+   - Preserve the ACTTRA-018 payload structure (duration, `itemsProcessed`, `itemsResolved`, `stageName`)
 
-6. **`#analyzeLegacyFormat`** (lines ~1159-1164)
+6. **`#analyzeLegacyFormat`** (lines ~1174-1191)
    - Move to `analyzeLegacyFormat(action)`
-   - Analyze legacy action format
+   - Keep the existing heuristic outputs (`string_targets`, `scope_property`, `legacy_target_type`, `modern`)
 
-Additionally, consolidate inline tracing calls:
-- Legacy detection captures (lines 179-218)
-- Legacy conversion captures
-- Scope evaluation captures
-- Multi-target resolution captures
+Additionally, consolidate inline tracing calls by delegating to the orchestrator:
+- Legacy detection captures (lines ~172-203)
+- Legacy conversion captures (lines ~204-233)
+- Scope evaluation captures during per-target resolution (lines ~704-792)
+- Multi-target resolution captures (lines ~613 and 866-892)
 
 ### Error Handling
 
@@ -106,14 +106,14 @@ Tests will be created in MULTARRESSTAREF-003. Implementation should be testable 
 
 **Lines to Extract:**
 - `#isActionAwareTrace`: ~3 lines
-- `#captureTargetResolutionData`: ~39 lines
-- `#captureTargetResolutionError`: ~25 lines
-- `#capturePostResolutionSummary`: ~36 lines
-- `#capturePerformanceData`: ~24 lines
-- `#analyzeLegacyFormat`: ~6 lines
-- **Total:** ~133 lines from helper methods
-- **Additional:** ~70 lines from inline tracing calls
-- **Grand Total:** ~203 lines extracted
+- `#captureTargetResolutionData`: ~46 lines (includes optional details handling)
+- `#captureTargetResolutionError`: ~33 lines
+- `#capturePostResolutionSummary`: ~41 lines
+- `#capturePerformanceData`: ~28 lines
+- `#analyzeLegacyFormat`: ~10 lines
+- **Total:** ~161 lines from helper methods
+- **Additional:** ~70 lines from inline tracing calls (legacy detection/conversion, scope evaluation, multi-target summaries)
+- **Grand Total:** ~230 lines extracted
 
 ## Notes
 
