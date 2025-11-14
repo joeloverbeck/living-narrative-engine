@@ -8,11 +8,11 @@
 
 ## Objective
 
-Create the interface definition for `ITargetResolutionTracingOrchestrator` to establish the contract for all tracing operations currently embedded in `MultiTargetResolutionStage`.
+Create the interface definition for `ITargetResolutionTracingOrchestrator` to establish the contract for every tracing operation currently embedded in `MultiTargetResolutionStage`.
 
 ## Background
 
-The `MultiTargetResolutionStage` currently has ~200 lines of tracing logic (27 trace calls, 10 conditionals, 5 helper methods) that obscure the core orchestration logic. This ticket creates the interface that will enable extraction of all tracing concerns.
+`MultiTargetResolutionStage` is still a 1,220-line class with ~200 lines of tracing logic (per MULTARRESSTAREF-000). The tracing work is spread between five private helper methods (`#isActionAwareTrace`, `#captureTargetResolutionData`, `#captureTargetResolutionError`, `#capturePostResolutionSummary`, `#capturePerformanceData`) and several direct `ActionAwareStructuredTrace` calls such as `captureLegacyDetection`, `captureLegacyConversion`, `captureScopeEvaluation`, and `captureMultiTargetResolution`. This ticket creates the interface that will enable extraction of those responsibilities into a dedicated orchestrator service.
 
 ## Technical Requirements
 
@@ -25,99 +25,148 @@ The `MultiTargetResolutionStage` currently has ~200 lines of tracing logic (27 t
 /**
  * @interface ITargetResolutionTracingOrchestrator
  */
-export default {
+export class ITargetResolutionTracingOrchestrator {
   /**
-   * Check if trace supports action-aware tracing
-   * @param {object} trace
+   * Determine whether the provided trace supports action-aware capture
+   * @param {import('../../../tracing/actionAwareStructuredTrace.js').default|object} trace
    * @returns {boolean}
    */
-  isActionAwareTrace(trace) {},
+  isActionAwareTrace(_trace) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture legacy action detection
+   * Capture legacy action detection before conversion
    * @param {object} trace
    * @param {string} actionId
    * @param {object} detectionData
    */
-  captureLegacyDetection(trace, actionId, detectionData) {},
+  captureLegacyDetection(_trace, _actionId, _detectionData) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture legacy conversion result
+   * Capture legacy conversion result from LegacyTargetCompatibilityLayer
    * @param {object} trace
    * @param {string} actionId
    * @param {object} conversionData
    */
-  captureLegacyConversion(trace, actionId, conversionData) {},
+  captureLegacyConversion(_trace, _actionId, _conversionData) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture scope evaluation result
+   * Capture scope evaluation output for a specific target key
    * @param {object} trace
    * @param {string} actionId
    * @param {string} targetKey
    * @param {object} evaluationData
    */
-  captureScopeEvaluation(trace, actionId, targetKey, evaluationData) {},
+  captureScopeEvaluation(_trace, _actionId, _targetKey, _evaluationData) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture multi-target resolution summary
+   * Capture multi-target resolution summary for an action
    * @param {object} trace
    * @param {string} actionId
    * @param {object} resolutionData
    */
-  captureMultiTargetResolution(trace, actionId, resolutionData) {},
+  captureMultiTargetResolution(_trace, _actionId, _resolutionData) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture target resolution data
+   * Capture detailed resolution data for either legacy or multi-target flows
    * @param {object} trace
-   * @param {object} actionDef
-   * @param {object} actor
+   * @param {import('../../../actionTypes.js').ActionDefinition} actionDef
+   * @param {import('../../../../entities/entity.js').default} actor
    * @param {object} resolutionData
    * @param {object} [detailedResults]
    */
-  captureResolutionData(trace, actionDef, actor, resolutionData, detailedResults) {},
+  captureResolutionData(
+    _trace,
+    _actionDef,
+    _actor,
+    _resolutionData,
+    _detailedResults
+  ) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture target resolution error
+   * Capture target resolution error data
    * @param {object} trace
-   * @param {object} actionDef
-   * @param {object} actor
+   * @param {import('../../../actionTypes.js').ActionDefinition} actionDef
+   * @param {import('../../../../entities/entity.js').default} actor
    * @param {Error} error
    */
-  captureResolutionError(trace, actionDef, actor, error) {},
+  captureResolutionError(_trace, _actionDef, _actor, _error) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture post-resolution summary
+   * Capture post-resolution summary metrics (counts, legacy usage, timing)
    * @param {object} trace
-   * @param {object} actor
-   * @param {object} summaryData
+   * @param {import('../../../../entities/entity.js').default} actor
+   * @param {number} originalCount
+   * @param {number} resolvedCount
+   * @param {boolean} hasLegacy
+   * @param {boolean} hasMultiTarget
+   * @param {number} stageDurationMs
    */
-  capturePostResolutionSummary(trace, actor, summaryData) {},
+  capturePostResolutionSummary(
+    _trace,
+    _actor,
+    _originalCount,
+    _resolvedCount,
+    _hasLegacy,
+    _hasMultiTarget,
+    _stageDurationMs
+  ) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Capture performance data
+   * Capture stage performance metrics as used by ACTTRA-018
    * @param {object} trace
-   * @param {object} actionDef
-   * @param {object} performanceMetrics
+   * @param {import('../../../actionTypes.js').ActionDefinition} actionDef
+   * @param {number} startTime
+   * @param {number} endTime
+   * @param {number} totalCandidates
+   * @param {number} actionsWithTargets
+   * @returns {Promise<void>}
    */
-  capturePerformanceData(trace, actionDef, performanceMetrics) {},
+  async capturePerformanceData(
+    _trace,
+    _actionDef,
+    _startTime,
+    _endTime,
+    _totalCandidates,
+    _actionsWithTargets
+  ) {
+    throw new Error('Method must be implemented by concrete class');
+  }
 
   /**
-   * Analyze legacy action format
-   * @param {object} action
-   * @returns {string} Format type
+   * Analyze legacy action formats for tracing metadata
+   * @param {import('../../../actionTypes.js').ActionDefinition} action
+   * @returns {string}
    */
-  analyzeLegacyFormat(action) {},
-};
+  analyzeLegacyFormat(_action) {
+    throw new Error('Method must be implemented by concrete class');
+  }
+}
 ```
 
 ## Acceptance Criteria
 
 - [ ] Interface file created at specified path
-- [ ] All 10 methods defined with JSDoc annotations
-- [ ] Parameter types documented for each method
-- [ ] Return types specified where applicable
-- [ ] File follows project naming conventions
-- [ ] Interface exported as default
+- [ ] Interface exported as a class (consistent with existing pipeline service interfaces)
+- [ ] All 10 methods defined with accurate parameters that match current `MultiTargetResolutionStage` usage
+- [ ] Parameter and return types documented for each method
+- [ ] Async contract documented for `capturePerformanceData`
+- [ ] Includes `throw new Error('Method must be implemented by concrete class')` to mirror existing interfaces
 
 ## Dependencies
 
@@ -131,4 +180,4 @@ No tests required for interface definition. Implementation tests will be in MULT
 
 - This interface establishes the contract for extracting ~200 lines of tracing code from `MultiTargetResolutionStage`
 - Methods correspond to the 5 private tracing helper methods currently in the stage
-- Interface follows project pattern of using default export for interfaces
+- Interface follows the existing class-based interface pattern used throughout `src/actions/pipeline/services/interfaces`
