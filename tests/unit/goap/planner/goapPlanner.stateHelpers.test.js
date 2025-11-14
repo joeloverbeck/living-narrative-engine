@@ -12,6 +12,8 @@ describe('GoapPlanner - State Management Helpers', () => {
   let planner;
   let mockLogger;
   let mockJsonLogicService;
+  let mockRepository;
+  let mockEntityManager;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -19,10 +21,14 @@ describe('GoapPlanner - State Management Helpers', () => {
     mockJsonLogicService = testBed.createMock('jsonLogicService', [
       'evaluateCondition',
     ]);
+    mockRepository = testBed.createMock('repository', ['get']);
+    mockEntityManager = testBed.createMock('entityManager', ['getEntityInstance']);
 
     planner = new GoapPlanner({
       logger: mockLogger,
       jsonLogicService: mockJsonLogicService,
+      gameDataRepository: mockRepository,
+      entityManager: mockEntityManager,
     });
   });
 
