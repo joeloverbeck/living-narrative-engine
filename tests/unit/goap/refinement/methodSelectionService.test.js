@@ -52,6 +52,54 @@ describe('MethodSelectionService', () => {
     });
   });
 
+  /**
+   * Helper factory for creating refinement method definitions with sane defaults.
+   *
+   * @param {object} overrides - Overrides for the default method shape
+   * @returns {object} Refinement method definition
+   */
+  const createMethod = (overrides = {}) => ({
+    id: overrides.id || 'core:test_method',
+    taskId: overrides.taskId || TEST_TASK_ID,
+    applicability:
+      Object.prototype.hasOwnProperty.call(overrides, 'applicability')
+        ? overrides.applicability
+        : { condition: { var: 'canExecute' } },
+    steps: overrides.steps || [{ type: 'test-step' }],
+  });
+
+  /**
+   * Configures the mocked repository to return the provided task + method registry.
+   *
+   * @param {...object} methods - Refinement method definitions to register
+   */
+  const setupTaskWithMethods = (...methods) => {
+    const task = {
+      id: TEST_TASK_ID,
+      refinementMethods: methods.map((method) => ({
+        methodId: method.id,
+        $ref: `ref://${method.id}.json`,
+      })),
+    };
+
+    const registry = methods.reduce((acc, method) => {
+      acc[method.id] = method;
+      return acc;
+    }, {});
+
+    mockGameDataRepository.get.mockImplementation((key) => {
+      if (key === 'tasks') {
+        return { [TEST_TASK_ID]: task };
+      }
+      if (key === 'refinement-methods') {
+        return registry;
+      }
+      return undefined;
+    });
+
+    return { task, registry };
+  };
+
   describe('constructor', () => {
     it('should create service with required dependencies', () => {
       expect(service).toBeInstanceOf(MethodSelectionService);
@@ -264,6 +312,202 @@ describe('MethodSelectionService', () => {
         service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
       }).toThrow("Refinement method 'core:consume_nourishing_item.simple_consume' not found in registry");
     });
+
+    it('should throw MethodSelectionError when method registry is unavailable', () => {
+      const mockTasks = {
+        [TEST_TASK_ID]: {
+          id: TEST_TASK_ID,
+          refinementMethods: [
+            {
+              methodId: 'core:missing_registry.method',
+              $ref: './refinement-methods/missing_registry.method.json',
+            },
+          ],
+        },
+      };
+
+      mockGameDataRepository.get.mockImplementation((key) => {
+        if (key === 'tasks') {
+          return mockTasks;
+        }
+        if (key === 'refinement-methods') {
+          return undefined;
+        }
+        return undefined;
+      });
+
+      expect(() => {
+        service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      }).toThrow('Refinement method registry not available');
+    });
+
+    it('should throw MethodSelectionError when method taskId differs from parent task', () => {
+      const mismatchedMethod = createMethod({
+        id: 'core:consume_nourishing_item.bad_ref',
+        taskId: 'core:different_task',
+      });
+
+      const task = {
+        id: TEST_TASK_ID,
+        refinementMethods: [
+          {
+            methodId: mismatchedMethod.id,
+            $ref: './refinement-methods/consume_nourishing_item.bad_ref.json',
+          },
+        ],
+      };
+
+      mockGameDataRepository.get.mockImplementation((key) => {
+        if (key === 'tasks') {
+          return { [TEST_TASK_ID]: task };
+        }
+        if (key === 'refinement-methods') {
+          return { [mismatchedMethod.id]: mismatchedMethod };
+        }
+        return undefined;
+      });
+
+      expect(() => {
+        service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      }).toThrow(
+        `Refinement method '${mismatchedMethod.id}' taskId mismatch: expected '${TEST_TASK_ID}', got '${mismatchedMethod.taskId}'`
+      );
+    });
+  });
+
+  describe('selectMethod - Method evaluation logic', () => {
+    it('should select the first method whose applicability condition evaluates to true', () => {
+      const primaryMethod = createMethod({ id: 'core:consume.primary' });
+      const fallbackMethod = createMethod({ id: 'core:consume.fallback' });
+      setupTaskWithMethods(primaryMethod, fallbackMethod);
+
+      const refinementContext = { actorId: TEST_ACTOR_ID, task: TEST_TASK_ID };
+      mockContextAssemblyService.assembleRefinementContext.mockReturnValue(refinementContext);
+      mockContextAssemblyService.assembleConditionContext.mockImplementation((ctx) => ctx);
+      mockJsonLogicService.evaluate.mockReturnValue(true);
+
+      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+
+      expect(result.selectedMethod).toBe(primaryMethod);
+      expect(result.diagnostics.methodsEvaluated).toBe(1);
+      expect(result.diagnostics.evaluationResults).toHaveLength(1);
+      expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(1);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Selected method 'core:consume.primary'")
+      );
+    });
+
+    it('should evaluate additional methods when earlier ones are not applicable', () => {
+      const firstMethod = createMethod({ id: 'core:consume.first' });
+      const secondMethod = createMethod({ id: 'core:consume.second' });
+      setupTaskWithMethods(firstMethod, secondMethod);
+
+      mockContextAssemblyService.assembleRefinementContext.mockReturnValue({});
+      mockContextAssemblyService.assembleConditionContext.mockReturnValue({});
+      mockJsonLogicService.evaluate
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
+
+      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS, {
+        enableDiagnostics: false,
+      });
+
+      expect(result.selectedMethod).toBe(secondMethod);
+      expect(result.diagnostics.evaluationResults).toEqual([]);
+      expect(mockJsonLogicService.evaluate).toHaveBeenCalledTimes(2);
+    });
+
+    it('should log when no applicable methods are found after evaluation', () => {
+      const methodA = createMethod({ id: 'core:consume.a' });
+      const methodB = createMethod({ id: 'core:consume.b' });
+      setupTaskWithMethods(methodA, methodB);
+
+      mockContextAssemblyService.assembleRefinementContext.mockReturnValue({});
+      mockContextAssemblyService.assembleConditionContext.mockReturnValue({});
+      mockJsonLogicService.evaluate.mockReturnValue(false);
+
+      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+
+      expect(result.selectedMethod).toBeNull();
+      expect(result.diagnostics.evaluationResults).toHaveLength(2);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('No applicable methods found for task')
+      );
+    });
+
+    it('should treat missing applicability as always applicable', () => {
+      const unconditionalMethod = createMethod({
+        id: 'core:consume.unconditional',
+        applicability: undefined,
+      });
+      setupTaskWithMethods(unconditionalMethod);
+
+      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+
+      expect(result.selectedMethod).toBe(unconditionalMethod);
+      expect(mockContextAssemblyService.assembleRefinementContext).not.toHaveBeenCalled();
+      expect(mockJsonLogicService.evaluate).not.toHaveBeenCalled();
+    });
+
+    it('should treat applicability without condition as always applicable', () => {
+      const method = createMethod({
+        id: 'core:consume.emptyCondition',
+        applicability: {},
+      });
+      setupTaskWithMethods(method);
+
+      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+
+      expect(result.selectedMethod).toBe(method);
+      expect(mockContextAssemblyService.assembleRefinementContext).not.toHaveBeenCalled();
+      expect(mockJsonLogicService.evaluate).not.toHaveBeenCalled();
+    });
+
+    it('should handle JSON Logic evaluation errors gracefully', () => {
+      const method = createMethod({ id: 'core:consume.errorPath' });
+      setupTaskWithMethods(method);
+
+      mockContextAssemblyService.assembleRefinementContext.mockReturnValue({});
+      mockContextAssemblyService.assembleConditionContext.mockReturnValue({});
+      mockJsonLogicService.evaluate.mockImplementation(() => {
+        throw new Error('JSON failure');
+      });
+
+      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+
+      expect(result.selectedMethod).toBeNull();
+      expect(result.diagnostics.evaluationResults[0]).toEqual(
+        expect.objectContaining({
+          methodId: method.id,
+          applicable: false,
+          reason: expect.stringContaining('Evaluation error: JSON failure'),
+        })
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(`Error evaluating applicability for method '${method.id}'`),
+        expect.objectContaining({ methodId: method.id })
+      );
+    });
+
+    it('should record diagnostics when applicability condition evaluates to false', () => {
+      const method = createMethod({ id: 'core:consume.falseResult' });
+      setupTaskWithMethods(method);
+
+      mockContextAssemblyService.assembleRefinementContext.mockReturnValue({});
+      mockContextAssemblyService.assembleConditionContext.mockReturnValue({});
+      mockJsonLogicService.evaluate.mockReturnValue(false);
+
+      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+
+      expect(result.selectedMethod).toBeNull();
+      expect(result.diagnostics.evaluationResults[0]).toEqual(
+        expect.objectContaining({
+          methodId: method.id,
+          applicable: false,
+          reason: expect.stringContaining('Applicability condition evaluated to false'),
+        })
+      );
+    });
   });
 
   describe('selectMethod - Diagnostics', () => {
@@ -337,7 +581,4 @@ describe('MethodSelectionService', () => {
     });
   });
 
-  // NOTE: Additional test suites for method evaluation logic will be added
-  // once the method loading infrastructure is implemented. Current tests focus
-  // on input validation, error handling, and diagnostics behavior.
 });
