@@ -110,6 +110,26 @@ class ValidationResultBuilder {
   }
 
   /**
+   * Adds a suggestion entry that preserves legacy suggestion formatting.
+   *
+   * Suggestion objects intentionally omit severity to remain compatible with
+   * existing validation output from RecipePreflightValidator.
+   *
+   * @param {string} type - Suggestion type identifier
+   * @param {string} message - Human-readable suggestion message
+   * @param {object} [metadata] - Additional context (location, reason, etc.)
+   * @returns {ValidationResultBuilder} This instance for method chaining
+   */
+  addSuggestion(type, message, metadata = {}) {
+    this.#suggestions.push({
+      type,
+      message,
+      ...metadata,
+    });
+    return this;
+  }
+
+  /**
    * Adds multiple issues at once, automatically categorizing by severity.
    *
    * This method is useful when collecting issues from sub-validators or

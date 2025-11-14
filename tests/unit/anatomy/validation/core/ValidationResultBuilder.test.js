@@ -241,6 +241,45 @@ describe('ValidationResultBuilder', () => {
     });
   });
 
+  describe('addSuggestion', () => {
+    let builder;
+
+    beforeEach(() => {
+      builder = new ValidationResultBuilder('test-recipe');
+    });
+
+    it('adds suggestion without severity for legacy compatibility', () => {
+      builder.addSuggestion('MISSING_DESCRIPTORS', 'Add descriptors', {
+        reason: 'Missing descriptors',
+        location: { type: 'slot', name: 'torso' },
+      });
+
+      const result = builder.build();
+      expect(result.suggestions).toHaveLength(1);
+      expect(result.suggestions[0]).toEqual({
+        type: 'MISSING_DESCRIPTORS',
+        message: 'Add descriptors',
+        reason: 'Missing descriptors',
+        location: { type: 'slot', name: 'torso' },
+      });
+      expect(result.suggestions[0]).not.toHaveProperty('severity');
+    });
+
+    it('returns builder to allow chaining', () => {
+      const returnValue = builder.addSuggestion('TYPE', 'Message');
+      expect(returnValue).toBe(builder);
+    });
+
+    it('supports multiple suggestions', () => {
+      builder
+        .addSuggestion('S1', 'Suggestion 1')
+        .addSuggestion('S2', 'Suggestion 2');
+
+      const result = builder.build();
+      expect(result.suggestions).toHaveLength(2);
+    });
+  });
+
   describe('addIssues', () => {
     let builder;
 
