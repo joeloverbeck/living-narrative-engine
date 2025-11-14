@@ -85,24 +85,6 @@ export default function createScopeReferenceResolver({
         }
       }
 
-      if (!scopeRegistry) {
-        const error = new Error(
-          'ScopeReferenceResolver: scopeRegistry is not available'
-        );
-        if (errorHandler) {
-          errorHandler.handleError(
-            error.message,
-            { ...ctx, requestedScope: node.scopeId },
-            'ScopeReferenceResolver',
-            ErrorCodes.MISSING_REGISTRY
-          );
-          return new Set(); // Return empty set when using error handler
-        } else {
-          // Fallback for backward compatibility
-          throw error;
-        }
-      }
-
       const scopeId = node.scopeId;
 
       // Add trace logging if available
