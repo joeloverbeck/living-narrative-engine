@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 
 describe('RecipePreflightValidator - Integration', () => {
@@ -39,11 +40,17 @@ describe('RecipePreflightValidator - Integration', () => {
       extractSlotKeysFromAppendage: () => [],
     };
 
+    const mockEntityMatcherService = new EntityMatcherService({
+      logger: mockLogger,
+      dataRegistry,
+    });
+
     validator = new RecipePreflightValidator({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator: mockSchemaValidator,
       slotGenerator: mockSlotGenerator,
+      entityMatcherService: mockEntityMatcherService,
       logger: mockLogger,
     });
   });

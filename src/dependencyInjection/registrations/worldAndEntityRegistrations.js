@@ -78,6 +78,8 @@ import AnatomyBlueprintRepository from '../../anatomy/repositories/anatomyBluepr
 import RecipePreflightValidator from '../../anatomy/validation/RecipePreflightValidator.js';
 import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
+import EntityMatcherService from '../../anatomy/services/entityMatcherService.js';
+import BlueprintProcessorService from '../../anatomy/services/blueprintProcessorService.js';
 import SlotResolver from '../../anatomy/integration/SlotResolver.js';
 import LayerResolutionService from '../../clothing/services/layerResolutionService.js';
 import SocketGenerator from '../../anatomy/socketGenerator.js';
@@ -801,6 +803,34 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register EntityMatcherService
+  registrar.singletonFactory(tokens.IEntityMatcherService, (c) => {
+    return new EntityMatcherService({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.IEntityMatcherService
+    )}.`
+  );
+
+  // Register BlueprintProcessorService
+  registrar.singletonFactory(tokens.IBlueprintProcessorService, (c) => {
+    return new BlueprintProcessorService({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+      socketGenerator: c.resolve(tokens.ISocketGenerator),
+      slotGenerator: c.resolve(tokens.ISlotGenerator),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.IBlueprintProcessorService
+    )}.`
+  );
+
   // Register RecipePreflightValidator
   registrar.singletonFactory(tokens.IRecipePreflightValidator, (c) => {
     return new RecipePreflightValidator({
@@ -809,6 +839,7 @@ export function registerWorldAndEntity(container) {
       anatomyBlueprintRepository: c.resolve(tokens.IAnatomyBlueprintRepository),
       schemaValidator: c.resolve(tokens.ISchemaValidator),
       slotGenerator: c.resolve(tokens.ISlotGenerator),
+      entityMatcherService: c.resolve(tokens.IEntityMatcherService),
     });
   });
   logger.debug(

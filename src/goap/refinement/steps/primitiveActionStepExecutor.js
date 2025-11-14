@@ -18,10 +18,14 @@ import StepExecutionError from '../../errors/stepExecutionError.js';
  * - Execute operations via OperationInterpreter
  * - Store results in RefinementStateManager if storeResultAs specified
  * - Return structured results with success/failure status
+ *
+ * IMPORTANT: RefinementStateManager is resolved lazily on each execute() call
+ * to ensure fresh transient instances per refinement, preventing state leakage
+ * between concurrent actor refinements.
  */
 class PrimitiveActionStepExecutor {
   #parameterResolutionService;
-  #refinementStateManager;
+  #container;
   #operationInterpreter;
   #actionIndex;
   #gameDataRepository;
@@ -32,7 +36,7 @@ class PrimitiveActionStepExecutor {
    *
    * @param {object} dependencies - Service dependencies
    * @param {object} dependencies.parameterResolutionService - Resolves parameter references
-   * @param {object} dependencies.refinementStateManager - Manages refinement local state
+   * @param {object} dependencies.container - DI container for lazy resolution of transient services
    * @param {object} dependencies.operationInterpreter - Executes operations
    * @param {object} dependencies.actionIndex - Registry of action definitions
    * @param {object} dependencies.gameDataRepository - Access to game data
@@ -40,7 +44,7 @@ class PrimitiveActionStepExecutor {
    */
   constructor({
     parameterResolutionService,
-    refinementStateManager,
+    container,
     operationInterpreter,
     actionIndex,
     gameDataRepository,
@@ -54,14 +58,9 @@ class PrimitiveActionStepExecutor {
         requiredMethods: ['resolve', 'clearCache'],
       }
     );
-    validateDependency(
-      refinementStateManager,
-      'IRefinementStateManager',
-      logger,
-      {
-        requiredMethods: ['store', 'getState'],
-      }
-    );
+    validateDependency(container, 'IAppContainer', logger, {
+      requiredMethods: ['resolve'],
+    });
     validateDependency(operationInterpreter, 'IOperationInterpreter', logger, {
       requiredMethods: ['execute'],
     });
@@ -76,7 +75,7 @@ class PrimitiveActionStepExecutor {
     });
 
     this.#parameterResolutionService = parameterResolutionService;
-    this.#refinementStateManager = refinementStateManager;
+    this.#container = container;
     this.#operationInterpreter = operationInterpreter;
     this.#actionIndex = actionIndex;
     this.#gameDataRepository = gameDataRepository;
@@ -87,6 +86,7 @@ class PrimitiveActionStepExecutor {
    * Execute a primitive action step from a refinement method.
    *
    * Execution flow:
+   * 0. Resolve fresh transient RefinementStateManager for this execution
    * 1. Resolve action definition from ActionIndex
    * 2. Resolve target bindings using ParameterResolutionService
    * 3. Merge step parameters with action defaults (step overrides)
@@ -111,6 +111,13 @@ class PrimitiveActionStepExecutor {
    * @throws {StepExecutionError} If step validation fails
    */
   async execute(step, context, stepIndex) {
+    // 0. CRITICAL: Resolve fresh transient RefinementStateManager to prevent state leakage
+    // Each execution gets its own isolated state manager instance
+    const tokens = await import('../../../dependencyInjection/tokens.js');
+    const refinementStateManager = this.#container.resolve(
+      tokens.tokens.IRefinementStateManager
+    );
+
     this.#logger.debug(
       `Executing primitive action step ${stepIndex}: ${step.actionId}`,
       {
@@ -163,7 +170,12 @@ class PrimitiveActionStepExecutor {
 
       // 7. Store result if storeResultAs specified
       if (step.storeResultAs) {
-        this.#storeResult(step.storeResultAs, result, stepIndex);
+        this.#storeResult(
+          refinementStateManager,
+          step.storeResultAs,
+          result,
+          stepIndex
+        );
       }
 
       // 8. Return result
@@ -194,7 +206,12 @@ class PrimitiveActionStepExecutor {
 
       // Store failure result if storeResultAs specified
       if (step.storeResultAs) {
-        this.#storeResult(step.storeResultAs, failureResult, stepIndex);
+        this.#storeResult(
+          refinementStateManager,
+          step.storeResultAs,
+          failureResult,
+          stepIndex
+        );
       }
 
       return failureResult;
@@ -405,11 +422,12 @@ class PrimitiveActionStepExecutor {
    * Store result in RefinementStateManager.
    *
    * @private
+   * @param {object} stateManager - Fresh transient state manager instance
    * @param {string} key - Storage key
    * @param {object} result - Result to store
    * @param {number} stepIndex - Step index for logging
    */
-  #storeResult(key, result, stepIndex) {
+  #storeResult(stateManager, key, result, stepIndex) {
     this.#logger.debug(
       `Storing result for step ${stepIndex} with key: ${key}`,
       {
@@ -419,7 +437,7 @@ class PrimitiveActionStepExecutor {
       }
     );
 
-    this.#refinementStateManager.store(key, result);
+    stateManager.store(key, result);
   }
 }
 

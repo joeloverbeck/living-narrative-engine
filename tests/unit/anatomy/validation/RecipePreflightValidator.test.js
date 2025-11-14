@@ -9,6 +9,7 @@ import * as patternMatchingValidator from '../../../../src/anatomy/validation/pa
 import * as socketSlotCompatibilityValidator from '../../../../src/anatomy/validation/socketSlotCompatibilityValidator.js';
 import { ComponentExistenceValidationRule } from '../../../../src/anatomy/validation/rules/componentExistenceValidationRule.js';
 import { PropertySchemaValidationRule } from '../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 
 describe('RecipePreflightValidator', () => {
   let validator;
@@ -17,6 +18,7 @@ describe('RecipePreflightValidator', () => {
   let mockAnatomyBlueprintRepository;
   let mockSchemaValidator;
   let mockSlotGenerator;
+  let mockEntityMatcherService;
 
   beforeEach(() => {
     mockLogger = {
@@ -46,11 +48,18 @@ describe('RecipePreflightValidator', () => {
       generateBlueprintSlots: jest.fn(() => ({})),
     };
 
+    // Use real EntityMatcherService to properly handle entity matching
+    mockEntityMatcherService = new EntityMatcherService({
+      logger: mockLogger,
+      dataRegistry: mockDataRegistry,
+    });
+
     validator = new RecipePreflightValidator({
       dataRegistry: mockDataRegistry,
       anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
       schemaValidator: mockSchemaValidator,
       slotGenerator: mockSlotGenerator,
+      entityMatcherService: mockEntityMatcherService,
       logger: mockLogger,
     });
   });
@@ -72,6 +81,7 @@ describe('RecipePreflightValidator', () => {
             anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
             schemaValidator: mockSchemaValidator,
             slotGenerator: mockSlotGenerator,
+            entityMatcherService: mockEntityMatcherService,
             logger: mockLogger,
           })
       ).toThrow();
@@ -85,6 +95,7 @@ describe('RecipePreflightValidator', () => {
             anatomyBlueprintRepository: {},
             schemaValidator: mockSchemaValidator,
             slotGenerator: mockSlotGenerator,
+            entityMatcherService: mockEntityMatcherService,
             logger: mockLogger,
           })
       ).toThrow();
@@ -98,6 +109,7 @@ describe('RecipePreflightValidator', () => {
             anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
             schemaValidator: {},
             slotGenerator: mockSlotGenerator,
+            entityMatcherService: mockEntityMatcherService,
             logger: mockLogger,
           })
       ).toThrow();
@@ -2032,6 +2044,7 @@ describe('RecipePreflightValidator', () => {
         anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
         schemaValidator: mockSchemaValidator,
         slotGenerator: mockSlotGenerator,
+        entityMatcherService: mockEntityMatcherService,
         logger: mockLogger,
         loadFailures,
       });
@@ -2130,6 +2143,7 @@ describe('RecipePreflightValidator', () => {
         anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
         schemaValidator: mockSchemaValidator,
         slotGenerator: mockSlotGenerator,
+        entityMatcherService: mockEntityMatcherService,
         logger: mockLogger,
         loadFailures,
       });
@@ -2202,6 +2216,7 @@ describe('RecipePreflightValidator', () => {
         anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
         schemaValidator: mockSchemaValidator,
         slotGenerator: mockSlotGenerator,
+        entityMatcherService: mockEntityMatcherService,
         logger: capturingLogger,
         loadFailures: throwingLoadFailures,
       });

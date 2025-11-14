@@ -7,6 +7,7 @@ import { describe, it, expect, beforeAll } from '@jest/globals';
 import { promises as fs } from 'fs';
 import path from 'path';
 import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../../../../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
@@ -53,18 +54,26 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     // Suppress unused variable warning
     void context;
 
+    const mockLogger = {
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+      debug: () => {},
+    };
+
+    const entityMatcherService = new EntityMatcherService({
+      logger: mockLogger,
+      dataRegistry,
+    });
+
     // Create validator
     validator = new RecipePreflightValidator({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,
       slotGenerator,
-      logger: {
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        debug: () => {},
-      },
+      entityMatcherService,
+      logger: mockLogger,
     });
   });
 

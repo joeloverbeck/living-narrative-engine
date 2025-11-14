@@ -9,6 +9,7 @@ import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../../../../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -71,12 +72,18 @@ describe('Centaur Warrior Recipe Validation', () => {
     context = await manifestPhase.execute(context);
     await contentPhase.execute(context);
 
+    const entityMatcherService = new EntityMatcherService({
+      logger,
+      dataRegistry,
+    });
+
     // Create validator
     validator = new RecipePreflightValidator({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,
       slotGenerator,
+      entityMatcherService,
       logger,
     });
   });

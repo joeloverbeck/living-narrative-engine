@@ -18,6 +18,7 @@ import { validatePatternMatching } from './patternMatchingValidator.js';
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../slotGenerator.js').default} SlotGenerator */
+/** @typedef {import('../services/entityMatcherService.js').default} EntityMatcherService */
 
 /**
  * Comprehensive pre-flight validator for anatomy recipes
@@ -30,12 +31,14 @@ class RecipePreflightValidator {
   #slotGenerator;
   #logger;
   #loadFailures;
+  #entityMatcherService;
 
   constructor({
     dataRegistry,
     anatomyBlueprintRepository,
     schemaValidator,
     slotGenerator,
+    entityMatcherService,
     logger,
     loadFailures = {},
   }) {
@@ -59,11 +62,19 @@ class RecipePreflightValidator {
         'extractSlotKeysFromAppendage',
       ],
     });
+    validateDependency(entityMatcherService, 'IEntityMatcherService', logger, {
+      requiredMethods: [
+        'findMatchingEntities',
+        'findMatchingEntitiesForSlot',
+        'mergePropertyRequirements',
+      ],
+    });
 
     this.#dataRegistry = dataRegistry;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
     this.#schemaValidator = schemaValidator;
     this.#slotGenerator = slotGenerator;
+    this.#entityMatcherService = entityMatcherService;
     this.#logger = logger;
     this.#loadFailures = loadFailures;
   }
@@ -594,7 +605,7 @@ class RecipePreflightValidator {
 
       // Check slots
       for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
-        const matchingEntities = this.#findMatchingEntities(
+        const matchingEntities = this.#entityMatcherService.findMatchingEntities(
           slot,
           allEntityDefs
         );
@@ -618,7 +629,7 @@ class RecipePreflightValidator {
       // Check patterns
       for (let i = 0; i < (recipe.patterns || []).length; i++) {
         const pattern = recipe.patterns[i];
-        const matchingEntities = this.#findMatchingEntities(
+        const matchingEntities = this.#entityMatcherService.findMatchingEntities(
           pattern,
           allEntityDefs
         );
@@ -656,39 +667,6 @@ class RecipePreflightValidator {
         error: error.message,
       });
     }
-  }
-
-  #findMatchingEntities(slotOrPattern, allEntityDefs) {
-    const matches = [];
-    const requiredPartType = slotOrPattern.partType;
-    const requiredTags = slotOrPattern.tags || [];
-    const requiredPropertyValues = slotOrPattern.properties || {};
-
-    for (const entityDef of allEntityDefs) {
-      // Check if entity has anatomy:part component with matching subType
-      const anatomyPart = entityDef.components?.['anatomy:part'];
-      if (!anatomyPart || anatomyPart.subType !== requiredPartType) {
-        continue;
-      }
-
-      // Check if entity has all required tags (components)
-      const hasAllTags = requiredTags.every(
-        (tag) => entityDef.components?.[tag] !== undefined
-      );
-      if (!hasAllTags) {
-        continue;
-      }
-
-      // Check if entity property VALUES match required property values
-      // This mirrors the runtime behavior in partSelectionService.js #matchesProperties
-      if (!this.#matchesPropertyValues(entityDef, requiredPropertyValues)) {
-        continue;
-      }
-
-      matches.push(entityDef.id);
-    }
-
-    return matches;
   }
 
   /**
@@ -800,14 +778,14 @@ class RecipePreflightValidator {
               ...(pattern.tags || []),
               ...(blueprintSlot.requirements?.components || []),
             ],
-            properties: this.#mergePropertyRequirements(
+            properties: this.#entityMatcherService.mergePropertyRequirements(
               pattern.properties || {},
               blueprintSlot.requirements?.properties || {}
             ),
           };
 
           // Find matching entities
-          const matchingEntities = this.#findMatchingEntitiesForSlot(
+          const matchingEntities = this.#entityMatcherService.findMatchingEntitiesForSlot(
             combinedRequirements,
             allEntityDefs
           );
@@ -860,127 +838,6 @@ class RecipePreflightValidator {
         error: error.message,
       });
     }
-  }
-
-  /**
-   * Find matching entities for a slot with combined requirements
-   * Similar to #findMatchingEntities but also checks allowedTypes
-   *
-   * @param {object} requirements - Combined requirements
-   * @param {Array} allEntityDefs - All entity definitions
-   * @returns {Array<string>} Matching entity IDs
-   */
-  #findMatchingEntitiesForSlot(requirements, allEntityDefs) {
-    const matches = [];
-    const { partType, allowedTypes, tags, properties } = requirements;
-
-    for (const entityDef of allEntityDefs) {
-      // Check if entity has anatomy:part component with matching subType
-      const anatomyPart = entityDef.components?.['anatomy:part'];
-      if (!anatomyPart) {
-        continue;
-      }
-
-      // Check partType requirement
-      if (partType && anatomyPart.subType !== partType) {
-        continue;
-      }
-
-      // Check if subType is in allowedTypes (unless allowedTypes includes '*')
-      if (
-        allowedTypes &&
-        !allowedTypes.includes('*') &&
-        !allowedTypes.includes(anatomyPart.subType)
-      ) {
-        continue;
-      }
-
-      // Check if entity has all required tags (components)
-      const hasAllTags = tags.every(
-        (tag) => entityDef.components?.[tag] !== undefined
-      );
-      if (!hasAllTags) {
-        continue;
-      }
-
-      // Check if entity properties match required property VALUES
-      // Properties is an object like { "descriptors:build": { "build": "slim" } }
-      if (!this.#matchesPropertyValues(entityDef, properties)) {
-        continue;
-      }
-
-      matches.push(entityDef.id);
-    }
-
-    return matches;
-  }
-
-  /**
-   * Checks if entity definition matches property value requirements
-   * Mimics the production code's #matchesProperties method
-   *
-   * @param {object} entityDef - Entity definition
-   * @param {object} propertyRequirements - Required property components with values
-   * @returns {boolean} True if all property values match
-   */
-  #matchesPropertyValues(entityDef, propertyRequirements) {
-    if (!propertyRequirements || typeof propertyRequirements !== 'object') {
-      return true;
-    }
-
-    for (const [componentId, requiredProps] of Object.entries(
-      propertyRequirements
-    )) {
-      const component = entityDef.components?.[componentId];
-      if (!component) {
-        return false;
-      }
-
-      for (const [propKey, propValue] of Object.entries(requiredProps)) {
-        if (component[propKey] !== propValue) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Deep merge property requirements from pattern and blueprint
-   * Ensures that both sets of constraints are preserved when they target the same component
-   *
-   * @param {object} patternProperties - Property requirements from pattern
-   * @param {object} blueprintProperties - Property requirements from blueprint slot
-   * @returns {object} Merged property requirements with all constraints
-   * @example
-   * // Pattern requires: descriptors:venom.potency === 'high'
-   * // Blueprint requires: descriptors:venom.color === 'green'
-   * // Result: descriptors:venom must have both potency='high' AND color='green'
-   * const merged = this.#mergePropertyRequirements(
-   *   { "descriptors:venom": { "potency": "high" } },
-   *   { "descriptors:venom": { "color": "green" } }
-   * );
-   * // => { "descriptors:venom": { "potency": "high", "color": "green" } }
-   */
-  #mergePropertyRequirements(patternProperties, blueprintProperties) {
-    const merged = { ...patternProperties };
-
-    // Deep merge blueprint properties into pattern properties
-    for (const [componentId, blueprintProps] of Object.entries(blueprintProperties)) {
-      if (merged[componentId]) {
-        // Component exists in both - merge the property constraints
-        merged[componentId] = {
-          ...merged[componentId],
-          ...blueprintProps,
-        };
-      } else {
-        // Component only in blueprint - add it
-        merged[componentId] = { ...blueprintProps };
-      }
-    }
-
-    return merged;
   }
 
   /**

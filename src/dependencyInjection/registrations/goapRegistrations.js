@@ -9,6 +9,7 @@ import RefinementStateManager from '../../goap/refinement/refinementStateManager
 import MethodSelectionService from '../../goap/refinement/methodSelectionService.js';
 import PrimitiveActionStepExecutor from '../../goap/refinement/steps/primitiveActionStepExecutor.js';
 import ConditionalStepExecutor from '../../goap/refinement/steps/conditionalStepExecutor.js';
+import RefinementEngine from '../../goap/refinement/refinementEngine.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -49,10 +50,13 @@ export function registerGoapServices(container) {
   });
 
   // Primitive Action Step Executor
+  // IMPORTANT: Injects container for lazy resolution of IRefinementStateManager
+  // State manager is transient, so each execute() call resolves a fresh instance
+  // to prevent state leakage between concurrent actor refinements
   container.register(tokens.IPrimitiveActionStepExecutor, PrimitiveActionStepExecutor, {
     dependencies: [
       tokens.IParameterResolutionService,
-      tokens.IRefinementStateManager,
+      tokens.AppContainer, // Lazy resolution for transient state manager
       tokens.OperationInterpreter,
       tokens.ActionIndex,
       tokens.GameDataRepository,
@@ -61,14 +65,35 @@ export function registerGoapServices(container) {
   });
 
   // Conditional Step Executor
-  // IMPORTANT: singleton lifecycle required for self-reference to work properly
-  // Self-reference enables recursive handling of nested conditionals
+  // IMPORTANT: Self-reference pattern for recursive nested conditional handling
+  // This is SAFE because singleton lifecycle prevents stack overflow:
+  // - First resolution creates instance and stores in container cache
+  // - Self-reference resolves from cache, NOT recursive instantiation
+  // - The single instance can recursively call its own execute() method
+  // This pattern enables deep conditional nesting without separate executor instances
   container.register(tokens.IConditionalStepExecutor, ConditionalStepExecutor, {
     dependencies: [
       tokens.IContextAssemblyService,
       tokens.IPrimitiveActionStepExecutor,
       tokens.IConditionalStepExecutor, // Self-reference for nested conditionals
       tokens.JsonLogicEvaluationService,
+      tokens.ILogger,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // Refinement Engine
+  // Main orchestration service for task-to-action refinement
+  // Coordinates method selection, step execution, state management, and event dispatching
+  container.register(tokens.IRefinementEngine, RefinementEngine, {
+    dependencies: [
+      tokens.IMethodSelectionService,
+      tokens.IRefinementStateManager,
+      tokens.IPrimitiveActionStepExecutor,
+      tokens.IConditionalStepExecutor,
+      tokens.IContextAssemblyService,
+      tokens.GameDataRepository,
+      tokens.IEventBus,
       tokens.ILogger,
     ],
     lifecycle: 'singleton',
