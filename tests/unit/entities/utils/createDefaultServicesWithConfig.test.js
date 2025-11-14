@@ -82,6 +82,55 @@ describe('createDefaultServicesWithConfig', () => {
       );
     });
 
+    it('uses a MonitoringCoordinator resolved from the DI container when available', () => {
+      const injectedCoordinator = {
+        stop: jest.fn(),
+        executeMonitored: jest.fn((operationName, fn) => fn()),
+        getCircuitBreaker: jest.fn(() => ({ state: 'CLOSED' })),
+        getStats: jest.fn(() => ({ health: 'ok' })),
+        getPerformanceMonitor: jest.fn(() => ({
+          timeSync: jest.fn((label, fn) => fn()),
+        })),
+      };
+      const container = {
+        has: jest.fn(() => true),
+        resolve: jest.fn(() => injectedCoordinator),
+      };
+
+      const services = createDefaultServicesWithConfig({
+        ...deps,
+        container,
+      });
+
+      expect(container.has).toHaveBeenCalledWith('IMonitoringCoordinator');
+      expect(container.resolve).toHaveBeenCalledWith('IMonitoringCoordinator');
+      expect(services.monitoringCoordinator).toBe(injectedCoordinator);
+      expect(deps.logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('logs a warning and falls back to direct instantiation when DI resolution fails', () => {
+      const resolutionError = new Error('Missing binding');
+      const container = {
+        has: jest.fn(() => true),
+        resolve: jest.fn(() => {
+          throw resolutionError;
+        }),
+      };
+
+      const services = createDefaultServicesWithConfig({
+        ...deps,
+        container,
+      });
+
+      expect(deps.logger.warn).toHaveBeenCalledWith(
+        'Could not resolve MonitoringCoordinator from DI container:',
+        resolutionError.message
+      );
+      expect(services.monitoringCoordinator).toBeInstanceOf(
+        MonitoringCoordinator
+      );
+    });
+
     it('works without global configuration initialized', () => {
       // Ensure config is not initialized
       expect(isConfigInitialized()).toBe(false);
