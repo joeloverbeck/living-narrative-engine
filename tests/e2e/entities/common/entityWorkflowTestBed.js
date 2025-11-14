@@ -41,7 +41,6 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     this.eventMonitoringOptions = {
       monitorAll: options.monitorAll ?? false, // Default: don't monitor all events
       specificEvents: options.specificEvents ?? [], // Only monitor these event types
-      deepClonePayloads: options.deepClonePayloads ?? false, // Default: shallow clone
       enablePerformanceTracking: options.enablePerformanceTracking ?? true,
       monitorComponentEvents: options.monitorComponentEvents ?? false, // Default: don't monitor component events
     };
@@ -273,22 +272,14 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   setupEventMonitoring() {
     const startTime = performance.now();
 
-    const { monitorAll, specificEvents, deepClonePayloads } = this.eventMonitoringOptions;
+    const { monitorAll, specificEvents } = this.eventMonitoringOptions;
 
-    // Helper to safely clone event data
+    // Helper to safely clone event data. Always shallow-clone for performance.
     const clonePayload = (payload) => {
-      if (!payload) return null;
-      if (!deepClonePayloads) {
-        // Shallow clone is much faster and sufficient for most tests
-        return { ...payload };
+      if (!payload) {
+        return null;
       }
-      // Deep clone only when explicitly requested
-      try {
-        return JSON.parse(JSON.stringify(payload));
-      } catch (error) {
-        this.logger?.warn('Failed to deep clone event payload:', error);
-        return { ...payload }; // Fallback to shallow clone
-      }
+      return { ...payload };
     };
 
     // Option 1: Monitor all events (only if explicitly requested)
@@ -704,10 +695,13 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   }
 
   /**
-   * Get events of a specific type
+   * Get events of a specific type.
+   *
+   * IMPORTANT: Returned events are shallow clones meant for read-only assertions.
+   * Create a local copy if you need to mutate payload data.
    *
    * @param {string} eventType - Event type to filter
-   * @returns {Array<object>} Matching events
+   * @returns {Array<object>} Matching events (read-only)
    */
   getEventsByType(eventType) {
     // Map event type to internal type names used in specialized arrays
@@ -734,20 +728,26 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   }
 
   /**
-   * Get entity lifecycle events for a specific entity
+   * Get entity lifecycle events for a specific entity.
+   *
+   * IMPORTANT: Returned objects are references to internal event data. Treat them as
+   * read-only and clone locally if mutations are required for a test scenario.
    *
    * @param {string} entityId - Entity ID to filter
-   * @returns {Array<object>} Entity lifecycle events
+   * @returns {Array<object>} Entity lifecycle events (read-only)
    */
   getEntityEvents(entityId) {
     return this.entityEvents.filter((event) => event.entityId === entityId);
   }
 
   /**
-   * Get component mutation events for a specific entity
+   * Get component mutation events for a specific entity.
+   *
+   * IMPORTANT: Returned objects reference internal monitoring arrays. Do not mutate the
+   * returned values; clone them locally if changes are required.
    *
    * @param {string} entityId - Entity ID to filter
-   * @returns {Array<object>} Component mutation events
+   * @returns {Array<object>} Component mutation events (read-only)
    */
   getComponentEvents(entityId) {
     return this.componentEvents.filter((event) => event.entityId === entityId);
