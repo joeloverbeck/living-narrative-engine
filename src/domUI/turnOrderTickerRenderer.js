@@ -156,6 +156,10 @@ export class TurnOrderTickerRenderer {
       // Clear existing queue before rendering
       this.#_clearQueue();
 
+      // Set ARIA list role on container for accessibility
+      this.#actorQueueElement.setAttribute('role', 'list');
+      this.#actorQueueElement.setAttribute('aria-label', 'Turn order queue');
+
       // Handle empty actor array
       if (actors.length === 0) {
         this.#logger.info('Rendering empty turn order queue');
@@ -679,6 +683,21 @@ export class TurnOrderTickerRenderer {
     container.setAttribute('data-entity-id', entityId);
     container.setAttribute('data-participating', displayData.participating.toString());
 
+    // ARIA attributes for accessibility
+    container.setAttribute('role', 'listitem');
+    container.setAttribute('tabindex', '0');
+    container.setAttribute(
+      'aria-label',
+      `${displayData.name}, ${displayData.participating ? 'participating' : 'not participating'}`
+    );
+
+    if (!displayData.participating) {
+      container.setAttribute('aria-disabled', 'true');
+    }
+
+    // Tooltip for hover
+    container.title = `${displayData.name}${displayData.participating ? '' : ' (Not participating)'}`;
+
     if (displayData.portraitPath) {
       // Render with portrait
       this.#_createPortraitElement(container, displayData);
@@ -768,6 +787,18 @@ export class TurnOrderTickerRenderer {
     // Set data attribute (CSS will apply visual changes)
     element.setAttribute('data-participating', participating.toString());
 
+    // Update ARIA attributes for screen readers
+    element.setAttribute(
+      'aria-label',
+      `${element.textContent}, ${participating ? 'participating' : 'not participating'}`
+    );
+
+    if (participating) {
+      element.removeAttribute('aria-disabled');
+    } else {
+      element.setAttribute('aria-disabled', 'true');
+    }
+
     // Add transition class for smooth visual change
     element.classList.add('participation-updating');
 
@@ -780,6 +811,44 @@ export class TurnOrderTickerRenderer {
       entityId: element.getAttribute('data-entity-id'),
       participating,
     });
+  }
+
+  /**
+   * Announce a message to screen readers using a temporary live region.
+   * Creates a visually hidden element with aria-live for announcements.
+   *
+   * @param {string} message - The message to announce
+   * @private
+   */
+  #announceToScreenReader(message) {
+    if (!message || typeof message !== 'string') {
+      this.#logger.warn('announceToScreenReader requires a valid message string', { message });
+      return;
+    }
+
+    try {
+      // Create temporary live region for announcements
+      const announcement = this.#domElementFactory.div(['sr-only']);
+      announcement.setAttribute('role', 'status');
+      announcement.setAttribute('aria-live', 'polite');
+      announcement.textContent = message;
+
+      document.body.appendChild(announcement);
+
+      this.#logger.debug('Screen reader announcement created', { message });
+
+      // Remove after announcement (screen readers have time to read it)
+      setTimeout(() => {
+        announcement.remove();
+        this.#logger.debug('Screen reader announcement removed');
+      }, 1000);
+    } catch (error) {
+      // Non-critical failure, log but don't throw
+      this.#logger.warn('Failed to create screen reader announcement', {
+        message,
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -1075,6 +1144,10 @@ export class TurnOrderTickerRenderer {
       this.updateCurrentActor(entityId);
       this.#_currentActorId = entityId;
 
+      // Announce to screen readers
+      const actorName = this.#_getActorDisplayData(entityId).name;
+      this.#announceToScreenReader(`${actorName}'s turn`);
+
     } catch (error) {
       this.#logger.error('Failed to handle turn_started event', {
         error: error.message,
@@ -1106,8 +1179,19 @@ export class TurnOrderTickerRenderer {
 
       this.#logger.debug('Turn ended', { entityId });
 
+      // Get actor name before removal
+      const actorName = this.#_getActorDisplayData(entityId).name;
+
       // Remove actor from ticker
       await this.removeActor(entityId);
+
+      // Count remaining actors
+      const remainingCount = this.#actorQueueElement?.children.length || 0;
+
+      // Announce to screen readers
+      this.#announceToScreenReader(
+        `${actorName} removed from turn order. ${remainingCount} ${remainingCount === 1 ? 'actor' : 'actors'} remaining`
+      );
 
       // Clear current actor tracking if it was this actor
       if (this.#_currentActorId === entityId) {
@@ -1154,8 +1238,16 @@ export class TurnOrderTickerRenderer {
 
       this.#logger.debug('Participation changed', { entityId, participating });
 
+      // Get actor name
+      const actorName = this.#_getActorDisplayData(entityId).name;
+
       // Update visual state
       this.updateActorParticipation(entityId, participating);
+
+      // Announce to screen readers
+      this.#announceToScreenReader(
+        `${actorName} ${participating ? 'enabled for' : 'disabled from'} participation`
+      );
 
     } catch (error) {
       this.#logger.error('Failed to handle participation change event', {
