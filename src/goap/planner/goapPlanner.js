@@ -25,20 +25,38 @@ class GoapPlanner {
   /** @type {import('../../logic/services/jsonLogicEvaluationService.js').default} */
   #jsonLogicService;
 
+  /** @type {import('../../data/gameDataRepository.js').GameDataRepository} */
+  #gameDataRepository;
+
+  /** @type {import('../../interfaces/IEntityManager.js').IEntityManager} */
+  #entityManager;
+
   /**
    * Create new GOAP planner instance
    *
    * @param {object} deps - Dependencies
    * @param {import('../../logging/logger.js').default} deps.logger - Logger instance
    * @param {import('../../logic/services/jsonLogicEvaluationService.js').default} deps.jsonLogicService - JSON Logic evaluation service
+   * @param {import('../../data/gameDataRepository.js').GameDataRepository} deps.gameDataRepository - Game data repository for loading tasks
+   * @param {import('../../interfaces/IEntityManager.js').IEntityManager} deps.entityManager - Entity manager for retrieving actor entities
    */
-  constructor({ logger, jsonLogicService }) {
+  constructor({ logger, jsonLogicService, gameDataRepository, entityManager }) {
     this.#logger = ensureValidLogger(logger);
 
     validateDependency(jsonLogicService, 'JsonLogicEvaluationService', this.#logger, {
       requiredMethods: ['evaluateCondition'],
     });
     this.#jsonLogicService = jsonLogicService;
+
+    validateDependency(gameDataRepository, 'GameDataRepository', this.#logger, {
+      requiredMethods: ['get'], // Uses generic get() method to retrieve tasks
+    });
+    this.#gameDataRepository = gameDataRepository;
+
+    validateDependency(entityManager, 'IEntityManager', this.#logger, {
+      requiredMethods: ['getEntityInstance'], // Note: uses getEntityInstance, not getEntity
+    });
+    this.#entityManager = entityManager;
 
     this.#logger.info('GoapPlanner initialized');
   }
@@ -199,6 +217,106 @@ class GoapPlanner {
   }
 
   /**
+   * Build task library for actor by filtering all tasks through structural gates
+   *
+   * Structural gates are coarse "is this task even relevant?" filters based on:
+   * - Actor capabilities (e.g., core:digestive_system, core:has_hands)
+   * - World knowledge (e.g., knows instruments exist)
+   * - Permanent attributes (e.g., is_musician, is_combatant)
+   *
+   * Different from preconditions which check "can I do this RIGHT NOW?"
+   *
+   * @param {string} actorId - Actor entity ID (UUID)
+   * @returns {Array<object>} Filtered task definitions
+   * @private
+   * @example
+   * const tasks = this.#getTaskLibrary('actor-uuid-123');
+   * // Returns: [
+   * //   { id: 'core:consume_nourishing_item', ... },
+   * //   { id: 'core:find_shelter', ... }
+   * // ]
+   */
+  #getTaskLibrary(actorId) {
+    // 1. Get all tasks from repository
+    // Tasks are stored in registry with key 'tasks' and retrieved via generic get()
+    const tasksData = this.#gameDataRepository.get('tasks');
+
+    if (!tasksData) {
+      this.#logger.warn('No tasks available in repository');
+      return [];
+    }
+
+    // 2. Flatten tasks from all mods into single array
+    // Tasks are stored as: { modId: { taskId: taskData, ... }, ... }
+    const allTasks = [];
+    for (const modId in tasksData) {
+      const modTasks = tasksData[modId];
+      if (modTasks && typeof modTasks === 'object') {
+        for (const taskId in modTasks) {
+          allTasks.push(modTasks[taskId]);
+        }
+      }
+    }
+
+    if (allTasks.length === 0) {
+      this.#logger.warn('No tasks found in repository data');
+      return [];
+    }
+
+    this.#logger.debug(`Filtering ${allTasks.length} tasks for actor ${actorId}`);
+
+    // 3. Get actor entity for structural gate evaluation
+    // CRITICAL: Use getEntityInstance() not getEntity()
+    const actor = this.#entityManager.getEntityInstance(actorId);
+
+    if (!actor) {
+      this.#logger.error(`Actor not found: ${actorId}`);
+      return [];
+    }
+
+    // 4. Build evaluation context for structural gates
+    const context = {
+      actor: actor,
+      // Future: add world-level facts if needed (e.g., world state, game config)
+    };
+
+    // 5. Filter by structural gates
+    const filteredTasks = allTasks.filter(task => {
+      // Tasks without structural gates are always relevant
+      if (!task.structuralGates || !task.structuralGates.condition) {
+        this.#logger.debug(`Task ${task.id} has no structural gates, including`);
+        return true;
+      }
+
+      try {
+        // Evaluate structural gate condition
+        const passed = this.#jsonLogicService.evaluateCondition(
+          task.structuralGates.condition,
+          context
+        );
+
+        if (passed) {
+          this.#logger.debug(`Task ${task.id} structural gates passed`);
+        } else {
+          this.#logger.debug(`Task ${task.id} structural gates failed, excluding`);
+        }
+
+        return passed;
+
+      } catch (err) {
+        this.#logger.error(`Structural gate evaluation failed for ${task.id}`, err, {
+          condition: task.structuralGates.condition,
+        });
+        return false; // Conservative: exclude on error
+      }
+    });
+
+    this.#logger.info(`Task library for ${actorId}: ${filteredTasks.length} / ${allTasks.length} tasks`);
+
+    return filteredTasks;
+  }
+
+  /**
    * TEST-ONLY METHODS
    * These public methods expose private helpers for unit testing.
    * DO NOT use in production code - they exist solely for test coverage.
@@ -233,6 +351,16 @@ class GoapPlanner {
    */
   testBuildEvaluationContext(state) {
     return this.#buildEvaluationContext(state);
+  }
+
+  /**
+   * Test-only accessor for #getTaskLibrary
+   *
+   * @param {string} actorId - Actor entity ID
+   * @returns {Array<object>} Filtered task definitions
+   */
+  testGetTaskLibrary(actorId) {
+    return this.#getTaskLibrary(actorId);
   }
 }
 

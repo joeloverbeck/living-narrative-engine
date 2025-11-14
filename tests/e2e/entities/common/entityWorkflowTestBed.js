@@ -733,16 +733,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
       return results;
     };
 
-    if (!forceFullValidation && skipIfSimple && entityCount <= simpleThreshold) {
-      results.skipped = true;
-      results.skipReason = `Entity count (${entityCount}) below threshold (${simpleThreshold})`;
-      results.validationType = 'skipped';
-      this.logger?.debug(
-        `Repository consistency check skipped: ${results.skipReason}`
-      );
-      return finalizeResults();
-    }
-
+    // Check explicit validation request FIRST (before auto-skip)
     if (quickCheck && !forceFullValidation) {
       results.validationType = 'quick';
 
@@ -762,6 +753,17 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         `Repository quick consistency check: ${results.isConsistent ? 'PASSED' : 'FAILED'}`
       );
 
+      return finalizeResults();
+    }
+
+    // Auto-skip only applies when quickCheck is NOT requested
+    if (!forceFullValidation && skipIfSimple && entityCount <= simpleThreshold) {
+      results.skipped = true;
+      results.skipReason = `Entity count (${entityCount}) below threshold (${simpleThreshold})`;
+      results.validationType = 'skipped';
+      this.logger?.debug(
+        `Repository consistency check skipped: ${results.skipReason}`
+      );
       return finalizeResults();
     }
 
