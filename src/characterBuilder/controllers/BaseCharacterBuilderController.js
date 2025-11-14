@@ -15,6 +15,7 @@ import {
 } from '../../shared/characterBuilder/uiStateManager.js';
 import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
 import { DOMElementManager } from '../services/domElementManager.js';
+import { EventListenerRegistry } from '../services/eventListenerRegistry.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -84,31 +85,8 @@ export class BaseCharacterBuilderController {
   /** @private @type {boolean} */
   #isInitializing = false;
 
-  /**
-   * Enhanced event listener tracking with comprehensive metadata
-   *
-   * @private
-   * @type {Array<{
-   *   type: 'dom'|'eventBus',
-   *   element?: HTMLElement,
-   *   event: string,
-   *   handler: Function,
-   *   originalHandler?: Function,
-   *   options?: object,
-   *   id?: string,
-   *   unsubscribe?: Function
-   * }>}
-   */
-  #eventListeners = [];
-
-  /** @private @type {number} */
-  #eventListenerIdCounter = 0;
-
-  /** @private @type {Map<string, Function>} */
-  #debouncedHandlers = new Map();
-
-  /** @private @type {Map<string, Function>} */
-  #throttledHandlers = new Map();
+  /** @private @type {EventListenerRegistry|null} */
+  #eventListenerRegistry = null;
 
   /** @private @type {UIStateManager} */
   #uiStateManager = null;
@@ -380,6 +358,38 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Lazy-loads the EventListenerRegistry instance.
+   *
+   * @private
+   * @returns {EventListenerRegistry}
+   */
+  #getEventListenerRegistry() {
+    if (!this.#eventListenerRegistry) {
+      this.#eventListenerRegistry = new EventListenerRegistry({
+        logger: this.#logger,
+        asyncUtilities: this.#createAsyncUtilitiesAdapters(),
+        contextName: this.constructor.name,
+      });
+    }
+
+    return this.#eventListenerRegistry;
+  }
+
+  /**
+   * Build async utility adapters until BASCHACUICONREF-005 extracts the toolkit.
+   *
+   * @private
+   * @returns {{ debounce: Function, throttle: Function }} Async adapters.
+   */
+  #createAsyncUtilitiesAdapters() {
+    // TODO(BASCHACUICONREF-005): Replace adapters with AsyncUtilitiesToolkit service.
+    return {
+      debounce: (fn, delay, options) => this._debounce(fn, delay, options),
+      throttle: (fn, wait, options) => this._throttle(fn, wait, options),
+    };
+  }
+
+  /**
    * Get initialization status
    *
    * @public
@@ -398,6 +408,16 @@ export class BaseCharacterBuilderController {
    */
   get elements() {
     return this._getDomManager().getElementsSnapshot();
+  }
+
+  /**
+   * Provides access to the shared event listener registry.
+   *
+   * @protected
+   * @returns {EventListenerRegistry}
+   */
+  get eventRegistry() {
+    return this.#getEventListenerRegistry();
   }
 
   /**
@@ -431,30 +451,8 @@ export class BaseCharacterBuilderController {
       return;
     }
 
-    const listenersToRestore = [];
-    let detachedCount = 0;
-
-    while (this.#eventListeners.length > 0) {
-      const listener = this.#eventListeners.pop();
-
-      if (listener.type === 'eventBus' && listener.unsubscribe) {
-        try {
-          listener.unsubscribe();
-          detachedCount += 1;
-        } catch (error) {
-          this.#logger.error(
-            `${this.constructor.name}: Error detaching event bus listener`,
-            error
-          );
-        }
-      } else {
-        listenersToRestore.push(listener);
-      }
-    }
-
-    listenersToRestore.reverse().forEach((listener) => {
-      this.#eventListeners.push(listener);
-    });
+    const registry = this.#eventListenerRegistry;
+    const detachedCount = registry ? registry.detachEventBusListeners() : 0;
 
     this.#logger.debug(
       `${this.constructor.name}: Detached from event bus after unsubscribing ${detachedCount} listener(s)`
@@ -1101,64 +1099,22 @@ export class BaseCharacterBuilderController {
    * });
    */
   _addEventListener(elementOrKey, event, handler, options = {}) {
-    // Resolve element
-    let element;
-    if (typeof elementOrKey === 'string') {
-      element = this._getElement(elementOrKey);
-      if (!element) {
-        this.#logger.warn(
-          `${this.constructor.name}: Cannot add ${event} listener - element '${elementOrKey}' not found`
-        );
-        return null;
-      }
-    } else if (elementOrKey instanceof HTMLElement) {
-      element = elementOrKey;
-    } else {
-      throw new Error(
-        `Invalid element provided to _addEventListener: ${elementOrKey}`
-      );
+    const element = this.#resolveEventTarget(elementOrKey, event);
+    if (!element) {
+      return null;
     }
 
-    // Generate unique ID
-    const listenerId =
-      options.id || `listener-${++this.#eventListenerIdCounter}`;
+    const boundHandler = handler?.bind ? handler.bind(this) : handler;
 
-    // Check for duplicate
-    if (options.id && this.#eventListeners.some((l) => l.id === options.id)) {
-      this.#logger.warn(
-        `${this.constructor.name}: Listener with ID '${options.id}' already exists`
-      );
-      return listenerId;
-    }
-
-    // Bind handler to this context if needed
-    const boundHandler = handler.bind ? handler.bind(this) : handler;
-
-    // Add the event listener
-    const listenerOptions = {
-      capture: options.capture || false,
-      once: options.once || false,
-      passive: options.passive !== false, // Default to true for better performance
-    };
-
-    element.addEventListener(event, boundHandler, listenerOptions);
-
-    // Track for cleanup
-    this.#eventListeners.push({
-      type: 'dom',
+    return this.#getEventListenerRegistry().addEventListener(
       element,
       event,
-      handler: boundHandler,
-      originalHandler: handler,
-      options: listenerOptions,
-      id: listenerId,
-    });
-
-    this.#logger.debug(
-      `${this.constructor.name}: Added ${event} listener to ${element.tagName}#${element.id || 'no-id'} [${listenerId}]`
+      boundHandler,
+      {
+        ...options,
+        originalHandler: handler,
+      }
     );
-
-    return listenerId;
   }
 
   /**
@@ -1187,35 +1143,17 @@ export class BaseCharacterBuilderController {
       return null;
     }
 
-    const subscriptionId =
-      options.id || `sub-${++this.#eventListenerIdCounter}`;
-    const boundHandler = handler.bind ? handler.bind(this) : handler;
+    const boundHandler = handler?.bind ? handler.bind(this) : handler;
 
-    // Subscribe to event (EventBus.subscribe only takes eventType and handler)
-    const unsubscribe = this.#eventBus.subscribe(eventType, boundHandler);
-
-    if (!unsubscribe) {
-      this.#logger.error(
-        `${this.constructor.name}: Failed to subscribe to event '${eventType}'`
-      );
-      return null;
-    }
-
-    // Track for cleanup
-    this.#eventListeners.push({
-      type: 'eventBus',
-      event: eventType,
-      handler: boundHandler,
-      originalHandler: handler,
-      unsubscribe,
-      id: subscriptionId,
-    });
-
-    this.#logger.debug(
-      `${this.constructor.name}: Subscribed to event '${eventType}' [${subscriptionId}]`
+    return this.#getEventListenerRegistry().subscribeToEvent(
+      this.#eventBus,
+      eventType,
+      boundHandler,
+      {
+        ...options,
+        originalHandler: handler,
+      }
     );
-
-    return subscriptionId;
   }
 
   /**
@@ -1244,22 +1182,26 @@ export class BaseCharacterBuilderController {
     handler,
     options = {}
   ) {
-    const delegatedHandler = (e) => {
-      // Find the target element that matches the selector
-      const matchedElement = e.target.closest(selector);
+    const container = this._getContainer(containerOrKey);
+    if (!container) {
+      this.#logger.warn(
+        `${this.constructor.name}: Cannot add delegated listener - container '${containerOrKey}' not found`
+      );
+      return null;
+    }
 
-      if (
-        matchedElement &&
-        this._getContainer(containerOrKey).contains(matchedElement)
-      ) {
-        handler.call(this, e, matchedElement);
+    const boundHandler = handler?.bind ? handler.bind(this) : handler;
+
+    return this.#getEventListenerRegistry().addDelegatedListener(
+      container,
+      selector,
+      event,
+      boundHandler,
+      {
+        ...options,
+        originalHandler: handler,
       }
-    };
-
-    return this._addEventListener(containerOrKey, event, delegatedHandler, {
-      ...options,
-      id: options.id || `delegated-${selector}-${event}`,
-    });
+    );
   }
 
   /**
@@ -1273,6 +1215,38 @@ export class BaseCharacterBuilderController {
       return this._getElement(containerOrKey);
     }
     return containerOrKey;
+  }
+
+  /**
+   * Resolve a DOM event target, logging warnings when cache lookups fail.
+   *
+   * @private
+   * @param {HTMLElement|string|EventTarget} elementOrKey - Cached key or direct element.
+   * @param {string} eventName - Event type for logging context.
+   * @returns {EventTarget|null} Resolved target or null.
+   */
+  #resolveEventTarget(elementOrKey, eventName) {
+    if (typeof elementOrKey === 'string') {
+      const element = this._getElement(elementOrKey);
+      if (!element) {
+        this.#logger.warn(
+          `${this.constructor.name}: Cannot add ${eventName} listener - element '${elementOrKey}' not found`
+        );
+        return null;
+      }
+      return element;
+    }
+
+    if (
+      elementOrKey instanceof HTMLElement ||
+      (elementOrKey && typeof elementOrKey.addEventListener === 'function')
+    ) {
+      return elementOrKey;
+    }
+
+    throw new Error(
+      `Invalid element provided to _addEventListener: ${elementOrKey}`
+    );
   }
 
   /**
@@ -1293,16 +1267,23 @@ export class BaseCharacterBuilderController {
    * );
    */
   _addDebouncedListener(elementOrKey, event, handler, delay, options = {}) {
-    const debouncedHandler = this._debounce(handler, delay);
-    const listenerId = `debounced-${event}-${delay}`;
+    const element = this.#resolveEventTarget(elementOrKey, event);
+    if (!element) {
+      return null;
+    }
 
-    // Store for cleanup
-    this.#debouncedHandlers.set(listenerId, debouncedHandler);
+    const boundHandler = handler?.bind ? handler.bind(this) : handler;
 
-    return this._addEventListener(elementOrKey, event, debouncedHandler, {
-      ...options,
-      id: options.id || listenerId,
-    });
+    return this.#getEventListenerRegistry().addDebouncedListener(
+      element,
+      event,
+      boundHandler,
+      delay,
+      {
+        ...options,
+        originalHandler: handler,
+      }
+    );
   }
 
   /**
@@ -1323,16 +1304,23 @@ export class BaseCharacterBuilderController {
    * );
    */
   _addThrottledListener(elementOrKey, event, handler, limit, options = {}) {
-    const throttledHandler = this._throttle(handler, limit);
-    const listenerId = `throttled-${event}-${limit}`;
+    const element = this.#resolveEventTarget(elementOrKey, event);
+    if (!element) {
+      return null;
+    }
 
-    // Store for cleanup
-    this.#throttledHandlers.set(listenerId, throttledHandler);
+    const boundHandler = handler?.bind ? handler.bind(this) : handler;
 
-    return this._addEventListener(elementOrKey, event, throttledHandler, {
-      ...options,
-      id: options.id || listenerId,
-    });
+    return this.#getEventListenerRegistry().addThrottledListener(
+      element,
+      event,
+      boundHandler,
+      limit,
+      {
+        ...options,
+        originalHandler: handler,
+      }
+    );
   }
 
   /**
@@ -1345,38 +1333,20 @@ export class BaseCharacterBuilderController {
    * @returns {string} Listener ID
    */
   _addAsyncClickHandler(elementOrKey, asyncHandler, options = {}) {
-    const handler = async (event) => {
-      const element = event.currentTarget;
-      const originalText = element.textContent;
-      const wasDisabled = element.disabled;
+    const element = this.#resolveEventTarget(elementOrKey, 'click');
+    if (!element) {
+      return null;
+    }
 
-      try {
-        // Show loading state
-        element.disabled = true;
-        if (options.loadingText) {
-          element.textContent = options.loadingText;
-        }
-        element.classList.add('is-loading');
+    const boundHandler = asyncHandler?.bind
+      ? asyncHandler.bind(this)
+      : asyncHandler;
 
-        // Execute handler
-        await asyncHandler.call(this, event);
-      } catch (error) {
-        this.#logger.error(
-          `${this.constructor.name}: Async click handler failed`,
-          error
-        );
-        if (options.onError) {
-          options.onError(error);
-        }
-      } finally {
-        // Restore state
-        element.disabled = wasDisabled;
-        element.textContent = originalText;
-        element.classList.remove('is-loading');
-      }
-    };
-
-    return this._addEventListener(elementOrKey, 'click', handler, options);
+    return this.#getEventListenerRegistry().addAsyncClickHandler(
+      element,
+      boundHandler,
+      options
+    );
   }
 
   /**
@@ -1387,36 +1357,9 @@ export class BaseCharacterBuilderController {
    * @returns {boolean} True if listener was removed
    */
   _removeEventListener(listenerId) {
-    const index = this.#eventListeners.findIndex((l) => l.id === listenerId);
-
-    if (index === -1) {
-      this.#logger.warn(
-        `${this.constructor.name}: Listener '${listenerId}' not found`
-      );
-      return false;
-    }
-
-    const listener = this.#eventListeners[index];
-
-    // Remove the listener
-    if (listener.type === 'dom') {
-      listener.element.removeEventListener(
-        listener.event,
-        listener.handler,
-        listener.options
-      );
-    } else if (listener.type === 'eventBus' && listener.unsubscribe) {
-      listener.unsubscribe();
-    }
-
-    // Remove from tracking
-    this.#eventListeners.splice(index, 1);
-
-    this.#logger.debug(
-      `${this.constructor.name}: Removed listener '${listenerId}'`
+    return (
+      this.#eventListenerRegistry?.removeEventListener(listenerId) || false
     );
-
-    return true;
   }
 
   /**
@@ -1425,37 +1368,7 @@ export class BaseCharacterBuilderController {
    * @protected
    */
   _removeAllEventListeners() {
-    const count = this.#eventListeners.length;
-
-    // Remove in reverse order to handle dependencies
-    while (this.#eventListeners.length > 0) {
-      const listener = this.#eventListeners.pop();
-
-      try {
-        if (listener.type === 'dom') {
-          listener.element.removeEventListener(
-            listener.event,
-            listener.handler,
-            listener.options
-          );
-        } else if (listener.type === 'eventBus' && listener.unsubscribe) {
-          listener.unsubscribe();
-        }
-      } catch (error) {
-        this.#logger.error(
-          `${this.constructor.name}: Error removing listener`,
-          error
-        );
-      }
-    }
-
-    // Clear debounced/throttled handlers
-    this.#debouncedHandlers.clear();
-    this.#throttledHandlers.clear();
-
-    this.#logger.debug(
-      `${this.constructor.name}: Removed ${count} event listeners`
-    );
+    this.#eventListenerRegistry?.removeAllEventListeners();
   }
 
   /**
@@ -1465,22 +1378,14 @@ export class BaseCharacterBuilderController {
    * @returns {object} Listener statistics
    */
   _getEventListenerStats() {
-    const stats = {
-      total: this.#eventListeners.length,
-      dom: 0,
-      eventBus: 0,
-      byEvent: {},
-    };
-
-    this.#eventListeners.forEach((listener) => {
-      if (listener.type === 'dom') stats.dom++;
-      if (listener.type === 'eventBus') stats.eventBus++;
-
-      const eventKey = `${listener.type}:${listener.event}`;
-      stats.byEvent[eventKey] = (stats.byEvent[eventKey] || 0) + 1;
-    });
-
-    return stats;
+    return (
+      this.#eventListenerRegistry?.getEventListenerStats() || {
+        total: 0,
+        dom: 0,
+        eventBus: 0,
+        byEvent: {},
+      }
+    );
   }
 
   /**
@@ -1495,12 +1400,9 @@ export class BaseCharacterBuilderController {
    * });
    */
   _preventDefault(event, handler) {
-    event.preventDefault();
-    event.stopPropagation();
+    const boundHandler = handler ? (evt) => handler.call(this, evt) : undefined;
 
-    if (handler) {
-      handler.call(this, event);
-    }
+    this.#getEventListenerRegistry().preventDefault(event, boundHandler);
   }
 
   /**
@@ -2672,9 +2574,11 @@ export class BaseCharacterBuilderController {
     // Clear error tracking
     this.#lastError = null;
 
-    // Clear debounced/throttled handlers
-    this.#debouncedHandlers.clear();
-    this.#throttledHandlers.clear();
+    // Clear event registry state
+    if (this.#eventListenerRegistry) {
+      this.#eventListenerRegistry.destroy();
+      this.#eventListenerRegistry = null;
+    }
 
     // Clear performance data
     this._clearPerformanceData();
@@ -3119,10 +3023,6 @@ export class BaseCharacterBuilderController {
       return !!timerId;
     };
 
-    // Store for cleanup
-    const key = `debounce_${fn.name || 'anonymous'}_${delay}`;
-    this.#debouncedHandlers.set(key, debounced);
-
     return debounced;
   }
 
@@ -3213,10 +3113,6 @@ export class BaseCharacterBuilderController {
       }
     };
 
-    // Store for cleanup
-    const key = `throttle_${fn.name || 'anonymous'}_${wait}`;
-    this.#throttledHandlers.set(key, throttled);
-
     return throttled;
   }
 
@@ -3231,10 +3127,13 @@ export class BaseCharacterBuilderController {
    * @returns {Function} Debounced function
    */
   _getDebouncedHandler(key, fn, delay, options) {
-    if (!this.#debouncedHandlers.has(key)) {
-      this.#debouncedHandlers.set(key, this._debounce(fn, delay, options));
-    }
-    return this.#debouncedHandlers.get(key);
+    const boundFn = fn?.bind ? fn.bind(this) : fn;
+    return this.#getEventListenerRegistry().getDebouncedHandler(
+      key,
+      boundFn,
+      delay,
+      options
+    );
   }
 
   /**
@@ -3248,10 +3147,13 @@ export class BaseCharacterBuilderController {
    * @returns {Function} Throttled function
    */
   _getThrottledHandler(key, fn, wait, options) {
-    if (!this.#throttledHandlers.has(key)) {
-      this.#throttledHandlers.set(key, this._throttle(fn, wait, options));
-    }
-    return this.#throttledHandlers.get(key);
+    const boundFn = fn?.bind ? fn.bind(this) : fn;
+    return this.#getEventListenerRegistry().getThrottledHandler(
+      key,
+      boundFn,
+      wait,
+      options
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
