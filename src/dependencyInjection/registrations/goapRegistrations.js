@@ -11,6 +11,9 @@ import MethodSelectionService from '../../goap/refinement/methodSelectionService
 import PrimitiveActionStepExecutor from '../../goap/refinement/steps/primitiveActionStepExecutor.js';
 import ConditionalStepExecutor from '../../goap/refinement/steps/conditionalStepExecutor.js';
 import RefinementEngine from '../../goap/refinement/refinementEngine.js';
+import GoalDistanceHeuristic from '../../goap/planner/goalDistanceHeuristic.js';
+import RelaxedPlanningGraphHeuristic from '../../goap/planner/relaxedPlanningGraphHeuristic.js';
+import HeuristicRegistry from '../../goap/planner/heuristicRegistry.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -106,6 +109,46 @@ export function registerGoapServices(container) {
       tokens.IContextAssemblyService,
       tokens.GameDataRepository,
       tokens.IEventBus,
+      tokens.ILogger,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // GOAP Heuristics (GOAPIMPL-017)
+  // A* search heuristics for GOAP planning
+
+  // Goal Distance Heuristic
+  // Simple, fast heuristic that counts unsatisfied goal conditions
+  // Admissible: each condition requires at least 1 action
+  container.register(tokens.IGoalDistanceHeuristic, GoalDistanceHeuristic, {
+    dependencies: [tokens.JsonLogicEvaluationService, tokens.ILogger],
+    lifecycle: 'singleton',
+  });
+
+  // Relaxed Planning Graph Heuristic
+  // Advanced heuristic that builds planning graph ignoring negative effects
+  // Admissible: relaxed problem is easier than real problem
+  // Requires planning effects simulator for state transformation
+  container.register(
+    tokens.IRelaxedPlanningGraphHeuristic,
+    RelaxedPlanningGraphHeuristic,
+    {
+      dependencies: [
+        tokens.IPlanningEffectsSimulator,
+        tokens.JsonLogicEvaluationService,
+        tokens.ILogger,
+      ],
+      lifecycle: 'singleton',
+    }
+  );
+
+  // Heuristic Registry
+  // Central registry for heuristic selection and delegation
+  // Supports 'goal-distance', 'rpg', and 'zero' (Dijkstra fallback)
+  container.register(tokens.IHeuristicRegistry, HeuristicRegistry, {
+    dependencies: [
+      tokens.IGoalDistanceHeuristic,
+      tokens.IRelaxedPlanningGraphHeuristic,
       tokens.ILogger,
     ],
     lifecycle: 'singleton',

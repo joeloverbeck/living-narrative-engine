@@ -151,6 +151,18 @@ export class DebugLoggingConfigMerger {
       return new Date(obj.getTime());
     }
 
+    if (obj instanceof Set) {
+      return new Set(Array.from(obj).map((item) => this.deepClone(item)));
+    }
+
+    if (obj instanceof Map) {
+      const clonedMap = new Map();
+      for (const [key, value] of obj) {
+        clonedMap.set(this.deepClone(key), this.deepClone(value));
+      }
+      return clonedMap;
+    }
+
     if (Array.isArray(obj)) {
       return obj.map((item) => this.deepClone(item));
     }

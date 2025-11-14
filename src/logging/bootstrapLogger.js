@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+/* eslint-disable no-undef */
 // src/logging/bootstrapLogger.js
 
 import { LogLevel } from './consoleLogger.js';
@@ -9,7 +10,7 @@ const { getEnvironmentVariable: importedGetEnvironmentVariable } = environmentUt
 /**
  * @description Safely reads an environment variable even when the environment utilities module is partially mocked.
  * @param {string} key - Environment variable name.
- * @param {string} [defaultValue=''] - Fallback value when the variable is unavailable.
+ * @param {string} [defaultValue] - Fallback value when the variable is unavailable.
  * @returns {string} Environment variable value or the provided fallback.
  */
 function safeGetEnvironmentVariable(key, defaultValue = '') {
@@ -76,7 +77,6 @@ const MODE_LEVEL_MAP = {
 
 /**
  * @description Normalizes a raw log level input into a {@link LogLevel} value if possible.
- *
  * @param {string | number | undefined | null} candidate - Raw log level input.
  * @returns {number | undefined} Normalized {@link LogLevel} value or undefined if invalid.
  */
@@ -105,10 +105,9 @@ function normalizeLogLevel(candidate) {
 
 /**
  * @description Determines the effective log level to use for bootstrap logging.
- *
  * @param {object} [options]
  * @param {string | number} [options.level] - Explicit log level override.
- * @param {number} [options.defaultLevel=LogLevel.INFO] - Fallback log level when no override is found.
+ * @param {number} [options.defaultLevel] - Fallback log level when no override is found.
  * @returns {number} Resolved {@link LogLevel} value.
  */
 export function resolveBootstrapLogLevel({ level, defaultLevel = LogLevel.INFO } = {}) {
@@ -129,9 +128,27 @@ export function resolveBootstrapLogLevel({ level, defaultLevel = LogLevel.INFO }
 }
 
 /**
+ * @description Parses DEBUG_NAMESPACES environment variable into a Set of enabled namespaces.
+ * @returns {Set<string>} Set of enabled debug namespaces
+ */
+export function resolveDebugNamespaces() {
+  const namespacesEnv = safeGetEnvironmentVariable('DEBUG_NAMESPACES', '');
+  if (!namespacesEnv) {
+    return new Set();
+  }
+
+  // Parse comma-separated list of namespaces
+  const namespaces = namespacesEnv
+    .split(',')
+    .map((ns) => ns.trim())
+    .filter((ns) => ns.length > 0);
+
+  return new Set(namespaces);
+}
+
+/**
  * @description Writes log arguments to the console, preferring the fallback method to
  * ensure compatibility with test environments that spy on {@link console.log}.
- *
  * @param {keyof Console} method - Primary console method to invoke.
  * @param {keyof Console | undefined} fallback - Secondary console method invoked first.
  * @param {any[]} args - Arguments to forward to the console implementation.
@@ -153,7 +170,6 @@ function callConsoleWithFallback(method, fallback, args) {
 /**
  * @description Creates a lightweight logger that respects the resolved bootstrap log level.
  * Intended for use during early bootstrap before the primary logger is available.
- *
  * @param {object} [options]
  * @param {string | number} [options.level] - Explicit log level override.
  * @param {number} [options.defaultLevel] - Fallback log level when no override is found.
