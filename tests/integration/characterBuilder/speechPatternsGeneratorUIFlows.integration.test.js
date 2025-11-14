@@ -196,6 +196,16 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     await new Promise((resolve) => setTimeout(resolve, 350));
 
     const generateBtn = document.getElementById('generate-btn');
+    await new Promise((resolve) => {
+      const waitUntilEnabled = () => {
+        if (!generateBtn.disabled) {
+          resolve();
+        } else {
+          setTimeout(waitUntilEnabled, 50);
+        }
+      };
+      waitUntilEnabled();
+    });
     expect(generateBtn.disabled).toBe(false);
 
     generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
@@ -409,5 +419,245 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
       document.getElementById('empty-state').style.display
     );
     expect(document.getElementById('generate-btn').disabled).toBe(true);
+  });
+
+  it('prevents overlapping generation when the generate button is activated repeatedly', async () => {
+    jest.useRealTimers();
+    buildDom(false);
+
+    const generationResult = {
+      characterName: 'Double Click Hero',
+      generatedAt: new Date('2024-05-02T09:00:00Z').toISOString(),
+      speechPatterns: [
+        {
+          pattern: 'Responds with careful pauses.',
+          example: 'Allow me a heartbeat to collect the proper phrasing.',
+          circumstances: 'When asked tough questions',
+        },
+      ],
+    };
+
+    const speechPatternsGenerator = {
+      getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
+      generateSpeechPatterns: jest
+        .fn()
+        .mockImplementation(
+          () =>
+            new Promise((resolve) => {
+              setTimeout(() => resolve(generationResult), 250);
+            })
+        ),
+    };
+
+    const dependencies = createMinimalDependencies({ speechPatternsGenerator });
+    const controller = new SpeechPatternsGeneratorController(dependencies);
+    await controller.initialize();
+
+    const textarea = document.getElementById('character-definition');
+    textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    textarea.dispatchEvent(new Event('blur', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    const generateBtn = document.getElementById('generate-btn');
+    expect(generateBtn.disabled).toBe(false);
+    generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
+    generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalledTimes(1);
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const resultsState = document.getElementById('results-state');
+    expect(resultsState.style.display).toBe('block');
+    expect(document.querySelectorAll('.speech-pattern-item')).toHaveLength(1);
+  });
+
+  it('exports fallback text when no display enhancer is provided', async () => {
+    jest.useRealTimers();
+    buildDom(true);
+
+    const generatedAt = new Date('2024-06-01T12:00:00Z').toISOString();
+    const speechPatternsGenerator = {
+      getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
+      generateSpeechPatterns: jest.fn().mockResolvedValue({
+        characterName: 'Professor Ada Lovette',
+        generatedAt,
+        speechPatterns: [
+          {
+            pattern: 'Speaks in precise academic terminology.',
+            example: 'Allow me to delineate the underlying hypothesis.',
+            circumstances: 'Formal lectures',
+          },
+          {
+            pattern: 'Adds whimsical metaphors when excited.',
+            example: 'This breakthrough sparkles brighter than morning dew.',
+            circumstances: 'Unexpected discoveries',
+          },
+        ],
+      }),
+    };
+
+    const dependencies = createMinimalDependencies({ speechPatternsGenerator });
+    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    await controller.initialize();
+
+    const textarea = document.getElementById('character-definition');
+    textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
+    document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    const firstPattern = document.querySelector('.speech-pattern-item');
+    expect(firstPattern.style.willChange).toBe('transform, opacity');
+    firstPattern.dispatchEvent(new Event('animationend'));
+    expect(firstPattern.style.willChange).toBe('auto');
+
+    const exportBtn = document.getElementById('export-btn');
+    expect(exportBtn.disabled).toBe(false);
+
+    const exportFormat = document.getElementById('exportFormat');
+    if (exportFormat) {
+      exportFormat.value = 'txt';
+    }
+
+    let capturedBlob = null;
+    const OriginalBlob = global.Blob;
+    class CapturingBlob {
+      constructor(parts, options = {}) {
+        this.type = options?.type || '';
+        this._text = parts
+          .map((part) => (typeof part === 'string' ? part : String(part)))
+          .join('');
+      }
+
+      text() {
+        return Promise.resolve(this._text);
+      }
+    }
+
+    global.Blob = CapturingBlob;
+
+    const urlSpy = jest
+      .spyOn(URL, 'createObjectURL')
+      .mockImplementation((blob) => {
+        capturedBlob = blob;
+        return 'blob:fallback';
+      });
+    const revokeSpy = jest
+      .spyOn(URL, 'revokeObjectURL')
+      .mockImplementation(() => {});
+
+    let capturedDownloadName = '';
+    const clickSpy = jest
+      .spyOn(window.HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function clickStub() {
+        capturedDownloadName = this.download;
+      });
+
+    try {
+      exportBtn.dispatchEvent(new Event('click', { bubbles: true }));
+
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+      expect(capturedDownloadName).toMatch(/speech_patterns_professor_ada_lovette_/);
+      expect(capturedBlob).not.toBeNull();
+      expect(capturedBlob.type).toBe('text/plain;charset=utf-8');
+
+      const exportedText = await capturedBlob.text();
+      expect(exportedText).toContain('Character Definition:');
+      expect(exportedText).toContain('Speaks in precise academic terminology.');
+
+      const announcement = document.getElementById('screen-reader-announcement');
+      expect(announcement.textContent).toContain('Speech patterns exported as TXT');
+    } finally {
+      clickSpy.mockRestore();
+      urlSpy.mockRestore();
+      revokeSpy.mockRestore();
+      global.Blob = OriginalBlob;
+    }
+  });
+
+  it('surfaces an inline error if export is triggered without generated patterns', async () => {
+    jest.useRealTimers();
+    buildDom(true);
+
+    const speechPatternsGenerator = {
+      getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
+      generateSpeechPatterns: jest.fn(),
+    };
+
+    const dependencies = createMinimalDependencies({ speechPatternsGenerator });
+    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    await controller.initialize();
+
+    const exportBtn = document.getElementById('export-btn');
+    exportBtn.disabled = false;
+    exportBtn.dispatchEvent(new Event('click', { bubbles: true }));
+
+    const errorMessage = document.getElementById('error-message');
+    expect(errorMessage.textContent).toBe('No speech patterns to export');
+  });
+
+  it('logs and displays an error when the display enhancer fails to export', async () => {
+    jest.useRealTimers();
+    buildDom(true);
+
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const displayEnhancer = new SpeechPatternsDisplayEnhancer({ logger });
+    const formatSpy = jest
+      .spyOn(displayEnhancer, 'formatForExport')
+      .mockImplementation(() => {
+        throw new Error('Formatting exploded');
+      });
+
+    const speechPatternsGenerator = {
+      getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
+      generateSpeechPatterns: jest.fn().mockResolvedValue({
+        characterName: 'Export Failure Subject',
+        generatedAt: new Date('2024-07-10T15:00:00Z').toISOString(),
+        speechPatterns: [
+          {
+            pattern: 'Uses clipped sentences when anxious.',
+            example: 'Need facts. No fluff.',
+            circumstances: 'During tense negotiations',
+          },
+        ],
+      }),
+    };
+
+    const dependencies = createMinimalDependencies({
+      logger,
+      speechPatternsGenerator,
+      speechPatternsDisplayEnhancer: displayEnhancer,
+    });
+
+    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    await controller.initialize();
+
+    const textarea = document.getElementById('character-definition');
+    textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
+    document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    document.getElementById('export-btn').dispatchEvent(new Event('click', { bubbles: true }));
+
+    expect(logger.error).toHaveBeenCalledWith('Export failed:', expect.any(Error));
+    const errorMessage = document.getElementById('error-message');
+    expect(errorMessage.textContent).toBe('Failed to export speech patterns');
+
+    formatSpy.mockRestore();
   });
 });
