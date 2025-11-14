@@ -1003,6 +1003,200 @@ describe('PlanningEffectsSimulator - Error Handling', () => {
     expect(result.error).toContain('Critical');
   });
 
+  it('should handle catastrophic failures from deep cloning', () => {
+    const currentState = { 'entity-1:core:state': true };
+    const planningEffects = [];
+    const context = {};
+    const originalStructuredClone = globalThis.structuredClone;
+    globalThis.structuredClone = () => {
+      throw new Error('clone explosion');
+    };
+
+    try {
+      const result = simulator.simulateEffects(
+        currentState,
+        planningEffects,
+        context
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.state).toBe(currentState);
+      expect(result.error).toBe('clone explosion');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Effects simulation failed catastrophically',
+        expect.any(Error)
+      );
+    } finally {
+      globalThis.structuredClone = originalStructuredClone;
+    }
+  });
+
+  it('should return error when effect parameters block is missing', () => {
+    const currentState = {};
+    const planningEffects = [
+      {
+        type: 'ADD_COMPONENT',
+      },
+    ];
+    const context = {};
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Effect missing parameters');
+  });
+
+  it('should surface unknown component type errors', () => {
+    const currentState = {};
+    const planningEffects = [
+      {
+        type: 'ADD_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('component_type');
+  });
+
+  it('should surface errors for missing modify fields', () => {
+    const currentState = { 'entity-1:core:stats': { level: 1 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:stats',
+          value: 5,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:stats']).toEqual({ level: 1 });
+    const warnCall = mockLogger.warn.mock.calls.find((call) =>
+      call[0].includes('Failed to simulate effect')
+    );
+    expect(warnCall[1].error).toContain('requires field');
+  });
+
+  it('should prevent field modification when component is not an object', () => {
+    const currentState = { 'entity-1:core:stats': true };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:stats',
+          field: 'level',
+          mode: 'set',
+          value: 5,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:stats']).toBe(true);
+    const warnCall = mockLogger.warn.mock.calls.find((call) =>
+      call[0].includes('Failed to simulate effect')
+    );
+    expect(warnCall[1].error).toContain('non-object component');
+  });
+
+  it('should throw when modification mode is unknown', () => {
+    const currentState = { 'entity-1:core:stats': { level: 1 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:stats',
+          field: 'level',
+          mode: 'multiply',
+          value: 5,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:stats'].level).toBe(1);
+    const warnCall = mockLogger.warn.mock.calls.find((call) =>
+      call[0].includes('Failed to simulate effect')
+    );
+    expect(warnCall[1].error).toContain('Unknown modification mode');
+  });
+
+  it('should surface unknown operation type if effect mutates mid-execution', () => {
+    const currentState = {};
+    const context = { actor: 'entity-1' };
+    mockParameterResolution.resolve.mockReturnValue('entity-1');
+    let accessCount = 0;
+    const effect = {
+      parameters: {
+        entity_ref: 'actor',
+        component_type: 'core:test',
+        value: {},
+      },
+    };
+
+    Object.defineProperty(effect, 'type', {
+      get() {
+        accessCount += 1;
+        if (accessCount < 3) {
+          return PlanningEffectsSimulator.OPERATION_TYPES.ADD_COMPONENT;
+        }
+        return 'MUTATED_OPERATION';
+      },
+    });
+
+    const result = simulator.simulateEffects(currentState, [effect], context);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Unknown operation type');
+  });
+
   it('should return original state on failure', () => {
     const currentState = { 'entity-1:core:original': true };
     const planningEffects = [
@@ -1061,5 +1255,101 @@ describe('PlanningEffectsSimulator - Error Handling', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Invalid context');
+  });
+});
+
+describe('PlanningEffectsSimulator - Edge Case Simulations', () => {
+  let testBed;
+  let simulator;
+  let mockLogger;
+  let mockParameterResolution;
+  let mockContextAssembly;
+
+  beforeEach(() => {
+    testBed = createTestBed();
+    mockLogger = testBed.createMockLogger();
+    mockParameterResolution = testBed.createMock(
+      'IParameterResolutionService',
+      ['resolve', 'clearCache']
+    );
+    mockParameterResolution.resolve.mockImplementation(() => 'entity-1');
+    mockContextAssembly = testBed.createMock(
+      'IContextAssemblyService',
+      ['assemblePlanningContext']
+    );
+
+    simulator = new PlanningEffectsSimulator({
+      parameterResolutionService: mockParameterResolution,
+      contextAssemblyService: mockContextAssembly,
+      logger: mockLogger,
+    });
+  });
+
+  afterEach(() => {
+    testBed.cleanup();
+  });
+
+  it('should create component entries when modifying a missing component', () => {
+    const currentState = {};
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'set',
+          value: 10,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition']).toEqual({ hungerLevel: 10 });
+  });
+
+  it('should support increment and decrement on nested field keys', () => {
+    const currentState = {
+      'entity-1:core:nutrition:hungerLevel': 5,
+    };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 3,
+        },
+      },
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'decrement',
+          value: 2,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition:hungerLevel']).toBe(6);
   });
 });
