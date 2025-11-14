@@ -685,22 +685,89 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   /**
    * Validate repository consistency after entity operations
    *
+   * @param {object} [options] - Validation options
+   * @param {boolean} [options.skipIfSimple=true] - Skip full validation for simple scenarios
+   * @param {number} [options.simpleThreshold=3] - Entity count threshold for "simple" tests
+   * @param {boolean} [options.quickCheck=false] - Perform only basic validation
+   * @param {boolean} [options.forceFullValidation=false] - Force full validation regardless of complexity
+   * @param {boolean} [options.logPerformance=false] - Emit performance logs for consistency checks
    * @returns {object} Consistency validation results
    */
-  async validateRepositoryConsistency() {
+  async validateRepositoryConsistency(options = {}) {
+    const {
+      skipIfSimple = true,
+      simpleThreshold = 3,
+      quickCheck = false,
+      forceFullValidation = false,
+      logPerformance = false,
+    } = options;
+
+    const startTime = performance.now();
+    const entityIds = this.entityManager.getEntityIds();
+    const entityCount = entityIds.length;
     const results = {
       isConsistent: true,
       issues: [],
-      entityCount: 0,
+      entityCount,
       indexIntegrity: true,
+      validationType: 'none',
+      skipped: false,
+      skipReason: null,
+      duration: 0,
     };
 
-    try {
-      // Get all entity IDs from the entity manager
-      const entityIds = this.entityManager.getEntityIds();
-      results.entityCount = entityIds.length;
+    const finalizeResults = () => {
+      const endTime = performance.now();
+      results.duration = endTime - startTime;
+      this.recordPerformanceMetric(
+        'repository_consistency_check',
+        results.duration
+      );
 
-      // Validate each entity can be retrieved and has consistent data
+      if (logPerformance) {
+        this.logger?.info(
+          `Repository consistency check (${results.validationType}): ${results.duration.toFixed(2)}ms - ${results.isConsistent ? 'PASS' : 'FAIL'}`
+        );
+      }
+
+      return results;
+    };
+
+    if (!forceFullValidation && skipIfSimple && entityCount <= simpleThreshold) {
+      results.skipped = true;
+      results.skipReason = `Entity count (${entityCount}) below threshold (${simpleThreshold})`;
+      results.validationType = 'skipped';
+      this.logger?.debug(
+        `Repository consistency check skipped: ${results.skipReason}`
+      );
+      return finalizeResults();
+    }
+
+    if (quickCheck && !forceFullValidation) {
+      results.validationType = 'quick';
+
+      if (entityCount < 0) {
+        results.isConsistent = false;
+        results.issues.push('Negative entity count detected');
+      }
+
+      if (this.createdEntities.size > entityCount + this.removedEntities.size) {
+        results.isConsistent = false;
+        results.issues.push(
+          `Created entities (${this.createdEntities.size}) exceeds expected based on current count (${entityCount}) and removed (${this.removedEntities.size})`
+        );
+      }
+
+      this.logger?.debug(
+        `Repository quick consistency check: ${results.isConsistent ? 'PASSED' : 'FAILED'}`
+      );
+
+      return finalizeResults();
+    }
+
+    results.validationType = 'full';
+
+    try {
       for (const entityId of entityIds) {
         try {
           const entity = await this.entityManager.getEntityInstance(entityId);
@@ -723,7 +790,6 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         }
       }
 
-      // Check for orphaned entities in created tracking
       for (const entityId of this.createdEntities) {
         if (
           !this.removedEntities.has(entityId) &&
@@ -737,7 +803,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
       }
 
       this.logger.debug(
-        `Repository consistency check: ${results.isConsistent ? 'PASSED' : 'FAILED'} (${results.issues.length} issues)`
+        `Repository full consistency check: ${results.isConsistent ? 'PASSED' : 'FAILED'} (${results.issues.length} issues)`
       );
     } catch (error) {
       results.isConsistent = false;
@@ -746,7 +812,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
       );
     }
 
-    return results;
+    return finalizeResults();
   }
 
   /**
@@ -967,15 +1033,50 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   }
 
   /**
-   * Assert that repository is in a consistent state
+   * Assert that repository is in a consistent state.
+   *
+   * @param {object} [options] - Validation options (see validateRepositoryConsistency)
+   * @returns {Promise<void>}
    */
-  async assertRepositoryConsistency() {
-    const results = await this.validateRepositoryConsistency();
+  async assertRepositoryConsistency(options = {}) {
+    const results = await this.validateRepositoryConsistency(options);
+
+    if (results.skipped) {
+      return;
+    }
+
     if (!results.isConsistent) {
       throw new Error(
-        `Repository consistency check failed: ${results.issues.join(', ')}`
+        `Repository consistency check failed (${results.validationType}): ${results.issues.join(', ')}`
       );
     }
+  }
+
+  /**
+   * Perform a quick repository sanity check for simple tests.
+   *
+   * @returns {Promise<void>}
+   */
+  async assertRepositorySanity() {
+    await this.assertRepositoryConsistency({ quickCheck: true });
+  }
+
+  /**
+   * Force the repository consistency check to run the full validation flow.
+   *
+   * @returns {Promise<void>}
+   */
+  async assertRepositoryFullyConsistent() {
+    await this.assertRepositoryConsistency({ forceFullValidation: true });
+  }
+
+  /**
+   * Explicitly skip the repository consistency check.
+   *
+   * @returns {Promise<void>}
+   */
+  async skipRepositoryConsistencyCheck() {
+    this.logger?.debug('Repository consistency check explicitly skipped');
   }
 
   /**

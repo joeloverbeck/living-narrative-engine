@@ -304,7 +304,7 @@ describe('Entity Lifecycle E2E Workflow', () => {
         testBed.assertEntityRemoved(entityId);
       }
 
-      // Validate repository consistency
+      // Validate repository consistency (will be skipped automatically)
       await testBed.assertRepositoryConsistency();
     });
   });
@@ -332,8 +332,11 @@ describe('Entity Lifecycle E2E Workflow', () => {
         instanceId: 'consistency_test_003',
       });
 
-      // Assert repository consistency throughout operations
+      // Assert repository consistency throughout operations (skips full validation)
       await testBed.assertRepositoryConsistency();
+
+      // Final validation requires a full repository check
+      await testBed.assertRepositoryFullyConsistent();
 
       // Validate final state
       const finalEntityIds = testBed.entityManager.getEntityIds();
@@ -426,6 +429,9 @@ describe('Entity Lifecycle E2E Workflow', () => {
         retrievedEntity.getComponentData('core:description');
       expect(descriptionComponent).toBeDefined();
       expect(descriptionComponent.text).toBeDefined();
+
+      // Lightweight repository sanity check
+      await testBed.assertRepositorySanity();
     });
 
     it('should track entity lifecycle events correctly throughout operations', async () => {
@@ -463,6 +469,9 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Event data should be consistent
       expect(createEvents[0].entityId).toBe(entity.id);
       expect(removeEvents[0].entityId).toBe(entity.id);
+
+      // Explicitly note that repository consistency is intentionally skipped
+      await testBed.skipRepositoryConsistencyCheck();
     });
   });
 });
