@@ -100,10 +100,13 @@ export function registerGoapServices(container) {
   // Refinement Engine
   // Main orchestration service for task-to-action refinement
   // Coordinates method selection, step execution, state management, and event dispatching
+  // IMPORTANT: Injects container for lazy resolution of IRefinementStateManager
+  // State manager is transient, so each refine() call resolves a fresh instance
+  // to prevent state leakage between concurrent actor refinements
   container.register(tokens.IRefinementEngine, RefinementEngine, {
     dependencies: [
       tokens.IMethodSelectionService,
-      tokens.IRefinementStateManager,
+      tokens.AppContainer, // Lazy resolution for transient state manager
       tokens.IPrimitiveActionStepExecutor,
       tokens.IConditionalStepExecutor,
       tokens.IContextAssemblyService,

@@ -90,7 +90,14 @@ export class RecipeUsageValidator extends BaseValidator {
         );
       } else {
         builder.addPassed(
-          `Recipe is referenced by ${referencingEntities.length} entity definition(s)`
+          `Recipe is referenced by ${referencingEntities.length} entity definition(s)`,
+          {
+            check: 'recipe_usage',
+            details: {
+              referencingEntities: referencingEntities.slice(0, 5),
+              totalCount: referencingEntities.length,
+            },
+          }
         );
       }
 

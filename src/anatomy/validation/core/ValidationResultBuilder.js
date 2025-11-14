@@ -144,10 +144,11 @@ class ValidationResultBuilder {
    * providing positive feedback about what was validated.
    *
    * @param {string} message - Human-readable success message
+   * @param {object} [metadata] - Optional metadata (check, details, etc.)
    * @returns {ValidationResultBuilder} This instance for method chaining
    */
-  addPassed(message) {
-    this.#passed.push({ message });
+  addPassed(message, metadata = {}) {
+    this.#passed.push({ message, ...metadata });
     return this;
   }
 
