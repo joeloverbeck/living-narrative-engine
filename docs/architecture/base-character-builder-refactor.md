@@ -33,6 +33,41 @@ responsibilities which are now encapsulated inside the
   inject a mocked service directly and remove the remaining wrapper
   methods once downstream controllers adopt the new surface area.
 
+## ControllerLifecycleOrchestrator responsibilities
+
+- Coordinates initialization, reinitialization, and destruction for every
+  controller via `src/characterBuilder/services/controllerLifecycleOrchestrator.js`.
+- Owns state guards (`isInitialized`, `isDestroying`, etc.) and exposes
+  `checkDestroyed`/`makeDestructionSafe` helpers for UI callbacks.
+- Provides hook registration so controllers (and bootstrap overrides) can
+  attach logic to named phases without rewriting the orchestration code.
+
+### Lifecycle phases and contracts
+
+- **Initialization (async):** `preInit`, `cacheElements` (required),
+  `initServices`, `setupEventListeners` (required), `loadData`, `initUI`,
+  `postInit`, plus `initError` which receives the thrown error.
+- **Destruction (sync):** `destroy:pre`, `destroy:cancelOperations`,
+  `destroy:removeListeners`, `destroy:cleanupServices`,
+  `destroy:clearElements`, `destroy:cleanupTasks`,
+  `destroy:clearReferences`, `destroy:post`.
+- Initialization hooks may return promises (awaited in sequence);
+  destruction hooks are expected to be synchronous to preserve the
+  existing `destroy()` contract.
+
+### Integration notes
+
+- `BaseCharacterBuilderController` now injects a
+  `ControllerLifecycleOrchestrator` (or creates one) and registers
+  default hooks that bridge to familiar methods
+  (`_preInitialize`, `_initializeServices`, `_preDestroy`, etc.).
+- Subclasses continue overriding the same protected methods while the
+  orchestrator handles logging, concurrency guards, cleanup tasks, and
+  event dispatching.
+- Tests can exercise the service directly via
+  `tests/unit/characterBuilder/services/controllerLifecycleOrchestrator.test.js`
+  with `npm run test:unit -- controllerLifecycleOrchestrator`.
+
 ## Testing strategy
 
 - Unit tests live in
