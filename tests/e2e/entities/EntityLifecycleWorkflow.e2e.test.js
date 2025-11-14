@@ -25,16 +25,55 @@ describe('Entity Lifecycle E2E Workflow', () => {
     // Lightweight state cleanup between tests
     testBed.clearTransientState();
 
+    /*
+     * Parallelization guidelines for entity lifecycle tests:
+     *
+     * When to parallelize:
+     * - Creating multiple independent entities
+     * - Removing multiple independent entities
+     * - Verifying multiple entity states
+     * - Cleanup operations (use allSettled for error tolerance)
+     *
+     * When NOT to parallelize:
+     * - Operations with dependencies (e.g., create parent, then children)
+     * - Operations that share state (e.g., modifying same entity)
+     * - Operations requiring specific ordering
+     * - Operations that depend on previous results
+     *
+     * Example (safe):
+     *   await Promise.all([
+     *     createEntity('entity1'),
+     *     createEntity('entity2'),
+     *     createEntity('entity3'),
+     *   ]);
+     *
+     * Example (unsafe):
+     *   const parent = await createEntity('parent');
+     *   const child = await createEntity('child', { parentId: parent.id });
+     */
+
     // Clean up any entities that might have been created
     // (belt-and-suspenders approach for test isolation)
     const entityIds = testBed.entityManager.getEntityIds();
-    for (const entityId of entityIds) {
-      try {
-        await testBed.removeTestEntity(entityId, { expectSuccess: false });
-      } catch (error) {
-        // Ignore errors during cleanup
-      }
+    if (entityIds.length === 0) {
+      return;
     }
+
+    const cleanupResults = await Promise.allSettled(
+      entityIds.map((entityId) =>
+        testBed.removeTestEntity(entityId, { expectSuccess: false })
+      )
+    );
+
+    cleanupResults.forEach((result) => {
+      if (result.status === 'rejected') {
+        // Ignore errors during cleanup but preserve deterministic behavior
+        testBed.logger?.debug?.(
+          'Entity cleanup failed (ignored for isolation safety)',
+          result.reason?.message
+        );
+      }
+    });
   });
 
   afterAll(async () => {
@@ -279,30 +318,47 @@ describe('Entity Lifecycle E2E Workflow', () => {
 
       await testBed.ensureEntityDefinitionExists(definitionId);
 
-      for (const entityId of entityIds) {
-        await testBed.createTestEntity(definitionId, {
-          instanceId: entityId,
-        });
-      }
+      // Create entities in parallel since they are independent operations
+      await Promise.all(
+        entityIds.map((entityId) =>
+          testBed.createTestEntity(definitionId, {
+            instanceId: entityId,
+          })
+        )
+      );
 
-      // Verify all entities exist
-      for (const entityId of entityIds) {
-        const entity = await testBed.entityManager.getEntityInstance(entityId);
+      // Verify all entities exist using parallel reads
+      const existingEntities = await Promise.all(
+        entityIds.map((entityId) =>
+          testBed.entityManager.getEntityInstance(entityId)
+        )
+      );
+      existingEntities.forEach((entity, index) => {
         expect(entity).toBeDefined();
-      }
+        expect(entity.id).toBe(entityIds[index]);
+      });
 
-      // Act - Remove all entities in sequence
-      for (const entityId of entityIds) {
-        const result = await testBed.removeTestEntity(entityId);
+      // Act - Remove all entities in parallel
+      const removalResults = await Promise.all(
+        entityIds.map((entityId) => testBed.removeTestEntity(entityId))
+      );
+
+      removalResults.forEach((result) => {
         expect(result).toBe(true);
-      }
+      });
 
-      // Assert all entities are removed
-      for (const entityId of entityIds) {
-        const entity = await testBed.entityManager.getEntityInstance(entityId);
+      // Assert all entities are removed (parallel reads for verification)
+      const removalChecks = await Promise.all(
+        entityIds.map(async (entityId) => {
+          const entity = await testBed.entityManager.getEntityInstance(entityId);
+          return { entityId, entity };
+        })
+      );
+
+      removalChecks.forEach(({ entityId, entity }) => {
         expect(entity).toBeUndefined();
         testBed.assertEntityRemoved(entityId);
-      }
+      });
 
       // Validate repository consistency (will be skipped automatically)
       await testBed.assertRepositoryConsistency();
