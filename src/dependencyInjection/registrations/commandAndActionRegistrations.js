@@ -156,6 +156,9 @@ export function registerCommandAndAction(container) {
       targetResolver: c.resolve(tokens.ITargetResolutionService),
       targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
       logger: c.resolve(tokens.ILogger),
+      tracingOrchestrator: c.resolve(
+        tokens.ITargetResolutionTracingOrchestrator
+      ),
     });
   });
   logger.debug(
