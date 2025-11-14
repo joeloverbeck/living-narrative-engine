@@ -213,6 +213,38 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
       );
     });
 
+    it('should handle scope iterators that report size but yield no values', () => {
+      const task = {
+        id: 'core:task_with_scope',
+        planningScope: 'core:test_scope',
+      };
+
+      const scopeAst = { type: 'scope', value: 'test' };
+      const actorEntity = { id: actorId, components: {} };
+
+      const inconsistentResult = {
+        size: 1,
+        values: () => ({
+          next: () => ({ done: true }),
+        }),
+      };
+
+      mockScopeRegistry.getScopeAst.mockReturnValue(scopeAst);
+      mockEntityManager.getEntityInstance.mockReturnValue(actorEntity);
+      mockScopeEngine.resolve.mockReturnValue(inconsistentResult);
+
+      const result = planner.testBindTaskParameters(task, state, actorId);
+
+      expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Scope returned empty iterator',
+        expect.objectContaining({
+          taskId: task.id,
+          scopeId: task.planningScope,
+        })
+      );
+    });
+
     it('should return null when scope evaluation throws error', () => {
       const task = {
         id: 'core:task_with_scope',
