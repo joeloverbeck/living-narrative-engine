@@ -16,22 +16,22 @@ Extract all lifecycle state, initialization phases, and destruction/cleanup orch
    - Define class with constructor dependencies `{ logger, eventBus, hooks = {} }`.  
    - Internal state mirrors current private booleans/callback arrays: `#isInitialized`, `#isInitializing`, `#isDestroyed`, `#isDestroying`, `#cleanupTasks`, plus hook registries per lifecycle phase.
 
-2. **Lifecycle Flow Porting**  
-   - Move methods controlling initialization/destroy/reinitialize sequences (`initialize`, `destroy`, `_executeLifecycleMethod`, `_preInitialize`, `_initializeServices`, `_initializeAdditionalServices`, `_loadInitialData`, `_initializeUIState`, `_postInitialize`, `_handleInitializationError`, `_onInitializationError`, `reinitialize`).  
+2. **Lifecycle Flow Porting**
+   - Move methods controlling initialization/destroy/reinitialize sequences (`initialize`, `destroy`, `_executeLifecycleMethod`, `_preInitialize`, `_initializeServices`, `_initializeAdditionalServices`, `_loadInitialData`, `_initializeUIState`, `_postInitialize`, `_handleInitializationError`, `_onInitializationError`, `_reinitialize`).
    - Provide explicit hook phases (preInit, initServices, loadData, initUI, postInit, destroy, cleanup).  
    - Ensure concurrency guards prevent overlapping initialize/destroy operations and throw descriptive errors when misused.
 
-3. **Cleanup Task Management**  
-   - Offer `registerCleanupTask(taskFn, description)` storing metadata + idempotent execution.  
-   - Provide `makeDestructionSafe(method, name)` helper returning wrapped function that aborts when controller destroyed.
+3. **Cleanup Task Management**
+   - Offer `_registerCleanupTask(taskFn, description)` storing metadata + idempotent execution (mirroring the existing protected helper in `BaseCharacterBuilderController`).
+   - Provide `_makeDestructionSafe(method, name)` helper returning wrapped function that aborts when controller destroyed.
 
 4. **Unit Tests**  
    - Create `tests/unit/characterBuilder/services/controllerLifecycleOrchestrator.test.js`.  
    - Cover: happy-path initialize/destroy, error propagation, double initialize prevention, cleanup task execution order, hook registration/deregistration, `reinitialize` resets, guard helpers.  
    - Use fake timers to assert async flows and ensure eventBus notifications triggered.
 
-5. **Base Controller Integration Hooks**  
-   - Add property `this.#lifecycle` (injected) and re-route `initialize/destroy/reinitialize` methods to orchestrator.  
+5. **Base Controller Integration Hooks**
+   - Add property `this.#lifecycle` (injected) and re-route `initialize/destroy/_reinitialize` methods to orchestrator.
    - Provide bridging hooks so subclasses can continue overriding `_preInitialize`, `_postInitialize`, etc., until BASCHACUICONREF-010 finalizes base controller rewrite.
 
 6. **Docs**  
