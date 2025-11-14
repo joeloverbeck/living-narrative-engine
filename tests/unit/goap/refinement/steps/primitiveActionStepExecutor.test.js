@@ -10,7 +10,7 @@ describe('PrimitiveActionStepExecutor', () => {
   let testBed;
   let executor;
   let mockParameterResolver;
-  let mockStateManager;
+  let mockContainer;
   let mockOperationInterpreter;
   let mockActionIndex;
   let mockGameDataRepository;
@@ -25,20 +25,24 @@ describe('PrimitiveActionStepExecutor', () => {
       'resolve',
       'clearCache',
     ]);
-    mockStateManager = testBed.createMock('IRefinementStateManager', [
-      'store',
-      'getState',
-    ]);
+
+    // Mock container that resolves fresh state manager instances
+    mockContainer = testBed.createMock('IAppContainer', ['resolve']);
+    mockContainer.resolve.mockImplementation(() => {
+      // Return fresh mock state manager for each call
+      return testBed.createMock('IRefinementStateManager', ['store', 'getState']);
+    });
+
     mockOperationInterpreter = testBed.createMock('IOperationInterpreter', ['execute']);
     mockActionIndex = testBed.createMock('IActionIndex', ['getActionById']);
     mockGameDataRepository = testBed.createMock('IGameDataRepository', [
       'getAllActions',
     ]);
 
-    // Create executor
+    // Create executor with container instead of state manager
     executor = new PrimitiveActionStepExecutor({
       parameterResolutionService: mockParameterResolver,
-      refinementStateManager: mockStateManager,
+      container: mockContainer,
       operationInterpreter: mockOperationInterpreter,
       actionIndex: mockActionIndex,
       gameDataRepository: mockGameDataRepository,
@@ -613,6 +617,12 @@ describe('PrimitiveActionStepExecutor', () => {
 
     it('should store result when storeResultAs specified', async () => {
       // Arrange
+      const mockStateManager = testBed.createMock('IRefinementStateManager', [
+        'store',
+        'getState',
+      ]);
+      mockContainer.resolve.mockReturnValue(mockStateManager);
+
       const step = {
         stepType: 'primitive_action',
         actionId: 'items:pick_up_item',
@@ -648,6 +658,12 @@ describe('PrimitiveActionStepExecutor', () => {
 
     it('should not store result when storeResultAs not specified', async () => {
       // Arrange
+      const mockStateManager = testBed.createMock('IRefinementStateManager', [
+        'store',
+        'getState',
+      ]);
+      mockContainer.resolve.mockReturnValue(mockStateManager);
+
       const step = {
         stepType: 'primitive_action',
         actionId: 'items:pick_up_item',
@@ -755,6 +771,12 @@ describe('PrimitiveActionStepExecutor', () => {
 
     it('should store failure result when storeResultAs specified', async () => {
       // Arrange
+      const mockStateManager = testBed.createMock('IRefinementStateManager', [
+        'store',
+        'getState',
+      ]);
+      mockContainer.resolve.mockReturnValue(mockStateManager);
+
       const step = {
         stepType: 'primitive_action',
         actionId: 'items:pick_up_item',
@@ -871,6 +893,133 @@ describe('PrimitiveActionStepExecutor', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('failed'),
         expect.any(Error)
+      );
+    });
+  });
+
+  describe('State Manager Isolation', () => {
+    it('should resolve fresh state manager instance for each execution', async () => {
+      // Arrange
+      const step1 = {
+        stepType: 'primitive_action',
+        actionId: 'items:pick_up_item',
+        storeResultAs: 'pickup_result',
+      };
+
+      const step2 = {
+        stepType: 'primitive_action',
+        actionId: 'items:drop_item',
+        storeResultAs: 'drop_result',
+      };
+
+      const mockAction = {
+        id: 'items:pick_up_item',
+        operation: { type: 'PICK_UP_ITEM' },
+        parameters: {},
+      };
+
+      mockActionIndex.getActionById.mockReturnValue(mockAction);
+      mockOperationInterpreter.execute.mockResolvedValue({
+        success: true,
+        data: { message: 'success' },
+      });
+
+      const context = {
+        task: { params: {} },
+        refinement: { localState: {} },
+        actor: { id: 'actor_123' },
+      };
+
+      // Act - Execute two steps
+      await executor.execute(step1, context, 0);
+      await executor.execute(step2, context, 1);
+
+      // Assert - Container should have been called twice to resolve state manager
+      expect(mockContainer.resolve).toHaveBeenCalledTimes(2);
+
+      // Each call should have resolved IRefinementStateManager token
+      const { tokens } = await import(
+        '../../../../../src/dependencyInjection/tokens.js'
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IRefinementStateManager
+      );
+    });
+
+    it('should prevent state leakage between concurrent executions', async () => {
+      // Arrange - Track state manager instances
+      const stateManagers = [];
+
+      mockContainer.resolve.mockImplementation(() => {
+        const stateManager = testBed.createMock('IRefinementStateManager', [
+          'store',
+          'getState',
+        ]);
+        stateManagers.push(stateManager);
+        return stateManager;
+      });
+
+      const step = {
+        stepType: 'primitive_action',
+        actionId: 'items:pick_up_item',
+        storeResultAs: 'result',
+      };
+
+      const mockAction = {
+        id: 'items:pick_up_item',
+        operation: { type: 'PICK_UP_ITEM' },
+        parameters: {},
+      };
+
+      mockActionIndex.getActionById.mockReturnValue(mockAction);
+      mockOperationInterpreter.execute.mockResolvedValue({
+        success: true,
+        data: { itemId: 'item_123' },
+      });
+
+      const context1 = {
+        task: { params: { actorId: 'actor_1' } },
+        refinement: { localState: {} },
+        actor: { id: 'actor_1' },
+      };
+
+      const context2 = {
+        task: { params: { actorId: 'actor_2' } },
+        refinement: { localState: {} },
+        actor: { id: 'actor_2' },
+      };
+
+      // Act - Simulate concurrent executions
+      await Promise.all([
+        executor.execute(step, context1, 0),
+        executor.execute(step, context2, 1),
+      ]);
+
+      // Assert - Should have created 2 separate state manager instances
+      expect(stateManagers).toHaveLength(2);
+
+      // Verify different instances were used
+      expect(stateManagers[0]).not.toBe(stateManagers[1]);
+
+      // Each state manager should have been called exactly once
+      expect(stateManagers[0].store).toHaveBeenCalledTimes(1);
+      expect(stateManagers[1].store).toHaveBeenCalledTimes(1);
+
+      // Verify no cross-contamination - each got its own result
+      expect(stateManagers[0].store).toHaveBeenCalledWith(
+        'result',
+        expect.objectContaining({
+          success: true,
+          data: { itemId: 'item_123' },
+        })
+      );
+
+      expect(stateManagers[1].store).toHaveBeenCalledWith(
+        'result',
+        expect.objectContaining({
+          success: true,
+          data: { itemId: 'item_123' },
+        })
       );
     });
   });

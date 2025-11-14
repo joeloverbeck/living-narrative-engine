@@ -7,6 +7,7 @@ import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipeP
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import SlotGenerator from '../../../../src/anatomy/slotGenerator.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 import * as patternMatchingValidatorModule from '../../../../src/anatomy/validation/patternMatchingValidator.js';
 
@@ -46,11 +47,17 @@ describe('RecipePreflightValidator - Failure mode integration coverage', () => {
   }
 
   function createValidator(overrides = {}) {
+    const entityMatcherService = new EntityMatcherService({
+      logger,
+      dataRegistry,
+    });
+
     return new RecipePreflightValidator({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,
       slotGenerator,
+      entityMatcherService,
       logger,
       ...overrides,
     });

@@ -15,7 +15,6 @@ import { fileURLToPath } from 'url';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../../../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import RecipePreflightValidator from '../../../src/anatomy/validation/RecipePreflightValidator.js';
 import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -90,12 +89,8 @@ describe('validate-recipe CLI integration tests', () => {
     const container = new AppContainer();
     await configureMinimalContainer(container);
 
-    // Get services
+    // Get services needed for mod loading
     const dataRegistry = container.resolve(tokens.IDataRegistry);
-    const anatomyBlueprintRepository = container.resolve(tokens.IAnatomyBlueprintRepository);
-    const schemaValidator = container.resolve(tokens.ISchemaValidator);
-    const slotGenerator = container.resolve(tokens.ISlotGenerator);
-    const logger = container.resolve(tokens.ILogger);
 
     // Load essential mods
     const { createLoadContext } = await import('../../../src/loaders/LoadContext.js');
@@ -115,14 +110,8 @@ describe('validate-recipe CLI integration tests', () => {
     context = await manifestPhase.execute(context);
     await contentPhase.execute(context);
 
-    // Create validator
-    validator = new RecipePreflightValidator({
-      dataRegistry,
-      anatomyBlueprintRepository,
-      schemaValidator,
-      slotGenerator,
-      logger,
-    });
+    // Create validator using DI container (ensures all dependencies are provided)
+    validator = container.resolve(tokens.IRecipePreflightValidator);
   });
 
   afterAll(() => {

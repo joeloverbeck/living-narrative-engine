@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 
 describe('ValidationReport formatting - Integration', () => {
@@ -40,6 +41,11 @@ describe('ValidationReport formatting - Integration', () => {
       extractSlotKeysFromAppendage: () => [],
     };
 
+    const mockEntityMatcherService = new EntityMatcherService({
+      logger: mockLogger,
+      dataRegistry,
+    });
+
     const componentFailureError = new Error(
       'Invalid components: [descriptors:size_category, missing:component] data/value must be equal to one of the allowed values'
     );
@@ -60,6 +66,7 @@ describe('ValidationReport formatting - Integration', () => {
       anatomyBlueprintRepository,
       schemaValidator: mockSchemaValidator,
       slotGenerator: mockSlotGenerator,
+      entityMatcherService: mockEntityMatcherService,
       logger: mockLogger,
       loadFailures,
     });

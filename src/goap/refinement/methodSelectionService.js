@@ -344,8 +344,8 @@ class MethodSelectionService {
       // Assemble refinement context for condition evaluation
       const refinementContext = this.#contextAssemblyService.assembleRefinementContext(
         actorId,
-        taskId,
-        taskParams
+        { id: taskId, params: taskParams }, // Build task object
+        {} // Empty localState during method selection
       );
 
       // Transform to condition context for JSON Logic

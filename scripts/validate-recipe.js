@@ -72,6 +72,7 @@ async function createValidationContext(verbose = false, recipePath = null) {
   const anatomyBlueprintRepository = container.resolve(tokens.IAnatomyBlueprintRepository);
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
   const slotGenerator = container.resolve(tokens.ISlotGenerator);
+  const entityMatcherService = container.resolve(tokens.IEntityMatcherService);
 
   // Load mods
   if (verbose) {
@@ -143,6 +144,7 @@ async function createValidationContext(verbose = false, recipePath = null) {
       anatomyBlueprintRepository,
       schemaValidator,
       slotGenerator,
+      entityMatcherService,
       loadFailures: context.totals, // Include load failures from totals
       logger: {
         info: verbose ? (msg) => console.log(chalk.blue(msg)) : () => {},

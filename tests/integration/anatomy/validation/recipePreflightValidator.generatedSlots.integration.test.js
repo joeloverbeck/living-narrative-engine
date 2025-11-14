@@ -8,6 +8,7 @@ import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipeP
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import SlotGenerator from '../../../../src/anatomy/slotGenerator.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 
 describe('RecipePreflightValidator - Generated slot integration coverage', () => {
@@ -32,11 +33,17 @@ describe('RecipePreflightValidator - Generated slot integration coverage', () =>
   }
 
   function createValidator(extraOptions = {}) {
+    const entityMatcherService = new EntityMatcherService({
+      logger,
+      dataRegistry,
+    });
+
     return new RecipePreflightValidator({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,
       slotGenerator,
+      entityMatcherService,
       logger,
       ...extraOptions,
     });

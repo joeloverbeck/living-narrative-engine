@@ -33,6 +33,7 @@ export const coreTokens = freeze({
   IActionCategorizationService: 'IActionCategorizationService',
   ILogger: 'ILogger',
   ServiceSetup: 'ServiceSetup',
+  AppContainer: 'AppContainer',
   EventBus: 'EventBus',
   IEventBus: 'IEventBus',
   IDataFetcher: 'IDataFetcher',
@@ -119,6 +120,8 @@ export const coreTokens = freeze({
   IRecipePreflightValidator: 'IRecipePreflightValidator',
   IAnatomySocketIndex: 'IAnatomySocketIndex',
   IAnatomyCacheCoordinator: 'IAnatomyCacheCoordinator',
+  IEntityMatcherService: 'IEntityMatcherService',
+  IBlueprintProcessorService: 'IBlueprintProcessorService',
   AnatomyClothingCache: 'AnatomyClothingCache',
   LayerResolutionService: 'LayerResolutionService',
   DescriptorFormatter: 'DescriptorFormatter',
@@ -334,5 +337,6 @@ export const coreTokens = freeze({
   IMethodSelectionService: 'IMethodSelectionService',
   IParameterResolutionService: 'IParameterResolutionService',
   IPrimitiveActionStepExecutor: 'IPrimitiveActionStepExecutor',
+  IRefinementEngine: 'IRefinementEngine',
   IRefinementStateManager: 'IRefinementStateManager',
 });

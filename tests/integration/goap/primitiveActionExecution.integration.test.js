@@ -8,12 +8,13 @@ import PrimitiveActionStepExecutor from '../../../src/goap/refinement/steps/prim
 import ParameterResolutionService from '../../../src/goap/services/parameterResolutionService.js';
 import RefinementStateManager from '../../../src/goap/refinement/refinementStateManager.js';
 import { createTestBed } from '../../common/testBed.js';
+import { coreTokens as tokens } from '../../../src/dependencyInjection/tokens/tokens-core.js';
 
 describe('Primitive Action Execution - Integration', () => {
   let testBed;
   let executor;
   let parameterResolutionService;
-  let refinementStateManager;
+  let mockContainer;
   let mockOperationInterpreter;
   let mockActionIndex;
   let mockGameDataRepository;
@@ -38,9 +39,14 @@ describe('Primitive Action Execution - Integration', () => {
       logger: mockLogger,
     });
 
-    // Real RefinementStateManager
-    refinementStateManager = new RefinementStateManager({
-      logger: mockLogger,
+    // Mock container for lazy resolution of transient RefinementStateManager
+    mockContainer = testBed.createMock('IAppContainer', ['resolve']);
+    mockContainer.resolve.mockImplementation((token) => {
+      if (token === tokens.IRefinementStateManager) {
+        // Return fresh RefinementStateManager instance for each call
+        return new RefinementStateManager({ logger: mockLogger });
+      }
+      throw new Error(`Unexpected token resolution: ${token}`);
     });
 
     // Mock other dependencies
@@ -53,7 +59,7 @@ describe('Primitive Action Execution - Integration', () => {
     // Create executor with mix of real and mock dependencies
     executor = new PrimitiveActionStepExecutor({
       parameterResolutionService,
-      refinementStateManager,
+      container: mockContainer,
       operationInterpreter: mockOperationInterpreter,
       actionIndex: mockActionIndex,
       gameDataRepository: mockGameDataRepository,
@@ -197,6 +203,7 @@ describe('Primitive Action Execution - Integration', () => {
     it('should store results in refinement state when storeResultAs specified', async () => {
       // Arrange
       const actorId = 'actor_123';
+      let capturedStateManager;
 
       const mockAction = {
         id: 'test:storable_action',
@@ -210,8 +217,15 @@ describe('Primitive Action Execution - Integration', () => {
         data: { result: 'stored' },
       });
 
-      // Initialize refinement state manager
-      refinementStateManager.initialize({});
+      // Capture the state manager instance that will be used
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.IRefinementStateManager) {
+          capturedStateManager = new RefinementStateManager({ logger: mockLogger });
+          capturedStateManager.initialize({});
+          return capturedStateManager;
+        }
+        throw new Error(`Unexpected token resolution: ${token}`);
+      });
 
       const context = {
         task: { params: {} },
@@ -231,7 +245,7 @@ describe('Primitive Action Execution - Integration', () => {
 
       // Assert
       expect(result.success).toBe(true);
-      const state = refinementStateManager.getState();
+      const state = capturedStateManager.getState();
       expect(state).toHaveProperty('actionResult');
       expect(state.actionResult).toEqual(result);
     });
@@ -302,12 +316,20 @@ describe('Primitive Action Execution - Integration', () => {
     it('should store failure results when storeResultAs specified', async () => {
       // Arrange
       const actorId = 'actor_123';
+      let capturedStateManager;
 
       mockActionIndex.getActionById.mockReturnValue(null);
       mockGameDataRepository.getAllActions.mockReturnValue([]);
 
-      // Initialize refinement state manager
-      refinementStateManager.initialize({});
+      // Capture the state manager instance that will be used
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.IRefinementStateManager) {
+          capturedStateManager = new RefinementStateManager({ logger: mockLogger });
+          capturedStateManager.initialize({});
+          return capturedStateManager;
+        }
+        throw new Error(`Unexpected token resolution: ${token}`);
+      });
 
       const context = {
         task: { params: {} },
@@ -327,7 +349,7 @@ describe('Primitive Action Execution - Integration', () => {
 
       // Assert
       expect(result.success).toBe(false);
-      const state = refinementStateManager.getState();
+      const state = capturedStateManager.getState();
       expect(state).toHaveProperty('failedAction');
       expect(state.failedAction.success).toBe(false);
     });
@@ -339,6 +361,7 @@ describe('Primitive Action Execution - Integration', () => {
       const actorId = 'actor_123';
       const item1Id = 'item_1';
       const item2Id = 'item_2';
+      let sharedStateManager;
 
       // Mock actions for workflow
       const mockAction1 = {
@@ -353,8 +376,18 @@ describe('Primitive Action Execution - Integration', () => {
         parameters: {},
       };
 
-      // Initialize refinement state
-      refinementStateManager.initialize({});
+      // Use a shared state manager for this workflow test
+      // (in real usage, each step would get fresh instance, but for this E2E test
+      // we want to verify state accumulation across multiple steps)
+      sharedStateManager = new RefinementStateManager({ logger: mockLogger });
+      sharedStateManager.initialize({});
+
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.IRefinementStateManager) {
+          return sharedStateManager;
+        }
+        throw new Error(`Unexpected token resolution: ${token}`);
+      });
 
       const context = {
         task: { params: { item1: item1Id, item2: item2Id } },
@@ -400,7 +433,7 @@ describe('Primitive Action Execution - Integration', () => {
       expect(result2.success).toBe(true);
 
       // Verify refinement state was updated
-      const finalState = refinementStateManager.getState();
+      const finalState = sharedStateManager.getState();
       expect(finalState).toHaveProperty('logResult');
       expect(finalState).toHaveProperty('varResult');
       expect(finalState.logResult.actionId).toBe('test:log_action');
@@ -427,9 +460,10 @@ describe('Primitive Action Execution - Integration', () => {
       });
       mockEntityManager.hasEntity.mockReturnValue(true);
 
-      // Initialize state with previous result
-      refinementStateManager.initialize({});
-      refinementStateManager.store('previousResult', {
+      // Create a state manager with previous result
+      const stateManager = new RefinementStateManager({ logger: mockLogger });
+      stateManager.initialize({});
+      stateManager.store('previousResult', {
         success: true,
         data: { foundItemId: itemId },
         error: null,
@@ -437,9 +471,16 @@ describe('Primitive Action Execution - Integration', () => {
         actionId: 'previous:action',
       });
 
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === tokens.IRefinementStateManager) {
+          return stateManager;
+        }
+        throw new Error(`Unexpected token resolution: ${token}`);
+      });
+
       const context = {
         task: { params: {} },
-        refinement: { localState: refinementStateManager.getState() },
+        refinement: { localState: stateManager.getState() },
         actor: { id: actorId },
       };
 
