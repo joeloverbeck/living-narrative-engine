@@ -268,6 +268,7 @@ describe('SpeechPatternsGeneratorController', () => {
       value: {
         appendChild: jest.fn(),
         removeChild: jest.fn(),
+        contains: jest.fn((node) => true),
       },
       configurable: true,
     });

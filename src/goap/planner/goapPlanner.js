@@ -31,6 +31,15 @@ class GoapPlanner {
   /** @type {import('../../interfaces/IEntityManager.js').IEntityManager} */
   #entityManager;
 
+  /** @type {import('../../scopeDsl/scopeRegistry.js').default} */
+  #scopeRegistry;
+
+  /** @type {import('../../scopeDsl/engine.js').default} */
+  #scopeEngine;
+
+  /** @type {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} */
+  #spatialIndexManager;
+
   /**
    * Create new GOAP planner instance
    *
@@ -39,8 +48,11 @@ class GoapPlanner {
    * @param {import('../../logic/services/jsonLogicEvaluationService.js').default} deps.jsonLogicService - JSON Logic evaluation service
    * @param {import('../../data/gameDataRepository.js').GameDataRepository} deps.gameDataRepository - Game data repository for loading tasks
    * @param {import('../../interfaces/IEntityManager.js').IEntityManager} deps.entityManager - Entity manager for retrieving actor entities
+   * @param {import('../../scopeDsl/scopeRegistry.js').default} deps.scopeRegistry - Scope registry for retrieving scope ASTs
+   * @param {import('../../scopeDsl/engine.js').default} deps.scopeEngine - Scope engine for resolving scopes
+   * @param {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} deps.spatialIndexManager - Spatial index manager for runtime context
    */
-  constructor({ logger, jsonLogicService, gameDataRepository, entityManager }) {
+  constructor({ logger, jsonLogicService, gameDataRepository, entityManager, scopeRegistry, scopeEngine, spatialIndexManager }) {
     this.#logger = ensureValidLogger(logger);
 
     validateDependency(jsonLogicService, 'JsonLogicEvaluationService', this.#logger, {
@@ -57,6 +69,21 @@ class GoapPlanner {
       requiredMethods: ['getEntityInstance'], // Note: uses getEntityInstance, not getEntity
     });
     this.#entityManager = entityManager;
+
+    validateDependency(scopeRegistry, 'IScopeRegistry', this.#logger, {
+      requiredMethods: ['getScopeAst'],
+    });
+    this.#scopeRegistry = scopeRegistry;
+
+    validateDependency(scopeEngine, 'IScopeEngine', this.#logger, {
+      requiredMethods: ['resolve'],
+    });
+    this.#scopeEngine = scopeEngine;
+
+    validateDependency(spatialIndexManager, 'ISpatialIndexManager', this.#logger, {
+      requiredMethods: [], // Spatial index manager just needs to exist for runtime context
+    });
+    this.#spatialIndexManager = spatialIndexManager;
 
     this.#logger.info('GoapPlanner initialized');
   }
@@ -317,6 +344,174 @@ class GoapPlanner {
   }
 
   /**
+   * Bind task parameters from planning scope to concrete entity IDs
+   *
+   * Uses scope resolution to find candidate entities and applies optimistic binding
+   * strategy (takes first entity from scope result). This connects planning-level
+   * task parameters with execution-level primitive actions.
+   *
+   * @param {object} task - Task definition with optional planningScope
+   * @param {object} state - Current planning state (unused in current implementation)
+   * @param {string} actorId - Actor entity ID performing the task
+   * @returns {object|null} Bound parameters object { target: entityId } or null if binding fails
+   * @private
+   * @example
+   * const task = {
+   *   id: 'core:consume_nourishing_item',
+   *   planningScope: 'core:edible_items_in_reach'
+   * };
+   * const params = this.#bindTaskParameters(task, state, 'actor-123');
+   * // Returns: { target: 'apple-456' }
+   */
+  #bindTaskParameters(task, state, actorId) {
+    // 1. Validate task has planningScope
+    if (!task.planningScope) {
+      this.#logger.debug(`Task ${task.id} has no planningScope defined`);
+      return null;
+    }
+
+    // 2. CRITICAL: Use scopeRegistry.getScopeAst(), NOT gameDataRepository.getScope()
+    const scopeAst = this.#scopeRegistry.getScopeAst(task.planningScope);
+    if (!scopeAst) {
+      this.#logger.warn(`Planning scope not found: ${task.planningScope}`, {
+        taskId: task.id,
+      });
+      return null;
+    }
+
+    // 3. Get actor entity
+    const actorEntity = this.#entityManager.getEntityInstance(actorId);
+    if (!actorEntity) {
+      this.#logger.error(`Actor entity not found: ${actorId}`, {
+        taskId: task.id,
+      });
+      return null;
+    }
+
+    // 4. CRITICAL: Build runtimeCtx matching RuntimeContext type exactly
+    // Property name is "jsonLogicEval" not "jsonLogicService"
+    // spatialIndexManager is REQUIRED
+    const runtimeCtx = {
+      entityManager: this.#entityManager,
+      spatialIndexManager: this.#spatialIndexManager,
+      jsonLogicEval: this.#jsonLogicService,
+      logger: this.#logger,
+    };
+
+    // 5. Resolve scope to entity set
+    try {
+      const scopeResult = this.#scopeEngine.resolve(
+        scopeAst,
+        actorEntity,
+        runtimeCtx,
+        null // trace - optional, null for no tracing
+      );
+
+      if (!scopeResult || scopeResult.size === 0) {
+        this.#logger.debug(`No entities in scope ${task.planningScope}`, {
+          taskId: task.id,
+          actorId,
+        });
+        return null;
+      }
+
+      // 6. Optimistic binding: take first entity from Set
+      const iterator = scopeResult.values();
+      const first = iterator.next();
+
+      if (first.done) {
+        this.#logger.debug('Scope returned empty iterator', {
+          taskId: task.id,
+          scopeId: task.planningScope,
+        });
+        return null;
+      }
+
+      // 7. Bind to parameter (convention: 'target' for single-target scopes)
+      const boundParams = {
+        target: first.value, // Entity ID string
+      };
+
+      this.#logger.debug(`Bound task parameters successfully`, {
+        taskId: task.id,
+        scopeId: task.planningScope,
+        entityId: first.value,
+        totalCandidates: scopeResult.size,
+      });
+
+      return boundParams;
+
+    } catch (err) {
+      this.#logger.error('Scope resolution failed during parameter binding', err, {
+        taskId: task.id,
+        scopeId: task.planningScope,
+        actorId,
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Get applicable tasks for actor by filtering task library and binding parameters
+   *
+   * This method:
+   * 1. Gets the structurally-filtered task library for the actor
+   * 2. Attempts to bind parameters for each task via scope resolution
+   * 3. Returns only tasks that successfully bind parameters
+   *
+   * Tasks without planningScope are included as-is (no parameter binding needed).
+   * Tasks that fail parameter binding are excluded from the result.
+   *
+   * @param {Array<object>} tasks - Task library (pre-filtered by structural gates)
+   * @param {object} state - Current planning state
+   * @param {string} actorId - Actor entity ID
+   * @returns {Array<object>} Tasks with bound parameters added to each task object
+   * @private
+   * @example
+   * const taskLibrary = this.#getTaskLibrary('actor-123');
+   * const applicable = this.#getApplicableTasks(taskLibrary, state, 'actor-123');
+   * // Returns: [
+   * //   { id: 'core:consume_item', boundParams: { target: 'apple-456' }, ... },
+   * //   { id: 'core:rest', ... } // No params needed
+   * // ]
+   */
+  #getApplicableTasks(tasks, state, actorId) {
+    if (!tasks || tasks.length === 0) {
+      this.#logger.debug('No tasks provided to filter for applicability');
+      return [];
+    }
+
+    const applicableTasks = [];
+
+    for (const task of tasks) {
+      // Try to bind parameters
+      const boundParams = this.#bindTaskParameters(task, state, actorId);
+
+      // Tasks without planningScope (boundParams === null) are still applicable
+      // Only exclude if binding was attempted but failed
+      if (task.planningScope && !boundParams) {
+        this.#logger.debug(`Task ${task.id} excluded - parameter binding failed`);
+        continue;
+      }
+
+      // Add bound parameters to task (or leave undefined if no binding needed)
+      const applicableTask = {
+        ...task,
+        ...(boundParams && { boundParams }),
+      };
+
+      applicableTasks.push(applicableTask);
+    }
+
+    this.#logger.debug(`Applicable tasks for actor ${actorId}`, {
+      total: tasks.length,
+      applicable: applicableTasks.length,
+    });
+
+    return applicableTasks;
+  }
+
+  /**
    * TEST-ONLY METHODS
    * These public methods expose private helpers for unit testing.
    * DO NOT use in production code - they exist solely for test coverage.
@@ -361,6 +556,30 @@ class GoapPlanner {
    */
   testGetTaskLibrary(actorId) {
     return this.#getTaskLibrary(actorId);
+  }
+
+  /**
+   * Test-only accessor for #bindTaskParameters
+   *
+   * @param {object} task - Task definition
+   * @param {object} state - Planning state
+   * @param {string} actorId - Actor entity ID
+   * @returns {object|null} Bound parameters or null
+   */
+  testBindTaskParameters(task, state, actorId) {
+    return this.#bindTaskParameters(task, state, actorId);
+  }
+
+  /**
+   * Test-only accessor for #getApplicableTasks
+   *
+   * @param {Array<object>} tasks - Task library
+   * @param {object} state - Planning state
+   * @param {string} actorId - Actor entity ID
+   * @returns {Array<object>} Applicable tasks with bound parameters
+   */
+  testGetApplicableTasks(tasks, state, actorId) {
+    return this.#getApplicableTasks(tasks, state, actorId);
   }
 }
 

@@ -248,13 +248,13 @@ describe('RecipeBodyDescriptorValidator', () => {
         {
           type: 'INVALID_BODY_DESCRIPTOR_TYPE',
           severity: 'error',
-          message: "Invalid type for body descriptor 'descriptors:texture': expected string, got object",
+          message: "Invalid type for body descriptor 'descriptors:texture': expected one of [string], got null",
           check: 'body_descriptors',
           field: 'descriptors:texture',
           value: null,
-          fix: 'Change value to type string',
-          expectedType: 'string',
-          actualType: 'object',
+          fix: 'Change value to one of these types: string',
+          expectedTypes: ['string'],
+          actualType: 'null',
         },
       ]);
     });
@@ -317,6 +317,104 @@ describe('RecipeBodyDescriptorValidator', () => {
 
       expect(result.errors).toHaveLength(0);
       expect(result.passed[0].message).toBe('All 1 body descriptor(s) valid');
+    });
+
+    it('rejects invalid types for union type schemas (number)', async () => {
+      const properties = createDescriptorProperties({
+        'descriptors:phase': {
+          type: ['string', 'null'],
+        },
+      });
+      const { validator } = createValidator({
+        component: createBodyComponent(properties),
+      });
+      const recipe = createRecipe({
+        bodyDescriptors: {
+          'descriptors:phase': 42, // Invalid: number not in ['string', 'null']
+        },
+      });
+
+      const result = await validator.validate(recipe);
+
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].type).toBe('INVALID_BODY_DESCRIPTOR_TYPE');
+      expect(result.errors[0].message).toContain('expected one of [string, null]');
+      expect(result.errors[0].message).toContain('got number');
+      expect(result.errors[0].field).toBe('descriptors:phase');
+      expect(result.errors[0].expectedTypes).toEqual(['string', 'null']);
+      expect(result.errors[0].actualType).toBe('number');
+    });
+
+    it('accepts valid null for union type schemas', async () => {
+      const properties = createDescriptorProperties({
+        'descriptors:phase': {
+          type: ['string', 'null'],
+        },
+      });
+      const { validator } = createValidator({
+        component: createBodyComponent(properties),
+      });
+      const recipe = createRecipe({
+        bodyDescriptors: {
+          'descriptors:phase': null, // Valid: null is in ['string', 'null']
+        },
+      });
+
+      const result = await validator.validate(recipe);
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.passed[0].message).toBe('All 1 body descriptor(s) valid');
+    });
+
+    it('rejects invalid types for union type schemas (object)', async () => {
+      const properties = createDescriptorProperties({
+        'descriptors:density': {
+          type: ['string', 'number'],
+        },
+      });
+      const { validator } = createValidator({
+        component: createBodyComponent(properties),
+      });
+      const recipe = createRecipe({
+        bodyDescriptors: {
+          'descriptors:density': { value: 'high' }, // Invalid: object not in ['string', 'number']
+        },
+      });
+
+      const result = await validator.validate(recipe);
+
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].type).toBe('INVALID_BODY_DESCRIPTOR_TYPE');
+      expect(result.errors[0].message).toContain('expected one of [string, number]');
+      expect(result.errors[0].message).toContain('got object');
+      expect(result.errors[0].field).toBe('descriptors:density');
+      expect(result.errors[0].expectedTypes).toEqual(['string', 'number']);
+      expect(result.errors[0].actualType).toBe('object');
+    });
+
+    it('handles single string type schema (backward compatibility)', async () => {
+      const properties = createDescriptorProperties({
+        'descriptors:color': {
+          type: 'string', // Single type as string, not array
+        },
+      });
+      const { validator } = createValidator({
+        component: createBodyComponent(properties),
+      });
+      const recipe = createRecipe({
+        bodyDescriptors: {
+          'descriptors:color': 42, // Invalid: number when expecting string
+        },
+      });
+
+      const result = await validator.validate(recipe);
+
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].type).toBe('INVALID_BODY_DESCRIPTOR_TYPE');
+      expect(result.errors[0].message).toContain('expected one of [string]');
+      expect(result.errors[0].message).toContain('got number');
+      expect(result.errors[0].expectedTypes).toEqual(['string']);
+      expect(result.errors[0].actualType).toBe('number');
     });
 
     it('converts registry exceptions into validation errors', async () => {

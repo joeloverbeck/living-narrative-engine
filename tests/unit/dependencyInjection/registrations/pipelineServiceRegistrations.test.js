@@ -15,6 +15,7 @@ const EXPECTED_TOKENS = [
   tokens.ILegacyTargetCompatibilityLayer,
   tokens.IScopeContextBuilder,
   tokens.ITargetDisplayNameResolver,
+  tokens.ITargetResolutionTracingOrchestrator,
 ];
 
 describe('registerPipelineServices', () => {
@@ -67,6 +68,7 @@ describe('registerPipelineServices', () => {
           'ILegacyTargetCompatibilityLayer',
           'IScopeContextBuilder',
           'ITargetDisplayNameResolver',
+          'ITargetResolutionTracingOrchestrator',
         ],
       }
     );
