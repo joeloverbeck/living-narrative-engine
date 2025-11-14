@@ -5,6 +5,7 @@
 import { tokens } from '../tokens.js';
 import ContextAssemblyService from '../../goap/services/contextAssemblyService.js';
 import ParameterResolutionService from '../../goap/services/parameterResolutionService.js';
+import PlanningEffectsSimulator from '../../goap/planner/planningEffectsSimulator.js';
 import RefinementStateManager from '../../goap/refinement/refinementStateManager.js';
 import MethodSelectionService from '../../goap/refinement/methodSelectionService.js';
 import PrimitiveActionStepExecutor from '../../goap/refinement/steps/primitiveActionStepExecutor.js';
@@ -29,6 +30,17 @@ export function registerGoapServices(container) {
   // Parameter Resolution Service
   container.register(tokens.IParameterResolutionService, ParameterResolutionService, {
     dependencies: [tokens.IEntityManager, tokens.ILogger],
+  });
+
+  // Planning Effects Simulator
+  // Pure state transformation service for GOAP planning
+  // Predicts task effects without executing handlers or triggering side effects
+  container.register(tokens.IPlanningEffectsSimulator, PlanningEffectsSimulator, {
+    dependencies: [
+      tokens.IParameterResolutionService,
+      tokens.IContextAssemblyService,
+      tokens.ILogger,
+    ],
   });
 
   // Refinement State Manager

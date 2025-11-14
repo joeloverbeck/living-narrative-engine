@@ -1,6 +1,6 @@
 # GOAP System Implementation Status
 
-**Last Updated**: 2025-11-13
+**Last Updated**: 2025-11-14
 
 ## Overview
 
@@ -117,6 +117,31 @@ Comprehensive refinement method examples, templates, and edge case documentation
 - **Documentation Updates**: Cross-references added to examples README
 
 **Note**: Example tasks and refinement methods already exist from GOAPIMPL-005. This ticket completes the modder-facing deliverables (templates + edge cases).
+
+#### GOAPIMPL-016: Planning Effects Simulator
+**Status**: ✅ COMPLETED
+**Completed**: 2025-11-14
+**Implementation**: `src/goap/planner/planningEffectsSimulator.js`
+
+Implemented pure state transformation service for GOAP planning:
+- Immutable state transformation (deep clone pattern)
+- Direct state manipulation (no operation handler invocation)
+- Support for ADD_COMPONENT, MODIFY_COMPONENT, REMOVE_COMPONENT operations
+- Parameter resolution with entity validation
+- Modification modes: set, increment, decrement
+- Dependency injection integration
+
+**Key Files Created**:
+- `src/goap/planner/planningEffectsSimulator.js` (core implementation)
+- `tests/unit/goap/planner/planningEffectsSimulator.test.js` (31 unit tests, 86.79% coverage)
+- `tests/integration/goap/effectsSimulation.integration.test.js` (6 integration tests)
+- `tests/common/entities/simpleEntityManager.js` (added hasEntity method)
+
+**DI Integration**:
+- Token: `IPlanningEffectsSimulator` in `tokens-core.js`
+- Registration: `goapRegistrations.js` with proper dependencies
+
+**Test Coverage**: 86.79% statements, 67.64% branches, 100% functions, 100% lines
 
 ### 🔄 In Progress
 
