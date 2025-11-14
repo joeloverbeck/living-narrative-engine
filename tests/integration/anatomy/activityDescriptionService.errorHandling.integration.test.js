@@ -46,6 +46,24 @@ class AugmentedActivityGroupingSystem extends ActivityGroupingSystem {
   }
 }
 
+class NullInjectingActivityGroupingSystem extends ActivityGroupingSystem {
+  groupActivities(activities, cacheKey = null) {
+    const groups = super.groupActivities(activities, cacheKey);
+
+    if (groups.length === 0) {
+      return [null];
+    }
+
+    return [null, ...groups];
+  }
+}
+
+const createEventBusStub = () => ({
+  dispatch: jest.fn(),
+  subscribe: jest.fn(),
+  unsubscribe: jest.fn(),
+});
+
 describe('ActivityDescriptionService error handling integration', () => {
   let testBed;
   let entityManager;
@@ -80,6 +98,7 @@ describe('ActivityDescriptionService error handling integration', () => {
     nlgSystemClass = ActivityNLGSystem,
     groupingSystemClass = ActivityGroupingSystem,
     eventBus = null,
+    metadataSystemFactory = null,
   } = {}) => {
     const cacheManager = new ActivityCacheManager({
       logger: testBed.mocks.logger,
@@ -91,11 +110,17 @@ describe('ActivityDescriptionService error handling integration', () => {
       logger: testBed.mocks.logger,
     });
 
-    const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
-      entityManager: testBed.entityManager,
-      logger: testBed.mocks.logger,
-      activityIndex: null,
-    });
+    const metadataCollectionSystem = metadataSystemFactory
+      ? metadataSystemFactory({
+          entityManager: testBed.entityManager,
+          logger: testBed.mocks.logger,
+          activityIndex: null,
+        })
+      : new ActivityMetadataCollectionSystem({
+          entityManager: testBed.entityManager,
+          logger: testBed.mocks.logger,
+          activityIndex: null,
+        });
 
     const groupingSystem = new groupingSystemClass({
       indexManager,
@@ -166,6 +191,49 @@ describe('ActivityDescriptionService error handling integration', () => {
     const description = await service.generateActivityDescription(actor.id);
 
     expect(description).toBe('');
+
+    service.destroy();
+  });
+
+  it('dispatches ENTITY_LOOKUP_FAILED when entity lookup throws', async () => {
+    const eventBus = createEventBusStub();
+    const service = createService({ eventBus });
+    const failingLookup = jest
+      .spyOn(testBed.entityManager, 'getEntityInstance')
+      .mockImplementation(() => {
+        throw new Error('entity lookup failed');
+      });
+
+    const entityId = 'lookup-error-actor';
+    const description = await service.generateActivityDescription(entityId);
+
+    expect(description).toBe('');
+    expect(eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'ENTITY_LOOKUP_FAILED',
+        entityId,
+      }),
+    });
+
+    failingLookup.mockRestore();
+    service.destroy();
+  });
+
+  it('dispatches ENTITY_NOT_FOUND when the entity manager returns no instance', async () => {
+    const eventBus = createEventBusStub();
+    const service = createService({ eventBus });
+
+    const description = await service.generateActivityDescription('unknown-actor');
+
+    expect(description).toBe('');
+    expect(eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'ENTITY_NOT_FOUND',
+        entityId: 'unknown-actor',
+      }),
+    });
 
     service.destroy();
   });
@@ -355,5 +423,133 @@ describe('ActivityDescriptionService error handling integration', () => {
     expect(postDestroySnapshot.entityName.size).toBe(0);
 
     service.invalidateCache(actor.id, 'name');
+  });
+
+  it('returns early after deduplication when all activities collapse to zero entries', async () => {
+    let dedupSpy;
+    const service = createService({
+      metadataSystemFactory: (deps) => {
+        const system = new ActivityMetadataCollectionSystem(deps);
+        dedupSpy = jest
+          .spyOn(system, 'deduplicateActivitiesBySignature')
+          .mockReturnValue([]);
+        return system;
+      },
+    });
+
+    const actor = await entityManager.createEntityInstance('core:actor', {
+      instanceId: 'filtered-actor',
+    });
+    entityManager.addComponent(actor.id, 'core:name', { text: 'Filtered Actor' });
+
+    const target = await entityManager.createEntityInstance('core:actor', {
+      instanceId: 'filtered-target',
+    });
+    entityManager.addComponent(target.id, 'core:name', { text: 'Filtered Target' });
+
+    entityManager.addComponent(actor.id, 'test:activity_state_generic', {
+      entityId: target.id,
+      activityMetadata: {
+        shouldDescribeInActivity: true,
+        template: '{actor} waits near {target}',
+        targetRole: 'entityId',
+        priority: 40,
+      },
+    });
+
+    testBed.mocks.logger.debug.mockClear();
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description).toBe('');
+    expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('No activities remaining after deduplication')
+    );
+    expect(dedupSpy).toHaveBeenCalled();
+
+    dedupSpy.mockRestore();
+    service.destroy();
+  });
+
+  it('dispatches a global error when metadata collection fails unexpectedly', async () => {
+    const eventBus = createEventBusStub();
+    const service = createService({
+      eventBus,
+      metadataSystemFactory: (deps) => {
+        const system = new ActivityMetadataCollectionSystem(deps);
+        jest
+          .spyOn(system, 'collectActivityMetadata')
+          .mockImplementation(() => {
+            throw new Error('metadata failure');
+          });
+        return system;
+      },
+    });
+
+    const actor = await entityManager.createEntityInstance('core:actor', {
+      instanceId: 'formatting-error-actor',
+    });
+    entityManager.addComponent(actor.id, 'core:name', {
+      text: 'Formatting Error Actor',
+    });
+
+    entityManager.addComponent(actor.id, 'test:activity_state_generic', {
+      entityId: 'formatting-error-actor',
+      activityMetadata: {
+        shouldDescribeInActivity: true,
+        template: '{actor} attempts to meditate',
+        targetRole: 'entityId',
+        priority: 55,
+      },
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description).toBe('');
+    expect(eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'ACTIVITY_DESCRIPTION_ERROR',
+      payload: expect.objectContaining({
+        errorType: 'ACTIVITY_DESCRIPTION_ERROR',
+        entityId: 'formatting-error-actor',
+      }),
+    });
+
+    service.destroy();
+  });
+
+  it('skips invalid groups returned by the grouping system before formatting output', async () => {
+    const service = createService({
+      groupingSystemClass: NullInjectingActivityGroupingSystem,
+    });
+
+    const actor = await entityManager.createEntityInstance('core:actor', {
+      instanceId: 'null-group-actor',
+    });
+    entityManager.addComponent(actor.id, 'core:name', { text: 'Null Group Actor' });
+
+    const partner = await entityManager.createEntityInstance('core:actor', {
+      instanceId: 'null-group-partner',
+    });
+    entityManager.addComponent(partner.id, 'core:name', {
+      text: 'Null Group Partner',
+    });
+
+    entityManager.addComponent(actor.id, 'test:primary', {
+      partner: partner.id,
+      activityMetadata: {
+        shouldDescribeInActivity: true,
+        template: '{actor} is training with {target}',
+        targetRole: 'partner',
+        priority: 70,
+        grouping: { groupKey: 'null-safety' },
+      },
+    });
+
+    const description = await service.generateActivityDescription(actor.id);
+
+    expect(description).toContain('Activity:');
+    expect(description).toContain('Null Group Actor is training with Null Group Partner');
+
+    service.destroy();
   });
 });
