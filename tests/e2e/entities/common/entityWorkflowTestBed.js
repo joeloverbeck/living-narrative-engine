@@ -34,6 +34,33 @@ import {
  * - Comprehensive cleanup and resource management
  */
 export class EntityWorkflowTestBed extends BaseTestBed {
+  /**
+   * @description Static cache for entity definitions shared across instances.
+   * @type {Map<string, object>}
+   * @private
+   * @static
+   */
+  static #definitionCache = new Map();
+
+  /**
+   * @description Tracks cache statistics for debugging and validation.
+   * @type {{hits: number, misses: number, stores: number}}
+   * @private
+   * @static
+   */
+  static #definitionCacheStats = {
+    hits: 0,
+    misses: 0,
+    stores: 0,
+  };
+
+  /**
+   * @description Flag to enable/disable definition caching for debugging.
+   * @type {boolean}
+   * @static
+   */
+  static enableDefinitionCache = true;
+
   constructor(options = {}) {
     super();
 
@@ -554,38 +581,105 @@ export class EntityWorkflowTestBed extends BaseTestBed {
   }
 
   /**
-   * Ensure an entity definition exists in the registry
-   *
+   * @description Ensure an entity definition exists, using cached definitions when available.
    * @param {string} definitionId - Entity definition ID
    * @param {object} [customDefinition] - Custom definition data
+   * @returns {Promise<void>}
    */
   async ensureEntityDefinitionExists(definitionId, customDefinition = null) {
     assertNonBlankString(definitionId, 'definitionId');
 
-    // Check if definition already exists
-    try {
-      const existingDef = this.registry.get('entityDefinitions', definitionId);
-      if (existingDef) {
+    const cachingEnabled = EntityWorkflowTestBed.enableDefinitionCache;
+
+    if (cachingEnabled) {
+      const cachedDefinition =
+        EntityWorkflowTestBed.#definitionCache.get(definitionId);
+
+      if (cachedDefinition) {
+        EntityWorkflowTestBed.#definitionCacheStats.hits += 1;
+
+        const registryDefinition = this.registry.get(
+          'entityDefinitions',
+          definitionId
+        );
+
+        if (!registryDefinition) {
+          this.registry.store('entityDefinitions', definitionId, cachedDefinition);
+        }
+
         return;
       }
-    } catch (error) {
-      // Definition doesn't exist, we'll create it
+
+      EntityWorkflowTestBed.#definitionCacheStats.misses += 1;
     }
 
-    // Create a basic entity definition
-    const definition = customDefinition
-      ? createEntityDefinition(customDefinition.id, customDefinition.components)
-      : createEntityDefinition(definitionId, {
-          'core:name': {
-            text: `Test Entity ${definitionId}`,
-          },
-          'core:description': {
-            text: `Test entity created for ${definitionId}`,
-          },
-        });
+    const existingDefinition = this.registry.get(
+      'entityDefinitions',
+      definitionId
+    );
+
+    if (existingDefinition) {
+      if (
+        cachingEnabled &&
+        !EntityWorkflowTestBed.#definitionCache.has(definitionId)
+      ) {
+        EntityWorkflowTestBed.#definitionCache.set(
+          definitionId,
+          existingDefinition
+        );
+        EntityWorkflowTestBed.#definitionCacheStats.stores += 1;
+      }
+      return;
+    }
+
+    const targetDefinitionId = customDefinition?.id ?? definitionId;
+    const definitionComponents = customDefinition?.components ?? {
+      'core:name': {
+        text: `Test Entity ${targetDefinitionId}`,
+      },
+      'core:description': {
+        text: `Test entity created for ${targetDefinitionId}`,
+      },
+    };
+
+    const definition = createEntityDefinition(
+      targetDefinitionId,
+      definitionComponents
+    );
 
     this.registry.store('entityDefinitions', definitionId, definition);
+
+    if (cachingEnabled) {
+      EntityWorkflowTestBed.#definitionCache.set(definitionId, definition);
+      EntityWorkflowTestBed.#definitionCacheStats.stores += 1;
+    }
+
     this.logger.debug(`Created entity definition: ${definitionId}`);
+  }
+
+  /**
+   * @description Clears the shared definition cache and resets statistics.
+   * @returns {void}
+   */
+  static clearDefinitionCache() {
+    EntityWorkflowTestBed.#definitionCache.clear();
+    EntityWorkflowTestBed.#definitionCacheStats.hits = 0;
+    EntityWorkflowTestBed.#definitionCacheStats.misses = 0;
+    EntityWorkflowTestBed.#definitionCacheStats.stores = 0;
+  }
+
+  /**
+   * @description Retrieves current cache statistics for debugging.
+   * @returns {{size: number, hits: number, misses: number, stores: number, enabled: boolean}}
+   */
+  static getDefinitionCacheStats() {
+    return {
+      size: EntityWorkflowTestBed.#definitionCache.size,
+      hits: EntityWorkflowTestBed.#definitionCacheStats.hits,
+      misses: EntityWorkflowTestBed.#definitionCacheStats.misses,
+      stores: EntityWorkflowTestBed.#definitionCacheStats.stores,
+      enabled: EntityWorkflowTestBed.enableDefinitionCache,
+    };
   }
 
   /**
@@ -1341,6 +1435,8 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     if (this.logger && typeof this.logger.debug === 'function') {
       this.logger.debug('EntityWorkflowTestBed cleanup completed');
     }
+
+    EntityWorkflowTestBed.clearDefinitionCache();
     await super.cleanup();
   }
 }
