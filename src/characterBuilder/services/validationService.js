@@ -61,6 +61,25 @@ export class ValidationService {
   }
 
   /**
+   * Update runtime configuration when controller context changes.
+   *
+   * @param {Partial<ValidationServiceDependencies>} config - Updated dependencies.
+   * @returns {void}
+   */
+  configure(config = {}) {
+    if (config.handleError) {
+      if (typeof config.handleError !== 'function') {
+        throw new Error('ValidationService.configure requires a handleError function.');
+      }
+      this.#handleError = config.handleError;
+    }
+
+    if (config.errorCategories) {
+      this.#errorCategories = { ...config.errorCategories };
+    }
+  }
+
+  /**
    * @param {object} data - Payload being validated.
    * @param {string} schemaId - Schema identifier registered with the validator.
    * @param {object} [context] - Additional logging metadata such as operation name.

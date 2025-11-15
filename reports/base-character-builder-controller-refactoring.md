@@ -500,33 +500,26 @@ export class BaseCharacterBuilderController {
 
 New DI tokens required:
 
-```javascript
-// tokens-characterBuilder.js
-export const tokens = {
-  DOMElementManager: 'DOMElementManager',
-  EventListenerRegistry: 'EventListenerRegistry',
-  ControllerLifecycleOrchestrator: 'ControllerLifecycleOrchestrator',
-  ErrorHandlingStrategy: 'ErrorHandlingStrategy',
-  AsyncUtilitiesToolkit: 'AsyncUtilitiesToolkit',
-  PerformanceMonitor: 'PerformanceMonitor',
-  ValidationService: 'ValidationService',
-  MemoryManager: 'MemoryManager',
-};
-```
+New tokens are defined directly in `src/dependencyInjection/tokens/tokens-core.js` to avoid stringly-typed lookups. The DI container now exposes:
 
-Registration:
+- `tokens.DOMElementManager`
+- `tokens.EventListenerRegistry`
+- `tokens.ControllerLifecycleOrchestrator`
+- `tokens.ErrorHandlingStrategy`
+- `tokens.AsyncUtilitiesToolkit`
+- `tokens.PerformanceMonitor`
+- `tokens.ValidationService`
+- `tokens.MemoryManager`
 
-```javascript
-// Registration in container
-container.register(tokens.DOMElementManager, DOMElementManager);
-container.register(tokens.EventListenerRegistry, ({ asyncUtils }) =>
-  new EventListenerRegistry({ logger, asyncUtils })
-);
-container.register(tokens.ControllerLifecycleOrchestrator, ({ eventBus }) =>
-  new ControllerLifecycleOrchestrator({ logger, eventBus })
-);
-// ... etc
-```
+`src/dependencyInjection/registrations/characterBuilderRegistrations.js` registers each service with `registrar.singletonFactory(...)` so they are created exactly once per container. The registration order matters because `EventListenerRegistry` depends on `AsyncUtilitiesToolkit`, and `ErrorHandlingStrategy`/`ValidationService` reuse the shared logger and schema validator. Optional tuning is driven by environment variables:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `CHARACTER_BUILDER_ASYNC_DEFAULT_WAIT` | Debounce/throttle wait used by `AsyncUtilitiesToolkit` | `100` ms |
+| `CHARACTER_BUILDER_LOG_TIMER_EVENTS` | Enables verbose timer instrumentation | `false` |
+| `CHARACTER_BUILDER_PERF_THRESHOLD_MS` | Warning threshold for `PerformanceMonitor` measurements | `200` ms |
+
+When these env vars are omitted, safe defaults keep the controllers responsive while still allowing per-environment overrides when profiling builds.
 
 ---
 

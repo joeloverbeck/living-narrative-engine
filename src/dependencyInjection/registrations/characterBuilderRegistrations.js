@@ -28,6 +28,30 @@ import { TraitsRewriterGenerator } from '../../characterBuilder/services/TraitsR
 import { TraitsRewriterResponseProcessor } from '../../characterBuilder/services/TraitsRewriterResponseProcessor.js';
 import { TraitsRewriterDisplayEnhancer } from '../../characterBuilder/services/TraitsRewriterDisplayEnhancer.js';
 import { CharacterBuilderService } from '../../characterBuilder/services/characterBuilderService.js';
+import { DOMElementManager } from '../../characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../characterBuilder/services/eventListenerRegistry.js';
+import { ControllerLifecycleOrchestrator } from '../../characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { ErrorHandlingStrategy } from '../../characterBuilder/services/errorHandlingStrategy.js';
+import { AsyncUtilitiesToolkit } from '../../characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../characterBuilder/services/performanceMonitor.js';
+import { ValidationService } from '../../characterBuilder/services/validationService.js';
+import { MemoryManager } from '../../characterBuilder/services/memoryManager.js';
+
+const CHARACTER_BUILDER_ERROR_CATEGORIES = Object.freeze({
+  VALIDATION: 'validation',
+  NETWORK: 'network',
+  SYSTEM: 'system',
+  USER: 'user',
+  PERMISSION: 'permission',
+  NOT_FOUND: 'not_found',
+});
+
+const CHARACTER_BUILDER_ERROR_SEVERITY = Object.freeze({
+  INFO: 'info',
+  WARNING: 'warning',
+  ERROR: 'error',
+  CRITICAL: 'critical',
+});
 
 /**
  * Registers character builder storage services.
@@ -36,6 +60,108 @@ import { CharacterBuilderService } from '../../characterBuilder/services/charact
  * @param {ILogger} logger - Logger instance for debug output.
  * @returns {void}
  */
+function registerCharacterBuilderInfrastructure(registrar, logger) {
+  registrar.singletonFactory(tokens.AsyncUtilitiesToolkit, (c) => {
+    const asyncConfig = getAsyncToolkitConfig();
+    return new AsyncUtilitiesToolkit({
+      logger: c.resolve(tokens.ILogger),
+      defaultWait: asyncConfig.defaultWait,
+      instrumentation: { logTimerEvents: asyncConfig.logTimerEvents },
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.AsyncUtilitiesToolkit}.`
+  );
+
+  registrar.singletonFactory(tokens.DOMElementManager, (c) => {
+    const documentRef =
+      typeof document !== 'undefined' ? document : getDocumentFallback();
+    const performanceRef =
+      typeof performance !== 'undefined'
+        ? performance
+        : getPerformanceFallback();
+
+    return new DOMElementManager({
+      logger: c.resolve(tokens.ILogger),
+      documentRef,
+      performanceRef,
+      contextName: 'CharacterBuilderDOMElementManager',
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.DOMElementManager}.`
+  );
+
+  registrar.singletonFactory(tokens.EventListenerRegistry, (c) => {
+    return new EventListenerRegistry({
+      logger: c.resolve(tokens.ILogger),
+      asyncUtilities: c.resolve(tokens.AsyncUtilitiesToolkit),
+      contextName: 'CharacterBuilderEventListenerRegistry',
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.EventListenerRegistry}.`
+  );
+
+  registrar.singletonFactory(tokens.ControllerLifecycleOrchestrator, (c) => {
+    return new ControllerLifecycleOrchestrator({
+      logger: c.resolve(tokens.ILogger),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.ControllerLifecycleOrchestrator}.`
+  );
+
+  registrar.singletonFactory(tokens.ErrorHandlingStrategy, (c) => {
+    return new ErrorHandlingStrategy({
+      logger: c.resolve(tokens.ILogger),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      controllerName: 'BaseCharacterBuilderController',
+      errorCategories: CHARACTER_BUILDER_ERROR_CATEGORIES,
+      errorSeverity: CHARACTER_BUILDER_ERROR_SEVERITY,
+      recoveryHandlers: {},
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.ErrorHandlingStrategy}.`
+  );
+
+  registrar.singletonFactory(tokens.PerformanceMonitor, (c) => {
+    return new PerformanceMonitor({
+      logger: c.resolve(tokens.ILogger),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      threshold: getPerformanceThreshold(),
+      contextName: 'CharacterBuilderPerformanceMonitor',
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.PerformanceMonitor}.`
+  );
+
+  registrar.singletonFactory(tokens.ValidationService, (c) => {
+    return new ValidationService({
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+      logger: c.resolve(tokens.ILogger),
+      handleError: () => {},
+      errorCategories: CHARACTER_BUILDER_ERROR_CATEGORIES,
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.ValidationService}.`
+  );
+
+  registrar.singletonFactory(tokens.MemoryManager, (c) => {
+    return new MemoryManager({
+      logger: c.resolve(tokens.ILogger),
+      contextName: 'CharacterBuilderMemoryManager',
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.MemoryManager}.`
+  );
+}
+
 function registerCharacterBuilderStorage(registrar, logger) {
   registrar.singletonFactory(tokens.CharacterDatabase, (c) => {
     return new CharacterDatabase({
@@ -243,8 +369,45 @@ export function registerCharacterBuilder(container) {
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Character Builder Registration: Starting...');
 
+  registerCharacterBuilderInfrastructure(registrar, logger);
   registerCharacterBuilderStorage(registrar, logger);
   registerCharacterBuilderServices(registrar, logger);
 
   logger.debug('Character Builder Registration: All registrations complete.');
+}
+
+function getDocumentFallback() {
+  return {
+    body: { contains: () => false },
+    getElementById: () => null,
+    querySelector: () => null,
+  };
+}
+
+function getPerformanceFallback() {
+  return { now: () => Date.now() };
+}
+
+function getAsyncToolkitConfig() {
+  const defaults = { defaultWait: 100, logTimerEvents: false };
+
+  if (typeof process === 'undefined' || !process?.env) {
+    return defaults;
+  }
+
+  const parsedWait = Number(process.env.CHARACTER_BUILDER_ASYNC_DEFAULT_WAIT);
+  return {
+    defaultWait: Number.isFinite(parsedWait) ? parsedWait : defaults.defaultWait,
+    logTimerEvents:
+      process.env.CHARACTER_BUILDER_LOG_TIMER_EVENTS === 'true',
+  };
+}
+
+function getPerformanceThreshold() {
+  if (typeof process === 'undefined' || !process?.env) {
+    return 200;
+  }
+
+  const threshold = Number(process.env.CHARACTER_BUILDER_PERF_THRESHOLD_MS);
+  return Number.isFinite(threshold) && threshold >= 0 ? threshold : 200;
 }
