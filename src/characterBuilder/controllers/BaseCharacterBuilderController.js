@@ -22,6 +22,11 @@ import {
   DESTRUCTION_PHASES,
 } from '../services/controllerLifecycleOrchestrator.js';
 import { ErrorHandlingStrategy } from '../services/errorHandlingStrategy.js';
+import {
+  AsyncUtilitiesToolkit,
+  registerToolkitForOwner,
+  unregisterToolkitForOwner,
+} from '../services/asyncUtilitiesToolkit.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -95,14 +100,8 @@ export class BaseCharacterBuilderController {
   /** @private @type {UIStateManager} */
   #uiStateManager = null;
 
-  /** @private @type {Set<number>} */
-  #pendingTimers = new Set();
-
-  /** @private @type {Set<number>} */
-  #pendingIntervals = new Set();
-
-  /** @private @type {Set<number>} */
-  #pendingAnimationFrames = new Set();
+  /** @private @type {AsyncUtilitiesToolkit|null} */
+  #asyncUtilitiesToolkit = null;
 
   /** @private @type {Map<string, number>} */
   #performanceMarks = new Map();
@@ -475,17 +474,44 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Lazily instantiate toolkit so it can be shared across services.
+   *
+   * @private
+   * @returns {AsyncUtilitiesToolkit}
+   */
+  #getAsyncUtilitiesToolkit() {
+    if (!this.#asyncUtilitiesToolkit) {
+      this.#asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+        logger: this.#logger,
+      });
+      registerToolkitForOwner(this, this.#asyncUtilitiesToolkit);
+    }
+
+    return this.#asyncUtilitiesToolkit;
+  }
+
+  /**
    * Build async utility adapters until BASCHACUICONREF-005 extracts the toolkit.
    *
    * @private
    * @returns {{ debounce: Function, throttle: Function }} Async adapters.
    */
   #createAsyncUtilitiesAdapters() {
-    // TODO(BASCHACUICONREF-005): Replace adapters with AsyncUtilitiesToolkit service.
+    const toolkit = this.#getAsyncUtilitiesToolkit();
     return {
-      debounce: (fn, delay, options) => this._debounce(fn, delay, options),
-      throttle: (fn, wait, options) => this._throttle(fn, wait, options),
+      debounce: toolkit.debounce.bind(toolkit),
+      throttle: toolkit.throttle.bind(toolkit),
     };
+  }
+
+  /**
+   * Provide subclasses with access to shared toolkit.
+   *
+   * @protected
+   * @returns {AsyncUtilitiesToolkit}
+   */
+  _getAsyncUtilitiesToolkit() {
+    return this.#getAsyncUtilitiesToolkit();
   }
 
   /**
@@ -2229,37 +2255,28 @@ export class BaseCharacterBuilderController {
    * @protected
    */
   _cancelPendingOperations() {
-    // Cancel timers
-    const timerCount = this.#pendingTimers.size;
-    if (timerCount > 0) {
-      this.#pendingTimers.forEach((timerId) => clearTimeout(timerId));
-      this.#pendingTimers.clear();
+    const toolkit = this.#getAsyncUtilitiesToolkit();
+    const stats = toolkit.getTimerStats();
+
+    if (stats.timeouts.count > 0) {
       this.#logger.debug(
-        `${this.constructor.name}: Cancelled ${timerCount} pending timers`
+        `${this.constructor.name}: Cancelled ${stats.timeouts.count} pending timers`
       );
     }
 
-    // Cancel intervals
-    const intervalCount = this.#pendingIntervals.size;
-    if (intervalCount > 0) {
-      this.#pendingIntervals.forEach((intervalId) => clearInterval(intervalId));
-      this.#pendingIntervals.clear();
+    if (stats.intervals.count > 0) {
       this.#logger.debug(
-        `${this.constructor.name}: Cancelled ${intervalCount} pending intervals`
+        `${this.constructor.name}: Cancelled ${stats.intervals.count} pending intervals`
       );
     }
 
-    // Cancel animation frames
-    const animationCount = this.#pendingAnimationFrames.size;
-    if (animationCount > 0) {
-      this.#pendingAnimationFrames.forEach((frameId) =>
-        cancelAnimationFrame(frameId)
-      );
-      this.#pendingAnimationFrames.clear();
+    if (stats.animationFrames.count > 0) {
       this.#logger.debug(
-        `${this.constructor.name}: Cancelled ${animationCount} pending animation frames`
+        `${this.constructor.name}: Cancelled ${stats.animationFrames.count} pending animation frames`
       );
     }
+
+    toolkit.clearAllTimers();
 
     // Call custom cancellation hook
     this._cancelCustomOperations();
@@ -2302,6 +2319,12 @@ export class BaseCharacterBuilderController {
       this.#eventListenerRegistry = null;
     }
 
+    if (this.#asyncUtilitiesToolkit) {
+      this.#asyncUtilitiesToolkit.clearAllTimers();
+      unregisterToolkitForOwner(this);
+      this.#asyncUtilitiesToolkit = null;
+    }
+
     // Clear performance data
     this._clearPerformanceData();
 
@@ -2318,6 +2341,9 @@ export class BaseCharacterBuilderController {
   // Pending Operations Management
   // ─────────────────────────────────────────────────────────────────────────
 
+  // TODO(BASCHACUICONREF-010): Remove these controller-level delegates once
+  // the AsyncUtilitiesToolkit is injected directly into all downstream services.
+
   /**
    * Set a timeout that will be automatically cleared on destruction
    *
@@ -2327,12 +2353,7 @@ export class BaseCharacterBuilderController {
    * @returns {number} Timer ID
    */
   _setTimeout(callback, delay) {
-    const timerId = setTimeout(() => {
-      this.#pendingTimers.delete(timerId);
-      callback();
-    }, delay);
-    this.#pendingTimers.add(timerId);
-    return timerId;
+    return this.#getAsyncUtilitiesToolkit().setTimeout(callback, delay);
   }
 
   /**
@@ -2342,10 +2363,7 @@ export class BaseCharacterBuilderController {
    * @param {number} timerId - Timer ID to clear
    */
   _clearTimeout(timerId) {
-    if (this.#pendingTimers.has(timerId)) {
-      clearTimeout(timerId);
-      this.#pendingTimers.delete(timerId);
-    }
+    this.#getAsyncUtilitiesToolkit().clearTimeout(timerId);
   }
 
   /**
@@ -2357,9 +2375,7 @@ export class BaseCharacterBuilderController {
    * @returns {number} Interval ID
    */
   _setInterval(callback, delay) {
-    const intervalId = setInterval(callback, delay);
-    this.#pendingIntervals.add(intervalId);
-    return intervalId;
+    return this.#getAsyncUtilitiesToolkit().setInterval(callback, delay);
   }
 
   /**
@@ -2369,10 +2385,7 @@ export class BaseCharacterBuilderController {
    * @param {number} intervalId - Interval ID to clear
    */
   _clearInterval(intervalId) {
-    if (this.#pendingIntervals.has(intervalId)) {
-      clearInterval(intervalId);
-      this.#pendingIntervals.delete(intervalId);
-    }
+    this.#getAsyncUtilitiesToolkit().clearInterval(intervalId);
   }
 
   /**
@@ -2383,12 +2396,7 @@ export class BaseCharacterBuilderController {
    * @returns {number} Animation frame ID
    */
   _requestAnimationFrame(callback) {
-    const frameId = requestAnimationFrame((timestamp) => {
-      this.#pendingAnimationFrames.delete(frameId);
-      callback(timestamp);
-    });
-    this.#pendingAnimationFrames.add(frameId);
-    return frameId;
+    return this.#getAsyncUtilitiesToolkit().requestAnimationFrame(callback);
   }
 
   /**
@@ -2398,10 +2406,7 @@ export class BaseCharacterBuilderController {
    * @param {number} frameId - Animation frame ID to cancel
    */
   _cancelAnimationFrame(frameId) {
-    if (this.#pendingAnimationFrames.has(frameId)) {
-      cancelAnimationFrame(frameId);
-      this.#pendingAnimationFrames.delete(frameId);
-    }
+    this.#getAsyncUtilitiesToolkit().cancelAnimationFrame(frameId);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2631,121 +2636,7 @@ export class BaseCharacterBuilderController {
    * @returns {Function} Debounced function with cancel() method
    */
   _debounce(fn, delay, options = {}) {
-    const { leading = false, trailing = true, maxWait } = options;
-
-    let timerId = null;
-    let maxTimerId = null;
-    let lastCallTime = null;
-    let lastExecuteTime = null;
-    let lastArgs = null;
-    let lastThis = null;
-    let result;
-
-    const executeFunction = () => {
-      const args = lastArgs;
-      const thisArg = lastThis;
-
-      lastArgs = null;
-      lastThis = null;
-      lastExecuteTime = Date.now();
-
-      result = fn.apply(thisArg, args);
-      return result;
-    };
-
-    const startTimer = (wait) => {
-      return this._setTimeout(() => {
-        timerId = null;
-        maxTimerId = null;
-
-        if (trailing && lastArgs) {
-          executeFunction();
-        }
-      }, wait);
-    };
-
-    const debounced = function (...args) {
-      lastArgs = args;
-      lastThis = this;
-      lastCallTime = Date.now();
-
-      const shouldExecuteNow = leading && !timerId;
-
-      // Clear existing timer
-      if (timerId) {
-        this._clearTimeout(timerId);
-      }
-
-      // Handle maxWait
-      if (maxWait && !maxTimerId) {
-        const timeToMaxWait = maxWait - (lastCallTime - (lastExecuteTime || 0));
-
-        if (timeToMaxWait <= 0) {
-          // Max wait exceeded, execute immediately
-          if (timerId) {
-            this._clearTimeout(timerId);
-            timerId = null;
-          }
-          executeFunction();
-        } else {
-          // Set max wait timer
-          maxTimerId = this._setTimeout(() => {
-            if (timerId) {
-              this._clearTimeout(timerId);
-              timerId = null;
-            }
-            maxTimerId = null;
-            executeFunction();
-          }, timeToMaxWait);
-        }
-      }
-
-      timerId = startTimer(delay);
-
-      if (shouldExecuteNow) {
-        executeFunction();
-      }
-
-      return result;
-    }.bind(this);
-
-    // Add cancel method
-    debounced.cancel = () => {
-      if (timerId) {
-        this._clearTimeout(timerId);
-        timerId = null;
-      }
-      if (maxTimerId) {
-        this._clearTimeout(maxTimerId);
-        maxTimerId = null;
-      }
-      lastArgs = null;
-      lastThis = null;
-      lastCallTime = null;
-      lastExecuteTime = null;
-    };
-
-    // Add flush method
-    debounced.flush = () => {
-      if (timerId) {
-        this._clearTimeout(timerId);
-        timerId = null;
-      }
-      if (maxTimerId) {
-        this._clearTimeout(maxTimerId);
-        maxTimerId = null;
-      }
-      if (lastArgs) {
-        executeFunction();
-      }
-    };
-
-    // Add pending check
-    debounced.pending = () => {
-      return !!timerId;
-    };
-
-    return debounced;
+    return this.#getAsyncUtilitiesToolkit().debounce(fn, delay, options);
   }
 
   /**
@@ -2761,81 +2652,7 @@ export class BaseCharacterBuilderController {
    * @returns {Function} Throttled function with cancel() method
    */
   _throttle(fn, wait, options = {}) {
-    const { leading = true, trailing = true } = options;
-
-    let timerId = null;
-    let lastExecuteTime = 0;
-    let lastArgs = null;
-    let lastThis = null;
-    let result;
-
-    const executeFunction = () => {
-      const args = lastArgs;
-      const thisArg = lastThis;
-
-      lastArgs = null;
-      lastThis = null;
-      lastExecuteTime = Date.now();
-
-      result = fn.apply(thisArg, args);
-      return result;
-    };
-
-    const throttled = function (...args) {
-      const now = Date.now();
-      const timeSinceLastExecute = now - lastExecuteTime;
-
-      lastArgs = args;
-      lastThis = this;
-
-      const shouldExecuteNow = leading && timeSinceLastExecute >= wait;
-
-      if (shouldExecuteNow) {
-        // Execute immediately
-        if (timerId) {
-          this._clearTimeout(timerId);
-          timerId = null;
-        }
-        executeFunction();
-      } else if (!timerId && trailing) {
-        // Schedule execution
-        const delay = wait - timeSinceLastExecute;
-        timerId = this._setTimeout(
-          () => {
-            timerId = null;
-            if (lastArgs) {
-              executeFunction();
-            }
-          },
-          delay > 0 ? delay : wait
-        );
-      }
-
-      return result;
-    }.bind(this);
-
-    // Add cancel method
-    throttled.cancel = () => {
-      if (timerId) {
-        this._clearTimeout(timerId);
-        timerId = null;
-      }
-      lastArgs = null;
-      lastThis = null;
-    };
-
-    // Add flush method
-    throttled.flush = () => {
-      if (timerId) {
-        this._clearTimeout(timerId);
-        timerId = null;
-      }
-      if (lastArgs) {
-        executeFunction();
-      }
-    };
-
-    return throttled;
+    return this.#getAsyncUtilitiesToolkit().throttle(fn, wait, options);
   }
 
   /**
@@ -2850,7 +2667,7 @@ export class BaseCharacterBuilderController {
    */
   _getDebouncedHandler(key, fn, delay, options) {
     const boundFn = fn?.bind ? fn.bind(this) : fn;
-    return this.#getEventListenerRegistry().getDebouncedHandler(
+    return this.#getAsyncUtilitiesToolkit().getDebouncedHandler(
       key,
       boundFn,
       delay,
@@ -2870,7 +2687,7 @@ export class BaseCharacterBuilderController {
    */
   _getThrottledHandler(key, fn, wait, options) {
     const boundFn = fn?.bind ? fn.bind(this) : fn;
-    return this.#getEventListenerRegistry().getThrottledHandler(
+    return this.#getAsyncUtilitiesToolkit().getThrottledHandler(
       key,
       boundFn,
       wait,
