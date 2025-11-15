@@ -10,6 +10,8 @@ import { ComponentExistenceValidationRule } from './rules/componentExistenceVali
 import { PropertySchemaValidationRule } from './rules/propertySchemaValidationRule.js';
 import { LoadTimeValidationContext } from './loadTimeValidationContext.js';
 import { ValidationReport } from './ValidationReport.js';
+import ValidatorRegistry from './core/ValidatorRegistry.js';
+import ValidationPipeline from './core/ValidationPipeline.js';
 import { BlueprintExistenceValidator } from './validators/BlueprintExistenceValidator.js';
 import { RecipeBodyDescriptorValidator } from './validators/RecipeBodyDescriptorValidator.js';
 import { SocketSlotCompatibilityValidator } from './validators/SocketSlotCompatibilityValidator.js';
@@ -39,7 +41,8 @@ class RecipePreflightValidator {
   #logger;
   #loadFailures;
   #entityMatcherService;
-  #validatorStack;
+  #validatorRegistry;
+  #validationPipeline;
 
   constructor({
     dataRegistry,
@@ -50,6 +53,8 @@ class RecipePreflightValidator {
     logger,
     loadFailures = {},
     validators = {},
+    validatorRegistry = null,
+    validationPipelineConfig = {},
   }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['get', 'getAll'],
@@ -87,7 +92,13 @@ class RecipePreflightValidator {
     this.#entityMatcherService = entityMatcherService;
     this.#logger = logger;
     this.#loadFailures = loadFailures;
-    this.#validatorStack = this.#createValidatorStack(validators);
+    this.#validatorRegistry =
+      validatorRegistry ?? this.#createValidatorRegistry(validators);
+    this.#validationPipeline = new ValidationPipeline({
+      registry: this.#validatorRegistry,
+      logger: this.#logger,
+      configuration: validationPipelineConfig,
+    });
   }
 
   /**
@@ -200,77 +211,39 @@ class RecipePreflightValidator {
       loadFailures: options.loadFailures ?? this.#loadFailures,
     };
 
-    for (const validator of this.#validatorStack) {
-      if (this.#shouldSkipValidator(validator.name, options)) {
-        continue;
-      }
+    const pipelineResult = await this.#validationPipeline.execute(
+      recipe,
+      validatorOptions
+    );
 
-      try {
-        const validatorResult = await validator.validate(
-          recipe,
-          validatorOptions
-        );
-
-        this.#mergeValidatorResult(results, validatorResult);
-
-        const hasErrors =
-          Array.isArray(validatorResult?.errors) &&
-          validatorResult.errors.length > 0;
-
-        if (hasErrors && validator.failFast) {
-          this.#logger.warn(
-            `RecipePreflightValidator: Validator '${validator.name}' halted execution due to failFast errors`
-          );
-          break;
-        }
-
-        if (hasErrors && options.failFast) {
-          this.#logger.warn(
-            `RecipePreflightValidator: Halting pipeline after '${validator.name}' due to failFast option`
-          );
-          break;
-        }
-      } catch (error) {
-        this.#logger.error(
-          `RecipePreflightValidator: Validator '${validator.name}' threw an exception`,
-          error
-        );
-        results.errors.push({
-          type: 'VALIDATION_ERROR',
-          check: validator.name,
-          message: error.message,
-        });
-        if (validator.failFast || options.failFast) {
-          break;
-        }
-      }
-    }
+    this.#mergePipelineResult(results, pipelineResult);
   }
 
-  #mergeValidatorResult(targetResults, validatorResult) {
-    if (!validatorResult) {
+  #mergePipelineResult(targetResults, pipelineResult) {
+    if (!pipelineResult) {
       return;
     }
 
-    if (Array.isArray(validatorResult.errors)) {
-      targetResults.errors.push(...validatorResult.errors);
+    if (Array.isArray(pipelineResult.errors)) {
+      targetResults.errors.push(...pipelineResult.errors);
     }
 
-    if (Array.isArray(validatorResult.warnings)) {
-      targetResults.warnings.push(...validatorResult.warnings);
+    if (Array.isArray(pipelineResult.warnings)) {
+      targetResults.warnings.push(...pipelineResult.warnings);
     }
 
-    if (Array.isArray(validatorResult.suggestions)) {
-      targetResults.suggestions.push(...validatorResult.suggestions);
+    if (Array.isArray(pipelineResult.suggestions)) {
+      targetResults.suggestions.push(...pipelineResult.suggestions);
     }
 
-    if (Array.isArray(validatorResult.passed)) {
-      targetResults.passed.push(...validatorResult.passed);
+    if (Array.isArray(pipelineResult.passed)) {
+      targetResults.passed.push(...pipelineResult.passed);
     }
   }
 
-  #createValidatorStack(overrides = {}) {
-    const stack = [
+  #createValidatorRegistry(overrides = {}) {
+    const registry = new ValidatorRegistry({ logger: this.#logger });
+    const validatorInstances = [
       overrides.blueprintExistence ??
         new BlueprintExistenceValidator({
           logger: this.#logger,
@@ -319,24 +292,13 @@ class RecipePreflightValidator {
           logger: this.#logger,
           dataRegistry: this.#dataRegistry,
         }),
-    ];
+    ].filter(Boolean);
 
-    return stack
-      .filter(Boolean)
-      .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
-  }
+    for (const validator of validatorInstances) {
+      registry.register(validator);
+    }
 
-  #shouldSkipValidator(name, options = {}) {
-    const skipMap = {
-      'pattern-matching': options.skipPatternValidation,
-      'descriptor-coverage': options.skipDescriptorChecks,
-      'part-availability': options.skipPartAvailabilityChecks,
-      'generated-slot-parts': options.skipGeneratedSlotChecks,
-      'load-failure': options.skipLoadFailureChecks,
-      'recipe-usage': options.skipRecipeUsageCheck,
-    };
-
-    return Boolean(skipMap[name]);
+    return registry;
   }
 
   #countComponentReferences(recipe) {
