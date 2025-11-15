@@ -19,55 +19,34 @@ The resolution coordinator service needs to be registered in the DI container fo
 ### Files to Modify
 
 #### 1. Define DI Token
-**File:** `src/dependencyInjection/tokens/tokens-core.js`
+**File:** `src/dependencyInjection/tokens/tokens-pipeline.js`
 
-**Change:**
-```javascript
-export const tokens = {
-  // ... existing tokens ...
-
-  // Target Resolution Pipeline Services
-  ITargetResolutionTracingOrchestrator: 'ITargetResolutionTracingOrchestrator',
-  ITargetResolutionResultBuilder: 'ITargetResolutionResultBuilder',
-  ITargetResolutionCoordinator: 'ITargetResolutionCoordinator',
-
-  // ... existing tokens ...
-};
-```
+**Change:** Add `ITargetResolutionCoordinator` to the exported `pipelineTokens` map that already includes the other multi-target pipeline services. This keeps all pipeline-specific DI keys grouped together and automatically exposes the token through `src/dependencyInjection/tokens.js` (which spreads `pipelineTokens` into the global `tokens` object).
 
 #### 2. Register Service Factory
-**File:** `src/dependencyInjection/registrations/pipelineServiceRegistrations.js` (or similar)
+**File:** `src/dependencyInjection/registrations/pipelineServiceRegistrations.js`
 
-**Change:**
-```javascript
-import TargetResolutionCoordinator from '../../actions/pipeline/services/implementations/TargetResolutionCoordinator.js';
-import { tokens } from '../tokens/tokens-core.js';
+**Change:** Use the existing `Registrar` helper (see how tracing/result builder registrations are implemented) to add a `singletonFactory` for `tokens.ITargetResolutionCoordinator`. The factory should instantiate `TargetResolutionCoordinator` from `src/actions/pipeline/services/implementations/TargetResolutionCoordinator.js` and inject **all eight** constructor dependencies:
 
-// In registration function:
-container.register(
-  tokens.ITargetResolutionCoordinator,
-  ({ resolve }) => {
-    return new TargetResolutionCoordinator({
-      dependencyResolver: resolve(tokens.ITargetDependencyResolver),
-      contextBuilder: resolve(tokens.IScopeContextBuilder),
-      unifiedScopeResolver: resolve(tokens.UnifiedScopeResolver),
-      entityManager: resolve(tokens.IEntityManager),
-      logger: resolve(tokens.ILogger),
-    });
-  }
-);
-```
+- `ITargetDependencyResolver`
+- `IScopeContextBuilder`
+- `ITargetDisplayNameResolver`
+- `IUnifiedScopeResolver`
+- `IEntityManager`
+- `ILogger`
+- `ITargetResolutionTracingOrchestrator`
+- `ITargetResolutionResultBuilder`
 
-#### 3. Update Stage Registration
-**File:** `src/dependencyInjection/registrations/pipelineStageRegistrations.js` (or similar)
+> `TargetResolutionCoordinator` validates each dependency (see its constructor), so make sure the factory resolves the exact tokens listed above. Follow the logging pattern already in the registration file so the completion message includes the new service.
 
-**Change:** Add `ITargetResolutionCoordinator` to `MultiTargetResolutionStage` dependencies (will be used in MULTARRESSTAREF-015)
+#### 3. Stage Wiring (Deferred)
+`MultiTargetResolutionStage` is still orchestrating everything directly. Per the program overview, integration happens in MULTARRESSTAREF-015, so **do not modify** `src/dependencyInjection/registrations/commandAndActionRegistrations.js` yet. This ticket only ensures the coordinator can be resolved from the container when Phase 4 starts.
 
 ## Acceptance Criteria
 
-- [ ] Token defined in `tokens-core.js`
+- [ ] Token defined in `tokens-pipeline.js` and therefore exposed through `tokens.js`
 - [ ] Service registered with factory pattern
-- [ ] Factory injects all 5 dependencies correctly
+- [ ] Factory injects all 8 dependencies required by `TargetResolutionCoordinator`
 - [ ] Registration follows project DI patterns
 - [ ] No circular dependencies introduced
 - [ ] TypeScript checks pass (`npm run typecheck`)
@@ -79,23 +58,10 @@ container.register(
 
 ## Testing Strategy
 
-**Validation Test:**
-```javascript
-describe('DI Container - Resolution Coordinator', () => {
-  it('should resolve ITargetResolutionCoordinator', () => {
-    const container = createContainer();
-    const coordinator = container.resolve(tokens.ITargetResolutionCoordinator);
-    expect(coordinator).toBeDefined();
-    expect(typeof coordinator.coordinateResolution).toBe('function');
-  });
+**Validation Tests:**
 
-  it('should inject all dependencies', () => {
-    const container = createContainer();
-    const coordinator = container.resolve(tokens.ITargetResolutionCoordinator);
-    // Verify all 5 dependencies are injected
-  });
-});
-```
+- Extend `tests/unit/dependencyInjection/registrations/pipelineServiceRegistrations.test.js` (new or existing case) to assert that `registerPipelineServices` registers the coordinator token and resolves all dependencies when the factory is invoked.
+- Optional smoke test: resolve `ITargetResolutionCoordinator` through `registerPipelineServices` in a focused unit test to ensure `coordinateResolution` is callable (constructor already validates dependencies).
 
 ## Validation Commands
 
@@ -107,7 +73,7 @@ npm run test:unit -- --testNamePattern="DI Container"
 ## Notes
 
 - Follow existing DI registration patterns in the codebase
-- Ensure all 5 dependencies are properly injected
+- Ensure all 8 dependencies are properly injected
 - Token name follows interface naming convention (`I` prefix)
 - Factory pattern allows for dependency injection
 - Will be consumed by `MultiTargetResolutionStage` in next phase
