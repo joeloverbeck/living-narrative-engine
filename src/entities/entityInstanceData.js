@@ -245,19 +245,6 @@ class EntityInstanceData {
     Object.keys(this.#overrides).forEach((key) => keys.add(key));
     const result = Array.from(keys);
 
-    // Debug logging for park bench issue
-    if (this.instanceId === 'p_erotica:park_bench_instance') {
-      this.#logger.info(
-        `[DEBUG] EntityInstanceData.allComponentTypeIds for park bench:`,
-        {
-          instanceId: this.instanceId,
-          definitionComponents: Object.keys(this.definition.components),
-          overrides: Object.keys(this.#overrides),
-          result: result,
-        }
-      );
-    }
-
     return result;
   }
 }

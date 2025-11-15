@@ -500,35 +500,5 @@ describe('EntityInstanceData', () => {
       expect(ids.length).toBe(4);
     });
 
-    it('should emit debug information for the park bench instance', () => {
-      const logger = {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-      };
-      const instanceData = new EntityInstanceData(
-        'p_erotica:park_bench_instance',
-        entityDef,
-        {
-          'custom:bench-state': { occupied: true },
-        },
-        logger
-      );
-
-      const ids = instanceData.allComponentTypeIds;
-
-      expect(logger.info).toHaveBeenCalledWith(
-        `[DEBUG] EntityInstanceData.allComponentTypeIds for park bench:`,
-        expect.objectContaining({
-          instanceId: 'p_erotica:park_bench_instance',
-          definitionComponents: expect.arrayContaining(
-            Object.keys(entityDef.components)
-          ),
-          overrides: expect.arrayContaining(['custom:bench-state']),
-          result: expect.arrayContaining(ids),
-        })
-      );
-    });
   });
 });

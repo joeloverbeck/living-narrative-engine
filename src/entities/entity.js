@@ -148,15 +148,6 @@ class Entity {
   get componentTypeIds() {
     const result = this.#data.allComponentTypeIds;
 
-    // Debug logging for park bench issue
-    if (this.id === 'p_erotica:park_bench_instance') {
-      console.debug(`[DEBUG] Entity.componentTypeIds for park bench:`, {
-        entityId: this.id,
-        componentTypeIds: result,
-        hasAllowsSitting: result?.includes('positioning:allows_sitting'),
-      });
-    }
-
     return result;
   }
 

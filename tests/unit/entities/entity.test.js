@@ -433,41 +433,6 @@ describe('Entity Class', () => {
     });
   });
 
-  describe('componentTypeIds debug logging', () => {
-    it('should emit debug information for the park bench instance', () => {
-      const debugSpy = jest
-        .spyOn(console, 'debug')
-        .mockImplementation(() => {});
-
-      const definition = new EntityDefinition('p_erotica:park_bench', {
-        components: {
-          'positioning:allows_sitting': { enabled: true },
-        },
-      });
-      const parkBenchInstance = new EntityInstanceData(
-        'p_erotica:park_bench_instance',
-        definition,
-        {},
-        console
-      );
-      const parkBenchEntity = new Entity(parkBenchInstance);
-
-      const ids = parkBenchEntity.componentTypeIds;
-
-      expect(ids).toEqual(['positioning:allows_sitting']);
-      expect(debugSpy).toHaveBeenCalledWith(
-        '[DEBUG] Entity.componentTypeIds for park bench:',
-        expect.objectContaining({
-          entityId: 'p_erotica:park_bench_instance',
-          componentTypeIds: expect.arrayContaining([
-            'positioning:allows_sitting',
-          ]),
-          hasAllowsSitting: true,
-        })
-      );
-    });
-  });
-
   // --- 4. toString Method ---
   describe('toString', () => {
     it('should return a string representation of the entity including its ID, DefID and component types', () => {
