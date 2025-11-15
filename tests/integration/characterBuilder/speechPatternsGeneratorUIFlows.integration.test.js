@@ -1,4 +1,4 @@
-import { describe, it, afterEach, expect, jest } from '@jest/globals';
+import { beforeEach, describe, it, afterEach, expect, jest } from '@jest/globals';
 import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 import SpeechPatternsDisplayEnhancer from '../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
 
@@ -136,7 +136,27 @@ async function readBlobAsText(blob) {
   return String(blob);
 }
 
+async function advanceTimersByTime(duration) {
+  await jest.advanceTimersByTimeAsync(duration);
+}
+
+async function waitForCondition(predicate, { interval = 50, timeout = 2000 } = {}) {
+  const attempts = Math.ceil(timeout / interval);
+  for (let i = 0; i < attempts; i += 1) {
+    if (predicate()) {
+      return;
+    }
+    await advanceTimersByTime(interval);
+  }
+
+  throw new Error('Timed out waiting for condition in integration test');
+}
+
 describe('SpeechPatternsGeneratorController integration UI flows', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
@@ -144,7 +164,6 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
   });
 
   it('renders generated patterns using the fallback display path and updates progress UI', async () => {
-    jest.useRealTimers();
     buildDom(false);
 
     const speechPatternsGenerator = {
@@ -193,24 +212,15 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
 
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await advanceTimersByTime(350);
 
     const generateBtn = document.getElementById('generate-btn');
-    await new Promise((resolve) => {
-      const waitUntilEnabled = () => {
-        if (!generateBtn.disabled) {
-          resolve();
-        } else {
-          setTimeout(waitUntilEnabled, 50);
-        }
-      };
-      waitUntilEnabled();
-    });
+    await waitForCondition(() => !generateBtn.disabled);
     expect(generateBtn.disabled).toBe(false);
 
     generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await advanceTimersByTime(800);
 
     const resultsState = document.getElementById('results-state');
     expect(resultsState.style.display).toBe('block');
@@ -240,7 +250,6 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
   });
 
   it('exports generated content using the display enhancer formatting options', async () => {
-    jest.useRealTimers();
     buildDom(true);
 
     const logger = {
@@ -297,10 +306,10 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     const textarea = document.getElementById('character-definition');
     textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await advanceTimersByTime(350);
 
     document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await advanceTimersByTime(500);
 
     const urlSpy = jest.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
       urlSpy.mock.blob = blob;
@@ -356,7 +365,6 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
   });
 
   it('displays service errors, allows retry, and clears all UI state', async () => {
-    jest.useRealTimers();
     buildDom(true);
 
     let attempt = 0;
@@ -389,10 +397,10 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     const textarea = document.getElementById('character-definition');
     textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await advanceTimersByTime(350);
 
     document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await advanceTimersByTime(400);
 
     const errorState = document.getElementById('error-state');
     expect(['block', 'flex']).toContain(errorState.style.display);
@@ -404,14 +412,14 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     expect(announcement.textContent).toContain('Generation timed out');
 
     document.getElementById('retry-btn').dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await advanceTimersByTime(600);
 
     const resultsState = document.getElementById('results-state');
     expect(resultsState.style.display).toBe('block');
     expect(document.querySelectorAll('.speech-pattern-item')).toHaveLength(1);
 
     document.getElementById('clear-all-btn').dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await advanceTimersByTime(50);
 
     expect(textarea.value).toBe('');
     expect(document.getElementById('results-state').style.display).toBe('none');
@@ -422,7 +430,6 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
   });
 
   it('prevents overlapping generation when the generate button is activated repeatedly', async () => {
-    jest.useRealTimers();
     buildDom(false);
 
     const generationResult = {
@@ -456,19 +463,19 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     const textarea = document.getElementById('character-definition');
     textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await advanceTimersByTime(350);
     textarea.dispatchEvent(new Event('blur', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await advanceTimersByTime(400);
 
     const generateBtn = document.getElementById('generate-btn');
     expect(generateBtn.disabled).toBe(false);
     generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
     generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await advanceTimersByTime(400);
     expect(speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalledTimes(1);
 
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await advanceTimersByTime(600);
 
     const resultsState = document.getElementById('results-state');
     expect(resultsState.style.display).toBe('block');
@@ -476,7 +483,6 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
   });
 
   it('exports fallback text when no display enhancer is provided', async () => {
-    jest.useRealTimers();
     buildDom(true);
 
     const generatedAt = new Date('2024-06-01T12:00:00Z').toISOString();
@@ -507,10 +513,10 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     const textarea = document.getElementById('character-definition');
     textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await advanceTimersByTime(350);
 
     document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    await advanceTimersByTime(700);
 
     const firstPattern = document.querySelector('.speech-pattern-item');
     expect(firstPattern.style.willChange).toBe('transform, opacity');
@@ -582,7 +588,6 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
   });
 
   it('surfaces an inline error if export is triggered without generated patterns', async () => {
-    jest.useRealTimers();
     buildDom(true);
 
     const speechPatternsGenerator = {
@@ -603,7 +608,6 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
   });
 
   it('logs and displays an error when the display enhancer fails to export', async () => {
-    jest.useRealTimers();
     buildDom(true);
 
     const logger = {
@@ -647,10 +651,10 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     const textarea = document.getElementById('character-definition');
     textarea.value = JSON.stringify(createValidCharacterDefinition(), null, 2);
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await advanceTimersByTime(350);
 
     document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await advanceTimersByTime(600);
 
     document.getElementById('export-btn').dispatchEvent(new Event('click', { bubbles: true }));
 
