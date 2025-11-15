@@ -346,4 +346,6 @@ export const coreTokens = freeze({
   IHeuristicRegistry: 'IHeuristicRegistry',
   // GOAP Planner (GOAPIMPL-018)
   IGoapPlanner: 'IGoapPlanner',
+  // GOAP Task Library Constructor (GOAPIMPL-019)
+  ITaskLibraryConstructor: 'ITaskLibraryConstructor',
 });

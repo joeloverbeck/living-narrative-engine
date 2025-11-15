@@ -15,6 +15,7 @@ import GoalDistanceHeuristic from '../../goap/planner/goalDistanceHeuristic.js';
 import RelaxedPlanningGraphHeuristic from '../../goap/planner/relaxedPlanningGraphHeuristic.js';
 import HeuristicRegistry from '../../goap/planner/heuristicRegistry.js';
 import GoapPlanner from '../../goap/planner/goapPlanner.js';
+import TaskLibraryConstructor from '../../goap/planner/taskLibraryConstructor.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -172,6 +173,21 @@ export function registerGoapServices(container) {
       tokens.ISpatialIndexManager,
       tokens.IPlanningEffectsSimulator,
       tokens.IHeuristicRegistry,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // Task Library Constructor (GOAPIMPL-019)
+  // Planning-phase optimization that pre-filters tasks by evaluating structural gates
+  // Reduces planning search space by filtering out structurally incompatible tasks
+  // Cache strategy: per-planning-cycle (clearCache() before each planning cycle)
+  container.register(tokens.ITaskLibraryConstructor, TaskLibraryConstructor, {
+    dependencies: [
+      tokens.IDataRegistry,
+      tokens.IEntityManager,
+      tokens.IContextAssemblyService,
+      tokens.JsonLogicEvaluationService,
+      tokens.ILogger,
     ],
     lifecycle: 'singleton',
   });

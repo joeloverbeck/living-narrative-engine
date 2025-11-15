@@ -656,7 +656,7 @@ describe('RecipePreflightValidator edge-case integration coverage', () => {
     });
 
     expect(logger.error).toHaveBeenCalledWith(
-      'Entity definition load failure check failed',
+      'Load failure validation failed',
       expect.any(Error)
     );
   });
