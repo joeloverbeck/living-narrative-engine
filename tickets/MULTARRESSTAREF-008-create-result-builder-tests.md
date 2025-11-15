@@ -8,16 +8,17 @@
 
 ## Objective
 
-Create comprehensive unit tests for `TargetResolutionResultBuilder` to ensure all result assembly logic is preserved during extraction and result formats remain consistent.
+Create comprehensive unit tests for `TargetResolutionResultBuilder` (see `src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js`) to ensure all constructor validation, metadata attachment, and PipelineResult assembly behaviors are locked down before further refactors.
 
 ## Background
 
-The result builder consolidates ~80 lines of duplicated result assembly logic from three locations. Comprehensive tests ensure backward compatibility with downstream stages and consistent result formats.
+`TargetResolutionResultBuilder` now owns the entire result-assembly surface for the multi-target resolution stage, including dependency validation, metadata hydration (via `attachMetadata` → `#hydrateEntities`), and fallback handling for legacy target definitions. Tests must reflect the current implementation so regressions are caught before integrating the builder elsewhere.
 
 ## Technical Requirements
 
 ### File to Create
 - **Path:** `tests/unit/actions/pipeline/services/implementations/TargetResolutionResultBuilder.test.js`
+- **Existing code reference:** `src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js`
 
 ### Test Coverage Requirements
 
@@ -30,7 +31,7 @@ The result builder consolidates ~80 lines of duplicated result assembly logic fr
 describe('TargetResolutionResultBuilder - Constructor', () => {
   it('should validate entityManager dependency', () => {});
   it('should validate logger dependency', () => {});
-  it('should throw if dependencies missing required methods', () => {});
+  it('should throw if entityManager is missing getEntityInstance', () => {});
   it('should initialize with valid dependencies', () => {});
 });
 ```
@@ -39,12 +40,12 @@ describe('TargetResolutionResultBuilder - Constructor', () => {
 ```javascript
 describe('buildLegacyResult', () => {
   it('should build result with resolved targets', () => {});
-  it('should include legacy conversion metadata', () => {});
-  it('should attach action definition fields', () => {});
-  it('should include backward compatibility fields', () => {});
-  it('should attach metadata correctly', () => {});
+  it('should include legacy conversion metadata or fallback definitions when missing', () => {});
+  it('should attach action definition fields via attachMetadata', () => {});
+  it('should include targetContexts for backward compatibility', () => {});
+  it('should call attachMetadata with isMultiTarget=false', () => {});
   it('should handle empty resolved targets', () => {});
-  it('should preserve action definition properties', () => {});
+  it('should return a PipelineResult.success payload containing actionsWithTargets', () => {});
 });
 ```
 
@@ -52,70 +53,55 @@ describe('buildLegacyResult', () => {
 ```javascript
 describe('buildMultiTargetResult', () => {
   it('should build result with resolved targets', () => {});
-  it('should include detailed resolution results', () => {});
+  it('should include detailed resolution results (default empty object)', () => {});
   it('should attach target definitions', () => {});
-  it('should attach metadata correctly', () => {});
-  it('should handle missing detailed results', () => {});
-  it('should handle multiple target types', () => {});
-  it('should preserve target contexts', () => {});
+  it('should attach metadata with isMultiTarget=true', () => {});
+  it('should mutate action definitions with resolved targets and target definitions', () => {});
+  it('should handle multiple target types and preserve contexts', () => {});
 });
 ```
 
 #### 4. Final Result Assembly
 ```javascript
 describe('buildFinalResult', () => {
-  it('should aggregate all actions with targets', () => {});
-  it('should include target contexts for backward compat', () => {});
-  it('should include last resolved targets when provided', () => {});
-  it('should include last target definitions when provided', () => {});
-  it('should return PipelineResult.success', () => {});
-  it('should handle empty actions array', () => {});
-  it('should handle missing backward compat fields gracefully', () => {});
-  it('should preserve all candidate actions', () => {});
+  it('should aggregate all actionsWithTargets', () => {});
+  it('should include targetContexts when provided', () => {});
+  it('should include last resolved targets and definitions only when both supplied', () => {});
+  it('should pass errors through PipelineResult.success', () => {});
+  it('should handle empty action arrays gracefully', () => {});
 });
 ```
 
-#### 5. Metadata Attachment
+#### 5. Metadata Attachment and Hydration
 ```javascript
 describe('attachMetadata', () => {
   it('should mark legacy format correctly', () => {});
   it('should mark multi-target format correctly', () => {});
-  it('should include target count', () => {});
-  it('should include timestamp', () => {});
-  it('should indicate presence of target definitions', () => {});
-  it('should handle zero targets', () => {});
+  it('should hydrate resolved target entities using entityManager.getEntityInstance', () => {});
+  it('should gracefully warn when provided an invalid action payload', () => {});
+  it('should handle zero targets by leaving resolvedTargets empty', () => {});
 });
 ```
 
-#### 6. Backward Compatibility
+#### 6. Backward Compatibility & Result Shape
 ```javascript
-describe('Backward Compatibility', () => {
-  it('should match TargetComponentValidationStage expectations', () => {});
-  it('should match ActionFormattingStage expectations', () => {});
-  it('should match PrerequisiteEvaluationStage expectations', () => {});
-  it('should include all required fields for downstream stages', () => {});
+describe('Result shape expectations', () => {
+  it('should expose actionsWithTargets entries with targetContexts', () => {});
+  it('should surface resolvedTargets and targetDefinitions on the top-level data payload when available', () => {});
+  it('should remain idempotent for identical inputs', () => {});
 });
 ```
 
-#### 7. Result Format Consistency
-```javascript
-describe('Result Format Consistency', () => {
-  it('should produce identical formats for same inputs (idempotent)', () => {});
-  it('should match legacy assembly format exactly', () => {});
-  it('should match multi-target assembly format exactly', () => {});
-  it('should produce consistent metadata across all paths', () => {});
-});
-```
+> Note: Downstream expectations referenced in the overview are satisfied by asserting the presence of `actionsWithTargets`, `targetContexts`, `resolvedTargets`, and `targetDefinitions` fields that the existing stages consume. Additional downstream stage unit tests already verify their own schemas, so we do **not** re-implement their assertions here.
 
 ### Mock Helper Utilities
 
 ```javascript
 function createMockContext(overrides = {}) {
   return {
-    candidateActions: [],
     actor: { id: 'actor-1', name: 'Test Actor' },
-    actionContext: {},
     trace: {},
+    data: { stage: 'multi-target-resolution' },
     ...overrides,
   };
 }
@@ -123,6 +109,7 @@ function createMockContext(overrides = {}) {
 function createMockActionDef(overrides = {}) {
   return {
     id: 'test:action',
+    name: 'Test Action',
     targets: {
       primary: { scope: 'test_scope' },
     },
@@ -132,8 +119,11 @@ function createMockActionDef(overrides = {}) {
 
 function createMockResolvedTargets() {
   return {
-    primary: ['target-1', 'target-2'],
-    secondary: ['target-3'],
+    primary: [
+      { id: 'target-1' },
+      { id: 'target-2', entity: { id: 'target-2', name: 'Target 2' } },
+    ],
+    secondary: [],
   };
 }
 
@@ -145,7 +135,7 @@ function createMockTargetContexts() {
 
 function createMockEntityManager() {
   return {
-    getEntity: jest.fn((id) => ({ id, name: `Entity ${id}` })),
+    getEntityInstance: jest.fn((id) => ({ id, name: `Entity ${id}` })),
   };
 }
 
@@ -167,15 +157,15 @@ it('should produce result matching downstream stage expectations', () => {
   const result = builder.buildFinalResult(/*...*/);
 
   expect(result.success).toBe(true);
-  expect(result.data).toHaveProperty('candidateActions');
-  expect(result.data.candidateActions).toBeArray();
-  expect(result.data.candidateActions[0]).toHaveProperty('resolvedTargets');
+  expect(result.data).toHaveProperty('actionsWithTargets');
+  expect(Array.isArray(result.data.actionsWithTargets)).toBe(true);
+  expect(result.data.actionsWithTargets[0]).toHaveProperty('resolvedTargets');
 });
 ```
 
 **Test backward compatibility fields:**
 ```javascript
-it('should include backward compatibility fields', () => {
+it('should include backward compatibility fields when last resolved payload provided', () => {
   const result = builder.buildFinalResult(/*...*/);
 
   expect(result.data).toHaveProperty('targetContexts');
@@ -187,12 +177,12 @@ it('should include backward compatibility fields', () => {
 ## Acceptance Criteria
 
 - [ ] Test file created at specified path
-- [ ] All 7 test suites implemented
+- [ ] All 6 targeted test suites implemented
 - [ ] Coverage meets 90%+ target (branches, functions, lines)
 - [ ] All edge cases covered (empty inputs, missing fields, etc.)
-- [ ] Mock utilities created for all dependencies
-- [ ] Backward compatibility tests verify downstream stage expectations
-- [ ] Result format consistency tests ensure idempotent behavior
+- [ ] Mock utilities created for all dependencies (context, action def, resolved targets, target contexts, entity manager, logger)
+- [ ] Backward compatibility tests verify downstream stage expectations by asserting result payload fields
+- [ ] Result format consistency tests ensure idempotent behavior for identical inputs
 - [ ] Tests follow project testing patterns (AAA pattern, descriptive names)
 - [ ] All tests pass with `npm run test:unit`
 
