@@ -16,6 +16,7 @@ import RelaxedPlanningGraphHeuristic from '../../goap/planner/relaxedPlanningGra
 import HeuristicRegistry from '../../goap/planner/heuristicRegistry.js';
 import GoapPlanner from '../../goap/planner/goapPlanner.js';
 import TaskLibraryConstructor from '../../goap/planner/taskLibraryConstructor.js';
+import PlanInvalidationDetector from '../../goap/planner/planInvalidationDetector.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -188,6 +189,18 @@ export function registerGoapServices(container) {
       tokens.IContextAssemblyService,
       tokens.JsonLogicEvaluationService,
       tokens.ILogger,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // Plan Invalidation Detector (GOAPIMPL-020)
+  // Re-checks task preconditions before execution to detect when world state changes
+  // invalidate the current plan. Enables responsive AI that adapts to dynamic environments.
+  container.register(tokens.IPlanInvalidationDetector, PlanInvalidationDetector, {
+    dependencies: [
+      tokens.ILogger,
+      tokens.JsonLogicEvaluationService,
+      tokens.GameDataRepository,
     ],
     lifecycle: 'singleton',
   });
