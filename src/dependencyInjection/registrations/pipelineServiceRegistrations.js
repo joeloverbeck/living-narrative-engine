@@ -13,6 +13,7 @@ import { ScopeContextBuilder } from '../../actions/pipeline/services/implementat
 import { TargetDisplayNameResolver } from '../../actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
 import TargetResolutionTracingOrchestrator from '../../actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 import TargetResolutionResultBuilder from '../../actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
+import TargetResolutionCoordinator from '../../actions/pipeline/services/implementations/TargetResolutionCoordinator.js';
 
 /**
  * Register pipeline services for multi-target resolution
@@ -92,6 +93,21 @@ export function registerPipelineServices(container) {
     });
   });
 
+  registrar.singletonFactory(tokens.ITargetResolutionCoordinator, (c) => {
+    return new TargetResolutionCoordinator({
+      dependencyResolver: c.resolve(tokens.ITargetDependencyResolver),
+      contextBuilder: c.resolve(tokens.IScopeContextBuilder),
+      nameResolver: c.resolve(tokens.ITargetDisplayNameResolver),
+      unifiedScopeResolver: c.resolve(tokens.IUnifiedScopeResolver),
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      tracingOrchestrator: c.resolve(
+        tokens.ITargetResolutionTracingOrchestrator
+      ),
+      resultBuilder: c.resolve(tokens.ITargetResolutionResultBuilder),
+    });
+  });
+
   logger.debug('Pipeline Service Registration: Completed', {
     registeredServices: [
       'IPipelineServiceFactory',
@@ -102,6 +118,7 @@ export function registerPipelineServices(container) {
       'ITargetDisplayNameResolver',
       'ITargetResolutionTracingOrchestrator',
       'ITargetResolutionResultBuilder',
+      'ITargetResolutionCoordinator',
     ],
   });
 }

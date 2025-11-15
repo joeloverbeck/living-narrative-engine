@@ -8,6 +8,8 @@ import { LegacyTargetCompatibilityLayer } from '../../../../src/actions/pipeline
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import { TargetDisplayNameResolver } from '../../../../src/actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
 import TargetResolutionResultBuilder from '../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
+import TargetResolutionTracingOrchestrator from '../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionCoordinator from '../../../../src/actions/pipeline/services/implementations/TargetResolutionCoordinator.js';
 
 const EXPECTED_TOKENS = [
   tokens.IPipelineServiceFactory,
@@ -18,6 +20,7 @@ const EXPECTED_TOKENS = [
   tokens.ITargetDisplayNameResolver,
   tokens.ITargetResolutionTracingOrchestrator,
   tokens.ITargetResolutionResultBuilder,
+  tokens.ITargetResolutionCoordinator,
 ];
 
 describe('registerPipelineServices', () => {
@@ -72,6 +75,7 @@ describe('registerPipelineServices', () => {
           'ITargetDisplayNameResolver',
           'ITargetResolutionTracingOrchestrator',
           'ITargetResolutionResultBuilder',
+          'ITargetResolutionCoordinator',
         ],
       }
     );
@@ -131,5 +135,42 @@ describe('registerPipelineServices', () => {
     expect(resultBuilder).toBeInstanceOf(TargetResolutionResultBuilder);
     expect(container.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
     expect(container.resolve).toHaveBeenCalledWith(tokens.ILogger);
+
+    const tracingOrchestrator = instantiate(
+      tokens.ITargetResolutionTracingOrchestrator
+    );
+    expect(tracingOrchestrator).toBeInstanceOf(
+      TargetResolutionTracingOrchestrator
+    );
+
+    const unifiedScopeResolver = { resolve: jest.fn() };
+
+    resolvedMap.set(tokens.ITargetDependencyResolver, dependencyResolver);
+    resolvedMap.set(tokens.IScopeContextBuilder, scopeBuilder);
+    resolvedMap.set(tokens.ITargetDisplayNameResolver, displayNameResolver);
+    resolvedMap.set(tokens.IUnifiedScopeResolver, unifiedScopeResolver);
+    resolvedMap.set(tokens.IEntityManager, stubEntityManager);
+    resolvedMap.set(tokens.ILogger, logger);
+    resolvedMap.set(tokens.ITargetResolutionTracingOrchestrator, tracingOrchestrator);
+    resolvedMap.set(tokens.ITargetResolutionResultBuilder, resultBuilder);
+
+    const coordinator = instantiate(tokens.ITargetResolutionCoordinator);
+    expect(coordinator).toBeInstanceOf(TargetResolutionCoordinator);
+    expect(container.resolve).toHaveBeenCalledWith(
+      tokens.ITargetDependencyResolver
+    );
+    expect(container.resolve).toHaveBeenCalledWith(tokens.IScopeContextBuilder);
+    expect(container.resolve).toHaveBeenCalledWith(
+      tokens.ITargetDisplayNameResolver
+    );
+    expect(container.resolve).toHaveBeenCalledWith(tokens.IUnifiedScopeResolver);
+    expect(container.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+    expect(container.resolve).toHaveBeenCalledWith(tokens.ILogger);
+    expect(container.resolve).toHaveBeenCalledWith(
+      tokens.ITargetResolutionTracingOrchestrator
+    );
+    expect(container.resolve).toHaveBeenCalledWith(
+      tokens.ITargetResolutionResultBuilder
+    );
   });
 });
