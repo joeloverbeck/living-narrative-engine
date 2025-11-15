@@ -327,6 +327,31 @@ async function createValidationContext({
     runtimeOverrides.createConfigurationLoader?.({ schemaValidator, logger }) ??
     new ConfigurationLoader({ schemaValidator, logger });
 
+  // Pre-load the validation-config schema before ConfigurationLoader needs it
+  // This schema is not in any mod manifest, so we must load it manually
+  const validationConfigSchemaPath = path.resolve(
+    process.cwd(),
+    'data/schemas/validation-config.schema.json'
+  );
+  try {
+    const schemaContent = await fs.readFile(validationConfigSchemaPath, 'utf-8');
+    const schemaData = JSON.parse(schemaContent);
+    const schemaId = schemaData.$id || 'schema://living-narrative-engine/validation-config.schema.json';
+
+    // Only add if not already loaded
+    if (!schemaValidator.isSchemaLoaded(schemaId)) {
+      await schemaValidator.addSchema(schemaData, schemaId);
+      if (verbose) {
+        logger.info(`[validate-recipe] Pre-loaded validation-config schema: ${schemaId}`);
+      }
+    }
+  } catch (error) {
+    logger.warn(
+      `[validate-recipe] Could not pre-load validation-config schema: ${error.message}`
+    );
+    // Continue anyway - ConfigurationLoader will report the error if needed
+  }
+
   const configuration = await configurationLoader.load(configPath, overrides);
   const requestedMods = deriveMods(configuration.rawConfig?.mods, recipePaths);
 

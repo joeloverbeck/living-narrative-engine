@@ -751,11 +751,17 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
       controller.destroy();
       controller.destroy();
 
-      // Should see multiple warnings for subsequent calls - actual message is "Already destroyed"
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Already destroyed')
+      // Total warnings: 2 from controller construction (AsyncUtilitiesToolkit, DOMElementManager fallbacks)
+      //                + 2 from destroy (2nd and 3rd destroy calls)
+      //                = 4 warnings total
+      expect(mockLogger.warn).toHaveBeenCalledTimes(4);
+
+      // Verify the destroy warnings specifically
+      const destroyWarnings = mockLogger.warn.mock.calls.filter(call =>
+        call[0].includes('Already destroyed')
       );
+      expect(destroyWarnings).toHaveLength(2);
+      expect(destroyWarnings[0][0]).toContain('Already destroyed');
     });
 
     it('should prevent destroy when already destroyed', () => {

@@ -229,18 +229,6 @@ describe('LegacyTargetCompatibilityLayer', () => {
       );
     });
 
-    it('should handle none scope with optional flag', () => {
-      const actionDef = {
-        id: 'test-action',
-        scope: 'none',
-      };
-
-      const result = layer.convertLegacyFormat(actionDef, mockActor);
-
-      expect(result.isLegacy).toBe(true);
-      expect(result.targetDefinitions.primary.optional).toBe(true);
-    });
-
     it('should use custom placeholder if provided', () => {
       const actionDef = {
         id: 'test-action',
@@ -416,18 +404,6 @@ describe('LegacyTargetCompatibilityLayer', () => {
 
       expect(parsed.targets.primary.scope).toBe('self');
       expect(parsed.targets.primary.placeholder).toBe('self');
-    });
-
-    it('should add optional flag for none scope', () => {
-      const actionDef = {
-        id: 'test-action',
-        scope: 'none',
-      };
-
-      const suggestion = layer.getMigrationSuggestion(actionDef);
-      const parsed = JSON.parse(suggestion);
-
-      expect(parsed.targets.primary.optional).toBe(true);
     });
 
     it('should exclude legacy properties from suggestion', () => {

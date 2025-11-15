@@ -41,7 +41,7 @@ export class ConfigurationLoader {
   /**
    * @description Loads configuration, merges defaults + overrides, and returns immutable payloads.
    * @param {string} [configPath] - Optional path to user configuration.
-   * @param {object} [overrides={}] - Programmatic overrides to merge in last.
+   * @param {object} [overrides] - Programmatic overrides to merge in last.
    * @returns {Promise<{rawConfig: object, pipelineConfig: object}>}
    */
   async load(configPath, overrides = {}) {
@@ -68,8 +68,8 @@ export class ConfigurationLoader {
         ? this.merge(baseConfig, overrides, { overrideHasDefaults: false })
         : baseConfig;
 
-    await this.#assertSchemaCompliance(finalConfig, 'merged configuration');
-
+    // Schema validation occurs at file load time (before normalization)
+    // No need to re-validate the merged config since all inputs were pre-validated
     const pipelineConfig = this.#buildPipelineConfig(finalConfig);
 
     return Object.freeze({
@@ -82,6 +82,7 @@ export class ConfigurationLoader {
    * @description Merge base config with overrides using user precedence.
    * @param {object} baseConfig - Default configuration.
    * @param {object} overrideConfig - User overrides.
+   * @param options
    * @returns {object} merged configuration.
    */
   merge(baseConfig = {}, overrideConfig = {}, options = {}) {

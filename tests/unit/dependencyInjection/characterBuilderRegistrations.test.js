@@ -175,12 +175,25 @@ describe('registerCharacterBuilder', () => {
 
     expect(container.resolve).toHaveBeenCalledTimes(1);
     expect(container.resolve).toHaveBeenCalledWith(tokens.ILogger);
-    expect(container.register).toHaveBeenCalledTimes(16);
+    // Production code now registers 24 services:
+    // 8 infrastructure (AsyncUtilitiesToolkit, DOMElementManager, EventListenerRegistry,
+    //                   ControllerLifecycleOrchestrator, ErrorHandlingStrategy, PerformanceMonitor,
+    //                   ValidationService, MemoryManager)
+    // 2 storage (CharacterDatabase, CharacterStorageService)
+    // 14 character builder services (ThematicDirectionGenerator, ClicheGenerator, CoreMotivationsGenerator,
+    //                                 CoreMotivationsDisplayEnhancer, TraitsGenerator, TraitsDisplayEnhancer,
+    //                                 SpeechPatternsResponseProcessor, SpeechPatternsGenerator, SpeechPatternsDisplayEnhancer,
+    //                                 TraitsRewriterGenerator, TraitsRewriterResponseProcessor, TraitsRewriterDisplayEnhancer,
+    //                                 CharacterBuilderService, ICharacterBuilderService)
+    expect(container.register).toHaveBeenCalledTimes(24);
     container.register.mock.calls.forEach(([, , options]) => {
       expect(options).toEqual({ lifecycle: 'singletonFactory' });
     });
 
-    expect(logger.debug).toHaveBeenCalledTimes(17);
+    // Debug call count: 1 start + 8 infrastructure + 2 storage + 13 character builder + 1 complete
+    // (CharacterBuilderService and ICharacterBuilderService share 1 debug call)
+    // = 25 total debug calls
+    expect(logger.debug).toHaveBeenCalledTimes(25);
     expect(logger.debug.mock.calls[0][0]).toContain('Starting');
     expect(logger.debug.mock.calls.at(-1)[0]).toContain('All registrations complete');
 

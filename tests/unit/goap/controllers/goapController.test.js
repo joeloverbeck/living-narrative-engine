@@ -17,6 +17,8 @@ describe('GoapController - Core Structure', () => {
 
   /**
    * Create default valid dependencies for GoapController
+   *
+   * @returns {object} Valid dependencies
    */
   const createValidDependencies = () => ({
     goapPlanner: mockGoapPlanner,
@@ -203,18 +205,25 @@ describe('GoapController - Core Structure', () => {
       ).rejects.toThrow('World is required');
     });
 
-    it('should return null when no plan exists (stub behavior)', async () => {
+    it('should return null when no goals are registered', async () => {
+      mockDataRegistry.getAll.mockReturnValue([]);
+
       const result = await controller.decideTurn({ id: 'actor_1' }, {});
 
       expect(result).toBeNull();
     });
 
-    it('should log debug message with actor ID', async () => {
+    it('should log debug message when no goals registered', async () => {
+      mockDataRegistry.getAll.mockReturnValue([]);
+
       await controller.decideTurn({ id: 'actor_1' }, {});
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('GOAP decideTurn called', {
-        actorId: 'actor_1',
-      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'No goals registered in system',
+        {
+          actorId: 'actor_1',
+        }
+      );
     });
   });
 });
