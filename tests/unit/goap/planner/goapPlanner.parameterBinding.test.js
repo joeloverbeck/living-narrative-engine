@@ -71,13 +71,13 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
     // Create planner instance
     planner = new GoapPlanner({
       logger: mockLogger,
-      jsonLogicService: mockJsonLogicService,
+      jsonLogicEvaluationService: mockJsonLogicService,
       gameDataRepository: mockGameDataRepository,
       entityManager: mockEntityManager,
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       spatialIndexManager: mockSpatialIndexManager,
-      effectsSimulator: mockEffectsSimulator,
+      planningEffectsSimulator: mockEffectsSimulator,
       heuristicRegistry: mockHeuristicRegistry,
     });
   });
@@ -87,14 +87,14 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
       expect(() => {
         new GoapPlanner({
           logger: mockLogger,
-          jsonLogicService: mockJsonLogicService,
+          jsonLogicEvaluationService: mockJsonLogicService,
           gameDataRepository: mockGameDataRepository,
           entityManager: mockEntityManager,
           scopeRegistry: {}, // Missing getScopeAst
           scopeEngine: mockScopeEngine,
           spatialIndexManager: mockSpatialIndexManager,
-      effectsSimulator: mockEffectsSimulator,
-      heuristicRegistry: mockHeuristicRegistry,
+          planningEffectsSimulator: mockEffectsSimulator,
+          heuristicRegistry: mockHeuristicRegistry,
         });
       }).toThrow();
     });
@@ -103,14 +103,14 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
       expect(() => {
         new GoapPlanner({
           logger: mockLogger,
-          jsonLogicService: mockJsonLogicService,
+          jsonLogicEvaluationService: mockJsonLogicService,
           gameDataRepository: mockGameDataRepository,
           entityManager: mockEntityManager,
           scopeRegistry: mockScopeRegistry,
           scopeEngine: {}, // Missing resolve
           spatialIndexManager: mockSpatialIndexManager,
-      effectsSimulator: mockEffectsSimulator,
-      heuristicRegistry: mockHeuristicRegistry,
+          planningEffectsSimulator: mockEffectsSimulator,
+          heuristicRegistry: mockHeuristicRegistry,
         });
       }).toThrow();
     });
@@ -119,12 +119,14 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
       expect(() => {
         new GoapPlanner({
           logger: mockLogger,
-          jsonLogicService: mockJsonLogicService,
+          jsonLogicEvaluationService: mockJsonLogicService,
           gameDataRepository: mockGameDataRepository,
           entityManager: mockEntityManager,
           scopeRegistry: mockScopeRegistry,
           scopeEngine: mockScopeEngine,
           spatialIndexManager: null, // Missing
+          planningEffectsSimulator: mockEffectsSimulator,
+          heuristicRegistry: mockHeuristicRegistry,
         });
       }).toThrow();
     });

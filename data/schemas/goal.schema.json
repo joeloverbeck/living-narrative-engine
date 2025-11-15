@@ -3,7 +3,7 @@
   "$id": "schema://living-narrative-engine/goal.schema.json",
   "title": "GOAP Goal Definition",
   "description": "Defines a single, reusable world-state target for a GOAP agent. It specifies the goal's priority, the conditions under which it is relevant, and the desired state of the world to be achieved.",
-  "$comment": "Goals are evaluated highest 'priority' first. The 'relevance' condition must pass against the live world state for the goal to be considered by the planner.",
+  "$comment": "Goals are evaluated highest 'priority' first. The 'relevance' condition must pass against the live world state for the goal to be considered by the planner. Context structure: The planner converts flat state (entityId:componentId) into nested context ({ entityId: { componentId: value } }). Goal conditions should reference entities directly by ID (not string literals) and components without a .components wrapper.",
   "type": "object",
   "properties": {
     "$schema": {

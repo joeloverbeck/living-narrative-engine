@@ -123,7 +123,18 @@ export class HasComponentOperator {
             entity = entityPath;
           }
         } else {
-          entity = resolved.entity;
+          // Resolution succeeded - check if it returned an object without an id
+          // This happens when resolving entity IDs like "actor_1" from nested context
+          // The context has {actor_1: {components...}} which resolves to the component object
+          // In this case, we should use the original entityPath as the entity ID
+          if (typeof resolved.entity === 'object' && !hasValidEntityId(resolved.entity)) {
+            this.#logger.debug(
+              `${this.#operatorName}: Resolved "${entityPath}" to object without id, treating original path as entity ID`
+            );
+            entity = entityPath;
+          } else {
+            entity = resolved.entity;
+          }
         }
       } else {
         this.#logger.warn(

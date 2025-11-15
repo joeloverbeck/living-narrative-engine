@@ -318,10 +318,5 @@ describe('Method Selection Integration Tests', () => {
       expect(result.diagnostics.evaluationResults[0].reason).toContain('Evaluation error');
       expect(result.diagnostics.evaluationResults[1].applicable).toBe(true);
     });
-
-    it.skip('should provide accurate diagnostics for multi-method evaluation', () => {
-      // Kept skipped - Lower priority. Activate only if diagnostics prove critical in production.
-      // This test would verify diagnostic output accuracy when multiple methods are evaluated.
-    });
   });
 });

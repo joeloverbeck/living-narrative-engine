@@ -3389,11 +3389,11 @@ describe('BaseCharacterBuilderController', () => {
 
         expect(errorController.isDestroyed).toBe(true);
         expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Error in pre-destruction'),
+          expect.stringContaining('Error in destroy:pre'),
           expect.any(Error)
         );
         expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Error in pending operations cancellation'),
+          expect.stringContaining('Error in destroy:cancelOperations'),
           expect.any(Error)
         );
       });
@@ -3412,31 +3412,10 @@ describe('BaseCharacterBuilderController', () => {
         );
       });
 
-      it('should mark as destroyed even on catastrophic failure', () => {
-        class CatastrophicController extends BaseCharacterBuilderController {
-          _cacheElements() {}
-          _setupEventListeners() {}
-
-          _executePhase() {
-            throw new Error('Catastrophic error');
-          }
-        }
-
-        const catastrophicController = new CatastrophicController({
-          logger: mockLogger,
-          characterBuilderService: mockCharacterBuilderService,
-          eventBus: mockEventBus,
-          schemaValidator: mockSchemaValidator,
-        });
-
-        expect(() => catastrophicController.destroy()).toThrow(
-          'Catastrophic error'
-        );
-
-        // Should still be marked as destroyed
-        expect(catastrophicController.isDestroyed).toBe(true);
-        expect(catastrophicController.isDestroying).toBe(false);
-      });
+      // Test removed - cannot test catastrophic failure behavior
+      // The orchestrator catches all errors during destruction and logs them
+      // There is no way to make destroy() throw from the outside
+      // All destruction phases are wrapped in try-catch blocks
     });
 
     describe('Destruction Flow', () => {
@@ -3471,10 +3450,8 @@ describe('BaseCharacterBuilderController', () => {
             super._clearElementCache();
           }
 
-          _executeCleanupTasks() {
-            executionOrder.push('executeCleanupTasks');
-            super._executeCleanupTasks();
-          }
+          // _executeCleanupTasks removed - this method doesn't exist on BaseCharacterBuilderController
+          // Cleanup tasks are executed internally by ControllerLifecycleOrchestrator
 
           _clearReferences() {
             executionOrder.push('clearReferences');
@@ -3501,7 +3478,7 @@ describe('BaseCharacterBuilderController', () => {
           'removeAllEventListeners',
           'cleanupServices',
           'clearElementCache',
-          'executeCleanupTasks',
+          // 'executeCleanupTasks' removed - internal to orchestrator, no controller method to override
           'clearReferences',
           'postDestroy',
         ]);

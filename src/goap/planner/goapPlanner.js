@@ -53,22 +53,22 @@ class GoapPlanner {
    *
    * @param {object} deps - Dependencies
    * @param {import('../../logging/logger.js').default} deps.logger - Logger instance
-   * @param {import('../../logic/services/jsonLogicEvaluationService.js').default} deps.jsonLogicService - JSON Logic evaluation service
+   * @param {import('../../logic/services/jsonLogicEvaluationService.js').default} deps.jsonLogicEvaluationService - JSON Logic evaluation service
    * @param {import('../../data/gameDataRepository.js').GameDataRepository} deps.gameDataRepository - Game data repository for loading tasks
    * @param {import('../../interfaces/IEntityManager.js').IEntityManager} deps.entityManager - Entity manager for retrieving actor entities
    * @param {import('../../scopeDsl/scopeRegistry.js').default} deps.scopeRegistry - Scope registry for retrieving scope ASTs
    * @param {import('../../scopeDsl/engine.js').default} deps.scopeEngine - Scope engine for resolving scopes
    * @param {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} deps.spatialIndexManager - Spatial index manager for runtime context
-   * @param {import('./planningEffectsSimulator.js').default} deps.effectsSimulator - Effects simulator for state transformation
+   * @param {import('./planningEffectsSimulator.js').default} deps.planningEffectsSimulator - Effects simulator for state transformation
    * @param {import('./heuristicRegistry.js').default} deps.heuristicRegistry - Heuristic registry for A* estimates
    */
-  constructor({ logger, jsonLogicService, gameDataRepository, entityManager, scopeRegistry, scopeEngine, spatialIndexManager, effectsSimulator, heuristicRegistry }) {
+  constructor({ logger, jsonLogicEvaluationService, gameDataRepository, entityManager, scopeRegistry, scopeEngine, spatialIndexManager, planningEffectsSimulator, heuristicRegistry }) {
     this.#logger = ensureValidLogger(logger);
 
-    validateDependency(jsonLogicService, 'JsonLogicEvaluationService', this.#logger, {
+    validateDependency(jsonLogicEvaluationService, 'JsonLogicEvaluationService', this.#logger, {
       requiredMethods: ['evaluateCondition'],
     });
-    this.#jsonLogicService = jsonLogicService;
+    this.#jsonLogicService = jsonLogicEvaluationService;
 
     validateDependency(gameDataRepository, 'GameDataRepository', this.#logger, {
       requiredMethods: ['get'], // Uses generic get() method to retrieve tasks
@@ -95,10 +95,10 @@ class GoapPlanner {
     });
     this.#spatialIndexManager = spatialIndexManager;
 
-    validateDependency(effectsSimulator, 'IPlanningEffectsSimulator', this.#logger, {
+    validateDependency(planningEffectsSimulator, 'IPlanningEffectsSimulator', this.#logger, {
       requiredMethods: ['simulateEffects'],
     });
-    this.#effectsSimulator = effectsSimulator;
+    this.#effectsSimulator = planningEffectsSimulator;
 
     validateDependency(heuristicRegistry, 'IHeuristicRegistry', this.#logger, {
       requiredMethods: ['calculate'],
@@ -173,11 +173,15 @@ class GoapPlanner {
       // Build evaluation context from state
       const context = this.#buildEvaluationContext(state);
 
+      // Add planning state for operators that need it (e.g., has_component)
+      context.state = state;
+
       // Evaluate goal condition
       const result = this.#jsonLogicService.evaluateCondition(
         goal.goalState,
         context
       );
+
 
       this.#logger.debug('Goal satisfaction check', {
         goalId: goal.id,
@@ -395,6 +399,7 @@ class GoapPlanner {
     if (!scopeAst) {
       this.#logger.warn(`Planning scope not found: ${task.planningScope}`, {
         taskId: task.id,
+        scopeId: task.planningScope,
       });
       return null;
     }
@@ -404,6 +409,7 @@ class GoapPlanner {
     if (!actorEntity) {
       this.#logger.error(`Actor entity not found: ${actorId}`, {
         taskId: task.id,
+        actorId,
       });
       return null;
     }
@@ -430,6 +436,7 @@ class GoapPlanner {
       if (!scopeResult || scopeResult.size === 0) {
         this.#logger.debug(`No entities in scope ${task.planningScope}`, {
           taskId: task.id,
+          scopeId: task.planningScope,
           actorId,
         });
         return null;
@@ -464,7 +471,6 @@ class GoapPlanner {
     } catch (err) {
       this.#logger.error('Scope resolution failed during parameter binding', err, {
         taskId: task.id,
-        scopeId: task.planningScope,
         actorId,
       });
       return null;
@@ -504,6 +510,7 @@ class GoapPlanner {
     const applicableTasks = [];
 
     for (const task of tasks) {
+
       // Try to bind parameters
       const boundParams = this.#bindTaskParameters(task, state, actorId);
 
@@ -512,6 +519,49 @@ class GoapPlanner {
       if (task.planningScope && !boundParams) {
         this.#logger.debug(`Task ${task.id} excluded - parameter binding failed`);
         continue;
+      }
+
+
+      // Check planning preconditions
+      if (task.planningPreconditions && task.planningPreconditions.length > 0) {
+        let preconditionsSatisfied = true;
+
+        // Build context for precondition evaluation (similar to #goalSatisfied)
+        const context = this.#buildEvaluationContext(state);
+        context.state = state; // Add planning state for operators
+
+        // Add actor placeholder resolution
+        context.actor = actorId;
+
+        // Add bound parameters if available
+        if (boundParams) {
+          Object.assign(context, boundParams);
+        }
+
+        for (const precondition of task.planningPreconditions) {
+          try {
+            // Evaluate precondition with full context
+            const satisfied = this.#jsonLogicService.evaluateCondition(
+              precondition.condition,
+              context
+            );
+
+
+            if (!satisfied) {
+              this.#logger.debug(`Task ${task.id} excluded - precondition not satisfied: ${precondition.description}`);
+              preconditionsSatisfied = false;
+              break;
+            }
+          } catch (err) {
+            this.#logger.warn(`Task ${task.id} precondition evaluation failed: ${err.message}`);
+            preconditionsSatisfied = false;
+            break;
+          }
+        }
+
+        if (!preconditionsSatisfied) {
+          continue;
+        }
       }
 
       // Add bound parameters to task (or leave undefined if no binding needed)
@@ -667,7 +717,11 @@ class GoapPlanner {
           planLength: current.gScore,
           timeElapsed: Date.now() - startTime,
         });
-        return current.getPath();
+        return {
+          tasks: current.getPath(),
+          cost: current.gScore,
+          nodesExplored: nodesExpanded,
+        };
       }
 
       // 7.5 Add to closed set
@@ -690,11 +744,12 @@ class GoapPlanner {
         actorId
       );
 
+
       for (const task of applicableTasks) {
         // 7.7.1 Build effect simulation context
         const effectContext = {
+          actor: actorId, // For parameter resolution (entity_ref: 'actor')
           actorId,
-          taskId: task.id,
           parameters: task.boundParams || {},
         };
 
@@ -708,7 +763,6 @@ class GoapPlanner {
           );
         } catch (err) {
           this.#logger.warn('Effect simulation failed', {
-            taskId: task.id,
             error: err.message,
           });
           continue; // Skip this task
@@ -716,11 +770,11 @@ class GoapPlanner {
 
         if (!simulationResult.success) {
           this.#logger.debug('Effect simulation unsuccessful', {
-            taskId: task.id,
             error: simulationResult.error,
           });
           continue; // Skip this task
         }
+
 
         const successorState = simulationResult.state;
         const successorHash = this.#hashState(successorState);
@@ -728,7 +782,6 @@ class GoapPlanner {
         // 7.7.3 Skip if already in closed set
         if (closedSet.has(successorHash)) {
           this.#logger.debug('State already visited', {
-            taskId: task.id,
           });
           continue;
         }
@@ -748,7 +801,6 @@ class GoapPlanner {
           );
         } catch (err) {
           this.#logger.warn('Heuristic calculation failed, using Infinity', {
-            taskId: task.id,
             error: err.message,
           });
           successorHScore = Infinity; // Inadmissible - will be deprioritized
@@ -776,7 +828,6 @@ class GoapPlanner {
           if (successor.gScore < existing.gScore) {
             // Found better path - replace
             this.#logger.debug('Replacing path in open list', {
-              taskId: task.id,
               oldGScore: existing.gScore,
               newGScore: successor.gScore,
             });
@@ -784,13 +835,11 @@ class GoapPlanner {
             openList.push(successor);
           } else {
             this.#logger.debug('Keeping existing better path', {
-              taskId: task.id,
             });
           }
         } else {
           // New state - add to open list
           this.#logger.debug('Adding successor to open list', {
-            taskId: task.id,
             gScore: successor.gScore,
             hScore: successor.hScore,
             fScore: successor.fScore,

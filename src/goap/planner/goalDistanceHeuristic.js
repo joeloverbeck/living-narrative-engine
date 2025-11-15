@@ -62,9 +62,36 @@ class GoalDistanceHeuristic {
       return Infinity;
     }
 
-    if (!goal || !Array.isArray(goal.conditions)) {
+    // Support both goalState (current format) and conditions array (legacy)
+    if (!goal) {
       this.#logger.warn(
-        'GoalDistanceHeuristic.calculate: Invalid goal (missing conditions array), returning Infinity'
+        'GoalDistanceHeuristic.calculate: Invalid goal (null/undefined), returning Infinity'
+      );
+      return Infinity;
+    }
+
+    // Handle goalState format (single condition)
+    if (goal.goalState) {
+      try {
+        // Evaluate goal condition against state
+        // Context provides state for JSON Logic variable resolution
+        const satisfied = this.#jsonLogicEvaluator.evaluate(goal.goalState, { state });
+
+        // If already satisfied, distance is 0; otherwise 1 (at least 1 action needed)
+        return satisfied ? 0 : 1;
+      } catch (err) {
+        // If condition evaluation fails, treat as unsatisfied (conservative)
+        this.#logger.warn(
+          `GoalDistanceHeuristic.calculate: Failed to evaluate goalState, treating as unsatisfied: ${err.message}`
+        );
+        return 1;
+      }
+    }
+
+    // Handle conditions array format (legacy)
+    if (!Array.isArray(goal.conditions)) {
+      this.#logger.warn(
+        'GoalDistanceHeuristic.calculate: Invalid goal (missing both goalState and conditions array), returning Infinity'
       );
       return Infinity;
     }

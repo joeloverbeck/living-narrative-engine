@@ -40,13 +40,13 @@ describe('GoapPlanner - State Management Helpers', () => {
 
     planner = new GoapPlanner({
       logger: mockLogger,
-      jsonLogicService: mockJsonLogicService,
+      jsonLogicEvaluationService: mockJsonLogicService,
       gameDataRepository: mockRepository,
       entityManager: mockEntityManager,
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
       spatialIndexManager: mockSpatialIndexManager,
-      effectsSimulator: mockEffectsSimulator,
+      planningEffectsSimulator: mockEffectsSimulator,
       heuristicRegistry: mockHeuristicRegistry,
     });
   });

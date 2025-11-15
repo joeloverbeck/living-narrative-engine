@@ -464,10 +464,24 @@ class JsonLogicEvaluationService extends BaseService {
         ) {
           rawResult = this.#evaluateLogicalGroup(op, args, context);
         } else {
+          console.log('[DEBUG] JsonLogicEvaluationService.evaluate calling jsonLogic.apply:', {
+            op,
+            args,
+            resolvedRule: JSON.stringify(resolvedRule),
+            contextKeys: Object.keys(context || {}),
+            stateKeys: context?.state ? Object.keys(context.state) : 'no state'
+          });
           rawResult = jsonLogic.apply(resolvedRule, context);
+          console.log('[DEBUG] JsonLogicEvaluationService.evaluate result:', rawResult);
         }
       } else {
+        console.log('[DEBUG] JsonLogicEvaluationService.evaluate (else branch) calling jsonLogic.apply:', {
+          resolvedRule: JSON.stringify(resolvedRule),
+          contextKeys: Object.keys(context || {}),
+          stateKeys: context?.state ? Object.keys(context.state) : 'no state'
+        });
         rawResult = jsonLogic.apply(resolvedRule, context);
+        console.log('[DEBUG] JsonLogicEvaluationService.evaluate (else branch) result:', rawResult);
       }
 
       const finalBooleanResult = !!rawResult;

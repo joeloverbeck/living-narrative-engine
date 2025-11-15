@@ -599,19 +599,27 @@ describe('BaseCharacterBuilderController utility behaviours (integration)', () =
     warnSpy.mockRestore();
   });
 
-  it('propagates errors from destruction phases while marking the controller as destroyed', () => {
-    const { controller } = setupController();
-    const error = new Error('phase failure');
-    const phaseSpy = jest
-      .spyOn(controller, '_executePhase')
-      .mockImplementation(() => {
-        throw error;
-      });
+  it('logs errors from cleanup tasks while marking the controller as destroyed', () => {
+    const { controller, dependencies } = setupController();
+    const error = new Error('cleanup task failure');
+    const errorSpy = jest.spyOn(dependencies.logger, 'error');
 
-    expect(() => controller.destroy()).toThrow(error);
+    // Register a cleanup task that will throw during destruction
+    controller.registerCleanupTask(() => {
+      throw error;
+    }, 'failing cleanup task');
+
+    // Destruction should NOT throw but should log the error and mark controller as destroyed
+    expect(() => controller.destroy()).not.toThrow();
     expect(controller.isDestroyed).toBe(true);
     expect(controller.isDestroying).toBe(false);
 
-    phaseSpy.mockRestore();
+    // Verify error was logged
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Cleanup task failed'),
+      error
+    );
+
+    errorSpy.mockRestore();
   });
 });
