@@ -11,19 +11,19 @@ Extract the `#checkGeneratedSlotPartAvailability` inline method from `RecipePref
 
 ## Background
 
-This is the most complex validator in the refactoring. It validates that entity definitions exist for pattern-matched slots (slots generated dynamically from patterns). It also handles dynamic SocketGenerator imports for structure templates.
+This is the most complex validator in the refactoring. It validates that entity definitions exist for pattern-matched slots (slots generated dynamically from patterns). It also handles dynamic SocketGenerator imports for structure templates. Per `docs/anatomy/anatomy-system-guide.md`, this logic is check #9 in the Recipe Pre-flight validation stage, immediately after the explicit part availability pass.
 
 ## Current Implementation
 
 **Location:** `src/anatomy/validation/RecipePreflightValidator.js`
-**Method:** `#checkGeneratedSlotPartAvailability` (lines 717-842)
+**Method:** `#checkGeneratedSlotPartAvailability` (lines 680-840)
 
 **Complex Features:**
 - Uses blueprint processing (`#ensureBlueprintProcessed`)
 - Dynamically imports SocketGenerator if structure template exists
 - Uses pattern matching helpers (`findMatchingSlots` from patternMatchingValidator.js)
 - Calls entityMatcherService for each generated slot
-- Uses `getPatternDescription` for error messages
+- Uses the private `#getPatternDescription` helper (lines 849-857) for error messages
 
 ## Implementation Tasks
 
@@ -36,7 +36,10 @@ This is the most complex validator in the refactoring. It validates that entity 
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { ensureBlueprintProcessed } from '../utils/blueprintProcessingUtils.js';
-import { getPatternDescription } from './PatternMatchingValidator.js';
+import {
+  findMatchingSlots,
+  getPatternDescription,
+} from './PatternMatchingValidator.js';
 
 /**
  * Validates entity availability for pattern-matched (generated) slots
@@ -51,6 +54,7 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
   #dataRegistry;
   #entityMatcherService;
   #anatomyBlueprintRepository;
+  #logger;
 
   constructor({
     logger,
@@ -66,69 +70,190 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
       logger,
     });
 
-    // Validate all dependencies
     validateDependency(slotGenerator, 'ISlotGenerator', logger, {
-      requiredMethods: ['extractSlotsFromBlueprint'],
+      requiredMethods: [
+        'generateBlueprintSlots',
+        'extractSlotKeysFromLimbSet',
+        'extractSlotKeysFromAppendage',
+      ],
     });
 
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getAllEntityDefinitions'],
+      requiredMethods: ['get', 'getAll'],
     });
 
     validateDependency(entityMatcherService, 'IEntityMatcherService', logger, {
-      requiredMethods: ['findMatchingEntities'],
+      requiredMethods: ['findMatchingEntitiesForSlot', 'mergePropertyRequirements'],
     });
 
-    validateDependency(anatomyBlueprintRepository, 'IAnatomyBlueprintRepository', logger, {
-      requiredMethods: ['getBlueprint'],
-    });
+    validateDependency(
+      anatomyBlueprintRepository,
+      'IAnatomyBlueprintRepository',
+      logger,
+      {
+        requiredMethods: ['getBlueprint'],
+      }
+    );
 
     this.#slotGenerator = slotGenerator;
     this.#dataRegistry = dataRegistry;
     this.#entityMatcherService = entityMatcherService;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
+    this.#logger = logger;
   }
 
-  async performValidation(recipe, options, builder) {
-    // Get and process blueprint
-    const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
+  async performValidation(recipe, _options, builder) {
+    const blueprintId = recipe?.blueprintId;
+    const rawBlueprint = await this.#anatomyBlueprintRepository.getBlueprint(
+      blueprintId
+    );
 
-    if (!blueprint) {
-      return; // Skip if blueprint missing
+    if (!rawBlueprint) {
+      this.#logger.warn(
+        `GeneratedSlotPartsValidator: Blueprint '${blueprintId}' not found, skipping generated slot checks`
+      );
+      return;
     }
 
-    const processedBlueprint = ensureBlueprintProcessed(blueprint);
+    const blueprint = await ensureBlueprintProcessed({
+      blueprint: rawBlueprint,
+      dataRegistry: this.#dataRegistry,
+      slotGenerator: this.#slotGenerator,
+      logger: this.#logger,
+    });
 
-    // Extract logic from lines 680-842
-    // Handle dynamic SocketGenerator import
-    // Validate each pattern-matched slot
-    // Use builder.addError() for missing entities
-    // Use builder.addPassed() when all slots have matches
+    const patterns = recipe?.patterns || [];
+    if (patterns.length === 0) {
+      builder.addPassed('No pattern-generated slots to validate', {
+        check: 'generated_slot_part_availability',
+      });
+      return;
+    }
+
+    const generatedSockets = await this.#loadStructureTemplateSockets(blueprint);
+    const allEntityDefs = this.#dataRegistry.getAll('entityDefinitions');
+    const issues = [];
+    let totalSlotsChecked = 0;
+
+    for (let patternIndex = 0; patternIndex < patterns.length; patternIndex++) {
+      const pattern = patterns[patternIndex];
+      const { matches } = findMatchingSlots(
+        pattern,
+        blueprint,
+        this.#dataRegistry,
+        this.#slotGenerator,
+        this.#logger
+      );
+
+      for (const slotKey of matches) {
+        totalSlotsChecked += 1;
+        const blueprintSlot = blueprint.slots?.[slotKey] ?? generatedSockets[slotKey];
+        if (!blueprintSlot) {
+          this.#logger.warn(
+            `GeneratedSlotPartsValidator: Slot '${slotKey}' matched by pattern but not found in blueprint or template`
+          );
+          continue;
+        }
+
+        const combinedRequirements = {
+          partType: pattern.partType,
+          allowedTypes: blueprintSlot.allowedTypes || ['*'],
+          tags: [
+            ...(pattern.tags || []),
+            ...(blueprintSlot.requirements?.components || []),
+          ],
+          properties: this.#entityMatcherService.mergePropertyRequirements(
+            pattern.properties || {},
+            blueprintSlot.requirements?.properties || {}
+          ),
+        };
+
+        const matchingEntities =
+          this.#entityMatcherService.findMatchingEntitiesForSlot(
+            combinedRequirements,
+            allEntityDefs
+          );
+
+        if (matchingEntities.length === 0) {
+          issues.push({
+            type: 'GENERATED_SLOT_PART_UNAVAILABLE',
+            severity: 'error',
+            message: `No entity definitions found for generated slot '${slotKey}' (matched by pattern ${patternIndex})`,
+            location: {
+              type: 'generated_slot',
+              slotKey,
+              patternIndex,
+              pattern: getPatternDescription(pattern),
+            },
+            details: {
+              slotKey,
+              patternIndex,
+              partType: pattern.partType,
+              allowedTypes: blueprintSlot.allowedTypes,
+              requiredTags: combinedRequirements.tags,
+              requiredProperties: Object.keys(combinedRequirements.properties),
+              totalEntitiesChecked: allEntityDefs.length,
+              blueprintRequiredComponents: blueprintSlot.requirements?.components || [],
+              blueprintRequiredProperties: Object.keys(
+                blueprintSlot.requirements?.properties || {}
+              ),
+            },
+            fix:
+              `Create an entity definition in data/mods/anatomy/entities/definitions/ with:\n` +
+              `  - anatomy:part component with subType: "${pattern.partType}"\n` +
+              `  - Required tags (pattern + blueprint): ${JSON.stringify(combinedRequirements.tags)}\n` +
+              `  - Required property components: ${JSON.stringify(Object.keys(combinedRequirements.properties))}`,
+          });
+        }
+      }
+    }
+
+    if (issues.length === 0) {
+      builder.addPassed(
+        `All ${totalSlotsChecked} generated slot(s) have matching entity definitions`,
+        { check: 'generated_slot_part_availability' }
+      );
+      return;
+    }
+
+    builder.addIssues(issues);
   }
 
-  async #handleStructureTemplate(blueprint) {
-    // Lines 685-715: Dynamic SocketGenerator import
-    // Only import if blueprint has structure template
-  }
+  async #loadStructureTemplateSockets(blueprint) {
+    if (!blueprint.structureTemplate) {
+      return {};
+    }
 
-  #findMatchingSlots(pattern, blueprint) {
-    // Import from patternMatchingValidator.js or implement
-    // Lines 730-747: Find slots matching pattern
-  }
+    const structureTemplate = this.#dataRegistry.get(
+      'anatomyStructureTemplates',
+      blueprint.structureTemplate
+    );
 
-  #validateSlotEntities(slot, pattern, entityDefs) {
-    // Lines 754-803: Validate entities for a single slot
-    // Returns { hasEntities, error }
+    if (!structureTemplate) {
+      this.#logger.warn(
+        `GeneratedSlotPartsValidator: Structure template '${blueprint.structureTemplate}' not found in data registry`
+      );
+      return {};
+    }
+
+    const { default: SocketGenerator } = await import('../../socketGenerator.js');
+    const socketGenerator = new SocketGenerator({ logger: this.#logger });
+    const sockets = socketGenerator.generateSockets(structureTemplate);
+
+    return sockets.reduce((acc, socket) => {
+      acc[socket.id] = socket;
+      return acc;
+    }, {});
   }
 }
 ```
 
 **Key Extraction Points:**
-- Lines 680-715: Structure template and SocketGenerator handling
-- Lines 717-729: Get blueprint and process
-- Lines 730-747: Pattern matching to find slots
-- Lines 754-803: Entity validation per slot
-- Lines 805-840: Error aggregation and reporting
+- Lines 682-693: Blueprint loading plus `#ensureBlueprintProcessed` call
+- Lines 700-737: Structure template + SocketGenerator handling
+- Lines 744-757: Pattern matching to find slots via `findMatchingSlots`
+- Lines 758-821: Entity validation per slot and issue assembly
+- Lines 824-834: Pass/fail aggregation and error fallback
 
 ### 2. Create Unit Tests (1 hour)
 
@@ -143,7 +268,8 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
    - Should pass when all generated slots have entities
    - Should error when generated slot lacks entities
    - Should error for multiple slots without entities
-   - Should handle recipe with no patterns
+   - Should handle recipe with no patterns (emits pass result)
+   - Should skip gracefully when the blueprint cannot be loaded (blueprint check already fails earlier)
 
 3. Pattern slot generation
    - Should find slots matching pattern
@@ -184,10 +310,10 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
 ## Dependencies
 
 **Service Dependencies:**
-- `ISlotGenerator` - For extracting slots from blueprints
-- `IDataRegistry` - For accessing entity definitions
-- `IEntityMatcherService` - For finding matching entities
-- `IAnatomyBlueprintRepository` - For loading blueprints
+- `ISlotGenerator` - Provides `generateBlueprintSlots`, `extractSlotKeysFromLimbSet`, and `extractSlotKeysFromAppendage` for blueprint processing and matcher helpers
+- `IDataRegistry` - Supplies `get` (structure templates) and `getAll` (entity definitions)
+- `IEntityMatcherService` - Supplies `findMatchingEntitiesForSlot` + `mergePropertyRequirements`
+- `IAnatomyBlueprintRepository` - For loading blueprints via `getBlueprint`
 - `ILogger` - For logging (inherited)
 
 **Dynamic Dependencies:**
@@ -196,8 +322,8 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
 **Code Dependencies:**
 - `BaseValidator` - Base class
 - `validateDependency` - Dependency validation
-- `blueprintProcessingUtils` - Shared blueprint processing
-- `PatternMatchingValidator` - getPatternDescription utility
+- `blueprintProcessingUtils` - Shared blueprint processing helper
+- `PatternMatchingValidator` - `findMatchingSlots` + `getPatternDescription`
 
 ## Acceptance Criteria
 
@@ -218,10 +344,10 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
 
 ```bash
 # Run unit tests
-npm run test:unit -- validators/GeneratedSlotPartsValidator.test.js
+npm run test:unit -- --runTestsByPath tests/unit/anatomy/validation/validators/GeneratedSlotPartsValidator.test.js
 
 # Check coverage
-npm run test:unit -- validators/GeneratedSlotPartsValidator.test.js --coverage
+npm run test:unit -- --coverage --runTestsByPath tests/unit/anatomy/validation/validators/GeneratedSlotPartsValidator.test.js
 
 # Lint
 npx eslint src/anatomy/validation/validators/GeneratedSlotPartsValidator.js
@@ -230,20 +356,20 @@ npx eslint src/anatomy/validation/validators/GeneratedSlotPartsValidator.js
 ## Code Reference
 
 **Original Method Location:**
-`src/anatomy/validation/RecipePreflightValidator.js:717-842`
+`src/anatomy/validation/RecipePreflightValidator.js:680-840`
 
 **Key Logic Sections:**
-- Lines 680-715: Structure template handling
-- Lines 717-729: Blueprint loading and processing
-- Lines 730-747: Pattern slot matching
-- Lines 749-753: Entity definitions retrieval
-- Lines 754-803: Per-slot entity validation
-- Lines 805-840: Error aggregation and reporting
+- Lines 682-693: Blueprint loading and processing via `#ensureBlueprintProcessed`
+- Lines 700-737: Structure template handling + SocketGenerator import
+- Lines 700-703: Entity definitions retrieval (`getAll('entityDefinitions')`)
+- Lines 744-757: Pattern slot matching
+- Lines 758-821: Per-slot entity validation
+- Lines 824-834: Error aggregation and reporting
 
 **External Dependencies:**
-- `findMatchingSlots` from patternMatchingValidator.js (line 730)
-- `getPatternDescription` from patternMatchingValidator.js (line 815)
-- `#ensureBlueprintProcessed` from RecipePreflightValidator (line 721)
+- `findMatchingSlots` from patternMatchingValidator.js (lines 744-753 call site)
+- `getPatternDescription` private helper inside RecipePreflightValidator (lines 849-857)
+- `#ensureBlueprintProcessed` from RecipePreflightValidator (lines 411-456)
 
 ## Critical Notes
 
