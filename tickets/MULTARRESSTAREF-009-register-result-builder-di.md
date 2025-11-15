@@ -19,49 +19,43 @@ The result builder service needs to be registered in the DI container following 
 ### Files to Modify
 
 #### 1. Define DI Token
-**File:** `src/dependencyInjection/tokens/tokens-core.js`
+**File:** `src/dependencyInjection/tokens/tokens-pipeline.js`
 
 **Change:**
 ```javascript
-export const tokens = {
+export const pipelineTokens = freeze({
   // ... existing tokens ...
 
-  // Target Resolution Pipeline Services
-  ITargetResolutionTracingOrchestrator: 'ITargetResolutionTracingOrchestrator',
   ITargetResolutionResultBuilder: 'ITargetResolutionResultBuilder',
 
   // ... existing tokens ...
-};
+});
 ```
 
 #### 2. Register Service Factory
-**File:** `src/dependencyInjection/registrations/pipelineServiceRegistrations.js` (or similar)
+**File:** `src/dependencyInjection/registrations/pipelineServiceRegistrations.js`
 
 **Change:**
 ```javascript
 import TargetResolutionResultBuilder from '../../actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
-import { tokens } from '../tokens/tokens-core.js';
 
-// In registration function:
-container.register(
-  tokens.ITargetResolutionResultBuilder,
-  ({ resolve }) => {
-    return new TargetResolutionResultBuilder({
-      entityManager: resolve(tokens.IEntityManager),
-      logger: resolve(tokens.ILogger),
-    });
-  }
-);
+// Inside registerPipelineServices
+registrar.singletonFactory(tokens.ITargetResolutionResultBuilder, (c) => {
+  return new TargetResolutionResultBuilder({
+    entityManager: c.resolve(tokens.IEntityManager),
+    logger: c.resolve(tokens.ILogger),
+  });
+});
 ```
 
 #### 3. Update Stage Registration
-**File:** `src/dependencyInjection/registrations/pipelineStageRegistrations.js` (or similar)
+**File:** `src/dependencyInjection/registrations/commandAndActionRegistrations.js`
 
 **Change:** Add `ITargetResolutionResultBuilder` to `MultiTargetResolutionStage` dependencies (will be used in MULTARRESSTAREF-010)
 
 ## Acceptance Criteria
 
-- [ ] Token defined in `tokens-core.js`
+- [ ] Token defined in `tokens-pipeline.js` and exported through `tokens.js`
 - [ ] Service registered with factory pattern
 - [ ] Factory injects `IEntityManager` and `ILogger` dependencies
 - [ ] Registration follows project DI patterns
