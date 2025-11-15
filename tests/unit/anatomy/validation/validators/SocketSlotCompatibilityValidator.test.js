@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { SocketSlotCompatibilityValidator } from '../../../../../src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js';
+import {
+  SocketSlotCompatibilityValidator,
+  __testables__,
+} from '../../../../../src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js';
 import { createTestBed } from '../../../../common/testBed.js';
 
 const createRecipe = (overrides = {}) => ({
@@ -158,6 +161,30 @@ describe('SocketSlotCompatibilityValidator', () => {
       ]);
     });
 
+    it('falls back to default entity definition path when root id is missing', async () => {
+      const blueprint = createBlueprint({ root: '', additionalSlots: {} });
+      const { validator, dataRegistry } = createValidator({
+        blueprint,
+        dataRegistryOverride: {
+          getEntityDefinition: jest.fn().mockReturnValue(undefined),
+        },
+      });
+
+      const result = await validator.validate(createRecipe());
+
+      expect(dataRegistry.getEntityDefinition).toHaveBeenCalledWith('');
+      expect(result.errors).toEqual([
+        {
+          type: 'ROOT_ENTITY_NOT_FOUND',
+          severity: 'error',
+          message: "Root entity '' not found",
+          blueprintId: blueprint.id,
+          rootEntityId: '',
+          fix: 'Create entity at data/mods/*/entities/definitions/unknown.entity.json',
+        },
+      ]);
+    });
+
     it('reports missing socket reference when slot omits socket property', async () => {
       const blueprint = createBlueprint({
         additionalSlots: {
@@ -215,6 +242,25 @@ describe('SocketSlotCompatibilityValidator', () => {
       });
     });
 
+    it('ignores additional slot entries that are not objects', async () => {
+      const blueprint = createBlueprint({
+        additionalSlots: {
+          invalid: null,
+          shoulder: { socket: 'missing_socket' },
+        },
+      });
+      const { validator } = createValidator({ blueprint });
+
+      const result = await validator.validate(createRecipe());
+
+      expect(result.errors).toEqual([
+        expect.objectContaining({
+          type: 'SOCKET_NOT_FOUND',
+          slotName: 'shoulder',
+        }),
+      ]);
+    });
+
     it('records warning when validation throws unexpected error', async () => {
       const repositoryError = new Error('Repository unavailable');
       const { validator } = createValidator({
@@ -259,6 +305,21 @@ describe('SocketSlotCompatibilityValidator', () => {
       expect(result.errors[0].availableSockets).toEqual([]);
     });
 
+    it('evaluates structure template sockets when blueprint defines a structure template', async () => {
+      const blueprint = createBlueprint({
+        structureTemplate: { id: 'structure:demo' },
+      });
+      const { validator } = createValidator({ blueprint });
+
+      const result = await validator.validate(createRecipe());
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.passed).toContainEqual({
+        message: 'All 1 additionalSlot socket references valid',
+        check: 'socket_slot_compatibility',
+      });
+    });
+
     it('counts zero slots as success when additionalSlots is empty', async () => {
       const blueprint = createBlueprint({ additionalSlots: {} });
       const { validator } = createValidator({ blueprint });
@@ -272,6 +333,35 @@ describe('SocketSlotCompatibilityValidator', () => {
           check: 'socket_slot_compatibility',
         },
       ]);
+    });
+  });
+
+  describe('__testables__ helpers', () => {
+    const { findSimilarSocketName, suggestSocketFix, validateStructureTemplateSockets } =
+      __testables__;
+
+    it('findSimilarSocketName returns null when requested socket is missing', () => {
+      expect(findSimilarSocketName('', ['torso'])).toBeNull();
+    });
+
+    it('suggestSocketFix falls back to generic guidance when no similar sockets are found', () => {
+      const availableSockets = new Map([['torso', {}]]);
+      const suggestion = suggestSocketFix(
+        'leg',
+        availableSockets,
+        'core:entity',
+        'custom.entity.json'
+      );
+
+      expect(suggestion).toBe(
+        "Add socket 'leg' to entity file 'custom.entity.json' or use one of: [torso]"
+      );
+    });
+
+    it('validateStructureTemplateSockets currently returns an empty list', () => {
+      expect(
+        validateStructureTemplateSockets({ id: 'bp' }, new Map(), { id: 'entity' })
+      ).toEqual([]);
     });
   });
 });
