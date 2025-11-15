@@ -6,10 +6,14 @@
  * of profiling, tracing, and developer tools integration.
  */
 
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { describe, beforeAll, beforeEach, afterAll, test, expect } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
+import {
+  createPerformanceContainer,
+  prewarmContainer,
+  resetContainerState,
+  forceCleanup,
+} from '../../common/performanceContainerFactory.js';
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
 import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
@@ -20,53 +24,55 @@ import { performance } from 'perf_hooks';
  * Focuses on profiling tools integration and performance measurement capabilities
  */
 describe('Developer Experience Performance', () => {
-  let container;
+  let sharedContainer;
+  let cleanupSharedContainer;
   let entityManager;
   let scopeRegistry;
   let scopeEngine;
+  let registry;
+  let logger;
+  let jsonLogicService;
+  let scopeDefinitions;
   let testActors;
 
-  beforeEach(async () => {
-    // Create container for performance testing
-    container = new AppContainer();
-    await configureContainer(container, {
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
-      document,
-    });
+  beforeAll(async () => {
+    const containerSetup = await createPerformanceContainer();
+    sharedContainer = containerSetup.container;
+    cleanupSharedContainer = containerSetup.cleanup;
 
-    // Get required services
-    entityManager = container.resolve(tokens.IEntityManager);
-    scopeRegistry = container.resolve(tokens.IScopeRegistry);
-    scopeEngine = container.resolve(tokens.IScopeEngine);
-    const dslParser = container.resolve(tokens.DslParser);
-    const logger = container.resolve(tokens.ILogger);
-    const registry = container.resolve(tokens.IDataRegistry);
+    await prewarmContainer(sharedContainer);
 
-    // Setup test conditions (required for JSON Logic filters)
-    ScopeTestUtilities.setupScopeTestConditions(registry);
+    entityManager = sharedContainer.resolve(tokens.IEntityManager);
+    scopeRegistry = sharedContainer.resolve(tokens.IScopeRegistry);
+    scopeEngine = sharedContainer.resolve(tokens.IScopeEngine);
+    registry = sharedContainer.resolve(tokens.IDataRegistry);
+    const dslParser = sharedContainer.resolve(tokens.DslParser);
+    logger = sharedContainer.resolve(tokens.ILogger);
+    jsonLogicService = sharedContainer.resolve(tokens.JsonLogicEvaluationService);
 
-    // Create and initialize scope definitions
-    const scopeDefinitions = ScopeTestUtilities.createTestScopes({
+    scopeDefinitions = ScopeTestUtilities.createTestScopes({
       dslParser,
       logger,
     });
+  });
 
-    // Initialize scope registry with test scopes
+  beforeEach(async () => {
+    await resetContainerState(sharedContainer);
+
+    ScopeTestUtilities.setupScopeTestConditions(registry);
     scopeRegistry.initialize(scopeDefinitions);
 
-    // Create test actors
     testActors = await ActionTestUtilities.createTestActors({
       entityManager,
       registry,
     });
   });
 
-  afterEach(() => {
-    if (container) {
-      container = null;
+  afterAll(() => {
+    if (cleanupSharedContainer) {
+      cleanupSharedContainer();
     }
+    forceCleanup();
   });
 
   /**
@@ -77,8 +83,8 @@ describe('Developer Experience Performance', () => {
       entities: [testActors.player, testActors.npc],
       location: { id: 'test_location' },
       entityManager,
-      jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-      logger: container.resolve(tokens.ILogger),
+      jsonLogicEval: jsonLogicService,
+      logger,
     };
   }
 
@@ -129,7 +135,7 @@ describe('Developer Experience Performance', () => {
         'simple',
         {
           entityManager,
-          registry: container.resolve(tokens.IDataRegistry),
+          registry,
         }
       );
 
@@ -182,7 +188,7 @@ describe('Developer Experience Performance', () => {
       // Create smaller dataset for memory testing
       await ScopeTestUtilities.createMockEntityDataset(5, 'simple', {
         entityManager,
-        registry: container.resolve(tokens.IDataRegistry),
+        registry,
       });
 
       // Memory tracking
