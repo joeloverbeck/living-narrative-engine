@@ -180,3 +180,37 @@ return strategy.executeWithErrorHandling(
   `tests/unit/characterBuilder/services/validationService.test.js`. Run
   `npx jest tests/unit/characterBuilder/services/validationService.test.js`
   when updating validation logic or formatting.
+
+## MemoryManager responsibilities
+
+- Owns the WeakMap/WeakSet instances that were previously stored on the
+  base controller. Controllers now delegate `_setWeakReference`,
+  `_getWeakReference`, `_trackWeakly`, and `_isWeaklyTracked` to the
+  shared service in `src/characterBuilder/services/memoryManager.js`.
+- Provides `setWeakReference`, `getWeakReference`, `trackWeakly`,
+  `isWeaklyTracked`, and `clear()` helpers so future dependency
+  injection work can swap the implementation without touching
+  controller subclasses.
+- Emits logger warnings (through the injected `ILogger`) whenever a
+  consumer provides an invalid key/value. This keeps regressions
+  observable without relying solely on uncaught `TypeError`s.
+- `MemoryManager#clear()` is invoked during the
+  `DESTRUCTION_PHASES.CLEAR_REFERENCES` hook via the base controller’s
+  `_clearReferences()` implementation, guaranteeing that tracked objects
+  are released before the controller is destroyed.
+
+### Usage guidance
+
+- Use weak references for caches that should not keep DOM nodes or
+  transient view models alive after the owning component is destroyed.
+- Continue using strong references for deterministic lifecycle objects
+  (services, required UI managers, etc.) where the controller must hold
+  the dependency for the duration of its lifetime.
+- When tracking GC-sensitive resources (e.g., external observers or
+  bridged DOM nodes), register them with `trackWeakly()` so
+  `MemoryManager#isWeaklyTracked()` can prevent duplicate registrations
+  and provide visibility into cleanup.
+- Unit tests live in
+  `tests/unit/characterBuilder/services/memoryManager.test.js`. Run
+  `npx jest tests/unit/characterBuilder/services/memoryManager.test.js`
+  during development to verify weak reference behavior and logging.

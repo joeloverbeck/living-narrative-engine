@@ -28,6 +28,7 @@ import {
 } from '../services/asyncUtilitiesToolkit.js';
 import { PerformanceMonitor } from '../services/performanceMonitor.js';
 import { ValidationService } from '../services/validationService.js';
+import { MemoryManager } from '../services/memoryManager.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -107,11 +108,8 @@ export class BaseCharacterBuilderController {
   /** @private @type {PerformanceMonitor|null} */
   #performanceMonitor = null;
 
-  /** @private @type {WeakMap<object, any>} */
-  #weakReferences = new WeakMap();
-
-  /** @private @type {WeakSet<object>} */
-  #weakTracking = new WeakSet();
+  /** @private @type {MemoryManager|null} */
+  #memoryManager = null;
 
   /** @private @type {ErrorHandlingStrategy|null} */
   #errorHandlingStrategy = null;
@@ -187,6 +185,23 @@ export class BaseCharacterBuilderController {
       // Re-throw validation errors - they already have detailed messages
       throw error;
     }
+  }
+
+  /**
+   * Lazily instantiate the memory manager service.
+   *
+   * @private
+   * @returns {MemoryManager}
+   */
+  #getMemoryManager() {
+    if (!this.#memoryManager) {
+      this.#memoryManager = new MemoryManager({
+        logger: this.#logger,
+        contextName: `${this.constructor.name}:MemoryManager`,
+      });
+    }
+
+    return this.#memoryManager;
   }
 
   /**
@@ -2325,8 +2340,10 @@ export class BaseCharacterBuilderController {
       this.#performanceMonitor = null;
     }
 
-    // Clear weak references (they will be garbage collected)
-    // Note: WeakMap and WeakSet don't need explicit clearing
+    // Clear weak references via memory manager
+    if (this.#memoryManager) {
+      this.#memoryManager.clear();
+    }
 
     // Clear custom cached data
     this._clearCachedData();
@@ -2481,10 +2498,7 @@ export class BaseCharacterBuilderController {
    * @param {any} value - Value to store
    */
   _setWeakReference(key, value) {
-    if (typeof key !== 'object' || key === null) {
-      throw new TypeError('WeakMap key must be an object');
-    }
-    this.#weakReferences.set(key, value);
+    this.#getMemoryManager().setWeakReference(key, value);
   }
 
   /**
@@ -2495,7 +2509,7 @@ export class BaseCharacterBuilderController {
    * @returns {any} Stored value or undefined
    */
   _getWeakReference(key) {
-    return this.#weakReferences.get(key);
+    return this.#getMemoryManager().getWeakReference(key);
   }
 
   /**
@@ -2505,10 +2519,7 @@ export class BaseCharacterBuilderController {
    * @param {object} obj - Object to track
    */
   _trackWeakly(obj) {
-    if (typeof obj !== 'object' || obj === null) {
-      throw new TypeError('WeakSet value must be an object');
-    }
-    this.#weakTracking.add(obj);
+    this.#getMemoryManager().trackWeakly(obj);
   }
 
   /**
@@ -2519,7 +2530,7 @@ export class BaseCharacterBuilderController {
    * @returns {boolean}
    */
   _isWeaklyTracked(obj) {
-    return this.#weakTracking.has(obj);
+    return this.#getMemoryManager().isWeaklyTracked(obj);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
