@@ -3,6 +3,8 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { extractSocketsFromEntity } from '../socketExtractor.js';
 import { levenshteinDistance } from '../../../utils/stringUtils.js';
 
+/** @typedef {import('../../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+
 /**
  * @file SocketSlotCompatibilityValidator - ensures blueprint slots reference valid sockets.
  * @see ../../../docs/anatomy/blueprints-and-recipes.md for socket anatomy documentation.
@@ -39,13 +41,10 @@ function findSimilarSocketName(requested, available) {
 }
 
 /**
- * Suggests how to fix socket mismatch.
+ * Builds a best-effort entity definition path for user-facing error messages.
  *
- * @param {string} requestedSocket - Socket ID that was requested.
- * @param {Map<string, object>} availableSockets - Available sockets on entity.
- * @param {string} rootEntityId - Root entity ID.
- * @param {string} [entitySourceFile] - Source filename of entity (optional).
- * @returns {string} Fix suggestion.
+ * @param {string} rootEntityId - Root entity identifier.
+ * @returns {string} Path hint for the entity definition file.
  */
 function buildEntityDefinitionPath(rootEntityId) {
   if (typeof rootEntityId !== 'string' || rootEntityId.length === 0) {
@@ -57,6 +56,15 @@ function buildEntityDefinitionPath(rootEntityId) {
   return `data/mods/*/entities/definitions/${fileId}.entity.json`;
 }
 
+/**
+ * Suggests how to fix socket mismatch.
+ *
+ * @param {string} requestedSocket - Socket ID that was requested.
+ * @param {Map<string, object>} availableSockets - Available sockets on entity.
+ * @param {string} rootEntityId - Root entity ID.
+ * @param {string} [entitySourceFile] - Source filename of entity (optional).
+ * @returns {string} Fix suggestion.
+ */
 function suggestSocketFix(
   requestedSocket,
   availableSockets,
@@ -96,6 +104,108 @@ function validateStructureTemplateSockets(
 }
 
 /**
+ * Resolves the root entity definition from the registry regardless of API variant.
+ *
+ * @param {IDataRegistry|object} dataRegistry - Registry used during validation.
+ * @param {string} entityId - Identifier of the root entity.
+ * @returns {object|undefined} Matching entity definition if found.
+ */
+function getRootEntityDefinition(dataRegistry, entityId) {
+  if (!dataRegistry) {
+    return undefined;
+  }
+
+  if (typeof dataRegistry.getEntityDefinition === 'function') {
+    return dataRegistry.getEntityDefinition(entityId);
+  }
+
+  if (typeof dataRegistry.get === 'function') {
+    return dataRegistry.get('entityDefinitions', entityId);
+  }
+
+  return undefined;
+}
+
+/**
+ * Validates additionalSlots against available sockets for a blueprint/root entity pair.
+ *
+ * @param {object} blueprint - Blueprint definition being validated.
+ * @param {IDataRegistry|object} dataRegistry - Registry for entity lookups.
+ * @returns {Promise<Array<object>>} Validation errors.
+ */
+export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
+  const errors = [];
+
+  if (!blueprint || !dataRegistry) {
+    return errors;
+  }
+
+  const rootEntity = getRootEntityDefinition(dataRegistry, blueprint.root);
+
+  if (!rootEntity) {
+    errors.push({
+      type: 'ROOT_ENTITY_NOT_FOUND',
+      severity: 'error',
+      blueprintId: blueprint.id,
+      rootEntityId: blueprint.root,
+      message: `Root entity '${blueprint.root}' not found`,
+      fix: `Create entity at ${buildEntityDefinitionPath(blueprint.root)}`,
+    });
+    return errors;
+  }
+
+  const sockets = extractSocketsFromEntity(rootEntity);
+  const additionalSlots = blueprint?.additionalSlots || {};
+
+  for (const [slotName, slotConfig] of Object.entries(additionalSlots)) {
+    if (!slotConfig || typeof slotConfig !== 'object') {
+      continue;
+    }
+
+    if (!slotConfig.socket) {
+      errors.push({
+        type: 'MISSING_SOCKET_REFERENCE',
+        severity: 'error',
+        blueprintId: blueprint.id,
+        slotName,
+        message: `Slot '${slotName}' has no socket reference`,
+        fix: `Add "socket" property to additionalSlots.${slotName}`,
+      });
+      continue;
+    }
+
+    if (sockets.has(slotConfig.socket) || slotConfig.optional === true) {
+      continue;
+    }
+
+    errors.push({
+      type: 'SOCKET_NOT_FOUND',
+      severity: 'error',
+      blueprintId: blueprint.id,
+      slotName,
+      socketId: slotConfig.socket,
+      rootEntityId: blueprint.root,
+      availableSockets: Array.from(sockets.keys()),
+      message: `Socket '${slotConfig.socket}' not found on root entity '${blueprint.root}'`,
+      fix: suggestSocketFix(
+        slotConfig.socket,
+        sockets,
+        blueprint.root,
+        rootEntity?._sourceFile
+      ),
+    });
+  }
+
+  if (blueprint.structureTemplate) {
+    errors.push(
+      ...validateStructureTemplateSockets(blueprint, sockets, rootEntity)
+    );
+  }
+
+  return errors;
+}
+
+/**
  * Validates that blueprint additionalSlots reference valid sockets on the root entity.
  */
 export class SocketSlotCompatibilityValidator extends BaseValidator {
@@ -119,9 +229,23 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
       logger,
     });
 
-    validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getEntityDefinition'],
-    });
+    const hasEntityDefinitionLookup =
+      typeof dataRegistry?.getEntityDefinition === 'function';
+    const hasLegacyLookup = typeof dataRegistry?.get === 'function';
+
+    if (hasEntityDefinitionLookup) {
+      validateDependency(dataRegistry, 'IDataRegistry', logger, {
+        requiredMethods: ['getEntityDefinition'],
+      });
+    } else if (hasLegacyLookup) {
+      validateDependency(dataRegistry, 'IDataRegistry', logger, {
+        requiredMethods: ['get'],
+      });
+    } else {
+      throw new Error(
+        'SocketSlotCompatibilityValidator requires IDataRegistry with getEntityDefinition() or get() method'
+      );
+    }
 
     validateDependency(
       anatomyBlueprintRepository,
@@ -156,39 +280,15 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
         return;
       }
 
-      const rootEntity = this.#dataRegistry.getEntityDefinition(blueprint.root);
-
-      if (!rootEntity) {
-        builder.addError(
-          'ROOT_ENTITY_NOT_FOUND',
-          `Root entity '${blueprint.root}' not found`,
-          {
-            blueprintId: blueprint.id,
-            rootEntityId: blueprint.root,
-            fix: `Create entity at ${buildEntityDefinitionPath(blueprint.root)}`,
-          }
-        );
-        return;
-      }
-
-      const sockets = extractSocketsFromEntity(rootEntity);
-      const issues = this.#validateAdditionalSlots(
+      const issues = await validateSocketSlotCompatibility(
         blueprint,
-        sockets,
-        rootEntity
+        this.#dataRegistry
       );
 
-      if (blueprint.structureTemplate) {
-        issues.push(
-          ...validateStructureTemplateSockets(blueprint, sockets, rootEntity)
-        );
-      }
-
       if (issues.length === 0) {
+        const slotCount = Object.keys(blueprint?.additionalSlots || {}).length;
         builder.addPassed(
-          `All ${this.#countAdditionalSlots(
-            blueprint
-          )} additionalSlot socket references valid`,
+          `All ${slotCount} additionalSlot socket references valid`,
           { check: 'socket_slot_compatibility' }
         );
       } else {
@@ -207,79 +307,11 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
     }
   }
 
-  /**
-   * Counts blueprint additional slots.
-   *
-   * @param {object} blueprint - Blueprint definition.
-   * @returns {number} Total additional slot count.
-   * @private
-   */
-  #countAdditionalSlots(blueprint) {
-    return Object.keys(blueprint?.additionalSlots || {}).length;
-  }
-
-  /**
-   * Validates additionalSlots against available sockets.
-   *
-   * @param {object} blueprint - Blueprint definition.
-   * @param {Map<string, object>} sockets - Available sockets map.
-   * @param {object} rootEntity - Root entity definition.
-   * @returns {Array<object>} Validation issues.
-   * @private
-   */
-  #validateAdditionalSlots(blueprint, sockets, rootEntity) {
-    const issues = [];
-    const additionalSlots = blueprint?.additionalSlots || {};
-
-    for (const [slotName, slotConfig] of Object.entries(additionalSlots)) {
-      if (!slotConfig || typeof slotConfig !== 'object') {
-        continue;
-      }
-
-      if (!slotConfig.socket) {
-        issues.push({
-          type: 'MISSING_SOCKET_REFERENCE',
-          severity: 'error',
-          blueprintId: blueprint.id,
-          slotName,
-          message: `Slot '${slotName}' has no socket reference`,
-          fix: `Add "socket" property to additionalSlots.${slotName}`,
-        });
-        continue;
-      }
-
-      if (sockets.has(slotConfig.socket)) {
-        continue;
-      }
-
-      if (slotConfig.optional === true) {
-        continue;
-      }
-
-      issues.push({
-        type: 'SOCKET_NOT_FOUND',
-        severity: 'error',
-        blueprintId: blueprint.id,
-        slotName,
-        socketId: slotConfig.socket,
-        rootEntityId: blueprint.root,
-        availableSockets: Array.from(sockets.keys()),
-        message: `Socket '${slotConfig.socket}' not found on root entity '${blueprint.root}'`,
-        fix: suggestSocketFix(
-          slotConfig.socket,
-          sockets,
-          blueprint.root,
-          rootEntity?._sourceFile
-        ),
-      });
-    }
-
-    return issues;
-  }
 }
 
 export const __testables__ = {
   findSimilarSocketName,
   suggestSocketFix,
   validateStructureTemplateSockets,
+  getRootEntityDefinition,
 };
