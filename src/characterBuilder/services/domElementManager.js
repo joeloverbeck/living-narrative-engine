@@ -78,6 +78,48 @@ export class DOMElementManager {
   }
 
   /**
+   * Update runtime configuration for controller-specific contexts.
+   *
+   * @param {Partial<DOMElementManagerDependencies>} config - Updated configuration.
+   * @returns {void}
+   */
+  configure(config = {}) {
+    const {
+      documentRef = null,
+      performanceRef = null,
+      elementsRef = null,
+      contextName = null,
+    } = config;
+
+    if (documentRef) {
+      validateDependency(documentRef, 'documentRef', this.#logger, {
+        requiredMethods: ['getElementById', 'querySelector'],
+      });
+      if (!documentRef.body || typeof documentRef.body.contains !== 'function') {
+        throw new Error(
+          'Invalid documentRef provided. Missing body.contains method.'
+        );
+      }
+      this.#document = documentRef;
+    }
+
+    if (performanceRef) {
+      validateDependency(performanceRef, 'performanceRef', this.#logger, {
+        requiredMethods: ['now'],
+      });
+      this.#performance = performanceRef;
+    }
+
+    if (elementsRef && typeof elementsRef === 'object') {
+      this.#elements = elementsRef;
+    }
+
+    if (typeof contextName === 'string' && contextName.trim().length > 0) {
+      this.#contextName = contextName.trim();
+    }
+  }
+
+  /**
    * @returns {Record<string, HTMLElement|null>} Snapshot of cached elements.
    */
   getElementsSnapshot() {

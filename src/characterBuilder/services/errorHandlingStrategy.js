@@ -92,6 +92,51 @@ export class ErrorHandlingStrategy {
   }
 
   /**
+   * Update controller-specific context such as UI handlers.
+   *
+   * @param {Partial<ErrorHandlingStrategyDependencies>} context
+   * @returns {void}
+   */
+  configureContext(context = {}) {
+    if ('uiStateManager' in context) {
+      this.#uiStateManager = context.uiStateManager ?? null;
+    }
+
+    if ('showError' in context) {
+      this.#showError =
+        typeof context.showError === 'function' ? context.showError : null;
+    }
+
+    if ('showState' in context) {
+      this.#showState =
+        typeof context.showState === 'function' ? context.showState : null;
+    }
+
+    if ('dispatchErrorEvent' in context) {
+      this.#dispatchErrorEvent =
+        typeof context.dispatchErrorEvent === 'function'
+          ? context.dispatchErrorEvent
+          : null;
+    }
+
+    if (context.controllerName) {
+      this.#controllerName = context.controllerName;
+    }
+
+    if (context.errorCategories) {
+      this.#errorCategories = { ...context.errorCategories };
+    }
+
+    if (context.errorSeverity) {
+      this.#errorSeverity = { ...context.errorSeverity };
+    }
+
+    if (context.recoveryHandlers) {
+      this.registerRecoveryHandlers(context.recoveryHandlers);
+    }
+  }
+
+  /**
    * Handle an error using the shared strategy.
    *
    * @param {Error|string} error

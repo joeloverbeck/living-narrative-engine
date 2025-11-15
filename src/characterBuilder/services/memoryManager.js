@@ -42,6 +42,18 @@ export class MemoryManager {
   }
 
   /**
+   * Update the context name used in log statements.
+   *
+   * @param {string} contextName - New context label.
+   * @returns {void}
+   */
+  setContextName(contextName) {
+    if (typeof contextName === 'string' && contextName.trim().length > 0) {
+      this.#contextName = contextName.trim();
+    }
+  }
+
+  /**
    * Store a value keyed by an object using WeakMap semantics.
    *
    * @param {object} key - Weak reference key.

@@ -64,6 +64,26 @@ export class PerformanceMonitor {
   }
 
   /**
+   * Update runtime configuration for the monitor.
+   *
+   * @param {Partial<PerformanceMonitorDependencies>} config - Updated configuration.
+   * @returns {void}
+   */
+  configure(config = {}) {
+    if (typeof config.contextName === 'string' && config.contextName.trim()) {
+      this.#contextName = config.contextName.trim();
+    }
+
+    if (config.eventBus) {
+      this.#eventBus = config.eventBus;
+    }
+
+    if (typeof config.threshold === 'number' && config.threshold >= 0) {
+      this.#threshold = config.threshold;
+    }
+  }
+
+  /**
    * Record a performance mark.
    *
    * @param {string} markName - Unique mark identifier

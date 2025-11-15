@@ -68,6 +68,18 @@ export class EventListenerRegistry {
   }
 
   /**
+   * Update the logger context name for diagnostics.
+   *
+   * @param {string} contextName - New context label.
+   * @returns {void}
+   */
+  setContextName(contextName) {
+    if (typeof contextName === 'string' && contextName.trim().length > 0) {
+      this.#contextName = contextName.trim();
+    }
+  }
+
+  /**
    * Add DOM listener and track metadata for cleanup.
    *
    * @param {EventTarget} element - Element or target implementing addEventListener.

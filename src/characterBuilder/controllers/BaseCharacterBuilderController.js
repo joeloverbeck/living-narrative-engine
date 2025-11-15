@@ -117,13 +117,24 @@ export class BaseCharacterBuilderController {
   /** @private @type {ValidationService|null} */
   #validationService = null;
 
+  /** @private @type {Set<string>} */
+  #dependencyFallbackWarnings = new Set();
+
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {CharacterBuilderService} dependencies.characterBuilderService - Character builder service
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher
    * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator
+   * @param {ControllerLifecycleOrchestrator} [dependencies.controllerLifecycleOrchestrator] - Injected lifecycle orchestrator
    * @param {object} [dependencies.additionalServices] - Page-specific services
+   * @param {DOMElementManager} [dependencies.domElementManager] - DOM helper service
+   * @param {EventListenerRegistry} [dependencies.eventListenerRegistry] - Event listener registry service
+   * @param {AsyncUtilitiesToolkit} [dependencies.asyncUtilitiesToolkit] - Async toolkit
+   * @param {PerformanceMonitor} [dependencies.performanceMonitor] - Performance monitor
+   * @param {MemoryManager} [dependencies.memoryManager] - Memory helper
+   * @param {ErrorHandlingStrategy} [dependencies.errorHandlingStrategy] - Shared error handler
+   * @param {ValidationService} [dependencies.validationService] - Validation helper
    */
   constructor({
     logger,
@@ -132,6 +143,13 @@ export class BaseCharacterBuilderController {
     schemaValidator,
     controllerLifecycleOrchestrator = null,
     lifecycleHooks = {},
+    domElementManager = null,
+    eventListenerRegistry = null,
+    asyncUtilitiesToolkit = null,
+    performanceMonitor = null,
+    memoryManager = null,
+    errorHandlingStrategy = null,
+    validationService = null,
     ...additionalServices
   }) {
     try {
@@ -157,6 +175,7 @@ export class BaseCharacterBuilderController {
         validationRules
       );
 
+      const lifecycleInjected = Boolean(controllerLifecycleOrchestrator);
       this.#lifecycle =
         controllerLifecycleOrchestrator ??
         new ControllerLifecycleOrchestrator({
@@ -166,6 +185,20 @@ export class BaseCharacterBuilderController {
         });
 
       this.#lifecycle.setControllerName(this.constructor.name);
+      if (lifecycleInjected) {
+        this.#applyLifecycleHookConfiguration(lifecycleHooks);
+      }
+
+      this.#configureInjectedServices({
+        domElementManager,
+        eventListenerRegistry,
+        asyncUtilitiesToolkit,
+        performanceMonitor,
+        memoryManager,
+        errorHandlingStrategy,
+        validationService,
+      });
+
       this.#configureLifecycleHooks();
 
       // Log successful initialization
@@ -188,6 +221,145 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Configure injected services so they adopt the controller context.
+   *
+   * @private
+   * @param {object} services
+   */
+  #configureInjectedServices(services) {
+    const {
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
+    } = services;
+
+    const documentRef = typeof document !== 'undefined' ? document : null;
+    const performanceRef =
+      typeof performance !== 'undefined' ? performance : null;
+
+    if (domElementManager) {
+      try {
+        domElementManager.configure?.({
+          documentRef: documentRef ?? undefined,
+          performanceRef: performanceRef ?? undefined,
+          elementsRef: this.#elements,
+          contextName: `${this.constructor.name}:DOMElementManager`,
+        });
+      } catch (error) {
+        this.#logger.warn(
+          `${this.constructor.name}: Failed to configure injected DOMElementManager`,
+          error
+        );
+      }
+      this.#domElementManager = domElementManager;
+    }
+
+    if (eventListenerRegistry) {
+      eventListenerRegistry.setContextName?.(
+        `${this.constructor.name}:EventListeners`
+      );
+      this.#eventListenerRegistry = eventListenerRegistry;
+    }
+
+    if (asyncUtilitiesToolkit) {
+      this.#asyncUtilitiesToolkit = asyncUtilitiesToolkit;
+      registerToolkitForOwner(this, asyncUtilitiesToolkit);
+    }
+
+    if (performanceMonitor) {
+      performanceMonitor.configure?.({
+        contextName: `${this.constructor.name}:PerformanceMonitor`,
+        eventBus: this.#eventBus,
+      });
+      this.#performanceMonitor = performanceMonitor;
+    }
+
+    if (memoryManager) {
+      memoryManager.setContextName?.(
+        `${this.constructor.name}:MemoryManager`
+      );
+      this.#memoryManager = memoryManager;
+    }
+
+    if (errorHandlingStrategy) {
+      errorHandlingStrategy.configureContext?.({
+        uiStateManager: this.#uiStateManager,
+        showError:
+          typeof this._showError === 'function'
+            ? (message, details) => this._showError(message, details)
+            : null,
+        showState:
+          typeof this._showState === 'function'
+            ? (state, payload) => this._showState(state, payload)
+            : null,
+        dispatchErrorEvent:
+          typeof this._dispatchErrorEvent === 'function'
+            ? (details) => this._dispatchErrorEvent(details)
+            : null,
+        controllerName: this.constructor.name,
+        errorCategories: ERROR_CATEGORIES,
+        errorSeverity: ERROR_SEVERITY,
+        recoveryHandlers: this.#buildDefaultRecoveryHandlers(),
+      });
+      this.#errorHandlingStrategy = errorHandlingStrategy;
+    }
+
+    if (validationService) {
+      validationService.configure?.({
+        handleError: this._handleError.bind(this),
+        errorCategories: ERROR_CATEGORIES,
+      });
+      this.#validationService = validationService;
+    }
+  }
+
+  /**
+   * Apply lifecycle hook configuration when orchestrator injected.
+   *
+   * @private
+   * @param {Record<string, Function|Function[]>} hooks
+   */
+  #applyLifecycleHookConfiguration(hooks) {
+    if (!hooks || typeof hooks !== 'object') {
+      return;
+    }
+
+    Object.entries(hooks).forEach(([phase, value]) => {
+      if (!value) {
+        return;
+      }
+
+      const hookList = Array.isArray(value) ? value : [value];
+      hookList.forEach((hook) => {
+        if (typeof hook === 'function') {
+          this.#lifecycle.registerHook(phase, hook);
+        }
+      });
+    });
+  }
+
+  /**
+   * Log when the controller falls back to self-managed dependency creation.
+   *
+   * @private
+   * @param {string} serviceName
+   */
+  #logDependencyFallback(serviceName) {
+    if (this.#dependencyFallbackWarnings.has(serviceName)) {
+      return;
+    }
+
+    this.#dependencyFallbackWarnings.add(serviceName);
+    this.#logger?.warn?.(
+      `${this.constructor.name}: Falling back to local ${serviceName} instantiation. Register ${serviceName} via DI to avoid this warning.`
+    );
+  }
+
+  /**
    * Lazily instantiate the memory manager service.
    *
    * @private
@@ -195,6 +367,7 @@ export class BaseCharacterBuilderController {
    */
   #getMemoryManager() {
     if (!this.#memoryManager) {
+      this.#logDependencyFallback('MemoryManager');
       this.#memoryManager = new MemoryManager({
         logger: this.#logger,
         contextName: `${this.constructor.name}:MemoryManager`,
@@ -479,6 +652,7 @@ export class BaseCharacterBuilderController {
    */
   #getEventListenerRegistry() {
     if (!this.#eventListenerRegistry) {
+      this.#logDependencyFallback('EventListenerRegistry');
       this.#eventListenerRegistry = new EventListenerRegistry({
         logger: this.#logger,
         asyncUtilities: this.#createAsyncUtilitiesAdapters(),
@@ -497,6 +671,7 @@ export class BaseCharacterBuilderController {
    */
   #getAsyncUtilitiesToolkit() {
     if (!this.#asyncUtilitiesToolkit) {
+      this.#logDependencyFallback('AsyncUtilitiesToolkit');
       this.#asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
         logger: this.#logger,
       });
@@ -514,6 +689,7 @@ export class BaseCharacterBuilderController {
    */
   #getPerformanceMonitor() {
     if (!this.#performanceMonitor) {
+      this.#logDependencyFallback('PerformanceMonitor');
       this.#performanceMonitor = new PerformanceMonitor({
         logger: this.#logger,
         eventBus: this.#eventBus,
@@ -923,6 +1099,7 @@ export class BaseCharacterBuilderController {
    */
   _getDomManager() {
     if (!this.#domElementManager) {
+      this.#logDependencyFallback('DOMElementManager');
       // TODO(BASCHACUICONREF-010): Allow subclasses to inject DOMElementManager instances directly
       // once the remaining DOM helper wrappers are removed.
       this.#domElementManager = new DOMElementManager({
@@ -968,6 +1145,9 @@ export class BaseCharacterBuilderController {
 
       // Create UIStateManager instance
       this.#uiStateManager = new UIStateManager(stateElements);
+      this.#errorHandlingStrategy?.configureContext({
+        uiStateManager: this.#uiStateManager,
+      });
 
       this.#logger.debug(
         `${this.constructor.name}: UIStateManager initialized successfully`
@@ -1804,6 +1984,7 @@ export class BaseCharacterBuilderController {
    */
   #getErrorHandlingStrategy() {
     if (!this.#errorHandlingStrategy) {
+      this.#logDependencyFallback('ErrorHandlingStrategy');
       this.#errorHandlingStrategy = new ErrorHandlingStrategy({
         logger: this.#logger,
         eventBus: this.#eventBus,
@@ -1877,6 +2058,7 @@ export class BaseCharacterBuilderController {
    */
   #getValidationService() {
     if (!this.#validationService) {
+      this.#logDependencyFallback('ValidationService');
       this.#validationService = new ValidationService({
         schemaValidator: this.#schemaValidator,
         logger: this.#logger,
@@ -2319,6 +2501,13 @@ export class BaseCharacterBuilderController {
     // Clear error tracking
     if (this.#errorHandlingStrategy) {
       this.#errorHandlingStrategy.resetLastError();
+      this.#errorHandlingStrategy.configureContext?.({
+        uiStateManager: null,
+        showError: null,
+        showState: null,
+        dispatchErrorEvent: null,
+        recoveryHandlers: {},
+      });
       this.#errorHandlingStrategy = null;
     }
 
@@ -2343,6 +2532,14 @@ export class BaseCharacterBuilderController {
     // Clear weak references via memory manager
     if (this.#memoryManager) {
       this.#memoryManager.clear();
+    }
+
+    if (this.#validationService) {
+      this.#validationService.configure?.({
+        handleError: () => {},
+        errorCategories: ERROR_CATEGORIES,
+      });
+      this.#validationService = null;
     }
 
     // Clear custom cached data

@@ -962,6 +962,35 @@ export class CharacterBuilderBootstrap {
       container: container, // Pass container for service resolution
     };
 
+    const optionalServices = [
+      ['controllerLifecycleOrchestrator', tokens.ControllerLifecycleOrchestrator],
+      ['domElementManager', tokens.DOMElementManager],
+      ['eventListenerRegistry', tokens.EventListenerRegistry],
+      ['asyncUtilitiesToolkit', tokens.AsyncUtilitiesToolkit],
+      ['performanceMonitor', tokens.PerformanceMonitor],
+      ['memoryManager', tokens.MemoryManager],
+      ['errorHandlingStrategy', tokens.ErrorHandlingStrategy],
+      ['validationService', tokens.ValidationService],
+    ];
+
+    optionalServices.forEach(([property, token]) => {
+      if (dependencies[property]) {
+        return;
+      }
+
+      try {
+        dependencies[property] = container.resolve(token);
+      } catch (error) {
+        if (this.#logger) {
+          this.#logger.debug(
+            `[CharacterBuilderBootstrap] Optional service ${String(
+              token
+            )} unavailable: ${error.message}`
+          );
+        }
+      }
+    });
+
     // Try to resolve optional services that some controllers might need
     try {
       dependencies.speechPatternsGenerator = container.resolve(
