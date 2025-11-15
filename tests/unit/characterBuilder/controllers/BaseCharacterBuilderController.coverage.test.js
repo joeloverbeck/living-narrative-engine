@@ -2072,5 +2072,75 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
       expect(throttledA).toBe(throttledB);
     });
   });
+
+  describe('validation helper wrappers', () => {
+    it('formats validation errors through the shared ValidationService', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const formatted = controller._formatValidationErrors([
+        { instancePath: '/name', message: 'is required' },
+        { instancePath: '/details/summary', message: 'must be a string' },
+      ]);
+
+      expect(formatted).toEqual([
+        'name: is required',
+        'details.summary: must be a string',
+      ]);
+    });
+
+    it('builds validation error messages using ValidationService helper', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const errorMessage = controller._buildValidationErrorMessage([
+        'name: is required',
+        'details.summary: must be a string',
+      ]);
+
+      expect(errorMessage).toBe(
+        'Please fix the following errors:\n• name: is required\n• details.summary: must be a string'
+      );
+    });
+  });
+
+  describe('performance monitor accessors', () => {
+    it('exposes and caches the lazily created performance monitor', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const monitorA = controller.performanceMonitor;
+      const monitorB = controller.performanceMonitor;
+
+      expect(monitorA).toBe(monitorB);
+      expect(typeof monitorA.mark).toBe('function');
+    });
+
+    it('returns an empty Map when requesting measurements before initialization', () => {
+      controller = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      const measurements = controller._getPerformanceMeasurements();
+
+      expect(measurements).toBeInstanceOf(Map);
+      expect(measurements.size).toBe(0);
+    });
+  });
 });
 
