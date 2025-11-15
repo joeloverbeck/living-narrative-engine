@@ -21,6 +21,7 @@ import {
   LIFECYCLE_PHASES,
   DESTRUCTION_PHASES,
 } from '../services/controllerLifecycleOrchestrator.js';
+import { ErrorHandlingStrategy } from '../services/errorHandlingStrategy.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -94,9 +95,6 @@ export class BaseCharacterBuilderController {
   /** @private @type {UIStateManager} */
   #uiStateManager = null;
 
-  /** @private @type {object|null} */
-  #lastError = null;
-
   /** @private @type {Set<number>} */
   #pendingTimers = new Set();
 
@@ -117,6 +115,9 @@ export class BaseCharacterBuilderController {
 
   /** @private @type {WeakSet<object>} */
   #weakTracking = new WeakSet();
+
+  /** @private @type {ErrorHandlingStrategy|null} */
+  #errorHandlingStrategy = null;
 
   /**
    * @param {object} dependencies
@@ -1730,6 +1731,79 @@ export class BaseCharacterBuilderController {
   // ─────────────────────────────────────────────────────────────────────────
 
   /**
+   * Lazily create or retrieve the shared ErrorHandlingStrategy instance.
+   *
+   * @private
+   * @returns {ErrorHandlingStrategy}
+   */
+  #getErrorHandlingStrategy() {
+    if (!this.#errorHandlingStrategy) {
+      this.#errorHandlingStrategy = new ErrorHandlingStrategy({
+        logger: this.#logger,
+        eventBus: this.#eventBus,
+        uiStateManager: this.#uiStateManager,
+        showError:
+          typeof this._showError === 'function'
+            ? (message, details) => this._showError(message, details)
+            : null,
+        showState:
+          typeof this._showState === 'function'
+            ? (state, payload) => this._showState(state, payload)
+            : null,
+        dispatchErrorEvent:
+          typeof this._dispatchErrorEvent === 'function'
+            ? (details) => this._dispatchErrorEvent(details)
+            : null,
+        controllerName: this.constructor.name,
+        errorCategories: ERROR_CATEGORIES,
+        errorSeverity: ERROR_SEVERITY,
+        recoveryHandlers: this.#buildDefaultRecoveryHandlers(),
+      });
+    }
+
+    return this.#errorHandlingStrategy;
+  }
+
+  /**
+   * Default recovery handlers wrapping controller callbacks.
+   *
+   * @private
+   * @returns {Record<string, Function>}
+   */
+  #buildDefaultRecoveryHandlers() {
+    return {
+      [ERROR_CATEGORIES.NETWORK]: (errorDetails) => {
+        setTimeout(() => {
+          try {
+            this._retryLastOperation();
+          } catch (error) {
+            this.#logger.error(
+              `${this.constructor.name}: Recovery retry failed`,
+              error
+            );
+          }
+        }, 5000);
+        return errorDetails;
+      },
+      [ERROR_CATEGORIES.SYSTEM]: (errorDetails) => {
+        if (errorDetails.operation === 'initialization') {
+          setTimeout(() => {
+            try {
+              this._reinitialize();
+            } catch (error) {
+              this.#logger.error(
+                `${this.constructor.name}: Recovery reinitialize failed`,
+                error
+              );
+            }
+          }, 2000);
+        }
+        return errorDetails;
+      },
+    };
+  }
+
+  /**
    * Handle errors with consistent logging and user feedback
    *
    * @protected
@@ -1756,30 +1830,9 @@ export class BaseCharacterBuilderController {
    *   category: ERROR_CATEGORIES.VALIDATION,
    *   severity: ERROR_SEVERITY.WARNING
    * });
-   */
+  */
   _handleError(error, context = {}) {
-    const errorDetails = this._buildErrorDetails(error, context);
-
-    // Track last error
-    this.#lastError = errorDetails;
-
-    // Log the error
-    this._logError(errorDetails);
-
-    // Show to user if appropriate
-    if (context.showToUser !== false) {
-      this._showErrorToUser(errorDetails);
-    }
-
-    // Dispatch error event for monitoring
-    this._dispatchErrorEvent(errorDetails);
-
-    // Check if recoverable
-    if (this._isRecoverableError(errorDetails)) {
-      this._attemptErrorRecovery(errorDetails);
-    }
-
-    return errorDetails;
+    return this.#getErrorHandlingStrategy().handleError(error, context);
   }
 
   /**
@@ -1790,26 +1843,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _buildErrorDetails(error, context) {
-    const isErrorObject = error instanceof Error;
-
-    return {
-      message: isErrorObject ? error.message : String(error),
-      stack: isErrorObject ? error.stack : new Error().stack,
-      name: isErrorObject ? error.name : 'Error',
-      timestamp: new Date().toISOString(),
-      controller: this.constructor.name,
-      operation: context.operation || 'unknown',
-      category: context.category || this._categorizeError(error),
-      severity: context.severity || ERROR_SEVERITY.ERROR,
-      userMessage:
-        context.userMessage || this._generateUserMessage(error, context),
-      metadata: {
-        ...context.metadata,
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-      },
-      isRecoverable: this._determineRecoverability(error, context),
-    };
+    return this.#getErrorHandlingStrategy().buildErrorDetails(error, context);
   }
 
   /**
@@ -1819,22 +1853,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _categorizeError(error) {
-    const message = error.message || error.toString();
-
-    if (message.includes('validation') || message.includes('invalid')) {
-      return ERROR_CATEGORIES.VALIDATION;
-    }
-    if (message.includes('network') || message.includes('fetch')) {
-      return ERROR_CATEGORIES.NETWORK;
-    }
-    if (message.includes('permission') || message.includes('unauthorized')) {
-      return ERROR_CATEGORIES.PERMISSION;
-    }
-    if (message.includes('not found') || message.includes('404')) {
-      return ERROR_CATEGORIES.NOT_FOUND;
-    }
-
-    return ERROR_CATEGORIES.SYSTEM;
+    return this.#getErrorHandlingStrategy().categorizeError(error);
   }
 
   /**
@@ -1845,24 +1864,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _generateUserMessage(error, context) {
-    // If custom message provided, use it
-    if (context.userMessage) {
-      return context.userMessage;
-    }
-
-    // Generate based on category
-    switch (context.category || this._categorizeError(error)) {
-      case ERROR_CATEGORIES.VALIDATION:
-        return 'Please check your input and try again.';
-      case ERROR_CATEGORIES.NETWORK:
-        return 'Connection error. Please check your internet and try again.';
-      case ERROR_CATEGORIES.PERMISSION:
-        return "You don't have permission to perform this action.";
-      case ERROR_CATEGORIES.NOT_FOUND:
-        return 'The requested resource was not found.';
-      default:
-        return 'An error occurred. Please try again or contact support.';
-    }
+    return this.#getErrorHandlingStrategy().generateUserMessage(error, context);
   }
 
   /**
@@ -1872,38 +1874,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _logError(errorDetails) {
-    const logData = {
-      message: errorDetails.message,
-      operation: errorDetails.operation,
-      category: errorDetails.category,
-      metadata: errorDetails.metadata,
-    };
-
-    switch (errorDetails.severity) {
-      case ERROR_SEVERITY.INFO:
-        this.#logger.info(
-          `${this.constructor.name}: ${errorDetails.operation} info`,
-          logData
-        );
-        break;
-      case ERROR_SEVERITY.WARNING:
-        this.#logger.warn(
-          `${this.constructor.name}: ${errorDetails.operation} warning`,
-          logData
-        );
-        break;
-      case ERROR_SEVERITY.CRITICAL:
-        this.#logger.error(
-          `${this.constructor.name}: CRITICAL ERROR in ${errorDetails.operation}`,
-          errorDetails
-        );
-        break;
-      default:
-        this.#logger.error(
-          `${this.constructor.name}: Error in ${errorDetails.operation}`,
-          logData
-        );
-    }
+    this.#getErrorHandlingStrategy().logError(errorDetails);
   }
 
   /**
@@ -1913,25 +1884,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _showErrorToUser(errorDetails) {
-    // Use existing UIStateManager integration (already implemented in BaseCharacterBuilderController)
-    // The controller already has sophisticated error display via _showError method
-    if (typeof this._showError === 'function') {
-      // Use existing _showError implementation that integrates with UIStateManager
-      this._showError(errorDetails.userMessage);
-    } else {
-      // Fallback to existing error state display if _showError not available
-      // Use existing UI_STATES.ERROR from UIStateManager integration
-      if (typeof this._showState === 'function') {
-        this._showState('error', {
-          message: errorDetails.userMessage,
-          category: errorDetails.category,
-          severity: errorDetails.severity,
-        });
-      } else {
-        // Final fallback to console (should not happen in production)
-        console.error('Error display not available:', errorDetails.userMessage);
-      }
-    }
+    this.#getErrorHandlingStrategy().showErrorToUser(errorDetails);
   }
 
   /**
@@ -1967,15 +1920,11 @@ export class BaseCharacterBuilderController {
    * @throws {Error} Re-throws the error after handling
    */
   _handleServiceError(error, operation, userMessage) {
-    this._handleError(error, {
+    return this.#getErrorHandlingStrategy().handleServiceError(
+      error,
       operation,
-      category: ERROR_CATEGORIES.SYSTEM,
-      userMessage,
-      showToUser: true,
-    });
-
-    // Re-throw for caller to handle if needed
-    throw error;
+      userMessage
+    );
   }
 
   /**
@@ -2000,58 +1949,11 @@ export class BaseCharacterBuilderController {
    * );
    */
   async _executeWithErrorHandling(operation, operationName, options = {}) {
-    const { userErrorMessage, retries = 0, retryDelay = 1000 } = options;
-
-    let lastError;
-    let attempt = 0;
-
-    while (attempt <= retries) {
-      try {
-        this.#logger.debug(
-          `${this.constructor.name}: Executing ${operationName} (attempt ${attempt + 1}/${retries + 1})`
-        );
-
-        const result = await operation();
-
-        if (attempt > 0) {
-          this.#logger.info(
-            `${this.constructor.name}: ${operationName} succeeded after ${attempt} retries`
-          );
-        }
-
-        return result;
-      } catch (error) {
-        lastError = error;
-        attempt++;
-
-        const isRetryable = this._isRetryableError(error) && attempt <= retries;
-
-        this._handleError(error, {
-          operation: operationName,
-          userMessage: userErrorMessage,
-          showToUser: !isRetryable, // Don't show to user if we're retrying
-          metadata: {
-            attempt,
-            maxRetries: retries,
-            isRetrying: isRetryable,
-          },
-        });
-
-        if (isRetryable) {
-          this.#logger.info(
-            `${this.constructor.name}: Retrying ${operationName} after ${retryDelay}ms`
-          );
-          await new Promise((resolve) =>
-            setTimeout(resolve, retryDelay * attempt)
-          );
-        } else {
-          break;
-        }
-      }
-    }
-
-    // All retries failed
-    throw lastError;
+    return this.#getErrorHandlingStrategy().executeWithErrorHandling(
+      operation,
+      operationName,
+      options
+    );
   }
 
   /**
@@ -2061,16 +1963,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _isRetryableError(error) {
-    const retryableMessages = [
-      'network',
-      'timeout',
-      'fetch',
-      'temporary',
-      'unavailable',
-    ];
-
-    const errorMessage = error.message?.toLowerCase() || '';
-    return retryableMessages.some((msg) => errorMessage.includes(msg));
+    return this.#getErrorHandlingStrategy().isRetryableError(error);
   }
 
   /**
@@ -2179,26 +2072,10 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _determineRecoverability(error, context) {
-    // Network errors are often recoverable
-    if (context.category === ERROR_CATEGORIES.NETWORK) {
-      return true;
-    }
-
-    // Some system errors might be transient
-    if (error.message && error.message.includes('temporary')) {
-      return true;
-    }
-
-    // Validation and permission errors are not recoverable
-    if (
-      [ERROR_CATEGORIES.VALIDATION, ERROR_CATEGORIES.PERMISSION].includes(
-        context.category
-      )
-    ) {
-      return false;
-    }
-
-    return false;
+    return this.#getErrorHandlingStrategy().determineRecoverability(
+      error,
+      context
+    );
   }
 
   /**
@@ -2208,10 +2085,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _isRecoverableError(errorDetails) {
-    return (
-      errorDetails.isRecoverable &&
-      errorDetails.severity !== ERROR_SEVERITY.CRITICAL
-    );
+    return this.#getErrorHandlingStrategy().isRecoverableError(errorDetails);
   }
 
   /**
@@ -2221,45 +2095,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _attemptErrorRecovery(errorDetails) {
-    this.#logger.info(
-      `${this.constructor.name}: Attempting recovery from ${errorDetails.category} error`
-    );
-
-    switch (errorDetails.category) {
-      case ERROR_CATEGORIES.NETWORK:
-        // Retry after delay
-        setTimeout(() => {
-          try {
-            this._retryLastOperation();
-          } catch (error) {
-            this.#logger.error(
-              `${this.constructor.name}: Recovery retry failed`,
-              error
-            );
-          }
-        }, 5000);
-        break;
-
-      case ERROR_CATEGORIES.SYSTEM:
-        // Attempt to reinitialize
-        if (errorDetails.operation === 'initialization') {
-          setTimeout(() => {
-            try {
-              this._reinitialize();
-            } catch (error) {
-              this.#logger.error(
-                `${this.constructor.name}: Recovery reinitialize failed`,
-                error
-              );
-            }
-          }, 2000);
-        }
-        break;
-
-      default:
-        // No automatic recovery
-        break;
-    }
+    this.#getErrorHandlingStrategy().attemptErrorRecovery(errorDetails);
   }
 
   /**
@@ -2282,11 +2118,11 @@ export class BaseCharacterBuilderController {
    * @returns {Error} Standardized error
    */
   _createError(message, category, metadata) {
-    const error = new Error(message);
-    error.category = category;
-    error.metadata = metadata;
-    error.controller = this.constructor.name;
-    return error;
+    return this.#getErrorHandlingStrategy().createError(
+      message,
+      category,
+      metadata
+    );
   }
 
   /**
@@ -2298,10 +2134,7 @@ export class BaseCharacterBuilderController {
    * @returns {Error} Wrapped error
    */
   _wrapError(error, context) {
-    const wrappedError = new Error(`${context}: ${error.message}`);
-    wrappedError.originalError = error;
-    wrappedError.stack = error.stack;
-    return wrappedError;
+    return this.#getErrorHandlingStrategy().wrapError(error, context);
   }
 
   /**
@@ -2311,7 +2144,7 @@ export class BaseCharacterBuilderController {
    * @returns {object|null} Last error details
    */
   get lastError() {
-    return this.#lastError || null;
+    return this.#getErrorHandlingStrategy().lastError || null;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2462,7 +2295,10 @@ export class BaseCharacterBuilderController {
     this.#uiStateManager = null;
 
     // Clear error tracking
-    this.#lastError = null;
+    if (this.#errorHandlingStrategy) {
+      this.#errorHandlingStrategy.resetLastError();
+      this.#errorHandlingStrategy = null;
+    }
 
     // Clear event registry state
     if (this.#eventListenerRegistry) {

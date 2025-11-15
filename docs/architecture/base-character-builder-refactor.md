@@ -89,3 +89,64 @@ responsibilities which are now encapsulated inside the
   describe new services (event managers, API coordinators, etc.) along
   with the corresponding test commands and ownership updates referenced
   in BASCHACUICONREF-000.
+
+## ErrorHandlingStrategy responsibilities
+
+- Centralizes the heuristics previously implemented inside
+  `BaseCharacterBuilderController` for creating and categorizing error
+  objects. The service keeps the same taxonomy:
+  - `validation` – invalid user input or schema errors.
+  - `network` – connectivity, timeout, and fetch failures.
+  - `system` – lifecycle, dependency, or unexpected exceptions.
+  - `user` – user initiated cancellation/flow breaks (reserved for
+    future extraction but preserved for telemetry consistency).
+  - `permission` – authorization or capability mismatches.
+  - `not_found` – resources that cannot be resolved (404s, missing
+    documents, etc.).
+- Emits `SYSTEM_ERROR_OCCURRED` with the original payload shape so
+  observers (telemetry, overlays, etc.) continue to work without
+  modifications.
+- Mirrors the `_showError → _showState(UI_STATES.ERROR, …)` flow via the
+  controller-provided hooks rather than instantiating `UIStateManager`
+  instances on its own. Controllers can provide different UI entry
+  points or override `_showError` without re-implementing the rest of
+  the pipeline.
+- Provides `handleError`, `handleServiceError`,
+  `executeWithErrorHandling`, `createError`, and `wrapError` façades so
+  controller subclasses continue calling the same methods while the
+  underlying implementation is handled by the service.
+- Supports retry + recovery orchestration by letting controllers
+  register category-specific handlers. For the base controller the
+  default handlers wrap `_retryLastOperation()` (network) and
+  `_reinitialize()` (system initialization failures). Later tickets can
+  plug additional category handlers or migrate to specialized recovery
+  services without editing controller code again.
+
+### Usage
+
+```
+const strategy = new ErrorHandlingStrategy({
+  logger,
+  eventBus,
+  controllerName: 'TraitsRewriterController',
+  showError: (message, details) => this._showError(message, details),
+  dispatchErrorEvent: (payload) => this._dispatchErrorEvent(payload),
+  errorCategories: ERROR_CATEGORIES,
+  errorSeverity: ERROR_SEVERITY,
+});
+
+return strategy.executeWithErrorHandling(
+  () => this.characterBuilderService.loadConcepts(),
+  'loadConcepts',
+  { retries: 2, userErrorMessage: 'Unable to load concepts.' }
+);
+```
+
+### Testing strategy
+
+- Unit tests live in
+  `tests/unit/characterBuilder/services/errorHandlingStrategy.test.js` and
+  cover the categorization heuristics, retry metadata propagation, UI
+  hooks, recoverability decisions, and recovery handler registration.
+- Run `npx jest tests/unit/characterBuilder/services/errorHandlingStrategy.test.js`
+  to execute the suite locally when updating the service.
