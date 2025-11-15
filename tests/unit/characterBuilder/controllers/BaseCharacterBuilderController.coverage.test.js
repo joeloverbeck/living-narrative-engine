@@ -1248,9 +1248,7 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
     });
   });
 
-  describe('Performance instrumentation coverage (lines 3004-3188)', () => {
-    let originalPerformance;
-
+  describe('Performance instrumentation delegation (lines 3004-3188)', () => {
     beforeEach(() => {
       controller = new TestControllerWithPrivates({
         logger: mockLogger,
@@ -1258,113 +1256,81 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
         eventBus: mockEventBus,
         schemaValidator: mockSchemaValidator,
       });
-
-      originalPerformance = global.performance;
-      global.performance = {
-        now: jest.fn(),
-        mark: jest.fn(),
-        measure: jest.fn(),
-        clearMarks: jest.fn(),
-        clearMeasures: jest.fn(),
-      };
     });
 
-    afterEach(() => {
-      global.performance = originalPerformance;
-    });
+    it('should delegate performance marks to PerformanceMonitor', () => {
+      // The controller should delegate to PerformanceMonitor.mark()
+      controller._performanceMark('test-mark');
 
-    it('should record performance marks and handle failures gracefully', () => {
-      performance.now.mockReturnValueOnce(25);
-      controller._performanceMark('load-start');
-      expect(performance.mark).toHaveBeenCalledWith('load-start');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Performance mark: load-start', {
-        timestamp: 25,
-      });
-
-      performance.mark.mockImplementationOnce(() => {
-        throw new Error('mark failed');
-      });
-      performance.now.mockReturnValueOnce(30);
-      controller._performanceMark('load-failed');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Failed to create performance mark: load-failed',
-        expect.any(Error)
-      );
-    });
-
-    it('should measure durations and dispatch performance warnings when threshold exceeded', () => {
-      mockEventBus.dispatch.mockClear();
-      performance.now
-        .mockReturnValueOnce(5) // start mark
-        .mockReturnValueOnce(155); // end mark created inside _performanceMeasure
-
-      controller._performanceMark('init-start');
-      const duration = controller._performanceMeasure('init', 'init-start');
-
-      expect(duration).toBe(150);
-      expect(performance.measure).toHaveBeenCalledWith('init', 'init-start', 'init-end');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        CHARACTER_BUILDER_EVENTS.CHARACTER_BUILDER_PERFORMANCE_WARNING,
+      // Verify logger was called by PerformanceMonitor
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Performance mark'),
         expect.objectContaining({
-          controller: 'TestControllerWithPrivates',
-          measurement: 'init',
-          duration: 150,
+          timestamp: expect.any(Number),
         })
       );
     });
 
-    it('should warn when measuring without available marks', () => {
-      mockLogger.warn.mockClear();
-      const duration = controller._performanceMeasure(
-        'missing',
-        'missing-start',
-        'missing-end'
-      );
-
-      expect(duration).toBeNull();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Performance marks not found for measurement: missing',
-        expect.objectContaining({
-          startMark: 'missing-start',
-          endMark: 'missing-end',
-          hasStartMark: false,
-          hasEndMark: false,
-        })
-      );
-    });
-
-    it('should expose and clear performance measurements', () => {
-      performance.now
-        .mockReturnValueOnce(5)
-        .mockReturnValueOnce(55)
-        .mockReturnValueOnce(10)
-        .mockReturnValueOnce(70);
-
-      controller._performanceMark('keep-start');
-      controller._performanceMeasure('keep', 'keep-start');
-      controller._performanceMark('test-start');
-      controller._performanceMeasure('test-measure', 'test-start');
-
-      const snapshot = controller._getPerformanceMeasurements();
-      expect(snapshot).toBeInstanceOf(Map);
-      expect(snapshot.get('keep')).toEqual(
-        expect.objectContaining({ duration: expect.any(Number) })
-      );
-
-      performance.clearMarks.mockClear();
-      performance.clearMeasures.mockClear();
+    it('should delegate performance measurements to PerformanceMonitor', () => {
+      // Create a mark first
+      controller._performanceMark('start');
       mockLogger.debug.mockClear();
+
+      // Measure
+      const duration = controller._performanceMeasure('test-measure', 'start');
+
+      // Should return a duration
+      expect(typeof duration).toBe('number');
+      expect(duration).toBeGreaterThanOrEqual(0);
+
+      // Verify logger was called by PerformanceMonitor
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Performance measurement'),
+        expect.any(Object)
+      );
+    });
+
+    it('should delegate getMeasurements to PerformanceMonitor', () => {
+      controller._performanceMark('start');
+      controller._performanceMeasure('op', 'start');
+
+      const measurements = controller._getPerformanceMeasurements();
+
+      expect(measurements).toBeInstanceOf(Map);
+      expect(measurements.has('op')).toBe(true);
+    });
+
+    it('should delegate clearPerformanceData to PerformanceMonitor', () => {
+      controller._performanceMark('test');
+      mockLogger.debug.mockClear();
+
       controller._clearPerformanceData('test');
-      expect(performance.clearMarks).toHaveBeenCalled();
-      expect(performance.clearMeasures).toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cleared performance data', {
-        prefix: 'test',
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cleared performance data',
+        { prefix: 'test' }
+      );
+    });
+
+    it('should handle clearPerformanceData when PerformanceMonitor not yet initialized', () => {
+      // Create new controller
+      const newController = new TestControllerWithPrivates({
+        logger: mockLogger,
+        characterBuilderService: mockCharacterBuilderService,
+        eventBus: mockEventBus,
+        schemaValidator: mockSchemaValidator,
       });
 
-      controller._clearPerformanceData();
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cleared performance data', {
-        prefix: null,
-      });
+      mockLogger.debug.mockClear();
+
+      // Clear without any marks (PerformanceMonitor lazy-initialized)
+      newController._clearPerformanceData();
+
+      // Should log directly without initializing PerformanceMonitor
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cleared performance data',
+        { prefix: null }
+      );
     });
   });
 
