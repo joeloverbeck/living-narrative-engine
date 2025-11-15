@@ -131,7 +131,9 @@ describe('registerWorldAndEntity', () => {
 
     // Register ISlotGenerator (moved to loadersRegistrations.js in production)
     container.register(tokens.ISlotGenerator, () => ({
-      generate: jest.fn().mockReturnValue([]),
+      generateBlueprintSlots: jest.fn().mockReturnValue({}),
+      extractSlotKeysFromLimbSet: jest.fn().mockReturnValue([]),
+      extractSlotKeysFromAppendage: jest.fn().mockReturnValue([]),
     }));
 
     // Register IRecipePatternResolver (moved to loadersRegistrations.js in production)
@@ -838,8 +840,9 @@ describe('registerWorldAndEntity', () => {
         },
         [tokens.ISchemaValidator]: { validate: jest.fn() },
         [tokens.ISlotGenerator]: {
-          extractSlotKeysFromLimbSet: jest.fn(),
-          extractSlotKeysFromAppendage: jest.fn(),
+          generateBlueprintSlots: jest.fn().mockReturnValue({}),
+          extractSlotKeysFromLimbSet: jest.fn().mockReturnValue([]),
+          extractSlotKeysFromAppendage: jest.fn().mockReturnValue([]),
         },
         [tokens.IEntityMatcherService]: {
           findMatchingEntities: jest.fn(),

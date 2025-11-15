@@ -36,6 +36,7 @@ describe('RecipePreflightValidator - Integration', () => {
     };
 
     const mockSlotGenerator = {
+      generateBlueprintSlots: () => ({}),
       extractSlotKeysFromLimbSet: () => [],
       extractSlotKeysFromAppendage: () => [],
     };
