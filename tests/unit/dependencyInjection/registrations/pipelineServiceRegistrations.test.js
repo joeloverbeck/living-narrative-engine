@@ -7,6 +7,7 @@ import { TargetDependencyResolver } from '../../../../src/actions/pipeline/servi
 import { LegacyTargetCompatibilityLayer } from '../../../../src/actions/pipeline/services/implementations/LegacyTargetCompatibilityLayer.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import { TargetDisplayNameResolver } from '../../../../src/actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
+import TargetResolutionResultBuilder from '../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 const EXPECTED_TOKENS = [
   tokens.IPipelineServiceFactory,
@@ -16,6 +17,7 @@ const EXPECTED_TOKENS = [
   tokens.IScopeContextBuilder,
   tokens.ITargetDisplayNameResolver,
   tokens.ITargetResolutionTracingOrchestrator,
+  tokens.ITargetResolutionResultBuilder,
 ];
 
 describe('registerPipelineServices', () => {
@@ -69,6 +71,7 @@ describe('registerPipelineServices', () => {
           'IScopeContextBuilder',
           'ITargetDisplayNameResolver',
           'ITargetResolutionTracingOrchestrator',
+          'ITargetResolutionResultBuilder',
         ],
       }
     );
@@ -123,5 +126,10 @@ describe('registerPipelineServices', () => {
 
     const displayNameResolver = instantiate(tokens.ITargetDisplayNameResolver);
     expect(displayNameResolver).toBeInstanceOf(TargetDisplayNameResolver);
+
+    const resultBuilder = instantiate(tokens.ITargetResolutionResultBuilder);
+    expect(resultBuilder).toBeInstanceOf(TargetResolutionResultBuilder);
+    expect(container.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+    expect(container.resolve).toHaveBeenCalledWith(tokens.ILogger);
   });
 });
