@@ -84,4 +84,14 @@ export class IDataRegistry {
   entries() {
     throw new Error('IDataRegistry.entries() must be implemented');
   }
+
+  /**
+   * Gets all items of a specific type.
+   *
+   * @param {string} type - The type of items to retrieve.
+   * @returns {Array<object>} Array of all items of the specified type.
+   */
+  getAll(type) {
+    throw new Error('IDataRegistry.getAll() must be implemented');
+  }
 }

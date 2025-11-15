@@ -11,7 +11,23 @@ describe('GoapController - Core Structure', () => {
   let mockRefinementEngine;
   let mockPlanInvalidationDetector;
   let mockContextAssemblyService;
+  let mockJsonLogicService;
+  let mockDataRegistry;
   let mockEventBus;
+
+  /**
+   * Create default valid dependencies for GoapController
+   */
+  const createValidDependencies = () => ({
+    goapPlanner: mockGoapPlanner,
+    refinementEngine: mockRefinementEngine,
+    planInvalidationDetector: mockPlanInvalidationDetector,
+    contextAssemblyService: mockContextAssemblyService,
+    jsonLogicService: mockJsonLogicService,
+    dataRegistry: mockDataRegistry,
+    eventBus: mockEventBus,
+    logger: mockLogger,
+  });
 
   beforeEach(() => {
     mockLogger = {
@@ -37,6 +53,15 @@ describe('GoapController - Core Structure', () => {
       assemblePlanningContext: jest.fn(),
     };
 
+    mockJsonLogicService = {
+      evaluate: jest.fn(),
+    };
+
+    mockDataRegistry = {
+      getAll: jest.fn(),
+      get: jest.fn(),
+    };
+
     mockEventBus = {
       dispatch: jest.fn(),
     };
@@ -44,159 +69,108 @@ describe('GoapController - Core Structure', () => {
 
   describe('constructor', () => {
     it('should construct with all valid dependencies', () => {
-      const controller = new GoapController({
-        goapPlanner: mockGoapPlanner,
-        refinementEngine: mockRefinementEngine,
-        planInvalidationDetector: mockPlanInvalidationDetector,
-        contextAssemblyService: mockContextAssemblyService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
+      const controller = new GoapController(createValidDependencies());
 
       expect(controller).toBeInstanceOf(GoapController);
       expect(mockLogger.info).toHaveBeenCalledWith('GoapController initialized');
     });
 
     it('should throw if goapPlanner is missing', () => {
+      const deps = createValidDependencies();
+      deps.goapPlanner = undefined;
+
       expect(() => {
-        new GoapController({
-          goapPlanner: undefined,
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if goapPlanner missing plan method', () => {
+      const deps = createValidDependencies();
+      deps.goapPlanner = {};
+
       expect(() => {
-        new GoapController({
-          goapPlanner: {},
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if refinementEngine is missing', () => {
+      const deps = createValidDependencies();
+      deps.refinementEngine = undefined;
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: undefined,
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if refinementEngine missing refine method', () => {
+      const deps = createValidDependencies();
+      deps.refinementEngine = {};
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: {},
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if planInvalidationDetector is missing', () => {
+      const deps = createValidDependencies();
+      deps.planInvalidationDetector = undefined;
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: undefined,
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if planInvalidationDetector missing checkPlanValidity method', () => {
+      const deps = createValidDependencies();
+      deps.planInvalidationDetector = {};
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: {},
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if contextAssemblyService is missing', () => {
+      const deps = createValidDependencies();
+      deps.contextAssemblyService = undefined;
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: undefined,
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if contextAssemblyService missing assemblePlanningContext method', () => {
+      const deps = createValidDependencies();
+      deps.contextAssemblyService = {};
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: {},
-          eventBus: mockEventBus,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if eventBus is missing', () => {
+      const deps = createValidDependencies();
+      deps.eventBus = undefined;
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: undefined,
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should throw if eventBus missing dispatch method', () => {
+      const deps = createValidDependencies();
+      deps.eventBus = {};
+
       expect(() => {
-        new GoapController({
-          goapPlanner: mockGoapPlanner,
-          refinementEngine: mockRefinementEngine,
-          planInvalidationDetector: mockPlanInvalidationDetector,
-          contextAssemblyService: mockContextAssemblyService,
-          eventBus: {},
-          logger: mockLogger,
-        });
+        new GoapController(deps);
       }).toThrow();
     });
 
     it('should use fallback logger if logger is missing', () => {
+      const deps = createValidDependencies();
+      deps.logger = undefined;
+
       // ensureValidLogger provides a fallback, doesn't throw
-      const controller = new GoapController({
-        goapPlanner: mockGoapPlanner,
-        refinementEngine: mockRefinementEngine,
-        planInvalidationDetector: mockPlanInvalidationDetector,
-        contextAssemblyService: mockContextAssemblyService,
-        eventBus: mockEventBus,
-        logger: undefined,
-      });
+      const controller = new GoapController(deps);
 
       expect(controller).toBeInstanceOf(GoapController);
     });
@@ -206,14 +180,7 @@ describe('GoapController - Core Structure', () => {
     let controller;
 
     beforeEach(() => {
-      controller = new GoapController({
-        goapPlanner: mockGoapPlanner,
-        refinementEngine: mockRefinementEngine,
-        planInvalidationDetector: mockPlanInvalidationDetector,
-        contextAssemblyService: mockContextAssemblyService,
-        eventBus: mockEventBus,
-        logger: mockLogger,
-      });
+      controller = new GoapController(createValidDependencies());
     });
 
     it('should throw if actor is missing', async () => {

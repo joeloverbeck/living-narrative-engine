@@ -16,6 +16,8 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
  * @typedef {import('../refinement/refinementEngine.js').default} RefinementEngine
  * @typedef {import('../planner/planInvalidationDetector.js').default} PlanInvalidationDetector
  * @typedef {import('../services/contextAssemblyService.js').default} ContextAssemblyService
+ * @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService
+ * @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry
  * @typedef {import('../../interfaces/IEventBus.js').IEventBus} IEventBus
  * @typedef {import('../../logging/logger.js').default} Logger
  */
@@ -45,6 +47,12 @@ class GoapController {
   // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-02
   #contextAssemblyService;
 
+  /** @type {JsonLogicEvaluationService} */
+  #jsonLogicService;
+
+  /** @type {IDataRegistry} */
+  #dataRegistry;
+
   /** @type {IEventBus} */
   // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-05, GOAPIMPL-021-06
   #eventBus;
@@ -64,6 +72,8 @@ class GoapController {
    * @param {RefinementEngine} deps.refinementEngine - Refinement engine
    * @param {PlanInvalidationDetector} deps.planInvalidationDetector - Plan invalidation detector
    * @param {ContextAssemblyService} deps.contextAssemblyService - Context assembly service
+   * @param {JsonLogicEvaluationService} deps.jsonLogicService - JSON Logic evaluation service
+   * @param {IDataRegistry} deps.dataRegistry - Data registry for goals and tasks
    * @param {IEventBus} deps.eventBus - Event bus
    * @param {Logger} deps.logger - Logger instance
    */
@@ -72,6 +82,8 @@ class GoapController {
     refinementEngine,
     planInvalidationDetector,
     contextAssemblyService,
+    jsonLogicService,
+    dataRegistry,
     eventBus,
     logger,
   }) {
@@ -99,6 +111,12 @@ class GoapController {
         requiredMethods: ['assemblePlanningContext'],
       }
     );
+    validateDependency(jsonLogicService, 'JsonLogicEvaluationService', this.#logger, {
+      requiredMethods: ['evaluate'],
+    });
+    validateDependency(dataRegistry, 'IDataRegistry', this.#logger, {
+      requiredMethods: ['getAll', 'get'],
+    });
     validateDependency(eventBus, 'IEventBus', this.#logger, {
       requiredMethods: ['dispatch'],
     });
@@ -107,6 +125,8 @@ class GoapController {
     this.#refinementEngine = refinementEngine;
     this.#invalidationDetector = planInvalidationDetector;
     this.#contextAssemblyService = contextAssemblyService;
+    this.#jsonLogicService = jsonLogicService;
+    this.#dataRegistry = dataRegistry;
     this.#eventBus = eventBus;
     this.#activePlan = null;
 
@@ -136,32 +156,101 @@ class GoapController {
   }
 
   /**
-   * Select highest priority unsatisfied goal from actor's goals
-   * To be implemented in GOAPIMPL-021-02 (Goal Selection)
+   * Select highest priority relevant goal from goal registry
    *
-   * @param {object} _actor - Actor entity
+   * @param {object} actor - Actor entity
+   * @param {object} world - World state
    * @returns {object|null} Selected goal or null
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
-  #selectGoal(_actor) {
-    // Select highest priority unsatisfied goal from actor.components['core:goals']
-    return null;
+  #selectGoal(actor, world) {
+    // Get all registered goals (from mods, not actor component)
+    const allGoals = this.#dataRegistry.getAll('goals');
+
+    if (!allGoals || allGoals.length === 0) {
+      this.#logger.debug('No goals registered in system', { actorId: actor.id });
+      return null;
+    }
+
+    // Build context for relevance evaluation
+    const context = this.#contextAssemblyService.assemblePlanningContext(actor.id);
+
+    // Add world state to context
+    const evaluationContext = {
+      ...context,
+      world: world,
+    };
+
+    // Filter to only relevant goals
+    const relevantGoals = allGoals.filter((goal) =>
+      this.#isGoalRelevant(goal, evaluationContext)
+    );
+
+    if (relevantGoals.length === 0) {
+      this.#logger.debug('No relevant goals for actor', {
+        actorId: actor.id,
+        totalGoals: allGoals.length,
+      });
+      return null;
+    }
+
+    // Sort by priority (descending - higher priority first)
+    const sortedGoals = [...relevantGoals].sort((a, b) => b.priority - a.priority);
+
+    const selectedGoal = sortedGoals[0];
+
+    this.#logger.info('Goal selected', {
+      actorId: actor.id,
+      goalId: selectedGoal.id,
+      priority: selectedGoal.priority,
+      relevantCount: relevantGoals.length,
+      totalCount: allGoals.length,
+    });
+
+    return selectedGoal;
   }
 
   /**
-   * Check if a goal is satisfied
-   * To be implemented in GOAPIMPL-021-02 (Goal Selection)
+   * Check if goal relevance condition is satisfied
    *
-   * @param {object} _goal - Goal to check
-   * @param {object} _actor - Actor entity
-   * @returns {boolean} True if goal is satisfied
+   * NOTE: This checks RELEVANCE, not GOAL SATISFACTION.
+   * - Relevance: "Is this goal applicable right now?" (e.g., low health → healing goal is relevant)
+   * - Goal Satisfaction: "Has the goal been achieved?" (checked by planner against goalState)
+   *
+   * @param {object} goal - Goal to check
+   * @param {object} context - Evaluation context (actor + world state)
+   * @returns {boolean} True if goal is relevant
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
-  #isGoalSatisfied(_goal, _actor) {
-    // Evaluate goal.conditions against actor state
-    return false;
+  #isGoalRelevant(goal, context) {
+    if (!goal.relevance) {
+      // No relevance condition = always relevant
+      this.#logger.debug('Goal has no relevance condition, treating as always relevant', {
+        goalId: goal.id,
+      });
+      return true;
+    }
+
+    try {
+      // Evaluate relevance condition using JSON Logic service
+      // The context contains actor and world state assembled by ContextAssemblyService
+      const result = this.#jsonLogicService.evaluate(goal.relevance, context);
+
+      this.#logger.debug('Goal relevance evaluated', {
+        goalId: goal.id,
+        relevant: Boolean(result),
+      });
+
+      return Boolean(result);
+    } catch (err) {
+      this.#logger.error('Goal relevance evaluation failed', {
+        goalId: goal.id,
+        error: err.message,
+        relevanceCondition: goal.relevance,
+      });
+      // Treat evaluation errors as not relevant (fail-safe)
+      return false;
+    }
   }
 
   /**

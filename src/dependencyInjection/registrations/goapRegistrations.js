@@ -215,6 +215,8 @@ export function registerGoapServices(container) {
       tokens.IRefinementEngine,
       tokens.IPlanInvalidationDetector,
       tokens.IContextAssemblyService,
+      tokens.JsonLogicEvaluationService,
+      tokens.IDataRegistry,
       tokens.IEventBus,
       tokens.ILogger,
     ],
