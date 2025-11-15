@@ -10,7 +10,7 @@ import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/ana
 import SlotGenerator from '../../../../src/anatomy/slotGenerator.js';
 import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import * as socketSlotCompatibilityValidatorModule from '../../../../src/anatomy/validation/socketSlotCompatibilityValidator.js';
-import * as patternMatchingValidatorModule from '../../../../src/anatomy/validation/patternMatchingValidator.js';
+import * as patternMatchingValidatorModule from '../../../../src/anatomy/validation/validators/PatternMatchingValidator.js';
 
 class ComponentThrowingRegistry extends InMemoryDataRegistry {
   constructor({ logger, componentIdsToThrow = new Set() }) {

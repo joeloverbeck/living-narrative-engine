@@ -260,6 +260,7 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
   #buildCombinedRequirements(pattern, blueprintSlot) {
     const blueprintComponents = blueprintSlot?.requirements?.components || [];
     const blueprintProperties = blueprintSlot?.requirements?.properties || {};
+    const blueprintPartType = blueprintSlot?.requirements?.partType;
 
     const mergedProperties =
       this.#entityMatcherService.mergePropertyRequirements(
@@ -268,7 +269,7 @@ export class GeneratedSlotPartsValidator extends BaseValidator {
       ) || {};
 
     return {
-      partType: pattern?.partType,
+      partType: pattern?.partType || blueprintPartType,
       allowedTypes: blueprintSlot?.allowedTypes || ['*'],
       tags: [...(pattern?.tags || []), ...blueprintComponents],
       properties: mergedProperties,

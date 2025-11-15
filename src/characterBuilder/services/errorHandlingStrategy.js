@@ -160,9 +160,11 @@ export class ErrorHandlingStrategy {
           this.#logger.info(
             `${this.#controllerName}: ${operationName} succeeded after ${attempt} retries`
           );
+        } else {
+          // Only reset lastError if operation succeeded on first attempt
+          this.resetLastError();
         }
 
-        this.resetLastError();
         return result;
       } catch (error) {
         lastError = error;

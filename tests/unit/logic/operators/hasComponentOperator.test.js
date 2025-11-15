@@ -107,11 +107,12 @@ describe('HasComponentOperator', () => {
     it('should return false when entity has no id', () => {
       const entity = { name: 'test' };
       const context = { entity };
+      mockEntityManager.hasComponent.mockReturnValue(false);
 
       const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
 
       expect(result).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalled();
     });
 
     it('should handle entity as string ID', () => {

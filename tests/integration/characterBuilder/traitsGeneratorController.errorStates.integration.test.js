@@ -242,6 +242,11 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
     jest.advanceTimersByTime(2000);
     await flushMicrotasksOnly();
 
+    // Additional time for final error to propagate through promise chain
+    jest.advanceTimersByTime(100);
+    await flushMicrotasksOnly();
+    await flushMicrotasksOnly();
+
     await waitForLoggerError(logger);
 
     const screenReaderAnnouncement = document.getElementById(

@@ -3,9 +3,26 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+
+// Mock the patternMatchingValidator module before any imports
+const mockValidatePatternMatching = jest.fn(() => []);
+const mockFindMatchingSlots = jest.fn(() => ({ matches: [], availableSlots: [] }));
+const mockGetPatternDescription = jest.fn((pattern) => 'pattern description');
+const mockExtractMatcherInfo = jest.fn(() => ({ type: 'none', value: null }));
+const mockIdentifyBlockingMatcher = jest.fn(() => 'blocking reason');
+const mockSuggestPatternFix = jest.fn(() => 'fix suggestion');
+
+jest.mock('../../../../src/anatomy/validation/patternMatchingValidator.js', () => ({
+  validatePatternMatching: (...args) => mockValidatePatternMatching(...args),
+  findMatchingSlots: (...args) => mockFindMatchingSlots(...args),
+  getPatternDescription: (...args) => mockGetPatternDescription(...args),
+  extractMatcherInfo: (...args) => mockExtractMatcherInfo(...args),
+  identifyBlockingMatcher: (...args) => mockIdentifyBlockingMatcher(...args),
+  suggestPatternFix: (...args) => mockSuggestPatternFix(...args),
+}));
+
 import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
-import * as patternMatchingValidator from '../../../../src/anatomy/validation/patternMatchingValidator.js';
 import * as socketSlotCompatibilityValidator from '../../../../src/anatomy/validation/socketSlotCompatibilityValidator.js';
 import { ComponentExistenceValidationRule } from '../../../../src/anatomy/validation/rules/componentExistenceValidationRule.js';
 import { PropertySchemaValidationRule } from '../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
@@ -21,6 +38,20 @@ describe('RecipePreflightValidator', () => {
   let mockEntityMatcherService;
 
   beforeEach(() => {
+    // Reset all pattern matching validator mocks
+    mockValidatePatternMatching.mockReset();
+    mockValidatePatternMatching.mockReturnValue([]);
+    mockFindMatchingSlots.mockReset();
+    mockFindMatchingSlots.mockReturnValue({ matches: [], availableSlots: [] });
+    mockGetPatternDescription.mockReset();
+    mockGetPatternDescription.mockReturnValue('pattern description');
+    mockExtractMatcherInfo.mockReset();
+    mockExtractMatcherInfo.mockReturnValue({ type: 'none', value: null });
+    mockIdentifyBlockingMatcher.mockReset();
+    mockIdentifyBlockingMatcher.mockReturnValue('blocking reason');
+    mockSuggestPatternFix.mockReset();
+    mockSuggestPatternFix.mockReturnValue('fix suggestion');
+
     mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -315,9 +346,8 @@ describe('RecipePreflightValidator', () => {
         message: 'Pattern has no matches',
       };
 
-      jest
-        .spyOn(patternMatchingValidator, 'validatePatternMatching')
-        .mockReturnValue([patternWarning]);
+      // Configure the mock to return the warning
+      mockValidatePatternMatching.mockReturnValue([patternWarning]);
 
       mockAnatomyBlueprintRepository.getBlueprint = jest.fn(async () => ({
         id: 'test:blueprint',
@@ -343,7 +373,7 @@ describe('RecipePreflightValidator', () => {
         skipPartAvailabilityChecks: true,
       });
 
-      expect(patternMatchingValidator.validatePatternMatching).toHaveBeenCalled();
+      expect(mockValidatePatternMatching).toHaveBeenCalled();
       expect(report.warnings).toContainEqual(patternWarning);
     });
 
@@ -1335,9 +1365,11 @@ describe('RecipePreflightValidator', () => {
 
       mockDataRegistry.getAll = jest.fn(() => []);
 
-      jest
-        .spyOn(patternMatchingValidator, 'findMatchingSlots')
-        .mockReturnValue({ matches: ['missing_slot'], availableSlots: [] });
+      // Configure the mock to return the expected result
+      mockFindMatchingSlots.mockReturnValue({
+        matches: ['missing_slot'],
+        availableSlots: [],
+      });
 
       const recipe = {
         recipeId: 'test:recipe',
@@ -1416,9 +1448,11 @@ describe('RecipePreflightValidator', () => {
         return [];
       });
 
-      jest
-        .spyOn(patternMatchingValidator, 'findMatchingSlots')
-        .mockReturnValue({ matches: ['wing_socket'], availableSlots: ['wing_socket'] });
+      // Configure the mock to return the expected result
+      mockFindMatchingSlots.mockReturnValue({
+        matches: ['wing_socket'],
+        availableSlots: ['wing_socket'],
+      });
 
       const recipe = {
         recipeId: 'test:recipe',
@@ -1564,24 +1598,23 @@ describe('RecipePreflightValidator', () => {
         return [];
       });
 
-      jest
-        .spyOn(patternMatchingValidator, 'findMatchingSlots')
-        .mockImplementation((pattern) => {
-          const availableSlots = Object.keys(blueprint.slots);
-          if (pattern.matchesGroup) {
-            return { matches: ['group_slot'], availableSlots };
-          }
-          if (pattern.matchesPattern !== undefined) {
-            return { matches: ['pattern_slot'], availableSlots };
-          }
-          if (pattern.matchesAll) {
-            return { matches: ['all_slot'], availableSlots };
-          }
-          if (Array.isArray(pattern.matches)) {
-            return { matches: pattern.matches, availableSlots };
-          }
-          return { matches: ['unknown_slot'], availableSlots };
-        });
+      // Configure the mock with custom implementation
+      mockFindMatchingSlots.mockImplementation((pattern) => {
+        const availableSlots = Object.keys(blueprint.slots);
+        if (pattern.matchesGroup) {
+          return { matches: ['group_slot'], availableSlots };
+        }
+        if (pattern.matchesPattern !== undefined) {
+          return { matches: ['pattern_slot'], availableSlots };
+        }
+        if (pattern.matchesAll) {
+          return { matches: ['all_slot'], availableSlots };
+        }
+        if (Array.isArray(pattern.matches)) {
+          return { matches: pattern.matches, availableSlots };
+        }
+        return { matches: ['unknown_slot'], availableSlots };
+      });
 
       const recipe = {
         recipeId: 'test:recipe',

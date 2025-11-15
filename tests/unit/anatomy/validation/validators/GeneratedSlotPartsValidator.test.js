@@ -385,6 +385,43 @@ describe('GeneratedSlotPartsValidator', () => {
       );
     });
 
+    it('uses blueprint partType when pattern omits it', async () => {
+      const recipe = createRecipe({
+        patterns: [
+          {
+            matches: ['arm_left'],
+            // Pattern omits partType (common when implied by structure template)
+          },
+        ],
+      });
+      const { validator, entityMatcherService } = createValidatorContext({
+        blueprint: createBlueprint({
+          slots: {
+            arm_left: {
+              allowedTypes: ['core:arm'],
+              requirements: {
+                partType: 'core:arm', // Blueprint specifies partType
+                components: ['anatomy:part'],
+              },
+            },
+          },
+        }),
+      });
+
+      await validator.validate(recipe);
+
+      // Should forward blueprint's partType, not undefined
+      expect(
+        entityMatcherService.findMatchingEntitiesForSlot
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          partType: 'core:arm',
+          allowedTypes: ['core:arm'],
+        }),
+        expect.any(Array)
+      );
+    });
+
     it('logs warning when matched slot disappears from blueprint map', async () => {
       const slotAccessSpy = jest.fn();
       const dynamicSlots = {};

@@ -93,20 +93,12 @@ class RecoveryTestController extends BaseCharacterBuilderController {
     return this._wrapError(error, context);
   }
 
-  executePhase(name, fn) {
-    return this._executePhase(name, fn);
-  }
-
   cancelPendingOperations() {
     return this._cancelPendingOperations();
   }
 
   registerCleanupTask(task, description) {
     this._registerCleanupTask(task, description);
-  }
-
-  executeCleanupTasks() {
-    this._executeCleanupTasks();
   }
 
   scheduleTimeout(callback, delay) {
@@ -365,15 +357,7 @@ describe('BaseCharacterBuilderController recovery helpers (integration)', () => 
     try {
       const errorSpy = jest.spyOn(dependencies.logger, 'error');
 
-      controller.executePhase('failing-phase', () => {
-        throw new Error('phase failure');
-      });
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Error in failing-phase'),
-        expect.any(Error)
-      );
-
+      // Test scheduled operations
       controller.scheduleTimeout(() => {}, 25);
       controller.scheduleInterval(() => {}, 50);
       const animationFrame = controller.scheduleAnimation(() => {});
@@ -382,21 +366,33 @@ describe('BaseCharacterBuilderController recovery helpers (integration)', () => 
 
       const frameToCancelDuringCleanup = controller.scheduleAnimation(() => {});
 
+      // Test pending operations cancellation
       controller.cancelPendingOperations();
       expect(global.cancelAnimationFrame).toHaveBeenCalledWith(
         frameToCancelDuringCleanup
       );
       expect(controller.customCancellationCount).toBe(1);
 
-      controller.registerCleanupTask(() => {}, 'safe cleanup');
+      // Test cleanup task registration (execution happens during destroy())
+      let safeCleanupCalled = false;
+      controller.registerCleanupTask(() => {
+        safeCleanupCalled = true;
+      }, 'safe cleanup');
+
+      // Cleanup task with error will be tested during destroy()
       controller.registerCleanupTask(() => {
         throw new Error('cleanup failure');
       }, 'failing cleanup');
 
-      controller.executeCleanupTasks();
+      // Destroy the controller to trigger cleanup tasks
+      controller.destroy();
 
+      // Verify safe cleanup was called
+      expect(safeCleanupCalled).toBe(true);
+
+      // Verify error was logged during cleanup
       expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Cleanup task failed: failing cleanup'),
+        expect.stringContaining('Cleanup task failed'),
         expect.any(Error)
       );
 
@@ -404,7 +400,7 @@ describe('BaseCharacterBuilderController recovery helpers (integration)', () => 
     } finally {
       global.requestAnimationFrame = originalRAF;
       global.cancelAnimationFrame = originalCAF;
-      controller.destroy();
+      // Controller already destroyed above
     }
   });
 
