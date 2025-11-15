@@ -42,21 +42,26 @@ describe('SocketSlotCompatibilityValidator', () => {
     logger = testBed.createMockLogger();
   });
 
-  const createValidator = ({
-    blueprint = createBlueprint(),
-    entityDefinition = createEntityDefinition(),
-    blueprintOverride,
-    dataRegistryOverride,
-  } = {}) => {
-    const anatomyBlueprintRepository = {
-      getBlueprint: jest.fn().mockResolvedValue(blueprint),
-      ...blueprintOverride,
-    };
+const createValidator = ({
+  blueprint = createBlueprint(),
+  entityDefinition = createEntityDefinition(),
+  blueprintOverride,
+  dataRegistryOverride,
+  useLegacyRegistry = false,
+} = {}) => {
+  const anatomyBlueprintRepository = {
+    getBlueprint: jest.fn().mockResolvedValue(blueprint),
+    ...blueprintOverride,
+  };
 
-    const dataRegistry = {
-      getEntityDefinition: jest.fn().mockReturnValue(entityDefinition),
-      ...dataRegistryOverride,
-    };
+  const registryBase = useLegacyRegistry
+    ? { get: jest.fn().mockReturnValue(entityDefinition) }
+    : { getEntityDefinition: jest.fn().mockReturnValue(entityDefinition) };
+
+  const dataRegistry = {
+    ...registryBase,
+    ...dataRegistryOverride,
+  };
 
     const validator = new SocketSlotCompatibilityValidator({
       logger,
@@ -76,7 +81,7 @@ describe('SocketSlotCompatibilityValidator', () => {
       expect(validator.failFast).toBe(false);
     });
 
-    it('validates data registry dependency', () => {
+    it('validates data registry dependency when no lookup methods provided', () => {
       expect(
         () =>
           new SocketSlotCompatibilityValidator({
@@ -85,7 +90,7 @@ describe('SocketSlotCompatibilityValidator', () => {
             anatomyBlueprintRepository: { getBlueprint: jest.fn() },
           })
       ).toThrow(
-        "Invalid or missing method 'getEntityDefinition' on dependency 'IDataRegistry'."
+        'SocketSlotCompatibilityValidator requires IDataRegistry with getEntityDefinition() or get() method'
       );
     });
 
@@ -100,6 +105,17 @@ describe('SocketSlotCompatibilityValidator', () => {
       ).toThrow(
         "Invalid or missing method 'getBlueprint' on dependency 'IAnatomyBlueprintRepository'."
       );
+    });
+
+    it('accepts data registry implementations that only expose get()', () => {
+      expect(
+        () =>
+          new SocketSlotCompatibilityValidator({
+            logger,
+            dataRegistry: { get: jest.fn() },
+            anatomyBlueprintRepository: { getBlueprint: jest.fn() },
+          })
+      ).not.toThrow();
     });
   });
 
@@ -333,6 +349,19 @@ describe('SocketSlotCompatibilityValidator', () => {
           check: 'socket_slot_compatibility',
         },
       ]);
+    });
+
+    it('uses legacy get() lookup when getEntityDefinition is unavailable', async () => {
+      const { validator, dataRegistry } = createValidator({
+        useLegacyRegistry: true,
+      });
+
+      await validator.validate(createRecipe());
+
+      expect(dataRegistry.get).toHaveBeenCalledWith(
+        'entityDefinitions',
+        'anatomy:test_root'
+      );
     });
   });
 

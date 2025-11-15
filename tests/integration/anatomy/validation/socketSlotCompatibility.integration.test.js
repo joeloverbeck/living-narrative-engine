@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { validateSocketSlotCompatibility } from '../../../../src/anatomy/validation/socketSlotCompatibilityValidator.js';
+import { validateSocketSlotCompatibility } from '../../../../src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js';
 
 describe('Socket/Slot Compatibility Integration', () => {
   let mockDataRegistry;
