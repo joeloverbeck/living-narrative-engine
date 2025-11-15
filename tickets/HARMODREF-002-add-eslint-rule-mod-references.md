@@ -31,8 +31,8 @@ Without automated enforcement, hardcoded mod references will continue to leak in
 2. `docs/development/eslint-exemptions.md` (exemption documentation)
 
 ### Modified Files
-3. `.eslintrc.js` (or equivalent ESLint config file)
-4. `.husky/pre-commit` (if using Husky for pre-commit hooks)
+3. `eslint.config.mjs` (flat ESLint config in repo root)
+4. `.githooks/pre-commit` (project uses git's native hooks, not Husky)
 5. `package.json` (may need to add scripts)
 
 ## Implementation Steps
@@ -141,7 +141,7 @@ module.exports = {
 
 ### 2. Configure ESLint (10 minutes)
 
-Update `.eslintrc.js`:
+Update `eslint.config.mjs`:
 
 ```javascript
 module.exports = {
@@ -158,8 +158,8 @@ module.exports = {
     'local-rules/no-hardcoded-mod-references': ['error', {
       allowedMods: ['core'],
       allowedFiles: [
-        'src/loaders/modLoader.js',
-        'src/loaders/modManifestProcessor.js',
+        'src/loaders/modsLoader.js',
+        'src/loaders/ModManifestProcessor.js',
         'tests/**/*.js',
         'scripts/**/*.js'
       ]
@@ -186,17 +186,13 @@ npm install --save-dev eslint-plugin-local-rules
 
 ### 3. Add Pre-Commit Hook Integration (10 minutes)
 
-If using Husky, update `.husky/pre-commit`:
+Project hooks live in `.githooks/`. Update `.githooks/pre-commit` to run the rule (or reuse existing logic that already shells out to `npm run lint`). If additional automation is needed specifically for mod reference checks, extend the script:
 
 ```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Run ESLint on staged files
-npm run lint-staged
-
-# Or manually run ESLint on modified files
-# git diff --cached --name-only --diff-filter=ACM | grep '\.js$' | xargs npx eslint
+# Ensure ESLint runs the custom rule against staged files
+git diff --cached --name-only --diff-filter=ACM | \
+  grep -E '\.(js|mjs)$' | \
+  xargs -r npx eslint --max-warnings=0
 ```
 
 Or add to `package.json`:
