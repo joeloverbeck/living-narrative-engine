@@ -138,6 +138,79 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
     jest.useRealTimers();
   });
 
+  it('continues rendering remaining actors when element creation fails', () => {
+    domElementFactory.create.mockImplementationOnce(() => {
+      throw new Error('factory failure');
+    });
+
+    renderer.render([
+      { id: 'broken-actor' },
+      { id: 'healthy-actor' },
+    ]);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to create actor element, continuing with others',
+      expect.objectContaining({ actorId: 'broken-actor', index: 0, error: 'factory failure' })
+    );
+    expect(queueElement.querySelector('[data-entity-id="healthy-actor"]')).not.toBeNull();
+  });
+
+  it('logs when clearCurrentHighlight runs without a queue element', () => {
+    renderer.__testSetActorQueueElement(null);
+
+    renderer.updateCurrentActor('actor-1');
+
+    expect(logger.debug).toHaveBeenCalledWith('clearCurrentHighlight: No actor queue element available');
+  });
+
+  it('scrolls actors into view when they fall outside the viewport', () => {
+    renderActors(renderer, ['actor-1', 'actor-2']);
+
+    const actorElement = queueElement.querySelector('[data-entity-id="actor-2"]');
+    queueElement.getBoundingClientRect = jest.fn(() => ({ left: 0, right: 100, top: 0, bottom: 50 }));
+    actorElement.getBoundingClientRect = jest.fn(() => ({ left: 200, right: 250, top: 0, bottom: 50 }));
+    actorElement.scrollIntoView = jest.fn();
+
+    renderer.updateCurrentActor('actor-2');
+
+    expect(actorElement.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    expect(logger.debug).toHaveBeenCalledWith(
+      'scrollToActor: Scrolled actor into view',
+      expect.objectContaining({ entityId: 'actor-2' })
+    );
+  });
+
+  it('logs scroll failures as non-critical issues', () => {
+    renderActors(renderer, ['actor-1', 'actor-2']);
+
+    const actorElement = queueElement.querySelector('[data-entity-id="actor-2"]');
+    queueElement.getBoundingClientRect = jest.fn(() => ({ left: 0, right: 100, top: 0, bottom: 50 }));
+    actorElement.getBoundingClientRect = jest.fn(() => ({ left: 200, right: 250, top: 0, bottom: 50 }));
+    actorElement.scrollIntoView = () => {
+      throw new Error('scroll failure');
+    };
+
+    renderer.updateCurrentActor('actor-2');
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      'scrollToActor: Scroll operation failed (non-critical)',
+      expect.objectContaining({ error: 'scroll failure' })
+    );
+  });
+
+  it('clears current actor tracking when the same actor ends their turn', async () => {
+    renderActors(renderer, ['actor-1']);
+    renderer.updateCurrentActor('actor-1');
+    expect(renderer.__testGetCurrentActorId()).toBe('actor-1');
+
+    const removeSpy = jest.spyOn(renderer, 'removeActor').mockResolvedValue();
+
+    await renderer.__testHandleTurnEnded({ payload: { entityId: 'actor-1' } });
+
+    expect(renderer.__testGetCurrentActorId()).toBeNull();
+    removeSpy.mockRestore();
+  });
+
   it('logs and continues when exit animation throws before promise creation', async () => {
     renderActors(renderer, ['actor-1', 'actor-2']);
     logger.error.mockClear();
