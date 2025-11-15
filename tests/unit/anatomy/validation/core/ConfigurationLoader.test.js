@@ -116,6 +116,31 @@ describe('ConfigurationLoader', () => {
     );
   });
 
+  it('normalizes invalid config shapes and validator entries during merge', () => {
+    const loader = new ConfigurationLoader({ schemaValidator, logger });
+    const merged = loader.merge(null, {
+      validators: [
+        null,
+        'not-an-object',
+        { name: null },
+        { name: '   ' },
+        { name: 'beta' },
+        { name: 'alpha' },
+      ],
+    });
+
+    expect(merged.mods).toEqual({ essential: [], optional: [], autoDetect: false });
+    expect(merged.validators.map((validator) => validator.name)).toEqual([
+      'alpha',
+      'beta',
+    ]);
+    expect(
+      merged.validators.every(
+        (validator) => validator.enabled === true && validator.priority === Infinity
+      )
+    ).toBe(true);
+  });
+
   it('throws when schema validation fails for user file', async () => {
     schemaValidator.validate = jest
       .fn()
@@ -141,6 +166,26 @@ describe('ConfigurationLoader', () => {
     const loader = new ConfigurationLoader({ schemaValidator, logger });
     await expect(loader.load(invalidPath)).rejects.toThrow(
       'ConfigurationLoader: Invalid JSON'
+    );
+  });
+
+  it('throws when a user configuration path does not exist', async () => {
+    const missingPath = path.join(tempDir, 'missing.json');
+    const loader = new ConfigurationLoader({ schemaValidator, logger });
+
+    await expect(loader.load(missingPath)).rejects.toThrow(
+      `ConfigurationLoader: Config file not found at '${missingPath}'`
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      `ConfigurationLoader: Config file not found at '${missingPath}'`
+    );
+  });
+
+  it('requires config paths to be strings when loading overrides', async () => {
+    const loader = new ConfigurationLoader({ schemaValidator, logger });
+
+    await expect(loader.load(123)).rejects.toThrow(
+      'ConfigurationLoader: config path must be a string'
     );
   });
 });
