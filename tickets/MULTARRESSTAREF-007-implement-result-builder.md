@@ -8,16 +8,16 @@
 
 ## Objective
 
-Implement `TargetResolutionResultBuilder` class that consolidates all result assembly logic from three locations in `MultiTargetResolutionStage`, removing ~80 lines of duplicated code.
+Implement `TargetResolutionResultBuilder` class that consolidates all result assembly logic from the current `MultiTargetResolutionStage` (748 lines as of `src/actions/pipeline/stages/MultiTargetResolutionStage.js`), removing the remaining ~80 lines of duplicated code around legacy, multi-target, and final result assembly.
 
 ## Background
 
-Result assembly is currently duplicated in:
-- Lines 379-399: Main result assembly in `executeInternal`
-- Lines 525-556: Legacy result assembly in `#resolveLegacyTarget`
-- Lines 903-922: Multi-target result assembly in `#resolveMultiTargets`
+Result assembly is currently duplicated in these areas of `src/actions/pipeline/stages/MultiTargetResolutionStage.js`:
+- The bottom of `executeInternal`, where the stage aggregates `actionsWithTargets`, merges `targetContexts`, re-attaches the last resolved targets/definitions, and wraps everything in `PipelineResult.success({ data, errors })`.
+- `#resolveLegacyTarget`, which builds a success payload that includes `resolvedTargets`, normalized `targetContexts`, and the singular `actionsWithTargets` entry for the legacy action.
+- `#resolveMultiTargets`, which builds a payload containing `resolvedTargets`, `targetContexts`, `targetDefinitions`, `detailedResolutionResults`, and an array of enriched `actionsWithTargets` (each action receives `resolvedTargets`, `targetDefinitions`, and `isMultiTarget`).
 
-This duplication makes backward compatibility maintenance error-prone and increases the risk of inconsistent result formats.
+Keeping these three flows in sync is error-prone and makes backward compatibility fields (especially `targetContexts`, `resolvedTargets`, `targetDefinitions`, and `detailedResolutionResults`) fragile.
 
 ## Technical Requirements
 
@@ -29,7 +29,7 @@ This duplication makes backward compatibility maintenance error-prone and increa
 **Class Structure:**
 ```javascript
 import { validateDependency } from '../../../../utils/dependencyUtils.js';
-import PipelineResult from '../../core/PipelineResult.js';
+import { PipelineResult } from '../../PipelineResult.js';
 
 export default class TargetResolutionResultBuilder {
   #entityManager;
@@ -37,55 +37,69 @@ export default class TargetResolutionResultBuilder {
 
   constructor({ entityManager, logger }) {
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntity'],
+      requiredMethods: ['getEntityInstance'],
     });
-    validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'warn', 'error', 'debug'],
-    });
+    validateDependency(logger, 'ILogger', logger);
 
     this.#entityManager = entityManager;
     this.#logger = logger;
   }
 
-  // Implement all 4 interface methods here
+  // Implement all 4 interface methods here based on current stage behavior
 }
 ```
 
 ### Methods to Extract and Implement
 
 #### 1. `buildLegacyResult`
-**Extract from:** Lines 525-556 in `#resolveLegacyTarget`
+**Extract from:** Legacy success branch in `#resolveLegacyTarget`
 
 **Responsibilities:**
-- Build result for legacy single-target actions
-- Attach legacy conversion metadata
-- Include backward compatibility fields
-- Populate `targetContexts` for downstream stages
+- Build the single-entry `actionsWithTargets` array that legacy actions currently return.
+- Preserve normalized `targetContexts` (placeholders + display names) and `resolvedTargets.primary` entries.
+- Provide `targetDefinitions` from the conversion result (fallbacks must match the stage's current defaults when conversion data is missing).
+- Ensure the payload mirrors the current `PipelineResult.success({ data })` contract (no `__legacyConversion` field exists today).
 
 **Key Logic:**
 ```javascript
 buildLegacyResult(context, resolvedTargets, targetContexts, conversionResult, actionDef) {
-  const actionWithTargets = {
-    ...actionDef,
-    resolvedTargets,
-    __legacyConversion: conversionResult,
-  };
-
-  // Attach backward compatibility metadata
-  this.attachMetadata(actionWithTargets, resolvedTargets, {}, false);
-
-  return actionWithTargets;
+  return PipelineResult.success({
+    data: {
+      ...context.data,
+      resolvedTargets,
+      targetContexts,
+      actionsWithTargets: [
+        {
+          actionDef,
+          targetContexts,
+          resolvedTargets,
+          targetDefinitions:
+            conversionResult.targetDefinitions || {
+              primary: {
+                scope:
+                  conversionResult.targetDefinitions?.primary?.scope ||
+                  actionDef.targets ||
+                  actionDef.scope,
+                placeholder:
+                  conversionResult.targetDefinitions?.primary?.placeholder || 'target',
+              },
+            },
+          isMultiTarget: false,
+        },
+      ],
+    },
+  });
 }
 ```
 
 #### 2. `buildMultiTargetResult`
-**Extract from:** Lines 903-922 in `#resolveMultiTargets`
+**Extract from:** Success branch in `#resolveMultiTargets`
 
 **Responsibilities:**
-- Build result for multi-target actions
-- Attach multi-target metadata
-- Include detailed resolution results
-- Populate target contexts
+- Attach `resolvedTargets`, `targetDefinitions`, and `isMultiTarget` directly to the `actionDef` (as the stage does today before returning).
+- Build the `actionsWithTargets` array (currently a single entry) that downstream stages consume.
+- Preserve `targetContexts`, `detailedResolutionResults`, and global `resolvedTargets`/`targetDefinitions` in the `PipelineResult.success({ data })` payload.
+- Keep backward compatibility behavior identical to the current implementation.
 
 **Key Logic:**
 ```javascript
@@ -97,27 +111,42 @@ buildMultiTargetResult(
   actionDef,
   detailedResults
 ) {
-  const actionWithTargets = {
-    ...actionDef,
-    resolvedTargets,
-    __detailedResults: detailedResults || {},
-  };
+  actionDef.resolvedTargets = resolvedTargets;
+  actionDef.targetDefinitions = targetDefinitions;
+  actionDef.isMultiTarget = true;
 
-  // Attach multi-target metadata
-  this.attachMetadata(actionWithTargets, resolvedTargets, targetDefinitions, true);
+  const actionsWithTargets = [
+    {
+      actionDef,
+      targetContexts,
+      resolvedTargets,
+      targetDefinitions,
+      isMultiTarget: true,
+    },
+  ];
 
-  return actionWithTargets;
+  return PipelineResult.success({
+    data: {
+      ...context.data,
+      resolvedTargets,
+      targetContexts,
+      targetDefinitions,
+      detailedResolutionResults: detailedResults || {},
+      actionsWithTargets,
+    },
+  });
 }
 ```
 
 #### 3. `buildFinalResult`
-**Extract from:** Lines 379-399 in `executeInternal`
+**Extract from:** Final aggregation block in `executeInternal`
 
 **Responsibilities:**
 - Aggregate all actions with targets
 - Build pipeline result with backward compatibility
 - Include target contexts for downstream stages
 - Preserve last resolved targets (backward compat)
+- Include collected `errors`
 
 **Key Logic:**
 ```javascript
@@ -126,10 +155,12 @@ buildFinalResult(
   allActionsWithTargets,
   allTargetContexts,
   lastResolvedTargets,
-  lastTargetDefinitions
+  lastTargetDefinitions,
+  errors
 ) {
   const resultData = {
-    candidateActions: allActionsWithTargets,
+    ...context.data,
+    actionsWithTargets: allActionsWithTargets,
   };
 
   // Backward compatibility: Include target contexts
@@ -143,7 +174,7 @@ buildFinalResult(
     resultData.targetDefinitions = lastTargetDefinitions;
   }
 
-  return PipelineResult.success({ data: resultData });
+  return PipelineResult.success({ data: resultData, errors });
 }
 ```
 
@@ -151,32 +182,27 @@ buildFinalResult(
 **New helper method** (consolidates metadata attachment logic)
 
 **Responsibilities:**
-- Attach consistent metadata to all action results
-- Mark legacy vs. multi-target format
-- Include resolution timestamps
-- Add any debugging metadata
+- Apply the common metadata the stage currently writes directly on each `actionsWithTargets` entry (`resolvedTargets`, `targetDefinitions`, `isMultiTarget`, and `targetContexts`).
+- Ensure both legacy and multi-target flows end up with consistent per-action payloads without sprinkling `isMultiTarget` checks throughout the stage.
+- Optionally log or annotate additional diagnostics (e.g., count of resolved targets) without changing the observable payload structure.
 
 **Key Logic:**
 ```javascript
 attachMetadata(actionWithTargets, resolvedTargets, targetDefinitions, isMultiTarget) {
-  actionWithTargets.__metadata = {
-    isMultiTarget,
-    targetCount: Object.keys(resolvedTargets).length,
-    resolvedAt: Date.now(),
-    hasTargetDefinitions: Object.keys(targetDefinitions).length > 0,
-  };
+  actionWithTargets.resolvedTargets = resolvedTargets;
+  actionWithTargets.targetDefinitions = targetDefinitions;
+  actionWithTargets.isMultiTarget = isMultiTarget;
 }
 ```
 
 ### Backward Compatibility Requirements
 
 **Critical Fields to Preserve:**
-- `candidateActions` - Array of actions with resolved targets
-- `targetContexts` - Array of target contexts (for ActionFormattingStage)
+- `actionsWithTargets` - Array of actions with resolved targets (currently provided via `data.actionsWithTargets`)
+- `targetContexts` - Array of target contexts (for `ActionFormattingStage`)
 - `resolvedTargets` - Last resolved targets map (backward compat)
 - `targetDefinitions` - Last target definitions (backward compat)
-- `__legacyConversion` - Legacy conversion metadata
-- `__detailedResults` - Detailed resolution results
+- `detailedResolutionResults` - Multi-target diagnostics surfaced today
 
 **Downstream Stage Dependencies:**
 - **TargetComponentValidationStage** expects `actionDef.resolvedTargets`
@@ -210,10 +236,10 @@ Tests will be created in MULTARRESSTAREF-008. Implementation should be testable 
 ## Migration Notes
 
 **Lines to Extract:**
-- Legacy result assembly: ~32 lines (525-556)
-- Multi-target result assembly: ~19 lines (903-922)
-- Final result assembly: ~21 lines (379-399)
-- Metadata attachment logic: ~8 lines (scattered)
+- Legacy result assembly: ~30 lines inside `#resolveLegacyTarget`'s success return block (payload + `actionsWithTargets`).
+- Multi-target result assembly: ~25 lines at the end of `#resolveMultiTargets` where `actionDef` is mutated and `PipelineResult.success` is returned.
+- Final result assembly: ~25 lines at the end of `executeInternal` that aggregate `actionsWithTargets`, target contexts, and errors.
+- Metadata attachment logic: ~5-10 scattered lines where `resolvedTargets`, `targetDefinitions`, and `isMultiTarget` get applied directly to action payloads.
 - **Total:** ~80 lines extracted
 
 ## Notes
