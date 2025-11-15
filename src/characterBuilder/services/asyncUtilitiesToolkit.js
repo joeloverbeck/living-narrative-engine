@@ -249,6 +249,19 @@ export class AsyncUtilitiesToolkit {
       lastThis = null;
     };
 
+    throttled.flush = () => {
+      if (!lastArgs) {
+        return result;
+      }
+
+      if (timerId) {
+        toolkit.clearTimeout(timerId);
+        timerId = null;
+      }
+
+      return executeFunction();
+    };
+
     return throttled;
   }
 

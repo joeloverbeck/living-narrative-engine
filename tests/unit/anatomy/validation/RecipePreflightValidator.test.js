@@ -2281,7 +2281,7 @@ describe('RecipePreflightValidator', () => {
       });
 
       expect(capturingLogger.error).toHaveBeenCalledWith(
-        'Entity definition load failure check failed',
+        'Load failure validation failed',
         expect.any(Error)
       );
     });
