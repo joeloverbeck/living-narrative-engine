@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
 import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionResultBuilder from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 /**
  * @file Full coverage tests for MultiTargetResolutionStage
@@ -56,6 +57,10 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
     mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
       logger: mockDeps.logger,
     });
+    mockDeps.targetResolutionResultBuilder = new TargetResolutionResultBuilder({
+      entityManager: mockDeps.entityManager,
+      logger: mockDeps.logger,
+    });
 
     // Setup default mock behaviors
     mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
@@ -96,6 +101,7 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
       targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
       tracingOrchestrator: mockDeps.tracingOrchestrator,
+      targetResolutionResultBuilder: mockDeps.targetResolutionResultBuilder,
     });
 
     // Create mock context

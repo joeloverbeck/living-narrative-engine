@@ -11,6 +11,7 @@ import { MultiTargetResolutionStage } from '../../../../src/actions/pipeline/sta
 import TargetResolutionTracingOrchestrator from '../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
 import ActionAwareStructuredTrace from '../../../../src/actions/tracing/actionAwareStructuredTrace.js';
 import ActionTraceFilter from '../../../../src/actions/tracing/actionTraceFilter.js';
+import TargetResolutionResultBuilder from '../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 describe('Multi-Target Resolution Tracing Integration', () => {
   let testBed;
@@ -25,6 +26,7 @@ describe('Multi-Target Resolution Tracing Integration', () => {
   let mockTargetResolver;
   let mockTargetContextBuilder;
   let tracingOrchestrator;
+  let targetResolutionResultBuilder;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -80,6 +82,11 @@ describe('Multi-Target Resolution Tracing Integration', () => {
       logger: testBed.mockLogger,
     });
 
+    targetResolutionResultBuilder = new TargetResolutionResultBuilder({
+      entityManager: mockEntityManager,
+      logger: testBed.mockLogger,
+    });
+
     // Create the stage with mocks
     stage = new MultiTargetResolutionStage({
       targetDependencyResolver: mockDependencyResolver,
@@ -92,6 +99,7 @@ describe('Multi-Target Resolution Tracing Integration', () => {
       targetContextBuilder: mockTargetContextBuilder,
       logger: testBed.mockLogger,
       tracingOrchestrator,
+      targetResolutionResultBuilder,
     });
   });
 

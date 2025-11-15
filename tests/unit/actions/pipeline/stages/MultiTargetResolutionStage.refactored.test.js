@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionResultBuilder from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 describe('MultiTargetResolutionStage - Refactored with Services', () => {
   let stage;
@@ -59,6 +60,11 @@ describe('MultiTargetResolutionStage - Refactored with Services', () => {
       debug: jest.fn(),
     };
 
+    const targetResolutionResultBuilder = new TargetResolutionResultBuilder({
+      entityManager: mockEntityManager,
+      logger: mockLogger,
+    });
+
     // Create stage with mocked services
     stage = new MultiTargetResolutionStage({
       targetDependencyResolver: mockDependencyResolver,
@@ -73,6 +79,7 @@ describe('MultiTargetResolutionStage - Refactored with Services', () => {
       tracingOrchestrator: new TargetResolutionTracingOrchestrator({
         logger: mockLogger,
       }),
+      targetResolutionResultBuilder,
     });
   });
 

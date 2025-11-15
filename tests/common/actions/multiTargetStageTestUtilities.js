@@ -11,6 +11,7 @@ import { LegacyTargetCompatibilityLayer } from '../../../src/actions/pipeline/se
 import { ScopeContextBuilder } from '../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import { TargetDisplayNameResolver } from '../../../src/actions/pipeline/services/implementations/TargetDisplayNameResolver.js';
 import TargetResolutionTracingOrchestrator from '../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionResultBuilder from '../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 /**
  * Creates a fully configured MultiTargetResolutionStage for testing
@@ -89,6 +90,13 @@ export function createMultiTargetResolutionStage({
       logger,
     });
 
+  const targetResolutionResultBuilder =
+    overrides.targetResolutionResultBuilder ||
+    new TargetResolutionResultBuilder({
+      entityManager,
+      logger,
+    });
+
   // Create and return the stage with all required dependencies
   return new MultiTargetResolutionStage({
     targetDependencyResolver,
@@ -101,6 +109,7 @@ export function createMultiTargetResolutionStage({
     targetContextBuilder,
     logger,
     tracingOrchestrator,
+    targetResolutionResultBuilder,
   });
 }
 

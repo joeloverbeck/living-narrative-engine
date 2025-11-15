@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionResultBuilder from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
 
 describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
@@ -50,6 +51,10 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
     };
 
     mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
+    mockDeps.targetResolutionResultBuilder = new TargetResolutionResultBuilder({
+      entityManager: mockDeps.entityManager,
       logger: mockDeps.logger,
     });
 

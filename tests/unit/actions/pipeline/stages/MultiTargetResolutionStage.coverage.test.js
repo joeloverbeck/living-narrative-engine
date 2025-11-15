@@ -3,6 +3,7 @@ import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
 import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionResultBuilder from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 /**
  * @file Additional test coverage for MultiTargetResolutionStage to achieve 100% branch coverage
@@ -57,6 +58,10 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
     mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
       logger: mockDeps.logger,
     });
+    mockDeps.targetResolutionResultBuilder = new TargetResolutionResultBuilder({
+      entityManager: mockDeps.entityManager,
+      logger: mockDeps.logger,
+    });
 
     // Setup default mock behaviors
     mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
@@ -97,6 +102,7 @@ describe('MultiTargetResolutionStage - Coverage Tests', () => {
       targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
       tracingOrchestrator: mockDeps.tracingOrchestrator,
+      targetResolutionResultBuilder: mockDeps.targetResolutionResultBuilder,
     });
 
     // Create mock context
