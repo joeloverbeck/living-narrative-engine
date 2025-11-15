@@ -8,16 +8,36 @@
 
 ## Objective
 
-Replace all inline result assembly logic in `MultiTargetResolutionStage` with calls to `TargetResolutionResultBuilder`, reducing the stage by ~80 lines while ensuring exact result format compatibility.
+Replace the inline result assembly logic that still exists inside `MultiTargetResolutionStage` with
+`TargetResolutionResultBuilder` calls. The stage currently sits at **1,085 lines** (`wc -l`), and the
+remaining result-assembly blocks live in `executeInternal` (~lines 402-439), `#resolveLegacyTarget`
+(~lines 520-575), and `#resolveMultiTargets` (~lines 930-990). Delegating those blocks to the builder
+should remove ~70-80 lines while keeping the exact output contract that downstream stages expect.
 
 ## Background
 
-Result assembly is currently duplicated in three locations (lines 379-399, 525-556, 903-922). This integration consolidates all result building into the builder service.
+Result assembly is still duplicated directly inside the stage:
+
+1. **Final aggregation (`executeInternal`)** – builds `resultData` and returns `PipelineResult.success` inline.
+2. **Legacy path (`#resolveLegacyTarget`)** – manually constructs `resolvedTargets`, hydrates metadata, and builds the
+   pipeline result even though `TargetResolutionResultBuilder.buildLegacyResult` already performs the same work.
+3. **Multi-target path (`#resolveMultiTargets`)** – assembles `actionsWithTargets` and attaches metadata that mirrors
+   `TargetResolutionResultBuilder.buildMultiTargetResult`.
+
+This ticket integrates the builder so the stage only orchestrates resolution, not payload construction.
 
 ## Technical Requirements
 
-### File to Modify
-- **Path:** `src/actions/pipeline/stages/MultiTargetResolutionStage.js`
+### Files to Modify
+- **Primary:** `src/actions/pipeline/stages/MultiTargetResolutionStage.js`
+- **Test utilities & call sites:** Every helper/test that instantiates the stage must now provide the builder dependency.
+  At minimum this includes `tests/common/actions/multiTargetStageTestUtilities.js` and each test surfaced by
+  `rg "new MultiTargetResolutionStage" tests`. The DI registration already resolves
+  `targetResolutionResultBuilder`, but the constructor currently ignores it.
+
+### Supporting References
+- Builder interface: `src/actions/pipeline/services/interfaces/ITargetResolutionResultBuilder.js`
+- Builder implementation: `src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js`
 
 ### Changes Required
 
@@ -45,141 +65,144 @@ export class MultiTargetResolutionStage extends PipelineStage {
     targetResolver,
     logger,
     tracingOrchestrator,
-    resultBuilder, // ADD THIS
+    targetResolutionResultBuilder, // ADD THIS (already provided via DI)
   }) {
     super('MultiTargetResolution');
     // ... existing validations ...
 
     validateDependency(
-      resultBuilder,
+      targetResolutionResultBuilder,
       'ITargetResolutionResultBuilder',
       logger,
       {
-        requiredMethods: ['buildFinalResult', 'buildLegacyResult', 'buildMultiTargetResult'],
+        requiredMethods: [
+          'buildFinalResult',
+          'buildLegacyResult',
+          'buildMultiTargetResult',
+          'attachMetadata',
+        ],
       }
     );
-    this.#resultBuilder = resultBuilder;
+    this.#resultBuilder = targetResolutionResultBuilder;
   }
 }
 ```
 
 #### 2. Replace Legacy Result Assembly
 
-**Location:** Lines 525-556 in `#resolveLegacyTarget`
+**Location:** ~lines 520-575 in `#resolveLegacyTarget`
 
 **OLD:**
 ```javascript
-const actionWithTargets = {
-  ...actionDef,
-  resolvedTargets,
-  __legacyConversion: {
-    originalFormat: legacyFormat,
-    convertedTargets: Object.keys(actionDef.targets || {}),
-    migrationSuggestion: migrationSuggestion || null,
-  },
+const resolvedTargets = {
+  primary: targetContexts.map((tc) => ({
+    id: tc.entityId,
+    displayName:
+      tc.displayName ||
+      this.#nameResolver.getEntityDisplayName(tc.entityId) ||
+      tc.entityId,
+    entity: tc.entityId
+      ? this.#entityManager.getEntityInstance(tc.entityId)
+      : null,
+  })),
 };
 
-// Backward compatibility: attach targetContexts
-if (targetContexts && targetContexts.length > 0) {
-  allTargetContexts.push(...targetContexts);
-}
-
-allActionsWithTargets.push(actionWithTargets);
-lastResolvedTargets = resolvedTargets;
-lastTargetDefinitions = actionDef.targets || {};
+return PipelineResult.success({
+  data: {
+    ...context.data,
+    resolvedTargets,
+    targetContexts, // Keep for backward compatibility
+    actionsWithTargets: [
+      {
+        actionDef,
+        targetContexts,
+        // Attach metadata for consistency with multi-target actions
+        resolvedTargets,
+        targetDefinitions: conversionResult.targetDefinitions || {
+          primary: { scope, placeholder },
+        },
+        isMultiTarget: false,
+      },
+    ],
+  },
+});
 ```
 
 **NEW:**
 ```javascript
-const actionWithTargets = this.#resultBuilder.buildLegacyResult(
+return this.#resultBuilder.buildLegacyResult(
   context,
   resolvedTargets,
   targetContexts,
-  {
-    originalFormat: legacyFormat,
-    convertedTargets: Object.keys(actionDef.targets || {}),
-    migrationSuggestion: migrationSuggestion || null,
-  },
+  conversionResult,
   actionDef
 );
-
-if (targetContexts && targetContexts.length > 0) {
-  allTargetContexts.push(...targetContexts);
-}
-
-allActionsWithTargets.push(actionWithTargets);
-lastResolvedTargets = resolvedTargets;
-lastTargetDefinitions = actionDef.targets || {};
 ```
 
 #### 3. Replace Multi-Target Result Assembly
 
-**Location:** Lines 903-922 in `#resolveMultiTargets`
+**Location:** ~lines 930-990 in `#resolveMultiTargets`
 
 **OLD:**
 ```javascript
-const actionWithTargets = {
-  ...actionDef,
-  resolvedTargets,
-};
+const actionsWithTargets = [
+  {
+    actionDef,
+    targetContexts: allTargetContexts,
+    resolvedTargets,
+    targetDefinitions: targetDefs,
+    isMultiTarget: true,
+  },
+];
 
-// Attach detailed results for debugging/tracing
-if (detailedResults && Object.keys(detailedResults).length > 0) {
-  actionWithTargets.__detailedResults = detailedResults;
-}
-
-allActionsWithTargets.push(actionWithTargets);
-if (targetContexts && targetContexts.length > 0) {
-  allTargetContexts.push(...targetContexts);
-}
-lastResolvedTargets = resolvedTargets;
-lastTargetDefinitions = targetDefs;
+return PipelineResult.success({
+  data: {
+    ...context.data,
+    resolvedTargets,
+    targetContexts: allTargetContexts, // Backward compatibility
+    targetDefinitions: targetDefs,
+    detailedResolutionResults,
+    actionsWithTargets,
+  },
+});
 ```
 
 **NEW:**
 ```javascript
-const actionWithTargets = this.#resultBuilder.buildMultiTargetResult(
+return this.#resultBuilder.buildMultiTargetResult(
   context,
   resolvedTargets,
-  targetContexts,
+  allTargetContexts,
   targetDefs,
   actionDef,
-  detailedResults
+  detailedResolutionResults
 );
-
-allActionsWithTargets.push(actionWithTargets);
-if (targetContexts && targetContexts.length > 0) {
-  allTargetContexts.push(...targetContexts);
-}
-lastResolvedTargets = resolvedTargets;
-lastTargetDefinitions = targetDefs;
 ```
 
 #### 4. Replace Final Result Assembly
 
-**Location:** Lines 379-399 in `executeInternal`
+**Location:** ~lines 402-439 in `executeInternal`
 
 **OLD:**
 ```javascript
 const resultData = {
-  candidateActions: allActionsWithTargets,
+  ...context.data,
+  actionsWithTargets: allActionsWithTargets,
 };
 
-// Backward compatibility: include targetContexts for downstream stages
 if (allTargetContexts.length > 0) {
   resultData.targetContexts = allTargetContexts;
 }
 
-// Backward compatibility: include last resolved targets
 if (lastResolvedTargets && lastTargetDefinitions) {
   resultData.resolvedTargets = lastResolvedTargets;
   resultData.targetDefinitions = lastTargetDefinitions;
 }
 
-this.#logger.debug('\n=== MULTITARGETRESOLUTIONSTAGE EXIT ===');
-this.#logger.debug('Actions with resolved targets:', allActionsWithTargets.length);
-
-return PipelineResult.success({ data: resultData, errors });
+return PipelineResult.success({
+  data: resultData,
+  errors,
+});
 ```
 
 **NEW:**
@@ -192,30 +215,41 @@ return this.#resultBuilder.buildFinalResult(
   allActionsWithTargets,
   allTargetContexts,
   lastResolvedTargets,
-  lastTargetDefinitions
+  lastTargetDefinitions,
+  errors
 );
 ```
 
+#### 5. Update stage factories and tests
+
+- `src/dependencyInjection/registrations/commandAndActionRegistrations.js` already resolves
+  `targetResolutionResultBuilder`; ensure the constructor update above consumes the same name so DI wiring keeps working.
+- Update `tests/common/actions/multiTargetStageTestUtilities.js` so the factory injects a real `TargetResolutionResultBuilder`
+  (or a mock when provided). This helper fans out to most unit/integration suites.
+- Update every test that directly calls `new MultiTargetResolutionStage` (see `rg "new MultiTargetResolutionStage" tests`) to
+  pass a mock builder exposing `buildLegacyResult`, `buildMultiTargetResult`, `buildFinalResult`, and `attachMetadata`.
+
 ### Expected Line Reduction
-- **Legacy result assembly:** ~32 lines removed
-- **Multi-target result assembly:** ~19 lines removed
-- **Final result assembly:** ~21 lines removed
-- **Total reduction:** ~72 lines
-- **New size (cumulative with Phase 1):** ~945 lines (from 1,220)
+- **Legacy result assembly:** ~30 lines removed (current block spans ~lines 540-575)
+- **Multi-target result assembly:** ~20 lines removed (current block spans ~lines 950-990)
+- **Final result assembly:** ~20 lines removed (current block spans ~lines 402-439)
+- **Total reduction:** ~70 lines
+- **New size (after Phase 2):** ~1,010 lines (current 1,085)
 
 ## Acceptance Criteria
 
 - [ ] `#resultBuilder` field added to constructor
-- [ ] Dependency validation added for result builder
+- [ ] Dependency validation added for result builder (all builder methods covered)
 - [ ] Legacy result assembly replaced with builder call
 - [ ] Multi-target result assembly replaced with builder call
 - [ ] Final result assembly replaced with builder call
 - [ ] No inline result assembly remains
+- [ ] All stage factories/tests updated to supply the builder dependency
 - [ ] All existing unit tests pass
 - [ ] All existing integration tests pass
 - [ ] Result format unchanged (verify with downstream stage tests)
 - [ ] Backward compatibility fields preserved
-- [ ] Code size reduced by ~70-80 lines
+- [ ] Code size reduced by ~70 lines (1,085 → ~1,010)
 
 ## Dependencies
 
