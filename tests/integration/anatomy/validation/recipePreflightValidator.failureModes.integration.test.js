@@ -113,7 +113,7 @@ describe('RecipePreflightValidator - Failure mode integration coverage', () => {
     // Blueprint validator runs with failFast=true and stops pipeline,
     // so pattern/generated slot validators never run
     expect(logger.warn).toHaveBeenCalledWith(
-      "RecipePreflightValidator: Validator 'blueprint-existence' halted execution due to failFast errors"
+      "ValidationPipeline: Validator 'blueprint-existence' halted execution due to failFast errors"
     );
   });
 

@@ -231,10 +231,11 @@ export class AsyncUtilitiesToolkit {
         }
         executeFunction();
       } else if (!timerId && trailing) {
+        const delay = wait - timeSinceLastExecute;
         timerId = toolkit.setTimeout(() => {
           timerId = null;
           executeFunction();
-        }, wait - timeSinceLastExecute);
+        }, delay > 0 ? delay : wait);
       }
 
       return result;

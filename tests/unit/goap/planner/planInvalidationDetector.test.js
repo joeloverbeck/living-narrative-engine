@@ -18,14 +18,15 @@ describe('PlanInvalidationDetector - Constructor', () => {
       evaluate: jest.fn(),
     };
 
-    const mockRepository = {
+    const mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     const detector = new PlanInvalidationDetector({
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
-      gameDataRepository: mockRepository,
+      dataRegistry: mockRegistry,
     });
 
     expect(detector).toBeInstanceOf(PlanInvalidationDetector);
@@ -42,20 +43,21 @@ describe('PlanInvalidationDetector - Constructor', () => {
 
     const invalidService = {}; // Missing evaluate method
 
-    const mockRepository = {
+    const mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     expect(() => {
       new PlanInvalidationDetector({
         logger: mockLogger,
         jsonLogicEvaluationService: invalidService,
-        gameDataRepository: mockRepository,
+        dataRegistry: mockRegistry,
       });
     }).toThrow();
   });
 
-  it('should throw if GameDataRepository missing get method', () => {
+  it('should throw if DataRegistry missing get method', () => {
     const mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -67,13 +69,13 @@ describe('PlanInvalidationDetector - Constructor', () => {
       evaluate: jest.fn(),
     };
 
-    const invalidRepository = {}; // Missing get method
+    const invalidRegistry = {}; // Missing get and getAll methods
 
     expect(() => {
       new PlanInvalidationDetector({
         logger: mockLogger,
         jsonLogicEvaluationService: mockJsonLogicService,
-        gameDataRepository: invalidRepository,
+        dataRegistry: invalidRegistry,
       });
     }).toThrow();
   });
@@ -83,7 +85,7 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
   let detector;
   let mockLogger;
   let mockJsonLogicService;
-  let mockRepository;
+  let mockRegistry;
 
   beforeEach(() => {
     mockLogger = {
@@ -97,14 +99,15 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
       evaluate: jest.fn(),
     };
 
-    mockRepository = {
+    mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     detector = new PlanInvalidationDetector({
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
-      gameDataRepository: mockRepository,
+      dataRegistry: mockRegistry,
     });
   });
 
@@ -124,18 +127,14 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     };
 
     // Setup: Task definition with satisfied precondition
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:consume_item': {
-          id: 'core:consume_item',
-          planningPreconditions: [
-            {
-              description: 'Actor has item',
-              condition: { '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'] },
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:consume_item',
+      planningPreconditions: [
+        {
+          description: 'Actor has item',
+          condition: { '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'] },
         },
-      },
+      ],
     });
 
     // Mock: Precondition evaluates to true
@@ -166,18 +165,14 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     };
 
     // Setup: Task definition with violated precondition
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:consume_item': {
-          id: 'core:consume_item',
-          planningPreconditions: [
-            {
-              description: 'Actor has item',
-              condition: { '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'] },
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:consume_item',
+      planningPreconditions: [
+        {
+          description: 'Actor has item',
+          condition: { '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'] },
         },
-      },
+      ],
     });
 
     // Mock: Precondition evaluates to false
@@ -209,12 +204,13 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     const currentState = {};
 
     // Setup: Task definitions with no preconditions
-    mockRepository.get.mockReturnValue({
-      core: {
+    mockRegistry.get.mockImplementation((type, id) => {
+      const tasks = {
         'core:task1': { id: 'core:task1' },
         'core:task2': { id: 'core:task2' },
         'core:task3': { id: 'core:task3' },
-      },
+      };
+      return tasks[id];
     });
 
     // Act
@@ -223,7 +219,7 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     // Assert
     expect(result.valid).toBe(true);
     expect(result.diagnostics).toHaveLength(3);
-    expect(mockRepository.get).toHaveBeenCalledTimes(3); // All tasks checked
+    expect(mockRegistry.get).toHaveBeenCalledTimes(3); // All tasks checked
   });
 
   it('should skip non-critical tasks in lenient policy', () => {
@@ -241,11 +237,12 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     const currentState = {};
 
     // Setup: Task definitions
-    mockRepository.get.mockReturnValue({
-      core: {
+    mockRegistry.get.mockImplementation((type, id) => {
+      const tasks = {
         'core:task1': { id: 'core:task1' },
         'core:task3': { id: 'core:task3' },
-      },
+      };
+      return tasks[id];
     });
 
     // Act
@@ -254,7 +251,7 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     // Assert
     expect(result.valid).toBe(true);
     expect(result.diagnostics).toHaveLength(2); // Only critical tasks
-    expect(mockRepository.get).toHaveBeenCalledTimes(2); // Only critical tasks checked
+    expect(mockRegistry.get).toHaveBeenCalledTimes(2); // Only critical tasks checked
   });
 
   it('should check every 3rd task in periodic policy', () => {
@@ -276,12 +273,13 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     const currentState = {};
 
     // Setup: Task definitions
-    mockRepository.get.mockReturnValue({
-      core: {
+    mockRegistry.get.mockImplementation((type, id) => {
+      const tasks = {
         'core:task0': { id: 'core:task0' },
         'core:task3': { id: 'core:task3' },
         'core:task6': { id: 'core:task6' },
-      },
+      };
+      return tasks[id];
     });
 
     // Act
@@ -290,7 +288,7 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     // Assert
     expect(result.valid).toBe(true);
     expect(result.diagnostics).toHaveLength(3); // Tasks at index 0, 3, 6
-    expect(mockRepository.get).toHaveBeenCalledTimes(3);
+    expect(mockRegistry.get).toHaveBeenCalledTimes(3);
   });
 });
 
@@ -298,7 +296,7 @@ describe('PlanInvalidationDetector - State Change Detection', () => {
   let detector;
   let mockLogger;
   let mockJsonLogicService;
-  let mockRepository;
+  let mockRegistry;
 
   beforeEach(() => {
     mockLogger = {
@@ -312,14 +310,15 @@ describe('PlanInvalidationDetector - State Change Detection', () => {
       evaluate: jest.fn(),
     };
 
-    mockRepository = {
+    mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     detector = new PlanInvalidationDetector({
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
-      gameDataRepository: mockRepository,
+      dataRegistry: mockRegistry,
     });
   });
 
@@ -339,18 +338,14 @@ describe('PlanInvalidationDetector - State Change Detection', () => {
     };
 
     // Setup: Task definition requiring unlocked door
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:open_door': {
-          id: 'core:open_door',
-          planningPreconditions: [
-            {
-              description: 'Door is unlocked',
-              condition: { '==': [{ var: 'door-789.core.locked' }, false] },
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:open_door',
+      planningPreconditions: [
+        {
+          description: 'Door is unlocked',
+          condition: { '==': [{ var: 'door-789.core.locked' }, false] },
         },
-      },
+      ],
     });
 
     // Mock: Precondition fails in current state
@@ -382,18 +377,14 @@ describe('PlanInvalidationDetector - State Change Detection', () => {
     };
 
     // Setup: Task definition checking entity existence
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:pick_up_item': {
-          id: 'core:pick_up_item',
-          planningPreconditions: [
-            {
-              description: 'Item exists',
-              condition: { '==': [{ var: 'apple-456.core.exists' }, true] },
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:pick_up_item',
+      planningPreconditions: [
+        {
+          description: 'Item exists',
+          condition: { '==': [{ var: 'apple-456.core.exists' }, true] },
         },
-      },
+      ],
     });
 
     // Mock: Precondition fails
@@ -413,7 +404,7 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
   let detector;
   let mockLogger;
   let mockJsonLogicService;
-  let mockRepository;
+  let mockRegistry;
 
   beforeEach(() => {
     mockLogger = {
@@ -427,14 +418,15 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
       evaluate: jest.fn(),
     };
 
-    mockRepository = {
+    mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     detector = new PlanInvalidationDetector({
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
-      gameDataRepository: mockRepository,
+      dataRegistry: mockRegistry,
     });
   });
 
@@ -447,18 +439,14 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
 
     const currentState = {};
 
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:task1': {
-          id: 'core:task1',
-          planningPreconditions: [
-            {
-              description: 'Test precondition',
-              condition: { '==': [{ var: 'test' }, true] },
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:task1',
+      planningPreconditions: [
+        {
+          description: 'Test precondition',
+          condition: { '==': [{ var: 'test' }, true] },
         },
-      },
+      ],
     });
 
     mockJsonLogicService.evaluate.mockReturnValue(false);
@@ -480,18 +468,14 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
 
     const violatedCondition = { '==': [{ var: 'actor.ready' }, true] };
 
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:task1': {
-          id: 'core:task1',
-          planningPreconditions: [
-            {
-              description: 'Actor is ready',
-              condition: violatedCondition,
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:task1',
+      planningPreconditions: [
+        {
+          description: 'Actor is ready',
+          condition: violatedCondition,
         },
-      },
+      ],
     });
 
     mockJsonLogicService.evaluate.mockReturnValue(false);
@@ -513,23 +497,22 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
       nodesExplored: 10,
     };
 
-    mockRepository.get.mockImplementation((key) => {
-      if (key === 'tasks') {
-        return {
-          core: {
-            'core:task1': { id: 'core:task1' }, // No preconditions
-            'core:task2': {
-              id: 'core:task2',
-              planningPreconditions: [
-                {
-                  description: 'Failing condition',
-                  condition: { '==': [{ var: 'test' }, true] },
-                },
-              ],
-            },
-            'core:task3': { id: 'core:task3' },
+    mockRegistry.get.mockImplementation((type, id) => {
+      if (type === 'tasks') {
+        const tasks = {
+          'core:task1': { id: 'core:task1' }, // No preconditions
+          'core:task2': {
+            id: 'core:task2',
+            planningPreconditions: [
+              {
+                description: 'Failing condition',
+                condition: { '==': [{ var: 'test' }, true] },
+              },
+            ],
           },
+          'core:task3': { id: 'core:task3' },
         };
+        return tasks[id];
       }
     });
 
@@ -547,7 +530,7 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
   let detector;
   let mockLogger;
   let mockJsonLogicService;
-  let mockRepository;
+  let mockRegistry;
 
   beforeEach(() => {
     mockLogger = {
@@ -561,14 +544,15 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
       evaluate: jest.fn(),
     };
 
-    mockRepository = {
+    mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     detector = new PlanInvalidationDetector({
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
-      gameDataRepository: mockRepository,
+      dataRegistry: mockRegistry,
     });
   });
 
@@ -582,18 +566,19 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
       nodesExplored: 5,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {
+    mockRegistry.get.mockImplementation((type, id) => {
+      const tasks = {
         'core:task1': { id: 'core:task1' },
         'core:task2': { id: 'core:task2' },
-      },
+      };
+      return tasks[id];
     });
 
     // Call without policy argument - should default to strict
     detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' });
 
     // Both tasks should be checked
-    expect(mockRepository.get).toHaveBeenCalledTimes(2);
+    expect(mockRegistry.get).toHaveBeenCalledTimes(2);
   });
 
   it('should apply lenient policy for non-critical tasks', () => {
@@ -606,17 +591,18 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
       nodesExplored: 5,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {
+    mockRegistry.get.mockImplementation((type, id) => {
+      const tasks = {
         'core:critical': { id: 'core:critical' },
-      },
+      };
+      return tasks[id];
     });
 
     const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'lenient');
 
     expect(result.valid).toBe(true);
     expect(result.diagnostics).toHaveLength(1); // Only critical task
-    expect(mockRepository.get).toHaveBeenCalledTimes(1);
+    expect(mockRegistry.get).toHaveBeenCalledTimes(1);
   });
 
   it('should support periodic checking policy', () => {
@@ -629,10 +615,11 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
       nodesExplored: 30,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: Object.fromEntries(
+    mockRegistry.get.mockImplementation((type, id) => {
+      const tasks = Object.fromEntries(
         Array.from({ length: 10 }, (_, i) => [`core:task${i}`, { id: `core:task${i}` }])
-      ),
+      );
+      return tasks[id];
     });
 
     const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'periodic');
@@ -640,7 +627,7 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
     expect(result.valid).toBe(true);
     // Periodic checks every 3rd task: indices 0, 3, 6, 9 = 4 tasks
     expect(result.diagnostics).toHaveLength(4);
-    expect(mockRepository.get).toHaveBeenCalledTimes(4);
+    expect(mockRegistry.get).toHaveBeenCalledTimes(4);
   });
 });
 
@@ -648,7 +635,7 @@ describe('PlanInvalidationDetector - Error Handling', () => {
   let detector;
   let mockLogger;
   let mockJsonLogicService;
-  let mockRepository;
+  let mockRegistry;
 
   beforeEach(() => {
     mockLogger = {
@@ -662,14 +649,15 @@ describe('PlanInvalidationDetector - Error Handling', () => {
       evaluate: jest.fn(),
     };
 
-    mockRepository = {
+    mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     detector = new PlanInvalidationDetector({
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
-      gameDataRepository: mockRepository,
+      dataRegistry: mockRegistry,
     });
   });
 
@@ -680,18 +668,14 @@ describe('PlanInvalidationDetector - Error Handling', () => {
       nodesExplored: 1,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:task1': {
-          id: 'core:task1',
-          planningPreconditions: [
-            {
-              description: 'Test condition',
-              condition: { invalid: 'logic' },
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:task1',
+      planningPreconditions: [
+        {
+          description: 'Test condition',
+          condition: { invalid: 'logic' },
         },
-      },
+      ],
     });
 
     // Mock evaluation error
@@ -713,18 +697,14 @@ describe('PlanInvalidationDetector - Error Handling', () => {
       nodesExplored: 1,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:task1': {
-          id: 'core:task1',
-          planningPreconditions: [
-            {
-              description: 'Test',
-              condition: {},
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:task1',
+      planningPreconditions: [
+        {
+          description: 'Test',
+          condition: {},
         },
-      },
+      ],
     });
 
     mockJsonLogicService.evaluate.mockImplementation(() => {
@@ -745,18 +725,14 @@ describe('PlanInvalidationDetector - Error Handling', () => {
       nodesExplored: 1,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:task1': {
-          id: 'core:task1',
-          planningPreconditions: [
-            {
-              description: 'Test condition',
-              condition: { test: 'condition' },
-            },
-          ],
+    mockRegistry.get.mockReturnValue({
+      id: 'core:task1',
+      planningPreconditions: [
+        {
+          description: 'Test condition',
+          condition: { test: 'condition' },
         },
-      },
+      ],
     });
 
     mockJsonLogicService.evaluate.mockImplementation(() => {
@@ -781,7 +757,7 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
   let detector;
   let mockLogger;
   let mockJsonLogicService;
-  let mockRepository;
+  let mockRegistry;
 
   beforeEach(() => {
     mockLogger = {
@@ -795,14 +771,15 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       evaluate: jest.fn(),
     };
 
-    mockRepository = {
+    mockRegistry = {
       get: jest.fn(),
+      getAll: jest.fn(),
     };
 
     detector = new PlanInvalidationDetector({
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicService,
-      gameDataRepository: mockRepository,
+      dataRegistry: mockRegistry,
     });
   });
 
@@ -848,9 +825,7 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       nodesExplored: 1,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {}, // Empty - task not found
-    });
+    mockRegistry.get.mockReturnValue(null); // Task not found
 
     const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
 
@@ -866,13 +841,9 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       nodesExplored: 1,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {
-        'core:simple_task': {
-          id: 'core:simple_task',
-          // No planningPreconditions field
-        },
-      },
+    mockRegistry.get.mockReturnValue({
+      id: 'core:simple_task',
+      // No planningPreconditions field
     });
 
     const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
@@ -891,17 +862,18 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       nodesExplored: 5,
     };
 
-    mockRepository.get.mockReturnValue({
-      core: {
+    mockRegistry.get.mockImplementation((type, id) => {
+      const tasks = {
         'core:task1': { id: 'core:task1' },
         'core:task2': { id: 'core:task2' },
-      },
+      };
+      return tasks[id];
     });
 
     detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'unknown_policy');
 
     // Should check all tasks (strict behavior)
-    expect(mockRepository.get).toHaveBeenCalledTimes(2);
+    expect(mockRegistry.get).toHaveBeenCalledTimes(2);
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'Unknown policy, defaulting to strict',
       expect.objectContaining({ policy: 'unknown_policy' })

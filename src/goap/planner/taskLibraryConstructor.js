@@ -46,7 +46,7 @@ class TaskLibraryConstructor {
       requiredMethods: ['getAll'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntity'],
+      requiredMethods: ['getAllComponentTypesForEntity'],
     });
     validateDependency(contextAssembly, 'IContextAssemblyService', logger, {
       requiredMethods: ['assemblePlanningContext'],
@@ -153,14 +153,15 @@ class TaskLibraryConstructor {
    */
   #generateCacheKey(actorId) {
     try {
-      const actor = this.#entityManager.getEntity(actorId);
-      if (!actor) {
-        throw new Error(`Actor not found: ${actorId}`);
+      // Use getAllComponentTypesForEntity which directly returns component type IDs
+      const componentIds = this.#entityManager.getAllComponentTypesForEntity(actorId);
+      if (!componentIds || componentIds.length === 0) {
+        throw new Error(`Actor not found or has no components: ${actorId}`);
       }
 
-      // Dynamic component discovery - sort for consistent cache keys
-      const componentIds = Object.keys(actor.components || {}).sort();
-      const capabilitiesHash = componentIds.join('|');
+      // Sort for consistent cache keys
+      const sortedComponentIds = [...componentIds].sort();
+      const capabilitiesHash = sortedComponentIds.join('|');
       const cacheKey = `${actorId}:${capabilitiesHash}`;
 
       this.#logger.debug(
@@ -183,22 +184,12 @@ class TaskLibraryConstructor {
    */
   #getAllTasksFromRegistry() {
     try {
-      const allTasks = [];
+      // Get all tasks from registry (stored with category 'tasks')
+      const allTasks = this.#dataRegistry.getAll('tasks') || [];
 
-      // Get all mod definitions from registry
-      const mods = this.#dataRegistry.getAll('mods') || [];
-      this.#logger.debug(`[TaskLibraryConstructor] Querying tasks from ${mods.length} mods`);
-
-      // Query tasks for each mod
-      for (const mod of mods) {
-        const modTasks = this.#dataRegistry.getAll(`tasks.${mod.id}`) || [];
-        if (modTasks.length > 0) {
-          this.#logger.debug(
-            `[TaskLibraryConstructor] Found ${modTasks.length} tasks in mod: ${mod.id}`
-          );
-          allTasks.push(...modTasks);
-        }
-      }
+      this.#logger.debug(
+        `[TaskLibraryConstructor] Retrieved ${allTasks.length} total tasks from registry`
+      );
 
       return allTasks;
     } catch (error) {

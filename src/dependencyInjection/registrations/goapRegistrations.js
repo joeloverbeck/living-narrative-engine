@@ -17,6 +17,7 @@ import HeuristicRegistry from '../../goap/planner/heuristicRegistry.js';
 import GoapPlanner from '../../goap/planner/goapPlanner.js';
 import TaskLibraryConstructor from '../../goap/planner/taskLibraryConstructor.js';
 import PlanInvalidationDetector from '../../goap/planner/planInvalidationDetector.js';
+import GoapController from '../../goap/controllers/goapController.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -200,7 +201,22 @@ export function registerGoapServices(container) {
     dependencies: [
       tokens.ILogger,
       tokens.JsonLogicEvaluationService,
-      tokens.GameDataRepository,
+      tokens.IDataRegistry,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // GOAP Controller (GOAPIMPL-021)
+  // Orchestrates complete GOAP decision cycle: goal selection → planning → validation → refinement
+  // Returns action hints for GoapDecisionProvider to resolve through standard action discovery
+  container.register(tokens.IGoapController, GoapController, {
+    dependencies: [
+      tokens.IGoapPlanner,
+      tokens.IRefinementEngine,
+      tokens.IPlanInvalidationDetector,
+      tokens.IContextAssemblyService,
+      tokens.IEventBus,
+      tokens.ILogger,
     ],
     lifecycle: 'singleton',
   });
