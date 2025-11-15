@@ -13,7 +13,6 @@ import {
   UIStateManager,
   UI_STATES,
 } from '../../shared/characterBuilder/uiStateManager.js';
-import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
 import { DOMElementManager } from '../services/domElementManager.js';
 import { EventListenerRegistry } from '../services/eventListenerRegistry.js';
 import {
@@ -27,6 +26,7 @@ import {
   registerToolkitForOwner,
   unregisterToolkitForOwner,
 } from '../services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../services/performanceMonitor.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -103,11 +103,8 @@ export class BaseCharacterBuilderController {
   /** @private @type {AsyncUtilitiesToolkit|null} */
   #asyncUtilitiesToolkit = null;
 
-  /** @private @type {Map<string, number>} */
-  #performanceMarks = new Map();
-
-  /** @private @type {Map<string, {duration: number, startMark: string, endMark: string}>} */
-  #performanceMeasurements = new Map();
+  /** @private @type {PerformanceMonitor|null} */
+  #performanceMonitor = null;
 
   /** @private @type {WeakMap<object, any>} */
   #weakReferences = new WeakMap();
@@ -491,6 +488,24 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Lazily instantiate the shared performance monitor.
+   *
+   * @private
+   * @returns {PerformanceMonitor}
+   */
+  #getPerformanceMonitor() {
+    if (!this.#performanceMonitor) {
+      this.#performanceMonitor = new PerformanceMonitor({
+        logger: this.#logger,
+        eventBus: this.#eventBus,
+        contextName: this.constructor.name,
+      });
+    }
+
+    return this.#performanceMonitor;
+  }
+
+  /**
    * Build async utility adapters until BASCHACUICONREF-005 extracts the toolkit.
    *
    * @private
@@ -604,6 +619,16 @@ export class BaseCharacterBuilderController {
    */
   get schemaValidator() {
     return this.#schemaValidator;
+  }
+
+  /**
+   * Access the shared performance monitor service.
+   *
+   * @protected
+   * @returns {PerformanceMonitor}
+   */
+  get performanceMonitor() {
+    return this.#getPerformanceMonitor();
   }
 
   /**
@@ -2326,7 +2351,10 @@ export class BaseCharacterBuilderController {
     }
 
     // Clear performance data
-    this._clearPerformanceData();
+    if (this.#performanceMonitor) {
+      this.#performanceMonitor.clearData();
+      this.#performanceMonitor = null;
+    }
 
     // Clear weak references (they will be garbage collected)
     // Note: WeakMap and WeakSet don't need explicit clearing
@@ -2421,18 +2449,7 @@ export class BaseCharacterBuilderController {
    * @returns {void}
    */
   _performanceMark(markName) {
-    try {
-      const timestamp = performance.now();
-      this.#performanceMarks.set(markName, timestamp);
-      performance.mark(markName);
-
-      this.#logger.debug(`Performance mark: ${markName}`, { timestamp });
-    } catch (error) {
-      this.#logger.warn(
-        `Failed to create performance mark: ${markName}`,
-        error
-      );
-    }
+    this.#getPerformanceMonitor().mark(markName);
   }
 
   /**
@@ -2445,69 +2462,13 @@ export class BaseCharacterBuilderController {
    * @returns {number|null} Duration in milliseconds or null if marks not found
    */
   _performanceMeasure(measureName, startMark, endMark = null) {
-    try {
-      if (!endMark) {
-        // Create end mark if not provided
-        endMark = `${measureName}-end`;
-        this._performanceMark(endMark);
-      }
+    const measurement = this.#getPerformanceMonitor().measure(
+      measureName,
+      startMark,
+      endMark
+    );
 
-      const startTime = this.#performanceMarks.get(startMark);
-      const endTime = this.#performanceMarks.get(endMark);
-
-      if (!startTime || !endTime) {
-        this.#logger.warn(
-          `Performance marks not found for measurement: ${measureName}`,
-          {
-            startMark,
-            endMark,
-            hasStartMark: !!startTime,
-            hasEndMark: !!endTime,
-          }
-        );
-        return null;
-      }
-
-      const duration = endTime - startTime;
-
-      // Store measurement
-      this.#performanceMeasurements.set(measureName, {
-        duration,
-        startMark,
-        endMark,
-      });
-
-      // Use native Performance API if available
-      try {
-        performance.measure(measureName, startMark, endMark);
-      } catch (e) {
-        // Native API might fail if marks don't exist, but we have our own tracking
-      }
-
-      this.#logger.debug(`Performance measurement: ${measureName}`, {
-        duration: `${duration.toFixed(2)}ms`,
-        startMark,
-        endMark,
-      });
-
-      // Dispatch performance event if duration exceeds threshold
-      if (duration > 100) {
-        this.eventBus.dispatch(
-          CHARACTER_BUILDER_EVENTS.CHARACTER_BUILDER_PERFORMANCE_WARNING,
-          {
-            controller: this.constructor.name,
-            measurement: measureName,
-            duration,
-            threshold: 100,
-          }
-        );
-      }
-
-      return duration;
-    } catch (error) {
-      this.#logger.warn(`Failed to measure performance: ${measureName}`, error);
-      return null;
-    }
+    return measurement ? measurement.duration : null;
   }
 
   /**
@@ -2517,7 +2478,11 @@ export class BaseCharacterBuilderController {
    * @returns {Map<string, {duration: number, startMark: string, endMark: string}>}
    */
   _getPerformanceMeasurements() {
-    return new Map(this.#performanceMeasurements);
+    if (!this.#performanceMonitor) {
+      return new Map();
+    }
+
+    return this.#performanceMonitor.getMeasurements();
   }
 
   /**
@@ -2527,42 +2492,12 @@ export class BaseCharacterBuilderController {
    * @param {string} [prefix] - Clear only marks/measurements with this prefix
    */
   _clearPerformanceData(prefix = null) {
-    if (prefix) {
-      // Clear specific marks and measurements with prefix
-      for (const [key] of this.#performanceMarks) {
-        if (key.startsWith(prefix)) {
-          this.#performanceMarks.delete(key);
-          try {
-            performance.clearMarks(key);
-          } catch (e) {
-            // Ignore if mark doesn't exist
-          }
-        }
-      }
-
-      for (const [key] of this.#performanceMeasurements) {
-        if (key.startsWith(prefix)) {
-          this.#performanceMeasurements.delete(key);
-          try {
-            performance.clearMeasures(key);
-          } catch (e) {
-            // Ignore if measure doesn't exist
-          }
-        }
-      }
-    } else {
-      // Clear all
-      this.#performanceMarks.clear();
-      this.#performanceMeasurements.clear();
-      try {
-        performance.clearMarks();
-        performance.clearMeasures();
-      } catch (e) {
-        // Ignore errors
-      }
+    if (!this.#performanceMonitor) {
+      this.#logger.debug('Cleared performance data', { prefix });
+      return;
     }
 
-    this.#logger.debug('Cleared performance data', { prefix });
+    this.#performanceMonitor.clearData(prefix);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
