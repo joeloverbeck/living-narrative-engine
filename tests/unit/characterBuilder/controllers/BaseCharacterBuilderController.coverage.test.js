@@ -1465,7 +1465,8 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
 
     it('should clear scheduled timers when maxWait triggers immediate debounce execution', () => {
       const fn = jest.fn();
-      const clearTimeoutSpy = jest.spyOn(controller, '_clearTimeout');
+      const toolkit = controller._getAsyncUtilitiesToolkit();
+      const clearTimeoutSpy = jest.spyOn(toolkit, 'clearTimeout');
       const nowSpy = jest.spyOn(Date, 'now');
 
       nowSpy
@@ -1495,7 +1496,8 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
 
     it('should cancel debounced handlers and clear all pending timers', () => {
       const fn = jest.fn();
-      const clearTimeoutSpy = jest.spyOn(controller, '_clearTimeout');
+      const toolkit = controller._getAsyncUtilitiesToolkit();
+      const clearTimeoutSpy = jest.spyOn(toolkit, 'clearTimeout');
       const nowSpy = jest.spyOn(Date, 'now').mockReturnValueOnce(0);
 
       const debounced = controller._debounce(fn, 40, {
@@ -1516,7 +1518,8 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
 
     it('should clear pending throttle timers when leading edge execution occurs', () => {
       const fn = jest.fn();
-      const clearTimeoutSpy = jest.spyOn(controller, '_clearTimeout');
+      const toolkit = controller._getAsyncUtilitiesToolkit();
+      const clearTimeoutSpy = jest.spyOn(toolkit, 'clearTimeout');
       const nowSpy = jest.spyOn(Date, 'now');
 
       nowSpy
