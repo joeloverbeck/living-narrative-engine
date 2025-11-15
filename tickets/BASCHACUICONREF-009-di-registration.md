@@ -12,22 +12,23 @@ Extend the DI container configuration so the eight new services can be injected 
 
 ## Implementation Tasks
 
-1. **Token Definitions**  
-   - Create/extend `src/characterBuilder/tokens-characterBuilder.js` (new file if needed) exporting constants for: `DOMElementManager`, `EventListenerRegistry`, `ControllerLifecycleOrchestrator`, `ErrorHandlingStrategy`, `AsyncUtilitiesToolkit`, `PerformanceMonitor`, `ValidationService`, `MemoryManager`.  
-   - Update any existing token registries or barrel files to re-export these identifiers.
+1. **Token Definitions**
+   - Extend `src/dependencyInjection/tokens/tokens-core.js` (current home for Character Builder tokens) with entries for `DOMElementManager`, `EventListenerRegistry`, `ControllerLifecycleOrchestrator`, `ErrorHandlingStrategy`, `AsyncUtilitiesToolkit`, `PerformanceMonitor`, `ValidationService`, and `MemoryManager`.
+   - Ensure these tokens are re-exported through `src/dependencyInjection/tokens.js` so `CharacterBuilderBootstrap` and downstream callers can resolve them.
 
-2. **Container Registration**  
-   - Modify the DI container setup (likely `src/config/container.js` or similar) to register each service.  
-   - Ensure `EventListenerRegistry` receives `asyncUtilities` instance, `ErrorHandlingStrategy` receives `uiStateManager`, etc.  
-   - Provide factory functions where constructor dependency graph requires cross-service references.  
+2. **Container Registration**
+   - Update `src/dependencyInjection/registrations/characterBuilderRegistrations.js` (invoked from `configureBaseContainer`) to register each new service.
+   - Wire their actual dependencies: e.g., `EventListenerRegistry` needs both the logger and `AsyncUtilitiesToolkit`, `DOMElementManager` expects DOM/performance references, and `ControllerLifecycleOrchestrator` consumes the logger plus the event bus.
+   - Stick with the existing `registrar.singletonFactory(...)` pattern so the lifetime/ordering matches the rest of the Phase 1 plan from BASCHACUICONREF-000.
    - Document optional configuration (e.g., performance thresholds) using environment variables or config constants.
 
-3. **Base Controller Injection Wiring**  
-   - Update `BaseCharacterBuilderController` constructor signature to accept the services via DI tokens while maintaining backwards compatibility (allow old options but log deprecation warning).  
-   - Add validation to ensure tokens resolve to proper classes.
+3. **Base Controller Injection Wiring**
+   - Update `src/characterBuilder/controllers/BaseCharacterBuilderController.js` so the constructor can accept these services in the `dependencies` object rather than instantiating them inside the private getters.
+   - Keep the lazy-instantiation code as a temporary fallback (log a deprecation warning) to avoid breaking controllers that are still being migrated.
+   - Update `src/characterBuilder/CharacterBuilderBootstrap.js` to resolve the new tokens from the container and include them in each controller’s dependency bag alongside the logger/event bus/schemaValidator.
 
-4. **Smoke Tests**  
-   - Create a minimal integration harness under `tests/integration/characterBuilder/di/baseController.di.test.js` verifying DI container builds controller instances with all services available.  
+4. **Smoke Tests**
+   - Add a controller-focused spec under `tests/integration/characterBuilder/controllers/BaseCharacterBuilderController.di.integration.test.js` (same folder the other base-controller specs use) to verify `configureMinimalContainer` can resolve and inject the new services.
    - Use spies to ensure services are singletons or scoped appropriately (document chosen lifetime).
 
 5. **Documentation**  
