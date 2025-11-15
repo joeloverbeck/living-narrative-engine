@@ -8,6 +8,23 @@ echo "🚪 Running ActionDefinitionBuilder Quality Gates..."
 # Get list of files being committed
 FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
+if [ -z "$FILES" ]; then
+    echo "ℹ️ No staged files detected. Skipping checks."
+    exit 0
+fi
+
+echo ""
+echo "🛡️ Checking for hardcoded mod references..."
+JS_FILES=$(echo "$FILES" | grep -E '\\.(js|mjs)$' || true)
+if [ -n "$JS_FILES" ]; then
+    if ! echo "$JS_FILES" | xargs -r npx eslint --quiet --max-warnings=0 --rule 'mod-architecture/no-hardcoded-mod-references:2'; then
+        echo "❌ Hardcoded mod references detected. Please remove non-core references or document an approved exemption."
+        exit 1
+    fi
+else
+    echo "ℹ️ No staged JavaScript files detected for mod reference scanning."
+fi
+
 # Check if any ActionDefinitionBuilder-related files are being committed
 ACTIONBUILDER_FILES=$(echo "$FILES" | grep -E "(src/actions/builders/|tests/.*actions/builders/|tests/performance/actions/)" || true)
 
