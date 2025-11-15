@@ -71,6 +71,18 @@ describe('EventListenerRegistry', () => {
     element = createElementStub();
   });
 
+  it('requires async utilities to expose debounce and throttle helpers', () => {
+    expect(
+      () =>
+        new EventListenerRegistry({
+          logger,
+          asyncUtilities: /** @type {any} */ (null),
+        })
+    ).toThrow(
+      'EventListenerRegistry requires asyncUtilities with debounce and throttle functions'
+    );
+  });
+
   it('registers DOM listeners and removes them deterministically', () => {
     const handler = jest.fn();
     const listenerId = registry.addEventListener(element, 'click', handler);
@@ -88,6 +100,32 @@ describe('EventListenerRegistry', () => {
       handler,
       expect.objectContaining({ passive: true })
     );
+  });
+
+  it('warns when attempting to register a listener on an invalid target', () => {
+    const handler = jest.fn();
+    const result = registry.addEventListener(null, 'click', handler);
+
+    expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "TestController: Cannot add click listener - invalid target provided"
+    );
+  });
+
+  it('logs constructor names for non-element targets', () => {
+    class CustomTarget {}
+    const customTarget = new CustomTarget();
+    customTarget.addEventListener = jest.fn();
+    customTarget.removeEventListener = jest.fn();
+
+    const id = registry.addEventListener(customTarget, 'hover', jest.fn());
+
+    const debugMessage = logger.debug.mock.calls
+      .map(([message]) => message)
+      .find((message) => message.includes('hover'));
+
+    expect(id).toBeTruthy();
+    expect(debugMessage).toContain('CustomTarget');
   });
 
   it('subscribes to the event bus and unsubscribes on cleanup', () => {
@@ -108,6 +146,28 @@ describe('EventListenerRegistry', () => {
 
     registry.removeAllEventListeners();
     expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('warns when attempting to subscribe without a valid event bus', () => {
+    const handler = jest.fn();
+    const result = registry.subscribeToEvent(null, 'broken:event', handler);
+
+    expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "TestController: Cannot subscribe to 'broken:event' - eventBus not available"
+    );
+  });
+
+  it('logs errors when the event bus does not return an unsubscribe function', () => {
+    const eventBus = { subscribe: jest.fn(() => null) };
+    const handler = jest.fn();
+
+    const result = registry.subscribeToEvent(eventBus, 'incomplete:event', handler);
+
+    expect(result).toBeNull();
+    expect(logger.error).toHaveBeenCalledWith(
+      "TestController: Failed to subscribe to event 'incomplete:event'"
+    );
   });
 
   it('filters delegated listeners so only matching children trigger handler', () => {
@@ -136,6 +196,16 @@ describe('EventListenerRegistry', () => {
     );
   });
 
+  it('warns when attempting to delegate from an invalid container', () => {
+    const handler = jest.fn();
+    const result = registry.addDelegatedListener(null, '.child', 'click', handler);
+
+    expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'TestController: Cannot add delegated listener - invalid container'
+    );
+  });
+
   it('wraps debounced listeners with async utilities and cancels wrappers on cleanup', () => {
     const handler = jest.fn();
     const listenerId = registry.addDebouncedListener(
@@ -153,6 +223,26 @@ describe('EventListenerRegistry', () => {
     expect(wrapped.cancel).toHaveBeenCalled();
   });
 
+  it('throws when attempting to create a debounced listener without a numeric delay', () => {
+    expect(() =>
+      registry.addDebouncedListener(element, 'input', jest.fn(), Number.NaN)
+    ).toThrow(new TypeError('addDebouncedListener requires a numeric delay'));
+  });
+
+  it('cleans up cached debounced handlers when registration fails', () => {
+    const handler = jest.fn();
+    const addSpy = jest
+      .spyOn(registry, 'addEventListener')
+      .mockReturnValue(null);
+
+    const result = registry.addDebouncedListener(element, 'input', handler, 125);
+
+    expect(result).toBeNull();
+    const debounced = asyncUtilities.debounce.mock.results[0].value;
+    expect(debounced.cancel).toHaveBeenCalled();
+    addSpy.mockRestore();
+  });
+
   it('wraps throttled listeners with async utilities and cancels on cleanup', () => {
     const handler = jest.fn();
     const listenerId = registry.addThrottledListener(
@@ -168,6 +258,12 @@ describe('EventListenerRegistry', () => {
     registry.removeAllEventListeners();
     const wrapped = asyncUtilities.throttle.mock.results[0].value;
     expect(wrapped.cancel).toHaveBeenCalled();
+  });
+
+  it('throws when attempting to create a throttled listener without a numeric limit', () => {
+    expect(() =>
+      registry.addThrottledListener(element, 'scroll', jest.fn(), Number.NaN)
+    ).toThrow(new TypeError('addThrottledListener requires a numeric limit'));
   });
 
   it('exposes memoized debounced and throttled handlers by key', () => {
@@ -234,5 +330,54 @@ describe('EventListenerRegistry', () => {
     await failingClickHandler({ currentTarget: element, target: element });
     expect(logger.error).toHaveBeenCalled();
     expect(onError).toHaveBeenCalled();
+  });
+
+  it('falls back to executing the async handler when no target can be resolved', async () => {
+    const asyncHandler = jest.fn().mockResolvedValue(true);
+    let capturedHandler;
+    const addSpy = jest
+      .spyOn(registry, 'addEventListener')
+      .mockImplementation((_, __, handler) => {
+        capturedHandler = handler;
+        return 'async-click';
+      });
+
+    registry.addAsyncClickHandler(null, asyncHandler);
+    await capturedHandler({});
+
+    expect(asyncHandler).toHaveBeenCalledWith({});
+    addSpy.mockRestore();
+  });
+
+  it('warns when a listener removal is attempted for an unknown id', () => {
+    expect(registry.removeEventListener('missing')).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "TestController: Listener 'missing' not found"
+    );
+  });
+
+  it('ignores preventDefault calls when no event is supplied', () => {
+    const handler = jest.fn();
+    registry.preventDefault(null, handler);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('handles unexpected undefined listeners during cleanup without throwing', () => {
+    registry.addEventListener(element, 'click', jest.fn());
+
+    const originalPop = Array.prototype.pop;
+    const popSpy = jest
+      .spyOn(Array.prototype, 'pop')
+      .mockImplementation(function (...args) {
+        originalPop.apply(this, args);
+        return undefined;
+      });
+
+    try {
+      registry.removeAllEventListeners();
+      expect(element.removeEventListener).not.toHaveBeenCalled();
+    } finally {
+      popSpy.mockRestore();
+    }
   });
 });
