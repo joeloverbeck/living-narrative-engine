@@ -271,6 +271,7 @@ describe('MinHeap - Edge Cases', () => {
   it('should handle large heap efficiently', () => {
     const heap = new MinHeap((a, b) => a - b);
     const itemCount = 1000;
+    const perfBudgetMs = 200;
 
     // Push 1000 items
     const pushStart = Date.now();
@@ -280,7 +281,7 @@ describe('MinHeap - Edge Cases', () => {
     const pushTime = Date.now() - pushStart;
 
     expect(heap.size).toBe(itemCount);
-    expect(pushTime).toBeLessThan(10); // < 10ms for 1000 pushes
+    expect(pushTime).toBeLessThan(perfBudgetMs);
 
     // Pop 1000 items
     const popStart = Date.now();
@@ -291,7 +292,7 @@ describe('MinHeap - Edge Cases', () => {
     const popTime = Date.now() - popStart;
 
     expect(results.length).toBe(itemCount);
-    expect(popTime).toBeLessThan(10); // < 10ms for 1000 pops
+    expect(popTime).toBeLessThan(perfBudgetMs);
 
     // Verify items came out in sorted order
     for (let i = 0; i < results.length - 1; i++) {

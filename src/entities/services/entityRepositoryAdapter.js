@@ -98,35 +98,10 @@ export class EntityRepositoryAdapter {
       throw new DuplicateEntityError(entity.id, msg);
     }
 
-    // Enhanced debug logging for park bench
-    if (entity.id === 'p_erotica:park_bench_instance') {
-      this.#logger.debug(`[DEBUG] Adding park bench to repository:`, {
-        entityId: entity.id,
-        componentTypeIds: entity.componentTypeIds,
-        componentCount: entity.componentTypeIds?.length || 0,
-        componentsBeforeIndexing: Array.from(entity.componentTypeIds || []),
-      });
-    }
-
     this.#mapManager.add(entity.id, entity);
 
     // Index the entity's components
     this.#indexEntityComponents(entity);
-
-    // Log component index state after adding park bench
-    if (entity.id === 'p_erotica:park_bench_instance') {
-      const allowsSittingIndex = this.#componentIndex.get(
-        'positioning:allows_sitting'
-      );
-      this.#logger.debug(`[DEBUG] After indexing park bench:`, {
-        entityId: entity.id,
-        allowsSittingIndexSize: allowsSittingIndex?.size || 0,
-        allowsSittingIndexEntities: allowsSittingIndex
-          ? Array.from(allowsSittingIndex)
-          : [],
-        totalComponentIndexSize: this.#componentIndex.size,
-      });
-    }
 
     this.#logger.debug(
       `Entity '${entity.id}' added to repository with ${entity.componentTypeIds?.length || 0} components indexed.`
@@ -357,35 +332,9 @@ export class EntityRepositoryAdapter {
    * @param {Entity} entity - Entity whose components to index
    */
   #indexEntityComponents(entity) {
-    // Enhanced debug logging for park bench issue
-    if (entity.id === 'p_erotica:park_bench_instance') {
-      this.#logger.debug(
-        `[DEBUG] Indexing components for park bench instance:`,
-        {
-          entityId: entity.id,
-          componentTypeIds: entity.componentTypeIds,
-          hasComponentTypeIds: !!entity.componentTypeIds,
-          componentTypeIdsLength: entity.componentTypeIds?.length || 0,
-        }
-      );
-    }
-
     if (entity.componentTypeIds) {
       for (const componentType of entity.componentTypeIds) {
-        // Extra logging for park bench
-        if (entity.id === 'p_erotica:park_bench_instance') {
-          this.#logger.debug(
-            `[DEBUG] Indexing component '${componentType}' for park bench`
-          );
-        }
         this.indexComponentAdd(entity.id, componentType);
-      }
-    } else {
-      // Log warning if no componentTypeIds
-      if (entity.id === 'p_erotica:park_bench_instance') {
-        this.#logger.warn(
-          `[DEBUG] Park bench instance has no componentTypeIds property!`
-        );
       }
     }
   }

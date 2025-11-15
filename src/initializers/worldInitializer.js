@@ -710,14 +710,6 @@ class WorldInitializer {
       componentOverrides
     );
 
-    // Enhanced logging for debugging park bench issue
-    if (instanceId === 'p_erotica:park_bench_instance') {
-      this.#logger.info(
-        `[DEBUG] Creating park bench instance with definitionId: ${definitionId}, overrides:`,
-        JSON.stringify(componentOverrides, null, 2)
-      );
-    }
-
     let instance;
     try {
       instance = await this.#entityManager.createEntityInstance(definitionId, {
@@ -725,26 +717,6 @@ class WorldInitializer {
         componentOverrides,
       });
 
-      // Enhanced logging for debugging park bench issue
-      if (instanceId === 'p_erotica:park_bench_instance' && instance) {
-        const components = this.#entityManager.getAllComponents(instanceId);
-        this.#logger.info(
-          `[DEBUG] Park bench created successfully. Components:`,
-          JSON.stringify(Object.keys(components), null, 2)
-        );
-        if (components['core:position']) {
-          this.#logger.info(
-            `[DEBUG] Park bench position:`,
-            JSON.stringify(components['core:position'], null, 2)
-          );
-        }
-        if (components['positioning:allows_sitting']) {
-          this.#logger.info(
-            `[DEBUG] Park bench sitting spots:`,
-            JSON.stringify(components['positioning:allows_sitting'], null, 2)
-          );
-        }
-      }
     } catch (creationError) {
       this.#logger.error(
         `WorldInitializer (Pass 1): Error during createEntityInstance for instanceId '${instanceId}', definitionId '${definitionId}':`,
