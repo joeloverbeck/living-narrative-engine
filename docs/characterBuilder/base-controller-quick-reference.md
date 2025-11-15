@@ -114,6 +114,24 @@ this._clearTimeout(timerId);
 this._clearInterval(intervalId);
 ```
 
+### Performance Monitoring
+
+```javascript
+this._performanceMark('init-start');
+// ...work
+this._performanceMeasure('init', 'init-start');
+const metrics = this.performanceMonitor.getMeasurements();
+```
+
+Performance marks/measures are now handled by the shared
+`PerformanceMonitor` service (`src/characterBuilder/services/performanceMonitor.js`).
+The base controller lazily instantiates the service and emits
+`core:character_builder_performance_warning` events when measurements exceed the
+default 100 ms threshold (configurable per controller). Use the
+`performanceMonitor` getter when you need direct access to the service (for
+aggregated metrics or future stats listeners) but prefer the protected helper
+methods for standard timing flows.
+
 ## Field Access
 
 ```javascript
