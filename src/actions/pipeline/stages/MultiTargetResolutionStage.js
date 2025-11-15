@@ -17,6 +17,7 @@
 /** @typedef {import('../services/interfaces/IScopeContextBuilder.js').IScopeContextBuilder} IScopeContextBuilder */
 /** @typedef {import('../services/interfaces/ITargetDisplayNameResolver.js').ITargetDisplayNameResolver} ITargetDisplayNameResolver */
 /** @typedef {import('../services/interfaces/ITargetResolutionTracingOrchestrator.js').ITargetResolutionTracingOrchestrator} ITargetResolutionTracingOrchestrator */
+/** @typedef {import('../services/interfaces/ITargetResolutionResultBuilder.js').default} ITargetResolutionResultBuilder */
 
 import { PipelineStage } from '../PipelineStage.js';
 import { PipelineResult } from '../PipelineResult.js';
@@ -52,6 +53,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
   #targetResolver;
   #logger;
   #tracingOrchestrator;
+  #resultBuilder;
 
   /**
    * @param {object} deps - Service dependencies
@@ -65,6 +67,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
    * @param {TargetContextBuilder} deps.targetContextBuilder
    * @param {ILogger} deps.logger
    * @param {ITargetResolutionTracingOrchestrator} deps.tracingOrchestrator
+   * @param {ITargetResolutionResultBuilder} deps.targetResolutionResultBuilder
    */
   constructor({
     targetDependencyResolver,
@@ -77,6 +80,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
     targetContextBuilder,
     logger,
     tracingOrchestrator,
+    targetResolutionResultBuilder,
   }) {
     super('MultiTargetResolution');
 
@@ -122,6 +126,20 @@ export class MultiTargetResolutionStage extends PipelineStage {
     this.#targetResolver = targetResolver;
     this.#logger = logger;
     this.#tracingOrchestrator = tracingOrchestrator;
+    validateDependency(
+      targetResolutionResultBuilder,
+      'ITargetResolutionResultBuilder',
+      logger,
+      {
+        requiredMethods: [
+          'buildFinalResult',
+          'buildLegacyResult',
+          'buildMultiTargetResult',
+          'attachMetadata',
+        ],
+      }
+    );
+    this.#resultBuilder = targetResolutionResultBuilder;
   }
 
   /**
@@ -423,27 +441,14 @@ export class MultiTargetResolutionStage extends PipelineStage {
       }
     }
 
-    // Build final result data
-    const resultData = {
-      ...context.data,
-      actionsWithTargets: allActionsWithTargets,
-    };
-
-    // Add backward compatibility fields if we have target data
-    if (allTargetContexts.length > 0) {
-      resultData.targetContexts = allTargetContexts;
-    }
-    // Keep global metadata for backward compatibility but it's no longer required
-    // Each action now has its own metadata attached
-    if (lastResolvedTargets && lastTargetDefinitions) {
-      resultData.resolvedTargets = lastResolvedTargets;
-      resultData.targetDefinitions = lastTargetDefinitions;
-    }
-
-    return PipelineResult.success({
-      data: resultData,
-      errors,
-    });
+    return this.#resultBuilder.buildFinalResult(
+      context,
+      allActionsWithTargets,
+      allTargetContexts,
+      lastResolvedTargets,
+      lastTargetDefinitions,
+      errors
+    );
   }
 
   /**
@@ -573,7 +578,8 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const resolvedTargets = {
       primary: targetContexts.map((tc) => ({
         id: tc.entityId,
-        displayName: tc.displayName ||
+        displayName:
+          tc.displayName ||
           this.#nameResolver.getEntityDisplayName(tc.entityId) ||
           tc.entityId,
         entity: tc.entityId
@@ -582,25 +588,19 @@ export class MultiTargetResolutionStage extends PipelineStage {
       })),
     };
 
-    return PipelineResult.success({
-      data: {
-        ...context.data,
-        resolvedTargets,
-        targetContexts, // Keep for backward compatibility
-        actionsWithTargets: [
-          {
-            actionDef,
-            targetContexts,
-            // Attach metadata for consistency with multi-target actions
-            resolvedTargets,
-            targetDefinitions: conversionResult.targetDefinitions || {
-              primary: { scope: scope, placeholder: placeholder },
-            },
-            isMultiTarget: false,
+    return this.#resultBuilder.buildLegacyResult(
+      context,
+      resolvedTargets,
+      targetContexts,
+      {
+        ...conversionResult,
+        targetDefinitions:
+          conversionResult.targetDefinitions || {
+            primary: { scope, placeholder },
           },
-        ],
       },
-    });
+      actionDef
+    );
   }
 
   /**
@@ -955,32 +955,14 @@ export class MultiTargetResolutionStage extends PipelineStage {
       });
     }
 
-    // Attach resolved targets directly to actionDef for downstream stages
-    // This is critical for TargetComponentValidationStage which expects actionDef.resolvedTargets
-    actionDef.resolvedTargets = resolvedTargets;
-    actionDef.targetDefinitions = targetDefs;
-    actionDef.isMultiTarget = true;
-
-    const actionsWithTargets = [
-      {
-        actionDef,
-        targetContexts: allTargetContexts,
-        resolvedTargets,
-        targetDefinitions: targetDefs,
-        isMultiTarget: true,
-      },
-    ];
-
-    return PipelineResult.success({
-      data: {
-        ...context.data,
-        resolvedTargets,
-        targetContexts: allTargetContexts, // Backward compatibility
-        targetDefinitions: targetDefs, // Pass definitions for formatting
-        detailedResolutionResults, // Include detailed resolution results
-        actionsWithTargets,
-      },
-    });
+    return this.#resultBuilder.buildMultiTargetResult(
+      context,
+      resolvedTargets,
+      allTargetContexts,
+      targetDefs,
+      actionDef,
+      detailedResolutionResults
+    );
   }
 
   /**

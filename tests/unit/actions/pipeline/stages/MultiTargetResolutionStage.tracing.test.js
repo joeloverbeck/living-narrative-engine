@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/stages/MultiTargetResolutionStage.js';
 import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionResultBuilder from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 describe('MultiTargetResolutionStage - Action Tracing', () => {
   let stage;
@@ -86,6 +87,10 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
     };
 
     mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockDeps.logger,
+    });
+    mockDeps.targetResolutionResultBuilder = new TargetResolutionResultBuilder({
+      entityManager: mockDeps.entityManager,
       logger: mockDeps.logger,
     });
 

@@ -7,6 +7,7 @@ import { MultiTargetResolutionStage } from '../../../../../src/actions/pipeline/
 import { PipelineResult } from '../../../../../src/actions/pipeline/PipelineResult.js';
 import { ActionResult } from '../../../../../src/actions/core/actionResult.js';
 import TargetResolutionTracingOrchestrator from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionTracingOrchestrator.js';
+import TargetResolutionResultBuilder from '../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 
 describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
   let stage;
@@ -57,6 +58,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
     mockDeps.tracingOrchestrator = new TargetResolutionTracingOrchestrator({
       logger: mockDeps.logger,
     });
+    mockDeps.targetResolutionResultBuilder = new TargetResolutionResultBuilder({
+      entityManager: mockDeps.entityManager,
+      logger: mockDeps.logger,
+    });
 
     stage = new MultiTargetResolutionStage({
       targetDependencyResolver: mockDeps.targetDependencyResolver,
@@ -69,6 +74,7 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
       targetContextBuilder: mockDeps.targetContextBuilder,
       logger: mockDeps.logger,
       tracingOrchestrator: mockDeps.tracingOrchestrator,
+      targetResolutionResultBuilder: mockDeps.targetResolutionResultBuilder,
     });
 
     mockActor = {
