@@ -7,6 +7,7 @@ describe('PerformanceMonitor service', () => {
   let performanceRef;
 
   beforeEach(() => {
+    jest.restoreAllMocks();
     logger = {
       debug: jest.fn(),
       warn: jest.fn(),
@@ -151,5 +152,146 @@ describe('PerformanceMonitor service', () => {
       'Failed to measure performance: unstable',
       expect.any(Error)
     );
+  });
+
+  it('returns null and warns when mark name is missing', () => {
+    const monitor = new PerformanceMonitor({
+      logger,
+      eventBus,
+      performanceRef,
+    });
+
+    const timestamp = monitor.mark('');
+    expect(timestamp).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith('PerformanceMonitor: mark name is required');
+  });
+
+  it('logs mark failures and returns null when native mark throws', () => {
+    const nativeError = new Error('mark failure');
+    performanceRef.now.mockReturnValue(15);
+    performanceRef.mark.mockImplementation(() => {
+      throw nativeError;
+    });
+
+    const monitor = new PerformanceMonitor({ logger, eventBus, performanceRef });
+    const result = monitor.mark('unstable-mark');
+
+    expect(result).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Failed to create performance mark: unstable-mark',
+      nativeError
+    );
+  });
+
+  it('logs debug fallback when native measure fails', () => {
+    const nativeError = new Error('measure failure');
+    performanceRef.now
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(30)
+      .mockReturnValue(40);
+    performanceRef.measure.mockImplementation(() => {
+      throw nativeError;
+    });
+
+    const monitor = new PerformanceMonitor({
+      logger,
+      eventBus,
+      performanceRef,
+      threshold: 1000,
+    });
+
+    monitor.mark('alpha');
+    monitor.mark('omega');
+    const measurement = monitor.measure('render', 'alpha', 'omega');
+
+    expect(measurement.duration).toBe(30);
+    expect(logger.debug).toHaveBeenCalledWith(
+      'PerformanceMonitor: native measure fallback used',
+      expect.objectContaining({ measureName: 'render', error: nativeError })
+    );
+  });
+
+  it('handles clear failures both by prefix and when clearing all data', () => {
+    const clearMarksError = new Error('clearMarks');
+    const clearMeasuresError = new Error('clearMeasures');
+    performanceRef.now.mockReturnValue(5);
+    performanceRef.clearMarks.mockImplementation(() => {
+      throw clearMarksError;
+    });
+    performanceRef.clearMeasures.mockImplementation(() => {
+      throw clearMeasuresError;
+    });
+
+    const monitor = new PerformanceMonitor({ logger, eventBus, performanceRef });
+    monitor.mark('test-start');
+    monitor.mark('test-end');
+    monitor.measure('test-measure', 'test-start', 'test-end');
+
+    expect(() => monitor.clearData('test')).not.toThrow();
+    expect(logger.debug).toHaveBeenCalledWith(
+      'PerformanceMonitor: clearMarks failed',
+      expect.objectContaining({ markKey: 'test-start', error: clearMarksError })
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'PerformanceMonitor: clearMeasures failed',
+      expect.objectContaining({ measureKey: 'test-measure', error: clearMeasuresError })
+    );
+
+    expect(() => monitor.clearData()).not.toThrow();
+    expect(logger.debug).toHaveBeenCalledWith('PerformanceMonitor: clear all failed', {
+      error: clearMarksError,
+    });
+  });
+
+  it('manages stats listeners and guards against listener errors', () => {
+    performanceRef.now
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(20)
+      .mockReturnValue(25);
+    const monitor = new PerformanceMonitor({
+      logger,
+      eventBus,
+      performanceRef,
+      threshold: 1000,
+    });
+
+    const safeListener = jest.fn();
+    const failingListener = jest.fn(() => {
+      throw new Error('listener broke');
+    });
+
+    monitor.registerStatsListener(safeListener);
+    monitor.registerStatsListener(failingListener);
+    monitor.registerStatsListener(null);
+
+    monitor.mark('task-start');
+    monitor.mark('task-end');
+    const measurement = monitor.measure('task', 'task-start', 'task-end');
+
+    expect(safeListener).toHaveBeenCalledWith('task', measurement);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'PerformanceMonitor: stats listener threw error',
+      expect.any(Error)
+    );
+
+    monitor.unregisterStatsListener(safeListener);
+    monitor.unregisterStatsListener(failingListener);
+
+    expect(monitor.getMeasurements().get('task')).toBe(measurement);
+  });
+
+  it('falls back to Date.now when performanceRef.now is not available', () => {
+    const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(12345);
+    const monitor = new PerformanceMonitor({
+      logger,
+      eventBus,
+      performanceRef: {
+        mark: jest.fn(),
+      },
+    });
+
+    const timestamp = monitor.mark('fallback-start');
+    expect(timestamp).toBe(12345);
+    expect(dateSpy).toHaveBeenCalled();
   });
 });
