@@ -37,8 +37,8 @@ class PlanInvalidationDetector {
   /** @type {import('../../logic/services/jsonLogicEvaluationService.js').default} */
   #jsonLogicService;
 
-  /** @type {import('../../data/gameDataRepository.js').GameDataRepository} */
-  #gameDataRepository;
+  /** @type {import('../../data/interfaces/IDataRegistry.js').IDataRegistry} */
+  #dataRegistry;
 
   /**
    * Create new plan invalidation detector instance
@@ -46,9 +46,9 @@ class PlanInvalidationDetector {
    * @param {object} deps - Dependencies
    * @param {import('../../logging/logger.js').default} deps.logger - Logger instance
    * @param {import('../../logic/services/jsonLogicEvaluationService.js').default} deps.jsonLogicEvaluationService - JSON Logic evaluation service
-   * @param {import('../../data/gameDataRepository.js').GameDataRepository} deps.gameDataRepository - Game data repository for loading task definitions
+   * @param {import('../../data/interfaces/IDataRegistry.js').IDataRegistry} deps.dataRegistry - Data registry for loading task definitions
    */
-  constructor({ logger, jsonLogicEvaluationService, gameDataRepository }) {
+  constructor({ logger, jsonLogicEvaluationService, dataRegistry }) {
     this.#logger = ensureValidLogger(logger);
 
     validateDependency(jsonLogicEvaluationService, 'JsonLogicEvaluationService', this.#logger, {
@@ -56,10 +56,10 @@ class PlanInvalidationDetector {
     });
     this.#jsonLogicService = jsonLogicEvaluationService;
 
-    validateDependency(gameDataRepository, 'GameDataRepository', this.#logger, {
-      requiredMethods: ['get'],
+    validateDependency(dataRegistry, 'IDataRegistry', this.#logger, {
+      requiredMethods: ['get', 'getAll'],
     });
-    this.#gameDataRepository = gameDataRepository;
+    this.#dataRegistry = dataRegistry;
 
     this.#logger.info('PlanInvalidationDetector initialized');
   }
@@ -395,7 +395,7 @@ class PlanInvalidationDetector {
   }
 
   /**
-   * Get task definition from repository
+   * Get task definition from registry
    *
    * @param {string} taskId - Task ID in format 'modId:taskName'
    * @returns {object|null} Task definition or null if not found
@@ -403,33 +403,17 @@ class PlanInvalidationDetector {
    */
   #getTaskDefinition(taskId) {
     try {
-      // Get all tasks from repository
-      const tasksData = this.#gameDataRepository.get('tasks');
-
-      if (!tasksData) {
-        this.#logger.warn('No tasks available in repository');
+      // Validate task ID format
+      if (!taskId || typeof taskId !== 'string') {
+        this.#logger.warn('Invalid task ID', { taskId });
         return null;
       }
 
-      // Parse task ID to extract mod and task name
-      const parts = taskId.split(':');
-      if (parts.length !== 2) {
-        this.#logger.warn('Invalid task ID format', { taskId });
-        return null;
-      }
-
-      const [modId] = parts;
-
-      // Get task from nested structure: tasks[modId][taskId]
-      if (!tasksData[modId]) {
-        this.#logger.warn('Mod not found in tasks data', { modId, taskId });
-        return null;
-      }
-
-      const task = tasksData[modId][taskId];
+      // Get task directly from registry using qualified ID
+      const task = this.#dataRegistry.get('tasks', taskId);
 
       if (!task) {
-        this.#logger.warn('Task not found in mod', { modId, taskId });
+        this.#logger.warn('Task not found in registry', { taskId });
         return null;
       }
 

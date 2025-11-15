@@ -20,7 +20,7 @@ describe('TaskLibraryConstructor', () => {
     };
 
     mockEntityManager = {
-      getEntity: jest.fn(),
+      getAllComponentTypesForEntity: jest.fn(),
     };
 
     mockContextAssembly = {
@@ -133,22 +133,17 @@ describe('TaskLibraryConstructor', () => {
   describe('constructLibrary - Cache Key Generation', () => {
     beforeEach(() => {
       mockDataRegistry.getAll.mockReturnValue([{ id: 'core' }]);
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core') return [];
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks') return [];
         return [];
       });
     });
 
     it('should generate cache key from actor components (sorted)', () => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {
-          'core:hands': {},
-          'core:digestive_system': {},
-          'core:actor': {},
-        },
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:hands',
+        'core:digestive_system',
+        'core:actor',
+      ]);
 
       constructor.constructLibrary('actor-1');
 
@@ -159,15 +154,9 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should generate different cache keys for different component sets', () => {
-      mockEntityManager.getEntity
-        .mockReturnValueOnce({
-          id: 'actor-1',
-          components: { 'core:hands': {}, 'core:actor': {} },
-        })
-        .mockReturnValueOnce({
-          id: 'actor-1',
-          components: { 'core:digestive_system': {}, 'core:actor': {} },
-        });
+      mockEntityManager.getAllComponentTypesForEntity
+        .mockReturnValueOnce(['core:hands', 'core:actor'])
+        .mockReturnValueOnce(['core:digestive_system', 'core:actor']);
 
       constructor.constructLibrary('actor-1');
       const stats1 = constructor.getCacheStats();
@@ -182,36 +171,29 @@ describe('TaskLibraryConstructor', () => {
       expect(key1).not.toEqual(key2);
     });
 
-    it('should handle actor with no components', () => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {},
-      });
+    it('should throw error for actor with no components', () => {
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-      const result = constructor.constructLibrary('actor-1');
-
-      expect(result).toEqual([]);
-      const stats = constructor.getCacheStats();
-      expect(stats.keys).toContain('actor-1:');
+      expect(() => constructor.constructLibrary('actor-1')).toThrow(
+        'Actor not found or has no components'
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should throw error if actor not found', () => {
-      mockEntityManager.getEntity.mockReturnValue(null);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(null);
 
-      expect(() => constructor.constructLibrary('nonexistent')).toThrow('Actor not found');
+      expect(() => constructor.constructLibrary('nonexistent')).toThrow(
+        'Actor not found or has no components'
+      );
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
 
   describe('constructLibrary - Cache Management', () => {
     beforeEach(() => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: { 'core:actor': {} },
-      });
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'core:test_task',
@@ -234,7 +216,7 @@ describe('TaskLibraryConstructor', () => {
       const result2 = constructor.constructLibrary('actor-1');
 
       expect(result1).toBe(result2); // Same reference
-      expect(mockDataRegistry.getAll).toHaveBeenCalledTimes(2); // Only called once (mods + tasks.core)
+      expect(mockDataRegistry.getAll).toHaveBeenCalledTimes(1); // Only called once for tasks (cached on second call)
     });
 
     it('should return cached result on cache hit', () => {
@@ -260,13 +242,8 @@ describe('TaskLibraryConstructor', () => {
 
   describe('clearCache', () => {
     beforeEach(() => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: { 'core:actor': {} },
-      });
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        return [];
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
+      mockDataRegistry.getAll.mockImplementation((key) => {        return [];
       });
     });
 
@@ -302,13 +279,8 @@ describe('TaskLibraryConstructor', () => {
 
   describe('getCacheStats', () => {
     beforeEach(() => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: { 'core:actor': {} },
-      });
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        return [];
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
+      mockDataRegistry.getAll.mockImplementation((key) => {        return [];
       });
     });
 
@@ -338,50 +310,36 @@ describe('TaskLibraryConstructor', () => {
   });
 
   describe('Task Retrieval from Registry', () => {
-    it('should retrieve tasks from all mods', () => {
+    it('should retrieve tasks from registry', () => {
       mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }, { id: 'custom' }];
-        if (key === 'tasks.core') return [{ id: 'core:task1' }];
-        if (key === 'tasks.custom') return [{ id: 'custom:task1' }];
+        if (key === 'tasks') return [{ id: 'core:task1' }, { id: 'custom:task1' }];
         return [];
       });
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {},
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
 
       constructor.constructLibrary('actor-1');
 
-      expect(mockDataRegistry.getAll).toHaveBeenCalledWith('mods');
-      expect(mockDataRegistry.getAll).toHaveBeenCalledWith('tasks.core');
-      expect(mockDataRegistry.getAll).toHaveBeenCalledWith('tasks.custom');
+      expect(mockDataRegistry.getAll).toHaveBeenCalledWith('tasks');
     });
 
-    it('should handle mods with no tasks', () => {
+    it('should handle empty task registry', () => {
       mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'empty_mod' }];
-        if (key === 'tasks.empty_mod') return [];
+        if (key === 'tasks') return [];
         return [];
       });
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {},
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
 
       const result = constructor.constructLibrary('actor-1');
 
       expect(result).toEqual([]);
     });
 
-    it('should handle registry with no mods', () => {
+    it('should handle null task registry', () => {
       mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [];
+        if (key === 'tasks') return null;
         return [];
       });
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {},
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
 
       const result = constructor.constructLibrary('actor-1');
 
@@ -392,10 +350,7 @@ describe('TaskLibraryConstructor', () => {
       mockDataRegistry.getAll.mockImplementation(() => {
         throw new Error('Registry error');
       });
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {},
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
 
       expect(() => constructor.constructLibrary('actor-1')).toThrow('Failed to retrieve tasks');
       expect(mockLogger.error).toHaveBeenCalled();
@@ -404,13 +359,11 @@ describe('TaskLibraryConstructor', () => {
 
   describe('Structural Gate Evaluation', () => {
     beforeEach(() => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: { 'core:actor': {}, 'core:hands': {} },
-      });
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        return [];
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:actor',
+        'core:hands',
+      ]);
+      mockDataRegistry.getAll.mockImplementation((key) => {        return [];
       });
       mockContextAssembly.assemblePlanningContext.mockReturnValue({
         actor: { components: { 'core:actor': {}, 'core:hands': {} } },
@@ -419,9 +372,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should include task with no structural gates', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core') return [{ id: 'core:always_applicable' }];
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks') return [{ id: 'core:always_applicable' }];
         return [];
       });
 
@@ -432,9 +383,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should include task when structural gate passes', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'core:requires_hands',
@@ -454,9 +403,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should exclude task when structural gate fails', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'core:requires_wings',
@@ -475,9 +422,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should exclude task when gate evaluation throws error', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'core:invalid_gate',
@@ -501,9 +446,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should handle mix of passing and failing gates', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'core:task1',
@@ -528,9 +471,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should assemble planning context for each gate evaluation', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'core:task1',
@@ -552,9 +493,7 @@ describe('TaskLibraryConstructor', () => {
         world: { time: 100 },
       };
       mockContextAssembly.assemblePlanningContext.mockReturnValue(context);
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'core:task1',
@@ -576,16 +515,11 @@ describe('TaskLibraryConstructor', () => {
 
   describe('Library Statistics Logging', () => {
     beforeEach(() => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {},
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
     });
 
     it('should log library construction stats', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [{ id: 'task1' }, { id: 'task2' }, { id: 'task3' }];
         return [];
       });
@@ -598,9 +532,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should calculate correct filter percentage', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'task1',
@@ -639,16 +571,11 @@ describe('TaskLibraryConstructor', () => {
 
   describe('Error Handling', () => {
     beforeEach(() => {
-      mockEntityManager.getEntity.mockReturnValue({
-        id: 'actor-1',
-        components: {},
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:actor']);
     });
 
     it('should handle context assembly failure gracefully', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'task1',
@@ -671,9 +598,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should continue processing other tasks after single task error', () => {
-      mockDataRegistry.getAll.mockImplementation((key) => {
-        if (key === 'mods') return [{ id: 'core' }];
-        if (key === 'tasks.core')
+      mockDataRegistry.getAll.mockImplementation((key) => {        if (key === 'tasks')
           return [
             {
               id: 'task1',
@@ -696,7 +621,7 @@ describe('TaskLibraryConstructor', () => {
     });
 
     it('should log error and throw when entire construction fails', () => {
-      mockEntityManager.getEntity.mockImplementation(() => {
+      mockEntityManager.getAllComponentTypesForEntity.mockImplementation(() => {
         throw new Error('Critical failure');
       });
 

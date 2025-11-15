@@ -17,7 +17,7 @@ echo ""
 echo "🛡️ Checking for hardcoded mod references..."
 JS_FILES=$(echo "$FILES" | grep -E '\\.(js|mjs)$' || true)
 if [ -n "$JS_FILES" ]; then
-    if ! echo "$JS_FILES" | xargs -r npx eslint --quiet --max-warnings=0 --rule 'mod-architecture/no-hardcoded-mod-references:2'; then
+    if ! echo "$JS_FILES" | xargs -r npx eslint --quiet --max-warnings=0; then
         echo "❌ Hardcoded mod references detected. Please remove non-core references or document an approved exemption."
         exit 1
     fi

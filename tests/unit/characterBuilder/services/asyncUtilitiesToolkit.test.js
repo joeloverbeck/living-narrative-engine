@@ -57,6 +57,21 @@ describe('asyncUtilitiesToolkit', () => {
     expect(fn).toHaveBeenLastCalledWith('second');
   });
 
+  it('asyncUtilitiesToolkit trailing-only throttle waits full delay on first call', () => {
+    const fn = jest.fn();
+    const throttled = toolkit.throttle(fn, 100, { leading: false, trailing: true });
+
+    throttled('first');
+    expect(fn).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(99);
+    expect(fn).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(1);
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn).toHaveBeenCalledWith('first');
+  });
+
   it('asyncUtilitiesToolkit namespaces debounced handlers by key', () => {
     const fn = jest.fn();
     const handlerA = toolkit.getDebouncedHandler('search', fn, 25);

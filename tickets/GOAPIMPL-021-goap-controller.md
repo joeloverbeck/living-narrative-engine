@@ -6,19 +6,22 @@
 
 ## Description
 
-Create GOAPController that orchestrates the complete GOAP cycle: goal selection → planning → refinement → execution → replanning. Integrates planner, refinement engine, and action executor into a cohesive decision-making system.
+Create GOAPController that orchestrates the complete GOAP cycle: goal selection → planning → refinement → action hint generation → replanning. Integrates planner, refinement engine, and turn system into a cohesive decision-making system.
 
 The GOAP controller is the main entry point for GOAP-based AI - it coordinates all GOAP subsystems to make intelligent action decisions.
 
+**Critical Architecture Note**: GOAP does NOT execute actions directly. It produces action hints (action references + target bindings) that flow through the standard turn system. This maintains the unified player type architecture where 'human', 'llm', and 'goap' all produce actions from `data/mods/*/actions/` and execute through the same pipeline.
+
 ## Acceptance Criteria
 
-- [ ] Manages complete GOAP cycle (goal → plan → refine → execute)
+- [ ] Manages complete GOAP cycle (goal → plan → refine → action hint)
 - [ ] Handles goal selection from actor's goals
 - [ ] Triggers planning with GOAP planner
-- [ ] Refines tasks to primitive actions with refinement engine
-- [ ] Executes actions via existing action executor
+- [ ] Refines tasks to step results with refinement engine
+- [ ] Extracts action hints from refinement step results
+- [ ] Returns action hints to GoapDecisionProvider (not executing directly)
 - [ ] Detects plan invalidation and triggers replanning
-- [ ] Handles all failure modes gracefully (planning fails, refinement fails, execution fails)
+- [ ] Handles all failure modes gracefully (planning fails, refinement fails)
 - [ ] Dispatches lifecycle events for monitoring
 - [ ] Maintains plan state across turns
 - [ ] 90%+ test coverage
@@ -26,7 +29,7 @@ The GOAP controller is the main entry point for GOAP-based AI - it coordinates a
 ## Files to Create
 
 ### Main Implementation
-- `src/goap/goapController.js` - Main GOAP orchestration controller
+- `src/goap/controllers/goapController.js` - Main GOAP orchestration controller
 
 ### Tests
 - `tests/unit/goap/goapController.test.js` - Unit tests
@@ -51,11 +54,11 @@ The GOAP controller is the main entry point for GOAP-based AI - it coordinates a
 - [ ] Test event dispatching
 
 ### Integration Tests
-- [ ] Test GOAP cycle with real tasks and actions
+- [ ] Test GOAP cycle with real tasks and action hints
 - [ ] Test replanning scenarios
 - [ ] Test multi-step plans
 - [ ] Test failure recovery
-- [ ] Test integration with action executor
+- [ ] Test integration with GoapDecisionProvider and turn system
 
 ### E2E Tests
 - [ ] Test complete game scenario with GOAP AI
@@ -67,7 +70,7 @@ The GOAP controller is the main entry point for GOAP-based AI - it coordinates a
 
 ### High-Level Algorithm
 ```javascript
-decideTurn(actor, world) {
+async decideTurn(actor, world) {
   // 1. Check if we have active plan
   if (this.activePlan) {
     // 2. Validate plan still applicable
@@ -110,11 +113,11 @@ decideTurn(actor, world) {
   // 8. Get next task from plan
   const task = this.activePlan.tasks[this.activePlan.currentStep];
 
-  // 9. Refine task to primitive actions
+  // 9. Refine task to step results (NOT executable actions)
   const refinementResult = await this.refinementEngine.refine(
-    task,
-    actor,
-    world
+    task.taskId,
+    actor.id,
+    task.params
   );
 
   if (!refinementResult.success) {
@@ -122,18 +125,30 @@ decideTurn(actor, world) {
     return this.handleRefinementFailure(task, refinementResult);
   }
 
-  // 11. Execute first primitive action
-  const action = refinementResult.actions[0];
+  // 11. Extract action reference from first step result
+  const firstStep = refinementResult.stepResults[0];
+  if (!firstStep || !firstStep.actionRef) {
+    throw new Error('Refinement produced no actionable steps');
+  }
 
-  // 12. Advance plan
+  // 12. Build action hint from step result
+  const actionHint = {
+    actionId: firstStep.actionRef,  // e.g., "items:consume_item"
+    targetBindings: firstStep.targetBindings,
+    stepIndex: 0
+  };
+
+  // 13. Advance plan
   this.activePlan.currentStep++;
 
   if (this.activePlan.currentStep >= this.activePlan.tasks.length) {
-    // 13. Plan complete
+    // 14. Plan complete
     this.activePlan = null;
   }
 
-  return action;
+  // 15. Return action hint for GoapDecisionProvider to resolve
+  // The turn system will match this hint to available actions
+  return { actionHint };
 }
 ```
 
@@ -223,7 +238,7 @@ handleRefinementFailure(task, result) {
 ```
 
 ### Execution Failure
-Handled by action executor, may trigger plan invalidation.
+Handled by the turn system's action execution pipeline. If an action fails prerequisite checks or execution, the turn system will handle it normally. This may trigger plan invalidation on the next turn if the failure affects world state.
 
 ## Events to Dispatch
 
@@ -268,10 +283,13 @@ Options for plan persistence:
 Start with controller state for MVP.
 
 ### Turn-Based Execution
-GOAP controller returns ONE action per turn:
-- Refine task → get action sequence
-- Execute first action only
-- Store remaining actions for future turns (or re-refine)
+GOAP controller returns ONE action hint per turn:
+- Refine task → get step results with action references
+- Extract first action reference as hint
+- Return hint to GoapDecisionProvider
+- Provider matches hint to discovered actions
+- Turn system executes chosen action
+- Next turn: Controller advances to next step or task
 
 ### Replanning Strategy
 When to replan:
@@ -299,13 +317,86 @@ Check goal satisfaction:
 - `IGOAPPlanner` (GOAPIMPL-018) - Planning
 - `IRefinementEngine` (GOAPIMPL-014) - Task refinement
 - `IPlanInvalidationDetector` (GOAPIMPL-020) - Plan validation
-- `IActionExecutor` - Execute primitive actions
+- `ITurnActionChoicePipeline` - Action discovery from refinement hints
 - `IContextAssemblyService` (GOAPIMPL-007) - Build contexts
 - `IEventBus` - Dispatch events
 - `ILogger` - Logging
 
 ### Used By (future)
 - GOAPIMPL-022 (Action Decider Integration) - GOAP decision provider
+
+## Integration with Turn System
+
+### Critical Architecture: Unified Player Type Design
+
+**IMPORTANT**: GOAP is designed as a decision provider that produces action hints, NOT a separate execution system. All player types ('human', 'llm', 'goap') share:
+- Same entry points (turn system calls decision provider)
+- Same exits (all produce atomic actions from `data/mods/*/actions/`)
+- Same execution pipeline (all actions go through prerequisite checks and system rules)
+
+This unified architecture is **intentional and must be preserved**.
+
+### Action Discovery Flow
+
+The GOAP controller returns action hints that flow through the standard turn system:
+
+1. **GOAPController.decideTurn()** returns `{ actionHint: { actionId, targetBindings } }`
+2. **GoapDecisionProvider** receives indexed actions from `TurnActionChoicePipeline.buildChoices()`
+3. **Provider matches** `actionHint.actionId` against available actions
+4. **Provider applies** `targetBindings` to filter/prioritize matching actions
+5. **Provider returns** `{ index }` of the matching action (standard decision format)
+6. **Turn system** executes the action at that index through normal pipeline
+
+### Why This Architecture Works
+
+**Separation of Concerns**:
+- **Planning Layer** (GOAP-specific): What high-level tasks to perform
+- **Refinement Layer** (GOAP-specific): How tasks decompose to action references
+- **Action Discovery Layer** (Unified): What primitive actions are available
+- **Execution Layer** (Unified): How actions execute and affect world state
+
+**Benefits**:
+- All actions go through same validation (prerequisites, scope checks)
+- All actions trigger same system rules (for consistency)
+- Mods define actions once, usable by all player types
+- No duplicate execution logic for GOAP vs human/LLM
+
+**Action Hint Resolution**:
+If the suggested action isn't available (failed prerequisites, out of scope), the GoapDecisionProvider returns `null`, which causes:
+1. Actor idles this turn
+2. Next turn, GOAPController detects world state change
+3. Plan invalidation detector may trigger replanning
+4. New plan generated with updated world state
+
+### Action Hint Resolver (Future Component)
+
+**Purpose**: Bridge between GOAP refinement results and turn system action discovery.
+
+**Interface** (to be created in GOAPIMPL-022):
+```javascript
+interface IActionHintResolver {
+  /**
+   * Resolve action hint to action index
+   * @param actionRef - Action ID from refinement (e.g., "items:consume_item")
+   * @param targetBindings - Target entity bindings from refinement
+   * @param availableActions - Discovered actions from TurnActionChoicePipeline
+   * @returns Index of matching action, or null if no match
+   */
+  resolveActionFromHint(
+    actionRef: string,
+    targetBindings: object,
+    availableActions: ActionComposite[]
+  ): number | null;
+}
+```
+
+**Responsibilities**:
+- Match action references to discovered actions
+- Apply target bindings to filter candidates
+- Handle ambiguous matches (multiple actions with same ID)
+- Return null for unresolvable hints (triggers replanning)
+
+**Used by**: GoapDecisionProvider in GOAPIMPL-022
 
 ## Success Validation
 
