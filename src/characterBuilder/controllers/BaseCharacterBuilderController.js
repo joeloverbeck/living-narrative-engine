@@ -195,10 +195,6 @@ export class BaseCharacterBuilderController {
    * @private
    */
   #configureLifecycleHooks() {
-    if (!this.#lifecycle) {
-      return;
-    }
-
     const createAsyncHook = (methodName, phaseName, options = {}) =>
       this.#lifecycle.createControllerMethodHook(
         this,
