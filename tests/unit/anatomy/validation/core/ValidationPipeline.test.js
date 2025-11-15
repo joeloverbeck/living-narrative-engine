@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import ValidationPipeline from '../../../../../src/anatomy/validation/core/ValidationPipeline.js';
+import ValidationResultBuilder from '../../../../../src/anatomy/validation/core/ValidationResultBuilder.js';
 
 const createLogger = () => ({
   info: jest.fn(),
@@ -39,6 +40,10 @@ describe('ValidationPipeline', () => {
     registry = {
       getAll: jest.fn(() => validators),
     };
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('executes validators in registry order and aggregates results', async () => {
@@ -232,5 +237,163 @@ describe('ValidationPipeline', () => {
       true
     );
     expect(validatorB.validate).toHaveBeenCalledTimes(1);
+  });
+
+  it('halts when a validator throws and failFast is enabled', async () => {
+    const validatorA = {
+      name: 'validator-a',
+      priority: 1,
+      failFast: true,
+      validate: jest.fn(async () => {
+        throw new Error('catastrophic failure');
+      }),
+    };
+    const validatorB = createValidator('validator-b');
+    validators = [validatorA, validatorB];
+
+    const pipeline = new ValidationPipeline({ registry, logger });
+    await pipeline.execute(recipe);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "ValidationPipeline: Halting after 'validator-a' due to failFast exception"
+    );
+    expect(validatorB.validate).not.toHaveBeenCalled();
+  });
+
+  it('normalizes invalid configuration input', async () => {
+    const validator = createValidator('validator-a');
+    validators = [validator];
+
+    const pipelineWithInvalidDefinition = new ValidationPipeline({
+      registry,
+      logger,
+      configuration: {
+        validators: {
+          'validator-a': null,
+        },
+      },
+    });
+
+    await pipelineWithInvalidDefinition.execute(recipe);
+
+    const pipelineWithNullConfiguration = new ValidationPipeline({
+      registry,
+      logger,
+      configuration: null,
+    });
+
+    await pipelineWithNullConfiguration.execute(recipe);
+
+    expect(validator.validate).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips aggregation when validator returns a non-object result', async () => {
+    const validator = createValidator('validator-a', { result: undefined });
+    validator.validate.mockResolvedValue('invalid');
+    validators = [validator];
+
+    const addIssuesSpy = jest.spyOn(
+      ValidationResultBuilder.prototype,
+      'addIssues'
+    );
+    const addSuggestionSpy = jest.spyOn(
+      ValidationResultBuilder.prototype,
+      'addSuggestion'
+    );
+    const addPassedSpy = jest.spyOn(
+      ValidationResultBuilder.prototype,
+      'addPassed'
+    );
+
+    const pipeline = new ValidationPipeline({ registry, logger });
+    const result = await pipeline.execute(recipe);
+
+    expect(addIssuesSpy).not.toHaveBeenCalled();
+    expect(addSuggestionSpy).not.toHaveBeenCalled();
+    expect(addPassedSpy).not.toHaveBeenCalled();
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('processes suggestion overrides and ignores invalid suggestion entries', async () => {
+    const validator = createValidator('validator-a', {
+      result: {
+        errors: [],
+        warnings: [],
+        suggestions: [
+          null,
+          { type: 'OVERRIDE_SUG', message: 'needs override' },
+          { type: 'REGULAR_SUG', message: 'keep as suggestion' },
+        ],
+        passed: [],
+      },
+    });
+    validators = [validator];
+
+    const pipeline = new ValidationPipeline({
+      registry,
+      logger,
+      configuration: {
+        validators: {
+          'validator-a': {
+            severityOverrides: { OVERRIDE_SUG: 'warning' },
+          },
+        },
+      },
+    });
+
+    const result = await pipeline.execute(recipe);
+
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'OVERRIDE_SUG', severity: 'warning' }),
+      ])
+    );
+    expect(result.suggestions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'REGULAR_SUG', message: 'keep as suggestion' }),
+      ])
+    );
+  });
+
+  it('ignores falsy passed entries and synthesizes default messages', async () => {
+    const validator = createValidator('validator-a', {
+      result: {
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        passed: [null, { check: 'core-shape' }],
+      },
+    });
+    validators = [validator];
+
+    const pipeline = new ValidationPipeline({ registry, logger });
+    const result = await pipeline.execute(recipe);
+
+    expect(result.passed).toHaveLength(1);
+    expect(result.passed[0]).toEqual(
+      expect.objectContaining({
+        message: "Validation passed for 'core-shape'",
+        check: 'core-shape',
+      })
+    );
+  });
+
+  it('applies default severities to issues missing severity metadata', async () => {
+    const validator = createValidator('validator-a', {
+      result: {
+        errors: [{ type: 'ERR_DEFAULT', message: 'no severity provided' }],
+        warnings: [],
+        suggestions: [],
+        passed: [],
+      },
+    });
+    validators = [validator];
+
+    const pipeline = new ValidationPipeline({ registry, logger });
+    const result = await pipeline.execute(recipe);
+
+    expect(result.errors[0]).toEqual(
+      expect.objectContaining({ type: 'ERR_DEFAULT', severity: 'error' })
+    );
   });
 });
