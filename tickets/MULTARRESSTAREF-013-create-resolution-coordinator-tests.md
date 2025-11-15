@@ -8,11 +8,18 @@
 
 ## Objective
 
-Create comprehensive unit tests for `TargetResolutionCoordinator` to ensure coordination logic is preserved during extraction and contextFrom dependencies work correctly.
+Create comprehensive unit tests for `TargetResolutionCoordinator` (`src/actions/pipeline/services/implementations/TargetResolutionCoordinator.js`) to ensure the extracted service correctly coordinates dependency-aware target resolution, surfaces failure conditions, and integrates with the surrounding tracing/result-building infrastructure.
 
 ## Background
 
-The coordinator handles ~150 lines of critical coordination logic including dependency order resolution and contextFrom handling. Tests ensure no functionality is lost during extraction.
+The coordinator currently spans ~180 lines and owns the full dependency-aware coordination logic, including:
+
+- Validating and storing eight service dependencies (`ITargetDependencyResolver`, `IScopeContextBuilder`, `ITargetDisplayNameResolver`, `UnifiedScopeResolver`, `IEntityManager`, `ILogger`, `ITargetResolutionTracingOrchestrator`, `ITargetResolutionResultBuilder`).
+- `coordinateResolution(context, trace)`, which expects the full pipeline context (with `actionDef`, `actor`, `actionContext`, and `data`), validates `actionDef.targets`, invokes `dependencyResolver.getResolutionOrder`, calls `resolveWithDependencies(...)`, and either forwards `PipelineResult` failures or delegates success payload building to `resultBuilder.buildMultiTargetResult`.
+- `resolveWithDependencies({ ... })`, which iterates over the resolver-provided order, branches between primary targets and `contextFrom`-dependent targets, records `detailedResolutionResults`, short-circuits with a `PipelineResult.success(... continueProcessing: false)` when any scope yields zero candidates, and defers to `resolveDependentTargets` for per-primary evaluation.
+- `resolveDependentTargets({ ... })`, which loops through previously resolved primaries, builds scope context via `buildScopeContextForSpecificPrimary`, calls the internal `#resolveScope`, and returns flattened targets/contexts plus diagnostics.
+
+Tests need to verify these real-world behaviors rather than the older stage assumptions.
 
 ## Technical Requirements
 
@@ -28,79 +35,71 @@ The coordinator handles ~150 lines of critical coordination logic including depe
 #### 1. Constructor and Initialization
 ```javascript
 describe('TargetResolutionCoordinator - Constructor', () => {
-  it('should validate all dependencies', () => {});
-  it('should throw if dependencies missing required methods', () => {});
-  it('should initialize with valid dependencies', () => {});
+  it('validates each dependency with the proper required methods (e.g., getResolutionOrder, buildScopeContext, resolve)', () => {});
+  it('throws when a dependency is missing its required method (exercise each dependency to ensure coverage)', () => {});
+  it('stores dependencies when validation succeeds', () => {});
 });
 ```
 
 #### 2. Coordination Orchestration
 ```javascript
 describe('coordinateResolution', () => {
-  it('should coordinate resolution for action with targets', () => {});
-  it('should use dependency resolver for order', () => {});
-  it('should return success result with resolved targets', () => {});
-  it('should include target contexts', () => {});
-  it('should include detailed results', () => {});
-  it('should handle empty targets gracefully', () => {});
-  it('should return error result on failure', () => {});
+  it('returns PipelineResult.failure when actionDef.targets is missing or invalid', async () => {});
+  it('passes actionDef.targets to dependencyResolver.getResolutionOrder and propagates thrown errors as PipelineResult.failure', async () => {});
+  it('short-circuits when resolveWithDependencies returns a PipelineResult instance', async () => {});
+  it('invokes resultBuilder.buildMultiTargetResult with context, resolved targets, contexts, target definitions, action definition, and detailed results', async () => {});
+  it('captures multi-target resolution statistics through tracingOrchestrator when the trace is action-aware', async () => {});
+  it('returns the builder-produced PipelineResult payload (including continueProcessing true/false) when there are resolved targets', async () => {});
 });
 ```
 
-#### 3. Dependency-Aware Resolution
+#### 3. Dependency-Aware Resolution (`resolveWithDependencies`)
 ```javascript
 describe('resolveWithDependencies', () => {
-  it('should resolve targets in dependency order', () => {});
-  it('should handle primary targets first', () => {});
-  it('should handle dependent targets after primaries', () => {});
-  it('should track detailed results per target', () => {});
-  it('should build target contexts for primary targets', () => {});
-  it('should handle mixed primary and dependent targets', () => {});
-  it('should handle only primary targets', () => {});
-  it('should handle only dependent targets', () => {});
+  it('iterates targets using the supplied resolutionOrder and logs diagnostics for each target', async () => {});
+  it('calls contextBuilder.buildScopeContext for primary targets and unifiedScopeResolver.resolve with the computed scope context', async () => {});
+  it('hydrates primary targets using entityManager.getEntityInstance + nameResolver.getEntityDisplayName', async () => {});
+  it('uses resolveDependentTargets for targets with contextFrom and merges its return shape', async () => {});
+  it('records detailedResolutionResults with scopeId, contextFrom, counts, and evaluation times', async () => {});
+  it('returns PipelineResult.success({ continueProcessing: false }) when a primary or dependent scope resolves to zero candidates', async () => {});
 });
 ```
 
-#### 4. ContextFrom Handling
+#### 4. ContextFrom Handling (`resolveDependentTargets`)
 ```javascript
 describe('resolveDependentTargets', () => {
-  it('should resolve dependent targets using primary target context', () => {});
-  it('should iterate through all primary targets', () => {});
-  it('should build context for each primary target', () => {});
-  it('should aggregate results from all contexts', () => {});
-  it('should deduplicate dependent targets', () => {});
-  it('should handle empty primary targets', () => {});
-  it('should handle resolution failures gracefully', () => {});
+  it('builds scope context for every primary target via buildScopeContextForSpecificPrimary', async () => {});
+  it('calls into the private #resolveScope through dependency injection stubs and aggregates all candidates', async () => {});
+  it('hydrates each resolved dependent target (including contextFromId) and returns flattened target contexts', async () => {});
+  it('tracks candidatesFound, contextEntityIds (matching the supplied primaries), and evaluation time', async () => {});
+  it('returns empty arrays when there are no primary targets', async () => {});
 });
 ```
 
-#### 5. Resolution Order
+#### 5. Resolution Order & Diagnostics
 ```javascript
 describe('Resolution Order', () => {
-  it('should respect dependency resolver order', () => {});
-  it('should resolve primary targets before dependents', () => {});
-  it('should handle complex dependency chains', () => {});
-  it('should handle circular dependencies gracefully', () => {});
+  it('respects the order returned by dependencyResolver.getResolutionOrder', async () => {});
+  it('handles mixed primary/dependent chains by ensuring dependent targets run only after their contextFrom targets exist', async () => {});
+  it('records tracing information (trace.step/info/success/failure) for each scope when a trace is provided', async () => {});
 });
 ```
 
 #### 6. Detailed Results Tracking
 ```javascript
 describe('Detailed Results Tracking', () => {
-  it('should track primary target results', () => {});
-  it('should track dependent target results with contextFrom', () => {});
-  it('should include resolution counts', () => {});
-  it('should mark primary vs dependent targets', () => {});
+  it('captures candidatesFound/candidatesResolved/evaluationTimeMs for primaries', async () => {});
+  it('captures primaryTargetCount/contextEntityIds and failureReason for dependents when zero candidates are returned', async () => {});
+  it('aggregates targetContexts for every hydrated target (primary and dependent)', async () => {});
 });
 ```
 
 #### 7. Error Handling
 ```javascript
 describe('Error Handling', () => {
-  it('should not throw on resolution failures', () => {});
-  it('should return error in result', () => {});
-  it('should log errors with context', () => {});
-  it('should handle partial resolution failures', () => {});
+  it('propagates scope resolution errors by logging and returning [] from #resolveScope (causing PipelineResult.success w/ continueProcessing: false)', async () => {});
+  it('logs dependency resolver errors and wraps them in PipelineResult.failure from coordinateResolution', async () => {});
+  it('handles action-aware tracing by calling tracingOrchestrator.captureScopeEvaluation and captureMultiTargetResolution only when trace supports it', async () => {});
 });
 ```
 
@@ -109,25 +108,32 @@ describe('Error Handling', () => {
 ```javascript
 function createMockDependencyResolver(order = ['primary', 'secondary']) {
   return {
-    resolveOrder: jest.fn().mockResolvedValue(order),
+    getResolutionOrder: jest.fn(() => order),
   };
 }
 
 function createMockContextBuilder() {
   return {
-    buildContext: jest.fn().mockResolvedValue({ actor: 'test-actor' }),
+    buildScopeContext: jest.fn(() => ({ actor: 'test-actor' })),
+    buildScopeContextForSpecificPrimary: jest.fn(() => ({ actor: 'test-actor', location: 'test-location' })),
   };
 }
 
-function createMockScopeResolver(candidates = ['target-1', 'target-2']) {
+function createMockNameResolver() {
   return {
-    resolveScope: jest.fn().mockResolvedValue(candidates),
+    getEntityDisplayName: jest.fn((id) => `Entity ${id}`),
+  };
+}
+
+function createMockUnifiedScopeResolver(candidates = ['target-1', 'target-2']) {
+  return {
+    resolve: jest.fn(async () => ({ success: true, value: candidates })),
   };
 }
 
 function createMockEntityManager() {
   return {
-    getEntity: jest.fn((id) => ({ id, name: `Entity ${id}` })),
+    getEntityInstance: jest.fn((id) => ({ id, name: `Entity ${id}` })),
   };
 }
 
@@ -140,63 +146,107 @@ function createMockLogger() {
   };
 }
 
+function createMockTracingOrchestrator() {
+  return {
+    isActionAwareTrace: jest.fn(() => false),
+    captureScopeEvaluation: jest.fn(),
+    captureMultiTargetResolution: jest.fn(),
+  };
+}
+
+function createMockResultBuilder(result = PipelineResult.success({ data: { actionsWithTargets: ['foo'] } })) {
+  return {
+    buildMultiTargetResult: jest.fn(() => result),
+  };
+}
+
+function createMockActionContext() {
+  return { currentLocation: 'loc-1' };
+}
+
 function createMockActionDef(overrides = {}) {
   return {
     id: 'test:action',
     targets: {
-      primary: { scope: 'primary_scope' },
-      secondary: { scope: 'secondary_scope', contextFrom: 'primary' },
+      primary: { scope: 'primary_scope', placeholder: 'Primary Target' },
+      secondary: { scope: 'secondary_scope', contextFrom: 'primary', placeholder: 'Secondary Target' },
     },
     ...overrides,
   };
 }
 ```
 
+> **Note:** The helper above references `PipelineResult`. Import it from `src/actions/pipeline/PipelineResult.js` inside the test file to construct success/failure instances consistent with production code.
+
 ### Critical Test Cases
 
 **Test contextFrom handling:**
 ```javascript
-it('should resolve contextFrom targets using primary targets', async () => {
-  const mockDependencyResolver = createMockDependencyResolver(['primary', 'secondary']);
-  const coordinator = new TargetResolutionCoordinator({/*...*/});
+it('resolves contextFrom targets using previously resolved primaries', async () => {
+  const dependencyResolver = createMockDependencyResolver(['primary', 'secondary']);
+  const contextBuilder = createMockContextBuilder();
+  const scopeResolver = createMockUnifiedScopeResolver(['entity-1']);
+  const entityManager = createMockEntityManager();
+  const nameResolver = createMockNameResolver();
+  const tracingOrchestrator = createMockTracingOrchestrator();
+  const resultBuilder = createMockResultBuilder();
+  const coordinator = new TargetResolutionCoordinator({
+    dependencyResolver,
+    contextBuilder,
+    nameResolver,
+    unifiedScopeResolver: scopeResolver,
+    entityManager,
+    logger: createMockLogger(),
+    tracingOrchestrator,
+    resultBuilder,
+  });
 
-  const actionDef = {
-    targets: {
-      primary: { scope: 'actors' },
-      secondary: { scope: 'items', contextFrom: 'primary' },
-    },
+  const context = {
+    actionDef: createMockActionDef(),
+    actor: { id: 'actor-1' },
+    actionContext: createMockActionContext(),
+    data: {},
   };
 
-  const result = await coordinator.coordinateResolution(actionDef, actor, context, trace);
+  await coordinator.coordinateResolution(context);
 
-  expect(result.success).toBe(true);
-  expect(result.resolvedTargets).toHaveProperty('primary');
-  expect(result.resolvedTargets).toHaveProperty('secondary');
-  expect(result.detailedResults.secondary).toHaveProperty('contextFrom', 'primary');
+  expect(resultBuilder.buildMultiTargetResult).toHaveBeenCalled();
+  expect(tracingOrchestrator.captureMultiTargetResolution).toHaveBeenCalled();
 });
 ```
 
 **Test dependency order:**
 ```javascript
-it('should resolve in dependency order', async () => {
-  const resolveOrder = ['target1', 'target2', 'target3'];
-  const mockDependencyResolver = createMockDependencyResolver(resolveOrder);
+it('resolves scopes in the order provided by getResolutionOrder', async () => {
+  const resolveOrder = ['primary', 'secondary'];
+  const dependencyResolver = createMockDependencyResolver(resolveOrder);
+  const scopeResolver = createMockUnifiedScopeResolver(['entity-1']);
+  const contextBuilder = createMockContextBuilder();
+  const coordinator = createCoordinator({
+    dependencyResolver,
+    unifiedScopeResolver: scopeResolver,
+    contextBuilder,
+  });
 
-  const callOrder = [];
-  const mockScopeResolver = {
-    resolveScope: jest.fn((scope) => {
-      callOrder.push(scope);
-      return [];
-    }),
-  };
+  await coordinator.resolveWithDependencies({
+    context: {
+      data: {},
+    },
+    actionDef: createMockActionDef(),
+    targetDefs: createMockActionDef().targets,
+    actor: { id: 'actor-1' },
+    actionContext: createMockActionContext(),
+    resolutionOrder: resolveOrder,
+  });
 
-  await coordinator.resolveWithDependencies(/*...*/);
-
-  expect(callOrder[0]).toBe('scope1');
-  expect(callOrder[1]).toBe('scope2');
-  expect(callOrder[2]).toBe('scope3');
+  expect(scopeResolver.resolve.mock.calls.map(([scope]) => scope)).toEqual([
+    'primary_scope',
+    'secondary_scope',
+  ]);
 });
 ```
+
+> Define `createCoordinator` in the test file to reduce boilerplate; it should wire all required dependencies using the helpers above while allowing overrides per test.
 
 ## Acceptance Criteria
 
