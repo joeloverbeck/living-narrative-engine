@@ -192,7 +192,7 @@ describe('RecipePreflightValidator', () => {
       expect(report.errors).toHaveLength(1);
       expect(validatorStubs.recipeBodyDescriptor.validate).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "RecipePreflightValidator: Validator 'blueprint-existence' halted execution due to failFast errors"
+        "ValidationPipeline: Validator 'blueprint-existence' halted execution due to failFast errors"
       );
     });
 
@@ -218,7 +218,7 @@ describe('RecipePreflightValidator', () => {
       expect(report.errors).toHaveLength(1);
       expect(validatorStubs.recipeBodyDescriptor.validate).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "RecipePreflightValidator: Halting pipeline after 'blueprint-existence' due to failFast option"
+        "ValidationPipeline: Halting pipeline after 'blueprint-existence' due to failFast option"
       );
     });
 
@@ -280,7 +280,7 @@ describe('RecipePreflightValidator', () => {
       const report = await validator.validate(createRecipe());
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        "RecipePreflightValidator: Validator 'pattern-matching' threw an exception",
+        "ValidationPipeline: Validator 'pattern-matching' threw an exception",
         expect.any(Error)
       );
       expect(report.errors.some((e) => e.type === 'VALIDATION_ERROR')).toBe(
