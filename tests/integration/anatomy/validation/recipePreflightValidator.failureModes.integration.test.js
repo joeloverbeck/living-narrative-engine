@@ -562,7 +562,7 @@ describe('RecipePreflightValidator - Failure mode integration coverage', () => {
     expect(failure).toBeDefined();
     expect(failure.details.error).toBe('Unexpected parse failure');
     expect(logger.debug).toHaveBeenCalledWith(
-      'RecipePreflightValidator: Found 1 entity definition load failures'
+      'LoadFailureValidator: Found 1 entity definition load failures'
     );
   });
 
