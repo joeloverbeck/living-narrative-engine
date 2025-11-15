@@ -27,6 +27,7 @@ import {
   unregisterToolkitForOwner,
 } from '../services/asyncUtilitiesToolkit.js';
 import { PerformanceMonitor } from '../services/performanceMonitor.js';
+import { ValidationService } from '../services/validationService.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -114,6 +115,9 @@ export class BaseCharacterBuilderController {
 
   /** @private @type {ErrorHandlingStrategy|null} */
   #errorHandlingStrategy = null;
+
+  /** @private @type {ValidationService|null} */
+  #validationService = null;
 
   /**
    * @param {object} dependencies
@@ -1851,6 +1855,25 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Lazily create the shared ValidationService instance.
+   *
+   * @private
+   * @returns {ValidationService}
+   */
+  #getValidationService() {
+    if (!this.#validationService) {
+      this.#validationService = new ValidationService({
+        schemaValidator: this.#schemaValidator,
+        logger: this.#logger,
+        handleError: this._handleError.bind(this),
+        errorCategories: ERROR_CATEGORIES,
+      });
+    }
+
+    return this.#validationService;
+  }
+
+  /**
    * Handle errors with consistent logging and user feedback
    *
    * @protected
@@ -2025,50 +2048,16 @@ export class BaseCharacterBuilderController {
    * @returns {{isValid: boolean, errors?: Array, errorMessage?: string}} Validation result
    */
   _validateData(data, schemaId, context = {}) {
-    try {
-      // Note: The schemaValidator interface expects validate() to return a ValidationResult object
-      // The validateAgainstSchema utility from schemaValidationUtils.js handles the context but throws on error
-      // So we need to use the validator's validate() method directly for non-throwing validation
-      const validationResult = this.schemaValidator.validate(schemaId, data);
+    const validationContext = {
+      ...context,
+      controllerName: context.controllerName || this.constructor.name,
+    };
 
-      if (validationResult.isValid) {
-        return { isValid: true };
-      }
-
-      const failureMessage = `${this.constructor.name}: Validation failed for schema '${schemaId}' with ${
-        validationResult.errors?.length || 0
-      } error(s)`;
-      this.#logger.warn(failureMessage, {
-        operation: context.operation || 'validateData',
-        schemaId,
-      });
-
-      // Format the validation errors from the result
-      const formattedErrors = this._formatValidationErrors(
-        validationResult.errors
-      );
-
-      return {
-        isValid: false,
-        errors: formattedErrors,
-        errorMessage: this._buildValidationErrorMessage(formattedErrors),
-        failureMessage,
-      };
-    } catch (error) {
-      // Handle schema loading errors or validation system failures
-      this._handleError(error, {
-        operation: context.operation || 'validateData',
-        category: ERROR_CATEGORIES.SYSTEM,
-        userMessage: 'Validation failed. Please check your input.',
-        metadata: { schemaId, dataKeys: Object.keys(data || {}) },
-      });
-
-      return {
-        isValid: false,
-        errors: [`Validation error: ${error.message}`],
-        errorMessage: 'Unable to validate data. Please try again.',
-      };
-    }
+    return this.#getValidationService().validateData(
+      data,
+      schemaId,
+      validationContext
+    );
   }
 
   /**
@@ -2078,23 +2067,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _formatValidationErrors(errors) {
-    if (!Array.isArray(errors)) {
-      return ['Invalid data format'];
-    }
-
-    return errors.map((error) => {
-      if (typeof error === 'string') {
-        return error;
-      }
-
-      // Handle AJV error format
-      if (error.instancePath && error.message) {
-        const field = error.instancePath.replace(/^\//, '').replace(/\//g, '.');
-        return field ? `${field}: ${error.message}` : error.message;
-      }
-
-      return error.message || 'Unknown validation error';
-    });
+    return this.#getValidationService().formatValidationErrors(errors);
   }
 
   /**
@@ -2104,11 +2077,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _buildValidationErrorMessage(errors) {
-    if (errors.length === 1) {
-      return errors[0];
-    }
-
-    return `Please fix the following errors:\n${errors.map((e) => `• ${e}`).join('\n')}`;
+    return this.#getValidationService().buildValidationErrorMessage(errors);
   }
 
   /**

@@ -150,3 +150,33 @@ return strategy.executeWithErrorHandling(
   hooks, recoverability decisions, and recovery handler registration.
 - Run `npx jest tests/unit/characterBuilder/services/errorHandlingStrategy.test.js`
   to execute the suite locally when updating the service.
+
+## ValidationService responsibilities
+
+- Encapsulates the `_validateData`, `_formatValidationErrors`, and
+  `_buildValidationErrorMessage` helpers that previously lived on the
+  controller. Controllers now keep the protected methods but internally
+  call the shared `ValidationService`, ensuring consistent logging and
+  AJV error normalization regardless of the consumer.
+- Emits a standardized validation result object with the following
+  contract:
+  - Success: `{ isValid: true }`.
+  - Failure: `{ isValid: false, errors: string[], errorMessage: string,
+    failureMessage: string }`. The `failureMessage` is logged with
+    `logger.warn` along with `{ operation, schemaId, ...context }`
+    metadata and should be surfaced in telemetry dashboards.
+  - System failure fallback: `{ isValid: false, errors: ['Validation
+    error: <details>'], errorMessage: 'Unable to validate data. Please
+    try again.' }`. This branch is accompanied by
+    `handleError(error, { category: ERROR_CATEGORIES.SYSTEM, userMessage:
+    'Validation failed. Please check your input.' })` so the centralized
+    ErrorHandlingStrategy still receives the exception.
+- Controllers should treat any `{ isValid: false }` response as a hard
+  stop for the current flow: show the returned `errorMessage` to users,
+  log the `failureMessage`, and only retry after the payload is updated.
+  This keeps the BASCHACUICONREF-000 expectations for validation flows
+  aligned with the centralized error handling playbook.
+- Unit tests for the service live in
+  `tests/unit/characterBuilder/services/validationService.test.js`. Run
+  `npx jest tests/unit/characterBuilder/services/validationService.test.js`
+  when updating validation logic or formatting.
