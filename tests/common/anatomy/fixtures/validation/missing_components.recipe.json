@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "tests:missing_components",
+  "blueprintId": "anatomy:human_male",
+  "bodyDescriptors": {
+    "build": "impossibly-broad",
+    "composition": "ethereal"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "tests:nonexistent_torso",
+      "properties": {
+        "descriptors:nonexistent_component": {
+          "shape": "ghostly"
+        }
+      }
+    },
+    "left_arm": {
+      "partType": "arm",
+      "preferId": "tests:missing_arm",
+      "tags": [
+        "descriptors:imaginary_component"
+      ]
+    },
+    "right_arm": {
+      "partType": "arm",
+      "preferId": "tests:missing_arm",
+      "properties": "invalid-property-payload"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "tests:missing_leg",
+      "properties": {
+        "descriptors:phantom_descriptor": {
+          "color": "mist"
+        }
+      }
+    }
+  ]
+}

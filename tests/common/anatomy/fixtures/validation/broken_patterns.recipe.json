@@ -1,0 +1,55 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "tests:broken_patterns",
+  "blueprintId": "anatomy:giant_spider",
+  "bodyDescriptors": {
+    "build": "athletic",
+    "hairDensity": "hairy"
+  },
+  "slots": {
+    "left_arm": {
+      "partType": "arm",
+      "preferId": "tests:invalid_arm"
+    },
+    "phantom_socket": {
+      "partType": "wing",
+      "socket": "nonexistent_socket",
+      "preferId": "tests:phantom_wing"
+    },
+    "spinnerets": {
+      "partType": "spinneret",
+      "preferId": "tests:missing_spinneret"
+    }
+  },
+  "patterns": [
+    {
+      "matchesGroup": "appendage:unknown_group",
+      "partType": "mystery_appendage",
+      "preferId": "tests:mystery_appendage"
+    },
+    {
+      "matches": ["tail_cluster"],
+      "partType": "tail",
+      "preferId": "tests:tail_that_does_not_exist"
+    },
+    {
+      "matchesAll": {
+        "slotType": "leg",
+        "orientation": "*_front"
+      },
+      "partType": "spider_leg",
+      "preferId": "tests:missing_front_leg"
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": ["spinneret", "wing"],
+        "validation": {
+          "minItems": 2,
+          "errorMessage": "Spinnerets and wings must coexist"
+        }
+      }
+    ]
+  }
+}
