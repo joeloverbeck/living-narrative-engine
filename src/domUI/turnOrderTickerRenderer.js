@@ -550,6 +550,17 @@ export class TurnOrderTickerRenderer {
   }
 
   /**
+   * Test-only helper to inspect the tracked current actor ID.
+   * DO NOT USE IN PRODUCTION CODE.
+   *
+   * @returns {string|null} Currently tracked actor ID
+   * @private
+   */
+  __testGetCurrentActorId() {
+    return this.#_currentActorId;
+  }
+
+  /**
    * Test-only helper to access private method for unit testing.
    * DO NOT USE IN PRODUCTION CODE.
    *
