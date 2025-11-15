@@ -6,6 +6,13 @@ import pluginJest from 'eslint-plugin-jest';
 import pluginJsdoc from 'eslint-plugin-jsdoc';
 import babelParser from '@babel/eslint-parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import noHardcodedModReferencesRule from './scripts/eslint-rules/no-hardcoded-mod-references.js';
+
+const modArchitecturePlugin = {
+  rules: {
+    'no-hardcoded-mod-references': noHardcodedModReferencesRule,
+  },
+};
 // Potentially add: import pluginImport from 'eslint-plugin-import'; // We'll discuss this later
 
 export default [
@@ -72,6 +79,31 @@ export default [
           importAssertions: true,
         },
       },
+    },
+  },
+
+  // 3a. Architecture rules for mod references
+  {
+    files: ['**/*.js', '**/*.mjs'],
+    plugins: {
+      'mod-architecture': modArchitecturePlugin,
+    },
+    rules: {
+      'mod-architecture/no-hardcoded-mod-references': [
+        'warn',
+        {
+          allowedMods: ['core'],
+          allowedFiles: [
+            'src/loaders/modsLoader.js',
+            'src/loaders/modLoader.js',
+            'src/loaders/ModManifestProcessor.js',
+            'tests/**/*.js',
+            'tests/**/*.mjs',
+            'scripts/**/*.js',
+            'scripts/**/*.mjs',
+          ],
+        },
+      ],
     },
   },
 
