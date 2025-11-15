@@ -22,6 +22,7 @@ export const pipelineTokens = freeze({
   IScopeContextBuilder: 'IScopeContextBuilder',
   ITargetDisplayNameResolver: 'ITargetDisplayNameResolver',
   ITargetResolutionTracingOrchestrator: 'ITargetResolutionTracingOrchestrator',
+  ITargetResolutionResultBuilder: 'ITargetResolutionResultBuilder',
 
   // Service Infrastructure
   IPipelineServiceFactory: 'IPipelineServiceFactory',

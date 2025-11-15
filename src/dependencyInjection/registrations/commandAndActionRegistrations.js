@@ -155,6 +155,9 @@ export function registerCommandAndAction(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       targetResolver: c.resolve(tokens.ITargetResolutionService),
       targetContextBuilder: c.resolve(tokens.ITargetContextBuilder),
+      targetResolutionResultBuilder: c.resolve(
+        tokens.ITargetResolutionResultBuilder
+      ),
       logger: c.resolve(tokens.ILogger),
       tracingOrchestrator: c.resolve(
         tokens.ITargetResolutionTracingOrchestrator
