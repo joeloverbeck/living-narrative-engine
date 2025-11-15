@@ -3,6 +3,7 @@ import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipeP
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 import { ComponentExistenceValidationRule } from '../../../../src/anatomy/validation/rules/componentExistenceValidationRule.js';
 import { PropertySchemaValidationRule } from '../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
+import ValidationPipeline from '../../../../src/anatomy/validation/core/ValidationPipeline.js';
 
 const createValidatorStub = (name, { priority = 10, failFast = false } = {}) => {
   const validate = jest.fn(async () => ({
@@ -103,11 +104,50 @@ describe('RecipePreflightValidator', () => {
     });
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   const createRecipe = () => ({
     recipeId: 'test:recipe',
     blueprintId: 'test:blueprint',
     slots: {},
     patterns: [],
+  });
+
+  const createDetailedRecipe = () => ({
+    recipeId: 'test:detailed',
+    blueprintId: 'test:blueprint',
+    slots: {
+      head: {
+        tags: ['vision', 'focus'],
+        properties: {
+          accuracy: { value: 0.9 },
+        },
+      },
+      arm: {
+        tags: ['power'],
+        properties: {
+          strength: { rating: 5 },
+          agility: { rating: 3 },
+        },
+      },
+    },
+    patterns: [
+      {
+        tags: ['pattern:stealth'],
+        properties: {
+          stealth: { required: true },
+        },
+      },
+      {
+        tags: ['pattern:combat', 'pattern:elite'],
+        properties: {
+          aggression: { level: 'high' },
+          style: { type: 'dual' },
+        },
+      },
+    ],
   });
 
   describe('constructor', () => {
@@ -286,6 +326,145 @@ describe('RecipePreflightValidator', () => {
       expect(report.errors.some((e) => e.type === 'VALIDATION_ERROR')).toBe(
         true
       );
+    });
+
+    it('records component existence errors when rule reports issues', async () => {
+      const componentIssues = [
+        {
+          type: 'MISSING_COMPONENT',
+          severity: 'error',
+          message: 'Missing link',
+        },
+      ];
+
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue(componentIssues);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      const report = await validator.validate(createRecipe());
+
+      expect(report.errors).toEqual(expect.arrayContaining(componentIssues));
+    });
+
+    it('logs and records component existence failures when rule throws', async () => {
+      const failure = new Error('component boom');
+
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockRejectedValue(failure);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      const report = await validator.validate(createRecipe());
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Component existence check failed',
+        failure
+      );
+      expect(report.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'VALIDATION_ERROR',
+            check: 'component_existence',
+          }),
+        ])
+      );
+    });
+
+    it('records property schema errors when rule reports issues', async () => {
+      const propertyIssues = [
+        {
+          type: 'INVALID_PROPERTY_SCHEMA',
+          severity: 'error',
+          message: 'Invalid property',
+        },
+      ];
+
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue(propertyIssues);
+
+      const report = await validator.validate(createRecipe());
+
+      expect(report.errors).toEqual(expect.arrayContaining(propertyIssues));
+    });
+
+    it('logs and records property schema failures when rule throws', async () => {
+      const failure = new Error('property boom');
+
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockRejectedValue(failure);
+
+      const report = await validator.validate(createRecipe());
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Property schema check failed',
+        failure
+      );
+      expect(report.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'VALIDATION_ERROR',
+            check: 'property_schemas',
+          }),
+        ])
+      );
+    });
+
+    it('returns early when validator pipeline produces no result', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      const pipelineSpy = jest
+        .spyOn(ValidationPipeline.prototype, 'execute')
+        .mockResolvedValue(undefined);
+
+      const report = await validator.validate(createRecipe());
+
+      expect(pipelineSpy).toHaveBeenCalled();
+      expect(report.errors).toHaveLength(0);
+      expect(report.passed.some((entry) => entry.check === 'component_existence')).toBe(
+        true
+      );
+    });
+
+    it('reports accurate counts for component references and property objects', async () => {
+      jest
+        .spyOn(ComponentExistenceValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+      jest
+        .spyOn(PropertySchemaValidationRule.prototype, 'validate')
+        .mockResolvedValue([]);
+
+      const detailedRecipe = createDetailedRecipe();
+      const report = await validator.validate(detailedRecipe);
+
+      const componentMessage = report.passed.find(
+        (entry) => entry.check === 'component_existence'
+      );
+      const propertyMessage = report.passed.find(
+        (entry) => entry.check === 'property_schemas'
+      );
+
+      expect(componentMessage.message).toBe(
+        'All 12 component references exist'
+      );
+      expect(propertyMessage.message).toBe('All 6 property objects valid');
     });
   });
 });
