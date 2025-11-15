@@ -435,7 +435,7 @@ describe('TargetComponentValidationStage - additional coverage', () => {
     expect(result.continueProcessing).toBe(false);
   });
 
-  it('retains actions when target definitions are optional or unresolved', async () => {
+  it('retains actions when target definitions are empty or unresolved', async () => {
     const configSnapshot = {
       skipValidation: false,
       logDetails: false,
@@ -481,26 +481,13 @@ describe('TargetComponentValidationStage - additional coverage', () => {
           },
           targetContexts: [],
         },
-        {
-          actionDef: {
-            id: 'optional-targets',
-            targetDefinitions: {
-              secondary: { placeholder: 'secondary_placeholder', optional: true },
-            },
-          },
-          resolvedTargets: {},
-          targetDefinitions: {
-            secondary: { placeholder: 'secondary_placeholder', optional: true },
-          },
-          targetContexts: [],
-        },
       ],
     };
 
     const result = await stage.executeInternal(context);
 
     expect(result.success).toBe(true);
-    expect(result.data.actionsWithTargets).toHaveLength(3);
+    expect(result.data.actionsWithTargets).toHaveLength(2);
   });
 
   it('handles missing metadata gracefully when recording pruning updates', async () => {

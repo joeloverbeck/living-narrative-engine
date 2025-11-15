@@ -106,13 +106,10 @@ export class LegacyTargetCompatibilityLayer extends BaseService {
           scope,
           placeholder,
           description: this.#generateDescription(actionDef, scope),
+          // 'none' targets are always optional (no target required)
+          ...(scope === 'none' && { optional: true }),
         },
       };
-
-      // Handle optional targets for 'none' scope
-      if (scope === 'none') {
-        targetDefinitions.primary.optional = true;
-      }
 
       this.logOperation('convertLegacyFormat', {
         actionId: actionDef.id,
@@ -168,11 +165,6 @@ export class LegacyTargetCompatibilityLayer extends BaseService {
         },
       },
     };
-
-    // Add optional flag for 'none' scope
-    if (scope === 'none') {
-      suggestion.targets.primary.optional = true;
-    }
 
     // Copy over other properties (excluding legacy ones)
     const legacyKeys = ['targets', 'scope', 'targetType', 'targetCount'];

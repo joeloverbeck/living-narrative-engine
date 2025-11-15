@@ -385,43 +385,6 @@ describe('TargetComponentValidationStage', () => {
       expect(result.continueProcessing).toBe(false);
     });
 
-    it('should retain actions when only optional targets are unresolved', async () => {
-      const actionDef = {
-        id: 'test:optional_secondary',
-        targets: {
-          primary: { placeholder: 'primary' },
-          secondary: { placeholder: 'secondary', optional: true },
-        },
-        resolvedTargets: {
-          primary: [{ id: 'entity:1' }],
-          secondary: [],
-        },
-      };
-
-      context.actionsWithTargets = [
-        {
-          actionDef,
-          resolvedTargets: { ...actionDef.resolvedTargets },
-          targetDefinitions: actionDef.targets,
-          isMultiTarget: true,
-          targetContexts: [],
-        },
-      ];
-
-      mockValidator.validateTargetComponents.mockReturnValue({ valid: true });
-      mockRequiredValidator.validateTargetRequirements.mockReturnValue({
-        valid: true,
-      });
-
-      const result = await stage.executeInternal(context);
-
-      expect(result.data.actionsWithTargets).toHaveLength(1);
-      expect(result.data.actionsWithTargets[0].actionDef.id).toBe(
-        'test:optional_secondary'
-      );
-      expect(result.continueProcessing).toBe(true);
-    });
-
     it('should pass actions when targets have all required components', async () => {
       const action = {
         id: 'action-1',

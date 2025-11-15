@@ -281,7 +281,6 @@ describe('TargetDependencyResolver', () => {
           scope: 'actor.partners',
           placeholder: 'primary_target',
           description: 123, // Should be string
-          optional: 'yes', // Should be boolean
         },
       };
 
@@ -289,9 +288,6 @@ describe('TargetDependencyResolver', () => {
       expect(result.success).toBe(true); // Optional fields don't fail validation
       expect(result.warnings).toContain(
         "Target 'primary' description should be a string"
-      );
-      expect(result.warnings).toContain(
-        "Target 'primary' optional should be a boolean"
       );
     });
 
@@ -335,7 +331,6 @@ describe('TargetDependencyResolver', () => {
           scope: 'secondary.equipment',
           placeholder: 'tertiary_target',
           contextFrom: 'secondary',
-          optional: true,
         },
       };
 
@@ -355,7 +350,7 @@ describe('TargetDependencyResolver', () => {
       expect(graph[2]).toEqual({
         targetKey: 'tertiary',
         dependencies: ['secondary'],
-        isOptional: true,
+        isOptional: false,
       });
     });
 

@@ -504,11 +504,7 @@ export class TargetComponentValidationStage extends PipelineStage {
         return true;
       }
 
-      for (const [targetKey, definition] of entries) {
-        if (definition?.optional) {
-          continue;
-        }
-
+      for (const [targetKey, _definition] of entries) {
         const targetValue = resolvedTargets[targetKey];
         const candidateCount = Array.isArray(targetValue)
           ? targetValue.length

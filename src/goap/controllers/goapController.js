@@ -10,6 +10,7 @@ import {
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /**
  * @typedef {import('../planner/goapPlanner.js').default} GoapPlanner
@@ -145,14 +146,81 @@ class GoapController {
    * @param {object} world - Current world state (structure TBD)
    * @returns {Promise<object|null>} Action hint { actionHint: { actionId, targetBindings } } or null
    */
+  /**
+   * Execute one GOAP decision cycle for an actor
+   *
+   * Returns an action hint (action reference + target bindings) for the
+   * GoapDecisionProvider to resolve through standard action discovery.
+   * Does NOT execute actions directly.
+   *
+   * @param {object} actor - Actor entity making decision
+   * @param {string} actor.id - Actor entity ID
+   * @param {object} world - Current world state (structure TBD)
+   * @returns {Promise<object|null>} Action hint { actionHint: { actionId, targetBindings } } or null
+   */
   async decideTurn(actor, world) {
     assertPresent(actor, 'Actor is required');
     assertNonBlankString(actor.id, 'Actor ID', 'decideTurn', this.#logger);
     assertPresent(world, 'World is required');
 
-    // Stub - will be implemented in subsequent tickets
-    this.#logger.debug('GOAP decideTurn called', { actorId: actor.id });
-    return null;
+    // 1. Check if we have active plan
+    if (this.#activePlan) {
+      // 2. Validate plan still applicable
+      const validation = this.#validateActivePlan(world);
+
+      if (!validation.valid) {
+        // 3. Plan invalidated → clear and replan
+        this.#clearPlan(`Invalidated: ${validation.reason}`);
+
+        // Dispatch invalidation event (implemented in GOAPIMPL-021-06)
+        // Will trigger replanning in next iteration
+      }
+    }
+
+    // 4. Need new plan?
+    if (!this.#activePlan) {
+      // 5. Select goal (implemented in GOAPIMPL-021-02)
+      const goal = this.#selectGoal(actor, world);
+
+      if (!goal) {
+        this.#logger.debug('No goals to pursue', { actorId: actor.id });
+        return null; // No goals → idle
+      }
+
+      // 6. Plan to achieve goal
+      // Extract state hash from world object
+      const initialState = world.state || world;
+      const planResult = this.#planner.plan(
+        actor.id, // actorId string, not actor object
+        goal,
+        initialState, // symbolic state hash
+        {} // options
+      );
+
+      if (!planResult || !planResult.tasks) {
+        // 7. Planning failed → handle failure (GOAPIMPL-021-05)
+        return this.#handlePlanningFailure(goal);
+      }
+
+      // 8. Create and store plan
+      this.#activePlan = this.#createPlan(goal, planResult.tasks, actor.id);
+    }
+
+    // 9. Get current task
+    const task = this.#getCurrentTask();
+
+    if (!task) {
+      // Plan exhausted but still active → shouldn't happen
+      this.#logger.error('Active plan has no current task', {
+        plan: this.#activePlan,
+      });
+      this.#clearPlan('No current task');
+      return null;
+    }
+
+    // Continue to refinement and action hint extraction
+    // (implemented in GOAPIMPL-021-04)
+    return null; // Stub for now
   }
 
   /**
@@ -262,9 +330,104 @@ class GoapController {
    * @private
    */
   // eslint-disable-next-line no-unused-private-class-members
-  #validateActivePlan(_world) {
-    // Call planInvalidationDetector.checkPlanValidity()
-    return { valid: true };
+  /**
+   * Create new plan from goal and planner result
+   *
+   * @param {object} goal - Goal to achieve
+   * @param {Array<object>} tasks - Tasks from planner
+   * @param {string} actorId - Actor entity ID (REQUIRED for validation)
+   * @returns {object} Active plan structure
+   * @private
+   */
+  #createPlan(goal, tasks, actorId) {
+    assertPresent(goal, 'Goal is required');
+    assertPresent(tasks, 'Tasks are required');
+    assertNonBlankString(actorId, 'Actor ID', '#createPlan', this.#logger);
+
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      throw new InvalidArgumentError('Tasks must be non-empty array');
+    }
+
+    const plan = {
+      goal: goal,
+      tasks: tasks,
+      currentStep: 0,
+      actorId: actorId,
+      createdAt: Date.now(),
+      lastValidated: Date.now(),
+    };
+
+    this.#logger.info('Plan created', {
+      goalId: goal.id,
+      taskCount: tasks.length,
+      actorId: actorId,
+    });
+
+    return plan;
+  }
+
+  /**
+   * Get current task from active plan
+   *
+   * @returns {object|null} Current task or null if no plan
+   * @private
+   */
+  #getCurrentTask() {
+    if (!this.#activePlan) {
+      return null;
+    }
+
+    if (this.#activePlan.currentStep >= this.#activePlan.tasks.length) {
+      return null;
+    }
+
+    return this.#activePlan.tasks[this.#activePlan.currentStep];
+  }
+
+  /**
+   * Validate current active plan against world state
+   *
+   * @param {object} world - Current world state (contains state hash)
+   * @returns {object} Validation result { valid: boolean, invalidatedAt?, task?, reason?, diagnostics? }
+   * @private
+   */
+  // eslint-disable-next-line no-unused-private-class-members
+  #validateActivePlan(world) {
+    if (!this.#activePlan) {
+      return { valid: false, reason: 'No active plan' };
+    }
+
+    // Extract state hash from world object
+    // NOTE: World structure TBD - fallback if world IS the state
+    const currentState = world.state || world;
+
+    // Build context with required actorId
+    const context = {
+      actorId: this.#activePlan.actorId,
+    };
+
+    // Use plan invalidation detector with correct signature
+    const validation = this.#invalidationDetector.checkPlanValidity(
+      this.#activePlan, // Plan with tasks array
+      currentState, // Symbolic state hash
+      context, // { actorId: string }
+      'strict' // Check all tasks
+    );
+
+    // Update validation timestamp if still valid
+    if (validation.valid) {
+      this.#activePlan.lastValidated = Date.now();
+    } else {
+      this.#logger.warn('Plan invalidated', {
+        goalId: this.#activePlan.goal.id,
+        invalidatedAt: validation.invalidatedAt,
+        task: validation.task,
+        reason: validation.reason,
+        currentStep: this.#activePlan.currentStep,
+      });
+    }
+
+    return validation;
   }
 
   /**
@@ -274,9 +437,37 @@ class GoapController {
    * @private
    */
   // eslint-disable-next-line no-unused-private-class-members
+  /**
+   * Advance plan to next task
+   *
+   * @returns {boolean} True if plan continues, false if complete
+   * @private
+   */
+  // eslint-disable-next-line no-unused-private-class-members
   #advancePlan() {
-    // Increment activePlan.currentStep
-    // Clear activePlan if plan complete
+    if (!this.#activePlan) {
+      throw new Error('Cannot advance: no active plan');
+    }
+
+    this.#activePlan.currentStep++;
+
+    const isComplete =
+      this.#activePlan.currentStep >= this.#activePlan.tasks.length;
+
+    if (isComplete) {
+      this.#logger.info('Plan completed', {
+        goalId: this.#activePlan.goal.id,
+        totalSteps: this.#activePlan.tasks.length,
+      });
+    } else {
+      this.#logger.debug('Plan advanced', {
+        goalId: this.#activePlan.goal.id,
+        currentStep: this.#activePlan.currentStep,
+        totalSteps: this.#activePlan.tasks.length,
+      });
+    }
+
+    return !isComplete;
   }
 
   /**
@@ -286,9 +477,28 @@ class GoapController {
    * @private
    */
   // eslint-disable-next-line no-unused-private-class-members
-  #clearPlan() {
+  /**
+   * Clear the active plan
+   *
+   * @param {string} reason - Reason for clearing
+   * @private
+   */
+  // eslint-disable-next-line no-unused-private-class-members
+  #clearPlan(reason) {
+    if (!this.#activePlan) {
+      return;
+    }
+
+    const goalId = this.#activePlan.goal.id;
+
+    this.#logger.info('Plan cleared', {
+      goalId,
+      reason,
+      stepsCompleted: this.#activePlan.currentStep,
+      totalSteps: this.#activePlan.tasks.length,
+    });
+
     this.#activePlan = null;
-    this.#logger.debug('Plan cleared');
   }
 
   /**

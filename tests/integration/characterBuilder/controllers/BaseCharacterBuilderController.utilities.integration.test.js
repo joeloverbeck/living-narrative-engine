@@ -11,6 +11,7 @@ import GameDataRepository from '../../../../src/data/gameDataRepository.js';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/services/characterBuilderService.js';
 import BaseCharacterBuilderController from '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import { PerformanceMonitor } from '../../../../src/characterBuilder/services/performanceMonitor.js';
 
 class MinimalCharacterBuilderService {
   constructor(logger) {
@@ -139,12 +140,17 @@ function createControllerDependencies() {
     logger,
   });
   const characterBuilderService = new MinimalCharacterBuilderService(logger);
+  const performanceMonitor = new PerformanceMonitor({
+    logger,
+    eventBus: safeDispatcher,
+  });
 
   return {
     logger,
     schemaValidator,
     eventBus: safeDispatcher,
     characterBuilderService,
+    performanceMonitor,
   };
 }
 

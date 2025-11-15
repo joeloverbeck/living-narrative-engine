@@ -434,17 +434,16 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     const [entry] = result.data.actionsWithTargets;
     expect(entry.targetContexts).toHaveLength(0);
     expect(entry.targetDefinitions.primary).toEqual(
-      expect.objectContaining({ scope: 'none', placeholder: 'target', optional: true })
+      expect.objectContaining({ scope: 'none', placeholder: 'target' })
     );
 
     const migrationSuggestion = JSON.parse(
       legacyLayer.getMigrationSuggestion(waitAction)
     );
-    expect(migrationSuggestion.targets.primary.optional).toBe(true);
     expect(migrationSuggestion.targets.primary.scope).toBe('none');
 
     const validation = legacyLayer.validateConversion(waitAction, {
-      primary: { scope: 'none', placeholder: 'target', optional: true },
+      primary: { scope: 'none', placeholder: 'target' },
     });
     expect(validation.valid).toBe(true);
 

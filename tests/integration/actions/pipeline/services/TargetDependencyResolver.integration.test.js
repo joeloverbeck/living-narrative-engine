@@ -66,7 +66,6 @@ describe('TargetDependencyResolver integration', () => {
         scope: 'scope:tertiary',
         placeholder: 'tertiary',
         contextFrom: 'secondary',
-        optional: true,
       },
     };
 
@@ -82,7 +81,7 @@ describe('TargetDependencyResolver integration', () => {
     expect(dependencyGraph).toEqual([
       { targetKey: 'primary', dependencies: [], isOptional: false },
       { targetKey: 'secondary', dependencies: ['primary'], isOptional: false },
-      { targetKey: 'tertiary', dependencies: ['secondary'], isOptional: true },
+      { targetKey: 'tertiary', dependencies: ['secondary'], isOptional: false },
     ]);
 
     expect(resolver.hasCircularDependency('primary', definitions)).toBe(false);
@@ -102,7 +101,6 @@ describe('TargetDependencyResolver integration', () => {
         scope: 'scope:primary',
         placeholder: 'primary',
         description: 42,
-        optional: 'yes',
       },
     };
 
@@ -111,7 +109,6 @@ describe('TargetDependencyResolver integration', () => {
     expect(result.errors).toEqual([]);
     expect(result.warnings).toEqual([
       "Target 'primary' description should be a string",
-      "Target 'primary' optional should be a boolean",
     ]);
   });
 

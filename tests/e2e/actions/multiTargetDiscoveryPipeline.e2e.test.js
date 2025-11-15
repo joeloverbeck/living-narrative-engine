@@ -720,7 +720,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
       expect(commands).toContain('drop Item 29');
     });
 
-    it('should handle optional targets with multiple entities correctly', async () => {
+    it('should handle multiple entities with multiple targets correctly', async () => {
       // Update player with items
       await entityService.updateComponent(
         testEnvironment.actors.playerActorId,
@@ -758,7 +758,7 @@ describe('Multi-Target Discovery Pipeline E2E', () => {
         },
       });
 
-      // Set up mock give actions with optional targets
+      // Set up mock give actions with multiple targets
       const giveActions = [
         {
           actionId: 'social:give_item',

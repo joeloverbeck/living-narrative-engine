@@ -156,10 +156,6 @@ export class TargetDependencyResolver extends BaseService {
       if (targetDef.description && typeof targetDef.description !== 'string') {
         warnings.push(`Target '${key}' description should be a string`);
       }
-
-      if (targetDef.optional && typeof targetDef.optional !== 'boolean') {
-        warnings.push(`Target '${key}' optional should be a boolean`);
-      }
     }
 
     const result = {
@@ -336,7 +332,7 @@ export class TargetDependencyResolver extends BaseService {
       dependencyInfoArray.push({
         targetKey: key,
         dependencies,
-        isOptional: targetDef.optional || false,
+        isOptional: false,
       });
     }
 
