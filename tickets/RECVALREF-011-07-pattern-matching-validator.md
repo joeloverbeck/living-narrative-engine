@@ -19,20 +19,24 @@ This validator performs dry-run pattern matching to detect patterns that would m
 
 **Functions:**
 - `validatePatternMatching(recipe, blueprint, dataRegistry, slotGenerator, logger)` (main)
-- `findMatchingSlots(pattern, blueprint, slotGenerator)` (helper)
-- `getPatternDescription(pattern)` (helper - also used by GeneratedSlotPartsValidator)
+- `findMatchingSlots(pattern, blueprint, dataRegistry, slotGenerator, logger)` (helper)
+- `getPatternDescription(pattern)` (helper - exported for RecipePreflightValidator and the runtime pattern resolver)
+- `extractMatcherInfo(pattern)` (helper - shapes warning metadata)
+- `identifyBlockingMatcher(pattern, result, blueprint)` (helper - explains failure reason)
+- `suggestPatternFix(pattern, result, blueprint)` (helper - proposes corrective action)
 
 **Logic:**
-- Gets processed blueprint (calls ensureBlueprintProcessed)
-- For each pattern in recipe, finds matching slots
-- Reports warnings for patterns with zero matches
-- Provides helpful pattern descriptions
+- Assumes blueprint has already been processed (RecipePreflightValidator calls its private `#ensureBlueprintProcessed` before delegating)
+- For each pattern in `recipe.patterns`, resolves slot matches via the matcher helpers (group, wildcard, property filter, explicit list)
+- Logs debug info for each matcher and accumulates warning objects when `matches.length === 0`
+- Warning objects include `type`, `location`, `matcher`, `availableSlots`, `reason`, `fix`, and `severity: 'warning'`
+- Uses `getPatternDescription` plus the matcher helpers to keep parity with runtime recipePatternResolver diagnostics
 
 ## Implementation Tasks
 
-### 1. Create Blueprint Processing Utility (30 min)
+### 1. Create Blueprint Processing Utility (45 min)
 
-**First, extract shared utility:**
+**First, extract the shared async utility:**
 
 **File:** `src/anatomy/validation/utils/blueprintProcessingUtils.js`
 
@@ -44,14 +48,24 @@ This validator performs dry-run pattern matching to detect patterns that would m
 /**
  * Ensures blueprint is processed (V2 compatibility)
  *
- * @param {object} blueprint - Blueprint to process
- * @returns {object} Processed blueprint
+ * @param {object} params.blueprint - Blueprint to process
+ * @param {import('../../../interfaces/coreServices.js').IDataRegistry} params.dataRegistry - Registry for structure templates
+ * @param {import('../../slotGenerator.js').SlotGenerator} params.slotGenerator - Slot generator for template expansion
+ * @param {import('../../../interfaces/coreServices.js').ILogger} params.logger - Logger for diagnostics
+ * @returns {Promise<object>} Processed blueprint
  */
-export function ensureBlueprintProcessed(blueprint) {
-  // Extract from RecipePreflightValidator.js lines 411-456
-  // This is used by both PatternMatchingValidator and GeneratedSlotPartsValidator
+export async function ensureBlueprintProcessed({
+  blueprint,
+  dataRegistry,
+  slotGenerator,
+  logger,
+}) {
+  // Extract from RecipePreflightValidator.#ensureBlueprintProcessed (currently ~lines 411-471)
+  // Must support V1 pass-through, V2 template expansion, `_generatedSockets` guard, and `additionalSlots` precedence per docs/anatomy/blueprints-and-recipes.md
 }
 ```
+
+> Note: RecipePreflightValidator currently calls `this.#slotGenerator.generateBlueprintSlots(template)` and `this.#dataRegistry.get('anatomyStructureTemplates', templateId)`, so the shared helper must accept those dependencies explicitly instead of relying on globals.
 
 ### 2. Create Validator Class (1.5 hours)
 
@@ -73,6 +87,7 @@ export class PatternMatchingValidator extends BaseValidator {
   #dataRegistry;
   #slotGenerator;
   #anatomyBlueprintRepository;
+  #logger;
 
   constructor({ logger, dataRegistry, slotGenerator, anatomyBlueprintRepository }) {
     super({
@@ -83,11 +98,15 @@ export class PatternMatchingValidator extends BaseValidator {
     });
 
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
-      requiredMethods: ['getComponent'],
+      requiredMethods: ['get'],
     });
 
     validateDependency(slotGenerator, 'ISlotGenerator', logger, {
-      requiredMethods: ['extractSlotsFromBlueprint'],
+      requiredMethods: [
+        'extractSlotKeysFromLimbSet',
+        'extractSlotKeysFromAppendage',
+        'generateBlueprintSlots',
+      ],
     });
 
     validateDependency(anatomyBlueprintRepository, 'IAnatomyBlueprintRepository', logger, {
@@ -97,6 +116,7 @@ export class PatternMatchingValidator extends BaseValidator {
     this.#dataRegistry = dataRegistry;
     this.#slotGenerator = slotGenerator;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
+    this.#logger = logger;
   }
 
   async performValidation(recipe, options, builder) {
@@ -104,39 +124,62 @@ export class PatternMatchingValidator extends BaseValidator {
     const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(recipe.blueprintId);
 
     if (!blueprint) {
-      return; // Skip if blueprint missing (validated elsewhere)
+      this.#logger.debug(
+        `PatternMatchingValidator: Blueprint '${recipe.blueprintId}' missing (handled by BlueprintExistenceValidator)`
+      );
+      return;
     }
 
-    const processedBlueprint = ensureBlueprintProcessed(blueprint);
+    const processedBlueprint = await ensureBlueprintProcessed({
+      blueprint,
+      dataRegistry: this.#dataRegistry,
+      slotGenerator: this.#slotGenerator,
+      logger: this.#logger,
+    });
 
     // Migrate logic from validatePatternMatching function
-    // Use builder.addWarning() for zero-match patterns
+    // Use builder.addWarning() for zero-match patterns, preserving matcher/reason/fix payloads
     // Use builder.addPassed() when all patterns match
   }
 
   #findMatchingSlots(pattern, blueprint) {
-    // Migrate from external helper function
+    // Migrate from external helper function (still needs dataRegistry, slotGenerator, logger context)
   }
 
   #getPatternDescription(pattern) {
-    // Migrate from external helper function
-    // Also export this utility for use by GeneratedSlotPartsValidator
+    // Reuse exported helper so runtime recipePatternResolver + RecipePreflightValidator stay consistent
   }
 }
 
-// Export utility for use by other validators
-export { getPatternDescription } from './PatternMatchingValidator.js';
+// Export utilities for use by other validators/runtime helpers
+export {
+  getPatternDescription,
+  extractMatcherInfo,
+  identifyBlockingMatcher,
+  suggestPatternFix,
+} from './PatternMatchingValidator.js';
 ```
 
 **Key Migration Points:**
 - External function `validatePatternMatching` → `performValidation`
-- Helper `findMatchingSlots` → private method
-- Helper `getPatternDescription` → private method + export for reuse
+- Helper `findMatchingSlots` → private method that still leverages slotGenerator/dataRegistry
+- Helper exports (`getPatternDescription`, `extractMatcherInfo`, `identifyBlockingMatcher`, `suggestPatternFix`) stay at module scope for reuse
 - Blueprint processing using shared utility
 
-### 3. Create Unit Tests (30 min)
+### 3. Update Unit & Integration Tests (45 min)
+
+**File:** `tests/unit/anatomy/validation/patternMatchingValidator.test.js`
+
+- Update existing tests to cover the class-based entry point (builder-level behavior) while keeping helper coverage intact.
+- Ensure helper exports (`findMatchingSlots`, `getPatternDescription`, `extractMatcherInfo`, `identifyBlockingMatcher`, `suggestPatternFix`) continue to be unit-tested directly because other systems import them.
 
 **File:** `tests/unit/anatomy/validation/validators/PatternMatchingValidator.test.js`
+
+- Add new tests for the BaseValidator subclass (constructor validation, blueprint loading, ensureBlueprintProcessed usage, builder outputs, warnings vs passes).
+
+**File:** `tests/integration/anatomy/validation/patternMatchingValidation.integration.test.js`
+
+- Keep parity tests up to date if they reference the legacy function signature.
 
 **Test Cases:**
 1. Constructor validation
@@ -167,9 +210,9 @@ export { getPatternDescription } from './PatternMatchingValidator.js';
    - Should handle patterns with multiple criteria
 
 6. Edge cases
-   - Should handle empty patterns array
-   - Should handle malformed patterns
-   - Should handle blueprint with no slots
+   - Should handle empty patterns array (builder records "No patterns to validate")
+   - Should handle malformed patterns (helper returns matcherType `none`, warning reason/fix still populated)
+   - Should handle blueprint with no slots (availableSlots metadata surfaces for fixes)
 
 **Coverage Target:** 80%+ branch coverage
 
@@ -192,17 +235,16 @@ export { getPatternDescription } from './PatternMatchingValidator.js';
 
 ## Acceptance Criteria
 
-- [ ] blueprintProcessingUtils.js created with ensureBlueprintProcessed
+- [ ] blueprintProcessingUtils.js created with `ensureBlueprintProcessed` (async, dependency-injected `dataRegistry`, `slotGenerator`, `logger`)
 - [ ] PatternMatchingValidator class created
 - [ ] Extends BaseValidator with priority: 35, failFast: false
-- [ ] All logic from external function migrated
-- [ ] Helper functions migrated as private methods
-- [ ] getPatternDescription exported for reuse
+- [ ] All logic from external function migrated without changing warning payloads (`type`, `location`, `matcher`, `reason`, `fix`, `severity`)
+- [ ] Helper exports (`getPatternDescription`, `extractMatcherInfo`, `identifyBlockingMatcher`, `suggestPatternFix`) remain available to other modules
 - [ ] Constructor validates all dependencies
-- [ ] Unit tests achieve 80%+ branch coverage
+- [ ] Unit + integration tests updated, maintaining ≥80% branch coverage
 - [ ] Warning messages match original format exactly
-- [ ] Blueprint processing uses shared utility
-- [ ] ESLint passes on new files
+- [ ] Blueprint processing uses shared utility and preserves `_generatedSockets` guard described in docs/anatomy/blueprints-and-recipes.md
+- [ ] ESLint passes on new/updated files
 
 ## Testing Commands
 
@@ -210,11 +252,14 @@ export { getPatternDescription } from './PatternMatchingValidator.js';
 # Run utility tests (if created)
 npm run test:unit -- validation/utils/blueprintProcessingUtils.test.js
 
-# Run validator tests
-npm run test:unit -- validators/PatternMatchingValidator.test.js
+# Run helper + legacy function tests
+npm run test:unit -- anatomy/validation/patternMatchingValidator.test.js
+
+# Run validator class tests
+npm run test:unit -- anatomy/validation/validators/PatternMatchingValidator.test.js
 
 # Check coverage
-npm run test:unit -- validators/PatternMatchingValidator.test.js --coverage
+npm run test:unit -- anatomy/validation/validators/PatternMatchingValidator.test.js --coverage
 
 # Lint
 npx eslint src/anatomy/validation/validators/PatternMatchingValidator.js
@@ -228,23 +273,26 @@ npx eslint src/anatomy/validation/utils/blueprintProcessingUtils.js
 
 **Functions to Migrate:**
 - `validatePatternMatching(recipe, blueprint, dataRegistry, slotGenerator, logger)`
-- `findMatchingSlots(pattern, blueprint, slotGenerator)`
+- `findMatchingSlots(pattern, blueprint, dataRegistry, slotGenerator, logger)`
 - `getPatternDescription(pattern)` (export for reuse)
+- `extractMatcherInfo(pattern)`
+- `identifyBlockingMatcher(pattern, result, blueprint)`
+- `suggestPatternFix(pattern, result, blueprint)`
 
 **Blueprint Processing Source:**
-`RecipePreflightValidator.js:411-456` (#ensureBlueprintProcessed)
+`RecipePreflightValidator.js:411-471` (#ensureBlueprintProcessed)
 
 **Usage Sites:**
-- RecipePreflightValidator line 130: Import
-- RecipePreflightValidator line 480-511: Call site
-- GeneratedSlotPartsValidator will use getPatternDescription
+- RecipePreflightValidator line 14: Import
+- RecipePreflightValidator line 471-511: Call site + duplicate `#getPatternDescription`
+- `src/anatomy/recipePatternResolver/patternResolver.js`: Imports `getPatternDescription` for runtime diagnostics
 
 ## Critical Notes
 
 - Creates shared blueprint processing utility (DRY principle)
 - Warnings only (not errors) - helps developers but doesn't block
 - Pattern matching is dry-run (doesn't generate actual slots)
-- getPatternDescription must be accessible to GeneratedSlotPartsValidator
+- `getPatternDescription` must remain accessible to RecipePreflightValidator and the runtime pattern resolver
 
 ## Success Metrics
 
