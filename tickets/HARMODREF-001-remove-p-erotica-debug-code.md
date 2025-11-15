@@ -14,7 +14,7 @@
 
 ## Problem Statement
 
-12 hardcoded debug references to `p_erotica:park_bench_instance` have leaked into 6 production source files. This debug code violates architectural principles, creates unnecessary performance overhead, and represents a serious professionalism issue.
+11 hardcoded debug references to `p_erotica:park_bench_instance` have leaked into 5 production source files. This debug code violates architectural principles, creates unnecessary performance overhead, and represents a serious professionalism issue.
 
 ## Why This Is Critical
 
@@ -26,12 +26,13 @@
 
 ## Affected Files
 
-1. `src/initializers/worldInitializer.js` (2 occurrences, lines 58-61, 71-74)
-2. `src/entities/services/entityLifecycleManager.js` (2 occurrences)
-3. `src/entities/services/entityRepositoryAdapter.js` (2 occurrences)
-4. `src/entities/entityDefinition.js` (2 occurrences)
-5. `src/entities/entityInstanceData.js` (2 occurrences)
-6. `src/entities/entity.js` (2 occurrences)
+1. `src/initializers/worldInitializer.js` (2 occurrences around lines 714-730)
+2. `src/entities/services/entityLifecycleManager.js` (2 occurrences around lines 287-330)
+3. `src/entities/services/entityRepositoryAdapter.js` (5 occurrences around lines 102-385)
+4. `src/entities/entityInstanceData.js` (1 occurrence around line 249)
+5. `src/entities/entity.js` (1 occurrence around line 152)
+
+> **Note:** `src/entities/entityDefinition.js` no longer contains references to `p_erotica:park_bench_instance`; it should be excluded from this effort.
 
 ## Implementation Steps
 
@@ -44,7 +45,6 @@ grep -n "p_erotica:park_bench_instance" \
   src/initializers/worldInitializer.js \
   src/entities/services/entityLifecycleManager.js \
   src/entities/services/entityRepositoryAdapter.js \
-  src/entities/entityDefinition.js \
   src/entities/entityInstanceData.js \
   src/entities/entity.js
 ```
@@ -99,7 +99,6 @@ npm run test:unit
 npx eslint src/initializers/worldInitializer.js \
   src/entities/services/entityLifecycleManager.js \
   src/entities/services/entityRepositoryAdapter.js \
-  src/entities/entityDefinition.js \
   src/entities/entityInstanceData.js \
   src/entities/entity.js
 ```
@@ -110,14 +109,13 @@ npx eslint src/initializers/worldInitializer.js \
 git add src/initializers/worldInitializer.js \
   src/entities/services/entityLifecycleManager.js \
   src/entities/services/entityRepositoryAdapter.js \
-  src/entities/entityDefinition.js \
   src/entities/entityInstanceData.js \
   src/entities/entity.js
 
 git commit -m "fix: remove p_erotica debug code from production files
 
-- Removed 12 hardcoded references to p_erotica:park_bench_instance
-- Affected 6 production files in entities and initializers
+- Removed 11 hardcoded references to p_erotica:park_bench_instance
+- Affected 5 production files in entities and initializers
 - Fixes architectural violation and performance overhead
 - Resolves HARMODREF-001"
 ```
