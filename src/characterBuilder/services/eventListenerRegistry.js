@@ -578,9 +578,6 @@ export class EventListenerRegistry {
    * @returns {string} Human readable label.
    */
   #describeTarget(target) {
-    if (!target) {
-      return 'unknown-target';
-    }
     if ('tagName' in target) {
       const element = /** @type {HTMLElement} */ (target);
       return `${element.tagName}#${element.id || 'no-id'}`;
