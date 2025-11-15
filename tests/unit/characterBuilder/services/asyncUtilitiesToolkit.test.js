@@ -1,4 +1,9 @@
-import { AsyncUtilitiesToolkit } from '../../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import {
+  AsyncUtilitiesToolkit,
+  registerToolkitForOwner,
+  getToolkitForOwner,
+  unregisterToolkitForOwner,
+} from '../../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
@@ -126,5 +131,65 @@ describe('asyncUtilitiesToolkit', () => {
     const summary = toolkit.clearAllTimers();
     expect(summary.debouncedHandlers).toBe(1);
     expect(summary.throttledHandlers).toBe(1);
+  });
+
+  it('asyncUtilitiesToolkit throttle helpers expose flush logic for pending and idle states', () => {
+    const fn = jest.fn().mockReturnValue('executed');
+    const throttled = toolkit.throttle(fn, 100, { leading: false, trailing: true });
+
+    // When no invocation is pending, flush should just return the latest result (undefined)
+    expect(throttled.flush()).toBeUndefined();
+
+    throttled('value');
+    jest.advanceTimersByTime(20);
+    expect(fn).not.toHaveBeenCalled();
+
+    // Flush should execute immediately, clear timers, and forward the return value
+    expect(throttled.flush()).toBe('executed');
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('asyncUtilitiesToolkit validates required function arguments across helpers', () => {
+    expect(() => toolkit.throttle(null, 50)).toThrow('expects a function');
+    expect(() => toolkit.getDebouncedHandler('search', null, 25)).toThrow('expects a function');
+    expect(() => toolkit.getThrottledHandler('', () => {}, 25)).toThrow('requires a key');
+    expect(() => toolkit.setTimeout(null, 10)).toThrow('expects a function');
+    expect(() => toolkit.setInterval(null, 10)).toThrow('expects a function');
+    expect(() => toolkit.requestAnimationFrame(null)).toThrow('expects a function');
+  });
+
+  it('asyncUtilitiesToolkit instrumentation emits timer logs when enabled', () => {
+    const instrumentedToolkit = new AsyncUtilitiesToolkit({
+      logger,
+      instrumentation: { logTimerEvents: true },
+    });
+
+    instrumentedToolkit.setTimeout(jest.fn(), 25);
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('AsyncUtilitiesToolkit:timeout:scheduled'),
+      expect.objectContaining({ timerId: expect.any(Number), delay: 25 })
+    );
+
+    jest.runOnlyPendingTimers();
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('AsyncUtilitiesToolkit:timeout:completed'),
+      expect.objectContaining({ timerId: expect.any(Number) })
+    );
+  });
+
+  it('asyncUtilitiesToolkit owner registry helpers manage ownership lifecycle', () => {
+    const owner = { id: 'owner-1' };
+    const otherOwner = { id: 'owner-2' };
+
+    // Guard clause coverage for missing owner/toolkit
+    registerToolkitForOwner(null, toolkit);
+    registerToolkitForOwner(owner, null);
+
+    registerToolkitForOwner(owner, toolkit);
+    expect(getToolkitForOwner(owner)).toBe(toolkit);
+    expect(getToolkitForOwner(otherOwner)).toBeNull();
+
+    unregisterToolkitForOwner(owner);
+    expect(getToolkitForOwner(owner)).toBeNull();
   });
 });
