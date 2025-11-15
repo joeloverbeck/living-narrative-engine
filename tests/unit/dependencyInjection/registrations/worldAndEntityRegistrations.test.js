@@ -46,6 +46,11 @@ import DescriptionPersistenceService from '../../../../src/anatomy/DescriptionPe
 import { BodyDescriptionOrchestrator } from '../../../../src/anatomy/BodyDescriptionOrchestrator.js';
 import { AnatomyDescriptionService } from '../../../../src/anatomy/anatomyDescriptionService.js';
 import { AnatomyGenerationService } from '../../../../src/anatomy/anatomyGenerationService.js';
+import ActivityDescriptionService from '../../../../src/anatomy/services/activityDescriptionService.js';
+import ActivityDescriptionFacade from '../../../../src/anatomy/services/activityDescriptionFacade.js';
+import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
+import BlueprintProcessorService from '../../../../src/anatomy/services/blueprintProcessorService.js';
+import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
 import { LayerCompatibilityService } from '../../../../src/clothing/validation/layerCompatibilityService.js';
 import { ClothingSlotValidator } from '../../../../src/clothing/validation/clothingSlotValidator.js';
 import { EquipmentOrchestrator } from '../../../../src/clothing/orchestration/equipmentOrchestrator.js';
@@ -138,6 +143,81 @@ describe('registerWorldAndEntity', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  const getFactoryForToken = (token) => {
+    const registrationCall = registerSpy.mock.calls.find(
+      (call) => call[0] === token
+    );
+    expect(registrationCall).toBeDefined();
+    return registrationCall[1];
+  };
+
+  const createTestLogger = () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  });
+
+  const createStubContainer = (dependencyMap, options = {}) => {
+    const resolve = jest.fn((token) => {
+      if (!Object.prototype.hasOwnProperty.call(dependencyMap, token)) {
+        throw new Error(`Missing dependency for ${String(token)}`);
+      }
+      return dependencyMap[token];
+    });
+
+    const isRegistered = jest.fn((token) => {
+      if (typeof options.isRegistered === 'function') {
+        return options.isRegistered(token);
+      }
+      return Object.prototype.hasOwnProperty.call(dependencyMap, token);
+    });
+
+    return { resolve, isRegistered };
+  };
+
+  const createActivityDependencyMap = () => {
+    const logger = createTestLogger();
+    return {
+      [tokens.ILogger]: logger,
+      [tokens.IEntityManager]: { getEntityInstance: jest.fn() },
+      [tokens.AnatomyFormattingService]: { getFormattingProfile: jest.fn() },
+      [tokens.JsonLogicEvaluationService]: { evaluate: jest.fn() },
+      'IActivityCacheManager': {
+        registerCache: jest.fn(),
+        get: jest.fn(),
+        set: jest.fn(),
+        invalidate: jest.fn(),
+        invalidateAll: jest.fn(),
+        clearAll: jest.fn(),
+      },
+      'IActivityIndexManager': { buildIndex: jest.fn() },
+      'IActivityMetadataCollectionSystem': {
+        collectActivityMetadata: jest.fn().mockReturnValue([]),
+      },
+      'IActivityGroupingSystem': {
+        groupActivities: jest.fn().mockReturnValue([]),
+        sortByPriority: jest.fn().mockReturnValue([]),
+      },
+      'IActivityNLGSystem': {
+        formatActivityDescription: jest.fn().mockReturnValue(''),
+      },
+      'IActivityFilteringSystem': {
+        filterByConditions: jest.fn().mockReturnValue([]),
+      },
+      'IActivityContextBuildingSystem': {
+        buildActivityContext: jest.fn().mockReturnValue({}),
+        applyContextualTone: jest.fn().mockReturnValue({}),
+        invalidateClosenessCache: jest.fn(),
+      },
+      [tokens.IEventBus]: {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+      },
+    };
+  };
 
   test('logs start, each service registration, and completion in order', () => {
     registerWorldAndEntity(container);
@@ -675,6 +755,104 @@ describe('registerWorldAndEntity', () => {
           throw error;
         }
       }
+    });
+  });
+
+  describe('targeted registration factories', () => {
+    test('ActivityDescriptionService factory composes the activity subsystem', () => {
+      registerWorldAndEntity(container);
+
+      const factory = getFactoryForToken(tokens.ActivityDescriptionService);
+      const dependencyMap = createActivityDependencyMap();
+      const stubContainer = createStubContainer(dependencyMap, {
+        isRegistered: (token) => token === tokens.IEventBus,
+      });
+
+      const instance = factory(stubContainer);
+
+      expect(instance).toBeInstanceOf(ActivityDescriptionService);
+      expect(dependencyMap['IActivityCacheManager'].registerCache).toHaveBeenCalledTimes(4);
+      expect(stubContainer.resolve).toHaveBeenCalledWith('IActivityFilteringSystem');
+    });
+
+    test('ActivityDescriptionFacade factory instantiates facade with event bus support', () => {
+      registerWorldAndEntity(container);
+
+      const factory = getFactoryForToken('IActivityDescriptionFacade');
+      const dependencyMap = createActivityDependencyMap();
+      const stubContainer = createStubContainer(dependencyMap, {
+        isRegistered: (token) => token === tokens.IEventBus,
+      });
+
+      const instance = factory(stubContainer);
+
+      expect(instance).toBeInstanceOf(ActivityDescriptionFacade);
+      expect(dependencyMap['IActivityCacheManager'].registerCache).toHaveBeenCalled();
+      expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.AnatomyFormattingService);
+    });
+
+    test('EntityMatcherService factory wires logger and data registry', () => {
+      registerWorldAndEntity(container);
+
+      const factory = getFactoryForToken(tokens.IEntityMatcherService);
+      const dependencyMap = {
+        [tokens.ILogger]: createTestLogger(),
+        [tokens.IDataRegistry]: { get: jest.fn(), getAll: jest.fn() },
+      };
+      const stubContainer = createStubContainer(dependencyMap);
+
+      const instance = factory(stubContainer);
+
+      expect(instance).toBeInstanceOf(EntityMatcherService);
+      expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.IDataRegistry);
+    });
+
+    test('BlueprintProcessorService factory validates blueprint tooling dependencies', () => {
+      registerWorldAndEntity(container);
+
+      const factory = getFactoryForToken(tokens.IBlueprintProcessorService);
+      const dependencyMap = {
+        [tokens.ILogger]: createTestLogger(),
+        [tokens.IDataRegistry]: { get: jest.fn() },
+        [tokens.ISocketGenerator]: { generateSockets: jest.fn() },
+        [tokens.ISlotGenerator]: { generateBlueprintSlots: jest.fn() },
+      };
+      const stubContainer = createStubContainer(dependencyMap);
+
+      const instance = factory(stubContainer);
+
+      expect(instance).toBeInstanceOf(BlueprintProcessorService);
+      expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.ISlotGenerator);
+    });
+
+    test('RecipePreflightValidator factory injects validator stack dependencies', () => {
+      registerWorldAndEntity(container);
+
+      const factory = getFactoryForToken(tokens.IRecipePreflightValidator);
+      const dependencyMap = {
+        [tokens.ILogger]: createTestLogger(),
+        [tokens.IDataRegistry]: { get: jest.fn(), getAll: jest.fn() },
+        [tokens.IAnatomyBlueprintRepository]: {
+          getBlueprint: jest.fn(),
+          getRecipe: jest.fn(),
+        },
+        [tokens.ISchemaValidator]: { validate: jest.fn() },
+        [tokens.ISlotGenerator]: {
+          extractSlotKeysFromLimbSet: jest.fn(),
+          extractSlotKeysFromAppendage: jest.fn(),
+        },
+        [tokens.IEntityMatcherService]: {
+          findMatchingEntities: jest.fn(),
+          findMatchingEntitiesForSlot: jest.fn(),
+          mergePropertyRequirements: jest.fn(),
+        },
+      };
+      const stubContainer = createStubContainer(dependencyMap);
+
+      const instance = factory(stubContainer);
+
+      expect(instance).toBeInstanceOf(RecipePreflightValidator);
+      expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.IEntityMatcherService);
     });
   });
 });
