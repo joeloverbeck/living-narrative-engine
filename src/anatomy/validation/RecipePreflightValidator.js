@@ -67,6 +67,7 @@ class RecipePreflightValidator {
     });
     validateDependency(slotGenerator, 'ISlotGenerator', logger, {
       requiredMethods: [
+        'generateBlueprintSlots',
         'extractSlotKeysFromLimbSet',
         'extractSlotKeysFromAppendage',
       ],

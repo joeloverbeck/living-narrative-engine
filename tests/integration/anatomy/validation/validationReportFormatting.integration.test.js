@@ -39,6 +39,7 @@ describe('ValidationReport formatting - Integration', () => {
     const mockSlotGenerator = {
       extractSlotKeysFromLimbSet: () => [],
       extractSlotKeysFromAppendage: () => [],
+      generateBlueprintSlots: () => ({ additionalSlots: {} }),
     };
 
     const mockEntityMatcherService = new EntityMatcherService({

@@ -145,10 +145,10 @@ describe('Entity integration with EntityInstanceData', () => {
     ]);
     expect(consoleDebugSpy).toHaveBeenCalled();
     expect(consoleDebugSpy).toHaveBeenCalledWith(
-      '[DEBUG] Entity.componentTypeIds for park bench:',
+      '[DEBUG] EntityDefinition created for park bench:',
       expect.objectContaining({
-        entityId: 'p_erotica:park_bench_instance',
-        componentTypeIds: componentTypeIds,
+        id: 'p_erotica:park_bench',
+        componentKeys: componentTypeIds,
         hasAllowsSitting: true,
       })
     );
