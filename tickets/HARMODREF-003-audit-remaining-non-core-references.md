@@ -39,19 +39,19 @@ The initial report identified 65+ non-core mod references throughout the codebas
 Search for all mod reference patterns in production code:
 
 ```bash
-# Positioning mod references (~50 expected)
+# Positioning mod references (~100 currently detected via `rg -o "positioning:" src | wc -l`)
 grep -rn "positioning:" src/ --include="*.js" | grep -v node_modules > audit-positioning.txt
 
-# Items mod references (~40 expected)
+# Items mod references (~95 currently detected via `rg -o "items:" src | wc -l`)
 grep -rn "items:" src/ --include="*.js" | grep -v node_modules > audit-items.txt
 
-# Affection mod references (~5 expected)
+# Affection mod references (currently **0** in src — keep this verification to confirm the count stays at zero)
 grep -rn "affection:" src/ --include="*.js" | grep -v node_modules > audit-affection.txt
 
-# Violence mod references (~4 expected)
+# Violence mod references (currently **0** in src — keep this verification to confirm the count stays at zero)
 grep -rn "violence:" src/ --include="*.js" | grep -v node_modules > audit-violence.txt
 
-# Clothing mod references (~6 expected)
+# Clothing mod references (~98 currently detected via `rg -o "clothing:" src | wc -l`)
 grep -rn "clothing:" src/ --include="*.js" | grep -v node_modules > audit-clothing.txt
 
 # Combine all
@@ -87,6 +87,10 @@ Create `docs/architecture/hardcoded-references-audit.md`:
 
 ## Positioning Mod References
 
+> Reality check (2025-02-15): `rg -o "positioning:" src | wc -l` currently returns **100** occurrences across production `src/` files.
+> Most hits come from the closeness operation handlers (`establish*/remove*Closeness`, `mergeClosenessCircle`, `autoMoveClosenessPartners`, `breakClosenessWithTarget`, etc.) and services such as `closenessCircleService.js` and the positioning operators.
+> The audit must catalogue *each* of those files rather than assuming only a single handler is affected.
+
 ### Operation Handlers (Component Type Registry Candidates)
 
 #### 🔴 CRITICAL: establishSittingClosenessHandler.js
@@ -118,16 +122,27 @@ const sittingComponent = this.#componentTypeRegistry.getComponentOfCategory(
 
 ---
 
-[Continue for each positioning handler...]
+Document each of the following confirmed handlers/services with their exact component IDs and event names so the registry rollout has precise scope:
+
+- `src/logic/operationHandlers/removeSittingClosenessHandler.js`
+- `src/logic/operationHandlers/establishLyingClosenessHandler.js`
+- `src/logic/operationHandlers/removeLyingClosenessHandler.js`
+- `src/logic/operationHandlers/removeFromClosenessCircleHandler.js`
+- `src/logic/operationHandlers/breakClosenessWithTargetHandler.js`
+- `src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js`
+- `src/logic/operationHandlers/mergeClosenessCircleHandler.js`
+- `src/logic/services/closenessCircleService.js`
+
+Each entry should specify which `'positioning:*'` component IDs are being read/written so HARMODREF-010 through -015 can prioritize them.
 
 ### Action Pipeline (Data-Driven Candidates)
 
-#### 🟡 HIGH: TargetComponentValidationStage.js
-**File:** `src/actions/pipeline/stages/TargetComponentValidationStage.js`
-**Lines:** 92-98
-**Pattern:** Hardcoded forbidden components array
-**Severity:** High - Fixed position types, cannot extend
-**Refactoring:** Load from action definition data
+#### 🟡 HIGH: targetResolutionService.js
+**File:** `src/actions/targetResolutionService.js`
+**Lines:** 122-190 (three debug blocks)
+**Pattern:** Direct comparisons to `actionId === 'positioning:sit_down'` and `scopeName === 'positioning:available_furniture'` baked into tracing/logging.
+**Severity:** High - Couples the entire target resolution pipeline to a single mod's action and scope, preventing other mods from enabling equivalent diagnostics.
+**Refactoring:** Load debug targets from action metadata or injectable tracing policies so any mod can opt in without editing core code.
 **Effort:** 1 day
 **Ticket:** HARMODREF-016
 
@@ -135,12 +150,12 @@ const sittingComponent = this.#componentTypeRegistry.getComponentOfCategory(
 
 ### Scope DSL (Plugin Architecture Candidates)
 
-#### 🔴 CRITICAL: slotAccessResolver.js
-**File:** `src/scopeDsl/nodes/slotAccessResolver.js`
-**Lines:** 156-162
-**Pattern:** Hardcoded straddling relationship logic
-**Severity:** Critical - Positioning mechanic baked into core
-**Refactoring:** Plugin Architecture
+#### 🔴 CRITICAL: stepResolver.js
+**File:** `src/scopeDsl/nodes/stepResolver.js`
+**Lines:** 118-141
+**Pattern:** Diagnostic logging assumes `'positioning:closeness'` will exist on every components object, reinforcing positioning-specific scopes during DSL evaluation.
+**Severity:** Critical - Scope DSL introspection is leaking positioning-specific knowledge rather than staying mod-agnostic.
+**Refactoring:** Introduce plugin-aware component inspectors so diagnostics enumerate whatever components are present without hardcoding namespace strings.
 **Effort:** 3 days
 **Ticket:** HARMODREF-017
 
@@ -149,6 +164,8 @@ const sittingComponent = this.#componentTypeRegistry.getComponentOfCategory(
 ---
 
 ## Items Mod References
+
+> Reality check (2025-02-15): `rg -o "items:" src | wc -l` currently reports **95** occurrences in production code. The majority live inside the container/ inventory operation handlers and GOAP refinement logic. Capture every file in the audit so we can scope registry vs. plugin migrations.
 
 ### Container System (Component Type Registry Candidates)
 
@@ -179,43 +196,42 @@ const sittingComponent = this.#componentTypeRegistry.getComponentOfCategory(
 
 ## Affection Mod References
 
-#### 🟡 HIGH: notesAnalyticsService.js
-**File:** `src/ai/services/notesAnalyticsService.js`
-**Line:** 234
-**Pattern:** Hardcoded affection score analysis
-**Severity:** High - Assumes affection scoring exists
-**Refactoring:** Make affection analysis optional/pluggable
-**Effort:** 4 hours
+> Reality check (2025-02-15): `rg -rn "affection:" src --include="*.js"` returns **0** matches. All affection namespaced entities currently live in tests and mod fixtures, not in production `src/` files.
 
-[...]
+#### ✅ VERIFIED: No production references (keep auditing for regressions)
+**Action:** Document the zero-count finding in the audit and keep the grep in the validation checklist so future contributions don't reintroduce unwanted coupling. No code changes are required for HARMODREF-003 beyond capturing the verification evidence.
 
 ---
 
 ## Violence Mod References
 
-#### 🟡 HIGH: eventBusRecursionGuard.js
-**File:** `src/events/eventBusRecursionGuard.js`
-**Line:** 89
-**Pattern:** Special handling for violence events
-**Severity:** High - Violence events treated specially
-**Refactoring:** Generic event categorization
-**Effort:** 4 hours
+> Reality check (2025-02-15): `rg -rn "violence:" src --include="*.js"` also returns **0** matches and there is no `eventBusRecursionGuard.js` file in the repo. The original assumption was incorrect.
 
-[...]
+#### ✅ VERIFIED: No production references (keep auditing for regressions)
+**Action:** Capture the zero-count evidence in the audit deliverable. Future regressions should be caught by the validation commands already listed in this ticket.
 
 ---
 
 ## Clothing Mod References
 
-#### 🟢 MEDIUM: bodyDescriptionComposer.js
-**File:** `src/anatomy/services/bodyDescriptionComposer.js`
-**Line:** 178
-**Pattern:** Clothing visibility assumptions
-**Severity:** Medium - Assumes clothing system exists
-**Refactoring:** Make clothing description optional
-**Effort:** 2 hours
+> Reality check (2025-02-15): `rg -o "clothing:" src | wc -l` reports **98** occurrences in production files. The most tangible hardcoding happens inside the clothing-specific logic operators rather than the anatomy description service.
 
-[...]
+#### 🟡 HIGH: isSocketCoveredOperator.js
+**File:** `src/logic/operators/isSocketCoveredOperator.js`
+**Lines:** 76-205
+**Pattern:** Direct references to `'clothing:equipment'`, `'clothing:slot_metadata'`, and coverage-mapping semantics are embedded directly into the operator, preventing non-clothing mods from reusing the operator infrastructure.
+**Severity:** High - Couples logical socket coverage checks to a single mod's component schema.
+**Refactoring:** Extract slot coverage queries behind injectable strategies or a registry so alternative equipment systems can integrate.
+**Effort:** 1 day
+
+#### 🟢 MEDIUM: hasClothingInSlotLayerOperator.js
+**File:** `src/logic/operators/hasClothingInSlotLayerOperator.js`
+**Lines:** ~70-110
+**Pattern:** Hardcoded `'clothing:equipment'` lookups plus assumptions about clothing layers.
+**Severity:** Medium - Still enforce the clothing component schema but easier to abstract once the coverage operator moves to a plugin.
+**Refactoring:** Same registry/plugin approach as above.
+
+Capture both operators (and any other `'clothing:*'` references surfaced by the grep output) inside the audit table so HARMODREF-018 can scope the clothing cleanup accurately.
 
 ---
 
@@ -249,7 +265,7 @@ const sittingComponent = this.#componentTypeRegistry.getComponentOfCategory(
 
 | File | Pattern | Solution | Effort |
 |------|---------|----------|--------|
-| TargetComponentValidationStage.js | Forbidden components | Load from action data | 1 day |
+| targetResolutionService.js | Sit_down-only diagnostics | Load debug targets from action metadata | 1 day |
 | [... more instances ...] |
 
 ---
