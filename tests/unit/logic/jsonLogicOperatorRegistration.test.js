@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { JsonLogicCustomOperators } from '../../../src/logic/jsonLogicCustomOperators.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import { validateOperatorWhitelist } from '../../../src/logic/operatorRegistrationValidator.js';
+import {
+  validateOperatorWhitelist,
+  generateAllowedOperations,
+} from '../../../src/logic/operatorRegistrationValidator.js';
 
 describe('JSON Logic Operator Registration', () => {
   let logger;
@@ -237,6 +240,60 @@ describe('JSON Logic Operator Registration', () => {
           missingOperators: ['newOperator'],
         })
       );
+    });
+  });
+
+  describe('Operator Registration Validator Utilities', () => {
+    let validatorLogger;
+
+    beforeEach(() => {
+      validatorLogger = {
+        warn: jest.fn(),
+        error: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+      };
+    });
+
+    it('should ignore standard json-logic operators missing from registration', () => {
+      const registered = new Set();
+      const allowed = new Set(['var', 'if', 'and']);
+
+      expect(() =>
+        validateOperatorWhitelist(registered, allowed, validatorLogger)
+      ).not.toThrow();
+
+      expect(validatorLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should ignore special syntax entries missing from registration', () => {
+      const registered = new Set();
+      const allowed = new Set(['condition_ref']);
+
+      expect(() =>
+        validateOperatorWhitelist(registered, allowed, validatorLogger)
+      ).not.toThrow();
+
+      expect(validatorLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should generate allowed operations from registered, standard, and additional operators', () => {
+      const registered = new Set(['customA', 'customB']);
+      const additional = ['legacyOp'];
+
+      const allowed = generateAllowedOperations(registered, additional);
+
+      expect(allowed).not.toBe(registered);
+      expect(allowed.has('customA')).toBe(true);
+      expect(allowed.has('customB')).toBe(true);
+      expect(allowed.has('legacyOp')).toBe(true);
+
+      // Spot-check a few standard operators to ensure the defaults are present
+      expect(allowed.has('var')).toBe(true);
+      expect(allowed.has('if')).toBe(true);
+      expect(allowed.has('==')).toBe(true);
+      expect(allowed.has('and')).toBe(true);
+      expect(allowed.has('or')).toBe(true);
     });
   });
 
