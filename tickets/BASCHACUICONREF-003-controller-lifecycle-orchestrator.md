@@ -14,7 +14,7 @@ Extract all lifecycle state, initialization phases, and destruction/cleanup orch
 
 1. **Service Skeleton** – Added `ControllerLifecycleOrchestrator` with `logger`, `eventBus`, and optional `hooks` dependencies. The class encapsulates lifecycle state flags, cleanup task stacks, hook registries, and exports default initialization/destruction sequences plus phase enums for reuse.
 
-2. **Lifecycle Flow Porting** – Migrated initialization/reinitialization/destruction flows out of `BaseCharacterBuilderController`. Each phase now runs through registered hooks with guardrails preventing concurrent runs, descriptive logging, and success/error event dispatching.
+2. **Lifecycle Flow Porting** – Migrated initialization/reinitialization/destruction flows out of `BaseCharacterBuilderController`. Each phase now runs through registered hooks with guardrails preventing concurrent runs, descriptive logging, success event dispatching, and dedicated error hooks (rather than separate event dispatches) when initialization fails.
 
 3. **Cleanup Task Management** – Introduced `registerCleanupTask`, `checkDestroyed`, `makeDestructionSafe`, and private cleanup execution helpers so controllers can register LIFO teardown work while maintaining the legacy safety guarantees.
 
