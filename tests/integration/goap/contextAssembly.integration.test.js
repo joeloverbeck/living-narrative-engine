@@ -208,7 +208,7 @@ describe('ContextAssemblyService - Integration', () => {
   });
 
   describe('knowledge limitation integration', () => {
-    it('should include all entities in knowledge array when enabled', () => {
+    it('should include known entities from core:known_to component when enabled', () => {
       // Create multiple entities
       const actor1 = 'actor-1';
       const actor2 = 'actor-2';
@@ -216,6 +216,10 @@ describe('ContextAssemblyService - Integration', () => {
 
       entityManager.createEntity(actor1);
       entityManager.addComponent(actor1, 'core:actor', { name: 'Actor 1' });
+      // Add core:known_to component with knowledge of other entities
+      entityManager.addComponent(actor1, 'core:known_to', {
+        entities: [actor1, actor2, item1],
+      });
 
       entityManager.createEntity(actor2);
       entityManager.addComponent(actor2, 'core:actor', { name: 'Actor 2' });
@@ -234,7 +238,7 @@ describe('ContextAssemblyService - Integration', () => {
       expect(context.actor.knowledge).toContain(actor1);
       expect(context.actor.knowledge).toContain(actor2);
       expect(context.actor.knowledge).toContain(item1);
-      expect(context.actor.knowledge.length).toBeGreaterThanOrEqual(3);
+      expect(context.actor.knowledge.length).toBe(3);
     });
 
     it('should not include knowledge array when feature flag is disabled', () => {
@@ -245,6 +249,28 @@ describe('ContextAssemblyService - Integration', () => {
       const context = service.assemblePlanningContext(actorId);
 
       expect(context.actor.knowledge).toBeUndefined();
+    });
+
+    it('should return minimal knowledge when core:known_to component is missing', () => {
+      const actorId = 'actor-without-knowledge-component';
+      entityManager.createEntity(actorId);
+      entityManager.addComponent(actorId, 'core:actor', { name: 'Actor Without Knowledge' });
+      // Note: NOT adding core:known_to component
+
+      const serviceWithKnowledge = new ContextAssemblyService({
+        entityManager,
+        logger,
+        enableKnowledgeLimitation: true,
+      });
+
+      const context = serviceWithKnowledge.assemblePlanningContext(actorId);
+
+      // Should fallback to minimal knowledge (self only)
+      expect(context.actor.knowledge).toEqual([actorId]);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Actor missing core:known_to component'),
+        expect.any(Object)
+      );
     });
   });
 

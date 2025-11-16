@@ -391,6 +391,7 @@ export function registerAITurnPipeline(registrar, logger) {
 
   registrar.singletonFactory(tokens.IGoapDecisionProvider, (c) => {
     return new GoapDecisionProvider({
+      goapController: c.resolve(tokens.IGoapController),
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
     });

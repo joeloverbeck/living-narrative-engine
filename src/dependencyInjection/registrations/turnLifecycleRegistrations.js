@@ -49,6 +49,8 @@ export function registerTurnLifecycle(container) {
         commandDispatcher: c.tryResolve?.(tokens.CommandDispatcher),
         resultInterpreter: c.tryResolve?.(tokens.ResultInterpreter),
         directiveExecutor: c.tryResolve?.(tokens.DirectiveExecutor),
+        // GOAP knowledge system integration
+        knowledgeManager: c.tryResolve?.(tokens.IKnowledgeManager),
       })
   );
 

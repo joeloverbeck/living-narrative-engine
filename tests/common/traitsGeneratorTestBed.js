@@ -4,6 +4,9 @@
  * @see src/characterBuilder/controllers/TraitsGeneratorController.js
  */
 
+/* eslint-env jest */
+/* global expect, global */
+
 import { jest } from '@jest/globals';
 import { BaseTestBed } from './baseTestBed.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -138,6 +141,192 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       validate: jest.fn(),
       validateAsync: jest.fn(),
       validateAgainstSchema: jest.fn(),
+    };
+
+    // Mock required services for BaseCharacterBuilderController refactoring
+    this.mockControllerLifecycleOrchestrator = {
+      setControllerName: jest.fn(),
+      registerHook: jest.fn(),
+      executeHook: jest.fn().mockResolvedValue(undefined),
+      hasHook: jest.fn().mockReturnValue(false),
+      getHooks: jest.fn().mockReturnValue([]),
+      clearHooks: jest.fn(),
+      getControllerName: jest.fn().mockReturnValue('TraitsGeneratorController'),
+      createControllerMethodHook: jest.fn((controller, methodName) => {
+        return async (...args) => {
+          if (typeof controller[methodName] === 'function') {
+            return await controller[methodName].call(controller, ...args);
+          }
+          return undefined;
+        };
+      }),
+      isInitialized: false,
+      isInitializing: false,
+      isDestroyed: false,
+      isDestroying: false,
+      initialize: jest.fn().mockImplementation(async function () {
+        // Prevent duplicate initialization
+        if (this.isInitialized) {
+          return;
+        }
+        // Prevent concurrent initialization
+        if (this.isInitializing) {
+          return;
+        }
+
+        this.isInitializing = true;
+        this.isInitialized = false;
+        // Simulate initialization
+        await Promise.resolve();
+        this.isInitializing = false;
+        this.isInitialized = true;
+      }),
+      destroy: jest.fn().mockImplementation(function () {
+        this.isDestroying = true;
+        this.isInitialized = false;
+        this.isInitializing = false;
+        this.isDestroying = false;
+        this.isDestroyed = true;
+      }),
+      makeDestructionSafe: jest.fn((fn, name) => fn),
+      reinitialize: jest.fn().mockImplementation(async function ({ onReset }) {
+        this.isInitialized = false;
+        if (typeof onReset === 'function') {
+          onReset();
+        }
+        await this.initialize();
+      }),
+      resetInitializationState: jest.fn().mockImplementation(function (callback) {
+        this.isInitialized = false;
+        this.isInitializing = false;
+        if (typeof callback === 'function') {
+          callback();
+        }
+      }),
+    };
+
+    // Create element cache for mockDOMElementManager
+    const elementCache = {};
+
+    this.mockDOMElementManager = {
+      getElement: jest.fn((id) => elementCache[id] || null),
+      setElement: jest.fn((id, element) => { elementCache[id] = element; }),
+      hideElement: jest.fn(),
+      showElement: jest.fn(),
+      enableElement: jest.fn(),
+      disableElement: jest.fn(),
+      cacheElement: jest.fn((id, selector) => {
+        const element = document.querySelector(selector);
+        if (element) {
+          elementCache[id] = element;
+        }
+      }),
+      clearCache: jest.fn(() => {
+        Object.keys(elementCache).forEach(key => delete elementCache[key]);
+      }),
+      getElementsSnapshot: jest.fn(() => elementCache),
+      validateElementCache: jest.fn(() => ({ valid: true, missing: [] })),
+      cacheElementsFromMap: jest.fn((map) => {
+        Object.entries(map).forEach(([id, selectorConfig]) => {
+          // Handle both string selectors and config objects
+          const selector = typeof selectorConfig === 'string' ? selectorConfig : selectorConfig?.selector;
+          if (typeof selector === 'string') {
+            const element = document.querySelector(selector);
+            if (element) {
+              elementCache[id] = element;
+            }
+          }
+        });
+        return elementCache;
+      }),
+      normalizeElementConfig: jest.fn((config) =>
+        typeof config === 'string' ? { selector: config, required: true } : config
+      ),
+      validateElement: jest.fn(),
+      setElementEnabled: jest.fn(),
+      setElementText: jest.fn((id, text) => {
+        const element = elementCache[id];
+        if (element) {
+          element.textContent = text;
+        }
+      }),
+      configure: jest.fn(),
+    };
+
+    this.mockEventListenerRegistry = {
+      addEventListener: jest.fn(),
+      addDelegatedListener: jest.fn(),
+      addDebouncedListener: jest.fn(),
+      addThrottledListener: jest.fn(),
+      addAsyncClickHandler: jest.fn(),
+      subscribeToEvent: jest.fn(),
+      removeListener: jest.fn(),
+      removeAllListeners: jest.fn(),
+      detachEventBusListeners: jest.fn(() => 0),
+      setContextName: jest.fn(),
+      destroy: jest.fn(),
+      getListenerCount: jest.fn(() => 0),
+      hasListener: jest.fn(() => false),
+    };
+
+    this.mockAsyncUtilitiesToolkit = {
+      withTimeout: jest.fn((promise) => promise),
+      retry: jest.fn((fn) => fn()),
+      debounce: jest.fn((fn) => fn),
+      throttle: jest.fn((fn) => fn),
+      getTimerStats: jest.fn(() => ({
+        timeouts: { count: 0, ids: [] },
+        intervals: { count: 0, ids: [] },
+        animationFrames: { count: 0, ids: [] },
+      })),
+      clearAllTimers: jest.fn(),
+    };
+
+    this.mockPerformanceMonitor = {
+      startMeasurement: jest.fn(),
+      endMeasurement: jest.fn(),
+      recordMetric: jest.fn(),
+      getMetrics: jest.fn().mockReturnValue({}),
+      clearData: jest.fn(),
+      configure: jest.fn(),
+    };
+
+    this.mockMemoryManager = {
+      track: jest.fn(),
+      release: jest.fn(),
+      getMemoryUsage: jest.fn().mockReturnValue(0),
+      setContextName: jest.fn(),
+      clear: jest.fn(),
+    };
+
+    this.mockErrorHandlingStrategy = {
+      handleError: jest.fn((error, context) => ({
+        error: error instanceof Error ? error.message : String(error),
+        category: context?.category || 'system',
+        severity: context?.severity || 'error',
+        timestamp: new Date().toISOString(),
+      })),
+      handleServiceError: jest.fn((error, operation, userMessage) => {
+        // Rethrow the error with operation context for testing
+        const contextualError = new Error(`${operation} failed: ${error.message}`);
+        throw contextualError;
+      }),
+      logError: jest.fn(),
+      shouldRetry: jest.fn().mockReturnValue(false),
+      configureContext: jest.fn(),
+      resetLastError: jest.fn(),
+    };
+
+    this.mockValidationService = {
+      validateInput: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+      validateForm: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+      validateField: jest.fn().mockReturnValue({ valid: true, error: null }),
+      validateData: jest.fn((data, schemaId) => ({
+        isValid: true,
+        errors: null,
+        errorMessage: null
+      })),
+      configure: jest.fn(),
     };
   }
 

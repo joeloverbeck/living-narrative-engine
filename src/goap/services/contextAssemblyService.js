@@ -301,15 +301,34 @@ class ContextAssemblyService {
    * @returns {string[]} Array of known entity IDs
    */
   #getActorKnowledge(actorId) {
-    // Feature flag implementation: Default to omniscient mode
-    // Future: Query core:known_to component when GOAPIMPL-023 completes
-    this.#logger.debug(
-      `[ContextAssemblyService] Knowledge limitation enabled but not yet implemented. Returning all entities for actor: ${actorId}`
-    );
+    // Query core:known_to component for knowledge-limited mode
+    const actor = this.#entityManager.getEntity(actorId);
 
-    // Return all entity IDs (omniscient mode)
-    const allEntities = Array.from(this.#entityManager.entities || []);
-    return allEntities.map((entity) => entity.id);
+    if (!actor) {
+      this.#logger.warn(
+        `[ContextAssemblyService] Actor not found during knowledge query: ${actorId}. Using minimal knowledge.`
+      );
+      return [actorId]; // Minimal knowledge: knows self
+    }
+
+    const knowledgeComponent = actor.components['core:known_to'];
+
+    if (!knowledgeComponent || !knowledgeComponent.entities) {
+      this.#logger.warn(
+        `[ContextAssemblyService] Actor missing core:known_to component: ${actorId}`,
+        {
+          actorId,
+          fallback: 'self-knowledge only',
+        }
+      );
+      return [actorId]; // Minimal knowledge: knows self
+    }
+
+    // Return known entity IDs from component
+    this.#logger.debug(
+      `[ContextAssemblyService] Actor ${actorId} knows ${knowledgeComponent.entities.length} entities`
+    );
+    return knowledgeComponent.entities;
   }
 
   /**

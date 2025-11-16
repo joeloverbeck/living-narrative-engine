@@ -15,6 +15,7 @@ describe('GoapController - Plan State Management', () => {
   let mockJsonLogicService;
   let mockDataRegistry;
   let mockEventBus;
+  let mockParameterResolutionService;
   let controller;
 
   /**
@@ -31,6 +32,7 @@ describe('GoapController - Plan State Management', () => {
     dataRegistry: mockDataRegistry,
     eventBus: mockEventBus,
     logger: mockLogger,
+    parameterResolutionService: mockParameterResolutionService,
   });
 
   beforeEach(() => {
@@ -70,6 +72,10 @@ describe('GoapController - Plan State Management', () => {
       dispatch: jest.fn(),
     };
 
+    mockParameterResolutionService = {
+      resolve: jest.fn(),
+    };
+
     controller = new GoapController(createValidDependencies());
   });
 
@@ -101,6 +107,28 @@ describe('GoapController - Plan State Management', () => {
       mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
         valid: true,
       });
+
+      // Setup refinement engine
+      mockRefinementEngine.refine.mockResolvedValue({
+        success: true,
+        methodId: 'test:method',
+        stepResults: [{ success: true }],
+      });
+
+      // Setup method definition
+      mockDataRegistry.get.mockReturnValue({
+        id: 'test:method',
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'test:action',
+            targetBindings: {},
+          },
+        ],
+      });
+
+      // Setup parameter resolution
+      mockParameterResolutionService.resolve.mockResolvedValue({});
     });
 
     it('should create new plan when no active plan exists', async () => {
@@ -272,7 +300,10 @@ describe('GoapController - Plan State Management', () => {
       const mockActor = { id: 'actor_1' };
       const mockWorld = { state: { hunger: 80 } };
       const mockGoal = { id: 'goal:reduce_hunger', priority: 10 };
-      const mockTasks = [{ taskId: 'task:find_food' }];
+      const mockTasks = [
+        { taskId: 'task:find_food' },
+        { taskId: 'task:consume_food' },
+      ];
 
       mockDataRegistry.getAll.mockReturnValue([mockGoal]);
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
@@ -281,6 +312,28 @@ describe('GoapController - Plan State Management', () => {
       mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
         valid: true,
       });
+
+      // Setup refinement engine
+      mockRefinementEngine.refine.mockResolvedValue({
+        success: true,
+        methodId: 'test:method',
+        stepResults: [{ success: true }],
+      });
+
+      // Setup method definition
+      mockDataRegistry.get.mockReturnValue({
+        id: 'test:method',
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'test:action',
+            targetBindings: {},
+          },
+        ],
+      });
+
+      // Setup parameter resolution
+      mockParameterResolutionService.resolve.mockResolvedValue({});
 
       // First turn - create plan
       await controller.decideTurn(mockActor, mockWorld);
@@ -294,7 +347,6 @@ describe('GoapController - Plan State Management', () => {
         expect.objectContaining({
           goal: mockGoal,
           tasks: mockTasks,
-          currentStep: 0,
           actorId: mockActor.id,
         }),
         mockWorld.state,
@@ -316,6 +368,28 @@ describe('GoapController - Plan State Management', () => {
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
       mockJsonLogicService.evaluate.mockReturnValue(true);
       mockGoapPlanner.plan.mockReturnValue({ tasks: mockTasks });
+
+      // Setup refinement engine
+      mockRefinementEngine.refine.mockResolvedValue({
+        success: true,
+        methodId: 'test:method',
+        stepResults: [{ success: true }],
+      });
+
+      // Setup method definition
+      mockDataRegistry.get.mockReturnValue({
+        id: 'test:method',
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'test:action',
+            targetBindings: {},
+          },
+        ],
+      });
+
+      // Setup parameter resolution
+      mockParameterResolutionService.resolve.mockResolvedValue({});
 
       // First turn - valid plan
       mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({

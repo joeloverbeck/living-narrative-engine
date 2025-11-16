@@ -2,6 +2,7 @@ import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals
 import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 import SpeechPatternsDisplayEnhancer from '../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
 import { EnhancedSpeechPatternsValidator } from '../../../src/characterBuilder/validators/EnhancedSpeechPatternsValidator.js';
+import { BaseCharacterBuilderControllerTestBase } from '../../unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 
 const activeControllers = new Set();
 
@@ -108,6 +109,41 @@ function createEventBus() {
   };
 }
 
+// Create shared testbase instance for mock factories
+const testBase = new BaseCharacterBuilderControllerTestBase();
+
+function createMockControllerLifecycleOrchestrator() {
+  return testBase.createMockControllerLifecycleOrchestrator();
+}
+
+function createMockDomElementManager() {
+  return testBase.createMockDomElementManager();
+}
+
+function createMockEventListenerRegistry() {
+  return testBase.createMockEventListenerRegistry();
+}
+
+function createMockAsyncUtilitiesToolkit() {
+  return testBase.createMockAsyncUtilitiesToolkit();
+}
+
+function createMockPerformanceMonitor() {
+  return testBase.createMockPerformanceMonitor();
+}
+
+function createMockMemoryManager() {
+  return testBase.createMockMemoryManager();
+}
+
+function createMockErrorHandlingStrategy() {
+  return testBase.createMockErrorHandlingStrategy();
+}
+
+function createMockValidationService() {
+  return testBase.createMockValidationService();
+}
+
 function createDependencies({
   speechPatternsGenerator,
   schemaValidator,
@@ -118,10 +154,23 @@ function createDependencies({
     displayEnhancer || new SpeechPatternsDisplayEnhancer({ logger });
 
   return {
+    // Core dependencies
     logger,
     characterBuilderService: createCharacterBuilderService(),
     eventBus: createEventBus(),
     schemaValidator,
+
+    // NEW: Required service dependencies (post-BASCHACUICONREF refactoring)
+    controllerLifecycleOrchestrator: createMockControllerLifecycleOrchestrator(),
+    domElementManager: createMockDomElementManager(),
+    eventListenerRegistry: createMockEventListenerRegistry(),
+    asyncUtilitiesToolkit: createMockAsyncUtilitiesToolkit(),
+    performanceMonitor: createMockPerformanceMonitor(),
+    memoryManager: createMockMemoryManager(),
+    errorHandlingStrategy: createMockErrorHandlingStrategy(),
+    validationService: createMockValidationService(),
+
+    // Page-specific additional services
     speechPatternsGenerator,
     speechPatternsDisplayEnhancer: displayEnhancerInstance,
   };

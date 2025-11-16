@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:known_to",
+  "description": "Tracks entities that this actor knows about. Contains an array of entity IDs representing known entities.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "entities": {
+        "type": "array",
+        "minItems": 0,
+        "items": {
+          "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+        },
+        "description": "Array of entity IDs (namespaced format) that this actor knows about. Knowledge persists across turns."
+      }
+    },
+    "required": ["entities"],
+    "additionalProperties": false
+  }
+}

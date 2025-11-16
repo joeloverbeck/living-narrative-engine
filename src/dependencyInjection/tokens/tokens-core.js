@@ -360,4 +360,6 @@ export const coreTokens = freeze({
   IPlanInvalidationDetector: 'IPlanInvalidationDetector',
   // GOAP Controller (GOAPIMPL-021)
   IGoapController: 'IGoapController',
+  // GOAP Knowledge Manager (GOAPIMPL-023-02)
+  IKnowledgeManager: 'IKnowledgeManager',
 });

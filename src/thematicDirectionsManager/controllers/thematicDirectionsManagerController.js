@@ -70,13 +70,42 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @param {CharacterBuilderService} dependencies.characterBuilderService - Character builder service (validated by base class)
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher (validated by base class)
    * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator (validated by base class)
+   * @param {ControllerLifecycleOrchestrator} dependencies.controllerLifecycleOrchestrator - Lifecycle orchestrator (required by base)
+   * @param {DOMElementManager} dependencies.domElementManager - DOM helper service (required by base)
+   * @param {EventListenerRegistry} dependencies.eventListenerRegistry - Event listener registry (required by base)
+   * @param {AsyncUtilitiesToolkit} dependencies.asyncUtilitiesToolkit - Async toolkit (required by base)
+   * @param {PerformanceMonitor} dependencies.performanceMonitor - Performance monitor (required by base)
+   * @param {MemoryManager} dependencies.memoryManager - Memory helper (required by base)
+   * @param {ErrorHandlingStrategy} dependencies.errorHandlingStrategy - Error handler (required by base)
+   * @param {ValidationService} dependencies.validationService - Validation helper (required by base)
    */
-  constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
+  constructor({
+    logger,
+    characterBuilderService,
+    eventBus,
+    schemaValidator,
+    controllerLifecycleOrchestrator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
+  }) {
     super({
       logger,
       characterBuilderService,
       eventBus,
       schemaValidator,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
     });
 
     // Initialize page-specific fields

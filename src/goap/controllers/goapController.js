@@ -11,6 +11,7 @@ import {
 } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import { GOAP_EVENTS } from '../events/goapEvents.js';
 
 /**
  * @typedef {import('../planner/goapPlanner.js').default} GoapPlanner
@@ -33,19 +34,19 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
  */
 class GoapController {
   /** @type {GoapPlanner} */
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-02
+   
   #planner;
 
   /** @type {RefinementEngine} */
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-04
+   
   #refinementEngine;
 
   /** @type {PlanInvalidationDetector} */
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-03
+   
   #invalidationDetector;
 
   /** @type {ContextAssemblyService} */
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-02
+   
   #contextAssemblyService;
 
   /** @type {JsonLogicEvaluationService} */
@@ -55,15 +56,32 @@ class GoapController {
   #dataRegistry;
 
   /** @type {IEventBus} */
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-05, GOAPIMPL-021-06
   #eventBus;
+
+  /** @type {IParameterResolutionService} */
+  #parameterResolutionService;
 
   /** @type {Logger} */
   #logger;
 
   /** @type {object|null} Active plan with goal, tasks, and current step */
-  // eslint-disable-next-line no-unused-private-class-members -- Will be used in GOAPIMPL-021-03
+   
   #activePlan;
+
+  /** @type {Map<string, Array<{reason: string, timestamp: number}>>} Failed goals tracking */
+  #failedGoals;
+
+  /** @type {Map<string, Array<{reason: string, timestamp: number}>>} Failed tasks tracking */
+  #failedTasks;
+
+  /** @type {number} Recursion depth for 'continue' fallback strategy */
+  #recursionDepth;
+
+  /** @type {string|null} Current actor ID for recursive decideTurn calls */
+  #currentActor;
+
+  /** @type {object|null} Current world state for recursive decideTurn calls */
+  #currentWorld;
 
   /**
    * Create new GOAP controller instance
@@ -77,6 +95,7 @@ class GoapController {
    * @param {IDataRegistry} deps.dataRegistry - Data registry for goals and tasks
    * @param {IEventBus} deps.eventBus - Event bus
    * @param {Logger} deps.logger - Logger instance
+   * @param {IParameterResolutionService} deps.parameterResolutionService - Parameter resolution service
    */
   constructor({
     goapPlanner,
@@ -87,6 +106,7 @@ class GoapController {
     dataRegistry,
     eventBus,
     logger,
+    parameterResolutionService,
   }) {
     this.#logger = ensureValidLogger(logger);
 
@@ -121,6 +141,9 @@ class GoapController {
     validateDependency(eventBus, 'IEventBus', this.#logger, {
       requiredMethods: ['dispatch'],
     });
+    validateDependency(parameterResolutionService, 'IParameterResolutionService', this.#logger, {
+      requiredMethods: ['resolve'],
+    });
 
     this.#planner = goapPlanner;
     this.#refinementEngine = refinementEngine;
@@ -129,9 +152,37 @@ class GoapController {
     this.#jsonLogicService = jsonLogicService;
     this.#dataRegistry = dataRegistry;
     this.#eventBus = eventBus;
+    this.#parameterResolutionService = parameterResolutionService;
     this.#activePlan = null;
 
+    // Initialize failure tracking (GOAPIMPL-021-05)
+    this.#failedGoals = new Map();
+    this.#failedTasks = new Map();
+    this.#recursionDepth = 0;
+    this.#currentActor = null;
+    this.#currentWorld = null;
+
     this.#logger.info('GoapController initialized');
+  }
+
+  /**
+   * Dispatch GOAP lifecycle event
+   *
+   * ISafeEventDispatcher handles errors internally, so no try-catch needed.
+   * Events use 'goap:event_name' namespace pattern.
+   *
+   * @param {string} eventType - Event type from GOAP_EVENTS
+   * @param {object} payload - Event payload (NO timestamp - handled by EventBus)
+   * @private
+   */
+  #dispatchEvent(eventType, payload) {
+    // ISafeEventDispatcher handles errors internally, no try-catch needed
+    this.#eventBus.dispatch(eventType, payload);
+
+    this.#logger.debug('GOAP event dispatched', {
+      eventType,
+      payload,
+    });
   }
 
   /**
@@ -163,6 +214,13 @@ class GoapController {
     assertNonBlankString(actor.id, 'Actor ID', 'decideTurn', this.#logger);
     assertPresent(world, 'World is required');
 
+    // Store current actor/world for recursive decideTurn calls (GOAPIMPL-021-05)
+    // Only reset recursion depth on top-level calls (not recursive calls)
+    if (this.#recursionDepth === 0) {
+      this.#currentActor = actor.id;
+      this.#currentWorld = world;
+    }
+
     // 1. Check if we have active plan
     if (this.#activePlan) {
       // 2. Validate plan still applicable
@@ -170,9 +228,14 @@ class GoapController {
 
       if (!validation.valid) {
         // 3. Plan invalidated → clear and replan
+        // Dispatch replanning started event
+        this.#dispatchEvent(GOAP_EVENTS.REPLANNING_STARTED, {
+          goalId: this.#activePlan.goal.id,
+          previousStep: this.#activePlan.currentStep,
+        });
+
         this.#clearPlan(`Invalidated: ${validation.reason}`);
 
-        // Dispatch invalidation event (implemented in GOAPIMPL-021-06)
         // Will trigger replanning in next iteration
       }
     }
@@ -188,6 +251,12 @@ class GoapController {
       }
 
       // 6. Plan to achieve goal
+      // Dispatch planning started event
+      this.#dispatchEvent(GOAP_EVENTS.PLANNING_STARTED, {
+        actorId: actor.id,
+        goalId: goal.id,
+      });
+
       // Extract state hash from world object
       const initialState = world.state || world;
       const planResult = this.#planner.plan(
@@ -201,6 +270,14 @@ class GoapController {
         // 7. Planning failed → handle failure (GOAPIMPL-021-05)
         return this.#handlePlanningFailure(goal);
       }
+
+      // Dispatch planning completed event
+      this.#dispatchEvent(GOAP_EVENTS.PLANNING_COMPLETED, {
+        actorId: actor.id,
+        goalId: goal.id,
+        planLength: planResult.tasks.length,
+        tasks: planResult.tasks.map((t) => t.taskId),
+      });
 
       // 8. Create and store plan
       this.#activePlan = this.#createPlan(goal, planResult.tasks, actor.id);
@@ -218,9 +295,65 @@ class GoapController {
       return null;
     }
 
-    // Continue to refinement and action hint extraction
-    // (implemented in GOAPIMPL-021-04)
-    return null; // Stub for now
+    // 10. Refine task to step results
+    const refinementResult = await this.#refineTask(task, actor);
+
+    // 11. Check replan flag FIRST (before success check)
+    if (refinementResult.replan) {
+      this.#logger.info('Refinement requested replan', {
+        taskId: task.taskId,
+        reason: refinementResult.error,
+      });
+      this.#clearPlan('Refinement requested replan');
+      return null; // Will trigger replanning next turn
+    }
+
+    // 12. Check skipped flag (task was optional and conditions not met)
+    if (refinementResult.skipped) {
+      this.#logger.info('Task skipped, advancing to next task', {
+        taskId: task.taskId,
+      });
+      const planContinues = this.#advancePlan();
+      if (!planContinues) {
+        this.#clearPlan('Goal achieved (last task skipped)');
+      }
+      return null; // Retry next turn with next task
+    }
+
+    if (!refinementResult.success) {
+      // 13. Refinement failed → handle failure (GOAPIMPL-021-05)
+      return this.#handleRefinementFailure(task, refinementResult);
+    }
+
+    // Dispatch task refined event
+    this.#dispatchEvent(GOAP_EVENTS.TASK_REFINED, {
+      actorId: actor.id,
+      taskId: task.taskId,
+      stepsGenerated: refinementResult.stepResults?.length || 0,
+      actionRefs: refinementResult.stepResults?.map((s) => s.actionRef) || [],
+    });
+
+    // 14. Extract action hint from refinement result
+    const actionHint = await this.#extractActionHint(refinementResult, task, actor);
+
+    if (!actionHint) {
+      this.#logger.error('Failed to extract action hint', {
+        taskId: task.taskId,
+        methodId: refinementResult.methodId,
+      });
+      return this.#handleRefinementFailure(task, refinementResult);
+    }
+
+    // 15. Advance plan for next turn
+    const planContinues = this.#advancePlan();
+
+    if (!planContinues) {
+      // 16. Plan complete → clear plan (event already dispatched in #advancePlan)
+      this.#clearPlan('Goal achieved');
+    }
+
+    // 17. Return action hint for GoapDecisionProvider
+    return { actionHint };
   }
 
   /**
@@ -266,6 +399,13 @@ class GoapController {
     const sortedGoals = [...relevantGoals].sort((a, b) => b.priority - a.priority);
 
     const selectedGoal = sortedGoals[0];
+
+    // Dispatch goal selected event
+    this.#dispatchEvent(GOAP_EVENTS.GOAL_SELECTED, {
+      actorId: actor.id,
+      goalId: selectedGoal.id,
+      priority: selectedGoal.priority,
+    });
 
     this.#logger.info('Goal selected', {
       actorId: actor.id,
@@ -329,7 +469,7 @@ class GoapController {
    * @returns {object} Validation result { valid: boolean, ... }
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
+   
   /**
    * Create new plan from goal and planner result
    *
@@ -391,7 +531,7 @@ class GoapController {
    * @returns {object} Validation result { valid: boolean, invalidatedAt?, task?, reason?, diagnostics? }
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #validateActivePlan(world) {
     if (!this.#activePlan) {
       return { valid: false, reason: 'No active plan' };
@@ -418,6 +558,14 @@ class GoapController {
     if (validation.valid) {
       this.#activePlan.lastValidated = Date.now();
     } else {
+      // Dispatch plan invalidated event
+      this.#dispatchEvent(GOAP_EVENTS.PLAN_INVALIDATED, {
+        goalId: this.#activePlan.goal.id,
+        reason: validation.reason,
+        currentStep: this.#activePlan.currentStep,
+        totalSteps: this.#activePlan.tasks.length,
+      });
+
       this.#logger.warn('Plan invalidated', {
         goalId: this.#activePlan.goal.id,
         invalidatedAt: validation.invalidatedAt,
@@ -436,14 +584,14 @@ class GoapController {
    *
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
+   
   /**
    * Advance plan to next task
    *
    * @returns {boolean} True if plan continues, false if complete
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #advancePlan() {
     if (!this.#activePlan) {
       throw new Error('Cannot advance: no active plan');
@@ -455,6 +603,13 @@ class GoapController {
       this.#activePlan.currentStep >= this.#activePlan.tasks.length;
 
     if (isComplete) {
+      // Dispatch goal achieved event
+      this.#dispatchEvent(GOAP_EVENTS.GOAL_ACHIEVED, {
+        goalId: this.#activePlan.goal.id,
+        totalSteps: this.#activePlan.tasks.length,
+        duration: Date.now() - this.#activePlan.createdAt,
+      });
+
       this.#logger.info('Plan completed', {
         goalId: this.#activePlan.goal.id,
         totalSteps: this.#activePlan.tasks.length,
@@ -476,14 +631,14 @@ class GoapController {
    *
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
+   
   /**
    * Clear the active plan
    *
    * @param {string} reason - Reason for clearing
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
+   
   #clearPlan(reason) {
     if (!this.#activePlan) {
       return;
@@ -509,42 +664,434 @@ class GoapController {
    * @returns {object|null} Action hint or null
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
-  #extractActionHint(_stepResults) {
-    // Extract actionRef and targetBindings from first step result
-    // Return { actionHint: { actionId, targetBindings } }
-    return null;
+   
+
+  /**
+   * Refine current task to executable step results
+   * 
+   * @param {object} task - Task from plan
+   * @param {string} task.taskId - Task identifier
+   * @param {object} task.params - Task parameters
+   * @param {object} actor - Actor entity
+   * @param {string} actor.id - Actor entity ID
+   * @returns {Promise<object>} Refinement result with ALL fields:
+   *   - success: boolean
+   *   - stepResults: Array<object>
+   *   - methodId: string
+   *   - taskId: string
+   *   - actorId: string
+   *   - timestamp: number
+   *   - replan?: boolean (critical for failure handling)
+   *   - skipped?: boolean (handles optional tasks)
+   *   - error?: string
+   * @private
+   */
+  async #refineTask(task, actor) {
+    assertPresent(task, 'Task is required');
+    assertPresent(actor, 'Actor is required');
+    assertNonBlankString(actor.id, 'Actor ID', '#refineTask', this.#logger);
+
+    this.#logger.debug('Refining task', {
+      taskId: task.taskId,
+      actorId: actor.id,
+      params: task.params,
+    });
+
+    // Call refinement engine
+    const result = await this.#refinementEngine.refine(
+      task.taskId,
+      actor.id,
+      task.params
+    );
+
+    // Log all returned fields for debugging
+    this.#logger.debug('Refinement completed', {
+      success: result.success,
+      methodId: result.methodId,
+      stepCount: result.stepResults?.length || 0,
+      replan: result.replan,
+      skipped: result.skipped,
+      timestamp: result.timestamp,
+    });
+
+    return result;
+  }
+
+  /**
+   * Resolve step bindings (placeholders like "task.params.item") to actual entity IDs
+   * 
+   * @param {object} stepBindings - Target bindings from refinement method step
+   * @param {object} task - Task from plan
+   * @param {object} actor - Actor entity
+   * @returns {Promise<object>} Resolved bindings (placeholder values replaced with entity IDs)
+   * @private
+   */
+  async #resolveStepBindings(stepBindings, task, actor) {
+    assertPresent(stepBindings, 'Step bindings are required');
+    assertPresent(task, 'Task is required');
+    assertPresent(actor, 'Actor is required');
+
+    // Build context for parameter resolution
+    // Context structure matches what ParameterResolutionService expects
+    const context = {
+      task: {
+        id: task.taskId,
+        params: task.params || {},
+      },
+      actor: actor,
+      refinement: {
+        localState: {}, // Empty state for hint extraction (no prior step results)
+      },
+    };
+
+    try {
+      // Resolve placeholders to actual values
+      const resolvedBindings = await this.#parameterResolutionService.resolve(
+        stepBindings,
+        context
+      );
+
+      this.#logger.debug('Step bindings resolved', {
+        original: stepBindings,
+        resolved: resolvedBindings,
+      });
+
+      return resolvedBindings;
+    } catch (err) {
+      this.#logger.error('Failed to resolve step bindings', {
+        stepBindings,
+        task: task.taskId,
+        actor: actor.id,
+        error: err.message,
+      });
+      throw err;
+    }
+  }
+
+  /**
+   * Extract action hint from refinement result by re-resolving bindings
+   * OPTION B: Fetches method definition and re-resolves bindings
+   *
+   * @param {object} refinementResult - Result from refinement engine
+   * @param {object} task - Task from plan
+   * @param {object} actor - Actor entity
+   * @returns {Promise<object|null>} Action hint or null if extraction fails
+   * @private
+   */
+  async #extractActionHint(refinementResult, task, actor) {
+    assertPresent(refinementResult, 'Refinement result is required');
+    assertPresent(task, 'Task is required');
+    assertPresent(actor, 'Actor is required');
+
+    if (!refinementResult.success) {
+      this.#logger.warn('Refinement failed, cannot extract hint', {
+        error: refinementResult.error,
+      });
+      return null;
+    }
+
+    // Get refinement method from registry
+    const methodId = refinementResult.methodId;
+    if (!methodId) {
+      this.#logger.error('Refinement result missing methodId', {
+        taskId: refinementResult.taskId,
+      });
+      return null;
+    }
+
+    const method = this.#dataRegistry.get('refinementMethod', methodId);
+
+    if (!method || !method.steps || method.steps.length === 0) {
+      this.#logger.error('Cannot find refinement method or first step', {
+        methodId,
+      });
+      return null;
+    }
+
+    const firstMethodStep = method.steps[0];
+
+    if (!firstMethodStep.actionId) {
+      this.#logger.error('First method step has no actionId', {
+        methodId,
+        step: firstMethodStep,
+      });
+      return null;
+    }
+
+    // Re-resolve target bindings using parameter resolution service
+    try {
+      const resolvedBindings = await this.#resolveStepBindings(
+        firstMethodStep.targetBindings || {},
+        task,
+        actor
+      );
+
+      const actionHint = {
+        actionId: firstMethodStep.actionId,
+        targetBindings: resolvedBindings,
+      };
+
+      // Dispatch action hint generated event
+      this.#dispatchEvent(GOAP_EVENTS.ACTION_HINT_GENERATED, {
+        actionId: actionHint.actionId,
+        targetBindings: actionHint.targetBindings,
+        taskId: task.taskId,
+      });
+
+      this.#logger.info('Action hint extracted via re-resolution', {
+        actionId: actionHint.actionId,
+        bindings: actionHint.targetBindings,
+      });
+
+      return actionHint;
+    } catch (err) {
+      // Dispatch action hint failed event
+      this.#dispatchEvent(GOAP_EVENTS.ACTION_HINT_FAILED, {
+        actionId: firstMethodStep.actionId,
+        bindings: firstMethodStep.targetBindings || {},
+        reason: err.message || 'Failed to resolve bindings',
+      });
+
+      // Error already logged by #resolveStepBindings()
+      return null;
+    }
+  }
+
+  /**
+   * Track failed goal to prevent infinite retry loops
+   *
+   * @param {string} goalId - Goal ID that failed
+   * @param {string} reason - Failure reason
+   * @returns {boolean} True if max failures reached (≥3 recent attempts)
+   * @private
+   */
+  #trackFailedGoal(goalId, reason) {
+    const now = Date.now();
+    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+    const MAX_FAILURES = 3;
+
+    // Get or create failure history for this goal
+    if (!this.#failedGoals.has(goalId)) {
+      this.#failedGoals.set(goalId, []);
+    }
+
+    const failures = this.#failedGoals.get(goalId);
+
+    // Prune old failures (older than 5 minutes)
+    const recentFailures = failures.filter(
+      (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
+    );
+
+    // Add new failure
+    recentFailures.push({ reason, timestamp: now });
+
+    // Update map with pruned + new failures
+    this.#failedGoals.set(goalId, recentFailures);
+
+    // Check if max failures reached
+    if (recentFailures.length >= MAX_FAILURES) {
+      this.#logger.error('Goal failed too many times', {
+        goalId,
+        failureCount: recentFailures.length,
+        recentFailures: recentFailures.map((f) => f.reason),
+      });
+      return true;
+    }
+
+    this.#logger.warn('Goal failure tracked', {
+      goalId,
+      reason,
+      failureCount: recentFailures.length,
+    });
+
+    return false;
+  }
+
+  /**
+   * Track failed task to prevent infinite retry loops
+   *
+   * @param {string} taskId - Task ID that failed
+   * @param {string} reason - Failure reason
+   * @returns {boolean} True if max failures reached (≥3 recent attempts)
+   * @private
+   */
+  #trackFailedTask(taskId, reason) {
+    const now = Date.now();
+    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+    const MAX_FAILURES = 3;
+
+    // Get or create failure history for this task
+    if (!this.#failedTasks.has(taskId)) {
+      this.#failedTasks.set(taskId, []);
+    }
+
+    const failures = this.#failedTasks.get(taskId);
+
+    // Prune old failures (older than 5 minutes)
+    const recentFailures = failures.filter(
+      (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
+    );
+
+    // Add new failure
+    recentFailures.push({ reason, timestamp: now });
+
+    // Update map with pruned + new failures
+    this.#failedTasks.set(taskId, recentFailures);
+
+    // Check if max failures reached
+    if (recentFailures.length >= MAX_FAILURES) {
+      this.#logger.error('Task failed too many times', {
+        taskId,
+        failureCount: recentFailures.length,
+        recentFailures: recentFailures.map((f) => f.reason),
+      });
+      return true;
+    }
+
+    this.#logger.warn('Task failure tracked', {
+      taskId,
+      reason,
+      failureCount: recentFailures.length,
+    });
+
+    return false;
   }
 
   /**
    * Handle planning failure for a goal
-   * To be implemented in GOAPIMPL-021-05 (Failure Handling)
    *
-   * @param {object} _goal - Goal that failed to plan
+   * Strategy: Track failure and return null to idle this turn.
+   * Next turn will attempt to select a different goal or retry after expiry.
+   *
+   * @param {object} goal - Goal that failed to plan
    * @returns {null} Returns null to idle this turn
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
-  #handlePlanningFailure(_goal) {
-    // Dispatch GOAP_PLANNING_FAILED event
-    // Return null (idle this turn)
+  #handlePlanningFailure(goal) {
+    // Track failed goal with reason
+    const reason = 'Planner returned no tasks';
+    this.#trackFailedGoal(goal.id, reason);
+
+    // Dispatch planning failed event
+    this.#dispatchEvent(GOAP_EVENTS.PLANNING_FAILED, {
+      actorId: this.#currentActor,
+      goalId: goal.id,
+      reason,
+    });
+
+    // Log warning with goal details
+    this.#logger.warn('Planning failed for goal', {
+      goalId: goal.id,
+      goalName: goal.name,
+      reason,
+    });
+
+    // Return null to idle this turn
+    // Next turn will select different goal or retry after failure expiry
     return null;
   }
 
   /**
    * Handle refinement failure for a task
-   * To be implemented in GOAPIMPL-021-05 (Failure Handling)
    *
-   * @param {object} _task - Task that failed to refine
-   * @param {object} _refinementResult - Refinement result with failure info
-   * @returns {null} Returns null based on fallback behavior
+   * Supports 4 fallback strategies:
+   * - 'replan' (default): Clear plan, track goal failure, replan next turn
+   * - 'continue': Skip failed task, advance plan, try next task (with recursion limit)
+   * - 'fail': Clear plan, track goal as failed, return null
+   * - 'idle': Clear plan, return null (no tracking)
+   *
+   * @param {object} task - Task that failed to refine
+   * @param {object} refinementResult - Refinement result with failure info
+   * @returns {Promise<object|null>} Action hint or null based on fallback behavior
    * @private
    */
-  // eslint-disable-next-line no-unused-private-class-members
-  #handleRefinementFailure(_task, _refinementResult) {
-    // Check refinementResult.fallbackBehavior
-    // Handle: 'replan' | 'continue' | 'fail'
-    return null;
+  async #handleRefinementFailure(task, refinementResult) {
+    const fallbackBehavior = refinementResult.fallbackBehavior || 'replan';
+    const reason = refinementResult.error || 'Refinement failed';
+
+    this.#logger.info('Handling refinement failure', {
+      taskId: task.taskId,
+      fallbackBehavior,
+      reason,
+      recursionDepth: this.#recursionDepth,
+    });
+
+    // Dispatch refinement failed event
+    this.#dispatchEvent(GOAP_EVENTS.REFINEMENT_FAILED, {
+      actorId: this.#currentActor,
+      taskId: task.taskId,
+      reason,
+      fallbackBehavior,
+    });
+
+    switch (fallbackBehavior) {
+      case 'replan': {
+        // Default: Clear plan and track goal failure
+        this.#trackFailedGoal(this.#activePlan.goal.id, `Task failed: ${reason}`);
+        this.#clearPlan(`Refinement failed: ${reason}`);
+        return null; // Will replan next turn
+      }
+
+      case 'continue': {
+        // Skip failed task, advance to next task, retry decideTurn
+        this.#trackFailedTask(task.taskId, reason);
+
+        // Check recursion depth limit
+        if (this.#recursionDepth >= 10) {
+          this.#logger.error('Recursion depth exceeded during continue fallback', {
+            taskId: task.taskId,
+            recursionDepth: this.#recursionDepth,
+          });
+          this.#clearPlan('Too many consecutive task failures');
+          this.#recursionDepth = 0;
+          return null;
+        }
+
+        // Advance to next task
+        const planContinues = this.#advancePlan();
+
+        if (!planContinues) {
+          // No more tasks → goal achieved (all remaining tasks were skippable failures)
+          this.#clearPlan('Goal achieved (remaining tasks failed but skippable)');
+          this.#recursionDepth = 0;
+          return null;
+        }
+
+        // Recursive call to try next task
+        this.#recursionDepth++;
+        const result = await this.decideTurn(
+          { id: this.#currentActor },
+          this.#currentWorld
+        );
+        this.#recursionDepth--;
+        return result;
+      }
+
+      case 'fail': {
+        // Critical failure → track goal and clear plan
+        this.#trackFailedGoal(this.#activePlan.goal.id, `Task failed critically: ${reason}`);
+        this.#trackFailedTask(task.taskId, reason);
+        this.#clearPlan(`Critical task failure: ${reason}`);
+        return null;
+      }
+
+      case 'idle': {
+        // Just clear plan without tracking (transient failure)
+        this.#clearPlan(`Temporary task failure: ${reason}`);
+        return null;
+      }
+
+      default: {
+        // Unknown fallback behavior → treat as 'replan'
+        this.#logger.warn('Unknown fallback behavior, treating as replan', {
+          fallbackBehavior,
+          taskId: task.taskId,
+        });
+        this.#trackFailedGoal(this.#activePlan.goal.id, `Task failed: ${reason}`);
+        this.#clearPlan(`Refinement failed: ${reason}`);
+        return null;
+      }
+    }
   }
 }
 

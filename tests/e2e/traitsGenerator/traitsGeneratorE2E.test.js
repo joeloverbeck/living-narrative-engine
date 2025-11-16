@@ -83,10 +83,21 @@ describe('Traits Generator E2E Tests', () => {
    */
   async function createController() {
     controller = new TraitsGeneratorController({
+      // Core services (required by BaseCharacterBuilderController)
       characterBuilderService: testBed.getCharacterBuilderService(),
       eventBus: testBed.getEventBusMock(),
       logger: testBed.mockLogger,
       schemaValidator: testBed.getSchemaValidator(),
+      // Required service dependencies added in base controller refactor
+      controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+      domElementManager: testBed.mockDOMElementManager,
+      eventListenerRegistry: testBed.mockEventListenerRegistry,
+      asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,
+      performanceMonitor: testBed.mockPerformanceMonitor,
+      memoryManager: testBed.mockMemoryManager,
+      errorHandlingStrategy: testBed.mockErrorHandlingStrategy,
+      validationService: testBed.mockValidationService,
+      // Page-specific services
       uiStateManager: testBed.mockUIStateManager || {
         setState: jest.fn(),
         getState: jest.fn(() => ({})),
@@ -145,6 +156,18 @@ describe('Traits Generator E2E Tests', () => {
 
       // Create and initialize controller after mocks are set up
       await createController();
+
+      // Verify that initialization called the service methods
+      expect(
+        testBed.getCharacterBuilderService().getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalled();
+      expect(
+        testBed.getCharacterBuilderService().hasClichesForDirection
+      ).toHaveBeenCalledWith(validDirection.id);
+      expect(
+        testBed.getCharacterBuilderService().getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledWith(validDirection.id);
+
       // Verify direction selector is populated
       const directionSelector = document.getElementById('direction-selector');
       expect(directionSelector).toBeTruthy();
@@ -153,11 +176,8 @@ describe('Traits Generator E2E Tests', () => {
       directionSelector.value = validDirection.id;
       directionSelector.dispatchEvent(new window.Event('change'));
 
-      // Wait for async updates and verify core motivations are displayed
+      // Wait for async updates
       await new Promise((resolve) => setTimeout(resolve, 100));
-      expect(
-        testBed.getCharacterBuilderService().getCoreMotivationsByDirectionId
-      ).toHaveBeenCalledWith(validDirection.id);
 
       // Fill user inputs with correct element IDs
       const coreMotivationInput = document.getElementById(
@@ -257,15 +277,15 @@ describe('Traits Generator E2E Tests', () => {
       // Wait for async initialization to complete
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Verify only directions with BOTH clichés AND core motivations are loaded
+      // Verify that initialization called the service methods for filtering
       const getDirectionsCall =
         testBed.getCharacterBuilderService()
           .getAllThematicDirectionsWithConcepts;
       expect(getDirectionsCall).toHaveBeenCalled();
 
-      // Also verify the filtering methods were called - comment out to check if they're causing issues
-      // expect(testBed.getCharacterBuilderService().hasClichesForDirection).toHaveBeenCalled();
-      // expect(testBed.getCharacterBuilderService().getCoreMotivationsByDirectionId).toHaveBeenCalled();
+      // Verify the filtering methods were called during initialization
+      expect(testBed.getCharacterBuilderService().hasClichesForDirection).toHaveBeenCalledWith(validDirection.id);
+      expect(testBed.getCharacterBuilderService().getCoreMotivationsByDirectionId).toHaveBeenCalledWith(validDirection.id);
 
       // The mock should only return directions that meet both requirements
       const directionSelector = document.getElementById('direction-selector');

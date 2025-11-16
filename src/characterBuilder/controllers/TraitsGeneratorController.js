@@ -81,7 +81,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    * @protected
    */
   _cacheElements() {
-    this._cacheElementsFromMap({
+    this._getDomManager().cacheElementsFromMap({
       // Direction selector elements
       directionSelector: '#direction-selector',
       selectedDirectionDisplay: '#selected-direction-display',
@@ -132,8 +132,9 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    */
   _setupEventListeners() {
     // Direction selector change
-    if (this._getElement('directionSelector')) {
-      this._addEventListener('directionSelector', 'change', (e) => {
+    const directionSelector = this._getElement('directionSelector');
+    if (directionSelector) {
+      this.eventRegistry.addEventListener(directionSelector, 'change', (e) => {
         Promise.resolve()
           .then(() => this.#handleDirectionSelection(e.target.value))
           .catch((error) => {
@@ -150,29 +151,33 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     this.#setupInputValidation();
 
     // Generate button click
-    if (this._getElement('generateBtn')) {
-      this._addEventListener('generateBtn', 'click', () => {
+    const generateBtn = this._getElement('generateBtn');
+    if (generateBtn) {
+      this.eventRegistry.addEventListener(generateBtn, 'click', () => {
         this.#generateTraits();
       });
     }
 
     // Export button click
-    if (this._getElement('exportBtn')) {
-      this._addEventListener('exportBtn', 'click', () => {
+    const exportBtn = this._getElement('exportBtn');
+    if (exportBtn) {
+      this.eventRegistry.addEventListener(exportBtn, 'click', () => {
         this.#exportToText();
       });
     }
 
     // Clear/reset button
-    if (this._getElement('clearBtn')) {
-      this._addEventListener('clearBtn', 'click', () => {
+    const clearBtn = this._getElement('clearBtn');
+    if (clearBtn) {
+      this.eventRegistry.addEventListener(clearBtn, 'click', () => {
         this.#clearDirection();
       });
     }
 
     // Back button
-    if (this._getElement('backBtn')) {
-      this._addEventListener('backBtn', 'click', () => {
+    const backBtn = this._getElement('backBtn');
+    if (backBtn) {
+      this.eventRegistry.addEventListener(backBtn, 'click', () => {
         window.location.href = 'index.html';
       });
     }
@@ -644,15 +649,16 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     ];
 
     inputs.forEach((inputId) => {
-      if (this._getElement(inputId)) {
-        this._addEventListener(inputId, 'input', () => {
+      const inputElement = this._getElement(inputId);
+      if (inputElement) {
+        this.eventRegistry.addEventListener(inputElement, 'input', () => {
           this.#updateUserInputs();
           this.#validateUserInputs();
           this.#updateUIState();
           this.#updateUserInputSummary();
         });
 
-        this._addEventListener(inputId, 'blur', () => {
+        this.eventRegistry.addEventListener(inputElement, 'blur', () => {
           this.#validateUserInputs();
         });
       }

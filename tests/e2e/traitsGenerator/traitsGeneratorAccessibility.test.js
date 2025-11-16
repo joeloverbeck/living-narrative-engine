@@ -110,10 +110,21 @@ describe('Traits Generator Accessibility E2E Tests', () => {
 
     // Create controller without initializing - tests will initialize as needed
     controller = new TraitsGeneratorController({
+      // Core services (required by BaseCharacterBuilderController)
       characterBuilderService: testBed.getCharacterBuilderService(),
       eventBus: testBed.getEventBusMock(),
       logger: testBed.mockLogger,
       schemaValidator: testBed.getSchemaValidator(),
+      // Required service dependencies added in base controller refactor
+      controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+      domElementManager: testBed.mockDOMElementManager,
+      eventListenerRegistry: testBed.mockEventListenerRegistry,
+      asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,
+      performanceMonitor: testBed.mockPerformanceMonitor,
+      memoryManager: testBed.mockMemoryManager,
+      errorHandlingStrategy: testBed.mockErrorHandlingStrategy,
+      validationService: testBed.mockValidationService,
+      // Page-specific services
       uiStateManager: { setState: jest.fn(), getState: jest.fn(() => ({})) },
       traitsDisplayEnhancer: {
         enhanceForDisplay: jest.fn((traits) => traits),

@@ -174,12 +174,16 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   #setupCharacterInputHandling() {
     const inputElement = this._getElement('characterDefinition');
     if (inputElement) {
-      // Real-time validation on input with debouncing
-      this._addEventListener(
-        'characterDefinition',
-        'input',
-        this._debounce(this.#handleCharacterInput.bind(this), 500)
+      // Create debounced validation handler
+      // Uses AsyncUtilitiesToolkit for proper timer lifecycle management
+      const debouncedInputHandler = this._getAsyncUtilitiesToolkit().debounce(
+        this.#handleCharacterInput.bind(this),
+        500,
+        { trailing: true } // Execute validation after user stops typing
       );
+
+      // Real-time validation on input with debouncing
+      this._addEventListener('characterDefinition', 'input', debouncedInputHandler);
 
       // Validation on blur
       this._addEventListener(
@@ -205,7 +209,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       if (!inputText) {
         this.#currentCharacterDefinition = null;
         this.#updateGenerateButtonState(false);
-        this._hideElement('characterInputError');
+        this._getDomManager().hideElement('characterInputError');
         return;
       }
 
@@ -215,7 +219,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       this.#currentCharacterDefinition = characterDefinition;
 
       // Clear errors and enable generation
-      this._hideElement('characterInputError');
+      this._getDomManager().hideElement('characterInputError');
       this.#updateGenerateButtonState(true);
 
       this.logger.debug(
@@ -373,10 +377,10 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
 
     try {
       // Update UI to loading state
-      this._showElement('generationProgress');
-      this._hideElement('emptyState');
-      this._hideElement('rewrittenTraitsContainer');
-      this._hideElement('generationError');
+      this._getDomManager().showElement('generationProgress');
+      this._getDomManager().hideElement('emptyState');
+      this._getDomManager().hideElement('rewrittenTraitsContainer');
+      this._getDomManager().hideElement('generationError');
 
       // Update progress text
       const progressText = this._getElement('progressText');
@@ -406,7 +410,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     } finally {
       this.#isGenerating = false;
       this.#updateControlsState(true);
-      this._hideElement('generationProgress');
+      this._getDomManager().hideElement('generationProgress');
     }
   }
 
@@ -441,13 +445,13 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       }
 
       // Show results container
-      this._showElement('rewrittenTraitsContainer');
-      this._hideElement('emptyState');
+      this._getDomManager().showElement('rewrittenTraitsContainer');
+      this._getDomManager().hideElement('emptyState');
 
       // Enable export buttons
-      this._showElement('exportJsonButton');
-      this._showElement('exportTextButton');
-      this._showElement('copyTraitsButton');
+      this._getDomManager().showElement('exportJsonButton');
+      this._getDomManager().showElement('exportTextButton');
+      this._getDomManager().showElement('copyTraitsButton');
 
       this.logger.info(
         'TraitsRewriterController: Results displayed successfully'
@@ -632,10 +636,10 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     this.#isGenerating = false;
 
     // Reset UI
-    this._hideElement('characterInputError');
-    this._hideElement('rewrittenTraitsContainer');
-    this._hideElement('generationError');
-    this._showElement('emptyState');
+    this._getDomManager().hideElement('characterInputError');
+    this._getDomManager().hideElement('rewrittenTraitsContainer');
+    this._getDomManager().hideElement('generationError');
+    this._getDomManager().showElement('emptyState');
 
     // Disable generate button
     this.#updateGenerateButtonState(false);
@@ -729,9 +733,9 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     }
 
     // Show error container
-    this._showElement('generationError');
-    this._hideElement('rewrittenTraitsContainer');
-    this._hideElement('emptyState');
+    this._getDomManager().showElement('generationError');
+    this._getDomManager().hideElement('rewrittenTraitsContainer');
+    this._getDomManager().hideElement('emptyState');
   }
 
   /**
@@ -744,7 +748,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     const errorElement = this._getElement('characterInputError');
     if (errorElement) {
       errorElement.textContent = message;
-      this._showElement('characterInputError');
+      this._getDomManager().showElement('characterInputError');
     }
   }
 

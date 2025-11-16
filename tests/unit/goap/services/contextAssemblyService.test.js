@@ -183,7 +183,12 @@ describe('ContextAssemblyService', () => {
       expect(context.actor.knowledge).toBeUndefined();
     });
 
-    it('should return all entity IDs in knowledge array (omniscient mode)', () => {
+    it('should return known entity IDs from core:known_to component', () => {
+      // Add core:known_to component to mock entity
+      mockEntity.components['core:known_to'] = {
+        entities: ['actor-123', 'other-entity'],
+      };
+
       const serviceWithKnowledge = new ContextAssemblyService({
         entityManager: mockEntityManager,
         logger: mockLogger,
@@ -194,6 +199,25 @@ describe('ContextAssemblyService', () => {
 
       expect(context.actor.knowledge).toContain('actor-123');
       expect(context.actor.knowledge).toContain('other-entity');
+      expect(context.actor.knowledge).toHaveLength(2);
+    });
+
+    it('should return minimal knowledge when core:known_to component is missing', () => {
+      // mockEntity doesn't have core:known_to component
+      const serviceWithKnowledge = new ContextAssemblyService({
+        entityManager: mockEntityManager,
+        logger: mockLogger,
+        enableKnowledgeLimitation: true,
+      });
+
+      const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+
+      // Should fallback to minimal knowledge (self only)
+      expect(context.actor.knowledge).toEqual(['actor-123']);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Actor missing core:known_to component'),
+        expect.any(Object)
+      );
     });
   });
 
@@ -585,6 +609,203 @@ describe('ContextAssemblyService', () => {
       const context2 = service.assemblePlanningContext('actor-123');
 
       expect(context1.world).toEqual(context2.world);
+    });
+  });
+
+  describe('ContextAssemblyService - Knowledge Integration', () => {
+    describe('getActorKnowledge', () => {
+      it('should return entities array from core:known_to component', () => {
+        const actor = {
+          id: 'actor-123',
+          components: {
+            'core:position': { location: 'room-1' },
+            'core:known_to': { entities: ['actor-123', 'entity-1', 'entity-2'] },
+          },
+        };
+
+        mockEntityManager.getEntity = jest.fn((id) => {
+          if (id === 'actor-123') return actor;
+          return null;
+        });
+
+        const serviceWithKnowledge = new ContextAssemblyService({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          enableKnowledgeLimitation: true,
+        });
+
+        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+
+        expect(context.actor.knowledge).toEqual(['actor-123', 'entity-1', 'entity-2']);
+        expect(context.actor.knowledge).toHaveLength(3);
+      });
+
+      it('should return self-knowledge when core:known_to component is missing', () => {
+        const actor = {
+          id: 'actor-123',
+          components: {
+            'core:position': { location: 'room-1' },
+          },
+        };
+
+        mockEntityManager.getEntity = jest.fn((id) => {
+          if (id === 'actor-123') return actor;
+          return null;
+        });
+
+        const serviceWithKnowledge = new ContextAssemblyService({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          enableKnowledgeLimitation: true,
+        });
+
+        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+
+        expect(context.actor.knowledge).toEqual(['actor-123']);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Actor missing core:known_to component'),
+          expect.any(Object)
+        );
+      });
+
+      it('should log warning when component is missing', () => {
+        const actor = {
+          id: 'actor-123',
+          components: {
+            'core:position': { location: 'room-1' },
+          },
+        };
+
+        mockEntityManager.getEntity = jest.fn((id) => {
+          if (id === 'actor-123') return actor;
+          return null;
+        });
+
+        const serviceWithKnowledge = new ContextAssemblyService({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          enableKnowledgeLimitation: true,
+        });
+
+        serviceWithKnowledge.assemblePlanningContext('actor-123');
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Actor missing core:known_to component: actor-123'),
+          expect.objectContaining({
+            actorId: 'actor-123',
+            fallback: 'self-knowledge only',
+          })
+        );
+      });
+
+      it('should handle empty entities array gracefully', () => {
+        const actor = {
+          id: 'actor-123',
+          components: {
+            'core:position': { location: 'room-1' },
+            'core:known_to': { entities: [] },
+          },
+        };
+
+        mockEntityManager.getEntity = jest.fn((id) => {
+          if (id === 'actor-123') return actor;
+          return null;
+        });
+
+        const serviceWithKnowledge = new ContextAssemblyService({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          enableKnowledgeLimitation: true,
+        });
+
+        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+
+        expect(context.actor.knowledge).toEqual([]);
+        expect(Array.isArray(context.actor.knowledge)).toBe(true);
+      });
+
+      it('should handle malformed core:known_to component gracefully', () => {
+        const actor = {
+          id: 'actor-123',
+          components: {
+            'core:position': { location: 'room-1' },
+            'core:known_to': {}, // Missing entities array
+          },
+        };
+
+        mockEntityManager.getEntity = jest.fn((id) => {
+          if (id === 'actor-123') return actor;
+          return null;
+        });
+
+        const serviceWithKnowledge = new ContextAssemblyService({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          enableKnowledgeLimitation: true,
+        });
+
+        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+
+        // Should fallback to self-knowledge
+        expect(context.actor.knowledge).toEqual(['actor-123']);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Actor missing core:known_to component'),
+          expect.any(Object)
+        );
+      });
+    });
+
+    describe('knowledge limitation flag', () => {
+      it('should include knowledge array when flag is enabled', () => {
+        const actor = {
+          id: 'actor-123',
+          components: {
+            'core:position': { location: 'room-1' },
+            'core:known_to': { entities: ['actor-123', 'entity-1'] },
+          },
+        };
+
+        mockEntityManager.getEntity = jest.fn((id) => {
+          if (id === 'actor-123') return actor;
+          return null;
+        });
+
+        const serviceWithKnowledge = new ContextAssemblyService({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          enableKnowledgeLimitation: true,
+        });
+
+        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+
+        expect(context.actor.knowledge).toBeDefined();
+        expect(Array.isArray(context.actor.knowledge)).toBe(true);
+      });
+
+      it('should not include knowledge array when flag is disabled', () => {
+        const actor = {
+          id: 'actor-123',
+          components: {
+            'core:position': { location: 'room-1' },
+            'core:known_to': { entities: ['actor-123', 'entity-1'] },
+          },
+        };
+
+        mockEntityManager.getEntity = jest.fn((id) => {
+          if (id === 'actor-123') return actor;
+          return null;
+        });
+
+        const serviceWithoutKnowledge = new ContextAssemblyService({
+          entityManager: mockEntityManager,
+          logger: mockLogger,
+          enableKnowledgeLimitation: false,
+        });
+
+        const context = serviceWithoutKnowledge.assemblePlanningContext('actor-123');
+
+        expect(context.actor.knowledge).toBeUndefined();
+      });
     });
   });
 });

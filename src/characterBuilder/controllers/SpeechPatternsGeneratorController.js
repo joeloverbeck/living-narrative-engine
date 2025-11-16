@@ -148,6 +148,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
   /** @private @type {Function|null} */
   #debouncedValidation = null;
 
+  /** @private @type {EventListenerRegistry} */
+  #eventListenerRegistry;
+
   /**
    * Create a new SpeechPatternsGeneratorController instance
    *
@@ -155,6 +158,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    */
   constructor(dependencies) {
     super(dependencies);
+
+    // Store EventListenerRegistry reference for direct access
+    this.#eventListenerRegistry = this.eventRegistry;
 
     // SpeechPatternsDisplayEnhancer is optional (will be created in SPEPATGEN-006)
     if (dependencies.speechPatternsDisplayEnhancer) {
@@ -225,7 +231,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @protected
    */
   _cacheElements() {
-    this._cacheElementsFromMap({
+    this._getDomManager().cacheElementsFromMap({
       // Input elements
       characterDefinition: '#character-definition',
       characterInputError: '#character-input-error',
@@ -292,7 +298,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       : () => this.#validateCharacterInput();
 
     // Create debounced validation function with faster response time
-    this.#debouncedValidation = this._debounce(
+    this.#debouncedValidation = this._getAsyncUtilitiesToolkit().debounce(
       validationHandler,
       300, // Reduced from 500ms to 300ms for better responsiveness
       { trailing: true }
@@ -300,30 +306,34 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
     // Character input validation
     if (this._getElement('characterDefinition')) {
-      this._addEventListener('characterDefinition', 'input', () => {
+      const characterDefinition = this._getElement('characterDefinition');
+      this.#eventListenerRegistry.addEventListener(characterDefinition, 'input', () => {
         this.#handleCharacterInput();
       });
 
-      this._addEventListener('characterDefinition', 'blur', validationHandler);
+      this.#eventListenerRegistry.addEventListener(characterDefinition, 'blur', validationHandler);
     }
 
     // Generate button
     if (this._getElement('generateBtn')) {
-      this._addEventListener('generateBtn', 'click', () => {
+      const generateBtn = this._getElement('generateBtn');
+      this.#eventListenerRegistry.addEventListener(generateBtn, 'click', () => {
         this.#generateSpeechPatterns();
       });
     }
 
     // Export button
     if (this._getElement('exportBtn')) {
-      this._addEventListener('exportBtn', 'click', () => {
+      const exportBtn = this._getElement('exportBtn');
+      this.#eventListenerRegistry.addEventListener(exportBtn, 'click', () => {
         this.#exportToFile();
       });
     }
 
     // Format selector change handler
     if (this._getElement('exportFormat')) {
-      this._addEventListener('exportFormat', 'change', () => {
+      const exportFormat = this._getElement('exportFormat');
+      this.#eventListenerRegistry.addEventListener(exportFormat, 'change', () => {
         this.#updateTemplateVisibility();
       });
     }
@@ -333,21 +343,24 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
     // Clear button
     if (this._getElement('clearBtn')) {
-      this._addEventListener('clearBtn', 'click', () => {
+      const clearBtn = this._getElement('clearBtn');
+      this.#eventListenerRegistry.addEventListener(clearBtn, 'click', () => {
         this.#clearAll();
       });
     }
 
     // Back button
     if (this._getElement('backBtn')) {
-      this._addEventListener('backBtn', 'click', () => {
+      const backBtn = this._getElement('backBtn');
+      this.#eventListenerRegistry.addEventListener(backBtn, 'click', () => {
         window.location.href = 'index.html';
       });
     }
 
     // Retry button (in error state)
     if (this._getElement('retryBtn')) {
-      this._addEventListener('retryBtn', 'click', () => {
+      const retryBtn = this._getElement('retryBtn');
+      this.#eventListenerRegistry.addEventListener(retryBtn, 'click', () => {
         this.#retryGeneration();
       });
     }
@@ -849,7 +862,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     }
 
     // Performance monitoring
-    this._performanceMark('speech-patterns-generation-start');
+    // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+    // this._performanceMark('speech-patterns-generation-start');
     const generationStartTime = performance.now();
 
     try {
@@ -857,7 +871,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#currentGenerationController = new AbortController();
 
       // Stage 1: Initial UI Update and Validation (0-15%)
-      this._performanceMark('speech-patterns-ui-update-start');
+      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+      // this._performanceMark('speech-patterns-ui-update-start');
       this._showState('loading');
       this.#updateUIState();
 
@@ -869,10 +884,11 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       );
       this.#updateLoadingProgress('validation', 5, timeEstimate);
 
-      this._performanceMeasure(
-        'speech-patterns-ui-update',
-        'speech-patterns-ui-update-start'
-      );
+      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+      // this._performanceMeasure(
+      //   'speech-patterns-ui-update',
+      //   'speech-patterns-ui-update-start'
+      // );
 
       // Brief pause for UI update (simulates validation time)
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -886,7 +902,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#updateLoadingProgress('validation', 15, timeEstimate);
 
       // Stage 2: AI Processing (15-70%)
-      this._performanceMark('speech-patterns-llm-request-start');
+      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+      // this._performanceMark('speech-patterns-llm-request-start');
 
       // Update to processing stage
       timeEstimate = this.#calculateTimeEstimate(
@@ -920,10 +937,11 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
           }
         );
 
-      this._performanceMeasure(
-        'speech-patterns-llm-request',
-        'speech-patterns-llm-request-start'
-      );
+      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+      // this._performanceMeasure(
+      //   'speech-patterns-llm-request',
+      //   'speech-patterns-llm-request-start'
+      // );
 
       // Stage 3: Response Processing (70-90%)
       timeEstimate = this.#calculateTimeEstimate(
@@ -946,7 +964,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#lastGeneratedPatterns = processedPatterns;
 
       // Stage 4: Display Rendering (90-100%)
-      this._performanceMark('speech-patterns-display-start');
+      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+      // this._performanceMark('speech-patterns-display-start');
       timeEstimate = this.#calculateTimeEstimate(
         'rendering',
         generationStartTime,
@@ -964,10 +983,11 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       );
       this.#updateLoadingProgress('rendering', 100, timeEstimate);
 
-      this._performanceMeasure(
-        'speech-patterns-display',
-        'speech-patterns-display-start'
-      );
+      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+      // this._performanceMeasure(
+      //   'speech-patterns-display',
+      //   'speech-patterns-display-start'
+      // );
 
       // Update UI state
       this._showState('results');
@@ -975,10 +995,12 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#announceResults(processedPatterns);
 
       // Measure total generation time
-      const totalDuration = this._performanceMeasure(
-        'speech-patterns-generation',
-        'speech-patterns-generation-start'
-      );
+      // TODO: Restore after refactoring - performance monitoring removed during BASCHACUICONREF
+      // const totalDuration = this._performanceMeasure(
+      //   'speech-patterns-generation',
+      //   'speech-patterns-generation-start'
+      // );
+      const totalDuration = performance.now() - generationStartTime;
 
       // Log performance summary
       this.logger.info('Speech patterns generation completed', {

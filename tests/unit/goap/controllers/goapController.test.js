@@ -14,6 +14,7 @@ describe('GoapController - Core Structure', () => {
   let mockJsonLogicService;
   let mockDataRegistry;
   let mockEventBus;
+  let mockParameterResolutionService;
 
   /**
    * Create default valid dependencies for GoapController
@@ -29,6 +30,7 @@ describe('GoapController - Core Structure', () => {
     dataRegistry: mockDataRegistry,
     eventBus: mockEventBus,
     logger: mockLogger,
+    parameterResolutionService: mockParameterResolutionService,
   });
 
   beforeEach(() => {
@@ -66,6 +68,10 @@ describe('GoapController - Core Structure', () => {
 
     mockEventBus = {
       dispatch: jest.fn(),
+    };
+
+    mockParameterResolutionService = {
+      resolve: jest.fn(),
     };
   });
 

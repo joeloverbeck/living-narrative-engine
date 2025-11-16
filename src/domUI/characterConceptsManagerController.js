@@ -3,6 +3,8 @@
  * @see characterBuilderService.js
  */
 
+/* global process */
+
 import { BaseCharacterBuilderController } from '../characterBuilder/controllers/BaseCharacterBuilderController.js';
 import {
   FormValidationHelper,
@@ -59,8 +61,29 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {CharacterBuilderService} deps.characterBuilderService
    * @param {ISafeEventDispatcher} deps.eventBus
    * @param {ISchemaValidator} [deps.schemaValidator] - Optional for backward compatibility
+   * @param {ControllerLifecycleOrchestrator} deps.controllerLifecycleOrchestrator
+   * @param {DOMElementManager} deps.domElementManager
+   * @param {EventListenerRegistry} deps.eventListenerRegistry
+   * @param {AsyncUtilitiesToolkit} deps.asyncUtilitiesToolkit
+   * @param {PerformanceMonitor} deps.performanceMonitor
+   * @param {MemoryManager} deps.memoryManager
+   * @param {ErrorHandlingStrategy} deps.errorHandlingStrategy
+   * @param {ValidationService} deps.validationService
    */
-  constructor({ logger, characterBuilderService, eventBus, schemaValidator }) {
+  constructor({
+    logger,
+    characterBuilderService,
+    eventBus,
+    schemaValidator,
+    controllerLifecycleOrchestrator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
+  }) {
     // Add backward compatibility for tests - provide missing methods
     // IMPORTANT: Don't use object spread as it destroys prototype methods
     let effectiveCharacterBuilderService = characterBuilderService;
@@ -104,6 +127,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
         characterBuilderService: effectiveCharacterBuilderService,
         eventBus,
         schemaValidator: effectiveSchemaValidator,
+        controllerLifecycleOrchestrator,
+        domElementManager,
+        eventListenerRegistry,
+        asyncUtilitiesToolkit,
+        performanceMonitor,
+        memoryManager,
+        errorHandlingStrategy,
+        validationService,
       });
     } catch (error) {
       // Re-map base class errors to original format for test compatibility
@@ -542,6 +573,14 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
    * @param {HTMLElement} modal - Modal element
    */
   _animateModalEntrance(modal) {
+    // Skip animations in test environment
+    if (process.env.NODE_ENV === 'test') {
+      modal.style.display = 'flex';
+      modal.style.opacity = '1';
+      modal.style.transform = 'scale(1)';
+      return;
+    }
+
     try {
       // Initial state
       modal.style.display = 'flex';

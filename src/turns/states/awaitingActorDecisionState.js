@@ -11,6 +11,7 @@ import { determineActorType } from '../../utils/actorTypeUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 import { safeDispatchEvent } from '../../utils/safeDispatchEvent.js';
 import { ActionDecisionWorkflow } from './workflows/actionDecisionWorkflow.js';
+import { KnowledgeUpdateWorkflow } from './workflows/knowledgeUpdateWorkflow.js';
 import { destroyCleanupStrategy } from './helpers/destroyCleanupStrategy.js';
 
 /**
@@ -40,18 +41,28 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   _workflowFactory;
 
   /**
+   * Factory function for creating KnowledgeUpdateWorkflow instances.
+   *
+   * @type {((state: AwaitingActorDecisionState, ctx: AwaitingActorDecisionStateContext, actor: import('../../entities/entity.js').default) => KnowledgeUpdateWorkflow) | null}
+   */
+  _knowledgeUpdateWorkflowFactory;
+
+  /**
    * Creates an instance of AwaitingActorDecisionState.
    *
    * @param {BaseTurnHandler} handler - Owning handler instance.
    * @param {(state: AwaitingActorDecisionState, ctx: AwaitingActorDecisionStateContext, actor: import('../../entities/entity.js').default, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy) => ActionDecisionWorkflow} [workflowFactory] - Optional factory for creating the workflow.
+   * @param {((state: AwaitingActorDecisionState, ctx: AwaitingActorDecisionStateContext, actor: import('../../entities/entity.js').default) => KnowledgeUpdateWorkflow) | null} [knowledgeUpdateWorkflowFactory] - Optional factory for creating knowledge update workflow.
    */
   constructor(
     handler,
     workflowFactory = (state, ctx, actor, strategy) =>
-      new ActionDecisionWorkflow(state, ctx, actor, strategy)
+      new ActionDecisionWorkflow(state, ctx, actor, strategy),
+    knowledgeUpdateWorkflowFactory = null
   ) {
     super(handler);
     this._workflowFactory = workflowFactory;
+    this._knowledgeUpdateWorkflowFactory = knowledgeUpdateWorkflowFactory;
   }
   /**
    * Ensures the context provides required methods for this state.
@@ -116,6 +127,18 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     if (!validated) return;
 
     const { actor, strategy } = validated;
+
+    // Update actor knowledge before decision (GOAP integration)
+    // This ensures planning uses current visibility information
+    if (this._knowledgeUpdateWorkflowFactory) {
+      const knowledgeWorkflow = this._knowledgeUpdateWorkflowFactory(
+        this,
+        turnContext,
+        actor
+      );
+      await knowledgeWorkflow.run();
+    }
+
     await this._handleActionDecision(turnContext, actor, strategy);
   }
 
