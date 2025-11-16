@@ -238,6 +238,8 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     generateBtn.setAttribute('aria-disabled', 'false');
     generateBtn.click();
     await flushAsyncOperations();
+    // Additional flush to ensure error handling completes
+    await flushAsyncOperations();
 
     expect(service.generateTraitsCalls.length).toBeGreaterThanOrEqual(2);
 

@@ -93,6 +93,69 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       );
     }
 
+    // Create required services for BaseCharacterBuilderController
+    const mockControllerLifecycleOrchestrator = {
+      init: jest.fn().mockResolvedValue(undefined),
+      initialize: jest.fn().mockResolvedValue(undefined),
+      reinitialize: jest.fn().mockResolvedValue(undefined),
+      setControllerName: jest.fn(),
+      registerHook: jest.fn(),
+      registerInitializationHook: jest.fn(),
+      registerDestructionHook: jest.fn(),
+      createControllerMethodHook: jest.fn(() => jest.fn()),
+      makeDestructionSafe: jest.fn((fn) => fn),
+      destroy: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const mockDomElementManager = {
+      cacheElement: jest.fn(),
+      cacheElements: jest.fn(),
+      getElement: jest.fn(),
+      getAllElements: jest.fn().mockReturnValue({}),
+      clearCache: jest.fn(),
+    };
+
+    const mockEventListenerRegistry = {
+      register: jest.fn(),
+      registerAll: jest.fn(),
+      unregisterAll: jest.fn(),
+      getRegisteredCount: jest.fn().mockReturnValue(0),
+    };
+
+    const mockAsyncUtilitiesToolkit = {
+      setTimeout: jest.fn((fn, delay) => setTimeout(fn, delay)),
+      setInterval: jest.fn((fn, delay) => setInterval(fn, delay)),
+      clearTimeout: jest.fn((id) => clearTimeout(id)),
+      clearInterval: jest.fn((id) => clearInterval(id)),
+      requestAnimationFrame: jest.fn((fn) => requestAnimationFrame(fn)),
+      cancelAnimationFrame: jest.fn((id) => cancelAnimationFrame(id)),
+      debounce: jest.fn((fn) => fn),
+      throttle: jest.fn((fn) => fn),
+    };
+
+    const mockPerformanceMonitor = {
+      trackOperation: jest.fn().mockResolvedValue(undefined),
+      getMetrics: jest.fn().mockReturnValue({}),
+      clearMetrics: jest.fn(),
+    };
+
+    const mockMemoryManager = {
+      createWeakRef: jest.fn((obj) => ({ deref: () => obj })),
+      getAllRefs: jest.fn().mockReturnValue([]),
+      clearAllRefs: jest.fn(),
+    };
+
+    const mockErrorHandlingStrategy = {
+      handleError: jest.fn(),
+      showError: jest.fn(),
+      dispatchErrorEvent: jest.fn(),
+    };
+
+    const mockValidationService = {
+      validateData: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+      handleValidationError: jest.fn(),
+    };
+
     // Then create controller instance with DOM already in place
     this.controller = new ClichesGeneratorController({
       logger: this.logger,
@@ -100,6 +163,14 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       eventBus: this.mockEventBus,
       schemaValidator: this.mockSchemaValidator,
       clicheGenerator: this.mockClicheGenerator,
+      controllerLifecycleOrchestrator: mockControllerLifecycleOrchestrator,
+      domElementManager: mockDomElementManager,
+      eventListenerRegistry: mockEventListenerRegistry,
+      asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
+      performanceMonitor: mockPerformanceMonitor,
+      memoryManager: mockMemoryManager,
+      errorHandlingStrategy: mockErrorHandlingStrategy,
+      validationService: mockValidationService,
     });
 
     // Initialize the controller
@@ -1165,6 +1236,69 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     // Recreate DOM structure
     this.createDOMStructure();
 
+    // Create required services for BaseCharacterBuilderController
+    const mockControllerLifecycleOrchestrator = {
+      init: jest.fn().mockResolvedValue(undefined),
+      initialize: jest.fn().mockResolvedValue(undefined),
+      reinitialize: jest.fn().mockResolvedValue(undefined),
+      setControllerName: jest.fn(),
+      registerHook: jest.fn(),
+      registerInitializationHook: jest.fn(),
+      registerDestructionHook: jest.fn(),
+      createControllerMethodHook: jest.fn(() => jest.fn()),
+      makeDestructionSafe: jest.fn((fn) => fn),
+      destroy: jest.fn().mockResolvedValue(undefined),
+    };
+
+    const mockDomElementManager = {
+      cacheElement: jest.fn(),
+      cacheElements: jest.fn(),
+      getElement: jest.fn(),
+      getAllElements: jest.fn().mockReturnValue({}),
+      clearCache: jest.fn(),
+    };
+
+    const mockEventListenerRegistry = {
+      register: jest.fn(),
+      registerAll: jest.fn(),
+      unregisterAll: jest.fn(),
+      getRegisteredCount: jest.fn().mockReturnValue(0),
+    };
+
+    const mockAsyncUtilitiesToolkit = {
+      setTimeout: jest.fn((fn, delay) => setTimeout(fn, delay)),
+      setInterval: jest.fn((fn, delay) => setInterval(fn, delay)),
+      clearTimeout: jest.fn((id) => clearTimeout(id)),
+      clearInterval: jest.fn((id) => clearInterval(id)),
+      requestAnimationFrame: jest.fn((fn) => requestAnimationFrame(fn)),
+      cancelAnimationFrame: jest.fn((id) => cancelAnimationFrame(id)),
+      debounce: jest.fn((fn) => fn),
+      throttle: jest.fn((fn) => fn),
+    };
+
+    const mockPerformanceMonitor = {
+      trackOperation: jest.fn().mockResolvedValue(undefined),
+      getMetrics: jest.fn().mockReturnValue({}),
+      clearMetrics: jest.fn(),
+    };
+
+    const mockMemoryManager = {
+      createWeakRef: jest.fn((obj) => ({ deref: () => obj })),
+      getAllRefs: jest.fn().mockReturnValue([]),
+      clearAllRefs: jest.fn(),
+    };
+
+    const mockErrorHandlingStrategy = {
+      handleError: jest.fn(),
+      showError: jest.fn(),
+      dispatchErrorEvent: jest.fn(),
+    };
+
+    const mockValidationService = {
+      validateData: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+      handleValidationError: jest.fn(),
+    };
+
     // Recreate controller with same mocks
     this.controller = new ClichesGeneratorController({
       logger: this.logger,
@@ -1172,6 +1306,14 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       eventBus: this.mockEventBus,
       schemaValidator: this.mockSchemaValidator,
       clicheGenerator: this.mockClicheGenerator,
+      controllerLifecycleOrchestrator: mockControllerLifecycleOrchestrator,
+      domElementManager: mockDomElementManager,
+      eventListenerRegistry: mockEventListenerRegistry,
+      asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
+      performanceMonitor: mockPerformanceMonitor,
+      memoryManager: mockMemoryManager,
+      errorHandlingStrategy: mockErrorHandlingStrategy,
+      validationService: mockValidationService,
     });
 
     // Re-initialize the controller

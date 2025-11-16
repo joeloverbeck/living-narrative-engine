@@ -154,7 +154,9 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     const generateBtn = this._getElement('generateBtn');
     if (generateBtn) {
       this.eventRegistry.addEventListener(generateBtn, 'click', () => {
-        this.#generateTraits();
+        // Fire-and-forget pattern - errors are handled within #generateTraits
+        // Using void to explicitly ignore the promise
+        void this.#generateTraits();
       });
     }
 
@@ -198,7 +200,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       this.#populateDirectionSelector();
 
       // Check for direction pre-selection from URL
-      this.#checkForPreselection();
+      await this.#checkForPreselection();
     } catch (error) {
       this._handleServiceError(
         error,
@@ -1600,7 +1602,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    *
    * @private
    */
-  #checkForPreselection() {
+  async #checkForPreselection() {
     if (typeof window === 'undefined') return;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1610,7 +1612,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       directionId &&
       this.#eligibleDirections.some((item) => item.direction.id === directionId)
     ) {
-      this.#selectDirection(directionId);
+      await this.#selectDirection(directionId);
 
       // Update selector if element exists
       if (this._getElement('directionSelector')) {

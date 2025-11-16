@@ -483,7 +483,9 @@ class GoapPlanner {
    * This method:
    * 1. Gets the structurally-filtered task library for the actor
    * 2. Attempts to bind parameters for each task via scope resolution
-   * 3. Returns only tasks that successfully bind parameters
+   * 3. Checks planning preconditions are satisfied
+   * 4. If goal provided, verifies task reduces distance to goal
+   * 5. Returns only tasks that pass all checks
    *
    * Tasks without planningScope are included as-is (no parameter binding needed).
    * Tasks that fail parameter binding are excluded from the result.
@@ -491,17 +493,18 @@ class GoapPlanner {
    * @param {Array<object>} tasks - Task library (pre-filtered by structural gates)
    * @param {object} state - Current planning state
    * @param {string} actorId - Actor entity ID
+   * @param {object|null} goal - Optional goal for distance reduction checking
    * @returns {Array<object>} Tasks with bound parameters added to each task object
    * @private
    * @example
    * const taskLibrary = this.#getTaskLibrary('actor-123');
-   * const applicable = this.#getApplicableTasks(taskLibrary, state, 'actor-123');
+   * const applicable = this.#getApplicableTasks(taskLibrary, state, 'actor-123', goal);
    * // Returns: [
    * //   { id: 'core:consume_item', boundParams: { target: 'apple-456' }, ... },
    * //   { id: 'core:rest', ... } // No params needed
    * // ]
    */
-  #getApplicableTasks(tasks, state, actorId) {
+  #getApplicableTasks(tasks, state, actorId, goal = null) {
     if (!tasks || tasks.length === 0) {
       this.#logger.debug('No tasks provided to filter for applicability');
       return [];
@@ -564,6 +567,15 @@ class GoapPlanner {
         }
       }
 
+      // Check if task reduces distance to goal (only for numeric goals)
+      if (goal && this.#hasNumericConstraints(goal)) {
+        const reduces = this.#taskReducesDistance(task, state, goal, actorId);
+        if (!reduces) {
+          this.#logger.debug(`Task ${task.id} excluded - does not reduce distance to goal`);
+          continue;
+        }
+      }
+
       // Add bound parameters to task (or leave undefined if no binding needed)
       const applicableTask = {
         ...task,
@@ -579,6 +591,170 @@ class GoapPlanner {
     });
 
     return applicableTasks;
+  }
+
+  /**
+   * Check if goal has numeric constraints
+   *
+   * Detects if goal state contains numeric comparison operators like <=, >=, <, >.
+   * Used to determine if distance reduction checking should be applied.
+   *
+   * @param {object} goal - Goal definition with goalState
+   * @returns {boolean} True if goal has numeric constraints
+   * @private
+   * @example
+   * const goal1 = { goalState: { '<=': [{ 'var': 'hunger' }, 30] } };
+   * this.#hasNumericConstraints(goal1); // Returns: true
+   *
+   * const goal2 = { goalState: { '!': { has_component: ['actor', 'hungry'] } } };
+   * this.#hasNumericConstraints(goal2); // Returns: false
+   */
+  #hasNumericConstraints(goal) {
+    if (!goal || !goal.goalState) {
+      return false;
+    }
+
+    const numericOperators = new Set(['<=', '>=', '<', '>', '+', '-', '*', '/', '%']);
+
+    const checkForNumericOps = (obj) => {
+      if (!obj || typeof obj !== 'object') {
+        return false;
+      }
+
+      // Check if any key is a numeric operator
+      for (const key of Object.keys(obj)) {
+        if (numericOperators.has(key)) {
+          return true;
+        }
+      }
+
+      // Recursively check nested objects and arrays
+      for (const value of Object.values(obj)) {
+        if (typeof value === 'object' && value !== null) {
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              if (checkForNumericOps(item)) {
+                return true;
+              }
+            }
+          } else {
+            if (checkForNumericOps(value)) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    };
+
+    return checkForNumericOps(goal.goalState);
+  }
+
+  /**
+   * Check if task reduces distance to goal
+   *
+   * Simulates task effects and compares goal distance before and after.
+   * Used during action applicability checking to filter out tasks that
+   * satisfy preconditions but make no progress toward the goal.
+   *
+   * @param {object} task - Task definition with planningEffects
+   * @param {object} currentState - Current planning state
+   * @param {object} goal - Goal definition for distance calculation
+   * @param {string} actorId - Actor entity ID for parameter resolution
+   * @returns {boolean} True if task reduces distance to goal
+   * @private
+   * @example
+   * const reduces = this.#taskReducesDistance(
+   *   task,
+   *   { 'actor.state.hunger': 80 },
+   *   { goalState: { '<=': [{ 'var': 'actor.state.hunger' }, 30] } },
+   *   'actor-123'
+   * );
+   * // Returns: true (if task reduces hunger by 60, distance goes from 50 to 0)
+   */
+  #taskReducesDistance(task, currentState, goal, actorId) {
+    try {
+      // Build effect simulation context
+      const effectContext = {
+        actor: actorId, // For parameter resolution (entity_ref: 'actor')
+        actorId,
+        parameters: task.boundParams || {}
+      };
+
+      // Simulate applying task effects
+      const simulationResult = this.#effectsSimulator.simulateEffects(
+        currentState,
+        task.planningEffects || [],
+        effectContext
+      );
+
+      // Check simulation success
+      if (!simulationResult.success) {
+        this.#logger.debug('Effect simulation failed for distance check', {
+          taskId: task.id,
+          error: simulationResult.error
+        });
+        return false;
+      }
+
+      const nextState = simulationResult.state;
+
+      // Calculate distances
+      const currentDistance = this.#heuristicRegistry.calculate(
+        'goal-distance',
+        currentState,
+        goal,
+        [] // task library not needed for distance calculation
+      );
+
+      const nextDistance = this.#heuristicRegistry.calculate(
+        'goal-distance',
+        nextState,
+        goal,
+        []
+      );
+
+      // Validate distance values
+      if (!Number.isFinite(currentDistance) || !Number.isFinite(nextDistance)) {
+        this.#logger.warn('Non-finite distance values', {
+          taskId: task.id,
+          currentDistance,
+          nextDistance
+        });
+        return false;
+      }
+
+      // Action is applicable if it reduces distance (or achieves goal)
+      const reduces = nextDistance < currentDistance;
+
+      if (reduces) {
+        this.#logger.debug('Task reduces distance to goal', {
+          taskId: task.id,
+          goalId: goal.id,
+          currentDistance,
+          nextDistance,
+          reduction: currentDistance - nextDistance
+        });
+      } else {
+        this.#logger.debug('Task does not reduce distance', {
+          taskId: task.id,
+          currentDistance,
+          nextDistance,
+          change: nextDistance - currentDistance
+        });
+      }
+
+      return reduces;
+    } catch (error) {
+      this.#logger.error('Failed to check distance reduction', {
+        taskId: task.id,
+        goalId: goal.id,
+        error: error.message,
+        stack: error.stack
+      });
+      return false; // Treat as not applicable on error
+    }
   }
 
   /**
@@ -631,6 +807,31 @@ class GoapPlanner {
     if (taskLibrary.length === 0) {
       this.#logger.warn('No tasks available for actor', { actorId });
       return null;
+    }
+
+    // 2.1 Quick feasibility check (if maxCost is set)
+    const maxCost = goal.maxCost || Infinity;
+
+    if (maxCost !== Infinity) {
+      // Only check if a limit is set
+      const estimatedCost = this.#heuristicRegistry.calculate(
+        'goal-distance',
+        initialState,
+        goal,
+        taskLibrary // Pass task library array directly
+      );
+
+      if (estimatedCost > maxCost) {
+        this.#logger.warn('Goal estimated cost exceeds limit', {
+          estimatedCost,
+          maxCost,
+          goalId: goal.id,
+          actorId,
+        });
+
+        // Return null - caller (GoapController) will dispatch PLANNING_FAILED event
+        return null;
+      }
     }
 
     // 3. Calculate initial heuristic
@@ -724,6 +925,29 @@ class GoapPlanner {
         };
       }
 
+      // 7.4.1 Cost limit check
+      const maxCost = goal.maxCost || Infinity;
+      if (current.gScore > maxCost) {
+        this.#logger.debug('Node exceeds cost limit, skipping', {
+          currentCost: current.gScore,
+          maxCost,
+          actionCount: current.getPath().length,
+        });
+        continue; // Skip this node, try other paths
+      }
+
+      // 7.4.2 Action count limit check
+      const maxActions = goal.maxActions || 20; // Default: prevent runaway plans
+      const currentPathLength = current.getPath().length;
+      if (currentPathLength >= maxActions) {
+        this.#logger.debug('Node exceeds action count limit, skipping', {
+          actionCount: currentPathLength,
+          maxActions,
+          currentCost: current.gScore,
+        });
+        continue; // Skip this node, try other paths
+      }
+
       // 7.5 Add to closed set
       const currentHash = this.#hashState(current.state);
       closedSet.add(currentHash);
@@ -741,7 +965,8 @@ class GoapPlanner {
       const applicableTasks = this.#getApplicableTasks(
         taskLibrary,
         current.state,
-        actorId
+        actorId,
+        goal // NEW: Pass goal for distance checking
       );
 
 
@@ -779,13 +1004,6 @@ class GoapPlanner {
         const successorState = simulationResult.state;
         const successorHash = this.#hashState(successorState);
 
-        // 7.7.3 Skip if already in closed set
-        if (closedSet.has(successorHash)) {
-          this.#logger.debug('State already visited', {
-          });
-          continue;
-        }
-
         // 7.7.4 Calculate scores
         const taskCost = task.cost || 1; // Default cost is 1
         const successorGScore = current.gScore + taskCost;
@@ -804,6 +1022,31 @@ class GoapPlanner {
             error: err.message,
           });
           successorHScore = Infinity; // Inadmissible - will be deprioritized
+        }
+
+        // 7.7.5.5 Check if task is reusable (AFTER simulation and heuristic calculation)
+        // Calculate distances for reusability check (use goal-distance heuristic, not general heuristic)
+        const currentDistance = this.#heuristicRegistry.calculate(
+          'goal-distance',
+          current.state,
+          goal,
+          [] // Empty task library for distance-only calculation
+        );
+
+        const successorDistance = this.#heuristicRegistry.calculate(
+          'goal-distance',
+          successorState,
+          goal,
+          [] // Empty task library for distance-only calculation
+        );
+
+        const isReusable = this.#isTaskReusable(task, current, successorState, successorDistance, currentDistance, goal);
+
+        // 7.7.3 Skip if already in closed set (UNLESS task is reusable)
+        if (closedSet.has(successorHash) && !isReusable) {
+          this.#logger.debug('State already visited', {
+          });
+          continue;
         }
 
         // 7.7.6 Create successor node
@@ -852,9 +1095,63 @@ class GoapPlanner {
     // 8. Open list exhausted - no solution
     this.#logger.warn('Goal unsolvable - open list exhausted', {
       nodesExpanded,
-      timeElapsed: Date.now() - startTime,
+      closedSetSize: closedSet.size,
+      goalId: goal.id,
+      actorId,
+      maxCost: goal.maxCost,
+      maxActions: goal.maxActions,
+      message: 'No valid plan found within constraints',
     });
+
+    // Note: No event bus dispatch - GoapController handles PLANNING_FAILED event
     return null;
+  }
+
+  /**
+   * Check if a task is reusable for multi-action planning.
+   *
+   * A task is reusable if:
+   * 1. It hasn't exceeded its reuse limit
+   * 2. It reduces distance to goal when applied (checked via successor state distance)
+   *
+   * Note: This method assumes the task has already passed applicability checks
+   * (preconditions, parameter binding, etc.). It only filters for multi-action reuse.
+   *
+   * @param {object} task - Task to check
+   * @param {import('./planningNode.js').default} currentNode - Current search node (PlanningNode instance)
+   * @param {object} _successorState - State after applying task (already simulated)
+   * @param {number} successorDistance - Distance to goal from successor state (already calculated)
+   * @param {number} currentDistance - Distance to goal from current state
+   * @param {object} _goal - Goal being planned for (reserved for future use)
+   * @returns {boolean} True if task can be reused
+   * @private
+   */
+  #isTaskReusable(task, currentNode, _successorState, successorDistance, currentDistance, _goal) {
+    // 1. Check if distance reduced (same check as #taskReducesDistance)
+    if (successorDistance >= currentDistance) {
+      this.#logger.debug('Task does not reduce distance, not reusable', {
+        taskId: task.id,
+        currentDistance,
+        successorDistance,
+      });
+      return false;
+    }
+
+    // 2. Check reuse limit
+    const actionPath = currentNode.getPath();
+    const taskUsageCount = actionPath.filter((a) => a.taskId === task.id).length;
+    const maxReuse = task.maxReuse || 10; // Default: max 10 instances
+
+    if (taskUsageCount >= maxReuse) {
+      this.#logger.debug('Task reuse limit reached', {
+        taskId: task.id,
+        usageCount: taskUsageCount,
+        maxReuse,
+      });
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -922,10 +1219,34 @@ class GoapPlanner {
    * @param {Array<object>} tasks - Task library
    * @param {object} state - Planning state
    * @param {string} actorId - Actor entity ID
+   * @param {object|null} goal - Optional goal for distance checking
    * @returns {Array<object>} Applicable tasks with bound parameters
    */
-  testGetApplicableTasks(tasks, state, actorId) {
-    return this.#getApplicableTasks(tasks, state, actorId);
+  testGetApplicableTasks(tasks, state, actorId, goal = null) {
+    return this.#getApplicableTasks(tasks, state, actorId, goal);
+  }
+
+  /**
+   * Test-only accessor for #taskReducesDistance
+   *
+   * @param {object} task - Task definition
+   * @param {object} currentState - Current planning state
+   * @param {object} goal - Goal definition
+   * @param {string} actorId - Actor entity ID
+   * @returns {boolean} True if task reduces distance to goal
+   */
+  testTaskReducesDistance(task, currentState, goal, actorId) {
+    return this.#taskReducesDistance(task, currentState, goal, actorId);
+  }
+
+  /**
+   * Test-only accessor for #hasNumericConstraints
+   *
+   * @param {object} goal - Goal definition
+   * @returns {boolean} True if goal has numeric constraints
+   */
+  testHasNumericConstraints(goal) {
+    return this.#hasNumericConstraints(goal);
   }
 }
 

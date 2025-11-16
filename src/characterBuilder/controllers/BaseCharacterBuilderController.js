@@ -931,6 +931,28 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Add a CSS class to a cached DOM element
+   *
+   * @param {string} elementName - Name of the cached element
+   * @param {string} className - CSS class to add
+   * @protected
+   */
+  _addElementClass(elementName, className) {
+    return this.#domElementManager.addElementClass(elementName, className);
+  }
+
+  /**
+   * Remove a CSS class from a cached DOM element
+   *
+   * @param {string} elementName - Name of the cached element
+   * @param {string} className - CSS class to remove
+   * @protected
+   */
+  _removeElementClass(elementName, className) {
+    return this.#domElementManager.removeElementClass(elementName, className);
+  }
+
+  /**
    * Register an event listener for a DOM element
    *
    * @param {string} elementName - Name of the cached element

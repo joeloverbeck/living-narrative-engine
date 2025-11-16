@@ -37,21 +37,36 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
   _initializeCharacterBuilderMocks() {
     // Controller lifecycle orchestrator mock
     if (!this.mocks.controllerLifecycleOrchestrator) {
-      this.mocks.controllerLifecycleOrchestrator = {
-        initialize: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockResolvedValue(undefined),
-        setControllerName: jest.fn(),
-        registerHook: jest.fn(),
-        createControllerMethodHook: jest.fn(),
-        reinitialize: jest.fn().mockResolvedValue(undefined),
-        resetInitializationState: jest.fn(),
-        registerCleanupTask: jest.fn(),
-        checkDestroyed: jest.fn(),
-        makeDestructionSafe: jest.fn((fn) => fn),
+      const lifecycleState = {
         isInitialized: false,
         isDestroyed: false,
         isInitializing: false,
         isDestroying: false,
+      };
+      
+      this.mocks.controllerLifecycleOrchestrator = {
+        initialize: jest.fn().mockImplementation(async () => {
+          lifecycleState.isInitialized = true;
+        }),
+        destroy: jest.fn().mockImplementation(() => {
+          lifecycleState.isDestroyed = true;
+        }),
+        setControllerName: jest.fn(),
+        registerHook: jest.fn(),
+        createControllerMethodHook: jest.fn((controller, methodName) => async () => {
+          if (typeof controller[methodName] === 'function') {
+            await controller[methodName]();
+          }
+        }),
+        reinitialize: jest.fn().mockResolvedValue(undefined),
+        resetInitializationState: jest.fn(),
+        registerCleanupTask: jest.fn(),
+        checkDestroyed: jest.fn().mockReturnValue(false),
+        makeDestructionSafe: jest.fn((fn) => fn),
+        get isInitialized() { return lifecycleState.isInitialized; },
+        get isDestroyed() { return lifecycleState.isDestroyed; },
+        get isInitializing() { return lifecycleState.isInitializing; },
+        get isDestroying() { return lifecycleState.isDestroying; },
       };
     }
 

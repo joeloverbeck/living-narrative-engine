@@ -15,6 +15,7 @@ import ContextAssemblyService from '../../../src/goap/services/contextAssemblySe
 import ParameterResolutionService from '../../../src/goap/services/parameterResolutionService.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { HasComponentOperator } from '../../../src/logic/operators/hasComponentOperator.js';
+import NumericConstraintEvaluator from '../../../src/goap/planner/numericConstraintEvaluator.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
 describe('GOAP Heuristics - Integration with Real Components', () => {
@@ -68,9 +69,16 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       return hasComponentOp.evaluate([entityPath, componentId], this);
     });
 
+    // Create numeric constraint evaluator
+    const numericConstraintEvaluator = new NumericConstraintEvaluator({
+      jsonLogicEvaluator,
+      logger: mockLogger,
+    });
+
     // Create heuristic instances
     goalDistanceHeuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator,
+      numericConstraintEvaluator,
       logger: mockLogger,
     });
 
@@ -101,7 +109,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
    * Skips components with false/null/undefined values.
    *
    * @param {SimpleEntityManager} entityManager - The entity manager to populate
-   * @param {Object} state - Planning state object
+   * @param {object} state - Planning state object
    * @returns {Promise<void>}
    */
   async function syncEntityManagerWithState(entityManager, state) {
@@ -695,6 +703,90 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       const duration = performance.now() - start;
 
       expect(duration).toBeLessThan(10); // < 10ms for 20 tasks with unsolvable goal
+    });
+  });
+
+  describe('Numeric Constraints Integration', () => {
+    it('should calculate correct distance for hunger goal (goalState format)', () => {
+      // State: Actor is very hungry (hunger = 80)
+      // Goal: Reduce hunger to 30 or below
+      // Note: Variable paths match state structure directly (no 'state.' prefix)
+      const state = {
+        actor: { needs: { hunger: 80 } },
+      };
+
+      const goal = {
+        goalState: { '<=': [{ var: 'actor.needs.hunger' }, 30] },
+      };
+
+      const distance = goalDistanceHeuristic.calculate(state, goal);
+
+      // Expected distance: 80 - 30 = 50
+      expect(distance).toBe(50);
+    });
+
+    it('should return 0 when hunger goal is already satisfied', () => {
+      const state = {
+        actor: { needs: { hunger: 20 } },
+      };
+
+      const goal = {
+        goalState: { '<=': [{ var: 'actor.needs.hunger' }, 30] },
+      };
+
+      const distance = goalDistanceHeuristic.calculate(state, goal);
+
+      expect(distance).toBe(0);
+    });
+
+    it('should calculate correct distance for health goal (>= constraint)', () => {
+      // State: Actor has low health
+      // Goal: Increase health to 80 or above
+      const state = {
+        actor: { health: 40 },
+      };
+
+      const goal = {
+        goalState: { '>=': [{ var: 'actor.health' }, 80] },
+      };
+
+      const distance = goalDistanceHeuristic.calculate(state, goal);
+
+      // Expected distance: 80 - 40 = 40
+      expect(distance).toBe(40);
+    });
+
+    it('should return 0 when health goal is already satisfied', () => {
+      const state = {
+        actor: { health: 90 },
+      };
+
+      const goal = {
+        goalState: { '>=': [{ var: 'actor.health' }, 80] },
+      };
+
+      const distance = goalDistanceHeuristic.calculate(state, goal);
+
+      expect(distance).toBe(0);
+    });
+
+    it('should maintain backward compatibility with conditions array (no numeric evaluation)', () => {
+      const state = {
+        actor: { health: 40, needs: { hunger: 80 } },
+      };
+
+      // Legacy format: conditions array (should NOT use numeric distances)
+      const goal = {
+        conditions: [
+          { condition: { '>=': [{ var: 'state.actor.health' }, 80] } },
+          { condition: { '<=': [{ var: 'state.actor.needs.hunger' }, 30] } },
+        ],
+      };
+
+      const distance = goalDistanceHeuristic.calculate(state, goal);
+
+      // Should count unsatisfied conditions (both unsatisfied = 2)
+      expect(distance).toBe(2);
     });
   });
 });
