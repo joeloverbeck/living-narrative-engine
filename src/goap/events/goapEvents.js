@@ -51,10 +51,28 @@ export const GOAP_EVENTS = {
   REPLANNING_STARTED: 'goap:replanning_started',
 
   /**
+   * Dispatched when task refinement process begins
+   * Payload: { taskId, actorId, timestamp }
+   */
+  REFINEMENT_STARTED: 'goap:refinement_started',
+
+  /**
+   * Dispatched when a refinement method is selected
+   * Payload: { taskId, methodId, actorId }
+   */
+  METHOD_SELECTED: 'goap:method_selected',
+
+  /**
    * Dispatched when a task is successfully refined to action steps
    * Payload: { actorId, taskId, stepsGenerated, actionRefs }
    */
   TASK_REFINED: 'goap:task_refined',
+
+  /**
+   * Dispatched when task refinement process completes successfully
+   * Payload: { taskId, methodId, actorId, stepsExecuted, success }
+   */
+  REFINEMENT_COMPLETED: 'goap:refinement_completed',
 
   /**
    * Dispatched when task refinement fails
@@ -79,4 +97,28 @@ export const GOAP_EVENTS = {
    * Payload: { goalId, totalSteps, duration }
    */
   GOAL_ACHIEVED: 'goap:goal_achieved',
+
+  /**
+   * Dispatched when a refinement method step begins execution
+   * Payload: { actorId, taskId, methodId, stepIndex, step, timestamp }
+   */
+  REFINEMENT_STEP_STARTED: 'goap:refinement_step_started',
+
+  /**
+   * Dispatched when a refinement method step completes successfully
+   * Payload: { actorId, taskId, methodId, stepIndex, result, duration, timestamp }
+   */
+  REFINEMENT_STEP_COMPLETED: 'goap:refinement_step_completed',
+
+  /**
+   * Dispatched when a refinement method step fails
+   * Payload: { actorId, taskId, methodId, stepIndex, error, timestamp }
+   */
+  REFINEMENT_STEP_FAILED: 'goap:refinement_step_failed',
+
+  /**
+   * Dispatched when refinement local state is updated
+   * Payload: { actorId, taskId, key, oldValue, newValue, timestamp }
+   */
+  REFINEMENT_STATE_UPDATED: 'goap:refinement_state_updated',
 };

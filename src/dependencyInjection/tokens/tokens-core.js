@@ -362,4 +362,9 @@ export const coreTokens = freeze({
   IGoapController: 'IGoapController',
   // GOAP Knowledge Manager (GOAPIMPL-023-02)
   IKnowledgeManager: 'IKnowledgeManager',
+  // GOAP Debug Tools (GOAPIMPL-025-06)
+  IPlanInspector: 'IPlanInspector',
+  IStateDiffViewer: 'IStateDiffViewer',
+  IRefinementTracer: 'IRefinementTracer',
+  IGOAPDebugger: 'IGOAPDebugger',
 });

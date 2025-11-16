@@ -19,6 +19,10 @@ import GoapPlanner from '../../goap/planner/goapPlanner.js';
 import TaskLibraryConstructor from '../../goap/planner/taskLibraryConstructor.js';
 import PlanInvalidationDetector from '../../goap/planner/planInvalidationDetector.js';
 import GoapController from '../../goap/controllers/goapController.js';
+import PlanInspector from '../../goap/debug/planInspector.js';
+import StateDiffViewer from '../../goap/debug/stateDiffViewer.js';
+import RefinementTracer from '../../goap/debug/refinementTracer.js';
+import GOAPDebugger from '../../goap/debug/goapDebugger.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -241,6 +245,46 @@ export function registerGoapServices(container) {
       tokens.IEventBus,
       tokens.ILogger,
       tokens.IParameterResolutionService,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // GOAP Debug Tools (GOAPIMPL-025-06)
+  // Debugging and introspection tools for GOAP system development
+
+  // PlanInspector - Displays active plans in human-readable format
+  // ⚠️ CRITICAL: Includes EntityDisplayDataProvider dependency for entity name resolution
+  container.register(tokens.IPlanInspector, PlanInspector, {
+    dependencies: [
+      tokens.IGoapController,
+      tokens.IDataRegistry,
+      tokens.IEntityManager,
+      tokens.EntityDisplayDataProvider,
+      tokens.ILogger,
+    ],
+    lifecycle: 'singleton',
+  });
+
+  // StateDiffViewer - Shows state changes during planning
+  container.register(tokens.IStateDiffViewer, StateDiffViewer, {
+    dependencies: [tokens.ILogger],
+    lifecycle: 'singleton',
+  });
+
+  // RefinementTracer - Captures step-by-step refinement execution
+  container.register(tokens.IRefinementTracer, RefinementTracer, {
+    dependencies: [tokens.IEventBus, tokens.ILogger],
+    lifecycle: 'singleton',
+  });
+
+  // GOAPDebugger - Main API coordinating all debug tools
+  container.register(tokens.IGOAPDebugger, GOAPDebugger, {
+    dependencies: [
+      tokens.IGoapController,
+      tokens.IPlanInspector,
+      tokens.IStateDiffViewer,
+      tokens.IRefinementTracer,
+      tokens.ILogger,
     ],
     lifecycle: 'singleton',
   });

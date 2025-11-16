@@ -15,6 +15,7 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import RefinementError from '../errors/refinementError.js';
+import { GOAP_EVENTS } from '../events/goapEvents.js';
 
 /**
  * Orchestrates task refinement into executable action sequences.
@@ -145,7 +146,7 @@ class RefinementEngine {
 
     // Dispatch refinement started event
     this.#eventBus.dispatch({
-      type: 'GOAP_REFINEMENT_STARTED',
+      type: GOAP_EVENTS.REFINEMENT_STARTED,
       payload: {
         taskId,
         actorId,
@@ -187,7 +188,7 @@ class RefinementEngine {
 
       // Dispatch method selected event
       this.#eventBus.dispatch({
-        type: 'GOAP_METHOD_SELECTED',
+        type: GOAP_EVENTS.METHOD_SELECTED,
         payload: {
           taskId,
           methodId: selectedMethod.id,
@@ -205,7 +206,7 @@ class RefinementEngine {
 
       // Dispatch refinement completed event
       this.#eventBus.dispatch({
-        type: 'GOAP_REFINEMENT_COMPLETED',
+        type: GOAP_EVENTS.REFINEMENT_COMPLETED,
         payload: {
           taskId,
           methodId: selectedMethod.id,
@@ -238,7 +239,7 @@ class RefinementEngine {
 
       // Dispatch refinement failed event
       this.#eventBus.dispatch({
-        type: 'GOAP_REFINEMENT_FAILED',
+        type: GOAP_EVENTS.REFINEMENT_FAILED,
         payload: {
           taskId,
           actorId,
@@ -382,6 +383,25 @@ class RefinementEngine {
       const stepResults = [];
 
       for (const [index, step] of selectedMethod.steps.entries()) {
+        const stepStartTime = Date.now();
+
+        // Dispatch step started event
+        this.#eventBus.dispatch({
+          type: GOAP_EVENTS.REFINEMENT_STEP_STARTED,
+          payload: {
+            actorId,
+            taskId: task.id,
+            methodId: selectedMethod.id,
+            stepIndex: index,
+            step: {
+              stepType: step.stepType,
+              actionId: step.actionId,
+              storeResultAs: step.storeResultAs,
+            },
+            timestamp: stepStartTime,
+          },
+        });
+
         this.#logger.debug('Executing step', {
           taskId: task.id,
           methodId: selectedMethod.id,
@@ -399,41 +419,84 @@ class RefinementEngine {
           refinementStateManager.getSnapshot()
         );
 
+        // Capture old value BEFORE execution if step will store result
+        const oldValue = step.storeResultAs && refinementStateManager.has(step.storeResultAs)
+          ? refinementStateManager.get(step.storeResultAs)
+          : undefined;
+
         // Execute step based on type
         let result;
-        if (step.stepType === 'primitive_action') {
-          result = await this.#primitiveActionStepExecutor.execute(
-            step,
-            stepContext,
-            index
-          );
-        } else if (step.stepType === 'conditional') {
-          result = await this.#conditionalStepExecutor.execute(
-            step,
-            stepContext,
-            index
-          );
-        } else {
-          throw new RefinementError(
-            `Unknown step type: ${step.stepType}`,
-            'INVALID_STEP_TYPE',
-            { stepIndex: index, stepType: step.stepType }
-          );
+        try {
+          if (step.stepType === 'primitive_action') {
+            result = await this.#primitiveActionStepExecutor.execute(
+              step,
+              stepContext,
+              index
+            );
+          } else if (step.stepType === 'conditional') {
+            result = await this.#conditionalStepExecutor.execute(
+              step,
+              stepContext,
+              index
+            );
+          } else {
+            throw new RefinementError(
+              `Unknown step type: ${step.stepType}`,
+              'INVALID_STEP_TYPE',
+              { stepIndex: index, stepType: step.stepType }
+            );
+          }
+
+          stepResults.push(result);
+
+          // Dispatch step completed event
+          this.#eventBus.dispatch({
+            type: GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
+            payload: {
+              actorId,
+              taskId: task.id,
+              methodId: selectedMethod.id,
+              stepIndex: index,
+              result: {
+                success: result.success,
+                actionId: result.actionId,
+              },
+              duration: Date.now() - stepStartTime,
+              timestamp: Date.now(),
+            },
+          });
+
+          // Dispatch state update event if result was stored
+          // Note: State is already stored by executor at this point
+          if (step.storeResultAs && result.success) {
+            this.#eventBus.dispatch({
+              type: GOAP_EVENTS.REFINEMENT_STATE_UPDATED,
+              payload: {
+                actorId,
+                taskId: task.id,
+                key: step.storeResultAs,
+                oldValue,
+                newValue: result,
+                timestamp: Date.now(),
+              },
+            });
+          }
+        } catch (stepError) {
+          // Dispatch step failed event
+          this.#eventBus.dispatch({
+            type: GOAP_EVENTS.REFINEMENT_STEP_FAILED,
+            payload: {
+              actorId,
+              taskId: task.id,
+              methodId: selectedMethod.id,
+              stepIndex: index,
+              error: stepError.message,
+              timestamp: Date.now(),
+            },
+          });
+
+          throw stepError;
         }
-
-        stepResults.push(result);
-
-        // Dispatch step executed event
-        this.#eventBus.dispatch({
-          type: 'GOAP_STEP_EXECUTED',
-          payload: {
-            taskId: task.id,
-            methodId: selectedMethod.id,
-            stepIndex: index,
-            stepType: step.stepType,
-            success: result.success,
-          },
-        });
 
         // Handle step failure
         if (!result.success) {
