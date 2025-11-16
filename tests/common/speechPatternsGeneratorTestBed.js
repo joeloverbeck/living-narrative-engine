@@ -10,6 +10,10 @@
 import { jest } from '@jest/globals';
 import { BaseTestBed } from './baseTestBed.js';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  cleanupTestElements,
+  createTestContainer,
+} from './domTestUtils.js';
 
 /**
  * Test bed for speech patterns generator integration testing
@@ -35,6 +39,7 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
     this.testData = {};
     this.services = {};
     this.uiElements = {};
+    this.createdElementIds = [];
 
     // Track UI state for testing
     this.uiState = {
@@ -335,31 +340,28 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
    * Setup UI elements for interaction simulation
    */
   setupUIElements() {
-    // Create mock UI elements
-    this.uiElements = {
-      generateButton: {
-        onclick: null,
-        disabled: false,
-        id: 'generateButton',
-      },
-      exportButton: {
-        onclick: null,
-        disabled: false,
-        hidden: true,
-        id: 'exportButton',
-      },
-      resultsContainer: {
-        hidden: true,
-        innerHTML: '',
-      },
-      errorContainer: {
-        hidden: true,
-        textContent: '',
-      },
-      loadingIndicator: {
-        hidden: true,
-      },
-    };
+    const { container, children } = createTestContainer({
+      containerId: 'speech-patterns-test-container',
+      children: [
+        { id: 'generateButton', tag: 'button' },
+        { id: 'exportButton', tag: 'button' },
+        { id: 'resultsContainer', tag: 'div' },
+        { id: 'errorContainer', tag: 'div' },
+        { id: 'loadingIndicator', tag: 'div' },
+      ],
+    });
+
+    this.uiElements = { container, ...children };
+    this.createdElementIds.push(container.id, ...Object.keys(children));
+
+    this.uiElements.generateButton.disabled = false;
+    this.uiElements.exportButton.disabled = false;
+    this.uiElements.exportButton.hidden = true;
+    this.uiElements.resultsContainer.hidden = true;
+    this.uiElements.resultsContainer.innerHTML = '';
+    this.uiElements.errorContainer.hidden = true;
+    this.uiElements.errorContainer.textContent = '';
+    this.uiElements.loadingIndicator.hidden = true;
   }
 
   // ============= Test Data Factories =============
@@ -525,5 +527,8 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
       validationErrors: {},
       generatedPatterns: null,
     };
+
+    cleanupTestElements(this.createdElementIds);
+    this.createdElementIds = [];
   }
 }
