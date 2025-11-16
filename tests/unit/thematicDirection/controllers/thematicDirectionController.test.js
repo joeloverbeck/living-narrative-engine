@@ -97,7 +97,7 @@ describe('ThematicDirectionController', () => {
 
       // Initialize should throw after handling the error
       await expect(testBase.controller.initialize()).rejects.toThrow(
-        'initial data loading failed'
+        'load character concepts failed'
       );
 
       // Verify the service was called
