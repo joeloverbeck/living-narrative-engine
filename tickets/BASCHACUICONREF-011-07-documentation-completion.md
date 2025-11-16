@@ -20,13 +20,13 @@ This is the final ticket in the BASCHACUICONREF-011 series. All controller migra
 
 ## Prerequisites
 
-**All previous tickets must be completed:**
-- ✅ BASCHACUICONREF-011-01: TraitsRewriter debounce fix
-- ✅ BASCHACUICONREF-011-02: TraitsGenerator DOM caching
-- ✅ BASCHACUICONREF-011-03: TraitsGenerator events & errors
-- ✅ BASCHACUICONREF-011-04: SpeechPatterns migration
-- ✅ BASCHACUICONREF-011-05: TraitsRewriter migration
-- ✅ BASCHACUICONREF-011-06: Integration validation (ALL TESTS PASSING)
+**All previous tickets must be completed (see BASCHACUICONREF-000 for sequencing):**
+- ⏳ BASCHACUICONREF-011-01: TraitsRewriter debounce fix
+- ⏳ BASCHACUICONREF-011-02: TraitsGenerator DOM caching
+- ⏳ BASCHACUICONREF-011-03: TraitsGenerator events & errors
+- ⏳ BASCHACUICONREF-011-04: SpeechPatterns migration
+- ⏳ BASCHACUICONREF-011-05: TraitsRewriter migration
+- ⏳ BASCHACUICONREF-011-06: Integration validation
 
 ## Implementation Tasks
 
@@ -43,14 +43,13 @@ Insert after existing content (around line 217):
 
 ### Overview
 
-Following the BASCHACUICONREF-010 service extraction, three dependent controllers were migrated from deprecated wrapper methods to direct service access patterns:
+Per `BASCHACUICONREF-000-overview.md`, the BaseCharacterBuilderController refactor is still in the alignment/planning stage. Production controllers continue to rely on the wrapper utilities provided by `BaseCharacterBuilderController` (for example, `_cacheElementsFromMap()`, `_addEventListener()`, `_handleServiceError()`). Documentation updates should describe this wrapper-based access model and clearly separate any future wrapper-to-direct-service migration work.
 
-- **TraitsGeneratorController**: DOM caching, event listeners, error handling
-- **SpeechPatternsGeneratorController**: DOM caching, event listeners
-- **TraitsRewriterController**: DOM caching, event listeners, debounce fix
+- **TraitsGeneratorController**: Uses `_getDomManager().cacheElementsFromMap()` and `this.eventRegistry.addEventListener(...)`.
+- **SpeechPatternsGeneratorController**: Uses `_cacheElementsFromMap()` and `this.eventRegistry.addEventListener(...)`.
+- **TraitsRewriterController**: Uses `_cacheElementsFromMap()`, `_handleServiceError()`, `_addEventListener()`, and `_getAsyncUtilitiesToolkit().debounce()`.
 
-**Completion Date**: [Insert date]
-**Migration Tickets**: BASCHACUICONREF-011-01 through -07
+**Migration Status**: No wrapper deprecations or migrations have been completed in production; future plans must align with `BASCHACUICONREF-000-overview.md`.
 
 ### Migration Patterns Applied
 
@@ -83,20 +82,14 @@ _cacheElements() {
 this._addEventListener('elementName', 'click', handlerFunction);
 ```
 
-**After (Direct Service Access):**
+**Current Production Pattern:**
 ```javascript
-// Store EventListenerRegistry reference in private field
-/** @private @type {EventListenerRegistry} */
-#eventListenerRegistry;
-
-constructor(dependencies) {
-  super(dependencies);
-  this.#eventListenerRegistry = this.eventRegistry;
-}
-
-// Register event listener
+// Access the shared registry via the BaseCharacterBuilderController getter
 const element = this._getElement('elementName');
-this.#eventListenerRegistry.addEventListener(element, 'click', handlerFunction);
+this.eventRegistry.addEventListener(element, 'click', handlerFunction);
+
+// Some controllers still use the provided wrapper for brevity
+this._addEventListener('elementName', 'click', handlerFunction);
 ```
 
 #### 3. Error Handling (TraitsGeneratorController only)
@@ -106,24 +99,15 @@ this.#eventListenerRegistry.addEventListener(element, 'click', handlerFunction);
 this._handleServiceError(error, 'operation', 'User message');
 ```
 
-**After (Direct Service Access):**
+**Current Production Pattern:**
 ```javascript
-// Store ErrorHandlingStrategy reference in private field
-/** @private @type {ErrorHandlingStrategy} */
-#errorHandlingStrategy;
-
-constructor(dependencies) {
-  super(dependencies);
-  this.#errorHandlingStrategy = super._getErrorHandlingStrategy();
-}
-
-// Handle error
-this.#errorHandlingStrategy.handleServiceError(error, 'operation', 'User message');
+// Use inherited wrapper
+this._handleServiceError(error, 'operation', 'User message');
 ```
 
 #### 4. Async Utilities (Debounce)
 
-**Correct Pattern (Already Used by SpeechPatternsGeneratorController):**
+**Current Production Pattern:**
 ```javascript
 this.#debouncedHandler = this._getAsyncUtilitiesToolkit().debounce(
   handlerFunction,
@@ -132,39 +116,15 @@ this.#debouncedHandler = this._getAsyncUtilitiesToolkit().debounce(
 );
 ```
 
-**TraitsRewriterController Fix (BASCHACUICONREF-011-01):**
-- Fixed broken `this._debounce()` call
-- Updated to use `this._getAsyncUtilitiesToolkit().debounce()`
+**TraitsRewriterController Usage:**
+- Uses `_getAsyncUtilitiesToolkit().debounce()` in combination with `_addEventListener()`
 
 ### Service Access Best Practices
 
-#### Private Field Storage
-When a service will be accessed multiple times, store a reference in a private field:
-
-```javascript
-/** @private @type {EventListenerRegistry} */
-#eventListenerRegistry;
-
-constructor(dependencies) {
-  super(dependencies);
-  this.#eventListenerRegistry = this.eventRegistry;
-}
-```
-
-**Benefits:**
-- Improved performance (no repeated getter calls)
-- Explicit dependency declaration
-- Clearer code intent
-
-#### Protected Method Access
-For services accessed via protected methods, call during initialization:
-
-```javascript
-constructor(dependencies) {
-  super(dependencies);
-  this.#errorHandlingStrategy = super._getErrorHandlingStrategy();
-}
-```
+#### Service Access Strategy
+Use the getters and wrapper helpers already provided by `BaseCharacterBuilderController` rather than duplicating private field
+storage. This keeps controller code consistent with the current production implementation and the alignment plan in
+`BASCHACUICONREF-000-overview.md`.
 
 #### Service Getters vs. Private Fields
 
@@ -176,19 +136,17 @@ constructor(dependencies) {
 - `super._getErrorHandlingStrategy()` → ErrorHandlingStrategy
 - `this._getAsyncUtilitiesToolkit()` → AsyncUtilitiesToolkit
 
-### Migration Results
+### Current State
 
-| Controller | Lines Changed | Services Migrated | Tests Updated |
-|------------|---------------|-------------------|---------------|
-| TraitsGenerator | ~50 | DOM, Events, Errors | ✅ All passing |
-| SpeechPatterns | ~60 | DOM, Events | ✅ All passing |
-| TraitsRewriter | ~55 | DOM, Events | ✅ All passing |
+| Controller | Access Pattern | Notes |
+|------------|----------------|-------|
+| TraitsGenerator | Wrapper-based DOM caching and event registration | Uses `this.eventRegistry.addEventListener(...)` and `_handleServiceError()` |
+| SpeechPatterns | Wrapper-based DOM caching and event registration | Uses `_cacheElementsFromMap()` and `this.eventRegistry.addEventListener(...)` |
+| TraitsRewriter | Wrapper-based DOM caching and debounce | Uses `_addEventListener()` with `_getAsyncUtilitiesToolkit().debounce()` |
 
-**Total Impact:**
-- **Source Code**: ~165 lines modified
-- **Tests**: ~150 lines added/modified
-- **Zero Behavioral Changes**: All functionality preserved
-- **Test Coverage**: Maintained at 90%+ lines, 85%+ branches
+**Documentation Focus:**
+- Describe the wrapper-based service access currently in production.
+- Call out planned migration steps separately so they can be sequenced once BASCHACUICONREF-000 deliverables are complete.
 
 ### Lessons Learned
 
@@ -198,19 +156,19 @@ constructor(dependencies) {
 
 3. **Service Initialization**: Services must be available in constructor for immediate use
 
-4. **Test Adaptation**: Tests need mock services matching new access patterns
+4. **Test Adaptation**: Tests need mock services that mirror the wrapper helpers and registry access points actually used.
 
-5. **Custom Patterns**: Some controllers (SpeechPatterns, TraitsRewriter) have custom error handling and don't need ErrorHandlingStrategy
+5. **Custom Patterns**: TraitsRewriter leverages `_addEventListener()` plus debounced handlers; document how wrappers integrate with async utilities.
 
 ### Future Controller Development
 
 **New Controller Checklist:**
 
 - [ ] Inject required services via constructor dependencies
-- [ ] Store service references in private fields
+- [ ] Use wrapper/getter accessors already provided by `BaseCharacterBuilderController`
 - [ ] Use `this._getDomManager().cacheElementsFromMap()` for DOM caching
-- [ ] Use `this.#eventListenerRegistry.addEventListener()` for events
-- [ ] Use `this.#errorHandlingStrategy.handleServiceError()` for standard errors (or custom handler)
+- [ ] Use `this.eventRegistry.addEventListener()` or `_addEventListener()` for events
+- [ ] Use `_handleServiceError()` for standard errors (or custom handler)
 - [ ] Use `this._getAsyncUtilitiesToolkit().debounce()` for debouncing
 - [ ] Add comprehensive unit tests with service mocks
 - [ ] Verify integration tests pass
@@ -218,9 +176,8 @@ constructor(dependencies) {
 
 ### References
 
-- **Migration Tickets**: `tickets/BASCHACUICONREF-011-01-*.md` through `-07-*.md`
-- **Validation Report**: `claudedocs/workflow-validation-report-BASCHACUICONREF-011.md`
-- **Test Results**: `claudedocs/BASCHACUICONREF-011-test-results.md`
+- **Program Overview**: `tickets/BASCHACUICONREF-000-overview.md`
+- **Architecture Notes**: `docs/architecture/base-character-builder-refactor.md`
 - **Service Implementations**: `src/characterBuilder/services/`
 ```
 
