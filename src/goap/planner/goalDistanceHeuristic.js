@@ -80,10 +80,10 @@ class GoalDistanceHeuristic {
       // Check if this is a numeric constraint
       if (this.#numericConstraintEvaluator.isNumericConstraint(goalState)) {
         // Try to calculate numeric distance
-        // Pass state directly as context (not wrapped in { state })
+        // Wrap state in { state } for consistent JSON Logic path resolution
         const numericDistance = this.#numericConstraintEvaluator.calculateDistance(
           goalState,
-          state
+          { state }
         );
 
         // If numeric distance is successfully calculated, use it
@@ -215,19 +215,44 @@ class GoalDistanceHeuristic {
       return 0;
     }
 
+    // Extract actor ID from state structure for context
+    // State has nested format: state.actor.id
+    // Fallback: extract from flat hash keys (format: "entityId:componentId")
+    let actorId = state.actor?.id;
+
+    if (!actorId) {
+      // Try to extract from first flat hash key
+      const flatKeys = Object.keys(state).filter(key => key.includes(':'));
+      if (flatKeys.length > 0) {
+        actorId = flatKeys[0].split(':')[0]; // Extract "entityId" from "entityId:componentId"
+        this.#logger.debug('Extracted actor ID from flat hash key', {
+          taskId: task.id,
+          actorId,
+          flatKey: flatKeys[0],
+        });
+      } else {
+        this.#logger.warn('Task effect estimation failed: actor ID not found in state', {
+          taskId: task.id,
+          stateKeys: Object.keys(state).slice(0, 5), // Log first 5 keys for debugging
+        });
+        return 0;
+      }
+    }
+
     // Calculate distance before task application
-    // CRITICAL: Pass state directly, NOT wrapped in { state }
+    // Wrap state in { state } for consistent JSON Logic path resolution
     const beforeDistance = this.#numericConstraintEvaluator.calculateDistance(
       goal.goalState,
-      state // Direct state, not { state }
+      { state } // Wrapped for JSON Logic var resolution
     );
 
     // Simulate ONE application of task
     // PlanningEffectsSimulator returns { success, state, errors }
+    // Use actual actor ID from state to maintain consistency with planning state structure
     const simulationResult = this.#planningEffectsSimulator.simulateEffects(
       state,
       task.planningEffects,
-      { actor: { id: 'heuristic-simulation' } } // Temporary actor for simulation
+      { actor: actorId, actorId } // Use actual actor ID for proper state key generation
     );
 
     // Handle simulation failure
@@ -240,10 +265,10 @@ class GoalDistanceHeuristic {
     }
 
     // Calculate distance after task application
-    // CRITICAL: Pass state directly, NOT wrapped in { state }
+    // Wrap state in { state } for consistent JSON Logic path resolution
     const afterDistance = this.#numericConstraintEvaluator.calculateDistance(
       goal.goalState,
-      simulationResult.state // Direct state from simulation result
+      { state: simulationResult.state } // Wrapped for JSON Logic var resolution
     );
 
     // Return absolute reduction in distance (beforeDistance - afterDistance)
