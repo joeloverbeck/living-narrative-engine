@@ -15,6 +15,54 @@ import { createTestGoal } from './testFixtures/testGoalFactory.js';
 import { createTestTask } from './testFixtures/testTaskFactory.js';
 import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
 
+/**
+ * Helper to add flattened component aliases to an actor entity
+ */
+function addFlattenedAliases(actor) {
+  const modifiedComponents = { ...actor.components };
+
+  Object.keys(actor.components).forEach((componentId) => {
+    if (componentId.includes(':')) {
+      const flattenedId = componentId.replace(/:/g, '_');
+      modifiedComponents[flattenedId] = actor.components[componentId];
+    }
+  });
+
+  return {
+    ...actor,
+    components: modifiedComponents,
+  };
+}
+
+/**
+ * Helper to build dual-format state for GOAP planning
+ */
+function buildDualFormatState(actor) {
+  const state = {
+    actor: {
+      id: actor.id,
+      components: {},
+    },
+  };
+
+  Object.keys(actor.components).forEach((componentId) => {
+    const componentData = { ...actor.components[componentId] };
+
+    // Flat hash format
+    const flatKey = `${actor.id}:${componentId}`;
+    state[flatKey] = componentData;
+
+    // Nested format with original key
+    state.actor.components[componentId] = componentData;
+
+    // Flattened alias
+    const flattenedId = componentId.replace(/:/g, '_');
+    state.actor.components[flattenedId] = componentData;
+  });
+
+  return state;
+}
+
 describe('GOAP Replanning - Integration', () => {
   let setup;
 
@@ -149,18 +197,46 @@ describe('GOAP Replanning - Integration', () => {
   });
 
   describe('External Goal Satisfaction', () => {
-    // SKIPPED: Planner does not support MODIFY_COMPONENT for backward chaining planning.
-    // Current planner only supports ADD_COMPONENT and REMOVE_COMPONENT effects.
-    // This test uses MODIFY_COMPONENT with JSON Logic goal expressions (<=, var refs),
-    // which requires the planner to reason about numeric modifications and constraints.
-    // To test external goal satisfaction, would need to rewrite using ADD/REMOVE semantics.
-    it.skip('should handle goal satisfied externally between turns', async () => {
+    it('should handle goal satisfied externally between turns', async () => {
+      // Setup: Task to reduce hunger
+      const eatTask = createTestTask({
+        id: 'test:eat',
+        cost: 10,
+        structuralGates: {
+          description: 'Actor can eat',
+          condition: { '==': [1, 1] },
+        },
+        planningPreconditions: [],
+        planningEffects: [
+          {
+            type: 'MODIFY_COMPONENT',
+            parameters: {
+              entity_ref: 'actor',
+              component_type: 'core:needs',
+              field: 'hunger',
+              value: 60,
+              mode: 'decrement',
+            },
+          },
+        ],
+        refinementMethods: ['test:eat_method'],
+        fallbackBehavior: 'replan',
+      });
+
+      // Re-create setup with tasks properly configured
+      setup = await createGoapTestSetup({
+        mockRefinement: true,
+        tasks: {
+          test: { [eatTask.id]: eatTask },
+        },
+      });
+
       // Setup: Goal to reduce hunger
       const goal = createTestGoal({
         id: 'test:hunger_goal',
-        relevance: { '>': [{ var: 'actor.components.core:needs.hunger' }, 50] },
+        relevance: { '>': [{ var: 'actor.components.core_needs.hunger' }, 50] },
         goalState: {
-          '<=': [{ var: 'actor.components.core:needs.hunger' }, 30],
+          '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
         },
       });
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -172,46 +248,13 @@ describe('GOAP Replanning - Integration', () => {
           'core:needs': { hunger: 80 }, // Above relevance threshold
         },
       };
-      setup.entityManager.addEntity(actor);
+      setup.entityManager.addEntity(addFlattenedAliases(actor));
 
-      // Setup: Task to reduce hunger
-      const eatTask = createTestTask({
-        id: 'test:eat',
-        cost: 10,
-        planningEffects: [
-          {
-            type: 'MODIFY_COMPONENT',
-            parameters: {
-              entityId: 'actor',
-              componentId: 'core:needs',
-              modifications: { hunger: 20 },
-            },
-          },
-        ],
-        effects: [
-          {
-            type: 'MODIFY_COMPONENT',
-            parameters: {
-              entityId: 'actor',
-              componentId: 'core:needs',
-              modifications: { hunger: 20 },
-            },
-          },
-        ],
-      });
-
-      setup.gameDataRepository.get = jest.fn((key) => {
-        if (key === 'tasks') {
-          return { test: { [eatTask.id]: eatTask } };
-        }
-        return null;
-      });
-
-      setup.gameDataRepository.getTask = jest.fn((taskId) =>
-        taskId === eatTask.id ? eatTask : null
-      );
-
-      const world = { state: {}, entities: {} };
+      // Build initial planning state from actor components
+      const world = {
+        state: buildDualFormatState(actor),
+        entities: {},
+      };
 
       // Execute: Turn 1 - Plan to eat
       const result1 = await setup.controller.decideTurn(actor, world);
@@ -224,6 +267,16 @@ describe('GOAP Replanning - Integration', () => {
       if (planCreated) {
         // Change: Externally satisfy hunger (simulating external event)
         actor.components['core:needs'].hunger = 10; // Below goal state threshold
+
+        // Update entity in entity manager (relevance check reads from here)
+        const entity = setup.entityManager.getEntity(actor.id);
+        entity.components['core:needs'].hunger = 10;
+        entity.components.core_needs.hunger = 10;
+
+        // Update all state formats (goal state check reads from here)
+        world.state.actor.components['core:needs'].hunger = 10;
+        world.state.actor.components.core_needs.hunger = 10;
+        world.state['test_actor:core:needs'].hunger = 10;
 
         // Execute: Turn 2 - Goal no longer relevant
         setup.eventBus.clear();

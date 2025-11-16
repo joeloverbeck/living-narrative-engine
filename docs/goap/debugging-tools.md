@@ -485,10 +485,84 @@ it('should debug complete GOAP workflow', async () => {
 
 This allows users to use intuitive method names while maintaining clean separation in the underlying tool implementations.
 
+## Debugging Multi-Action Scenarios
+
+**See Dedicated Guide**: [`debugging-multi-action.md`](./debugging-multi-action.md)
+
+Multi-action planning scenarios require specialized debugging workflows. This section provides quick reference for common multi-action debugging tasks. For comprehensive workflows, see the dedicated guide.
+
+### Quick Reference
+
+**Common Multi-Action Issues**:
+
+1. **Planning fails for multi-action scenario**
+   - Check task reduces distance: `distance(after) < distance(before)`
+   - Verify reuse limit not exceeded: `taskUsageCount < task.maxReuse`
+   - Check cost/action limits: `estimatedCost < goal.maxCost`
+
+2. **Plan has too many/few tasks**
+   - Verify task effect magnitude in `planning_effects`
+   - Check for clamping/overflow in numeric constraints
+   - Review reuse limits in task definitions
+
+3. **Wrong tasks selected**
+   - Verify structural gates (preconditions)
+   - Check task costs (planner prefers cheaper)
+   - Review heuristic accuracy
+
+### Key Debugging Commands
+
+```javascript
+// Enable debug logging
+logger.setLevel('debug');
+
+// Check distance reduction
+const heuristicRegistry = container.resolve(tokens.IHeuristicRegistry);
+const initialDistance = heuristicRegistry.calculate(
+  'goal-distance',
+  initialState,
+  goal
+);
+
+// Simulate task and check new distance
+const effectsSimulator = container.resolve(tokens.IPlanningEffectsSimulator);
+const successorState = effectsSimulator.simulateEffects(
+  initialState,
+  task.planningEffects,
+  { actor: { id: actorId } }
+);
+
+const newDistance = heuristicRegistry.calculate(
+  'goal-distance',
+  successorState,
+  goal
+);
+
+console.log('Distance Reduced:', newDistance < initialDistance);
+
+// Inspect plan structure
+const debugger = container.resolve(tokens.IGOAPDebugger);
+const plan = debugger.inspectPlan(actorId);
+console.log(plan);
+```
+
+### Multi-Action Debugging Workflow
+
+1. **Enable Debug Logging**: Set logger to 'debug' level
+2. **Check Planning Events**: Look for `goap:planning_failed` events
+3. **Verify Task Library**: Ensure applicable tasks exist after structural gates
+4. **Test Distance Reduction**: Verify each task reduces heuristic distance
+5. **Inspect Plan Structure**: Check task count, order, and parameters
+6. **Analyze State Progression**: Use StateDiffViewer for step-by-step changes
+
+**For Complete Workflows**: See [`debugging-multi-action.md`](./debugging-multi-action.md)
+
 ## References
 
 - Implementation: `src/goap/debug/`
 - Events: `src/goap/events/goapEvents.js`
 - Controller: `src/goap/controllers/goapController.js`
 - Spec: `specs/goap-system-specs.md`
+- Multi-Action Debugging: [`docs/goap/debugging-multi-action.md`](./debugging-multi-action.md)
+- Multi-Action Planning: [`docs/goap/multi-action-planning.md`](./multi-action-planning.md)
 - Parent Ticket: `tickets/GOAPIMPL-025-goap-debugging-tools.md`

@@ -1,8 +1,25 @@
 /**
- * @file GOAP planner implementing A* search for goal-based planning
- * @see planningNode.js
- * @see planningEffectsSimulator.js
- * @see heuristicRegistry.js
+ * @file GOAP Planner - A* search-based goal-oriented action planning
+ *
+ * Architecture:
+ * - Planning operates on tasks with planning_preconditions and planning_effects
+ * - Tasks are abstract intentions (task:consume_nourishing_item), not concrete actions
+ * - Tasks are refined to executable actions post-planning (refinement process)
+ * - See specs/goap-system-specs.md for complete architecture explanation
+ *
+ * Features:
+ * - Task-level planning with knowledge-limited scoping
+ * - Numeric goal support via goal-distance and RPG heuristics
+ * - Configurable cost and task limits (maxCost, maxActions in goal definition)
+ * - Multi-action planning with task reusability (maxReuse per task)
+ * - Admissible heuristics for A* optimality
+ *
+ * @see planningNode.js - Planning state representation
+ * @see planningEffectsSimulator.js - Task effect simulation
+ * @see heuristicRegistry.js - Distance estimation functions
+ * @see docs/goap/multi-action-planning.md - Usage guide
+ * @see docs/goap/debugging-multi-action.md - Debugging workflows
+ * @see specs/goap-system-specs.md - Architecture reference
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
@@ -12,14 +29,36 @@ import PlanningNode from './planningNode.js';
 import { detectGoalType, allowsOvershoot } from './goalTypeDetector.js';
 
 /**
- * GOAP planner using A* algorithm to find action sequences achieving goals
+ * GOAP Planner - A* search for task-level planning
  *
- * State management helpers (GOAPIMPL-018-02):
- * - State hashing for duplicate detection in closed set
- * - Goal satisfaction checking for search termination
- * - Evaluation context building for JSON Logic conditions
+ * Core Capabilities:
+ * - A* search on task operators with planning preconditions/effects
+ * - Multi-action plans with task reusability and overshoot handling
+ * - Heuristic-guided search (goal-distance or RPG) for efficiency
+ * - Configurable stopping criteria (maxCost, maxActions from goal definition)
+ * - Knowledge-limited scoping via core:known_to and core:visible components
+ *
+ * Planning Process:
+ * 1. Start with initial planning state (symbolic facts about world)
+ * 2. Apply task operators via planning_effects simulation
+ * 3. Use heuristics to guide A* search efficiently
+ * 4. Find minimum-cost task sequence satisfying goal conditions
+ * 5. Return plan of abstract tasks (refinement to actions happens later)
+ *
+ * State Management (GOAPIMPL-018-02):
+ * - State hashing for duplicate detection in closed set (msgpack-based)
+ * - Goal satisfaction via JSON Logic evaluation of goal state
+ * - Evaluation context building for preconditions and goal checking
+ *
+ * Multi-Action Planning:
+ * - Tasks can be reused up to task.maxReuse times (default: 10)
+ * - Each task application must reduce distance to goal
+ * - Plans stop when: goal reached, cost limit exceeded, or action limit exceeded
+ * - Overshoot allowed for inequality goals (≤, ≥), not equality goals (=)
  *
  * @class
+ * @see docs/goap/multi-action-planning.md for usage examples
+ * @see docs/goap/debugging-multi-action.md for troubleshooting
  */
 class GoapPlanner {
   /** @type {import('../../logging/logger.js').default} */
