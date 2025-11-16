@@ -116,8 +116,8 @@ describe('[Integration] Player Type Routing Verification', () => {
     });
   });
 
-  describe('GOAP Player Type Routing (Stub)', () => {
-    it('should route actors with player_type="goap" to GoapDecisionProvider stub', () => {
+  describe('GOAP Player Type Routing', () => {
+    it('should route actors with player_type="goap" to GoapDecisionProvider', () => {
       const actor = {
         getComponentData: jest.fn().mockReturnValue({ type: 'goap' }),
       };
@@ -155,15 +155,20 @@ describe('[Integration] Player Type Routing Verification', () => {
       expect(strategy.decisionProvider).toBe(providers.goap);
     });
 
-    it('should verify GOAP stub selects first action when actions available', async () => {
+    it('should verify GOAP provider returns action index from GOAP controller', async () => {
       const mockActions = [
-        { actionId: 'test:action1', actionName: 'Test Action 1', index: 0 },
-        { actionId: 'test:action2', actionName: 'Test Action 2', index: 1 },
+        { actionId: 'core:sit_down', index: 1, params: { targetId: 'chair-1' } },
+        { actionId: 'core:stand_up', index: 2, params: {} },
       ];
 
       const goapProvider = {
         name: 'goap',
-        decide: jest.fn().mockResolvedValue({ index: mockActions[0].index }),
+        decide: jest.fn().mockResolvedValue({
+          chosenIndex: 1,
+          speech: null,
+          thoughts: null,
+          notes: null,
+        }),
       };
 
       const actor = {
@@ -185,14 +190,24 @@ describe('[Integration] Player Type Routing Verification', () => {
       // Simulate decision making with actions
       const result = await strategy.decisionProvider.decide(actor, {}, mockActions);
 
-      expect(result).toEqual({ index: 0 });
+      expect(result).toEqual({
+        chosenIndex: 1,
+        speech: null,
+        thoughts: null,
+        notes: null,
+      });
       expect(goapProvider.decide).toHaveBeenCalledWith(actor, {}, mockActions);
     });
 
-    it('should verify GOAP stub returns null when no actions available', async () => {
+    it('should verify GOAP provider returns null when no decision made', async () => {
       const goapProvider = {
         name: 'goap',
-        decide: jest.fn().mockResolvedValue({ index: null }),
+        decide: jest.fn().mockResolvedValue({
+          chosenIndex: null,
+          speech: null,
+          thoughts: null,
+          notes: null,
+        }),
       };
 
       const actor = {
@@ -207,14 +222,19 @@ describe('[Integration] Player Type Routing Verification', () => {
         actorLookup: () => actor,
       });
 
-      const strategy = factory.create('goap-actor-no-actions');
+      const strategy = factory.create('goap-actor-no-decision');
 
       expect(strategy.decisionProvider).toBe(goapProvider);
 
-      // Simulate decision making with no actions
+      // Simulate decision making with no goals or failed planning
       const result = await strategy.decisionProvider.decide(actor, {}, []);
 
-      expect(result).toEqual({ index: null });
+      expect(result).toEqual({
+        chosenIndex: null,
+        speech: null,
+        thoughts: null,
+        notes: null,
+      });
       expect(goapProvider.decide).toHaveBeenCalledWith(actor, {}, []);
     });
   });

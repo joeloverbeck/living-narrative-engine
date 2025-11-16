@@ -5,6 +5,7 @@
 import { tokens } from '../tokens.js';
 import ContextAssemblyService from '../../goap/services/contextAssemblyService.js';
 import ParameterResolutionService from '../../goap/services/parameterResolutionService.js';
+import KnowledgeManager from '../../goap/services/knowledgeManager.js';
 import PlanningEffectsSimulator from '../../goap/planner/planningEffectsSimulator.js';
 import RefinementStateManager from '../../goap/refinement/refinementStateManager.js';
 import MethodSelectionService from '../../goap/refinement/methodSelectionService.js';
@@ -30,13 +31,33 @@ export function registerGoapServices(container) {
     dependencies: [
       tokens.IEntityManager,
       tokens.ILogger,
-      { optional: true, parameter: 'enableKnowledgeLimitation', defaultValue: false },
+      { optional: true, parameter: 'enableKnowledgeLimitation', defaultValue: true },
     ],
   });
 
   // Parameter Resolution Service
   container.register(tokens.IParameterResolutionService, ParameterResolutionService, {
     dependencies: [tokens.IEntityManager, tokens.ILogger],
+  });
+
+  // Knowledge Manager (GOAPIMPL-023-02)
+  // Updates actor knowledge based on visibility (same location + visible flag)
+  // Called during turn state transitions to prevent omniscience
+  container.register(tokens.IKnowledgeManager, KnowledgeManager, {
+    dependencies: [
+      {
+        resolver: (container) => {
+          // ComponentMutationService is created outside DI, so we need to resolve it
+          // from EntityManager which has it as a dependency
+          const entityManager = container.resolve(tokens.IEntityManager);
+          return entityManager.componentMutationService;
+        }
+      },
+      tokens.IEntityManager,
+      tokens.ILogger,
+      tokens.IEventBus,
+    ],
+    lifecycle: 'singleton',
   });
 
   // Planning Effects Simulator
@@ -219,6 +240,7 @@ export function registerGoapServices(container) {
       tokens.IDataRegistry,
       tokens.IEventBus,
       tokens.ILogger,
+      tokens.IParameterResolutionService,
     ],
     lifecycle: 'singleton',
   });

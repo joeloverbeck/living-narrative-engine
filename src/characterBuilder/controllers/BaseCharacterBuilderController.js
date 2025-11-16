@@ -117,106 +117,142 @@ export class BaseCharacterBuilderController {
   /** @private @type {ValidationService|null} */
   #validationService = null;
 
-  /** @private @type {Set<string>} */
-  #dependencyFallbackWarnings = new Set();
-
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger instance
    * @param {CharacterBuilderService} dependencies.characterBuilderService - Character builder service
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event dispatcher
    * @param {ISchemaValidator} dependencies.schemaValidator - Schema validator
-   * @param {ControllerLifecycleOrchestrator} [dependencies.controllerLifecycleOrchestrator] - Injected lifecycle orchestrator
+   * @param {ControllerLifecycleOrchestrator} dependencies.controllerLifecycleOrchestrator - Lifecycle orchestrator (required)
+   * @param dependencies.lifecycleHooks
    * @param {object} [dependencies.additionalServices] - Page-specific services
-   * @param {DOMElementManager} [dependencies.domElementManager] - DOM helper service
-   * @param {EventListenerRegistry} [dependencies.eventListenerRegistry] - Event listener registry service
-   * @param {AsyncUtilitiesToolkit} [dependencies.asyncUtilitiesToolkit] - Async toolkit
-   * @param {PerformanceMonitor} [dependencies.performanceMonitor] - Performance monitor
-   * @param {MemoryManager} [dependencies.memoryManager] - Memory helper
-   * @param {ErrorHandlingStrategy} [dependencies.errorHandlingStrategy] - Shared error handler
-   * @param {ValidationService} [dependencies.validationService] - Validation helper
+   * @param {DOMElementManager} dependencies.domElementManager - DOM helper service (required)
+   * @param {EventListenerRegistry} dependencies.eventListenerRegistry - Event listener registry service (required)
+   * @param {AsyncUtilitiesToolkit} dependencies.asyncUtilitiesToolkit - Async toolkit (required)
+   * @param {PerformanceMonitor} dependencies.performanceMonitor - Performance monitor (required)
+   * @param {MemoryManager} dependencies.memoryManager - Memory helper (required)
+   * @param {ErrorHandlingStrategy} dependencies.errorHandlingStrategy - Shared error handler (required)
+   * @param {ValidationService} dependencies.validationService - Validation helper (required)
    */
   constructor({
     logger,
     characterBuilderService,
     eventBus,
     schemaValidator,
-    controllerLifecycleOrchestrator = null,
+    controllerLifecycleOrchestrator,
     lifecycleHooks = {},
-    domElementManager = null,
-    eventListenerRegistry = null,
-    asyncUtilitiesToolkit = null,
-    performanceMonitor = null,
-    memoryManager = null,
-    errorHandlingStrategy = null,
-    validationService = null,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
     ...additionalServices
   }) {
-    try {
-      // Validate required dependencies
-      this.#validateCoreDependencies({
-        logger,
-        characterBuilderService,
-        eventBus,
-        schemaValidator,
-      });
+    // Validate required dependencies
+    this.#validateCoreDependencies({
+      logger,
+      characterBuilderService,
+      eventBus,
+      schemaValidator,
+    });
 
-      // Store validated core dependencies
-      this.#logger = logger;
-      this.#characterBuilderService = characterBuilderService;
-      this.#eventBus = eventBus;
-      this.#schemaValidator = schemaValidator;
+    // Store validated core dependencies
+    this.#logger = logger;
+    this.#characterBuilderService = characterBuilderService;
+    this.#eventBus = eventBus;
+    this.#schemaValidator = schemaValidator;
 
-      // Validate and store additional services
-      // Subclasses can override #getAdditionalServiceValidationRules()
-      const validationRules = this.#getAdditionalServiceValidationRules();
-      this.#additionalServices = this.#validateAdditionalServices(
-        additionalServices,
-        validationRules
-      );
+    // Validate and store additional services
+    // Subclasses can override #getAdditionalServiceValidationRules()
+    const validationRules = this.#getAdditionalServiceValidationRules();
+    this.#additionalServices = this.#validateAdditionalServices(
+      additionalServices,
+      validationRules
+    );
 
-      const lifecycleInjected = Boolean(controllerLifecycleOrchestrator);
-      this.#lifecycle =
-        controllerLifecycleOrchestrator ??
-        new ControllerLifecycleOrchestrator({
-          logger: this.#logger,
-          eventBus: this.#eventBus,
-          hooks: lifecycleHooks,
-        });
+    // Validate required service dependencies
+    this.#validateRequiredServices({
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
+    });
 
-      this.#lifecycle.setControllerName(this.constructor.name);
-      if (lifecycleInjected) {
-        this.#applyLifecycleHookConfiguration(lifecycleHooks);
+    this.#lifecycle = controllerLifecycleOrchestrator;
+    this.#lifecycle.setControllerName(this.constructor.name);
+    this.#applyLifecycleHookConfiguration(lifecycleHooks);
+
+    this.#configureInjectedServices({
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
+    });
+
+    this.#configureLifecycleHooks();
+
+    // Log successful initialization
+    this.#logger.info(
+      `${this.constructor.name}: Successfully created with dependencies`,
+      {
+        coreServices: [
+          'logger',
+          'characterBuilderService',
+          'eventBus',
+          'schemaValidator',
+        ],
+        additionalServices: Object.keys(this.#additionalServices),
       }
+    );
+  }
 
-      this.#configureInjectedServices({
-        domElementManager,
-        eventListenerRegistry,
-        asyncUtilitiesToolkit,
-        performanceMonitor,
-        memoryManager,
-        errorHandlingStrategy,
-        validationService,
-      });
+  /**
+   * Validate required service dependencies.
+   *
+   * @private
+   * @param {object} services
+   * @throws {MissingDependencyError} If any required service is missing
+   */
+  #validateRequiredServices(services) {
+    const {
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
+    } = services;
 
-      this.#configureLifecycleHooks();
+    const requiredServices = {
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
+    };
 
-      // Log successful initialization
-      this.#logger.info(
-        `${this.constructor.name}: Successfully created with dependencies`,
-        {
-          coreServices: [
-            'logger',
-            'characterBuilderService',
-            'eventBus',
-            'schemaValidator',
-          ],
-          additionalServices: Object.keys(this.#additionalServices),
-        }
-      );
-    } catch (error) {
-      // Re-throw validation errors - they already have detailed messages
-      throw error;
+    for (const [serviceName, service] of Object.entries(requiredServices)) {
+      if (!service) {
+        throw new MissingDependencyError(
+          serviceName,
+          this.constructor.name,
+          `${serviceName} must be injected via DI. Register it in the dependency injection container.`
+        );
+      }
     }
   }
 
@@ -241,80 +277,66 @@ export class BaseCharacterBuilderController {
     const performanceRef =
       typeof performance !== 'undefined' ? performance : null;
 
-    if (domElementManager) {
-      try {
-        domElementManager.configure?.({
-          documentRef: documentRef ?? undefined,
-          performanceRef: performanceRef ?? undefined,
-          elementsRef: this.#elements,
-          contextName: `${this.constructor.name}:DOMElementManager`,
-        });
-      } catch (error) {
-        this.#logger.warn(
-          `${this.constructor.name}: Failed to configure injected DOMElementManager`,
-          error
-        );
-      }
-      this.#domElementManager = domElementManager;
-    }
-
-    if (eventListenerRegistry) {
-      eventListenerRegistry.setContextName?.(
-        `${this.constructor.name}:EventListeners`
+    try {
+      domElementManager.configure?.({
+        documentRef: documentRef ?? undefined,
+        performanceRef: performanceRef ?? undefined,
+        elementsRef: this.#elements,
+        contextName: `${this.constructor.name}:DOMElementManager`,
+      });
+    } catch (error) {
+      this.#logger.warn(
+        `${this.constructor.name}: Failed to configure injected DOMElementManager`,
+        error
       );
-      this.#eventListenerRegistry = eventListenerRegistry;
     }
+    this.#domElementManager = domElementManager;
 
-    if (asyncUtilitiesToolkit) {
-      this.#asyncUtilitiesToolkit = asyncUtilitiesToolkit;
-      registerToolkitForOwner(this, asyncUtilitiesToolkit);
-    }
+    eventListenerRegistry.setContextName?.(
+      `${this.constructor.name}:EventListeners`
+    );
+    this.#eventListenerRegistry = eventListenerRegistry;
 
-    if (performanceMonitor) {
-      performanceMonitor.configure?.({
-        contextName: `${this.constructor.name}:PerformanceMonitor`,
-        eventBus: this.#eventBus,
-      });
-      this.#performanceMonitor = performanceMonitor;
-    }
+    this.#asyncUtilitiesToolkit = asyncUtilitiesToolkit;
+    registerToolkitForOwner(this, asyncUtilitiesToolkit);
 
-    if (memoryManager) {
-      memoryManager.setContextName?.(
-        `${this.constructor.name}:MemoryManager`
-      );
-      this.#memoryManager = memoryManager;
-    }
+    performanceMonitor.configure?.({
+      contextName: `${this.constructor.name}:PerformanceMonitor`,
+      eventBus: this.#eventBus,
+    });
+    this.#performanceMonitor = performanceMonitor;
 
-    if (errorHandlingStrategy) {
-      errorHandlingStrategy.configureContext?.({
-        uiStateManager: this.#uiStateManager,
-        showError:
-          typeof this._showError === 'function'
-            ? (message, details) => this._showError(message, details)
-            : null,
-        showState:
-          typeof this._showState === 'function'
-            ? (state, payload) => this._showState(state, payload)
-            : null,
-        dispatchErrorEvent:
-          typeof this._dispatchErrorEvent === 'function'
-            ? (details) => this._dispatchErrorEvent(details)
-            : null,
-        controllerName: this.constructor.name,
-        errorCategories: ERROR_CATEGORIES,
-        errorSeverity: ERROR_SEVERITY,
-        recoveryHandlers: this.#buildDefaultRecoveryHandlers(),
-      });
-      this.#errorHandlingStrategy = errorHandlingStrategy;
-    }
+    memoryManager.setContextName?.(
+      `${this.constructor.name}:MemoryManager`
+    );
+    this.#memoryManager = memoryManager;
 
-    if (validationService) {
-      validationService.configure?.({
-        handleError: this._handleError.bind(this),
-        errorCategories: ERROR_CATEGORIES,
-      });
-      this.#validationService = validationService;
-    }
+    errorHandlingStrategy.configureContext?.({
+      uiStateManager: this.#uiStateManager,
+      showError:
+        typeof this._showError === 'function'
+          ? (message, details) => this._showError(message, details)
+          : null,
+      showState:
+        typeof this._showState === 'function'
+          ? (state, payload) => this._showState(state, payload)
+          : null,
+      dispatchErrorEvent:
+        typeof this._dispatchErrorEvent === 'function'
+          ? (details) => this._dispatchErrorEvent(details)
+          : null,
+      controllerName: this.constructor.name,
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+      recoveryHandlers: this.#buildDefaultRecoveryHandlers(),
+    });
+    this.#errorHandlingStrategy = errorHandlingStrategy;
+
+    validationService.configure?.({
+      handleError: this._handleError.bind(this),
+      errorCategories: ERROR_CATEGORIES,
+    });
+    this.#validationService = validationService;
   }
 
   /**
@@ -340,41 +362,6 @@ export class BaseCharacterBuilderController {
         }
       });
     });
-  }
-
-  /**
-   * Log when the controller falls back to self-managed dependency creation.
-   *
-   * @private
-   * @param {string} serviceName
-   */
-  #logDependencyFallback(serviceName) {
-    if (this.#dependencyFallbackWarnings.has(serviceName)) {
-      return;
-    }
-
-    this.#dependencyFallbackWarnings.add(serviceName);
-    this.#logger?.warn?.(
-      `${this.constructor.name}: Falling back to local ${serviceName} instantiation. Register ${serviceName} via DI to avoid this warning.`
-    );
-  }
-
-  /**
-   * Lazily instantiate the memory manager service.
-   *
-   * @private
-   * @returns {MemoryManager}
-   */
-  #getMemoryManager() {
-    if (!this.#memoryManager) {
-      this.#logDependencyFallback('MemoryManager');
-      this.#memoryManager = new MemoryManager({
-        logger: this.#logger,
-        contextName: `${this.constructor.name}:MemoryManager`,
-      });
-    }
-
-    return this.#memoryManager;
   }
 
   /**
@@ -645,83 +632,13 @@ export class BaseCharacterBuilderController {
   }
 
   /**
-   * Lazy-loads the EventListenerRegistry instance.
-   *
-   * @private
-   * @returns {EventListenerRegistry}
-   */
-  #getEventListenerRegistry() {
-    if (!this.#eventListenerRegistry) {
-      this.#logDependencyFallback('EventListenerRegistry');
-      this.#eventListenerRegistry = new EventListenerRegistry({
-        logger: this.#logger,
-        asyncUtilities: this.#createAsyncUtilitiesAdapters(),
-        contextName: this.constructor.name,
-      });
-    }
-
-    return this.#eventListenerRegistry;
-  }
-
-  /**
-   * Lazily instantiate toolkit so it can be shared across services.
-   *
-   * @private
-   * @returns {AsyncUtilitiesToolkit}
-   */
-  #getAsyncUtilitiesToolkit() {
-    if (!this.#asyncUtilitiesToolkit) {
-      this.#logDependencyFallback('AsyncUtilitiesToolkit');
-      this.#asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
-        logger: this.#logger,
-      });
-      registerToolkitForOwner(this, this.#asyncUtilitiesToolkit);
-    }
-
-    return this.#asyncUtilitiesToolkit;
-  }
-
-  /**
-   * Lazily instantiate the shared performance monitor.
-   *
-   * @private
-   * @returns {PerformanceMonitor}
-   */
-  #getPerformanceMonitor() {
-    if (!this.#performanceMonitor) {
-      this.#logDependencyFallback('PerformanceMonitor');
-      this.#performanceMonitor = new PerformanceMonitor({
-        logger: this.#logger,
-        eventBus: this.#eventBus,
-        contextName: this.constructor.name,
-      });
-    }
-
-    return this.#performanceMonitor;
-  }
-
-  /**
-   * Build async utility adapters until BASCHACUICONREF-005 extracts the toolkit.
-   *
-   * @private
-   * @returns {{ debounce: Function, throttle: Function }} Async adapters.
-   */
-  #createAsyncUtilitiesAdapters() {
-    const toolkit = this.#getAsyncUtilitiesToolkit();
-    return {
-      debounce: toolkit.debounce.bind(toolkit),
-      throttle: toolkit.throttle.bind(toolkit),
-    };
-  }
-
-  /**
    * Provide subclasses with access to shared toolkit.
    *
    * @protected
    * @returns {AsyncUtilitiesToolkit}
    */
   _getAsyncUtilitiesToolkit() {
-    return this.#getAsyncUtilitiesToolkit();
+    return this.#asyncUtilitiesToolkit;
   }
 
   /**
@@ -752,7 +669,7 @@ export class BaseCharacterBuilderController {
    * @returns {EventListenerRegistry}
    */
   get eventRegistry() {
-    return this.#getEventListenerRegistry();
+    return this.#eventListenerRegistry;
   }
 
   /**
@@ -823,7 +740,7 @@ export class BaseCharacterBuilderController {
    * @returns {PerformanceMonitor}
    */
   get performanceMonitor() {
-    return this.#getPerformanceMonitor();
+    return this.#performanceMonitor;
   }
 
   /**
@@ -964,154 +881,164 @@ export class BaseCharacterBuilderController {
   }
 
   /**
-   * Get a cached element by key
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @returns {HTMLElement|null} The cached element or null
-   */
-  _getElement(key) {
-    return this._getDomManager().getElement(key);
-  }
-
-  /**
-   * Check if an element is cached and available
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @returns {boolean} True if element exists and is in DOM
-   */
-  _hasElement(key) {
-    return this._getDomManager().hasElement(key);
-  }
-
-  /**
-   * Get multiple cached elements by keys
-   *
-   * @protected
-   * @param {string[]} keys - Array of element keys
-   * @returns {object} Object with requested elements
-   */
-  _getElements(keys) {
-    return this._getDomManager().getElements(keys);
-  }
-
-  /**
-   * Refresh a cached element (re-query DOM)
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @param {string} selector - CSS selector
-   * @returns {HTMLElement|null} The refreshed element
-   */
-  _refreshElement(key, selector) {
-    return this._getDomManager().refreshElement(key, selector);
-  }
-
-  /**
-   * Show an element
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @param {string} [displayType] - CSS display type
-   * @returns {boolean} True if element was shown
-   */
-  _showElement(key, displayType = 'block') {
-    return this._getDomManager().showElement(key, displayType);
-  }
-
-  /**
-   * Hide an element
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @returns {boolean} True if element was hidden
-   */
-  _hideElement(key) {
-    return this._getDomManager().hideElement(key);
-  }
-
-  /**
-   * Toggle element visibility
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @param {boolean} [visible] - Force visible state
-   * @returns {boolean} New visibility state
-   */
-  _toggleElement(key, visible) {
-    return this._getDomManager().toggleElement(key, visible);
-  }
-
-  /**
-   * Enable/disable an element (for form controls)
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @param {boolean} [enabled] - Whether to enable
-   * @returns {boolean} True if state was changed
-   */
-  _setElementEnabled(key, enabled = true) {
-    return this._getDomManager().setElementEnabled(key, enabled);
-  }
-
-  /**
-   * Set text content of an element
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @param {string} text - Text content
-   * @returns {boolean} True if text was set
-   */
-  _setElementText(key, text) {
-    return this._getDomManager().setElementText(key, text);
-  }
-
-  /**
-   * Add CSS class to element
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @param {string} className - CSS class name
-   * @returns {boolean} True if class was added
-   */
-  _addElementClass(key, className) {
-    return this._getDomManager().addElementClass(key, className);
-  }
-
-  /**
-   * Remove CSS class from element
-   *
-   * @protected
-   * @param {string} key - Element key
-   * @param {string} className - CSS class name
-   * @returns {boolean} True if class was removed
-   */
-  _removeElementClass(key, className) {
-    return this._getDomManager().removeElementClass(key, className);
-  }
-
-  /**
-   * Lazily create or retrieve DOMElementManager instance.
+   * Get DOMElementManager instance for subclass access.
+   * Subclasses should use this to access DOM manipulation methods directly.
    *
    * @protected
    * @returns {DOMElementManager}
+   * @example
+   * // In subclass method:
+   * const element = this._getDomManager().getElement('myElement');
+   * this._getDomManager().showElement('myElement');
    */
   _getDomManager() {
-    if (!this.#domElementManager) {
-      this.#logDependencyFallback('DOMElementManager');
-      // TODO(BASCHACUICONREF-010): Allow subclasses to inject DOMElementManager instances directly
-      // once the remaining DOM helper wrappers are removed.
-      this.#domElementManager = new DOMElementManager({
-        logger: this.#logger,
-        documentRef: document,
-        performanceRef: performance,
-        elementsRef: this.#elements,
-        contextName: this.constructor.name,
-      });
-    }
-
     return this.#domElementManager;
+  }
+
+  /**
+   * Get a cached DOM element
+   *
+   * @param {string} elementName - Name of the element to retrieve
+   * @returns {HTMLElement|null} The requested element or null if not found
+   * @protected
+   */
+  _getElement(elementName) {
+    return this.#domElementManager.getElement(elementName);
+  }
+
+  /**
+   * Refresh a cached DOM element
+   *
+   * @param {string} elementName - Name of the element to refresh
+   * @param {string} selector - CSS selector to re-query the element
+   * @returns {HTMLElement|null} The refreshed element or null if not found
+   * @protected
+   */
+  _refreshElement(elementName, selector) {
+    return this.#domElementManager.refreshElement(elementName, selector);
+  }
+
+  /**
+   * Set text content of a cached DOM element
+   *
+   * @param {string} elementName - Name of the element to update
+   * @param {string} text - Text content to set
+   * @returns {boolean} True if element was found and updated, false otherwise
+   * @protected
+   */
+  _setElementText(elementName, text) {
+    return this.#domElementManager.setElementText(elementName, text);
+  }
+
+  /**
+   * Register an event listener for a DOM element
+   *
+   * @param {string} elementName - Name of the cached element
+   * @param {string} eventType - Type of event to listen for
+   * @param {Function} handler - Event handler function
+   * @protected
+   */
+  _addEventListener(elementName, eventType, handler) {
+    const element = this._getDomManager().getElement(elementName);
+    if (element) {
+      this.#eventListenerRegistry.addEventListener(element, eventType, handler);
+    }
+  }
+
+  /**
+   * Add debounced event listener to cached element
+   *
+   * @param {string} elementName - Name of the cached element
+   * @param {string} eventType - Type of event to listen for
+   * @param {Function} handler - Event handler function
+   * @param {number} delay - Debounce delay in milliseconds
+   * @protected
+   */
+  _addDebouncedListener(elementName, eventType, handler, delay) {
+    const element = this._getDomManager().getElement(elementName);
+    if (element) {
+      this.#eventListenerRegistry.addDebouncedListener(
+        element,
+        eventType,
+        handler,
+        delay
+      );
+    }
+  }
+
+  /**
+   * Subscribe to event bus event
+   *
+   * @param {string} eventType - Type of event to listen for
+   * @param {Function} handler - Event handler function
+   * @protected
+   */
+  _subscribeToEvent(eventType, handler) {
+    this.#eventListenerRegistry.subscribeToEvent(
+      this.#eventBus,
+      eventType,
+      handler
+    );
+  }
+
+  /**
+   * Set timeout using async utilities
+   *
+   * @param {Function} callback - Function to call after delay
+   * @param {number} [delay] - Delay in milliseconds
+   * @returns {number} Timer ID
+   * @protected
+   */
+  _setTimeout(callback, delay) {
+    return this.#asyncUtilitiesToolkit.setTimeout(callback, delay);
+  }
+
+  /**
+   * Set interval using async utilities
+   *
+   * @param {Function} callback - Function to call repeatedly
+   * @param {number} [delay] - Delay between calls in milliseconds
+   * @returns {number} Interval ID
+   * @protected
+   */
+  _setInterval(callback, delay) {
+    return this.#asyncUtilitiesToolkit.setInterval(callback, delay);
+  }
+
+  /**
+   * Clear timeout using async utilities
+   *
+   * @param {number} timerId - Timer ID to clear
+   * @protected
+   */
+  _clearTimeout(timerId) {
+    this.#asyncUtilitiesToolkit.clearTimeout(timerId);
+  }
+
+  /**
+   * Clear interval using async utilities
+   *
+   * @param {number} intervalId - Interval ID to clear
+   * @protected
+   */
+  _clearInterval(intervalId) {
+    this.#asyncUtilitiesToolkit.clearInterval(intervalId);
+  }
+
+  /**
+   * Prevent default event behavior
+   *
+   * @param {Event} event - Event to prevent default on
+   * @param {Function} [callback] - Optional callback to call after preventing default
+   * @protected
+   */
+  _preventDefault(event, callback) {
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+    }
+    if (callback && typeof callback === 'function') {
+      callback();
+    }
   }
 
   /**
@@ -1125,10 +1052,10 @@ export class BaseCharacterBuilderController {
     try {
       // Get required state elements
       const stateElements = {
-        emptyState: this._getElement('emptyState'),
-        loadingState: this._getElement('loadingState'),
-        resultsState: this._getElement('resultsState'),
-        errorState: this._getElement('errorState'),
+        emptyState: this._getDomManager().getElement('emptyState'),
+        loadingState: this._getDomManager().getElement('loadingState'),
+        resultsState: this._getDomManager().getElement('resultsState'),
+        errorState: this._getDomManager().getElement('errorState'),
       };
 
       // Validate required elements exist
@@ -1322,11 +1249,11 @@ export class BaseCharacterBuilderController {
     ];
 
     controlKeys.forEach((key) => {
-      this._setElementEnabled(key, enabled);
+      this._getDomManager().setElementEnabled(key, enabled);
     });
 
     // Also handle any buttons in the form
-    const form = this._getElement('form');
+    const form = this._getDomManager().getElement('form');
     if (form) {
       const buttons = form.querySelectorAll('button, input[type="submit"]');
       buttons.forEach((button) => {
@@ -1435,312 +1362,6 @@ export class BaseCharacterBuilderController {
    *   id: 'main-input-handler'
    * });
    */
-  _addEventListener(elementOrKey, event, handler, options = {}) {
-    const element = this.#resolveEventTarget(elementOrKey, event);
-    if (!element) {
-      return null;
-    }
-
-    const boundHandler = handler?.bind ? handler.bind(this) : handler;
-
-    return this.#getEventListenerRegistry().addEventListener(
-      element,
-      event,
-      boundHandler,
-      {
-        ...options,
-        originalHandler: handler,
-      }
-    );
-  }
-
-  /**
-   * Subscribe to application event with automatic cleanup
-   *
-   * @protected
-   * @param {string} eventType - Event type to subscribe to
-   * @param {Function} handler - Event handler function
-   * @param {object} [options] - Subscription options
-   * @param {string} [options.id] - Unique identifier
-   * @returns {string|null} Subscription ID, or null if failed
-   * @example
-   * // Subscribe to application event
-   * this._subscribeToEvent('USER_LOGGED_IN', this._handleUserLogin.bind(this));
-   *
-   * // With options
-   * this._subscribeToEvent('DATA_UPDATED', this._refreshDisplay.bind(this), {
-   *   id: 'main-data-refresh'
-   * });
-   */
-  _subscribeToEvent(eventType, handler, options = {}) {
-    if (!this.#eventBus) {
-      this.#logger.warn(
-        `${this.constructor.name}: Cannot subscribe to '${eventType}' - eventBus not available`
-      );
-      return null;
-    }
-
-    const boundHandler = handler?.bind ? handler.bind(this) : handler;
-
-    return this.#getEventListenerRegistry().subscribeToEvent(
-      this.#eventBus,
-      eventType,
-      boundHandler,
-      {
-        ...options,
-        originalHandler: handler,
-      }
-    );
-  }
-
-  /**
-   * Add delegated event listener for dynamic content
-   *
-   * @protected
-   * @param {HTMLElement|string} containerOrKey - Container element or key
-   * @param {string} selector - CSS selector for target elements
-   * @param {string} event - Event type
-   * @param {Function} handler - Event handler (receives event and matched element)
-   * @param {object} [options] - Listener options
-   * @returns {string} Listener ID
-   * @example
-   * // Handle clicks on dynamically added buttons
-   * this._addDelegatedListener('resultsContainer', '.delete-btn', 'click',
-   *   (event, button) => {
-   *     const itemId = button.dataset.itemId;
-   *     this._deleteItem(itemId);
-   *   }
-   * );
-   */
-  _addDelegatedListener(
-    containerOrKey,
-    selector,
-    event,
-    handler,
-    options = {}
-  ) {
-    const container = this._getContainer(containerOrKey);
-    if (!container) {
-      this.#logger.warn(
-        `${this.constructor.name}: Cannot add delegated listener - container '${containerOrKey}' not found`
-      );
-      return null;
-    }
-
-    const boundHandler = handler?.bind ? handler.bind(this) : handler;
-
-    return this.#getEventListenerRegistry().addDelegatedListener(
-      container,
-      selector,
-      event,
-      boundHandler,
-      {
-        ...options,
-        originalHandler: handler,
-      }
-    );
-  }
-
-  /**
-   * Helper to get container element
-   *
-   * @param containerOrKey
-   * @private
-   */
-  _getContainer(containerOrKey) {
-    if (typeof containerOrKey === 'string') {
-      return this._getElement(containerOrKey);
-    }
-    return containerOrKey;
-  }
-
-  /**
-   * Resolve a DOM event target, logging warnings when cache lookups fail.
-   *
-   * @private
-   * @param {HTMLElement|string|EventTarget} elementOrKey - Cached key or direct element.
-   * @param {string} eventName - Event type for logging context.
-   * @returns {EventTarget|null} Resolved target or null.
-   */
-  #resolveEventTarget(elementOrKey, eventName) {
-    if (typeof elementOrKey === 'string') {
-      const element = this._getElement(elementOrKey);
-      if (!element) {
-        this.#logger.warn(
-          `${this.constructor.name}: Cannot add ${eventName} listener - element '${elementOrKey}' not found`
-        );
-        return null;
-      }
-      return element;
-    }
-
-    if (
-      elementOrKey instanceof HTMLElement ||
-      (elementOrKey && typeof elementOrKey.addEventListener === 'function')
-    ) {
-      return elementOrKey;
-    }
-
-    throw new Error(
-      `Invalid element provided to _addEventListener: ${elementOrKey}`
-    );
-  }
-
-  /**
-   * Add debounced event listener
-   *
-   * @protected
-   * @param {HTMLElement|string} elementOrKey - Element or key
-   * @param {string} event - Event type
-   * @param {Function} handler - Event handler
-   * @param {number} delay - Debounce delay in milliseconds
-   * @param {object} [options] - Additional options
-   * @returns {string} Listener ID
-   * @example
-   * // Debounce search input
-   * this._addDebouncedListener('searchInput', 'input',
-   *   this._handleSearch.bind(this),
-   *   300
-   * );
-   */
-  _addDebouncedListener(elementOrKey, event, handler, delay, options = {}) {
-    const element = this.#resolveEventTarget(elementOrKey, event);
-    if (!element) {
-      return null;
-    }
-
-    const boundHandler = handler?.bind ? handler.bind(this) : handler;
-
-    return this.#getEventListenerRegistry().addDebouncedListener(
-      element,
-      event,
-      boundHandler,
-      delay,
-      {
-        ...options,
-        originalHandler: handler,
-      }
-    );
-  }
-
-  /**
-   * Add throttled event listener
-   *
-   * @protected
-   * @param {HTMLElement|string} elementOrKey - Element or key
-   * @param {string} event - Event type
-   * @param {Function} handler - Event handler
-   * @param {number} limit - Throttle limit in milliseconds
-   * @param {object} [options] - Additional options
-   * @returns {string} Listener ID
-   * @example
-   * // Throttle scroll handler
-   * this._addThrottledListener(window, 'scroll',
-   *   this._handleScroll.bind(this),
-   *   100
-   * );
-   */
-  _addThrottledListener(elementOrKey, event, handler, limit, options = {}) {
-    const element = this.#resolveEventTarget(elementOrKey, event);
-    if (!element) {
-      return null;
-    }
-
-    const boundHandler = handler?.bind ? handler.bind(this) : handler;
-
-    return this.#getEventListenerRegistry().addThrottledListener(
-      element,
-      event,
-      boundHandler,
-      limit,
-      {
-        ...options,
-        originalHandler: handler,
-      }
-    );
-  }
-
-  /**
-   * Add click handler with loading state
-   *
-   * @protected
-   * @param {HTMLElement|string} elementOrKey - Element or key
-   * @param {Function} asyncHandler - Async handler function
-   * @param {object} [options] - Options
-   * @returns {string} Listener ID
-   */
-  _addAsyncClickHandler(elementOrKey, asyncHandler, options = {}) {
-    const element = this.#resolveEventTarget(elementOrKey, 'click');
-    if (!element) {
-      return null;
-    }
-
-    const boundHandler = asyncHandler?.bind
-      ? asyncHandler.bind(this)
-      : asyncHandler;
-
-    return this.#getEventListenerRegistry().addAsyncClickHandler(
-      element,
-      boundHandler,
-      options
-    );
-  }
-
-  /**
-   * Remove specific event listener by ID
-   *
-   * @protected
-   * @param {string} listenerId - Listener ID returned from add methods
-   * @returns {boolean} True if listener was removed
-   */
-  _removeEventListener(listenerId) {
-    return (
-      this.#eventListenerRegistry?.removeEventListener(listenerId) || false
-    );
-  }
-
-  /**
-   * Remove all event listeners
-   *
-   * @protected
-   */
-  _removeAllEventListeners() {
-    this.#eventListenerRegistry?.removeAllEventListeners();
-  }
-
-  /**
-   * Get event listener statistics (for debugging)
-   *
-   * @protected
-   * @returns {object} Listener statistics
-   */
-  _getEventListenerStats() {
-    return (
-      this.#eventListenerRegistry?.getEventListenerStats() || {
-        total: 0,
-        dom: 0,
-        eventBus: 0,
-        byEvent: {},
-      }
-    );
-  }
-
-  /**
-   * Prevent default and stop propagation helper
-   *
-   * @protected
-   * @param {Event} event - DOM event
-   * @param {Function} handler - Handler to execute
-   * @example
-   * formElement.addEventListener('submit', (e) => {
-   *   this._preventDefault(e, () => this._handleSubmit());
-   * });
-   */
-  _preventDefault(event, handler) {
-    const boundHandler = handler ? (evt) => handler.call(this, evt) : undefined;
-
-    this.#getEventListenerRegistry().preventDefault(event, boundHandler);
-  }
 
   /**
    * Cache DOM elements - must be implemented by subclasses
@@ -1976,40 +1597,6 @@ export class BaseCharacterBuilderController {
   // Error Handling Framework (Added in ticket #7)
   // ─────────────────────────────────────────────────────────────────────────
 
-  /**
-   * Lazily create or retrieve the shared ErrorHandlingStrategy instance.
-   *
-   * @private
-   * @returns {ErrorHandlingStrategy}
-   */
-  #getErrorHandlingStrategy() {
-    if (!this.#errorHandlingStrategy) {
-      this.#logDependencyFallback('ErrorHandlingStrategy');
-      this.#errorHandlingStrategy = new ErrorHandlingStrategy({
-        logger: this.#logger,
-        eventBus: this.#eventBus,
-        uiStateManager: this.#uiStateManager,
-        showError:
-          typeof this._showError === 'function'
-            ? (message, details) => this._showError(message, details)
-            : null,
-        showState:
-          typeof this._showState === 'function'
-            ? (state, payload) => this._showState(state, payload)
-            : null,
-        dispatchErrorEvent:
-          typeof this._dispatchErrorEvent === 'function'
-            ? (details) => this._dispatchErrorEvent(details)
-            : null,
-        controllerName: this.constructor.name,
-        errorCategories: ERROR_CATEGORIES,
-        errorSeverity: ERROR_SEVERITY,
-        recoveryHandlers: this.#buildDefaultRecoveryHandlers(),
-      });
-    }
-
-    return this.#errorHandlingStrategy;
-  }
 
   /**
    * Default recovery handlers wrapping controller callbacks.
@@ -2050,25 +1637,6 @@ export class BaseCharacterBuilderController {
     };
   }
 
-  /**
-   * Lazily create the shared ValidationService instance.
-   *
-   * @private
-   * @returns {ValidationService}
-   */
-  #getValidationService() {
-    if (!this.#validationService) {
-      this.#logDependencyFallback('ValidationService');
-      this.#validationService = new ValidationService({
-        schemaValidator: this.#schemaValidator,
-        logger: this.#logger,
-        handleError: this._handleError.bind(this),
-        errorCategories: ERROR_CATEGORIES,
-      });
-    }
-
-    return this.#validationService;
-  }
 
   /**
    * Handle errors with consistent logging and user feedback
@@ -2097,9 +1665,9 @@ export class BaseCharacterBuilderController {
    *   category: ERROR_CATEGORIES.VALIDATION,
    *   severity: ERROR_SEVERITY.WARNING
    * });
-  */
+   */
   _handleError(error, context = {}) {
-    return this.#getErrorHandlingStrategy().handleError(error, context);
+    return this.#errorHandlingStrategy.handleError(error, context);
   }
 
   /**
@@ -2110,7 +1678,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _buildErrorDetails(error, context) {
-    return this.#getErrorHandlingStrategy().buildErrorDetails(error, context);
+    return this.#errorHandlingStrategy.buildErrorDetails(error, context);
   }
 
   /**
@@ -2120,7 +1688,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _categorizeError(error) {
-    return this.#getErrorHandlingStrategy().categorizeError(error);
+    return this.#errorHandlingStrategy.categorizeError(error);
   }
 
   /**
@@ -2131,7 +1699,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _generateUserMessage(error, context) {
-    return this.#getErrorHandlingStrategy().generateUserMessage(error, context);
+    return this.#errorHandlingStrategy.generateUserMessage(error, context);
   }
 
   /**
@@ -2141,7 +1709,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _logError(errorDetails) {
-    this.#getErrorHandlingStrategy().logError(errorDetails);
+    this.#errorHandlingStrategy.logError(errorDetails);
   }
 
   /**
@@ -2151,7 +1719,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _showErrorToUser(errorDetails) {
-    this.#getErrorHandlingStrategy().showErrorToUser(errorDetails);
+    this.#errorHandlingStrategy.showErrorToUser(errorDetails);
   }
 
   /**
@@ -2187,7 +1755,7 @@ export class BaseCharacterBuilderController {
    * @throws {Error} Re-throws the error after handling
    */
   _handleServiceError(error, operation, userMessage) {
-    return this.#getErrorHandlingStrategy().handleServiceError(
+    return this.#errorHandlingStrategy.handleServiceError(
       error,
       operation,
       userMessage
@@ -2216,7 +1784,7 @@ export class BaseCharacterBuilderController {
    * );
    */
   async _executeWithErrorHandling(operation, operationName, options = {}) {
-    return this.#getErrorHandlingStrategy().executeWithErrorHandling(
+    return this.#errorHandlingStrategy.executeWithErrorHandling(
       operation,
       operationName,
       options
@@ -2230,7 +1798,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _isRetryableError(error) {
-    return this.#getErrorHandlingStrategy().isRetryableError(error);
+    return this.#errorHandlingStrategy.isRetryableError(error);
   }
 
   /**
@@ -2250,7 +1818,7 @@ export class BaseCharacterBuilderController {
       controllerName: context.controllerName || this.constructor.name,
     };
 
-    return this.#getValidationService().validateData(
+    return this.#validationService.validateData(
       data,
       schemaId,
       validationContext
@@ -2264,7 +1832,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _formatValidationErrors(errors) {
-    return this.#getValidationService().formatValidationErrors(errors);
+    return this.#validationService.formatValidationErrors(errors);
   }
 
   /**
@@ -2274,7 +1842,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _buildValidationErrorMessage(errors) {
-    return this.#getValidationService().buildValidationErrorMessage(errors);
+    return this.#validationService.buildValidationErrorMessage(errors);
   }
 
   /**
@@ -2285,7 +1853,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _determineRecoverability(error, context) {
-    return this.#getErrorHandlingStrategy().determineRecoverability(
+    return this.#errorHandlingStrategy.determineRecoverability(
       error,
       context
     );
@@ -2298,7 +1866,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _isRecoverableError(errorDetails) {
-    return this.#getErrorHandlingStrategy().isRecoverableError(errorDetails);
+    return this.#errorHandlingStrategy.isRecoverableError(errorDetails);
   }
 
   /**
@@ -2308,7 +1876,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _attemptErrorRecovery(errorDetails) {
-    this.#getErrorHandlingStrategy().attemptErrorRecovery(errorDetails);
+    this.#errorHandlingStrategy.attemptErrorRecovery(errorDetails);
   }
 
   /**
@@ -2331,7 +1899,7 @@ export class BaseCharacterBuilderController {
    * @returns {Error} Standardized error
    */
   _createError(message, category, metadata) {
-    return this.#getErrorHandlingStrategy().createError(
+    return this.#errorHandlingStrategy.createError(
       message,
       category,
       metadata
@@ -2347,7 +1915,7 @@ export class BaseCharacterBuilderController {
    * @returns {Error} Wrapped error
    */
   _wrapError(error, context) {
-    return this.#getErrorHandlingStrategy().wrapError(error, context);
+    return this.#errorHandlingStrategy.wrapError(error, context);
   }
 
   /**
@@ -2357,7 +1925,7 @@ export class BaseCharacterBuilderController {
    * @returns {object|null} Last error details
    */
   get lastError() {
-    return this.#getErrorHandlingStrategy().lastError || null;
+    return this.#errorHandlingStrategy.lastError || null;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2446,7 +2014,7 @@ export class BaseCharacterBuilderController {
    * @protected
    */
   _cancelPendingOperations() {
-    const toolkit = this.#getAsyncUtilitiesToolkit();
+    const toolkit = this.#asyncUtilitiesToolkit;
     const stats = toolkit.getTimerStats();
 
     if (stats.timeouts.count > 0) {
@@ -2563,249 +2131,6 @@ export class BaseCharacterBuilderController {
    * @param {number} delay - Delay in milliseconds
    * @returns {number} Timer ID
    */
-  _setTimeout(callback, delay) {
-    return this.#getAsyncUtilitiesToolkit().setTimeout(callback, delay);
-  }
-
-  /**
-   * Clear a timeout set with _setTimeout
-   *
-   * @protected
-   * @param {number} timerId - Timer ID to clear
-   */
-  _clearTimeout(timerId) {
-    this.#getAsyncUtilitiesToolkit().clearTimeout(timerId);
-  }
-
-  /**
-   * Set an interval that will be automatically cleared on destruction
-   *
-   * @protected
-   * @param {Function} callback - Function to execute
-   * @param {number} delay - Delay in milliseconds
-   * @returns {number} Interval ID
-   */
-  _setInterval(callback, delay) {
-    return this.#getAsyncUtilitiesToolkit().setInterval(callback, delay);
-  }
-
-  /**
-   * Clear an interval set with _setInterval
-   *
-   * @protected
-   * @param {number} intervalId - Interval ID to clear
-   */
-  _clearInterval(intervalId) {
-    this.#getAsyncUtilitiesToolkit().clearInterval(intervalId);
-  }
-
-  /**
-   * Request an animation frame that will be automatically cancelled on destruction
-   *
-   * @protected
-   * @param {Function} callback - Function to execute
-   * @returns {number} Animation frame ID
-   */
-  _requestAnimationFrame(callback) {
-    return this.#getAsyncUtilitiesToolkit().requestAnimationFrame(callback);
-  }
-
-  /**
-   * Cancel an animation frame
-   *
-   * @protected
-   * @param {number} frameId - Animation frame ID to cancel
-   */
-  _cancelAnimationFrame(frameId) {
-    this.#getAsyncUtilitiesToolkit().cancelAnimationFrame(frameId);
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Performance Monitoring
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Mark a performance timestamp
-   *
-   * @protected
-   * @param {string} markName - Name of the performance mark
-   * @returns {void}
-   */
-  _performanceMark(markName) {
-    this.#getPerformanceMonitor().mark(markName);
-  }
-
-  /**
-   * Measure time between two marks
-   *
-   * @protected
-   * @param {string} measureName - Name for the measurement
-   * @param {string} startMark - Start mark name
-   * @param {string} [endMark] - End mark name (defaults to current time)
-   * @returns {number|null} Duration in milliseconds or null if marks not found
-   */
-  _performanceMeasure(measureName, startMark, endMark = null) {
-    const measurement = this.#getPerformanceMonitor().measure(
-      measureName,
-      startMark,
-      endMark
-    );
-
-    return measurement ? measurement.duration : null;
-  }
-
-  /**
-   * Get all performance measurements
-   *
-   * @protected
-   * @returns {Map<string, {duration: number, startMark: string, endMark: string}>}
-   */
-  _getPerformanceMeasurements() {
-    if (!this.#performanceMonitor) {
-      return new Map();
-    }
-
-    return this.#performanceMonitor.getMeasurements();
-  }
-
-  /**
-   * Clear performance marks and measurements
-   *
-   * @protected
-   * @param {string} [prefix] - Clear only marks/measurements with this prefix
-   */
-  _clearPerformanceData(prefix = null) {
-    if (!this.#performanceMonitor) {
-      this.#logger.debug('Cleared performance data', { prefix });
-      return;
-    }
-
-    this.#performanceMonitor.clearData(prefix);
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Memory Management
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Store a weak reference to an object
-   *
-   * @protected
-   * @param {object} key - Key object
-   * @param {any} value - Value to store
-   */
-  _setWeakReference(key, value) {
-    this.#getMemoryManager().setWeakReference(key, value);
-  }
-
-  /**
-   * Get a weak reference
-   *
-   * @protected
-   * @param {object} key - Key object
-   * @returns {any} Stored value or undefined
-   */
-  _getWeakReference(key) {
-    return this.#getMemoryManager().getWeakReference(key);
-  }
-
-  /**
-   * Track an object in a WeakSet
-   *
-   * @protected
-   * @param {object} obj - Object to track
-   */
-  _trackWeakly(obj) {
-    this.#getMemoryManager().trackWeakly(obj);
-  }
-
-  /**
-   * Check if an object is being tracked
-   *
-   * @protected
-   * @param {object} obj - Object to check
-   * @returns {boolean}
-   */
-  _isWeaklyTracked(obj) {
-    return this.#getMemoryManager().isWeaklyTracked(obj);
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Debounce and Throttle Utilities
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Create a debounced version of a function
-   * Function will only execute after the specified delay with no new calls
-   *
-   * @protected
-   * @param {Function} fn - Function to debounce
-   * @param {number} delay - Delay in milliseconds
-   * @param {object} [options] - Debounce options
-   * @param {boolean} [options.leading] - Execute on the leading edge
-   * @param {boolean} [options.trailing] - Execute on the trailing edge
-   * @param {number} [options.maxWait] - Maximum time to wait before forcing execution
-   * @returns {Function} Debounced function with cancel() method
-   */
-  _debounce(fn, delay, options = {}) {
-    return this.#getAsyncUtilitiesToolkit().debounce(fn, delay, options);
-  }
-
-  /**
-   * Create a throttled version of a function
-   * Function will execute at most once per specified interval
-   *
-   * @protected
-   * @param {Function} fn - Function to throttle
-   * @param {number} wait - Minimum time between executions in milliseconds
-   * @param {object} [options] - Throttle options
-   * @param {boolean} [options.leading] - Execute on the leading edge
-   * @param {boolean} [options.trailing] - Execute on the trailing edge
-   * @returns {Function} Throttled function with cancel() method
-   */
-  _throttle(fn, wait, options = {}) {
-    return this.#getAsyncUtilitiesToolkit().throttle(fn, wait, options);
-  }
-
-  /**
-   * Get or create a debounced handler
-   *
-   * @protected
-   * @param {string} key - Unique key for the handler
-   * @param {Function} fn - Function to debounce
-   * @param {number} delay - Delay in milliseconds
-   * @param {object} [options] - Debounce options
-   * @returns {Function} Debounced function
-   */
-  _getDebouncedHandler(key, fn, delay, options) {
-    const boundFn = fn?.bind ? fn.bind(this) : fn;
-    return this.#getAsyncUtilitiesToolkit().getDebouncedHandler(
-      key,
-      boundFn,
-      delay,
-      options
-    );
-  }
-
-  /**
-   * Get or create a throttled handler
-   *
-   * @protected
-   * @param {string} key - Unique key for the handler
-   * @param {Function} fn - Function to throttle
-   * @param {number} wait - Wait time in milliseconds
-   * @param {object} [options] - Throttle options
-   * @returns {Function} Throttled function
-   */
-  _getThrottledHandler(key, fn, wait, options) {
-    const boundFn = fn?.bind ? fn.bind(this) : fn;
-    return this.#getAsyncUtilitiesToolkit().getThrottledHandler(
-      key,
-      boundFn,
-      wait,
-      options
-    );
-  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Cleanup Task Registration

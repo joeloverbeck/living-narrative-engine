@@ -150,16 +150,135 @@ describe('Traits Generator Performance E2E Tests', () => {
       .getCharacterBuilderService()
       .getCoreMotivationsByDirectionId.mockResolvedValue([]);
 
+    // Create required service mocks for BaseCharacterBuilderController
+    const mockLogger = {
+      debug: jest.fn((msg, ...args) => console.log(`DEBUG: ${msg}`, ...args)),
+      info: jest.fn((msg, ...args) => console.log(`INFO: ${msg}`, ...args)),
+      warn: jest.fn((msg, ...args) => console.log(`WARN: ${msg}`, ...args)),
+      error: jest.fn((msg, ...args) => console.log(`ERROR: ${msg}`, ...args)),
+    };
+
+    const mockControllerLifecycleOrchestrator = {
+      setControllerName: jest.fn(),
+      hooks: [],
+      registerHook: jest.fn(function (phase, hook) {
+        this.hooks.push({ phase, hook });
+      }),
+      createControllerMethodHook: jest.fn((controller, methodName) => async () => {
+        if (typeof controller[methodName] === 'function') {
+          await controller[methodName]();
+        }
+      }),
+      initialize: jest.fn(async function () {
+        // Execute registered hooks in order
+        for (const { hook } of this.hooks) {
+          try {
+            await hook();
+          } catch (error) {
+            // Silently catch errors during initialization for tests
+          }
+        }
+        this.isInitialized = true;
+      }),
+      destroy: jest.fn(),
+      reinitialize: jest.fn(),
+      resetInitializationState: jest.fn(),
+      registerCleanupTask: jest.fn(),
+      checkDestroyed: jest.fn(() => false),
+      makeDestructionSafe: jest.fn((method) => method),
+      isInitialized: false,
+      isInitializing: false,
+      isDestroyed: false,
+      isDestroying: false,
+    };
+
+    const mockDomElementManager = {
+      configure: jest.fn(),
+      cacheElement: jest.fn(),
+      cacheElementsFromMap: jest.fn(() => ({ errors: [] })),
+      getElement: jest.fn(() => null),
+      getElementsSnapshot: jest.fn(() => ({})),
+      clearCache: jest.fn(),
+      validateElementCache: jest.fn(() => ({ valid: true })),
+      validateElement: jest.fn(),
+      normalizeElementConfig: jest.fn((config) =>
+        typeof config === 'string' ? { selector: config, required: true } : config
+      ),
+      showElement: jest.fn(),
+      hideElement: jest.fn(),
+      setElementEnabled: jest.fn(),
+    };
+
+    const mockEventListenerRegistry = {
+      setContextName: jest.fn(),
+      detachEventBusListeners: jest.fn(() => 0),
+      destroy: jest.fn(),
+    };
+
+    const mockAsyncUtilitiesToolkit = {
+      clearAllTimers: jest.fn(),
+      getTimerStats: jest.fn(() => ({
+        timeouts: { count: 0 },
+        intervals: { count: 0 },
+        animationFrames: { count: 0 },
+      })),
+    };
+
+    const mockPerformanceMonitor = {
+      configure: jest.fn(),
+      clearData: jest.fn(),
+    };
+
+    const mockMemoryManager = {
+      setContextName: jest.fn(),
+      clear: jest.fn(),
+    };
+
+    const mockErrorHandlingStrategy = {
+      configureContext: jest.fn(),
+      handleError: jest.fn((error, context) => ({
+        error,
+        context,
+        category: 'system',
+        severity: 'error',
+      })),
+      resetLastError: jest.fn(),
+      buildErrorDetails: jest.fn(),
+      categorizeError: jest.fn(),
+      generateUserMessage: jest.fn(),
+      logError: jest.fn(),
+      showErrorToUser: jest.fn(),
+      handleServiceError: jest.fn(),
+      executeWithErrorHandling: jest.fn(),
+      isRetryableError: jest.fn(() => false),
+      determineRecoverability: jest.fn(),
+      isRecoverableError: jest.fn(() => false),
+      attemptErrorRecovery: jest.fn(),
+      createError: jest.fn((msg) => new Error(msg)),
+      wrapError: jest.fn((error) => error),
+      lastError: null,
+    };
+
+    const mockValidationService = {
+      configure: jest.fn(),
+      validateData: jest.fn(() => ({ isValid: true })),
+      formatValidationErrors: jest.fn(),
+      buildValidationErrorMessage: jest.fn(),
+    };
+
     controller = new TraitsGeneratorController({
       characterBuilderService: testBed.getCharacterBuilderService(),
       eventBus: testBed.getEventBusMock(),
-      logger: {
-        debug: jest.fn((msg, ...args) => console.log(`DEBUG: ${msg}`, ...args)),
-        info: jest.fn((msg, ...args) => console.log(`INFO: ${msg}`, ...args)),
-        warn: jest.fn((msg, ...args) => console.log(`WARN: ${msg}`, ...args)),
-        error: jest.fn((msg, ...args) => console.log(`ERROR: ${msg}`, ...args)),
-      },
+      logger: mockLogger,
       schemaValidator: testBed.getSchemaValidator(),
+      controllerLifecycleOrchestrator: mockControllerLifecycleOrchestrator,
+      domElementManager: mockDomElementManager,
+      eventListenerRegistry: mockEventListenerRegistry,
+      asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
+      performanceMonitor: mockPerformanceMonitor,
+      memoryManager: mockMemoryManager,
+      errorHandlingStrategy: mockErrorHandlingStrategy,
+      validationService: mockValidationService,
       uiStateManager: { setState: jest.fn(), getState: jest.fn(() => ({})) },
       traitsDisplayEnhancer: {
         enhanceForDisplay: jest.fn((traits) => traits),

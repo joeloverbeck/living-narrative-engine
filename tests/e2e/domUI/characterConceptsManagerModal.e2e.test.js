@@ -16,6 +16,7 @@ import {
 } from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
+import { registerCharacterBuilder } from '../../../src/dependencyInjection/registrations/characterBuilderRegistrations.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
 
@@ -217,6 +218,9 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
 
     await configureContainer(container, mockUiElements);
 
+    // Register character builder services
+    registerCharacterBuilder(container);
+
     // Get services
     logger = container.resolve(tokens.ILogger);
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
@@ -280,11 +284,33 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
     );
     characterBuilderService = mockCharacterBuilderService;
 
-    // Create and initialize controller
+    // Get required services from container for BaseCharacterBuilderController
+    const controllerLifecycleOrchestrator = container.resolve(
+      tokens.ControllerLifecycleOrchestrator
+    );
+    const domElementManager = container.resolve(tokens.DOMElementManager);
+    const eventListenerRegistry = container.resolve(tokens.EventListenerRegistry);
+    const asyncUtilitiesToolkit = container.resolve(tokens.AsyncUtilitiesToolkit);
+    const performanceMonitor = container.resolve(tokens.PerformanceMonitor);
+    const memoryManager = container.resolve(tokens.MemoryManager);
+    const errorHandlingStrategy = container.resolve(tokens.ErrorHandlingStrategy);
+    const validationService = container.resolve(tokens.ValidationService);
+    const schemaValidator = container.resolve(tokens.ISchemaValidator);
+
+    // Create and initialize controller with all required dependencies
     controller = new CharacterConceptsManagerController({
       logger,
       characterBuilderService,
       eventBus,
+      schemaValidator,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
     });
 
     try {

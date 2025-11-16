@@ -45,6 +45,7 @@ describe('TraitsGeneratorController', () => {
       if (container && container.parentNode) {
         container.parentNode.removeChild(container);
       }
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       // Ignore cleanup errors
     }
@@ -144,6 +145,35 @@ describe('TraitsGeneratorController', () => {
       await expect(controller.initialize()).rejects.toThrow(
         'initial data loading failed: Service unavailable'
       );
+    });
+
+    it('should register event listeners via eventRegistry protected getter', async () => {
+      // Mock successful service calls
+      testBed.services.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        []
+      );
+
+      // Reset the mock to clear any previous calls
+      testBed.mockEventListenerRegistry.addEventListener.mockClear();
+
+      await controller.initialize();
+
+      // Verify eventRegistry.addEventListener was called for main event listeners
+      // Expected: 5 main listeners (direction selector, generate btn, export btn, clear btn, back btn)
+      // Plus 6 more from setupInputValidation (3 inputs × 2 events each: input + blur)
+      // Total: 11 event listeners
+      expect(testBed.mockEventListenerRegistry.addEventListener).toHaveBeenCalled();
+
+      const callCount = testBed.mockEventListenerRegistry.addEventListener.mock.calls.length;
+      expect(callCount).toBeGreaterThanOrEqual(5); // At least the 5 main listeners
+
+      // Verify specific listeners were registered with correct event types
+      const calls = testBed.mockEventListenerRegistry.addEventListener.mock.calls;
+      const eventTypes = calls.map(call => call[1]); // Second argument is event type
+
+      // Main event listeners
+      expect(eventTypes).toContain('change'); // Direction selector
+      expect(eventTypes).toContain('click');  // Generate, Export, Clear, Back buttons
     });
   });
 
@@ -455,6 +485,7 @@ describe('TraitsGeneratorController', () => {
       });
 
       // Check loading state is shown
+      // eslint-disable-next-line no-unused-vars
       const loadingState = document.getElementById('loading-state');
       // Loading state visibility is controlled by the controller's state management
 
@@ -759,6 +790,7 @@ describe('TraitsGeneratorController', () => {
       const mockEnhancer = createMockTraitsDisplayEnhancer();
 
       // Create controller with the mock enhancer
+      // eslint-disable-next-line no-unused-vars
       const testController = createControllerWithEnhancer(mockEnhancer);
 
       // Set up internal state to simulate having generated traits (private method simulation)
@@ -1178,6 +1210,14 @@ describe('TraitsGeneratorController', () => {
       uiStateManager: createMockUIStateManager(),
       schemaValidator: createMockSchemaValidator(),
       traitsDisplayEnhancer: createMockTraitsDisplayEnhancer(),
+      controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+      domElementManager: testBed.mockDOMElementManager,
+      eventListenerRegistry: testBed.mockEventListenerRegistry,
+      asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,
+      performanceMonitor: testBed.mockPerformanceMonitor,
+      memoryManager: testBed.mockMemoryManager,
+      errorHandlingStrategy: testBed.mockErrorHandlingStrategy,
+      validationService: testBed.mockValidationService,
     });
   }
 
@@ -1193,6 +1233,14 @@ describe('TraitsGeneratorController', () => {
       uiStateManager: createMockUIStateManager(),
       schemaValidator: createMockSchemaValidator(),
       traitsDisplayEnhancer: enhancer,
+      controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+      domElementManager: testBed.mockDOMElementManager,
+      eventListenerRegistry: testBed.mockEventListenerRegistry,
+      asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,
+      performanceMonitor: testBed.mockPerformanceMonitor,
+      memoryManager: testBed.mockMemoryManager,
+      errorHandlingStrategy: testBed.mockErrorHandlingStrategy,
+      validationService: testBed.mockValidationService,
     });
   }
 

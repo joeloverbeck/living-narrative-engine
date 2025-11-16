@@ -21,6 +21,7 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
   let mockJsonLogicService;
   let mockDataRegistry;
   let mockEventBus;
+  let mockParameterResolutionService;
 
   /**
    * Create default valid dependencies for GoapController
@@ -34,6 +35,7 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
     dataRegistry: mockDataRegistry,
     eventBus: mockEventBus,
     logger: mockLogger,
+    parameterResolutionService: mockParameterResolutionService,
   });
 
   beforeEach(() => {
@@ -78,6 +80,10 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
 
     mockEventBus = {
       dispatch: jest.fn(),
+    };
+
+    mockParameterResolutionService = {
+      resolve: jest.fn(),
     };
   });
 
@@ -200,6 +206,7 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
         dataRegistry: mockDataRegistry,
         eventBus: mockEventBus,
         logger: mockLogger,
+        parameterResolutionService: mockParameterResolutionService,
       });
 
       expect(controller).toBeInstanceOf(GoapController);

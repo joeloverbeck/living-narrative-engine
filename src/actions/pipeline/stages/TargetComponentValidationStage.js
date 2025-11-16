@@ -504,7 +504,12 @@ export class TargetComponentValidationStage extends PipelineStage {
         return true;
       }
 
-      for (const [targetKey, _definition] of entries) {
+      for (const [targetKey, definition] of entries) {
+        // Skip optional targets (e.g., 'none' scope actions from legacy layer)
+        if (definition?.optional) {
+          continue;
+        }
+
         const targetValue = resolvedTargets[targetKey];
         const candidateCount = Array.isArray(targetValue)
           ? targetValue.length

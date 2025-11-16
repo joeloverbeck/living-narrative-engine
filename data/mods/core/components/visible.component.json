@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:visible",
+  "description": "Controls whether an entity is visible to actors. Absence of this component implies the entity is visible (default behavior).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "isVisible": {
+        "type": "boolean",
+        "description": "Whether the entity is currently visible. Set to false to hide entity (e.g., items in closed containers)."
+      }
+    },
+    "required": ["isVisible"],
+    "additionalProperties": false
+  }
+}

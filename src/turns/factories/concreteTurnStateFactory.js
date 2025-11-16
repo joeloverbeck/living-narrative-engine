@@ -11,6 +11,7 @@ import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../strategies/turnDirectiveStrategyResolver.js';
 import { CommandProcessingWorkflow } from '../states/helpers/commandProcessingWorkflow.js';
+import { KnowledgeUpdateWorkflow } from '../states/workflows/knowledgeUpdateWorkflow.js';
 
 /**
  * @typedef {import('../interfaces/ITurnStateHost.js').ITurnStateHost} BaseTurnHandler
@@ -32,6 +33,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
   #commandDispatcher;
   #resultInterpreter;
   #directiveExecutor;
+  #knowledgeManager;
 
   /**
    * @param {object} deps Dependencies
@@ -40,6 +42,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
    * @param {CommandDispatcher} [deps.commandDispatcher] Optional command dispatcher service.
    * @param {ResultInterpreter} [deps.resultInterpreter] Optional result interpreter service.
    * @param {DirectiveExecutor} [deps.directiveExecutor] Optional directive executor service.
+   * @param {object} [deps.knowledgeManager] Optional GOAP knowledge manager service for updating actor knowledge before decisions.
    */
   constructor({
     commandProcessor,
@@ -47,6 +50,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     commandDispatcher,
     resultInterpreter,
     directiveExecutor,
+    knowledgeManager,
   }) {
     super();
     if (!commandProcessor) {
@@ -64,6 +68,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     this.#commandDispatcher = commandDispatcher;
     this.#resultInterpreter = resultInterpreter;
     this.#directiveExecutor = directiveExecutor;
+    this.#knowledgeManager = knowledgeManager;
   }
 
   /**
@@ -91,9 +96,16 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
    * @override
    */
   createAwaitingInputState(handler, actionDecisionWorkflowFactory) {
+    // Create knowledge update workflow factory if KnowledgeManager is available
+    const knowledgeUpdateWorkflowFactory = this.#knowledgeManager
+      ? (state, ctx, actor) =>
+          new KnowledgeUpdateWorkflow(state, ctx, actor, this.#knowledgeManager)
+      : null;
+
     return new AwaitingActorDecisionState(
       handler,
-      actionDecisionWorkflowFactory
+      actionDecisionWorkflowFactory,
+      knowledgeUpdateWorkflowFactory
     );
   }
 

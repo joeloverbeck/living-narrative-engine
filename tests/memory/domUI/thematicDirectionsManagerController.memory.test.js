@@ -96,6 +96,90 @@ describe('ThematicDirectionsManagerController - Memory Tests', () => {
     // Mock services with predictable data
     setupMemoryMocks(testBase.mocks);
 
+    // Add required services that were previously provided by wrappers
+    testBase.mocks.controllerLifecycleOrchestrator = {
+      initialize: jest.fn().mockResolvedValue(undefined),
+      destroy: jest.fn().mockResolvedValue(undefined),
+      setControllerName: jest.fn(),
+      registerHook: jest.fn(),
+      createControllerMethodHook: jest.fn(),
+      reinitialize: jest.fn().mockResolvedValue(undefined),
+      resetInitializationState: jest.fn(),
+      registerCleanupTask: jest.fn(),
+      checkDestroyed: jest.fn(),
+      makeDestructionSafe: jest.fn((fn) => fn),
+      isInitialized: false,
+      isDestroyed: false,
+      isInitializing: false,
+      isDestroying: false,
+    };
+
+    testBase.mocks.domElementManager = {
+      configure: jest.fn(),
+      cacheElement: jest.fn(),
+      getElement: jest.fn(),
+      clearCache: jest.fn(),
+      validateElementCache: jest.fn(),
+      getElementsSnapshot: jest.fn().mockReturnValue({}),
+      cacheElementsFromMap: jest.fn(),
+      normalizeElementConfig: jest.fn(),
+      validateElement: jest.fn(),
+      setElementEnabled: jest.fn(),
+      showElement: jest.fn(),
+      hideElement: jest.fn(),
+    };
+
+    testBase.mocks.eventListenerRegistry = {
+      setContextName: jest.fn(),
+      detachEventBusListeners: jest.fn(),
+      destroy: jest.fn(),
+    };
+
+    testBase.mocks.asyncUtilitiesToolkit = {
+      getTimerStats: jest.fn().mockReturnValue({
+        timeouts: { count: 0 },
+        intervals: { count: 0 },
+        animationFrames: { count: 0 },
+      }),
+      clearAllTimers: jest.fn(),
+    };
+
+    testBase.mocks.performanceMonitor = {
+      configure: jest.fn(),
+      clearData: jest.fn(),
+    };
+
+    testBase.mocks.memoryManager = {
+      setContextName: jest.fn(),
+      clear: jest.fn(),
+    };
+
+    testBase.mocks.errorHandlingStrategy = {
+      configureContext: jest.fn(),
+      handleError: jest.fn(),
+      buildErrorDetails: jest.fn(),
+      categorizeError: jest.fn(),
+      generateUserMessage: jest.fn(),
+      logError: jest.fn(),
+      showErrorToUser: jest.fn(),
+      handleServiceError: jest.fn(),
+      executeWithErrorHandling: jest.fn(),
+      isRetryableError: jest.fn(),
+      determineRecoverability: jest.fn(),
+      isRecoverableError: jest.fn(),
+      attemptErrorRecovery: jest.fn(),
+      createError: jest.fn(),
+      wrapError: jest.fn(),
+      resetLastError: jest.fn(),
+    };
+
+    testBase.mocks.validationService = {
+      configure: jest.fn(),
+      validateData: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+      formatValidationErrors: jest.fn(),
+      buildValidationErrorMessage: jest.fn(),
+    };
+
     // Get the mocked InPlaceEditor for this test suite
     const module = await import(
       '../../../src/shared/characterBuilder/inPlaceEditor.js'

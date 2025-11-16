@@ -109,7 +109,7 @@ describe('Traits Generator - Schema Validation E2E', () => {
       updateButtonStates: jest.fn(),
     };
 
-    // Initialize controller with mocked dependencies
+    // Initialize controller with mocked dependencies (including new required services)
     window.traitsController = new TraitsGeneratorController({
       characterBuilderService: testBed.mockCharacterBuilderService,
       logger: testBed.mockLogger,
@@ -117,6 +117,15 @@ describe('Traits Generator - Schema Validation E2E', () => {
       schemaValidator: testBed.mockSchemaValidator,
       traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
       uiStateManager: mockUIStateManager,
+      // Required services for BaseCharacterBuilderController
+      controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+      domElementManager: testBed.mockDOMElementManager,
+      eventListenerRegistry: testBed.mockEventListenerRegistry,
+      asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,
+      performanceMonitor: testBed.mockPerformanceMonitor,
+      memoryManager: testBed.mockMemoryManager,
+      errorHandlingStrategy: testBed.mockErrorHandlingStrategy,
+      validationService: testBed.mockValidationService,
     });
 
     await window.traitsController.initialize();
@@ -1023,6 +1032,15 @@ describe('Traits Generator - Schema Validation E2E', () => {
         schemaValidator: mockFailingSchemaValidator,
         uiStateManager: mockUIStateManager,
         traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
+        // Required services for BaseCharacterBuilderController
+        controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+        domElementManager: testBed.mockDOMElementManager,
+        eventListenerRegistry: testBed.mockEventListenerRegistry,
+        asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,
+        performanceMonitor: testBed.mockPerformanceMonitor,
+        memoryManager: testBed.mockMemoryManager,
+        errorHandlingStrategy: testBed.mockErrorHandlingStrategy,
+        validationService: testBed.mockValidationService,
       });
 
       await controllerWithFailingSchemas.initialize();
