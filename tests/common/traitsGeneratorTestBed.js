@@ -10,6 +10,11 @@
 import { jest } from '@jest/globals';
 import { BaseTestBed } from './baseTestBed.js';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  createTestElement,
+  cleanupTestElements,
+  createTestContainer,
+} from './domTestUtils.js';
 
 /**
  * Test bed for traits generator integration testing
@@ -35,6 +40,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     this.testData = {};
     this.services = {};
     this.uiElements = {};
+    this.createdElementIds = [];
 
     // Track UI state for testing
     this.uiState = {
@@ -357,51 +363,33 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
    * Setup UI elements for interaction simulation
    */
   setupUIElements() {
-    // Create mock UI elements
-    this.uiElements = {
-      generateButton: {
-        onclick: null,
-        disabled: false,
-        id: 'generateButton',
-      },
-      exportButton: {
-        onclick: null,
-        disabled: false,
-        hidden: true,
-        id: 'exportButton',
-      },
-      retryButton: {
-        onclick: null,
-        disabled: false,
-        id: 'retryButton',
-      },
-      coreMotivation: {
-        value: '',
-        oninput: null,
-        id: 'coreMotivation',
-      },
-      internalContradiction: {
-        value: '',
-        oninput: null,
-        id: 'internalContradiction',
-      },
-      centralQuestion: {
-        value: '',
-        oninput: null,
-        id: 'centralQuestion',
-      },
-      resultsContainer: {
-        hidden: true,
-        innerHTML: '',
-      },
-      errorContainer: {
-        hidden: true,
-        textContent: '',
-      },
-      loadingIndicator: {
-        hidden: true,
-      },
-    };
+    const { container, children } = createTestContainer({
+      containerId: 'traits-generator-test-container',
+      children: [
+        { id: 'generateButton', tag: 'button' },
+        { id: 'exportButton', tag: 'button' },
+        { id: 'retryButton', tag: 'button' },
+        { id: 'coreMotivation', tag: 'textarea' },
+        { id: 'internalContradiction', tag: 'textarea' },
+        { id: 'centralQuestion', tag: 'textarea' },
+        { id: 'resultsContainer', tag: 'div' },
+        { id: 'errorContainer', tag: 'div' },
+        { id: 'loadingIndicator', tag: 'div' },
+      ],
+    });
+
+    this.uiElements = { container, ...children };
+    this.createdElementIds.push(container.id, ...Object.keys(children));
+
+    this.uiElements.generateButton.disabled = false;
+    this.uiElements.exportButton.disabled = false;
+    this.uiElements.exportButton.hidden = true;
+    this.uiElements.retryButton.disabled = false;
+    this.uiElements.resultsContainer.hidden = true;
+    this.uiElements.resultsContainer.innerHTML = '';
+    this.uiElements.errorContainer.hidden = true;
+    this.uiElements.errorContainer.textContent = '';
+    this.uiElements.loadingIndicator.hidden = true;
   }
 
   // ============= UI Simulation Methods =============
@@ -792,13 +780,15 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
    */
   mockFileDownload() {
     const downloadSpy = jest.fn();
-    global.document = {
-      createElement: jest.fn(() => ({
-        click: downloadSpy,
-        href: '',
-        download: '',
-      })),
-    };
+    const anchor = createTestElement({
+      id: `download-link-${uuidv4()}`,
+      tag: 'a',
+      attachToDocument: false,
+    });
+    anchor.click = downloadSpy;
+    anchor.href = '';
+    anchor.download = '';
+    jest.spyOn(document, 'createElement').mockReturnValue(anchor);
     return downloadSpy;
   }
 
@@ -1186,5 +1176,8 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       validationErrors: {},
       generatedTraits: null,
     };
+
+    cleanupTestElements(this.createdElementIds);
+    this.createdElementIds = [];
   }
 }

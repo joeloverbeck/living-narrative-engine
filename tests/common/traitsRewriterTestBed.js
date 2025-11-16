@@ -10,6 +10,10 @@
 import { jest } from '@jest/globals';
 import { BaseTestBed } from './baseTestBed.js';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  cleanupTestElements,
+  createTestContainer,
+} from './domTestUtils.js';
 
 /**
  * Test bed for traits rewriter integration testing
@@ -35,6 +39,7 @@ export class TraitsRewriterTestBed extends BaseTestBed {
     this.testData = {};
     this.services = {};
     this.uiElements = {};
+    this.createdElementIds = [];
 
     // Track UI state for testing
     this.uiState = {
@@ -335,31 +340,28 @@ export class TraitsRewriterTestBed extends BaseTestBed {
    * Setup UI elements for interaction simulation
    */
   setupUIElements() {
-    // Create mock UI elements
-    this.uiElements = {
-      rewriteButton: {
-        onclick: null,
-        disabled: false,
-        id: 'rewriteButton',
-      },
-      exportButton: {
-        onclick: null,
-        disabled: false,
-        hidden: true,
-        id: 'exportButton',
-      },
-      resultsContainer: {
-        hidden: true,
-        innerHTML: '',
-      },
-      errorContainer: {
-        hidden: true,
-        textContent: '',
-      },
-      loadingIndicator: {
-        hidden: true,
-      },
-    };
+    const { container, children } = createTestContainer({
+      containerId: 'traits-rewriter-test-container',
+      children: [
+        { id: 'rewriteButton', tag: 'button' },
+        { id: 'exportButton', tag: 'button' },
+        { id: 'resultsContainer', tag: 'div' },
+        { id: 'errorContainer', tag: 'div' },
+        { id: 'loadingIndicator', tag: 'div' },
+      ],
+    });
+
+    this.uiElements = { container, ...children };
+    this.createdElementIds.push(container.id, ...Object.keys(children));
+
+    this.uiElements.rewriteButton.disabled = false;
+    this.uiElements.exportButton.disabled = false;
+    this.uiElements.exportButton.hidden = true;
+    this.uiElements.resultsContainer.hidden = true;
+    this.uiElements.resultsContainer.innerHTML = '';
+    this.uiElements.errorContainer.hidden = true;
+    this.uiElements.errorContainer.textContent = '';
+    this.uiElements.loadingIndicator.hidden = true;
   }
 
   // ============= Test Data Factories =============
@@ -539,5 +541,8 @@ export class TraitsRewriterTestBed extends BaseTestBed {
       validationErrors: {},
       rewrittenTraits: null,
     };
+
+    cleanupTestElements(this.createdElementIds);
+    this.createdElementIds = [];
   }
 }
