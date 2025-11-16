@@ -190,7 +190,10 @@ describe('TraitsGeneratorController (additional coverage)', () => {
 
   it('recovers from unexpected errors thrown inside the direction selector handler', async () => {
     const directionSelector = document.getElementById('direction-selector');
-    const addEventListenerSpy = jest.spyOn(directionSelector, 'addEventListener');
+    const addEventListenerSpy = jest.spyOn(
+      controller.eventRegistry,
+      'addEventListener'
+    );
     const handleServiceErrorSpy = jest.spyOn(controller, '_handleServiceError');
 
     await controller.initialize();
@@ -208,7 +211,7 @@ describe('TraitsGeneratorController (additional coverage)', () => {
     }));
 
     const changeCall = addEventListenerSpy.mock.calls.find(
-      ([eventName]) => eventName === 'change'
+      ([target, eventName]) => target === directionSelector && eventName === 'change'
     );
     expect(changeCall).toBeDefined();
     const [, changeHandler] = changeCall;
@@ -254,7 +257,10 @@ describe('TraitsGeneratorController (additional coverage)', () => {
     ]);
 
     const directionSelector = document.getElementById('direction-selector');
-    const addEventListenerSpy = jest.spyOn(directionSelector, 'addEventListener');
+    const addEventListenerSpy = jest.spyOn(
+      controller.eventRegistry,
+      'addEventListener'
+    );
     const handleServiceErrorSpy = jest.spyOn(controller, '_handleServiceError');
 
     await controller.initialize();
@@ -286,7 +292,7 @@ describe('TraitsGeneratorController (additional coverage)', () => {
       });
 
     const changeCall = addEventListenerSpy.mock.calls.find(
-      ([eventName]) => eventName === 'change'
+      ([target, eventName]) => target === directionSelector && eventName === 'change'
     );
     expect(changeCall).toBeDefined();
     const [, changeHandler] = changeCall;
