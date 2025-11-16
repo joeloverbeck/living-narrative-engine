@@ -246,12 +246,12 @@ This catalog documents individual error messages, the code that raises them, and
 
 | Message Snippet | Error / Warning | Raised By | Section |
 | --- | --- | --- | --- |
-| `Recipe validation failed` | `RecipeValidationError` | `RecipePreflightValidator` | [Recipe validation failures](#recipe-validation-failures) |
+| `Recipe validation failed` | `RecipeValidationError` | `RecipeValidationRunner` | [Recipe validation failures](#recipe-validation-failures) |
 | `Component '…' does not exist in the component registry` | `ComponentNotFoundError` | `componentExistenceValidationRule` | [Missing component references](#missing-component-references) |
 | `Property '…' has invalid value '…'` | `InvalidPropertyError` | `propertySchemaValidationRule` | [Property schema violations](#property-schema-violations) |
 | `Pattern matchesGroup '…' has no matching slots` | Warning object | `patternMatchingValidator` | [Pattern dry-run warnings](#pattern-dry-run-warnings) |
-| `Blueprint '…' does not exist` | Validation issue | `RecipePreflightValidator` | [Blueprint availability](#blueprint-availability) |
-| `No entity definitions found for slot '…'` | Validation issue | `RecipePreflightValidator` | [Part availability at load time](#part-availability-at-load-time) |
+| `Blueprint '…' does not exist` | Validation issue | `BlueprintExistenceValidator` | [Blueprint availability](#blueprint-availability) |
+| `No entity definitions found for slot '…'` | Validation issue | `PartAvailabilityValidator` / `GeneratedSlotPartsValidator` | [Part availability at load time](#part-availability-at-load-time) |
 | `No entity definitions found matching anatomy requirements` | `ValidationError` | `PartSelectionService` | [Runtime part selection failures](#runtime-part-selection-failures) |
 | `Socket '…' not found on root entity '…'` | `SocketNotFoundError` | `socketSlotCompatibilityValidator` or `SocketLimitRule` | [Socket reference issues](#socket-reference-issues) |
 | `Required constraint not satisfied: …` | Validation issue | `RecipeConstraintEvaluator` | [Runtime constraint violations](#runtime-constraint-violations) |
@@ -266,9 +266,9 @@ This catalog documents individual error messages, the code that raises them, and
 #### Recipe validation failures
 
 - **Thrown by**: `RecipeValidationError` (`src/anatomy/errors/RecipeValidationError.js`)
-- **Trigger**: `RecipePreflightValidator.validate` returns a `ValidationReport` containing at least one error
+- **Trigger**: `RecipeValidationRunner.validate` returns a `ValidationReport` containing at least one error
 - **Report contents**: `errors`, `warnings`, `suggestions`, `passed`, `isValid`, and `summary` with counts
-- **Diagnostics**: Capture `error.report` and review each issue. Run `node scripts/validate-recipe.js --recipe anatomy:red_dragon` to regenerate the report
+- **Diagnostics**: Capture `error.report` and review each issue. Run `npm run validate:recipe -- data/mods/anatomy/recipes/red_dragon.recipe.json` (or `node scripts/validate-recipe.js <path>`) to regenerate the report
 - **Fix path**: Resolve the underlying issues and re-run the validator
 
 #### Missing component references
@@ -286,32 +286,32 @@ This catalog documents individual error messages, the code that raises them, and
 
 - **Raised by**: `PropertySchemaValidationRule` (`src/anatomy/validation/rules/propertySchemaValidationRule.js`)
 - **Trigger**: Recipe supplies component property values that fail the component's schema
-- **Diagnostics**: Inspect the component schema from the data registry; Preflight attaches `validValues` and `schemaPath` to errors
+- **Diagnostics**: Inspect the component schema from the data registry; the property schema validator attaches `validValues` and `schemaPath` to errors
 - **Fix**: Align the recipe with the allowed values
 
 #### Body descriptor validation
 
-- **Load-time check**: `RecipePreflightValidator` validates `bodyDescriptors` against the schema in `anatomy:body` component
+- **Load-time check**: `RecipeValidationRunner` executes `RecipeBodyDescriptorValidator`, which validates `bodyDescriptors` against the schema in the `anatomy:body` component
 - **Runtime check**: `BodyDescriptorValidator` (`src/anatomy/utils/bodyDescriptorValidator.js`) enforces the registry in `src/anatomy/registries/bodyDescriptorRegistry.js`
 - **Diagnostics**: Cross-check values against the registry (`getAllDescriptorNames()` and per-descriptor `validValues`)
 - **Fix**: Change invalid entries or add the descriptor to the registry and schema if intentional
 
 #### Blueprint availability
 
-- **Blueprint existence**: Preflight fetches the referenced blueprint through `anatomyBlueprintRepository.getBlueprint(recipe.blueprintId)`
+- **Blueprint existence**: The validation pipeline fetches the referenced blueprint through `BlueprintExistenceValidator`, which calls `anatomyBlueprintRepository.getBlueprint(recipe.blueprintId)`
 - **Socket/slot compatibility**: `validateSocketSlotCompatibility` confirms that every `additionalSlots` entry references an existing socket
 - **Fix**: Create or update the blueprint with the correct `id`, `root`, and sockets, or adjust the recipe
 
 #### Pattern dry-run warnings
 
 - **Raised by**: `validatePatternMatching` (`src/anatomy/validation/patternMatchingValidator.js`)
-- **Trigger**: A recipe pattern resolves to zero blueprint slots during Preflight's dry-run
+- **Trigger**: A recipe pattern resolves to zero blueprint slots during the pattern-matching validator's dry-run
 - **Diagnostics**: Inspect the processed blueprint and verify expected slot keys exist
 - **Fix**: Update the recipe pattern or the structure template
 
 #### Part availability at load time
 
-- **Raised by**: `RecipePreflightValidator.#checkPartAvailability` and `#checkGeneratedSlotPartAvailability`
+- **Raised by**: `PartAvailabilityValidator` (explicit slots) and `GeneratedSlotPartsValidator` (pattern expansion)
 - **Trigger**: No entity definitions satisfy requirements for a recipe slot or pattern
 - **Diagnostics**: Enumerate entity definitions (`dataRegistry.getAll('entityDefinitions')`) to confirm matching entities exist
 - **Fix**: Add or correct entity definitions under `data/mods/<modId>/entities/definitions`

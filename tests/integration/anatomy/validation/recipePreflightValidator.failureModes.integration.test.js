@@ -1,9 +1,9 @@
 /**
- * @file Integration tests covering failure and diagnostic paths for RecipePreflightValidator.
+ * @file Integration tests covering failure and diagnostic paths for RecipeValidationRunner.
  */
 
 import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import SlotGenerator from '../../../../src/anatomy/slotGenerator.js';
@@ -24,7 +24,7 @@ class ThrowingDataRegistry extends InMemoryDataRegistry {
   }
 }
 
-describe('RecipePreflightValidator - Failure mode integration coverage', () => {
+describe('RecipeValidationRunner - Failure mode integration coverage', () => {
   /** @type {ReturnType<typeof createLogger>} */
   let logger;
   /** @type {InMemoryDataRegistry} */
@@ -51,7 +51,7 @@ describe('RecipePreflightValidator - Failure mode integration coverage', () => {
       dataRegistry,
     });
 
-    return new RecipePreflightValidator({
+    return new RecipeValidationRunner({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,

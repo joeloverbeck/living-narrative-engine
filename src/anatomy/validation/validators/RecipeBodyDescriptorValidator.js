@@ -29,7 +29,7 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
    */
   constructor({ logger, dataRegistry }) {
     super({
-      name: 'recipe-body-descriptor',
+      name: 'body-descriptors',
       priority: 15,
       failFast: false,
       logger,

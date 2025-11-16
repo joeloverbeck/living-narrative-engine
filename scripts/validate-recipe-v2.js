@@ -8,7 +8,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import path from 'path';
 import { promises as fs } from 'fs';
-import RecipePreflightValidator from '../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../src/anatomy/validation/RecipeValidationRunner.js';
 import AppContainer from '../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../src/dependencyInjection/tokens.js';
@@ -104,6 +104,7 @@ export async function executeRecipeValidation(
 ) {
   const consoleInterface = runtimeOverrides.console ?? console;
   const chalkInstance = runtimeOverrides.chalk ?? chalk;
+  const loadRecipe = runtimeOverrides.loadRecipeFile ?? loadRecipeFile;
 
   const argsValidation = validateCliArgs(recipes);
   if (!argsValidation.isValid) {
@@ -122,6 +123,28 @@ export async function executeRecipeValidation(
     };
   }
 
+  const { recipes: preloadedRecipes, failures: recipeLoadFailures } =
+    await preloadRecipes(recipes, loadRecipe);
+  const recipeIds = Array.from(preloadedRecipes.values())
+    .map((recipe) => recipe?.recipeId)
+    .filter((id) => typeof id === 'string' && id.length > 0);
+
+  let inferredMods = [];
+  const usageDetector =
+    runtimeOverrides.detectRecipeUsageMods ?? detectRecipeUsageMods;
+  try {
+    inferredMods = await usageDetector(recipeIds);
+  } catch (error) {
+    if (cliOptions.verbose) {
+      consoleInterface.warn(
+        chalkInstance.yellow(
+          `[validate-recipe] Failed to auto-detect referencing mods: ${error.message}`
+        )
+      );
+    }
+    inferredMods = [];
+  }
+
   let context;
   try {
     const overrides = buildConfigurationOverrides(cliOptions);
@@ -136,6 +159,7 @@ export async function executeRecipeValidation(
       configPath: cliOptions.config,
       overrides,
       recipePaths: recipes,
+      inferredMods,
       runtimeOverrides,
     });
   } catch (error) {
@@ -160,15 +184,34 @@ export async function executeRecipeValidation(
   const finalFormat = resolveOutputFormat(cliOptions, context.config);
   const legacyJsonMode = Boolean(cliOptions.json);
   const results = [];
-  const loadRecipe = runtimeOverrides.loadRecipeFile ?? loadRecipeFile;
 
   for (const recipePath of recipes) {
     if (!legacyJsonMode && finalFormat === 'text') {
       consoleInterface.log(chalkInstance.blue(`\n✓ Validating ${recipePath}...`));
     }
 
+    const preloadError = recipeLoadFailures.get(recipePath);
+    if (preloadError) {
+      consoleInterface.error(
+        chalkInstance.red(`\n❌ Failed to validate ${recipePath}: ${preloadError.message}`)
+      );
+      if (cliOptions.verbose && preloadError?.stack) {
+        consoleInterface.error(preloadError.stack);
+      }
+
+      const errorResult = formatErrorResult(recipePath, preloadError);
+      results.push(errorResult);
+
+      if (cliOptions.failFast) {
+        break;
+      }
+
+      continue;
+    }
+
     try {
-      const recipeData = await loadRecipe(recipePath);
+      const recipeData =
+        preloadedRecipes.get(recipePath) ?? (await loadRecipe(recipePath));
       const report = await context.validator.validate(recipeData, {
         recipePath,
         failFast: cliOptions.failFast,
@@ -240,6 +283,122 @@ export async function loadRecipeFile(recipePath) {
 }
 
 /**
+ * @description Preloads recipe files so their metadata is available before context creation.
+ * @param {Array<string>} recipePaths - Recipe file paths.
+ * @param {(recipePath: string) => Promise<object>} loadRecipe - Loader function.
+ * @returns {Promise<{recipes: Map<string, object>, failures: Map<string, Error>}>}
+ */
+async function preloadRecipes(recipePaths, loadRecipe) {
+  const recipes = new Map();
+  const failures = new Map();
+
+  for (const recipePath of recipePaths) {
+    if (recipes.has(recipePath) || failures.has(recipePath)) {
+      continue;
+    }
+
+    try {
+      const recipeData = await loadRecipe(recipePath);
+      recipes.set(recipePath, recipeData);
+    } catch (error) {
+      failures.set(recipePath, error);
+    }
+  }
+
+  return { recipes, failures };
+}
+
+/**
+ * @description Detects mods whose entity definitions reference the provided recipe IDs.
+ * @param {Array<string>} recipeIds - Recipe IDs being validated.
+ * @returns {Promise<Array<string>>} Detected mod IDs.
+ */
+async function detectRecipeUsageMods(recipeIds = []) {
+  if (!Array.isArray(recipeIds) || recipeIds.length === 0) {
+    return [];
+  }
+
+  const normalizedIds = new Set(
+    recipeIds.filter((id) => typeof id === 'string' && id.trim() !== '')
+  );
+  if (normalizedIds.size === 0) {
+    return [];
+  }
+
+  const modsDir = path.resolve(process.cwd(), 'data/mods');
+  let modEntries = [];
+  try {
+    modEntries = await fs.readdir(modsDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const referencingMods = new Set();
+
+  for (const modEntry of modEntries) {
+    if (!modEntry.isDirectory()) {
+      continue;
+    }
+
+    const modId = modEntry.name;
+    const definitionsDir = path.join(modsDir, modId, 'entities', 'definitions');
+    if (!(await directoryExists(definitionsDir))) {
+      continue;
+    }
+
+    const directoryStack = [definitionsDir];
+    let foundReference = false;
+
+    while (directoryStack.length > 0 && !foundReference) {
+      const currentDir = directoryStack.pop();
+      let dirEntries = [];
+      try {
+        dirEntries = await fs.readdir(currentDir, { withFileTypes: true });
+      } catch {
+        continue;
+      }
+
+      for (const entry of dirEntries) {
+        const entryPath = path.join(currentDir, entry.name);
+        if (entry.isDirectory()) {
+          directoryStack.push(entryPath);
+          continue;
+        }
+
+        if (!entry.isFile() || !entry.name.endsWith('.json')) {
+          continue;
+        }
+
+        try {
+          const raw = await fs.readFile(entryPath, 'utf-8');
+          const entity = JSON.parse(raw);
+          const recipeId = entity?.components?.['anatomy:body']?.recipeId;
+
+          if (recipeId && normalizedIds.has(recipeId)) {
+            referencingMods.add(modId);
+            foundReference = true;
+            break;
+          }
+        } catch {
+          // Ignore malformed entity definitions during detection
+        }
+      }
+    }
+  }
+
+  return Array.from(referencingMods);
+}
+
+async function directoryExists(targetPath) {
+  try {
+    const stats = await fs.stat(targetPath);
+    return stats.isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/**
  * @description Builds configuration overrides based on CLI flags.
  * @param {object} cliOptions - CLI options.
  * @returns {object} Overrides suitable for ConfigurationLoader.load().
@@ -297,13 +456,14 @@ function normalizeFormat(value) {
 /**
  * @description Creates the validator and supporting services.
  * @param {object} params - Bootstrap parameters.
- * @returns {Promise<{validator: RecipePreflightValidator, config: object}>} Context payload.
+ * @returns {Promise<{validator: RecipeValidationRunner, config: object}>} Context payload.
  */
 async function createValidationContext({
   verbose = false,
   configPath,
   overrides = {},
   recipePaths = [],
+  inferredMods = [],
   runtimeOverrides = {},
 }) {
   const container = (await runtimeOverrides.createContainer?.()) ?? new AppContainer();
@@ -353,7 +513,11 @@ async function createValidationContext({
   }
 
   const configuration = await configurationLoader.load(configPath, overrides);
-  const requestedMods = deriveMods(configuration.rawConfig?.mods, recipePaths);
+  const requestedMods = deriveMods(
+    configuration.rawConfig?.mods,
+    recipePaths,
+    inferredMods
+  );
 
   if (verbose && requestedMods.length > 0) {
     logger.info(
@@ -383,7 +547,7 @@ async function createValidationContext({
 
   const validator =
     runtimeOverrides.createValidator?.(validatorDeps) ??
-    new RecipePreflightValidator(validatorDeps);
+    new RecipeValidationRunner(validatorDeps);
 
   return {
     validator,
@@ -445,10 +609,11 @@ async function loadModsFromContainer({ container, requestedMods, verbose, logger
  * @param {Array<string>} recipePaths - Recipe paths provided via CLI.
  * @returns {Array<string>} Ordered mod names.
  */
-function deriveMods(modConfig = {}, recipePaths = []) {
+function deriveMods(modConfig = {}, recipePaths = [], inferredMods = []) {
   const essential = Array.isArray(modConfig.essential) ? modConfig.essential : [];
   const optional = Array.isArray(modConfig.optional) ? modConfig.optional : [];
-  const modSet = new Set([...essential, ...optional]);
+  const extra = Array.isArray(inferredMods) ? inferredMods.filter(Boolean) : [];
+  const modSet = new Set([...essential, ...optional, ...extra]);
   const autoDetect = Boolean(modConfig.autoDetect);
 
   if (autoDetect) {

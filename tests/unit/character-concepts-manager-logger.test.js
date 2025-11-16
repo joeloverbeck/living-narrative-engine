@@ -13,14 +13,21 @@ import {
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import { CharacterConceptsManagerController } from '../../src/domUI/characterConceptsManagerController.js';
+import { tokens } from '../../src/dependencyInjection/tokens.js';
+import {
+  createTestContainer,
+  resolveControllerDependencies,
+} from '../common/testContainerConfig.js';
 
 describe('Character Concepts Manager - Logger Accessibility', () => {
   let mockLogger;
   let mockCharacterBuilderService;
   let mockEventBus;
   let controller;
+  let container;
+  let controllerDependencies;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Mock logger with all required methods
     mockLogger = {
       debug: jest.fn(),
@@ -48,16 +55,25 @@ describe('Character Concepts Manager - Logger Accessibility', () => {
       unsubscribe: jest.fn(),
     };
 
-    // Create controller instance
+    container = await createTestContainer({
+      mockServices: {
+        [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+      },
+    });
+    controllerDependencies = resolveControllerDependencies(container);
+
     controller = new CharacterConceptsManagerController({
       logger: mockLogger,
       characterBuilderService: mockCharacterBuilderService,
       eventBus: mockEventBus,
+      ...controllerDependencies,
     });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    controller = null;
+    container = null;
   });
 
   describe('Logger Getter', () => {

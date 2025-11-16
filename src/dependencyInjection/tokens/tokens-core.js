@@ -117,7 +117,7 @@ export const coreTokens = freeze({
   ClothingSlotValidator: 'ClothingSlotValidator',
   SlotResolver: 'SlotResolver',
   IAnatomyBlueprintRepository: 'IAnatomyBlueprintRepository',
-  IRecipePreflightValidator: 'IRecipePreflightValidator',
+  IRecipeValidationRunner: 'IRecipeValidationRunner',
   IAnatomySocketIndex: 'IAnatomySocketIndex',
   IAnatomyCacheCoordinator: 'IAnatomyCacheCoordinator',
   IEntityMatcherService: 'IEntityMatcherService',

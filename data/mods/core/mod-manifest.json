@@ -21,6 +21,7 @@
       "gender.component.json",
       "goals.component.json",
       "internal_tensions.component.json",
+      "known_to.component.json",
       "likes.component.json",
       "material.component.json",
       "motivations.component.json",
@@ -41,6 +42,7 @@
       "short_term_memory.component.json",
       "speech_patterns.component.json",
       "strengths.component.json",
+      "visible.component.json",
       "weaknesses.component.json"
     ],
     "conditions": [
@@ -187,16 +189,7 @@
       "environment.scope"
     ],
     "recipes": [],
-    "goals": [
-      "defeat_enemy.goal.json",
-      "find_food.goal.json",
-      "rest_safely.goal.json"
-    ],
-    "tasks": [
-      "arm_self.task.json",
-      "consume_nourishing_item.task.json",
-      "find_instrument.task.json",
-      "secure_shelter.task.json"
-    ]
+    "goals": [],
+    "tasks": []
   }
 }

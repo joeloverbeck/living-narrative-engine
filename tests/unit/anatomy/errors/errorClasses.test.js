@@ -401,7 +401,7 @@ describe('RecipeValidationError', () => {
     const str = error.toString();
 
     expect(str).toContain('docs/anatomy/troubleshooting.md');
-    expect(str).toContain('src/anatomy/validation/RecipePreflightValidator.js');
+    expect(str).toContain('src/anatomy/validation/RecipeValidationRunner.js');
   });
 });
 

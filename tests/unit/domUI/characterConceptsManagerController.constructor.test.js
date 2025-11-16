@@ -12,6 +12,7 @@ import {
 } from '@jest/globals';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
 import { CharacterConceptsManagerTestBase } from './characterConceptsManagerController.testUtils.enhanced.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 describe('CharacterConceptsManagerController - Constructor and Dependencies', () => {
   const testBase = new CharacterConceptsManagerTestBase();
@@ -111,11 +112,11 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
         getThematicDirections: jest.fn(),
       };
 
-      const controller = new CharacterConceptsManagerController({
-        logger: testBase.mocks.logger,
+      const controller = testBase.createController({
         characterBuilderService: partialService,
-        eventBus: testBase.mocks.eventBus,
-        schemaValidator: testBase.mocks.schemaValidator,
+        schemaValidator: testBase._controllerContainer.resolve(
+          tokens.ISchemaValidator
+        ),
       });
 
       expect(controller.characterBuilderService).not.toBe(partialService);

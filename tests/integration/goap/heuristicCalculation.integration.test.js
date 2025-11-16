@@ -79,6 +79,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
     goalDistanceHeuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator,
       numericConstraintEvaluator,
+      planningEffectsSimulator,
       logger: mockLogger,
     });
 

@@ -50,7 +50,7 @@ import ActivityDescriptionService from '../../../../src/anatomy/services/activit
 import ActivityDescriptionFacade from '../../../../src/anatomy/services/activityDescriptionFacade.js';
 import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import BlueprintProcessorService from '../../../../src/anatomy/services/blueprintProcessorService.js';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import { LayerCompatibilityService } from '../../../../src/clothing/validation/layerCompatibilityService.js';
 import { ClothingSlotValidator } from '../../../../src/clothing/validation/clothingSlotValidator.js';
 import { EquipmentOrchestrator } from '../../../../src/clothing/orchestration/equipmentOrchestrator.js';
@@ -827,10 +827,10 @@ describe('registerWorldAndEntity', () => {
       expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.ISlotGenerator);
     });
 
-    test('RecipePreflightValidator factory injects validator stack dependencies', () => {
+    test('RecipeValidationRunner factory injects validator stack dependencies', () => {
       registerWorldAndEntity(container);
 
-      const factory = getFactoryForToken(tokens.IRecipePreflightValidator);
+      const factory = getFactoryForToken(tokens.IRecipeValidationRunner);
       const dependencyMap = {
         [tokens.ILogger]: createTestLogger(),
         [tokens.IDataRegistry]: { get: jest.fn(), getAll: jest.fn() },
@@ -854,7 +854,7 @@ describe('registerWorldAndEntity', () => {
 
       const instance = factory(stubContainer);
 
-      expect(instance).toBeInstanceOf(RecipePreflightValidator);
+      expect(instance).toBeInstanceOf(RecipeValidationRunner);
       expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.IEntityMatcherService);
     });
   });

@@ -434,7 +434,13 @@ class GoapPlanner {
       return null;
     }
 
-    // 2. CRITICAL: Use scopeRegistry.getScopeAst(), NOT gameDataRepository.getScope()
+    // 2. Handle special scopes: 'self' and 'none' don't need parameter binding
+    if (task.planningScope === 'self' || task.planningScope === 'none') {
+      this.#logger.debug(`Task ${task.id} uses special scope ${task.planningScope}, no parameter binding needed`);
+      return {}; // Empty parameters for self-targeting tasks
+    }
+
+    // 3. CRITICAL: Use scopeRegistry.getScopeAst(), NOT gameDataRepository.getScope()
     const scopeAst = this.#scopeRegistry.getScopeAst(task.planningScope);
     if (!scopeAst) {
       this.#logger.warn(`Planning scope not found: ${task.planningScope}`, {
@@ -444,7 +450,7 @@ class GoapPlanner {
       return null;
     }
 
-    // 3. Get actor entity
+    // 4. Get actor entity
     const actorEntity = this.#entityManager.getEntityInstance(actorId);
     if (!actorEntity) {
       this.#logger.error(`Actor entity not found: ${actorId}`, {
@@ -454,7 +460,7 @@ class GoapPlanner {
       return null;
     }
 
-    // 4. CRITICAL: Build runtimeCtx matching RuntimeContext type exactly
+    // 5. CRITICAL: Build runtimeCtx matching RuntimeContext type exactly
     // Property name is "jsonLogicEval" not "jsonLogicService"
     // spatialIndexManager is REQUIRED
     const runtimeCtx = {
@@ -464,7 +470,7 @@ class GoapPlanner {
       logger: this.#logger,
     };
 
-    // 5. Resolve scope to entity set
+    // 6. Resolve scope to entity set
     try {
       const scopeResult = this.#scopeEngine.resolve(
         scopeAst,
@@ -482,7 +488,7 @@ class GoapPlanner {
         return null;
       }
 
-      // 6. Optimistic binding: take first entity from Set
+      // 7. Optimistic binding: take first entity from Set
       const iterator = scopeResult.values();
       const first = iterator.next();
 
@@ -494,7 +500,7 @@ class GoapPlanner {
         return null;
       }
 
-      // 7. Bind to parameter (convention: 'target' for single-target scopes)
+      // 8. Bind to parameter (convention: 'target' for single-target scopes)
       const boundParams = {
         target: first.value, // Entity ID string
       };

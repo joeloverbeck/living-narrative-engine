@@ -190,9 +190,9 @@ describe('Error Formatting Integration', () => {
       expect(str).toContain('Recipe cannot be loaded due to 3 validation error(s)');
       expect(str).toContain('Errors: 3');
       expect(str).toContain('Warnings: 2');
-      expect(str).toContain('Check RecipePreflightValidator for validation logic');
+      expect(str).toContain('Check RecipeValidationRunner for validation pipeline logic');
       expect(str).toContain('docs/anatomy/troubleshooting.md');
-      expect(str).toContain('src/anatomy/validation/RecipePreflightValidator.js');
+      expect(str).toContain('src/anatomy/validation/RecipeValidationRunner.js');
 
       // Verify JSON serialization
       expect(json.name).toBe('RecipeValidationError');

@@ -14,7 +14,7 @@ import { program } from 'commander';
 import chalk from 'chalk';
 import { promises as fs } from 'fs';
 import path from 'path';
-import RecipePreflightValidator from '../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../src/anatomy/validation/RecipeValidationRunner.js';
 import AppContainer from '../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../src/dependencyInjection/tokens.js';
@@ -46,6 +46,7 @@ async function createWizardContext(verbose = false) {
   const anatomyBlueprintRepository = container.resolve(tokens.IAnatomyBlueprintRepository);
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
   const slotGenerator = container.resolve(tokens.ISlotGenerator);
+  const entityMatcherService = container.resolve(tokens.IEntityMatcherService);
 
   // Load mods
   if (verbose) {
@@ -83,6 +84,7 @@ async function createWizardContext(verbose = false) {
     anatomyBlueprintRepository,
     schemaValidator,
     slotGenerator,
+    entityMatcherService,
     logger: {
       info: verbose ? (msg) => console.log(chalk.blue(msg)) : () => {},
       warn: (msg) => console.warn(chalk.yellow(`⚠️  ${msg}`)),
@@ -517,7 +519,7 @@ async function runWizard(options) {
 
     // Initialize context
     const context = await createWizardContext(options.verbose);
-    const validator = new RecipePreflightValidator(context);
+    const validator = new RecipeValidationRunner(context);
 
     // Step 1: Recipe ID
     const { recipeId } = await inquirer.prompt([

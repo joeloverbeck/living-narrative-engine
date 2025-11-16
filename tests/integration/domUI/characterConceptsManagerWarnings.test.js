@@ -16,7 +16,13 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
+import {
+  createMockCharacterBuilderService,
+  createTestContainer,
+  resolveControllerDependencies,
+} from '../../common/testContainerConfig.js';
 
 // Mock IndexedDB for testing
 const mockIndexedDB = {
@@ -27,10 +33,11 @@ global.indexedDB = mockIndexedDB;
 
 describe('CharacterConceptsManagerController - Warnings Integration Test', () => {
   let controller;
+  let container;
   let logger;
   let eventBus;
   let characterBuilderService;
-  let schemaValidator;
+  let controllerDependencies;
   let capturedWarnings = [];
 
   beforeEach(async () => {
@@ -121,35 +128,7 @@ describe('CharacterConceptsManagerController - Warnings Integration Test', () =>
       }
     }, 0);
 
-    // Create mock services directly
-    logger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    };
-
-    eventBus = {
-      dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()),
-      unsubscribe: jest.fn(),
-    };
-
-    characterBuilderService = {
-      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-      createCharacterConcept: jest.fn(),
-      updateCharacterConcept: jest.fn(),
-      deleteCharacterConcept: jest.fn(),
-      getThematicDirections: jest.fn().mockResolvedValue([]),
-      initialize: jest.fn().mockResolvedValue(undefined),
-      getCharacterConcept: jest.fn().mockResolvedValue(null),
-      generateThematicDirections: jest.fn().mockResolvedValue([]),
-    };
-
-    schemaValidator = {
-      validate: jest.fn().mockReturnValue({ valid: true }),
-      validateAgainstSchema: jest.fn().mockReturnValue({ valid: true }),
-    };
+    characterBuilderService = createMockCharacterBuilderService();
 
     // Create DOM structure
     document.body.innerHTML = `
@@ -206,18 +185,30 @@ describe('CharacterConceptsManagerController - Warnings Integration Test', () =>
       </div>
     `;
 
+    container = await createTestContainer({
+      mockServices: {
+        [tokens.CharacterBuilderService]: characterBuilderService,
+      },
+    });
+
+    logger = container.resolve(tokens.ILogger);
+    eventBus = container.resolve(tokens.ISafeEventDispatcher);
+    controllerDependencies = resolveControllerDependencies(container);
+
     // Create controller
     controller = new CharacterConceptsManagerController({
       logger,
       characterBuilderService,
       eventBus,
-      schemaValidator,
+      ...controllerDependencies,
     });
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
     controller?.destroy();
+    controller = null;
+    container = null;
   });
 
   describe('UIStateManager Initialization Handling', () => {

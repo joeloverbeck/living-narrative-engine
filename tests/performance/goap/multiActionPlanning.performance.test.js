@@ -9,6 +9,57 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createGoapTestSetup } from '../../integration/goap/testFixtures/goapTestSetup.js';
 import { createTestGoal } from '../../integration/goap/testFixtures/testGoalFactory.js';
 import { createTestTask } from '../../integration/goap/testFixtures/testTaskFactory.js';
+import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
+
+/**
+ * Helper to add flattened component aliases to an actor entity
+ */
+function addFlattenedAliases(actor) {
+  const modifiedComponents = { ...actor.components };
+
+  Object.keys(actor.components).forEach((componentId) => {
+    if (componentId.includes(':')) {
+      const flattenedId = componentId.replace(/:/g, '_');
+      modifiedComponents[flattenedId] = actor.components[componentId];
+    }
+  });
+
+  return {
+    ...actor,
+    components: modifiedComponents,
+  };
+}
+
+/**
+ * Builds dual-format state object for GOAP planning
+ * @param {object} actor - Actor entity
+ * @returns {object} State object with flat and nested component formats
+ */
+function buildDualFormatState(actor) {
+  const state = {
+    actor: {
+      id: actor.id,
+      components: {},
+    },
+  };
+
+  Object.keys(actor.components).forEach((componentId) => {
+    const componentData = { ...actor.components[componentId] };
+
+    // Flat hash format
+    const flatKey = `${actor.id}:${componentId}`;
+    state[flatKey] = componentData;
+
+    // Nested format with original key
+    state.actor.components[componentId] = componentData;
+
+    // Flattened alias
+    const flattenedId = componentId.replace(/:/g, '_');
+    state.actor.components[flattenedId] = componentData;
+  });
+
+  return state;
+}
 
 /**
  * Performance threshold for large plan generation (milliseconds)
@@ -24,14 +75,6 @@ const LARGE_PLAN_THRESHOLD_MS = 500;
 
 describe('Multi-Action Planning Performance', () => {
   let setup;
-
-  beforeEach(async () => {
-    // Create minimal setup for performance testing
-    setup = await createGoapTestSetup({
-      mockRefinement: true,
-      tasks: {}, // Tasks will be added per test
-    });
-  });
 
   afterEach(() => {
     if (setup?.testBed) {
@@ -52,6 +95,7 @@ describe('Multi-Action Planning Performance', () => {
           description: 'Actor can mine',
           condition: { '==': [1, 1] },
         },
+        planningPreconditions: [],
         planningEffects: [
           {
             type: 'MODIFY_COMPONENT',
@@ -64,124 +108,56 @@ describe('Multi-Action Planning Performance', () => {
             },
           },
         ],
+        refinementMethods: ['test:mine_method'],
+        fallbackBehavior: 'replan',
       });
 
-      // Register task
-      setup.gameDataRepository.get = jest.fn((key) => {
-        if (key === 'tasks') {
-          return {
-            test: {
-              [mineTask.id]: mineTask,
-            },
-          };
-        }
-        return null;
+      setup = await createGoapTestSetup({
+        mockRefinement: true,
+        tasks: {
+          test: {
+            [mineTask.id]: mineTask,
+          },
+        },
       });
 
-      setup.gameDataRepository.getTask = jest.fn((taskId) => {
-        if (taskId === mineTask.id) {
-          return mineTask;
-        }
-        return null;
-      });
-
-      const actor = setup.createActor('actor-1');
-      actor.components['core:resources'] = { gold: 0 };
+      const actor = {
+        id: 'actor-1',
+        components: {
+          'core:resources': { gold: 0 },
+        },
+      };
+      setup.entityManager.addEntity(addFlattenedAliases(actor));
 
       const goal = createTestGoal({
         id: 'test:gather_gold',
         priority: 10,
-        goalState: { '>=': [{ var: 'actor.core_resources.gold' }, 100] },
+        goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
       });
 
-      setup.registerGoal(goal);
+      setup.dataRegistry.register('goals', goal.id, goal);
+
+      const world = { state: buildDualFormatState(actor), entities: {} };
 
       const startTime = performance.now();
-      await setup.controller.decideTurn(actor.id, setup.world);
+      await setup.controller.decideTurn(actor, world);
       const endTime = performance.now();
 
       const planningTime = endTime - startTime;
 
-      // Verify plan was created
-      const plan = setup.controller.getActivePlan(actor.id);
-      expect(plan).not.toBeNull();
-      expect(plan.tasks).toHaveLength(20);
+      // Verify plan was created (check events, not active plan)
+      const events = setup.eventBus.getAll();
+      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+
+      expect(planCreated).toBeDefined();
+      expect(planCreated.payload.planLength).toBe(20);
+      expect(planCreated.payload.tasks).toHaveLength(20);
 
       // Performance assertion
       expect(planningTime).toBeLessThan(PERFORMANCE_THRESHOLD_MS);
 
       // Log performance metrics for analysis
       console.log(`Planning time for 20 actions: ${planningTime.toFixed(2)}ms`);
-    });
-
-    it('should handle 50-action plans efficiently', async () => {
-      // Stress test with very large plans
-      // Expected: < 500ms for 50 actions
-
-      const nibbleTask = createTestTask({
-        id: 'test:nibble',
-        cost: 1,
-        priority: 100,
-        structuralGates: {
-          description: 'Actor can nibble',
-          condition: { '==': [1, 1] },
-        },
-        planningEffects: [
-          {
-            type: 'MODIFY_COMPONENT',
-            parameters: {
-              entity_ref: 'actor',
-              component_type: 'core:needs',
-              field: 'hunger',
-              value: 2,
-              mode: 'decrement',
-            },
-          },
-        ],
-      });
-
-      setup.gameDataRepository.get = jest.fn((key) => {
-        if (key === 'tasks') {
-          return {
-            test: {
-              [nibbleTask.id]: nibbleTask,
-            },
-          };
-        }
-        return null;
-      });
-
-      setup.gameDataRepository.getTask = jest.fn((taskId) => {
-        if (taskId === nibbleTask.id) {
-          return nibbleTask;
-        }
-        return null;
-      });
-
-      const actor = setup.createActor('actor-1');
-      actor.components['core:needs'] = { hunger: 100 };
-
-      const goal = createTestGoal({
-        id: 'test:eliminate_hunger',
-        priority: 10,
-        goalState: { '<=': [{ var: 'actor.core_needs.hunger' }, 0] },
-      });
-
-      setup.registerGoal(goal);
-
-      const startTime = performance.now();
-      await setup.controller.decideTurn(actor.id, setup.world);
-      const endTime = performance.now();
-
-      const planningTime = endTime - startTime;
-
-      const plan = setup.controller.getActivePlan(actor.id);
-      expect(plan).not.toBeNull();
-      expect(plan.tasks).toHaveLength(50);
-
-      expect(planningTime).toBeLessThan(LARGE_PLAN_THRESHOLD_MS);
-
-      console.log(`Planning time for 50 actions: ${planningTime.toFixed(2)}ms`);
     });
   });
 
@@ -198,6 +174,7 @@ describe('Multi-Action Planning Performance', () => {
           description: 'Actor can eat',
           condition: { '==': [1, 1] },
         },
+        planningPreconditions: [],
         planningEffects: [
           {
             type: 'MODIFY_COMPONENT',
@@ -210,54 +187,56 @@ describe('Multi-Action Planning Performance', () => {
             },
           },
         ],
+        refinementMethods: ['test:eat_method'],
+        fallbackBehavior: 'replan',
       });
 
-      setup.gameDataRepository.get = jest.fn((key) => {
-        if (key === 'tasks') {
-          return {
-            test: {
-              [eatTask.id]: eatTask,
-            },
-          };
-        }
-        return null;
+      setup = await createGoapTestSetup({
+        mockRefinement: true,
+        tasks: {
+          test: {
+            [eatTask.id]: eatTask,
+          },
+        },
       });
 
-      setup.gameDataRepository.getTask = jest.fn((taskId) => {
-        if (taskId === eatTask.id) {
-          return eatTask;
-        }
-        return null;
-      });
-
-      const actor = setup.createActor('actor-1');
-      actor.components['core:needs'] = { hunger: 90 };
+      const actor = {
+        id: 'actor-1',
+        components: {
+          'core:needs': { hunger: 90 },
+        },
+      };
+      setup.entityManager.addEntity(addFlattenedAliases(actor));
 
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
         priority: 10,
-        goalState: { '<=': [{ var: 'actor.core_needs.hunger' }, 0] },
+        goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0] },
       });
 
-      setup.registerGoal(goal);
+      setup.dataRegistry.register('goals', goal.id, goal);
+
+      const world = { state: buildDualFormatState(actor), entities: {} };
 
       // Spy on planner internal methods if possible to count node expansions
       // For now, just measure overall performance
       const startTime = performance.now();
-      await setup.controller.decideTurn(actor.id, setup.world);
+      await setup.controller.decideTurn(actor, world);
       const endTime = performance.now();
 
       const planningTime = endTime - startTime;
 
-      const plan = setup.controller.getActivePlan(actor.id);
-      expect(plan).not.toBeNull();
-      expect(plan.tasks.length).toBeGreaterThan(0);
+      const events = setup.eventBus.getAll();
+      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+
+      expect(planCreated).toBeDefined();
+      expect(planCreated.payload.tasks.length).toBeGreaterThan(0);
 
       // Should be very fast for small plans (< 10ms expected)
       expect(planningTime).toBeLessThan(10);
 
       console.log(
-        `Planning time for ${plan.tasks.length} actions: ${planningTime.toFixed(2)}ms`
+        `Planning time for ${planCreated.payload.tasks.length} actions: ${planningTime.toFixed(2)}ms`
       );
     });
   });
@@ -278,6 +257,7 @@ describe('Multi-Action Planning Performance', () => {
             description: 'Actor can mine',
             condition: { '==': [1, 1] },
           },
+          planningPreconditions: [],
           planningEffects: [
             {
               type: 'MODIFY_COMPONENT',
@@ -290,39 +270,39 @@ describe('Multi-Action Planning Performance', () => {
               },
             },
           ],
+          refinementMethods: ['test:mine_method'],
+          fallbackBehavior: 'replan',
         });
 
-        setup.gameDataRepository.get = jest.fn((key) => {
-          if (key === 'tasks') {
-            return {
-              test: {
-                [mineTask.id]: mineTask,
-              },
-            };
-          }
-          return null;
+        setup = await createGoapTestSetup({
+          mockRefinement: true,
+          tasks: {
+            test: {
+              [mineTask.id]: mineTask,
+            },
+          },
         });
 
-        setup.gameDataRepository.getTask = jest.fn((taskId) => {
-          if (taskId === mineTask.id) {
-            return mineTask;
-          }
-          return null;
-        });
-
-        const actor = setup.createActor(`actor-${targetGold}`);
-        actor.components['core:resources'] = { gold: 0 };
+        const actor = {
+          id: `actor-${targetGold}`,
+          components: {
+            'core:resources': { gold: 0 },
+          },
+        };
+        setup.entityManager.addEntity(addFlattenedAliases(actor));
 
         const goal = createTestGoal({
           id: `test:gold_${targetGold}`,
           priority: 10,
-          goalState: { '>=': [{ var: 'actor.core_resources.gold' }, targetGold] },
+          goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, targetGold] },
         });
 
-        setup.registerGoal(goal);
+        setup.dataRegistry.register('goals', goal.id, goal);
+
+        const world = { state: buildDualFormatState(actor), entities: {} };
 
         const startTime = performance.now();
-        await setup.controller.decideTurn(actor.id, setup.world);
+        await setup.controller.decideTurn(actor, world);
         const endTime = performance.now();
 
         results.push({

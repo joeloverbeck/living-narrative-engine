@@ -1,6 +1,6 @@
 /**
  * @file Centralized entity matching service for anatomy validation
- * @see src/anatomy/validation/RecipePreflightValidator.js
+ * @see src/anatomy/validation/RecipeValidationRunner.js
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
@@ -12,7 +12,7 @@ import { BaseService } from '../../utils/serviceBase.js';
  * Provides centralized entity matching logic for anatomy recipe validation
  * Eliminates code duplication and improves testability
  *
- * Extracted from RecipePreflightValidator to support:
+ * Shared with RecipeValidationRunner to support:
  * - Basic entity matching for slots and patterns
  * - Slot-specific matching with allowedTypes filtering
  * - Property requirement merging

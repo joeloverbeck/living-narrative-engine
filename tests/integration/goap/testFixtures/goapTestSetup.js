@@ -47,7 +47,12 @@ function createMockDataRegistry() {
   return {
     register: jest.fn((category, id, data) => {
       if (category === 'goals') {
-        goals.set(id, data);
+        if (data === null) {
+          // Remove goal when null is registered (for cleanup)
+          goals.delete(id);
+        } else {
+          goals.set(id, data);
+        }
       }
     }),
     getAll: jest.fn((category) => {
@@ -343,6 +348,18 @@ export async function createGoapTestSetup(config = {}) {
     parameterResolutionService,
   });
 
+  // Helper methods for tests
+  const createActor = (actorId) => {
+    entityManager.createEntity(actorId);
+    return entityManager.getEntityInstance(actorId);
+  };
+
+  const registerGoal = (goal) => {
+    dataRegistry.register('goals', goal.id, goal);
+  };
+
+  const world = {}; // Simple world state for testing
+
   return {
     testBed,
     controller,
@@ -361,5 +378,9 @@ export async function createGoapTestSetup(config = {}) {
     spatialIndexManager,
     effectsSimulator,
     heuristicRegistry,
+    // Helper methods
+    createActor,
+    registerGoal,
+    world,
   };
 }

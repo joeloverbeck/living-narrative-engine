@@ -448,7 +448,11 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getAll();
+      console.log('[TEST DEBUG] Events:', events.map(e => e.type));
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+
+      const activePlan = setup.controller.getActivePlan(actor.id);
+      console.log('[TEST DEBUG] Active plan:', activePlan);
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(20);

@@ -18,6 +18,7 @@ import {
   createMockCharacterBuilderService,
   createFastIndexedDBMock,
   createMinimalModalDOM,
+  resolveControllerDependencies,
 } from '../../common/testContainerConfig.js';
 import {
   flushPromises,
@@ -116,10 +117,13 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       });
 
     // Create controller
+    const controllerDependencies = resolveControllerDependencies(container);
+
     controller = new CharacterConceptsManagerController({
       logger,
       characterBuilderService,
       eventBus,
+      ...controllerDependencies,
     });
 
     // Initialize controller and wait for IndexedDB
@@ -128,6 +132,9 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
   });
 
   afterEach(() => {
+    controller?.destroy?.();
+    controller = null;
+
     // Unsubscribe all event listeners
     eventUnsubscribers.forEach((unsubscribe) => {
       if (typeof unsubscribe === 'function') {

@@ -116,7 +116,7 @@ describe('validate-recipe CLI integration tests', () => {
     await contentPhase.execute(context);
 
     // Create validator using DI container (ensures all dependencies are provided)
-    validator = container.resolve(tokens.IRecipePreflightValidator);
+    validator = container.resolve(tokens.IRecipeValidationRunner);
   });
 
   afterAll(() => {

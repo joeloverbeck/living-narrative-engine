@@ -11,6 +11,7 @@
 export function createTestTask(overrides = {}) {
   return {
     id: 'test:task',
+    planningScope: 'self', // Self-targeting task (no parameters needed)
     structuralGates: null, // No filtering by default
     planningPreconditions: [],
     planningEffects: [
@@ -36,6 +37,7 @@ export function createTestTask(overrides = {}) {
 export function createConsumeTask() {
   return {
     id: 'test:consume_nourishing_item',
+    planningScope: 'self', // Self-targeting task
     structuralGates: null,
     planningPreconditions: [
       {
@@ -66,6 +68,7 @@ export function createConsumeTask() {
 export function createGatherTask() {
   return {
     id: 'test:gather_resources',
+    planningScope: 'self', // Self-targeting task
     structuralGates: null,
     planningPreconditions: [],
     planningEffects: [
@@ -90,6 +93,7 @@ export function createGatherTask() {
 export function createBuildShelterTask() {
   return {
     id: 'test:build_shelter',
+    planningScope: 'self', // Self-targeting task
     structuralGates: null,
     planningPreconditions: [
       {
@@ -121,6 +125,7 @@ export function createBuildShelterTask() {
 export function createReplanTask() {
   return {
     id: 'test:replan_task',
+    planningScope: 'self', // Self-targeting task
     structuralGates: null,
     planningPreconditions: [],
     planningEffects: [],
@@ -136,6 +141,7 @@ export function createReplanTask() {
 export function createFailTask() {
   return {
     id: 'test:fail_task',
+    planningScope: 'self', // Self-targeting task
     structuralGates: null,
     planningPreconditions: [],
     planningEffects: [],
@@ -151,6 +157,7 @@ export function createFailTask() {
 export function createContinueTask() {
   return {
     id: 'test:continue_task',
+    planningScope: 'self', // Self-targeting task
     structuralGates: null,
     planningPreconditions: [],
     planningEffects: [],

@@ -8,7 +8,7 @@
  * - Metadata sharing between validators
  * - Context derivation for configuration overrides
  * - Strict dependency validation
- * @see src/anatomy/validation/RecipePreflightValidator.js - Will consume this context
+ * @see src/anatomy/validation/RecipeValidationRunner.js - Will consume this context
  * @see src/interfaces/IRecipeValidator.js - Validators receive context via options
  */
 

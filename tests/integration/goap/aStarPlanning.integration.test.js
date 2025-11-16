@@ -127,6 +127,7 @@ describe('GOAP A* Planner - Integration', () => {
     const goalDistanceHeuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator: jsonLogicService,
       numericConstraintEvaluator,
+      planningEffectsSimulator: effectsSimulator,
       logger: testBed.createMockLogger(),
     });
 

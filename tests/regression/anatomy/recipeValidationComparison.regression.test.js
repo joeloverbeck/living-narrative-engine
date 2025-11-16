@@ -2,7 +2,7 @@ import { describe, it, expect, jest } from '@jest/globals';
 import path from 'path';
 import { promises as fs } from 'fs';
 import { executeRecipeValidation } from '../../../scripts/validate-recipe-v2.js';
-import RecipePreflightValidator from '../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../src/anatomy/validation/RecipeValidationRunner.js';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 
 jest.mock('chalk', () => ({
@@ -31,7 +31,7 @@ const FIXTURE_PATHS = {
 };
 
 describe('Recipe Validation Comparison Regression Suite', () => {
-  describe('CLI vs RecipePreflightValidator parity', () => {
+  describe('CLI vs RecipeValidationRunner parity', () => {
     it('maintains parity for the human male recipe', async () => {
       const { cliReport, validatorReport } = await performComparison(
         RECIPE_PATHS.humanoid
@@ -158,6 +158,35 @@ describe('Recipe Validation Comparison Regression Suite', () => {
   });
 });
 
+describe('Recipe usage detection', () => {
+  it('loads referencing mods so recipe usage warnings remain accurate', async () => {
+    const runtimeOverrides = {
+      console: createSilentConsole(),
+    };
+
+    const result = await executeRecipeValidation(
+      ['data/mods/anatomy/recipes/writhing_observer.recipe.json'],
+      {},
+      runtimeOverrides
+    );
+
+    const report = result.results[0];
+    expect(report).toBeDefined();
+    const usageWarnings = report.warnings.filter(
+      (warning) => warning.type === 'RECIPE_UNUSED'
+    );
+    expect(usageWarnings).toHaveLength(0);
+    expect(report.passed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          check: 'recipe_usage',
+          message: expect.stringContaining('referenced'),
+        }),
+      ])
+    );
+  });
+});
+
 async function performComparison(recipePath, options = {}) {
   let capturedValidator = null;
   const transformValidatorDeps = options.transformValidatorDeps;
@@ -169,7 +198,7 @@ async function performComparison(recipePath, options = {}) {
 
   runtimeOverrides.createValidator = (deps) => {
     const finalDeps = transformValidatorDeps ? transformValidatorDeps(deps) : deps;
-    capturedValidator = new RecipePreflightValidator(finalDeps);
+    capturedValidator = new RecipeValidationRunner(finalDeps);
     return capturedValidator;
   };
 

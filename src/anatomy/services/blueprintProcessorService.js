@@ -8,7 +8,7 @@
  * - Handle V1 blueprints as pass-through (no processing needed)
  * - Merge additionalSlots with generated slots (additionalSlots take precedence)
  * @see src/anatomy/bodyBlueprintFactory/blueprintLoader.js - Production processing
- * @see src/anatomy/validation/RecipePreflightValidator.js - Validation processing
+ * @see src/anatomy/validation/RecipeValidationRunner.js - Validation processing
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
