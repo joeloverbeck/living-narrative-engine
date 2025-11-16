@@ -45,6 +45,7 @@ class PrimitiveActionStepExecutor {
   constructor({
     parameterResolutionService,
     container,
+    appContainer,
     operationInterpreter,
     actionIndex,
     gameDataRepository,
@@ -58,7 +59,9 @@ class PrimitiveActionStepExecutor {
         requiredMethods: ['resolve', 'clearCache'],
       }
     );
-    validateDependency(container, 'IAppContainer', logger, {
+    const resolvedContainer = container ?? appContainer;
+
+    validateDependency(resolvedContainer, 'IAppContainer', logger, {
       requiredMethods: ['resolve'],
     });
     validateDependency(operationInterpreter, 'IOperationInterpreter', logger, {
@@ -75,7 +78,7 @@ class PrimitiveActionStepExecutor {
     });
 
     this.#parameterResolutionService = parameterResolutionService;
-    this.#container = container;
+    this.#container = resolvedContainer;
     this.#operationInterpreter = operationInterpreter;
     this.#actionIndex = actionIndex;
     this.#gameDataRepository = gameDataRepository;

@@ -83,6 +83,7 @@ class MethodSelectionService {
     gameDataRepository,
     contextAssemblyService,
     jsonLogicService,
+    jsonLogicEvaluationService,
     logger,
   }) {
     validateDependency(gameDataRepository, 'IGameDataRepository', logger, {
@@ -91,7 +92,9 @@ class MethodSelectionService {
     validateDependency(contextAssemblyService, 'IContextAssemblyService', logger, {
       requiredMethods: ['assembleRefinementContext', 'assembleConditionContext'],
     });
-    validateDependency(jsonLogicService, 'JsonLogicEvaluationService', logger, {
+    const logicService = jsonLogicService ?? jsonLogicEvaluationService;
+
+    validateDependency(logicService, 'JsonLogicEvaluationService', logger, {
       requiredMethods: ['evaluate'],
     });
     validateDependency(logger, 'ILogger', logger, {
@@ -100,7 +103,7 @@ class MethodSelectionService {
 
     this.#gameDataRepository = gameDataRepository;
     this.#contextAssemblyService = contextAssemblyService;
-    this.#jsonLogicService = jsonLogicService;
+    this.#jsonLogicService = logicService;
     this.#logger = logger;
   }
 

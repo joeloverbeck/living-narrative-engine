@@ -49,6 +49,7 @@ class RefinementEngine {
   constructor({
     methodSelectionService,
     container,
+    appContainer,
     primitiveActionStepExecutor,
     conditionalStepExecutor,
     contextAssemblyService,
@@ -64,7 +65,9 @@ class RefinementEngine {
         requiredMethods: ['selectMethod'],
       }
     );
-    validateDependency(container, 'AppContainer', logger, {
+    const resolvedContainer = container ?? appContainer;
+
+    validateDependency(resolvedContainer, 'AppContainer', logger, {
       requiredMethods: ['resolve'],
     });
     validateDependency(
@@ -102,7 +105,7 @@ class RefinementEngine {
     });
 
     this.#methodSelectionService = methodSelectionService;
-    this.#container = container;
+    this.#container = resolvedContainer;
     this.#primitiveActionStepExecutor = primitiveActionStepExecutor;
     this.#conditionalStepExecutor = conditionalStepExecutor;
     this.#contextAssemblyService = contextAssemblyService;

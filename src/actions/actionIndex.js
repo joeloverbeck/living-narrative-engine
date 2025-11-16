@@ -37,6 +37,13 @@ export class ActionIndex {
   #byForbiddenComponent = new Map();
 
   /**
+   * Direct lookup table for action definitions by their id.
+   *
+   * @type {Map<string, ActionDefinition>}
+   */
+  #byActionId = new Map();
+
+  /**
    * Instantiates ActionIndex.
    *
    * @param {{logger: ILogger, entityManager: EntityManager}} deps ActionIndex's dependencies.
@@ -75,6 +82,7 @@ export class ActionIndex {
     this.#byActorComponent.clear();
     this.#byForbiddenComponent.clear();
     this.#noActorRequirement = [];
+    this.#byActionId.clear();
 
     for (const actionDef of allActionDefinitions) {
       if (!actionDef || typeof actionDef !== 'object') {
@@ -83,6 +91,10 @@ export class ActionIndex {
         );
         continue;
       }
+
+       if (typeof actionDef.id === 'string' && actionDef.id.trim()) {
+         this.#byActionId.set(actionDef.id, actionDef);
+       }
 
       const requiredActorComponents = actionDef.required_components?.actor;
 
@@ -125,6 +137,24 @@ export class ActionIndex {
     this.#logger.debug(
       `Action index built. ${this.#byActorComponent.size} component-to-action maps created.`
     );
+  }
+
+  /**
+   * Retrieves a single action definition by its id.
+   * Used by GOAP refinement to fetch concrete actions during execution.
+   *
+   * @param {string} actionId - Namespaced action id.
+   * @returns {ActionDefinition|null}
+   */
+  getActionById(actionId) {
+    if (typeof actionId !== 'string' || !actionId.trim()) {
+      this.#logger.warn(
+        `ActionIndex.getActionById called with invalid id: ${actionId}`
+      );
+      return null;
+    }
+
+    return this.#byActionId.get(actionId) ?? null;
   }
 
   /**

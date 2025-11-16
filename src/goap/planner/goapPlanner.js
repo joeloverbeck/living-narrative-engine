@@ -300,6 +300,11 @@ class GoapPlanner {
         }
       }
 
+      // Expose shorthand actor reference if available in nested state format
+      if (state.actor && typeof state.actor === 'object') {
+        context.actor = state.actor;
+      }
+
       return context;
     } catch (err) {
       this.#logger.error('Context building failed', err, { state });
@@ -662,39 +667,12 @@ class GoapPlanner {
 
     const numericOperators = new Set(['<=', '>=', '<', '>', '+', '-', '*', '/', '%']);
 
-    const checkForNumericOps = (obj) => {
-      if (!obj || typeof obj !== 'object') {
-        return false;
-      }
+    const topLevelKeys = Object.keys(goal.goalState);
+    if (topLevelKeys.length !== 1) {
+      return false; // Composite goals treated as boolean for distance heuristics
+    }
 
-      // Check if any key is a numeric operator
-      for (const key of Object.keys(obj)) {
-        if (numericOperators.has(key)) {
-          return true;
-        }
-      }
-
-      // Recursively check nested objects and arrays
-      for (const value of Object.values(obj)) {
-        if (typeof value === 'object' && value !== null) {
-          if (Array.isArray(value)) {
-            for (const item of value) {
-              if (checkForNumericOps(item)) {
-                return true;
-              }
-            }
-          } else {
-            if (checkForNumericOps(value)) {
-              return true;
-            }
-          }
-        }
-      }
-
-      return false;
-    };
-
-    return checkForNumericOps(goal.goalState);
+    return numericOperators.has(topLevelKeys[0]);
   }
 
   /**
@@ -841,6 +819,15 @@ class GoapPlanner {
     const maxTime = options.maxTime || 5000;
     const maxDepth = options.maxDepth || 20;
 
+    // Normalize maxCost upfront to keep structural depth checks fully independent from cost
+    const rawCostLimit = goal?.maxCost;
+    const normalizedCostLimit =
+      rawCostLimit === undefined || rawCostLimit === null
+        ? Infinity
+        : Number(rawCostLimit);
+    const hasCostLimit = Number.isFinite(normalizedCostLimit);
+    const maxCostLimit = hasCostLimit ? normalizedCostLimit : Infinity;
+
     this.#logger.info('Starting A* search', {
       actorId,
       goalId: goal.id,
@@ -856,9 +843,7 @@ class GoapPlanner {
     }
 
     // 2.1 Quick feasibility check (if maxCost is set)
-    const maxCost = goal.maxCost || Infinity;
-
-    if (maxCost !== Infinity) {
+    if (hasCostLimit) {
       // Only check if a limit is set
       const estimatedCost = this.#heuristicRegistry.calculate(
         'goal-distance',
@@ -867,10 +852,10 @@ class GoapPlanner {
         taskLibrary // Pass task library array directly
       );
 
-      if (estimatedCost > maxCost) {
+      if (estimatedCost > maxCostLimit) {
         this.#logger.warn('Goal estimated cost exceeds limit', {
           estimatedCost,
-          maxCost,
+          maxCost: maxCostLimit,
           goalId: goal.id,
           actorId,
         });
@@ -950,19 +935,26 @@ class GoapPlanner {
         });
       }
 
+      // Depth semantics (GOAPNUMPLAHAR-001): depth == path length (task count), never cumulative cost
+      const currentPathLength = current.getPath().length;
+
       this.#logger.debug('Expanding node', {
         gScore: current.gScore,
         hScore: current.hScore,
         fScore: current.fScore,
         task: current.task?.id,
+        planLength: currentPathLength,
+        maxDepth,
       });
 
       // 7.4 Goal check - BEFORE adding to closed set
       if (this.#goalSatisfied(current.state, goal)) {
         this.#logger.info('Goal reached', {
           nodesExpanded,
-          planLength: current.gScore,
+          planLength: currentPathLength,
           timeElapsed: Date.now() - startTime,
+          gScore: current.gScore,
+          maxDepth,
         });
         return {
           tasks: current.getPath(),
@@ -972,20 +964,19 @@ class GoapPlanner {
       }
 
       // 7.4.1 Cost limit check
-      const maxCost = goal.maxCost || Infinity;
-      if (current.gScore > maxCost) {
+      if (hasCostLimit && current.gScore > maxCostLimit) {
         this.#logger.debug('Node exceeds cost limit, skipping', {
           currentCost: current.gScore,
-          maxCost,
-          actionCount: current.getPath().length,
+          maxCost: maxCostLimit,
+          actionCount: currentPathLength,
         });
         continue; // Skip this node, try other paths
       }
 
       // 7.4.2 Action count limit check
       const maxActions = goal.maxActions || 20; // Default: prevent runaway plans
-      const currentPathLength = current.getPath().length;
       if (currentPathLength >= maxActions) {
+        // Structural gate: number of abstract tasks, cost is handled separately by goal.maxCost
         this.#logger.debug('Node exceeds action count limit, skipping', {
           actionCount: currentPathLength,
           maxActions,
@@ -999,9 +990,10 @@ class GoapPlanner {
       closedSet.add(currentHash);
 
       // 7.6 Check depth limit
-      if (current.gScore >= maxDepth) {
+      // Depth guard must reflect path length (task count) to stay aligned with specs/goap-system-specs.md
+      if (currentPathLength >= maxDepth) {
         this.#logger.debug('Depth limit reached for node', {
-          depth: current.gScore,
+          planLength: currentPathLength,
           maxDepth,
         });
         continue; // Skip expanding this node

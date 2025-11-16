@@ -145,6 +145,39 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   /**
+   * Backwards-compatible alias consumed by GOAP refinement services.
+   * @returns {ActionDefinition[]}
+   */
+  getAllActions() {
+    return this.getAllActionDefinitions();
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  //  Task definitions (GOAP planning)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * @param {string} id
+   * @returns {object | null}
+   */
+  getTask(id) {
+    if (typeof id !== 'string' || !id.trim()) {
+      this.#logger.warn(`GameDataRepository.getTask called with invalid ID: ${id}`);
+      return null;
+    }
+
+    return this.#registry.get('tasks', id) ?? null;
+  }
+
+  /**
+   * @returns {object[]}
+   */
+  getAllTasks() {
+    const tasks = this.#registry.getAll('tasks');
+    return Array.isArray(tasks) ? tasks : [];
+  }
+
+  /**
    * @param {string} id
    * @returns {ActionDefinition | null}
    */

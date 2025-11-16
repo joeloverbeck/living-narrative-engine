@@ -151,6 +151,21 @@ export function registerInfrastructure(container) {
   );
   safeDebug(`Registered ${String(tokens.IGameDataRepository)}.`);
 
+  // Some subsystems (notably GOAP) still resolve the concrete token while the
+  // rest of the runtime relies on the interface to allow mocking in tests.
+  // Bridge both tokens to the same singleton instance so newer registrations
+  // (IGameDataRepository) and legacy ones (GameDataRepository) stay in sync.
+  container.register(
+    tokens.GameDataRepository,
+    (c) => c.resolve(tokens.IGameDataRepository),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(
+    `Aliased ${String(tokens.GameDataRepository)} to ${String(
+      tokens.IGameDataRepository
+    )}.`
+  );
+
   container.register(
     tokens.IValidatedEventDispatcher,
     (c) =>

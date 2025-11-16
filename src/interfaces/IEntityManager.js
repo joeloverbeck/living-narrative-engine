@@ -18,6 +18,29 @@ export class IEntityManager {
   }
 
   /**
+    * Retrieves summary information for an entity by ID.
+    * Alias kept for subsystems that expect `getEntity` rather than
+    * `getEntityInstance` (e.g. GOAP parameter resolution).
+    *
+    * @param {string} entityId The ID of the entity to retrieve.
+    * @returns {Entity | undefined} The entity if present, otherwise undefined.
+    */
+  getEntity(entityId) {
+    throw new Error('IEntityManager.getEntity not implemented.');
+  }
+
+  /**
+    * Indicates whether an entity with the provided ID exists.
+    * Used by GOAP planning to validate references resolved at runtime.
+    *
+    * @param {string} entityId The ID to check.
+    * @returns {boolean} True if the entity exists.
+    */
+  hasEntity(entityId) {
+    throw new Error('IEntityManager.hasEntity not implemented.');
+  }
+
+  /**
    * Creates a new Entity instance based on its definition ID.
    *
    * @param {string} definitionId - The ID of the entity definition to use.
@@ -54,6 +77,18 @@ export class IEntityManager {
    */
   getComponentData(instanceId, componentTypeId) {
     throw new Error('IEntityManager.getComponentData not implemented.');
+  }
+
+  /**
+   * Backwards-compatible alias for getComponentData used by legacy systems
+   * and GOAP services.
+   *
+   * @param {string} instanceId
+   * @param {string} componentTypeId
+   * @returns {object | undefined}
+   */
+  getComponent(instanceId, componentTypeId) {
+    throw new Error('IEntityManager.getComponent not implemented.');
   }
 
   /**

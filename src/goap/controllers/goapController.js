@@ -103,6 +103,7 @@ class GoapController {
     planInvalidationDetector,
     contextAssemblyService,
     jsonLogicService,
+    jsonLogicEvaluationService,
     dataRegistry,
     eventBus,
     logger,
@@ -132,7 +133,9 @@ class GoapController {
         requiredMethods: ['assemblePlanningContext'],
       }
     );
-    validateDependency(jsonLogicService, 'JsonLogicEvaluationService', this.#logger, {
+    const logicService = jsonLogicService ?? jsonLogicEvaluationService;
+
+    validateDependency(logicService, 'JsonLogicEvaluationService', this.#logger, {
       requiredMethods: ['evaluate'],
     });
     validateDependency(dataRegistry, 'IDataRegistry', this.#logger, {
@@ -149,7 +152,7 @@ class GoapController {
     this.#refinementEngine = refinementEngine;
     this.#invalidationDetector = planInvalidationDetector;
     this.#contextAssemblyService = contextAssemblyService;
-    this.#jsonLogicService = jsonLogicService;
+    this.#jsonLogicService = logicService;
     this.#dataRegistry = dataRegistry;
     this.#eventBus = eventBus;
     this.#parameterResolutionService = parameterResolutionService;
@@ -278,6 +281,14 @@ class GoapController {
         planLength: planResult.tasks.length,
         tasks: planResult.tasks.map((t) => t.taskId),
       });
+
+      if (planResult.tasks.length === 0) {
+        this.#logger.info('Planner returned empty plan (goal already satisfied)', {
+          actorId: actor.id,
+          goalId: goal.id,
+        });
+        return null;
+      }
 
       // 8. Create and store plan
       this.#activePlan = this.#createPlan(goal, planResult.tasks, actor.id);

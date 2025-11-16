@@ -206,10 +206,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false); // Goal never satisfied
-      mockHeuristicRegistry.calculate
-        .mockReturnValueOnce(10) // Initial heuristic
-        .mockReturnValueOnce(10) // Distance check - current distance
-        .mockReturnValueOnce(10); // Distance check - next distance (no progress)
+      mockHeuristicRegistry.calculate.mockImplementation(() => 10); // No progress toward goal
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,
@@ -882,6 +879,7 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
       const goal = {
         id: 'never-finish',
         goalState: { '==': [{ var: 'actor.core.hungry' }, false] },
+        maxActions: 200, // Allow deep plans so node tracking reaches 100 expansions
       };
 
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
@@ -971,6 +969,101 @@ describe('GoapPlanner - plan() Method (A* Search)', () => {
         nodesExplored: expect.any(Number),
       });
       expect(plan.tasks).toHaveLength(0); // Empty plan - already at goal
+    });
+  });
+
+  describe('13. Depth semantics and telemetry instrumentation', () => {
+    function setupHighCostHealingScenario({ stepValue = 10, targetHp = 100 } = {}) {
+      mockRepository.get.mockReturnValue({
+        core: {
+          'core:heal_10': {
+            id: 'core:heal_10',
+            cost: stepValue,
+            planningEffects: [{ op: 'increment', path: 'actor:hp' }],
+          },
+        },
+      });
+
+      mockJsonLogicService.evaluateCondition.mockImplementation((condition, context) => {
+        const hp = context?.actor?.hp ?? 0;
+        return hp >= targetHp;
+      });
+
+      mockHeuristicRegistry.calculate.mockImplementation((heuristicName, state) => {
+        const hp = state?.['actor:hp'] ?? 0;
+        const remaining = Math.max(0, targetHp - hp);
+        return Math.ceil(remaining / stepValue);
+      });
+
+      mockEffectsSimulator.simulateEffects.mockImplementation((currentState) => {
+        const hp = currentState['actor:hp'] ?? 0;
+        return {
+          success: true,
+          state: {
+            ...currentState,
+            'actor:hp': hp + stepValue,
+          },
+        };
+      });
+    }
+
+    it('should allow short high-cost plans when depth limit is satisfied', () => {
+      setupHighCostHealingScenario({ stepValue: 10, targetHp: 100 });
+
+      const initialState = { 'actor:hp': 70 };
+      const goal = {
+        id: 'restore-health',
+        goalState: { '>=': [{ var: 'actor.hp' }, 100] },
+      };
+
+      const plan = planner.plan('actor-123', goal, initialState, {
+        maxDepth: 3, // Exactly three intent steps allowed
+      });
+
+      expect(plan).not.toBeNull();
+      expect(plan.tasks).toHaveLength(3);
+      expect(plan.cost).toBe(30); // 3 * cost 10
+      expect(plan.tasks.every(task => task.taskId === 'core:heal_10')).toBe(true);
+    });
+
+    it('should emit planLength, gScore, and maxDepth telemetry during planning', () => {
+      setupHighCostHealingScenario({ stepValue: 10, targetHp: 90 });
+
+      const initialState = { 'actor:hp': 70 };
+      const goal = {
+        id: 'restore-health',
+        goalState: { '>=': [{ var: 'actor.hp' }, 90] },
+      };
+
+      const plan = planner.plan('actor-123', goal, initialState, {
+        maxDepth: 4,
+      });
+
+      expect(plan).not.toBeNull();
+
+      const expansionLog = mockLogger.debug.mock.calls.find(
+        ([message]) => message === 'Expanding node'
+      );
+      expect(expansionLog).toBeDefined();
+      expect(expansionLog?.[1]).toEqual(
+        expect.objectContaining({
+          planLength: expect.any(Number),
+          gScore: expect.any(Number),
+          maxDepth: 4,
+        })
+      );
+
+      const completionLog = mockLogger.info.mock.calls.find(
+        ([message]) => message === 'Goal reached'
+      );
+      expect(completionLog).toBeDefined();
+      expect(completionLog?.[1]).toEqual(
+        expect.objectContaining({
+          planLength: expect.any(Number),
+          gScore: expect.any(Number),
+          maxDepth: 4,
+        })
+      );
     });
   });
 });
