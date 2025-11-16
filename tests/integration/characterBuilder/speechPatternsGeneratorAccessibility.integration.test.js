@@ -1,8 +1,22 @@
 import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
 import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import {
+  LIFECYCLE_PHASES,
+  DESTRUCTION_PHASES,
+} from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
 import SpeechPatternsDisplayEnhancer from '../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
 import { EnhancedSpeechPatternsValidator } from '../../../src/characterBuilder/validators/EnhancedSpeechPatternsValidator.js';
-import { BaseCharacterBuilderControllerTestBase } from '../../unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 
 const activeControllers = new Set();
 
@@ -18,6 +32,30 @@ class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGenerat
       exportTemplate: '#exportTemplate',
       templateGroup: '#templateGroup',
     });
+  }
+
+  /**
+   * Provide a predictable requestAnimationFrame fallback for jsdom tests.
+   * @protected
+   * @param {Function} callback
+   * @returns {number}
+   */
+  _requestAnimationFrame(callback) {
+    const raf =
+      global.requestAnimationFrame ||
+      ((cb) => global.setTimeout(() => cb(Date.now()), 16));
+    return raf(callback);
+  }
+
+  /**
+   * Provide a cancelAnimationFrame fallback for jsdom tests.
+   * @protected
+   * @param {number} handle
+   * @returns {void}
+   */
+  _cancelAnimationFrame(handle) {
+    const cancel = global.cancelAnimationFrame || global.clearTimeout;
+    cancel(handle);
   }
 }
 
@@ -102,46 +140,154 @@ function createCharacterBuilderService() {
 }
 
 function createEventBus() {
+  const subscriptions = new Map();
   return {
-    dispatch: jest.fn(),
-    subscribe: jest.fn(),
-    unsubscribe: jest.fn(),
+    dispatch: jest.fn((eventType, payload) => {
+      const handlers = subscriptions.get(eventType) || [];
+      handlers.forEach((handler) => {
+        try {
+          handler(payload);
+        } catch (error) {
+          // Swallow handler errors during tests to avoid cascading failures
+        }
+      });
+    }),
+    subscribe: jest.fn((eventType, handler) => {
+      if (!subscriptions.has(eventType)) {
+        subscriptions.set(eventType, []);
+      }
+      subscriptions.get(eventType).push(handler);
+      return () => {
+        const listeners = subscriptions.get(eventType);
+        if (!listeners) {
+          return;
+        }
+        const index = listeners.indexOf(handler);
+        if (index >= 0) {
+          listeners.splice(index, 1);
+        }
+      };
+    }),
+    unsubscribe: jest.fn((eventType, handler) => {
+      const listeners = subscriptions.get(eventType);
+      if (!listeners) {
+        return false;
+      }
+      const index = listeners.indexOf(handler);
+      if (index === -1) {
+        return false;
+      }
+      listeners.splice(index, 1);
+      return true;
+    }),
   };
 }
 
-// Create shared testbase instance for mock factories
-const testBase = new BaseCharacterBuilderControllerTestBase();
+function createLifecycleOrchestrator(logger) {
+  const hooks = new Map();
+  const orchestrator = {
+    _isInitialized: false,
+    _isInitializing: false,
+    _isDestroyed: false,
+    _isDestroying: false,
+    setControllerName: jest.fn(),
+    registerHook: jest.fn((phase, hook) => {
+      if (!hooks.has(phase)) {
+        hooks.set(phase, []);
+      }
+      hooks.get(phase).push(hook);
+      return () => {
+        const phaseHooks = hooks.get(phase);
+        if (!phaseHooks) {
+          return;
+        }
+        const index = phaseHooks.indexOf(hook);
+        if (index >= 0) {
+          phaseHooks.splice(index, 1);
+        }
+      };
+    }),
+    createControllerMethodHook: jest.fn((controller, methodName) => async (...args) => {
+      if (typeof controller[methodName] === 'function') {
+        return controller[methodName](...args);
+      }
+    }),
+    async initialize() {
+      orchestrator._isInitializing = true;
+      const phases = [
+        LIFECYCLE_PHASES.PRE_INIT,
+        LIFECYCLE_PHASES.CACHE_ELEMENTS,
+        LIFECYCLE_PHASES.INIT_SERVICES,
+        LIFECYCLE_PHASES.SETUP_EVENT_LISTENERS,
+        LIFECYCLE_PHASES.LOAD_DATA,
+        LIFECYCLE_PHASES.INIT_UI,
+        LIFECYCLE_PHASES.POST_INIT,
+      ];
+      for (const phase of phases) {
+        const phaseHooks = hooks.get(phase) || [];
+        for (const hook of phaseHooks) {
+          await hook();
+        }
+      }
+      orchestrator._isInitializing = false;
+      orchestrator._isInitialized = true;
+    },
+    async reinitialize() {
+      orchestrator.resetInitializationState();
+      await orchestrator.initialize();
+    },
+    resetInitializationState: jest.fn(() => {
+      orchestrator._isInitialized = false;
+      orchestrator._isInitializing = false;
+    }),
+    destroy: jest.fn(() => {
+      orchestrator._isDestroying = true;
+      const phases = [
+        DESTRUCTION_PHASES.PRE_DESTROY,
+        DESTRUCTION_PHASES.CANCEL_OPERATIONS,
+        DESTRUCTION_PHASES.REMOVE_LISTENERS,
+        DESTRUCTION_PHASES.CLEANUP_SERVICES,
+        DESTRUCTION_PHASES.CLEAR_ELEMENTS,
+        DESTRUCTION_PHASES.CLEANUP_TASKS,
+        DESTRUCTION_PHASES.CLEAR_REFERENCES,
+        DESTRUCTION_PHASES.POST_DESTROY,
+      ];
+      phases.forEach((phase) => {
+        const phaseHooks = hooks.get(phase) || [];
+        phaseHooks.forEach((hook) => {
+          try {
+            hook();
+          } catch (error) {
+            logger?.warn?.('Lifecycle destruction hook failed', error);
+          }
+        });
+      });
+      orchestrator._isDestroying = false;
+      orchestrator._isDestroyed = true;
+    }),
+    registerCleanupTask: jest.fn(),
+    checkDestroyed: jest.fn(() => orchestrator._isDestroyed),
+    makeDestructionSafe: jest.fn((fn) => (...args) => {
+      if (orchestrator._isDestroyed) {
+        throw new Error('Controller destroyed');
+      }
+      return fn(...args);
+    }),
+    get isInitialized() {
+      return orchestrator._isInitialized;
+    },
+    get isDestroyed() {
+      return orchestrator._isDestroyed;
+    },
+    get isInitializing() {
+      return orchestrator._isInitializing;
+    },
+    get isDestroying() {
+      return orchestrator._isDestroying;
+    },
+  };
 
-function createMockControllerLifecycleOrchestrator() {
-  return testBase.createMockControllerLifecycleOrchestrator();
-}
-
-function createMockDomElementManager() {
-  return testBase.createMockDomElementManager();
-}
-
-function createMockEventListenerRegistry() {
-  return testBase.createMockEventListenerRegistry();
-}
-
-function createMockAsyncUtilitiesToolkit() {
-  return testBase.createMockAsyncUtilitiesToolkit();
-}
-
-function createMockPerformanceMonitor() {
-  return testBase.createMockPerformanceMonitor();
-}
-
-function createMockMemoryManager() {
-  return testBase.createMockMemoryManager();
-}
-
-function createMockErrorHandlingStrategy() {
-  return testBase.createMockErrorHandlingStrategy();
-}
-
-function createMockValidationService() {
-  return testBase.createMockValidationService();
+  return orchestrator;
 }
 
 function createDependencies({
@@ -150,27 +296,61 @@ function createDependencies({
   displayEnhancer,
 }) {
   const logger = createLogger();
+  const eventBus = createEventBus();
+  const characterBuilderService = createCharacterBuilderService();
+  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger });
+  const domElementManager = new DOMElementManager({
+    logger,
+    documentRef: document,
+    performanceRef: performance,
+    elementsRef: {},
+    contextName: 'SpeechPatternsTestDOM',
+  });
+  const eventListenerRegistry = new EventListenerRegistry({
+    logger,
+    asyncUtilities: asyncUtilitiesToolkit,
+    contextName: 'SpeechPatternsTestEventRegistry',
+  });
+  const performanceMonitor = new PerformanceMonitor({
+    logger,
+    eventBus,
+    contextName: 'SpeechPatternsTestPerformanceMonitor',
+    threshold: 2500,
+  });
+  const memoryManager = new MemoryManager({
+    logger,
+    contextName: 'SpeechPatternsTestMemoryManager',
+  });
+  const errorHandlingStrategy = new ErrorHandlingStrategy({
+    logger,
+    eventBus,
+    controllerName: 'SpeechPatternsGeneratorController',
+    errorCategories: ERROR_CATEGORIES,
+    errorSeverity: ERROR_SEVERITY,
+  });
+  const validationService = new ValidationService({
+    schemaValidator,
+    logger,
+    handleError: (error, context) => logger.error('Validation error', error, context),
+    errorCategories: ERROR_CATEGORIES,
+  });
+  const controllerLifecycleOrchestrator = createLifecycleOrchestrator(logger);
   const displayEnhancerInstance =
     displayEnhancer || new SpeechPatternsDisplayEnhancer({ logger });
 
   return {
-    // Core dependencies
     logger,
-    characterBuilderService: createCharacterBuilderService(),
-    eventBus: createEventBus(),
+    characterBuilderService,
+    eventBus,
     schemaValidator,
-
-    // NEW: Required service dependencies (post-BASCHACUICONREF refactoring)
-    controllerLifecycleOrchestrator: createMockControllerLifecycleOrchestrator(),
-    domElementManager: createMockDomElementManager(),
-    eventListenerRegistry: createMockEventListenerRegistry(),
-    asyncUtilitiesToolkit: createMockAsyncUtilitiesToolkit(),
-    performanceMonitor: createMockPerformanceMonitor(),
-    memoryManager: createMockMemoryManager(),
-    errorHandlingStrategy: createMockErrorHandlingStrategy(),
-    validationService: createMockValidationService(),
-
-    // Page-specific additional services
+    controllerLifecycleOrchestrator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
     speechPatternsGenerator,
     speechPatternsDisplayEnhancer: displayEnhancerInstance,
   };
@@ -262,6 +442,9 @@ async function enterValidCharacterDefinition({ useFakeTimers = false } = {}) {
   } else {
     await new Promise((resolve) => setTimeout(resolve, 350));
   }
+
+  // Trigger blur to force immediate validation pass in tests
+  textarea.dispatchEvent(new Event('blur', { bubbles: true }));
 }
 
 async function waitForGeneration({ duration = 650, useFakeTimers = false } = {}) {
@@ -336,17 +519,15 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
       },
     });
 
-    const controller = new ExportAwareSpeechPatternsGeneratorController(
-      createDependencies({
-        speechPatternsGenerator,
-        schemaValidator,
-        displayEnhancer: displayEnhancerStub,
-      })
-    );
+    const dependencies = createDependencies({
+      speechPatternsGenerator,
+      schemaValidator,
+      displayEnhancer: displayEnhancerStub,
+    });
+    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
     activeControllers.add(controller);
     controller._disableEnhancedValidation();
     await controller.initialize();
-
     await enterValidCharacterDefinition({ useFakeTimers: true });
 
     document.getElementById('generate-btn').click();

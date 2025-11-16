@@ -522,6 +522,19 @@ class JsonLogicEvaluationService extends BaseService {
   }
 
   /**
+   * Backwards-compatible alias for evaluate().
+   * Some subsystems (GOAP planner) previously depended on an
+   * evaluateCondition helper on the evaluation service itself.
+   *
+   * @param {object} condition - JSON Logic rule to evaluate.
+   * @param {object} context - Evaluation context object.
+   * @returns {boolean} True when the condition evaluates to a truthy value.
+   */
+  evaluateCondition(condition, context) {
+    return this.evaluate(condition, context);
+  }
+
+  /**
    * Removes a custom operation from the underlying json-logic-js instance.
    * Used primarily for test cleanup to prevent operator contamination.
    *

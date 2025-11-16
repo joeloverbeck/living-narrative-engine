@@ -32,13 +32,16 @@ import NumericConstraintEvaluator from '../../goap/planner/numericConstraintEval
  */
 export function registerGoapServices(container) {
   // Context Assembly Service
-  container.register(tokens.IContextAssemblyService, ContextAssemblyService, {
-    dependencies: [
-      tokens.IEntityManager,
-      tokens.ILogger,
-      { optional: true, parameter: 'enableKnowledgeLimitation', defaultValue: true },
-    ],
-  });
+  container.register(
+    tokens.IContextAssemblyService,
+    (c) =>
+      new ContextAssemblyService({
+        entityManager: c.resolve(tokens.IEntityManager),
+        logger: c.resolve(tokens.ILogger),
+        enableKnowledgeLimitation: true,
+      }),
+    { lifecycle: 'singleton' }
+  );
 
   // Parameter Resolution Service
   container.register(tokens.IParameterResolutionService, ParameterResolutionService, {
@@ -120,7 +123,6 @@ export function registerGoapServices(container) {
     dependencies: [
       tokens.IContextAssemblyService,
       tokens.IPrimitiveActionStepExecutor,
-      tokens.IConditionalStepExecutor, // Self-reference for nested conditionals
       tokens.JsonLogicEvaluationService,
       tokens.ILogger,
     ],

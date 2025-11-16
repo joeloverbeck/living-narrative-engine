@@ -82,10 +82,18 @@ class GoalDistanceHeuristic {
    * @param {object} params.planningEffectsSimulator - Service to simulate task effects
    * @param {object} params.logger - Logger instance
    */
-  constructor({ jsonLogicEvaluator, numericConstraintEvaluator, planningEffectsSimulator, logger }) {
+  constructor({
+    jsonLogicEvaluator,
+    jsonLogicEvaluationService,
+    numericConstraintEvaluator,
+    planningEffectsSimulator,
+    logger,
+  }) {
     this.#logger = ensureValidLogger(logger, 'GoalDistanceHeuristic.constructor');
 
-    validateDependency(jsonLogicEvaluator, 'JsonLogicEvaluationService', this.#logger, {
+    const logicEvaluator = jsonLogicEvaluator ?? jsonLogicEvaluationService;
+
+    validateDependency(logicEvaluator, 'JsonLogicEvaluationService', this.#logger, {
       requiredMethods: ['evaluate'],
     });
 
@@ -107,7 +115,7 @@ class GoalDistanceHeuristic {
       }
     );
 
-    this.#jsonLogicEvaluator = jsonLogicEvaluator;
+    this.#jsonLogicEvaluator = logicEvaluator;
     this.#numericConstraintEvaluator = numericConstraintEvaluator;
     this.#planningEffectsSimulator = planningEffectsSimulator;
   }

@@ -48,14 +48,19 @@ class NumericConstraintEvaluator {
    * @param {object} params.jsonLogicEvaluator - Service to evaluate JSON Logic expressions
    * @param {object} params.logger - Logger instance
    */
-  constructor({ jsonLogicEvaluator, logger }) {
-    this.#logger = ensureValidLogger(logger, 'NumericConstraintEvaluator.constructor');
+  constructor({ jsonLogicEvaluator, jsonLogicEvaluationService, logger }) {
+    this.#logger = ensureValidLogger(
+      logger,
+      'NumericConstraintEvaluator.constructor'
+    );
 
-    validateDependency(jsonLogicEvaluator, 'JsonLogicEvaluationService', this.#logger, {
+    const evaluator = jsonLogicEvaluator ?? jsonLogicEvaluationService;
+
+    validateDependency(evaluator, 'JsonLogicEvaluationService', this.#logger, {
       requiredMethods: ['evaluate'],
     });
 
-    this.#jsonLogicEvaluator = jsonLogicEvaluator;
+    this.#jsonLogicEvaluator = evaluator;
   }
 
   /**

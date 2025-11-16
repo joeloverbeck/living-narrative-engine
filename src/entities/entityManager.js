@@ -98,6 +98,44 @@ class EntityManager extends IEntityManager {
   }
 
   /**
+   * Backwards-compatible alias for getEntityInstance.
+   * Some systems (GOAP planning specs) still refer to this helper when
+   * validating contextual references.
+   *
+   * @param {string} entityId - Entity identifier.
+   * @returns {Entity | undefined}
+   */
+  getEntity(entityId) {
+    try {
+      return this.#queryManager.getEntityInstance(entityId);
+    } catch (error) {
+      this.#logger.warn('EntityManager.getEntity called with invalid id', {
+        entityId,
+        error: error?.message,
+      });
+      return undefined;
+    }
+  }
+
+  /**
+   * Indicates whether an entity id currently resolves to an active entity.
+   *
+   * @param {string} entityId
+   * @returns {boolean}
+   */
+  hasEntity(entityId) {
+    try {
+      return Boolean(this.#queryManager.getEntityInstance(entityId));
+    } catch (error) {
+      this.#logger.warn('EntityManager.hasEntity called with invalid id', {
+        entityId,
+        error: error?.message,
+      });
+      return false;
+    }
+  }
+
+  /**
    * @class
    * @param {object} [deps] - Constructor dependencies
    * @param {IDataRegistry} deps.registry - Data registry for definitions
@@ -496,6 +534,15 @@ class EntityManager extends IEntityManager {
    */
   getComponentData(instanceId, componentTypeId) {
     return this.#queryManager.getComponentData(instanceId, componentTypeId);
+  }
+
+  /**
+   * Compatibility alias consumed by GOAP context builders.
+   * @param {string} instanceId
+   * @param {string} componentTypeId
+   */
+  getComponent(instanceId, componentTypeId) {
+    return this.getComponentData(instanceId, componentTypeId);
   }
 
   /**

@@ -51,6 +51,7 @@ class ConditionalStepExecutor {
     primitiveActionStepExecutor,
     conditionalStepExecutor,
     jsonLogicService,
+    jsonLogicEvaluationService,
     logger,
   }) {
     validateDependency(
@@ -69,15 +70,21 @@ class ConditionalStepExecutor {
         requiredMethods: ['execute'],
       }
     );
-    validateDependency(
-      conditionalStepExecutor,
-      'IConditionalStepExecutor',
-      logger,
-      {
-        requiredMethods: ['execute'],
-      }
-    );
-    validateDependency(jsonLogicService, 'JsonLogicEvaluationService', logger, {
+    const nestedExecutor = conditionalStepExecutor ?? this;
+
+    if (conditionalStepExecutor) {
+      validateDependency(
+        conditionalStepExecutor,
+        'IConditionalStepExecutor',
+        logger,
+        {
+          requiredMethods: ['execute'],
+        }
+      );
+    }
+    const logicService = jsonLogicService ?? jsonLogicEvaluationService;
+
+    validateDependency(logicService, 'JsonLogicEvaluationService', logger, {
       requiredMethods: ['evaluate'],
     });
     validateDependency(logger, 'ILogger', logger, {
@@ -86,8 +93,8 @@ class ConditionalStepExecutor {
 
     this.#contextAssemblyService = contextAssemblyService;
     this.#primitiveActionStepExecutor = primitiveActionStepExecutor;
-    this.#conditionalStepExecutor = conditionalStepExecutor;
-    this.#jsonLogicService = jsonLogicService;
+    this.#conditionalStepExecutor = nestedExecutor;
+    this.#jsonLogicService = logicService;
     this.#logger = logger;
   }
 

@@ -41,7 +41,14 @@ class TaskLibraryConstructor {
    * @param {object} dependencies.jsonLogicService - IJsonLogicService for gate evaluation
    * @param {object} dependencies.logger - ILogger for logging
    */
-  constructor({ dataRegistry, entityManager, contextAssembly, jsonLogicService, logger }) {
+  constructor({
+    dataRegistry,
+    entityManager,
+    contextAssembly,
+    jsonLogicService,
+    jsonLogicEvaluationService,
+    logger,
+  }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['getAll'],
     });
@@ -51,7 +58,10 @@ class TaskLibraryConstructor {
     validateDependency(contextAssembly, 'IContextAssemblyService', logger, {
       requiredMethods: ['assemblePlanningContext'],
     });
-    validateDependency(jsonLogicService, 'IJsonLogicService', logger, {
+
+    const logicService = jsonLogicService ?? jsonLogicEvaluationService;
+
+    validateDependency(logicService, 'JsonLogicEvaluationService', logger, {
       requiredMethods: ['evaluate'],
     });
     validateDependency(logger, 'ILogger', logger, {
@@ -61,7 +71,7 @@ class TaskLibraryConstructor {
     this.#dataRegistry = dataRegistry;
     this.#entityManager = entityManager;
     this.#contextAssembly = contextAssembly;
-    this.#jsonLogicService = jsonLogicService;
+    this.#jsonLogicService = logicService;
     this.#logger = logger;
     this.#cache = new Map();
   }

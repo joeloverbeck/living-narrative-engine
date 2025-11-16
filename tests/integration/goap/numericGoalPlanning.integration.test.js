@@ -439,6 +439,39 @@ describe('Numeric Goal Planning - Health System', () => {
     // Need: (80 - 10) / 30 = 2.33 → 3 heal actions
   });
 
+  it('should keep default depth (20) sufficient for multi-heal plans', async () => {
+    const actor = {
+      id: 'test_actor',
+      components: {
+        'core:stats': { health: 10 },
+      },
+    };
+    setup.entityManager.addEntity(addFlattenedAliases(actor));
+
+    const goal = createTestGoal({
+      id: 'test:heal_self',
+      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      relevance: { '==': [true, true] },
+      priority: 10,
+    });
+
+    setup.dataRegistry.register('goals', goal.id, goal);
+
+    // Default planner options (maxDepth = 20 per specs/goap-system-specs.md) must allow 3 intent steps
+    const defaultDepthState = buildDualFormatState(actor);
+    const defaultDepthPlan = setup.planner.plan(actor.id, goal, defaultDepthState, {});
+    expect(defaultDepthPlan).not.toBeNull();
+    expect(defaultDepthPlan.tasks).toHaveLength(3);
+    expect(defaultDepthPlan.cost).toBe(30);
+
+    // Tight depth budget (2) should fail even though cost remains unchanged
+    const shallowDepthState = buildDualFormatState(actor);
+    const depthLimitedPlan = setup.planner.plan(actor.id, goal, shallowDepthState, {
+      maxDepth: 2,
+    });
+    expect(depthLimitedPlan).toBeNull();
+  });
+
   it('should handle already healthy actor', async () => {
     const actor = {
       id: 'test_actor',

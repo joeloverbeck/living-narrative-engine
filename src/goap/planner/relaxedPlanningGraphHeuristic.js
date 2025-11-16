@@ -31,8 +31,17 @@ class RelaxedPlanningGraphHeuristic {
    * @param {object} params.logger - Logger instance
    * @param {number} [params.maxLayers=10] - Maximum graph layers before declaring unsolvable
    */
-  constructor({ planningEffectsSimulator, jsonLogicEvaluator, logger, maxLayers = 10 }) {
-    this.#logger = ensureValidLogger(logger, 'RelaxedPlanningGraphHeuristic.constructor');
+  constructor({
+    planningEffectsSimulator,
+    jsonLogicEvaluator,
+    jsonLogicEvaluationService,
+    logger,
+    maxLayers = 10,
+  }) {
+    this.#logger = ensureValidLogger(
+      logger,
+      'RelaxedPlanningGraphHeuristic.constructor'
+    );
 
     // Validate dependencies
     validateDependency(
@@ -44,12 +53,14 @@ class RelaxedPlanningGraphHeuristic {
       }
     );
 
-    validateDependency(jsonLogicEvaluator, 'JsonLogicEvaluationService', this.#logger, {
+    const logicEvaluator = jsonLogicEvaluator ?? jsonLogicEvaluationService;
+
+    validateDependency(logicEvaluator, 'JsonLogicEvaluationService', this.#logger, {
       requiredMethods: ['evaluate'],
     });
 
     this.#planningEffectsSimulator = planningEffectsSimulator;
-    this.#jsonLogicEvaluator = jsonLogicEvaluator;
+    this.#jsonLogicEvaluator = logicEvaluator;
     this.#MAX_LAYERS = maxLayers;
   }
 

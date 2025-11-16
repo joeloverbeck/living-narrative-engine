@@ -52,6 +52,10 @@ export async function configureContainer(container, uiElements) {
     const registrar = new Registrar(container);
     const { outputDiv, inputElement, document: doc } = uiElements;
 
+    // Expose the container itself for services that need to resolve
+    // transient dependencies on demand (e.g., refinement engines).
+    registrar.instance(tokens.AppContainer, container);
+
     // Log initial state - container should be empty at this point
     bootstrapLog.debug(
       '[ContainerConfig] Container is empty:',
