@@ -323,10 +323,8 @@ describe('GOAP Plan Invalidation - Integration', () => {
   });
 
   describe('Goal Priority Changes', () => {
-    // SKIPPED: Cannot test plan inertia with mockRefinement:true because plans complete immediately in same turn.
-    // Plan inertia requires a plan that spans multiple turns, but mockRefinement causes immediate completion.
-    // To properly test plan inertia, would need mockRefinement:false with real refinement methods.
-    it.skip('should maintain plan commitment until completion (plan inertia)', async () => {
+    it('should maintain plan commitment until completion (plan inertia)', async () => {
+
       // NOTE: This test verifies intentional GOAP design - plan inertia.
       // Once an actor commits to a plan, they maintain it until completion or failure.
       // This provides cognitive realism (people don't constantly re-evaluate mid-task)
@@ -400,7 +398,12 @@ describe('GOAP Plan Invalidation - Integration', () => {
       const lowStep2Task = createTestTask({
         id: 'test:low_step2',
         cost: 10,
-        preconditions: [{ has_component: ['actor', 'test:low_resources'] }],
+        planningPreconditions: [
+          {
+            description: 'Actor must have resources',
+            condition: { has_component: ['actor', 'test:low_resources'] },
+          },
+        ],
         planningEffects: [
           {
             type: 'ADD_COMPONENT',
@@ -480,88 +483,86 @@ describe('GOAP Plan Invalidation - Integration', () => {
       };
 
       // Execute: Turn 1 - select low priority goal and create plan
-      await setup.controller.decideTurn(actor, world);
+      const result1 = await setup.controller.decideTurn(actor, world);
 
       const events1 = setup.eventBus.getAll();
-      console.log('[DEBUG] Turn 1 events:', events1.map(e => e.type));
-
-      const planningFailed = events1.find((e) => e.type === GOAP_EVENTS.PLANNING_FAILED);
-      if (planningFailed) {
-        console.log('[DEBUG] Planning failed:', planningFailed.payload);
-      }
+      const eventTypes1 = events1.map((e) => e.type);
+      console.log('[DEBUG] Turn 1 event types:', eventTypes1);
 
       const firstGoalSelected = events1.find(
         (e) => e.type === GOAP_EVENTS.GOAL_SELECTED
       );
-      console.log('[DEBUG] firstGoalSelected:', firstGoalSelected ? firstGoalSelected.payload.goalId : 'NONE');
 
-      if (firstGoalSelected) {
-        expect(firstGoalSelected.payload.goalId).toBe('test:low_priority');
-
-        // DEBUG: Check plan created
-        const planCreated = events1.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
-        if (planCreated) {
-          console.log('[DEBUG TURN 1] Plan tasks:', planCreated.payload.tasks);
-          console.log('[DEBUG TURN 1] Total tasks:', planCreated.payload.tasks.length);
+      if (!firstGoalSelected) {
+        const planningFailed = events1.find((e) => e.type === GOAP_EVENTS.PLANNING_FAILED);
+        if (planningFailed) {
+          console.log('[DEBUG] Planning failed:', planningFailed.payload);
         }
-
-        // Change: Make high priority goal relevant (urgency increases)
-        // Update in entity manager using addComponent (getEntity returns a copy, not a reference)
-        await setup.entityManager.addComponent('test_actor', 'test:urgent', {
-          value: 60, // Above threshold
-        });
-
-        // Execute: Turn 2 - system maintains plan commitment (plan inertia)
-        setup.eventBus.clear();
-        await setup.controller.decideTurn(actor, world);
-
-        const events2 = setup.eventBus.getAll();
-
-        // Verify: System maintains current plan despite higher priority goal
-        // No new goal selection should occur (no GOAL_SELECTED event)
-        const secondGoalSelected = events2.find(
-          (e) => e.type === GOAP_EVENTS.GOAL_SELECTED
-        );
-
-        // Either no goal selected (continuing current plan) OR
-        // same goal selected (re-planning for same goal)
-        if (secondGoalSelected) {
-          // If goal was re-selected, it should still be low-priority (plan inertia)
-          expect(secondGoalSelected.payload.goalId).toBe('test:low_priority');
-        } else {
-          // No goal selection = continuing with active plan (expected)
-          expect(secondGoalSelected).toBeUndefined();
-        }
-
-        // Complete the low-priority goal
-        // Update in entity manager using addComponent (getEntity returns a copy, not a reference)
-        await setup.entityManager.addComponent(
-          'test_actor',
-          'test:low_satisfied',
-          {}
-        );
-
-        // Execute: Turn 3 - after plan completion, re-evaluate priorities
-        setup.eventBus.clear();
-
-        // DEBUG: Verify component is in entity manager before turn 3
-        const actorBeforeTurn3 = setup.entityManager.getEntity('test_actor');
-        console.log('[DEBUG TURN 3] Actor components before decideTurn:', Object.keys(actorBeforeTurn3.components));
-        console.log('[DEBUG TURN 3] Has test:low_satisfied?', setup.entityManager.hasComponent('test_actor', 'test:low_satisfied'));
-        console.log('[DEBUG TURN 3] Has test:high_satisfied?', setup.entityManager.hasComponent('test_actor', 'test:high_satisfied'));
-
-        await setup.controller.decideTurn(actor, world);
-
-        const events3 = setup.eventBus.getAll();
-        const thirdGoalSelected = events3.find(
-          (e) => e.type === GOAP_EVENTS.GOAL_SELECTED
-        );
-
-        // NOW the system should select the higher-priority goal
-        if (thirdGoalSelected) {
-          expect(thirdGoalSelected.payload.goalId).toBe('test:high_priority');
-        }
+        console.log('[DEBUG] All events:', events1);
       }
+
+      expect(firstGoalSelected).toBeDefined();
+      expect(firstGoalSelected.payload.goalId).toBe('test:low_priority');
+
+      // Verify plan was created with 2 tasks
+      const planCreated = events1.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      if (!planCreated) {
+        console.log('[DEBUG] No PLANNING_COMPLETED event. Events:', eventTypes1);
+      }
+      expect(planCreated).toBeDefined();
+      expect(planCreated.payload.tasks.length).toBe(2);
+
+      // Simulate execution of first task (low_step1) - add resources component
+      // With mockRefinement, the task executes immediately, but we need to manually
+      // update state to simulate the effect taking place
+      await setup.entityManager.addComponent('test_actor', 'test:low_resources', {});
+
+      // Change: Make high priority goal relevant (urgency increases)
+      await setup.entityManager.addComponent('test_actor', 'test:urgent', {
+        value: 60, // Above threshold
+      });
+
+      // Execute: Turn 2 - execute second task of plan (plan inertia should maintain commitment)
+      setup.eventBus.clear();
+      const result2 = await setup.controller.decideTurn(actor, world);
+
+      const events2 = setup.eventBus.getAll();
+
+      // Verify: System maintains current plan despite higher priority goal
+      // No new goal selection should occur (no GOAL_SELECTED event)
+      const secondGoalSelected = events2.find(
+        (e) => e.type === GOAP_EVENTS.GOAL_SELECTED
+      );
+
+      // Either no goal selected (continuing current plan) OR
+      // same goal selected (re-planning for same goal)
+      if (secondGoalSelected) {
+        // If goal was re-selected, it should still be low-priority (plan inertia)
+        expect(secondGoalSelected.payload.goalId).toBe('test:low_priority');
+      } else {
+        // No goal selection = continuing with active plan (expected)
+        expect(secondGoalSelected).toBeUndefined();
+      }
+
+      // Simulate execution of second task (low_step2) - add low_satisfied component
+      await setup.entityManager.addComponent(
+        'test_actor',
+        'test:low_satisfied',
+        {}
+      );
+
+      // Execute: Turn 3 - after plan completion, re-evaluate priorities
+      setup.eventBus.clear();
+      const result3 = await setup.controller.decideTurn(actor, world);
+
+      const events3 = setup.eventBus.getAll();
+      const thirdGoalSelected = events3.find(
+        (e) => e.type === GOAP_EVENTS.GOAL_SELECTED
+      );
+
+      // NOW the system should select the higher-priority goal
+      expect(thirdGoalSelected).toBeDefined();
+      expect(thirdGoalSelected.payload.goalId).toBe('test:high_priority');
     });
   });
 

@@ -23,6 +23,7 @@ import ConditionalStepExecutor from '../../../src/goap/refinement/steps/conditio
 import ContextAssemblyService from '../../../src/goap/services/contextAssemblyService.js';
 import ParameterResolutionService from '../../../src/goap/services/parameterResolutionService.js';
 import { coreTokens as tokens } from '../../../src/dependencyInjection/tokens/tokens-core.js';
+import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
 
 describe('RefinementEngine E2E Tests', () => {
   let testBed;
@@ -425,7 +426,7 @@ describe('RefinementEngine E2E Tests', () => {
       // Assert: Events dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'GOAP_REFINEMENT_STARTED',
+          type: GOAP_EVENTS.REFINEMENT_STARTED,
           payload: expect.objectContaining({
             taskId: 'core:consume_nourishing_item',
             actorId,
@@ -435,7 +436,7 @@ describe('RefinementEngine E2E Tests', () => {
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'GOAP_METHOD_SELECTED',
+          type: GOAP_EVENTS.METHOD_SELECTED,
           payload: expect.objectContaining({
             methodId: 'core:consume_nourishing_item.inventory_consumption',
           }),
@@ -444,7 +445,7 @@ describe('RefinementEngine E2E Tests', () => {
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'GOAP_REFINEMENT_COMPLETED',
+          type: GOAP_EVENTS.REFINEMENT_COMPLETED,
           payload: expect.objectContaining({
             success: true,
             stepsExecuted: 3,
@@ -606,7 +607,7 @@ describe('RefinementEngine E2E Tests', () => {
       // Assert: Error event dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'GOAP_REFINEMENT_FAILED',
+          type: GOAP_EVENTS.REFINEMENT_FAILED,
         })
       );
     });
