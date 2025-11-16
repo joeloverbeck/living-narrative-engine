@@ -1093,6 +1093,130 @@ class GoapController {
       }
     }
   }
+
+  // ==================== Debug API (Read-Only) ====================
+
+  /**
+   * Get the active plan for an actor (debug API).
+   *
+   * @param {string} actorId - Entity ID of actor
+   * @returns {object|null} Deep copy of active plan or null if no plan exists
+   */
+  getActivePlan(actorId) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.getActivePlan', this.#logger);
+
+    if (!this.#activePlan || this.#activePlan.actorId !== actorId) {
+      return null;
+    }
+
+    // Return deep copy to prevent external modification
+    return {
+      goal: { ...this.#activePlan.goal },
+      tasks: this.#activePlan.tasks.map(task => ({ ...task })),
+      currentStep: this.#activePlan.currentStep,
+      actorId: this.#activePlan.actorId,
+      createdAt: this.#activePlan.createdAt,
+      lastValidated: this.#activePlan.lastValidated,
+    };
+  }
+
+  /**
+   * Get failed goals for an actor (debug API).
+   *
+   * ⚠️ CORRECTED: Returns failure arrays, NOT goal objects.
+   * The actual structure stores goalId → Array<{reason, timestamp}>,
+   * NOT goalId → {goal, timestamp, reason}.
+   *
+   * @param {string} actorId - Entity ID of actor
+   * @returns {Array} Array of { goalId, failures: Array<{reason, timestamp}> }
+   */
+  getFailedGoals(actorId) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.getFailedGoals', this.#logger);
+
+    const now = Date.now();
+    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes (from #trackFailedGoal)
+    const results = [];
+
+    for (const [goalId, failures] of this.#failedGoals.entries()) {
+      // Filter out expired failures (consistent with #trackFailedGoal pruning)
+      const recentFailures = failures.filter(
+        (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
+      );
+
+      // Only include goals with non-expired failures
+      // Note: Cannot filter by actorId since goals don't have actorId property
+      // Goals are selected per-turn, not actor-specific in storage
+      if (recentFailures.length > 0) {
+        results.push({
+          goalId,
+          failures: recentFailures.map(f => ({
+            reason: f.reason,
+            timestamp: f.timestamp
+          })),
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get failed tasks for an actor (debug API).
+   *
+   * ⚠️ CORRECTED: Returns failure arrays, NOT task objects.
+   * The actual structure stores taskId → Array<{reason, timestamp}>,
+   * NOT taskId → {task, timestamp, reason}.
+   *
+   * Task failures are actor-agnostic (tasks don't store actorId).
+   *
+   * @param {string} actorId - Entity ID of actor (for consistency, not used for filtering)
+   * @returns {Array} Array of { taskId, failures: Array<{reason, timestamp}> }
+   */
+  getFailedTasks(actorId) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.getFailedTasks', this.#logger);
+
+    const now = Date.now();
+    const FAILURE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes (from #trackFailedTask)
+    const results = [];
+
+    for (const [taskId, failures] of this.#failedTasks.entries()) {
+      // Filter out expired failures (consistent with #trackFailedTask pruning)
+      const recentFailures = failures.filter(
+        (failure) => now - failure.timestamp < FAILURE_EXPIRY_MS
+      );
+
+      // Only include tasks with non-expired failures
+      // Task failures are actor-agnostic, return all
+      if (recentFailures.length > 0) {
+        results.push({
+          taskId,
+          failures: recentFailures.map(f => ({
+            reason: f.reason,
+            timestamp: f.timestamp
+          })),
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get the current task from active plan (debug API).
+   *
+   * @param {string} actorId - Entity ID of actor
+   * @returns {object|null} Current task or null if no active plan
+   */
+  getCurrentTask(actorId) {
+    assertNonBlankString(actorId, 'actorId', 'GoapController.getCurrentTask', this.#logger);
+
+    const plan = this.getActivePlan(actorId);
+    if (!plan || plan.currentStep >= plan.tasks.length) {
+      return null;
+    }
+
+    return { ...plan.tasks[plan.currentStep] };
+  }
 }
 
 export default GoapController;

@@ -163,6 +163,7 @@ describe('RefinementEngine Integration Tests', () => {
         id: actionId,
         displayName: `Action ${actionId}`,
         operations: [],
+        operation: { type: 'NOOP' }, // Required for primitive action executor
       };
     });
 
@@ -311,7 +312,7 @@ describe('RefinementEngine Integration Tests', () => {
 
       const eventsSeen = [];
       const unsubscribe = eventBus.subscribe(event => {
-        if (event.type.startsWith('GOAP_')) {
+        if (event.type.startsWith('goap:')) {
           eventsSeen.push(event.type);
         }
       });
@@ -331,10 +332,10 @@ describe('RefinementEngine Integration Tests', () => {
         expect(result.stepResults).toHaveLength(1);
 
         // Verify events were dispatched
-        expect(eventsSeen).toContain('GOAP_REFINEMENT_STARTED');
-        expect(eventsSeen).toContain('GOAP_METHOD_SELECTED');
-        expect(eventsSeen).toContain('GOAP_STEP_EXECUTED');
-        expect(eventsSeen).toContain('GOAP_REFINEMENT_COMPLETED');
+        expect(eventsSeen).toContain('goap:refinement_started');
+        expect(eventsSeen).toContain('goap:method_selected');
+        expect(eventsSeen).toContain('goap:refinement_step_completed');
+        expect(eventsSeen).toContain('goap:refinement_completed');
       } finally {
         unsubscribe();
       }
@@ -651,7 +652,7 @@ describe('RefinementEngine Integration Tests', () => {
       };
 
       const unsubscribe = eventBus.subscribe(event => {
-        if (event.type.startsWith('GOAP_')) {
+        if (event.type.startsWith('goap:')) {
           eventsReceived.push({
             type: event.type,
             payload: event.payload,
@@ -666,13 +667,14 @@ describe('RefinementEngine Integration Tests', () => {
         });
 
         // Assert
-        expect(eventsReceived.length).toBeGreaterThanOrEqual(4);
+        expect(eventsReceived.length).toBeGreaterThanOrEqual(5);
 
         const eventTypes = eventsReceived.map(e => e.type);
-        expect(eventTypes[0]).toBe('GOAP_REFINEMENT_STARTED');
-        expect(eventTypes[1]).toBe('GOAP_METHOD_SELECTED');
-        expect(eventTypes[2]).toBe('GOAP_STEP_EXECUTED');
-        expect(eventTypes[3]).toBe('GOAP_REFINEMENT_COMPLETED');
+        expect(eventTypes[0]).toBe('goap:refinement_started');
+        expect(eventTypes[1]).toBe('goap:method_selected');
+        expect(eventTypes[2]).toBe('goap:refinement_step_started');
+        expect(eventTypes[3]).toBe('goap:refinement_step_completed');
+        expect(eventTypes[4]).toBe('goap:refinement_completed');
 
         // Verify event payloads contain expected data
         const startedEvent = eventsReceived[0];
@@ -684,10 +686,210 @@ describe('RefinementEngine Integration Tests', () => {
 
         const stepEvent = eventsReceived[2];
         expect(stepEvent.payload.stepIndex).toBe(0);
-        expect(stepEvent.payload.stepType).toBe('primitive_action');
+        expect(stepEvent.payload.step.stepType).toBe('primitive_action');
 
-        const completedEvent = eventsReceived[3];
-        expect(completedEvent.payload.success).toBe(true);
+        const stepCompletedEvent = eventsReceived[3];
+        expect(stepCompletedEvent.payload.result.success).toBe(true);
+      } finally {
+        unsubscribe();
+      }
+    });
+  });
+
+  describe('Step-level event dispatching', () => {
+    it('should dispatch step events during full refinement', async () => {
+      // Arrange
+      const eventLog = [];
+
+      // Create test task and method
+      const testTask = {
+        id: 'test.step_events_task',
+        name: 'Step Events Test Task',
+        params: [],
+        fallbackBehavior: 'fail',
+        refinementMethods: [
+          {
+            methodId: 'test.step_events_method',
+            methodRef: 'test.step_events_method',
+          },
+        ],
+      };
+
+      const testMethod = {
+        id: 'test.step_events_method',
+        name: 'Step Events Method',
+        taskId: 'test.step_events_task',
+        structuralGates: [],
+        planningPreconditions: [],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'core:test_action',
+            storeResultAs: 'step1',
+          },
+          {
+            stepType: 'primitive_action',
+            actionId: 'core:test_action_2',
+          },
+        ],
+      };
+
+      gameDataRepository.tasks[testTask.id] = testTask;
+      gameDataRepository.refinementMethods = {
+        [testMethod.id]: testMethod,
+      };
+      gameDataRepository.getTask.mockReturnValue(testTask);
+      gameDataRepository.getRefinementMethod.mockReturnValue(testMethod);
+
+      // Mock action index to return actions with operation
+      actionIndex.getActionById.mockImplementation((actionId) => ({
+        id: actionId,
+        name: `Test Action ${actionId}`,
+        targets: [],
+        operation: { type: 'NOOP' }, // Required for primitive action executor
+      }));
+
+      // Subscribe to all events
+      const unsubscribe = eventBus.subscribe((event) => {
+        eventLog.push(event);
+      });
+
+      try {
+        // Act
+        await refinementEngine.refine('test.step_events_task', 'test_actor_1', {});
+
+        // Assert: Verify step events were dispatched
+        const startedEvents = eventLog.filter(
+          (e) => e.type === 'goap:refinement_step_started'
+        );
+        const completedEvents = eventLog.filter(
+          (e) => e.type === 'goap:refinement_step_completed'
+        );
+        const stateUpdatedEvents = eventLog.filter(
+          (e) => e.type === 'goap:refinement_state_updated'
+        );
+
+        // Should have 2 steps
+        expect(startedEvents).toHaveLength(2);
+        expect(completedEvents).toHaveLength(2);
+
+        // First step has storeResultAs, so should have 1 state update event
+        expect(stateUpdatedEvents).toHaveLength(1);
+        expect(stateUpdatedEvents[0].payload.key).toBe('step1');
+
+        // Verify event ordering (started before completed for each step)
+        for (let i = 0; i < startedEvents.length; i++) {
+          const startedIndex = eventLog.indexOf(startedEvents[i]);
+          const completedIndex = eventLog.indexOf(completedEvents[i]);
+          expect(startedIndex).toBeLessThan(completedIndex);
+        }
+
+        // Verify step 0 and step 1 are correctly indexed
+        expect(startedEvents[0].payload.stepIndex).toBe(0);
+        expect(startedEvents[1].payload.stepIndex).toBe(1);
+        expect(completedEvents[0].payload.stepIndex).toBe(0);
+        expect(completedEvents[1].payload.stepIndex).toBe(1);
+
+        // Verify step details are included
+        expect(startedEvents[0].payload.step).toMatchObject({
+          stepType: 'primitive_action',
+          actionId: 'core:test_action',
+          storeResultAs: 'step1',
+        });
+
+        expect(startedEvents[1].payload.step).toMatchObject({
+          stepType: 'primitive_action',
+          actionId: 'core:test_action_2',
+        });
+      } finally {
+        unsubscribe();
+      }
+    });
+
+    it('should handle graceful step failure without throwing', async () => {
+      // Arrange
+      const eventLog = [];
+
+      const testTask = {
+        id: 'test.graceful_failure_task',
+        name: 'Graceful Failure Task',
+        params: [],
+        fallbackBehavior: 'fail',
+        refinementMethods: [
+          {
+            methodId: 'test.graceful_failure_method',
+            methodRef: 'test.graceful_failure_method',
+          },
+        ],
+      };
+
+      const testMethod = {
+        id: 'test.graceful_failure_method',
+        name: 'Graceful Failure Method',
+        taskId: 'test.graceful_failure_task',
+        structuralGates: [],
+        planningPreconditions: [],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'core:failing_action',
+          },
+        ],
+      };
+
+      gameDataRepository.tasks[testTask.id] = testTask;
+      gameDataRepository.refinementMethods = {
+        [testMethod.id]: testMethod,
+      };
+      gameDataRepository.getTask.mockReturnValue(testTask);
+      gameDataRepository.getRefinementMethod.mockReturnValue(testMethod);
+
+      // Make action index work normally
+      actionIndex.getActionById.mockReturnValue({
+        id: 'core:failing_action',
+        name: 'Failing Action',
+        targets: [],
+        operation: { type: 'NOOP' },
+      });
+
+      // Make operation fail gracefully (not throw)
+      operationInterpreter.execute.mockResolvedValue({
+        success: false,
+        data: {},
+        error: 'Operation failed gracefully',
+      });
+
+      const unsubscribe = eventBus.subscribe((event) => {
+        eventLog.push(event);
+      });
+
+      try {
+        // Act - Refinement completes even though step failed
+        const result = await refinementEngine.refine('test.graceful_failure_task', 'test_actor_1', {});
+
+        // Assert - Refinement itself succeeds
+        expect(result.success).toBe(true);
+        expect(result.stepResults).toHaveLength(1);
+        expect(result.stepResults[0].success).toBe(false);
+
+        // Verify step started event was dispatched
+        const startedEvents = eventLog.filter(
+          (e) => e.type === 'goap:refinement_step_started'
+        );
+        expect(startedEvents).toHaveLength(1);
+
+        // Verify step completed event was dispatched (even for graceful failure)
+        const completedEvents = eventLog.filter(
+          (e) => e.type === 'goap:refinement_step_completed'
+        );
+        expect(completedEvents).toHaveLength(1);
+        expect(completedEvents[0].payload.result.success).toBe(false);
+
+        // Verify NO step failed event (graceful failures don't trigger STEP_FAILED event)
+        const failedEvents = eventLog.filter(
+          (e) => e.type === 'goap:refinement_step_failed'
+        );
+        expect(failedEvents).toHaveLength(0);
       } finally {
         unsubscribe();
       }

@@ -143,6 +143,39 @@ Implemented pure state transformation service for GOAP planning:
 
 **Test Coverage**: 86.79% statements, 67.64% branches, 100% functions, 100% lines
 
+#### GOAPIMPL-025: GOAP Debugging Tools
+**Status**: ✅ COMPLETED
+**Completed**: 2025-11-16
+**Tickets**: GOAPIMPL-025-01 through GOAPIMPL-025-07
+
+**Components**:
+- Plan Inspector (`src/goap/debug/planInspector.js`)
+- State Diff Viewer (`src/goap/debug/stateDiffViewer.js`)
+- Refinement Tracer (`src/goap/debug/refinementTracer.js`)
+- GOAP Debugger (`src/goap/debug/goapDebugger.js`)
+
+**Features**:
+- Active plan inspection with entity resolution
+- Planning state diff visualization
+- Step-by-step refinement tracing
+- Unified debug API with combined reporting
+- Full event-driven architecture
+
+**DI Integration**:
+- Token: `IGOAPDebugger` (tokens-core.js line 369)
+- Registration: goapRegistrations.js lines 281-290
+- Dependencies: GoapController, PlanInspector, StateDiffViewer, RefinementTracer, Logger
+
+**Key Files Created**:
+- `src/goap/debug/planInspector.js`
+- `src/goap/debug/stateDiffViewer.js`
+- `src/goap/debug/refinementTracer.js`
+- `src/goap/debug/goapDebugger.js`
+- `tests/unit/goap/debug/*.test.js` (4 test files)
+- `tests/integration/goap/debug/*.integration.test.js` (3 test files)
+
+**Documentation**: `docs/goap/debugging-tools.md`
+
 ### 🔄 In Progress
 
 *None currently*

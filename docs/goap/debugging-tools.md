@@ -1,34 +1,3 @@
-# GOAPIMPL-025-07: GOAP Debugging Tools Documentation
-
-**Parent Ticket**: GOAPIMPL-025 (GOAP Debugging Tools)
-**Priority**: LOW
-**Estimated Effort**: 1 hour
-**Dependencies**: All other GOAPIMPL-025 tickets
-
-## Description
-
-Create comprehensive documentation for GOAP debugging tools, including usage guides, examples, troubleshooting tips, and integration with the testing workflow. This documentation ensures developers can effectively debug GOAP behavior during development and testing.
-
-**Reference**:
-- Parent ticket: `tickets/GOAPIMPL-025-goap-debugging-tools.md`
-- Spec: `specs/goap-system-specs.md` lines 507-516
-
-## Acceptance Criteria
-
-- [ ] Usage guide with examples
-- [ ] API reference for all tools
-- [ ] Troubleshooting section
-- [ ] Integration with test workflow documented
-- [ ] Performance considerations documented
-- [ ] Documentation updated in docs/goap/
-
-## Documentation Structure
-
-### File to Create
-
-`docs/goap/debugging-tools.md`
-
-```markdown
 # GOAP Debugging Tools
 
 **Status**: ✅ Complete
@@ -77,16 +46,16 @@ debugger.stopTrace('actor-123');
 // In integration test
 it('should debug GOAP behavior', async () => {
   const debugger = container.resolve(tokens.IGOAPDebugger);
-  
+
   debugger.startTrace('actor-1');
-  
+
   await goapController.decideTurn(actor, world);
-  
+
   const trace = debugger.stopTrace('actor-1');
   const formatted = debugger.formatTrace(trace);
-  
+
   console.log(formatted);
-  
+
   // Assert on trace events
   expect(trace.events).toContainEqual(
     expect.objectContaining({
@@ -103,8 +72,8 @@ it('should debug GOAP behavior', async () => {
 **Purpose**: Display active GOAP plans with task details and parameters.
 
 **Methods**:
-- `inspectPlan(actorId)` - Returns formatted plan text
-- `inspectPlanJSON(actorId)` - Returns plan as JSON object
+- `inspect(actorId)` - Returns formatted plan text
+- `inspectJSON(actorId)` - Returns plan as JSON object
 
 **Example Output**:
 ```
@@ -145,8 +114,9 @@ Failure Tracking:
 **IMPORTANT**: Works with **planning state hashes** (symbolic key-value pairs), not ECS components.
 
 **Methods**:
-- `showStateDiff(beforeState, afterState, options)` - Returns formatted diff
-- `showStateDiffJSON(beforeState, afterState)` - Returns diff as JSON
+- `diff(beforeState, afterState)` - Returns diff object
+- `visualize(beforeState, afterState, options)` - Returns formatted diff text
+- `diffJSON(beforeState, afterState)` - Returns diff as JSON
 
 **Example Output**:
 ```
@@ -178,10 +148,10 @@ Total Changes: 4 (1 added, 2 modified, 1 removed)
 **Purpose**: Capture step-by-step refinement method execution.
 
 **Methods**:
-- `startTrace(actorId)` - Begin capturing events
-- `stopTrace(actorId)` - Stop and return trace
+- `startCapture(actorId)` - Begin capturing events
+- `stopCapture(actorId)` - Stop and return trace
 - `getTrace(actorId)` - Get current trace without stopping
-- `formatTrace(trace)` - Format trace as text
+- `format(trace)` - Format trace as text
 
 **Example Output**:
 ```
@@ -406,13 +376,13 @@ import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
 it('should trace refinement execution', async () => {
   const debugger = container.resolve(tokens.IGOAPDebugger);
-  
+
   debugger.startTrace('actor-1');
-  
+
   await refinementEngine.refineTask(task, world, context);
-  
+
   const trace = debugger.stopTrace('actor-1');
-  
+
   // Assert on events
   expect(trace.events).toContainEqual(
     expect.objectContaining({
@@ -422,7 +392,7 @@ it('should trace refinement execution', async () => {
       }),
     })
   );
-  
+
   // Verify steps executed
   const stepsCompleted = trace.events.filter(
     e => e.type === GOAP_EVENTS.REFINEMENT_STEP_COMPLETED
@@ -436,28 +406,84 @@ it('should trace refinement execution', async () => {
 ```javascript
 it('should debug complete GOAP workflow', async () => {
   const debugger = container.resolve(tokens.IGOAPDebugger);
-  
+
   // Start comprehensive debugging
   debugger.startTrace('actor-1');
-  
+
   // Execute full turn
   await goapController.decideTurn(actor, world);
-  
+
   // Generate report
   const report = debugger.generateReport('actor-1');
-  
+
   // Log for manual inspection
   console.log(report);
-  
+
   // Programmatic assertions
   const plan = debugger.inspectPlanJSON('actor-1');
   expect(plan).not.toBeNull();
   expect(plan.plan.tasks.length).toBeGreaterThan(0);
-  
+
   const trace = debugger.stopTrace('actor-1');
   expect(trace.events.length).toBeGreaterThan(0);
 });
 ```
+
+## Implementation Notes
+
+### Verified Codebase State
+
+**Debug Infrastructure** (all files exist):
+- ✅ `src/goap/debug/planInspector.js`
+- ✅ `src/goap/debug/stateDiffViewer.js`
+- ✅ `src/goap/debug/refinementTracer.js`
+- ✅ `src/goap/debug/goapDebugger.js`
+
+**Test Files** (all exist):
+- ✅ `tests/unit/goap/debug/planInspector.test.js`
+- ✅ `tests/unit/goap/debug/stateDiffViewer.test.js`
+- ✅ `tests/unit/goap/debug/refinementTracer.test.js`
+- ✅ `tests/unit/goap/debug/goapDebugger.test.js`
+- ✅ `tests/integration/goap/debug/stateDiffViewerIntegration.test.js`
+- ✅ `tests/integration/goap/debug/refinementTracerIntegration.test.js`
+- ✅ `tests/integration/goap/debug/goapDebuggerIntegration.test.js`
+
+**DI Configuration**:
+- ✅ Token `IGOAPDebugger` exists at `tokens-core.js:369`
+- ✅ Registration in `goapRegistrations.js:281-290`
+- ✅ Dependencies: GoapController, PlanInspector, StateDiffViewer, RefinementTracer, Logger
+
+**GoapController Debug API** (verified methods exist):
+- ✅ `getActivePlan(actorId)` at line 1105
+- ✅ `getFailedGoals(actorId)` at line 1133
+- ✅ `getFailedTasks(actorId)` at line 1175
+- ✅ `getCurrentTask(actorId)` at line 1210
+
+**GOAP Events** (verified in `goapEvents.js`):
+- ✅ `TASK_REFINED` (line 69)
+- ✅ `REFINEMENT_STEP_STARTED` (line 105)
+- ✅ `REFINEMENT_STEP_COMPLETED` (line 111)
+- ✅ `REFINEMENT_STEP_FAILED` (line 117)
+- ✅ `REFINEMENT_STATE_UPDATED` (line 123)
+
+**Debug Tool Methods** (verified):
+- ✅ PlanInspector: `inspect()`, `inspectJSON()`
+- ✅ StateDiffViewer: `diff()`, `visualize()`, `diffJSON()`
+- ✅ RefinementTracer: `startCapture()`, `stopCapture()`, `getTrace()`, `format()`
+- ✅ GOAPDebugger: Delegates to all sub-tools with convenience wrapper methods
+
+### Method Name Reference
+
+**Important**: GOAPDebugger provides convenience wrapper methods that delegate to the underlying tools:
+
+- `debugger.inspectPlan()` → `planInspector.inspect()`
+- `debugger.inspectPlanJSON()` → `planInspector.inspectJSON()`
+- `debugger.showStateDiff()` → `stateDiffViewer.visualize()`
+- `debugger.showStateDiffJSON()` → `stateDiffViewer.diffJSON()`
+- `debugger.startTrace()` → `refinementTracer.startCapture()`
+- `debugger.stopTrace()` → `refinementTracer.stopCapture()`
+
+This allows users to use intuitive method names while maintaining clean separation in the underlying tool implementations.
 
 ## References
 
@@ -466,87 +492,3 @@ it('should debug complete GOAP workflow', async () => {
 - Controller: `src/goap/controllers/goapController.js`
 - Spec: `specs/goap-system-specs.md`
 - Parent Ticket: `tickets/GOAPIMPL-025-goap-debugging-tools.md`
-```
-
-### File to Update
-
-`docs/goap/IMPLEMENTATION-STATUS.md`
-
-Add new section:
-
-```markdown
-### Debugging Tools ✅ COMPLETE
-
-**Status**: Fully implemented and tested
-**Tickets**: GOAPIMPL-025-01 through GOAPIMPL-025-07
-
-**Components**:
-- Plan Inspector (`src/goap/debug/planInspector.js`)
-- State Diff Viewer (`src/goap/debug/stateDiffViewer.js`)
-- Refinement Tracer (`src/goap/debug/refinementTracer.js`)
-- GOAP Debugger (`src/goap/debug/goapDebugger.js`)
-
-**Features**:
-- Active plan inspection with entity resolution
-- Planning state diff visualization
-- Step-by-step refinement tracing
-- Unified debug API with combined reporting
-- Full event-driven architecture
-
-**DI Integration**:
-- Token: `IGOAPDebugger` (tokens-core.js)
-- Registration: goapRegistrations.js
-- Dependencies: GoapController, EventBus, DataRegistry, EntityManager
-
-**Documentation**: `docs/goap/debugging-tools.md`
-```
-
-## Testing Requirements
-
-### Documentation Validation
-
-1. **Accuracy Check**:
-   - Verify all code examples are correct
-   - Test all API examples in console
-   - Validate output examples match actual output
-
-2. **Completeness Check**:
-   - All debug tools documented
-   - All methods have examples
-   - Troubleshooting covers common issues
-
-3. **Integration Check**:
-   - Test workflow examples work end-to-end
-   - Verify integration with testing patterns
-
-## Manual Testing
-
-1. **Follow Quick Start**:
-   - Execute quick start example
-   - Verify output matches documentation
-
-2. **Test Advanced Examples**:
-   - Run each advanced usage example
-   - Verify behavior is as documented
-
-3. **Troubleshooting Validation**:
-   - Intentionally trigger each issue
-   - Verify solutions work
-
-## Success Validation
-
-✅ **Done when**:
-- `docs/goap/debugging-tools.md` created
-- `docs/goap/IMPLEMENTATION-STATUS.md` updated
-- All code examples tested
-- All output examples verified
-- Troubleshooting section validated
-- Documentation reviewed for clarity
-- Links to relevant files correct
-
-## References
-
-- Parent: `tickets/GOAPIMPL-025-goap-debugging-tools.md`
-- All GOAPIMPL-025 sub-tickets
-- Existing docs: `docs/goap/IMPLEMENTATION-STATUS.md`
-- Spec: `specs/goap-system-specs.md`
