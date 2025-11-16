@@ -143,7 +143,7 @@ describe('TraitsGeneratorController', () => {
 
       // BaseCharacterBuilderController wraps errors with additional context
       await expect(controller.initialize()).rejects.toThrow(
-        'initial data loading failed: Service unavailable'
+        'load thematic directions failed: Service unavailable'
       );
     });
 
@@ -1108,7 +1108,7 @@ describe('TraitsGeneratorController', () => {
 
       // BaseCharacterBuilderController wraps errors with additional context
       await expect(controller.initialize()).rejects.toThrow(
-        'initial data loading failed: Service initialization failed'
+        'load thematic directions failed: Service initialization failed'
       );
     });
 
