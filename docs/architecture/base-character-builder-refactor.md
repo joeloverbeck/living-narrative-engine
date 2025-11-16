@@ -214,3 +214,99 @@ return strategy.executeWithErrorHandling(
   `tests/unit/characterBuilder/services/memoryManager.test.js`. Run
   `npx jest tests/unit/characterBuilder/services/memoryManager.test.js`
   during development to verify weak reference behavior and logging.
+
+## Dependent Controller Migration (BASCHACUICONREF-011)
+
+### Overview
+
+Per `BASCHACUICONREF-000-overview.md`, the BaseCharacterBuilderController
+refactor remains in the alignment and planning stage. Production
+controllers continue to rely on the wrapper utilities provided by
+`BaseCharacterBuilderController` (for example, `_cacheElementsFromMap()`,
+`_addEventListener()`, `_handleServiceError()`). Documentation updates
+describe this wrapper-based access model and clearly separate any future
+wrapper-to-direct-service migration work.
+
+- **TraitsGeneratorController**: Uses `_getDomManager().cacheElementsFromMap()`
+  and `this.eventRegistry.addEventListener(...)`.
+- **SpeechPatternsGeneratorController**: Uses `_cacheElementsFromMap()` and
+  `this.eventRegistry.addEventListener(...)`.
+- **TraitsRewriterController**: Uses `_cacheElementsFromMap()`,
+  `_handleServiceError()`, `_addEventListener()`, and
+  `_getAsyncUtilitiesToolkit().debounce()`.
+
+**Migration Status**: No wrapper deprecations or migrations have been
+completed in production; future plans must align with
+`BASCHACUICONREF-000-overview.md`.
+
+### Migration Patterns Applied
+
+#### 1. DOM Element Caching
+
+**Before (Wrapper):**
+
+```javascript
+_cacheElements() {
+  this._cacheElementsFromMap({
+    elementName: '#element-selector',
+    // ...
+  });
+}
+```
+
+**After (Direct Service Access):**
+
+```javascript
+_cacheElements() {
+  this._getDomManager().cacheElementsFromMap({
+    elementName: '#element-selector',
+    // ...
+  });
+}
+```
+
+#### 2. Event Listener Registration
+
+**Before (Wrapper):**
+
+```javascript
+this._addEventListener('elementName', 'click', handlerFunction);
+```
+
+**Current Production Pattern:**
+
+```javascript
+// Access the shared registry via the BaseCharacterBuilderController getter
+const element = this._getElement('elementName');
+this.eventRegistry.addEventListener(element, 'click', handlerFunction);
+
+// Some controllers still use the provided wrapper for brevity
+this._addEventListener('elementName', 'click', handlerFunction);
+```
+
+#### 3. Error Handling (TraitsGeneratorController only)
+
+**Before (Wrapper):**
+
+```javascript
+this._handleServiceError(error, 'operation', 'User message');
+```
+
+**Current Production Pattern:**
+
+```javascript
+// Use inherited wrapper
+this._handleServiceError(error, 'operation', 'User message');
+```
+
+#### 4. Async Utilities (Debounce)
+
+**Current Production Pattern:**
+
+```javascript
+this.#debouncedHandler = this._getAsyncUtilitiesToolkit().debounce(
+  handlerFunction,
+  delayMs,
+  options
+);
+```
