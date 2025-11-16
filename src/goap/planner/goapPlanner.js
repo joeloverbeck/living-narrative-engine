@@ -9,6 +9,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import MinHeap from './minHeap.js';
 import PlanningNode from './planningNode.js';
+import { detectGoalType, allowsOvershoot } from './goalTypeDetector.js';
 
 /**
  * GOAP planner using A* algorithm to find action sequences achieving goals
@@ -1122,17 +1123,22 @@ class GoapPlanner {
    * @param {object} _successorState - State after applying task (already simulated)
    * @param {number} successorDistance - Distance to goal from successor state (already calculated)
    * @param {number} currentDistance - Distance to goal from current state
-   * @param {object} _goal - Goal being planned for (reserved for future use)
+   * @param {object} goal - Goal being planned for (used for diagnostic logging)
    * @returns {boolean} True if task can be reused
    * @private
    */
-  #isTaskReusable(task, currentNode, _successorState, successorDistance, currentDistance, _goal) {
+  #isTaskReusable(task, currentNode, _successorState, successorDistance, currentDistance, goal) {
     // 1. Check if distance reduced (same check as #taskReducesDistance)
     if (successorDistance >= currentDistance) {
+      const goalType = detectGoalType(goal.goalState);
+      const overshootAllowed = allowsOvershoot(goal.goalState);
+
       this.#logger.debug('Task does not reduce distance, not reusable', {
         taskId: task.id,
         currentDistance,
         successorDistance,
+        goalType,
+        allowsOvershoot: overshootAllowed,
       });
       return false;
     }
