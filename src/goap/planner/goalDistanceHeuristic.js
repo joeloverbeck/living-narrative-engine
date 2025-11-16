@@ -1,26 +1,71 @@
 /**
- * @file Goal Distance Heuristic for GOAP planning
- * Simple heuristic that counts the number of unsatisfied goal conditions.
- * Admissible: each condition requires at least 1 action to satisfy.
+ * @file Goal Distance Heuristic for multi-action GOAP planning
+ *
+ * Simple, admissible heuristic for A* search that:
+ * - Counts unsatisfied goal conditions (boolean evaluation)
+ * - Computes numeric distances for numeric constraints (inequality goals)
+ * - Enhanced mode: Estimates task count via most effective task analysis
+ *
+ * Admissibility: Never overestimates cost to goal
+ * - Each condition requires ≥1 task to satisfy
+ * - Numeric distances are exact (no overestimation)
+ * - Enhanced mode uses actual task effects (still admissible)
+ *
+ * Time Complexity:
+ * - Standard mode: O(n) for n goal conditions
+ * - Enhanced mode: O(n + t) for t available tasks
+ *
+ * Best For:
+ * - Multi-action numeric goals (e.g., reduce hunger 100 → 0)
+ * - Simple goals with independent conditions
+ * - Fast planning with reasonable accuracy
+ *
+ * @see src/goap/planner/relaxedPlanningGraphHeuristic.js - More accurate alternative
+ * @see docs/goap/multi-action-planning.md#heuristic-enhancement
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /**
- * Goal Distance Heuristic
+ * Goal Distance Heuristic for Multi-Action Planning
  *
- * Calculates heuristic value by counting unsatisfied goal conditions or computing
- * numeric distances for numeric constraints. This is a simple, fast, admissible
- * heuristic suitable for goals with independent conditions and numeric constraints.
+ * Two-Mode Heuristic:
  *
- * Enhanced with multi-action cost estimation that estimates the number of actions
- * needed to reach a goal by finding the most effective task and calculating how
- * many applications would be required.
+ * 1. **Standard Mode** (when tasks not provided):
+ *    - Count unsatisfied boolean conditions
+ *    - Sum numeric distances for inequality goals (≤, ≥)
+ *    - Fast: O(n) for n conditions
  *
- * Time Complexity: O(n) where n = number of conditions (O(t) for enhanced with t tasks)
- * Admissibility: Yes (each condition requires ≥1 action, numeric distances are exact)
- * Best for: Simple goals with independent conditions and numeric goals
+ * 2. **Enhanced Mode** (when tasks provided):
+ *    - Analyze task effects to find most effective task per goal field
+ *    - Estimate task count needed: Math.ceil(distance / maxEffect)
+ *    - More accurate guidance for multi-action scenarios
+ *    - Slower: O(n + t) for t tasks
+ *
+ * Admissibility Guarantees:
+ * - Never overestimates cost (required for A* optimality)
+ * - Each condition requires ≥1 task (conservative for standard mode)
+ * - Task count estimates based on actual max effects (admissible for enhanced mode)
+ * - Numeric distances exact for current state
+ *
+ * Usage in GOAP:
+ * - Guides A* search to explore promising paths first
+ * - Reduces search space expansion significantly
+ * - Critical for multi-action planning efficiency
+ *
+ * Examples:
+ * - Goal: hunger ≤ 10, Current: 100, Task: -60 hunger
+ *   Standard: 1 (unsatisfied condition)
+ *   Enhanced: 2 (Math.ceil(90 / 60) = 2 tasks needed)
+ *
+ * - Goal: gold ≥ 100, Current: 0, Task: +25 gold
+ *   Standard: 1 (unsatisfied condition)
+ *   Enhanced: 4 (Math.ceil(100 / 25) = 4 tasks needed)
+ *
+ * @class
+ * @see docs/goap/multi-action-planning.md for usage guide
+ * @see src/goap/planner/numericConstraintEvaluator.js for numeric constraint handling
  */
 class GoalDistanceHeuristic {
   #jsonLogicEvaluator;
