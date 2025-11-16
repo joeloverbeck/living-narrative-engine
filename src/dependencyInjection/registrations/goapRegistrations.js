@@ -23,6 +23,7 @@ import PlanInspector from '../../goap/debug/planInspector.js';
 import StateDiffViewer from '../../goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../goap/debug/refinementTracer.js';
 import GOAPDebugger from '../../goap/debug/goapDebugger.js';
+import NumericConstraintEvaluator from '../../goap/planner/numericConstraintEvaluator.js';
 
 /**
  * Registers GOAP system services with the dependency injection container.
@@ -149,11 +150,25 @@ export function registerGoapServices(container) {
   // GOAP Heuristics (GOAPIMPL-017)
   // A* search heuristics for GOAP planning
 
+  // Numeric Constraint Evaluator
+  // Evaluates numeric constraints (>=, <=, ==, <, >) for GOAP planning
+  // Calculates distances from current values to constraint satisfaction
+  container.register(tokens.INumericConstraintEvaluator, NumericConstraintEvaluator, {
+    dependencies: [tokens.JsonLogicEvaluationService, tokens.ILogger],
+    lifecycle: 'singleton',
+  });
+
   // Goal Distance Heuristic
   // Simple, fast heuristic that counts unsatisfied goal conditions
+  // Enhanced with multi-action cost estimation using task effects
   // Admissible: each condition requires at least 1 action
   container.register(tokens.IGoalDistanceHeuristic, GoalDistanceHeuristic, {
-    dependencies: [tokens.JsonLogicEvaluationService, tokens.ILogger],
+    dependencies: [
+      tokens.JsonLogicEvaluationService,
+      tokens.INumericConstraintEvaluator,
+      tokens.IPlanningEffectsSimulator,  // NEW: Required for task effect estimation
+      tokens.ILogger
+    ],
     lifecycle: 'singleton',
   });
 

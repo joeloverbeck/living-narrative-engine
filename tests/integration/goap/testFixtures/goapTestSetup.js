@@ -14,6 +14,7 @@ import PlanningEffectsSimulator from '../../../../src/goap/planner/planningEffec
 import HeuristicRegistry from '../../../../src/goap/planner/heuristicRegistry.js';
 import GoalDistanceHeuristic from '../../../../src/goap/planner/goalDistanceHeuristic.js';
 import RelaxedPlanningGraphHeuristic from '../../../../src/goap/planner/relaxedPlanningGraphHeuristic.js';
+import NumericConstraintEvaluator from '../../../../src/goap/planner/numericConstraintEvaluator.js';
 import ContextAssemblyService from '../../../../src/goap/services/contextAssemblyService.js';
 import ParameterResolutionService from '../../../../src/goap/services/parameterResolutionService.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
@@ -239,8 +240,15 @@ export async function createGoapTestSetup(config = {}) {
   });
 
   // 7. Create heuristics
+  const numericConstraintEvaluator = new NumericConstraintEvaluator({
+    jsonLogicEvaluator: jsonLogicService,
+    logger: testBed.createMockLogger(),
+  });
+
   const goalDistanceHeuristic = new GoalDistanceHeuristic({
     jsonLogicEvaluator: jsonLogicService,
+    numericConstraintEvaluator,
+    planningEffectsSimulator: effectsSimulator,
     logger: testBed.createMockLogger(),
   });
 

@@ -9,14 +9,37 @@
  */
 export function createEventBusRecorder() {
   const events = [];
+  const listeners = new Map(); // Map<eventType, Set<handler>>
 
   const eventBus = {
     dispatch: jest.fn((type, payload) => {
-      events.push({
+      const event = {
         type,
         payload,
         timestamp: Date.now(),
-      });
+      };
+      events.push(event);
+
+      // Trigger registered listeners
+      const handlers = listeners.get(type);
+      if (handlers) {
+        handlers.forEach((handler) => handler(event));
+      }
+    }),
+
+    // Event listener registration (for RefinementTracer)
+    on: jest.fn((eventType, handler) => {
+      if (!listeners.has(eventType)) {
+        listeners.set(eventType, new Set());
+      }
+      listeners.get(eventType).add(handler);
+    }),
+
+    off: jest.fn((eventType, handler) => {
+      const handlers = listeners.get(eventType);
+      if (handlers) {
+        handlers.delete(handler);
+      }
     }),
 
     // Helper methods for test assertions

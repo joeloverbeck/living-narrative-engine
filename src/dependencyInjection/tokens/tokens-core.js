@@ -367,4 +367,6 @@ export const coreTokens = freeze({
   IStateDiffViewer: 'IStateDiffViewer',
   IRefinementTracer: 'IRefinementTracer',
   IGOAPDebugger: 'IGOAPDebugger',
+  // GOAP Numeric Constraint Evaluator (MODCOMPLASUP-001)
+  INumericConstraintEvaluator: 'INumericConstraintEvaluator',
 });

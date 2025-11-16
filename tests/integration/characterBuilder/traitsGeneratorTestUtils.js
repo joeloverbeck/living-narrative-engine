@@ -249,12 +249,219 @@ function createControllerSetup({
     typeof traitsDisplayEnhancerFactory === 'function'
       ? traitsDisplayEnhancerFactory({ logger })
       : new TraitsDisplayEnhancer({ logger });
+  
+  // Create required service mocks (added after refactoring)
+  const lifecycleState = {
+    isInitialized: false,
+    isDestroyed: false,
+    isInitializing: false,
+    isDestroying: false,
+  };
+
+  // Store registered hooks so they can be executed during initialize()
+  const registeredHooks = new Map();
+
+  const controllerLifecycleOrchestrator = {
+    initialize: jest.fn().mockImplementation(async () => {
+      lifecycleState.isInitializing = true;
+
+      // Execute all registered hooks in order
+      const phases = ['preInit', 'cacheElements', 'initServices', 'setupEventListeners', 'loadData', 'initUI', 'postInit'];
+      for (const phase of phases) {
+        const phaseHooks = registeredHooks.get(phase);
+        if (phaseHooks && phaseHooks.length > 0) {
+          for (const hook of phaseHooks) {
+            await hook();
+          }
+        }
+      }
+
+      lifecycleState.isInitializing = false;
+      lifecycleState.isInitialized = true;
+    }),
+    destroy: jest.fn().mockImplementation(() => {
+      lifecycleState.isDestroyed = true;
+    }),
+    setControllerName: jest.fn(),
+    registerHook: jest.fn((phase, hook) => {
+      if (!registeredHooks.has(phase)) {
+        registeredHooks.set(phase, []);
+      }
+      registeredHooks.get(phase).push(hook);
+    }),
+    createControllerMethodHook: jest.fn((controller, methodName) => async () => {
+      if (typeof controller[methodName] === 'function') {
+        await controller[methodName]();
+      }
+    }),
+    registerCleanupTask: jest.fn(),
+    checkDestroyed: jest.fn().mockReturnValue(false),
+    makeDestructionSafe: jest.fn((fn) => fn),
+    get isInitialized() { return lifecycleState.isInitialized; },
+    get isDestroyed() { return lifecycleState.isDestroyed; },
+    get isInitializing() { return lifecycleState.isInitializing; },
+    get isDestroying() { return lifecycleState.isDestroying; },
+  };
+  
+  // DOM element manager with actual caching functionality
+  const cachedElements = new Map();
+
+  const domElementManager = {
+    configure: jest.fn(),
+    cacheElement: jest.fn((key, selector, required = true) => {
+      const element = typeof selector === 'string'
+        ? document.querySelector(selector)
+        : selector;
+      if (element) {
+        cachedElements.set(key, element);
+      }
+      return element;
+    }),
+    getElement: jest.fn((key) => {
+      // First check cache, then try direct DOM lookup
+      if (cachedElements.has(key)) {
+        return cachedElements.get(key);
+      }
+      const element = document.getElementById(key);
+      if (element) {
+        cachedElements.set(key, element);
+      }
+      return element;
+    }),
+    clearCache: jest.fn(() => {
+      cachedElements.clear();
+    }),
+    validateElementCache: jest.fn(),
+    getElementsSnapshot: jest.fn(() => {
+      const snapshot = {};
+      cachedElements.forEach((element, key) => {
+        snapshot[key] = element;
+      });
+      return snapshot;
+    }),
+    cacheElementsFromMap: jest.fn((elementMap, options = {}) => {
+      Object.entries(elementMap).forEach(([key, config]) => {
+        const selector = typeof config === 'string' ? config : config.selector;
+        const required = typeof config === 'object' ? config.required !== false : true;
+        const element = document.querySelector(selector);
+        if (element) {
+          cachedElements.set(key, element);
+        } else if (required) {
+          console.warn(`Required element not found: ${key} (${selector})`);
+        }
+      });
+    }),
+    setElementText: jest.fn((key, text) => {
+      const element = cachedElements.get(key);
+      if (element) {
+        element.textContent = text;
+      }
+    }),
+    setElementEnabled: jest.fn((key, enabled = true) => {
+      const element = cachedElements.get(key);
+      if (element) {
+        element.disabled = !enabled;
+      }
+    }),
+    showElement: jest.fn((key, displayType = 'block') => {
+      const element = cachedElements.get(key);
+      if (element) {
+        element.style.display = displayType;
+      }
+    }),
+    hideElement: jest.fn((key) => {
+      const element = cachedElements.get(key);
+      if (element) {
+        element.style.display = 'none';
+      }
+    }),
+    addElementClass: jest.fn((key, className) => {
+      const element = cachedElements.get(key);
+      if (element) {
+        element.classList.add(className);
+      }
+    }),
+    removeElementClass: jest.fn((key, className) => {
+      const element = cachedElements.get(key);
+      if (element) {
+        element.classList.remove(className);
+      }
+    }),
+  };
+  
+  // Event listener registry that actually registers events
+  const eventListenerRegistry = {
+    setContextName: jest.fn(),
+    addEventListener: jest.fn((element, eventType, handler) => {
+      if (element && typeof element.addEventListener === 'function') {
+        element.addEventListener(eventType, handler);
+      }
+    }),
+    detachEventBusListeners: jest.fn(),
+    destroy: jest.fn(),
+  };
+  
+  const asyncUtilitiesToolkit = {
+    setTimeout: jest.fn((cb, delay) => setTimeout(cb, delay)),
+    clearTimeout: jest.fn((id) => clearTimeout(id)),
+    getTimerStats: jest.fn().mockReturnValue({ timeouts: { count: 0 }, intervals: { count: 0 }, animationFrames: { count: 0 } }),
+    clearAllTimers: jest.fn(),
+  };
+  
+  const performanceMonitor = {
+    configure: jest.fn(),
+    clearData: jest.fn(),
+  };
+  
+  const memoryManager = {
+    setContextName: jest.fn(),
+    clear: jest.fn(),
+  };
+  
+  const errorHandlingStrategy = {
+    configureContext: jest.fn(),
+    handleError: jest.fn(),
+    resetLastError: jest.fn(),
+    executeWithErrorHandling: jest.fn(async (operation, operationName, options = {}) => {
+      const { retries = 0 } = options;
+      let lastError;
+
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          return await operation();
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError;
+    }),
+    handleServiceError: jest.fn((error, operation, userMessage) => {
+      console.error(`Service error in ${operation}:`, error);
+      throw error;
+    }),
+    isRetryableError: jest.fn(() => false),
+  };
+  
+  const validationService = {
+    configure: jest.fn(),
+    validateData: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+  };
+  
   const controller = new TraitsGeneratorController({
     logger,
     characterBuilderService: service,
     eventBus,
     schemaValidator,
     traitsDisplayEnhancer,
+    controllerLifecycleOrchestrator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
   });
   return { controller, logger, eventBus, schemaValidator, service };
 }

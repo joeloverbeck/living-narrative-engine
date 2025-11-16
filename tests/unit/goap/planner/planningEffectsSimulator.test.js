@@ -1162,10 +1162,12 @@ describe('PlanningEffectsSimulator - Error Handling', () => {
 
     expect(result.success).toBe(true);
     expect(result.state['entity-1:core:stats'].level).toBe(1);
+    // With safe modification, unknown mode is logged directly by #applyModification
     const warnCall = mockLogger.warn.mock.calls.find((call) =>
-      call[0].includes('Failed to simulate effect')
+      call[0].includes('Unknown modification mode')
     );
-    expect(warnCall[1].error).toContain('Unknown modification mode');
+    expect(warnCall).toBeDefined();
+    expect(warnCall[0]).toContain('Unknown modification mode');
   });
 
   it('should surface unknown operation type if effect mutates mid-execution', () => {
@@ -1351,5 +1353,787 @@ describe('PlanningEffectsSimulator - Edge Case Simulations', () => {
 
     expect(result.success).toBe(true);
     expect(result.state['entity-1:core:nutrition:hungerLevel']).toBe(6);
+  });
+});
+
+describe('PlanningEffectsSimulator - MODIFY_COMPONENT Type Safety', () => {
+  let testBed;
+  let simulator;
+  let mockLogger;
+  let mockParameterResolution;
+  let mockContextAssembly;
+
+  beforeEach(() => {
+    testBed = createTestBed();
+    mockLogger = testBed.createMockLogger();
+    mockParameterResolution = testBed.createMock(
+      'IParameterResolutionService',
+      ['resolve', 'clearCache']
+    );
+    mockContextAssembly = testBed.createMock(
+      'IContextAssemblyService',
+      ['assemblePlanningContext']
+    );
+
+    simulator = new PlanningEffectsSimulator({
+      parameterResolutionService: mockParameterResolution,
+      contextAssemblyService: mockContextAssembly,
+      logger: mockLogger,
+    });
+  });
+
+  afterEach(() => {
+    testBed.cleanup();
+  });
+
+  it('should reject string modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment', // Changed from 'set' - type validation only applies to increment/decrement
+          value: 'not a number',
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('type validation failed');
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('value is not a number'),
+      expect.objectContaining({
+        entityId: 'entity-1',
+        componentType: 'core:nutrition',
+        field: 'hungerLevel',
+        valueType: 'string',
+      })
+    );
+  });
+
+  it('should reject NaN modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: NaN,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('type validation failed');
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('value is NaN'),
+      expect.objectContaining({
+        entityId: 'entity-1',
+        componentType: 'core:nutrition',
+        field: 'hungerLevel',
+      })
+    );
+  });
+
+  it('should reject Infinity modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment', // Changed from 'set' - type validation only applies to increment/decrement
+          value: Infinity,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('type validation failed');
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('value is Infinity'),
+      expect.objectContaining({
+        entityId: 'entity-1',
+        componentType: 'core:nutrition',
+        field: 'hungerLevel',
+      })
+    );
+  });
+
+  it('should reject negative Infinity modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'decrement',
+          value: -Infinity,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('type validation failed');
+  });
+
+  it('should reject null modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment', // Changed from 'set' - type validation only applies to increment/decrement
+          value: null,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('type validation failed');
+  });
+
+  it('should reject undefined modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment', // Changed from 'set' - type validation only applies to increment/decrement
+          value: undefined,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('type validation failed');
+  });
+
+  it('should accept valid integer modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'set',
+          value: 100,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(100);
+  });
+
+  it('should accept valid float modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 10.5,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(60.5);
+  });
+
+  it('should accept negative modification values', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: -10,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(40);
+  });
+
+  it('should accept zero as modification value', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'set',
+          value: 0,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(0);
+  });
+});
+
+describe('PlanningEffectsSimulator - Modification Application Safety', () => {
+  let testBed;
+  let simulator;
+  let mockLogger;
+  let mockParameterResolution;
+  let mockContextAssembly;
+
+  beforeEach(() => {
+    testBed = createTestBed();
+    mockLogger = testBed.createMockLogger();
+    mockParameterResolution = testBed.createMock(
+      'IParameterResolutionService',
+      ['resolve', 'clearCache']
+    );
+    mockContextAssembly = testBed.createMock(
+      'IContextAssemblyService',
+      ['assemblePlanningContext']
+    );
+
+    simulator = new PlanningEffectsSimulator({
+      parameterResolutionService: mockParameterResolution,
+      contextAssemblyService: mockContextAssembly,
+      logger: mockLogger,
+    });
+  });
+
+  afterEach(() => {
+    testBed.cleanup();
+  });
+
+  it('should detect overflow in increment mode', () => {
+    const currentState = {
+      'entity-1:core:nutrition': { hungerLevel: Number.MAX_SAFE_INTEGER },
+    };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 1,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    // Should succeed but skip the modification
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(
+      Number.MAX_SAFE_INTEGER
+    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('overflow'),
+      expect.any(Object)
+    );
+  });
+
+  it('should detect underflow in decrement mode', () => {
+    const currentState = {
+      'entity-1:core:nutrition': { hungerLevel: Number.MIN_SAFE_INTEGER },
+    };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'decrement',
+          value: 1,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    // Should succeed but skip the modification
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(
+      Number.MIN_SAFE_INTEGER
+    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('underflow'),
+      expect.any(Object)
+    );
+  });
+
+  it('should handle set mode with valid value', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'set',
+          value: 75,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(75);
+  });
+
+  it('should handle increment mode with valid value', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 25,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(75);
+  });
+
+  it('should handle decrement mode with valid value', () => {
+    const currentState = { 'entity-1:core:nutrition': { hungerLevel: 50 } };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'decrement',
+          value: 25,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(25);
+  });
+
+  it('should default missing field to 0 for increment mode', () => {
+    const currentState = { 'entity-1:core:nutrition': {} };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 10,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(10);
+  });
+
+  it('should default missing field to 0 for decrement mode', () => {
+    const currentState = { 'entity-1:core:nutrition': {} };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'decrement',
+          value: 10,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(-10);
+  });
+});
+
+describe('PlanningEffectsSimulator - Edge Cases', () => {
+  let testBed;
+  let simulator;
+  let mockLogger;
+  let mockParameterResolution;
+  let mockContextAssembly;
+
+  beforeEach(() => {
+    testBed = createTestBed();
+    mockLogger = testBed.createMockLogger();
+    mockParameterResolution = testBed.createMock(
+      'IParameterResolutionService',
+      ['resolve', 'clearCache']
+    );
+    mockContextAssembly = testBed.createMock(
+      'IContextAssemblyService',
+      ['assemblePlanningContext']
+    );
+
+    simulator = new PlanningEffectsSimulator({
+      parameterResolutionService: mockParameterResolution,
+      contextAssemblyService: mockContextAssembly,
+      logger: mockLogger,
+    });
+  });
+
+  afterEach(() => {
+    testBed.cleanup();
+  });
+
+  it('should skip modification when component is missing from state', () => {
+    const currentState = {};
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 10,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    // Should create component and apply modification
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(10);
+  });
+
+  it('should handle nested field key modifications with overflow detection', () => {
+    const currentState = {
+      'entity-1:core:nutrition:hungerLevel': Number.MAX_SAFE_INTEGER,
+    };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 1,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition:hungerLevel']).toBe(
+      Number.MAX_SAFE_INTEGER
+    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('overflow'),
+      expect.any(Object)
+    );
+  });
+
+  it('should handle multiple modifications with some failures gracefully', () => {
+    const currentState = {
+      'entity-1:core:nutrition': { hungerLevel: 50, satiation: 50 },
+    };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment', // Changed from 'set' - type validation only applies to increment/decrement
+          value: 'invalid', // This will fail type validation
+        },
+      },
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'satiation',
+          mode: 'increment',
+          value: 10, // This should succeed
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    // First effect should fail, second should be skipped due to first failure
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('type validation failed');
+  });
+
+  it('should preserve immutability when modification is skipped', () => {
+    const currentState = {
+      'entity-1:core:nutrition': { hungerLevel: Number.MAX_SAFE_INTEGER },
+    };
+    const originalState = JSON.parse(JSON.stringify(currentState));
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 1,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    // Original state should not be mutated
+    expect(currentState).toEqual(originalState);
+    // Result state should be a new object
+    expect(result.state).not.toBe(currentState);
+  });
+
+  it('should handle non-numeric current value by defaulting to 0', () => {
+    const currentState = {
+      'entity-1:core:nutrition': { hungerLevel: 'not a number' },
+    };
+    const planningEffects = [
+      {
+        type: 'MODIFY_COMPONENT',
+        parameters: {
+          entity_ref: 'actor',
+          component_type: 'core:nutrition',
+          field: 'hungerLevel',
+          mode: 'increment',
+          value: 10,
+        },
+      },
+    ];
+    const context = { actor: 'entity-1' };
+
+    mockParameterResolution.resolve.mockReturnValueOnce('entity-1');
+
+    const result = simulator.simulateEffects(
+      currentState,
+      planningEffects,
+      context
+    );
+
+    // Should treat non-numeric current value as 0 and apply increment
+    expect(result.success).toBe(true);
+    expect(result.state['entity-1:core:nutrition'].hungerLevel).toBe(10);
   });
 });

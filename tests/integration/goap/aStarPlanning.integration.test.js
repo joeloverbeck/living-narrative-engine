@@ -11,6 +11,7 @@ import PlanningEffectsSimulator from '../../../src/goap/planner/planningEffectsS
 import HeuristicRegistry from '../../../src/goap/planner/heuristicRegistry.js';
 import GoalDistanceHeuristic from '../../../src/goap/planner/goalDistanceHeuristic.js';
 import RelaxedPlanningGraphHeuristic from '../../../src/goap/planner/relaxedPlanningGraphHeuristic.js';
+import NumericConstraintEvaluator from '../../../src/goap/planner/numericConstraintEvaluator.js';
 import ContextAssemblyService from '../../../src/goap/services/contextAssemblyService.js';
 import ParameterResolutionService from '../../../src/goap/services/parameterResolutionService.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
@@ -118,8 +119,14 @@ describe('GOAP A* Planner - Integration', () => {
     });
 
     // Create heuristic registry
+    const numericConstraintEvaluator = new NumericConstraintEvaluator({
+      jsonLogicEvaluator: jsonLogicService,
+      logger: testBed.createMockLogger(),
+    });
+
     const goalDistanceHeuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator: jsonLogicService,
+      numericConstraintEvaluator,
       logger: testBed.createMockLogger(),
     });
 
@@ -414,7 +421,7 @@ describe('GOAP A* Planner - Integration', () => {
       };
 
       const plan = planner.plan(actorId, goal, initialState, {
-        heuristic: 'goal-distance',
+        heuristic: 'relaxed-planning-graph', // Use RPG for multi-step plans
       });
 
       expect(plan).not.toBeNull();
@@ -700,6 +707,7 @@ describe('GOAP A* Planner - Integration', () => {
       const startTime = Date.now();
       const plan = planner.plan(actorId, goal, initialState, {
         maxTime: 2000,
+        heuristic: 'relaxed-planning-graph', // Use RPG for complex multi-step goals
       });
       const elapsed = Date.now() - startTime;
 

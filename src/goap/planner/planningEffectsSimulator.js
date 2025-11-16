@@ -104,6 +104,169 @@ class PlanningEffectsSimulator {
   }
 
   /**
+   * Validate that modification values are numeric and not NaN/Infinity
+   * This helper ensures type safety for MODIFY_COMPONENT operations during planning.
+   *
+   * @private
+   * @param {number|string|boolean|object|null|undefined} value - Value to validate
+   * @param {string} componentType - Component type being modified
+   * @param {string} entityId - Entity ID for error reporting
+   * @param {string} field - Field name for error reporting
+   * @returns {boolean} True if value is valid numeric, false otherwise
+   */
+  #validateModificationTypes(value, componentType, entityId, field) {
+    // Check if value is a number
+    if (typeof value !== 'number') {
+      this.#logger.warn(
+        `MODIFY_COMPONENT type validation failed: value is not a number`,
+        {
+          entityId,
+          componentType,
+          field,
+          valueType: typeof value,
+          value,
+        }
+      );
+      return false;
+    }
+
+    // Check for NaN
+    if (Number.isNaN(value)) {
+      this.#logger.warn(
+        `MODIFY_COMPONENT type validation failed: value is NaN`,
+        {
+          entityId,
+          componentType,
+          field,
+        }
+      );
+      return false;
+    }
+
+    // Check for Infinity
+    if (!Number.isFinite(value)) {
+      this.#logger.warn(
+        `MODIFY_COMPONENT type validation failed: value is Infinity`,
+        {
+          entityId,
+          componentType,
+          field,
+          value,
+        }
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Safely apply a numeric modification with overflow/underflow detection
+   * Returns null if the modification would result in overflow, underflow, or NaN.
+   *
+   * @private
+   * @param {number} currentValue - Current field value
+   * @param {number} modValue - Modification value
+   * @param {string} mode - Modification mode (set, increment, decrement)
+   * @param {string} fieldName - Field name for logging
+   * @returns {number|null} New value or null if modification failed
+   */
+  #applyModification(currentValue, modValue, mode, fieldName) {
+    let result;
+
+    switch (mode) {
+      case PlanningEffectsSimulator.MODIFICATION_MODES.SET:
+        // For set mode, the modValue becomes the new value directly
+        // No numeric validation needed - SET can accept any type
+        return modValue;
+
+      case PlanningEffectsSimulator.MODIFICATION_MODES.INCREMENT: {
+        // Default to 0 if current value is missing or non-numeric
+        const currentIncrement = typeof currentValue === 'number' ? currentValue : 0;
+        result = currentIncrement + modValue;
+        break;
+      }
+
+      case PlanningEffectsSimulator.MODIFICATION_MODES.DECREMENT: {
+        // Default to 0 if current value is missing or non-numeric
+        const currentDecrement = typeof currentValue === 'number' ? currentValue : 0;
+        result = currentDecrement - modValue;
+        break;
+      }
+
+      default:
+        this.#logger.warn(
+          `Unknown modification mode: ${mode}, field: ${fieldName}`
+        );
+        return null;
+    }
+
+    // Numeric validation checks (only for increment/decrement modes)
+    // Check for NaN result
+    if (Number.isNaN(result)) {
+      this.#logger.warn(
+        `Modification resulted in NaN, skipping modification`,
+        {
+          field: fieldName,
+          mode,
+          currentValue,
+          modValue,
+        }
+      );
+      return null;
+    }
+
+    // Check for overflow (beyond safe integer range)
+    if (result > Number.MAX_SAFE_INTEGER) {
+      this.#logger.warn(
+        `Modification would overflow safe integer range, skipping modification`,
+        {
+          field: fieldName,
+          mode,
+          currentValue,
+          modValue,
+          result,
+          max: Number.MAX_SAFE_INTEGER,
+        }
+      );
+      return null;
+    }
+
+    // Check for underflow (below safe integer range)
+    if (result < Number.MIN_SAFE_INTEGER) {
+      this.#logger.warn(
+        `Modification would underflow safe integer range, skipping modification`,
+        {
+          field: fieldName,
+          mode,
+          currentValue,
+          modValue,
+          result,
+          min: Number.MIN_SAFE_INTEGER,
+        }
+      );
+      return null;
+    }
+
+    // Check for Infinity
+    if (!Number.isFinite(result)) {
+      this.#logger.warn(
+        `Modification resulted in Infinity, skipping modification`,
+        {
+          field: fieldName,
+          mode,
+          currentValue,
+          modValue,
+          result,
+        }
+      );
+      return null;
+    }
+
+    return result;
+  }
+
+  /**
    * Simulate the effects of planning operations on a state snapshot
    * This method creates a new state by applying planning effects to a cloned
    * copy of the input state. The original state is never modified.
@@ -247,6 +410,9 @@ class PlanningEffectsSimulator {
       throw new Error(`Critical: ${type} effect missing entity_ref or entityId parameter`);
     }
 
+    // Preserve original entity reference for dual-format state sync
+    resolved.entityRef = entityRef;
+
     try {
       // Check if entityRef is a variable reference (contains dot or is a known variable)
       // Otherwise treat as literal entity ID (for testing and direct entity references)
@@ -307,6 +473,22 @@ class PlanningEffectsSimulator {
           parameters.value.includes('.')
             ? this.#parameterResolutionService.resolve(parameters.value, context)
             : parameters.value;
+
+        // Type validation: Ensure modification value is numeric for increment/decrement modes
+        // SET mode can accept any type, but increment/decrement require numeric values
+        if (
+          (resolved.mode === 'increment' || resolved.mode === 'decrement') &&
+          !this.#validateModificationTypes(
+            resolved.value,
+            resolved.componentType,
+            resolved.entityId,
+            resolved.field
+          )
+        ) {
+          throw new Error(
+            `Critical: MODIFY_COMPONENT type validation failed: ${resolved.mode} mode requires numeric value (got ${typeof resolved.value})`
+          );
+        }
         break;
 
       case PlanningEffectsSimulator.OPERATION_TYPES.REMOVE_COMPONENT:
@@ -318,6 +500,52 @@ class PlanningEffectsSimulator {
     }
 
     return resolved;
+  }
+
+  /**
+   * Synchronizes dual-format state after modifying flat hash format.
+   * For numeric goal planning, state must maintain three formats:
+   * - Flat hash: entityId:componentType -> component data (for operations)
+   * - Nested: state[entityRef].components[componentType] -> component data (for JSON Logic)
+   * - Flattened alias: state[entityRef].components[componentType_flattened] -> component data (for JSON Logic paths)
+   *
+   * The flattened alias replaces colons with underscores to make component IDs JSON Logic-compatible.
+   * For example, 'core:needs' becomes 'core_needs', allowing paths like 'state.actor.components.core_needs.hunger'
+   * instead of the unparseable 'state.actor.components.core:needs.hunger'.
+   *
+   * @private
+   * @param {object} state - State object with dual format
+   * @param {string} entityId - Resolved entity ID (for flat hash key)
+   * @param {string} entityRef - Original entity reference (for nested state key)
+   * @param {string} componentType - Component type
+   */
+  #syncDualFormat(state, entityId, entityRef, componentType) {
+    const flatKey = `${entityId}:${componentType}`;
+
+    // Check if nested format exists (state[entityRef].components)
+    // Use entityRef (e.g., 'actor') not entityId (e.g., 'test_actor')
+    if (state[entityRef] && state[entityRef].components) {
+      // Sync flat hash value to nested format (with original colon-based key)
+      state[entityRef].components[componentType] = state[flatKey];
+
+      // Also create flattened alias (replace colons with underscores for JSON Logic)
+      const flattenedComponentType = componentType.replace(/:/g, '_');
+      state[entityRef].components[flattenedComponentType] = state[flatKey];
+
+      this.#logger.debug(
+        `Synced dual format: ${flatKey} -> ${entityRef}.components.${componentType} + ${flattenedComponentType}`,
+        {
+          flatValue: state[flatKey],
+          nestedValue: state[entityRef].components[componentType],
+          flattenedValue: state[entityRef].components[flattenedComponentType],
+          areEqual: state[flatKey] === state[entityRef].components[componentType]
+        }
+      );
+    } else {
+      this.#logger.debug(
+        `Dual format sync skipped: nested structure missing for ${entityRef}`
+      );
+    }
   }
 
   /**
@@ -340,6 +568,9 @@ class PlanningEffectsSimulator {
         // State key format: "entityId:componentId"
         const stateKey = `${entityId}:${componentType}`;
         state[stateKey] = parameters.value;
+
+        // Sync to nested format for JSON Logic evaluation
+        this.#syncDualFormat(state, entityId, parameters.entityRef, componentType);
 
         this.#logger.debug(`Simulated ADD_COMPONENT: ${stateKey}`, {
           value: parameters.value,
@@ -368,22 +599,22 @@ class PlanningEffectsSimulator {
 
         if (hasNestedFieldKey) {
           // Direct nested field modification (rare case)
-          switch (mode) {
-            case PlanningEffectsSimulator.MODIFICATION_MODES.SET:
-              state[fieldKey] = value;
-              break;
+          const newValue = this.#applyModification(
+            state[fieldKey],
+            value,
+            mode,
+            fieldKey
+          );
 
-            case PlanningEffectsSimulator.MODIFICATION_MODES.INCREMENT:
-              state[fieldKey] = (state[fieldKey] || 0) + value;
-              break;
-
-            case PlanningEffectsSimulator.MODIFICATION_MODES.DECREMENT:
-              state[fieldKey] = (state[fieldKey] || 0) - value;
-              break;
-
-            default:
-              throw new Error(`Unknown modification mode: ${mode}`);
+          // Skip modification if it would result in overflow/underflow/NaN
+          if (newValue === null) {
+            this.#logger.warn(
+              `Skipping MODIFY_COMPONENT for ${fieldKey} due to invalid result`
+            );
+            break;
           }
+
+          state[fieldKey] = newValue;
 
           this.#logger.debug(`Simulated MODIFY_COMPONENT: ${fieldKey}`, {
             mode,
@@ -402,28 +633,28 @@ class PlanningEffectsSimulator {
             );
           }
 
-          switch (mode) {
-            case PlanningEffectsSimulator.MODIFICATION_MODES.SET:
-              state[baseKey] = { ...state[baseKey], [field]: value };
-              break;
+          // Apply modification safely
+          const currentFieldValue = state[baseKey][field];
+          const newValue = this.#applyModification(
+            currentFieldValue,
+            value,
+            mode,
+            `${baseKey}.${field}`
+          );
 
-            case PlanningEffectsSimulator.MODIFICATION_MODES.INCREMENT:
-              state[baseKey] = {
-                ...state[baseKey],
-                [field]: (state[baseKey][field] || 0) + value,
-              };
-              break;
-
-            case PlanningEffectsSimulator.MODIFICATION_MODES.DECREMENT:
-              state[baseKey] = {
-                ...state[baseKey],
-                [field]: (state[baseKey][field] || 0) - value,
-              };
-              break;
-
-            default:
-              throw new Error(`Unknown modification mode: ${mode}`);
+          // Skip modification if it would result in overflow/underflow/NaN
+          if (newValue === null) {
+            this.#logger.warn(
+              `Skipping MODIFY_COMPONENT for ${baseKey}.${field} due to invalid result`
+            );
+            break;
           }
+
+          // Apply the new value
+          state[baseKey] = { ...state[baseKey], [field]: newValue };
+
+          // Sync to nested format for JSON Logic evaluation
+          this.#syncDualFormat(state, entityId, parameters.entityRef, componentType);
 
           this.#logger.debug(`Simulated MODIFY_COMPONENT: ${baseKey}.${field}`, {
             mode,
@@ -447,6 +678,11 @@ class PlanningEffectsSimulator {
           if (key.startsWith(nestedPrefix)) {
             delete state[key];
           }
+        }
+
+        // Remove from nested format as well
+        if (state[entityId] && state[entityId].components) {
+          delete state[entityId].components[componentType];
         }
 
         this.#logger.debug(`Simulated REMOVE_COMPONENT: ${stateKey}`);
