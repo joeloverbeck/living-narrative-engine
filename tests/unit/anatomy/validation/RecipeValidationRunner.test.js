@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 import { ComponentExistenceValidationRule } from '../../../../src/anatomy/validation/rules/componentExistenceValidationRule.js';
 import { PropertySchemaValidationRule } from '../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
@@ -21,7 +21,7 @@ const createValidatorStub = (name, { priority = 10, failFast = false } = {}) => 
   };
 };
 
-describe('RecipePreflightValidator', () => {
+describe('RecipeValidationRunner', () => {
   let validator;
   let mockLogger;
   let mockDataRegistry;
@@ -67,7 +67,7 @@ describe('RecipePreflightValidator', () => {
 
     validatorStubs = {
       blueprintExistence: createValidatorStub('blueprint-existence'),
-      recipeBodyDescriptor: createValidatorStub('recipe-body-descriptor', {
+      recipeBodyDescriptor: createValidatorStub('body-descriptors', {
         priority: 15,
       }),
       socketSlotCompatibility: createValidatorStub('socket-slot-compatibility', {
@@ -85,7 +85,7 @@ describe('RecipePreflightValidator', () => {
       descriptorCoverage: createValidatorStub('descriptor-coverage', {
         priority: 40,
       }),
-      loadFailure: createValidatorStub('load-failure', {
+      loadFailure: createValidatorStub('load-failures', {
         priority: 50,
       }),
       recipeUsage: createValidatorStub('recipe-usage', {
@@ -93,7 +93,7 @@ describe('RecipePreflightValidator', () => {
       }),
     };
 
-    validator = new RecipePreflightValidator({
+    validator = new RecipeValidationRunner({
       dataRegistry: mockDataRegistry,
       anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
       schemaValidator: mockSchemaValidator,
@@ -158,7 +158,7 @@ describe('RecipePreflightValidator', () => {
     it('throws when slot generator lacks required methods', () => {
       expect(
         () =>
-          new RecipePreflightValidator({
+          new RecipeValidationRunner({
             dataRegistry: mockDataRegistry,
             anatomyBlueprintRepository: mockAnatomyBlueprintRepository,
             schemaValidator: mockSchemaValidator,

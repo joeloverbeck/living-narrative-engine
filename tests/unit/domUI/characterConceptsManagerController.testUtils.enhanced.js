@@ -7,6 +7,11 @@ import { jest } from '@jest/globals';
 import { BaseCharacterBuilderControllerTestBase } from '../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
 import {
+  createTestContainer,
+  resolveControllerDependencies,
+} from '../../common/testContainerConfig.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import {
   createMockElements,
   setupDocumentMock,
   createMockUIStateManager,
@@ -73,6 +78,8 @@ export class CharacterConceptsManagerTestBase extends BaseCharacterBuilderContro
     super();
     this.mockUIStateManager = null;
     this.mockElements = null;
+    this.controllerDependencies = null;
+    this._controllerContainer = null;
   }
 
   /**
@@ -96,6 +103,15 @@ export class CharacterConceptsManagerTestBase extends BaseCharacterBuilderContro
 
     // Setup additional mocks
     this.setupAdditionalMocks();
+
+    this._controllerContainer = await createTestContainer({
+      mockServices: {
+        [tokens.CharacterBuilderService]: this.mocks.characterBuilderService,
+      },
+    });
+    this.controllerDependencies = resolveControllerDependencies(
+      this._controllerContainer
+    );
   }
 
   /**
@@ -217,12 +233,14 @@ export class CharacterConceptsManagerTestBase extends BaseCharacterBuilderContro
    *
    * @returns {CharacterConceptsManagerController}
    */
-  createController() {
+  createController(additionalDeps = {}) {
     return new CharacterConceptsManagerController({
       logger: this.mocks.logger,
       characterBuilderService: this.mocks.characterBuilderService,
       eventBus: this.mocks.eventBus,
       schemaValidator: this.mocks.schemaValidator,
+      ...this.controllerDependencies,
+      ...additionalDeps,
     });
   }
 

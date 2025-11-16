@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightValidator parity captures blueprint and pattern regressions for broken pattern fixture: broken pattern report 1`] = `
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity captures blueprint and pattern regressions for broken pattern fixture: broken pattern report 1`] = `
 {
   "errors": [
     {
@@ -239,7 +239,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightVal
 }
 `;
 
-exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightValidator parity captures component/schema regressions for missing component fixture: missing component report 1`] = `
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity captures component/schema regressions for missing component fixture: missing component report 1`] = `
 {
   "errors": [
     {
@@ -1751,7 +1751,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightVal
 }
 `;
 
-exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightValidator parity maintains parity for the giant forest spider recipe: valid spider report 1`] = `
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity maintains parity for the giant forest spider recipe: valid spider report 1`] = `
 {
   "errors": [],
   "isValid": true,
@@ -1818,7 +1818,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightVal
 }
 `;
 
-exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightValidator parity maintains parity for the human male recipe: valid humanoid report 1`] = `
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity maintains parity for the human male recipe: valid humanoid report 1`] = `
 {
   "errors": [],
   "isValid": true,
@@ -1893,7 +1893,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightVal
 }
 `;
 
-exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightValidator parity records recipe usage suggestions for unused human clone fixture: unused clone usage hint 1`] = `
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity records recipe usage suggestions for unused human clone fixture: unused clone usage hint 1`] = `
 {
   "errors": [],
   "isValid": true,
@@ -1979,7 +1979,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightVal
 }
 `;
 
-exports[`Recipe Validation Comparison Regression Suite CLI vs RecipePreflightValidator parity surfaces loader failures via CLI and validator with mocked matcher service: load failure propagation 1`] = `
+exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRunner parity surfaces loader failures via CLI and validator with mocked matcher service: load failure propagation 1`] = `
 {
   "errors": [
     {

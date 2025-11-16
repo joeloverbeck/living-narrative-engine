@@ -12,7 +12,7 @@
  * @interface IRecipeValidator
  * @description Defines the contract for recipe validators in the refactored validation pipeline.
  * This interface defines orchestrator-level validators that coordinate validation rules and
- * produce comprehensive validation reports. Aligns with RecipePreflightValidator pattern.
+ * produce comprehensive validation reports. Aligns with RecipeValidationRunner pipeline.
  */
 export class IRecipeValidator {
   /**

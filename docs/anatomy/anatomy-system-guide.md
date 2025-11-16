@@ -124,9 +124,9 @@ The anatomy system validates content across four stages, from schema load throug
 - **Coverage**: Anatomy schemas for recipes, blueprints, structure templates, and related JSON definitions under `data/schemas/`
 - **When it runs**: During mod loading pipeline's schema phase and via `npm run validate:recipe`
 
-### Stage 2: Recipe Pre-flight Validation
+### Stage 2: Recipe Validation Pipeline
 
-`RecipePreflightValidator` (`src/anatomy/validation/RecipePreflightValidator.js`) chains eleven checks:
+`RecipeValidationRunner` (`src/anatomy/validation/RecipeValidationRunner.js`) orchestrates the validation pipeline and chains eleven validators:
 
 1. **Component existence** – Confirms every referenced component is registered
 2. **Property schemas** – Validates component property payloads
@@ -140,7 +140,7 @@ The anatomy system validates content across four stages, from schema load throug
 10. **Entity load failures** – Surfaces loaders' recorded entity-definition failures
 11. **Recipe usage hint** – Warns when no entity definition references the recipe ID
 
-Run via: `npm run validate:recipe [--verbose|--json] <path>`
+Run via: `npm run validate:recipe [--verbose|--json] <path>` (CLI uses `RecipeValidationRunner`)
 
 ### Stage 3: Runtime Generation Validation
 
@@ -305,4 +305,3 @@ These refactors are reflected directly in the file layout cited above.
 
 **Maintained By**: Living Narrative Engine Core Team  
 **Last Reviewed**: 2025-11-12
-

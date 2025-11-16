@@ -77,7 +77,7 @@ describe('RecipeBodyDescriptorValidator', () => {
     it('configures base metadata and exposes name/priority', () => {
       const { validator } = createValidator();
 
-      expect(validator.name).toBe('recipe-body-descriptor');
+      expect(validator.name).toBe('body-descriptors');
       expect(validator.priority).toBe(15);
       expect(validator.failFast).toBe(false);
     });

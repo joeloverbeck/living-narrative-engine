@@ -37,12 +37,12 @@ class RecipeValidationError extends AnatomyError {
         `Errors: ${errorCount}`,
         `Warnings: ${warningCount}`,
         '',
-        'Check RecipePreflightValidator for validation logic',
+        'Check RecipeValidationRunner for validation pipeline logic',
       ],
       references: [
         'docs/anatomy/troubleshooting.md',
         'docs/anatomy/anatomy-system-guide.md',
-        'src/anatomy/validation/RecipePreflightValidator.js',
+        'src/anatomy/validation/RecipeValidationRunner.js',
       ],
     });
 

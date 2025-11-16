@@ -44,6 +44,7 @@ function createConsoleStub() {
   return {
     log: jest.fn(),
     error: jest.fn(),
+    warn: jest.fn(),
   };
 }
 
@@ -99,6 +100,7 @@ function createRuntime({ reports = [] } = {}) {
     loadRecipeFile: jest.fn(async (recipePath) => ({ recipeId: `test:${recipePath}` })),
     loadMods: jest.fn().mockResolvedValue({ loadFailures: {} }),
     console: consoleStub,
+    detectRecipeUsageMods: jest.fn().mockResolvedValue([]),
   };
 
   return { runtimeOverrides, loader, validator, consoleStub };
@@ -155,7 +157,7 @@ describe('validate-recipe-v2 runner', () => {
 
     expect(validator.validate).toHaveBeenCalledTimes(1);
     expect(result.results).toHaveLength(1);
-    expect(runtimeOverrides.loadRecipeFile).toHaveBeenCalledTimes(1);
+    expect(runtimeOverrides.loadRecipeFile).toHaveBeenCalledTimes(2);
   });
 
   it('emits aggregated JSON when format json is requested', async () => {

@@ -6,16 +6,21 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
+import {
+  createTestContainer,
+  resolveControllerDependencies,
+} from '../../common/testContainerConfig.js';
 
 describe('CharacterConceptsManagerController - Fix Verification', () => {
   let mockLogger;
   let mockStorageService;
   let mockDirectionGenerator;
   let mockEventBus;
-  let mockSchemaValidator;
   let characterBuilderService;
+  let container;
+  let controllerDependencies;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create mocks for all dependencies
     mockLogger = {
       debug: jest.fn(),
@@ -42,15 +47,6 @@ describe('CharacterConceptsManagerController - Fix Verification', () => {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
       unsubscribe: jest.fn(),
-    };
-
-    mockSchemaValidator = {
-      validate: () => ({ isValid: true, errors: [] }),
-      validateAgainstSchema: () => ({ isValid: true, errors: [] }),
-      addSchema: () => {},
-      removeSchema: () => {},
-      listSchemas: () => [],
-      getSchema: () => null,
     };
 
     characterBuilderService = new CharacterBuilderService({
@@ -89,6 +85,9 @@ describe('CharacterConceptsManagerController - Fix Verification', () => {
       <div id="outputDiv"></div>
       <div id="message-list"></div>
     `;
+
+    container = await createTestContainer();
+    controllerDependencies = resolveControllerDependencies(container);
   });
 
   afterEach(() => {
@@ -105,7 +104,7 @@ describe('CharacterConceptsManagerController - Fix Verification', () => {
         logger: mockLogger,
         characterBuilderService: characterBuilderService,
         eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
+        ...controllerDependencies,
       });
 
       expect(controller).toBeDefined();
@@ -121,7 +120,7 @@ describe('CharacterConceptsManagerController - Fix Verification', () => {
           logger: mockLogger,
           characterBuilderService: characterBuilderService,
           eventBus: mockEventBus,
-          schemaValidator: mockSchemaValidator,
+          ...controllerDependencies,
         });
       }).not.toThrow();
     });
@@ -131,7 +130,7 @@ describe('CharacterConceptsManagerController - Fix Verification', () => {
         logger: mockLogger,
         characterBuilderService: characterBuilderService,
         eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
+        ...controllerDependencies,
       });
 
       // The service passed to the base class should still have all methods

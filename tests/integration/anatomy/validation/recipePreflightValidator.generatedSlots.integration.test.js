@@ -1,17 +1,17 @@
 /**
- * @file Additional integration coverage for RecipePreflightValidator focusing on
+ * @file Additional integration coverage for RecipeValidationRunner focusing on
  * generated slot availability, blueprint processing, and load failure diagnostics.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import SlotGenerator from '../../../../src/anatomy/slotGenerator.js';
 import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 
-describe('RecipePreflightValidator - Generated slot integration coverage', () => {
+describe('RecipeValidationRunner - Generated slot integration coverage', () => {
   /** @type {ReturnType<typeof createLogger>} */
   let logger;
   /** @type {InMemoryDataRegistry} */
@@ -38,7 +38,7 @@ describe('RecipePreflightValidator - Generated slot integration coverage', () =>
       dataRegistry,
     });
 
-    return new RecipePreflightValidator({
+    return new RecipeValidationRunner({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,

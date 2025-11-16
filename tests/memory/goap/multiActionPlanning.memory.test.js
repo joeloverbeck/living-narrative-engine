@@ -13,6 +13,35 @@ import { createTestGoal } from '../../integration/goap/testFixtures/testGoalFact
 import { createTestTask } from '../../integration/goap/testFixtures/testTaskFactory.js';
 
 /**
+ * Helper to build dual-format state for GOAP planning
+ */
+function buildDualFormatState(actor) {
+  const state = {
+    actor: {
+      id: actor.id,
+      components: {},
+    },
+  };
+
+  Object.keys(actor.components).forEach((componentId) => {
+    const componentData = { ...actor.components[componentId] };
+
+    // Flat hash format
+    const flatKey = `${actor.id}:${componentId}`;
+    state[flatKey] = componentData;
+
+    // Nested format with original key
+    state.actor.components[componentId] = componentData;
+
+    // Flattened alias
+    const flattenedId = componentId.replace(/:/g, '_');
+    state.actor.components[flattenedId] = componentData;
+  });
+
+  return state;
+}
+
+/**
  * Maximum allowed memory growth (bytes)
  * Allow 5MB growth for reasonable caching and data structures
  */
@@ -37,11 +66,90 @@ function getHeapUsed() {
 
 describe('Multi-Action Planning Memory Tests', () => {
   let setup;
+  let mineTask;
+  let eatTask;
+  let largeEffectTask;
 
   beforeEach(async () => {
+    // Define all tasks BEFORE creating setup
+    mineTask = createTestTask({
+      id: 'test:mine',
+      cost: 1,
+      priority: 100,
+      maxReuse: 10,
+      structuralGates: {
+        description: 'Actor can mine',
+        condition: { '==': [1, 1] }, // Always true
+      },
+      planningEffects: [
+        {
+          type: 'MODIFY_COMPONENT',
+          parameters: {
+            entity_ref: 'actor',
+            component_type: 'core:resources',
+            field: 'gold',
+            value: 5,
+            mode: 'increment',
+          },
+        },
+      ],
+    });
+
+    eatTask = createTestTask({
+      id: 'test:eat',
+      cost: 5,
+      priority: 100,
+      maxReuse: 150, // Increased for memory test iterations (50 iterations × 2 calls + buffer)
+      structuralGates: {
+        description: 'Actor can eat',
+        condition: { '==': [1, 1] }, // Always true
+      },
+      planningEffects: [
+        {
+          type: 'MODIFY_COMPONENT',
+          parameters: {
+            entity_ref: 'actor',
+            component_type: 'core:needs',
+            field: 'hunger',
+            value: 30,
+            mode: 'decrement',
+          },
+        },
+      ],
+    });
+
+    largeEffectTask = createTestTask({
+      id: 'test:large_effect',
+      cost: 1,
+      priority: 100,
+      maxReuse: 15,
+      structuralGates: {
+        description: 'Task with large effect',
+        condition: { '==': [1, 1] }, // Always true
+      },
+      planningEffects: [
+        {
+          type: 'MODIFY_COMPONENT',
+          parameters: {
+            entity_ref: 'actor',
+            component_type: 'core:data',
+            field: 'value',
+            value: 1,
+            mode: 'increment',
+          },
+        },
+      ],
+    });
+
     setup = await createGoapTestSetup({
       mockRefinement: true,
-      tasks: {},
+      tasks: {
+        test: {
+          [mineTask.id]: mineTask,
+          [eatTask.id]: eatTask,
+          [largeEffectTask.id]: largeEffectTask,
+        },
+      },
     });
   });
 
@@ -57,46 +165,6 @@ describe('Multi-Action Planning Memory Tests', () => {
       // Generate 100 plans, measure memory
       // Expected: No memory accumulation beyond reasonable caching
 
-      const mineTask = createTestTask({
-        id: 'test:mine',
-        cost: 1,
-        priority: 100,
-        structuralGates: {
-          description: 'Actor can mine',
-          condition: { '==': [1, 1] },
-        },
-        planningEffects: [
-          {
-            type: 'MODIFY_COMPONENT',
-            parameters: {
-              entity_ref: 'actor',
-              component_type: 'core:resources',
-              field: 'gold',
-              value: 5,
-              mode: 'increment',
-            },
-          },
-        ],
-      });
-
-      setup.gameDataRepository.get = jest.fn((key) => {
-        if (key === 'tasks') {
-          return {
-            test: {
-              [mineTask.id]: mineTask,
-            },
-          };
-        }
-        return null;
-      });
-
-      setup.gameDataRepository.getTask = jest.fn((taskId) => {
-        if (taskId === mineTask.id) {
-          return mineTask;
-        }
-        return null;
-      });
-
       // Warm up - run once to initialize caches
       const warmupActor = setup.createActor('warmup-actor');
       warmupActor.components['core:resources'] = { gold: 0 };
@@ -104,11 +172,12 @@ describe('Multi-Action Planning Memory Tests', () => {
       const warmupGoal = createTestGoal({
         id: 'test:warmup',
         priority: 10,
+        relevance: { '==': [true, true] }, // Always relevant
         goalState: { '>=': [{ var: 'actor.core_resources.gold' }, 20] },
       });
 
       setup.registerGoal(warmupGoal);
-      await setup.controller.decideTurn(warmupActor.id, setup.world);
+      await setup.controller.decideTurn(warmupActor, setup.world);
 
       // Force GC before measurement
       forceGC();
@@ -125,14 +194,19 @@ describe('Multi-Action Planning Memory Tests', () => {
         const goal = createTestGoal({
           id: `test:gold_${i}`,
           priority: 10,
+          relevance: { '==': [true, true] }, // Always relevant
           goalState: { '>=': [{ var: 'actor.core_resources.gold' }, 20] },
         });
 
-        // Clear previous goal
-        setup.dataRegistry.register('goals', warmupGoal.id, null);
+        // Clear previous goal (first iteration clears warmup, subsequent clear previous loop's goal)
+        if (i === 0) {
+          setup.dataRegistry.register('goals', warmupGoal.id, null);
+        } else {
+          setup.dataRegistry.register('goals', `test:gold_${i - 1}`, null);
+        }
         setup.registerGoal(goal);
 
-        await setup.controller.decideTurn(actor.id, setup.world);
+        await setup.controller.decideTurn(actor, setup.world);
 
         // Periodically force GC
         if (i % 25 === 0) {
@@ -159,46 +233,6 @@ describe('Multi-Action Planning Memory Tests', () => {
     it('should clean up actor-specific data after plan invalidation', async () => {
       // Verify that invalidated plans release memory
 
-      const eatTask = createTestTask({
-        id: 'test:eat',
-        cost: 5,
-        priority: 100,
-        structuralGates: {
-          description: 'Actor can eat',
-          condition: { '==': [1, 1] },
-        },
-        planningEffects: [
-          {
-            type: 'MODIFY_COMPONENT',
-            parameters: {
-              entity_ref: 'actor',
-              component_type: 'core:needs',
-              field: 'hunger',
-              value: 30,
-              mode: 'decrement',
-            },
-          },
-        ],
-      });
-
-      setup.gameDataRepository.get = jest.fn((key) => {
-        if (key === 'tasks') {
-          return {
-            test: {
-              [eatTask.id]: eatTask,
-            },
-          };
-        }
-        return null;
-      });
-
-      setup.gameDataRepository.getTask = jest.fn((taskId) => {
-        if (taskId === eatTask.id) {
-          return eatTask;
-        }
-        return null;
-      });
-
       forceGC();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -212,17 +246,26 @@ describe('Multi-Action Planning Memory Tests', () => {
         const goal = createTestGoal({
           id: `test:hunger_${i}`,
           priority: 10,
-          goalState: { '<=': [{ var: 'actor.core_needs.hunger' }, 0] },
+          relevance: { '==': [true, true] }, // Always relevant
+          goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0] },
         });
 
+        // Clear previous goal to avoid accumulation
+        if (i > 0) {
+          setup.dataRegistry.register('goals', `test:hunger_${i - 1}`, null);
+        }
         setup.registerGoal(goal);
-        await setup.controller.decideTurn(actor.id, setup.world);
+
+        // Build world with state for planning
+        const world = { state: buildDualFormatState(actor), entities: {} };
+        await setup.controller.decideTurn(actor, world);
 
         // Simulate plan invalidation (actor changes state)
         actor.components['core:needs'].hunger = 100;
 
         // Trigger replanning (which should clean up old plan)
-        await setup.controller.decideTurn(actor.id, setup.world);
+        const updatedWorld = { state: buildDualFormatState(actor), entities: {} };
+        await setup.controller.decideTurn(actor, updatedWorld);
 
         if (i % 10 === 0) {
           forceGC();
@@ -246,46 +289,6 @@ describe('Multi-Action Planning Memory Tests', () => {
     it('should handle large state objects without leaking', async () => {
       // Test with large component data to ensure proper cleanup
 
-      const taskWithLargeEffect = createTestTask({
-        id: 'test:large_effect',
-        cost: 1,
-        priority: 100,
-        structuralGates: {
-          description: 'Task with large effect',
-          condition: { '==': [1, 1] },
-        },
-        planningEffects: [
-          {
-            type: 'MODIFY_COMPONENT',
-            parameters: {
-              entity_ref: 'actor',
-              component_type: 'core:data',
-              field: 'value',
-              value: 1,
-              mode: 'increment',
-            },
-          },
-        ],
-      });
-
-      setup.gameDataRepository.get = jest.fn((key) => {
-        if (key === 'tasks') {
-          return {
-            test: {
-              [taskWithLargeEffect.id]: taskWithLargeEffect,
-            },
-          };
-        }
-        return null;
-      });
-
-      setup.gameDataRepository.getTask = jest.fn((taskId) => {
-        if (taskId === taskWithLargeEffect.id) {
-          return taskWithLargeEffect;
-        }
-        return null;
-      });
-
       forceGC();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -307,11 +310,16 @@ describe('Multi-Action Planning Memory Tests', () => {
         const goal = createTestGoal({
           id: `test:data_${i}`,
           priority: 10,
+          relevance: { '==': [true, true] }, // Always relevant
           goalState: { '>=': [{ var: 'actor.core_data.value' }, 10] },
         });
 
+        // Clear previous goal to avoid accumulation
+        if (i > 0) {
+          setup.dataRegistry.register('goals', `test:data_${i - 1}`, null);
+        }
         setup.registerGoal(goal);
-        await setup.controller.decideTurn(actor.id, setup.world);
+        await setup.controller.decideTurn(actor, setup.world);
 
         if (i % 10 === 0) {
           forceGC();

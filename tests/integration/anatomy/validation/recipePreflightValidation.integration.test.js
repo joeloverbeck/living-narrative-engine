@@ -1,15 +1,15 @@
 /**
- * @file Integration tests for RecipePreflightValidator
+ * @file Integration tests for the recipe validation pipeline runner
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import { ValidationReport } from '../../../../src/anatomy/validation/ValidationReport.js';
 
-describe('RecipePreflightValidator - Integration', () => {
+describe('RecipeValidationRunner - Integration', () => {
   let validator;
   let dataRegistry;
   let anatomyBlueprintRepository;
@@ -46,7 +46,7 @@ describe('RecipePreflightValidator - Integration', () => {
       dataRegistry,
     });
 
-    validator = new RecipePreflightValidator({
+    validator = new RecipeValidationRunner({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator: mockSchemaValidator,

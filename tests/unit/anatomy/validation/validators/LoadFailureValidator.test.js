@@ -24,7 +24,7 @@ describe('LoadFailureValidator', () => {
     it('initializes with expected defaults', () => {
       const validator = createValidator();
 
-      expect(validator.name).toBe('load-failure');
+      expect(validator.name).toBe('load-failures');
       expect(validator.priority).toBe(50);
       expect(validator.failFast).toBe(false);
     });

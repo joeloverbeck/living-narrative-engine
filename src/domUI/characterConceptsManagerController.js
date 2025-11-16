@@ -490,8 +490,8 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
       FormValidationHelper.clearFieldError(conceptText);
     }
 
-    // Disable save button initially
-    this._setElementEnabled('saveConceptBtn', false);
+    // Disable save button initially using DOM manager for consistency
+    this._getDomManager().setElementEnabled('saveConceptBtn', false);
 
     // Clear editing state
     this.#editingConceptId = null;
@@ -857,9 +857,16 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     // Append all cards at once
     this._getElement('conceptsResults').appendChild(fragment);
 
-    // Add entrance animation class
+    // Add entrance animation class if container still mounted
     requestAnimationFrame(() => {
-      this._getElement('conceptsResults').classList.add('cards-loaded');
+      const resultsElement = this._getElement('conceptsResults');
+      if (!resultsElement || !resultsElement.classList) {
+        this.logger?.debug?.(
+          'CharacterConceptsManagerController: concept results container missing during animation'
+        );
+        return;
+      }
+      resultsElement.classList.add('cards-loaded');
     });
   }
 
@@ -1660,9 +1667,12 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
     // Show modal with proper animation
     this._animateModalEntrance(this._getElement('deleteModal'));
 
-    // Focus on cancel button (safer default)
+    // Focus on cancel button (safer default) when available
     setTimeout(() => {
-      this._getElement('cancelDeleteBtn').focus();
+      const cancelButton = this._getElement('cancelDeleteBtn');
+      if (cancelButton && typeof cancelButton.focus === 'function') {
+        cancelButton.focus();
+      }
     }, 100);
 
     // Set up delete handler

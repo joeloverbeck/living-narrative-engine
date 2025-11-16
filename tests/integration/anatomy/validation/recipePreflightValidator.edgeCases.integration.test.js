@@ -1,10 +1,10 @@
 /**
- * @file Additional integration coverage for RecipePreflightValidator focusing on
+ * @file Additional integration coverage for RecipeValidationRunner focusing on
  * rare failure handling paths and defensive branches.
  */
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import SlotGenerator from '../../../../src/anatomy/slotGenerator.js';
@@ -86,7 +86,7 @@ function createLogger() {
   };
 }
 
-describe('RecipePreflightValidator edge-case integration coverage', () => {
+describe('RecipeValidationRunner edge-case integration coverage', () => {
   /** @type {ReturnType<typeof createLogger>} */
   let logger;
   /** @type {InMemoryDataRegistry} */
@@ -104,7 +104,7 @@ describe('RecipePreflightValidator edge-case integration coverage', () => {
       dataRegistry,
     });
 
-    return new RecipePreflightValidator({
+    return new RecipeValidationRunner({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,

@@ -18,6 +18,7 @@ import {
   createMinimalModalDOM,
   createMockCharacterBuilderService,
   createTestContainer,
+  resolveControllerDependencies,
 } from '../../common/testContainerConfig.js';
 import { flushPromises } from '../../common/testWaitUtils.js';
 
@@ -76,6 +77,7 @@ describe('Character Concepts Manager - advanced integration flows', () => {
   let logger;
   let eventBus;
   let characterBuilderService;
+  let controllerDependencies;
   let originalBroadcastChannel;
   let originalEnv;
 
@@ -167,11 +169,13 @@ describe('Character Concepts Manager - advanced integration flows', () => {
 
     logger = container.resolve(tokens.ILogger);
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
+    controllerDependencies = resolveControllerDependencies(container);
 
     controller = new CharacterConceptsManagerController({
       logger,
       characterBuilderService,
       eventBus,
+      ...controllerDependencies,
     });
 
     await controller.initialize();
@@ -289,11 +293,13 @@ describe('Character Concepts Manager - advanced integration flows', () => {
 
     logger = container.resolve(tokens.ILogger);
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
+    controllerDependencies = resolveControllerDependencies(container);
 
     controller = new CharacterConceptsManagerController({
       logger,
       characterBuilderService: singleConceptService,
       eventBus,
+      ...controllerDependencies,
     });
 
     await controller.initialize();
@@ -388,4 +394,3 @@ describe('Character Concepts Manager - advanced integration flows', () => {
     expect(channel.closed).toBe(true);
   });
 });
-

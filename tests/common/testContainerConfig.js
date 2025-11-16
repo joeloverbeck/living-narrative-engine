@@ -7,6 +7,30 @@ import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import ConsoleLogger, { LogLevel } from '../../src/logging/consoleLogger.js';
 import { SafeEventDispatcher } from '../../src/events/safeEventDispatcher.js';
+import { AsyncUtilitiesToolkit } from '../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { DOMElementManager } from '../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../src/characterBuilder/services/eventListenerRegistry.js';
+import { ControllerLifecycleOrchestrator } from '../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { ErrorHandlingStrategy } from '../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { PerformanceMonitor } from '../../src/characterBuilder/services/performanceMonitor.js';
+import { ValidationService } from '../../src/characterBuilder/services/validationService.js';
+import { MemoryManager } from '../../src/characterBuilder/services/memoryManager.js';
+
+const ERROR_CATEGORIES = Object.freeze({
+  VALIDATION: 'validation',
+  NETWORK: 'network',
+  SYSTEM: 'system',
+  USER: 'user',
+  PERMISSION: 'permission',
+  NOT_FOUND: 'not_found',
+});
+
+const ERROR_SEVERITY = Object.freeze({
+  INFO: 'info',
+  WARNING: 'warning',
+  ERROR: 'error',
+  CRITICAL: 'critical',
+});
 
 /**
  * Creates a lightweight container configuration optimized for testing
@@ -81,12 +105,121 @@ export async function createTestContainer(options = {}) {
   };
   container.register(tokens.ISchemaValidator, () => mockSchemaValidator);
 
+  // Register controller infrastructure dependencies added by base controller refactor
+  container.register(
+    tokens.AsyncUtilitiesToolkit,
+    () =>
+      new AsyncUtilitiesToolkit({
+        logger,
+        defaultWait: 1,
+        instrumentation: { logTimerEvents: false },
+      }),
+    { lifecycle: 'transient' }
+  );
+
+  container.register(
+    tokens.DOMElementManager,
+    () =>
+      new DOMElementManager({
+        logger,
+        documentRef: document,
+        performanceRef: performance,
+        contextName: 'TestDOMElementManager',
+      }),
+    { lifecycle: 'transient' }
+  );
+
+  container.register(
+    tokens.EventListenerRegistry,
+    () =>
+      new EventListenerRegistry({
+        logger,
+        asyncUtilities: container.resolve(tokens.AsyncUtilitiesToolkit),
+        contextName: 'TestEventListenerRegistry',
+      }),
+    { lifecycle: 'transient' }
+  );
+
+  container.register(
+    tokens.ControllerLifecycleOrchestrator,
+    () =>
+      new ControllerLifecycleOrchestrator({
+        logger,
+        eventBus,
+      }),
+    { lifecycle: 'transient' }
+  );
+
+  container.register(
+    tokens.PerformanceMonitor,
+    () =>
+      new PerformanceMonitor({
+        logger,
+        eventBus,
+        threshold: 25,
+        contextName: 'TestPerformanceMonitor',
+      }),
+    { lifecycle: 'transient' }
+  );
+
+  container.register(
+    tokens.MemoryManager,
+    () =>
+      new MemoryManager({
+        logger,
+        contextName: 'TestMemoryManager',
+      }),
+    { lifecycle: 'transient' }
+  );
+
+  container.register(
+    tokens.ErrorHandlingStrategy,
+    () =>
+      new ErrorHandlingStrategy({
+        logger,
+        eventBus,
+        controllerName: 'TestController',
+        errorCategories: ERROR_CATEGORIES,
+        errorSeverity: ERROR_SEVERITY,
+        recoveryHandlers: {},
+      }),
+    { lifecycle: 'transient' }
+  );
+
+  container.register(
+    tokens.ValidationService,
+    () =>
+      new ValidationService({
+        schemaValidator: container.resolve(tokens.ISchemaValidator),
+        logger,
+        handleError: (error) => logger.error('Validation error', error),
+        errorCategories: ERROR_CATEGORIES,
+      }),
+    { lifecycle: 'transient' }
+  );
+
   // Register any additional mock services
   for (const [token, service] of Object.entries(mockServices)) {
     container.register(token, () => service);
   }
 
   return container;
+}
+
+export function resolveControllerDependencies(container) {
+  return {
+    schemaValidator: container.resolve(tokens.ISchemaValidator),
+    controllerLifecycleOrchestrator: container.resolve(
+      tokens.ControllerLifecycleOrchestrator
+    ),
+    domElementManager: container.resolve(tokens.DOMElementManager),
+    eventListenerRegistry: container.resolve(tokens.EventListenerRegistry),
+    asyncUtilitiesToolkit: container.resolve(tokens.AsyncUtilitiesToolkit),
+    performanceMonitor: container.resolve(tokens.PerformanceMonitor),
+    memoryManager: container.resolve(tokens.MemoryManager),
+    errorHandlingStrategy: container.resolve(tokens.ErrorHandlingStrategy),
+    validationService: container.resolve(tokens.ValidationService),
+  };
 }
 
 /**

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
 import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
@@ -62,7 +62,7 @@ describe('ValidationReport formatting - Integration', () => {
       },
     };
 
-    validator = new RecipePreflightValidator({
+    validator = new RecipeValidationRunner({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator: mockSchemaValidator,

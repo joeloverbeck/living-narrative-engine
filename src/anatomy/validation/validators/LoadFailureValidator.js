@@ -21,7 +21,7 @@ export class LoadFailureValidator extends BaseValidator {
    */
   constructor({ logger }) {
     super({
-      name: 'load-failure',
+      name: 'load-failures',
       priority: 50,
       failFast: false,
       logger,

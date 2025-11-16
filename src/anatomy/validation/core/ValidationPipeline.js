@@ -8,7 +8,7 @@ const LEGACY_SKIP_FLAGS = {
   'descriptor-coverage': 'skipDescriptorChecks',
   'part-availability': 'skipPartAvailabilityChecks',
   'generated-slot-parts': 'skipGeneratedSlotChecks',
-  'load-failure': 'skipLoadFailureChecks',
+  'load-failures': 'skipLoadFailureChecks',
   'recipe-usage': 'skipRecipeUsageCheck',
 };
 

@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import { promises as fs } from 'fs';
 import path from 'path';
-import RecipePreflightValidator from '../../../../src/anatomy/validation/RecipePreflightValidator.js';
+import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import EntityMatcherService from '../../../../src/anatomy/services/entityMatcherService.js';
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../../../../src/dependencyInjection/minimalContainerConfig.js';
@@ -67,7 +67,7 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     });
 
     // Create validator
-    validator = new RecipePreflightValidator({
+    validator = new RecipeValidationRunner({
       dataRegistry,
       anatomyBlueprintRepository,
       schemaValidator,

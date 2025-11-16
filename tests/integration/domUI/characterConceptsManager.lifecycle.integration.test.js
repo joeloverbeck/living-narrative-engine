@@ -13,6 +13,7 @@ import {
   createMinimalModalDOM,
   createMockCharacterBuilderService,
   createTestContainer,
+  resolveControllerDependencies,
 } from '../../common/testContainerConfig.js';
 import { flushPromises } from '../../common/testWaitUtils.js';
 
@@ -58,6 +59,7 @@ describe('Character Concepts Manager - lifecycle integration', () => {
   let characterBuilderService;
   let originalEnv;
   let conceptTextKeydownHandler;
+  let controllerDependencies;
 
   beforeEach(async () => {
     originalEnv = process.env.NODE_ENV;
@@ -97,11 +99,13 @@ describe('Character Concepts Manager - lifecycle integration', () => {
 
     logger = container.resolve(tokens.ILogger);
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
+    controllerDependencies = resolveControllerDependencies(container);
 
     controller = new CharacterConceptsManagerController({
       logger,
       characterBuilderService,
       eventBus,
+      ...controllerDependencies,
     });
 
     const originalAddEventListener = controller._addEventListener.bind(controller);
