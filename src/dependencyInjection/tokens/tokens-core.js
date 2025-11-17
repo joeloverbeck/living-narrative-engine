@@ -345,6 +345,7 @@ export const coreTokens = freeze({
   IMethodSelectionService: 'IMethodSelectionService',
   IParameterResolutionService: 'IParameterResolutionService',
   IPlanningEffectsSimulator: 'IPlanningEffectsSimulator',
+  IGoapEventDispatcher: 'IGoapEventDispatcher',
   IPrimitiveActionStepExecutor: 'IPrimitiveActionStepExecutor',
   IRefinementEngine: 'IRefinementEngine',
   IRefinementStateManager: 'IRefinementStateManager',

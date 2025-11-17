@@ -728,28 +728,21 @@ describe('ClichesGeneratorController', () => {
 
     it('should validate required elements on cache', async () => {
       // Arrange
-      // Remove a required element
+      await testBed.controller.cleanup();
       const generateBtn = document.getElementById('generate-btn');
       generateBtn.remove();
+      testBed.logger.error.mockClear();
 
       // Act - Need to create a new controller after removing the element
-      const newController = new (
-        await import(
-          '../../../../src/clichesGenerator/controllers/ClichesGeneratorController.js'
-        )
-      ).ClichesGeneratorController({
-        logger: testBed.logger,
-        characterBuilderService: testBed.mockCharacterBuilderService,
-        eventBus: testBed.mockEventBus,
-        schemaValidator: testBed.mockSchemaValidator,
-        clicheGenerator: testBed.mockClicheGenerator,
-      });
+      const newController = testBed.createController();
       await newController.initialize();
 
       // Assert
       expect(testBed.logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Required element missing: Generate button')
       );
+
+      await newController.cleanup();
     });
   });
 

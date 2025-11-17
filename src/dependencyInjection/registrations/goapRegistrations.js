@@ -23,6 +23,7 @@ import PlanInspector from '../../goap/debug/planInspector.js';
 import StateDiffViewer from '../../goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../goap/debug/refinementTracer.js';
 import GOAPDebugger from '../../goap/debug/goapDebugger.js';
+import { createGoapEventDispatcher } from '../../goap/debug/goapEventDispatcher.js';
 import NumericConstraintEvaluator from '../../goap/planner/numericConstraintEvaluator.js';
 
 /**
@@ -31,6 +32,12 @@ import NumericConstraintEvaluator from '../../goap/planner/numericConstraintEval
  * @param {import('../containerBase.js').default} container - DI container
  */
 export function registerGoapServices(container) {
+  container.register(tokens.IGoapEventDispatcher, (c) => {
+    const eventBus = c.resolve(tokens.IEventBus);
+    const logger = c.resolve(tokens.ILogger);
+    return createGoapEventDispatcher(eventBus, logger);
+  }, { lifecycle: 'singleton' });
+
   // Context Assembly Service
   container.register(
     tokens.IContextAssemblyService,
@@ -143,7 +150,7 @@ export function registerGoapServices(container) {
       tokens.IConditionalStepExecutor,
       tokens.IContextAssemblyService,
       tokens.GameDataRepository,
-      tokens.IEventBus,
+      tokens.IGoapEventDispatcher,
       tokens.ILogger,
     ],
     lifecycle: 'singleton',
@@ -260,6 +267,7 @@ export function registerGoapServices(container) {
       tokens.JsonLogicEvaluationService,
       tokens.IDataRegistry,
       tokens.IEventBus,
+      tokens.IGoapEventDispatcher,
       tokens.ILogger,
       tokens.IParameterResolutionService,
     ],

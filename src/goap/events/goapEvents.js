@@ -33,6 +33,12 @@ export const GOAP_EVENTS = {
   DEPENDENCY_VALIDATED: 'goap:dependency_validated',
 
   /**
+   * Dispatched when an event violates the GOAP dispatch contract
+   * Payload: { actorId?, eventType, code, reason, stack, timestamp }
+   */
+  EVENT_CONTRACT_VIOLATION: 'goap:event_contract_violation',
+
+  /**
    * Dispatched when planning starts for a goal
    * Payload: { actorId, goalId }
    */

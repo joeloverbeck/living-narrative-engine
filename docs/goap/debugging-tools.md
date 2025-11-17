@@ -185,11 +185,13 @@ This workflow keeps component-aware planning observable without ad-hoc logging a
 
 ## Diagnostics Contract
 
-`GoapController` and `GOAPDebugger` share a diagnostics contract defined in `src/goap/debug/goapDebuggerDiagnosticsContract.js` (`version = 1.0.0` at the time of writing). The contract ensures:
+`GoapController` and `GOAPDebugger` share a diagnostics contract defined in `src/goap/debug/goapDebuggerDiagnosticsContract.js` (`version = 1.1.0` at the time of writing). The contract ensures:
 
-- Both sides expose `getTaskLibraryDiagnostics`, `getPlanningStateDiagnostics`, and `getDiagnosticsContractVersion()`; mismatches throw during dependency injection so carets fail early instead of emitting partial reports.
+- Both sides expose `getTaskLibraryDiagnostics`, `getPlanningStateDiagnostics`, `getEventComplianceDiagnostics`, and `getDiagnosticsContractVersion()`; mismatches throw during dependency injection so carets fail early instead of emitting partial reports.
 - Each diagnostics section includes metadata describing whether data is available, when it was last updated, and whether it is stale. Payloads older than five minutes (configurable via the contract) are tagged with `⚠️ STALE` in the text report and `diagnosticsMeta.*.stale = true` in JSON output.
 - Missing payloads emit a throttled `GOAP_DEBUGGER_DIAGNOSTICS_MISSING` warning so CI can grep for instrumentation gaps. Bumping the contract version is mandatory whenever a new diagnostics block is added or the stale threshold changes.
+
+Event contract compliance now appears alongside the task library and planning-state sections. The controller exposes `{ actor, global }` diagnostics fed by `createGoapEventDispatcher()` so every GOAP event recorded in CI shows its total dispatch count and any missing payloads. Violations carry `GOAP_EVENT_PAYLOAD_MISSING` stacks and the debugger links back to `#Planner Contract Checklist` for remediation.
 
 When you add diagnostics:
 

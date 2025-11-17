@@ -21,6 +21,7 @@ import {
   getPlanningStateDiagnostics as getPlanningStateDiagnosticsSnapshot,
 } from '../planner/planningStateDiagnostics.js';
 import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../debug/goapDebuggerDiagnosticsContract.js';
+import { createGoapEventDispatcher } from '../debug/goapEventDispatcher.js';
 
 export const GOAP_CONTROLLER_DIAGNOSTICS_CONTRACT_VERSION =
   GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version;
@@ -68,7 +69,7 @@ class GoapController {
   #dataRegistry;
 
   /** @type {IEventBus} */
-  #eventBus;
+  #eventDispatcher;
 
   /** @type {IParameterResolutionService} */
   #parameterResolutionService;
@@ -124,6 +125,7 @@ class GoapController {
     jsonLogicEvaluationService,
     dataRegistry,
     eventBus,
+    goapEventDispatcher,
     logger,
     parameterResolutionService,
   }) {
@@ -164,9 +166,15 @@ class GoapController {
     validateDependency(dataRegistry, 'IDataRegistry', this.#logger, {
       requiredMethods: ['getAll', 'get'],
     });
-    validateDependency(eventBus, 'IEventBus', this.#logger, {
-      requiredMethods: ['dispatch'],
-    });
+    if (goapEventDispatcher) {
+      validateDependency(goapEventDispatcher, 'IGoapEventDispatcher', this.#logger, {
+        requiredMethods: ['dispatch', 'getComplianceSnapshot', 'getComplianceForActor'],
+      });
+    } else {
+      validateDependency(eventBus, 'IEventBus', this.#logger, {
+        requiredMethods: ['dispatch'],
+      });
+    }
     validateDependency(parameterResolutionService, 'IParameterResolutionService', this.#logger, {
       requiredMethods: ['resolve'],
     });
@@ -177,7 +185,8 @@ class GoapController {
     this.#contextAssemblyService = contextAssemblyService;
     this.#jsonLogicService = logicService;
     this.#dataRegistry = dataRegistry;
-    this.#eventBus = eventBus;
+    this.#eventDispatcher =
+      goapEventDispatcher ?? createGoapEventDispatcher(eventBus, this.#logger);
     this.#parameterResolutionService = parameterResolutionService;
     this.#activePlan = null;
     this.#dependencyDiagnostics = new Map();
@@ -196,7 +205,7 @@ class GoapController {
       createPlannerContractSnapshot(this.#planner)
     );
 
-    registerPlanningStateDiagnosticsEventBus(this.#eventBus);
+    registerPlanningStateDiagnosticsEventBus(this.#eventDispatcher);
   }
 
   /**
@@ -211,7 +220,7 @@ class GoapController {
    */
   #dispatchEvent(eventType, payload) {
     // ISafeEventDispatcher handles errors internally, no try-catch needed
-    this.#eventBus.dispatch(eventType, payload);
+    this.#eventDispatcher.dispatch(eventType, payload);
 
     this.#logger.debug('GOAP event dispatched', {
       eventType,
@@ -1394,6 +1403,40 @@ class GoapController {
     );
 
     return getPlanningStateDiagnosticsSnapshot(actorId);
+  }
+
+  /**
+   * Return GOAP event-dispatch compliance diagnostics for an actor (plus global aggregate).
+   *
+   * @param {string} actorId - Target actor identifier or 'global'
+   * @returns {{ actor: object|null, global: object|null } | null}
+   */
+  getEventComplianceDiagnostics(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GoapController.getEventComplianceDiagnostics',
+      this.#logger
+    );
+
+    if (
+      !this.#eventDispatcher ||
+      typeof this.#eventDispatcher.getComplianceForActor !== 'function'
+    ) {
+      return null;
+    }
+
+    const actorDiagnostics = this.#eventDispatcher.getComplianceForActor(actorId);
+    const globalDiagnostics = this.#eventDispatcher.getComplianceForActor('global');
+
+    if (!actorDiagnostics && !globalDiagnostics) {
+      return null;
+    }
+
+    return {
+      actor: actorDiagnostics,
+      global: globalDiagnostics,
+    };
   }
 
   /**

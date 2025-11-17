@@ -1077,6 +1077,29 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Show a cached DOM element using the configured DOMElementManager
+   *
+   * @param {string} elementName - Name of the cached element
+   * @param {string} [displayType='block'] - Display value to apply
+   * @returns {boolean} True when the element was shown
+   * @protected
+   */
+  _showElement(elementName, displayType = 'block') {
+    return this.#domElementManager.showElement(elementName, displayType);
+  }
+
+  /**
+   * Hide a cached DOM element using the configured DOMElementManager
+   *
+   * @param {string} elementName - Name of the cached element
+   * @returns {boolean} True when the element was hidden
+   * @protected
+   */
+  _hideElement(elementName) {
+    return this.#domElementManager.hideElement(elementName);
+  }
+
+  /**
    * Add a CSS class to a cached DOM element
    *
    * @param {string} elementName - Name of the cached element
