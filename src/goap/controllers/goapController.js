@@ -103,6 +103,12 @@ class GoapController {
   /** @type {Map<string, object>} Task library diagnostics keyed by actorId */
   #taskLibraryDiagnostics;
 
+  /** @type {Map<string, object>} Goal path diagnostics keyed by actorId */
+  #goalPathDiagnostics;
+
+  /** @type {Map<string, object>} Effect failure telemetry keyed by actorId */
+  #effectFailureTelemetry;
+
   /**
    * Create new GOAP controller instance
    *
@@ -199,6 +205,8 @@ class GoapController {
     this.#activePlan = null;
     this.#dependencyDiagnostics = new Map();
     this.#taskLibraryDiagnostics = new Map();
+    this.#goalPathDiagnostics = new Map();
+    this.#effectFailureTelemetry = new Map();
 
     // Initialize failure tracking (GOAPIMPL-021-05)
     this.#failedGoals = new Map();
@@ -306,6 +314,48 @@ class GoapController {
         }
       );
     }
+  }
+
+  #captureGoalPathDiagnostics(actorId) {
+    if (
+      !actorId ||
+      typeof this.#planner.getGoalPathDiagnostics !== 'function'
+    ) {
+      return;
+    }
+
+    const diagnostics = this.#planner.getGoalPathDiagnostics(actorId);
+    if (!diagnostics) {
+      return;
+    }
+
+    const enrichedDiagnostics = {
+      ...diagnostics,
+      timestamp: Date.now(),
+    };
+
+    this.#goalPathDiagnostics.set(actorId, enrichedDiagnostics);
+  }
+
+  #captureEffectFailureTelemetry(actorId) {
+    if (
+      !actorId ||
+      typeof this.#planner.getEffectFailureTelemetry !== 'function'
+    ) {
+      return;
+    }
+
+    const telemetry = this.#planner.getEffectFailureTelemetry(actorId);
+    if (!telemetry) {
+      return;
+    }
+
+    const enrichedTelemetry = {
+      ...telemetry,
+      timestamp: Date.now(),
+    };
+
+    this.#effectFailureTelemetry.set(actorId, enrichedTelemetry);
   }
 
   /**
@@ -435,9 +485,12 @@ class GoapController {
         );
       } catch (error) {
         this.#captureTaskLibraryDiagnostics(actor.id);
+        this.#captureGoalPathDiagnostics(actor.id);
+        this.#captureEffectFailureTelemetry(actor.id);
         if (
           error?.code === 'GOAP_SETUP_MISSING_ACTOR' ||
-          error?.code === GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION
+          error?.code === GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION ||
+          error?.code === GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH
         ) {
           return this.#handlePlanningFailure(goal, {
             code: error.code,
@@ -448,6 +501,8 @@ class GoapController {
       }
 
       this.#captureTaskLibraryDiagnostics(actor.id);
+      this.#captureGoalPathDiagnostics(actor.id);
+      this.#captureEffectFailureTelemetry(actor.id);
 
       if (!planResult || !planResult.tasks) {
         // 7. Planning failed → handle failure (GOAPIMPL-021-05)
@@ -1523,6 +1578,38 @@ class GoapController {
     }
 
     return JSON.parse(JSON.stringify(diagnostics));
+  }
+
+  getGoalPathDiagnostics(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GoapController.getGoalPathDiagnostics',
+      this.#logger
+    );
+
+    const diagnostics = this.#goalPathDiagnostics.get(actorId);
+    if (!diagnostics) {
+      return null;
+    }
+
+    return JSON.parse(JSON.stringify(diagnostics));
+  }
+
+  getEffectFailureTelemetry(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GoapController.getEffectFailureTelemetry',
+      this.#logger
+    );
+
+    const telemetry = this.#effectFailureTelemetry.get(actorId);
+    if (!telemetry) {
+      return null;
+    }
+
+    return JSON.parse(JSON.stringify(telemetry));
   }
 
   /**

@@ -54,6 +54,8 @@ debugger.stopTrace('actor-123');
 - When `GoapController` boots it emits `goap:dependency_validated` telemetry and the debugger prints a **Dependency Contracts** section. That block lists required vs provided methods plus timestamps, making mock drift obvious inside `npm run test:e2e -- --report-goap-debug` logs.
 - Any `GOAP_DEPENDENCY_WARN` log means a mock bypassed the factory or a dependency is missing methods. CI greps for this string to fail builds before the regression spreads.
 - GOAP integration harnesses should call `setup.registerPlanningActor(actor)`, `setup.buildPlanningState(actor)`, and `setup.registerPlanningStateSnapshot(state)` instead of wiring the entity manager manually. This keeps `SimpleEntityManager`, the dual-format planning state, and the new task validation guardrails perfectly in sync.
+- Set `GOAP_GOAL_PATH_LINT=1` (or run `npm run validate:goals`) to lint JSON Logic goals for canonical `actor.components.*` paths. When the planner encounters a bare `actor.hp` reference it aborts with `GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH` and GOAPDebugger links to the offending variable.
+- `GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION` now powers the **Effect Failure Telemetry** section in GOAPDebugger. Any `{ success: false }` result from `planningEffectsSimulator` is fatal—surface the missing precondition instead of relying on simulator failures.
 
 ### Test Integration
 
@@ -188,9 +190,16 @@ Total Changes: 4 (1 added, 2 modified, 1 removed)
 
 This workflow keeps component-aware planning observable without ad-hoc logging and reaffirms that `#buildEvaluationContext` is the extension point for any future preprocessing.
 
+### Goal Path & Effect Telemetry
+
+Plan Inspector and the consolidated GOAPDebugger report now include two additional diagnostics blocks:
+
+- **Goal Path Violations**—lists every actor/goal that referenced `actor.*` or `state.actor.*` without the `components` segment. Run `npm run validate:goals` locally (or export `GOAP_GOAL_PATH_LINT=1`) to catch these before they reach CI. When the planner aborts with `INVALID_GOAL_PATH`, the block shows the exact variable path(s) to fix.
+- **Effect Failure Telemetry**—captures every `{ success: false }` response from `planningEffectsSimulator` along with `{ taskId, phase, goalId }`. Treat each entry as a missing precondition; `INVALID_EFFECT_DEFINITION` remains a hard failure and GOAPDebugger links back to this section so you can see which task caused the abort.
+
 ## Diagnostics Contract
 
-`GoapController` and `GOAPDebugger` share a diagnostics contract defined in `src/goap/debug/goapDebuggerDiagnosticsContract.js` (`version = 1.1.0` at the time of writing). The contract ensures:
+`GoapController` and `GOAPDebugger` share a diagnostics contract defined in `src/goap/debug/goapDebuggerDiagnosticsContract.js` (`version = 1.2.0` at the time of writing). The contract ensures:
 
 - Both sides expose `getTaskLibraryDiagnostics`, `getPlanningStateDiagnostics`, `getEventComplianceDiagnostics`, and `getDiagnosticsContractVersion()`; mismatches throw during dependency injection so carets fail early instead of emitting partial reports.
 - Each diagnostics section includes metadata describing whether data is available, when it was last updated, and whether it is stale. Payloads older than five minutes (configurable via the contract) are tagged with `⚠️ STALE` in the text report and `diagnosticsMeta.*.stale = true` in JSON output.

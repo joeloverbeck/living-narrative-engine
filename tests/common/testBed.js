@@ -5,6 +5,8 @@
 import { jest } from '@jest/globals';
 import { createMockElement } from './testHelpers/thematicDirectionDOMSetup.js';
 import { createGoapPlannerMock } from './mocks/createGoapPlannerMock.js';
+import { deepClone } from '../../src/utils/cloneUtils.js';
+import { rewriteActorPath } from '../../src/goap/planner/goalPathValidator.js';
 
 // Action tracing classes imported dynamically to avoid circular dependencies
 
@@ -401,4 +403,45 @@ export function createTestBed() {
       });
     },
   };
+}
+
+export function buildPlanningGoal(goalState, overrides = {}) {
+  const normalizedGoalState = deepClone(goalState || {});
+  rewriteGoalStateVars(normalizedGoalState);
+
+  const goal = { ...overrides };
+  if (!goal.id) {
+    goal.id = 'test-goal';
+  }
+  if (goal.priority === undefined) {
+    goal.priority = 1;
+  }
+
+  return {
+    ...goal,
+    goalState: normalizedGoalState,
+  };
+}
+
+function rewriteGoalStateVars(node) {
+  if (!node || typeof node !== 'object') {
+    return;
+  }
+
+  if (Array.isArray(node)) {
+    node.forEach((value) => rewriteGoalStateVars(value));
+    return;
+  }
+
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'var') {
+      if (typeof value === 'string') {
+        node.var = rewriteActorPath(value);
+      } else if (Array.isArray(value) && typeof value[0] === 'string') {
+        value[0] = rewriteActorPath(value[0]);
+      }
+    } else {
+      rewriteGoalStateVars(value);
+    }
+  }
 }

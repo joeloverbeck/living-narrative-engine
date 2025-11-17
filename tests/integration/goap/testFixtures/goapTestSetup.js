@@ -22,7 +22,7 @@ import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { HasComponentOperator } from '../../../../src/logic/operators/hasComponentOperator.js';
 import { createEventBusMock } from '../../../common/mocks/createEventBusMock.js';
-import { buildDualFormatState } from './dualFormatStateBuilder.js';
+import { buildDualFormatState } from '../../../common/goap/planningStateTestUtils.js';
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
 import { createGoapEventDispatcher } from '../../../../src/goap/debug/goapEventDispatcher.js';

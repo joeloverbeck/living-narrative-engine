@@ -26,6 +26,8 @@ describe('GOAPDebugger', () => {
       'getTaskLibraryDiagnostics',
       'getPlanningStateDiagnostics',
       'getEventComplianceDiagnostics',
+      'getGoalPathDiagnostics',
+      'getEffectFailureTelemetry',
       'getDiagnosticsContractVersion',
     ]);
     mockController.getTaskLibraryDiagnostics.mockReturnValue({
@@ -51,6 +53,18 @@ describe('GOAPDebugger', () => {
     mockController.getEventComplianceDiagnostics.mockReturnValue({
       actor: { actorId: 'actor-1', totalEvents: 0, missingPayloads: 0 },
       global: { actorId: 'global', totalEvents: 0, missingPayloads: 0 },
+    });
+    mockController.getGoalPathDiagnostics.mockReturnValue({
+      actorId: 'actor-1',
+      totalViolations: 0,
+      entries: [],
+      lastViolationAt: Date.now(),
+    });
+    mockController.getEffectFailureTelemetry.mockReturnValue({
+      actorId: 'actor-1',
+      totalFailures: 0,
+      failures: [],
+      lastFailureAt: Date.now(),
     });
     mockController.getDiagnosticsContractVersion.mockReturnValue(
       GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version
@@ -596,50 +610,54 @@ describe('GOAPDebugger', () => {
 
       const report = goapDebugger.generateReportJSON('actor-1');
 
-      expect(report).toEqual({
-        actorId: 'actor-1',
-        timestamp: expect.any(Number),
-        plan: planData,
-        failures,
-        dependencies: [],
-        taskLibraryDiagnostics: diagnostics,
-        planningStateDiagnostics: {
-          totalMisses: 1,
-          lastMisses: [
-            expect.objectContaining({
-              timestamp: expect.any(Number),
-              path: 'actor:core:needs',
-            }),
-          ],
-        },
-        eventComplianceDiagnostics: {
-          actor: expect.objectContaining({
-            actorId: 'actor-1',
-            missingPayloads: 0,
-          }),
-          global: expect.objectContaining({
-            actorId: 'global',
-          }),
-        },
-        eventStream: expect.objectContaining({
+      expect(report).toEqual(
+        expect.objectContaining({
           actorId: 'actor-1',
-          events: expect.any(Array),
-        }),
-        diagnosticsMeta: {
-          taskLibrary: expect.objectContaining({
-            available: true,
-            stale: false,
+          timestamp: expect.any(Number),
+          plan: planData,
+          failures,
+          dependencies: [],
+          taskLibraryDiagnostics: diagnostics,
+          planningStateDiagnostics: {
+            totalMisses: 1,
+            lastMisses: [
+              expect.objectContaining({
+                timestamp: expect.any(Number),
+                path: 'actor:core:needs',
+              }),
+            ],
+          },
+          eventComplianceDiagnostics: {
+            actor: expect.objectContaining({
+              actorId: 'actor-1',
+              missingPayloads: 0,
+            }),
+            global: expect.objectContaining({
+              actorId: 'global',
+            }),
+          },
+          goalPathDiagnostics: expect.objectContaining({ actorId: 'actor-1' }),
+          effectFailureTelemetry: expect.objectContaining({ actorId: 'actor-1' }),
+          eventStream: expect.objectContaining({
+            actorId: 'actor-1',
+            events: expect.any(Array),
           }),
-          planningState: expect.objectContaining({
-            available: true,
+          diagnosticsMeta: expect.objectContaining({
+            taskLibrary: expect.objectContaining({
+              available: true,
+              stale: false,
+            }),
+            planningState: expect.objectContaining({ available: true }),
+            eventCompliance: expect.objectContaining({
+              available: true,
+              stale: true,
+            }),
+            goalPathViolations: expect.objectContaining({ sectionId: 'goalPathViolations' }),
+            effectFailureTelemetry: expect.objectContaining({ sectionId: 'effectFailureTelemetry' }),
           }),
-          eventCompliance: expect.objectContaining({
-            available: true,
-            stale: true,
-          }),
-        },
-        trace,
-      });
+          trace,
+        })
+      );
     });
 
     it('should validate actorId parameter', () => {
