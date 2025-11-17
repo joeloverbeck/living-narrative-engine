@@ -98,6 +98,7 @@ export class ConfigurationLoader {
         override.errorHandling
       ),
       output: this.#mergeOutput(base.output, override.output),
+      features: this.#mergeFeatures(base.features, override.features),
     };
   }
 
@@ -108,6 +109,7 @@ export class ConfigurationLoader {
         validators: [],
         errorHandling: {},
         output: {},
+        features: {},
       };
     }
 
@@ -122,6 +124,7 @@ export class ConfigurationLoader {
         : [],
       errorHandling: this.#cloneIfObject(config.errorHandling) ?? {},
       output: this.#cloneIfObject(config.output) ?? {},
+      features: this.#cloneIfObject(config.features) ?? {},
     };
   }
 
@@ -309,7 +312,57 @@ export class ConfigurationLoader {
       pipelineConfig.output = this.#cloneIfObject(config.output) ?? {};
     }
 
+    pipelineConfig.guards = {
+      enabled: this.#shouldEnableGuardrails(config),
+    };
+
     return pipelineConfig;
+  }
+
+  #mergeFeatures(baseFeatures = {}, overrideFeatures = {}) {
+    const merged = {};
+
+    if (typeof baseFeatures.validationPipelineGuards === 'boolean') {
+      merged.validationPipelineGuards = baseFeatures.validationPipelineGuards;
+    }
+
+    if (typeof overrideFeatures.validationPipelineGuards === 'boolean') {
+      merged.validationPipelineGuards = overrideFeatures.validationPipelineGuards;
+    }
+
+    return merged;
+  }
+
+  #shouldEnableGuardrails(config) {
+    if (config?.features && typeof config.features.validationPipelineGuards === 'boolean') {
+      return config.features.validationPipelineGuards;
+    }
+
+    const envFlag = this.#parseEnvGuardFlag(process?.env?.VALIDATION_PIPELINE_GUARDS);
+    if (envFlag !== null) {
+      return envFlag;
+    }
+
+    if (process?.env?.NODE_ENV === 'test') {
+      return true;
+    }
+
+    return true;
+  }
+
+  #parseEnvGuardFlag(value) {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (normalized === '1' || normalized === 'true') {
+      return true;
+    }
+    if (normalized === '0' || normalized === 'false') {
+      return false;
+    }
+    return null;
   }
 
   async #loadConfigFromFile(filePath) {

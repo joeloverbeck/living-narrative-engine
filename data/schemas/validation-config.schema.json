@@ -150,6 +150,21 @@
         "verbose": false,
         "colorize": true
       }
+    },
+    "features": {
+      "type": "object",
+      "description": "Feature flags controlling guardrails and diagnostics",
+      "additionalProperties": false,
+      "properties": {
+        "validationPipelineGuards": {
+          "type": "boolean",
+          "description": "Enable guardrails that normalize pipeline results and assert validator ordering",
+          "default": true
+        }
+      },
+      "default": {
+        "validationPipelineGuards": true
+      }
     }
   }
 }

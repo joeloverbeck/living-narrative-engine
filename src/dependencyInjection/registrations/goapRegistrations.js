@@ -176,7 +176,7 @@ export function registerGoapServices(container) {
   // Evaluates numeric constraints (>=, <=, ==, <, >) for GOAP planning
   // Calculates distances from current values to constraint satisfaction
   container.register(tokens.INumericConstraintEvaluator, NumericConstraintEvaluator, {
-    dependencies: [tokens.JsonLogicEvaluationService, tokens.ILogger],
+    dependencies: [tokens.JsonLogicEvaluationService, tokens.ILogger, tokens.IGoapEventDispatcher],
     lifecycle: 'singleton',
   });
 

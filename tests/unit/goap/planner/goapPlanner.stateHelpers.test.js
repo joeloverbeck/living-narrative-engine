@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import GoapPlanner from '../../../../src/goap/planner/goapPlanner.js';
 import { createTestBed } from '../../../common/testBed.js';
+import { createGoalEvaluationContextAdapter } from '../../../../src/goap/planner/goalEvaluationContextAdapter.js';
 
 describe('GoapPlanner - State Management Helpers', () => {
   let testBed;
@@ -189,16 +190,16 @@ describe('GoapPlanner - State Management Helpers', () => {
 
       const result = planner.testGoalSatisfied(state, goal);
 
+      const adapter = createGoalEvaluationContextAdapter({
+        state,
+        goal,
+        logger: mockLogger,
+      });
+
       expect(result).toBe(true);
       expect(mockJsonLogicService.evaluateCondition).toHaveBeenCalledWith(
         goal.goalState,
-        expect.objectContaining({
-          actor: expect.objectContaining({
-            components: expect.objectContaining({
-              core: expect.objectContaining({ hungry: false }),
-            }),
-          }),
-        })
+        adapter.getEvaluationContext()
       );
       expect(mockLogger.debug).toHaveBeenCalledWith('Goal satisfaction check', {
         goalId: 'core:reduce_hunger',
@@ -370,7 +371,7 @@ describe('GoapPlanner - State Management Helpers', () => {
       const context = planner.testBuildEvaluationContext(state);
 
       expect(context['actor:core:needs']).toEqual({ hunger: 80 });
-      expect(context.actor.components.core).toEqual(expect.objectContaining({ hunger: 80 }));
+      expect(context.actor.components['core:needs']).toEqual(expect.objectContaining({ hunger: 80 }));
     });
 
     it('should provide stable state wrapper for empty or null input', () => {

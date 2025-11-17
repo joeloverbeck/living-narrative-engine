@@ -129,6 +129,16 @@ export class ValidationPipeline {
     return aggregatedResult;
   }
 
+  /**
+   * Exposes the total number of registered validators for diagnostics.
+   * @returns {number} Count of validators registered with the pipeline.
+   */
+  getValidatorCount() {
+    return typeof this.#registry.count === 'function'
+      ? this.#registry.count()
+      : this.#registry.getAll().length;
+  }
+
   #normalizeConfiguration(configuration = {}) {
     if (!configuration || typeof configuration !== 'object') {
       return { validators: {} };

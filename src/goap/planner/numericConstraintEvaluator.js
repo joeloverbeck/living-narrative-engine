@@ -19,6 +19,9 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { createPlanningStateView } from './planningStateView.js';
+import { GOAP_EVENTS } from '../events/goapEvents.js';
+import { emitGoapEvent } from '../events/goapEventFactory.js';
+import { recordNumericConstraintFallback } from './numericConstraintDiagnostics.js';
 
 /**
  * Numeric Constraint Evaluator
@@ -33,6 +36,7 @@ import { createPlanningStateView } from './planningStateView.js';
 class NumericConstraintEvaluator {
   #jsonLogicEvaluator;
   #logger;
+  #goapEventDispatcher;
 
   /**
    * Supported numeric comparison operators
@@ -48,7 +52,12 @@ class NumericConstraintEvaluator {
    * @param {object} params.jsonLogicEvaluator - Service to evaluate JSON Logic expressions
    * @param {object} params.logger - Logger instance
    */
-  constructor({ jsonLogicEvaluator, jsonLogicEvaluationService, logger }) {
+  constructor({
+    jsonLogicEvaluator,
+    jsonLogicEvaluationService,
+    logger,
+    goapEventDispatcher,
+  }) {
     this.#logger = ensureValidLogger(
       logger,
       'NumericConstraintEvaluator.constructor'
@@ -61,6 +70,7 @@ class NumericConstraintEvaluator {
     });
 
     this.#jsonLogicEvaluator = evaluator;
+    this.#goapEventDispatcher = goapEventDispatcher ?? null;
   }
 
   /**
@@ -113,24 +123,29 @@ class NumericConstraintEvaluator {
     try {
       const parsed = this.#parseNumericConstraint(constraint);
       if (!parsed) {
+        this.#handleNumericFallback({
+          metadata: options.metadata,
+          reason: 'invalid-constraint',
+        });
         return null;
       }
 
       const { operator, varPath, targetValue } = parsed;
       let currentValue;
+      let activeStateView = options.stateView || null;
 
-      if (options.stateView) {
-        currentValue = options.stateView.assertPath(varPath, {
+      if (activeStateView) {
+        currentValue = activeStateView.assertPath(varPath, {
           path: varPath,
           goalId: options.metadata?.goalId,
           taskId: options.metadata?.taskId,
           origin: 'NumericConstraintEvaluator',
         });
       } else {
-        const fallbackView = createPlanningStateView(context?.state ?? context, {
+        activeStateView = createPlanningStateView(context?.state ?? context, {
           metadata: { origin: 'NumericConstraintEvaluator', ...options.metadata },
         });
-        currentValue = fallbackView.assertPath(varPath, {
+        currentValue = activeStateView.assertPath(varPath, {
           path: varPath,
           goalId: options.metadata?.goalId,
           taskId: options.metadata?.taskId,
@@ -143,6 +158,13 @@ class NumericConstraintEvaluator {
           `Cannot calculate distance - non-numeric values: current=${currentValue} (${typeof currentValue}), target=${targetValue} (${typeof targetValue})`,
           { varPath, constraint }
         );
+        this.#handleNumericFallback({
+          metadata: options.metadata,
+          stateView: activeStateView,
+          varPath,
+          operator,
+          reason: 'non-numeric-value',
+        });
         return null;
       }
 
@@ -153,6 +175,11 @@ class NumericConstraintEvaluator {
         { constraint, context },
         err
       );
+      this.#handleNumericFallback({
+        metadata: options.metadata,
+        stateView: options.stateView || null,
+        reason: 'calculation-error',
+      });
       return null;
     }
   }
@@ -257,6 +284,60 @@ class NumericConstraintEvaluator {
     }
   }
 
+  #handleNumericFallback({ metadata = {}, stateView, varPath = null, operator = null, reason = 'numeric-fallback' }) {
+    const actorId =
+      metadata.actorId ||
+      stateView?.getActorId() ||
+      stateView?.getEvaluationContext()?.actor?.id ||
+      null;
+    const payload = {
+      actorId: actorId || 'unknown',
+      goalId: metadata.goalId || null,
+      origin: metadata.origin || 'NumericConstraintEvaluator',
+      varPath,
+      operator,
+      reason,
+    };
+    const adapterEnabled = process.env.GOAP_NUMERIC_ADAPTER === '1';
+
+    if (adapterEnabled) {
+      recordNumericConstraintFallback(payload);
+
+      if (this.#goapEventDispatcher) {
+        try {
+          emitGoapEvent(
+            this.#goapEventDispatcher,
+            GOAP_EVENTS.NUMERIC_CONSTRAINT_FALLBACK,
+            {
+              actorId: payload.actorId,
+              goalId: payload.goalId,
+              origin: payload.origin,
+              operator: payload.operator,
+              missingPath: payload.varPath || null,
+              reason: payload.reason,
+            },
+            {
+              actorId: payload.actorId,
+              goalId: payload.goalId,
+            }
+          );
+        } catch (error) {
+          this.#logger.warn('Failed to emit numeric constraint fallback event', {
+            error,
+            payload,
+          });
+        }
+      }
+    }
+
+    if (process.env.GOAP_NUMERIC_STRICT === '1') {
+      const err = new Error(
+        `[GOAP_NUMERIC_STRICT] Numeric constraint fallback${payload.varPath ? ` at ${payload.varPath}` : ''}`
+      );
+      err.code = 'GOAP_NUMERIC_CONSTRAINT_FALLBACK';
+      throw err;
+    }
+  }
 }
 
 export default NumericConstraintEvaluator;

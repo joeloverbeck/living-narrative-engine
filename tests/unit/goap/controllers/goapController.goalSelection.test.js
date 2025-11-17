@@ -85,6 +85,7 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
 
     mockParameterResolutionService = {
       resolve: jest.fn(),
+      clearCache: jest.fn(),
     };
   });
 

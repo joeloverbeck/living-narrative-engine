@@ -1,0 +1,12 @@
+{
+  "id": "integration_test_mod_1763412521353:test-component",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "reference": {
+        "type": "string",
+        "default": "positioning:standing"
+      }
+    }
+  }
+}

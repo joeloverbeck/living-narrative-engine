@@ -27,6 +27,12 @@ export const GOAP_EVENTS = {
   STATE_MISS: 'goap:state_miss',
 
   /**
+   * Dispatched when numeric heuristics fall back from distance calculation to boolean counting
+   * Payload: { actorId, goalId?, origin, operator?, missingPath?, reason? }
+   */
+  NUMERIC_CONSTRAINT_FALLBACK: 'goap:numeric_constraint_fallback',
+
+  /**
    * Dispatched when a dependency contract validation completes
    * Payload: { dependency, requiredMethods, providedMethods, missingMethods, timestamp, status }
    */

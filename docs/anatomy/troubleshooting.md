@@ -20,6 +20,19 @@ This guide provides both symptom-based troubleshooting and a complete error cata
 
 ## Common Symptoms and Solutions
 
+### Pipeline configuration warnings
+
+**Symptom**: The CLI logs `ValidationPipeline:invalid_result` with `{ recipeId, validatorCount, issue }` or monitoring dashboards report non-zero `validationPipelineHealth`.
+
+**Why it happens**:
+- Custom validators short-circuited the pipeline and returned `undefined`, forcing `normalizeValidationResult` to synthesize output.
+- A custom registry removed `component-existence` or `property-schemas`, or modified their `priority`/`failFast` configuration so the Stage 2 contract cannot be guaranteed.
+
+**How to fix**:
+- Guardrails are enabled by default; only set `VALIDATION_PIPELINE_GUARDS=0` (or `features.validationPipelineGuards: false`) when you intentionally need to debug the legacy behavior.
+- Keep the fail-fast validators in the registry with `priority: 0/5` and `failFast: true`. `ValidatorRegistry.assertRegistered` throws in non-production environments to surface misconfigurations immediately and only downgrades to warnings in production.
+- When the CLI emits the structured log, inspect the `issue` field (`missing_payload`, `missing_fields`, etc.) to understand whether a validator returned the wrong shape or never executed.
+
 ### Body parts are missing after generation
 
 **Symptom**: The entity owns an anatomy graph, but expected parts never appear.

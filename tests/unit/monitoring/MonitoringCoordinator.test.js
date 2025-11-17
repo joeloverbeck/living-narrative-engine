@@ -939,4 +939,38 @@ describe('MonitoringCoordinator', () => {
       });
     });
   });
+
+  describe('GOAP numeric fallback tracking', () => {
+    it('increments counter when fallback events arrive', () => {
+      const eventHandlers = {};
+      const eventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn((eventType, handler) => {
+          eventHandlers[eventType] = handler;
+        }),
+      };
+
+      coordinator = new MonitoringCoordinator({ logger, eventBus });
+      expect(coordinator.getGoapNumericFallbackCount()).toBe(0);
+
+      eventHandlers['goap:numeric_constraint_fallback']?.({ payload: {} });
+      eventHandlers['goap:numeric_constraint_fallback']?.({ payload: {} });
+
+      expect(coordinator.getGoapNumericFallbackCount()).toBe(2);
+    });
+  });
+
+  describe('validation pipeline health tracking', () => {
+    it('tracks guardrail increments', () => {
+      coordinator = new MonitoringCoordinator({ logger });
+
+      coordinator.incrementValidationPipelineHealth('missing_fields');
+
+      expect(coordinator.getValidationPipelineHealth()).toBe(1);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'MonitoringCoordinator: validation pipeline guard increment',
+        expect.objectContaining({ issue: 'missing_fields', total: 1 })
+      );
+    });
+  });
 });

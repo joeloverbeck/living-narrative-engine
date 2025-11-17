@@ -47,6 +47,11 @@ async function createWizardContext(verbose = false) {
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
   const slotGenerator = container.resolve(tokens.ISlotGenerator);
   const entityMatcherService = container.resolve(tokens.IEntityMatcherService);
+  const monitoringCoordinator =
+    typeof container.isRegistered === 'function' &&
+    container.isRegistered(tokens.IMonitoringCoordinator)
+      ? container.resolve(tokens.IMonitoringCoordinator)
+      : null;
 
   // Load mods
   if (verbose) {
@@ -91,6 +96,7 @@ async function createWizardContext(verbose = false) {
       error: (msg, err) => console.error(chalk.red(`❌ ${msg}`), err || ''),
       debug: verbose ? (msg) => console.log(chalk.gray(msg)) : () => {},
     },
+    monitoringCoordinator,
   };
 }
 

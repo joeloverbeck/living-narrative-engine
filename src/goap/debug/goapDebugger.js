@@ -56,6 +56,7 @@ class GOAPDebugger {
         'getFailedGoals',
         'getFailedTasks',
         'getDependencyDiagnostics',
+        'getNumericConstraintDiagnostics',
         diagnosticSections.taskLibrary.controllerMethod,
         diagnosticSections.planningState.controllerMethod,
         diagnosticSections.eventCompliance.controllerMethod,
@@ -181,6 +182,16 @@ class GOAPDebugger {
    */
   getDependencyDiagnostics() {
     return this.#goapController.getDependencyDiagnostics();
+  }
+
+  getNumericConstraintDiagnostics(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GOAPDebugger.getNumericConstraintDiagnostics',
+      this.#logger
+    );
+    return this.#goapController.getNumericConstraintDiagnostics(actorId);
   }
 
   // ==================== State Visualization ====================

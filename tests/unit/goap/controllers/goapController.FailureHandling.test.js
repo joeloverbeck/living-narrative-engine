@@ -72,6 +72,7 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
 
     mockParameterResolutionService = {
       resolve: jest.fn(),
+      clearCache: jest.fn(),
     };
 
     controller = new GoapController(createValidDependencies());

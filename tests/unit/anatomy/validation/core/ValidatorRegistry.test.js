@@ -496,4 +496,13 @@ describe('ValidatorRegistry', () => {
       expect(registry.has('second')).toBe(true);
     });
   });
+
+  describe('count()', () => {
+    it('reports the current validator count', () => {
+      registry.register({ name: 'first', priority: 1, validate: jest.fn() });
+      registry.register({ name: 'second', priority: 2, validate: jest.fn() });
+
+      expect(registry.count()).toBe(2);
+    });
+  });
 });

@@ -76,6 +76,17 @@ export class PlanningStateView {
     return this.#actorId || null;
   }
 
+  getActorSnapshot() {
+    if (!this.#actorSnapshot) {
+      return null;
+    }
+    try {
+      return JSON.parse(JSON.stringify(this.#actorSnapshot));
+    } catch (_) {
+      return { ...this.#actorSnapshot };
+    }
+  }
+
   hasComponent(entityId, componentId, options = {}) {
     const normalizedEntityId = entityId ? String(entityId) : null;
     const normalizedComponentId = componentId ? String(componentId) : null;
@@ -251,7 +262,8 @@ export class PlanningStateView {
       if (typeof key !== 'string' || !key.includes(':')) {
         continue;
       }
-      const [entityId, componentId] = key.split(':');
+      const [entityId, ...componentParts] = key.split(':');
+      const componentId = componentParts.join(':');
       if (entityId === base.id) {
         registerComponent(componentId, value);
       }

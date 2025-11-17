@@ -9,6 +9,7 @@ import CircuitBreaker from './CircuitBreaker.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { getCircuitBreakerConfig, getErrorConfig } from '../../config/errorHandling.config.js';
+import { GOAP_EVENTS } from '../../goap/events/goapEvents.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').IEventBus} IEventBus */
@@ -63,6 +64,10 @@ export default class MonitoringCoordinator {
   #eventBus;
   /** @type {boolean} */
   #errorHandlersInjected;
+  /** @type {number} */
+  #goapNumericFallbacks;
+  /** @type {number} */
+  #validationPipelineHealth;
 
   /**
    * Creates a new MonitoringCoordinator instance.
@@ -115,6 +120,8 @@ export default class MonitoringCoordinator {
     this.#recoveryStrategyManager = null;
     this.#errorReporter = null;
     this.#errorHandlersInjected = false;
+    this.#goapNumericFallbacks = 0;
+    this.#validationPipelineHealth = 0;
 
     // Initialize monitoring components
     this.#performanceMonitor = new PerformanceMonitor({
@@ -134,6 +141,9 @@ export default class MonitoringCoordinator {
     if (this.#memoryMonitor && eventBus) {
       this.#registerMemoryAlerts(eventBus);
     }
+    if (eventBus) {
+      this.#registerGoapNumericDiagnostics(eventBus);
+    }
 
     // Start health checks if enabled
     if (this.#enabled) {
@@ -144,6 +154,15 @@ export default class MonitoringCoordinator {
       enabled: this.#enabled,
       checkInterval: this.#checkInterval,
       memoryMonitoring: this.#memoryMonitor !== null,
+    });
+  }
+
+  #registerGoapNumericDiagnostics(eventBus) {
+    if (typeof eventBus.subscribe !== 'function') {
+      return;
+    }
+    eventBus.subscribe(GOAP_EVENTS.NUMERIC_CONSTRAINT_FALLBACK, () => {
+      this.#goapNumericFallbacks += 1;
     });
   }
 
@@ -198,6 +217,14 @@ export default class MonitoringCoordinator {
    */
   getMemoryMonitor() {
     return this.#memoryMonitor;
+  }
+
+  getGoapNumericFallbackCount() {
+    return this.#goapNumericFallbacks;
+  }
+
+  getValidationPipelineHealth() {
+    return this.#validationPipelineHealth;
   }
 
   /**
@@ -335,6 +362,14 @@ export default class MonitoringCoordinator {
    */
   getErrorReporter() {
     return this.#errorReporter;
+  }
+
+  incrementValidationPipelineHealth(issue = 'unknown') {
+    this.#validationPipelineHealth += 1;
+    this.#logger.debug('MonitoringCoordinator: validation pipeline guard increment', {
+      issue,
+      total: this.#validationPipelineHealth,
+    });
   }
 
   /**

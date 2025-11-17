@@ -542,6 +542,7 @@ export async function createGoapTestSetup(config = {}) {
   const numericConstraintEvaluator = new NumericConstraintEvaluator({
     jsonLogicEvaluator: jsonLogicService,
     logger: testBed.createMockLogger(),
+    goapEventDispatcher: { dispatch: () => {} },
   });
 
   const goalDistanceHeuristic = new GoalDistanceHeuristic({
