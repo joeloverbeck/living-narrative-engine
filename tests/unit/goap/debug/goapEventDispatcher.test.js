@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { createGoapEventDispatcher, GOAP_EVENT_COMPLIANCE_CODES } from '../../../../src/goap/debug/goapEventDispatcher.js';
+import {
+  createGoapEventDispatcher,
+  GOAP_EVENT_COMPLIANCE_CODES,
+  validateEventBusContract,
+} from '../../../../src/goap/debug/goapEventDispatcher.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
 describe('createGoapEventDispatcher', () => {
@@ -87,5 +91,101 @@ describe('createGoapEventDispatcher', () => {
 
     expect(eventBus.dispatch).toHaveBeenCalledWith('goap:dependency_validated', {});
     expect(dispatcher.getComplianceForActor('global').totalEvents).toBe(1);
+  });
+
+  it('fan-outs events to probes without breaking dispatch flow', async () => {
+    const probeEvents = [];
+    const flakyProbe = {
+      record: () => {
+        throw new Error('probe failure');
+      },
+    };
+    const dispatcher = createGoapEventDispatcher(eventBus, logger, {
+      probes: [
+        {
+          record: (entry) => probeEvents.push(entry),
+        },
+        flakyProbe,
+      ],
+    });
+
+    await dispatcher.dispatch('goap:test_event', { actorId: 'actor-123', taskId: 'task-1' });
+
+    expect(probeEvents).toHaveLength(1);
+    expect(probeEvents[0]).toMatchObject({
+      type: 'goap:test_event',
+      actorId: 'actor-123',
+      payload: expect.objectContaining({ taskId: 'task-1' }),
+    });
+    expect(eventBus.dispatch).toHaveBeenCalledWith('goap:test_event', {
+      actorId: 'actor-123',
+      taskId: 'task-1',
+    });
+  });
+
+  it('registers probes after construction and detaches them via the returned handle', async () => {
+    const dispatcher = createGoapEventDispatcher(eventBus, logger);
+    const dynamicProbe = { record: jest.fn() };
+    const detach = dispatcher.registerProbe(dynamicProbe);
+
+    await dispatcher.dispatch('goap:test_event', { actorId: 'actor-999' });
+    expect(dynamicProbe.record).toHaveBeenCalledTimes(1);
+
+    detach();
+    await dispatcher.dispatch('goap:test_event', { actorId: 'actor-999' });
+    expect(dynamicProbe.record).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles invalid probes when registering dynamically', () => {
+    const dispatcher = createGoapEventDispatcher(eventBus, logger);
+    const detach = dispatcher.registerProbe(null);
+
+    expect(typeof detach).toBe('function');
+    // Calling detach on invalid probes should be a no-op
+    expect(() => detach()).not.toThrow();
+  });
+
+  it('throws when event bus dispatch returns a non-promise value', () => {
+    eventBus.dispatch.mockReturnValue('invalid');
+    const dispatcher = createGoapEventDispatcher(eventBus, logger);
+
+    expect(() =>
+      dispatcher.dispatch('goap:test_event', { actorId: 'actor-1' })
+    ).toThrow(/must return a Promise or void/);
+  });
+});
+
+describe('validateEventBusContract', () => {
+  let logger;
+
+  beforeEach(() => {
+    logger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+  });
+
+  it('throws when event bus lacks a dispatch method', () => {
+    expect(() => validateEventBusContract(null, logger)).toThrow(/dispatch/);
+  });
+
+  it('rejects legacy single-argument dispatch functions', () => {
+    const legacyBus = {
+      dispatch(event) {
+        return event;
+      },
+    };
+    expect(() => validateEventBusContract(legacyBus, logger)).toThrow(/event bus dispatch must accept \(eventType, payload\)/);
+  });
+
+  it('passes modern dispatch implementations', () => {
+    const modernBus = {
+      dispatch(eventType, payload) {
+        return Promise.resolve({ eventType, payload });
+      },
+    };
+    expect(validateEventBusContract(modernBus, logger)).toBe(modernBus);
   });
 });

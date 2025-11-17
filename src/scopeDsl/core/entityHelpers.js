@@ -150,6 +150,20 @@ function warnSyntheticLookupFallback(entityId, runtimeContext) {
   }
 }
 
+function unwrapGatewayComponents(result) {
+  if (
+    result &&
+    typeof result === 'object' &&
+    !Array.isArray(result) &&
+    Object.prototype.hasOwnProperty.call(result, 'components') &&
+    Object.prototype.hasOwnProperty.call(result, 'source')
+  ) {
+    return result.components;
+  }
+
+  return result;
+}
+
 /**
  * @typedef {import('./gateways.js').EntityGateway} EntityGateway
  */
@@ -306,7 +320,9 @@ export function createEvaluationContext(
           warnSyntheticLookupFallback(item, runtimeContext);
         }
         // Fallback: component lookup or basic entity
-        const components = gateway.getItemComponents?.(item);
+        const components = unwrapGatewayComponents(
+          gateway.getItemComponents?.(item)
+        );
         if (components) {
           entity = { id: item, components };
           resolvedHow = 'resolved via component lookup';
@@ -344,7 +360,9 @@ export function createEvaluationContext(
             warnSyntheticLookupFallback(item.id, runtimeContext);
           }
           // Fallback: use the object itself with component resolution
-          const components = gateway.getItemComponents?.(item.id);
+          const components = unwrapGatewayComponents(
+            gateway.getItemComponents?.(item.id)
+          );
           if (components) {
             entity = { id: item.id, components };
             resolvedHow = 'resolved object with ID via component lookup';

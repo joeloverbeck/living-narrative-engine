@@ -129,7 +129,7 @@ describe('GOAP Complex Plans - Integration', () => {
       const result = await setup.controller.decideTurn(actor, world);
 
       // Verify: Planning succeeded
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planningCompleted = events.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -279,7 +279,7 @@ describe('GOAP Complex Plans - Integration', () => {
       const result = await setup.controller.decideTurn(actor, world);
 
       // Verify: Planning succeeded
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planningCompleted = events.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -422,7 +422,7 @@ describe('GOAP Complex Plans - Integration', () => {
       const result = await setup.controller.decideTurn(actor, world);
 
       // Verify: Planning succeeded
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planningCompleted = events.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -546,7 +546,7 @@ describe('GOAP Complex Plans - Integration', () => {
       await setup.controller.decideTurn(actor, world);
 
       // Verify: Planning metrics
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planningCompleted = events.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );

@@ -193,7 +193,7 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
     }
 
     // Check events
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
 
     console.log('=== EVENT BUS ANALYSIS ===\n');
     const eventTypes = events.map(e => e.type);

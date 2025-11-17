@@ -92,7 +92,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
       const result1 = await setup.controller.decideTurn(actor, world);
 
       // Verify: Planning succeeded
-      const events1 = setup.eventBus.getAll();
+      const events1 = setup.eventBus.getEvents();
       const planCreated = events1.some(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -105,7 +105,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
         setup.eventBus.clear(); // Clear previous events
         const result2 = await setup.controller.decideTurn(actor, world);
 
-        const events2 = setup.eventBus.getAll();
+        const events2 = setup.eventBus.getEvents();
 
         // Verify: Either invalidation detected OR replanning occurred
         const invalidationDetected = events2.some(
@@ -203,7 +203,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
       // Execute: First turn - create plan
       await setup.controller.decideTurn(actor, world);
 
-      const events1 = setup.eventBus.getAll();
+      const events1 = setup.eventBus.getEvents();
       const planCreated = events1.some(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -221,7 +221,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
         setup.eventBus.clear();
         await setup.controller.decideTurn(actor, world);
 
-        const events2 = setup.eventBus.getAll();
+        const events2 = setup.eventBus.getEvents();
 
         // Verify: Invalidation or replanning
         const hasInvalidationEvent = events2.some(
@@ -291,7 +291,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
       // Execute: First turn - create movement plan
       await setup.controller.decideTurn(actor, world);
 
-      const events1 = setup.eventBus.getAll();
+      const events1 = setup.eventBus.getEvents();
       const planCreated = events1.some(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -304,7 +304,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
         setup.eventBus.clear();
         await setup.controller.decideTurn(actor, world);
 
-        const events2 = setup.eventBus.getAll();
+        const events2 = setup.eventBus.getEvents();
 
         // Verify: System detected the change
         expect(events2.length).toBeGreaterThan(0);
@@ -376,7 +376,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
       // Execute: Turn 1 - Create plan
       await setup.controller.decideTurn(actor, world);
 
-      const events1 = setup.eventBus.getAll();
+      const events1 = setup.eventBus.getEvents();
       const planCreated = events1.some(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -392,7 +392,7 @@ describe('GOAP Plan Invalidation - Integration', () => {
         // Verify: No crash, graceful handling
         expect(typeof result2).toBe('object'); // null is object in JS
 
-        const events2 = setup.eventBus.getAll();
+        const events2 = setup.eventBus.getEvents();
 
         // Verify: System handled failure gracefully
         const hasGracefulFailure = events2.some(

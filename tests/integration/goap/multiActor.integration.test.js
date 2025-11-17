@@ -114,7 +114,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
       // Execute: Actor 1 plans (gets food)
       await setup.controller.decideTurn(actor1, world);
 
-      const events1 = setup.eventBus.getAll();
+      const events1 = setup.eventBus.getEvents();
       const actor1Planned = events1.some(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -130,7 +130,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         setup.eventBus.clear();
         await setup.controller.decideTurn(actor2, world);
 
-        const events2 = setup.eventBus.getAll();
+        const events2 = setup.eventBus.getEvents();
 
         // Verify: Actor 2 either:
         // 1. Fails to plan (no food available)
@@ -294,7 +294,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
       // Execute: Chef plans
       await setup.controller.decideTurn(chef, world);
 
-      const chefEvents = setup.eventBus.getAll();
+      const chefEvents = setup.eventBus.getEvents();
       const chefPlan = chefEvents.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -303,7 +303,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
       setup.eventBus.clear();
       await setup.controller.decideTurn(simple, world);
 
-      const simpleEvents = setup.eventBus.getAll();
+      const simpleEvents = setup.eventBus.getEvents();
       const simplePlan = simpleEvents.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -459,7 +459,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
       // Execute: Knowledgeable actor plans
       await setup.controller.decideTurn(knowledgeable, world);
 
-      const knowEvents = setup.eventBus.getAll();
+      const knowEvents = setup.eventBus.getEvents();
       const knowPlan = knowEvents.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -468,7 +468,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
       setup.eventBus.clear();
       await setup.controller.decideTurn(ignorant, world);
 
-      const ignoreEvents = setup.eventBus.getAll();
+      const ignoreEvents = setup.eventBus.getEvents();
       const ignorePlan = ignoreEvents.find(
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
@@ -580,7 +580,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         const result = await setup.controller.decideTurn(actor, world);
         results.push(result);
 
-        const events = setup.eventBus.getAll();
+        const events = setup.eventBus.getEvents();
         allEvents.push(...events);
 
         // Simulate: Actor achieves goal

@@ -49,4 +49,54 @@ describe('createEntityLookupStrategy', () => {
       'getEntity',
     ]);
   });
+
+  it('allows swapping entity managers via refreshCapabilities()', () => {
+    const firstManager = {
+      getEntity: jest.fn((entityId) => ({ id: `legacy-${entityId}` })),
+    };
+    const nextManager = {
+      getEntityInstance: jest.fn((entityId) => ({ id: `next-${entityId}` })),
+    };
+
+    const strategy = createEntityLookupStrategy({ entityManager: firstManager });
+
+    expect(strategy.resolve('alpha')).toEqual({ id: 'legacy-alpha' });
+
+    const refreshedOrder = strategy.refreshCapabilities(nextManager);
+    expect(refreshedOrder).toEqual(['getEntityInstance']);
+
+    expect(strategy.resolve('beta')).toEqual({ id: 'next-beta' });
+    expect(firstManager.getEntity).toHaveBeenCalledWith('alpha');
+    expect(nextManager.getEntityInstance).toHaveBeenCalledWith('beta');
+  });
+
+  it('emits debug trace entries when resolver changes under debug config', () => {
+    const entityManager = {
+      getEntity: jest.fn(() => null),
+    };
+    const trace = { addLog: jest.fn() };
+
+    const strategy = createEntityLookupStrategy({
+      entityManager,
+      trace,
+      debugConfig: { enabled: true },
+    });
+
+    strategy.resolve('alpha');
+    entityManager.getEntity.mockReturnValueOnce({ id: 'beta' });
+    strategy.resolve('beta');
+
+    expect(trace.addLog).toHaveBeenCalledWith(
+      'debug',
+      'ScopeDSL entity lookup resolver switched.',
+      'ScopeDSL.EntityLookupStrategy',
+      expect.objectContaining({ resolver: 'miss' })
+    );
+    expect(trace.addLog).toHaveBeenCalledWith(
+      'debug',
+      'ScopeDSL entity lookup resolver switched.',
+      'ScopeDSL.EntityLookupStrategy',
+      expect.objectContaining({ resolver: 'getEntity' })
+    );
+  });
 });

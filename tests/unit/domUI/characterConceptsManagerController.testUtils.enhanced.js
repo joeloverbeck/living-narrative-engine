@@ -11,6 +11,7 @@ import {
   resolveControllerDependencies,
 } from '../../common/testContainerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
 import {
   createMockElements,
   setupDocumentMock,
@@ -112,6 +113,13 @@ export class CharacterConceptsManagerTestBase extends BaseCharacterBuilderContro
     this.controllerDependencies = resolveControllerDependencies(
       this._controllerContainer
     );
+
+    // Ensure lifecycle orchestrator shares the mocked event bus so tests can observe dispatched events
+    this.controllerDependencies.controllerLifecycleOrchestrator =
+      new ControllerLifecycleOrchestrator({
+        logger: this.mocks.logger,
+        eventBus: this.mocks.eventBus,
+      });
   }
 
   /**

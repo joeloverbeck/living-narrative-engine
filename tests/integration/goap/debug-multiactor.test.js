@@ -129,7 +129,7 @@ describe('Debug multiActor', () => {
       console.log('[DEBUG] Logger calls:', console.log.mock.calls.filter(c => c[0]?.includes?.('Task library') || c[0]?.includes?.('Actor not found')));
     }
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     console.log('[DEBUG] Events dispatched:', events.length);
     events.forEach(e => console.log('[DEBUG] Event:', e.type));
 

@@ -129,7 +129,7 @@ describe('Core Multi-Action Planning', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -200,7 +200,7 @@ describe('Core Multi-Action Planning', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -270,7 +270,7 @@ describe('Core Multi-Action Planning', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -367,7 +367,7 @@ describe('Core Multi-Action Planning', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -447,7 +447,7 @@ describe('Core Multi-Action Planning', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       console.log('[TEST DEBUG] Events:', events.map(e => e.type));
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
@@ -521,7 +521,7 @@ describe('Core Multi-Action Planning', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -591,7 +591,7 @@ describe('Core Multi-Action Planning', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();

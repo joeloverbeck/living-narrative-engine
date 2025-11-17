@@ -21,7 +21,7 @@ import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluatio
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { HasComponentOperator } from '../../../../src/logic/operators/hasComponentOperator.js';
-import { createEventBusRecorder } from '../testHelpers/eventBusRecorder.js';
+import { createEventBusMock } from '../../../common/mocks/createEventBusMock.js';
 import { buildDualFormatState } from './dualFormatStateBuilder.js';
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
@@ -418,6 +418,8 @@ export async function createGoapTestSetup(config = {}) {
     methods = {},
     mockRefinement = false,
     enableGoapSetupGuards = true,
+    eventTraceProbe = null,
+    eventTraceProbes = null,
   } = config;
 
   const testBed = createTestBed();
@@ -588,11 +590,39 @@ export async function createGoapTestSetup(config = {}) {
   }
 
   // 9. Create Event Bus + dispatcher (shared across GOAP subsystems)
-  const eventBus = createEventBusRecorder();
+  const normalizeProbeList = (probeList) => {
+    if (!probeList) {
+      return [];
+    }
+    if (!Array.isArray(probeList)) {
+      return [probeList].filter(
+        (probe) => probe && typeof probe.record === 'function'
+      );
+    }
+    return probeList.filter((probe) => probe && typeof probe.record === 'function');
+  };
+
+  const initialProbes = [
+    ...normalizeProbeList(eventTraceProbe),
+    ...normalizeProbeList(eventTraceProbes),
+  ];
+
+  const eventBus = createEventBusMock();
   const goapEventDispatcher = createGoapEventDispatcher(
     eventBus,
-    testBed.createMockLogger()
+    testBed.createMockLogger(),
+    initialProbes.length > 0 ? { probes: initialProbes } : undefined
   );
+
+  const attachEventTraceProbe = (probe) => {
+    if (!probe || typeof probe.record !== 'function') {
+      throw new Error('attachEventTraceProbe requires a probe with a record() method');
+    }
+    if (typeof goapEventDispatcher.registerProbe === 'function') {
+      return goapEventDispatcher.registerProbe(probe);
+    }
+    throw new Error('GOAP event dispatcher does not support dynamic probe registration');
+  };
 
   // 10. Create Refinement Engine (real or mock)
   let refinementEngine;
@@ -688,6 +718,8 @@ export async function createGoapTestSetup(config = {}) {
     spatialIndexManager,
     effectsSimulator,
     heuristicRegistry,
+    goapEventDispatcher,
+    attachEventTraceProbe,
     // Helper methods
     createActor,
     registerGoal,
