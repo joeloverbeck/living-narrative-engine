@@ -90,6 +90,8 @@ class ScopeEngine extends IScopeEngine {
     const debugConfig = normalizeEntityLookupDebugConfig(
       runtimeCtx?.scopeEntityLookupDebug
     );
+    const debugEnabled = Boolean(debugConfig?.enabled);
+    const includeSources = Boolean(debugConfig?.includeSources);
     const factoryOptions = {
       entityManager: runtimeCtx?.entityManager ?? null,
       trace,
@@ -145,6 +147,119 @@ class ScopeEngine extends IScopeEngine {
       }
     }
 
+    const componentRegistry = runtimeCtx?.componentRegistry ?? null;
+    const registryCache = new Map();
+    const lookupStats = debugEnabled
+      ? {
+          entityHits: 0,
+          componentTypeIdHits: 0,
+          registryItemHits: 0,
+          registryClothingHits: 0,
+          misses: 0,
+        }
+      : null;
+
+    const recordStat = (statKey) => {
+      if (!lookupStats || !(statKey in lookupStats)) {
+        return;
+      }
+
+      lookupStats[statKey] += 1;
+
+      if (debugEnabled && trace?.data) {
+        trace.data(
+          'ScopeDSL entity lookup stats',
+          'ScopeEngine._createEntitiesGateway',
+          { ...lookupStats }
+        );
+      }
+    };
+
+    const logDebug = (message, payload = {}) => {
+      if (!debugEnabled) {
+        return;
+      }
+
+      if (trace?.addLog) {
+        trace.addLog(
+          'debug',
+          message,
+          'ScopeEngine._createEntitiesGateway',
+          payload
+        );
+        return;
+      }
+
+      if (factoryOptions.logger?.debug) {
+        factoryOptions.logger.debug(message, payload);
+      }
+    };
+
+    const wrapComponentsResult = (components, source, meta = {}) => {
+      switch (source) {
+        case 'entity':
+          recordStat('entityHits');
+          break;
+        case 'component-type-ids':
+          recordStat('componentTypeIdHits');
+          break;
+        case 'registry:item':
+          recordStat('registryItemHits');
+          break;
+        case 'registry:clothing':
+          recordStat('registryClothingHits');
+          break;
+        default:
+          break;
+      }
+
+      if (includeSources) {
+        return {
+          components,
+          source,
+          ...meta,
+        };
+      }
+
+      return components;
+    };
+
+    const wrapMissingResult = (source, meta = {}) => {
+      recordStat('misses');
+
+      if (includeSources) {
+        return {
+          components: null,
+          source,
+          ...meta,
+        };
+      }
+
+      return null;
+    };
+
+    const getRegistryComponents = (definitionKey) => {
+      if (!componentRegistry || typeof componentRegistry.getDefinition !== 'function') {
+        return null;
+      }
+
+      if (registryCache.has(definitionKey)) {
+        return registryCache.get(definitionKey);
+      }
+
+      const definition = componentRegistry.getDefinition(definitionKey);
+      const components = definition?.components ?? null;
+      registryCache.set(definitionKey, components);
+      return components;
+    };
+
+    const logMissingComponentData = (itemId, componentId) => {
+      logDebug('ScopeDSL component reconstruction skipped missing data.', {
+        itemId,
+        componentId,
+      });
+    };
+
     return {
       getEntities: () => {
         const em = runtimeCtx?.entityManager;
@@ -181,55 +296,84 @@ class ScopeEngine extends IScopeEngine {
         runtimeCtx?.entityManager?.getComponentData(eid, cid),
       getEntityInstance: (eid) => entityLookupStrategy?.resolve?.(eid),
       getItemComponents: (itemId) => {
-        // Primary path: Check if it's an entity (most clothing items)
+        if (itemId === null || itemId === undefined) {
+          return wrapMissingResult('missing:entity', { reason: 'invalid-id' });
+        }
+
+        const normalizedItemId =
+          typeof itemId === 'string' ? itemId : String(itemId);
+
         const entityManager = runtimeCtx?.entityManager;
-        let entity = entityLookupStrategy?.resolve?.(itemId);
+        let entity = entityLookupStrategy?.resolve?.(normalizedItemId);
 
         if (entity) {
-          // Convert entity components to plain object for JSON Logic
           const components = {};
+          let resolvedFromComponentTypeIds = false;
+
           if (entity.components instanceof Map) {
             for (const [componentId, data] of entity.components) {
               components[componentId] = data;
             }
           } else if (
             entity.components &&
-            typeof entity.components === 'object'
+            typeof entity.components === 'object' &&
+            !Array.isArray(entity.components)
           ) {
             Object.assign(components, entity.components);
           } else if (Array.isArray(entity.componentTypeIds)) {
-            // Build components from componentTypeIds
+            resolvedFromComponentTypeIds = true;
             for (const componentTypeId of entity.componentTypeIds) {
               const data =
-                entity.getComponentData?.(componentTypeId) ||
-                entityManager?.getComponentData(itemId, componentTypeId);
+                entity.getComponentData?.(componentTypeId) ??
+                entityManager?.getComponentData?.(
+                  normalizedItemId,
+                  componentTypeId
+                ) ??
+                null;
               if (data) {
                 components[componentTypeId] = data;
+              } else {
+                logMissingComponentData(normalizedItemId, componentTypeId);
               }
             }
           }
-          return components;
-        }
 
-        // Fallback: Try component registry for item templates/definitions
-        const componentRegistry = runtimeCtx?.componentRegistry;
-        if (componentRegistry) {
-          // Check for item definitions in registry
-          const itemDef = componentRegistry.getDefinition?.(`item:${itemId}`);
-          if (itemDef?.components) {
-            return itemDef.components;
+          const hasComponents = Object.keys(components).length > 0;
+          if (resolvedFromComponentTypeIds) {
+            return wrapComponentsResult(components, 'component-type-ids');
           }
 
-          // Check clothing-specific definitions
-          const clothingDef = componentRegistry.getDefinition?.(
-            `clothing:${itemId}`
+          return wrapComponentsResult(
+            hasComponents ? components : {},
+            'entity'
           );
-          if (clothingDef?.components) {
-            return clothingDef.components;
-          }
         }
 
-        return null;
+        logDebug('ScopeDSL getItemComponents falling back to registry.', {
+          itemId: normalizedItemId,
+        });
+
+        const itemComponents = getRegistryComponents(
+          `item:${normalizedItemId}`
+        );
+        if (itemComponents) {
+          return wrapComponentsResult(itemComponents, 'registry:item');
+        }
+
+        const clothingComponents = getRegistryComponents(
+          `clothing:${normalizedItemId}`
+        );
+        if (clothingComponents) {
+          return wrapComponentsResult(clothingComponents, 'registry:clothing');
+        }
+
+        logDebug('ScopeDSL registry definitions missing for item.', {
+          itemId: normalizedItemId,
+        });
+        return wrapMissingResult('missing:definition');
+      },
+      refreshEntityManager: (nextEntityManager) => {
+        entityLookupStrategy?.refreshCapabilities?.(nextEntityManager);
       },
     };
   }

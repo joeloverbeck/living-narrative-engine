@@ -385,10 +385,14 @@ class EventBus extends IEventBus {
    * @param {object} [eventPayload] - The data payload associated with the event (becomes event.payload). Defaults to empty object.
    * @returns {Promise<void>} A promise that resolves when all relevant listeners have been processed.
    */
-  async dispatch(eventName, eventPayload = {}) {
+  async dispatch(eventName, eventPayload) {
     // Renamed second arg for clarity, added default
     if (!this.#validateEventName(eventName)) {
       return;
+    }
+
+    if (eventPayload === undefined || eventPayload === null) {
+      eventPayload = {};
     }
 
     // Time-based auto-reset: Clear recursion counters if no dispatch in 5 seconds

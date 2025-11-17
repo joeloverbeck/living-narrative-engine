@@ -16,7 +16,7 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import RefinementError from '../errors/refinementError.js';
 import { GOAP_EVENTS } from '../events/goapEvents.js';
-import { createGoapEventDispatcher } from '../debug/goapEventDispatcher.js';
+import { createGoapEventDispatcher, validateEventBusContract } from '../debug/goapEventDispatcher.js';
 import { emitGoapEvent } from '../events/goapEventFactory.js';
 
 /**
@@ -113,6 +113,13 @@ class RefinementEngine {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
 
+    let validatedEventBus = eventBus;
+    if (!goapEventDispatcher && eventBus) {
+      validatedEventBus = validateEventBusContract(eventBus, logger, {
+        context: 'RefinementEngine',
+      });
+    }
+
     this.#methodSelectionService = methodSelectionService;
     this.#container = resolvedContainer;
     this.#primitiveActionStepExecutor = primitiveActionStepExecutor;
@@ -121,7 +128,7 @@ class RefinementEngine {
     this.#gameDataRepository = gameDataRepository;
     this.#eventBus = goapEventDispatcher
       ? goapEventDispatcher
-      : createGoapEventDispatcher(eventBus, logger);
+      : createGoapEventDispatcher(validatedEventBus, logger);
     this.#logger = logger;
   }
 

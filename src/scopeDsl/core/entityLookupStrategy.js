@@ -1,58 +1,159 @@
 import { devOnlyAssert } from './devOnlyAssert.js';
 
+function describeOrderFor(entityManager) {
+  if (!entityManager) {
+    return [];
+  }
+
+  const order = [];
+  if (typeof entityManager.getEntityInstance === 'function') {
+    order.push('getEntityInstance');
+  }
+  if (typeof entityManager.getEntity === 'function') {
+    order.push('getEntity');
+  }
+  return order;
+}
+
+function validateEntityManager(entityManager) {
+  if (!entityManager) {
+    return;
+  }
+
+  const hasGetEntityInstance =
+    typeof entityManager.getEntityInstance === 'function';
+  const hasGetEntity = typeof entityManager.getEntity === 'function';
+
+  devOnlyAssert(
+    Boolean(hasGetEntityInstance || hasGetEntity),
+    'ScopeDSL expects runtimeCtx.entityManager to expose getEntityInstance or getEntity.'
+  );
+}
+
+function createResolverChangeEmitter({ trace = null, logger = null, debugConfig }) {
+  const debugEnabled = Boolean(debugConfig?.enabled);
+  let lastResolverUsed = null;
+
+  const emit = (resolver, entityManager) => {
+    if (resolver === lastResolverUsed) {
+      return;
+    }
+
+    lastResolverUsed = resolver;
+
+    if (!debugEnabled) {
+      return;
+    }
+
+    const payload = {
+      resolver,
+      order: describeOrderFor(entityManager),
+    };
+
+    if (trace?.addLog) {
+      trace.addLog(
+        'debug',
+        'ScopeDSL entity lookup resolver switched.',
+        'ScopeDSL.EntityLookupStrategy',
+        payload
+      );
+      return;
+    }
+
+    if (logger?.debug) {
+      logger.debug('ScopeDSL entity lookup resolver switched.', payload);
+    }
+  };
+
+  const reset = () => {
+    lastResolverUsed = null;
+  };
+
+  return { emit, reset };
+}
+
 /**
  * Creates a reusable entity lookup strategy that prefers getEntityInstance over legacy helpers.
  *
  * @param {object} options
  * @param {import('../../interfaces/IEntityManager.js').IEntityManager|null} options.entityManager
- * @returns {{ resolve: (entityId: string) => object|undefined, describeOrder: () => string[] }}
+ * @param {import('../../actions/tracing/traceContext.js').TraceContext|null} [options.trace]
+ * @param {import('../../interfaces/coreServices.js').ILogger|null} [options.logger]
+ * @param {object|null} [options.debugConfig]
+ * @returns {{ resolve: (entityId: string) => object|undefined, describeOrder: () => string[], refreshCapabilities: (entityManager?: import('../../interfaces/IEntityManager.js').IEntityManager|null) => string[] }}
  */
 export function createEntityLookupStrategy({
   entityManager = null,
+  trace = null,
+  logger = null,
+  debugConfig = null,
 } = {}) {
-  const hasEntityManager = Boolean(entityManager);
-  const supportsGetEntityInstance =
-    hasEntityManager && typeof entityManager.getEntityInstance === 'function';
-  const supportsGetEntity =
-    hasEntityManager && typeof entityManager.getEntity === 'function';
+  validateEntityManager(entityManager);
 
-  if (hasEntityManager) {
-    devOnlyAssert(
-      Boolean(supportsGetEntityInstance || supportsGetEntity),
-      'ScopeDSL expects runtimeCtx.entityManager to expose getEntityInstance or getEntity.'
-    );
+  let currentEntityManager = entityManager;
+  const { emit, reset } = createResolverChangeEmitter({
+    trace,
+    logger,
+    debugConfig,
+  });
+
+  function resolve(entityId) {
+    if (!entityId) {
+      return undefined;
+    }
+
+    if (!currentEntityManager) {
+      emit('miss', currentEntityManager);
+      return undefined;
+    }
+
+    const hasGetEntityInstance =
+      typeof currentEntityManager.getEntityInstance === 'function';
+    if (hasGetEntityInstance) {
+      const entity = currentEntityManager.getEntityInstance(entityId);
+      if (entity) {
+        emit('getEntityInstance', currentEntityManager);
+        return entity;
+      }
+    }
+
+    const hasGetEntity =
+      typeof currentEntityManager.getEntity === 'function';
+    if (hasGetEntity) {
+      const entity = currentEntityManager.getEntity(entityId);
+      if (entity) {
+        emit('getEntity', currentEntityManager);
+        return entity;
+      }
+    }
+
+    emit('miss', currentEntityManager);
+    return undefined;
   }
 
-  const order = [];
-  if (supportsGetEntityInstance) {
-    order.push('getEntityInstance');
+  function describeOrder() {
+    return describeOrderFor(currentEntityManager);
   }
-  if (supportsGetEntity) {
-    order.push('getEntity');
+
+  function refreshCapabilities(nextEntityManager) {
+    if (typeof nextEntityManager !== 'undefined') {
+      if (nextEntityManager === null) {
+        currentEntityManager = null;
+        reset();
+      } else if (nextEntityManager !== currentEntityManager) {
+        validateEntityManager(nextEntityManager);
+        currentEntityManager = nextEntityManager;
+        reset();
+      }
+    }
+
+    return describeOrder();
   }
 
   return {
-    resolve(entityId) {
-      if (!entityId || !hasEntityManager) {
-        return undefined;
-      }
-
-      if (supportsGetEntityInstance) {
-        const entity = entityManager.getEntityInstance(entityId);
-        if (entity) {
-          return entity;
-        }
-      }
-
-      if (supportsGetEntity) {
-        return entityManager.getEntity(entityId);
-      }
-
-      return undefined;
-    },
-    describeOrder() {
-      return order.slice();
-    },
+    resolve,
+    describeOrder,
+    refreshCapabilities,
   };
 }
 

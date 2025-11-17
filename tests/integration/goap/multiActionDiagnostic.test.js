@@ -192,7 +192,7 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     }
 
     // Check events
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
 
     console.log('=== EVENT BUS ANALYSIS ===\n');
     const eventTypes = events.map(e => e.type);
@@ -316,7 +316,7 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
 
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planningCompleted = events.find(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
     console.log('Planning result:', planningCompleted ? 'SUCCESS' : 'FAILED');

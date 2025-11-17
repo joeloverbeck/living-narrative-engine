@@ -135,7 +135,7 @@ async function runDiagnostic() {
   }
 
   // Check events
-  const events = setup.eventBus.getAll();
+  const events = setup.eventBus.getEvents();
   console.log('\n8. Event Bus Results:');
   console.log('   Total events:', events.length);
 

@@ -38,6 +38,10 @@ await goapController.decideTurn(actor, world);
 const report = debugger.generateReport('actor-123');
 console.log(report);
 
+// View recent GOAP events
+const eventStream = debugger.getEventStream('actor-123');
+console.table(eventStream.events);
+
 // Stop trace
 debugger.stopTrace('actor-123');
 ```
@@ -46,6 +50,7 @@ debugger.stopTrace('actor-123');
 
 - Use `tests/common/mocks/createGoapPlannerMock.js` for any GOAP planner doubles. The factory ships with `plan()` and `getLastFailure()` wired to the same defaults required by `GoapController`.
 - Immediately call `expectGoapPlannerMock(mock)` after instantiating a test double. It mirrors the runtime dependency validator so tests fail locally instead of during E2E runs.
+- Route every GOAP test harness through `tests/common/mocks/createEventBusMock.js`. The helper enforces `dispatch(eventType, payload)` up front and mirrors `validateEventBusContract`, so suites can’t regress to the legacy `{ type, payload }` signature.
 - When `GoapController` boots it emits `goap:dependency_validated` telemetry and the debugger prints a **Dependency Contracts** section. That block lists required vs provided methods plus timestamps, making mock drift obvious inside `npm run test:e2e -- --report-goap-debug` logs.
 - Any `GOAP_DEPENDENCY_WARN` log means a mock bypassed the factory or a dependency is missing methods. CI greps for this string to fail builds before the regression spreads.
 - GOAP integration harnesses should call `setup.registerPlanningActor(actor)`, `setup.buildPlanningState(actor)`, and `setup.registerPlanningStateSnapshot(state)` instead of wiring the entity manager manually. This keeps `SimpleEntityManager`, the dual-format planning state, and the new task validation guardrails perfectly in sync.
@@ -357,6 +362,23 @@ console.log(`Total events: ${trace.events.length}`);
 // Stop when done
 debugger.stopTrace('actor-123');
 ```
+
+### Event Stream Diagnostics
+
+```javascript
+debugger.startTrace('actor-456');
+await goapController.decideTurn(actor, world);
+
+const stream = debugger.getEventStream('actor-456');
+console.log(`Captured ${stream.totalCaptured} events (${stream.totalViolations} violations)`);
+stream.events.slice(-5).forEach(evt => {
+  console.log(evt.type, evt.payload);
+});
+
+debugger.stopTrace('actor-456');
+```
+
+`createGoapEventTraceProbe()` fans out from `createGoapEventDispatcher()` so probes see the normalized `(eventType, payload)` pairs without mutating the shared bus. `validateEventBusContract(eventBus)`—and the shared `tests/common/mocks/createEventBusMock.js` helper—keep every dependency on the `(eventType, payload)` signature before anything reaches the probe.
 
 ## Troubleshooting
 

@@ -386,6 +386,22 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
       const components = gateway.getItemComponents('simple_item');
       expect(components).toEqual({});
     });
+
+    it('should expose source metadata when lookup debug flag requests it', () => {
+      const runtimeCtxWithDebug = {
+        ...mockRuntimeContext,
+        scopeEntityLookupDebug: { enabled: true, includeSources: true },
+      };
+      const gateway = engine._createEntitiesGateway(runtimeCtxWithDebug);
+      const result = gateway.getItemComponents('leather_jacket_001');
+
+      expect(result).toEqual({
+        components: expect.objectContaining({
+          'core:tags': { tags: ['waterproof', 'armor', 'outer'] },
+        }),
+        source: 'entity',
+      });
+    });
   });
 
   describe('Trace Logging Integration', () => {
@@ -408,6 +424,27 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
       // Should have some trace activity
       expect(traceCalls.length).toBeGreaterThan(0);
       expect(Array.from(result)).toEqual(['leather_jacket_001']);
+    });
+
+    it('should emit lookup stats through trace data when debug is enabled', () => {
+      const trace = {
+        addLog: jest.fn(),
+        data: jest.fn(),
+      };
+
+      const runtimeCtxWithDebug = {
+        ...mockRuntimeContext,
+        scopeEntityLookupDebug: { enabled: true, includeSources: true },
+      };
+
+      const gateway = engine._createEntitiesGateway(runtimeCtxWithDebug, trace);
+      gateway.getItemComponents('leather_jacket_001');
+
+      expect(trace.data).toHaveBeenCalledWith(
+        'ScopeDSL entity lookup stats',
+        'ScopeEngine._createEntitiesGateway',
+        expect.objectContaining({ entityHits: 1 })
+      );
     });
   });
 

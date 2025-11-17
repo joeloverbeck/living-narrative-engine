@@ -2,6 +2,7 @@ import {
   describe,
   it,
   expect,
+  beforeAll,
   beforeEach,
   afterEach,
   jest,
@@ -13,9 +14,30 @@ import {
   ValidationPatterns,
 } from '../../../src/shared/characterBuilder/formValidationHelper.js';
 import { UI_STATES } from '../../../src/shared/characterBuilder/uiStateManager.js';
+import {
+  createTestContainer,
+  resolveControllerDependencies,
+} from '../../common/testContainerConfig.js';
 
 const ORIGINAL_ENV = process.env.NODE_ENV;
 const ORIGINAL_CONFIRM = global.confirm;
+
+let controllerTestContainer;
+
+beforeAll(async () => {
+  controllerTestContainer = await createTestContainer();
+});
+
+const getControllerSupportDependencies = () => {
+  if (!controllerTestContainer) {
+    throw new Error('Test container not initialized');
+  }
+
+  const { schemaValidator: _unused, ...supportDeps } =
+    resolveControllerDependencies(controllerTestContainer);
+
+  return supportDeps;
+};
 
 const createDependencySet = () => {
   const logger = {
@@ -51,7 +73,15 @@ const createDependencySet = () => {
     getSchema: jest.fn().mockReturnValue(null),
   };
 
-  return { logger, eventBus, characterBuilderService, schemaValidator };
+  const controllerDeps = getControllerSupportDependencies();
+
+  return {
+    logger,
+    eventBus,
+    characterBuilderService,
+    schemaValidator,
+    controllerDeps,
+  };
 };
 
 describe('CharacterConceptsManagerController constructor coverage', () => {
@@ -60,7 +90,7 @@ describe('CharacterConceptsManagerController constructor coverage', () => {
   });
 
   it('maps missing logger dependency errors', () => {
-    const { characterBuilderService, eventBus, schemaValidator } =
+    const { characterBuilderService, eventBus, schemaValidator, controllerDeps } =
       createDependencySet();
 
     expect(
@@ -69,12 +99,14 @@ describe('CharacterConceptsManagerController constructor coverage', () => {
           characterBuilderService,
           eventBus,
           schemaValidator,
+          ...controllerDeps,
         })
     ).toThrow('Missing required dependency: ILogger');
   });
 
   it('maps missing character builder service dependency errors', () => {
-    const { logger, eventBus, schemaValidator } = createDependencySet();
+    const { logger, eventBus, schemaValidator, controllerDeps } =
+      createDependencySet();
 
     expect(
       () =>
@@ -82,12 +114,13 @@ describe('CharacterConceptsManagerController constructor coverage', () => {
           logger,
           eventBus,
           schemaValidator,
+          ...controllerDeps,
         })
     ).toThrow('Missing required dependency: CharacterBuilderService');
   });
 
   it('maps missing event bus dependency errors', () => {
-    const { logger, characterBuilderService, schemaValidator } =
+    const { logger, characterBuilderService, schemaValidator, controllerDeps } =
       createDependencySet();
 
     expect(
@@ -96,18 +129,20 @@ describe('CharacterConceptsManagerController constructor coverage', () => {
           logger,
           characterBuilderService,
           schemaValidator,
+          ...controllerDeps,
         })
     ).toThrow('Missing required dependency: ISafeEventDispatcher');
   });
 
   it('provides fallbacks for missing schema validator', () => {
-    const { logger, characterBuilderService, eventBus } =
+    const { logger, characterBuilderService, eventBus, controllerDeps } =
       createDependencySet();
 
     const controller = new CharacterConceptsManagerController({
       logger,
       characterBuilderService,
       eventBus,
+      ...controllerDeps,
     });
 
     expect(controller.schemaValidator.validate()).toEqual({
@@ -120,7 +155,8 @@ describe('CharacterConceptsManagerController constructor coverage', () => {
   });
 
   it('adds backward compatible service methods when missing', async () => {
-    const { logger, eventBus, schemaValidator } = createDependencySet();
+    const { logger, eventBus, schemaValidator, controllerDeps } =
+      createDependencySet();
     const incompleteService = {
       initialize: jest.fn().mockResolvedValue(undefined),
       getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
@@ -135,6 +171,7 @@ describe('CharacterConceptsManagerController constructor coverage', () => {
       characterBuilderService: incompleteService,
       eventBus,
       schemaValidator,
+      ...controllerDeps,
     });
 
     await expect(
@@ -239,6 +276,8 @@ describe('CharacterConceptsManagerController additional coverage', () => {
 
   it('animates modals across success, fallback, and error paths', () => {
     const modal = controller._getElement('conceptModal');
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
 
     const animation = {
       playState: 'running',
@@ -296,6 +335,8 @@ describe('CharacterConceptsManagerController additional coverage', () => {
       'Modal exit animation failed',
       expect.any(Error)
     );
+
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('creates concept cards and wires event handlers', () => {
@@ -1285,11 +1326,15 @@ describe('CharacterConceptsManagerController additional coverage', () => {
       addEventListener: jest.fn(),
     };
     modal.animate = jest.fn(() => animation);
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
 
     controller._animateModalEntrance(modal);
     controller.destroy();
 
     expect(animation.cancel).toHaveBeenCalled();
+
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('restores focus when closing the concept modal successfully', () => {

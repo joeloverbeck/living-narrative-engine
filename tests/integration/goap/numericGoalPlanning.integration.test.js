@@ -13,6 +13,7 @@ import GOAPDebugger from '../../../src/goap/debug/goapDebugger.js';
 import PlanInspector from '../../../src/goap/debug/planInspector.js';
 import StateDiffViewer from '../../../src/goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../../src/goap/debug/refinementTracer.js';
+import { createGoapEventTraceProbe } from '../../../src/goap/debug/goapEventTraceProbe.js';
 
 /**
  * Helper to add flattened component aliases to an actor entity.
@@ -82,6 +83,8 @@ function buildDualFormatState(actor) {
 describe('Numeric Goal Planning - Hunger System', () => {
   let setup;
   let goapDebugger;
+  let eventTraceProbe;
+  let detachProbeHandle;
 
   beforeEach(async () => {
     // Define eat task BEFORE creating setup
@@ -132,16 +135,29 @@ describe('Numeric Goal Planning - Hunger System', () => {
       gameDataRepository: setup.gameDataRepository,
       logger,
     });
+    eventTraceProbe = createGoapEventTraceProbe({ logger });
+    if (typeof setup.attachEventTraceProbe === 'function') {
+      detachProbeHandle = setup.attachEventTraceProbe(eventTraceProbe);
+    }
     goapDebugger = new GOAPDebugger({
       goapController: setup.controller,
       planInspector,
       stateDiffViewer,
       refinementTracer,
+      eventTraceProbe,
       logger,
     });
   });
 
   afterEach(() => {
+    if (detachProbeHandle) {
+      detachProbeHandle();
+      detachProbeHandle = null;
+    }
+    if (eventTraceProbe) {
+      eventTraceProbe.clear();
+      eventTraceProbe = null;
+    }
     if (setup?.testBed) {
       setup.testBed.cleanup();
     }
@@ -209,6 +225,8 @@ describe('Numeric Goal Planning - Hunger System', () => {
 
     // Generate debug report
     goapDebugger.stopTrace('test_actor');
+    const eventStream = goapDebugger.getEventStream('test_actor');
+    expect(eventStream?.events?.length ?? 0).toBeGreaterThan(0);
     const report = goapDebugger.generateReport('test_actor');
 
     console.log('\n=== DEBUG REPORT ===');
@@ -216,7 +234,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
     console.log('\n=== END DEBUG REPORT ===\n');
 
     // Verify plan was created
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
 
@@ -250,7 +268,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
     await setup.controller.decideTurn(actor, world);
 
     // Goal not relevant (hunger already low)
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(false); // No plan needed
   });
@@ -281,7 +299,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
 
@@ -314,7 +332,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
 
     // Verify goal selection happened
     const goalSelected = events.some(e => e.type === GOAP_EVENTS.GOAL_SELECTED);
@@ -401,7 +419,7 @@ describe('Numeric Goal Planning - Health System', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
 
@@ -432,7 +450,7 @@ describe('Numeric Goal Planning - Health System', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
 
@@ -497,7 +515,7 @@ describe('Numeric Goal Planning - Health System', () => {
     await setup.controller.decideTurn(actor, world);
 
     // Goal not relevant (health already high)
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(false); // No plan needed
   });
@@ -572,7 +590,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
     // Need: (100 - 30) / 25 = 2.8 → 3 mine actions
@@ -602,7 +620,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
 
@@ -639,7 +657,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
 
@@ -719,7 +737,7 @@ describe('Numeric Goal Planning - Error Cases', () => {
     // Planning should fail gracefully (cost too high for benefit)
     await expect(setup.controller.decideTurn(actor, world)).resolves.not.toThrow();
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     // May be null if planning failed, or very expensive plan
     const planningFailed = events.some(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
     // Either planning failed or succeeded with expensive plan
@@ -871,12 +889,12 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
   });
 
-  it('should fall back to runtime components when planning state is stale', async () => {
+  it('should surface state misses when planning state is stale', async () => {
     const actor = {
       id: 'test_actor',
       components: {
@@ -907,11 +925,19 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     await setup.controller.decideTurn(actor, world);
 
     const planningCompleted = setup.eventBus
-      .getAll()
+      .getEvents()
       .find((event) => event.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
     expect(planningCompleted).toBeDefined();
-    expect(planningCompleted.payload.planLength).toBe(0);
+    expect(planningCompleted.payload.planLength).toBeGreaterThan(0);
+
+    const stateMissEvents = setup.eventBus.getEvents(GOAP_EVENTS.STATE_MISS);
+    expect(stateMissEvents.length).toBeGreaterThan(0);
+    expect(
+      stateMissEvents.some(
+        (event) => event.payload?.componentId === 'core:armed'
+      )
+    ).toBe(true);
   });
 
   it('should handle mixed component + numeric goals', async () => {
@@ -944,7 +970,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     await setup.controller.decideTurn(actor, world);
 
     // Should plan for both conditions
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
   });
@@ -979,7 +1005,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
 
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     const planCompleted = events.find(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCompleted).toBeDefined();
     expect(planCompleted.payload.planLength).toBeGreaterThan(0);
@@ -1019,7 +1045,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     };
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
     // Should either acquire weapon OR reduce hunger
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);

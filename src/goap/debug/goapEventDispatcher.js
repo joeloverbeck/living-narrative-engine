@@ -2,10 +2,78 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { GOAP_EVENTS } from '../events/goapEvents.js';
 
 const GLOBAL_ACTOR_ID = 'global';
+const EVENT_BUS_CONTRACT_REFERENCE = 'See specs/goap-system-specs.md and docs/goap/debugging-tools.md#Planner Contract Checklist for the GOAP event bus contract.';
 export const GOAP_EVENT_COMPLIANCE_CODES = {
   MISSING_PAYLOAD: 'GOAP_EVENT_PAYLOAD_MISSING',
   INVALID_SIGNATURE: 'GOAP_EVENT_INVALID_SIGNATURE',
 };
+
+const warnedEventBuses = new WeakSet();
+
+function clonePayloadForProbe(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return {};
+  }
+
+  if (typeof structuredClone === 'function') {
+    try {
+      return structuredClone(payload);
+    } catch (_) {
+      // Fall through to JSON serialization when structuredClone fails
+    }
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(payload));
+  } catch (_) {
+    return { ...payload };
+  }
+}
+
+function normalizeActorId(actorId) {
+  if (typeof actorId === 'string') {
+    const trimmed = actorId.trim();
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+  return GLOBAL_ACTOR_ID;
+}
+
+/**
+ * @typedef {object} IGoapEventProbe
+ * @property {(event: { type: string, payload: object, actorId?: string, violation?: boolean, timestamp: number }) => void} record
+ */
+
+export function validateEventBusContract(eventBus, logger, options = {}) {
+  const safeLogger = ensureValidLogger(logger, 'GoapEventDispatcher');
+  const context = options.context || 'GoapEventDispatcher';
+
+  if (!eventBus || typeof eventBus.dispatch !== 'function') {
+    const message =
+      'GOAP event dispatcher requires an eventBus with a dispatch(eventType, payload) method. ' +
+      EVENT_BUS_CONTRACT_REFERENCE;
+    safeLogger.warn('GOAP event bus missing dispatch method', { context });
+    throw new Error(message);
+  }
+
+  const arity = eventBus.dispatch.length;
+  if (arity > 0 && arity < 2) {
+    const message =
+      `GOAP event bus dispatch must accept (eventType, payload). Received function arity=${arity}. ` +
+      EVENT_BUS_CONTRACT_REFERENCE;
+    if (!warnedEventBuses.has(eventBus)) {
+      safeLogger.warn('GOAP event bus dispatch signature mismatch', {
+        context,
+        arity,
+      });
+      warnedEventBuses.add(eventBus);
+    }
+    throw new Error(message);
+  }
+
+  return eventBus;
+}
 
 function createComplianceEntry(actorId) {
   return {
@@ -34,20 +102,68 @@ function cloneComplianceEntry(entry) {
  *
  * @param {import('../../interfaces/IEventBus.js').IEventBus} eventBus
  * @param {import('../../interfaces/coreServices.js').ILogger} logger
+ * @param {object} [options]
+ * @param {Array<IGoapEventProbe>} [options.probes]
+ * @param {string} [options.context]
  * @returns {{
  *   dispatch(eventType: string, payload?: object, options?: { allowEmptyPayload?: boolean, actorIdOverride?: string }): Promise<void> | void,
  *   getComplianceSnapshot(): { global: object|null, actors: object[] },
  *   getComplianceForActor(actorId: string): object|null
  * }}
  */
-export function createGoapEventDispatcher(eventBus, logger) {
-  if (!eventBus || typeof eventBus.dispatch !== 'function') {
-    throw new Error('createGoapEventDispatcher requires an eventBus with a dispatch method.');
-  }
-
+export function createGoapEventDispatcher(eventBus, logger, options = {}) {
   const safeLogger = ensureValidLogger(logger, 'GoapEventDispatcher');
+  const { probes = [], context } = options ?? {};
+  const validatedEventBus = validateEventBusContract(eventBus, safeLogger, {
+    context: context || 'GoapEventDispatcher',
+  });
+  const activeProbes = Array.isArray(probes)
+    ? probes.filter((probe) => probe && typeof probe.record === 'function')
+    : [];
   const complianceByActor = new Map();
   complianceByActor.set(GLOBAL_ACTOR_ID, createComplianceEntry(GLOBAL_ACTOR_ID));
+
+  const emitToProbes = (eventType, payload, metadata = {}) => {
+    if (activeProbes.length === 0) {
+      return;
+    }
+
+    const snapshot = {
+      type: eventType,
+      payload: clonePayloadForProbe(payload),
+      actorId: metadata.actorId ? normalizeActorId(metadata.actorId) : undefined,
+      violation: Boolean(metadata.violation),
+      timestamp: metadata.timestamp || Date.now(),
+    };
+
+    for (const probe of activeProbes) {
+      try {
+        probe.record(snapshot);
+      } catch (error) {
+        safeLogger.warn('GOAP event probe failed to record event', {
+          eventType,
+          error,
+        });
+      }
+    }
+  };
+
+  const registerProbe = (probe) => {
+    if (!probe || typeof probe.record !== 'function') {
+      safeLogger.warn('GOAP event probe missing record() method', {
+        context: context || 'GoapEventDispatcher',
+      });
+      return () => {};
+    }
+
+    activeProbes.push(probe);
+    return () => {
+      const index = activeProbes.indexOf(probe);
+      if (index >= 0) {
+        activeProbes.splice(index, 1);
+      }
+    };
+  };
 
   const getOrCreateEntry = (actorId) => {
     if (!actorId || typeof actorId !== 'string') {
@@ -64,10 +180,14 @@ export function createGoapEventDispatcher(eventBus, logger) {
   };
 
   const recordEventDispatch = (actorId) => {
+    const normalizedActor = normalizeActorId(actorId);
     const globalEntry = complianceByActor.get(GLOBAL_ACTOR_ID);
     globalEntry.totalEvents += 1;
 
-    const actorEntry = getOrCreateEntry(actorId);
+    const actorEntry =
+      normalizedActor === GLOBAL_ACTOR_ID
+        ? null
+        : getOrCreateEntry(normalizedActor);
     if (actorEntry) {
       actorEntry.totalEvents += 1;
     }
@@ -75,7 +195,7 @@ export function createGoapEventDispatcher(eventBus, logger) {
 
   const recordViolation = ({ actorId, eventType, reason, code }) => {
     const violation = {
-      actorId: actorId || 'unknown',
+      actorId: normalizeActorId(actorId),
       eventType,
       code,
       reason,
@@ -87,15 +207,24 @@ export function createGoapEventDispatcher(eventBus, logger) {
     globalEntry.missingPayloads += 1;
     globalEntry.lastViolation = violation;
 
-    const actorEntry = getOrCreateEntry(actorId);
-    if (actorEntry) {
+    const actorEntry =
+      violation.actorId === GLOBAL_ACTOR_ID
+        ? globalEntry
+        : getOrCreateEntry(violation.actorId);
+    if (actorEntry && actorEntry !== globalEntry) {
       actorEntry.missingPayloads += 1;
       actorEntry.lastViolation = violation;
     }
 
+    emitToProbes(GOAP_EVENTS.EVENT_CONTRACT_VIOLATION, violation, {
+      actorId: violation.actorId,
+      violation: true,
+      timestamp: violation.timestamp,
+    });
+
     try {
       safeLogger.warn('GOAP event dispatch violation detected', violation);
-      eventBus.dispatch(GOAP_EVENTS.EVENT_CONTRACT_VIOLATION, violation);
+      validatedEventBus.dispatch(GOAP_EVENTS.EVENT_CONTRACT_VIOLATION, violation);
     } catch (error) {
       safeLogger.error('Failed to dispatch GOAP event contract violation', {
         violation,
@@ -172,8 +301,33 @@ export function createGoapEventDispatcher(eventBus, logger) {
       );
 
       const actorId = actorIdOverride || normalizedPayload?.actorId;
-      recordEventDispatch(actorId);
-      return eventBus.dispatch(validatedType, normalizedPayload);
+      const normalizedActorId = normalizeActorId(actorId);
+      recordEventDispatch(normalizedActorId);
+      emitToProbes(validatedType, normalizedPayload, {
+        actorId: normalizedActorId,
+        timestamp: normalizedPayload?.timestamp,
+      });
+
+      const dispatchResult = validatedEventBus.dispatch(
+        validatedType,
+        normalizedPayload
+      );
+
+      if (
+        typeof dispatchResult !== 'undefined' &&
+        (typeof dispatchResult !== 'object' || typeof dispatchResult.then !== 'function')
+      ) {
+        const message =
+          'GOAP event bus dispatch must return a Promise or void. ' +
+          EVENT_BUS_CONTRACT_REFERENCE;
+        safeLogger.warn('GOAP event bus returned invalid dispatch result', {
+          eventType: validatedType,
+          resultType: typeof dispatchResult,
+        });
+        throw new Error(message);
+      }
+
+      return dispatchResult;
     },
 
     getComplianceSnapshot() {
@@ -193,6 +347,8 @@ export function createGoapEventDispatcher(eventBus, logger) {
           : complianceByActor.get(targetId);
       return cloneComplianceEntry(entry);
     },
+
+    registerProbe,
   };
 
   return dispatcher;

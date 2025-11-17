@@ -146,7 +146,7 @@ describe('Multi-Action Planning Performance', () => {
       const planningTime = endTime - startTime;
 
       // Verify plan was created (check events, not active plan)
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -226,7 +226,7 @@ describe('Multi-Action Planning Performance', () => {
 
       const planningTime = endTime - startTime;
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();

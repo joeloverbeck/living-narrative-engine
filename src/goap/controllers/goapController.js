@@ -22,7 +22,7 @@ import {
   getPlanningStateDiagnostics as getPlanningStateDiagnosticsSnapshot,
 } from '../planner/planningStateDiagnostics.js';
 import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../debug/goapDebuggerDiagnosticsContract.js';
-import { createGoapEventDispatcher } from '../debug/goapEventDispatcher.js';
+import { createGoapEventDispatcher, validateEventBusContract } from '../debug/goapEventDispatcher.js';
 
 export const GOAP_CONTROLLER_DIAGNOSTICS_CONTRACT_VERSION =
   GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version;
@@ -180,6 +180,13 @@ class GoapController {
       requiredMethods: ['resolve'],
     });
 
+    let validatedEventBus = eventBus;
+    if (!goapEventDispatcher && eventBus) {
+      validatedEventBus = validateEventBusContract(eventBus, this.#logger, {
+        context: 'GoapController',
+      });
+    }
+
     this.#planner = goapPlanner;
     this.#refinementEngine = refinementEngine;
     this.#invalidationDetector = planInvalidationDetector;
@@ -187,7 +194,7 @@ class GoapController {
     this.#jsonLogicService = logicService;
     this.#dataRegistry = dataRegistry;
     this.#eventDispatcher =
-      goapEventDispatcher ?? createGoapEventDispatcher(eventBus, this.#logger);
+      goapEventDispatcher ?? createGoapEventDispatcher(validatedEventBus, this.#logger);
     this.#parameterResolutionService = parameterResolutionService;
     this.#activePlan = null;
     this.#dependencyDiagnostics = new Map();

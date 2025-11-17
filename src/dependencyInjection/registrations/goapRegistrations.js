@@ -24,6 +24,7 @@ import StateDiffViewer from '../../goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../goap/debug/refinementTracer.js';
 import GOAPDebugger from '../../goap/debug/goapDebugger.js';
 import { createGoapEventDispatcher } from '../../goap/debug/goapEventDispatcher.js';
+import { createGoapEventTraceProbe } from '../../goap/debug/goapEventTraceProbe.js';
 import NumericConstraintEvaluator from '../../goap/planner/numericConstraintEvaluator.js';
 
 /**
@@ -32,10 +33,22 @@ import NumericConstraintEvaluator from '../../goap/planner/numericConstraintEval
  * @param {import('../containerBase.js').default} container - DI container
  */
 export function registerGoapServices(container) {
+  container.register(
+    tokens.IGoapEventTraceProbe,
+    (c) =>
+      createGoapEventTraceProbe({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+
   container.register(tokens.IGoapEventDispatcher, (c) => {
     const eventBus = c.resolve(tokens.IEventBus);
     const logger = c.resolve(tokens.ILogger);
-    return createGoapEventDispatcher(eventBus, logger);
+    const traceProbe = c.resolve(tokens.IGoapEventTraceProbe);
+    return createGoapEventDispatcher(eventBus, logger, {
+      probes: [traceProbe],
+    });
   }, { lifecycle: 'singleton' });
 
   // Context Assembly Service
@@ -309,6 +322,7 @@ export function registerGoapServices(container) {
       tokens.IPlanInspector,
       tokens.IStateDiffViewer,
       tokens.IRefinementTracer,
+      tokens.IGoapEventTraceProbe,
       tokens.ILogger,
     ],
     lifecycle: 'singleton',

@@ -86,7 +86,7 @@ describe('GOAP Failure Scenarios - Integration', () => {
       expect(result).toBeNull();
 
       // Verify: PLANNING_FAILED event was dispatched
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planningFailures = events.filter(
         (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
       );
@@ -130,7 +130,7 @@ describe('GOAP Failure Scenarios - Integration', () => {
       expect(result).toBeNull();
 
       // Verify: Planning failure event
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const failures = events.filter((e) => e.type === GOAP_EVENTS.PLANNING_FAILED);
       expect(failures.length).toBeGreaterThan(0);
     });
@@ -189,7 +189,7 @@ describe('GOAP Failure Scenarios - Integration', () => {
       expect(result).toBeNull();
 
       // Verify: Planning failure event dispatched
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const failures = events.filter((e) => e.type === GOAP_EVENTS.PLANNING_FAILED);
       expect(failures.length).toBeGreaterThan(0);
     });
@@ -245,7 +245,7 @@ describe('GOAP Failure Scenarios - Integration', () => {
       const result = await setup.controller.decideTurn(actor, world);
 
       // Verify: Either null (failed refinement) or refinement failure event
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
 
       // Check for planning completion AND refinement failure
       const planningComplete = events.some(
@@ -305,7 +305,7 @@ describe('GOAP Failure Scenarios - Integration', () => {
       expect(didThrow).toBe(false);
 
       // Verify: Either null result or failure event
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const hasFailureEvent = events.some(
         (e) =>
           e.type === GOAP_EVENTS.PLANNING_FAILED ||
@@ -375,7 +375,7 @@ describe('GOAP Failure Scenarios - Integration', () => {
 
       // Verify: Either planning succeeded or failed gracefully
       // (Either result is defined OR null with failure event)
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const hasAnyEvent = events.length > 0;
       expect(result !== undefined || hasAnyEvent).toBe(true);
     });

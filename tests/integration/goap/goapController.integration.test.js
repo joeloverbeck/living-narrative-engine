@@ -654,7 +654,7 @@ describe('GOAPController - Integration', () => {
       await setup.controller.decideTurn(actor, world);
 
       // Verify: All events have required fields
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
 
       events.forEach((event) => {
         // All events should have payload

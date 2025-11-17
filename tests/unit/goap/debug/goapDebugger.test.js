@@ -10,6 +10,7 @@ describe('GOAPDebugger', () => {
   let mockInspector;
   let mockDiffViewer;
   let mockTracer;
+  let mockEventTraceProbe;
   let mockLogger;
 
   beforeEach(() => {
@@ -72,11 +73,26 @@ describe('GOAPDebugger', () => {
       'format',
     ]);
 
+    mockEventTraceProbe = {
+      record: jest.fn(),
+      startCapture: jest.fn(),
+      stopCapture: jest.fn(),
+      getSnapshot: jest.fn().mockReturnValue({
+        actorId: 'actor-1',
+        capturing: false,
+        totalCaptured: 0,
+        totalViolations: 0,
+        events: [],
+      }),
+      clear: jest.fn(),
+    };
+
     goapDebugger = new GOAPDebugger({
       goapController: mockController,
       planInspector: mockInspector,
       stateDiffViewer: mockDiffViewer,
       refinementTracer: mockTracer,
+      eventTraceProbe: mockEventTraceProbe,
       logger: mockLogger,
     });
   });
@@ -89,6 +105,7 @@ describe('GOAPDebugger', () => {
           planInspector: mockInspector,
           stateDiffViewer: mockDiffViewer,
           refinementTracer: mockTracer,
+          eventTraceProbe: mockEventTraceProbe,
           logger: mockLogger,
         });
       }).toThrow();
@@ -101,6 +118,7 @@ describe('GOAPDebugger', () => {
           planInspector: {},
           stateDiffViewer: mockDiffViewer,
           refinementTracer: mockTracer,
+          eventTraceProbe: mockEventTraceProbe,
           logger: mockLogger,
         });
       }).toThrow();
@@ -113,6 +131,7 @@ describe('GOAPDebugger', () => {
           planInspector: mockInspector,
           stateDiffViewer: {},
           refinementTracer: mockTracer,
+          eventTraceProbe: mockEventTraceProbe,
           logger: mockLogger,
         });
       }).toThrow();
@@ -125,6 +144,20 @@ describe('GOAPDebugger', () => {
           planInspector: mockInspector,
           stateDiffViewer: mockDiffViewer,
           refinementTracer: {},
+          eventTraceProbe: mockEventTraceProbe,
+          logger: mockLogger,
+        });
+      }).toThrow();
+    });
+
+    it('should validate eventTraceProbe dependency', () => {
+      expect(() => {
+        new GOAPDebugger({
+          goapController: mockController,
+          planInspector: mockInspector,
+          stateDiffViewer: mockDiffViewer,
+          refinementTracer: mockTracer,
+          eventTraceProbe: {},
           logger: mockLogger,
         });
       }).toThrow();
@@ -139,6 +172,7 @@ describe('GOAPDebugger', () => {
           planInspector: mockInspector,
           stateDiffViewer: mockDiffViewer,
           refinementTracer: mockTracer,
+          eventTraceProbe: mockEventTraceProbe,
           logger: mockLogger,
         });
       }).toThrow(/diagnostics contract mismatch/);
@@ -296,10 +330,12 @@ describe('GOAPDebugger', () => {
   });
 
   describe('startTrace', () => {
-    it('should delegate to refinement tracer', () => {
+    it('should delegate to refinement tracer and event trace probe', () => {
       goapDebugger.startTrace('actor-1');
 
       expect(mockTracer.startCapture).toHaveBeenCalledWith('actor-1');
+      expect(mockEventTraceProbe.clear).toHaveBeenCalledWith('actor-1');
+      expect(mockEventTraceProbe.startCapture).toHaveBeenCalledWith('actor-1');
     });
 
     it('should validate actorId parameter', () => {
@@ -315,6 +351,7 @@ describe('GOAPDebugger', () => {
       const result = goapDebugger.stopTrace('actor-1');
 
       expect(mockTracer.stopCapture).toHaveBeenCalledWith('actor-1');
+      expect(mockEventTraceProbe.stopCapture).toHaveBeenCalledWith('actor-1');
       expect(result).toEqual(trace);
     });
 
@@ -344,6 +381,28 @@ describe('GOAPDebugger', () => {
 
     it('should validate actorId parameter', () => {
       expect(() => goapDebugger.getTrace('')).toThrow();
+    });
+  });
+
+  describe('getEventStream', () => {
+    it('should return snapshot from the trace probe', () => {
+      const snapshot = {
+        actorId: 'actor-1',
+        capturing: true,
+        totalCaptured: 2,
+        totalViolations: 1,
+        events: [],
+      };
+      mockEventTraceProbe.getSnapshot.mockReturnValue(snapshot);
+
+      const result = goapDebugger.getEventStream('actor-1');
+
+      expect(mockEventTraceProbe.getSnapshot).toHaveBeenCalledWith('actor-1');
+      expect(result).toBe(snapshot);
+    });
+
+    it('should validate actorId parameter', () => {
+      expect(() => goapDebugger.getEventStream('')).toThrow();
     });
   });
 
@@ -377,6 +436,7 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('Failed Tasks: 0');
       expect(report).toContain('Dependency Contracts');
       expect(report).toContain('Task Library Diagnostics');
+      expect(report).toContain('Event Stream');
       expect(report).toContain('End Report');
     });
 
@@ -511,6 +571,10 @@ describe('GOAPDebugger', () => {
             actorId: 'global',
           }),
         },
+        eventStream: expect.objectContaining({
+          actorId: 'actor-1',
+          events: expect.any(Array),
+        }),
         diagnosticsMeta: {
           taskLibrary: expect.objectContaining({
             available: true,

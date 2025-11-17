@@ -11,6 +11,11 @@ import StateDiffViewer from '../../../../src/goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../../../src/goap/debug/refinementTracer.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../../../../src/goap/debug/goapDebuggerDiagnosticsContract.js';
+import { createGoapEventTraceProbe } from '../../../../src/goap/debug/goapEventTraceProbe.js';
+import { createGoapEventDispatcher } from '../../../../src/goap/debug/goapEventDispatcher.js';
+import { createEventBusMock } from '../../../common/mocks/createEventBusMock.js';
+import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
+import { emitGoapEvent } from '../../../../src/goap/events/goapEventFactory.js';
 
 describe('GOAPDebugger Integration', () => {
   let testBed;
@@ -19,6 +24,10 @@ describe('GOAPDebugger Integration', () => {
   let mockDataRegistry;
   let entityManager;
   let logger;
+  let eventTraceProbe;
+  let planInspector;
+  let stateDiffViewer;
+  let refinementTracer;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -60,7 +69,7 @@ describe('GOAPDebugger Integration', () => {
     };
 
     // Create real debug tool instances
-    const planInspector = new PlanInspector({
+    planInspector = new PlanInspector({
       goapController: mockController,
       dataRegistry: mockDataRegistry,
       entityManager,
@@ -68,7 +77,7 @@ describe('GOAPDebugger Integration', () => {
       logger,
     });
 
-    const stateDiffViewer = new StateDiffViewer({ logger });
+    stateDiffViewer = new StateDiffViewer({ logger });
     
     // Mock event bus for RefinementTracer
     const mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe', 'unsubscribe', 'on', 'off']);
@@ -78,11 +87,25 @@ describe('GOAPDebugger Integration', () => {
       get: jest.fn().mockReturnValue(new Map()),
     };
     
-    const refinementTracer = new RefinementTracer({ 
+    refinementTracer = new RefinementTracer({ 
       eventBus: mockEventBus, 
       gameDataRepository: mockGameDataRepository,
       logger 
     });
+
+    eventTraceProbe = {
+      record: jest.fn(),
+      startCapture: jest.fn(),
+      stopCapture: jest.fn(),
+      getSnapshot: jest.fn().mockReturnValue({
+        actorId: 'test-actor',
+        capturing: false,
+        totalCaptured: 0,
+        totalViolations: 0,
+        events: [],
+      }),
+      clear: jest.fn(),
+    };
 
     // Create GOAPDebugger with real tools
     goapDebugger = new GOAPDebugger({
@@ -90,6 +113,7 @@ describe('GOAPDebugger Integration', () => {
       planInspector,
       stateDiffViewer,
       refinementTracer,
+      eventTraceProbe,
       logger,
     });
   });
@@ -170,6 +194,67 @@ describe('GOAPDebugger Integration', () => {
       expect(failures.failedGoals[0].failures).toHaveLength(2);
       expect(failures.failedTasks).toHaveLength(1);
       expect(failures.failedTasks[0].failures).toHaveLength(1);
+    });
+  });
+
+  it('captures GOAP events in the event stream probe', () => {
+    const traceProbe = createGoapEventTraceProbe({ logger });
+    const eventBusMock = createEventBusMock();
+    const goapDispatcher = createGoapEventDispatcher(eventBusMock, logger, {
+      probes: [traceProbe],
+    });
+
+    const debuggerWithRealProbe = new GOAPDebugger({
+      goapController: mockController,
+      planInspector,
+      stateDiffViewer,
+      refinementTracer,
+      eventTraceProbe: traceProbe,
+      logger,
+    });
+
+    debuggerWithRealProbe.startTrace('test-actor');
+    const context = { actorId: 'test-actor', taskId: 'test-task' };
+
+    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STARTED, {
+      actorId: 'test-actor',
+      taskId: 'test-task',
+    }, context);
+    emitGoapEvent(goapDispatcher, GOAP_EVENTS.METHOD_SELECTED, {
+      actorId: 'test-actor',
+      taskId: 'test-task',
+      methodId: 'method-1',
+    }, context);
+    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
+      actorId: 'test-actor',
+      taskId: 'test-task',
+      stepIndex: 0,
+      step: { stepType: 'primitive_action' },
+    }, context);
+    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STATE_UPDATED, {
+      actorId: 'test-actor',
+      taskId: 'test-task',
+      key: 'step0',
+      newValue: 'ok',
+    }, context);
+    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
+      actorId: 'test-actor',
+      taskId: 'test-task',
+      stepIndex: 0,
+      result: { success: true },
+    }, context);
+    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_COMPLETED, {
+      actorId: 'test-actor',
+      taskId: 'test-task',
+      methodId: 'method-1',
+      stepsExecuted: 1,
+      success: true,
+    }, context);
+
+    const eventStream = debuggerWithRealProbe.getEventStream('test-actor');
+    expect(eventStream.events.length).toBeGreaterThanOrEqual(5);
+    eventStream.events.forEach((event) => {
+      expect(event.payload.actorId).toBe('test-actor');
     });
   });
 

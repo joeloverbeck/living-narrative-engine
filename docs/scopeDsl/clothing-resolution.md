@@ -61,6 +61,17 @@ console.log(trace.coverageResolution);
 // Shows: candidates, priorities, filtering, selection reasoning
 ```
 
+### Inspecting Component Sources
+
+When `runtimeCtx.scopeEntityLookupDebug` is enabled (see `docs/scopeDsl/troubleshooting.md`), the entities gateway can also return provenance data for clothing components. Set `runtimeCtx.scopeEntityLookupDebug.includeSources = true` to receive an envelope shaped as `{ components, source }` from `entitiesGateway.getItemComponents(itemId)`. The `source` field indicates where the component data originated:
+
+- `entity` – live entity instances with component maps/objects
+- `component-type-ids` – reconstructed from `componentTypeIds`
+- `registry:item` / `registry:clothing` – definitions loaded from registries
+- `missing:entity` / `missing:definition` – no entity or no registry entry was found
+
+Use this metadata to confirm that coverage resolution is using the deterministic fallbacks described above instead of silently dropping clothing data.
+
 ## Performance Considerations
 
 - Coverage resolution adds ~20-50% overhead vs legacy resolution

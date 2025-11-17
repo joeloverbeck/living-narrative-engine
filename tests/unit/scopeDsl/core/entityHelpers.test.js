@@ -271,6 +271,29 @@ describe('entityHelpers', () => {
       expect(result.id).toBe('item1');
     });
 
+    it('unwraps gateway component envelopes when includeSources is enabled', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => null),
+        getItemComponents: jest.fn(() => ({
+          components: { 'core:item': { rarity: 'rare' } },
+          source: 'registry:item',
+        })),
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const result = createEvaluationContext(
+        'artifact_01',
+        actor,
+        gateway,
+        locationProvider
+      );
+
+      expect(result.entity.components).toEqual({
+        'core:item': { rarity: 'rare' },
+      });
+    });
+
     it('reuses cached entities when resolving objects that already include an id', () => {
       const actor = { id: 'actor1', componentTypeIds: [] };
       const gateway = {

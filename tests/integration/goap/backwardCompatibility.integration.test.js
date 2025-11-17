@@ -129,7 +129,7 @@ describe('GOAP Backward Compatibility', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -198,7 +198,7 @@ describe('GOAP Backward Compatibility', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -293,7 +293,7 @@ describe('GOAP Backward Compatibility', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();
@@ -398,7 +398,7 @@ describe('GOAP Backward Compatibility', () => {
 
       await setup.controller.decideTurn(actor, world);
 
-      const events = setup.eventBus.getAll();
+      const events = setup.eventBus.getEvents();
       const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
 
       expect(planCreated).toBeDefined();

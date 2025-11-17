@@ -1224,6 +1224,167 @@ describe('ScopeEngine', () => {
 
         expect(result).toEqual({});
       });
+
+      test('should provide source metadata when includeSources flag enabled', () => {
+        const itemId = 'item_with_source';
+        const mockEntity = {
+          id: itemId,
+          components: new Map([
+            ['core:item', { name: 'Ring' }],
+          ]),
+        };
+
+        const runtimeCtxWithSources = {
+          ...mockRuntimeCtx,
+          scopeEntityLookupDebug: { enabled: true, includeSources: true },
+          entityManager: {
+            ...mockRuntimeCtx.entityManager,
+            getEntityInstance: jest.fn().mockReturnValue(mockEntity),
+          },
+        };
+
+        const gateway = engine._createEntitiesGateway(runtimeCtxWithSources);
+        const result = gateway.getItemComponents(itemId);
+
+        expect(result).toEqual({
+          components: { 'core:item': { name: 'Ring' } },
+          source: 'entity',
+        });
+      });
+
+      test('should log registry fallback events and emit stats when debug enabled', () => {
+        const trace = {
+          addLog: jest.fn(),
+          data: jest.fn(),
+        };
+
+        const runtimeCtxWithDebug = {
+          ...mockRuntimeCtx,
+          scopeEntityLookupDebug: { enabled: true, includeSources: true },
+          entityManager: {
+            getEntityInstance: jest.fn().mockReturnValue(null),
+          },
+          componentRegistry: {
+            getDefinition: jest.fn((defId) => {
+              if (defId === 'item:template123') {
+                return {
+                  components: { 'core:item': { label: 'Template' } },
+                };
+              }
+              return null;
+            }),
+          },
+        };
+
+        const gateway = engine._createEntitiesGateway(runtimeCtxWithDebug, trace);
+        const result = gateway.getItemComponents('template123');
+
+        expect(result).toEqual({
+          components: { 'core:item': { label: 'Template' } },
+          source: 'registry:item',
+        });
+        expect(trace.addLog).toHaveBeenCalledWith(
+          'debug',
+          'ScopeDSL getItemComponents falling back to registry.',
+          'ScopeEngine._createEntitiesGateway',
+          { itemId: 'template123' }
+        );
+        expect(trace.data).toHaveBeenCalledWith(
+          'ScopeDSL entity lookup stats',
+          'ScopeEngine._createEntitiesGateway',
+          expect.objectContaining({
+            entityHits: 0,
+            registryItemHits: 1,
+          })
+        );
+      });
+
+      test('should cache registry misses per key', () => {
+        const componentRegistry = {
+          getDefinition: jest.fn(() => null),
+        };
+
+        const runtimeCtxWithoutEntity = {
+          ...mockRuntimeCtx,
+          entityManager: {
+            getEntityInstance: jest.fn().mockReturnValue(null),
+          },
+          componentRegistry,
+        };
+
+        const gateway = engine._createEntitiesGateway(runtimeCtxWithoutEntity);
+
+        gateway.getItemComponents('ghost_item');
+        gateway.getItemComponents('ghost_item');
+
+        expect(componentRegistry.getDefinition).toHaveBeenCalledTimes(2);
+        expect(componentRegistry.getDefinition).toHaveBeenCalledWith(
+          'item:ghost_item'
+        );
+        expect(componentRegistry.getDefinition).toHaveBeenCalledWith(
+          'clothing:ghost_item'
+        );
+      });
+
+      test('should log missing componentTypeIds data when debug enabled', () => {
+        const logger = {
+          debug: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        };
+
+        const runtimeCtxWithDebugLogger = {
+          ...mockRuntimeCtx,
+          entityManager: {
+            getEntityInstance: jest.fn().mockReturnValue({
+              id: 'item_component_ids',
+              componentTypeIds: ['core:missing'],
+              getComponentData: jest.fn().mockReturnValue(null),
+            }),
+          },
+          logger,
+          scopeEntityLookupDebug: { enabled: true },
+        };
+
+        const gateway = engine._createEntitiesGateway(runtimeCtxWithDebugLogger);
+        const result = gateway.getItemComponents('item_component_ids');
+
+        expect(result).toEqual({});
+        expect(logger.debug).toHaveBeenCalledWith(
+          'ScopeDSL component reconstruction skipped missing data.',
+          expect.objectContaining({
+            itemId: 'item_component_ids',
+            componentId: 'core:missing',
+          })
+        );
+      });
+
+      test('should allow refreshing entity manager without rebuilding gateway', () => {
+        const initialEntityManager = {
+          getEntityInstance: jest.fn(() => ({ id: 'initial-entity' })),
+        };
+        const nextEntityManager = {
+          getEntityInstance: jest.fn(() => ({ id: 'next-entity' })),
+        };
+
+        const runtimeCtxWithCustomManager = {
+          ...mockRuntimeCtx,
+          entityManager: initialEntityManager,
+        };
+
+        const gateway = engine._createEntitiesGateway(runtimeCtxWithCustomManager);
+        expect(gateway.getEntityInstance('entity-id')).toEqual({
+          id: 'initial-entity',
+        });
+
+        gateway.refreshEntityManager(nextEntityManager);
+
+        expect(gateway.getEntityInstance('entity-id')).toEqual({
+          id: 'next-entity',
+        });
+        expect(initialEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
+        expect(nextEntityManager.getEntityInstance).toHaveBeenCalledTimes(1);
+      });
     });
   });
 

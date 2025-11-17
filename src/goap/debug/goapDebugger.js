@@ -21,6 +21,7 @@ class GOAPDebugger {
   #planInspector;
   #stateDiffViewer;
   #refinementTracer;
+  #eventTraceProbe;
   #logger;
   #diagnosticWarningCache;
   #diagnosticsContractVersion;
@@ -40,6 +41,7 @@ class GOAPDebugger {
     planInspector,
     stateDiffViewer,
     refinementTracer,
+    eventTraceProbe,
     logger,
   }) {
     const diagnosticSections = GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections;
@@ -65,6 +67,9 @@ class GOAPDebugger {
     validateDependency(refinementTracer, 'IRefinementTracer', logger, {
       requiredMethods: ['startCapture', 'stopCapture', 'getTrace', 'format'],
     });
+    validateDependency(eventTraceProbe, 'IGoapEventTraceProbe', logger, {
+      requiredMethods: ['record', 'startCapture', 'stopCapture', 'getSnapshot', 'clear'],
+    });
 
     const controllerVersion = goapController.getDiagnosticsContractVersion();
     if (controllerVersion !== GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version) {
@@ -77,6 +82,7 @@ class GOAPDebugger {
     this.#planInspector = planInspector;
     this.#stateDiffViewer = stateDiffViewer;
     this.#refinementTracer = refinementTracer;
+    this.#eventTraceProbe = eventTraceProbe;
     this.#logger = logger;
     this.#diagnosticWarningCache = new Map();
     this.#diagnosticsContractVersion = controllerVersion;
@@ -205,6 +211,8 @@ class GOAPDebugger {
       'GOAPDebugger.startTrace',
       this.#logger
     );
+    this.#eventTraceProbe.clear(actorId);
+    this.#eventTraceProbe.startCapture(actorId);
     this.#refinementTracer.startCapture(actorId);
   }
 
@@ -221,6 +229,7 @@ class GOAPDebugger {
       'GOAPDebugger.stopTrace',
       this.#logger
     );
+    this.#eventTraceProbe.stopCapture(actorId);
     return this.#refinementTracer.stopCapture(actorId);
   }
 
@@ -238,6 +247,21 @@ class GOAPDebugger {
       this.#logger
     );
     return this.#refinementTracer.getTrace(actorId);
+  }
+
+  /**
+   * Get the buffered GOAP event stream for an actor.
+   * @param {string} actorId
+   * @returns {object|null}
+   */
+  getEventStream(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GOAPDebugger.getEventStream',
+      this.#logger
+    );
+    return this.#eventTraceProbe.getSnapshot(actorId);
   }
 
   /**
@@ -344,6 +368,11 @@ class GOAPDebugger {
     );
     report += `\n`;
 
+    const eventStream = this.#eventTraceProbe.getSnapshot(actorId);
+    report += `--- Event Stream ---\n`;
+    report += this.#formatEventStream(eventStream);
+    report += `\n`;
+
     // Current trace (if any)
     const trace = this.getTrace(actorId);
     if (trace) {
@@ -381,8 +410,9 @@ class GOAPDebugger {
       dependencies: this.getDependencyDiagnostics(),
       taskLibraryDiagnostics: diagnostics.taskLibraryDiagnostics,
       planningStateDiagnostics: diagnostics.planningStateDiagnostics,
-       eventComplianceDiagnostics: diagnostics.eventComplianceDiagnostics,
+      eventComplianceDiagnostics: diagnostics.eventComplianceDiagnostics,
       diagnosticsMeta: diagnostics.meta,
+      eventStream: this.#eventTraceProbe.getSnapshot(actorId),
       trace: this.getTrace(actorId),
     };
   }
@@ -592,6 +622,40 @@ class GOAPDebugger {
       );
     } else {
       lines.push('Event payload contract satisfied for this actor.');
+    }
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  #formatEventStream(eventStream) {
+    if (!eventStream) {
+      return 'Event stream capture unavailable. Call GOAPDebugger.startTrace(actorId) before running scenarios.\n';
+    }
+
+    const lines = [];
+    lines.push(`Scope: ${eventStream.actorId}`);
+    lines.push(`Capturing: ${eventStream.capturing ? 'YES' : 'NO'}`);
+    lines.push(`Events Captured: ${eventStream.totalCaptured}`);
+    lines.push(`Violations Recorded: ${eventStream.totalViolations}`);
+
+    if (!eventStream.events || eventStream.events.length === 0) {
+      lines.push('Recent Events: ∅ (enable tracing via GOAPDebugger.startTrace).');
+      return `${lines.join('\n')}\n`;
+    }
+
+    const recent = eventStream.events.slice(-5);
+    lines.push('Recent Events (max 5):');
+    for (const event of recent) {
+      const timestamp = new Date(event.timestamp).toISOString();
+      const violationLabel = event.violation ? ' ⚠ violation' : '';
+      const actorLabel = event.payload?.actorId || event.actorId || 'unknown';
+      const taskLabel = event.payload?.taskId ? ` task=${event.payload.taskId}` : '';
+      lines.push(`  • ${timestamp} :: ${event.type}${violationLabel}`);
+      lines.push(`    actor=${actorLabel}${taskLabel}`);
+      if (event.payload && Object.keys(event.payload).length > 0) {
+        const shortPreview = { ...event.payload };
+        lines.push(`    payload=${JSON.stringify(shortPreview).slice(0, 200)}`);
+      }
     }
 
     return `${lines.join('\n')}\n`;

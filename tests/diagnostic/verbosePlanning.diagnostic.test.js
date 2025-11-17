@@ -91,7 +91,7 @@ describe('Verbose Planning Diagnostic', () => {
     console.log('2. Executing decideTurn...\n');
     await setup.controller.decideTurn(actor, world);
 
-    const events = setup.eventBus.getAll();
+    const events = setup.eventBus.getEvents();
 
     const planningCompleted = events.find(e => e.type === 'goap:planning_completed');
     const planningFailed = events.find(e => e.type === 'goap:planning_failed');

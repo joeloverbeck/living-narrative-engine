@@ -88,7 +88,7 @@ async function main() {
   console.log('1. Executing decideTurn with goal: health >= 80, current: 10\n');
   await setup.controller.decideTurn(actor, world);
 
-  const events = setup.eventBus.getAll();
+  const events = setup.eventBus.getEvents();
 
   console.log(`2. Total events dispatched: ${events.length}\n`);
 
