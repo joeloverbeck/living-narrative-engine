@@ -23,6 +23,7 @@ describe('GOAPDebugger', () => {
       'getDependencyDiagnostics',
       'getTaskLibraryDiagnostics',
       'getPlanningStateDiagnostics',
+      'getEventComplianceDiagnostics',
       'getDiagnosticsContractVersion',
     ]);
     mockController.getTaskLibraryDiagnostics.mockReturnValue({
@@ -44,6 +45,10 @@ describe('GOAPDebugger', () => {
           reason: 'setup',
         },
       ],
+    });
+    mockController.getEventComplianceDiagnostics.mockReturnValue({
+      actor: { actorId: 'actor-1', totalEvents: 0, missingPayloads: 0 },
+      global: { actorId: 'global', totalEvents: 0, missingPayloads: 0 },
     });
     mockController.getDiagnosticsContractVersion.mockReturnValue(
       GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version
@@ -497,6 +502,15 @@ describe('GOAPDebugger', () => {
             }),
           ],
         },
+        eventComplianceDiagnostics: {
+          actor: expect.objectContaining({
+            actorId: 'actor-1',
+            missingPayloads: 0,
+          }),
+          global: expect.objectContaining({
+            actorId: 'global',
+          }),
+        },
         diagnosticsMeta: {
           taskLibrary: expect.objectContaining({
             available: true,
@@ -504,6 +518,10 @@ describe('GOAPDebugger', () => {
           }),
           planningState: expect.objectContaining({
             available: true,
+          }),
+          eventCompliance: expect.objectContaining({
+            available: true,
+            stale: true,
           }),
         },
         trace,

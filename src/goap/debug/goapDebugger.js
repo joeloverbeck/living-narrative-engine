@@ -52,6 +52,7 @@ class GOAPDebugger {
         'getDependencyDiagnostics',
         diagnosticSections.taskLibrary.controllerMethod,
         diagnosticSections.planningState.controllerMethod,
+        diagnosticSections.eventCompliance.controllerMethod,
         'getDiagnosticsContractVersion',
       ],
     });
@@ -336,6 +337,13 @@ class GOAPDebugger {
     );
     report += `\n`;
 
+    report += `--- Event Contract Compliance ---\n`;
+    report += this.#formatEventComplianceDiagnostics(
+      diagnostics.eventComplianceDiagnostics,
+      diagnostics.meta.eventCompliance
+    );
+    report += `\n`;
+
     // Current trace (if any)
     const trace = this.getTrace(actorId);
     if (trace) {
@@ -373,6 +381,7 @@ class GOAPDebugger {
       dependencies: this.getDependencyDiagnostics(),
       taskLibraryDiagnostics: diagnostics.taskLibraryDiagnostics,
       planningStateDiagnostics: diagnostics.planningStateDiagnostics,
+       eventComplianceDiagnostics: diagnostics.eventComplianceDiagnostics,
       diagnosticsMeta: diagnostics.meta,
       trace: this.getTrace(actorId),
     };
@@ -381,10 +390,12 @@ class GOAPDebugger {
   #collectDiagnostics(actorId) {
     const taskLibraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
     const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
+    const eventComplianceDiagnostics = this.#goapController.getEventComplianceDiagnostics(actorId);
 
     return {
       taskLibraryDiagnostics,
       planningStateDiagnostics,
+      eventComplianceDiagnostics,
       meta: {
         taskLibrary: this.#buildDiagnosticsMeta({
           actorId,
@@ -404,6 +415,21 @@ class GOAPDebugger {
               return payload.lastMisses[payload.lastMisses.length - 1].timestamp;
             }
             return null;
+          },
+        }),
+        eventCompliance: this.#buildDiagnosticsMeta({
+          actorId,
+          section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.eventCompliance,
+          payload: eventComplianceDiagnostics,
+          lastUpdatedResolver: (payload) => {
+            if (!payload) {
+              return null;
+            }
+            const timestamps = [
+              payload.actor?.lastViolation?.timestamp,
+              payload.global?.lastViolation?.timestamp,
+            ].filter(Boolean);
+            return timestamps.length > 0 ? Math.max(...timestamps) : null;
           },
         }),
       },
@@ -521,6 +547,51 @@ class GOAPDebugger {
         );
       }
       lines.push('See docs/goap/debugging-tools.md#planning-state-assertions for remediation steps.');
+    }
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  #formatEventComplianceDiagnostics(payload, meta) {
+    if (!meta.available) {
+      return 'Event compliance diagnostics unavailable (ensure goapEventDispatcher is wired).\n';
+    }
+
+    const lines = [];
+    if (meta.stale) {
+      lines.push(
+        `⚠️ STALE — last violation recorded ${meta.lastUpdated || 'unknown'}`
+      );
+    } else if (meta.lastUpdated) {
+      lines.push(`Last violation recorded: ${meta.lastUpdated}`);
+    }
+
+    const formatEntry = (label, entry) => {
+      if (!entry) {
+        lines.push(`${label}: ∅`);
+        return;
+      }
+      lines.push(
+        `${label}: total=${entry.totalEvents ?? 0}, missingPayloads=${entry.missingPayloads ?? 0}`
+      );
+      if (entry.lastViolation) {
+        lines.push(
+          `  Last violation (${entry.lastViolation.code}): event=${entry.lastViolation.eventType}, reason=${entry.lastViolation.reason}`
+        );
+      }
+    };
+
+    formatEntry('Global Totals', payload.global);
+    formatEntry(`Actor (${payload.actor?.actorId || meta.actorId})`, payload.actor);
+
+    const actorViolations = payload.actor?.missingPayloads ?? 0;
+    const globalViolations = payload.global?.missingPayloads ?? 0;
+    if (actorViolations > 0 || globalViolations > 0) {
+      lines.push(
+        '⚠️ Event Contract Violations detected — see docs/goap/debugging-tools.md#Planner Contract Checklist.'
+      );
+    } else {
+      lines.push('Event payload contract satisfied for this actor.');
     }
 
     return `${lines.join('\n')}\n`;

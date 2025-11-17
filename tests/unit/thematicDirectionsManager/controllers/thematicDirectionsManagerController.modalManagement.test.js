@@ -17,6 +17,8 @@ import { ThematicDirectionsManagerController } from '../../../../src/thematicDir
 describe('ThematicDirectionsManagerController - Modal Management', () => {
   let testBase;
   let controller;
+  let originalSetTimeout;
+  let documentActiveElementSpy;
 
   beforeEach(async () => {
     // Initialize test base
@@ -38,18 +40,12 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
     `);
 
     // Setup document mock globals
-    const mockActiveElement = { focus: jest.fn() };
-    global.document = {
-      ...document, // Preserve existing document functionality
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-    };
-
-    // Mock activeElement with a getter
-    Object.defineProperty(global.document, 'activeElement', {
-      get: jest.fn(() => mockActiveElement),
-      configurable: true,
-    });
+    const defaultActiveElement = { focus: jest.fn() };
+    originalSetTimeout = global.setTimeout;
+    jest.spyOn(document, 'addEventListener');
+    jest.spyOn(document, 'removeEventListener');
+    documentActiveElementSpy = jest.spyOn(document, 'activeElement', 'get');
+    documentActiveElementSpy.mockReturnValue(defaultActiveElement);
 
     // Mock setTimeout
     global.setTimeout = jest.fn((callback, delay) => {
@@ -97,7 +93,12 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
   afterEach(async () => {
     await testBase.cleanup();
     jest.restoreAllMocks();
+    if (originalSetTimeout) {
+      global.setTimeout = originalSetTimeout;
+      originalSetTimeout = null;
+    }
   });
+
 
   // Helper function to map element keys to DOM IDs
   /**
@@ -144,7 +145,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
           controller._showElement('confirmationModal', 'flex');
 
           // Setup keyboard handler
-          global.document.addEventListener(
+          document.addEventListener(
             'keydown',
             expect.any(Function),
             true
@@ -377,12 +378,6 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
   });
 
   describe('Keyboard handling', () => {
-    beforeEach(() => {
-      // Make sure document methods are mocked
-      global.document.addEventListener = jest.fn();
-      global.document.removeEventListener = jest.fn();
-    });
-
     it('should setup ESC key handler when modal is shown', () => {
       controller._showConfirmationModal({
         title: 'Test',
@@ -390,7 +385,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
         onConfirm: jest.fn(),
       });
 
-      expect(global.document.addEventListener).toHaveBeenCalledWith(
+      expect(document.addEventListener).toHaveBeenCalledWith(
         'keydown',
         expect.any(Function),
         true
@@ -405,7 +400,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
       });
 
       // Get the event handler from the mock calls
-      const addEventListenerCalls = global.document.addEventListener.mock.calls;
+      const addEventListenerCalls = document.addEventListener.mock.calls;
       const keydownCall = addEventListenerCalls.find(
         (call) => call[0] === 'keydown'
       );
@@ -428,7 +423,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
 
       controller._closeModal();
 
-      expect(global.document.removeEventListener).toHaveBeenCalledWith(
+      expect(document.removeEventListener).toHaveBeenCalledWith(
         'keydown',
         expect.any(Function),
         true
@@ -440,11 +435,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
     it('should track focus when modal is shown', () => {
       const mockActiveElement = { focus: jest.fn() };
 
-      // Mock activeElement for this test
-      Object.defineProperty(global.document, 'activeElement', {
-        get: jest.fn(() => mockActiveElement),
-        configurable: true,
-      });
+      documentActiveElementSpy.mockReturnValue(mockActiveElement);
 
       controller._showConfirmationModal({
         title: 'Test',
@@ -465,11 +456,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
         }),
       };
 
-      // Mock activeElement for this test
-      Object.defineProperty(global.document, 'activeElement', {
-        get: jest.fn(() => mockActiveElement),
-        configurable: true,
-      });
+      documentActiveElementSpy.mockReturnValue(mockActiveElement);
 
       controller._showConfirmationModal({
         title: 'Test',
@@ -498,12 +485,6 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
   });
 
   describe('Cleanup on destroy', () => {
-    beforeEach(() => {
-      // Make sure document methods are mocked
-      global.document.addEventListener = jest.fn();
-      global.document.removeEventListener = jest.fn();
-    });
-
     it('should call _preDestroy without errors', () => {
       // Show modal first to setup some state
       controller._showConfirmationModal({
@@ -567,4 +548,5 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
       );
     });
   });
+
 });

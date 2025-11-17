@@ -5,6 +5,18 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
 
 describe('SpeechPatternsGeneratorController - Character Definition Validation', () => {
   let controller;
@@ -15,6 +27,14 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
   let mockEventBus;
   let mockSchemaValidator;
   let mockElements;
+  let controllerLifecycleOrchestrator;
+  let domElementManager;
+  let eventListenerRegistry;
+  let asyncUtilitiesToolkit;
+  let performanceMonitor;
+  let memoryManager;
+  let errorHandlingStrategy;
+  let validationService;
 
   beforeEach(async () => {
     jest.useFakeTimers();
@@ -117,6 +137,42 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       document.body.appendChild(element);
     });
 
+    // Instantiate shared services required by BaseCharacterBuilderController
+    asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger: mockLogger });
+    eventListenerRegistry = new EventListenerRegistry({
+      logger: mockLogger,
+      asyncUtilities: asyncUtilitiesToolkit,
+    });
+    domElementManager = new DOMElementManager({
+      logger: mockLogger,
+      documentRef: document,
+      performanceRef: performance,
+      elementsRef: {},
+      contextName: 'SpeechPatternsGeneratorController:DOM',
+    });
+    controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+    });
+    performanceMonitor = new PerformanceMonitor({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+    });
+    memoryManager = new MemoryManager({ logger: mockLogger });
+    errorHandlingStrategy = new ErrorHandlingStrategy({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      controllerName: 'SpeechPatternsGeneratorController',
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+    });
+    validationService = new ValidationService({
+      schemaValidator: mockSchemaValidator,
+      logger: mockLogger,
+      handleError: jest.fn(),
+      errorCategories: ERROR_CATEGORIES,
+    });
+
     // Create controller instance
     controller = new SpeechPatternsGeneratorController({
       logger: mockLogger,
@@ -125,6 +181,14 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       schemaValidator: mockSchemaValidator,
       characterBuilderService: mockCharacterBuilderService,
       speechPatternsGenerator: mockSpeechPatternsGenerator,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
     });
 
     // Initialize the controller asynchronously to set up event listeners

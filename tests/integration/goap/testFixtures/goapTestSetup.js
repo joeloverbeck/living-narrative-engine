@@ -25,6 +25,7 @@ import { createEventBusRecorder } from '../testHelpers/eventBusRecorder.js';
 import { buildDualFormatState } from './dualFormatStateBuilder.js';
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
+import { createGoapEventDispatcher } from '../../../../src/goap/debug/goapEventDispatcher.js';
 
 const GOAP_SETUP_ERRORS = {
   INVALID_TASK_REGISTRY: 'GOAP_SETUP_INVALID_TASK_REGISTRY',
@@ -586,7 +587,14 @@ export async function createGoapTestSetup(config = {}) {
     };
   }
 
-  // 9. Create Refinement Engine (real or mock)
+  // 9. Create Event Bus + dispatcher (shared across GOAP subsystems)
+  const eventBus = createEventBusRecorder();
+  const goapEventDispatcher = createGoapEventDispatcher(
+    eventBus,
+    testBed.createMockLogger()
+  );
+
+  // 10. Create Refinement Engine (real or mock)
   let refinementEngine;
   if (mockRefinement) {
     refinementEngine = {
@@ -624,20 +632,17 @@ export async function createGoapTestSetup(config = {}) {
       conditionalStepExecutor,
       contextAssemblyService,
       gameDataRepository,
-      eventBus: createEventBusRecorder(), // Separate event bus for refinement
+      goapEventDispatcher,
       logger: testBed.createMockLogger(),
     });
   }
 
-  // 10. Create Plan Invalidation Detector
+  // 11. Create Plan Invalidation Detector
   const invalidationDetector = new PlanInvalidationDetector({
     logger: testBed.createMockLogger(),
     jsonLogicEvaluationService: jsonLogicService,
     dataRegistry,
   });
-
-  // 11. Create Event Bus (recording for verification)
-  const eventBus = createEventBusRecorder();
 
   // 12. Create GOAP Controller
   const controller = new GoapController({
@@ -648,6 +653,7 @@ export async function createGoapTestSetup(config = {}) {
     jsonLogicService,
     dataRegistry,
     eventBus,
+    goapEventDispatcher,
     logger: testBed.createMockLogger(),
     parameterResolutionService,
   });

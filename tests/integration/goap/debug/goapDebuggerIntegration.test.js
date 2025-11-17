@@ -34,6 +34,10 @@ describe('GOAPDebugger Integration', () => {
       getDependencyDiagnostics: jest.fn().mockReturnValue([]),
       getTaskLibraryDiagnostics: jest.fn().mockReturnValue(null),
       getPlanningStateDiagnostics: jest.fn().mockReturnValue(null),
+      getEventComplianceDiagnostics: jest.fn().mockReturnValue({
+        actor: { actorId: 'test-actor', totalEvents: 0, missingPayloads: 0 },
+        global: { actorId: 'global', totalEvents: 0, missingPayloads: 0 },
+      }),
       getDiagnosticsContractVersion: jest
         .fn()
         .mockReturnValue(GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version),
@@ -236,7 +240,7 @@ describe('GOAPDebugger Integration', () => {
       expect(report).toContain('Planning State Diagnostics');
       expect(report).toContain('End Report');
       expect(report).toContain('No task library diagnostics captured.');
-      expect(report).toContain('No planning-state misses recorded');
+      expect(report).toContain('No planning-state diagnostics captured');
     });
 
     it('should generate JSON report with all data', () => {

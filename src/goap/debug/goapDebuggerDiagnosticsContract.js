@@ -1,5 +1,5 @@
 export const GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT = {
-  version: '1.0.0',
+  version: '1.1.0',
   sections: {
     taskLibrary: {
       id: 'taskLibrary',
@@ -10,6 +10,11 @@ export const GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT = {
       id: 'planningState',
       label: 'Planning State Diagnostics',
       controllerMethod: 'getPlanningStateDiagnostics',
+    },
+    eventCompliance: {
+      id: 'eventCompliance',
+      label: 'Event Contract Compliance',
+      controllerMethod: 'getEventComplianceDiagnostics',
     },
   },
   missingWarningCode: 'GOAP_DEBUGGER_DIAGNOSTICS_MISSING',

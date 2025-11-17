@@ -425,31 +425,25 @@ describe('RefinementEngine E2E Tests', () => {
 
       // Assert: Events dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        GOAP_EVENTS.REFINEMENT_STARTED,
         expect.objectContaining({
-          type: GOAP_EVENTS.REFINEMENT_STARTED,
-          payload: expect.objectContaining({
-            taskId: 'core:consume_nourishing_item',
-            actorId,
-          }),
+          taskId: 'core:consume_nourishing_item',
+          actorId,
         })
       );
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        GOAP_EVENTS.METHOD_SELECTED,
         expect.objectContaining({
-          type: GOAP_EVENTS.METHOD_SELECTED,
-          payload: expect.objectContaining({
-            methodId: 'core:consume_nourishing_item.inventory_consumption',
-          }),
+          methodId: 'core:consume_nourishing_item.inventory_consumption',
         })
       );
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        GOAP_EVENTS.REFINEMENT_COMPLETED,
         expect.objectContaining({
-          type: GOAP_EVENTS.REFINEMENT_COMPLETED,
-          payload: expect.objectContaining({
-            success: true,
-            stepsExecuted: 3,
-          }),
+          success: true,
+          stepsExecuted: 3,
         })
       );
 
@@ -606,8 +600,9 @@ describe('RefinementEngine E2E Tests', () => {
 
       // Assert: Error event dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        GOAP_EVENTS.REFINEMENT_FAILED,
         expect.objectContaining({
-          type: GOAP_EVENTS.REFINEMENT_FAILED,
+          taskId: 'nonexistent:task',
         })
       );
     });

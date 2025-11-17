@@ -536,6 +536,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
         getThematicDirectionsByConceptId: jest.fn().mockResolvedValue([]),
         getOrphanedThematicDirections: jest.fn().mockResolvedValue([]),
+        deleteThematicDirection: jest.fn().mockResolvedValue(true),
         saveCoreMotivations: jest.fn().mockResolvedValue([]),
         getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
         removeCoreMotivationItem: jest.fn().mockResolvedValue(true),

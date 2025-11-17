@@ -74,6 +74,106 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   }
 
   /**
+   * Create a full dependency bundle for controller instantiation.
+   * Tests can override individual dependencies when needed.
+   *
+   * @param {object} overrides
+   * @returns {object}
+   */
+  createControllerDependencies(overrides = {}) {
+    const defaultDependencies = {
+      logger: this.logger,
+      characterBuilderService: this.mockCharacterBuilderService,
+      eventBus: this.mockEventBus,
+      schemaValidator: this.mockSchemaValidator,
+      clicheGenerator: this.mockClicheGenerator,
+      controllerLifecycleOrchestrator:
+        overrides.controllerLifecycleOrchestrator ??
+        new ControllerLifecycleOrchestrator({
+          logger: this.logger,
+          eventBus: this.mockEventBus,
+        }),
+      domElementManager:
+        overrides.domElementManager ??
+        new DOMElementManager({
+          logger: this.logger,
+          documentRef: document,
+          performanceRef:
+            typeof performance !== 'undefined'
+              ? performance
+              : { now: () => Date.now() },
+          elementsRef: {},
+          contextName: 'ClichesGeneratorControllerTestBed',
+        }),
+      eventListenerRegistry:
+        overrides.eventListenerRegistry ??
+        {
+          register: jest.fn(),
+          registerAll: jest.fn(),
+          unregisterAll: jest.fn(),
+          getRegisteredCount: jest.fn().mockReturnValue(0),
+          setContextName: jest.fn(),
+        },
+      asyncUtilitiesToolkit:
+        overrides.asyncUtilitiesToolkit ??
+        {
+          setTimeout: jest.fn((fn, delay) => setTimeout(fn, delay)),
+          setInterval: jest.fn((fn, delay) => setInterval(fn, delay)),
+          clearTimeout: jest.fn((id) => clearTimeout(id)),
+          clearInterval: jest.fn((id) => clearInterval(id)),
+          requestAnimationFrame: jest.fn((fn) => requestAnimationFrame(fn)),
+          cancelAnimationFrame: jest.fn((id) => cancelAnimationFrame(id)),
+          debounce: jest.fn((fn) => fn),
+          throttle: jest.fn((fn) => fn),
+        },
+      performanceMonitor:
+        overrides.performanceMonitor ??
+        {
+          trackOperation: jest.fn().mockResolvedValue(undefined),
+          getMetrics: jest.fn().mockReturnValue({}),
+          clearMetrics: jest.fn(),
+        },
+      memoryManager:
+        overrides.memoryManager ??
+        {
+          createWeakRef: jest.fn((obj) => ({ deref: () => obj })),
+          getAllRefs: jest.fn().mockReturnValue([]),
+          clearAllRefs: jest.fn(),
+        },
+      errorHandlingStrategy:
+        overrides.errorHandlingStrategy ??
+        {
+          handleError: jest.fn(),
+          showError: jest.fn(),
+          dispatchErrorEvent: jest.fn(),
+        },
+      validationService:
+        overrides.validationService ??
+        {
+          validateData: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+          handleValidationError: jest.fn(),
+        },
+    };
+
+    return {
+      ...defaultDependencies,
+      ...overrides,
+    };
+  }
+
+  /**
+   * Create a controller instance with the default dependency bundle.
+   *
+   * @param {object} overrides
+   * @returns {ClichesGeneratorController}
+   */
+  createController(overrides = {}) {
+    return new ClichesGeneratorController(
+      this.createControllerDependencies(overrides)
+    );
+  }
+
+  /**
    * Override setup to initialize the controller
    */
   async setup() {
@@ -96,82 +196,8 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       );
     }
 
-    // Create required services for BaseCharacterBuilderController
-    const controllerLifecycleOrchestrator =
-      new ControllerLifecycleOrchestrator({
-        logger: this.logger,
-        eventBus: this.mockEventBus,
-      });
-
-    const domElementManager = new DOMElementManager({
-      logger: this.logger,
-      documentRef: document,
-      performanceRef:
-        typeof performance !== 'undefined'
-          ? performance
-          : { now: () => Date.now() },
-      elementsRef: {},
-      contextName: 'ClichesGeneratorControllerTestBed',
-    });
-
-    const mockEventListenerRegistry = {
-      register: jest.fn(),
-      registerAll: jest.fn(),
-      unregisterAll: jest.fn(),
-      getRegisteredCount: jest.fn().mockReturnValue(0),
-      setContextName: jest.fn(),
-    };
-
-    const mockAsyncUtilitiesToolkit = {
-      setTimeout: jest.fn((fn, delay) => setTimeout(fn, delay)),
-      setInterval: jest.fn((fn, delay) => setInterval(fn, delay)),
-      clearTimeout: jest.fn((id) => clearTimeout(id)),
-      clearInterval: jest.fn((id) => clearInterval(id)),
-      requestAnimationFrame: jest.fn((fn) => requestAnimationFrame(fn)),
-      cancelAnimationFrame: jest.fn((id) => cancelAnimationFrame(id)),
-      debounce: jest.fn((fn) => fn),
-      throttle: jest.fn((fn) => fn),
-    };
-
-    const mockPerformanceMonitor = {
-      trackOperation: jest.fn().mockResolvedValue(undefined),
-      getMetrics: jest.fn().mockReturnValue({}),
-      clearMetrics: jest.fn(),
-    };
-
-    const mockMemoryManager = {
-      createWeakRef: jest.fn((obj) => ({ deref: () => obj })),
-      getAllRefs: jest.fn().mockReturnValue([]),
-      clearAllRefs: jest.fn(),
-    };
-
-    const mockErrorHandlingStrategy = {
-      handleError: jest.fn(),
-      showError: jest.fn(),
-      dispatchErrorEvent: jest.fn(),
-    };
-
-    const mockValidationService = {
-      validateData: jest.fn().mockReturnValue({ valid: true, errors: [] }),
-      handleValidationError: jest.fn(),
-    };
-
     // Then create controller instance with DOM already in place
-    this.controller = new ClichesGeneratorController({
-      logger: this.logger,
-      characterBuilderService: this.mockCharacterBuilderService,
-      eventBus: this.mockEventBus,
-      schemaValidator: this.mockSchemaValidator,
-      clicheGenerator: this.mockClicheGenerator,
-      controllerLifecycleOrchestrator,
-      domElementManager,
-      eventListenerRegistry: mockEventListenerRegistry,
-      asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
-      performanceMonitor: mockPerformanceMonitor,
-      memoryManager: mockMemoryManager,
-      errorHandlingStrategy: mockErrorHandlingStrategy,
-      validationService: mockValidationService,
-    });
+    this.controller = this.createController();
 
     this._controllerInitializeWrapped = false;
     this._wrapControllerInitialize();
@@ -1235,78 +1261,8 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     // Recreate DOM structure
     this.createDOMStructure();
 
-    // Create required services for BaseCharacterBuilderController
-    const controllerLifecycleOrchestrator =
-      new ControllerLifecycleOrchestrator({
-        logger: this.logger,
-        eventBus: this.mockEventBus,
-      });
-
-    const mockDomElementManager = {
-      cacheElement: jest.fn(),
-      cacheElements: jest.fn(),
-      getElement: jest.fn(),
-      getAllElements: jest.fn().mockReturnValue({}),
-      clearCache: jest.fn(),
-    };
-
-    const mockEventListenerRegistry = {
-      register: jest.fn(),
-      registerAll: jest.fn(),
-      unregisterAll: jest.fn(),
-      getRegisteredCount: jest.fn().mockReturnValue(0),
-    };
-
-    const mockAsyncUtilitiesToolkit = {
-      setTimeout: jest.fn((fn, delay) => setTimeout(fn, delay)),
-      setInterval: jest.fn((fn, delay) => setInterval(fn, delay)),
-      clearTimeout: jest.fn((id) => clearTimeout(id)),
-      clearInterval: jest.fn((id) => clearInterval(id)),
-      requestAnimationFrame: jest.fn((fn) => requestAnimationFrame(fn)),
-      cancelAnimationFrame: jest.fn((id) => cancelAnimationFrame(id)),
-      debounce: jest.fn((fn) => fn),
-      throttle: jest.fn((fn) => fn),
-    };
-
-    const mockPerformanceMonitor = {
-      trackOperation: jest.fn().mockResolvedValue(undefined),
-      getMetrics: jest.fn().mockReturnValue({}),
-      clearMetrics: jest.fn(),
-    };
-
-    const mockMemoryManager = {
-      createWeakRef: jest.fn((obj) => ({ deref: () => obj })),
-      getAllRefs: jest.fn().mockReturnValue([]),
-      clearAllRefs: jest.fn(),
-    };
-
-    const mockErrorHandlingStrategy = {
-      handleError: jest.fn(),
-      showError: jest.fn(),
-      dispatchErrorEvent: jest.fn(),
-    };
-
-    const mockValidationService = {
-      validateData: jest.fn().mockReturnValue({ valid: true, errors: [] }),
-      handleValidationError: jest.fn(),
-    };
-
     // Recreate controller with same mocks
-    this.controller = new ClichesGeneratorController({
-      logger: this.logger,
-      characterBuilderService: this.mockCharacterBuilderService,
-      eventBus: this.mockEventBus,
-      schemaValidator: this.mockSchemaValidator,
-      clicheGenerator: this.mockClicheGenerator,
-      controllerLifecycleOrchestrator,
-      domElementManager: mockDomElementManager,
-      eventListenerRegistry: mockEventListenerRegistry,
-      asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
-      performanceMonitor: mockPerformanceMonitor,
-      memoryManager: mockMemoryManager,
-      errorHandlingStrategy: mockErrorHandlingStrategy,
-      validationService: mockValidationService,
-    });
+    this.controller = this.createController();
 
     this._controllerInitializeWrapped = false;
     this._wrapControllerInitialize();

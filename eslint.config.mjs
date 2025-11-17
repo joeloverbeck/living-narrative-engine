@@ -107,6 +107,22 @@ export default [
     },
   },
 
+  // 3b. GOAP-specific safety rails
+  {
+    files: ['src/goap/**/*.js'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'CallExpression[callee.property.name="dispatch"][arguments.length=1][arguments.0.type="ObjectExpression"]',
+          message:
+            'GOAP events must call dispatch(eventType, payload). Import createGoapEventDispatcher() and pass payload as the second argument.',
+        },
+      ],
+    },
+  },
+
   // 4. Global configuration for your BROWSER source files
   {
     files: ['**/*.js', '**/*.mjs'],

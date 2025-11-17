@@ -53,18 +53,15 @@ export function recordPlanningStateMiss(payload) {
   }
 
   if (eventBus) {
-    eventBus.dispatch({
-      type: GOAP_EVENTS.STATE_MISS,
-      payload: {
-        actorId,
-        path: miss.path,
-        entityId: miss.entityId,
-        componentId: miss.componentId,
-        origin: miss.origin,
-        goalId: miss.goalId,
-        taskId: miss.taskId,
-        reason: miss.reason,
-      },
+    eventBus.dispatch(GOAP_EVENTS.STATE_MISS, {
+      actorId,
+      path: miss.path,
+      entityId: miss.entityId,
+      componentId: miss.componentId,
+      origin: miss.origin,
+      goalId: miss.goalId,
+      taskId: miss.taskId,
+      reason: miss.reason,
     });
   }
 
