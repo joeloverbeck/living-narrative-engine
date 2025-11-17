@@ -26,6 +26,7 @@ import { buildDualFormatState } from './dualFormatStateBuilder.js';
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
 import { createGoapEventDispatcher } from '../../../../src/goap/debug/goapEventDispatcher.js';
+import { createGoapEventTraceProbe } from '../../../../src/goap/debug/goapEventTraceProbe.js';
 
 const GOAP_SETUP_ERRORS = {
   INVALID_TASK_REGISTRY: 'GOAP_SETUP_INVALID_TASK_REGISTRY',
@@ -420,6 +421,7 @@ export async function createGoapTestSetup(config = {}) {
     enableGoapSetupGuards = true,
     eventTraceProbe = null,
     eventTraceProbes = null,
+    autoAttachEventTraceProbe = true,
   } = config;
 
   const testBed = createTestBed();
@@ -606,11 +608,21 @@ export async function createGoapTestSetup(config = {}) {
     ...normalizeProbeList(eventTraceProbe),
     ...normalizeProbeList(eventTraceProbes),
   ];
+  let defaultEventTraceProbeInstance = null;
+  let defaultEventTraceProbeDetach = null;
+  const shouldAutoAttachTraceProbe = autoAttachEventTraceProbe !== false;
+  if (initialProbes.length === 0 && shouldAutoAttachTraceProbe) {
+    defaultEventTraceProbeInstance = createGoapEventTraceProbe({
+      logger: testBed.createMockLogger(),
+    });
+    initialProbes.push(defaultEventTraceProbeInstance);
+  }
 
   const eventBus = createEventBusMock();
+  const goapEventDispatcherLogger = testBed.createMockLogger();
   const goapEventDispatcher = createGoapEventDispatcher(
     eventBus,
-    testBed.createMockLogger(),
+    goapEventDispatcherLogger,
     initialProbes.length > 0 ? { probes: initialProbes } : undefined
   );
 
@@ -622,6 +634,26 @@ export async function createGoapTestSetup(config = {}) {
       return goapEventDispatcher.registerProbe(probe);
     }
     throw new Error('GOAP event dispatcher does not support dynamic probe registration');
+  };
+
+  const bootstrapEventTraceProbe = ({ logger, forceNew } = {}) => {
+    if (!forceNew && defaultEventTraceProbeInstance) {
+      return {
+        probe: defaultEventTraceProbeInstance,
+        detach: defaultEventTraceProbeDetach,
+      };
+    }
+
+    const probeLogger = logger ?? testBed.createMockLogger();
+    const probe = createGoapEventTraceProbe({ logger: probeLogger });
+    const detach = attachEventTraceProbe(probe);
+
+    if (!forceNew && !defaultEventTraceProbeInstance) {
+      defaultEventTraceProbeInstance = probe;
+      defaultEventTraceProbeDetach = detach;
+    }
+
+    return { probe, detach };
   };
 
   // 10. Create Refinement Engine (real or mock)
@@ -719,7 +751,10 @@ export async function createGoapTestSetup(config = {}) {
     effectsSimulator,
     heuristicRegistry,
     goapEventDispatcher,
+    goapEventDispatcherLogger,
     attachEventTraceProbe,
+    bootstrapEventTraceProbe,
+    defaultEventTraceProbe: defaultEventTraceProbeInstance,
     // Helper methods
     createActor,
     registerGoal,

@@ -3,6 +3,7 @@ import { ThematicDirectionsManagerController } from './controllers/thematicDirec
 import { tokens } from '../dependencyInjection/tokens.js';
 import { Registrar } from '../utils/registrarHelpers.js';
 import { UIStateManager } from '../shared/characterBuilder/uiStateManager.js';
+import { shouldAutoInitializeDom } from '../utils/environmentUtils.js';
 
 /**
  * Character Builder Events for thematic directions manager
@@ -222,7 +223,7 @@ class ThematicDirectionsManagerApp {
  * Initialize application when DOM is ready
  */
 function initializeWhenReady() {
-  if (typeof document === 'undefined') {
+  if (!shouldAutoInitializeDom()) {
     return;
   }
 
@@ -253,8 +254,6 @@ async function initialize() {
   }
 }
 
-if (typeof document !== 'undefined') {
-  initializeWhenReady();
-}
+initializeWhenReady();
 
 export { ThematicDirectionsManagerApp };

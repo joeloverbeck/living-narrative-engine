@@ -13,7 +13,6 @@ import GOAPDebugger from '../../../src/goap/debug/goapDebugger.js';
 import PlanInspector from '../../../src/goap/debug/planInspector.js';
 import StateDiffViewer from '../../../src/goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../../src/goap/debug/refinementTracer.js';
-import { createGoapEventTraceProbe } from '../../../src/goap/debug/goapEventTraceProbe.js';
 
 /**
  * Helper to add flattened component aliases to an actor entity.
@@ -135,16 +134,15 @@ describe('Numeric Goal Planning - Hunger System', () => {
       gameDataRepository: setup.gameDataRepository,
       logger,
     });
-    eventTraceProbe = createGoapEventTraceProbe({ logger });
-    if (typeof setup.attachEventTraceProbe === 'function') {
-      detachProbeHandle = setup.attachEventTraceProbe(eventTraceProbe);
-    }
+    ({ probe: eventTraceProbe, detach: detachProbeHandle } =
+      setup.bootstrapEventTraceProbe());
     goapDebugger = new GOAPDebugger({
       goapController: setup.controller,
       planInspector,
       stateDiffViewer,
       refinementTracer,
       eventTraceProbe,
+      goapEventDispatcher: setup.goapEventDispatcher,
       logger,
     });
   });

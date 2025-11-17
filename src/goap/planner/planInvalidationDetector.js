@@ -169,7 +169,14 @@ class PlanInvalidationDetector {
         };
       }
 
-      const planningPreconditions = normalizePlanningPreconditions(taskDefinition, this.#logger);
+      const planningPreconditions = normalizePlanningPreconditions(
+        taskDefinition,
+        this.#logger,
+        {
+          actorId: context.actorId,
+          origin: 'PlanInvalidationDetector.checkPlanValidity',
+        }
+      );
 
       // 6.2 Check if task has preconditions
       if (planningPreconditions.length === 0) {

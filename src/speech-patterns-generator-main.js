@@ -7,6 +7,7 @@ import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBo
 import { SpeechPatternsGeneratorController } from './characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 import { LLMSelectionPersistence } from './llms/services/llmSelectionPersistence.js';
 import { tokens } from './dependencyInjection/tokens.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Update the LLM status display on the page
@@ -75,7 +76,7 @@ async function initializeSpeechPatternsGenerator() {
 }
 
 // Initialize when DOM is ready
-if (typeof document !== 'undefined') {
+if (shouldAutoInitializeDom()) {
   if (document.readyState === 'loading') {
     document.addEventListener(
       'DOMContentLoaded',

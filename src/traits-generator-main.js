@@ -6,6 +6,7 @@
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { TraitsGeneratorController } from './characterBuilder/controllers/TraitsGeneratorController.js';
 import { TraitsDisplayEnhancer } from './characterBuilder/services/TraitsDisplayEnhancer.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Initialize the Traits Generator application
@@ -49,7 +50,7 @@ const initializeApp = async () => {
 };
 
 // Initialize when DOM is loaded
-if (typeof document !== 'undefined') {
+if (shouldAutoInitializeDom()) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
   } else {

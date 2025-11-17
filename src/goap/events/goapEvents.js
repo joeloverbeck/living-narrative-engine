@@ -63,6 +63,12 @@ export const GOAP_EVENTS = {
   PLAN_INVALIDATED: 'goap:plan_invalidated',
 
   /**
+   * Dispatched when legacy `preconditions` are auto-normalized for a task
+   * Payload: { actorId?, taskId, sourceField: 'preconditions', normalizedCount, timestamp }
+   */
+  TASK_PRECONDITIONS_NORMALIZED: 'goap:task_preconditions_normalized',
+
+  /**
    * Dispatched when replanning starts after invalidation
    * Payload: { goalId, previousStep }
    */

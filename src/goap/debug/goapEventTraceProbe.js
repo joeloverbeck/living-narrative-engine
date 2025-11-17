@@ -76,6 +76,7 @@ export function createGoapEventTraceProbe(options = {}) {
   const globalEvents = [];
   let totalRecorded = 0;
   let totalViolations = 0;
+  let attachedAtLeastOnce = false;
 
   const ensureActorBuffer = (actorId) => {
     if (actorId === GLOBAL_ACTOR_ID) {
@@ -141,6 +142,7 @@ export function createGoapEventTraceProbe(options = {}) {
     const normalized = normalizeActorId(actorId);
     activeActors.add(normalized);
     ensureActorBuffer(normalized);
+    attachedAtLeastOnce = true;
     safeLogger.debug(`GOAP event trace capture enabled for ${normalized}`);
   };
 
@@ -224,6 +226,7 @@ export function createGoapEventTraceProbe(options = {}) {
       return {
         totalRecorded,
         totalViolations,
+        attachedAtLeastOnce,
       };
     },
   };

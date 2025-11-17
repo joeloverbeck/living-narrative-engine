@@ -8,6 +8,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { deepClone } from '../../utils/cloneUtils.js';
 import { createPlanningStateView } from './planningStateView.js';
+import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
 
 /**
  * Relaxed Planning Graph Heuristic
@@ -245,14 +246,22 @@ class RelaxedPlanningGraphHeuristic {
    * @returns {boolean} True if all preconditions satisfied
    */
   #checkPreconditions(task, stateView) {
+    const normalizedPreconditions = normalizePlanningPreconditions(
+      task,
+      this.#logger,
+      {
+        origin: 'RelaxedPlanningGraphHeuristic.#checkPreconditions',
+      }
+    );
+
     // Tasks without preconditions are always applicable
-    if (!task.planningPreconditions || task.planningPreconditions.length === 0) {
+    if (normalizedPreconditions.length === 0) {
       return true;
     }
 
     const evaluationContext = stateView.getEvaluationContext();
 
-    for (const preconditionObj of task.planningPreconditions) {
+    for (const preconditionObj of normalizedPreconditions) {
       try {
         const condition = preconditionObj.condition;
         if (!condition) {

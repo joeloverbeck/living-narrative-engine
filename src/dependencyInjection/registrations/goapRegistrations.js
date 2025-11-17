@@ -323,6 +323,7 @@ export function registerGoapServices(container) {
       tokens.IStateDiffViewer,
       tokens.IRefinementTracer,
       tokens.IGoapEventTraceProbe,
+      tokens.IGoapEventDispatcher,
       tokens.ILogger,
     ],
     lifecycle: 'singleton',

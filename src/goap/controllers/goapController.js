@@ -255,10 +255,57 @@ class GoapController {
       return;
     }
 
-    this.#taskLibraryDiagnostics.set(actorId, {
-      ...diagnostics,
-      timestamp: Date.now(),
+    const timestamp = Date.now();
+    const normalizationEntriesSource = Array.isArray(
+      diagnostics.preconditionNormalizations
+    )
+      ? diagnostics.preconditionNormalizations
+      : [];
+    const normalizationEntries = normalizationEntriesSource.map((entry) => {
+      try {
+        return JSON.parse(JSON.stringify(entry));
+      } catch (error) {
+        return {
+          ...entry,
+          normalizedPreconditions: Array.isArray(entry?.normalizedPreconditions)
+            ? entry.normalizedPreconditions.map((precondition) => ({
+                ...precondition,
+              }))
+            : [],
+        };
+      }
     });
+
+    const enrichedDiagnostics = {
+      ...diagnostics,
+      timestamp,
+      preconditionNormalizations: normalizationEntries,
+    };
+
+    this.#taskLibraryDiagnostics.set(actorId, enrichedDiagnostics);
+
+    for (const entry of normalizationEntries) {
+      const payload = {
+        actorId: entry.actorId ?? actorId,
+        taskId: entry.taskId,
+        sourceField: entry.sourceField,
+        normalizedCount:
+          typeof entry.normalizedCount === 'number'
+            ? entry.normalizedCount
+            : entry.normalizedPreconditions.length,
+        timestamp: entry.timestamp ?? timestamp,
+      };
+
+      this.#dispatchEvent(
+        GOAP_EVENTS.TASK_PRECONDITIONS_NORMALIZED,
+        payload,
+        {
+          actorId: payload.actorId,
+          goalId: entry.goalId ?? undefined,
+          taskId: entry.taskId ?? undefined,
+        }
+      );
+    }
   }
 
   /**

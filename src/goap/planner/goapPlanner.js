@@ -315,6 +315,7 @@ class GoapPlanner {
         : [],
       missingActors: [],
       errors: [],
+      preconditionNormalizations: [],
     };
 
     // 1. Get all tasks from repository
@@ -581,7 +582,16 @@ class GoapPlanner {
       }
 
 
-      const planningPreconditions = normalizePlanningPreconditions(task, this.#logger);
+      const planningPreconditions = normalizePlanningPreconditions(
+        task,
+        this.#logger,
+        {
+          diagnostics: this.#lastTaskLibraryDiagnostics,
+          actorId,
+          goalId: goal?.id ?? null,
+          origin: 'GoapPlanner.#getApplicableTasks',
+        }
+      );
 
       // Check planning preconditions
       if (planningPreconditions.length > 0) {
@@ -827,6 +837,9 @@ class GoapPlanner {
 
     const cloned = deepClone(diagnostics);
     cloned.warnings = Array.isArray(cloned.warnings) ? [...cloned.warnings] : [];
+    if (!Array.isArray(cloned.preconditionNormalizations)) {
+      cloned.preconditionNormalizations = [];
+    }
     this.#externalTaskLibraryDiagnostics = cloned;
   }
 

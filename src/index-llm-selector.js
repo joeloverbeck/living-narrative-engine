@@ -9,6 +9,7 @@ import { LLMSelectionPersistence } from './llms/services/llmSelectionPersistence
 import { tokens } from './dependencyInjection/tokens.js';
 import { LlmSelectionModal } from './domUI/llmSelectionModal.js';
 import DocumentContext from './domUI/documentContext.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Simple controller for the index page LLM selector
@@ -161,7 +162,7 @@ async function initializeLLMSelector() {
 }
 
 // Initialize when DOM is ready
-if (typeof document !== 'undefined') {
+if (shouldAutoInitializeDom()) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeLLMSelector);
   } else {

@@ -28,6 +28,7 @@ describe('GOAPDebugger Integration', () => {
   let planInspector;
   let stateDiffViewer;
   let refinementTracer;
+  let mockGoapEventDispatcher;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -93,6 +94,17 @@ describe('GOAPDebugger Integration', () => {
       logger 
     });
 
+    mockGoapEventDispatcher = {
+      getProbeDiagnostics: jest.fn().mockReturnValue({
+        totalRegistered: 1,
+        totalAttachedEver: 1,
+        totalDetached: 0,
+        lastAttachedAt: Date.now(),
+        lastDetachedAt: null,
+        hasProbes: true,
+      }),
+    };
+
     eventTraceProbe = {
       record: jest.fn(),
       startCapture: jest.fn(),
@@ -114,6 +126,7 @@ describe('GOAPDebugger Integration', () => {
       stateDiffViewer,
       refinementTracer,
       eventTraceProbe,
+      goapEventDispatcher: mockGoapEventDispatcher,
       logger,
     });
   });
@@ -210,6 +223,7 @@ describe('GOAPDebugger Integration', () => {
       stateDiffViewer,
       refinementTracer,
       eventTraceProbe: traceProbe,
+      goapEventDispatcher: goapDispatcher,
       logger,
     });
 

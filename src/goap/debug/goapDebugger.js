@@ -22,9 +22,12 @@ class GOAPDebugger {
   #stateDiffViewer;
   #refinementTracer;
   #eventTraceProbe;
+  #goapEventDispatcherDiagnostics;
   #logger;
   #diagnosticWarningCache;
   #diagnosticsContractVersion;
+  #captureWarningByActor;
+  #probeDiagnosticsErrorLogged;
 
   /**
    * Creates a new GOAPDebugger instance.
@@ -42,6 +45,7 @@ class GOAPDebugger {
     stateDiffViewer,
     refinementTracer,
     eventTraceProbe,
+    goapEventDispatcher,
     logger,
   }) {
     const diagnosticSections = GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections;
@@ -70,6 +74,11 @@ class GOAPDebugger {
     validateDependency(eventTraceProbe, 'IGoapEventTraceProbe', logger, {
       requiredMethods: ['record', 'startCapture', 'stopCapture', 'getSnapshot', 'clear'],
     });
+    if (goapEventDispatcher) {
+      validateDependency(goapEventDispatcher, 'IGoapEventDispatcher', logger, {
+        requiredMethods: ['getProbeDiagnostics'],
+      });
+    }
 
     const controllerVersion = goapController.getDiagnosticsContractVersion();
     if (controllerVersion !== GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version) {
@@ -83,9 +92,12 @@ class GOAPDebugger {
     this.#stateDiffViewer = stateDiffViewer;
     this.#refinementTracer = refinementTracer;
     this.#eventTraceProbe = eventTraceProbe;
+    this.#goapEventDispatcherDiagnostics = goapEventDispatcher || null;
     this.#logger = logger;
     this.#diagnosticWarningCache = new Map();
     this.#diagnosticsContractVersion = controllerVersion;
+    this.#captureWarningByActor = new Map();
+    this.#probeDiagnosticsErrorLogged = false;
   }
 
   // ==================== Plan Inspection ====================
@@ -211,6 +223,7 @@ class GOAPDebugger {
       'GOAPDebugger.startTrace',
       this.#logger
     );
+    this.#checkProbeDiagnostics(actorId);
     this.#eventTraceProbe.clear(actorId);
     this.#eventTraceProbe.startCapture(actorId);
     this.#refinementTracer.startCapture(actorId);
@@ -261,7 +274,14 @@ class GOAPDebugger {
       'GOAPDebugger.getEventStream',
       this.#logger
     );
-    return this.#eventTraceProbe.getSnapshot(actorId);
+    const snapshot = this.#eventTraceProbe.getSnapshot(actorId);
+    if (this.#isCaptureDisabled(actorId)) {
+      return {
+        ...snapshot,
+        captureDisabled: true,
+      };
+    }
+    return snapshot;
   }
 
   /**
@@ -368,7 +388,7 @@ class GOAPDebugger {
     );
     report += `\n`;
 
-    const eventStream = this.#eventTraceProbe.getSnapshot(actorId);
+    const eventStream = this.getEventStream(actorId);
     report += `--- Event Stream ---\n`;
     report += this.#formatEventStream(eventStream);
     report += `\n`;
@@ -412,9 +432,68 @@ class GOAPDebugger {
       planningStateDiagnostics: diagnostics.planningStateDiagnostics,
       eventComplianceDiagnostics: diagnostics.eventComplianceDiagnostics,
       diagnosticsMeta: diagnostics.meta,
-      eventStream: this.#eventTraceProbe.getSnapshot(actorId),
+      eventStream: this.getEventStream(actorId),
       trace: this.getTrace(actorId),
     };
+  }
+
+  #checkProbeDiagnostics(actorId) {
+    const diagnostics = this.#readProbeDiagnostics();
+    if (!diagnostics) {
+      this.#clearActorCaptureWarning(actorId);
+      return;
+    }
+
+    if (diagnostics.hasProbes) {
+      this.#clearActorCaptureWarning(actorId);
+      return;
+    }
+
+    const existing = this.#captureWarningByActor.get(actorId);
+    if (!existing || existing.captureDisabled !== true) {
+      this.#logger.warn(
+        'GOAPDebugger trace requested but no GOAP event trace probes are attached. Call attachEventTraceProbe() or bootstrapEventTraceProbe().',
+        {
+          actorId,
+          code: 'GOAP_DEBUGGER_TRACE_PROBE_FALLBACK',
+        }
+      );
+    }
+    this.#captureWarningByActor.set(actorId, {
+      captureDisabled: true,
+      lastChecked: Date.now(),
+    });
+  }
+
+  #readProbeDiagnostics() {
+    if (!this.#goapEventDispatcherDiagnostics) {
+      return null;
+    }
+    try {
+      return this.#goapEventDispatcherDiagnostics.getProbeDiagnostics();
+    } catch (error) {
+      if (!this.#probeDiagnosticsErrorLogged) {
+        this.#logger.warn('GOAPDebugger failed to read GOAP event dispatcher probe diagnostics.', {
+          code: 'GOAP_DEBUGGER_TRACE_PROBE_DIAGNOSTICS_FAILED',
+          error,
+        });
+        this.#probeDiagnosticsErrorLogged = true;
+      }
+      return null;
+    }
+  }
+
+  #clearActorCaptureWarning(actorId) {
+    if (!actorId) {
+      this.#captureWarningByActor.clear();
+      return;
+    }
+    this.#captureWarningByActor.delete(actorId);
+  }
+
+  #isCaptureDisabled(actorId) {
+    const status = this.#captureWarningByActor.get(actorId);
+    return Boolean(status?.captureDisabled);
   }
 
   #collectDiagnostics(actorId) {

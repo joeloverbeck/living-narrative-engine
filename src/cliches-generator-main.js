@@ -5,6 +5,7 @@
 
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { ClichesGeneratorController } from './clichesGenerator/controllers/ClichesGeneratorController.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Initialize the Clichés Generator application
@@ -77,7 +78,7 @@ const initializeApp = async () => {
 };
 
 // Handle DOM ready
-if (typeof document !== 'undefined') {
+if (shouldAutoInitializeDom()) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
   } else {

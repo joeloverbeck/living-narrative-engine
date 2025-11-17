@@ -7,6 +7,7 @@ import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBo
 import { ThematicDirectionController } from './thematicDirection/controllers/thematicDirectionController.js';
 import { tokens } from './dependencyInjection/tokens.js';
 import { Registrar } from './utils/registrarHelpers.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Thematic Direction Generator Application class
@@ -92,7 +93,7 @@ class ThematicDirectionApp {
  * Initialize the thematic direction generator when DOM is ready
  */
 function initializeWhenReady() {
-  if (typeof document === 'undefined') {
+  if (!shouldAutoInitializeDom()) {
     return;
   }
 
@@ -117,8 +118,6 @@ async function initialize() {
 }
 
 // Start the application
-if (typeof document !== 'undefined') {
-  initializeWhenReady();
-}
+initializeWhenReady();
 
 export { ThematicDirectionApp };

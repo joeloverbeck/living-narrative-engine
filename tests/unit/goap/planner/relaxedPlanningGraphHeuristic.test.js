@@ -662,6 +662,33 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
       expect(mockSimulator.simulateEffects).toHaveBeenCalledTimes(3); // Max 3 layers
     });
   });
+
+  describe('Legacy precondition guardrail', () => {
+    afterEach(() => {
+      delete process.env.GOAP_STATE_ASSERT;
+    });
+
+    it('asserts when GOAP_STATE_ASSERT=1 and a task still uses legacy preconditions', () => {
+      process.env.GOAP_STATE_ASSERT = '1';
+      const state = { 'actor-1:core:hungry': true };
+      const goal = {
+        conditions: [{ condition: { '!': { has_component: ['actor-1', 'core:satiated'] } } }],
+      };
+      const tasks = [
+        {
+          id: 'legacy:task',
+          preconditions: [{ has_component: ['actor-1', 'core:hungry'] }],
+          planningEffects: [],
+        },
+      ];
+
+      mockEvaluator.evaluate.mockReturnValue(false);
+
+      expect(() => heuristic.calculate(state, goal, tasks)).toThrow(
+        /Legacy "preconditions" detected/
+      );
+    });
+  });
 });
 
 describe('RelaxedPlanningGraphHeuristic - Construction', () => {

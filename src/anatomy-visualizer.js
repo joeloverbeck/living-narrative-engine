@@ -4,6 +4,7 @@ import { CommonBootstrapper } from './bootstrapper/CommonBootstrapper.js';
 import { tokens } from './dependencyInjection/tokens.js';
 import { registerVisualizerComponents } from './dependencyInjection/registrations/visualizerRegistrations.js';
 import AnatomyVisualizerUI from './domUI/AnatomyVisualizerUI.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 let visualizerUI;
 
@@ -89,7 +90,7 @@ async function initialize() {
 export { initialize };
 
 // Initialize when DOM is ready
-if (typeof document !== 'undefined') {
+if (shouldAutoInitializeDom()) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
   } else {

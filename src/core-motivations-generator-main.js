@@ -9,6 +9,7 @@ import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBo
 import { CoreMotivationsGeneratorController } from './coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
 import { CoreMotivationsDisplayEnhancer } from './coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
 import { CoreMotivationsGenerator } from './characterBuilder/services/CoreMotivationsGenerator.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Initialize the Core Motivations Generator application
@@ -94,7 +95,7 @@ const initializeApp = async () => {
 };
 
 // Handle DOM ready
-if (typeof document !== 'undefined') {
+if (shouldAutoInitializeDom()) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
   } else {

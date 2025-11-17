@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
   createGoapEventDispatcher,
   GOAP_EVENT_COMPLIANCE_CODES,
+  GOAP_EVENT_TRACE_LOG_CODES,
   validateEventBusContract,
 } from '../../../../src/goap/debug/goapEventDispatcher.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
@@ -143,6 +144,37 @@ describe('createGoapEventDispatcher', () => {
     expect(typeof detach).toBe('function');
     // Calling detach on invalid probes should be a no-op
     expect(() => detach()).not.toThrow();
+  });
+
+  it('logs trace state transitions and exposes probe diagnostics', () => {
+    const dispatcher = createGoapEventDispatcher(eventBus, logger);
+
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('probes unavailable'),
+      expect.objectContaining({ code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED })
+    );
+
+    logger.info.mockClear();
+    const probe = { record: jest.fn() };
+    const detach = dispatcher.registerProbe(probe);
+
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('tracing enabled'),
+      expect.objectContaining({ code: GOAP_EVENT_TRACE_LOG_CODES.ENABLED })
+    );
+    let diagnostics = dispatcher.getProbeDiagnostics();
+    expect(diagnostics).toMatchObject({ hasProbes: true, totalRegistered: 1, totalAttachedEver: 1 });
+
+    logger.info.mockClear();
+    detach();
+
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('tracing disabled'),
+      expect.objectContaining({ code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED })
+    );
+    diagnostics = dispatcher.getProbeDiagnostics();
+    expect(diagnostics.hasProbes).toBe(false);
+    expect(diagnostics.totalDetached).toBe(1);
   });
 
   it('throws when event bus dispatch returns a non-promise value', () => {
