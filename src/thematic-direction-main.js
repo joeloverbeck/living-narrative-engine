@@ -92,6 +92,10 @@ class ThematicDirectionApp {
  * Initialize the thematic direction generator when DOM is ready
  */
 function initializeWhenReady() {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
   } else {
@@ -113,6 +117,8 @@ async function initialize() {
 }
 
 // Start the application
-initializeWhenReady();
+if (typeof document !== 'undefined') {
+  initializeWhenReady();
+}
 
 export { ThematicDirectionApp };

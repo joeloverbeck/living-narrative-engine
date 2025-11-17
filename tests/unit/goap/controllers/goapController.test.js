@@ -2,8 +2,10 @@
  * @file Unit tests for GoapController
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GoapController from '../../../../src/goap/controllers/goapController.js';
+import { createGoapPlannerMock } from '../../../common/mocks/createGoapPlannerMock.js';
+import { expectGoapPlannerMock } from '../../../common/mocks/expectGoapPlannerMock.js';
 
 describe('GoapController - Core Structure', () => {
   let mockLogger;
@@ -41,10 +43,8 @@ describe('GoapController - Core Structure', () => {
       debug: jest.fn(),
     };
 
-    mockGoapPlanner = {
-      plan: jest.fn(),
-      getLastFailure: jest.fn().mockReturnValue(null),
-    };
+    mockGoapPlanner = createGoapPlannerMock();
+    expectGoapPlannerMock(mockGoapPlanner);
 
     mockRefinementEngine = {
       refine: jest.fn(),

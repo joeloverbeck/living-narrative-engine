@@ -75,8 +75,10 @@ async function initializeTraitsRewriter() {
 }
 
 // Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeTraitsRewriter);
-} else {
-  initializeTraitsRewriter();
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTraitsRewriter);
+  } else {
+    initializeTraitsRewriter();
+  }
 }

@@ -316,5 +316,7 @@ export async function beginGame(showLoadUI = false) {
   }
 }
 
-window.bootstrapApp = bootstrapApp;
-window.beginGame = beginGame;
+if (typeof window !== 'undefined') {
+  window.bootstrapApp = bootstrapApp;
+  window.beginGame = beginGame;
+}

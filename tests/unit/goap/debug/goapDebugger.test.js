@@ -19,7 +19,9 @@ describe('GOAPDebugger', () => {
       'getActivePlan',
       'getFailedGoals',
       'getFailedTasks',
+      'getDependencyDiagnostics',
     ]);
+    mockController.getDependencyDiagnostics.mockReturnValue([]);
 
     mockInspector = testBed.createMock('planInspector', [
       'inspect',
@@ -318,6 +320,7 @@ describe('GOAPDebugger', () => {
       mockController.getFailedGoals.mockReturnValue([]);
       mockController.getFailedTasks.mockReturnValue([]);
       mockTracer.getTrace.mockReturnValue(null);
+      mockController.getDependencyDiagnostics.mockReturnValue([]);
 
       const report = goapDebugger.generateReport('actor-1');
 
@@ -326,6 +329,7 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('Failure History');
       expect(report).toContain('Failed Goals: 0');
       expect(report).toContain('Failed Tasks: 0');
+      expect(report).toContain('Dependency Contracts');
       expect(report).toContain('End Report');
     });
 
@@ -346,6 +350,16 @@ describe('GOAPDebugger', () => {
           failures: [{ reason: 'refinement failed', code: 'TASK_FAILURE', timestamp: 3000 }],
         },
       ]);
+      mockController.getDependencyDiagnostics.mockReturnValue([
+        {
+          dependency: 'IGoapPlanner',
+          requiredMethods: ['plan', 'getLastFailure'],
+          providedMethods: ['plan', 'getLastFailure'],
+          missingMethods: [],
+          timestamp: 1234,
+          status: 'ok',
+        },
+      ]);
       mockTracer.getTrace.mockReturnValue(null);
 
       const report = goapDebugger.generateReport('actor-1');
@@ -357,6 +371,8 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('Failed Tasks: 1');
       expect(report).toContain('Task: task-1');
       expect(report).toContain('[TASK_FAILURE] refinement failed');
+      expect(report).toContain('IGoapPlanner: status=ok');
+      expect(report).toContain('required: plan, getLastFailure');
     });
 
     it('should include active trace when present', () => {
@@ -389,6 +405,7 @@ describe('GOAPDebugger', () => {
       mockInspector.inspectJSON.mockReturnValue(planData);
       mockController.getFailedGoals.mockReturnValue([]);
       mockController.getFailedTasks.mockReturnValue([]);
+      mockController.getDependencyDiagnostics.mockReturnValue([]);
       mockTracer.getTrace.mockReturnValue(trace);
 
       const report = goapDebugger.generateReportJSON('actor-1');
@@ -398,6 +415,7 @@ describe('GOAPDebugger', () => {
         timestamp: expect.any(Number),
         plan: planData,
         failures,
+        dependencies: [],
         trace,
       });
     });

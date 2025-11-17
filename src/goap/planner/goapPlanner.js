@@ -839,7 +839,7 @@ class GoapPlanner {
    * @param {string} actorId - Acting entity ID (UUID format)
    * @param {object} goal - Goal definition with goalState JSON Logic condition
    * @param {object} initialState - Starting world state (symbolic facts hash)
-   * @param {object} options - Search configuration
+   * @param {object} [options={}] - Search configuration
    * @param {string} options.heuristic - Heuristic name (default: 'goal-distance')
    * @param {number} options.maxNodes - Max nodes to explore (default: 1000)
    * @param {number} options.maxTime - Max time in ms (default: 5000)
@@ -855,12 +855,13 @@ class GoapPlanner {
    * //   { taskId: 'core:consume_food', parameters: { target: 'apple-456' } }
    * // ]
    */
-  plan(actorId, goal, initialState, options = {}) {
+  plan(actorId, goal, initialState, options) {
+    const planningOptions = options ?? {};
     // 1. Extract and validate options
-    const heuristic = options.heuristic || 'goal-distance';
-    const maxNodes = options.maxNodes || 1000;
-    const maxTime = options.maxTime || 5000;
-    const maxDepth = options.maxDepth || 20;
+    const heuristic = planningOptions.heuristic || 'goal-distance';
+    const maxNodes = planningOptions.maxNodes || 1000;
+    const maxTime = planningOptions.maxTime || 5000;
+    const maxDepth = planningOptions.maxDepth || 20;
     this.#lastFailure = null;
     const failureStats = {
       depthLimitHit: false,

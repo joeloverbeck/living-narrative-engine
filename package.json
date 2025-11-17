@@ -83,7 +83,7 @@
     "test:integration:build": "jest --config jest.config.build.js --env=jsdom --silent",
     "test:e2e": "jest --config jest.config.e2e.js --env=jsdom --silent --coverage",
     "test:performance": "jest --config jest.config.performance.js --env=jsdom --silent",
-    "test:memory": "node --expose-gc ./node_modules/.bin/jest --config jest.config.memory.js --env=jsdom --silent",
+    "test:memory": "node --expose-gc ./node_modules/.bin/jest --config jest.config.memory.js --env=jsdom --silent --runInBand",
     "test:single": "jest --env=jsdom --silent=false --runInBand",
     "test:ci": "npm run validate:operations && npm run typecheck && npm run test:unit && npm run test:integration && npm run test:integration:build && npm run test:e2e",
     "create-mod": "node scripts/createMod.mjs",

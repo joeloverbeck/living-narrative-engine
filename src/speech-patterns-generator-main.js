@@ -75,11 +75,13 @@ async function initializeSpeechPatternsGenerator() {
 }
 
 // Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener(
-    'DOMContentLoaded',
-    initializeSpeechPatternsGenerator
-  );
-} else {
-  initializeSpeechPatternsGenerator();
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener(
+      'DOMContentLoaded',
+      initializeSpeechPatternsGenerator
+    );
+  } else {
+    initializeSpeechPatternsGenerator();
+  }
 }

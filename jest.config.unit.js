@@ -20,6 +20,7 @@ module.exports = {
   testMatch: [
     '<rootDir>/tests/unit/**/*.test.js',
     '<rootDir>/tests/unit/**/*.spec.js',
+    '<rootDir>/tests/contracts/**/*.test.js',
   ],
   // Unit tests should be fast, set a reasonable timeout
   testTimeout: 15000, // Increased slightly to handle performance tests

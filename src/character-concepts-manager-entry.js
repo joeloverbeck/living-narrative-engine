@@ -12,6 +12,11 @@ import { initializeApp } from './character-concepts-manager-main.js';
  */
 function waitForDOM() {
   return new Promise((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve();
+      return;
+    }
+
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', resolve);
     } else {
@@ -20,10 +25,12 @@ function waitForDOM() {
   });
 }
 
-// Start initialization when DOM is ready
-waitForDOM().then(() => {
-  initializeApp().catch((error) => {
-    // eslint-disable-next-line no-console
-    console.error('Failed to initialize application:', error);
+if (typeof document !== 'undefined') {
+  // Start initialization when DOM is ready
+  waitForDOM().then(() => {
+    initializeApp().catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error('Failed to initialize application:', error);
+    });
   });
-});
+}

@@ -12,6 +12,10 @@ import {
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { GOAP_EVENTS } from '../events/goapEvents.js';
+import {
+  GOAP_PLANNER_CONTRACT,
+  createPlannerContractSnapshot,
+} from '../planner/goapPlannerContractDefinition.js';
 
 /**
  * @typedef {import('../planner/goapPlanner.js').default} GoapPlanner
@@ -83,6 +87,9 @@ class GoapController {
   /** @type {object|null} Current world state for recursive decideTurn calls */
   #currentWorld;
 
+  /** @type {Map<string, object>} Dependency diagnostics keyed by dependency token */
+  #dependencyDiagnostics;
+
   /**
    * Create new GOAP controller instance
    *
@@ -111,9 +118,14 @@ class GoapController {
   }) {
     this.#logger = ensureValidLogger(logger);
 
-    validateDependency(goapPlanner, 'IGoapPlanner', this.#logger, {
-      requiredMethods: ['plan', 'getLastFailure'],
-    });
+    validateDependency(
+      goapPlanner,
+      GOAP_PLANNER_CONTRACT.dependencyName,
+      this.#logger,
+      {
+        requiredMethods: GOAP_PLANNER_CONTRACT.requiredMethods,
+      }
+    );
     validateDependency(refinementEngine, 'IRefinementEngine', this.#logger, {
       requiredMethods: ['refine'],
     });
@@ -157,6 +169,7 @@ class GoapController {
     this.#eventBus = eventBus;
     this.#parameterResolutionService = parameterResolutionService;
     this.#activePlan = null;
+    this.#dependencyDiagnostics = new Map();
 
     // Initialize failure tracking (GOAPIMPL-021-05)
     this.#failedGoals = new Map();
@@ -166,6 +179,10 @@ class GoapController {
     this.#currentWorld = null;
 
     this.#logger.info('GoapController initialized');
+
+    this.#recordDependencyDiagnostics(
+      createPlannerContractSnapshot(this.#planner)
+    );
   }
 
   /**
@@ -186,6 +203,35 @@ class GoapController {
       eventType,
       payload,
     });
+  }
+
+  /**
+   * Record dependency diagnostics for debugger + telemetry.
+   * @param {object} snapshot - Output of createPlannerContractSnapshot
+   */
+  #recordDependencyDiagnostics(snapshot) {
+    if (!snapshot || !snapshot.dependency) {
+      return;
+    }
+
+    const enriched = {
+      ...snapshot,
+      timestamp: Date.now(),
+      status:
+        Array.isArray(snapshot.missingMethods) && snapshot.missingMethods.length > 0
+          ? 'warn'
+          : 'ok',
+    };
+
+    this.#dependencyDiagnostics.set(snapshot.dependency, enriched);
+
+    this.#dispatchEvent(GOAP_EVENTS.DEPENDENCY_VALIDATED, enriched);
+
+    if (enriched.status === 'warn') {
+      this.#logger.warn('GOAP_DEPENDENCY_WARN: Missing dependency methods', enriched);
+    } else {
+      this.#logger.debug('GOAP dependency validated', enriched);
+    }
   }
 
   /**
@@ -1233,6 +1279,19 @@ class GoapController {
     }
 
     return results;
+  }
+
+  /**
+   * Expose dependency diagnostics captured during construction.
+   * @returns {Array<object>} Snapshot entries per dependency.
+   */
+  getDependencyDiagnostics() {
+    return Array.from(this.#dependencyDiagnostics.values()).map((snapshot) => ({
+      ...snapshot,
+      requiredMethods: [...snapshot.requiredMethods],
+      providedMethods: [...snapshot.providedMethods],
+      missingMethods: [...snapshot.missingMethods],
+    }));
   }
 
   /**

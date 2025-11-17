@@ -42,6 +42,13 @@ console.log(report);
 debugger.stopTrace('actor-123');
 ```
 
+## Planner Contract Checklist
+
+- Use `tests/common/mocks/createGoapPlannerMock.js` for any GOAP planner doubles. The factory ships with `plan()` and `getLastFailure()` wired to the same defaults required by `GoapController`.
+- Immediately call `expectGoapPlannerMock(mock)` after instantiating a test double. It mirrors the runtime dependency validator so tests fail locally instead of during E2E runs.
+- When `GoapController` boots it emits `goap:dependency_validated` telemetry and the debugger prints a **Dependency Contracts** section. That block lists required vs provided methods plus timestamps, making mock drift obvious inside `npm run test:e2e -- --report-goap-debug` logs.
+- Any `GOAP_DEPENDENCY_WARN` log means a mock bypassed the factory or a dependency is missing methods. CI greps for this string to fail builds before the regression spreads.
+
 ### Test Integration
 
 ```javascript

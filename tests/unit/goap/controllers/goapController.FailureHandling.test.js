@@ -7,6 +7,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GoapController from '../../../../src/goap/controllers/goapController.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
+import { createGoapPlannerMock } from '../../../common/mocks/createGoapPlannerMock.js';
+import { expectGoapPlannerMock } from '../../../common/mocks/expectGoapPlannerMock.js';
 
 describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
   let mockLogger;
@@ -40,10 +42,8 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
       debug: jest.fn(),
     };
 
-    mockGoapPlanner = {
-      plan: jest.fn(),
-      getLastFailure: jest.fn().mockReturnValue(null),
-    };
+    mockGoapPlanner = createGoapPlannerMock();
+    expectGoapPlannerMock(mockGoapPlanner);
 
     mockRefinementEngine = {
       refine: jest.fn(),

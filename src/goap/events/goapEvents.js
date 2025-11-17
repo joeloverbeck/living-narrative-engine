@@ -21,6 +21,12 @@ export const GOAP_EVENTS = {
   GOAL_SELECTED: 'goap:goal_selected',
 
   /**
+   * Dispatched when a dependency contract validation completes
+   * Payload: { dependency, requiredMethods, providedMethods, missingMethods, timestamp, status }
+   */
+  DEPENDENCY_VALIDATED: 'goap:dependency_validated',
+
+  /**
    * Dispatched when planning starts for a goal
    * Payload: { actorId, goalId }
    */

@@ -40,7 +40,12 @@ class GOAPDebugger {
     logger,
   }) {
     validateDependency(goapController, 'IGoapController', logger, {
-      requiredMethods: ['getActivePlan', 'getFailedGoals', 'getFailedTasks'],
+      requiredMethods: [
+        'getActivePlan',
+        'getFailedGoals',
+        'getFailedTasks',
+        'getDependencyDiagnostics',
+      ],
     });
     validateDependency(planInspector, 'IPlanInspector', logger, {
       requiredMethods: ['inspect', 'inspectJSON'],
@@ -132,6 +137,14 @@ class GOAPDebugger {
       failedGoals: this.#goapController.getFailedGoals(actorId),
       failedTasks: this.#goapController.getFailedTasks(actorId),
     };
+  }
+
+  /**
+   * Surface dependency diagnostics collected by GoapController.
+   * @returns {Array<object>} Dependency snapshots
+   */
+  getDependencyDiagnostics() {
+    return this.#goapController.getDependencyDiagnostics();
   }
 
   // ==================== State Visualization ====================
@@ -269,6 +282,27 @@ class GOAPDebugger {
     }
     report += `\n`;
 
+    // Dependency diagnostics
+    const dependencies = this.getDependencyDiagnostics();
+    report += `--- Dependency Contracts ---\n`;
+    if (!dependencies || dependencies.length === 0) {
+      report += `No dependency diagnostics captured.\n`;
+    } else {
+      for (const dependency of dependencies) {
+        const required = dependency.requiredMethods || [];
+        const provided = dependency.providedMethods || [];
+        const missing = dependency.missingMethods || [];
+        report += `  ${dependency.dependency || 'unknown'}: status=${dependency.status}\n`;
+        report += `    required: ${required.length ? required.join(', ') : '∅'}\n`;
+        report += `    provided: ${provided.length ? provided.join(', ') : '∅'}\n`;
+        if (missing.length > 0) {
+          report += `    missing: ${missing.join(', ')}\n`;
+        }
+        report += `    validated: ${new Date(dependency.timestamp).toISOString()}\n`;
+      }
+    }
+    report += `\n`;
+
     // Current trace (if any)
     const trace = this.getTrace(actorId);
     if (trace) {
@@ -301,6 +335,7 @@ class GOAPDebugger {
       timestamp: Date.now(),
       plan: this.inspectPlanJSON(actorId),
       failures: this.getFailureHistory(actorId),
+      dependencies: this.getDependencyDiagnostics(),
       trace: this.getTrace(actorId),
     };
   }
