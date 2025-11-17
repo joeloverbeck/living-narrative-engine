@@ -485,7 +485,7 @@ async #checkComponentExistence(recipe, results) {
       results.errors.push(...errors);  // ← Adds to errors array
     }
   } catch (error) {
-    this.#logger.error('Component existence check failed', error);
+    this.#logger.error('component-existence check failed', error);
     results.errors.push({  // ← Exception → errors array
       type: 'VALIDATION_ERROR',
       check: 'component_existence',
@@ -508,7 +508,7 @@ async #checkSocketSlotCompatibility(recipe, results) {
       results.errors.push(...errors);  // ← Validation errors → errors
     }
   } catch (error) {
-    this.#logger.error('Socket/slot compatibility check failed', error);
+    this.#logger.error('socket-slot-compatibility check failed', error);
     results.warnings.push({  // ← Exception → warnings array (inconsistent!)
       type: 'VALIDATION_WARNING',
       check: 'socket_slot_compatibility',
@@ -529,7 +529,7 @@ async #checkSocketSlotCompatibility(recipe, results) {
       results.suggestions.push(...suggestions);
     }
   } catch (error) {
-    this.#logger.error('Descriptor coverage check failed', error);
+    this.#logger.error('descriptor-coverage check failed', error);
     // ← NO error/warning added to results! Silent failure!
   }
 }
@@ -699,7 +699,7 @@ async #checkBodyDescriptors(recipe, results) {
       results.errors.push(...errors);
     }
   } catch (error) {
-    this.#logger.error('Body descriptors check failed', error);
+    this.#logger.error('body-descriptors check failed', error);
     results.errors.push({
       type: 'VALIDATION_ERROR',
       check: 'body_descriptors',

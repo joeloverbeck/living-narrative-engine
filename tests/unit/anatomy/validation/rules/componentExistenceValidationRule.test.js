@@ -177,6 +177,42 @@ describe('ComponentExistenceValidationRule', () => {
       });
     });
 
+    it('should emit a warning and skip slot properties that are not plain objects', async () => {
+      mockLogger.warn.mockClear();
+      const recipe = {
+        id: 'test:recipe',
+        slots: {
+          head: {
+            properties: ['invalid'],
+          },
+        },
+      };
+
+      const context = new LoadTimeValidationContext({
+        blueprints: {},
+        recipes: { 'test:recipe': recipe },
+      });
+
+      const issues = await validationRule.validate(context);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "ComponentExistenceValidationRule: slot 'head' properties must be a plain object; received array"
+      );
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        severity: 'warning',
+        type: 'INVALID_PROPERTY_OBJECT',
+        context: {
+          location: {
+            type: 'slot',
+            name: 'head',
+            field: 'properties',
+          },
+          receivedType: 'array',
+        },
+      });
+    });
+
     it('should pass when all slot components exist', async () => {
       const recipe = {
         id: 'test:recipe',
@@ -371,6 +407,43 @@ describe('ComponentExistenceValidationRule', () => {
             name: '*',
             field: 'properties',
           },
+        },
+      });
+    });
+
+    it('should warn and skip pattern properties that are not plain objects', async () => {
+      mockLogger.warn.mockClear();
+      const recipe = {
+        id: 'test:recipe',
+        patterns: [
+          {
+            properties: ['invalid'],
+          },
+        ],
+      };
+
+      const context = new LoadTimeValidationContext({
+        blueprints: {},
+        recipes: { 'test:recipe': recipe },
+      });
+
+      const issues = await validationRule.validate(context);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "ComponentExistenceValidationRule: pattern 'pattern-0' properties must be a plain object; received array"
+      );
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        severity: 'warning',
+        type: 'INVALID_PROPERTY_OBJECT',
+        context: {
+          location: {
+            type: 'pattern',
+            name: 'pattern-0',
+            field: 'properties',
+            index: 0,
+          },
+          receivedType: 'array',
         },
       });
     });

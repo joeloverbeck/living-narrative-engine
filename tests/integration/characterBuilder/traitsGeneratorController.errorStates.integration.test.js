@@ -279,7 +279,7 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
   });
 
   it('maps validation errors to actionable feedback during generation failures', async () => {
-    const { controller, eventBus } = createControllerSetup({
+    const { controller, eventBus, logger } = createControllerSetup({
       traitsResolver: async () => {
         throw new Error('validation error: missing data');
       },
@@ -294,6 +294,7 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
     generateBtn.click();
 
     await flushAsyncOperations();
+    await waitForLoggerError(logger);
 
     expect(document.getElementById('error-message-text').textContent).toBe(
       'Invalid input provided. Please check your entries and try again.'

@@ -2,6 +2,7 @@ import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { ComponentExistenceValidationRule } from '../rules/componentExistenceValidationRule.js';
 import { LoadTimeValidationContext } from '../loadTimeValidationContext.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * @description Pipeline validator that reuses the component existence rule to
@@ -9,7 +10,7 @@ import { LoadTimeValidationContext } from '../loadTimeValidationContext.js';
  */
 export class ComponentExistenceValidator extends BaseValidator {
   #rule;
-  #logger;
+  #logValidatorError;
 
   /**
    * @param {object} params - Constructor parameters.
@@ -28,10 +29,13 @@ export class ComponentExistenceValidator extends BaseValidator {
       requiredMethods: ['get', 'getAll'],
     });
 
-    this.#logger = logger;
     this.#rule = new ComponentExistenceValidationRule({
       logger,
       dataRegistry,
+    });
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
     });
   }
 
@@ -64,7 +68,7 @@ export class ComponentExistenceValidator extends BaseValidator {
 
       builder.addIssues(issues);
     } catch (error) {
-      this.#logger.error('Component existence validation failed', error);
+      this.#logValidatorError(error);
       builder.addError(
         'VALIDATION_ERROR',
         'Failed to validate component existence',

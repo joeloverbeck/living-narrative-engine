@@ -2,7 +2,7 @@
  * @file Unit tests for PropertySchemaValidationRule
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { PropertySchemaValidationRule } from '../../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
 import { LoadTimeValidationContext } from '../../../../../src/anatomy/validation/loadTimeValidationContext.js';
 
@@ -14,10 +14,10 @@ describe('PropertySchemaValidationRule', () => {
 
   beforeEach(() => {
     logger = {
-      info: () => {},
-      warn: () => {},
-      error: () => {},
-      debug: () => {},
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
     };
 
     dataRegistry = {
@@ -382,6 +382,41 @@ describe('PropertySchemaValidationRule', () => {
       const issues = await rule.validate(context);
       expect(issues).toHaveLength(0);
     });
+
+    it('should flag non-object slot properties with INVALID_PROPERTY_OBJECT', async () => {
+      const recipe = {
+        slots: {
+          head: {
+            properties: ['invalid'],
+          },
+        },
+      };
+
+      const context = new LoadTimeValidationContext({
+        blueprints: {},
+        recipes: { 'test:recipe': recipe },
+      });
+
+      const issues = await rule.validate(context);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        "PropertySchemaValidationRule: slot 'head' properties must be a plain object; received array"
+      );
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        type: 'INVALID_PROPERTY_OBJECT',
+        severity: 'error',
+        context: {
+          location: {
+            type: 'slot',
+            name: 'head',
+            field: 'properties',
+          },
+          receivedType: 'array',
+          recipeId: 'test:recipe',
+        },
+      });
+    });
   });
 
   describe('validate - pattern properties', () => {
@@ -527,6 +562,42 @@ describe('PropertySchemaValidationRule', () => {
 
       const issues = await rule.validate(context);
       expect(issues).toHaveLength(0);
+    });
+
+    it('should emit INVALID_PROPERTY_OBJECT when pattern properties are not objects', async () => {
+      const recipe = {
+        patterns: [
+          {
+            properties: ['invalid'],
+          },
+        ],
+      };
+
+      const context = new LoadTimeValidationContext({
+        blueprints: {},
+        recipes: { 'test:recipe': recipe },
+      });
+
+      const issues = await rule.validate(context);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        "PropertySchemaValidationRule: pattern 'pattern-0' properties must be a plain object; received array"
+      );
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        type: 'INVALID_PROPERTY_OBJECT',
+        severity: 'error',
+        context: {
+          location: {
+            type: 'pattern',
+            name: 'pattern-0',
+            field: 'properties',
+            index: 0,
+          },
+          receivedType: 'array',
+          recipeId: 'test:recipe',
+        },
+      });
     });
   });
 

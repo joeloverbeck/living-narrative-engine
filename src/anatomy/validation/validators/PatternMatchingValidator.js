@@ -8,6 +8,7 @@ import { ensureBlueprintProcessed } from '../utils/blueprintProcessingUtils.js';
 import { resolveSlotGroup } from '../../recipePatternResolver/matchers/groupMatcher.js';
 import { resolveWildcardPattern } from '../../recipePatternResolver/matchers/wildcardMatcher.js';
 import { resolvePropertyFilter } from '../../recipePatternResolver/matchers/propertyMatcher.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 const PATTERN_CHECK_NAME = 'pattern_matching';
 
@@ -22,6 +23,7 @@ export class PatternMatchingValidator extends BaseValidator {
   #slotGenerator;
   #anatomyBlueprintRepository;
   #logger;
+  #logValidatorError;
 
   /**
    * @description Creates a new pattern matching validator instance.
@@ -65,6 +67,10 @@ export class PatternMatchingValidator extends BaseValidator {
     this.#slotGenerator = slotGenerator;
     this.#anatomyBlueprintRepository = anatomyBlueprintRepository;
     this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -137,7 +143,7 @@ export class PatternMatchingValidator extends BaseValidator {
         });
       }
     } catch (error) {
-      this.#logger.error('Pattern matching check failed', error);
+      this.#logValidatorError(error);
       builder.addWarning('VALIDATION_WARNING', 'Pattern matching check failed', {
         check: PATTERN_CHECK_NAME,
         error: error.message,

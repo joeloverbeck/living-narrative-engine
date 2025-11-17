@@ -12,15 +12,25 @@ import {
   jest,
 } from '@jest/globals';
 import { TraitsGeneratorController } from '../../../src/characterBuilder/controllers/TraitsGeneratorController.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
-import { TraitsGenerator } from '../../../src/characterBuilder/services/TraitsGenerator.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
 
 describe('TraitsGeneratorController Integration - Concept Handling', () => {
   let controller;
   let characterBuilderService;
   let mockLogger;
   let mockEventBus;
-  let mockUIStateManager;
   let mockTraitsDisplayEnhancer;
   let container;
   let mockStorageService;
@@ -31,6 +41,7 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
   let mockLlmStrategyFactory;
   let mockLlmConfigManager;
   let mockTokenEstimator;
+  let createControllerInstance;
 
   const mockDirectionWithConcept = {
     direction: {
@@ -136,11 +147,6 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
       unsubscribe: jest.fn(),
-    };
-
-    mockUIStateManager = {
-      showState: jest.fn(),
-      hideState: jest.fn(),
     };
 
     mockSchemaValidator = {
@@ -259,15 +265,66 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
       .fn()
       .mockResolvedValue(mockCliches[0]);
 
+    const createControllerDependencies = () => {
+      const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+        logger: mockLogger,
+      });
+
+      return {
+        controllerLifecycleOrchestrator: new ControllerLifecycleOrchestrator({
+          logger: mockLogger,
+          eventBus: mockEventBus,
+        }),
+        domElementManager: new DOMElementManager({
+          logger: mockLogger,
+          documentRef: document,
+          performanceRef:
+            typeof performance !== 'undefined'
+              ? performance
+              : { now: () => Date.now() },
+          elementsRef: {},
+        }),
+        eventListenerRegistry: new EventListenerRegistry({
+          logger: mockLogger,
+          asyncUtilities: asyncUtilitiesToolkit,
+        }),
+        asyncUtilitiesToolkit,
+        performanceMonitor: new PerformanceMonitor({
+          logger: mockLogger,
+          eventBus: mockEventBus,
+        }),
+        memoryManager: new MemoryManager({ logger: mockLogger }),
+        errorHandlingStrategy: new ErrorHandlingStrategy({
+          logger: mockLogger,
+          eventBus: mockEventBus,
+          controllerName: 'TraitsGeneratorController',
+          errorCategories: ERROR_CATEGORIES,
+          errorSeverity: ERROR_SEVERITY,
+        }),
+        validationService: new ValidationService({
+          schemaValidator: mockSchemaValidator,
+          logger: mockLogger,
+          handleError: (error) => {
+            throw error;
+          },
+          errorCategories: ERROR_CATEGORIES,
+        }),
+      };
+    };
+
+    createControllerInstance = (service = characterBuilderService) => {
+      return new TraitsGeneratorController({
+        logger: mockLogger,
+        characterBuilderService: service,
+        eventBus: mockEventBus,
+        traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
+        schemaValidator: mockSchemaValidator,
+        ...createControllerDependencies(),
+      });
+    };
+
     // Create controller with real service
-    controller = new TraitsGeneratorController({
-      logger: mockLogger,
-      characterBuilderService,
-      eventBus: mockEventBus,
-      uiStateManager: mockUIStateManager,
-      traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
-      schemaValidator: mockSchemaValidator,
-    });
+    controller = createControllerInstance();
   });
 
   afterEach(() => {
@@ -370,14 +427,7 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
     });
 
     // Recreate controller
-    controller = new TraitsGeneratorController({
-      logger: mockLogger,
-      characterBuilderService,
-      eventBus: mockEventBus,
-      uiStateManager: mockUIStateManager,
-      traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
-      schemaValidator: mockSchemaValidator,
-    });
+    controller = createControllerInstance(characterBuilderService);
 
     await controller.initialize();
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -424,14 +474,7 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
       traitsGenerator: mockTraitsGenerator,
     });
 
-    controller = new TraitsGeneratorController({
-      logger: mockLogger,
-      characterBuilderService,
-      eventBus: mockEventBus,
-      uiStateManager: mockUIStateManager,
-      traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
-      schemaValidator: mockSchemaValidator,
-    });
+    controller = createControllerInstance(characterBuilderService);
 
     await controller.initialize();
     await new Promise((resolve) => setTimeout(resolve, 100));

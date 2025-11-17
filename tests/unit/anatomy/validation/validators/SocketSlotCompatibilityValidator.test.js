@@ -288,7 +288,7 @@ const createValidator = ({
       const result = await validator.validate(createRecipe());
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Socket/slot compatibility check failed',
+        'socket-slot-compatibility check failed',
         repositoryError
       );
       expect(result.warnings).toEqual([

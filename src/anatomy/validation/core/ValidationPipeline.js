@@ -104,6 +104,8 @@ export class ValidationPipeline {
         validatorResult.errors.length > 0;
 
       if (hasErrors && validator.failFast) {
+        // Validator-level failFast cannot be overridden by options.failFast; these
+        // guards stop the pipeline before downstream validators run.
         this.#logger.warn(
           `ValidationPipeline: Validator '${validator.name}' halted execution due to failFast errors`
         );

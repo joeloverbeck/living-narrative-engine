@@ -1,4 +1,5 @@
 import { BaseValidator } from './BaseValidator.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * @file LoadFailureValidator - reports entity definition load failures recorded during mod loading.
@@ -11,6 +12,7 @@ import { BaseValidator } from './BaseValidator.js';
  */
 export class LoadFailureValidator extends BaseValidator {
   #logger;
+  #logValidatorError;
 
   /**
    * Initializes validator dependencies for reporting load failures.
@@ -28,6 +30,10 @@ export class LoadFailureValidator extends BaseValidator {
     });
 
     this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -129,7 +135,7 @@ export class LoadFailureValidator extends BaseValidator {
         `LoadFailureValidator: Found ${failureEntries.length} entity definition load failures`
       );
     } catch (error) {
-      this.#logger.error('Load failure validation failed', error);
+      this.#logValidatorError(error);
     }
   }
 

@@ -104,3 +104,18 @@ export function safeResolvePath(
 }
 
 // Add other generic object utilities here in the future if needed.
+
+/**
+ * Determines whether the provided value is a plain object (object literal or null prototype).
+ *
+ * @param {unknown} value - Value to inspect.
+ * @returns {value is Record<string, unknown>} True when the value is a plain object.
+ */
+export function isPlainObject(value) {
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}

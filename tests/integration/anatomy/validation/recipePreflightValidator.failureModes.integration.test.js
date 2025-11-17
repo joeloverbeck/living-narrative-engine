@@ -162,7 +162,7 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
 
     expect(report).toBeInstanceOf(ValidationReport);
     expect(logger.error).toHaveBeenCalledWith(
-      'Descriptor coverage check failed',
+      'descriptor-coverage check failed',
       expect.any(Error)
     );
   });
@@ -261,7 +261,7 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
 
     const json = report.toJSON();
     expect(logger.error).toHaveBeenCalledWith(
-      'Part availability check failed',
+      'part-availability check failed',
       expect.any(Error)
     );
     expect(
@@ -331,7 +331,7 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
 
     const json = report.toJSON();
     expect(logger.error).toHaveBeenCalledWith(
-      'Generated slot part availability check failed',
+      'generated-slot-parts check failed',
       expect.any(Error)
     );
     expect(
@@ -514,7 +514,7 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
 
     expect(report).toBeInstanceOf(ValidationReport);
     expect(logger.error).toHaveBeenCalledWith(
-      'Recipe usage validation failed',
+      'recipe-usage check failed',
       expect.any(Error)
     );
   });

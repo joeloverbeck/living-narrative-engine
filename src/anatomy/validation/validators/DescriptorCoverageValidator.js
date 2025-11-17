@@ -1,5 +1,6 @@
 import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
 /**
  * @file DescriptorCoverageValidator - suggests descriptors for recipe slots.
@@ -14,6 +15,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
 export class DescriptorCoverageValidator extends BaseValidator {
   #dataRegistry;
   #logger;
+  #logValidatorError;
 
   /**
    * Creates a descriptor coverage validator instance.
@@ -36,6 +38,10 @@ export class DescriptorCoverageValidator extends BaseValidator {
 
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
+    this.#logValidatorError = createValidatorLogger({
+      logger,
+      validatorName: this.name,
+    });
   }
 
   /**
@@ -94,7 +100,7 @@ export class DescriptorCoverageValidator extends BaseValidator {
         builder.addPassed('All slots have descriptor components');
       }
     } catch (error) {
-      this.#logger.error('Descriptor coverage check failed', error);
+      this.#logValidatorError(error);
     }
   }
 

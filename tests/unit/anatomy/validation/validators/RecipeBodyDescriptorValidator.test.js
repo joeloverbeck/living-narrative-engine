@@ -432,7 +432,7 @@ describe('RecipeBodyDescriptorValidator', () => {
       const result = await validator.validate(createRecipe());
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Body descriptors check failed',
+        'body-descriptors check failed',
         registryError
       );
       expect(result.errors).toEqual([

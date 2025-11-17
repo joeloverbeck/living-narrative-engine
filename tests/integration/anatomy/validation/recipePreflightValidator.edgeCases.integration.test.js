@@ -187,7 +187,7 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
 
     const json = report.toJSON();
     expect(logger.error).toHaveBeenCalledWith(
-      'Component existence check failed',
+      'component-existence check failed',
       expect.any(Error)
     );
     expect(
@@ -195,6 +195,34 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
         (entry) => entry.check === 'component_existence' && entry.type === 'VALIDATION_ERROR'
       )
     ).toBe(true);
+  });
+
+  it('halts downstream validators when multiple components are missing', async () => {
+    seedBlueprintWithRoot();
+    const validator = createValidator();
+
+    const recipe = {
+      recipeId: 'test:missing-components',
+      blueprintId: 'test:blueprint',
+      slots: {
+        head: { tags: ['core:missing-one', 'core:missing-two'] },
+      },
+    };
+
+    const report = await validator.validate(recipe, {
+      skipPatternValidation: true,
+      skipDescriptorChecks: true,
+      skipGeneratedSlotChecks: true,
+      skipLoadFailureChecks: true,
+      skipRecipeUsageCheck: true,
+    });
+
+    const json = report.toJSON();
+    const missingComponentErrors = json.errors.filter(
+      (entry) => entry.type === 'COMPONENT_NOT_FOUND'
+    );
+    expect(missingComponentErrors).toHaveLength(2);
+    expect(json.errors.some((entry) => entry.type === 'PART_UNAVAILABLE')).toBe(false);
   });
 
   it('records property schema validation failures when schema validator throws', async () => {
@@ -239,7 +267,7 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
 
     const json = report.toJSON();
     expect(logger.error).toHaveBeenCalledWith(
-      'Property schema check failed',
+      'property-schemas check failed',
       expect.any(Error)
     );
     expect(
@@ -389,7 +417,7 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
 
     const json = report.toJSON();
     expect(logger.error).toHaveBeenCalledWith(
-      'Body descriptors check failed',
+      'body-descriptors check failed',
       expect.any(Error)
     );
     expect(
@@ -420,7 +448,7 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
 
     const json = report.toJSON();
     expect(logger.error).toHaveBeenCalledWith(
-      'Blueprint existence check failed',
+      'blueprint-existence check failed',
       expect.any(Error)
     );
     expect(
@@ -452,7 +480,6 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
         arm: {
           partType: 'arm',
           tags: ['core:muscle'],
-          properties: 'unexpected',
         },
       },
     };
@@ -467,6 +494,39 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
 
     const json = report.toJSON();
     expect(json.errors.some((entry) => entry.type === 'PART_UNAVAILABLE')).toBe(true);
+    expect(json.errors.every((entry) => entry.type !== 'COMPONENT_NOT_FOUND')).toBe(true);
+  });
+
+  it('reports INVALID_PROPERTY_OBJECT instead of treating numeric keys as components', async () => {
+    seedBlueprintWithRoot();
+    const validator = createValidator();
+
+    const recipe = {
+      recipeId: 'test:invalid-properties',
+      blueprintId: 'test:blueprint',
+      slots: {
+        head: {
+          properties: ['bad', 'data'],
+        },
+      },
+    };
+
+    const report = await validator.validate(recipe, {
+      skipPatternValidation: true,
+      skipDescriptorChecks: true,
+      skipPartAvailabilityChecks: true,
+      skipGeneratedSlotChecks: true,
+      skipLoadFailureChecks: true,
+      skipRecipeUsageCheck: true,
+    });
+
+    const json = report.toJSON();
+    expect(json.errors.some((entry) => entry.type === 'INVALID_PROPERTY_OBJECT')).toBe(true);
+    expect(
+      json.errors.some(
+        (entry) => entry.type === 'COMPONENT_NOT_FOUND' && entry.context?.componentId === '0'
+      )
+    ).toBe(false);
   });
 
   it('skips generated slot validation when the blueprint becomes unavailable mid-run', async () => {
@@ -584,7 +644,7 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     });
 
     expect(logger.error).toHaveBeenCalledWith(
-      'Load failure validation failed',
+      'load-failures check failed',
       expect.any(Error)
     );
   });

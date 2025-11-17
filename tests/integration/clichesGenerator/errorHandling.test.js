@@ -420,9 +420,9 @@ describe('Clichés Generator Error Handling Integration', () => {
       // New controller preserves selection during generation errors for easier retries
       expect(selector.value).toBe('dir-1');
 
-      // Direction display is hidden even though the selection stays in place
+      // Direction details stay visible so the user knows what they're retrying
       const directionDisplay = testBed.getDirectionDisplay();
-      expect(directionDisplay.style.display).toBe('none');
+      expect(directionDisplay.style.display).toBe('block');
     });
 
     it('should properly clean up error state on successful recovery', async () => {
