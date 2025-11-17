@@ -6,8 +6,10 @@
  */
 
 import { deepClone } from '../../utils/cloneUtils.js';
+import { rewriteActorPath } from '../planner/goalPathValidator.js';
 
 const legacyPreconditionWarnings = new Set();
+const requiresWarnings = new Set();
 const LEGACY_PRECONDITION_ASSERTION_CODE = 'GOAP_LEGACY_PRECONDITIONS_ASSERTION';
 
 /**
@@ -52,6 +54,30 @@ export function normalizePlanningPreconditions(task, logger, options = {}) {
         normalizePreconditionEntry(task.planningPreconditions[index], index, task.id)
       );
     }
+  }
+
+  const requiresEntries = normalizeRequiresEntries(task, logger);
+  if (requiresEntries.length > 0) {
+    const normalizedRequires = requiresEntries.map((entry, index) =>
+      normalizePreconditionEntry(
+        buildRequiresCondition(entry),
+        normalized.length + index,
+        task.id
+      )
+    );
+
+    normalized.push(...normalizedRequires);
+
+    recordPreconditionNormalization(task, normalizedRequires, {
+      diagnostics,
+      actorId,
+      goalId,
+      origin,
+      sourceField: 'requires',
+    });
+  }
+
+  if (normalized.length > 0) {
     return normalized;
   }
 
@@ -75,11 +101,12 @@ export function normalizePlanningPreconditions(task, logger, options = {}) {
       );
     }
 
-    recordLegacyNormalization(task, normalized, {
+    recordPreconditionNormalization(task, normalized, {
       diagnostics,
       actorId,
       goalId,
       origin,
+      sourceField: 'preconditions',
     });
 
     if (process.env.GOAP_STATE_ASSERT === '1') {
@@ -136,7 +163,39 @@ function buildDescription(index, taskId) {
   return `Precondition ${index + 1}${suffix}`;
 }
 
-function recordLegacyNormalization(task, normalizedEntries, context = {}) {
+function normalizeRequiresEntries(task, logger) {
+  if (!task || task.requires === undefined || task.requires === null) {
+    return [];
+  }
+
+  if (logger && task.id && !requiresWarnings.has(task.id)) {
+    logger.warn(
+      `Task "${task.id}" uses shorthand "requires". It will be normalized to planningPreconditions per specs/goap-system-specs.md.`,
+      {
+        taskId: task.id,
+        code: 'GOAP_REQUIRES_NORMALIZATION',
+      }
+    );
+    requiresWarnings.add(task.id);
+  }
+
+  const requiresField = Array.isArray(task.requires)
+    ? task.requires
+    : [task.requires];
+
+  return requiresField.filter((entry) => entry !== undefined && entry !== null);
+}
+
+function buildRequiresCondition(entry) {
+  if (typeof entry === 'string') {
+    const rewritten = rewriteActorPath(entry);
+    return { '!!': [{ var: rewritten }] };
+  }
+
+  return entry;
+}
+
+function recordPreconditionNormalization(task, normalizedEntries, context = {}) {
   const diagnostics = context.diagnostics;
   if (!diagnostics) {
     return;
@@ -144,7 +203,7 @@ function recordLegacyNormalization(task, normalizedEntries, context = {}) {
 
   const entry = {
     taskId: task?.id ?? null,
-    sourceField: 'preconditions',
+    sourceField: context.sourceField || 'preconditions',
     normalizedCount: normalizedEntries.length,
     normalizedPreconditions: deepClone(normalizedEntries),
     actorId: context.actorId ?? null,

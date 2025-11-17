@@ -32,6 +32,7 @@ import { goalHasPureNumericRoot } from './goalConstraintUtils.js';
 import { GOAP_PLANNER_FAILURES } from './goapPlannerFailureReasons.js';
 import { createPlanningStateView } from './planningStateView.js';
 import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
+import { validateGoalPaths, shouldEnforceGoalPathLint } from './goalPathValidator.js';
 
 /**
  * GOAP Planner - A* search for task-level planning
@@ -102,6 +103,12 @@ class GoapPlanner {
   /** @type {object|null} */
   #externalTaskLibraryDiagnostics;
 
+  /** @type {Map<string, object>} */
+  #goalPathDiagnostics;
+
+  /** @type {Map<string, object>} */
+  #effectFailureTelemetry;
+
   /**
    * Create new GOAP planner instance
    *
@@ -163,6 +170,8 @@ class GoapPlanner {
     this.#lastFailure = null;
     this.#lastTaskLibraryDiagnostics = null;
     this.#externalTaskLibraryDiagnostics = null;
+    this.#goalPathDiagnostics = new Map();
+    this.#effectFailureTelemetry = new Map();
   }
 
   /**
@@ -227,8 +236,24 @@ class GoapPlanner {
     }
 
     try {
+      const stateView = this.#buildPlanningStateView(state, {
+        origin: 'GoapPlanner.goalSatisfied',
+        goalId: goal?.id,
+      });
+      const actorId = stateView.getActorId();
+
+      const validation = validateGoalPaths(goal.goalState, {
+        actorId,
+        goalId: goal?.id ?? null,
+      });
+
+      if (validation.violations.length > 0) {
+        this.#handleGoalPathViolations(actorId, goal, validation.violations);
+        return false;
+      }
+
       // Build evaluation context from state
-      const context = this.#buildEvaluationContext(state);
+      const context = stateView.getEvaluationContext();
 
       // Add planning state for operators that need it (e.g., has_component)
       context.state = state;
@@ -276,10 +301,16 @@ class GoapPlanner {
    * //   }
    * // }
    */
-  #buildEvaluationContext(state) {
-    const stateView = createPlanningStateView(state, {
+  #buildPlanningStateView(state, metadata = {}) {
+    return createPlanningStateView(state, {
       logger: this.#logger,
-      metadata: { origin: 'GoapPlanner.buildEvaluationContext' },
+      metadata,
+    });
+  }
+
+  #buildEvaluationContext(state) {
+    const stateView = this.#buildPlanningStateView(state, {
+      origin: 'GoapPlanner.buildEvaluationContext',
     });
     return stateView.getEvaluationContext();
   }
@@ -731,6 +762,14 @@ class GoapPlanner {
 
       // Check simulation success
       if (!simulationResult.success) {
+        this.#recordEffectFailureTelemetry(actorId, {
+          taskId: task.id,
+          goalId: goal?.id ?? null,
+          phase: 'distance-check',
+          message:
+            simulationResult.error ||
+            'PlanningEffectsSimulator returned unsuccessfully during distance check',
+        });
         this.#failForInvalidEffect(
           task.id,
           simulationResult.error || 'PlanningEffectsSimulator returned unsuccessfully during distance check',
@@ -856,6 +895,34 @@ class GoapPlanner {
     return deepClone(this.#lastTaskLibraryDiagnostics);
   }
 
+  getGoalPathDiagnostics(actorId) {
+    if (!actorId) {
+      return null;
+    }
+
+    const entry = this.#goalPathDiagnostics.get(actorId);
+    if (!entry) {
+      return null;
+    }
+
+    this.#goalPathDiagnostics.delete(actorId);
+    return deepClone(entry);
+  }
+
+  getEffectFailureTelemetry(actorId) {
+    if (!actorId) {
+      return null;
+    }
+
+    const entry = this.#effectFailureTelemetry.get(actorId);
+    if (!entry) {
+      return null;
+    }
+
+    this.#effectFailureTelemetry.delete(actorId);
+    return deepClone(entry);
+  }
+
   /**
    * Record failure metadata for the most recent planning attempt
    *
@@ -870,6 +937,99 @@ class GoapPlanner {
       reason,
       details,
     };
+  }
+
+  #recordGoalPathViolation(actorId, goal, violations) {
+    const actorKey = actorId || 'unknown';
+    if (!this.#goalPathDiagnostics.has(actorKey)) {
+      this.#goalPathDiagnostics.set(actorKey, {
+        actorId: actorKey,
+        totalViolations: 0,
+        lastViolationAt: null,
+        entries: [],
+      });
+    }
+
+    const entry = this.#goalPathDiagnostics.get(actorKey);
+    const snapshot = {
+      goalId: goal?.id ?? null,
+      goalName: goal?.name ?? null,
+      timestamp: Date.now(),
+      violations: violations.map((violation) => ({
+        path: violation.path,
+        reason: violation.reason,
+      })),
+    };
+
+    entry.totalViolations += violations.length;
+    entry.lastViolationAt = snapshot.timestamp;
+    entry.entries.push(snapshot);
+    if (entry.entries.length > 5) {
+      entry.entries.shift();
+    }
+  }
+
+  #handleGoalPathViolations(actorId, goal, violations) {
+    this.#recordGoalPathViolation(actorId, goal, violations);
+
+    const paths = violations.map((violation) => violation.path).join(', ');
+    const docHint = 'See docs/goap/debugging-tools.md#Planner Contract Checklist for remediation steps.';
+    const goalLabel = goal?.id || goal?.name || 'unknown-goal';
+    const reason = `Goal "${goalLabel}" referenced actor.* paths without actor.components.*: ${paths}`;
+
+    if (shouldEnforceGoalPathLint()) {
+      this.#recordFailure(
+        GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH,
+        `${reason}. ${docHint}`,
+        {
+          actorId,
+          goalId: goal?.id ?? null,
+          goalPathViolations: violations.map((violation) => violation.path),
+        }
+      );
+
+      const error = new Error(`${reason}. ${docHint}`);
+      error.code = GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH;
+      error.details = {
+        actorId,
+        goalId: goal?.id ?? null,
+        goalPathViolations: violations.map((violation) => violation.path),
+        violations,
+      };
+      throw error;
+    }
+
+    this.#logger.warn('Goal JSON Logic referenced actor.* paths without actor.components.*', {
+      actorId,
+      goalId: goal?.id ?? null,
+      violations,
+      code: 'GOAP_INVALID_GOAL_PATH',
+    });
+  }
+
+  #recordEffectFailureTelemetry(actorId, payload) {
+    const actorKey = actorId || 'unknown';
+    if (!this.#effectFailureTelemetry.has(actorKey)) {
+      this.#effectFailureTelemetry.set(actorKey, {
+        actorId: actorKey,
+        totalFailures: 0,
+        lastFailureAt: null,
+        failures: [],
+      });
+    }
+
+    const entry = this.#effectFailureTelemetry.get(actorKey);
+    const snapshot = {
+      ...payload,
+      timestamp: Date.now(),
+    };
+
+    entry.totalFailures += 1;
+    entry.lastFailureAt = snapshot.timestamp;
+    entry.failures.push(snapshot);
+    if (entry.failures.length > 10) {
+      entry.failures.shift();
+    }
   }
 
   /**
@@ -955,6 +1115,35 @@ class GoapPlanner {
       }
       return false;
     };
+
+    const abortForInvalidGoalPath = (error) => {
+      if (error?.code === GOAP_PLANNER_FAILURES.INVALID_GOAL_PATH) {
+        this.#logger.error('Aborting planning due to invalid goal path', {
+          actorId,
+          goalId: goal?.id,
+          reason: error.message,
+          violations: error.details?.goalPathViolations,
+        });
+        return true;
+      }
+      return false;
+    };
+
+    const upfrontGoalPathCheck = validateGoalPaths(goal.goalState, {
+      goalId: goal?.id ?? null,
+      actorId,
+    });
+
+    if (upfrontGoalPathCheck.violations.length > 0) {
+      try {
+        this.#handleGoalPathViolations(actorId, goal, upfrontGoalPathCheck.violations);
+      } catch (error) {
+        if (abortForInvalidGoalPath(error)) {
+          return null;
+        }
+        throw error;
+      }
+    }
 
     // Normalize maxCost upfront to keep structural depth checks fully independent from cost
     const rawCostLimit = goal?.maxCost;
@@ -1110,7 +1299,17 @@ class GoapPlanner {
       });
 
       // 7.4 Goal check - BEFORE adding to closed set
-      if (this.#goalSatisfied(current.state, goal)) {
+      let goalReached = false;
+      try {
+        goalReached = this.#goalSatisfied(current.state, goal);
+      } catch (error) {
+        if (abortForInvalidEffect(error) || abortForInvalidGoalPath(error)) {
+          return null;
+        }
+        throw error;
+      }
+
+      if (goalReached) {
         this.#logger.info('Goal reached', {
           nodesExpanded,
           planLength: currentPathLength,
@@ -1220,6 +1419,14 @@ class GoapPlanner {
           }
 
           if (!simulationResult.success) {
+            this.#recordEffectFailureTelemetry(actorId, {
+              taskId: task.id,
+              goalId: goal?.id ?? null,
+              phase: 'successor-expansion',
+              message:
+                simulationResult.error ||
+                'PlanningEffectsSimulator returned unsuccessfully during successor expansion',
+            });
             this.#failForInvalidEffect(
               task.id,
               simulationResult.error || 'PlanningEffectsSimulator returned unsuccessfully during successor expansion',

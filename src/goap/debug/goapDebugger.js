@@ -388,6 +388,20 @@ class GOAPDebugger {
     );
     report += `\n`;
 
+    report += `--- Goal Path Violations ---\n`;
+    report += this.#formatGoalPathDiagnostics(
+      diagnostics.goalPathDiagnostics,
+      diagnostics.meta.goalPathViolations
+    );
+    report += `\n`;
+
+    report += `--- Effect Failure Telemetry ---\n`;
+    report += this.#formatEffectFailureTelemetry(
+      diagnostics.effectFailureTelemetry,
+      diagnostics.meta.effectFailureTelemetry
+    );
+    report += `\n`;
+
     const eventStream = this.getEventStream(actorId);
     report += `--- Event Stream ---\n`;
     report += this.#formatEventStream(eventStream);
@@ -431,6 +445,8 @@ class GOAPDebugger {
       taskLibraryDiagnostics: diagnostics.taskLibraryDiagnostics,
       planningStateDiagnostics: diagnostics.planningStateDiagnostics,
       eventComplianceDiagnostics: diagnostics.eventComplianceDiagnostics,
+      goalPathDiagnostics: diagnostics.goalPathDiagnostics,
+      effectFailureTelemetry: diagnostics.effectFailureTelemetry,
       diagnosticsMeta: diagnostics.meta,
       eventStream: this.getEventStream(actorId),
       trace: this.getTrace(actorId),
@@ -500,11 +516,15 @@ class GOAPDebugger {
     const taskLibraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
     const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
     const eventComplianceDiagnostics = this.#goapController.getEventComplianceDiagnostics(actorId);
+    const goalPathDiagnostics = this.#goapController.getGoalPathDiagnostics(actorId);
+    const effectFailureTelemetry = this.#goapController.getEffectFailureTelemetry(actorId);
 
     return {
       taskLibraryDiagnostics,
       planningStateDiagnostics,
       eventComplianceDiagnostics,
+      goalPathDiagnostics,
+      effectFailureTelemetry,
       meta: {
         taskLibrary: this.#buildDiagnosticsMeta({
           actorId,
@@ -540,6 +560,18 @@ class GOAPDebugger {
             ].filter(Boolean);
             return timestamps.length > 0 ? Math.max(...timestamps) : null;
           },
+        }),
+        goalPathViolations: this.#buildDiagnosticsMeta({
+          actorId,
+          section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.goalPathViolations,
+          payload: goalPathDiagnostics,
+          lastUpdatedResolver: (payload) => payload?.lastViolationAt,
+        }),
+        effectFailureTelemetry: this.#buildDiagnosticsMeta({
+          actorId,
+          section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.effectFailureTelemetry,
+          payload: effectFailureTelemetry,
+          lastUpdatedResolver: (payload) => payload?.lastFailureAt,
         }),
       },
     };
@@ -701,6 +733,72 @@ class GOAPDebugger {
       );
     } else {
       lines.push('Event payload contract satisfied for this actor.');
+    }
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  #formatGoalPathDiagnostics(payload, meta) {
+    if (!meta.available) {
+      return 'No goal path violations captured. Run npm run validate:goals or enable GOAP_GOAL_PATH_LINT=1 for strict mode.\n';
+    }
+
+    const lines = [];
+    if (meta.stale) {
+      lines.push(
+        `⚠️ STALE — last violation recorded ${meta.lastUpdated || 'unknown'} (enable GOAP_GOAL_PATH_LINT=1 to enforce).`
+      );
+    } else if (meta.lastUpdated) {
+      lines.push(`Last violation recorded: ${meta.lastUpdated}`);
+    }
+
+    lines.push(`Total Violations: ${payload.totalViolations ?? 0}`);
+
+    const entries = Array.isArray(payload.entries) ? payload.entries : [];
+    if (entries.length === 0) {
+      lines.push('Recent Violations: ∅ (all goals follow actor.components.* contract).');
+    } else {
+      lines.push('Recent Violations (max 5):');
+      for (const entry of entries) {
+        lines.push(
+          `  • ${new Date(entry.timestamp).toISOString()} :: goal=${entry.goalId || 'unknown'} paths=${entry.violations
+            .map((violation) => violation.path)
+            .join(', ')}`
+        );
+      }
+      lines.push('See docs/goap/debugging-tools.md#Planner Contract Checklist for remediation steps.');
+    }
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  #formatEffectFailureTelemetry(payload, meta) {
+    if (!meta.available) {
+      return 'No planning-effect telemetry captured. Ensure planner emits INVALID_EFFECT_DEFINITION on simulator failures.\n';
+    }
+
+    const lines = [];
+    if (meta.stale) {
+      lines.push(
+        `⚠️ STALE — last failure recorded ${meta.lastUpdated || 'unknown'} (see docs/goap/debugging-tools.md#Planner Contract Checklist).`
+      );
+    } else if (meta.lastUpdated) {
+      lines.push(`Last failure recorded: ${meta.lastUpdated}`);
+    }
+
+    lines.push(`Total Failures: ${payload.totalFailures ?? 0}`);
+
+    const failures = Array.isArray(payload.failures) ? payload.failures : [];
+    if (failures.length === 0) {
+      lines.push('Recent Failures: ∅');
+    } else {
+      lines.push('Recent Failures (max 10):');
+      for (const failure of failures) {
+        lines.push(
+          `  • ${new Date(failure.timestamp).toISOString()} :: task=${failure.taskId || 'unknown'} phase=${failure.phase || 'n/a'} goal=${failure.goalId || 'n/a'} reason=${failure.message}`
+        );
+      }
+      lines.push('INVALID_EFFECT_DEFINITION failures halt planning — confirm task.preconditions gate simulator usage.');
     }
 
     return `${lines.join('\n')}\n`;

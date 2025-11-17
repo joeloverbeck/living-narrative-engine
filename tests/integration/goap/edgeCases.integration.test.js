@@ -9,7 +9,7 @@ import { describe, it, expect, afterEach } from '@jest/globals';
 import { createGoapTestSetup } from './testFixtures/goapTestSetup.js';
 import { createTestGoal } from './testFixtures/testGoalFactory.js';
 import { createTestTask } from './testFixtures/testTaskFactory.js';
-import { GOAP_PLANNER_FAILURES } from '../../../src/goap/planner/goapPlannerFailureReasons.js';
+import { expectInvalidEffectFailure } from '../../common/goap/plannerTestUtils.js';
 
 /**
  * Wrap raw task definitions into the structure expected by the game data repository.
@@ -529,12 +529,7 @@ describe('GOAP Edge Cases', () => {
       const plan = setup.planner.plan(actor.id, goal, state, { maxCost: 100 });
 
       expect(plan).toBeNull();
-      const failure = setup.planner.getLastFailure();
-      expect(failure).toEqual(
-        expect.objectContaining({
-          code: GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION,
-        })
-      );
+      expectInvalidEffectFailure(setup.planner, invalidTask.id);
     });
   });
 });

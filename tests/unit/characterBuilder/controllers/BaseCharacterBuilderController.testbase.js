@@ -59,10 +59,48 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
     // Event bus mock
     if (!this.mocks.eventBus) {
+      const subscriptions = new Map();
       this.mocks.eventBus = {
-        dispatch: jest.fn(),
-        subscribe: jest.fn(),
-        unsubscribe: jest.fn(),
+        dispatch: jest.fn((eventType, payload) => {
+          const handlers = subscriptions.get(eventType);
+          if (!handlers) {
+            return;
+          }
+          handlers.forEach((handler) => {
+            try {
+              handler({ type: eventType, payload });
+            } catch (error) {
+              this.mocks.logger?.error?.(
+                `Test eventBus handler for '${eventType}' threw an error`,
+                error
+              );
+            }
+          });
+        }),
+        subscribe: jest.fn((eventType, handler) => {
+          if (!subscriptions.has(eventType)) {
+            subscriptions.set(eventType, new Set());
+          }
+          const handlers = subscriptions.get(eventType);
+          handlers.add(handler);
+          return () => {
+            handlers.delete(handler);
+            if (handlers.size === 0) {
+              subscriptions.delete(eventType);
+            }
+          };
+        }),
+        unsubscribe: jest.fn((eventType, handler) => {
+          const handlers = subscriptions.get(eventType);
+          if (!handlers) {
+            return;
+          }
+          handlers.delete(handler);
+          if (handlers.size === 0) {
+            subscriptions.delete(eventType);
+          }
+        }),
+        _subscriptions: subscriptions,
       };
     }
 
@@ -563,30 +601,27 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
     // Character builder service mock
     if (!this.mocks.characterBuilderService) {
       this.mocks.characterBuilderService = {
-        initialize: jest.fn().mockResolvedValue(true),
-        getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-        createCharacterConcept: jest.fn().mockResolvedValue('concept-id'),
-        updateCharacterConcept: jest.fn().mockResolvedValue(true),
-        deleteCharacterConcept: jest.fn().mockResolvedValue(true),
-        getCharacterConcept: jest.fn().mockResolvedValue(null),
-        generateThematicDirections: jest.fn().mockResolvedValue([]),
-        getThematicDirections: jest.fn().mockResolvedValue([]),
-        getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
-        getThematicDirectionsByConceptId: jest.fn().mockResolvedValue([]),
-        getOrphanedThematicDirections: jest.fn().mockResolvedValue([]),
-        updateThematicDirection: jest
-          .fn()
-          .mockImplementation(async (directionId, updates = {}) => ({
-            id: directionId,
-            ...updates,
-          })),
-        deleteThematicDirection: jest.fn().mockResolvedValue(true),
-        saveCoreMotivations: jest.fn().mockResolvedValue([]),
-        getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
-        removeCoreMotivationItem: jest.fn().mockResolvedValue(true),
-        clearCoreMotivationsForDirection: jest.fn().mockResolvedValue(0),
+        initialize: jest.fn(),
+        getAllCharacterConcepts: jest.fn(),
+        createCharacterConcept: jest.fn(),
+        updateCharacterConcept: jest.fn(),
+        deleteCharacterConcept: jest.fn(),
+        getCharacterConcept: jest.fn(),
+        generateThematicDirections: jest.fn(),
+        getThematicDirections: jest.fn(),
+        getAllThematicDirectionsWithConcepts: jest.fn(),
+        getThematicDirectionsByConceptId: jest.fn(),
+        getOrphanedThematicDirections: jest.fn(),
+        updateThematicDirection: jest.fn(),
+        deleteThematicDirection: jest.fn(),
+        saveCoreMotivations: jest.fn(),
+        getCoreMotivationsByDirectionId: jest.fn(),
+        removeCoreMotivationItem: jest.fn(),
+        clearCoreMotivationsForDirection: jest.fn(),
       };
     }
+
+    this._resetCharacterBuilderServiceMocks();
 
     // Schema validator mock
     if (!this.mocks.schemaValidator) {
@@ -594,6 +629,59 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
       };
     }
+  }
+
+  /**
+   * Reset character builder service mocks to default happy-path implementations.
+   * Ensures tests don't leak mock implementations between runs.
+   *
+   * @private
+   */
+  _resetCharacterBuilderServiceMocks() {
+    const service = this.mocks.characterBuilderService;
+    if (!service) {
+      return;
+    }
+
+    const ensureMock = (methodName) => {
+      if (!jest.isMockFunction(service[methodName])) {
+        service[methodName] = jest.fn();
+      }
+      service[methodName].mockReset();
+      return service[methodName];
+    };
+
+    /**
+     * @param {string} methodName
+     * @param {any} value
+     */
+    const mockResolvedValue = (methodName, value) => {
+      ensureMock(methodName).mockResolvedValue(value);
+    };
+
+    mockResolvedValue('initialize', true);
+    mockResolvedValue('getAllCharacterConcepts', []);
+    mockResolvedValue('createCharacterConcept', 'concept-id');
+    mockResolvedValue('updateCharacterConcept', true);
+    mockResolvedValue('deleteCharacterConcept', true);
+    mockResolvedValue('getCharacterConcept', null);
+    mockResolvedValue('generateThematicDirections', []);
+    mockResolvedValue('getThematicDirections', []);
+    mockResolvedValue('getAllThematicDirectionsWithConcepts', []);
+    mockResolvedValue('getThematicDirectionsByConceptId', []);
+    mockResolvedValue('getOrphanedThematicDirections', []);
+    mockResolvedValue('deleteThematicDirection', true);
+    mockResolvedValue('saveCoreMotivations', []);
+    mockResolvedValue('getCoreMotivationsByDirectionId', []);
+    mockResolvedValue('removeCoreMotivationItem', true);
+    mockResolvedValue('clearCoreMotivationsForDirection', 0);
+
+    ensureMock('updateThematicDirection').mockImplementation(
+      async (directionId, updates = {}) => ({
+        id: directionId,
+        ...updates,
+      })
+    );
   }
 
   /**

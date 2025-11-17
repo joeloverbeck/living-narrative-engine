@@ -48,6 +48,8 @@ describe('GOAPDebugger Integration', () => {
         actor: { actorId: 'test-actor', totalEvents: 0, missingPayloads: 0 },
         global: { actorId: 'global', totalEvents: 0, missingPayloads: 0 },
       }),
+      getGoalPathDiagnostics: jest.fn().mockReturnValue(null),
+      getEffectFailureTelemetry: jest.fn().mockReturnValue(null),
       getDiagnosticsContractVersion: jest
         .fn()
         .mockReturnValue(GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version),
