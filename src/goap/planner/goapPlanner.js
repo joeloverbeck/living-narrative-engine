@@ -24,6 +24,7 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { deepClone } from '../../utils/cloneUtils.js';
 import MinHeap from './minHeap.js';
 import PlanningNode from './planningNode.js';
 import { detectGoalType, allowsOvershoot } from './goalTypeDetector.js';
@@ -93,6 +94,12 @@ class GoapPlanner {
   /** @type {{code: string, reason: string, details?: object}|null} */
   #lastFailure;
 
+  /** @type {object|null} */
+  #lastTaskLibraryDiagnostics;
+
+  /** @type {object|null} */
+  #externalTaskLibraryDiagnostics;
+
   /**
    * Create new GOAP planner instance
    *
@@ -152,6 +159,8 @@ class GoapPlanner {
 
     this.#logger.info('GoapPlanner initialized');
     this.#lastFailure = null;
+    this.#lastTaskLibraryDiagnostics = null;
+    this.#externalTaskLibraryDiagnostics = null;
   }
 
   /**
@@ -339,12 +348,26 @@ class GoapPlanner {
    * // ]
    */
   #getTaskLibrary(actorId) {
+    const diagnostics = {
+      actorId,
+      timestamp: Date.now(),
+      namespaces: {},
+      totalTasks: 0,
+      warnings: this.#externalTaskLibraryDiagnostics?.warnings
+        ? [...this.#externalTaskLibraryDiagnostics.warnings]
+        : [],
+      missingActors: [],
+      errors: [],
+    };
+
     // 1. Get all tasks from repository
     // Tasks are stored in registry with key 'tasks' and retrieved via generic get()
     const tasksData = this.#gameDataRepository.get('tasks');
 
     if (!tasksData) {
       this.#logger.warn('No tasks available in repository');
+       diagnostics.errors.push('TASK_REGISTRY_MISSING');
+       this.#lastTaskLibraryDiagnostics = diagnostics;
       return [];
     }
 
@@ -353,15 +376,28 @@ class GoapPlanner {
     const allTasks = [];
     for (const modId in tasksData) {
       const modTasks = tasksData[modId];
-      if (modTasks && typeof modTasks === 'object') {
-        for (const taskId in modTasks) {
-          allTasks.push(modTasks[taskId]);
-        }
+      if (!modTasks || typeof modTasks !== 'object') {
+        diagnostics.warnings.push(
+          `Task namespace "${modId}" is not an object. Ignoring malformed entry.`
+        );
+        continue;
+      }
+
+      const taskIds = Object.keys(modTasks);
+      diagnostics.namespaces[modId] = {
+        taskCount: taskIds.length,
+      };
+      diagnostics.totalTasks += taskIds.length;
+
+      for (const taskId of taskIds) {
+        allTasks.push(modTasks[taskId]);
       }
     }
 
     if (allTasks.length === 0) {
       this.#logger.warn('No tasks found in repository data');
+      diagnostics.errors.push('TASK_LIBRARY_EMPTY');
+      this.#lastTaskLibraryDiagnostics = diagnostics;
       return [];
     }
 
@@ -373,6 +409,9 @@ class GoapPlanner {
 
     if (!actor) {
       this.#logger.error(`Actor not found: ${actorId}`);
+      diagnostics.missingActors.push(actorId);
+      diagnostics.lastErrorCode = 'GOAP_SETUP_MISSING_ACTOR';
+      this.#lastTaskLibraryDiagnostics = diagnostics;
       return [];
     }
 
@@ -415,6 +454,8 @@ class GoapPlanner {
 
     this.#logger.info(`Task library for ${actorId}: ${filteredTasks.length} / ${allTasks.length} tasks`);
 
+    diagnostics.filteredTaskCount = filteredTasks.length;
+    this.#lastTaskLibraryDiagnostics = diagnostics;
     return filteredTasks;
   }
 
@@ -721,11 +762,14 @@ class GoapPlanner {
 
       // Check simulation success
       if (!simulationResult.success) {
-        this.#logger.debug('Effect simulation failed for distance check', {
-          taskId: task.id,
-          error: simulationResult.error
-        });
-        return false;
+        this.#failForInvalidEffect(
+          task.id,
+          simulationResult.error || 'PlanningEffectsSimulator returned unsuccessfully during distance check',
+          {
+            phase: 'distance-check',
+            actorId,
+          }
+        );
       }
 
       const nextState = simulationResult.state;
@@ -777,6 +821,9 @@ class GoapPlanner {
 
       return reduces;
     } catch (error) {
+      if (error?.code === GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION) {
+        throw error;
+      }
       this.#logger.error('Failed to check distance reduction', {
         taskId: task.id,
         goalId: goal.id,
@@ -809,6 +856,35 @@ class GoapPlanner {
   }
 
   /**
+   * Allow external callers (e.g., test harness) to attach normalization warnings.
+   *
+   * @param {{warnings?: string[]}|null} diagnostics - Optional diagnostics payload
+   */
+  setExternalTaskLibraryDiagnostics(diagnostics = null) {
+    if (!diagnostics) {
+      this.#externalTaskLibraryDiagnostics = null;
+      return;
+    }
+
+    const cloned = deepClone(diagnostics);
+    cloned.warnings = Array.isArray(cloned.warnings) ? [...cloned.warnings] : [];
+    this.#externalTaskLibraryDiagnostics = cloned;
+  }
+
+  /**
+   * Return diagnostics collected during the most recent task library build.
+   *
+   * @returns {object|null} Diagnostics object with namespace counts, warnings, etc.
+   */
+  getTaskLibraryDiagnostics() {
+    if (!this.#lastTaskLibraryDiagnostics) {
+      return null;
+    }
+
+    return deepClone(this.#lastTaskLibraryDiagnostics);
+  }
+
+  /**
    * Record failure metadata for the most recent planning attempt
    *
    * @param {string} code - Failure code from GOAP_PLANNER_FAILURES
@@ -822,6 +898,32 @@ class GoapPlanner {
       reason,
       details,
     };
+  }
+
+  /**
+   * Record invalid planning effect metadata and throw a standardized error.
+   *
+   * @param {string} taskId - Task identifier
+   * @param {string} message - Base error message
+   * @param {object} [context={}] - Additional diagnostic data
+   * @private
+   */
+  #failForInvalidEffect(taskId, message, context = {}) {
+    const docHint = 'See docs/goap/debugging-tools.md#Planner Contract Checklist for schema details.';
+    const reason = `Invalid planning effect in task "${taskId}": ${message}. ${docHint}`;
+    this.#recordFailure(
+      GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION,
+      reason,
+      {
+        taskId,
+        ...context,
+      }
+    );
+
+    const error = new Error(reason);
+    error.code = GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION;
+    error.details = context;
+    throw error;
   }
 
   /**
@@ -869,6 +971,19 @@ class GoapPlanner {
       nodesWithoutApplicableTasks: 0,
     };
 
+    const abortForInvalidEffect = (error) => {
+      if (error?.code === GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION) {
+        this.#logger.error('Aborting planning due to invalid planning effect', {
+          actorId,
+          goalId: goal?.id,
+          reason: error.message,
+          details: error.details,
+        });
+        return true;
+      }
+      return false;
+    };
+
     // Normalize maxCost upfront to keep structural depth checks fully independent from cost
     const rawCostLimit = goal?.maxCost;
     const normalizedCostLimit =
@@ -887,12 +1002,17 @@ class GoapPlanner {
 
     // 2. Get task library for actor
     const taskLibrary = this.#getTaskLibrary(actorId);
+    const latestDiagnostics = this.#lastTaskLibraryDiagnostics;
     if (taskLibrary.length === 0) {
       this.#logger.warn('No tasks available for actor', { actorId });
       this.#recordFailure(
         GOAP_PLANNER_FAILURES.TASK_LIBRARY_EXHAUSTED,
         'No planning tasks available for actor',
-        { actorId, goalId: goal?.id }
+        {
+          actorId,
+          goalId: goal?.id,
+          ...(latestDiagnostics ? { diagnostics: latestDiagnostics } : {}),
+        }
       );
       return null;
     }
@@ -1075,13 +1195,21 @@ class GoapPlanner {
         numericGuardCandidates: 0,
         numericGuardRejects: 0,
       };
-      const applicableTasks = this.#getApplicableTasks(
-        taskLibrary,
-        current.state,
-        actorId,
-        goal, // NEW: Pass goal for distance checking
-        applicabilityDiagnostics
-      );
+      let applicableTasks;
+      try {
+        applicableTasks = this.#getApplicableTasks(
+          taskLibrary,
+          current.state,
+          actorId,
+          goal, // NEW: Pass goal for distance checking
+          applicabilityDiagnostics
+        );
+      } catch (error) {
+        if (abortForInvalidEffect(error)) {
+          return null;
+        }
+        throw error;
+      }
 
       if (applicableTasks.length === 0) {
         failureStats.nodesWithoutApplicableTasks += 1;
@@ -1095,125 +1223,132 @@ class GoapPlanner {
       }
 
 
-      for (const task of applicableTasks) {
-        // 7.7.1 Build effect simulation context
-        const effectContext = {
-          actor: actorId, // For parameter resolution (entity_ref: 'actor')
-          actorId,
-          parameters: task.boundParams || {},
-        };
+      try {
+        for (const task of applicableTasks) {
+          // 7.7.1 Build effect simulation context
+          const effectContext = {
+            actor: actorId, // For parameter resolution (entity_ref: 'actor')
+            actorId,
+            parameters: task.boundParams || {},
+          };
 
-        // 7.7.2 Simulate effects
-        let simulationResult;
-        try {
-          simulationResult = this.#effectsSimulator.simulateEffects(
+          // 7.7.2 Simulate effects
+          let simulationResult;
+          try {
+            simulationResult = this.#effectsSimulator.simulateEffects(
+              current.state,
+              task.planningEffects || [],
+              effectContext
+            );
+          } catch (err) {
+            this.#logger.warn('Effect simulation failed', {
+              error: err.message,
+            });
+            continue; // Skip this task
+          }
+
+          if (!simulationResult.success) {
+            this.#failForInvalidEffect(
+              task.id,
+              simulationResult.error || 'PlanningEffectsSimulator returned unsuccessfully during successor expansion',
+              { phase: 'successor-expansion', actorId }
+            );
+          }
+
+          const successorState = simulationResult.state;
+          const successorHash = this.#hashState(successorState);
+
+          // 7.7.4 Calculate scores
+          const taskCost = task.cost || 1; // Default cost is 1
+          const successorGScore = current.gScore + taskCost;
+
+          // 7.7.5 Calculate heuristic
+          let successorHScore;
+          try {
+            successorHScore = this.#heuristicRegistry.calculate(
+              heuristic,
+              successorState,
+              goal,
+              taskLibrary
+            );
+          } catch (err) {
+            this.#logger.warn('Heuristic calculation failed, using Infinity', {
+              error: err.message,
+            });
+            successorHScore = Infinity; // Inadmissible - will be deprioritized
+          }
+
+          // 7.7.5.5 Check if task is reusable (AFTER simulation and heuristic calculation)
+          // Calculate distances for reusability check (use goal-distance heuristic, not general heuristic)
+          const currentDistance = this.#heuristicRegistry.calculate(
+            'goal-distance',
             current.state,
-            task.planningEffects || [],
-            effectContext
+            goal,
+            [] // Empty task library for distance-only calculation
           );
-        } catch (err) {
-          this.#logger.warn('Effect simulation failed', {
-            error: err.message,
-          });
-          continue; // Skip this task
-        }
 
-        if (!simulationResult.success) {
-          this.#logger.debug('Effect simulation unsuccessful', {
-            error: simulationResult.error,
-          });
-          continue; // Skip this task
-        }
-
-
-        const successorState = simulationResult.state;
-        const successorHash = this.#hashState(successorState);
-
-        // 7.7.4 Calculate scores
-        const taskCost = task.cost || 1; // Default cost is 1
-        const successorGScore = current.gScore + taskCost;
-
-        // 7.7.5 Calculate heuristic
-        let successorHScore;
-        try {
-          successorHScore = this.#heuristicRegistry.calculate(
-            heuristic,
+          const successorDistance = this.#heuristicRegistry.calculate(
+            'goal-distance',
             successorState,
             goal,
-            taskLibrary
+            [] // Empty task library for distance-only calculation
           );
-        } catch (err) {
-          this.#logger.warn('Heuristic calculation failed, using Infinity', {
-            error: err.message,
-          });
-          successorHScore = Infinity; // Inadmissible - will be deprioritized
-        }
 
-        // 7.7.5.5 Check if task is reusable (AFTER simulation and heuristic calculation)
-        // Calculate distances for reusability check (use goal-distance heuristic, not general heuristic)
-        const currentDistance = this.#heuristicRegistry.calculate(
-          'goal-distance',
-          current.state,
-          goal,
-          [] // Empty task library for distance-only calculation
-        );
+          const isReusable = this.#isTaskReusable(task, current, successorState, successorDistance, currentDistance, goal);
 
-        const successorDistance = this.#heuristicRegistry.calculate(
-          'goal-distance',
-          successorState,
-          goal,
-          [] // Empty task library for distance-only calculation
-        );
-
-        const isReusable = this.#isTaskReusable(task, current, successorState, successorDistance, currentDistance, goal);
-
-        // 7.7.3 Skip if already in closed set (UNLESS task is reusable)
-        if (closedSet.has(successorHash) && !isReusable) {
-          this.#logger.debug('State already visited', {
-          });
-          continue;
-        }
-
-        // 7.7.6 Create successor node
-        const successor = new PlanningNode({
-          state: successorState,
-          gScore: successorGScore,
-          hScore: successorHScore,
-          parent: current,
-          task: task,
-          taskParameters: task.boundParams || null,
-        });
-
-        // 7.7.7 Check if already in open list
-        const existingIndex = openList.findIndex(node => {
-          const existingHash = this.#hashState(node.state);
-          return existingHash === successorHash;
-        });
-
-        if (existingIndex !== -1) {
-          // State already in open list
-          const existing = openList.get(existingIndex);
-          if (successor.gScore < existing.gScore) {
-            // Found better path - replace
-            this.#logger.debug('Replacing path in open list', {
-              oldGScore: existing.gScore,
-              newGScore: successor.gScore,
+          // 7.7.3 Skip if already in closed set (UNLESS task is reusable)
+          if (closedSet.has(successorHash) && !isReusable) {
+            this.#logger.debug('State already visited', {
             });
-            openList.remove(existingIndex);
-            openList.push(successor);
-          } else {
-            this.#logger.debug('Keeping existing better path', {
-            });
+            continue;
           }
-        } else {
-          // New state - add to open list
-          this.#logger.debug('Adding successor to open list', {
-            gScore: successor.gScore,
-            hScore: successor.hScore,
-            fScore: successor.fScore,
+
+          // 7.7.6 Create successor node
+          const successor = new PlanningNode({
+            state: successorState,
+            gScore: successorGScore,
+            hScore: successorHScore,
+            parent: current,
+            task: task,
+            taskParameters: task.boundParams || null,
           });
-          openList.push(successor);
+
+          // 7.7.7 Check if already in open list
+          const existingIndex = openList.findIndex(node => {
+            const existingHash = this.#hashState(node.state);
+            return existingHash === successorHash;
+          });
+
+          if (existingIndex !== -1) {
+            // State already in open list
+            const existing = openList.get(existingIndex);
+            if (successor.gScore < existing.gScore) {
+              // Found better path - replace
+              this.#logger.debug('Replacing path in open list', {
+                oldGScore: existing.gScore,
+                newGScore: successor.gScore,
+              });
+              openList.remove(existingIndex);
+              openList.push(successor);
+            } else {
+              this.#logger.debug('Keeping existing better path', {
+              });
+            }
+          } else {
+            // New state - add to open list
+            this.#logger.debug('Adding successor to open list', {
+              gScore: successor.gScore,
+              hScore: successor.hScore,
+              fScore: successor.fScore,
+            });
+            openList.push(successor);
+          }
         }
+      } catch (error) {
+        if (abortForInvalidEffect(error)) {
+          return null;
+        }
+        throw error;
       }
     }
 

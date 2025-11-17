@@ -112,7 +112,7 @@ describe('GOAP Backward Compatibility', () => {
           'core:needs': { hunger: 80 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
@@ -123,7 +123,7 @@ describe('GOAP Backward Compatibility', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -179,7 +179,7 @@ describe('GOAP Backward Compatibility', () => {
         id: 'test_actor',
         components: {},
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:arm_self',
@@ -192,7 +192,7 @@ describe('GOAP Backward Compatibility', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -271,7 +271,7 @@ describe('GOAP Backward Compatibility', () => {
           'core:needs': { hunger: 50 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:arm_and_feed',
@@ -287,7 +287,7 @@ describe('GOAP Backward Compatibility', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -371,7 +371,7 @@ describe('GOAP Backward Compatibility', () => {
           'core:location': { position: 'forest' },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:complex_goal',
@@ -392,7 +392,7 @@ describe('GOAP Backward Compatibility', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 

@@ -40,7 +40,7 @@ export const GOAP_EVENTS = {
 
   /**
    * Dispatched when planning fails
-   * Payload: { actorId, goalId, reason }
+   * Payload: { actorId, goalId, reason, code }
    */
   PLANNING_FAILED: 'goap:planning_failed',
 

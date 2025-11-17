@@ -156,7 +156,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
         'core:inventory': { items: ['food'] },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     // Register hunger reduction goal
     const goal = createTestGoal({
@@ -170,7 +170,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
 
     // Build world with dual-format state
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
 
@@ -232,7 +232,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
         'core:needs': { hunger: 20 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
@@ -244,7 +244,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -263,7 +263,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
         'core:inventory': { items: ['food', 'food'] },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     // Goal requires hunger <= 10
     const goal = createTestGoal({
@@ -276,7 +276,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -297,7 +297,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
         'core:inventory': { items: ['food'] },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
@@ -309,7 +309,7 @@ describe('Numeric Goal Planning - Hunger System', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -384,7 +384,7 @@ describe('Numeric Goal Planning - Health System', () => {
         'core:stats': { health: 40 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:heal_self',
@@ -396,7 +396,7 @@ describe('Numeric Goal Planning - Health System', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -415,7 +415,7 @@ describe('Numeric Goal Planning - Health System', () => {
         'core:stats': { health: 10 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:heal_self',
@@ -427,7 +427,7 @@ describe('Numeric Goal Planning - Health System', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -446,7 +446,7 @@ describe('Numeric Goal Planning - Health System', () => {
         'core:stats': { health: 10 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:heal_self',
@@ -458,14 +458,14 @@ describe('Numeric Goal Planning - Health System', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     // Default planner options (maxDepth = 20 per specs/goap-system-specs.md) must allow 3 intent steps
-    const defaultDepthState = buildDualFormatState(actor);
+    const defaultDepthState = setup.buildPlanningState(actor);
     const defaultDepthPlan = setup.planner.plan(actor.id, goal, defaultDepthState, {});
     expect(defaultDepthPlan).not.toBeNull();
     expect(defaultDepthPlan.tasks).toHaveLength(3);
     expect(defaultDepthPlan.cost).toBe(30);
 
     // Tight depth budget (2) should fail even though cost remains unchanged
-    const shallowDepthState = buildDualFormatState(actor);
+    const shallowDepthState = setup.buildPlanningState(actor);
     const depthLimitedPlan = setup.planner.plan(actor.id, goal, shallowDepthState, {
       maxDepth: 2,
     });
@@ -479,7 +479,7 @@ describe('Numeric Goal Planning - Health System', () => {
         'core:stats': { health: 90 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:heal_self',
@@ -491,7 +491,7 @@ describe('Numeric Goal Planning - Health System', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -555,7 +555,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
         'core:resources': { gold: 30 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:accumulate_gold',
@@ -567,7 +567,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -585,7 +585,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
         'core:resources': { gold: 0 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:accumulate_gold',
@@ -597,7 +597,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -622,7 +622,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
         'core:resources': { gold: 50 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:accumulate_gold',
@@ -634,7 +634,7 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -701,7 +701,7 @@ describe('Numeric Goal Planning - Error Cases', () => {
         'core:needs': { hunger: 100 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:impossible_hunger',
@@ -713,7 +713,7 @@ describe('Numeric Goal Planning - Error Cases', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     // Planning should fail gracefully (cost too high for benefit)
@@ -734,7 +734,7 @@ describe('Numeric Goal Planning - Error Cases', () => {
       components: {},
       // No 'core:needs' component added
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:missing_field',
@@ -746,7 +746,7 @@ describe('Numeric Goal Planning - Error Cases', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await expect(setup.controller.decideTurn(actor, world)).resolves.not.toThrow();
@@ -759,7 +759,7 @@ describe('Numeric Goal Planning - Error Cases', () => {
         'core:needs': { hunger: 50 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     // Use unsupported operator (should be handled gracefully)
     const goal = createTestGoal({
@@ -774,7 +774,7 @@ describe('Numeric Goal Planning - Error Cases', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     // Should not throw, may treat as non-numeric constraint
@@ -854,7 +854,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
       id: 'test_actor',
       components: {},
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:be_armed',
@@ -866,7 +866,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -883,7 +883,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
         'core:armed': { equipped: true },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:be_armed-runtime',
@@ -900,7 +900,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     };
 
     const world = {
-      state: buildDualFormatState(staleActorState),
+      state: setup.buildPlanningState(staleActorState),
       entities: {},
     };
 
@@ -921,7 +921,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
         'core:needs': { hunger: 80 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:mixed_goal',
@@ -938,7 +938,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);
@@ -956,7 +956,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
         'core:needs': { hunger: 20 }, // Already satisfies numeric threshold
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:structural_progress_only',
@@ -973,7 +973,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
 
@@ -992,7 +992,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
         'core:needs': { hunger: 75 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:complex_goal',
@@ -1014,7 +1014,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
     await setup.controller.decideTurn(actor, world);

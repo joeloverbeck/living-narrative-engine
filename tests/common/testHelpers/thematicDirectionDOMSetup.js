@@ -352,6 +352,7 @@ export function setupThematicDirectionDOM(mockElements) {
     body: {
       innerHTML: '',
       appendChild: jest.fn(),
+      contains: jest.fn(() => true),
     },
   };
 
@@ -368,6 +369,12 @@ export function setupThematicDirectionDOM(mockElements) {
     global.document.getElementById = mockDocument.getElementById;
     global.document.querySelector = mockDocument.querySelector;
     global.document.createElement = mockDocument.createElement;
+
+    if (!global.document.body) {
+      global.document.body = mockDocument.body;
+    } else if (typeof global.document.body.contains !== 'function') {
+      global.document.body.contains = jest.fn(() => true);
+    }
   } else {
     // If document doesn't exist, create it
     global.document = mockDocument;

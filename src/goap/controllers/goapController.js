@@ -90,6 +90,9 @@ class GoapController {
   /** @type {Map<string, object>} Dependency diagnostics keyed by dependency token */
   #dependencyDiagnostics;
 
+  /** @type {Map<string, object>} Task library diagnostics keyed by actorId */
+  #taskLibraryDiagnostics;
+
   /**
    * Create new GOAP controller instance
    *
@@ -170,6 +173,7 @@ class GoapController {
     this.#parameterResolutionService = parameterResolutionService;
     this.#activePlan = null;
     this.#dependencyDiagnostics = new Map();
+    this.#taskLibraryDiagnostics = new Map();
 
     // Initialize failure tracking (GOAPIMPL-021-05)
     this.#failedGoals = new Map();
@@ -202,6 +206,31 @@ class GoapController {
     this.#logger.debug('GOAP event dispatched', {
       eventType,
       payload,
+    });
+  }
+
+  /**
+   * Capture task library diagnostics from the planner for the active actor.
+   *
+   * @param {string} actorId - Actor identifier
+   * @private
+   */
+  #captureTaskLibraryDiagnostics(actorId) {
+    if (
+      !actorId ||
+      typeof this.#planner.getTaskLibraryDiagnostics !== 'function'
+    ) {
+      return;
+    }
+
+    const diagnostics = this.#planner.getTaskLibraryDiagnostics();
+    if (!diagnostics) {
+      return;
+    }
+
+    this.#taskLibraryDiagnostics.set(actorId, {
+      ...diagnostics,
+      timestamp: Date.now(),
     });
   }
 
@@ -308,12 +337,29 @@ class GoapController {
 
       // Extract state hash from world object
       const initialState = world.state || world;
-      const planResult = this.#planner.plan(
-        actor.id, // actorId string, not actor object
-        goal,
-        initialState, // symbolic state hash
-        {} // options
-      );
+      let planResult;
+      try {
+        planResult = this.#planner.plan(
+          actor.id, // actorId string, not actor object
+          goal,
+          initialState, // symbolic state hash
+          {} // options
+        );
+      } catch (error) {
+        this.#captureTaskLibraryDiagnostics(actor.id);
+        if (
+          error?.code === 'GOAP_SETUP_MISSING_ACTOR' ||
+          error?.code === GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION
+        ) {
+          return this.#handlePlanningFailure(goal, {
+            code: error.code,
+            reason: error.message,
+          });
+        }
+        throw error;
+      }
+
+      this.#captureTaskLibraryDiagnostics(actor.id);
 
       if (!planResult || !planResult.tasks) {
         // 7. Planning failed → handle failure (GOAPIMPL-021-05)
@@ -1292,6 +1338,28 @@ class GoapController {
       providedMethods: [...snapshot.providedMethods],
       missingMethods: [...snapshot.missingMethods],
     }));
+  }
+
+  /**
+   * Get the most recent task library diagnostics for an actor.
+   *
+   * @param {string} actorId - Entity ID of actor
+   * @returns {object|null} Diagnostics payload or null if none captured
+   */
+  getTaskLibraryDiagnostics(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GoapController.getTaskLibraryDiagnostics',
+      this.#logger
+    );
+
+    const diagnostics = this.#taskLibraryDiagnostics.get(actorId);
+    if (!diagnostics) {
+      return null;
+    }
+
+    return JSON.parse(JSON.stringify(diagnostics));
   }
 
   /**

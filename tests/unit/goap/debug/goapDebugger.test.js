@@ -20,7 +20,9 @@ describe('GOAPDebugger', () => {
       'getFailedGoals',
       'getFailedTasks',
       'getDependencyDiagnostics',
+      'getTaskLibraryDiagnostics',
     ]);
+    mockController.getTaskLibraryDiagnostics.mockReturnValue(null);
     mockController.getDependencyDiagnostics.mockReturnValue([]);
 
     mockInspector = testBed.createMock('planInspector', [
@@ -321,6 +323,7 @@ describe('GOAPDebugger', () => {
       mockController.getFailedTasks.mockReturnValue([]);
       mockTracer.getTrace.mockReturnValue(null);
       mockController.getDependencyDiagnostics.mockReturnValue([]);
+      mockController.getTaskLibraryDiagnostics.mockReturnValue(null);
 
       const report = goapDebugger.generateReport('actor-1');
 
@@ -330,6 +333,7 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('Failed Goals: 0');
       expect(report).toContain('Failed Tasks: 0');
       expect(report).toContain('Dependency Contracts');
+      expect(report).toContain('Task Library Diagnostics');
       expect(report).toContain('End Report');
     });
 
@@ -360,6 +364,14 @@ describe('GOAPDebugger', () => {
           status: 'ok',
         },
       ]);
+      mockController.getTaskLibraryDiagnostics.mockReturnValue({
+        actorId: 'actor-1',
+        totalTasks: 3,
+        namespaces: { test: { taskCount: 3 } },
+        warnings: ['deprecated field'],
+        missingActors: [],
+        timestamp: 1234,
+      });
       mockTracer.getTrace.mockReturnValue(null);
 
       const report = goapDebugger.generateReport('actor-1');
@@ -373,6 +385,9 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('[TASK_FAILURE] refinement failed');
       expect(report).toContain('IGoapPlanner: status=ok');
       expect(report).toContain('required: plan, getLastFailure');
+      expect(report).toContain('Task Library Diagnostics');
+      expect(report).toContain('Total Tasks: 3');
+      expect(report).toContain('Warnings:');
     });
 
     it('should include active trace when present', () => {
@@ -401,11 +416,13 @@ describe('GOAPDebugger', () => {
         failedTasks: [],
       };
       const trace = { events: [] };
+      const diagnostics = { actorId: 'actor-1', namespaces: {}, warnings: [] };
 
       mockInspector.inspectJSON.mockReturnValue(planData);
       mockController.getFailedGoals.mockReturnValue([]);
       mockController.getFailedTasks.mockReturnValue([]);
       mockController.getDependencyDiagnostics.mockReturnValue([]);
+      mockController.getTaskLibraryDiagnostics.mockReturnValue(diagnostics);
       mockTracer.getTrace.mockReturnValue(trace);
 
       const report = goapDebugger.generateReportJSON('actor-1');
@@ -416,6 +433,7 @@ describe('GOAPDebugger', () => {
         plan: planData,
         failures,
         dependencies: [],
+        taskLibraryDiagnostics: diagnostics,
         trace,
       });
     });

@@ -9,39 +9,29 @@ import { describe, it, expect, afterEach } from '@jest/globals';
 import { createGoapTestSetup } from './testFixtures/goapTestSetup.js';
 import { createTestGoal } from './testFixtures/testGoalFactory.js';
 import { createTestTask } from './testFixtures/testTaskFactory.js';
+import { GOAP_PLANNER_FAILURES } from '../../../src/goap/planner/goapPlannerFailureReasons.js';
 
 /**
- * Build dual-format state for GOAP planning with numeric components.
- * Creates flat hash format and nested format with flattened aliases.
+ * Wrap raw task definitions into the structure expected by the game data repository.
+ * The runtime stores tasks by mod namespace, so tests must mirror that layout.
  *
- * @param {object} actor - Actor entity with id and components
- * @returns {object} State with dual format
+ * @param {Array<object>} taskList - Task definitions to register
+ * @param {string} [modId='test'] - Optional namespace identifier
+ * @returns {object} Task registry keyed by namespace and task id
  */
-function buildDualFormatState(actor) {
-  const state = {
-    actor: {
-      id: actor.id,
-      components: {},
-    },
+function createTaskRegistry(taskList, modId = 'test') {
+  if (!taskList || taskList.length === 0) {
+    return {};
+  }
+
+  return {
+    [modId]: taskList.reduce((acc, task) => {
+      acc[task.id] = task;
+      return acc;
+    }, {}),
   };
-
-  Object.keys(actor.components).forEach((componentId) => {
-    const componentData = { ...actor.components[componentId] };
-
-    // Flat hash format
-    const flatKey = `${actor.id}:${componentId}`;
-    state[flatKey] = componentData;
-
-    // Nested format with original key
-    state.actor.components[componentId] = componentData;
-
-    // Flattened alias (colons → underscores)
-    const flattenedId = componentId.replace(/:/g, '_');
-    state.actor.components[flattenedId] = componentData;
-  });
-
-  return state;
 }
+
 
 describe('GOAP Edge Cases', () => {
   let setup;
@@ -71,21 +61,17 @@ describe('GOAP Edge Cases', () => {
             type: 'MODIFY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_id: 'test:hunger',
-              modifications: [
-                {
-                  operation: 'add',
-                  path: 'value',
-                  value: -60,
-                },
-              ],
+              component_type: 'test:hunger',
+              field: 'value',
+              mode: 'decrement',
+              value: 60,
             },
           },
         ],
       });
 
       setup = await createGoapTestSetup({
-        tasks: [eatTask],
+        tasks: createTaskRegistry([eatTask]),
       });
 
       const actor = {
@@ -95,7 +81,9 @@ describe('GOAP Edge Cases', () => {
         },
       };
 
-      const state = buildDualFormatState(actor);
+      setup.registerPlanningActor(actor);
+
+      const state = setup.buildPlanningState(actor);
 
       const goal = createTestGoal({
         id: 'test:stay_fed',
@@ -114,7 +102,7 @@ describe('GOAP Edge Cases', () => {
       expect(plan).not.toBeNull();
       expect(plan.tasks).toHaveLength(1);
       expect(plan.tasks[0].taskId).toBe('test:eat');
-      expect(plan.totalCost).toBe(10);
+      expect(plan.cost).toBe(10);
     });
 
     it('should achieve exact equality goals without overshoot (gold = 100)', async () => {
@@ -134,21 +122,17 @@ describe('GOAP Edge Cases', () => {
             type: 'MODIFY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_id: 'test:gold',
-              modifications: [
-                {
-                  operation: 'add',
-                  path: 'value',
-                  value: 25,
-                },
-              ],
+              component_type: 'test:gold',
+              field: 'value',
+              mode: 'increment',
+              value: 25,
             },
           },
         ],
       });
 
       setup = await createGoapTestSetup({
-        tasks: [mineTask],
+        tasks: createTaskRegistry([mineTask]),
       });
 
       const actor = {
@@ -158,7 +142,9 @@ describe('GOAP Edge Cases', () => {
         },
       };
 
-      const state = buildDualFormatState(actor);
+      setup.registerPlanningActor(actor);
+
+      const state = setup.buildPlanningState(actor);
 
       const goal = createTestGoal({
         id: 'test:get_rich',
@@ -177,7 +163,7 @@ describe('GOAP Edge Cases', () => {
       expect(plan).not.toBeNull();
       expect(plan.tasks).toHaveLength(1);
       expect(plan.tasks[0].taskId).toBe('test:mine');
-      expect(plan.totalCost).toBe(15);
+      expect(plan.cost).toBe(15);
     });
   });
 
@@ -200,21 +186,17 @@ describe('GOAP Edge Cases', () => {
             type: 'MODIFY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_id: 'test:hunger',
-              modifications: [
-                {
-                  operation: 'add',
-                  path: 'value',
-                  value: 20, // WRONG DIRECTION
-                },
-              ],
+              component_type: 'test:hunger',
+              field: 'value',
+              mode: 'increment',
+              value: 20, // WRONG DIRECTION
             },
           },
         ],
       });
 
       setup = await createGoapTestSetup({
-        tasks: [eatMoreTask],
+        tasks: createTaskRegistry([eatMoreTask]),
       });
 
       const actor = {
@@ -224,7 +206,9 @@ describe('GOAP Edge Cases', () => {
         },
       };
 
-      const state = buildDualFormatState(actor);
+      setup.registerPlanningActor(actor);
+
+      const state = setup.buildPlanningState(actor);
 
       const goal = createTestGoal({
         id: 'test:stay_fed',
@@ -262,21 +246,17 @@ describe('GOAP Edge Cases', () => {
             type: 'MODIFY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_id: 'test:hunger',
-              modifications: [
-                {
-                  operation: 'add',
-                  path: 'value',
-                  value: -1, // Tiny effect
-                },
-              ],
+              component_type: 'test:hunger',
+              field: 'value',
+              mode: 'decrement',
+              value: 1, // Tiny effect
             },
           },
         ],
       });
 
       setup = await createGoapTestSetup({
-        tasks: [nibbleTask],
+        tasks: createTaskRegistry([nibbleTask]),
       });
 
       const actor = {
@@ -286,7 +266,9 @@ describe('GOAP Edge Cases', () => {
         },
       };
 
-      const state = buildDualFormatState(actor);
+      setup.registerPlanningActor(actor);
+
+      const state = setup.buildPlanningState(actor);
 
       const goal = createTestGoal({
         id: 'test:eliminate_hunger',
@@ -312,7 +294,7 @@ describe('GOAP Edge Cases', () => {
       // Planning should fail with PLANNING_FAILED event
 
       setup = await createGoapTestSetup({
-        tasks: [], // No tasks available
+        tasks: {}, // No tasks available
       });
 
       const actor = {
@@ -322,7 +304,9 @@ describe('GOAP Edge Cases', () => {
         },
       };
 
-      const state = buildDualFormatState(actor);
+      setup.registerPlanningActor(actor);
+
+      const state = setup.buildPlanningState(actor);
 
       const goal = createTestGoal({
         id: 'test:stay_fed',
@@ -360,14 +344,10 @@ describe('GOAP Edge Cases', () => {
             type: 'MODIFY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_id: 'test:hunger',
-              modifications: [
-                {
-                  operation: 'add',
-                  path: 'value',
-                  value: -30,
-                },
-              ],
+              component_type: 'test:hunger',
+              field: 'value',
+              mode: 'decrement',
+              value: 30,
             },
           },
         ],
@@ -386,21 +366,17 @@ describe('GOAP Edge Cases', () => {
             type: 'MODIFY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_id: 'test:health',
-              modifications: [
-                {
-                  operation: 'add',
-                  path: 'value',
-                  value: 30,
-                },
-              ],
+              component_type: 'test:health',
+              field: 'value',
+              mode: 'increment',
+              value: 30,
             },
           },
         ],
       });
 
       setup = await createGoapTestSetup({
-        tasks: [eatTask, healTask],
+        tasks: createTaskRegistry([eatTask, healTask]),
       });
 
       const actor = {
@@ -411,7 +387,9 @@ describe('GOAP Edge Cases', () => {
         },
       };
 
-      const state = buildDualFormatState(actor);
+      setup.registerPlanningActor(actor);
+
+      const state = setup.buildPlanningState(actor);
 
       const goal = createTestGoal({
         id: 'test:survive',
@@ -459,21 +437,17 @@ describe('GOAP Edge Cases', () => {
             type: 'MODIFY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_id: 'test:hunger',
-              modifications: [
-                {
-                  operation: 'add',
-                  path: 'value',
-                  value: -60,
-                },
-              ],
+              component_type: 'test:hunger',
+              field: 'value',
+              mode: 'decrement',
+              value: 60,
             },
           },
         ],
       });
 
       setup = await createGoapTestSetup({
-        tasks: [eatTask],
+        tasks: createTaskRegistry([eatTask]),
       });
 
       const actor = {
@@ -483,7 +457,9 @@ describe('GOAP Edge Cases', () => {
         },
       };
 
-      const state = buildDualFormatState(actor);
+      setup.registerPlanningActor(actor);
+
+      const state = setup.buildPlanningState(actor);
 
       const goal = createTestGoal({
         id: 'test:stay_fed',
@@ -504,6 +480,61 @@ describe('GOAP Edge Cases', () => {
       // Verify diagnostic logging occurred
       // (Check logger calls if mock logger is available in setup)
       // This is a placeholder for actual logging verification
+    });
+  });
+
+  describe('Setup guardrails', () => {
+    it('should surface invalid planning effects with failure code', async () => {
+      const invalidTask = createTestTask({
+        id: 'test:invalid_effect',
+        planningEffects: [
+          {
+            type: 'MODIFY_COMPONENT',
+            parameters: {
+              // Missing component_type on purpose to trigger validation
+              field: 'value',
+              mode: 'decrement',
+              value: 10,
+            },
+          },
+        ],
+      });
+
+      setup = await createGoapTestSetup({
+        tasks: {
+          test: {
+            [invalidTask.id]: invalidTask,
+          },
+        },
+      });
+
+      const actor = {
+        id: 'actor-invalid',
+        components: {
+          'test:hunger': { value: 50 },
+        },
+      };
+
+      setup.registerPlanningActor(actor);
+
+      const goal = createTestGoal({
+        id: 'test:reduce_hunger_invalid',
+        priority: 5,
+        goalState: {
+          '<=': [{ var: 'state.actor.components.test_hunger.value' }, 10],
+        },
+      });
+
+      const state = setup.buildPlanningState(actor);
+      const plan = setup.planner.plan(actor.id, goal, state, { maxCost: 100 });
+
+      expect(plan).toBeNull();
+      const failure = setup.planner.getLastFailure();
+      expect(failure).toEqual(
+        expect.objectContaining({
+          code: GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION,
+        })
+      );
     });
   });
 });

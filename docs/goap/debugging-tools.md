@@ -48,6 +48,7 @@ debugger.stopTrace('actor-123');
 - Immediately call `expectGoapPlannerMock(mock)` after instantiating a test double. It mirrors the runtime dependency validator so tests fail locally instead of during E2E runs.
 - When `GoapController` boots it emits `goap:dependency_validated` telemetry and the debugger prints a **Dependency Contracts** section. That block lists required vs provided methods plus timestamps, making mock drift obvious inside `npm run test:e2e -- --report-goap-debug` logs.
 - Any `GOAP_DEPENDENCY_WARN` log means a mock bypassed the factory or a dependency is missing methods. CI greps for this string to fail builds before the regression spreads.
+- GOAP integration harnesses should call `setup.registerPlanningActor(actor)` and `setup.buildPlanningState(actor)` instead of wiring the entity manager manually. This keeps `SimpleEntityManager`, the dual-format planning state, and the new task validation guardrails perfectly in sync.
 
 ### Test Integration
 
@@ -120,6 +121,19 @@ Failure Tracking:
 - Indicates whether numeric distance heuristics are active or bypassed for the goal
 
 `inspectJSON()` exposes this data via `goal.numericHeuristic`, allowing GOAPDebugger and downstream tooling to display whether `#taskReducesDistance` is active.
+
+### Task Library Diagnostics
+
+**Purpose**: Capture the raw task registry state the planner saw for a given actor.
+
+**What it shows**:
+- Number of tasks discovered per namespace after structural gates.
+- Warnings emitted by the normalization guardrails (deprecated `component_id`, missing namespaces, etc.).
+- Actor IDs that failed to register with `SimpleEntityManager` before planning began.
+
+**Where to find it**:
+- The GOAP debugger report now prints a `Task Library Diagnostics` section, and `generateReportJSON()` returns a `taskLibraryDiagnostics` payload.
+- `GOAP_EVENTS.PLANNING_FAILED` includes a `code` property so CI and content tooling can distinguish setup violations (e.g., `GOAP_SETUP_MISSING_ACTOR`) from genuine search exhaustion.
 
 ### State Diff Viewer
 
