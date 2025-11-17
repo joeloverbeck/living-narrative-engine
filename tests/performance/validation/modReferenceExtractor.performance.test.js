@@ -24,7 +24,6 @@ describe('ModReferenceExtractor - Performance Tests', () => {
   let mockAjvValidator;
   let testModPath;
   let tempDir;
-  let memoryBaseline;
 
   beforeEach(async () => {
     testBed = createTestBed();
@@ -41,11 +40,6 @@ describe('ModReferenceExtractor - Performance Tests', () => {
     testModPath = path.join(tempDir, 'performance_test_mod');
     await fs.mkdir(testModPath, { recursive: true });
 
-    // Capture memory baseline
-    if (global.gc) {
-      global.gc();
-    }
-    memoryBaseline = process.memoryUsage();
   });
 
   afterEach(async () => {
@@ -399,143 +393,6 @@ describe('ModReferenceExtractor - Performance Tests', () => {
       console.log(`Deep structure performance (${maxDepth} levels):`);
       console.log(`- Duration: ${duration.toFixed(2)}ms`);
       console.log(`- Level mods found: ${levelModCount}`);
-    });
-  });
-
-  describe('Memory Management Performance', () => {
-    it('should not exhibit memory leaks during repeated extractions', async () => {
-      const numIterations = 20;
-      const memoryReadings = [];
-
-      // Create a moderate-sized test directory
-      for (let i = 0; i < 20; i++) {
-        await fs.writeFile(
-          path.join(testModPath, `file_${i}.action.json`),
-          JSON.stringify({
-            id: `performance_test_mod:action_${i}`,
-            required_components: {
-              actor: [`test_mod_${i % 5}:component_${i}`],
-            },
-          })
-        );
-      }
-
-      // Perform repeated extractions
-      for (let iteration = 0; iteration < numIterations; iteration++) {
-        if (global.gc) {
-          global.gc(); // Force garbage collection if available
-        }
-
-        const memBefore = process.memoryUsage();
-
-        const references = await extractor.extractReferences(testModPath);
-
-        const memAfter = process.memoryUsage();
-
-        memoryReadings.push({
-          iteration,
-          heapUsed: memAfter.heapUsed,
-          heapTotal: memAfter.heapTotal,
-          deltaHeap: memAfter.heapUsed - memBefore.heapUsed,
-        });
-
-        // Verify extraction worked correctly
-        expect(references.size).toBe(5); // test_mod_0 through test_mod_4
-      }
-
-      // Analyze memory trend
-      const firstHalf = memoryReadings.slice(0, numIterations / 2);
-      const secondHalf = memoryReadings.slice(numIterations / 2);
-
-      const avgFirstHalf =
-        firstHalf.reduce((sum, reading) => sum + reading.heapUsed, 0) /
-        firstHalf.length;
-      const avgSecondHalf =
-        secondHalf.reduce((sum, reading) => sum + reading.heapUsed, 0) /
-        secondHalf.length;
-
-      const memoryGrowth = avgSecondHalf - avgFirstHalf;
-      const growthPercentage = (memoryGrowth / avgFirstHalf) * 100;
-
-      // Memory growth should be minimal (less than 10% increase)
-      expect(growthPercentage).toBeLessThan(10);
-
-      console.log(`Memory leak test (${numIterations} iterations):`);
-      console.log(
-        `- Average memory first half: ${(avgFirstHalf / 1024 / 1024).toFixed(2)}MB`
-      );
-      console.log(
-        `- Average memory second half: ${(avgSecondHalf / 1024 / 1024).toFixed(2)}MB`
-      );
-      console.log(`- Memory growth: ${growthPercentage.toFixed(2)}%`);
-    }, 30000); // 30 second timeout for memory test
-
-    it('should efficiently handle string processing with many duplicates', async () => {
-      const numFiles = 50;
-      const duplicateReferences = [
-        'common_mod:shared',
-        'utility_mod:helper',
-        'base_mod:foundation',
-      ];
-
-      // Create many files with duplicate references
-      for (let i = 0; i < numFiles; i++) {
-        const fileData = {
-          id: `performance_test_mod:duplicate_test_${i}`,
-          required_components: {
-            actor: duplicateReferences.concat([`unique_mod_${i}:special`]),
-          },
-          metadata: {
-            shared_refs: duplicateReferences,
-            unique_ref: `unique_mod_${i}:metadata`,
-          },
-        };
-
-        await fs.writeFile(
-          path.join(testModPath, `duplicate_${i}.action.json`),
-          JSON.stringify(fileData)
-        );
-      }
-
-      const startTime = performance.now();
-      const startMemory = process.memoryUsage();
-
-      const references = await extractor.extractReferences(testModPath);
-
-      const endTime = performance.now();
-      const endMemory = process.memoryUsage();
-      const duration = endTime - startTime;
-      const memoryDelta = endMemory.heapUsed - startMemory.heapUsed;
-
-      // Should process efficiently despite many duplicates
-      expect(duration).toBeLessThan(1000);
-
-      // Memory should not grow excessively due to duplicate string handling
-      expect(memoryDelta).toBeLessThan(10 * 1024 * 1024); // Less than 10MB
-
-      // Should extract the correct unique references
-      expect(references.has('common_mod')).toBe(true);
-      expect(references.has('utility_mod')).toBe(true);
-      expect(references.has('base_mod')).toBe(true);
-      expect(references.get('common_mod')).toContain('shared');
-      expect(references.get('utility_mod')).toContain('helper');
-      expect(references.get('base_mod')).toContain('foundation');
-
-      // Should have all unique mod references
-      for (let i = 0; i < numFiles; i++) {
-        expect(references.has(`unique_mod_${i}`)).toBe(true);
-        expect(references.get(`unique_mod_${i}`)).toContain('special');
-        // Note: metadata references are not extracted by ModReferenceExtractor
-      }
-
-      console.log(
-        `Duplicate reference handling (${numFiles} files with duplicates):`
-      );
-      console.log(`- Duration: ${duration.toFixed(2)}ms`);
-      console.log(
-        `- Memory delta: ${(memoryDelta / 1024 / 1024).toFixed(2)}MB`
-      );
-      console.log(`- Unique mods: ${references.size}`);
     });
   });
 

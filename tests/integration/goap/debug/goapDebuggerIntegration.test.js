@@ -30,6 +30,7 @@ describe('GOAPDebugger Integration', () => {
       getCurrentGoal: jest.fn().mockReturnValue(null),
       getFailedGoals: jest.fn().mockReturnValue([]),
       getFailedTasks: jest.fn().mockReturnValue([]),
+      getDependencyDiagnostics: jest.fn().mockReturnValue([]),
     };
 
     // Mock data registry for action/task names
@@ -224,6 +225,7 @@ describe('GOAPDebugger Integration', () => {
       expect(report).toContain('GOAP Debug Report');
       expect(report).toContain('Active Plan');
       expect(report).toContain('Failure History');
+       expect(report).toContain('Dependency Contracts');
       expect(report).toContain('End Report');
     });
 
@@ -236,6 +238,7 @@ describe('GOAPDebugger Integration', () => {
       expect(report).toHaveProperty('timestamp');
       expect(report).toHaveProperty('plan');
       expect(report).toHaveProperty('failures');
+      expect(report).toHaveProperty('dependencies');
       expect(report).toHaveProperty('trace');
     });
 

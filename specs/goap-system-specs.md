@@ -18,6 +18,17 @@ What a task does to the world (effects in state space).
 
 Otherwise it can’t reason correctly about whether a plan actually achieves a goal.
 
+## Planner Interface Contract
+
+`GoapController` validates the planner against a shared contract defined in `src/goap/planner/goapPlannerContractDefinition.js`. Every runtime implementation and test double must expose the following API:
+
+| Method | Signature | Notes |
+| --- | --- | --- |
+| `plan` | `plan(actorId, goal, initialState, options)` | Returns `{ tasks: [...] }` when a plan exists, or `null` after recording a failure snapshot. The GOAP debugger surfaces this metadata in the **Dependency Contracts** section. |
+| `getLastFailure` | `getLastFailure()` | Returns `{ code, reason, details? }` describing the last `plan()` attempt, or `null` if none. Always returns a shallow copy so callers can mutate without affecting cached diagnostics. |
+
+Tests should import `createGoapPlannerMock` + `expectGoapPlannerMock` from `tests/common/mocks/` to stay aligned with this table.
+
 ## Clean split: planning-tasks vs primitive-actions
 
 ### A. Primitive / executable actions (what we have now)

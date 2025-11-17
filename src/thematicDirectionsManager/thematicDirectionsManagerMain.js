@@ -212,7 +212,9 @@ class ThematicDirectionsManagerApp {
         </div>
       </div>
     `;
-    document.body.innerHTML = errorHtml;
+    if (typeof document !== 'undefined') {
+      document.body.innerHTML = errorHtml;
+    }
   }
 }
 
@@ -220,6 +222,10 @@ class ThematicDirectionsManagerApp {
  * Initialize application when DOM is ready
  */
 function initializeWhenReady() {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialize);
   } else {
@@ -236,15 +242,19 @@ async function initialize() {
     await app.initialize();
   } catch (error) {
     // Use error display instead of console for consistency
-    document.body.innerHTML = `
+    if (typeof document !== 'undefined') {
+      document.body.innerHTML = `
       <div style="color: red; text-align: center; padding: 2rem;">
         <h1>Failed to initialize thematic directions manager</h1>
         <p>${error.message}</p>
       </div>
     `;
+    }
   }
 }
 
-initializeWhenReady();
+if (typeof document !== 'undefined') {
+  initializeWhenReady();
+}
 
 export { ThematicDirectionsManagerApp };

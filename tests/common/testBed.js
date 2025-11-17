@@ -4,6 +4,7 @@
 
 import { jest } from '@jest/globals';
 import { createMockElement } from './testHelpers/thematicDirectionDOMSetup.js';
+import { createGoapPlannerMock } from './mocks/createGoapPlannerMock.js';
 
 // Action tracing classes imported dynamically to avoid circular dependencies
 
@@ -34,6 +35,10 @@ export function createTestBed() {
     mockScopeRegistry: {
       initialize: jest.fn(),
     },
+  };
+
+  const specializedMockFactories = {
+    GoapPlanner: (options = {}) => createGoapPlannerMock(options),
   };
 
   return {
@@ -295,7 +300,16 @@ export function createTestBed() {
       ];
     },
 
-    createMock(name, methods) {
+    createMock(name, methods = [], options = {}) {
+      if (specializedMockFactories[name]) {
+        if (Array.isArray(methods) && methods.length > 0) {
+          mockObjects.mockLogger.warn?.('GOAP_DEPENDENCY_WARN: Ignored manual method list for specialized mock', {
+            dependency: name,
+            requestedMethods: methods,
+          });
+        }
+        return specializedMockFactories[name](options);
+      }
       if (methods.length === 0) {
         // If no methods specified, return a jest function
         return jest.fn();

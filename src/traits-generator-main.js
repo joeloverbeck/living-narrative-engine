@@ -30,7 +30,10 @@ const initializeApp = async () => {
       hooks: {
         postInit: (controller) => {
           // Store controller reference for debugging
-          if (globalThis.process?.env?.NODE_ENV === 'development') {
+          if (
+            globalThis.process?.env?.NODE_ENV === 'development' &&
+            typeof window !== 'undefined'
+          ) {
             window.__traitsGeneratorController = controller;
             console.log('Debug: Controller exposed on window object');
           }
@@ -46,8 +49,10 @@ const initializeApp = async () => {
 };
 
 // Initialize when DOM is loaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-  initializeApp();
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  } else {
+    initializeApp();
+  }
 }

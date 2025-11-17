@@ -31,6 +31,13 @@ async function initializeApp() {
       },
       hooks: {
         postInit: async (controller) => {
+          const hasBrowserEnv =
+            typeof window !== 'undefined' && typeof document !== 'undefined';
+
+          if (!hasBrowserEnv) {
+            return;
+          }
+
           // Store controller reference for debugging
           window.__characterConceptsManagerController = controller;
 
@@ -66,6 +73,10 @@ async function initializeApp() {
  * @param {ILogger} logger - The logger instance
  */
 function setupPageVisibilityHandling(controller, logger) {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return;
+  }
+
   // Handle page visibility changes
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
@@ -98,6 +109,10 @@ function setupPageVisibilityHandling(controller, logger) {
  * @param {ILogger} logger - The logger instance
  */
 function setupGlobalErrorHandling(logger) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   // Handle unhandled errors
   window.addEventListener('error', (event) => {
     logger.error('Unhandled error', {

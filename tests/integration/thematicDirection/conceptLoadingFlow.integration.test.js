@@ -16,6 +16,18 @@ import { CharacterBuilderService } from '../../../src/characterBuilder/services/
 import { CharacterStorageService } from '../../../src/characterBuilder/services/characterStorageService.js';
 import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
 import { createCharacterConcept } from '../../../src/characterBuilder/models/characterConcept.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 
 // Mock DOM environment
 const mockDocument = {
@@ -34,6 +46,14 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
   let mockSchemaValidator;
   let mockDirectionGenerator;
   let mockElements;
+  let asyncUtilitiesToolkit;
+  let domElementManager;
+  let eventListenerRegistry;
+  let controllerLifecycleOrchestrator;
+  let performanceMonitor;
+  let memoryManager;
+  let errorHandlingStrategy;
+  let validationService;
 
   beforeEach(async () => {
     // Set up global document mock by spying on existing document methods
@@ -115,6 +135,59 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
     };
     document.createElement.mockReturnValue(mockOption);
 
+    asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+      logger: mockLogger,
+      defaultWait: 5,
+      instrumentation: { logTimerEvents: false },
+    });
+
+    domElementManager = new DOMElementManager({
+      logger: mockLogger,
+      documentRef: document,
+      performanceRef: performance,
+      elementsRef: {},
+      contextName: 'IntegrationDOMElementManager',
+    });
+
+    eventListenerRegistry = new EventListenerRegistry({
+      logger: mockLogger,
+      asyncUtilities: asyncUtilitiesToolkit,
+      contextName: 'IntegrationEventListenerRegistry',
+    });
+
+    controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+    });
+
+    performanceMonitor = new PerformanceMonitor({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      threshold: 25,
+      contextName: 'IntegrationPerformanceMonitor',
+    });
+
+    memoryManager = new MemoryManager({
+      logger: mockLogger,
+      contextName: 'IntegrationMemoryManager',
+    });
+
+    errorHandlingStrategy = new ErrorHandlingStrategy({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      controllerName: 'ThematicDirectionController',
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+    });
+
+    validationService = new ValidationService({
+      schemaValidator: mockSchemaValidator,
+      logger: mockLogger,
+      handleError: (error, context) =>
+        mockLogger.error('Validation error', error, context),
+      errorCategories: ERROR_CATEGORIES,
+    });
+
     // Create real service instances with mocked dependencies
     database = new CharacterDatabase({ logger: mockLogger });
 
@@ -149,6 +222,14 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
       characterBuilderService: builderService,
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
     });
 
     // Initialize the storage service
@@ -248,7 +329,7 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
 
     // Act & Assert
     await expect(controller.initialize()).rejects.toThrow(
-      'load character concepts failed: Failed to list character concepts: Failed to list character concepts: Database error'
+      /initial data loading failed: .*Database error/
     );
 
       // Verify the error was logged appropriately

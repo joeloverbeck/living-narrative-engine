@@ -14,6 +14,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
+import { expectGoapPlannerMock } from '../../common/mocks/expectGoapPlannerMock.js';
 import GoapController from '../../../src/goap/controllers/goapController.js';
 
 describe('GOAP System - Full Cycle E2E', () => {
@@ -149,7 +150,8 @@ describe('GOAP System - Full Cycle E2E', () => {
     mockEventBus = testBed.createMock('EventBus', ['dispatch']);
 
     // Mock GOAP services (will be replaced with real implementations in future)
-    mockPlanner = testBed.createMock('GoapPlanner', ['plan']);
+    mockPlanner = testBed.createMock('GoapPlanner');
+    expectGoapPlannerMock(mockPlanner);
 
     mockRefinementEngine = testBed.createMock('RefinementEngine', ['refine']);
 
