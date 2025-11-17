@@ -332,6 +332,21 @@ class GOAPDebugger {
     }
     report += `\n`;
 
+    const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
+    report += `--- Planning State Diagnostics ---\n`;
+    if (!planningStateDiagnostics || !planningStateDiagnostics.totalMisses) {
+      report += `No planning-state misses recorded (see docs/goap/debugging-tools.md#planning-state-assertions).\n`;
+    } else {
+      report += `Total Misses: ${planningStateDiagnostics.totalMisses}\n`;
+      const { lastMisses = [] } = planningStateDiagnostics;
+      report += `Recent Misses (max 5):\n`;
+      for (const miss of lastMisses) {
+        report += `  • ${new Date(miss.timestamp).toISOString()} :: path=${miss.path || 'n/a'} origin=${miss.origin || 'unknown'} reason=${miss.reason}\n`;
+      }
+      report += `See docs/goap/debugging-tools.md#planning-state-assertions for remediation steps.\n`;
+    }
+    report += `\n`;
+
     // Current trace (if any)
     const trace = this.getTrace(actorId);
     if (trace) {
@@ -360,6 +375,7 @@ class GOAPDebugger {
     );
 
     const libraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
+    const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
 
     return {
       actorId,
@@ -368,6 +384,7 @@ class GOAPDebugger {
       failures: this.getFailureHistory(actorId),
       dependencies: this.getDependencyDiagnostics(),
       taskLibraryDiagnostics: libraryDiagnostics,
+      planningStateDiagnostics,
       trace: this.getTrace(actorId),
     };
   }

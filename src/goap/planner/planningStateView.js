@@ -1,0 +1,313 @@
+import jsonLogic from 'json-logic-js';
+import { recordPlanningStateMiss } from './planningStateDiagnostics.js';
+
+const viewCache = new WeakMap();
+
+function toMetadata(options = {}) {
+  if (!options) {
+    return {};
+  }
+  if (options.metadata && typeof options.metadata === 'object') {
+    return { ...options.metadata };
+  }
+  return { ...options };
+}
+
+/**
+ * Factory that memoizes PlanningStateView instances per state snapshot.
+ * Subsequent calls update metadata/loggers before returning the cached view.
+ * @param {object} state
+ * @param {object} [options]
+ * @returns {PlanningStateView}
+ */
+export function createPlanningStateView(state, options = {}) {
+  const baseState = state && typeof state === 'object' ? state : {};
+  let view = viewCache.get(baseState);
+  if (view) {
+    view.updateMetadata(options);
+    return view;
+  }
+  view = new PlanningStateView(baseState, options);
+  viewCache.set(baseState, view);
+  return view;
+}
+
+export class PlanningStateView {
+  #state;
+  #logger;
+  #metadata;
+  #actorId;
+  #actorSnapshot;
+  #evaluationContext;
+  #entityIndex;
+
+  constructor(state, options = {}) {
+    this.#state = state && typeof state === 'object' ? state : {};
+    this.#logger = options.logger || null;
+    this.#metadata = toMetadata(options);
+    this.#actorId = this.#metadata.actorId || this.#inferActorId();
+    this.#actorSnapshot = this.#buildActorSnapshot();
+    this.#entityIndex = this.#buildEntityIndex();
+    this.#evaluationContext = this.#buildEvaluationContext();
+  }
+
+  updateMetadata(options = {}) {
+    if (options.logger) {
+      this.#logger = options.logger;
+    }
+    const next = toMetadata(options);
+    if (Object.keys(next).length > 0) {
+      this.#metadata = { ...this.#metadata, ...next };
+      if (next.actorId) {
+        this.#actorId = next.actorId;
+      }
+    }
+  }
+
+  getEvaluationContext() {
+    return this.#evaluationContext;
+  }
+
+  getState() {
+    return this.#state;
+  }
+
+  getActorId() {
+    return this.#actorId || null;
+  }
+
+  hasComponent(entityId, componentId, options = {}) {
+    const normalizedEntityId = entityId ? String(entityId) : null;
+    const normalizedComponentId = componentId ? String(componentId) : null;
+
+    if (!normalizedEntityId || !normalizedComponentId) {
+      this.#recordMiss('component', {
+        entityId: normalizedEntityId,
+        componentId: normalizedComponentId,
+        reason: 'invalid-component-lookup',
+        ...options.metadata,
+      });
+      return { status: 'unknown', value: false };
+    }
+
+    const entry = this.#entityIndex.get(normalizedEntityId);
+    if (!entry) {
+      this.#recordMiss('component', {
+        entityId: normalizedEntityId,
+        componentId: normalizedComponentId,
+        reason: 'entity-missing',
+        ...options.metadata,
+      });
+      return { status: 'unknown', value: false };
+    }
+
+    if (entry.components.has(normalizedComponentId)) {
+      const value = entry.values.get(normalizedComponentId);
+      return {
+        status: 'present',
+        value: typeof value === 'object' ? true : Boolean(value),
+      };
+    }
+
+    return { status: 'absent', value: false };
+  }
+
+  assertPath(path, metadata = {}) {
+    if (!path || typeof path !== 'string') {
+      return undefined;
+    }
+
+    try {
+      const value = jsonLogic.apply({ var: path }, this.#evaluationContext);
+      if (value === undefined || value === null) {
+        this.#recordMiss('path', {
+          path,
+          reason: 'unresolved-path',
+          ...metadata,
+        });
+        return undefined;
+      }
+      return value;
+    } catch (err) {
+      this.#recordMiss('path', {
+        path,
+        reason: err?.message || 'path-resolution-error',
+        ...metadata,
+      });
+      return undefined;
+    }
+  }
+
+  #buildEvaluationContext() {
+    const base = { ...this.#state };
+    if (this.#actorSnapshot) {
+      base.actor = this.#actorSnapshot;
+    }
+
+    const stateWrapper = { ...base };
+    stateWrapper.actor = this.#actorSnapshot || base.actor;
+
+    const context = {
+      ...base,
+      state: stateWrapper,
+    };
+
+    if (!context.actor && this.#actorSnapshot) {
+      context.actor = this.#actorSnapshot;
+    }
+
+    return context;
+  }
+
+  #buildEntityIndex() {
+    const index = new Map();
+
+    const register = (entityId, componentId, value) => {
+      if (!entityId || !componentId) {
+        return;
+      }
+      if (!index.has(entityId)) {
+        index.set(entityId, {
+          components: new Set(),
+          values: new Map(),
+        });
+      }
+      const entry = index.get(entityId);
+      entry.components.add(componentId);
+      entry.values.set(componentId, value);
+    };
+
+    for (const [key, value] of Object.entries(this.#state)) {
+      if (typeof key !== 'string' || !key.includes(':')) {
+        continue;
+      }
+      const [entityId, ...componentParts] = key.split(':');
+      const componentId = componentParts.join(':');
+      register(entityId, componentId, value);
+    }
+
+    const nested = this.#state.state;
+    if (nested && typeof nested === 'object') {
+      for (const [entityId, entityData] of Object.entries(nested)) {
+        if (!entityData || typeof entityData !== 'object') {
+          continue;
+        }
+        const componentsObject = entityData.components || entityData;
+        if (!componentsObject || typeof componentsObject !== 'object') {
+          continue;
+        }
+        for (const [componentId, componentValue] of Object.entries(
+          componentsObject
+        )) {
+          if (componentId.includes('_') && componentsObject[componentId.replace(/_/g, ':')]) {
+            continue; // Skip flattened aliases when colon key exists
+          }
+          register(entityId, componentId, componentValue);
+        }
+      }
+    }
+
+    if (this.#actorId && this.#actorSnapshot?.components) {
+      for (const [componentId, componentValue] of Object.entries(
+        this.#actorSnapshot.components
+      )) {
+        if (componentId.includes('_') && this.#actorSnapshot.components[componentId.replace(/_/g, ':')]) {
+          continue;
+        }
+        register(this.#actorId, componentId, componentValue);
+      }
+    }
+
+    return index;
+  }
+
+  #buildActorSnapshot() {
+    const actorData = this.#state.actor || this.#state.state?.actor;
+    const base = {
+      id: actorData?.id || this.#actorId || null,
+      components: {},
+    };
+
+    if (!base.id) {
+      return null;
+    }
+
+    const registerComponent = (componentId, value) => {
+      if (!componentId) {
+        return;
+      }
+      base.components[componentId] = value;
+      const flattened = this.#flattenComponentId(componentId);
+      base.components[flattened] = value;
+    };
+
+    if (actorData?.components && typeof actorData.components === 'object') {
+      for (const [componentId, componentValue] of Object.entries(actorData.components)) {
+        registerComponent(componentId, componentValue);
+      }
+    }
+
+    for (const [key, value] of Object.entries(this.#state)) {
+      if (typeof key !== 'string' || !key.includes(':')) {
+        continue;
+      }
+      const [entityId, componentId] = key.split(':');
+      if (entityId === base.id) {
+        registerComponent(componentId, value);
+      }
+    }
+
+    return base;
+  }
+
+  #inferActorId() {
+    if (this.#state?.actor?.id) {
+      return this.#state.actor.id;
+    }
+    if (this.#state?.state?.actor?.id) {
+      return this.#state.state.actor.id;
+    }
+    const flatKey = Object.keys(this.#state).find((key) => key.includes(':'));
+    if (flatKey) {
+      return flatKey.split(':')[0];
+    }
+    return null;
+  }
+
+  #flattenComponentId(componentId) {
+    return componentId.replace(/:/g, '_');
+  }
+
+  #recordMiss(type, details = {}) {
+    const payload = {
+      actorId: details.actorId || this.getActorId() || undefined,
+      path: details.path || null,
+      entityId: details.entityId || null,
+      componentId: details.componentId || null,
+      origin: details.origin || this.#metadata.origin || null,
+      goalId: details.goalId || this.#metadata.goalId || null,
+      taskId: details.taskId || this.#metadata.taskId || null,
+      reason: details.reason || 'planning-state-miss',
+      metadata: details.metadata || this.#metadata || null,
+    };
+
+    recordPlanningStateMiss(payload);
+
+    if (this.#logger?.warn) {
+      this.#logger.warn(
+        `PlanningStateView: Missing ${type} information in planning state`,
+        payload
+      );
+    }
+
+    if (process.env.GOAP_STATE_ASSERT === '1') {
+      const error = new Error(
+        `[GOAP_STATE_MISS] PlanningStateView missing ${type}: ${payload.path || payload.componentId || 'unknown'}`
+      );
+      error.code = 'GOAP_STATE_MISS';
+      throw error;
+    }
+  }
+}
+
+export default createPlanningStateView;

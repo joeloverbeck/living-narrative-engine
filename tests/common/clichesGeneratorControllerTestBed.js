@@ -8,6 +8,7 @@ import { ClichesGeneratorController } from '../../src/clichesGenerator/controlle
 import { Cliche } from '../../src/characterBuilder/models/cliche.js';
 import { createEventBus } from './mockFactories/eventBus.js';
 import { v4 as uuidv4 } from 'uuid';
+import { ControllerLifecycleOrchestrator } from '../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
 
 /**
  * Test bed for ClichesGeneratorController
@@ -29,6 +30,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     // Track event dispatches for state management testing
     this.dispatchedEvents = [];
     this.eventCallbacks = new Map();
+    this._controllerInitializeWrapped = false;
 
     // Mock services
     this.mockCharacterBuilderService = {
@@ -94,18 +96,11 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     }
 
     // Create required services for BaseCharacterBuilderController
-    const mockControllerLifecycleOrchestrator = {
-      init: jest.fn().mockResolvedValue(undefined),
-      initialize: jest.fn().mockResolvedValue(undefined),
-      reinitialize: jest.fn().mockResolvedValue(undefined),
-      setControllerName: jest.fn(),
-      registerHook: jest.fn(),
-      registerInitializationHook: jest.fn(),
-      registerDestructionHook: jest.fn(),
-      createControllerMethodHook: jest.fn(() => jest.fn()),
-      makeDestructionSafe: jest.fn((fn) => fn),
-      destroy: jest.fn().mockResolvedValue(undefined),
-    };
+    const controllerLifecycleOrchestrator =
+      new ControllerLifecycleOrchestrator({
+        logger: this.logger,
+        eventBus: this.mockEventBus,
+      });
 
     const mockDomElementManager = {
       cacheElement: jest.fn(),
@@ -163,7 +158,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       eventBus: this.mockEventBus,
       schemaValidator: this.mockSchemaValidator,
       clicheGenerator: this.mockClicheGenerator,
-      controllerLifecycleOrchestrator: mockControllerLifecycleOrchestrator,
+      controllerLifecycleOrchestrator,
       domElementManager: mockDomElementManager,
       eventListenerRegistry: mockEventListenerRegistry,
       asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
@@ -172,6 +167,9 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       errorHandlingStrategy: mockErrorHandlingStrategy,
       validationService: mockValidationService,
     });
+
+    this._controllerInitializeWrapped = false;
+    this._wrapControllerInitialize();
 
     // Initialize the controller
     if (this.controller && this.controller.initialize) {
@@ -660,7 +658,10 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    *
    * @param {string} eventType - Event type to filter by
    */
-  getDispatchedEvents(eventType) {
+  getDispatchedEvents(eventType = null) {
+    if (!eventType) {
+      return [...this.dispatchedEvents];
+    }
     return this.dispatchedEvents.filter((e) => e.type === eventType);
   }
 
@@ -720,13 +721,6 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     });
 
     return baseEventBus;
-  }
-
-  /**
-   * Get all dispatched events
-   */
-  getDispatchedEvents() {
-    return [...this.dispatchedEvents];
   }
 
   /**
@@ -1237,18 +1231,11 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     this.createDOMStructure();
 
     // Create required services for BaseCharacterBuilderController
-    const mockControllerLifecycleOrchestrator = {
-      init: jest.fn().mockResolvedValue(undefined),
-      initialize: jest.fn().mockResolvedValue(undefined),
-      reinitialize: jest.fn().mockResolvedValue(undefined),
-      setControllerName: jest.fn(),
-      registerHook: jest.fn(),
-      registerInitializationHook: jest.fn(),
-      registerDestructionHook: jest.fn(),
-      createControllerMethodHook: jest.fn(() => jest.fn()),
-      makeDestructionSafe: jest.fn((fn) => fn),
-      destroy: jest.fn().mockResolvedValue(undefined),
-    };
+    const controllerLifecycleOrchestrator =
+      new ControllerLifecycleOrchestrator({
+        logger: this.logger,
+        eventBus: this.mockEventBus,
+      });
 
     const mockDomElementManager = {
       cacheElement: jest.fn(),
@@ -1306,7 +1293,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       eventBus: this.mockEventBus,
       schemaValidator: this.mockSchemaValidator,
       clicheGenerator: this.mockClicheGenerator,
-      controllerLifecycleOrchestrator: mockControllerLifecycleOrchestrator,
+      controllerLifecycleOrchestrator,
       domElementManager: mockDomElementManager,
       eventListenerRegistry: mockEventListenerRegistry,
       asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
@@ -1316,8 +1303,41 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       validationService: mockValidationService,
     });
 
+    this._controllerInitializeWrapped = false;
+    this._wrapControllerInitialize();
+
     // Re-initialize the controller
     await this.controller.initialize();
+  }
+
+  /**
+   * Wrap controller.initialize so repeated calls reset lifecycle state.
+   */
+  _wrapControllerInitialize() {
+    if (this._controllerInitializeWrapped || !this.controller) {
+      return;
+    }
+
+    const originalInitialize =
+      typeof this.controller.initialize === 'function'
+        ? this.controller.initialize.bind(this.controller)
+        : null;
+
+    if (!originalInitialize) {
+      return;
+    }
+
+    this.controller.initialize = async (...args) => {
+      if (
+        this.controller &&
+        typeof this.controller._resetInitializationState === 'function'
+      ) {
+        this.controller._resetInitializationState();
+      }
+      return originalInitialize(...args);
+    };
+
+    this._controllerInitializeWrapped = true;
   }
 
   /**

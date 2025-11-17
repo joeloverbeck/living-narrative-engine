@@ -7,6 +7,7 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { deepClone } from '../../utils/cloneUtils.js';
+import { createPlanningStateView } from './planningStateView.js';
 
 /**
  * Relaxed Planning Graph Heuristic
@@ -185,6 +186,12 @@ class RelaxedPlanningGraphHeuristic {
    * @returns {boolean} True if all goal conditions satisfied
    */
   #isGoalSatisfied(goal, state) {
+    const stateView = createPlanningStateView(state, {
+      logger: this.#logger,
+      metadata: { goalId: goal?.id, origin: 'RelaxedPlanningGraphHeuristic' },
+    });
+    const evaluationContext = stateView.getEvaluationContext();
+
     for (const conditionObj of goal.conditions) {
       try {
         const condition = conditionObj.condition;
@@ -192,7 +199,7 @@ class RelaxedPlanningGraphHeuristic {
           return false; // Missing condition means not satisfied
         }
 
-        const satisfied = this.#jsonLogicEvaluator.evaluate(condition, { state });
+        const satisfied = this.#jsonLogicEvaluator.evaluate(condition, evaluationContext);
         if (!satisfied) {
           return false;
         }
@@ -214,10 +221,14 @@ class RelaxedPlanningGraphHeuristic {
    * @returns {Array} Tasks whose preconditions are satisfied
    */
   #findApplicableTasks(tasks, state) {
+    const stateView = createPlanningStateView(state, {
+      logger: this.#logger,
+      metadata: { origin: 'RelaxedPlanningGraphHeuristic' },
+    });
     const applicable = [];
 
     for (const task of tasks) {
-      if (this.#checkPreconditions(task, state)) {
+      if (this.#checkPreconditions(task, stateView)) {
         applicable.push(task);
       }
     }
@@ -233,11 +244,13 @@ class RelaxedPlanningGraphHeuristic {
    * @param {object} state - Current world state
    * @returns {boolean} True if all preconditions satisfied
    */
-  #checkPreconditions(task, state) {
+  #checkPreconditions(task, stateView) {
     // Tasks without preconditions are always applicable
     if (!task.planningPreconditions || task.planningPreconditions.length === 0) {
       return true;
     }
+
+    const evaluationContext = stateView.getEvaluationContext();
 
     for (const preconditionObj of task.planningPreconditions) {
       try {
@@ -246,7 +259,7 @@ class RelaxedPlanningGraphHeuristic {
           return false; // Missing condition means not applicable
         }
 
-        const satisfied = this.#jsonLogicEvaluator.evaluate(condition, { state });
+        const satisfied = this.#jsonLogicEvaluator.evaluate(condition, evaluationContext);
         if (!satisfied) {
           return false;
         }

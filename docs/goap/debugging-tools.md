@@ -48,7 +48,7 @@ debugger.stopTrace('actor-123');
 - Immediately call `expectGoapPlannerMock(mock)` after instantiating a test double. It mirrors the runtime dependency validator so tests fail locally instead of during E2E runs.
 - When `GoapController` boots it emits `goap:dependency_validated` telemetry and the debugger prints a **Dependency Contracts** section. That block lists required vs provided methods plus timestamps, making mock drift obvious inside `npm run test:e2e -- --report-goap-debug` logs.
 - Any `GOAP_DEPENDENCY_WARN` log means a mock bypassed the factory or a dependency is missing methods. CI greps for this string to fail builds before the regression spreads.
-- GOAP integration harnesses should call `setup.registerPlanningActor(actor)` and `setup.buildPlanningState(actor)` instead of wiring the entity manager manually. This keeps `SimpleEntityManager`, the dual-format planning state, and the new task validation guardrails perfectly in sync.
+- GOAP integration harnesses should call `setup.registerPlanningActor(actor)`, `setup.buildPlanningState(actor)`, and `setup.registerPlanningStateSnapshot(state)` instead of wiring the entity manager manually. This keeps `SimpleEntityManager`, the dual-format planning state, and the new task validation guardrails perfectly in sync.
 
 ### Test Integration
 
@@ -500,9 +500,19 @@ it('should debug complete GOAP workflow', async () => {
   expect(plan).not.toBeNull();
   expect(plan.plan.tasks.length).toBeGreaterThan(0);
 
-  const trace = debugger.stopTrace('actor-1');
-  expect(trace.events.length).toBeGreaterThan(0);
+const trace = debugger.stopTrace('actor-1');
+expect(trace.events.length).toBeGreaterThan(0);
 });
+
+## Planning State Assertions
+
+`PlanningStateView` now instruments every heuristic/operator lookup. When a JSON Logic path or `has_component` query references data that is missing from the symbolic state, the helper emits a `goap:state_miss` event, increments the Planning State Diagnostics counters shown in `GOAPDebugger.generateReport()`, and describes the last five misses. When you want those warnings to fail tests immediately, run suites with `GOAP_STATE_ASSERT=1`:
+
+```bash
+GOAP_STATE_ASSERT=1 npm run test:integration -- goap
+```
+
+This flag causes `PlanningStateView` to throw as soon as it records a miss, making it trivial to pinpoint which goal/heuristic referenced the bad path. The event log and debugger output both link back to this section so future contributors know how to enable the stricter mode.
 ```
 
 ## Implementation Notes
@@ -541,6 +551,7 @@ it('should debug complete GOAP workflow', async () => {
 - ✅ `REFINEMENT_STEP_COMPLETED` (line 111)
 - ✅ `REFINEMENT_STEP_FAILED` (line 117)
 - ✅ `REFINEMENT_STATE_UPDATED` (line 123)
+- ✅ `STATE_MISS` (line 132) — emitted whenever `PlanningStateView` cannot find a requested path/component
 
 **Debug Tool Methods** (verified):
 - ✅ PlanInspector: `inspect()`, `inspectJSON()`

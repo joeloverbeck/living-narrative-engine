@@ -30,6 +30,7 @@ import PlanningNode from './planningNode.js';
 import { detectGoalType, allowsOvershoot } from './goalTypeDetector.js';
 import { goalHasPureNumericRoot } from './goalConstraintUtils.js';
 import { GOAP_PLANNER_FAILURES } from './goapPlannerFailureReasons.js';
+import { createPlanningStateView } from './planningStateView.js';
 
 /**
  * GOAP Planner - A* search for task-level planning
@@ -275,56 +276,11 @@ class GoapPlanner {
    * // }
    */
   #buildEvaluationContext(state) {
-    if (!state || typeof state !== 'object') {
-      this.#logger.warn('Invalid state for context building', { state });
-      return {};
-    }
-
-    const context = {};
-
-    try {
-      for (const [key, value] of Object.entries(state)) {
-        // Parse key format: "entityId:componentId" or "entityId:componentId:field"
-        const parts = key.split(':');
-
-        if (parts.length < 2) {
-          this.#logger.debug('Invalid state key format', { key });
-          continue;
-        }
-
-        const [entityId, componentId, ...fieldPath] = parts;
-
-        // Initialize entity if needed
-        if (!context[entityId]) {
-          context[entityId] = {};
-        }
-
-        // Initialize component if needed
-        if (!context[entityId][componentId]) {
-          context[entityId][componentId] = {};
-        }
-
-        // Set value
-        if (fieldPath.length === 0) {
-          // Simple component: "entity:component" => value
-          context[entityId][componentId] = value;
-        } else {
-          // Nested field: "entity:component:field" => value
-          const field = fieldPath.join(':'); // Rejoin in case field has colons
-          context[entityId][componentId][field] = value;
-        }
-      }
-
-      // Expose shorthand actor reference if available in nested state format
-      if (state.actor && typeof state.actor === 'object') {
-        context.actor = state.actor;
-      }
-
-      return context;
-    } catch (err) {
-      this.#logger.error('Context building failed', err, { state });
-      return {};
-    }
+    const stateView = createPlanningStateView(state, {
+      logger: this.#logger,
+      metadata: { origin: 'GoapPlanner.buildEvaluationContext' },
+    });
+    return stateView.getEvaluationContext();
   }
 
   /**

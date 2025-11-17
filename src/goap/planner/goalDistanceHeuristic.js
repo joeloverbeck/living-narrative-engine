@@ -26,6 +26,7 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { createPlanningStateView } from './planningStateView.js';
 
 /**
  * Goal Distance Heuristic for Multi-Action Planning
@@ -129,8 +130,8 @@ class GoalDistanceHeuristic {
    * @returns {number} Distance to goal (0 if satisfied, numeric distance if numeric constraint, 1 otherwise)
    * @private
    */
-  #calculateDistanceForGoalState(state, goalState) {
-    const evaluationContext = this.#createEvaluationContext(state);
+  #calculateDistanceForGoalState(stateView, goalState, metadata = {}) {
+    const evaluationContext = stateView.getEvaluationContext();
 
     try {
       // Check if this is a numeric constraint
@@ -138,7 +139,8 @@ class GoalDistanceHeuristic {
         // Try to calculate numeric distance
         const numericDistance = this.#numericConstraintEvaluator.calculateDistance(
           goalState,
-          evaluationContext
+          evaluationContext,
+          { stateView, metadata }
         );
 
         // If numeric distance is successfully calculated, use it
@@ -184,9 +186,9 @@ class GoalDistanceHeuristic {
    * @returns {number} Distance to goal (enhanced with task estimation if tasks provided)
    * @private
    */
-  #calculateDistanceForGoalStateEnhanced(state, goalState, tasks, goal) {
-    // Get base distance using existing logic
-    const baseDistance = this.#calculateDistanceForGoalState(state, goalState);
+  #calculateDistanceForGoalStateEnhanced(stateView, goalState, tasks, goal) {
+    const metadata = { goalId: goal?.id, origin: 'GoalDistanceHeuristic' };
+    const baseDistance = this.#calculateDistanceForGoalState(stateView, goalState, metadata);
 
     // If goal already satisfied or no tasks available, return base distance
     if (baseDistance === 0 || tasks.length === 0) {
@@ -199,23 +201,20 @@ class GoalDistanceHeuristic {
     }
 
     // Find task that best reduces distance
-    const bestTask = this.#findBestTaskForGoal(tasks, state, goal);
+    const bestTask = this.#findBestTaskForGoal(tasks, stateView, goal);
 
     if (!bestTask) {
-      // No task can reduce distance → use base distance as pessimistic estimate
       return baseDistance;
     }
 
-    // Estimate number of actions needed
-    const taskEffect = this.#estimateTaskEffect(bestTask, state, goal);
+    const taskEffect = this.#estimateTaskEffect(bestTask, stateView, goal);
 
     if (taskEffect === 0) {
-      // Task doesn't reduce distance
       return baseDistance;
     }
 
     const actionsNeeded = Math.ceil(baseDistance / taskEffect);
-    const taskCost = bestTask.cost || 1; // Default cost is 1
+    const taskCost = bestTask.cost || 1;
     const estimatedCost = actionsNeeded * taskCost;
 
     this.#logger.debug('Enhanced heuristic calculation', {
@@ -236,17 +235,17 @@ class GoalDistanceHeuristic {
    * "Most effective" = largest distance reduction per action
    *
    * @param {Array<object>} tasks - Available tasks from task library
-   * @param {object} state - Current world state
+   * @param {PlanningStateView} stateView - Planning state view helper
    * @param {object} goal - Goal being planned for
    * @returns {object|null} Best task or null if none reduce distance
    * @private
    */
-  #findBestTaskForGoal(tasks, state, goal) {
+  #findBestTaskForGoal(tasks, stateView, goal) {
     let bestTask = null;
     let bestEffect = 0;
 
     for (const task of tasks) {
-      const effect = this.#estimateTaskEffect(task, state, goal);
+      const effect = this.#estimateTaskEffect(task, stateView, goal);
 
       if (effect > bestEffect) {
         bestEffect = effect;
@@ -261,12 +260,12 @@ class GoalDistanceHeuristic {
    * Estimate how much a single application of a task reduces distance to goal.
    *
    * @param {object} task - Task to estimate (must have planningEffects)
-   * @param {object} state - Current world state
+   * @param {PlanningStateView} stateView - Planning state helper
    * @param {object} goal - Goal being planned for
    * @returns {number} Distance reduced per action (>= 0)
    * @private
    */
-  #estimateTaskEffect(task, state, goal) {
+  #estimateTaskEffect(task, stateView, goal) {
     // Skip tasks without planning effects
     if (!task.planningEffects || task.planningEffects.length === 0) {
       return 0;
@@ -275,11 +274,11 @@ class GoalDistanceHeuristic {
     // Extract actor ID from state structure for context
     // State has nested format: state.actor.id
     // Fallback: extract from flat hash keys (format: "entityId:componentId")
-    let actorId = state.actor?.id;
+    let actorId = stateView.getActorId();
 
     if (!actorId) {
       // Try to extract from first flat hash key
-      const flatKeys = Object.keys(state).filter(key => key.includes(':'));
+      const flatKeys = Object.keys(stateView.getState()).filter((key) => key.includes(':'));
       if (flatKeys.length > 0) {
         actorId = flatKeys[0].split(':')[0]; // Extract "entityId" from "entityId:componentId"
         this.#logger.debug('Extracted actor ID from flat hash key', {
@@ -290,7 +289,7 @@ class GoalDistanceHeuristic {
       } else {
         this.#logger.warn('Task effect estimation failed: actor ID not found in state', {
           taskId: task.id,
-          stateKeys: Object.keys(state).slice(0, 5), // Log first 5 keys for debugging
+          stateKeys: Object.keys(stateView.getState()).slice(0, 5),
         });
         return 0;
       }
@@ -299,14 +298,18 @@ class GoalDistanceHeuristic {
     // Calculate distance before task application
     const beforeDistance = this.#numericConstraintEvaluator.calculateDistance(
       goal.goalState,
-      this.#createEvaluationContext(state)
+      stateView.getEvaluationContext(),
+      {
+        stateView,
+        metadata: { goalId: goal?.id, taskId: task.id, origin: 'GoalDistanceHeuristic' },
+      }
     );
 
     // Simulate ONE application of task
     // PlanningEffectsSimulator returns { success, state, errors }
     // Use actual actor ID from state to maintain consistency with planning state structure
     const simulationResult = this.#planningEffectsSimulator.simulateEffects(
-      state,
+      stateView.getState(),
       task.planningEffects,
       { actor: actorId, actorId } // Use actual actor ID for proper state key generation
     );
@@ -321,9 +324,14 @@ class GoalDistanceHeuristic {
     }
 
     // Calculate distance after task application
+    const simulatedView = createPlanningStateView(simulationResult.state, {
+      logger: this.#logger,
+      metadata: { goalId: goal?.id, taskId: task.id, origin: 'GoalDistanceHeuristic' },
+    });
     const afterDistance = this.#numericConstraintEvaluator.calculateDistance(
       goal.goalState,
-      this.#createEvaluationContext(simulationResult.state)
+      simulatedView.getEvaluationContext(),
+      { stateView: simulatedView, metadata: { goalId: goal?.id, taskId: task.id } }
     );
 
     // Return absolute reduction in distance (beforeDistance - afterDistance)
@@ -348,14 +356,14 @@ class GoalDistanceHeuristic {
    * @returns {number} Count of unsatisfied conditions
    * @private
    */
-  #calculateDistanceForConditions(state, conditions) {
+  #calculateDistanceForConditions(stateView, conditions) {
     // Handle empty goal (already satisfied)
     if (conditions.length === 0) {
       return 0;
     }
 
     let unsatisfiedCount = 0;
-    const evaluationContext = this.#createEvaluationContext(state);
+    const evaluationContext = stateView.getEvaluationContext();
 
     for (const conditionObj of conditions) {
       try {
@@ -441,14 +449,17 @@ class GoalDistanceHeuristic {
       return Infinity;
     }
 
-    // Handle goalState format (single condition) - supports numeric constraints
+    const stateView = createPlanningStateView(state, {
+      logger: this.#logger,
+      metadata: { goalId: goal?.id, origin: 'GoalDistanceHeuristic' },
+    });
+
     if (goal.goalState) {
-      return this.#calculateDistanceForGoalStateEnhanced(state, goal.goalState, tasks, goal);
+      return this.#calculateDistanceForGoalStateEnhanced(stateView, goal.goalState, tasks, goal);
     }
 
-    // Handle conditions array format (legacy) - no numeric evaluation
     if (Array.isArray(goal.conditions)) {
-      return this.#calculateDistanceForConditions(state, goal.conditions);
+      return this.#calculateDistanceForConditions(stateView, goal.conditions);
     }
 
     // Neither format present
@@ -458,33 +469,6 @@ class GoalDistanceHeuristic {
     return Infinity;
   }
 
-  /**
-   * Build an evaluation context that exposes planning state both via the legacy
-   * `{ state: ... }` wrapper and directly at the root level so JSON Logic rules
-   * can reference either `state.actor.health` or `actor.health`.
-   *
-   * @private
-   * @param {object} state - Planning state object
-   * @returns {object} Evaluation context
-   */
-  #createEvaluationContext(state) {
-    if (!state || typeof state !== 'object') {
-      return { state };
-    }
-
-    // Cache contexts to avoid re-creating objects during tight loops
-    if (this.#logicContextCache.has(state)) {
-      return this.#logicContextCache.get(state);
-    }
-
-    const context = {
-      ...state,
-      state,
-    };
-
-    this.#logicContextCache.set(state, context);
-    return context;
-  }
 }
 
 export default GoalDistanceHeuristic;

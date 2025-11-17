@@ -16,6 +16,10 @@ import {
   GOAP_PLANNER_CONTRACT,
   createPlannerContractSnapshot,
 } from '../planner/goapPlannerContractDefinition.js';
+import {
+  registerPlanningStateDiagnosticsEventBus,
+  getPlanningStateDiagnostics as getPlanningStateDiagnosticsSnapshot,
+} from '../planner/planningStateDiagnostics.js';
 
 /**
  * @typedef {import('../planner/goapPlanner.js').default} GoapPlanner
@@ -187,6 +191,8 @@ class GoapController {
     this.#recordDependencyDiagnostics(
       createPlannerContractSnapshot(this.#planner)
     );
+
+    registerPlanningStateDiagnosticsEventBus(this.#eventBus);
   }
 
   /**
@@ -1360,6 +1366,22 @@ class GoapController {
     }
 
     return JSON.parse(JSON.stringify(diagnostics));
+  }
+
+  /**
+   * Return planning-state diagnostics captured via PlanningStateView instrumentation.
+   * @param {string} actorId
+   * @returns {object|null}
+   */
+  getPlanningStateDiagnostics(actorId) {
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'GoapController.getPlanningStateDiagnostics',
+      this.#logger
+    );
+
+    return getPlanningStateDiagnosticsSnapshot(actorId);
   }
 
   /**
