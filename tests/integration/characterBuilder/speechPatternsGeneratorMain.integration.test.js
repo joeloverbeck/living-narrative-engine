@@ -4,6 +4,8 @@ const MODULE_PATH = '../../../src/speech-patterns-generator-main.js';
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
+const importEntrypointWithForcedAutoInit = async () => import(MODULE_PATH);
+
 describe('speech-patterns-generator main entrypoint integration', () => {
   let readyStateValue;
   let originalReadyDescriptor;
@@ -90,7 +92,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
           return { controller: { id: 'controller' }, container, bootstrapTime: 7 };
         });
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     await flushPromises();
@@ -151,7 +153,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
           bootstrapTime: 11,
         });
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -215,7 +217,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
           bootstrapTime: 9,
         });
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     await flushPromises();
@@ -268,7 +270,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
           bootstrapTime: 10,
         });
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     await flushPromises();
@@ -317,7 +319,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
           bootstrapTime: 5,
         });
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     await flushPromises();
@@ -366,7 +368,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
           bootstrapTime: 6,
         });
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     await flushPromises();
@@ -398,7 +400,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
         .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
         .mockRejectedValue(failure);
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     await flushPromises();
@@ -432,7 +434,7 @@ describe('speech-patterns-generator main entrypoint integration', () => {
         .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
         .mockRejectedValue(failure);
 
-      await import(MODULE_PATH);
+      await importEntrypointWithForcedAutoInit();
     });
 
     await flushPromises();

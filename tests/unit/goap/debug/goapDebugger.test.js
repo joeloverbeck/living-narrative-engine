@@ -11,6 +11,7 @@ describe('GOAPDebugger', () => {
   let mockDiffViewer;
   let mockTracer;
   let mockEventTraceProbe;
+  let mockEventDispatcher;
   let mockLogger;
 
   beforeEach(() => {
@@ -86,6 +87,16 @@ describe('GOAPDebugger', () => {
       }),
       clear: jest.fn(),
     };
+    mockEventDispatcher = {
+      getProbeDiagnostics: jest.fn().mockReturnValue({
+        totalRegistered: 1,
+        totalAttachedEver: 1,
+        totalDetached: 0,
+        lastAttachedAt: Date.now(),
+        lastDetachedAt: null,
+        hasProbes: true,
+      }),
+    };
 
     goapDebugger = new GOAPDebugger({
       goapController: mockController,
@@ -93,6 +104,7 @@ describe('GOAPDebugger', () => {
       stateDiffViewer: mockDiffViewer,
       refinementTracer: mockTracer,
       eventTraceProbe: mockEventTraceProbe,
+      goapEventDispatcher: mockEventDispatcher,
       logger: mockLogger,
     });
   });
@@ -340,6 +352,44 @@ describe('GOAPDebugger', () => {
 
     it('should validate actorId parameter', () => {
       expect(() => goapDebugger.startTrace('')).toThrow();
+    });
+
+    it('warns once per actor when dispatcher reports no probes', () => {
+      mockEventDispatcher.getProbeDiagnostics.mockReturnValue({
+        totalRegistered: 0,
+        totalAttachedEver: 0,
+        totalDetached: 0,
+        lastAttachedAt: null,
+        lastDetachedAt: null,
+        hasProbes: false,
+      });
+
+      goapDebugger.startTrace('actor-1');
+      goapDebugger.startTrace('actor-1');
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('GOAPDebugger trace requested'),
+        expect.objectContaining({
+          actorId: 'actor-1',
+          code: 'GOAP_DEBUGGER_TRACE_PROBE_FALLBACK',
+        })
+      );
+      const fallbackWarnings = mockLogger.warn.mock.calls.filter(
+        ([, meta]) => meta && meta.code === 'GOAP_DEBUGGER_TRACE_PROBE_FALLBACK'
+      );
+      expect(fallbackWarnings).toHaveLength(1);
+
+      const snapshot = goapDebugger.getEventStream('actor-1');
+      expect(snapshot.captureDisabled).toBe(true);
+
+      mockEventDispatcher.getProbeDiagnostics.mockReturnValue({
+        totalRegistered: 1,
+        totalAttachedEver: 1,
+        totalDetached: 0,
+        lastAttachedAt: Date.now(),
+        lastDetachedAt: null,
+        hasProbes: true,
+      });
     });
   });
 

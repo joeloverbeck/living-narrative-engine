@@ -8,6 +8,7 @@
 import { deepClone } from '../../utils/cloneUtils.js';
 
 const legacyPreconditionWarnings = new Set();
+const LEGACY_PRECONDITION_ASSERTION_CODE = 'GOAP_LEGACY_PRECONDITIONS_ASSERTION';
 
 /**
  * Normalize a task's planning preconditions.
@@ -25,9 +26,19 @@ const legacyPreconditionWarnings = new Set();
  * @param {import('../../logging/logger.js').default} logger - Logger for warnings
  * @returns {Array<{description: string, condition: object}>} Normalized preconditions
  */
-export function normalizePlanningPreconditions(task, logger) {
+export function normalizePlanningPreconditions(task, logger, options = {}) {
   if (!task || typeof task !== 'object') {
     return [];
+  }
+
+  const settings = options || {};
+  const diagnostics = settings.diagnostics || null;
+  const actorId = settings.actorId ?? null;
+  const goalId = settings.goalId ?? null;
+  const origin = settings.origin ?? null;
+
+  if (diagnostics && !Array.isArray(diagnostics.preconditionNormalizations)) {
+    diagnostics.preconditionNormalizations = [];
   }
 
   const normalized = [];
@@ -48,7 +59,12 @@ export function normalizePlanningPreconditions(task, logger) {
     if (logger && task.id && !legacyPreconditionWarnings.has(task.id)) {
       logger.warn(
         `Task "${task.id}" uses legacy "preconditions". ` +
-          'Update to "planningPreconditions" per specs/goap-system-specs.md.'
+          'Update to "planningPreconditions" per specs/goap-system-specs.md.',
+        {
+          taskId: task.id,
+          origin,
+          code: 'GOAP_LEGACY_PRECONDITIONS_FALLBACK',
+        }
       );
       legacyPreconditionWarnings.add(task.id);
     }
@@ -57,6 +73,22 @@ export function normalizePlanningPreconditions(task, logger) {
       normalized.push(
         normalizePreconditionEntry(task.preconditions[index], index, task.id)
       );
+    }
+
+    recordLegacyNormalization(task, normalized, {
+      diagnostics,
+      actorId,
+      goalId,
+      origin,
+    });
+
+    if (process.env.GOAP_STATE_ASSERT === '1') {
+      const assertionError = new Error(
+        `Legacy "preconditions" detected for task "${task.id}" with GOAP_STATE_ASSERT=1`
+      );
+      assertionError.code = LEGACY_PRECONDITION_ASSERTION_CODE;
+      assertionError.taskId = task.id;
+      throw assertionError;
     }
   }
 
@@ -102,4 +134,24 @@ function normalizePreconditionEntry(entry, index, taskId) {
 function buildDescription(index, taskId) {
   const suffix = taskId ? ` for ${taskId}` : '';
   return `Precondition ${index + 1}${suffix}`;
+}
+
+function recordLegacyNormalization(task, normalizedEntries, context = {}) {
+  const diagnostics = context.diagnostics;
+  if (!diagnostics) {
+    return;
+  }
+
+  const entry = {
+    taskId: task?.id ?? null,
+    sourceField: 'preconditions',
+    normalizedCount: normalizedEntries.length,
+    normalizedPreconditions: deepClone(normalizedEntries),
+    actorId: context.actorId ?? null,
+    goalId: context.goalId ?? null,
+    origin: context.origin ?? null,
+    timestamp: Date.now(),
+  };
+
+  diagnostics.preconditionNormalizations.push(entry);
 }

@@ -4,6 +4,7 @@
  */
 
 import { initializeApp } from './character-concepts-manager-main.js';
+import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
 
 /**
  * Wait for DOM to be ready
@@ -25,7 +26,7 @@ function waitForDOM() {
   });
 }
 
-if (typeof document !== 'undefined') {
+if (shouldAutoInitializeDom()) {
   // Start initialization when DOM is ready
   waitForDOM().then(() => {
     initializeApp().catch((error) => {

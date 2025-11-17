@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GoapController from '../../../../src/goap/controllers/goapController.js';
 import { createGoapPlannerMock } from '../../../common/mocks/createGoapPlannerMock.js';
 import { expectGoapPlannerMock } from '../../../common/mocks/expectGoapPlannerMock.js';
+import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
 describe('GoapController - Core Structure', () => {
   let mockLogger;
@@ -45,6 +46,7 @@ describe('GoapController - Core Structure', () => {
 
     mockGoapPlanner = createGoapPlannerMock();
     expectGoapPlannerMock(mockGoapPlanner);
+    mockGoapPlanner.getTaskLibraryDiagnostics = jest.fn();
 
     mockRefinementEngine = {
       refine: jest.fn(),
@@ -230,6 +232,55 @@ describe('GoapController - Core Structure', () => {
         {
           actorId: 'actor_1',
         }
+      );
+    });
+
+    it('dispatches task preconditions normalization events when diagnostics are present', async () => {
+      const goapEventDispatcher = {
+        dispatch: jest.fn(),
+        getComplianceSnapshot: jest.fn().mockReturnValue({ actors: [], global: null }),
+        getComplianceForActor: jest.fn().mockReturnValue(null),
+      };
+      const eventfulController = new GoapController({
+        ...createValidDependencies(),
+        eventBus: undefined,
+        goapEventDispatcher,
+      });
+
+      mockDataRegistry.getAll.mockReturnValue([
+        { id: 'goal:reduce-hunger', priority: 1, goalState: {}, relevance: null },
+      ]);
+      mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
+      mockGoapPlanner.plan.mockReturnValueOnce({ tasks: [] });
+      mockGoapPlanner.getTaskLibraryDiagnostics.mockReturnValueOnce({
+        preconditionNormalizations: [
+          {
+            taskId: 'task:legacy',
+            sourceField: 'preconditions',
+            normalizedCount: 1,
+            normalizedPreconditions: [
+              { description: 'legacy gate', condition: { '==': [true, true] } },
+            ],
+            actorId: 'actor_1',
+            goalId: 'goal:reduce-hunger',
+            timestamp: 987,
+          },
+        ],
+      });
+
+      await eventfulController.decideTurn({ id: 'actor_1' }, { state: {} });
+
+      const normalizationCall = goapEventDispatcher.dispatch.mock.calls.find(
+        ([eventType]) => eventType === GOAP_EVENTS.TASK_PRECONDITIONS_NORMALIZED
+      );
+      expect(normalizationCall).toBeDefined();
+      expect(normalizationCall[1]).toEqual(
+        expect.objectContaining({
+          actorId: 'actor_1',
+          taskId: 'task:legacy',
+          sourceField: 'preconditions',
+          normalizedCount: 1,
+        })
       );
     });
   });

@@ -10,6 +10,9 @@ process.env.NODE_ENV = 'test';
 process.env.DEBUG_LOG_MODE = 'test';
 process.env.DEBUG_LOG_SILENT = 'true';
 
+// Allow browser entrypoint modules to auto-initialize inside Jest unless overridden per test.
+globalThis.__LNE_FORCE_AUTO_INIT__ = true;
+
 // --- Polyfills for Jest Node environment ---
 
 // 1. TextEncoder/TextDecoder (needed by jsdom/whatwg-url)

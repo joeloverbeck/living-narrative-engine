@@ -455,3 +455,22 @@ export function getMemoryUsagePercent() {
   }
   return usage.heapUsed / usage.heapLimit;
 }
+
+/**
+ * Determine whether DOM-specific auto initialization should run.
+ * @returns {boolean}
+ */
+export function shouldAutoInitializeDom() {
+  if (typeof document === 'undefined') {
+    return false;
+  }
+
+  if (typeof globalThis !== 'undefined') {
+    const override = globalThis.__LNE_FORCE_AUTO_INIT__;
+    if (typeof override === 'boolean') {
+      return override;
+    }
+  }
+
+  return !isTestEnvironment();
+}

@@ -11,6 +11,7 @@ import {
   DESTRUCTION_PHASES,
   LIFECYCLE_PHASES,
 } from '../../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { UI_STATES } from '../../../../src/shared/characterBuilder/uiStateManager.js';
 
 /**
  * Base test class for CharacterBuilder controllers
@@ -488,7 +489,10 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
     // Error handling strategy mock
     if (!this.mocks.errorHandlingStrategy) {
-      this.mocks.errorHandlingStrategy = {
+      const retryableMessagePattern =
+        /(network|timeout|fetch|temporary|unavailable)/i;
+
+      const errorHandlingStrategyMock = {
         configureContext: jest.fn(),
         handleError: jest.fn(),
         buildErrorDetails: jest.fn(),
@@ -496,14 +500,46 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         generateUserMessage: jest.fn(),
         logError: jest.fn(),
         showErrorToUser: jest.fn(),
-        handleServiceError: jest.fn(),
-        executeWithErrorHandling: jest.fn(async (operation) => {
-          if (typeof operation === 'function') {
-            return await operation();
-          }
-          return undefined;
+        handleServiceError: jest.fn((error) => {
+          throw error;
         }),
-        isRetryableError: jest.fn(),
+        executeWithErrorHandling: jest.fn(
+          async (operation, _operationName, options = {}) => {
+            const { retries = 0, retryDelay = 0 } = options;
+            let attempt = 0;
+            let lastError;
+
+            while (attempt <= retries) {
+              try {
+                const result =
+                  typeof operation === 'function'
+                    ? await operation()
+                    : operation;
+                return result;
+              } catch (error) {
+                lastError = error;
+                attempt += 1;
+                const canRetry =
+                  errorHandlingStrategyMock.isRetryableError(error) &&
+                  attempt <= retries;
+
+                if (!canRetry) {
+                  break;
+                }
+
+                // Yield back to the event loop without incurring the full delay
+                if (retryDelay > 0) {
+                  await new Promise((resolve) => setTimeout(resolve, 0));
+                }
+              }
+            }
+
+            throw lastError;
+          }
+        ),
+        isRetryableError: jest.fn((error) =>
+          retryableMessagePattern.test(error?.message || '')
+        ),
         determineRecoverability: jest.fn(),
         isRecoverableError: jest.fn(),
         attemptErrorRecovery: jest.fn(),
@@ -511,6 +547,8 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         wrapError: jest.fn(),
         resetLastError: jest.fn(),
       };
+
+      this.mocks.errorHandlingStrategy = errorHandlingStrategyMock;
     }
 
     // Validation service mock
@@ -629,6 +667,44 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
    */
   async wait(durationMs = 0) {
     await new Promise((resolve) => setTimeout(resolve, durationMs));
+  }
+
+  /**
+   * Assert that the UI state manager is showing the expected state.
+   * @param {string} expectedState
+   * @param {import('../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js').BaseCharacterBuilderController} [controller]
+   */
+  assertUIState(expectedState, controller = this.controller) {
+    if (!controller) {
+      throw new Error('Controller instance is required to assert UI state');
+    }
+
+    const normalizedState = String(expectedState).toLowerCase();
+    const validStates = Object.values(UI_STATES);
+    if (!validStates.includes(normalizedState)) {
+      throw new Error(`Invalid UI state '${expectedState}'`);
+    }
+
+    expect(controller.currentState).toBe(normalizedState);
+
+    const stateElements = {
+      [UI_STATES.EMPTY]: document.getElementById('empty-state'),
+      [UI_STATES.LOADING]: document.getElementById('loading-state'),
+      [UI_STATES.RESULTS]: document.getElementById('results-state'),
+      [UI_STATES.ERROR]: document.getElementById('error-state'),
+    };
+
+    Object.entries(stateElements).forEach(([state, element]) => {
+      if (!element) {
+        return;
+      }
+      const isVisible = element.style.display !== 'none';
+      if (state === normalizedState) {
+        expect(isVisible).toBe(true);
+      } else {
+        expect(isVisible).toBe(false);
+      }
+    });
   }
 
   /**

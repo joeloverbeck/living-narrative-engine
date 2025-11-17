@@ -7,6 +7,10 @@ export const GOAP_EVENT_COMPLIANCE_CODES = {
   MISSING_PAYLOAD: 'GOAP_EVENT_PAYLOAD_MISSING',
   INVALID_SIGNATURE: 'GOAP_EVENT_INVALID_SIGNATURE',
 };
+export const GOAP_EVENT_TRACE_LOG_CODES = {
+  DISABLED: 'GOAP_EVENT_TRACE_DISABLED',
+  ENABLED: 'GOAP_EVENT_TRACE_ENABLED',
+};
 
 const warnedEventBuses = new WeakSet();
 
@@ -108,7 +112,9 @@ function cloneComplianceEntry(entry) {
  * @returns {{
  *   dispatch(eventType: string, payload?: object, options?: { allowEmptyPayload?: boolean, actorIdOverride?: string }): Promise<void> | void,
  *   getComplianceSnapshot(): { global: object|null, actors: object[] },
- *   getComplianceForActor(actorId: string): object|null
+ *   getComplianceForActor(actorId: string): object|null,
+ *   registerProbe(probe: IGoapEventProbe): () => void,
+ *   getProbeDiagnostics(): { totalRegistered: number, totalAttachedEver: number, totalDetached: number, lastAttachedAt: number|null, lastDetachedAt: number|null, hasProbes: boolean }
  * }}
  */
 export function createGoapEventDispatcher(eventBus, logger, options = {}) {
@@ -120,8 +126,24 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
   const activeProbes = Array.isArray(probes)
     ? probes.filter((probe) => probe && typeof probe.record === 'function')
     : [];
+  const probeStats = {
+    totalRegistered: activeProbes.length,
+    totalAttachedEver: activeProbes.length,
+    totalDetached: 0,
+    lastAttachedAt: activeProbes.length > 0 ? Date.now() : null,
+    lastDetachedAt: null,
+    hasProbes: activeProbes.length > 0,
+  };
   const complianceByActor = new Map();
   complianceByActor.set(GLOBAL_ACTOR_ID, createComplianceEntry(GLOBAL_ACTOR_ID));
+  let lastProbeLogState = probeStats.hasProbes ? 'enabled' : 'disabled';
+
+  if (!probeStats.hasProbes) {
+    safeLogger.info('GOAP event trace probes unavailable; dispatcher constructed without probes.', {
+      code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED,
+      context: context || 'GoapEventDispatcher',
+    });
+  }
 
   const emitToProbes = (eventType, payload, metadata = {}) => {
     if (activeProbes.length === 0) {
@@ -148,6 +170,24 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
     }
   };
 
+  const logProbeStateChange = (state) => {
+    if (lastProbeLogState === state) {
+      return;
+    }
+    lastProbeLogState = state;
+    if (state === 'enabled') {
+      safeLogger.info('GOAP event trace probe attached; tracing enabled.', {
+        code: GOAP_EVENT_TRACE_LOG_CODES.ENABLED,
+        context: context || 'GoapEventDispatcher',
+      });
+    } else {
+      safeLogger.info('GOAP event trace probes unavailable; tracing disabled.', {
+        code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED,
+        context: context || 'GoapEventDispatcher',
+      });
+    }
+  };
+
   const registerProbe = (probe) => {
     if (!probe || typeof probe.record !== 'function') {
       safeLogger.warn('GOAP event probe missing record() method', {
@@ -156,11 +196,26 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
       return () => {};
     }
 
+    const wasEmpty = activeProbes.length === 0;
     activeProbes.push(probe);
+    probeStats.totalRegistered = activeProbes.length;
+    probeStats.totalAttachedEver += 1;
+    probeStats.hasProbes = activeProbes.length > 0;
+    probeStats.lastAttachedAt = Date.now();
+    if (wasEmpty) {
+      logProbeStateChange('enabled');
+    }
     return () => {
       const index = activeProbes.indexOf(probe);
       if (index >= 0) {
         activeProbes.splice(index, 1);
+        probeStats.totalRegistered = activeProbes.length;
+        probeStats.totalDetached += 1;
+        probeStats.hasProbes = activeProbes.length > 0;
+        probeStats.lastDetachedAt = Date.now();
+        if (activeProbes.length === 0) {
+          logProbeStateChange('disabled');
+        }
       }
     };
   };
@@ -349,6 +404,17 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
     },
 
     registerProbe,
+
+    getProbeDiagnostics() {
+      return {
+        totalRegistered: probeStats.totalRegistered,
+        totalAttachedEver: probeStats.totalAttachedEver,
+        totalDetached: probeStats.totalDetached,
+        lastAttachedAt: probeStats.lastAttachedAt,
+        lastDetachedAt: probeStats.lastDetachedAt,
+        hasProbes: probeStats.hasProbes,
+      };
+    },
   };
 
   return dispatcher;

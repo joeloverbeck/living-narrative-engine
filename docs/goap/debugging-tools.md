@@ -380,6 +380,13 @@ debugger.stopTrace('actor-456');
 
 `createGoapEventTraceProbe()` fans out from `createGoapEventDispatcher()` so probes see the normalized `(eventType, payload)` pairs without mutating the shared bus. `validateEventBusContract(eventBus)`—and the shared `tests/common/mocks/createEventBusMock.js` helper—keep every dependency on the `(eventType, payload)` signature before anything reaches the probe.
 
+### Trace Wiring Checklist
+
+- Call `setup.bootstrapEventTraceProbe()` from `createGoapTestSetup()` when writing integration harnesses. It creates a real `createGoapEventTraceProbe()` instance, attaches it to `createGoapEventDispatcher()`, and returns `{ probe, detach }` so suites can opt out if needed.
+- Inspect `setup.goapEventDispatcherLogger.info` (or your runtime logger) for `GOAP_EVENT_TRACE_DISABLED` / `GOAP_EVENT_TRACE_ENABLED` messages. The dispatcher now calls `getProbeDiagnostics()` internally and emits these codes whenever the active probe count drops to zero or rises back above it.
+- When `GOAPDebugger.startTrace()` runs without any dispatcher probes, it logs `GOAP_DEBUGGER_TRACE_PROBE_FALLBACK`, flags `getEventStream()` with `captureDisabled: true`, and leaves the buffered probe untouched so suites can detect the misconfiguration before debugging.
+- `createGoapEventTraceProbe().getTotals()` now reports `{ totalRecorded, totalViolations, attachedAtLeastOnce }`. Dashboards and CI can alert when `attachedAtLeastOnce` stays `false` across a session, signaling that tracing never ran.
+
 ## Troubleshooting
 
 ### Common Issues
