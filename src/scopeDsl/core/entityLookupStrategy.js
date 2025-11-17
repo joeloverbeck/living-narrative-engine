@@ -11,26 +11,23 @@ export function createEntityLookupStrategy({
   entityManager = null,
 } = {}) {
   const hasEntityManager = Boolean(entityManager);
-  const boundGetEntityInstance = hasEntityManager &&
-    typeof entityManager.getEntityInstance === 'function'
-    ? entityManager.getEntityInstance.bind(entityManager)
-    : null;
-  const boundGetEntity = hasEntityManager && typeof entityManager.getEntity === 'function'
-    ? entityManager.getEntity.bind(entityManager)
-    : null;
+  const supportsGetEntityInstance =
+    hasEntityManager && typeof entityManager.getEntityInstance === 'function';
+  const supportsGetEntity =
+    hasEntityManager && typeof entityManager.getEntity === 'function';
 
   if (hasEntityManager) {
     devOnlyAssert(
-      Boolean(boundGetEntityInstance || boundGetEntity),
+      Boolean(supportsGetEntityInstance || supportsGetEntity),
       'ScopeDSL expects runtimeCtx.entityManager to expose getEntityInstance or getEntity.'
     );
   }
 
   const order = [];
-  if (boundGetEntityInstance) {
+  if (supportsGetEntityInstance) {
     order.push('getEntityInstance');
   }
-  if (boundGetEntity) {
+  if (supportsGetEntity) {
     order.push('getEntity');
   }
 
@@ -40,15 +37,15 @@ export function createEntityLookupStrategy({
         return undefined;
       }
 
-      if (boundGetEntityInstance) {
-        const entity = boundGetEntityInstance(entityId);
+      if (supportsGetEntityInstance) {
+        const entity = entityManager.getEntityInstance(entityId);
         if (entity) {
           return entity;
         }
       }
 
-      if (boundGetEntity) {
-        return boundGetEntity(entityId);
+      if (supportsGetEntity) {
+        return entityManager.getEntity(entityId);
       }
 
       return undefined;

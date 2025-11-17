@@ -23,6 +23,18 @@ import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/servi
 import { TraitsRewriterController } from '../../../../src/characterBuilder/controllers/TraitsRewriterController.js';
 import { TraitsRewriterGenerator } from '../../../../src/characterBuilder/services/TraitsRewriterGenerator.js';
 import { TraitsRewriterDisplayEnhancer } from '../../../../src/characterBuilder/services/TraitsRewriterDisplayEnhancer.js';
+import { DOMElementManager } from '../../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { ControllerLifecycleOrchestrator } from '../../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { AsyncUtilitiesToolkit } from '../../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../../src/characterBuilder/services/validationService.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 
 class MinimalCharacterBuilderService {
   constructor(logger) {
@@ -189,11 +201,69 @@ const createCoreDependencies = () => {
   return { logger, schemaValidator, eventBus: safeDispatcher, characterBuilderService };
 };
 
+const createControllerInfrastructure = (core) => {
+  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger: core.logger });
+  const eventListenerRegistry = new EventListenerRegistry({
+    logger: core.logger,
+    asyncUtilities: {
+      debounce: asyncUtilitiesToolkit.debounce.bind(asyncUtilitiesToolkit),
+      throttle: asyncUtilitiesToolkit.throttle.bind(asyncUtilitiesToolkit),
+    },
+  });
+
+  const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+    logger: core.logger,
+    eventBus: core.eventBus,
+  });
+
+  const domElementManager = new DOMElementManager({
+    logger: core.logger,
+    documentRef: document,
+    performanceRef: performance,
+  });
+
+  const performanceMonitor = new PerformanceMonitor({
+    logger: core.logger,
+    eventBus: core.eventBus,
+  });
+
+  const memoryManager = new MemoryManager({ logger: core.logger });
+
+  const errorHandlingStrategy = new ErrorHandlingStrategy({
+    logger: core.logger,
+    eventBus: core.eventBus,
+    controllerName: 'TraitsRewriterController',
+    errorCategories: ERROR_CATEGORIES,
+    errorSeverity: ERROR_SEVERITY,
+  });
+
+  const validationService = new ValidationService({
+    schemaValidator: core.schemaValidator,
+    logger: core.logger,
+    handleError: (error) => {
+      throw error;
+    },
+    errorCategories: ERROR_CATEGORIES,
+  });
+
+  return {
+    controllerLifecycleOrchestrator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
+  };
+};
+
 const buildController = async () => {
   renderTraitsRewriterDom();
   const core = createCoreDependencies();
   const generatorSetup = createGenerator({ logger: core.logger, eventBus: core.eventBus });
   const displayEnhancer = new TraitsRewriterDisplayEnhancer({ logger: core.logger });
+  const infrastructure = createControllerInfrastructure(core);
 
   const controller = new TraitsRewriterController({
     logger: core.logger,
@@ -202,6 +272,14 @@ const buildController = async () => {
     characterBuilderService: core.characterBuilderService,
     traitsRewriterGenerator: generatorSetup.generator,
     traitsRewriterDisplayEnhancer: displayEnhancer,
+    controllerLifecycleOrchestrator: infrastructure.controllerLifecycleOrchestrator,
+    domElementManager: infrastructure.domElementManager,
+    eventListenerRegistry: infrastructure.eventListenerRegistry,
+    asyncUtilitiesToolkit: infrastructure.asyncUtilitiesToolkit,
+    performanceMonitor: infrastructure.performanceMonitor,
+    memoryManager: infrastructure.memoryManager,
+    errorHandlingStrategy: infrastructure.errorHandlingStrategy,
+    validationService: infrastructure.validationService,
   });
 
   await controller.initialize();
@@ -417,4 +495,3 @@ describe('TraitsRewriterController (integration)', () => {
     await controller.destroy();
   });
 });
-

@@ -12,6 +12,18 @@ import {
 import {
   CoreMotivationsDisplayEnhancer,
 } from '../../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
 import EventBus from '../../../src/events/eventBus.js';
 
 const flushPromises = async () => {
@@ -30,6 +42,61 @@ const createMotivation = (overrides = {}) => ({
     overrides.centralQuestion || 'Will they rise above their fears?',
   createdAt: overrides.createdAt || new Date().toISOString(),
 });
+
+const createControllerDependencies = ({ logger, eventBus, schemaValidator }) => {
+  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger });
+  const domElementManager = new DOMElementManager({
+    logger,
+    documentRef: document,
+    performanceRef: globalThis.performance,
+    elementsRef: {},
+    contextName: 'CoreMotivationsTestDOM',
+  });
+  const eventListenerRegistry = new EventListenerRegistry({
+    logger,
+    asyncUtilities: asyncUtilitiesToolkit,
+    contextName: 'CoreMotivationsTestEventRegistry',
+  });
+  const performanceMonitor = new PerformanceMonitor({
+    logger,
+    eventBus,
+    contextName: 'CoreMotivationsTestPerformanceMonitor',
+    threshold: 2500,
+  });
+  const memoryManager = new MemoryManager({
+    logger,
+    contextName: 'CoreMotivationsTestMemoryManager',
+  });
+  const errorHandlingStrategy = new ErrorHandlingStrategy({
+    logger,
+    eventBus,
+    controllerName: 'CoreMotivationsGeneratorController',
+    errorCategories: ERROR_CATEGORIES,
+    errorSeverity: ERROR_SEVERITY,
+  });
+  const validationService = new ValidationService({
+    schemaValidator,
+    logger,
+    handleError: (error, context) =>
+      logger.error('Validation error', error, context),
+    errorCategories: ERROR_CATEGORIES,
+  });
+  const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+    logger,
+    eventBus,
+  });
+
+  return {
+    asyncUtilitiesToolkit,
+    domElementManager,
+    eventListenerRegistry,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
+    controllerLifecycleOrchestrator,
+  };
+};
 
 describe('Core Motivations accessibility integration', () => {
   let controller;
@@ -223,6 +290,12 @@ describe('Core Motivations accessibility integration', () => {
 
     setupDOM();
 
+    const controllerDependencies = createControllerDependencies({
+      logger,
+      eventBus,
+      schemaValidator,
+    });
+
     controller = new CoreMotivationsGeneratorController({
       logger,
       characterBuilderService,
@@ -230,6 +303,7 @@ describe('Core Motivations accessibility integration', () => {
       schemaValidator,
       coreMotivationsGenerator,
       displayEnhancer,
+      ...controllerDependencies,
     });
   });
 
