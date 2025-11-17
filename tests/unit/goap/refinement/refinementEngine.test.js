@@ -162,29 +162,24 @@ describe('RefinementEngine', () => {
 
         // Verify events dispatched
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'goap:refinement_started',
-          })
+          'goap:refinement_started',
+          expect.objectContaining({ taskId: 'core:consume_nourishing_item' })
         );
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'goap:method_selected',
-          })
+          'goap:method_selected',
+          expect.objectContaining({ taskId: 'core:consume_nourishing_item' })
         );
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'goap:refinement_step_started',
-          })
+          'goap:refinement_step_started',
+          expect.objectContaining({ taskId: 'core:consume_nourishing_item' })
         );
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'goap:refinement_step_completed',
-          })
+          'goap:refinement_step_completed',
+          expect.objectContaining({ taskId: 'core:consume_nourishing_item' })
         );
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'goap:refinement_completed',
-          })
+          'goap:refinement_completed',
+          expect.objectContaining({ taskId: 'core:consume_nourishing_item' })
         );
       });
 
@@ -553,7 +548,9 @@ describe('RefinementEngine', () => {
         await refinementEngine.refine('task_1', 'actor_1', {});
 
         // Assert - verify event sequence
-        const dispatchCalls = mockEventBus.dispatch.mock.calls.map(call => call[0].type);
+        const dispatchCalls = mockEventBus.dispatch.mock.calls.map(
+          (call) => call[0]
+        );
         expect(dispatchCalls).toEqual([
           'goap:refinement_started',
           'goap:method_selected',
@@ -589,9 +586,8 @@ describe('RefinementEngine', () => {
 
         // Verify failure event was dispatched
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'goap:refinement_failed',
-          })
+          'goap:refinement_failed',
+          expect.objectContaining({ taskId: 'task_1' })
         );
       });
 
@@ -624,22 +620,22 @@ describe('RefinementEngine', () => {
         await refinementEngine.refine('task_1', 'actor_1', {});
 
         // Assert
-        const stepStartedEvents = mockEventBus.dispatch.mock.calls
-          .map(call => call[0])
-          .filter(event => event.type === 'goap:refinement_step_started');
+        const stepStartedEvents = mockEventBus.dispatch.mock.calls.filter(
+          (call) => call[0] === 'goap:refinement_step_started'
+        );
 
-        const stepCompletedEvents = mockEventBus.dispatch.mock.calls
-          .map(call => call[0])
-          .filter(event => event.type === 'goap:refinement_step_completed');
+        const stepCompletedEvents = mockEventBus.dispatch.mock.calls.filter(
+          (call) => call[0] === 'goap:refinement_step_completed'
+        );
 
         expect(stepStartedEvents).toHaveLength(3);
         expect(stepCompletedEvents).toHaveLength(3);
-        expect(stepStartedEvents[0].payload.stepIndex).toBe(0);
-        expect(stepStartedEvents[1].payload.stepIndex).toBe(1);
-        expect(stepStartedEvents[2].payload.stepIndex).toBe(2);
-        expect(stepCompletedEvents[0].payload.stepIndex).toBe(0);
-        expect(stepCompletedEvents[1].payload.stepIndex).toBe(1);
-        expect(stepCompletedEvents[2].payload.stepIndex).toBe(2);
+        expect(stepStartedEvents[0][1].stepIndex).toBe(0);
+        expect(stepStartedEvents[1][1].stepIndex).toBe(1);
+        expect(stepStartedEvents[2][1].stepIndex).toBe(2);
+        expect(stepCompletedEvents[0][1].stepIndex).toBe(0);
+        expect(stepCompletedEvents[1][1].stepIndex).toBe(1);
+        expect(stepCompletedEvents[2][1].stepIndex).toBe(2);
       });
     });
 
@@ -828,11 +824,11 @@ describe('RefinementEngine', () => {
 
       // Assert
       const startedEvents = mockEventBus.dispatch.mock.calls.filter(
-        (call) => call[0].type === 'goap:refinement_step_started'
+        (call) => call[0] === 'goap:refinement_step_started'
       );
 
       expect(startedEvents).toHaveLength(1);
-      expect(startedEvents[0][0].payload).toMatchObject({
+      expect(startedEvents[0][1]).toMatchObject({
         actorId: 'actor_1',
         taskId: 'task_1',
         methodId: 'method_1',
@@ -843,7 +839,7 @@ describe('RefinementEngine', () => {
           storeResultAs: 'step1Result',
         },
       });
-      expect(startedEvents[0][0].payload.timestamp).toBeDefined();
+      expect(startedEvents[0][1].timestamp).toBeDefined();
     });
 
     it('should dispatch REFINEMENT_STEP_COMPLETED after successful step', async () => {
@@ -862,11 +858,11 @@ describe('RefinementEngine', () => {
 
       // Assert
       const completedEvents = mockEventBus.dispatch.mock.calls.filter(
-        (call) => call[0].type === 'goap:refinement_step_completed'
+        (call) => call[0] === 'goap:refinement_step_completed'
       );
 
       expect(completedEvents).toHaveLength(1);
-      expect(completedEvents[0][0].payload).toMatchObject({
+      expect(completedEvents[0][1]).toMatchObject({
         actorId: 'actor_1',
         taskId: 'task_1',
         methodId: 'method_1',
@@ -876,8 +872,8 @@ describe('RefinementEngine', () => {
           actionId: 'action_1',
         },
       });
-      expect(completedEvents[0][0].payload.duration).toBeDefined();
-      expect(completedEvents[0][0].payload.timestamp).toBeDefined();
+      expect(completedEvents[0][1].duration).toBeDefined();
+      expect(completedEvents[0][1].timestamp).toBeDefined();
     });
 
     it('should dispatch REFINEMENT_STEP_FAILED on step error', async () => {
@@ -891,18 +887,18 @@ describe('RefinementEngine', () => {
       ).rejects.toThrow();
 
       const failedEvents = mockEventBus.dispatch.mock.calls.filter(
-        (call) => call[0].type === 'goap:refinement_step_failed'
+        (call) => call[0] === 'goap:refinement_step_failed'
       );
 
       expect(failedEvents).toHaveLength(1);
-      expect(failedEvents[0][0].payload).toMatchObject({
+      expect(failedEvents[0][1]).toMatchObject({
         actorId: 'actor_1',
         taskId: 'task_1',
         methodId: 'method_1',
         stepIndex: 0,
         error: 'Step execution failed',
       });
-      expect(failedEvents[0][0].payload.timestamp).toBeDefined();
+      expect(failedEvents[0][1].timestamp).toBeDefined();
     });
 
     it('should dispatch REFINEMENT_STATE_UPDATED when storeResultAs is used', async () => {
@@ -923,18 +919,18 @@ describe('RefinementEngine', () => {
 
       // Assert
       const stateUpdatedEvents = mockEventBus.dispatch.mock.calls.filter(
-        (call) => call[0].type === 'goap:refinement_state_updated'
+        (call) => call[0] === 'goap:refinement_state_updated'
       );
 
       expect(stateUpdatedEvents).toHaveLength(1);
-      expect(stateUpdatedEvents[0][0].payload).toMatchObject({
+      expect(stateUpdatedEvents[0][1]).toMatchObject({
         actorId: 'actor_1',
         taskId: 'task_1',
         key: 'step1Result',
         oldValue: undefined,
         newValue: mockResult,
       });
-      expect(stateUpdatedEvents[0][0].payload.timestamp).toBeDefined();
+      expect(stateUpdatedEvents[0][1].timestamp).toBeDefined();
     });
 
     it('should maintain correct event ordering: started before completed', async () => {
@@ -952,12 +948,8 @@ describe('RefinementEngine', () => {
 
       // Assert
       const allEvents = mockEventBus.dispatch.mock.calls.map((call) => call[0]);
-      const startedIndex = allEvents.findIndex(
-        (e) => e.type === 'goap:refinement_step_started'
-      );
-      const completedIndex = allEvents.findIndex(
-        (e) => e.type === 'goap:refinement_step_completed'
-      );
+      const startedIndex = allEvents.indexOf('goap:refinement_step_started');
+      const completedIndex = allEvents.indexOf('goap:refinement_step_completed');
 
       expect(startedIndex).toBeGreaterThanOrEqual(0);
       expect(completedIndex).toBeGreaterThan(startedIndex);
@@ -977,28 +969,28 @@ describe('RefinementEngine', () => {
       await refinementEngine.refine('task_1', 'actor_1', {});
 
       // Assert
-      const startedEvent = mockEventBus.dispatch.mock.calls.find(
-        (call) => call[0].type === 'goap:refinement_step_started'
-      )[0];
+      const startedEventPayload = mockEventBus.dispatch.mock.calls.find(
+        (call) => call[0] === 'goap:refinement_step_started'
+      )[1];
 
-      expect(startedEvent.payload).toHaveProperty('actorId');
-      expect(startedEvent.payload).toHaveProperty('taskId');
-      expect(startedEvent.payload).toHaveProperty('methodId');
-      expect(startedEvent.payload).toHaveProperty('stepIndex');
-      expect(startedEvent.payload).toHaveProperty('step');
-      expect(startedEvent.payload).toHaveProperty('timestamp');
+      expect(startedEventPayload).toHaveProperty('actorId');
+      expect(startedEventPayload).toHaveProperty('taskId');
+      expect(startedEventPayload).toHaveProperty('methodId');
+      expect(startedEventPayload).toHaveProperty('stepIndex');
+      expect(startedEventPayload).toHaveProperty('step');
+      expect(startedEventPayload).toHaveProperty('timestamp');
 
-      const completedEvent = mockEventBus.dispatch.mock.calls.find(
-        (call) => call[0].type === 'goap:refinement_step_completed'
-      )[0];
+      const completedEventPayload = mockEventBus.dispatch.mock.calls.find(
+        (call) => call[0] === 'goap:refinement_step_completed'
+      )[1];
 
-      expect(completedEvent.payload).toHaveProperty('actorId');
-      expect(completedEvent.payload).toHaveProperty('taskId');
-      expect(completedEvent.payload).toHaveProperty('methodId');
-      expect(completedEvent.payload).toHaveProperty('stepIndex');
-      expect(completedEvent.payload).toHaveProperty('result');
-      expect(completedEvent.payload).toHaveProperty('duration');
-      expect(completedEvent.payload).toHaveProperty('timestamp');
+      expect(completedEventPayload).toHaveProperty('actorId');
+      expect(completedEventPayload).toHaveProperty('taskId');
+      expect(completedEventPayload).toHaveProperty('methodId');
+      expect(completedEventPayload).toHaveProperty('stepIndex');
+      expect(completedEventPayload).toHaveProperty('result');
+      expect(completedEventPayload).toHaveProperty('duration');
+      expect(completedEventPayload).toHaveProperty('timestamp');
     });
 
     it('should dispatch events for multiple steps', async () => {
@@ -1046,10 +1038,10 @@ describe('RefinementEngine', () => {
 
       // Assert
       const startedEvents = mockEventBus.dispatch.mock.calls.filter(
-        (call) => call[0].type === 'goap:refinement_step_started'
+        (call) => call[0] === 'goap:refinement_step_started'
       );
       const completedEvents = mockEventBus.dispatch.mock.calls.filter(
-        (call) => call[0].type === 'goap:refinement_step_completed'
+        (call) => call[0] === 'goap:refinement_step_completed'
       );
 
       expect(startedEvents).toHaveLength(3);

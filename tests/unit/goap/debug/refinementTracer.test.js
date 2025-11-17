@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
+import { dispatchGoapEventForTest } from '../../../common/goap/goapEventTestUtils.js';
 import RefinementTracer from '../../../../src/goap/debug/refinementTracer.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
@@ -30,9 +31,10 @@ describe('RefinementTracer', () => {
           }
         }
       }),
-      dispatch: jest.fn((event) => {
-        if (listeners.has(event.type)) {
-          listeners.get(event.type).forEach((handler) => handler(event));
+      dispatch: jest.fn((eventType, payload = {}) => {
+        const event = { type: eventType, payload: payload || {} };
+        if (listeners.has(eventType)) {
+          listeners.get(eventType).forEach((handler) => handler(event));
         }
       }),
     };
@@ -91,14 +93,11 @@ describe('RefinementTracer', () => {
       tracer.startCapture('actor-1');
 
       // Dispatch an event
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepsGenerated: 2,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepsGenerated: 2,
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -140,14 +139,11 @@ describe('RefinementTracer', () => {
     it('should return current trace without stopping', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepsGenerated: 1,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepsGenerated: 1,
+        timestamp: Date.now(),
       });
 
       const trace = tracer.getTrace('actor-1');
@@ -176,25 +172,19 @@ describe('RefinementTracer', () => {
       tracer.startCapture('actor-1');
 
       // Dispatch event for actor-1
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepsGenerated: 0,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepsGenerated: 0,
+        timestamp: Date.now(),
       });
 
       // Dispatch event for actor-2 (should be ignored)
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-2',
-          taskId: 'gather_resources',
-          stepsGenerated: 0,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-2',
+        taskId: 'gather_resources',
+        stepsGenerated: 0,
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -208,24 +198,18 @@ describe('RefinementTracer', () => {
 
       const baseTime = Date.now();
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_STARTED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 0,
-          timestamp: baseTime,
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 0,
+        timestamp: baseTime,
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 0,
-          timestamp: baseTime + 10,
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 0,
+        timestamp: baseTime + 10,
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -242,14 +226,11 @@ describe('RefinementTracer', () => {
 
       const timestamp = Date.now();
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepsGenerated: 2,
-          timestamp,
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepsGenerated: 2,
+        timestamp,
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -268,14 +249,11 @@ describe('RefinementTracer', () => {
       tracer.startCapture('actor-1');
       tracer.stopCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepsGenerated: 1,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepsGenerated: 1,
+        timestamp: Date.now(),
       });
 
       // Start again and verify no events from before
@@ -290,14 +268,11 @@ describe('RefinementTracer', () => {
     it('should capture TASK_REFINED events', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepsGenerated: 2,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepsGenerated: 2,
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -309,35 +284,26 @@ describe('RefinementTracer', () => {
     it('should capture REFINEMENT_STEP_* events', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_STARTED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 0,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 0,
+        timestamp: Date.now(),
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 0,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 0,
+        timestamp: Date.now(),
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_FAILED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 1,
-          error: 'Test error',
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_FAILED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 1,
+        error: 'Test error',
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -353,16 +319,13 @@ describe('RefinementTracer', () => {
     it('should capture REFINEMENT_STATE_UPDATED events', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STATE_UPDATED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          key: 'pickedItem',
-          oldValue: null,
-          newValue: 'food-1',
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STATE_UPDATED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        key: 'pickedItem',
+        oldValue: null,
+        newValue: 'food-1',
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -374,14 +337,11 @@ describe('RefinementTracer', () => {
     it('should capture REFINEMENT_FAILED events', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_FAILED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          reason: 'No food available',
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_FAILED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        reason: 'No food available',
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -395,27 +355,21 @@ describe('RefinementTracer', () => {
     it('should format trace with summary', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_STARTED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 0,
-          step: { stepType: 'primitive_action' },
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 0,
+        step: { stepType: 'primitive_action' },
+        timestamp: Date.now(),
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 0,
-          result: { success: true },
-          duration: 10,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 0,
+        result: { success: true },
+        duration: 10,
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -449,14 +403,11 @@ describe('RefinementTracer', () => {
     it('should format TASK_REFINED event', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepsGenerated: 3,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepsGenerated: 3,
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -470,15 +421,12 @@ describe('RefinementTracer', () => {
     it('should format REFINEMENT_STEP_STARTED event', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_STARTED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 2,
-          step: { stepType: 'conditional' },
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 2,
+        step: { stepType: 'conditional' },
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -492,16 +440,13 @@ describe('RefinementTracer', () => {
     it('should format REFINEMENT_STEP_COMPLETED event', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 1,
-          result: { success: true },
-          duration: 25,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 1,
+        result: { success: true },
+        duration: 25,
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -516,15 +461,12 @@ describe('RefinementTracer', () => {
     it('should format REFINEMENT_STEP_FAILED event', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_FAILED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          stepIndex: 0,
-          error: 'Item not found',
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_FAILED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        stepIndex: 0,
+        error: 'Item not found',
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -538,16 +480,13 @@ describe('RefinementTracer', () => {
     it('should format REFINEMENT_STATE_UPDATED event', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STATE_UPDATED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          key: 'selectedItem',
-          oldValue: null,
-          newValue: 'bread-5',
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STATE_UPDATED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        key: 'selectedItem',
+        oldValue: null,
+        newValue: 'bread-5',
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -561,14 +500,11 @@ describe('RefinementTracer', () => {
     it('should format REFINEMENT_FAILED event', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_FAILED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'consume_food',
-          reason: 'No valid method found',
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_FAILED, {
+        actorId: 'actor-1',
+        taskId: 'consume_food',
+        reason: 'No valid method found',
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');
@@ -582,51 +518,36 @@ describe('RefinementTracer', () => {
     it('should display summary with correct counts', () => {
       tracer.startCapture('actor-1');
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.TASK_REFINED,
-        payload: {
-          actorId: 'actor-1',
-          taskId: 'task1',
-          stepsGenerated: 2,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.TASK_REFINED, {
+        actorId: 'actor-1',
+        taskId: 'task1',
+        stepsGenerated: 2,
+        timestamp: Date.now(),
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_STARTED,
-        payload: {
-          actorId: 'actor-1',
-          stepIndex: 0,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
+        actorId: 'actor-1',
+        stepIndex: 0,
+        timestamp: Date.now(),
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
-        payload: {
-          actorId: 'actor-1',
-          stepIndex: 0,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
+        actorId: 'actor-1',
+        stepIndex: 0,
+        timestamp: Date.now(),
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_STARTED,
-        payload: {
-          actorId: 'actor-1',
-          stepIndex: 1,
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
+        actorId: 'actor-1',
+        stepIndex: 1,
+        timestamp: Date.now(),
       });
 
-      mockEventBus.dispatch({
-        type: GOAP_EVENTS.REFINEMENT_STEP_FAILED,
-        payload: {
-          actorId: 'actor-1',
-          stepIndex: 1,
-          error: 'Failed',
-          timestamp: Date.now(),
-        },
+      dispatchGoapEventForTest(mockEventBus, GOAP_EVENTS.REFINEMENT_STEP_FAILED, {
+        actorId: 'actor-1',
+        stepIndex: 1,
+        error: 'Failed',
+        timestamp: Date.now(),
       });
 
       const trace = tracer.stopCapture('actor-1');

@@ -17,6 +17,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import RefinementError from '../errors/refinementError.js';
 import { GOAP_EVENTS } from '../events/goapEvents.js';
 import { createGoapEventDispatcher } from '../debug/goapEventDispatcher.js';
+import { emitGoapEvent } from '../events/goapEventFactory.js';
 
 /**
  * Orchestrates task refinement into executable action sequences.
@@ -158,11 +159,19 @@ class RefinementEngine {
     });
 
     // Dispatch refinement started event
-    this.#eventBus.dispatch(GOAP_EVENTS.REFINEMENT_STARTED, {
-      taskId,
-      actorId,
-      timestamp: startTime,
-    });
+    emitGoapEvent(
+      this.#eventBus,
+      GOAP_EVENTS.REFINEMENT_STARTED,
+      {
+        taskId,
+        actorId,
+        timestamp: startTime,
+      },
+      {
+        actorId,
+        taskId,
+      }
+    );
 
     try {
       // Load task definition
@@ -197,11 +206,19 @@ class RefinementEngine {
       });
 
       // Dispatch method selected event
-      this.#eventBus.dispatch(GOAP_EVENTS.METHOD_SELECTED, {
-        taskId,
-        methodId: selectedMethod.id,
-        actorId,
-      });
+      emitGoapEvent(
+        this.#eventBus,
+        GOAP_EVENTS.METHOD_SELECTED,
+        {
+          taskId,
+          methodId: selectedMethod.id,
+          actorId,
+        },
+        {
+          actorId,
+          taskId,
+        }
+      );
 
       // Execute method steps with state management
       const stepResults = await this.#executeMethodSteps(
@@ -212,13 +229,21 @@ class RefinementEngine {
       );
 
       // Dispatch refinement completed event
-      this.#eventBus.dispatch(GOAP_EVENTS.REFINEMENT_COMPLETED, {
-        taskId,
-        methodId: selectedMethod.id,
-        actorId,
-        stepsExecuted: stepResults.length,
-        success: true,
-      });
+      emitGoapEvent(
+        this.#eventBus,
+        GOAP_EVENTS.REFINEMENT_COMPLETED,
+        {
+          taskId,
+          methodId: selectedMethod.id,
+          actorId,
+          stepsExecuted: stepResults.length,
+          success: true,
+        },
+        {
+          actorId,
+          taskId,
+        }
+      );
 
       this.#logger.info('Task refinement completed', {
         taskId,
@@ -242,12 +267,20 @@ class RefinementEngine {
       });
 
       // Dispatch refinement failed event
-      this.#eventBus.dispatch(GOAP_EVENTS.REFINEMENT_FAILED, {
-        taskId,
-        actorId,
-        reason: error.message,
-        timestamp: Date.now(),
-      });
+      emitGoapEvent(
+        this.#eventBus,
+        GOAP_EVENTS.REFINEMENT_FAILED,
+        {
+          taskId,
+          actorId,
+          reason: error.message,
+          timestamp: Date.now(),
+        },
+        {
+          actorId,
+          taskId,
+        }
+      );
 
       throw error;
     }
@@ -387,18 +420,26 @@ class RefinementEngine {
         const stepStartTime = Date.now();
 
         // Dispatch step started event
-        this.#eventBus.dispatch(GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
-          actorId,
-          taskId: task.id,
-          methodId: selectedMethod.id,
-          stepIndex: index,
-          step: {
-            stepType: step.stepType,
-            actionId: step.actionId,
-            storeResultAs: step.storeResultAs,
+        emitGoapEvent(
+          this.#eventBus,
+          GOAP_EVENTS.REFINEMENT_STEP_STARTED,
+          {
+            actorId,
+            taskId: task.id,
+            methodId: selectedMethod.id,
+            stepIndex: index,
+            step: {
+              stepType: step.stepType,
+              actionId: step.actionId,
+              storeResultAs: step.storeResultAs,
+            },
+            timestamp: stepStartTime,
           },
-          timestamp: stepStartTime,
-        });
+          {
+            actorId,
+            taskId: task.id,
+          }
+        );
 
         this.#logger.debug('Executing step', {
           taskId: task.id,
@@ -448,41 +489,65 @@ class RefinementEngine {
           stepResults.push(result);
 
           // Dispatch step completed event
-          this.#eventBus.dispatch(GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
-            actorId,
-            taskId: task.id,
-            methodId: selectedMethod.id,
-            stepIndex: index,
-            result: {
-              success: result.success,
-              actionId: result.actionId,
+          emitGoapEvent(
+            this.#eventBus,
+            GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
+            {
+              actorId,
+              taskId: task.id,
+              methodId: selectedMethod.id,
+              stepIndex: index,
+              result: {
+                success: result.success,
+                actionId: result.actionId,
+              },
+              duration: Date.now() - stepStartTime,
+              timestamp: Date.now(),
             },
-            duration: Date.now() - stepStartTime,
-            timestamp: Date.now(),
-          });
+            {
+              actorId,
+              taskId: task.id,
+            }
+          );
 
           // Dispatch state update event if result was stored
           // Note: State is already stored by executor at this point
           if (step.storeResultAs && result.success) {
-            this.#eventBus.dispatch(GOAP_EVENTS.REFINEMENT_STATE_UPDATED, {
-              actorId,
-              taskId: task.id,
-              key: step.storeResultAs,
-              oldValue,
-              newValue: result,
-              timestamp: Date.now(),
-            });
+            emitGoapEvent(
+              this.#eventBus,
+              GOAP_EVENTS.REFINEMENT_STATE_UPDATED,
+              {
+                actorId,
+                taskId: task.id,
+                key: step.storeResultAs,
+                oldValue,
+                newValue: result,
+                timestamp: Date.now(),
+              },
+              {
+                actorId,
+                taskId: task.id,
+              }
+            );
           }
         } catch (stepError) {
           // Dispatch step failed event
-          this.#eventBus.dispatch(GOAP_EVENTS.REFINEMENT_STEP_FAILED, {
-            actorId,
-            taskId: task.id,
-            methodId: selectedMethod.id,
-            stepIndex: index,
-            error: stepError.message,
-            timestamp: Date.now(),
-          });
+          emitGoapEvent(
+            this.#eventBus,
+            GOAP_EVENTS.REFINEMENT_STEP_FAILED,
+            {
+              actorId,
+              taskId: task.id,
+              methodId: selectedMethod.id,
+              stepIndex: index,
+              error: stepError.message,
+              timestamp: Date.now(),
+            },
+            {
+              actorId,
+              taskId: task.id,
+            }
+          );
 
           throw stepError;
         }

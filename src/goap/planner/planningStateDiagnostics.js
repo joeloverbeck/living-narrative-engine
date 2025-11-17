@@ -1,4 +1,5 @@
 import { GOAP_EVENTS } from '../events/goapEvents.js';
+import { emitGoapEvent } from '../events/goapEventFactory.js';
 
 const diagnosticsByActor = new Map();
 let eventBus = null;
@@ -53,16 +54,25 @@ export function recordPlanningStateMiss(payload) {
   }
 
   if (eventBus) {
-    eventBus.dispatch(GOAP_EVENTS.STATE_MISS, {
-      actorId,
-      path: miss.path,
-      entityId: miss.entityId,
-      componentId: miss.componentId,
-      origin: miss.origin,
-      goalId: miss.goalId,
-      taskId: miss.taskId,
-      reason: miss.reason,
-    });
+    emitGoapEvent(
+      eventBus,
+      GOAP_EVENTS.STATE_MISS,
+      {
+        actorId,
+        path: miss.path,
+        entityId: miss.entityId,
+        componentId: miss.componentId,
+        origin: miss.origin,
+        goalId: miss.goalId,
+        taskId: miss.taskId,
+        reason: miss.reason,
+      },
+      {
+        actorId,
+        goalId: miss.goalId,
+        taskId: miss.taskId,
+      }
+    );
   }
 
   return miss;

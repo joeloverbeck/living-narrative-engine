@@ -11,9 +11,64 @@ import {
   expect,
 } from '@jest/globals';
 import { ThematicDirectionController } from '../../../../src/thematicDirection/controllers/thematicDirectionController.js';
+import { ControllerLifecycleOrchestrator } from '../../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../../src/characterBuilder/services/validationService.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 
-// Mock DOM - will be set up in beforeEach
-let mockDocument;
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = jest.fn();
+}
+
+const renderControllerMarkup = () => {
+  document.body.innerHTML = `
+    <section id="thematic-direction-page">
+      <form id="concept-form">
+        <textarea id="concept-input"></textarea>
+        <span class="char-count"></span>
+        <div id="concept-error"></div>
+        <button id="generate-btn" type="button">Generate</button>
+      </form>
+      <button id="retry-btn" type="button">Retry</button>
+      <button id="back-to-menu-btn" type="button">Back</button>
+      <div class="cb-form-group">
+        <label for="concept-selector">Concept</label>
+        <select id="concept-selector">
+          <option value="">Select a concept</option>
+        </select>
+      </div>
+      <div id="concept-selector-error"></div>
+      <div id="selected-concept-display">
+        <div id="concept-content"></div>
+        <div id="concept-directions-count"></div>
+        <div id="concept-created-date"></div>
+      </div>
+      <section id="ui-states">
+        <div id="empty-state"></div>
+        <div id="loading-state"></div>
+        <div id="results-state">
+          <div id="directions-results"></div>
+        </div>
+        <div id="error-state"></div>
+        <div id="error-message-text"></div>
+      </section>
+      <div id="generated-directions"></div>
+      <ul id="directions-list"></ul>
+      <div id="generated-concept"></div>
+      <div id="concept-text"></div>
+      <div id="character-count"></div>
+      <div id="timestamp"></div>
+    </section>
+  `;
+};
 
 describe('ThematicDirectionController - Debug', () => {
   let controller;
@@ -21,14 +76,62 @@ describe('ThematicDirectionController - Debug', () => {
   let mockCharacterBuilderService;
   let mockEventBus;
   let mockSchemaValidator;
+  let controllerDependencies;
+  let validationHandleError;
+
+  const buildControllerDependencies = () => {
+    const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+      logger: mockLogger,
+    });
+
+    const sharedOptions = {
+      logger: mockLogger,
+    };
+
+    const controllerLifecycleOrchestrator =
+      new ControllerLifecycleOrchestrator({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+      });
+
+    return {
+      controllerLifecycleOrchestrator,
+      domElementManager: new DOMElementManager({
+        ...sharedOptions,
+        documentRef: document,
+        performanceRef: performance,
+        elementsRef: {},
+        contextName: 'ThematicDirectionController:DOM',
+      }),
+      eventListenerRegistry: new EventListenerRegistry({
+        ...sharedOptions,
+        asyncUtilities: asyncUtilitiesToolkit,
+      }),
+      asyncUtilitiesToolkit,
+      performanceMonitor: new PerformanceMonitor({
+        ...sharedOptions,
+        eventBus: mockEventBus,
+        performanceRef: performance,
+      }),
+      memoryManager: new MemoryManager(sharedOptions),
+      errorHandlingStrategy: new ErrorHandlingStrategy({
+        ...sharedOptions,
+        eventBus: mockEventBus,
+        controllerName: 'ThematicDirectionController',
+        errorCategories: ERROR_CATEGORIES,
+        errorSeverity: ERROR_SEVERITY,
+      }),
+      validationService: new ValidationService({
+        schemaValidator: mockSchemaValidator,
+        logger: mockLogger,
+        handleError: validationHandleError,
+        errorCategories: ERROR_CATEGORIES,
+      }),
+    };
+  };
 
   beforeEach(() => {
-    // Create fresh mock document
-    mockDocument = {
-      getElementById: jest.fn(),
-      querySelector: jest.fn(),
-      createElement: jest.fn(),
-    };
+    renderControllerMarkup();
 
     mockLogger = {
       debug: jest.fn(),
@@ -39,7 +142,13 @@ describe('ThematicDirectionController - Debug', () => {
 
     mockCharacterBuilderService = {
       initialize: jest.fn().mockResolvedValue(),
-      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+      getAllCharacterConcepts: jest.fn().mockResolvedValue([
+        {
+          id: 'concept-1',
+          concept: 'Explorer of hidden worlds',
+          createdAt: new Date('2024-01-01T00:00:00Z').toISOString(),
+        },
+      ]),
       createCharacterConcept: jest.fn(),
       updateCharacterConcept: jest.fn(),
       deleteCharacterConcept: jest.fn(),
@@ -63,103 +172,35 @@ describe('ThematicDirectionController - Debug', () => {
       hasSchema: jest.fn().mockReturnValue(true),
     };
 
-    // Mock all DOM elements to return valid objects mapped by ID
-    const mockElements = {};
-    const elementIds = [
-      // Form elements
-      'concept-form',
-      'concept-input',
-      'concept-error',
-
-      // Concept selector elements
-      'concept-selector',
-      'selected-concept-display',
-      'concept-content',
-      'concept-directions-count',
-      'concept-created-date',
-      'concept-selector-error',
-
-      // Buttons
-      'generate-btn',
-      'retry-btn',
-      'back-to-menu-btn',
-
-      // State containers
-      'empty-state',
-      'loading-state',
-      'results-state',
-      'error-state',
-      'error-message-text',
-
-      // Results elements
-      'generated-directions',
-      'directions-list',
-      'directions-results',
-      'generated-concept',
-      'concept-text',
-      'character-count',
-      'timestamp',
-    ];
-
-    // Create a mock element for each ID
-    elementIds.forEach((id) => {
-      mockElements[id] = {
-        addEventListener: jest.fn(),
-        style: { display: 'none' },
-        innerHTML: '',
-        appendChild: jest.fn(),
-        value: '',
-        disabled: false,
-        textContent: '',
-        setAttribute: jest.fn(),
-        dispatchEvent: jest.fn(),
-        children: { length: 0 },
-      };
-    });
-
-    mockDocument.getElementById.mockImplementation((id) => {
-      return mockElements[id] || null;
-    });
-
-    mockDocument.querySelector.mockImplementation(() => ({
-      textContent: '',
-    }));
-
-    mockDocument.createElement.mockImplementation((tagName) => {
-      if (tagName === 'option') {
-        return {
-          textContent: '',
-          value: '',
-          selected: false,
-          appendChild: jest.fn(),
-        };
-      }
-      return {
-        textContent: '',
-        value: '',
-        selected: false,
-        appendChild: jest.fn(),
-        className: '',
-        setAttribute: jest.fn(),
-        id: '',
-      };
-    });
+    validationHandleError = jest.fn();
+    controllerDependencies = buildControllerDependencies();
   });
 
   afterEach(() => {
+    if (controller?.destroy) {
+      controller.destroy();
+    }
+    controller = null;
+    document.body.innerHTML = '';
     jest.clearAllMocks();
   });
 
   test('should complete initialization without errors', async () => {
-    // Set global document right before creating controller
-    global.document = mockDocument;
-
     // Create controller after all mocks are set up
     controller = new ThematicDirectionController({
       logger: mockLogger,
       characterBuilderService: mockCharacterBuilderService,
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
+      controllerLifecycleOrchestrator:
+        controllerDependencies.controllerLifecycleOrchestrator,
+      domElementManager: controllerDependencies.domElementManager,
+      eventListenerRegistry: controllerDependencies.eventListenerRegistry,
+      asyncUtilitiesToolkit: controllerDependencies.asyncUtilitiesToolkit,
+      performanceMonitor: controllerDependencies.performanceMonitor,
+      memoryManager: controllerDependencies.memoryManager,
+      errorHandlingStrategy: controllerDependencies.errorHandlingStrategy,
+      validationService: controllerDependencies.validationService,
     });
 
     // Act
@@ -171,15 +212,11 @@ describe('ThematicDirectionController - Debug', () => {
       mockCharacterBuilderService.getAllCharacterConcepts
     ).toHaveBeenCalled();
 
-    // The controller will log errors for missing elements, but still initialize successfully
-    // This is expected behavior - it continues despite missing optional elements
-    expect(mockLogger.error).toHaveBeenCalled();
-
-    // But it should still complete initialization
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.stringMatching(
         /ThematicDirectionController: Initialization completed in \d+\.\d+ms/
       )
     );
+    expect(mockLogger.error).not.toHaveBeenCalled();
   });
 });

@@ -12,6 +12,7 @@ import {
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { GOAP_EVENTS } from '../events/goapEvents.js';
+import { emitGoapEvent } from '../events/goapEventFactory.js';
 import {
   GOAP_PLANNER_CONTRACT,
   createPlannerContractSnapshot,
@@ -218,13 +219,13 @@ class GoapController {
    * @param {object} payload - Event payload (NO timestamp - handled by EventBus)
    * @private
    */
-  #dispatchEvent(eventType, payload) {
-    // ISafeEventDispatcher handles errors internally, no try-catch needed
-    this.#eventDispatcher.dispatch(eventType, payload);
+  #dispatchEvent(eventType, payload = {}, context) {
+    emitGoapEvent(this.#eventDispatcher, eventType, payload, context);
 
     this.#logger.debug('GOAP event dispatched', {
       eventType,
       payload,
+      context,
     });
   }
 
@@ -326,10 +327,17 @@ class GoapController {
       if (!validation.valid) {
         // 3. Plan invalidated → clear and replan
         // Dispatch replanning started event
-        this.#dispatchEvent(GOAP_EVENTS.REPLANNING_STARTED, {
-          goalId: this.#activePlan.goal.id,
-          previousStep: this.#activePlan.currentStep,
-        });
+        this.#dispatchEvent(
+          GOAP_EVENTS.REPLANNING_STARTED,
+          {
+            goalId: this.#activePlan.goal.id,
+            previousStep: this.#activePlan.currentStep,
+          },
+          {
+            actorId: actor.id,
+            goalId: this.#activePlan.goal.id,
+          }
+        );
 
         this.#clearPlan(`Invalidated: ${validation.reason}`);
 
@@ -349,10 +357,17 @@ class GoapController {
 
       // 6. Plan to achieve goal
       // Dispatch planning started event
-      this.#dispatchEvent(GOAP_EVENTS.PLANNING_STARTED, {
-        actorId: actor.id,
-        goalId: goal.id,
-      });
+      this.#dispatchEvent(
+        GOAP_EVENTS.PLANNING_STARTED,
+        {
+          actorId: actor.id,
+          goalId: goal.id,
+        },
+        {
+          actorId: actor.id,
+          goalId: goal.id,
+        }
+      );
 
       // Extract state hash from world object
       const initialState = world.state || world;
@@ -390,12 +405,19 @@ class GoapController {
       }
 
       // Dispatch planning completed event
-      this.#dispatchEvent(GOAP_EVENTS.PLANNING_COMPLETED, {
-        actorId: actor.id,
-        goalId: goal.id,
-        planLength: planResult.tasks.length,
-        tasks: planResult.tasks.map((t) => t.taskId),
-      });
+      this.#dispatchEvent(
+        GOAP_EVENTS.PLANNING_COMPLETED,
+        {
+          actorId: actor.id,
+          goalId: goal.id,
+          planLength: planResult.tasks.length,
+          tasks: planResult.tasks.map((t) => t.taskId),
+        },
+        {
+          actorId: actor.id,
+          goalId: goal.id,
+        }
+      );
 
       if (planResult.tasks.length === 0) {
         this.#logger.info('Planner returned empty plan (goal already satisfied)', {
@@ -452,12 +474,20 @@ class GoapController {
     }
 
     // Dispatch task refined event
-    this.#dispatchEvent(GOAP_EVENTS.TASK_REFINED, {
-      actorId: actor.id,
-      taskId: task.taskId,
-      stepsGenerated: refinementResult.stepResults?.length || 0,
-      actionRefs: refinementResult.stepResults?.map((s) => s.actionRef) || [],
-    });
+    this.#dispatchEvent(
+      GOAP_EVENTS.TASK_REFINED,
+      {
+        actorId: actor.id,
+        taskId: task.taskId,
+        stepsGenerated: refinementResult.stepResults?.length || 0,
+        actionRefs: refinementResult.stepResults?.map((s) => s.actionRef) || [],
+      },
+      {
+        actorId: actor.id,
+        goalId: this.#activePlan?.goal?.id,
+        taskId: task.taskId,
+      }
+    );
 
     // 14. Extract action hint from refinement result
     const actionHint = await this.#extractActionHint(refinementResult, task, actor);
@@ -527,11 +557,18 @@ class GoapController {
     const selectedGoal = sortedGoals[0];
 
     // Dispatch goal selected event
-    this.#dispatchEvent(GOAP_EVENTS.GOAL_SELECTED, {
-      actorId: actor.id,
-      goalId: selectedGoal.id,
-      priority: selectedGoal.priority,
-    });
+    this.#dispatchEvent(
+      GOAP_EVENTS.GOAL_SELECTED,
+      {
+        actorId: actor.id,
+        goalId: selectedGoal.id,
+        priority: selectedGoal.priority,
+      },
+      {
+        actorId: actor.id,
+        goalId: selectedGoal.id,
+      }
+    );
 
     this.#logger.info('Goal selected', {
       actorId: actor.id,
@@ -685,12 +722,19 @@ class GoapController {
       this.#activePlan.lastValidated = Date.now();
     } else {
       // Dispatch plan invalidated event
-      this.#dispatchEvent(GOAP_EVENTS.PLAN_INVALIDATED, {
-        goalId: this.#activePlan.goal.id,
-        reason: validation.reason,
-        currentStep: this.#activePlan.currentStep,
-        totalSteps: this.#activePlan.tasks.length,
-      });
+      this.#dispatchEvent(
+        GOAP_EVENTS.PLAN_INVALIDATED,
+        {
+          goalId: this.#activePlan.goal.id,
+          reason: validation.reason,
+          currentStep: this.#activePlan.currentStep,
+          totalSteps: this.#activePlan.tasks.length,
+        },
+        {
+          actorId: this.#activePlan.actorId,
+          goalId: this.#activePlan.goal.id,
+        }
+      );
 
       this.#logger.warn('Plan invalidated', {
         goalId: this.#activePlan.goal.id,
@@ -730,11 +774,18 @@ class GoapController {
 
     if (isComplete) {
       // Dispatch goal achieved event
-      this.#dispatchEvent(GOAP_EVENTS.GOAL_ACHIEVED, {
-        goalId: this.#activePlan.goal.id,
-        totalSteps: this.#activePlan.tasks.length,
-        duration: Date.now() - this.#activePlan.createdAt,
-      });
+      this.#dispatchEvent(
+        GOAP_EVENTS.GOAL_ACHIEVED,
+        {
+          goalId: this.#activePlan.goal.id,
+          totalSteps: this.#activePlan.tasks.length,
+          duration: Date.now() - this.#activePlan.createdAt,
+        },
+        {
+          actorId: this.#activePlan.actorId,
+          goalId: this.#activePlan.goal.id,
+        }
+      );
 
       this.#logger.info('Plan completed', {
         goalId: this.#activePlan.goal.id,
@@ -958,11 +1009,19 @@ class GoapController {
       };
 
       // Dispatch action hint generated event
-      this.#dispatchEvent(GOAP_EVENTS.ACTION_HINT_GENERATED, {
-        actionId: actionHint.actionId,
-        targetBindings: actionHint.targetBindings,
-        taskId: task.taskId,
-      });
+      this.#dispatchEvent(
+        GOAP_EVENTS.ACTION_HINT_GENERATED,
+        {
+          actionId: actionHint.actionId,
+          targetBindings: actionHint.targetBindings,
+          taskId: task.taskId,
+        },
+        {
+          actorId: actor.id,
+          taskId: task.taskId,
+          goalId: this.#activePlan?.goal?.id,
+        }
+      );
 
       this.#logger.info('Action hint extracted via re-resolution', {
         actionId: actionHint.actionId,
@@ -972,11 +1031,19 @@ class GoapController {
       return actionHint;
     } catch (err) {
       // Dispatch action hint failed event
-      this.#dispatchEvent(GOAP_EVENTS.ACTION_HINT_FAILED, {
-        actionId: firstMethodStep.actionId,
-        bindings: firstMethodStep.targetBindings || {},
-        reason: err.message || 'Failed to resolve bindings',
-      });
+      this.#dispatchEvent(
+        GOAP_EVENTS.ACTION_HINT_FAILED,
+        {
+          actionId: firstMethodStep.actionId,
+          bindings: firstMethodStep.targetBindings || {},
+          reason: err.message || 'Failed to resolve bindings',
+        },
+        {
+          actorId: actor.id,
+          taskId: task.taskId,
+          goalId: this.#activePlan?.goal?.id,
+        }
+      );
 
       // Error already logged by #resolveStepBindings()
       return null;
@@ -1102,12 +1169,19 @@ class GoapController {
     this.#trackFailedGoal(goal.id, reason, failureCode);
 
     // Dispatch planning failed event
-    this.#dispatchEvent(GOAP_EVENTS.PLANNING_FAILED, {
-      actorId: this.#currentActor,
-      goalId: goal.id,
-      reason,
-      code: failureCode,
-    });
+    this.#dispatchEvent(
+      GOAP_EVENTS.PLANNING_FAILED,
+      {
+        actorId: this.#currentActor,
+        goalId: goal.id,
+        reason,
+        code: failureCode,
+      },
+      {
+        actorId: this.#currentActor,
+        goalId: goal.id,
+      }
+    );
 
     // Log warning with goal details
     this.#logger.warn('Planning failed for goal', {
@@ -1148,12 +1222,20 @@ class GoapController {
     });
 
     // Dispatch refinement failed event
-    this.#dispatchEvent(GOAP_EVENTS.REFINEMENT_FAILED, {
-      actorId: this.#currentActor,
-      taskId: task.taskId,
-      reason,
-      fallbackBehavior,
-    });
+    this.#dispatchEvent(
+      GOAP_EVENTS.REFINEMENT_FAILED,
+      {
+        actorId: this.#currentActor,
+        taskId: task.taskId,
+        reason,
+        fallbackBehavior,
+      },
+      {
+        actorId: this.#currentActor,
+        taskId: task.taskId,
+        goalId: this.#activePlan?.goal?.id,
+      }
+    );
 
     switch (fallbackBehavior) {
       case 'replan': {

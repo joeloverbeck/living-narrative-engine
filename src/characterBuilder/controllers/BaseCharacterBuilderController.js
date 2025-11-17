@@ -2409,10 +2409,12 @@ export class BaseCharacterBuilderController {
    * Cleans up event listeners, timers, and references
    *
    * @public
-   * @returns {void}
+   * @returns {Promise<void>} Resolves when destruction finishes
    */
   destroy() {
-    this.#lifecycle.destroy({ controllerName: this.constructor.name });
+    return this.#lifecycle.destroy({
+      controllerName: this.constructor.name,
+    });
   }
 }
 
