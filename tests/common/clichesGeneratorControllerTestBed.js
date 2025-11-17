@@ -9,6 +9,7 @@ import { Cliche } from '../../src/characterBuilder/models/cliche.js';
 import { createEventBus } from './mockFactories/eventBus.js';
 import { v4 as uuidv4 } from 'uuid';
 import { ControllerLifecycleOrchestrator } from '../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../src/characterBuilder/services/domElementManager.js';
 
 /**
  * Test bed for ClichesGeneratorController
@@ -102,19 +103,23 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
         eventBus: this.mockEventBus,
       });
 
-    const mockDomElementManager = {
-      cacheElement: jest.fn(),
-      cacheElements: jest.fn(),
-      getElement: jest.fn(),
-      getAllElements: jest.fn().mockReturnValue({}),
-      clearCache: jest.fn(),
-    };
+    const domElementManager = new DOMElementManager({
+      logger: this.logger,
+      documentRef: document,
+      performanceRef:
+        typeof performance !== 'undefined'
+          ? performance
+          : { now: () => Date.now() },
+      elementsRef: {},
+      contextName: 'ClichesGeneratorControllerTestBed',
+    });
 
     const mockEventListenerRegistry = {
       register: jest.fn(),
       registerAll: jest.fn(),
       unregisterAll: jest.fn(),
       getRegisteredCount: jest.fn().mockReturnValue(0),
+      setContextName: jest.fn(),
     };
 
     const mockAsyncUtilitiesToolkit = {
@@ -159,7 +164,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       schemaValidator: this.mockSchemaValidator,
       clicheGenerator: this.mockClicheGenerator,
       controllerLifecycleOrchestrator,
-      domElementManager: mockDomElementManager,
+      domElementManager,
       eventListenerRegistry: mockEventListenerRegistry,
       asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
       performanceMonitor: mockPerformanceMonitor,

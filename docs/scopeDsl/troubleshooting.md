@@ -243,6 +243,23 @@ entities(core:actor)
 }]
 ```
 
+### Entity Lookup Debugging
+
+ScopeDSL now enables `runtimeCtx.scopeEntityLookupDebug` automatically whenever `NODE_ENV` is not `production`. Override the defaults (or force-enable in production) by passing either `true` or a configuration object onto the runtime context:
+
+```
+runtimeCtx.scopeEntityLookupDebug = {
+  enabled: true,
+  cacheEvents: ({ type, key }) => telemetry.emit('scopeCache', { type, key }),
+  strategyFactory: ({ entityManager }) => ({
+    resolve: (id) => entityManager.getEntityInstance(id),
+    describeOrder: () => ['custom']
+  }),
+};
+```
+
+With the flag enabled the engine logs which lookup strategy is active, streams cache hit/miss/eviction events through `cacheEvents`, and emits throttled warnings whenever lookups fall back to synthetic component data instead of live entities (as emphasized in `docs/scopeDsl/README.md`). Use these hooks to validate that scopes stay aligned with the live entity model described in the docs. To force this mode outside dev/test, set the environment variable `SCOPE_DSL_LOOKUP_DEBUG=true` (or `false` to disable globally) before starting the engine.
+
 ### Edge Cases
 
 #### Handling Null/Undefined Values

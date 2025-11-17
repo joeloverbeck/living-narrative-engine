@@ -10,12 +10,17 @@ import {
   COMPONENT_REMOVED_ID,
   COMPONENTS_BATCH_ADDED_ID,
 } from '../../constants/eventIds.js';
+import { normalizeEntityLookupDebugConfig } from './entityLookupDebug.js';
 
 // Entity lookup cache for performance optimization
 const entityCache = new Map();
 const CACHE_SIZE_LIMIT = 10000; // Prevent unbounded cache growth
+export const ENTITY_CACHE_SIZE_LIMIT = CACHE_SIZE_LIMIT;
 let cacheHits = 0;
 let cacheMisses = 0;
+
+const fallbackWarningTimestamps = new Map();
+const FALLBACK_WARN_THROTTLE_MS = 60000;
 
 // Event bus instance for automatic cache invalidation
 let eventBusInstance = null;
@@ -83,6 +88,66 @@ export function setupEntityCacheInvalidation(eventBus) {
       invalidateEntityCache(event.payload.entity.id);
     }
   });
+}
+
+function notifyCacheEvent(handler, type, key, logger) {
+  if (typeof handler !== 'function') {
+    return;
+  }
+
+  try {
+    handler({ type, key });
+  } catch (error) {
+    if (logger?.warn) {
+      logger.warn('ScopeDSL cacheEvents handler failed.', {
+        error,
+        type,
+        key,
+        source: 'createEvaluationContext',
+      });
+    }
+  }
+}
+
+function evictCacheEntries(cacheEventsHandler, logger) {
+  if (entityCache.size < CACHE_SIZE_LIMIT) {
+    return;
+  }
+
+  const entriesToDelete = Math.floor(CACHE_SIZE_LIMIT * 0.2);
+  let deleted = 0;
+  for (const key of entityCache.keys()) {
+    if (deleted >= entriesToDelete) break;
+    entityCache.delete(key);
+    notifyCacheEvent(cacheEventsHandler, 'evict', key, logger);
+    deleted++;
+  }
+}
+
+function warnSyntheticLookupFallback(entityId, runtimeContext) {
+  if (!entityId) {
+    return;
+  }
+
+  const now = Date.now();
+  const lastLoggedAt = fallbackWarningTimestamps.get(entityId) || 0;
+  if (now - lastLoggedAt < FALLBACK_WARN_THROTTLE_MS) {
+    return;
+  }
+
+  fallbackWarningTimestamps.set(entityId, now);
+
+  const logger = runtimeContext?.logger;
+  const message = `ScopeDSL fell back to synthetic entity components for id ${entityId}`;
+
+  if (logger?.warn) {
+    logger.warn(message, {
+      entityId,
+      source: 'createEvaluationContext',
+    });
+  } else if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+    console.warn(message);
+  }
 }
 
 /**
@@ -201,6 +266,15 @@ export function createEvaluationContext(
   }
 
   // Create or retrieve entity with components (with caching for performance)
+  const lookupDebugConfig = normalizeEntityLookupDebugConfig(
+    runtimeContext?.scopeEntityLookupDebug
+  );
+  const cacheEventsHandler = lookupDebugConfig?.cacheEvents;
+  const runtimeLogger = runtimeContext?.logger ?? null;
+  const shouldWarnSyntheticFallback = Boolean(
+    lookupDebugConfig?.enabled && runtimeContext
+  );
+
   let entity;
   if (typeof item === 'string') {
     // Check cache first for massive performance boost
@@ -208,6 +282,7 @@ export function createEvaluationContext(
     if (entityCache.has(cacheKey)) {
       entity = entityCache.get(cacheKey);
       cacheHits++;
+      notifyCacheEvent(cacheEventsHandler, 'hit', cacheKey, runtimeLogger);
 
       if (trace && cacheHits % 1000 === 0) {
         trace.addLog(
@@ -218,6 +293,7 @@ export function createEvaluationContext(
       }
     } else {
       cacheMisses++;
+      notifyCacheEvent(cacheEventsHandler, 'miss', cacheKey, runtimeLogger);
 
       // Try as entity first (primary path)
       entity = gateway.getEntityInstance(item);
@@ -226,6 +302,9 @@ export function createEvaluationContext(
       if (entity) {
         resolvedHow = 'resolved as entity';
       } else {
+        if (shouldWarnSyntheticFallback) {
+          warnSyntheticLookupFallback(item, runtimeContext);
+        }
         // Fallback: component lookup or basic entity
         const components = gateway.getItemComponents?.(item);
         if (components) {
@@ -238,16 +317,7 @@ export function createEvaluationContext(
       }
 
       // Cache the result (with simple LRU eviction)
-      if (entityCache.size >= CACHE_SIZE_LIMIT) {
-        // Clear oldest 20% when limit reached
-        const entriesToDelete = Math.floor(CACHE_SIZE_LIMIT * 0.2);
-        let deleted = 0;
-        for (const key of entityCache.keys()) {
-          if (deleted >= entriesToDelete) break;
-          entityCache.delete(key);
-          deleted++;
-        }
-      }
+      evictCacheEntries(cacheEventsHandler, runtimeLogger);
       entityCache.set(cacheKey, entity);
 
       // Log how the entity was resolved
@@ -260,14 +330,19 @@ export function createEvaluationContext(
       if (entityCache.has(cacheKey)) {
         entity = entityCache.get(cacheKey);
         cacheHits++;
+        notifyCacheEvent(cacheEventsHandler, 'hit', cacheKey, runtimeLogger);
       } else {
         cacheMisses++;
+        notifyCacheEvent(cacheEventsHandler, 'miss', cacheKey, runtimeLogger);
         entity = gateway.getEntityInstance(item.id);
         let resolvedHow = null;
 
         if (entity) {
           resolvedHow = 'resolved object with ID via gateway';
         } else {
+          if (shouldWarnSyntheticFallback) {
+            warnSyntheticLookupFallback(item.id, runtimeContext);
+          }
           // Fallback: use the object itself with component resolution
           const components = gateway.getItemComponents?.(item.id);
           if (components) {
@@ -280,16 +355,7 @@ export function createEvaluationContext(
         }
 
         // Cache the result (with simple LRU eviction)
-        if (entityCache.size >= CACHE_SIZE_LIMIT) {
-          // Clear oldest 20% when limit reached
-          const entriesToDelete = Math.floor(CACHE_SIZE_LIMIT * 0.2);
-          let deleted = 0;
-          for (const key of entityCache.keys()) {
-            if (deleted >= entriesToDelete) break;
-            entityCache.delete(key);
-            deleted++;
-          }
-        }
+        evictCacheEntries(cacheEventsHandler, runtimeLogger);
         entityCache.set(cacheKey, entity);
       }
     } else {
