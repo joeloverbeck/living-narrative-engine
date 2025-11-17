@@ -11,10 +11,9 @@ import {
   jest,
 } from '@jest/globals';
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
-import { CharacterStorageService } from '../../../src/characterBuilder/services/characterStorageService.js';
 import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
 import { ThematicDirectionsManagerController } from '../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
-import { UIStateManager } from '../../../src/shared/characterBuilder/uiStateManager.js';
+import { BaseCharacterBuilderControllerTestBase } from '../../unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 
 // Mock IndexedDB for testing
 const mockIndexedDB = {
@@ -63,7 +62,7 @@ describe('Thematic Directions Manager Integration Tests', () => {
   let mockDirectionGenerator;
   let mockEventBus;
   let mockSchemaValidator;
-  let mockUIStateManager;
+  let testBase;
 
   // Test data
   const testConcept = {
@@ -96,173 +95,86 @@ describe('Thematic Directions Manager Integration Tests', () => {
     createdAt: new Date().toISOString(),
   };
 
-  beforeEach(() => {
-    // Set up DOM mocking
-    const createMockElement = (id, tagName = 'DIV') => ({
-      id,
-      tagName,
-      addEventListener: jest.fn(),
-      style: { display: 'none' },
-      classList: {
-        add: jest.fn(),
-        remove: jest.fn(),
-        contains: jest.fn(() => false),
-      },
-      querySelector: jest.fn().mockReturnValue({
-        textContent: '',
-        innerHTML: '',
-      }),
-      querySelectorAll: jest.fn(() => []),
-      appendChild: jest.fn(),
-      setAttribute: jest.fn(),
-      getAttribute: jest.fn(),
-      textContent: '',
-      innerHTML: '',
-      disabled: false,
-      parentElement: null,
-      parentNode: null,
-      cloneNode: jest.fn(() => ({})),
-      value: '',
-      options: [],
-    });
+  const initializeTestDOM = () => {
+    document.body.innerHTML = `
+      <div class="page-container">
+        <div class="header-section">
+          <button id="refresh-btn">Refresh</button>
+          <button id="cleanup-orphans-btn">Clean Up</button>
+          <button id="back-to-menu-btn">Back</button>
+        </div>
 
-    // Map of required element IDs to mock elements
-    const mockElements = {};
-    const requiredIds = [
-      'empty-state',
-      'loading-state',
-      'error-state',
-      'results-state',
-      'concept-selector',
-      'direction-filter',
-      'directions-results',
-      'refresh-btn',
-      'cleanup-orphans-btn',
-      'back-to-menu-btn',
-      'retry-btn',
-    ];
+        <div class="filter-section">
+          <select id="concept-selector">
+            <option value="">All Concepts</option>
+            <option value="orphaned">Orphaned</option>
+          </select>
+          <input id="direction-filter" type="text" />
+        </div>
 
-    requiredIds.forEach((id) => {
-      // Special handling for concept-selector - needs to be a SELECT element
-      if (id === 'concept-selector') {
-        mockElements[id] = createMockElement(id, 'SELECT');
-      } else {
-        mockElements[id] = createMockElement(id);
-      }
-    });
+        <div class="stats-section">
+          <span id="total-directions">0</span>
+          <span id="orphaned-count">0</span>
+        </div>
 
-    global.document = {
-      getElementById: jest.fn((id) => {
-        // Handle both with and without # prefix
-        const elementId = id.startsWith('#') ? id.slice(1) : id;
-        const element = mockElements[elementId] || mockElements[id] || null;
-        // console.log(`getElementById called with: ${id}, returning:`, element);
-        return element;
-      }),
-      createElement: jest.fn((tag) => ({
-        tagName: tag.toUpperCase(),
-        addEventListener: jest.fn(),
-        appendChild: jest.fn(),
-        setAttribute: jest.fn(),
-        getAttribute: jest.fn(),
-        classList: {
-          add: jest.fn(),
-          remove: jest.fn(),
-          contains: jest.fn(() => false),
-        },
-        style: { display: 'none' },
-        textContent: '',
-        innerHTML: '',
-        value: '',
-        disabled: false,
-        title: '',
-        id: '',
-        className: '',
-        parentElement: null,
-        parentNode: null,
-        querySelector: jest.fn().mockReturnValue({
-          textContent: '',
-          innerHTML: '',
-        }),
-        querySelectorAll: jest.fn(() => []),
-        focus: jest.fn(),
-        select: jest.fn(),
-        setSelectionRange: jest.fn(),
-        rows: 2,
-      })),
-      querySelector: jest.fn().mockReturnValue({
-        textContent: '',
-      }),
-      querySelectorAll: jest.fn(() => []),
-    };
+        <div id="concept-display-container" style="display: none;">
+          <div id="concept-display-content"></div>
+        </div>
 
-    global.window = { location: { href: '' } };
-    global.alert = jest.fn();
+        <div class="states">
+          <div id="empty-state" style="display: none;"></div>
+          <div id="loading-state" style="display: none;"></div>
+          <div id="error-state" style="display: none;">
+            <p id="error-message-text"></p>
+            <button id="retry-btn">Retry</button>
+          </div>
+          <div id="results-state" style="display: none;">
+            <div id="directions-results">
+              <div id="directions-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    // Also add a querySelector mock that properly returns elements
-    global.document.querySelector = jest.fn((selector) => {
-      // Remove # prefix if present
-      const id = selector.startsWith('#') ? selector.slice(1) : selector;
-      return mockElements[id] || null;
-    });
+      <div id="confirmation-modal" style="display: none;">
+        <div class="modal-content">
+          <h2 id="modal-title"></h2>
+          <p id="modal-message"></p>
+          <button id="modal-confirm-btn">Confirm</button>
+          <button id="modal-cancel-btn">Cancel</button>
+          <button id="close-modal-btn">Close</button>
+        </div>
+      </div>
+    `;
+  };
 
-    // Add additional DOM elements that might be needed
-    mockElements['total-directions'] = createMockElement('total-directions');
-    mockElements['orphaned-count'] = createMockElement('orphaned-count');
-    mockElements['confirmation-modal'] =
-      createMockElement('confirmation-modal');
-    mockElements['modal-title'] = createMockElement('modal-title');
-    mockElements['modal-message'] = createMockElement('modal-message');
-    mockElements['modal-confirm-btn'] = createMockElement('modal-confirm-btn');
-    mockElements['modal-cancel-btn'] = createMockElement('modal-cancel-btn');
-    mockElements['close-modal-btn'] = createMockElement('close-modal-btn');
-    mockElements['concept-display-container'] = createMockElement(
-      'concept-display-container'
-    );
-    mockElements['concept-display-content'] = createMockElement(
-      'concept-display-content'
-    );
-    mockElements['error-message-text'] =
-      createMockElement('error-message-text');
+  beforeEach(async () => {
+    testBase = new BaseCharacterBuilderControllerTestBase();
+    await testBase.setup();
 
-    // Make sure document.createElement returns elements with innerHTML property
-    const originalCreateElement = global.document.createElement;
-    global.document.createElement = jest.fn((tag) => {
-      const element = originalCreateElement(tag);
-      element.innerHTML = element.innerHTML || '';
-      return element;
-    });
+    initializeTestDOM();
 
-    // Create service mocks
-    mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
+    mockLogger = testBase.mocks.logger;
 
     mockDirectionGenerator = {
       generateDirections: jest.fn(),
     };
 
-    mockEventBus = {
-      dispatch: jest.fn(),
-      subscribe: jest.fn(() => jest.fn()), // Returns unsubscribe function
-      unsubscribe: jest.fn(),
-    };
+    mockEventBus = testBase.mocks.eventBus;
+    mockEventBus.dispatch = jest.fn();
+    mockEventBus.subscribe = jest.fn(() => jest.fn());
+    mockEventBus.unsubscribe = jest.fn();
 
     mockSchemaValidator = {
+      ...testBase.mocks.schemaValidator,
       validate: jest.fn(() => true),
       validateAgainstSchema: jest.fn(() => true),
       formatAjvErrors: jest.fn(() => ''),
     };
+    testBase.mocks.schemaValidator = mockSchemaValidator;
 
-    // Create mock UIStateManager
-    mockUIStateManager = {
-      showState: jest.fn(),
-      showError: jest.fn(),
-      getCurrentState: jest.fn(() => 'empty'),
-    };
+    global.alert = jest.fn();
+    window.location.href = '';
 
     // Mock IndexedDB operations
     const mockRequest = {
@@ -296,10 +208,8 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
     mockIndexedDB.open.mockReturnValue(mockRequest);
 
-    // Create service instances
     database = new CharacterDatabase({ logger: mockLogger });
 
-    // Create a mock storage service that bypasses initialization checks
     storageService = {
       initialize: jest.fn().mockResolvedValue(undefined),
       close: jest.fn().mockResolvedValue(undefined),
@@ -329,14 +239,31 @@ describe('Thematic Directions Manager Integration Tests', () => {
       directionGenerator: mockDirectionGenerator,
       eventBus: mockEventBus,
     });
-
-    // Add initialize method
     characterBuilderService.initialize = jest.fn().mockResolvedValue(undefined);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  afterEach(async () => {
+    document.body.innerHTML = '';
+    if (testBase) {
+      await testBase.cleanup();
+      testBase = null;
+    }
   });
+
+  const createController = (overrides = {}) => {
+    if (!testBase) {
+      throw new Error('Test base must be initialized before creating controller');
+    }
+
+    return new ThematicDirectionsManagerController({
+      ...testBase.mockDependencies,
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      schemaValidator: mockSchemaValidator,
+      characterBuilderService,
+      ...overrides,
+    });
+  };
 
   describe('Complete Workflow Tests', () => {
     it('should initialize all services successfully', async () => {
@@ -419,27 +346,15 @@ describe('Thematic Directions Manager Integration Tests', () => {
         deleteThematicDirection: jest.fn(),
       };
 
-      controller = new ThematicDirectionsManagerController({
-        logger: mockLogger,
+      controller = createController({
         characterBuilderService: failingCharacterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-        uiStateManager: mockUIStateManager,
       });
 
       // The initialization should throw an error
-      await expect(controller.initialize()).rejects.toThrow();
+      await expect(controller.initialize()).rejects.toThrow(error);
 
-      // Should log the initialization error
-      expect(mockLogger.error).toHaveBeenCalled();
-
-      // The error is thrown and caught by the base controller
-      // Since we expect the initialization to reject, the error will be logged
-      // The exact error message depends on where the failure occurs in the lifecycle
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('failed'),
-        expect.any(Error)
-      );
+      // The service should have been invoked as part of initialization
+      expect(failingCharacterBuilderService.initialize).toHaveBeenCalled();
     });
 
     it('should handle data loading errors gracefully', async () => {
@@ -453,13 +368,7 @@ describe('Thematic Directions Manager Integration Tests', () => {
         .fn()
         .mockResolvedValue([]);
 
-      controller = new ThematicDirectionsManagerController({
-        logger: mockLogger,
-        characterBuilderService,
-        eventBus: mockEventBus,
-        schemaValidator: mockSchemaValidator,
-        uiStateManager: mockUIStateManager,
-      });
+      controller = createController();
 
       await controller.initialize();
 

@@ -12,6 +12,7 @@ import {
   createEvaluationContext,
   preprocessActorForEvaluation,
   setupEntityCacheInvalidation,
+  ENTITY_CACHE_SIZE_LIMIT,
 } from '../../../src/scopeDsl/core/entityHelpers.js';
 import { LogLevel } from '../../../src/logging/consoleLogger.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
@@ -101,6 +102,8 @@ describe('entityHelpers advanced integration coverage', () => {
       componentRegistry: overrides.componentRegistry ?? null,
       target: overrides.target,
       targets: overrides.targets,
+      logger: overrides.logger ?? services.logger ?? null,
+      scopeEntityLookupDebug: overrides.scopeEntityLookupDebug,
     };
   }
 
@@ -168,9 +171,9 @@ describe('entityHelpers advanced integration coverage', () => {
   it('falls back to basic entity objects when gateway lookups fail', async () => {
     const { actor, location } = await createActorItemAndLocation();
     const runtimeCtx = createRuntimeContext({ location });
+    const getEntitySpy = jest.spyOn(entityManager, 'getEntityInstance');
     const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
     const locationProvider = createLocationProvider(runtimeCtx.location);
-    const getEntitySpy = jest.spyOn(entityManager, 'getEntityInstance');
 
     const context = createEvaluationContext(
       'test:unknown-item',
@@ -190,9 +193,9 @@ describe('entityHelpers advanced integration coverage', () => {
   it('evicts the least recently used cache entries once the capacity threshold is exceeded', async () => {
     const { actor, item, location } = await createActorItemAndLocation();
     const runtimeCtx = createRuntimeContext({ location });
+    const getEntitySpy = jest.spyOn(entityManager, 'getEntityInstance');
     const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
     const locationProvider = createLocationProvider(runtimeCtx.location);
-    const getEntitySpy = jest.spyOn(entityManager, 'getEntityInstance');
 
     createEvaluationContext(item.id, actor, gateway, locationProvider, null, runtimeCtx);
 
@@ -500,9 +503,9 @@ describe('entityHelpers advanced integration coverage', () => {
   it('evicts cached entries for object references when threshold is exceeded', async () => {
     const { actor, item, location } = await createActorItemAndLocation();
     const runtimeCtx = createRuntimeContext({ location });
+    const getEntitySpy = jest.spyOn(entityManager, 'getEntityInstance');
     const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
     const locationProvider = createLocationProvider(runtimeCtx.location);
-    const getEntitySpy = jest.spyOn(entityManager, 'getEntityInstance');
 
     const reference = { id: item.id };
 
@@ -539,5 +542,76 @@ describe('entityHelpers advanced integration coverage', () => {
 
     expect(getEntitySpy).toHaveBeenCalled();
     getEntitySpy.mockRestore();
+  });
+
+  it('emits cacheEvents for hits, misses, and evictions when lookup debugging is enabled', async () => {
+    const { actor, location } = await createActorItemAndLocation();
+    const cacheEvents = jest.fn();
+    const resolveSpy = jest.fn((entityId, manager) => manager?.getEntityInstance(entityId));
+    const logger = {
+      warn: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const runtimeCtx = createRuntimeContext({
+      location,
+      logger,
+      scopeEntityLookupDebug: {
+        enabled: true,
+        cacheEvents,
+        strategyFactory: ({ entityManager: manager }) => ({
+          resolve: (entityId) => resolveSpy(entityId, manager),
+          describeOrder: () => ['custom-strategy'],
+        }),
+      },
+    });
+    const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
+    const locationProvider = createLocationProvider(runtimeCtx.location);
+
+    createEvaluationContext('missing:0', actor, gateway, locationProvider, null, runtimeCtx);
+    createEvaluationContext('missing:0', actor, gateway, locationProvider, null, runtimeCtx);
+
+    for (let i = 1; i <= ENTITY_CACHE_SIZE_LIMIT + 5; i += 1) {
+      createEvaluationContext(
+        `missing:${i}`,
+        actor,
+        gateway,
+        locationProvider,
+        null,
+        runtimeCtx
+      );
+    }
+
+    expect(resolveSpy).toHaveBeenCalled();
+    const eventTypes = cacheEvents.mock.calls.map(([event]) => event.type);
+    expect(eventTypes).toContain('miss');
+    expect(eventTypes).toContain('hit');
+    expect(eventTypes).toContain('evict');
+  });
+
+  it('warns once per entity when falling back to synthetic objects under debug mode', async () => {
+    const { actor, location } = await createActorItemAndLocation();
+    const logger = {
+      warn: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const runtimeCtx = createRuntimeContext({
+      location,
+      logger,
+      scopeEntityLookupDebug: { enabled: true },
+    });
+    const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
+    const locationProvider = createLocationProvider(runtimeCtx.location);
+
+    createEvaluationContext('synthetic-warning', actor, gateway, locationProvider, null, runtimeCtx);
+    createEvaluationContext('synthetic-warning', actor, gateway, locationProvider, null, runtimeCtx);
+
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn.mock.calls[0][0]).toMatch(/synthetic entity/i);
   });
 });

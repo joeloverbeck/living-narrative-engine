@@ -23,6 +23,8 @@ import createSlotAccessResolver from './nodes/slotAccessResolver.js';
 import createScopeReferenceResolver from './nodes/scopeReferenceResolver.js';
 import { ParameterValidator } from './core/parameterValidator.js';
 import { tokens } from '../dependencyInjection/tokens.js';
+import { normalizeEntityLookupDebugConfig } from './core/entityLookupDebug.js';
+import { createEntityLookupStrategy } from './core/entityLookupStrategy.js';
 
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
@@ -84,7 +86,65 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context containing entity manager.
    * @returns {object} Gateway with helper methods for entities.
    */
-  _createEntitiesGateway(runtimeCtx) {
+  _createEntitiesGateway(runtimeCtx, trace = null) {
+    const debugConfig = normalizeEntityLookupDebugConfig(
+      runtimeCtx?.scopeEntityLookupDebug
+    );
+    const factoryOptions = {
+      entityManager: runtimeCtx?.entityManager ?? null,
+      trace,
+      logger: runtimeCtx?.logger ?? null,
+      debugConfig,
+    };
+
+    let entityLookupStrategy = null;
+
+    if (
+      runtimeCtx?.scopeEntityLookupStrategy &&
+      typeof runtimeCtx.scopeEntityLookupStrategy.resolve === 'function'
+    ) {
+      entityLookupStrategy = runtimeCtx.scopeEntityLookupStrategy;
+    }
+
+    if (!entityLookupStrategy) {
+      const strategyFactory =
+        typeof debugConfig?.strategyFactory === 'function'
+          ? debugConfig.strategyFactory
+          : null;
+      if (strategyFactory) {
+        const candidate = strategyFactory(factoryOptions);
+        if (candidate?.resolve) {
+          entityLookupStrategy = candidate;
+        }
+      }
+    }
+
+    if (!entityLookupStrategy) {
+      entityLookupStrategy = createEntityLookupStrategy(factoryOptions);
+    }
+
+    if (debugConfig?.enabled) {
+      const order = entityLookupStrategy?.describeOrder?.() ?? ['custom'];
+      const payload = {
+        order,
+        entityManagerPresent: Boolean(factoryOptions.entityManager),
+      };
+
+      if (trace?.addLog) {
+        trace.addLog(
+          'debug',
+          'ScopeDSL entity lookup strategy established.',
+          'ScopeEngine._createEntitiesGateway',
+          payload
+        );
+      } else if (factoryOptions.logger?.debug) {
+        factoryOptions.logger.debug(
+          'ScopeDSL entity lookup strategy established.',
+          payload
+        );
+      }
+    }
+
     return {
       getEntities: () => {
         const em = runtimeCtx?.entityManager;
@@ -119,16 +179,11 @@ class ScopeEngine extends IScopeEngine {
       },
       getComponentData: (eid, cid) =>
         runtimeCtx?.entityManager?.getComponentData(eid, cid),
-      getEntityInstance: (eid) => {
-        const em = runtimeCtx?.entityManager;
-        return em?.getEntity ? em.getEntity(eid) : em?.getEntityInstance(eid);
-      },
+      getEntityInstance: (eid) => entityLookupStrategy?.resolve?.(eid),
       getItemComponents: (itemId) => {
         // Primary path: Check if it's an entity (most clothing items)
         const entityManager = runtimeCtx?.entityManager;
-        const entity = entityManager?.getEntity
-          ? entityManager.getEntity(itemId)
-          : entityManager?.getEntityInstance(itemId);
+        let entity = entityLookupStrategy?.resolve?.(itemId);
 
         if (entity) {
           // Convert entity components to plain object for JSON Logic
@@ -265,9 +320,9 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context providing dependencies.
    * @returns {object} Dispatcher used to resolve nodes.
    */
-  _ensureInitialized(runtimeCtx) {
+  _ensureInitialized(runtimeCtx, trace) {
     const locationProvider = this._createLocationProvider(runtimeCtx);
-    const entitiesGateway = this._createEntitiesGateway(runtimeCtx);
+    const entitiesGateway = this._createEntitiesGateway(runtimeCtx, trace);
     const logicEval = this._createLogicEvaluator(runtimeCtx);
     const resolvers = this._createResolvers({
       locationProvider,
@@ -305,7 +360,7 @@ class ScopeEngine extends IScopeEngine {
     const depthGuard = createDepthGuard(this.maxDepth);
 
     // Ensure engine is initialized with resolvers
-    const dispatcher = this._ensureInitialized(runtimeCtx);
+    const dispatcher = this._ensureInitialized(runtimeCtx, trace);
 
     // Create resolution context for resolvers with wrapped dispatcher
     const ctx = {
