@@ -22,6 +22,207 @@ import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { HasComponentOperator } from '../../../../src/logic/operators/hasComponentOperator.js';
 import { createEventBusRecorder } from '../testHelpers/eventBusRecorder.js';
+import { buildDualFormatState } from './dualFormatStateBuilder.js';
+import { deepClone } from '../../../../src/utils/cloneUtils.js';
+
+const GOAP_SETUP_ERRORS = {
+  INVALID_TASK_REGISTRY: 'GOAP_SETUP_INVALID_TASK_REGISTRY',
+  INVALID_EFFECT: 'GOAP_SETUP_INVALID_EFFECT',
+  MISSING_ACTOR: 'GOAP_SETUP_MISSING_ACTOR',
+};
+
+const DEFAULT_TASK_NAMESPACE = 'test';
+
+function throwSetupError(code, message) {
+  const error = new Error(
+    `${code}: ${message} (see specs/goap-system-specs.md#Planner Interface Contract)`
+  );
+  error.code = code;
+  throw error;
+}
+
+function mirrorActorComponents(components = {}) {
+  const normalized = {};
+  for (const [componentId, data] of Object.entries(components)) {
+    const cloned = deepClone(data);
+    normalized[componentId] = cloned;
+    if (componentId.includes(':')) {
+      const aliasId = componentId.replace(/:/g, '_');
+      normalized[aliasId] = deepClone(data);
+    }
+  }
+  return normalized;
+}
+
+function normalizeTasksPayload(rawTasks, { logger }) {
+  const warnings = [];
+  if (!rawTasks) {
+    return { tasks: {}, warnings };
+  }
+
+  const normalized = {};
+
+  const registerNamespace = (namespace, namespaceTasks) => {
+    normalized[namespace] = namespaceTasks;
+  };
+
+  const normalizeTaskMap = (namespace, tasksObject) => {
+    const namespaceTasks = {};
+    for (const [taskId, taskDef] of Object.entries(tasksObject)) {
+      namespaceTasks[taskId] = normalizeSingleTask(
+        taskDef,
+        warnings,
+        logger
+      );
+    }
+    registerNamespace(namespace, namespaceTasks);
+  };
+
+  if (Array.isArray(rawTasks)) {
+    const warning = 'Deprecated task array payload detected. Tasks will be registered under the "test" namespace automatically.';
+    warnings.push(warning);
+    logger?.warn(warning);
+
+    const namespaceTasks = {};
+    rawTasks.forEach((taskDef, index) => {
+      if (!taskDef || typeof taskDef !== 'object') {
+        throwSetupError(
+          GOAP_SETUP_ERRORS.INVALID_TASK_REGISTRY,
+          `Task at index ${index} must be an object`
+        );
+      }
+      const normalizedTask = normalizeSingleTask(taskDef, warnings, logger);
+      namespaceTasks[normalizedTask.id] = normalizedTask;
+    });
+
+    registerNamespace(DEFAULT_TASK_NAMESPACE, namespaceTasks);
+    return { tasks: normalized, warnings };
+  }
+
+  if (typeof rawTasks !== 'object') {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_TASK_REGISTRY,
+      `Task registry must be an object or array (received ${typeof rawTasks})`
+    );
+  }
+
+  for (const [namespace, namespaceTasks] of Object.entries(rawTasks)) {
+    if (!namespaceTasks || typeof namespaceTasks !== 'object') {
+      throwSetupError(
+        GOAP_SETUP_ERRORS.INVALID_TASK_REGISTRY,
+        `Task namespace "${namespace}" must be an object map`
+      );
+    }
+    normalizeTaskMap(namespace, namespaceTasks);
+  }
+
+  return { tasks: normalized, warnings };
+}
+
+function normalizeSingleTask(taskDef, warnings, logger) {
+  if (!taskDef || typeof taskDef !== 'object') {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_TASK_REGISTRY,
+      'Tasks must be objects with an id field'
+    );
+  }
+
+  if (!taskDef.id || typeof taskDef.id !== 'string') {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_TASK_REGISTRY,
+      'Task definitions must include a string id property'
+    );
+  }
+
+  if (!Array.isArray(taskDef.planningEffects)) {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_TASK_REGISTRY,
+      `Task "${taskDef.id}" must include a planningEffects array`
+    );
+  }
+
+  const normalizedTask = {
+    ...taskDef,
+    planningEffects: taskDef.planningEffects.map((effect, index) =>
+      validatePlanningEffect(effect, taskDef.id, index, warnings, logger)
+    ),
+  };
+
+  if (
+    normalizedTask.structuralGates &&
+    typeof normalizedTask.structuralGates === 'object' &&
+    !normalizedTask.structuralGates.condition
+  ) {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_TASK_REGISTRY,
+      `Task "${taskDef.id}" structuralGates must include a condition`
+    );
+  }
+
+  return normalizedTask;
+}
+
+function validatePlanningEffect(effect, taskId, index, warnings, logger) {
+  if (!effect || typeof effect !== 'object') {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_EFFECT,
+      `Task "${taskId}" effect[${index}] must be an object`
+    );
+  }
+
+  const normalized = {
+    ...effect,
+    parameters: effect.parameters ? { ...effect.parameters } : undefined,
+  };
+
+  const supportedTypes = Object.values(PlanningEffectsSimulator.OPERATION_TYPES);
+
+  if (!normalized.type) {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_EFFECT,
+      `Task "${taskId}" effect[${index}] missing type`
+    );
+  }
+
+  if (!supportedTypes.includes(normalized.type)) {
+    throwSetupError(
+      GOAP_SETUP_ERRORS.INVALID_EFFECT,
+      `Task "${taskId}" effect[${index}] has unknown type "${normalized.type}"`
+    );
+  }
+
+  if (!normalized.parameters) {
+    return normalized;
+  }
+
+  const params = normalized.parameters;
+
+  if (params.entityId && !params.entity_ref) {
+    const warning = `Task "${taskId}" effect[${index}] uses deprecated entityId. Use entity_ref instead.`;
+    warnings.push(warning);
+    logger?.warn(warning);
+  }
+
+  if (params.entity_id && !params.entity_ref) {
+    const warning = `Task "${taskId}" effect[${index}] uses deprecated entity_id. Use entity_ref instead.`;
+    warnings.push(warning);
+    logger?.warn(warning);
+  }
+
+  if (params.componentId && !params.component_type) {
+    const warning = `Task "${taskId}" effect[${index}] uses deprecated componentId. Use component_type instead.`;
+    warnings.push(warning);
+    logger?.warn(warning);
+  }
+
+  if (params.component_id && !params.component_type) {
+    const warning = `Task "${taskId}" effect[${index}] uses deprecated component_id. Use component_type instead.`;
+    warnings.push(warning);
+    logger?.warn(warning);
+  }
+
+  return normalized;
+}
 
 /**
  * Creates mock spatial index manager for scope engine
@@ -166,18 +367,57 @@ export async function createGoapTestSetup(config = {}) {
     tasks = {},
     methods = {},
     mockRefinement = false,
+    enableGoapSetupGuards = true,
   } = config;
 
   const testBed = createTestBed();
+  const guardsEnabled = enableGoapSetupGuards !== false;
+  const guardLogger = testBed.createMockLogger();
+  const taskNormalization = guardsEnabled
+    ? normalizeTasksPayload(tasks, { logger: guardLogger })
+    : null;
+  const normalizedTasks = taskNormalization ? taskNormalization.tasks : (tasks || {});
+  const taskWarnings = taskNormalization ? taskNormalization.warnings : [];
 
   // 1. Create real EntityManager
   const entityManager = new SimpleEntityManager();
+  const registerPlanningActor = (actorDefinition) => {
+    if (!actorDefinition || !actorDefinition.id) {
+      throwSetupError(
+        GOAP_SETUP_ERRORS.MISSING_ACTOR,
+        'registerPlanningActor requires an actor definition with an id'
+      );
+    }
+
+    const normalizedComponents = mirrorActorComponents(
+      actorDefinition.components || {}
+    );
+    entityManager.addEntity({
+      id: actorDefinition.id,
+      components: normalizedComponents,
+    });
+
+    const planningState = buildDualFormatState({
+      id: actorDefinition.id,
+      components: actorDefinition.components || {},
+    });
+
+    const cleanup = () => {
+      entityManager.deleteEntity(actorDefinition.id);
+    };
+
+    return {
+      actor: entityManager.getEntityInstance(actorDefinition.id),
+      planningState,
+      cleanup,
+    };
+  };
 
   // 2. Create DataRegistry for GOAP goals
   const dataRegistry = createMockDataRegistry();
 
   // 3. Create GameDataRepository for tasks
-  const gameDataRepository = createMockGameDataRepository(tasks);
+  const gameDataRepository = createMockGameDataRepository(normalizedTasks);
 
   // 4. Create JSON Logic service with custom operators
   const baseJsonLogicService = new JsonLogicEvaluationService({
@@ -281,6 +521,21 @@ export async function createGoapTestSetup(config = {}) {
     planningEffectsSimulator: effectsSimulator,
     heuristicRegistry,
   });
+  if (typeof planner.setExternalTaskLibraryDiagnostics === 'function') {
+    planner.setExternalTaskLibraryDiagnostics({ warnings: taskWarnings });
+  }
+  if (guardsEnabled) {
+    const originalPlan = planner.plan.bind(planner);
+    planner.plan = (actorId, ...args) => {
+      if (!entityManager.hasEntity(actorId)) {
+        throwSetupError(
+          GOAP_SETUP_ERRORS.MISSING_ACTOR,
+          `Actor "${actorId}" must be registered via registerPlanningActor() before calling plan()`
+        );
+      }
+      return originalPlan(actorId, ...args);
+    };
+  }
 
   // 9. Create Refinement Engine (real or mock)
   let refinementEngine;
@@ -381,6 +636,8 @@ export async function createGoapTestSetup(config = {}) {
     // Helper methods
     createActor,
     registerGoal,
+    registerPlanningActor,
+    buildPlanningState: buildDualFormatState,
     world,
   };
 }

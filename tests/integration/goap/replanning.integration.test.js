@@ -248,11 +248,11 @@ describe('GOAP Replanning - Integration', () => {
           'core:needs': { hunger: 80 }, // Above relevance threshold
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       // Build initial planning state from actor components
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 

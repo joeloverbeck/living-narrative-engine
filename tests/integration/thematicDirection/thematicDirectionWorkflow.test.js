@@ -17,6 +17,14 @@ import { ThematicDirectionGenerator } from '../../../src/characterBuilder/servic
 import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import { ThematicDirectionController } from '../../../src/thematicDirection/controllers/thematicDirectionController.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 import { createThematicDirectionsFromLLMResponse } from '../../../src/characterBuilder/models/thematicDirection.js';
 import { waitForCondition } from '../../common/jestHelpers.js';
@@ -26,6 +34,10 @@ import {
   cleanupThematicDirectionDOM,
   createMockEvent,
 } from '../../common/testHelpers/thematicDirectionDOMSetup.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 
 // Mock the validation function to ensure it always passes
 jest.mock(
@@ -92,6 +104,14 @@ describe('Thematic Direction Workflow Integration', () => {
   let mockLlmJsonService;
   let mockLlmConfigManager;
   let mockLlmStrategyFactory;
+  let asyncUtilitiesToolkit;
+  let domElementManager;
+  let eventListenerRegistry;
+  let controllerLifecycleOrchestrator;
+  let performanceMonitor;
+  let memoryManager;
+  let errorHandlingStrategy;
+  let validationService;
 
   // Mock DOM elements
   let mockElements;
@@ -113,7 +133,7 @@ describe('Thematic Direction Workflow Integration', () => {
       validateAgainstSchema: jest.fn().mockReturnValue({ valid: true }),
       formatAjvErrors: jest.fn(() => 'Validation error'),
       addSchema: jest.fn(),
-      validate: jest.fn().mockReturnValue(true), // Required by dependency validation
+      validate: jest.fn().mockReturnValue({ isValid: true }), // Required by dependency validation
     };
 
     // Create database mock
@@ -216,12 +236,82 @@ describe('Thematic Direction Workflow Integration', () => {
       return elementMap[id] || null;
     });
 
+    if (!document.body) {
+      document.body = {
+        appendChild: jest.fn(),
+        contains: jest.fn(() => true),
+      };
+    } else if (typeof document.body.contains !== 'function') {
+      document.body.contains = jest.fn(() => true);
+    }
+
+    asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+      logger: mockLogger,
+      defaultWait: 10,
+      instrumentation: { logTimerEvents: false },
+    });
+
+    domElementManager = new DOMElementManager({
+      logger: mockLogger,
+      documentRef: document,
+      performanceRef: performance,
+      elementsRef: {},
+      contextName: 'ThematicDirectionWorkflowDOM',
+    });
+
+    eventListenerRegistry = new EventListenerRegistry({
+      logger: mockLogger,
+      asyncUtilities: asyncUtilitiesToolkit,
+      contextName: 'ThematicDirectionWorkflowListeners',
+    });
+
+    controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+    });
+
+    performanceMonitor = new PerformanceMonitor({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      threshold: 25,
+      contextName: 'ThematicDirectionWorkflowPerformance',
+    });
+
+    memoryManager = new MemoryManager({
+      logger: mockLogger,
+      contextName: 'ThematicDirectionWorkflowMemory',
+    });
+
+    errorHandlingStrategy = new ErrorHandlingStrategy({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      controllerName: 'ThematicDirectionController',
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+    });
+
+    validationService = new ValidationService({
+      schemaValidator: mockSchemaValidator,
+      logger: mockLogger,
+      handleError: (error, context) =>
+        mockLogger.error('Validation error', error, context),
+      errorCategories: ERROR_CATEGORIES,
+    });
+
     // Create controller
     controller = new ThematicDirectionController({
       logger: mockLogger,
       characterBuilderService,
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
     });
   });
 

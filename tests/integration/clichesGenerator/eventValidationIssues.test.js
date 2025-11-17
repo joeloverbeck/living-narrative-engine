@@ -11,7 +11,6 @@ import { CHARACTER_BUILDER_EVENTS } from '../../../src/characterBuilder/services
 
 describe('Cliches Generator - Event Validation Issues', () => {
   let testBed;
-  let mockEventBus;
   let mockCharacterBuilderService;
   let controller;
 
@@ -72,8 +71,17 @@ describe('Cliches Generator - Event Validation Issues', () => {
 
     // Initialize the test bed and controller
     await testBed.setup();
-    mockEventBus = testBed.mockEventBus;
     controller = testBed.controller;
+
+    // Manually run lifecycle steps that the mocked orchestrator skips
+    controller?._cacheElements?.();
+    controller?._setupEventListeners?.();
+    if (controller?._loadInitialData) {
+      await controller._loadInitialData();
+    }
+    if (controller?._initializeUIState) {
+      await controller._initializeUIState();
+    }
   });
 
   afterEach(() => {
@@ -82,12 +90,7 @@ describe('Cliches Generator - Event Validation Issues', () => {
 
   describe('Event Validation Errors', () => {
     it('should handle cliches retrieval without event dispatch from mock', async () => {
-      // Track dispatched events
-      const dispatchedEvents = [];
-      mockEventBus.dispatch.mockImplementation((eventType, payload) => {
-        dispatchedEvents.push({ type: eventType, payload });
-        return true;
-      });
+      testBed.clearEventTracking();
 
       // Get the direction selector element
       const directionSelector = document.getElementById('direction-selector');
@@ -101,11 +104,7 @@ describe('Cliches Generator - Event Validation Issues', () => {
       // Wait for async operations
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Log all dispatched events to debug
-      console.log(
-        'Dispatched events:',
-        dispatchedEvents.map((e) => e.type)
-      );
+      const dispatchedEvents = testBed.getDispatchedEvents();
 
       // The mock service should NOT dispatch CLICHES_RETRIEVED event
       // Only the real service does that
@@ -137,12 +136,7 @@ describe('Cliches Generator - Event Validation Issues', () => {
     });
 
     it('should dispatch core:existing_cliches_loaded event when cliches exist', async () => {
-      // Track dispatched events
-      const dispatchedEvents = [];
-      mockEventBus.dispatch.mockImplementation((eventType, payload) => {
-        dispatchedEvents.push({ type: eventType, payload });
-        return true;
-      });
+      testBed.clearEventTracking();
 
       // Get the direction selector element
       const directionSelector = document.getElementById('direction-selector');
@@ -155,6 +149,8 @@ describe('Cliches Generator - Event Validation Issues', () => {
 
       // Wait for async operations
       await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const dispatchedEvents = testBed.getDispatchedEvents();
 
       // Find the core:existing_cliches_loaded event (with namespace)
       const existingClichesEvent = dispatchedEvents.find(
@@ -202,12 +198,7 @@ describe('Cliches Generator - Event Validation Issues', () => {
         }
       );
 
-      // Track dispatched events
-      const dispatchedEvents = [];
-      mockEventBus.dispatch.mockImplementation((eventType, payload) => {
-        dispatchedEvents.push({ type: eventType, payload });
-        return true;
-      });
+      testBed.clearEventTracking();
 
       // Select a direction
       const directionSelector = document.getElementById('direction-selector');
@@ -217,6 +208,7 @@ describe('Cliches Generator - Event Validation Issues', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify that the controller dispatched the existing_cliches_loaded event
+      const dispatchedEvents = testBed.getDispatchedEvents();
       const existingClichesEvent = dispatchedEvents.find(
         (e) => e.type === 'core:existing_cliches_loaded'
       );

@@ -14,10 +14,19 @@ import {
 import { CoreMotivationsGenerator } from '../../../src/characterBuilder/services/CoreMotivationsGenerator.js';
 import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
 import { CoreMotivationsDisplayEnhancer } from '../../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
 import {
-  createCoreMotivationsTestBed,
-  createMockLLMService,
-} from '../../common/coreMotivations/mockFactories.js';
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import { createCoreMotivationsTestBed } from '../../common/coreMotivations/mockFactories.js';
 import {
   createMockThematicDirection,
   createMockCharacterConcept,
@@ -30,7 +39,6 @@ describe('Core Motivations Workflow Integration', () => {
   let controller;
   let generator;
   let displayEnhancer;
-  let mockDOM;
 
   beforeEach(() => {
     // Create comprehensive test bed
@@ -40,77 +48,13 @@ describe('Core Motivations Workflow Integration', () => {
       cache: { hasCachedData: false },
     });
 
-    // Set up mock DOM
-    mockDOM = {
-      directionSelector: createMockDOMElement('select', 'direction-selector'),
-      generateBtn: createMockDOMElement('button', 'generate-btn'),
-      clearAllBtn: createMockDOMElement('button', 'clear-all-btn'),
-      exportBtn: createMockDOMElement('button', 'export-btn'),
-      motivationsList: createMockDOMElement('div', 'motivations-list'),
-      emptyState: createMockDOMElement('div', 'empty-state'),
-      loadingState: createMockDOMElement('div', 'loading-state'),
-      resultsState: createMockDOMElement('div', 'results-state'),
-      errorState: createMockDOMElement('div', 'error-state'),
-    };
+    setupControllerDOM();
 
-    // Mock all required DOM elements
-    mockDOM['direction-selector'] = createMockDOMElement(
-      'div',
-      'direction-selector'
-    );
-    mockDOM['no-directions-message'] = createMockDOMElement(
-      'div',
-      'no-directions-message'
-    );
-    mockDOM['loading-indicator'] = createMockDOMElement(
-      'div',
-      'loading-indicator'
-    );
-    mockDOM['generate-btn'] = createMockDOMElement('button', 'generate-btn');
-    mockDOM['clear-all-btn'] = createMockDOMElement('button', 'clear-all-btn');
-    mockDOM['export-btn'] = createMockDOMElement('button', 'export-btn');
-    mockDOM['back-btn'] = createMockDOMElement('button', 'back-btn');
-    mockDOM['motivation-search'] = createMockDOMElement(
-      'input',
-      'motivation-search'
-    );
-    mockDOM['motivation-sort'] = createMockDOMElement(
-      'select',
-      'motivation-sort'
-    );
-    mockDOM['motivations-container'] = createMockDOMElement(
-      'div',
-      'motivations-container'
-    );
-    mockDOM['empty-state'] = createMockDOMElement('div', 'empty-state');
-    mockDOM['confirmation-modal'] = createMockDOMElement(
-      'div',
-      'confirmation-modal'
-    );
-    mockDOM['confirm-clear'] = createMockDOMElement('button', 'confirm-clear');
-    mockDOM['cancel-clear'] = createMockDOMElement('button', 'cancel-clear');
-    mockDOM['sr-announcements'] = createMockDOMElement(
-      'div',
-      'sr-announcements'
-    );
-    mockDOM['search-results-count'] = createMockDOMElement(
-      'span',
-      'search-results-count'
-    );
-    mockDOM['search-count'] = createMockDOMElement('span', 'search-count');
-
-    global.document = {
-      getElementById: jest.fn((id) => {
-        // Return the DOM element directly using the id
-        return mockDOM[id] || null;
-      }),
-      createElement: jest.fn((tag) => createMockDOMElement(tag)),
-      querySelector: jest.fn(),
-      querySelectorAll: jest.fn(() => []),
-      body: {
-        appendChild: jest.fn(),
-      },
-    };
+    const controllerDependencies = createControllerDependencies({
+      logger: testBed.mocks.logger,
+      eventBus: testBed.mocks.eventBus,
+      schemaValidator: testBed.mocks.schemaValidator,
+    });
 
     // Initialize services
     generator = new CoreMotivationsGenerator({
@@ -141,12 +85,14 @@ describe('Core Motivations Workflow Integration', () => {
       schemaValidator: testBed.mocks.schemaValidator,
       coreMotivationsGenerator: generator,
       displayEnhancer: displayEnhancer,
+      ...controllerDependencies,
     });
   });
 
   afterEach(() => {
     testBed.cleanup();
     jest.clearAllMocks();
+    document.body.innerHTML = '';
   });
 
   describe('Complete Generation Workflow', () => {
@@ -281,61 +227,95 @@ describe('Core Motivations Workflow Integration', () => {
   });
 });
 
-// Helper functions
-/**
- *
- * @param tag
- * @param id
- * @param className
- */
-function createMockDOMElement(tag, id = '', className = '') {
-  const element = {
-    tagName: tag.toUpperCase(),
-    id,
-    className,
-    innerHTML: '',
-    innerText: '',
-    textContent: '',
-    value: '',
-    disabled: false,
-    style: { display: 'block' },
-    children: [],
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-    click: jest.fn(),
-    focus: jest.fn(),
-    blur: jest.fn(),
-    getAttribute: jest.fn((attr) => {
-      if (attr === 'id') return id;
-      if (attr === 'class') return className;
-      return null;
-    }),
-    setAttribute: jest.fn(),
-    querySelector: jest.fn(),
-    querySelectorAll: jest.fn(() => []),
-    appendChild: jest.fn(function (child) {
-      this.children.push(child);
-    }),
-    removeChild: jest.fn(function (child) {
-      const index = this.children.indexOf(child);
-      if (index > -1) this.children.splice(index, 1);
-    }),
-    contains: jest.fn(),
-    classList: {
-      add: jest.fn(),
-      remove: jest.fn(),
-      toggle: jest.fn(),
-      contains: jest.fn(),
-    },
-  };
-  return element;
+function setupControllerDOM() {
+  document.body.innerHTML = `
+    <div id="empty-state"></div>
+    <div id="loading-state"></div>
+    <div id="results-state"></div>
+    <div id="error-state"></div>
+    <select id="direction-selector"></select>
+    <div id="no-directions-message"></div>
+    <div id="loading-indicator"></div>
+    <button id="generate-btn"></button>
+    <button id="clear-all-btn"></button>
+    <button id="export-btn"></button>
+    <button id="back-btn"></button>
+    <input id="motivation-search" />
+    <select id="motivation-sort"></select>
+    <div id="motivations-container"></div>
+    <div id="motivations-list"></div>
+    <div id="confirmation-modal"></div>
+    <button id="confirm-clear"></button>
+    <button id="cancel-clear"></button>
+    <div id="sr-announcements"></div>
+    <span id="search-results-count"></span>
+    <span id="search-count"></span>
+  `;
 }
 
-/**
- *
- * @param str
- */
-function toCamelCase(str) {
-  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+function createControllerDependencies({ logger, eventBus, schemaValidator }) {
+  const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+    logger,
+    eventBus,
+  });
+
+  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+    logger,
+  });
+
+  const performanceRef =
+    typeof performance !== 'undefined'
+      ? performance
+      : {
+          now: () => Date.now(),
+        };
+
+  const domElementManager = new DOMElementManager({
+    logger,
+    documentRef: document,
+    performanceRef,
+    elementsRef: {},
+    contextName: 'CoreMotivationsWorkflowIntegration',
+  });
+
+  const eventListenerRegistry = new EventListenerRegistry({
+    logger,
+    asyncUtilities: {
+      debounce: (...args) => asyncUtilitiesToolkit.debounce(...args),
+      throttle: (...args) => asyncUtilitiesToolkit.throttle(...args),
+    },
+  });
+
+  const performanceMonitor = new PerformanceMonitor({
+    logger,
+    eventBus,
+  });
+
+  const memoryManager = new MemoryManager({ logger });
+
+  const errorHandlingStrategy = new ErrorHandlingStrategy({
+    logger,
+    eventBus,
+    controllerName: 'CoreMotivationsGeneratorController',
+    errorCategories: ERROR_CATEGORIES,
+    errorSeverity: ERROR_SEVERITY,
+  });
+
+  const validationService = new ValidationService({
+    schemaValidator,
+    logger,
+    handleError: jest.fn(),
+    errorCategories: ERROR_CATEGORIES,
+  });
+
+  return {
+    controllerLifecycleOrchestrator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
+  };
 }

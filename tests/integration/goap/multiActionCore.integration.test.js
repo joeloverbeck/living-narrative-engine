@@ -112,7 +112,7 @@ describe('Core Multi-Action Planning', () => {
           'core:needs': { hunger: 100 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
@@ -123,7 +123,7 @@ describe('Core Multi-Action Planning', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -183,7 +183,7 @@ describe('Core Multi-Action Planning', () => {
           'core:needs': { hunger: 90 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
@@ -194,7 +194,7 @@ describe('Core Multi-Action Planning', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -253,7 +253,7 @@ describe('Core Multi-Action Planning', () => {
           'core:needs': { hunger: 15 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
@@ -264,7 +264,7 @@ describe('Core Multi-Action Planning', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -345,7 +345,7 @@ describe('Core Multi-Action Planning', () => {
           'core:needs': { hunger: 100, health: 10 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:reduce_hunger_and_heal',
@@ -361,7 +361,7 @@ describe('Core Multi-Action Planning', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -430,7 +430,7 @@ describe('Core Multi-Action Planning', () => {
           'core:resources': { gold: 0 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:gather_gold',
@@ -441,7 +441,7 @@ describe('Core Multi-Action Planning', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -504,7 +504,7 @@ describe('Core Multi-Action Planning', () => {
           'core:resources': { gold: 0 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:gather_gold',
@@ -515,7 +515,7 @@ describe('Core Multi-Action Planning', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 
@@ -574,7 +574,7 @@ describe('Core Multi-Action Planning', () => {
           'core:resources': { gold: 50 },
         },
       };
-      setup.entityManager.addEntity(addFlattenedAliases(actor));
+      setup.registerPlanningActor(actor);
 
       const goal = createTestGoal({
         id: 'test:gather_gold',
@@ -585,7 +585,7 @@ describe('Core Multi-Action Planning', () => {
       setup.dataRegistry.register('goals', goal.id, goal);
 
       const world = {
-        state: buildDualFormatState(actor),
+        state: setup.buildPlanningState(actor),
         entities: {},
       };
 

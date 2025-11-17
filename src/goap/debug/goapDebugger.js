@@ -303,6 +303,35 @@ class GOAPDebugger {
     }
     report += `\n`;
 
+    // Task library diagnostics
+    const libraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
+    report += `--- Task Library Diagnostics ---\n`;
+    if (!libraryDiagnostics) {
+      report += `No task library diagnostics captured.\n`;
+    } else {
+      report += `Captured: ${new Date(libraryDiagnostics.timestamp || Date.now()).toISOString()}\n`;
+      report += `Total Tasks: ${libraryDiagnostics.totalTasks ?? 0}\n`;
+      const namespaces = libraryDiagnostics.namespaces || {};
+      if (Object.keys(namespaces).length === 0) {
+        report += `Namespaces: ∅\n`;
+      } else {
+        report += `Namespaces:\n`;
+        for (const [namespace, data] of Object.entries(namespaces)) {
+          report += `  - ${namespace}: ${data.taskCount ?? 0} tasks\n`;
+        }
+      }
+      if (libraryDiagnostics.missingActors && libraryDiagnostics.missingActors.length > 0) {
+        report += `Missing Actors: ${libraryDiagnostics.missingActors.join(', ')}\n`;
+      }
+      if (libraryDiagnostics.warnings && libraryDiagnostics.warnings.length > 0) {
+        report += `Warnings:\n`;
+        for (const warning of libraryDiagnostics.warnings) {
+          report += `  • ${warning}\n`;
+        }
+      }
+    }
+    report += `\n`;
+
     // Current trace (if any)
     const trace = this.getTrace(actorId);
     if (trace) {
@@ -330,12 +359,15 @@ class GOAPDebugger {
       this.#logger
     );
 
+    const libraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
+
     return {
       actorId,
       timestamp: Date.now(),
       plan: this.inspectPlanJSON(actorId),
       failures: this.getFailureHistory(actorId),
       dependencies: this.getDependencyDiagnostics(),
+      taskLibraryDiagnostics: libraryDiagnostics,
       trace: this.getTrace(actorId),
     };
   }

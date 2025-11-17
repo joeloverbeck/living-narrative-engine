@@ -1214,6 +1214,27 @@ export class BaseCharacterBuilderController {
   }
 
   /**
+   * Request animation frame using async utilities
+   *
+   * @param {Function} callback - Frame callback function
+   * @returns {number} Frame identifier returned by the toolkit
+   * @protected
+   */
+  _requestAnimationFrame(callback) {
+    return this.#asyncUtilitiesToolkit.requestAnimationFrame(callback);
+  }
+
+  /**
+   * Cancel a scheduled animation frame
+   *
+   * @param {number} frameId - Identifier returned from _requestAnimationFrame
+   * @protected
+   */
+  _cancelAnimationFrame(frameId) {
+    this.#asyncUtilitiesToolkit.cancelAnimationFrame(frameId);
+  }
+
+  /**
    * Prevent default event behavior
    *
    * @param {Event} event - Event to prevent default on

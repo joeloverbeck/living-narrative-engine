@@ -25,7 +25,7 @@
  * @returns {object} State object with all three formats
  * 
  * @example
- * const state = buildDualFormatState({
+ * const state = setup.buildPlanningState({
  *   id: 'test_actor',
  *   components: { 'core:needs': { hunger: 100 } }
  * });

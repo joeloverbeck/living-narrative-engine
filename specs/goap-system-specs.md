@@ -487,17 +487,17 @@ But those are solvable, and you already started solving them with structural_gat
 
 Commit to GOAP at the planning level.
 
-“Planning-task” = classic STRIPS-style operator.
+"Planning-task" = classic STRIPS-style operator.
 
 Clear preconditions/effects, param binding from planning scopes, knowledge-limited.
 
 Implement a data-driven refinement spec, but keep it execution-centric:
 
-For each planning-task, define one or a handful of “recipes”:
+For each planning-task, define one or a handful of "recipes":
 
 sequences of primitive actions,
 
-maybe with simple branches (“if item not in inventory, prepend acquire sequence”),
+maybe with simple branches ("if item not in inventory, prepend acquire sequence"),
 
 all mod-defined.
 
@@ -511,7 +511,7 @@ primitive actions, and
 
 other planning-tasks as sub-steps.
 
-For now, you only ever call it “top-down” from a chosen task with no branching.
+For now, you only ever call it "top-down" from a chosen task with no branching.
 
 Later, you can start interpreting that as an HTN method network if you want.
 

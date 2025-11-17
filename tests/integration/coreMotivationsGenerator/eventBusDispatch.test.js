@@ -12,13 +12,18 @@ import {
   jest,
 } from '@jest/globals';
 import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
-import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
-import { createMockValidatedEventDispatcherForIntegration } from '../../common/mockFactories/eventBusMocks.js';
+import {
+  createTestContainer,
+  resolveControllerDependencies,
+} from '../../common/testContainerConfig.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () => {
   let controller;
-  let safeEventDispatcher;
+  let container;
+  let controllerDependencies;
+  let eventBus;
   let logger;
   let mockCharacterBuilderService;
   let mockCoreMotivationsGenerator;
@@ -31,17 +36,11 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
-    // Create logger and event dispatcher
+    // Set up dependency container and logger
     logger = createMockLogger();
-    const mockValidatedDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(true),
-      subscribe: jest.fn().mockReturnValue(() => {}),
-      unsubscribe: jest.fn(),
-    };
-    safeEventDispatcher = new SafeEventDispatcher({
-      logger,
-      validatedEventDispatcher: mockValidatedDispatcher,
-    });
+    container = await createTestContainer();
+    controllerDependencies = resolveControllerDependencies(container);
+    eventBus = container.resolve(tokens.ISafeEventDispatcher);
 
     // Mock services (comprehensive mock from test bed)
     mockCharacterBuilderService = {
@@ -119,18 +118,31 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
     });
 
     // Create controller with safe event dispatcher
+    const {
+      schemaValidator,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
+    } = controllerDependencies;
+
     controller = new CoreMotivationsGeneratorController({
       logger,
       characterBuilderService: mockCharacterBuilderService,
-      eventBus: safeEventDispatcher,
-      schemaValidator: {
-        validate: jest.fn(),
-        isSchemaLoaded: jest.fn(),
-        validateAgainstSchema: jest.fn(),
-        addSchema: jest.fn(),
-        removeSchema: jest.fn(),
-        getValidator: jest.fn(),
-      },
+      eventBus,
+      schemaValidator,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
       coreMotivationsGenerator: mockCoreMotivationsGenerator,
       displayEnhancer: mockDisplayEnhancer,
     });
@@ -145,8 +157,8 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
 
   describe('Validate correct event dispatch behavior', () => {
     it('should dispatch events with proper string event names and complete initialization', async () => {
-      // Spy on the safeEventDispatcher to verify correct dispatch calls
-      const dispatchSpy = jest.spyOn(safeEventDispatcher, 'dispatch');
+      // Spy on the SafeEventDispatcher to verify correct dispatch calls
+      const dispatchSpy = jest.spyOn(eventBus, 'dispatch');
 
       // Act - Initialize the controller which should dispatch events correctly
       await controller.initialize();
@@ -239,7 +251,7 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
         true
       );
 
-      const dispatchSpy = jest.spyOn(safeEventDispatcher, 'dispatch');
+      const dispatchSpy = jest.spyOn(eventBus, 'dispatch');
 
       // Act
       await controller.initialize();

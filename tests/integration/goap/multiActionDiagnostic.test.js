@@ -141,7 +141,7 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
         'core:needs': { hunger: 90 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
@@ -152,7 +152,7 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
 
@@ -287,7 +287,7 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
         'core:needs': { hunger: 80 },
       },
     };
-    setup.entityManager.addEntity(addFlattenedAliases(actor));
+    setup.registerPlanningActor(actor);
 
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
@@ -298,7 +298,7 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     setup.dataRegistry.register('goals', goal.id, goal);
 
     const world = {
-      state: buildDualFormatState(actor),
+      state: setup.buildPlanningState(actor),
       entities: {},
     };
 

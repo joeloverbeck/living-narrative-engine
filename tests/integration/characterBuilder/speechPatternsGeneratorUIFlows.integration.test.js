@@ -1,6 +1,20 @@
 import { beforeEach, describe, it, afterEach, expect, jest } from '@jest/globals';
-import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
+import {
+  SpeechPatternsGeneratorController,
+} from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 import SpeechPatternsDisplayEnhancer from '../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
 
 class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGeneratorController {
   /**
@@ -54,43 +68,153 @@ function buildDom(includeExportControls = true) {
 }
 
 function createMinimalDependencies(overrides = {}) {
-  const logger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger =
+    overrides.logger ||
+    {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
-  const characterBuilderService = {
-    initialize: jest.fn().mockResolvedValue(),
-    getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-    createCharacterConcept: jest.fn().mockResolvedValue({ id: 'test-id' }),
-    updateCharacterConcept: jest.fn().mockResolvedValue(),
-    deleteCharacterConcept: jest.fn().mockResolvedValue(),
-    getCharacterConcept: jest.fn().mockResolvedValue(null),
-    generateThematicDirections: jest.fn().mockResolvedValue([]),
-    getThematicDirections: jest.fn().mockResolvedValue([]),
-  };
+  const characterBuilderService =
+    overrides.characterBuilderService ||
+    {
+      initialize: jest.fn().mockResolvedValue(),
+      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+      createCharacterConcept: jest.fn().mockResolvedValue({ id: 'test-id' }),
+      updateCharacterConcept: jest.fn().mockResolvedValue(),
+      deleteCharacterConcept: jest.fn().mockResolvedValue(),
+      getCharacterConcept: jest.fn().mockResolvedValue(null),
+      generateThematicDirections: jest.fn().mockResolvedValue([]),
+      getThematicDirections: jest.fn().mockResolvedValue([]),
+    };
 
-  const eventBus = {
-    dispatch: jest.fn(),
-    subscribe: jest.fn(),
-    unsubscribe: jest.fn(),
-  };
+  const eventBus =
+    overrides.eventBus ||
+    (() => {
+      const subscriptions = new Map();
+      return {
+        dispatch: jest.fn((eventName, payload) => {
+          const listeners = subscriptions.get(eventName) || [];
+          listeners.forEach((listener) => {
+            try {
+              listener(payload);
+            } catch (error) {
+              logger.warn('Event handler threw during test', error);
+            }
+          });
+        }),
+        subscribe: jest.fn((eventName, handler) => {
+          if (!subscriptions.has(eventName)) {
+            subscriptions.set(eventName, []);
+          }
+          subscriptions.get(eventName).push(handler);
+          return () => {
+            const listeners = subscriptions.get(eventName);
+            if (!listeners) {
+              return;
+            }
+            const index = listeners.indexOf(handler);
+            if (index >= 0) {
+              listeners.splice(index, 1);
+            }
+          };
+        }),
+        unsubscribe: jest.fn((eventName, handler) => {
+          const listeners = subscriptions.get(eventName);
+          if (!listeners) {
+            return false;
+          }
+          const index = listeners.indexOf(handler);
+          if (index === -1) {
+            return false;
+          }
+          listeners.splice(index, 1);
+          return true;
+        }),
+      };
+    })();
 
-  const schemaValidator = {
-    validate: jest.fn(),
-  };
+  const schemaValidator =
+    overrides.schemaValidator ||
+    {
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+      isSchemaLoaded: jest.fn().mockReturnValue(false),
+    };
 
-  const baseDependencies = {
+  const asyncUtilitiesToolkit =
+    overrides.asyncUtilitiesToolkit || new AsyncUtilitiesToolkit({ logger });
+
+  const domElementManager =
+    overrides.domElementManager ||
+    new DOMElementManager({
+      logger,
+      documentRef: document,
+      performanceRef: performance,
+      elementsRef: {},
+      contextName: 'SpeechPatternsUIFlowsDOM',
+    });
+
+  const eventListenerRegistry =
+    overrides.eventListenerRegistry ||
+    new EventListenerRegistry({
+      logger,
+      asyncUtilities: asyncUtilitiesToolkit,
+      contextName: 'SpeechPatternsUIFlowsEvents',
+    });
+
+  const performanceMonitor =
+    overrides.performanceMonitor ||
+    new PerformanceMonitor({
+      logger,
+      eventBus,
+      threshold: 2500,
+      contextName: 'SpeechPatternsUIFlowsPerformance',
+    });
+
+  const memoryManager =
+    overrides.memoryManager ||
+    new MemoryManager({ logger, contextName: 'SpeechPatternsUIFlowsMemory' });
+
+  const errorHandlingStrategy =
+    overrides.errorHandlingStrategy ||
+    new ErrorHandlingStrategy({
+      logger,
+      eventBus,
+      controllerName: 'SpeechPatternsGeneratorController',
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+    });
+
+  const validationService =
+    overrides.validationService ||
+    new ValidationService({
+      schemaValidator,
+      logger,
+      handleError: (error, context) => logger.error('Validation error', error, context),
+      errorCategories: ERROR_CATEGORIES,
+    });
+
+  const controllerLifecycleOrchestrator =
+    overrides.controllerLifecycleOrchestrator ||
+    new ControllerLifecycleOrchestrator({ logger, eventBus });
+
+  return {
     logger,
     characterBuilderService,
     eventBus,
     schemaValidator,
+    domElementManager,
+    eventListenerRegistry,
+    asyncUtilitiesToolkit,
+    performanceMonitor,
+    memoryManager,
+    errorHandlingStrategy,
+    validationService,
+    controllerLifecycleOrchestrator,
     ...overrides,
   };
-
-  return baseDependencies;
 }
 
 function createValidCharacterDefinition() {
