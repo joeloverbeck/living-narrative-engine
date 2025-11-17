@@ -8,6 +8,7 @@ import {
   resolveEntityPath,
   hasValidEntityId,
 } from '../utils/entityPathResolver.js';
+import { createPlanningStateView } from '../../goap/planner/planningStateView.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -217,42 +218,19 @@ export class HasComponentOperator {
     // Check if we're in planning mode (context has a 'state' object).
     // During planning, the symbolic planning state is the source of truth.
     if (context.state && typeof context.state === 'object') {
-      const stateKey = `${entityId}:${componentId}`;
-
-      if (Object.hasOwn(context.state, stateKey)) {
-        const hasComponent = Boolean(context.state[stateKey]);
-
-        this.#logger.debug(
-          `${this.#operatorName}: [Planning Mode] Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId} in planning state`
-        );
-
-        return hasComponent;
-      }
-
-      // Check nested dual-format planning state (state[entityId].components)
-      const nestedEntity = context.state[entityId];
-      if (nestedEntity && typeof nestedEntity === 'object') {
-        const components = nestedEntity.components || nestedEntity;
-        if (components && typeof components === 'object') {
-          const { exists, value } = this.#lookupNestedComponent(
-            components,
-            componentId
-          );
-
-          if (exists) {
-            const hasComponent = Boolean(value);
-            this.#logger.debug(
-              `${this.#operatorName}: [Planning Mode] (nested) Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId}`
-            );
-            return hasComponent;
-          }
-        }
-      }
+      const stateView = createPlanningStateView(context.state, {
+        logger: this.#logger,
+        metadata: { origin: 'HasComponentOperator' },
+      });
+      const lookup = stateView.hasComponent(entityId, componentId, {
+        metadata: { entityId, componentId },
+      });
 
       this.#logger.debug(
-        `${this.#operatorName}: [Planning Mode] Component ${componentId} missing from planning state for entity ${entityId}; treating as absent`
+        `${this.#operatorName}: [Planning Mode] Entity ${entityId} ${lookup.value ? 'has' : 'does not have'} component ${componentId} (status=${lookup.status})`
       );
-      return false;
+
+      return lookup.value;
     }
 
     // Normal runtime mode: check EntityManager
@@ -268,28 +246,4 @@ export class HasComponentOperator {
     return hasComponent;
   }
 
-  /**
-   * Look up a component inside a nested planning state record.
-   *
-   * @private
-   * @param {object} components - Component dictionary
-   * @param {string} componentId - Component identifier
-   * @returns {{exists: boolean, value?: unknown}} Lookup result
-   */
-  #lookupNestedComponent(components, componentId) {
-    if (!components || typeof components !== 'object') {
-      return { exists: false };
-    }
-
-    if (Object.hasOwn(components, componentId)) {
-      return { exists: true, value: components[componentId] };
-    }
-
-    const flattenedId = componentId.replace(/:/g, '_');
-    if (Object.hasOwn(components, flattenedId)) {
-      return { exists: true, value: components[flattenedId] };
-    }
-
-    return { exists: false };
-  }
 }

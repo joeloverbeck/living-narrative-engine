@@ -417,11 +417,11 @@ describe('Clichés Generator Error Handling Integration', () => {
 
       // Assert - After error, selection is cleared
       const selector = testBed.getDirectionSelector();
-      expect(selector.value).toBe('');
+      // New controller preserves selection during generation errors for easier retries
+      expect(selector.value).toBe('dir-1');
 
-      // Direction should be cleared after error (controller calls #clearSelection)
+      // Direction display is hidden even though the selection stays in place
       const directionDisplay = testBed.getDirectionDisplay();
-      // After error, selection is cleared
       expect(directionDisplay.style.display).toBe('none');
     });
 
@@ -588,10 +588,19 @@ describe('Clichés Generator Error Handling Integration', () => {
       for (let i = 0; i < 10; i++) {
         const invalidId = `invalid-direction-${i}`;
 
+        // Inject a temporary option so the DOM select accepts the invalid value
+        const tempOption = document.createElement('option');
+        tempOption.value = invalidId;
+        tempOption.textContent = `Invalid ${i}`;
+        selector.appendChild(tempOption);
+
         // Force set invalid value and trigger change
         selector.value = invalidId;
         const changeEvent = new Event('change', { bubbles: true });
         selector.dispatchEvent(changeEvent);
+
+        // Clean up option to avoid polluting the selector
+        tempOption.remove();
       }
 
       // Wait for all async operations

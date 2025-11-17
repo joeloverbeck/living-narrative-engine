@@ -17,6 +17,7 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
 import { HasComponentOperator } from '../../../src/logic/operators/hasComponentOperator.js';
 import NumericConstraintEvaluator from '../../../src/goap/planner/numericConstraintEvaluator.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { registerPlanningStateSnapshot } from './testFixtures/goapTestSetup.js';
 
 describe('GOAP Heuristics - Integration with Real Components', () => {
   let testBed;
@@ -101,55 +102,6 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
     testBed.cleanup();
   });
 
-  /**
-   * Helper function to synchronize EntityManager with planning state.
-   * Parses state keys (format: "entityId:componentId:path") and creates
-   * entities with components in the EntityManager.
-   *
-   * Only adds components when state value is truthy (true or object).
-   * Skips components with false/null/undefined values.
-   *
-   * @param {SimpleEntityManager} entityManager - The entity manager to populate
-   * @param {object} state - Planning state object
-   * @returns {Promise<void>}
-   */
-  async function syncEntityManagerWithState(entityManager, state) {
-    const entityComponents = new Map();
-
-    // Parse state keys to extract entity IDs and components
-    for (const [key, value] of Object.entries(state)) {
-      const parts = key.split(':');
-      if (parts.length < 2) continue;
-
-      // Skip if value is falsy (component doesn't exist in world state)
-      if (!value && value !== 0) continue;
-
-      const entityId = parts[0];
-      // Component ID is everything after the first colon (e.g., "core:hungry", "core:satiated")
-      const componentId = parts.slice(1).join(':');
-
-      if (!entityComponents.has(entityId)) {
-        entityComponents.set(entityId, []);
-      }
-
-      entityComponents.get(entityId).push({
-        componentId,
-        data: typeof value === 'object' && value !== null ? value : {},
-      });
-    }
-
-    // Create entities and add components
-    for (const [entityId, components] of entityComponents) {
-      if (!entityManager.hasEntity(entityId)) {
-        entityManager.createEntity(entityId);
-      }
-
-      for (const { componentId, data } of components) {
-        await entityManager.addComponent(entityId, componentId, data);
-      }
-    }
-  }
-
   describe('Goal Distance Heuristic - Real Scenarios', () => {
     it('should calculate distance for simple hunger goal', async () => {
       const state = {
@@ -157,8 +109,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
         'entity-1:core:health': 50,
       };
 
-      // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -186,7 +137,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -227,7 +178,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -259,7 +210,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -308,7 +259,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -415,7 +366,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -443,7 +394,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -544,7 +495,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -569,7 +520,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -624,7 +575,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [
@@ -671,7 +622,7 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       };
 
       // Sync EntityManager with planning state
-      await syncEntityManagerWithState(entityManager, state);
+      await registerPlanningStateSnapshot(entityManager, state);
 
       const goal = {
         conditions: [

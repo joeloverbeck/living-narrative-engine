@@ -21,6 +21,12 @@ export const GOAP_EVENTS = {
   GOAL_SELECTED: 'goap:goal_selected',
 
   /**
+   * Dispatched when heuristics/operators cannot resolve a planning-state path
+   * Payload: { actorId, goalId?, taskId?, path?, entityId?, componentId?, origin }
+   */
+  STATE_MISS: 'goap:state_miss',
+
+  /**
    * Dispatched when a dependency contract validation completes
    * Payload: { dependency, requiredMethods, providedMethods, missingMethods, timestamp, status }
    */

@@ -24,6 +24,7 @@ import { HasComponentOperator } from '../../../../src/logic/operators/hasCompone
 import { createEventBusRecorder } from '../testHelpers/eventBusRecorder.js';
 import { buildDualFormatState } from './dualFormatStateBuilder.js';
 import { deepClone } from '../../../../src/utils/cloneUtils.js';
+import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
 
 const GOAP_SETUP_ERRORS = {
   INVALID_TASK_REGISTRY: 'GOAP_SETUP_INVALID_TASK_REGISTRY',
@@ -117,6 +118,54 @@ function normalizeTasksPayload(rawTasks, { logger }) {
   }
 
   return { tasks: normalized, warnings };
+}
+
+export async function registerPlanningStateSnapshot(entityManager, planningState, options = {}) {
+  if (!planningState || typeof planningState !== 'object') {
+    throw new Error('registerPlanningStateSnapshot requires a planning state object');
+  }
+
+  const createdEntities = new Set();
+
+  for (const [key, value] of Object.entries(planningState)) {
+    if (typeof key !== 'string' || !key.includes(':')) {
+      continue;
+    }
+
+    const [entityId, componentId] = key.split(':');
+    if (!entityId || !componentId) {
+      continue;
+    }
+
+    if (!entityManager.hasEntity(entityId)) {
+      entityManager.createEntity(entityId);
+      createdEntities.add(entityId);
+    }
+
+    if (value === undefined || value === null || value === false) {
+      continue;
+    }
+
+    const componentData = typeof value === 'object' ? value : {};
+    await entityManager.addComponent(entityId, componentId, componentData);
+  }
+
+  const stateView = createPlanningStateView(planningState, {
+    metadata: {
+      origin: options.origin || 'registerPlanningStateSnapshot',
+      actorId: options.actorId || planningState.actor?.id,
+    },
+  });
+
+  return {
+    stateView,
+    planningState,
+    cleanup: () => {
+      for (const entityId of createdEntities) {
+        entityManager.deleteEntity(entityId);
+      }
+    },
+  };
 }
 
 function normalizeSingleTask(taskDef, warnings, logger) {
@@ -637,6 +686,8 @@ export async function createGoapTestSetup(config = {}) {
     createActor,
     registerGoal,
     registerPlanningActor,
+    registerPlanningStateSnapshot: (state, options) =>
+      registerPlanningStateSnapshot(entityManager, state, options),
     buildPlanningState: buildDualFormatState,
     world,
   };

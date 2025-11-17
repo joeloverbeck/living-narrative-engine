@@ -18,6 +18,16 @@ What a task does to the world (effects in state space).
 
 Otherwise it can’t reason correctly about whether a plan actually achieves a goal.
 
+## Planning-State View Contract
+
+Every planner/heuristic/operator now consumes the same dual-format snapshot via `createPlanningStateView(state)` in `src/goap/planner/planningStateView.js`. The helper:
+
+- Exposes the raw flat hash (`'actor_id:core:needs'`) alongside nested `actor.components.core:needs` and flattened `actor.components.core_needs` aliases so JSON Logic rules can reference either `actor.*` or `state.actor.*` paths.
+- Provides `hasComponent()` and `assertPath()` helpers that emit `goap:state_miss` events whenever a component/path cannot be resolved. Setting `GOAP_STATE_ASSERT=1` during tests turns those warnings into hard failures.
+- Supplies `registerPlanningStateSnapshot(state)` (see `tests/integration/goap/testFixtures/goapTestSetup.js`) so integration suites can sync `SimpleEntityManager` and the symbolic planning state without bespoke helpers.
+
+When you write new goals or tasks, prefer the `actor.components.core_stats.health` style paths; `PlanningStateView` automatically maps those to the colonized component IDs stored inside the planner. Never access `context.state` manually—ask the helper instead so diagnostics stay accurate.
+
 ## Planner Interface Contract
 
 `GoapController` validates the planner against a shared contract defined in `src/goap/planner/goapPlannerContractDefinition.js`. Every runtime implementation and test double must expose the following API:
