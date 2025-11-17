@@ -23,6 +23,12 @@ describe('ThematicDirectionsManagerController - State Management Migration', () 
     testBase = new BaseCharacterBuilderControllerTestBase();
     await testBase.setup();
 
+    // Provide a legacy-style UIStateManager mock so we can detect accidental direct usage
+    testBase.mocks.uiStateManager = {
+      showState: jest.fn(),
+      showError: jest.fn(),
+    };
+
     // Add DOM elements needed for state management testing
     // Need to add this as children to the body, not wrapped in another div
     document.body.innerHTML += `

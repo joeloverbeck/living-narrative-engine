@@ -23,6 +23,11 @@ describe('ThematicDirectionsManagerController - Abstract Method Placeholders', (
       <div id="directions-results"></div>
       <div id="concept-display-container"></div>
       <div id="concept-display-content"></div>
+      <div id="empty-state"></div>
+      <div id="loading-state"></div>
+      <div id="error-state"></div>
+      <div id="results-state"></div>
+      <div id="error-message-text"></div>
       <div id="total-directions"></div>
       <div id="orphaned-count"></div>
       <div id="refresh-btn"></div>
@@ -35,7 +40,6 @@ describe('ThematicDirectionsManagerController - Abstract Method Placeholders', (
       <div id="modal-confirm-btn"></div>
       <div id="modal-cancel-btn"></div>
       <div id="close-modal-btn"></div>
-      <div id="directions-container"></div>
     `);
 
     // Create controller instance using test base mocks
