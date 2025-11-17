@@ -72,6 +72,7 @@ class GoalDistanceHeuristic {
   #numericConstraintEvaluator;
   #planningEffectsSimulator;
   #logger;
+  #logicContextCache = new WeakMap();
 
   /**
    * Creates a new GoalDistanceHeuristic instance
@@ -129,14 +130,15 @@ class GoalDistanceHeuristic {
    * @private
    */
   #calculateDistanceForGoalState(state, goalState) {
+    const evaluationContext = this.#createEvaluationContext(state);
+
     try {
       // Check if this is a numeric constraint
       if (this.#numericConstraintEvaluator.isNumericConstraint(goalState)) {
         // Try to calculate numeric distance
-        // Wrap state in { state } for consistent JSON Logic path resolution
         const numericDistance = this.#numericConstraintEvaluator.calculateDistance(
           goalState,
-          { state }
+          evaluationContext
         );
 
         // If numeric distance is successfully calculated, use it
@@ -151,8 +153,10 @@ class GoalDistanceHeuristic {
       }
 
       // Evaluate goal condition against state (boolean evaluation)
-      // Context provides state for JSON Logic variable resolution
-      const satisfied = this.#jsonLogicEvaluator.evaluate(goalState, { state });
+      const satisfied = this.#jsonLogicEvaluator.evaluate(
+        goalState,
+        evaluationContext
+      );
 
       // If already satisfied, distance is 0; otherwise 1 (at least 1 action needed)
       return satisfied ? 0 : 1;
@@ -293,10 +297,9 @@ class GoalDistanceHeuristic {
     }
 
     // Calculate distance before task application
-    // Wrap state in { state } for consistent JSON Logic path resolution
     const beforeDistance = this.#numericConstraintEvaluator.calculateDistance(
       goal.goalState,
-      { state } // Wrapped for JSON Logic var resolution
+      this.#createEvaluationContext(state)
     );
 
     // Simulate ONE application of task
@@ -318,10 +321,9 @@ class GoalDistanceHeuristic {
     }
 
     // Calculate distance after task application
-    // Wrap state in { state } for consistent JSON Logic path resolution
     const afterDistance = this.#numericConstraintEvaluator.calculateDistance(
       goal.goalState,
-      { state: simulationResult.state } // Wrapped for JSON Logic var resolution
+      this.#createEvaluationContext(simulationResult.state)
     );
 
     // Return absolute reduction in distance (beforeDistance - afterDistance)
@@ -353,6 +355,7 @@ class GoalDistanceHeuristic {
     }
 
     let unsatisfiedCount = 0;
+    const evaluationContext = this.#createEvaluationContext(state);
 
     for (const conditionObj of conditions) {
       try {
@@ -368,8 +371,10 @@ class GoalDistanceHeuristic {
         }
 
         // Evaluate condition against state
-        // Context provides state for JSON Logic variable resolution
-        const satisfied = this.#jsonLogicEvaluator.evaluate(condition, { state });
+        const satisfied = this.#jsonLogicEvaluator.evaluate(
+          condition,
+          evaluationContext
+        );
 
         if (!satisfied) {
           unsatisfiedCount++;
@@ -451,6 +456,34 @@ class GoalDistanceHeuristic {
       'GoalDistanceHeuristic.calculate: Invalid goal (missing both goalState and conditions array), returning Infinity'
     );
     return Infinity;
+  }
+
+  /**
+   * Build an evaluation context that exposes planning state both via the legacy
+   * `{ state: ... }` wrapper and directly at the root level so JSON Logic rules
+   * can reference either `state.actor.health` or `actor.health`.
+   *
+   * @private
+   * @param {object} state - Planning state object
+   * @returns {object} Evaluation context
+   */
+  #createEvaluationContext(state) {
+    if (!state || typeof state !== 'object') {
+      return { state };
+    }
+
+    // Cache contexts to avoid re-creating objects during tight loops
+    if (this.#logicContextCache.has(state)) {
+      return this.#logicContextCache.get(state);
+    }
+
+    const context = {
+      ...state,
+      state,
+    };
+
+    this.#logicContextCache.set(state, context);
+    return context;
   }
 }
 

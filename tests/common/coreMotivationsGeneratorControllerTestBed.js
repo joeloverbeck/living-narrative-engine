@@ -5,8 +5,18 @@
 import { jest } from '@jest/globals';
 import { BaseTestBed } from './baseTestBed.js';
 import { CoreMotivationsGeneratorController } from '../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
-import { createEventBus } from './mockFactories/eventBus.js';
-import { v4 as uuidv4 } from 'uuid';
+import { ControllerLifecycleOrchestrator } from '../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { AsyncUtilitiesToolkit } from '../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { DOMElementManager } from '../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../src/characterBuilder/services/eventListenerRegistry.js';
+import { PerformanceMonitor } from '../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../src/characterBuilder/services/validationService.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 
 /**
  * Test bed for CoreMotivationsGeneratorController
@@ -144,6 +154,7 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     this.createDOMStructure();
 
     // Then create controller instance with DOM already in place
+    this.controllerDependencies = this._buildControllerDependencies();
     this.controller = new CoreMotivationsGeneratorController({
       logger: this.logger,
       characterBuilderService: this.mockCharacterBuilderService,
@@ -151,12 +162,132 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
       schemaValidator: this.mockSchemaValidator,
       coreMotivationsGenerator: this.mockCoreMotivationsGenerator,
       displayEnhancer: this.mockDisplayEnhancer,
+      ...this.controllerDependencies,
     });
 
     // Mock the base controller methods
-    this.controller.showError = jest.fn();
-    this.controller.showSuccess = jest.fn();
-    this.controller.showWarning = jest.fn();
+    this._mockControllerUIHelpers(this.controller);
+  }
+
+  /**
+   * Build the dependency set required by BaseCharacterBuilderController
+   * so tests don't have to wire them manually after the refactor.
+   *
+   * @param {string} contextName - Optional context name for DOM manager logs.
+   * @returns {object} - Dependency map passed into the controller constructor.
+   */
+  _buildControllerDependencies(
+    contextName = 'CoreMotivationsGeneratorControllerTestBed'
+  ) {
+    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+      logger: this.logger,
+      eventBus: this.mockEventBus,
+    });
+
+    const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+      logger: this.logger,
+    });
+
+    const performanceRef =
+      typeof performance !== 'undefined'
+        ? performance
+        : {
+            now: () => Date.now(),
+          };
+
+    const domElementManager = new DOMElementManager({
+      logger: this.logger,
+      documentRef: document,
+      performanceRef,
+      elementsRef: {},
+      contextName,
+    });
+
+    const eventListenerRegistry = new EventListenerRegistry({
+      logger: this.logger,
+      asyncUtilities: {
+        debounce: (...args) => asyncUtilitiesToolkit.debounce(...args),
+        throttle: (...args) => asyncUtilitiesToolkit.throttle(...args),
+      },
+    });
+
+    const performanceMonitor = new PerformanceMonitor({
+      logger: this.logger,
+      eventBus: this.mockEventBus,
+    });
+
+    const memoryManager = new MemoryManager({ logger: this.logger });
+
+    const errorHandlingStrategy = new ErrorHandlingStrategy({
+      logger: this.logger,
+      eventBus: this.mockEventBus,
+      controllerName: 'CoreMotivationsGeneratorController',
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+    });
+
+    const validationService = new ValidationService({
+      schemaValidator: this.mockSchemaValidator,
+      logger: this.logger,
+      handleError: jest.fn(),
+      errorCategories: ERROR_CATEGORIES,
+    });
+
+    return {
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
+    };
+  }
+
+  /**
+   * Provide a reusable helper for creating controllers with proper dependencies.
+   *
+   * @param {object} overrides - Dependency overrides (optional).
+   * @returns {CoreMotivationsGeneratorController}
+   */
+  createController(overrides = {}) {
+    const {
+      logger = this.logger,
+      characterBuilderService = this.mockCharacterBuilderService,
+      eventBus = this.mockEventBus,
+      schemaValidator = this.mockSchemaValidator,
+      coreMotivationsGenerator = this.mockCoreMotivationsGenerator,
+      displayEnhancer = this.mockDisplayEnhancer,
+      ...additionalOverrides
+    } = overrides;
+
+    const baseDependencies = this._buildControllerDependencies();
+
+    const controller = new CoreMotivationsGeneratorController({
+      logger,
+      characterBuilderService,
+      eventBus,
+      schemaValidator,
+      coreMotivationsGenerator,
+      displayEnhancer,
+      ...baseDependencies,
+      ...additionalOverrides,
+    });
+
+    this._mockControllerUIHelpers(controller);
+    return controller;
+  }
+
+  /**
+   * Ensure controller UI helper methods are stubbed for predictable tests.
+   *
+   * @param {CoreMotivationsGeneratorController} controller
+   */
+  _mockControllerUIHelpers(controller) {
+    controller.showError = jest.fn();
+    controller.showSuccess = jest.fn();
+    controller.showWarning = jest.fn();
   }
 
   /**

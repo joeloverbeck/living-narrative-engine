@@ -6,7 +6,6 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { CoreMotivationsGeneratorControllerTestBed } from '../../common/coreMotivationsGeneratorControllerTestBed.js';
-import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
 
 describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
   let testBed;
@@ -90,13 +89,9 @@ describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
 
   it('should verify that event dispatch errors from error_logs2.txt are now fixed', async () => {
     // Given: Create controller with mocked dependencies (similar to actual initialization)
-    const controller = new CoreMotivationsGeneratorController({
-      logger: testBed.logger,
+    const controller = testBed.createController({
       eventBus: mockEventBus,
       characterBuilderService: mockCharacterBuilderService,
-      schemaValidator: testBed.mockSchemaValidator,
-      coreMotivationsGenerator: testBed.mockCoreMotivationsGenerator,
-      displayEnhancer: testBed.mockDisplayEnhancer,
     });
 
     // When: Initialize the controller (this should trigger the problematic event dispatch)
@@ -136,13 +131,9 @@ describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
       []
     );
 
-    const controller = new CoreMotivationsGeneratorController({
-      logger: testBed.logger,
+    const controller = testBed.createController({
       eventBus: mockEventBus,
       characterBuilderService: mockCharacterBuilderService,
-      schemaValidator: testBed.mockSchemaValidator,
-      coreMotivationsGenerator: testBed.mockCoreMotivationsGenerator,
-      displayEnhancer: testBed.mockDisplayEnhancer,
     });
 
     // When: Initialize and trigger a direction selection (more events)
