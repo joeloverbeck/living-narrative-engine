@@ -214,8 +214,8 @@ export class HasComponentOperator {
    * @returns {boolean} True if the entity has the specified component
    */
   #evaluateInternal(entityId, componentId, context = {}) {
-    // Check if we're in planning mode (context has a 'state' object)
-    // During planning, check the planning state instead of EntityManager
+    // Check if we're in planning mode (context has a 'state' object).
+    // During planning, the symbolic planning state is the source of truth.
     if (context.state && typeof context.state === 'object') {
       const stateKey = `${entityId}:${componentId}`;
 
@@ -229,9 +229,30 @@ export class HasComponentOperator {
         return hasComponent;
       }
 
+      // Check nested dual-format planning state (state[entityId].components)
+      const nestedEntity = context.state[entityId];
+      if (nestedEntity && typeof nestedEntity === 'object') {
+        const components = nestedEntity.components || nestedEntity;
+        if (components && typeof components === 'object') {
+          const { exists, value } = this.#lookupNestedComponent(
+            components,
+            componentId
+          );
+
+          if (exists) {
+            const hasComponent = Boolean(value);
+            this.#logger.debug(
+              `${this.#operatorName}: [Planning Mode] (nested) Entity ${entityId} ${hasComponent ? 'has' : 'does not have'} component ${componentId}`
+            );
+            return hasComponent;
+          }
+        }
+      }
+
       this.#logger.debug(
-        `${this.#operatorName}: [Planning Mode] Component ${componentId} missing from planning state for entity ${entityId}, falling back to runtime`
+        `${this.#operatorName}: [Planning Mode] Component ${componentId} missing from planning state for entity ${entityId}; treating as absent`
       );
+      return false;
     }
 
     // Normal runtime mode: check EntityManager
@@ -245,5 +266,30 @@ export class HasComponentOperator {
     );
 
     return hasComponent;
+  }
+
+  /**
+   * Look up a component inside a nested planning state record.
+   *
+   * @private
+   * @param {object} components - Component dictionary
+   * @param {string} componentId - Component identifier
+   * @returns {{exists: boolean, value?: unknown}} Lookup result
+   */
+  #lookupNestedComponent(components, componentId) {
+    if (!components || typeof components !== 'object') {
+      return { exists: false };
+    }
+
+    if (Object.hasOwn(components, componentId)) {
+      return { exists: true, value: components[componentId] };
+    }
+
+    const flattenedId = componentId.replace(/:/g, '_');
+    if (Object.hasOwn(components, flattenedId)) {
+      return { exists: true, value: components[flattenedId] };
+    }
+
+    return { exists: false };
   }
 }
