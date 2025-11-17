@@ -20,6 +20,10 @@ import {
   registerPlanningStateDiagnosticsEventBus,
   getPlanningStateDiagnostics as getPlanningStateDiagnosticsSnapshot,
 } from '../planner/planningStateDiagnostics.js';
+import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../debug/goapDebuggerDiagnosticsContract.js';
+
+export const GOAP_CONTROLLER_DIAGNOSTICS_CONTRACT_VERSION =
+  GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version;
 
 /**
  * @typedef {import('../planner/goapPlanner.js').default} GoapPlanner
@@ -1344,6 +1348,14 @@ class GoapController {
       providedMethods: [...snapshot.providedMethods],
       missingMethods: [...snapshot.missingMethods],
     }));
+  }
+
+  /**
+   * Report the diagnostics contract version consumed by the controller + debugger.
+   * @returns {string}
+   */
+  getDiagnosticsContractVersion() {
+    return GOAP_CONTROLLER_DIAGNOSTICS_CONTRACT_VERSION;
   }
 
   /**

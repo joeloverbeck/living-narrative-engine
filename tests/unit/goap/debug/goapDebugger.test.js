@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import GOAPDebugger from '../../../../src/goap/debug/goapDebugger.js';
+import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../../../../src/goap/debug/goapDebuggerDiagnosticsContract.js';
 
 describe('GOAPDebugger', () => {
   let testBed;
@@ -21,9 +22,32 @@ describe('GOAPDebugger', () => {
       'getFailedTasks',
       'getDependencyDiagnostics',
       'getTaskLibraryDiagnostics',
+      'getPlanningStateDiagnostics',
+      'getDiagnosticsContractVersion',
     ]);
-    mockController.getTaskLibraryDiagnostics.mockReturnValue(null);
+    mockController.getTaskLibraryDiagnostics.mockReturnValue({
+      timestamp: Date.now(),
+      totalTasks: 0,
+      namespaces: {},
+      warnings: [],
+    });
     mockController.getDependencyDiagnostics.mockReturnValue([]);
+    mockController.getFailedGoals.mockReturnValue([]);
+    mockController.getFailedTasks.mockReturnValue([]);
+    mockController.getPlanningStateDiagnostics.mockReturnValue({
+      totalMisses: 0,
+      lastMisses: [
+        {
+          timestamp: Date.now(),
+          path: 'actor:core:needs',
+          origin: 'test',
+          reason: 'setup',
+        },
+      ],
+    });
+    mockController.getDiagnosticsContractVersion.mockReturnValue(
+      GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version
+    );
 
     mockInspector = testBed.createMock('planInspector', [
       'inspect',
@@ -99,6 +123,20 @@ describe('GOAPDebugger', () => {
           logger: mockLogger,
         });
       }).toThrow();
+    });
+
+    it('fails fast when diagnostics contract versions diverge', () => {
+      mockController.getDiagnosticsContractVersion.mockReturnValue('0.0.1');
+
+      expect(() => {
+        new GOAPDebugger({
+          goapController: mockController,
+          planInspector: mockInspector,
+          stateDiffViewer: mockDiffViewer,
+          refinementTracer: mockTracer,
+          logger: mockLogger,
+        });
+      }).toThrow(/diagnostics contract mismatch/);
     });
   });
 
@@ -416,7 +454,12 @@ describe('GOAPDebugger', () => {
         failedTasks: [],
       };
       const trace = { events: [] };
-      const diagnostics = { actorId: 'actor-1', namespaces: {}, warnings: [] };
+      const diagnostics = {
+        actorId: 'actor-1',
+        namespaces: {},
+        warnings: [],
+        timestamp: Date.now(),
+      };
 
       mockInspector.inspectJSON.mockReturnValue(planData);
       mockController.getFailedGoals.mockReturnValue([]);
@@ -424,6 +467,17 @@ describe('GOAPDebugger', () => {
       mockController.getDependencyDiagnostics.mockReturnValue([]);
       mockController.getTaskLibraryDiagnostics.mockReturnValue(diagnostics);
       mockTracer.getTrace.mockReturnValue(trace);
+      mockController.getPlanningStateDiagnostics.mockReturnValue({
+        totalMisses: 1,
+        lastMisses: [
+          {
+            timestamp: Date.now(),
+            path: 'actor:core:needs',
+            origin: 'test',
+            reason: 'assert',
+          },
+        ],
+      });
 
       const report = goapDebugger.generateReportJSON('actor-1');
 
@@ -434,12 +488,82 @@ describe('GOAPDebugger', () => {
         failures,
         dependencies: [],
         taskLibraryDiagnostics: diagnostics,
+        planningStateDiagnostics: {
+          totalMisses: 1,
+          lastMisses: [
+            expect.objectContaining({
+              timestamp: expect.any(Number),
+              path: 'actor:core:needs',
+            }),
+          ],
+        },
+        diagnosticsMeta: {
+          taskLibrary: expect.objectContaining({
+            available: true,
+            stale: false,
+          }),
+          planningState: expect.objectContaining({
+            available: true,
+          }),
+        },
         trace,
       });
     });
 
     it('should validate actorId parameter', () => {
       expect(() => goapDebugger.generateReportJSON('')).toThrow();
+    });
+  });
+
+  describe('diagnostics handling', () => {
+    it('logs a single warning when diagnostics are missing', () => {
+      mockController.getTaskLibraryDiagnostics.mockReturnValue(null);
+      mockLogger.warn.mockClear();
+
+      goapDebugger.generateReportJSON('actor-1');
+      goapDebugger.generateReportJSON('actor-1');
+
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.missingWarningCode,
+        expect.objectContaining({
+          actorId: 'actor-1',
+          sectionId: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.taskLibrary.id,
+        })
+      );
+    });
+
+    it('marks diagnostics stale when timestamp is old', () => {
+      const oldTimestamp =
+        Date.now() - GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.staleThresholdMs - 5000;
+      mockController.getTaskLibraryDiagnostics.mockReturnValue({
+        timestamp: oldTimestamp,
+        totalTasks: 0,
+        namespaces: {},
+        warnings: [],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+      expect(report).toContain('⚠️ STALE');
+
+      const json = goapDebugger.generateReportJSON('actor-1');
+      expect(json.diagnosticsMeta.taskLibrary.stale).toBe(true);
+      expect(json.diagnosticsMeta.taskLibrary.available).toBe(true);
+    });
+
+    it('treats planning state diagnostics as available but stale when no misses', () => {
+      mockController.getPlanningStateDiagnostics.mockReturnValue({
+        totalMisses: 0,
+        lastMisses: [],
+      });
+
+      const report = goapDebugger.generateReport('actor-1');
+      expect(report).toContain('Planning State Diagnostics');
+      expect(report).toContain('⚠️ STALE — no recent misses');
+
+      const json = goapDebugger.generateReportJSON('actor-1');
+      expect(json.diagnosticsMeta.planningState.available).toBe(true);
+      expect(json.diagnosticsMeta.planningState.stale).toBe(true);
     });
   });
 });

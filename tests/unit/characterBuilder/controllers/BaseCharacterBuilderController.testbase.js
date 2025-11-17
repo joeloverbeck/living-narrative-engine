@@ -20,6 +20,8 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
   constructor() {
     super();
     this.domElements = new Map();
+    this._conceptCounter = 0;
+    this._directionCounter = 0;
   }
 
   /**
@@ -31,6 +33,8 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
     // Initialize character builder-specific mocks
     this._initializeCharacterBuilderMocks();
+
+    this.mocks.controllerLifecycleOrchestrator?.resetInitializationState?.();
 
     // Expose mocks as mockDependencies for compatibility with existing tests
     this.mockDependencies = this.mocks;
@@ -77,6 +81,15 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         for (const hook of hooks) {
           await hook();
         }
+      };
+
+      const resetLifecycleState = () => {
+        lifecycleState.isInitialized = false;
+        lifecycleState.isDestroyed = false;
+        lifecycleState.isInitializing = false;
+        lifecycleState.isDestroying = false;
+        initializationHooks.clear();
+        destructionHooks.clear();
       };
 
       const registerHook = (phase, handler) => {
@@ -163,7 +176,9 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
           lifecycleState.isInitialized = false;
           await this.mocks.controllerLifecycleOrchestrator.initialize();
         }),
-        resetInitializationState: jest.fn(),
+        resetInitializationState: jest.fn(() => {
+          resetLifecycleState();
+        }),
         registerCleanupTask: jest.fn((task) => {
           registerHook(DESTRUCTION_PHASES.CLEANUP_TASKS, task);
         }),
@@ -186,40 +201,214 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
 
     // DOM element manager mock
     if (!this.mocks.domElementManager) {
+      let documentRef = document;
+      let elementsRef = Object.create(null);
+
       const resolveDomElement = (elementId) => {
-        const byId = document.getElementById(elementId);
+        if (!documentRef) {
+          return null;
+        }
+        const byId = documentRef.getElementById(elementId);
         if (byId) {
           return byId;
         }
-        const kebabId = elementId.replace(/([A-Z])/g, '-$1').toLowerCase();
-        return document.getElementById(kebabId);
+        const kebabId = elementId
+          .replace(/([A-Z])/g, '-$1')
+          .toLowerCase();
+        return documentRef.getElementById(kebabId);
+      };
+
+      const resolveBySelector = (selector) => {
+        if (!selector || !documentRef) {
+          return null;
+        }
+        if (selector.startsWith('#') && !selector.includes(' ')) {
+          return documentRef.getElementById(selector.slice(1));
+        }
+        return documentRef.querySelector(selector);
+      };
+
+      const normalizeElementConfig = (config) => {
+        if (typeof config === 'string') {
+          return { selector: config, required: true, validate: null };
+        }
+        return {
+          selector: config.selector,
+          required: config.required !== false,
+          validate: config.validate || null,
+        };
+      };
+
+      const storeElement = (key, element) => {
+        elementsRef[key] = element || null;
+        return elementsRef[key];
+      };
+
+      const getCachedElement = (key) => {
+        if (Object.prototype.hasOwnProperty.call(elementsRef, key)) {
+          const cached = elementsRef[key];
+          if (cached && !documentRef.body.contains(cached)) {
+            elementsRef[key] = null;
+            return null;
+          }
+          return cached;
+        }
+        return resolveDomElement(key);
       };
 
       this.mocks.domElementManager = {
-        configure: jest.fn(),
-        cacheElement: jest.fn(),
-        getElement: jest.fn(resolveDomElement),
+        configure: jest.fn((config = {}) => {
+          if (config.documentRef) {
+            documentRef = config.documentRef;
+          }
+          if (config.elementsRef) {
+            elementsRef = config.elementsRef;
+          }
+        }),
+        cacheElement: jest.fn((key, selector, required = true) => {
+          const element = resolveBySelector(selector);
+          if (!element && required) {
+            throw new Error(`Element not found for selector '${selector}'`);
+          }
+          return storeElement(key, element || null);
+        }),
+        cacheElementsFromMap: jest.fn((elementMap = {}, options = {}) => {
+          const { continueOnError = true, stopOnFirstError = false } = options;
+          const results = {
+            cached: {},
+            errors: [],
+            stats: { total: 0, cached: 0, failed: 0, optional: 0 },
+          };
+
+          for (const [key, config] of Object.entries(elementMap)) {
+            results.stats.total++;
+            const normalized = normalizeElementConfig(config);
+            try {
+              const element = normalized.selector
+                ? resolveBySelector(normalized.selector)
+                : resolveDomElement(key);
+
+              if (!element && normalized.required) {
+                throw new Error(
+                  `Element not found for selector '${normalized.selector}'`
+                );
+              }
+
+              if (element && normalized.validate) {
+                const isValid = normalized.validate(element);
+                if (!isValid) {
+                  throw new Error(
+                    `Custom validation failed for element '${key}'`
+                  );
+                }
+              }
+
+              storeElement(key, element || null);
+
+              if (element) {
+                results.cached[key] = element;
+                results.stats.cached++;
+              } else {
+                results.stats.optional++;
+              }
+            } catch (error) {
+              results.stats.failed++;
+              results.errors.push({
+                key,
+                error: error.message,
+                selector:
+                  typeof config === 'string' ? config : config.selector || key,
+              });
+
+              const shouldHalt =
+                stopOnFirstError || (!continueOnError && normalized.required);
+
+              if (shouldHalt) {
+                const batchError = new Error(
+                  `Element caching failed for '${key}': ${error.message}`
+                );
+                batchError.results = results;
+                throw batchError;
+              }
+            }
+          }
+
+          return results;
+        }),
+        normalizeElementConfig: jest.fn(normalizeElementConfig),
+        getElement: jest.fn((elementId) => getCachedElement(elementId)),
         addElementClass: jest.fn((elementId, className) => {
-          const element = resolveDomElement(elementId);
+          const element = getCachedElement(elementId);
           if (element) {
             element.classList.add(className);
           }
         }),
         removeElementClass: jest.fn((elementId, className) => {
-          const element = resolveDomElement(elementId);
+          const element = getCachedElement(elementId);
           if (element) {
             element.classList.remove(className);
           }
         }),
-        clearCache: jest.fn(),
-        validateElementCache: jest.fn(),
-        getElementsSnapshot: jest.fn().mockReturnValue({}),
-        cacheElementsFromMap: jest.fn(),
-        normalizeElementConfig: jest.fn(),
-        validateElement: jest.fn(),
-        setElementEnabled: jest.fn(),
-        showElement: jest.fn(),
-        hideElement: jest.fn(),
+        clearCache: jest.fn(() => {
+          const keys = Object.keys(elementsRef);
+          for (const key of keys) {
+            delete elementsRef[key];
+          }
+          return keys.length;
+        }),
+        validateElementCache: jest.fn(() => {
+          const results = { valid: [], invalid: [], total: 0 };
+          for (const [key, element] of Object.entries(elementsRef)) {
+            results.total++;
+            if (element && documentRef.body.contains(element)) {
+              results.valid.push(key);
+            } else {
+              results.invalid.push(key);
+            }
+          }
+          return results;
+        }),
+        getElementsSnapshot: jest
+          .fn()
+          .mockImplementation(() => ({ ...elementsRef })),
+        validateElement: jest.fn((element, key) => {
+          if (!element || !documentRef.body.contains(element)) {
+            throw new Error(`Element '${key}' is not attached to the DOM`);
+          }
+          return true;
+        }),
+        setElementEnabled: jest.fn((elementId, enabled = true) => {
+          const element = getCachedElement(elementId);
+          if (element && 'disabled' in element) {
+            element.disabled = !enabled;
+            return true;
+          }
+          return false;
+        }),
+        showElement: jest.fn((elementId) => {
+          const element = getCachedElement(elementId);
+          if (element) {
+            element.style.display = 'block';
+            return true;
+          }
+          return false;
+        }),
+        hideElement: jest.fn((elementId) => {
+          const element = getCachedElement(elementId);
+          if (element) {
+            element.style.display = 'none';
+            return true;
+          }
+          return false;
+        }),
+        setElementText: jest.fn((elementId, text) => {
+          const element = getCachedElement(elementId);
+          if (element) {
+            element.textContent = text;
+            return true;
+          }
+          return false;
+        }),
       };
     }
 
@@ -308,7 +497,12 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         logError: jest.fn(),
         showErrorToUser: jest.fn(),
         handleServiceError: jest.fn(),
-        executeWithErrorHandling: jest.fn(),
+        executeWithErrorHandling: jest.fn(async (operation) => {
+          if (typeof operation === 'function') {
+            return await operation();
+          }
+          return undefined;
+        }),
         isRetryableError: jest.fn(),
         determineRecoverability: jest.fn(),
         isRecoverableError: jest.fn(),
@@ -355,6 +549,85 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
       };
     }
+  }
+
+  /**
+   * Build a character concept test fixture
+   * @param {object} [overrides]
+   * @returns {object}
+   */
+  buildCharacterConcept(overrides = {}) {
+    this._conceptCounter += 1;
+    const timestamp = new Date(Date.now() - this._conceptCounter * 1000).toISOString();
+
+    const defaults = {
+      id: `concept-${this._conceptCounter}`,
+      concept: `Test concept idea ${this._conceptCounter}`,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      status: 'draft',
+      thematicDirections: [],
+      metadata: {},
+    };
+
+    return {
+      ...defaults,
+      ...overrides,
+      thematicDirections:
+        overrides.thematicDirections ?? defaults.thematicDirections,
+      metadata: overrides.metadata ?? defaults.metadata,
+    };
+  }
+
+  /**
+   * Build a thematic direction test fixture
+   * @param {object} [overrides]
+   * @returns {object}
+   */
+  buildThematicDirection(overrides = {}) {
+    this._directionCounter += 1;
+    const defaults = {
+      id: `direction-${this._directionCounter}`,
+      title: `Direction ${this._directionCounter}`,
+      description: `Sample direction description ${this._directionCounter}`,
+      themes: ['courage', 'growth'],
+      tone: 'dramatic',
+      coreTension: 'internal vs external',
+      uniqueTwist: 'hidden lineage revealed',
+      narrativePotential: 'epic franchise',
+    };
+
+    return {
+      ...defaults,
+      ...overrides,
+      themes: overrides.themes ?? defaults.themes,
+    };
+  }
+
+  /**
+   * Dispatch a click event against a selector or element.
+   * @param {string|Element} target
+   * @returns {Element}
+   */
+  click(target) {
+    const element =
+      typeof target === 'string' ? document.querySelector(target) : target;
+
+    if (!element) {
+      throw new Error(`Unable to find element for selector '${target}'`);
+    }
+
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    return element;
+  }
+
+  /**
+   * Await a simple timeout to allow async DOM flows to settle.
+   * @param {number} durationMs
+   * @returns {Promise<void>}
+   */
+  async wait(durationMs = 0) {
+    await new Promise((resolve) => setTimeout(resolve, durationMs));
   }
 
   /**

@@ -16,14 +16,6 @@ describe('ThematicDirectionController - Coverage Enhancement', () => {
     // Mock scrollIntoView which doesn't exist in jsdom
     Element.prototype.scrollIntoView = jest.fn();
 
-    // Delete existing location to allow redefinition
-    delete window.location;
-
-    // Mock window location methods
-    window.location = {
-      href: '',
-      search: '',
-    };
   });
 
   afterEach(async () => {

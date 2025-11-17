@@ -7,6 +7,7 @@
 
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from './goapDebuggerDiagnosticsContract.js';
 
 /**
  * Main debugging API for GOAP system.
@@ -21,6 +22,8 @@ class GOAPDebugger {
   #stateDiffViewer;
   #refinementTracer;
   #logger;
+  #diagnosticWarningCache;
+  #diagnosticsContractVersion;
 
   /**
    * Creates a new GOAPDebugger instance.
@@ -39,12 +42,17 @@ class GOAPDebugger {
     refinementTracer,
     logger,
   }) {
+    const diagnosticSections = GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections;
+
     validateDependency(goapController, 'IGoapController', logger, {
       requiredMethods: [
         'getActivePlan',
         'getFailedGoals',
         'getFailedTasks',
         'getDependencyDiagnostics',
+        diagnosticSections.taskLibrary.controllerMethod,
+        diagnosticSections.planningState.controllerMethod,
+        'getDiagnosticsContractVersion',
       ],
     });
     validateDependency(planInspector, 'IPlanInspector', logger, {
@@ -57,11 +65,20 @@ class GOAPDebugger {
       requiredMethods: ['startCapture', 'stopCapture', 'getTrace', 'format'],
     });
 
+    const controllerVersion = goapController.getDiagnosticsContractVersion();
+    if (controllerVersion !== GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version) {
+      throw new Error(
+        `GOAPDebugger diagnostics contract mismatch: expected ${GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version} but received ${controllerVersion}. See docs/goap/debugging-tools.md#diagnostics-contract`
+      );
+    }
+
     this.#goapController = goapController;
     this.#planInspector = planInspector;
     this.#stateDiffViewer = stateDiffViewer;
     this.#refinementTracer = refinementTracer;
     this.#logger = logger;
+    this.#diagnosticWarningCache = new Map();
+    this.#diagnosticsContractVersion = controllerVersion;
   }
 
   // ==================== Plan Inspection ====================
@@ -303,48 +320,20 @@ class GOAPDebugger {
     }
     report += `\n`;
 
-    // Task library diagnostics
-    const libraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
+    const diagnostics = this.#collectDiagnostics(actorId);
+
     report += `--- Task Library Diagnostics ---\n`;
-    if (!libraryDiagnostics) {
-      report += `No task library diagnostics captured.\n`;
-    } else {
-      report += `Captured: ${new Date(libraryDiagnostics.timestamp || Date.now()).toISOString()}\n`;
-      report += `Total Tasks: ${libraryDiagnostics.totalTasks ?? 0}\n`;
-      const namespaces = libraryDiagnostics.namespaces || {};
-      if (Object.keys(namespaces).length === 0) {
-        report += `Namespaces: ∅\n`;
-      } else {
-        report += `Namespaces:\n`;
-        for (const [namespace, data] of Object.entries(namespaces)) {
-          report += `  - ${namespace}: ${data.taskCount ?? 0} tasks\n`;
-        }
-      }
-      if (libraryDiagnostics.missingActors && libraryDiagnostics.missingActors.length > 0) {
-        report += `Missing Actors: ${libraryDiagnostics.missingActors.join(', ')}\n`;
-      }
-      if (libraryDiagnostics.warnings && libraryDiagnostics.warnings.length > 0) {
-        report += `Warnings:\n`;
-        for (const warning of libraryDiagnostics.warnings) {
-          report += `  • ${warning}\n`;
-        }
-      }
-    }
+    report += this.#formatTaskLibraryDiagnostics(
+      diagnostics.taskLibraryDiagnostics,
+      diagnostics.meta.taskLibrary
+    );
     report += `\n`;
 
-    const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
     report += `--- Planning State Diagnostics ---\n`;
-    if (!planningStateDiagnostics || !planningStateDiagnostics.totalMisses) {
-      report += `No planning-state misses recorded (see docs/goap/debugging-tools.md#planning-state-assertions).\n`;
-    } else {
-      report += `Total Misses: ${planningStateDiagnostics.totalMisses}\n`;
-      const { lastMisses = [] } = planningStateDiagnostics;
-      report += `Recent Misses (max 5):\n`;
-      for (const miss of lastMisses) {
-        report += `  • ${new Date(miss.timestamp).toISOString()} :: path=${miss.path || 'n/a'} origin=${miss.origin || 'unknown'} reason=${miss.reason}\n`;
-      }
-      report += `See docs/goap/debugging-tools.md#planning-state-assertions for remediation steps.\n`;
-    }
+    report += this.#formatPlanningStateDiagnostics(
+      diagnostics.planningStateDiagnostics,
+      diagnostics.meta.planningState
+    );
     report += `\n`;
 
     // Current trace (if any)
@@ -374,8 +363,7 @@ class GOAPDebugger {
       this.#logger
     );
 
-    const libraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
-    const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
+    const diagnostics = this.#collectDiagnostics(actorId);
 
     return {
       actorId,
@@ -383,10 +371,177 @@ class GOAPDebugger {
       plan: this.inspectPlanJSON(actorId),
       failures: this.getFailureHistory(actorId),
       dependencies: this.getDependencyDiagnostics(),
-      taskLibraryDiagnostics: libraryDiagnostics,
-      planningStateDiagnostics,
+      taskLibraryDiagnostics: diagnostics.taskLibraryDiagnostics,
+      planningStateDiagnostics: diagnostics.planningStateDiagnostics,
+      diagnosticsMeta: diagnostics.meta,
       trace: this.getTrace(actorId),
     };
+  }
+
+  #collectDiagnostics(actorId) {
+    const taskLibraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
+    const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
+
+    return {
+      taskLibraryDiagnostics,
+      planningStateDiagnostics,
+      meta: {
+        taskLibrary: this.#buildDiagnosticsMeta({
+          actorId,
+          section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.taskLibrary,
+          payload: taskLibraryDiagnostics,
+        }),
+        planningState: this.#buildDiagnosticsMeta({
+          actorId,
+          section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.planningState,
+          payload: planningStateDiagnostics,
+          lastUpdatedResolver: (payload) => {
+            if (
+              payload &&
+              Array.isArray(payload.lastMisses) &&
+              payload.lastMisses.length > 0
+            ) {
+              return payload.lastMisses[payload.lastMisses.length - 1].timestamp;
+            }
+            return null;
+          },
+        }),
+      },
+    };
+  }
+
+  #buildDiagnosticsMeta({ actorId, section, payload, lastUpdatedResolver }) {
+    const meta = {
+      sectionId: section.id,
+      label: section.label,
+      actorId,
+      available: Boolean(payload),
+      stale: false,
+      lastUpdated: null,
+    };
+
+    if (!payload) {
+      meta.available = false;
+      meta.stale = true;
+      this.#logMissingDiagnosticsWarning(actorId, section.id);
+      return meta;
+    }
+
+    const timestampCandidate = this.#resolveTimestamp(
+      lastUpdatedResolver ? lastUpdatedResolver(payload) : payload?.timestamp
+    );
+
+    if (timestampCandidate) {
+      meta.lastUpdated = new Date(timestampCandidate).toISOString();
+      meta.stale =
+        Date.now() - timestampCandidate >
+        GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.staleThresholdMs;
+    } else {
+      meta.stale = true;
+    }
+
+    return meta;
+  }
+
+  #resolveTimestamp(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Date.parse(value);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  }
+
+  #formatTaskLibraryDiagnostics(payload, meta) {
+    if (!meta.available) {
+      return 'No task library diagnostics captured. (see docs/goap/debugging-tools.md#diagnostics-contract)\n';
+    }
+
+    const lines = [];
+    if (meta.stale) {
+      lines.push(
+        `⚠️ STALE — last updated ${meta.lastUpdated || 'unknown'} (see docs/goap/debugging-tools.md#diagnostics-contract)`
+      );
+    } else if (meta.lastUpdated) {
+      lines.push(`Last updated: ${meta.lastUpdated}`);
+    }
+
+    lines.push(`Total Tasks: ${payload.totalTasks ?? 0}`);
+    const namespaces = payload.namespaces || {};
+    if (Object.keys(namespaces).length === 0) {
+      lines.push('Namespaces: ∅');
+    } else {
+      lines.push('Namespaces:');
+      for (const [namespace, data] of Object.entries(namespaces)) {
+        lines.push(`  - ${namespace}: ${data.taskCount ?? 0} tasks`);
+      }
+    }
+    if (payload.missingActors && payload.missingActors.length > 0) {
+      lines.push(`Missing Actors: ${payload.missingActors.join(', ')}`);
+    }
+    if (payload.warnings && payload.warnings.length > 0) {
+      lines.push('Warnings:');
+      for (const warning of payload.warnings) {
+        lines.push(`  • ${warning}`);
+      }
+    }
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  #formatPlanningStateDiagnostics(payload, meta) {
+    if (!meta.available) {
+      return 'No planning-state diagnostics captured (see docs/goap/debugging-tools.md#planning-state-assertions).\n';
+    }
+
+    const lines = [];
+    if (meta.stale) {
+      lines.push(
+        `⚠️ STALE — no recent misses (last updated ${meta.lastUpdated || 'unknown'})`
+      );
+    } else if (meta.lastUpdated) {
+      lines.push(`Last miss recorded: ${meta.lastUpdated}`);
+    }
+
+    const totalMisses = payload.totalMisses ?? 0;
+    lines.push(`Total Misses: ${totalMisses}`);
+
+    const lastMisses = Array.isArray(payload.lastMisses)
+      ? payload.lastMisses
+      : [];
+    if (lastMisses.length === 0) {
+      lines.push('Recent Misses: ∅ (enable GOAP_STATE_ASSERT=1 to fail fast).');
+    } else {
+      lines.push('Recent Misses (max 5):');
+      for (const miss of lastMisses) {
+        lines.push(
+          `  • ${new Date(miss.timestamp).toISOString()} :: path=${miss.path || 'n/a'} origin=${miss.origin || 'unknown'} reason=${miss.reason}`
+        );
+      }
+      lines.push('See docs/goap/debugging-tools.md#planning-state-assertions for remediation steps.');
+    }
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  #logMissingDiagnosticsWarning(actorId, sectionId) {
+    const cacheKey = `${actorId}:${sectionId}`;
+    if (this.#diagnosticWarningCache.has(cacheKey)) {
+      return;
+    }
+
+    this.#diagnosticWarningCache.set(cacheKey, true);
+    this.#logger.warn(
+      GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.missingWarningCode,
+      {
+        actorId,
+        sectionId,
+        contractVersion: this.#diagnosticsContractVersion,
+        hint: 'Instrumentation missing — see docs/goap/debugging-tools.md#diagnostics-contract',
+      }
+    );
   }
 }
 

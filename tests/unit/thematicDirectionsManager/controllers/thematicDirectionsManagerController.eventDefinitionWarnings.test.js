@@ -26,6 +26,48 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
   let container;
   let controller;
   let logger;
+  
+  const createController = (overrides = {}) => {
+    if (!container) {
+      throw new Error('DI container not initialized for controller creation');
+    }
+
+    const dependencies = {
+      logger: overrides.logger ?? container.resolve(tokens.ILogger),
+      characterBuilderService:
+        overrides.characterBuilderService ??
+        container.resolve(tokens.CharacterBuilderService),
+      eventBus:
+        overrides.eventBus ?? container.resolve(tokens.ISafeEventDispatcher),
+      schemaValidator:
+        overrides.schemaValidator ?? container.resolve(tokens.ISchemaValidator),
+      controllerLifecycleOrchestrator:
+        overrides.controllerLifecycleOrchestrator ??
+        container.resolve(tokens.ControllerLifecycleOrchestrator),
+      domElementManager:
+        overrides.domElementManager ??
+        container.resolve(tokens.DOMElementManager),
+      eventListenerRegistry:
+        overrides.eventListenerRegistry ??
+        container.resolve(tokens.EventListenerRegistry),
+      asyncUtilitiesToolkit:
+        overrides.asyncUtilitiesToolkit ??
+        container.resolve(tokens.AsyncUtilitiesToolkit),
+      performanceMonitor:
+        overrides.performanceMonitor ??
+        container.resolve(tokens.PerformanceMonitor),
+      memoryManager:
+        overrides.memoryManager ?? container.resolve(tokens.MemoryManager),
+      errorHandlingStrategy:
+        overrides.errorHandlingStrategy ??
+        container.resolve(tokens.ErrorHandlingStrategy),
+      validationService:
+        overrides.validationService ??
+        container.resolve(tokens.ValidationService),
+    };
+
+    return new ThematicDirectionsManagerController(dependencies);
+  };
 
   beforeEach(async () => {
     // Capture all console warnings
@@ -160,6 +202,9 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
       const mockCharacterBuilderService = {
         initialize: jest.fn().mockResolvedValue(),
         getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+        getAllThematicDirectionsWithConcepts: jest
+          .fn()
+          .mockResolvedValue([]),
         createCharacterConcept: jest.fn().mockResolvedValue({}),
         updateCharacterConcept: jest.fn().mockResolvedValue({}),
         deleteCharacterConcept: jest.fn().mockResolvedValue(),
@@ -177,11 +222,8 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
         }),
       };
 
-      controller = new ThematicDirectionsManagerController({
-        logger: container.resolve(tokens.ILogger),
+      controller = createController({
         characterBuilderService: mockCharacterBuilderService,
-        eventBus: container.resolve(tokens.ISafeEventDispatcher),
-        schemaValidator: container.resolve(tokens.ISchemaValidator),
       });
 
       await controller.initialize();
@@ -373,6 +415,9 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
       const mockCharacterBuilderService = {
         initialize: jest.fn().mockResolvedValue(),
         getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+        getAllThematicDirectionsWithConcepts: jest
+          .fn()
+          .mockResolvedValue([]),
         createCharacterConcept: jest.fn().mockResolvedValue({}),
         updateCharacterConcept: jest.fn().mockResolvedValue({}),
         deleteCharacterConcept: jest.fn().mockResolvedValue(),
@@ -399,34 +444,37 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
         return originalDispatch(eventName, payload);
       });
 
-      controller = new ThematicDirectionsManagerController({
-        logger: container.resolve(tokens.ILogger),
-        characterBuilderService: mockCharacterBuilderService,
-        eventBus: eventBus,
-        schemaValidator: container.resolve(tokens.ISchemaValidator),
-      });
+      try {
+        controller = createController({
+          characterBuilderService: mockCharacterBuilderService,
+          eventBus,
+        });
 
-      await controller.initialize();
+        await controller.initialize();
 
-      // Verify controller is properly initialized
-      expect(controller).toBeDefined();
+        // Verify controller is properly initialized
+        expect(controller).toBeDefined();
 
-      // Note: The controller doesn't actually dispatch ui_state_changed or controller_initialized
-      // events during normal initialization. This was an incorrect assumption in the original test.
-      // Instead, we verify that when the controller DOES dispatch events (like ANALYTICS_TRACK),
-      // they don't generate warnings because the event definitions are loaded.
+        // Note: The controller doesn't actually dispatch ui_state_changed or controller_initialized
+        // events during normal initialization. This was an incorrect assumption in the original test.
+        // Instead, we verify that when the controller DOES dispatch events (like ANALYTICS_TRACK),
+        // they don't generate warnings because the event definitions are loaded.
 
-      console.log('Dispatched events during initialization:', dispatchedEvents);
+        console.log('Dispatched events during initialization:', dispatchedEvents);
 
-      // Verify no EventDefinition warnings occurred during initialization
-      const eventDefinitionWarnings = loggedWarnings.filter(
-        (warning) =>
-          warning.message &&
-          typeof warning.message === 'string' &&
-          warning.message.includes('EventDefinition')
-      );
+        // Verify no EventDefinition warnings occurred during initialization
+        const eventDefinitionWarnings = loggedWarnings.filter(
+          (warning) =>
+            warning.message &&
+            typeof warning.message === 'string' &&
+            warning.message.includes('EventDefinition')
+        );
 
-      expect(eventDefinitionWarnings).toHaveLength(0);
+        expect(eventDefinitionWarnings).toHaveLength(0);
+      } finally {
+        // Restore dispatcher to avoid leaking spies to other tests
+        eventBus.dispatch = originalDispatch;
+      }
 
       console.log(
         '✅ SUCCESS: No event definition warnings during controller lifecycle'

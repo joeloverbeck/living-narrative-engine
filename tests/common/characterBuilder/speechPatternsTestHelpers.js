@@ -103,7 +103,7 @@ export function createMalformedLLMResponse() {
 /**
  * Creates mock dependencies for SpeechPatternsGeneratorController
  */
-export function createMockControllerDependencies() {
+export function createMockControllerDependencies(overrides = {}) {
   const mockLogger = {
     debug: jest.fn(),
     info: jest.fn(),
@@ -134,6 +134,70 @@ export function createMockControllerDependencies() {
   const mockSchemaValidator = {
     validate: jest.fn(),
     isSchemaLoaded: jest.fn().mockReturnValue(true),
+  };
+
+  const mockDomElementManager = {
+    configure: jest.fn(),
+    cacheElementsFromMap: jest.fn(),
+    getElementsSnapshot: jest.fn().mockReturnValue({}),
+    clearCache: jest.fn(),
+  };
+
+  const mockEventListenerRegistry = {
+    setContextName: jest.fn(),
+    detachEventBusListeners: jest.fn().mockReturnValue(0),
+    destroy: jest.fn(),
+    addEventListener: jest.fn(),
+    addDebouncedListener: jest.fn(),
+    subscribeToEvent: jest.fn(),
+  };
+
+  const mockAsyncUtilitiesToolkit = {
+    debounce: jest.fn((fn) => fn),
+    throttle: jest.fn((fn) => fn),
+    setTimeout: jest.fn(),
+    clearTimeout: jest.fn(),
+    setInterval: jest.fn(),
+    clearInterval: jest.fn(),
+    requestAnimationFrame: jest.fn(),
+    cancelAnimationFrame: jest.fn(),
+    getTimerStats: jest.fn().mockReturnValue({
+      timeouts: { count: 0 },
+      intervals: { count: 0 },
+      animationFrames: { count: 0 },
+    }),
+    clearAllTimers: jest.fn(),
+  };
+
+  const mockPerformanceMonitor = {
+    configure: jest.fn(),
+    mark: jest.fn(),
+    measure: jest.fn(),
+    getMeasurements: jest.fn().mockReturnValue(new Map()),
+    clearData: jest.fn(),
+  };
+
+  const mockMemoryManager = {
+    setContextName: jest.fn(),
+    clear: jest.fn(),
+  };
+
+  const mockErrorHandlingStrategy = {
+    configureContext: jest.fn(),
+    resetLastError: jest.fn(),
+  };
+
+  const mockValidationService = {
+    configure: jest.fn(),
+  };
+
+  const mockControllerLifecycleOrchestrator = {
+    setControllerName: jest.fn(),
+    registerHook: jest.fn(),
+    createControllerMethodHook: jest.fn(() => jest.fn()),
+    initialize: jest.fn(),
+    destroy: jest.fn(),
+    isInitialized: false,
   };
 
   // Add missing characterBuilderService mock
@@ -167,6 +231,15 @@ export function createMockControllerDependencies() {
     schemaValidator: mockSchemaValidator,
     characterBuilderService: mockCharacterBuilderService,
     container: mockContainer,
+    domElementManager: mockDomElementManager,
+    eventListenerRegistry: mockEventListenerRegistry,
+    asyncUtilitiesToolkit: mockAsyncUtilitiesToolkit,
+    performanceMonitor: mockPerformanceMonitor,
+    memoryManager: mockMemoryManager,
+    errorHandlingStrategy: mockErrorHandlingStrategy,
+    validationService: mockValidationService,
+    controllerLifecycleOrchestrator: mockControllerLifecycleOrchestrator,
+    ...overrides,
   };
 }
 

@@ -39,6 +39,10 @@ When you write new goals or tasks, prefer the `actor.components.core_stats.healt
 
 Tests should import `createGoapPlannerMock` + `expectGoapPlannerMock` from `tests/common/mocks/` to stay aligned with this table.
 
+### Debug Diagnostics Contract
+
+`GoapController` exposes `getDiagnosticsContractVersion()` so `GOAPDebugger` can enforce the shared diagnostics contract described in `docs/goap/debugging-tools.md#diagnostics-contract`. Any time you add or remove diagnostics sections (task library, planning state, future additions), bump the contract version and update the debugger/GoapController tests to acknowledge the change. This keeps instrumentation in lockstep with the runtime planner API and prevents silent drift.
+
 ## Clean split: planning-tasks vs primitive-actions
 
 ### A. Primitive / executable actions (what we have now)
