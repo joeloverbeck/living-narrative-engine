@@ -153,15 +153,10 @@ describe('registerInfrastructure', () => {
     expect(repo).toBeDefined();
     // expect(repo).toBeInstanceOf(ActualGameDataRepository); // If you import it
 
-    // The concrete token GameDataRepository might not be registered by registerInfrastructure
-    // if it standardizes on interfaces. Let's check the current behavior.
-    // The logs show "GameDataRepository" being registered by AppContainer in beforeEach.
-    // infrastructureRegistrations registers against IGameDataRepository.
-    // So, resolving GameDataRepository should still give the mock from beforeEach.
+    // The concrete token GameDataRepository is aliased to the interface token.
+    // Resolving either token should return the same singleton instance.
     expect(() => container.resolve(tokens.GameDataRepository)).not.toThrow();
-    expect(container.resolve(tokens.GameDataRepository)).toBe(
-      mockGameDataRepositoryConcrete
-    );
+    expect(container.resolve(tokens.GameDataRepository)).toBe(repo);
   });
 
   // THIS TEST HAS BEEN REMOVED

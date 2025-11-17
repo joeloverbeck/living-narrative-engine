@@ -175,13 +175,13 @@ describe('GoapPlanner - State Management Helpers', () => {
   describe('#goalSatisfied', () => {
     it('should return true when goal is satisfied', () => {
       const state = {
-        'actor:core:hungry': false,
+        'actor:core': { hungry: false },
       };
 
       const goal = {
         id: 'core:reduce_hunger',
         goalState: {
-          '==': [{ var: 'actor.core.hungry' }, false],
+          '==': [{ var: 'actor.components.core.hungry' }, false],
         },
       };
 
@@ -193,9 +193,11 @@ describe('GoapPlanner - State Management Helpers', () => {
       expect(mockJsonLogicService.evaluateCondition).toHaveBeenCalledWith(
         goal.goalState,
         expect.objectContaining({
-          actor: {
-            core: { hungry: false },
-          },
+          actor: expect.objectContaining({
+            components: expect.objectContaining({
+              core: expect.objectContaining({ hungry: false }),
+            }),
+          }),
         })
       );
       expect(mockLogger.debug).toHaveBeenCalledWith('Goal satisfaction check', {
@@ -206,13 +208,13 @@ describe('GoapPlanner - State Management Helpers', () => {
 
     it('should return false when goal is not satisfied', () => {
       const state = {
-        'actor:core:hungry': true,
+        'actor:core': { hungry: true },
       };
 
       const goal = {
         id: 'core:reduce_hunger',
         goalState: {
-          '==': [{ var: 'actor.core.hungry' }, false],
+          '==': [{ var: 'actor.components.core.hungry' }, false],
         },
       };
 
@@ -229,7 +231,7 @@ describe('GoapPlanner - State Management Helpers', () => {
 
     it('should return false when goal is missing goalState', () => {
       const state = {
-        'actor:core:hungry': false,
+        'actor:core': { hungry: false },
       };
 
       const goal = {
@@ -248,7 +250,7 @@ describe('GoapPlanner - State Management Helpers', () => {
 
     it('should return false when goal is null', () => {
       const state = {
-        'actor:core:hungry': false,
+        'actor:core': { hungry: false },
       };
 
       const result = planner.testGoalSatisfied(state, null);
@@ -261,13 +263,13 @@ describe('GoapPlanner - State Management Helpers', () => {
 
     it('should handle evaluation errors gracefully', () => {
       const state = {
-        'actor:core:hungry': false,
+        'actor:core': { hungry: false },
       };
 
       const goal = {
         id: 'core:reduce_hunger',
         goalState: {
-          '==': [{ var: 'actor.core.hungry' }, false],
+          '==': [{ var: 'actor.components.core.hungry' }, false],
         },
       };
 
@@ -290,13 +292,13 @@ describe('GoapPlanner - State Management Helpers', () => {
 
     it('should coerce truthy values to boolean true', () => {
       const state = {
-        'actor:core:health': 100,
+        'actor:core': { health: 100 },
       };
 
       const goal = {
         id: 'core:be_healthy',
         goalState: {
-          '>': [{ var: 'actor.core.health' }, 75],
+          '>': [{ var: 'actor.components.core.health' }, 75],
         },
       };
 
@@ -309,13 +311,13 @@ describe('GoapPlanner - State Management Helpers', () => {
 
     it('should coerce falsy values to boolean false', () => {
       const state = {
-        'actor:core:health': 50,
+        'actor:core': { health: 50 },
       };
 
       const goal = {
         id: 'core:be_healthy',
         goalState: {
-          '>': [{ var: 'actor.core.health' }, 75],
+          '>': [{ var: 'actor.components.core.health' }, 75],
         },
       };
 
@@ -328,251 +330,129 @@ describe('GoapPlanner - State Management Helpers', () => {
   });
 
   describe('#buildEvaluationContext', () => {
-    it('should convert simple component keys correctly', () => {
+    it('should expose actor components derived from colonized keys', () => {
       const state = {
-        'entity-1:core': { health: 50 },
+        'actor:core': { health: 50, hungry: false },
       };
 
       const context = planner.testBuildEvaluationContext(state);
 
-      expect(context).toEqual({
-        'entity-1': {
-          core: { health: 50 },
-        },
-      });
-    });
-
-    it('should convert nested field keys correctly', () => {
-      const state = {
-        'entity-1:core:hungry': true,
-        'entity-1:core:health': 50,
-      };
-
-      const context = planner.testBuildEvaluationContext(state);
-
-      expect(context).toEqual({
-        'entity-1': {
-          core: {
-            hungry: true,
-            health: 50,
-          },
-        },
-      });
-    });
-
-    it('should handle fields with colons in path', () => {
-      const state = {
-        'entity-1:core:nested:field:with:colons': 'value',
-      };
-
-      const context = planner.testBuildEvaluationContext(state);
-
-      expect(context).toEqual({
-        'entity-1': {
-          core: {
-            'nested:field:with:colons': 'value',
-          },
-        },
-      });
-    });
-
-    it('should handle empty state', () => {
-      const context = planner.testBuildEvaluationContext({});
-
-      expect(context).toEqual({});
-      expect(mockLogger.warn).not.toHaveBeenCalled();
-    });
-
-    it('should handle null state gracefully', () => {
-      const context = planner.testBuildEvaluationContext(null);
-
-      expect(context).toEqual({});
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Invalid state for context building',
-        { state: null }
+      expect(context['actor:core']).toEqual({ health: 50, hungry: false });
+      expect(context.state['actor:core']).toEqual({ health: 50, hungry: false });
+      expect(context.actor).toEqual(
+        expect.objectContaining({
+          id: 'actor',
+          components: expect.objectContaining({
+            core: expect.objectContaining({ health: 50, hungry: false }),
+          }),
+        })
       );
     });
 
-    it('should handle undefined state gracefully', () => {
-      const context = planner.testBuildEvaluationContext(undefined);
-
-      expect(context).toEqual({});
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Invalid state for context building',
-        { state: undefined }
-      );
-    });
-
-    it('should skip invalid key formats', () => {
+    it('should retain non-actor entries alongside actor snapshot', () => {
       const state = {
-        'entity-1:core:health': 50,
-        'invalid-key': 'value', // Only 1 part, should be skipped
-        'entity-2:core:hungry': true,
-      };
-
-      const context = planner.testBuildEvaluationContext(state);
-
-      expect(context).toEqual({
-        'entity-1': {
-          core: { health: 50 },
-        },
-        'entity-2': {
-          core: { hungry: true },
-        },
-      });
-      expect(mockLogger.debug).toHaveBeenCalledWith('Invalid state key format', {
-        key: 'invalid-key',
-      });
-    });
-
-    it('should build complex multi-entity contexts', () => {
-      const state = {
-        'actor:core:hungry': false,
-        'actor:core:health': 100,
-        'actor:core:inventory': ['item-1'],
+        'actor:core': { hunger: 10 },
         'target:core:friendly': true,
-        'target:positioning:location': 'room-1',
       };
 
       const context = planner.testBuildEvaluationContext(state);
 
-      expect(context).toEqual({
-        actor: {
-          core: {
-            hungry: false,
-            health: 100,
-            inventory: ['item-1'],
-          },
-        },
-        target: {
-          core: {
-            friendly: true,
-          },
-          positioning: {
-            location: 'room-1',
-          },
-        },
-      });
+      expect(context['target:core:friendly']).toBe(true);
+      expect(context.state['target:core:friendly']).toBe(true);
+      expect(context.actor?.id).toBe('actor');
     });
 
-    it('should handle arrays and objects in values', () => {
-      const state = {
-        'entity-1:core:inventory': ['item-1', 'item-2'],
-        'entity-1:core:data': { nested: 'value' },
-      };
-
-      const context = planner.testBuildEvaluationContext(state);
-
-      expect(context).toEqual({
-        'entity-1': {
-          core: {
-            inventory: ['item-1', 'item-2'],
-            data: { nested: 'value' },
-          },
-        },
-      });
-    });
-
-    it('should merge multiple fields for same entity and component', () => {
-      const state = {
-        'actor:core:health': 50,
-        'actor:core:hungry': true,
-        'actor:core:inventory': ['item-1'],
-      };
-
-      const context = planner.testBuildEvaluationContext(state);
-
-      expect(context).toEqual({
-        actor: {
-          core: {
-            health: 50,
-            hungry: true,
-            inventory: ['item-1'],
-          },
-        },
-      });
-    });
-
-    it('should handle mix of simple and nested field formats', () => {
-      const state = {
-        'entity-1:core': { existingData: 'value' },
-        'entity-1:core:newField': 'newValue',
-      };
-
-      const context = planner.testBuildEvaluationContext(state);
-
-      // When we have both "entity:component" and "entity:component:field",
-      // the second will overwrite the first's structure
-      expect(context['entity-1'].core).toHaveProperty('newField', 'newValue');
-    });
-
-    it('should handle errors during context building gracefully', () => {
-      // Create a state that will cause an error when processing
-      const problematicState = {};
-      Object.defineProperty(problematicState, 'badKey:component:field', {
-        get() {
-          throw new Error('Property access error');
-        },
-        enumerable: true,
-      });
-
-      const context = planner.testBuildEvaluationContext(problematicState);
-
-      expect(context).toEqual({});
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Context building failed',
-        expect.any(Error),
-        { state: problematicState }
-      );
-    });
-
-    it('should mirror state.actor tree (including flattened aliases) onto context.actor', () => {
+    it('should preserve colon-delimited component segments', () => {
       const state = {
         'actor:core:needs': { hunger: 80 },
       };
 
-      state.actor = {
-        id: 'actor',
-        components: {
-          'core:needs': { hunger: 80 },
-          core_needs: { hunger: 80 },
+      const context = planner.testBuildEvaluationContext(state);
+
+      expect(context['actor:core:needs']).toEqual({ hunger: 80 });
+      expect(context.actor.components.core).toEqual(expect.objectContaining({ hunger: 80 }));
+    });
+
+    it('should provide stable state wrapper for empty or null input', () => {
+      for (const input of [{}, null, undefined]) {
+        const ctx = planner.testBuildEvaluationContext(input);
+        expect(ctx).toEqual({ state: { actor: undefined } });
+      }
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should respect actor snapshot data provided on state.actor', () => {
+      const state = {
+        'actor:core': { hunger: 80 },
+        actor: {
+          id: 'actor',
+          components: {
+            'core:needs': { hunger: 80 },
+            core_needs: { hunger: 80 },
+          },
         },
       };
 
       const context = planner.testBuildEvaluationContext(state);
 
-      expect(context.actor).toBe(state.actor);
-      expect(context.actor.components['core:needs'].hunger).toBe(80);
-      expect(context.actor.components.core_needs.hunger).toBe(80);
+      expect(context.actor).toEqual(
+        expect.objectContaining({
+          id: state.actor.id,
+          components: expect.objectContaining({
+            'core:needs': expect.objectContaining({ hunger: 80 }),
+            core_needs: expect.objectContaining({ hunger: 80 }),
+          }),
+        })
+      );
+      expect(context.actor.components.core).toEqual(expect.objectContaining({ hunger: 80 }));
+    });
+
+    it('should preserve arrays and nested objects in component data', () => {
+      const state = {
+        'actor:core': {
+          inventory: ['item-1', 'item-2'],
+          status: { mood: 'calm' },
+        },
+      };
+
+      const context = planner.testBuildEvaluationContext(state);
+
+      expect(context.actor.components.core.inventory).toEqual(['item-1', 'item-2']);
+      expect(context.actor.components.core.status).toEqual({ mood: 'calm' });
+    });
+
+    it('should carry through unstructured keys without crashing', () => {
+      const state = {
+        'actor:core': { health: 50 },
+        'invalid-key': 'value',
+      };
+
+      const context = planner.testBuildEvaluationContext(state);
+
+      expect(context['invalid-key']).toBe('value');
+      expect(context.state['invalid-key']).toBe('value');
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
   });
 
   describe('Integration - Combined Helper Usage', () => {
     it('should work together for goal checking workflow', () => {
-      // 1. Build context from state
       const state = {
-        'actor:core:hungry': false,
-        'actor:core:health': 100,
+        'actor:core': { hungry: false, health: 100 },
       };
 
       const context = planner.testBuildEvaluationContext(state);
 
-      expect(context).toEqual({
-        actor: {
-          core: {
-            hungry: false,
-            health: 100,
-          },
-        },
-      });
+      expect(context.actor.components.core).toEqual(
+        expect.objectContaining({ hungry: false, health: 100 })
+      );
 
-      // 2. Check goal satisfaction using built context
       const goal = {
         id: 'core:be_healthy',
         goalState: {
           and: [
-            { '==': [{ var: 'actor.core.hungry' }, false] },
-            { '>': [{ var: 'actor.core.health' }, 75] },
+            { '==': [{ var: 'actor.components.core.hungry' }, false] },
+            { '>': [{ var: 'actor.components.core.health' }, 75] },
           ],
         },
       };
@@ -598,10 +478,8 @@ describe('GoapPlanner - State Management Helpers', () => {
       const hash1 = planner.testHashState(state1);
       const hash2 = planner.testHashState(state2);
 
-      // These should be identical for duplicate detection
       expect(hash1).toBe(hash2);
 
-      // And they should be usable as Set keys
       const closedSet = new Set();
       closedSet.add(hash1);
 

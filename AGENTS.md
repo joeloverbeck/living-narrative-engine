@@ -6,6 +6,8 @@ Source for the browser runtime lives in `src/` (engine, AI, UI entry points, and
 ## Build, Test, and Development Commands
 Run `npm run dev` to boot the engine alongside the proxy in watch mode; use `npm run start:all` for production-like manual testing. `npm run build` emits optimized bundles, and `npm run build:clean` resets stale artifacts. Content teams should validate data with `npm run validate:ecosystem` (fast variant `validate:quick`, hard gate `validate:strict`). Generate new modules via `npm run create-mod` and refresh manifests with `npm run update-manifest:validate`.
 
+There are known issues with force exits when running tests, which we haven't been able to solve. Run individual test suites with --runInBand to prevent this.
+
 ## Coding Style & Naming Conventions
 Code is modern ES modules with TypeScript-friendly typings; favor descriptive folder names over mega-files. Prettier (`npm run format`) enforces two-space indentation, single quotes, and trailing commas. ESLint (flat config) is mandatory—`npm run lint` must pass with no `no-console` violations in browser code and the custom `mod-architecture/no-hardcoded-mod-references` rule satisfied. Use `camelCase` for functions, `PascalCase` for classes/components, and SCREAMING_SNAKE for shared constants.
 
