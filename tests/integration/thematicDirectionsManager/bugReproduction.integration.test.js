@@ -19,6 +19,7 @@ describe('ThematicDirectionsManager - Bug Reproduction Integration Test', () => 
   let controller;
   let mockConsoleWarn;
   let capturedWarnings;
+  let createController;
 
   beforeEach(async () => {
     testBase = new BaseCharacterBuilderControllerTestBase();
@@ -193,6 +194,24 @@ describe('ThematicDirectionsManager - Bug Reproduction Integration Test', () => 
     testBase.mocks.characterBuilderService.initialize = jest
       .fn()
       .mockResolvedValue(true);
+
+    createController = (overrides = {}) =>
+      new ThematicDirectionsManagerController({
+        logger: testBase.mocks.logger,
+        characterBuilderService: testBase.mocks.characterBuilderService,
+        eventBus: testBase.mocks.eventBus,
+        schemaValidator: testBase.mocks.schemaValidator,
+        controllerLifecycleOrchestrator:
+          testBase.mocks.controllerLifecycleOrchestrator,
+        domElementManager: testBase.mocks.domElementManager,
+        eventListenerRegistry: testBase.mocks.eventListenerRegistry,
+        asyncUtilitiesToolkit: testBase.mocks.asyncUtilitiesToolkit,
+        performanceMonitor: testBase.mocks.performanceMonitor,
+        memoryManager: testBase.mocks.memoryManager,
+        errorHandlingStrategy: testBase.mocks.errorHandlingStrategy,
+        validationService: testBase.mocks.validationService,
+        ...overrides,
+      });
   });
 
   afterEach(async () => {
@@ -207,13 +226,7 @@ describe('ThematicDirectionsManager - Bug Reproduction Integration Test', () => 
     it('should verify that UIStateManager warning is no longer generated', async () => {
       // This test now verifies that the bug has been FIXED
       // Create controller normally - UIStateManager should be created automatically by BaseCharacterBuilderController
-      controller = new ThematicDirectionsManagerController({
-        logger: testBase.mocks.logger,
-        characterBuilderService: testBase.mocks.characterBuilderService,
-        eventBus: testBase.mocks.eventBus,
-        schemaValidator: testBase.mocks.schemaValidator,
-        // Note: No uiStateManager parameter - BaseCharacterBuilderController creates it automatically
-      });
+      controller = createController();
 
       // Initialize the controller
       await controller.initialize();
@@ -297,13 +310,7 @@ describe('ThematicDirectionsManager - Bug Reproduction Integration Test', () => 
         uiStateManager = null;
       }
 
-      controller = new ThematicDirectionsManagerController({
-        logger: testBase.mocks.logger,
-        characterBuilderService: testBase.mocks.characterBuilderService,
-        eventBus: testBase.mocks.eventBus,
-        schemaValidator: testBase.mocks.schemaValidator,
-        uiStateManager: uiStateManager,
-      });
+      controller = createController({ uiStateManager });
 
       // Initialize the controller
       await controller.initialize();
@@ -455,13 +462,7 @@ describe('ThematicDirectionsManager - Bug Reproduction Integration Test', () => 
       };
 
       // Create and initialize controller
-      controller = new ThematicDirectionsManagerController({
-        logger: testBase.mocks.logger,
-        characterBuilderService: testBase.mocks.characterBuilderService,
-        eventBus: testBase.mocks.eventBus,
-        schemaValidator: testBase.mocks.schemaValidator,
-        uiStateManager: null,
-      });
+      controller = createController({ uiStateManager: null });
 
       await controller.initialize();
 

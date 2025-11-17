@@ -876,6 +876,44 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     expect(planCreated).toBe(true);
   });
 
+  it('should fall back to runtime components when planning state is stale', async () => {
+    const actor = {
+      id: 'test_actor',
+      components: {
+        'core:armed': { equipped: true },
+      },
+    };
+    setup.entityManager.addEntity(addFlattenedAliases(actor));
+
+    const goal = createTestGoal({
+      id: 'test:be_armed-runtime',
+      goalState: { has_component: ['actor', 'core:armed'] },
+      relevance: { '==': [true, true] },
+      priority: 10,
+    });
+
+    setup.dataRegistry.register('goals', goal.id, goal);
+
+    const staleActorState = {
+      id: actor.id,
+      components: {},
+    };
+
+    const world = {
+      state: buildDualFormatState(staleActorState),
+      entities: {},
+    };
+
+    await setup.controller.decideTurn(actor, world);
+
+    const planningCompleted = setup.eventBus
+      .getAll()
+      .find((event) => event.type === GOAP_EVENTS.PLANNING_COMPLETED);
+
+    expect(planningCompleted).toBeDefined();
+    expect(planningCompleted.payload.planLength).toBe(0);
+  });
+
   it('should handle mixed component + numeric goals', async () => {
     const actor = {
       id: 'test_actor',
@@ -909,6 +947,42 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     const events = setup.eventBus.getAll();
     const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
     expect(planCreated).toBe(true);
+  });
+
+  it('should bypass numeric heuristics when composite goal only needs structural progress', async () => {
+    const actor = {
+      id: 'test_actor',
+      components: {
+        'core:needs': { hunger: 20 }, // Already satisfies numeric threshold
+      },
+    };
+    setup.entityManager.addEntity(addFlattenedAliases(actor));
+
+    const goal = createTestGoal({
+      id: 'test:structural_progress_only',
+      goalState: {
+        and: [
+          { has_component: ['actor', 'core:armed'] },
+          { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+        ],
+      },
+      relevance: { '==': [true, true] },
+      priority: 10,
+    });
+
+    setup.dataRegistry.register('goals', goal.id, goal);
+
+    const world = {
+      state: buildDualFormatState(actor),
+      entities: {},
+    };
+
+    await setup.controller.decideTurn(actor, world);
+
+    const events = setup.eventBus.getAll();
+    const planCompleted = events.find(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    expect(planCompleted).toBeDefined();
+    expect(planCompleted.payload.planLength).toBeGreaterThan(0);
   });
 
   it('should handle complex nested logic with numeric constraints', async () => {

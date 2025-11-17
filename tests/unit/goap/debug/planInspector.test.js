@@ -130,6 +130,7 @@ describe('PlanInspector', () => {
         goal: {
           id: 'stay_fed',
           priority: 10,
+          goalState: { '<=': [{ var: 'actor.components.core_needs.hunger' }, 30] },
         },
         tasks: [
           {
@@ -186,6 +187,9 @@ describe('PlanInspector', () => {
       expect(result).toContain('Goal: Maintain nourishment');
       expect(result).toContain('Description: Keep actor fed and healthy');
       expect(result).toContain('Goal Priority: 10');
+      expect(result).toContain('Goal Priority: 10');
+      expect(result).toContain('Numeric Heuristic: ACTIVE (pure numeric root comparator)');
+      expect(result).toContain('Heuristic Reason: Root operator is <=, <, >=, or >');
       expect(result).toContain('Plan Length: 2 task(s)');
       expect(result).toContain('[consume_nourishing_item] (COMPLETED)');
       expect(result).toContain('[gather_resources] (CURRENT)');
@@ -268,15 +272,15 @@ describe('PlanInspector', () => {
         {
           goalId: 'test_goal',
           failures: [
-            { reason: 'No path to goal', timestamp: 1700000002000 },
-            { reason: 'Preconditions failed', timestamp: 1700000003000 },
+            { reason: 'No path to goal', code: 'NO_VALID_PLAN', timestamp: 1700000002000 },
+            { reason: 'Preconditions failed', code: 'NO_APPLICABLE_TASKS', timestamp: 1700000003000 },
           ],
         },
       ]);
       mockGoapController.getFailedTasks.mockReturnValue([
         {
           taskId: 'task1',
-          failures: [{ reason: 'Item not found', timestamp: 1700000004000 }],
+          failures: [{ reason: 'Item not found', code: 'TASK_FAILURE', timestamp: 1700000004000 }],
         },
       ]);
       mockDataRegistry.getGoalDefinition.mockReturnValue({ name: 'Test Goal' });
@@ -287,10 +291,10 @@ describe('PlanInspector', () => {
       expect(result).toContain('Failed Goals: 2');
       expect(result).toContain('Failed Tasks: 1');
       expect(result).toContain('test_goal: 2 failure(s)');
-      expect(result).toContain('- No path to goal');
-      expect(result).toContain('- Preconditions failed');
+      expect(result).toContain('- [NO_VALID_PLAN] No path to goal');
+      expect(result).toContain('- [NO_APPLICABLE_TASKS] Preconditions failed');
       expect(result).toContain('task1: 1 failure(s)');
-      expect(result).toContain('- Item not found');
+      expect(result).toContain('- [TASK_FAILURE] Item not found');
     });
 
     it('should handle no failures gracefully', () => {
@@ -382,6 +386,7 @@ describe('PlanInspector', () => {
         goal: {
           id: 'stay_fed',
           priority: 10,
+          goalState: { '<=': [{ var: 'actor.components.core_needs.hunger' }, 30] },
         },
         tasks: [
           {
@@ -442,6 +447,11 @@ describe('PlanInspector', () => {
           name: 'Maintain nourishment',
           description: 'Keep actor fed',
           priority: 10,
+          numericHeuristic: {
+            status: 'ACTIVE (pure numeric root comparator)',
+            reason: 'Root operator is <=, <, >=, or >',
+            active: true,
+          },
         },
         tasks: [
           {

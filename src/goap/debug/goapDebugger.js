@@ -255,14 +255,16 @@ class GOAPDebugger {
     for (const failedGoal of failures.failedGoals) {
       report += `  Goal: ${failedGoal.goalId}\n`;
       for (const failure of failedGoal.failures) {
-        report += `    - ${failure.reason} (${new Date(failure.timestamp).toISOString()})\n`;
+        const label = failure.code ? `[${failure.code}] ` : '';
+        report += `    - ${label}${failure.reason} (${new Date(failure.timestamp).toISOString()})\n`;
       }
     }
     report += `Failed Tasks: ${failures.failedTasks.length}\n`;
     for (const failedTask of failures.failedTasks) {
       report += `  Task: ${failedTask.taskId}\n`;
       for (const failure of failedTask.failures) {
-        report += `    - ${failure.reason} (${new Date(failure.timestamp).toISOString()})\n`;
+        const label = failure.code ? `[${failure.code}] ` : '';
+        report += `    - ${label}${failure.reason} (${new Date(failure.timestamp).toISOString()})\n`;
       }
     }
     report += `\n`;

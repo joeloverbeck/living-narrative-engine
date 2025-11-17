@@ -48,6 +48,7 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
 
     mockGoapPlanner = {
       plan: jest.fn(),
+      getLastFailure: jest.fn().mockReturnValue(null),
     };
 
     mockRefinementEngine = {

@@ -161,15 +161,15 @@ describe('GOAPDebugger', () => {
         {
           goalId: 'goal-1',
           failures: [
-            { reason: 'precondition failed', timestamp: 1000 },
-            { reason: 'no valid tasks', timestamp: 2000 },
+            { reason: 'precondition failed', code: 'NO_APPLICABLE_TASKS', timestamp: 1000 },
+            { reason: 'no valid tasks', code: 'NO_VALID_PLAN', timestamp: 2000 },
           ],
         },
       ];
       const failedTasks = [
         {
           taskId: 'task-1',
-          failures: [{ reason: 'refinement failed', timestamp: 3000 }],
+          failures: [{ reason: 'refinement failed', code: 'TASK_FAILURE', timestamp: 3000 }],
         },
       ];
 
@@ -335,15 +335,15 @@ describe('GOAPDebugger', () => {
         {
           goalId: 'goal-1',
           failures: [
-            { reason: 'precondition failed', timestamp: 1000 },
-            { reason: 'no valid tasks', timestamp: 2000 },
+            { reason: 'precondition failed', code: 'NO_APPLICABLE_TASKS', timestamp: 1000 },
+            { reason: 'no valid tasks', code: 'NO_VALID_PLAN', timestamp: 2000 },
           ],
         },
       ]);
       mockController.getFailedTasks.mockReturnValue([
         {
           taskId: 'task-1',
-          failures: [{ reason: 'refinement failed', timestamp: 3000 }],
+          failures: [{ reason: 'refinement failed', code: 'TASK_FAILURE', timestamp: 3000 }],
         },
       ]);
       mockTracer.getTrace.mockReturnValue(null);
@@ -352,11 +352,11 @@ describe('GOAPDebugger', () => {
 
       expect(report).toContain('Failed Goals: 1');
       expect(report).toContain('Goal: goal-1');
-      expect(report).toContain('precondition failed');
-      expect(report).toContain('no valid tasks');
+      expect(report).toContain('[NO_APPLICABLE_TASKS] precondition failed');
+      expect(report).toContain('[NO_VALID_PLAN] no valid tasks');
       expect(report).toContain('Failed Tasks: 1');
       expect(report).toContain('Task: task-1');
-      expect(report).toContain('refinement failed');
+      expect(report).toContain('[TASK_FAILURE] refinement failed');
     });
 
     it('should include active trace when present', () => {

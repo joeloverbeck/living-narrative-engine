@@ -27,6 +27,8 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import MinHeap from './minHeap.js';
 import PlanningNode from './planningNode.js';
 import { detectGoalType, allowsOvershoot } from './goalTypeDetector.js';
+import { goalHasPureNumericRoot } from './goalConstraintUtils.js';
+import { GOAP_PLANNER_FAILURES } from './goapPlannerFailureReasons.js';
 
 /**
  * GOAP Planner - A* search for task-level planning
@@ -88,6 +90,9 @@ class GoapPlanner {
   /** @type {import('./heuristicRegistry.js').default} */
   #heuristicRegistry;
 
+  /** @type {{code: string, reason: string, details?: object}|null} */
+  #lastFailure;
+
   /**
    * Create new GOAP planner instance
    *
@@ -146,6 +151,7 @@ class GoapPlanner {
     this.#heuristicRegistry = heuristicRegistry;
 
     this.#logger.info('GoapPlanner initialized');
+    this.#lastFailure = null;
   }
 
   /**
@@ -545,6 +551,7 @@ class GoapPlanner {
    * @param {object} state - Current planning state
    * @param {string} actorId - Actor entity ID
    * @param {object|null} goal - Optional goal for distance reduction checking
+   * @param {object|null} [diagnostics] - Optional object collecting rejection stats
    * @returns {Array<object>} Tasks with bound parameters added to each task object
    * @private
    * @example
@@ -555,7 +562,7 @@ class GoapPlanner {
    * //   { id: 'core:rest', ... } // No params needed
    * // ]
    */
-  #getApplicableTasks(tasks, state, actorId, goal = null) {
+  #getApplicableTasks(tasks, state, actorId, goal = null, diagnostics = null) {
     if (!tasks || tasks.length === 0) {
       this.#logger.debug('No tasks provided to filter for applicability');
       return [];
@@ -620,8 +627,16 @@ class GoapPlanner {
 
       // Check if task reduces distance to goal (only for numeric goals)
       if (goal && this.#hasNumericConstraints(goal)) {
+        if (diagnostics) {
+          diagnostics.numericGuardCandidates =
+            (diagnostics.numericGuardCandidates || 0) + 1;
+        }
         const reduces = this.#taskReducesDistance(task, state, goal, actorId);
         if (!reduces) {
+          if (diagnostics) {
+            diagnostics.numericGuardRejects =
+              (diagnostics.numericGuardRejects || 0) + 1;
+          }
           this.#logger.debug(`Task ${task.id} excluded - does not reduce distance to goal`);
           continue;
         }
@@ -661,18 +676,9 @@ class GoapPlanner {
    * this.#hasNumericConstraints(goal2); // Returns: false
    */
   #hasNumericConstraints(goal) {
-    if (!goal || !goal.goalState) {
-      return false;
-    }
-
-    const numericOperators = new Set(['<=', '>=', '<', '>', '+', '-', '*', '/', '%']);
-
-    const topLevelKeys = Object.keys(goal.goalState);
-    if (topLevelKeys.length !== 1) {
-      return false; // Composite goals treated as boolean for distance heuristics
-    }
-
-    return numericOperators.has(topLevelKeys[0]);
+    // Guardrail documented in specs/goap-system-specs.md: only pure numeric comparators
+    // activate distance heuristics. Mixed structural goals stay boolean-only.
+    return goalHasPureNumericRoot(goal);
   }
 
   /**
@@ -782,6 +788,43 @@ class GoapPlanner {
   }
 
   /**
+   * Expose the last planning failure recorded by plan()
+   *
+   * @returns {{code: string, reason: string, details?: object}|null}
+   */
+  getLastFailure() {
+    if (!this.#lastFailure) {
+      return null;
+    }
+
+    const details = this.#lastFailure.details
+      ? { ...this.#lastFailure.details }
+      : undefined;
+
+    return {
+      code: this.#lastFailure.code,
+      reason: this.#lastFailure.reason,
+      ...(details ? { details } : {}),
+    };
+  }
+
+  /**
+   * Record failure metadata for the most recent planning attempt
+   *
+   * @param {string} code - Failure code from GOAP_PLANNER_FAILURES
+   * @param {string} reason - Human-readable reason
+   * @param {object} [details] - Optional diagnostic payload
+   * @private
+   */
+  #recordFailure(code, reason, details = {}) {
+    this.#lastFailure = {
+      code,
+      reason,
+      details,
+    };
+  }
+
+  /**
    * Find optimal task sequence to achieve goal using A* search
    *
    * Implements classic A* algorithm with:
@@ -818,6 +861,12 @@ class GoapPlanner {
     const maxNodes = options.maxNodes || 1000;
     const maxTime = options.maxTime || 5000;
     const maxDepth = options.maxDepth || 20;
+    this.#lastFailure = null;
+    const failureStats = {
+      depthLimitHit: false,
+      numericGuardBlocked: false,
+      nodesWithoutApplicableTasks: 0,
+    };
 
     // Normalize maxCost upfront to keep structural depth checks fully independent from cost
     const rawCostLimit = goal?.maxCost;
@@ -839,6 +888,11 @@ class GoapPlanner {
     const taskLibrary = this.#getTaskLibrary(actorId);
     if (taskLibrary.length === 0) {
       this.#logger.warn('No tasks available for actor', { actorId });
+      this.#recordFailure(
+        GOAP_PLANNER_FAILURES.TASK_LIBRARY_EXHAUSTED,
+        'No planning tasks available for actor',
+        { actorId, goalId: goal?.id }
+      );
       return null;
     }
 
@@ -861,6 +915,11 @@ class GoapPlanner {
         });
 
         // Return null - caller (GoapController) will dispatch PLANNING_FAILED event
+        this.#recordFailure(
+          GOAP_PLANNER_FAILURES.ESTIMATED_COST_EXCEEDS_LIMIT,
+          'Estimated planning cost exceeds goal maxCost',
+          { actorId, goalId: goal.id, estimatedCost, maxCost: maxCostLimit }
+        );
         return null;
       }
     }
@@ -909,6 +968,11 @@ class GoapPlanner {
           maxTime,
           nodesExpanded,
         });
+        this.#recordFailure(
+          GOAP_PLANNER_FAILURES.TIME_LIMIT_EXCEEDED,
+          'Planner exceeded time limit',
+          { actorId, goalId: goal.id, elapsed, maxTime, nodesExpanded }
+        );
         return null;
       }
 
@@ -918,6 +982,11 @@ class GoapPlanner {
           nodesExpanded,
           maxNodes,
         });
+        this.#recordFailure(
+          GOAP_PLANNER_FAILURES.NODE_LIMIT_REACHED,
+          'Planner explored maximum nodes without success',
+          { actorId, goalId: goal.id, nodesExpanded, maxNodes }
+        );
         return null;
       }
 
@@ -996,16 +1065,33 @@ class GoapPlanner {
           planLength: currentPathLength,
           maxDepth,
         });
+        failureStats.depthLimitHit = true;
         continue; // Skip expanding this node
       }
 
       // 7.7 Generate successors
+      const applicabilityDiagnostics = {
+        numericGuardCandidates: 0,
+        numericGuardRejects: 0,
+      };
       const applicableTasks = this.#getApplicableTasks(
         taskLibrary,
         current.state,
         actorId,
-        goal // NEW: Pass goal for distance checking
+        goal, // NEW: Pass goal for distance checking
+        applicabilityDiagnostics
       );
+
+      if (applicableTasks.length === 0) {
+        failureStats.nodesWithoutApplicableTasks += 1;
+        if (
+          applicabilityDiagnostics.numericGuardCandidates > 0 &&
+          applicabilityDiagnostics.numericGuardRejects ===
+            applicabilityDiagnostics.numericGuardCandidates
+        ) {
+          failureStats.numericGuardBlocked = true;
+        }
+      }
 
 
       for (const task of applicableTasks) {
@@ -1131,14 +1217,36 @@ class GoapPlanner {
     }
 
     // 8. Open list exhausted - no solution
-    this.#logger.warn('Goal unsolvable - open list exhausted', {
+    let failureCode = GOAP_PLANNER_FAILURES.NO_VALID_PLAN;
+    let failureReason = 'No valid plan found within constraints';
+
+    if (failureStats.numericGuardBlocked) {
+      failureCode = GOAP_PLANNER_FAILURES.DISTANCE_GUARD_BLOCKED;
+      failureReason = 'Distance guard rejected all numeric goal tasks';
+    } else if (failureStats.depthLimitHit) {
+      failureCode = GOAP_PLANNER_FAILURES.DEPTH_LIMIT_REACHED;
+      failureReason = 'Depth limit reached before satisfying goal';
+    } else if (failureStats.nodesWithoutApplicableTasks > 0) {
+      failureCode = GOAP_PLANNER_FAILURES.NO_APPLICABLE_TASKS;
+      failureReason = 'No applicable tasks available after filtering';
+    }
+
+    const failureDetails = {
+      actorId,
+      goalId: goal.id,
       nodesExpanded,
       closedSetSize: closedSet.size,
-      goalId: goal.id,
-      actorId,
       maxCost: goal.maxCost,
       maxActions: goal.maxActions,
-      message: 'No valid plan found within constraints',
+      failureStats,
+    };
+
+    this.#recordFailure(failureCode, failureReason, failureDetails);
+
+    this.#logger.warn('Goal unsolvable - open list exhausted', {
+      ...failureDetails,
+      failureCode,
+      message: failureReason,
     });
 
     // Note: No event bus dispatch - GoapController handles PLANNING_FAILED event

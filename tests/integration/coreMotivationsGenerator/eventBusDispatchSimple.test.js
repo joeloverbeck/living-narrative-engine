@@ -12,6 +12,20 @@ import {
   jest,
 } from '@jest/globals';
 import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
+import {
+  ControllerLifecycleOrchestrator,
+} from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
+import { PerformanceMonitor } from '../../../src/characterBuilder/services/performanceMonitor.js';
+import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
+import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
+import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
+import {
+  ERROR_CATEGORIES,
+  ERROR_SEVERITY,
+} from '../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 
 describe('CoreMotivationsGeneratorController - EventBus Dispatch Issue (Simplified)', () => {
   let controller;
@@ -70,7 +84,13 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Issue (Simplifi
       generateThematicDirections: jest.fn().mockResolvedValue([]),
       getThematicDirections: jest.fn().mockResolvedValue([]),
       getThematicDirectionsByConceptId: jest.fn().mockResolvedValue([]),
-      hasClichesForDirection: jest.fn().mockResolvedValue(false),
+      getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([
+        {
+          direction: { id: 'direction-1', title: 'Heroic Journey' },
+          concept: { id: 'concept-1', concept: 'A brave warrior' },
+        },
+      ]),
+      hasClichesForDirection: jest.fn().mockResolvedValue(true),
     };
 
     const mockCoreMotivationsGenerator = {
@@ -93,29 +113,27 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Issue (Simplifi
 
     // Create DOM structure
     document.body.innerHTML = `
-      <div id="loading-overlay"></div>
-      <div id="direction-selector"></div>
-      <div id="generate-button"></div>
-      <div id="motivations-display"></div>
-      <div id="export-button"></div>
-      <div id="clear-all-button"></div>
-      <div id="motivations-count"></div>
-      <div id="no-concept-message"></div>
+      <div id="empty-state" class="cb-empty-state"><p>Empty</p></div>
+      <div id="loading-indicator" class="cb-loading-state"><p>Loading...</p></div>
+      <div id="error-state" class="cb-error-state"><p class="error-message"></p></div>
+      <div id="results-state" class="cb-results-state"></div>
+      <select id="direction-selector"></select>
+      <button id="generate-btn"></button>
+      <button id="clear-all-btn"></button>
+      <button id="export-btn"></button>
+      <input id="motivation-search" />
+      <select id="motivation-sort"><option value="newest">Newest</option></select>
+      <div id="motivations-container"></div>
+      <div id="direction-count"></div>
+      <div id="search-count"></div>
+      <div id="search-results-count"></div>
       <div id="no-directions-message"></div>
-      <div id="no-cliches-message"></div>
-      <div id="select-direction-message"></div>
-      <div id="confirmation-modal"></div>
-      <div id="confirm-clear"></div>
-      <div id="cancel-clear"></div>
-      <div id="error-message"></div>
-      <div id="success-message"></div>
-      <div id="warning-message"></div>
-      <div id="search-bar"></div>
-      <div id="sort-dropdown"></div>
-      <div id="load-more-trigger"></div>
-      <button id="generate-button-kbd"></button>
-      <button id="export-button-kbd"></button>
-      <button id="clear-all-button-kbd"></button>
+      <div id="confirmation-modal" style="display: none;">
+        <button id="confirm-clear" type="button">Confirm</button>
+        <button id="cancel-clear" type="button">Cancel</button>
+      </div>
+      <button id="back-btn"></button>
+      <div id="sr-announcements"></div>
     `;
 
     // Mock localStorage
@@ -130,6 +148,53 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Issue (Simplifi
     });
 
     // Create controller
+    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+    });
+
+    const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+      logger: mockLogger,
+    });
+
+    const domElementManager = new DOMElementManager({
+      logger: mockLogger,
+      documentRef: document,
+      performanceRef: performance,
+      elementsRef: {},
+      contextName: 'CoreMotivationsGeneratorController',
+    });
+
+    const eventListenerRegistry = new EventListenerRegistry({
+      logger: mockLogger,
+      asyncUtilities: {
+        debounce: (...args) => asyncUtilitiesToolkit.debounce(...args),
+        throttle: (...args) => asyncUtilitiesToolkit.throttle(...args),
+      },
+    });
+
+    const performanceMonitor = new PerformanceMonitor({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+    });
+
+    const memoryManager = new MemoryManager({ logger: mockLogger });
+
+    const errorHandlingStrategy = new ErrorHandlingStrategy({
+      logger: mockLogger,
+      eventBus: mockEventBus,
+      controllerName: 'CoreMotivationsGeneratorController',
+      errorCategories: ERROR_CATEGORIES,
+      errorSeverity: ERROR_SEVERITY,
+    });
+
+    const validationService = new ValidationService({
+      schemaValidator: mockSchemaValidator,
+      logger: mockLogger,
+      handleError: jest.fn(),
+      errorCategories: ERROR_CATEGORIES,
+    });
+
     controller = new CoreMotivationsGeneratorController({
       logger: mockLogger,
       characterBuilderService: mockCharacterBuilderService,
@@ -137,6 +202,14 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Issue (Simplifi
       schemaValidator: mockSchemaValidator,
       coreMotivationsGenerator: mockCoreMotivationsGenerator,
       displayEnhancer: mockDisplayEnhancer,
+      controllerLifecycleOrchestrator,
+      domElementManager,
+      eventListenerRegistry,
+      asyncUtilitiesToolkit,
+      performanceMonitor,
+      memoryManager,
+      errorHandlingStrategy,
+      validationService,
     });
   });
 
@@ -157,13 +230,14 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Issue (Simplifi
       expect(mockEventBus.dispatch).toHaveBeenCalled();
 
       // The controller now calls dispatch correctly with two arguments
-      const firstCall = dispatchedCalls[0];
-      expect(firstCall).toBeDefined();
-      expect(firstCall.length).toBe(2); // Two arguments passed (correct)
+      const initCall = dispatchedCalls.find(
+        ([eventName]) => eventName === 'core:core_motivations_ui_initialized'
+      );
+      expect(initCall).toBeDefined();
+      expect(initCall.length).toBe(2); // Two arguments passed (correct)
 
-      const [eventName, payload] = firstCall;
+      const [eventName, payload] = initCall;
       expect(typeof eventName).toBe('string');
-      expect(eventName).toBe('core:core_motivations_ui_initialized');
       expect(typeof payload).toBe('object');
       expect(payload).toHaveProperty('conceptId');
       expect(payload).toHaveProperty('eligibleDirectionsCount');

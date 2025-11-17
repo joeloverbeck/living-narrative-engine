@@ -39,7 +39,12 @@ describe('ValidationReport formatting - Integration', () => {
     const mockSlotGenerator = {
       extractSlotKeysFromLimbSet: () => [],
       extractSlotKeysFromAppendage: () => [],
-      generateBlueprintSlots: () => ({ additionalSlots: {} }),
+      generateBlueprintSlots: () => ({
+        head: {
+          socket: 'head',
+          requirements: { partType: 'head' },
+        },
+      }),
     };
 
     const mockEntityMatcherService = new EntityMatcherService({
@@ -84,10 +89,25 @@ describe('ValidationReport formatting - Integration', () => {
       },
     });
 
+    dataRegistry.store('components', 'missing:component', {
+      id: 'missing:component',
+      dataSchema: {
+        type: 'object',
+        properties: {},
+      },
+    });
+
     dataRegistry.store('anatomyBlueprints', 'test:blueprint', {
       id: 'test:blueprint',
       root: 'test:root',
       structureTemplate: 'test:template',
+      _generatedSockets: true,
+      slots: {
+        head: {
+          socket: 'head',
+          requirements: { partType: 'head' },
+        },
+      },
       parts: [],
     });
 
@@ -107,6 +127,13 @@ describe('ValidationReport formatting - Integration', () => {
       },
     });
 
+    dataRegistry.store('entityDefinitions', 'test:wing_entity', {
+      id: 'test:wing_entity',
+      components: {
+        'anatomy:part': { subType: 'wing' },
+      },
+    });
+
     const recipe = {
       recipeId: 'test:complex_recipe',
       blueprintId: 'test:blueprint',
@@ -120,7 +147,12 @@ describe('ValidationReport formatting - Integration', () => {
           },
         },
       },
-      patterns: [],
+      patterns: [
+        {
+          matchesPattern: 'wing_*',
+          partType: 'wing',
+        },
+      ],
     };
 
     const report = await validator.validate(recipe, {
@@ -170,7 +202,14 @@ describe('ValidationReport formatting - Integration', () => {
       'Suggestion: Ensure the slot configuration matches the entity definition.'
     );
     expect(formatted).toContain('⚠ Warnings:');
+    expect(formatted).toContain(
+      "Pattern matchesPattern 'wing_*' has no matching slots"
+    );
+    expect(formatted).toContain(
+      "Recipe 'test:complex_recipe' is not referenced by any entity definitions"
+    );
     expect(formatted).toContain('💡 Suggestions:');
+    expect(formatted).toContain("Slot 'head' may not appear in descriptions");
 
     const formatter = report.formatter();
     const markdown = formatter.toMarkdown();

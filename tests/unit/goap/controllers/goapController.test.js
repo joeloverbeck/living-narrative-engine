@@ -43,6 +43,7 @@ describe('GoapController - Core Structure', () => {
 
     mockGoapPlanner = {
       plan: jest.fn(),
+      getLastFailure: jest.fn().mockReturnValue(null),
     };
 
     mockRefinementEngine = {
