@@ -134,6 +134,8 @@ Failure Tracking:
 **Where to find it**:
 - The GOAP debugger report now prints a `Task Library Diagnostics` section, and `generateReportJSON()` returns a `taskLibraryDiagnostics` payload.
 - `GOAP_EVENTS.PLANNING_FAILED` includes a `code` property so CI and content tooling can distinguish setup violations (e.g., `GOAP_SETUP_MISSING_ACTOR`) from genuine search exhaustion.
+- When the controller returns `null`, GOAPDebugger now emits a single `GOAP_DEBUGGER_DIAGNOSTICS_MISSING` warning per actor/section and annotates the report with an empty state so downstream tooling can alert on missing instrumentation.
+- `generateReportJSON()` exposes a `diagnosticsMeta.taskLibrary` object that includes `{ available, stale, lastUpdated }` so dashboards can render freshness indicators alongside the raw payload.
 
 ### State Diff Viewer
 
@@ -180,6 +182,21 @@ Total Changes: 4 (1 added, 2 modified, 1 removed)
 - Inspect `state.actor.components` (and the flattened aliases with underscores) in the diff output to ensure colon-based component IDs stay mirrored—those mirrors are what allow JSON Logic expressions like `state.actor.components.core_needs.hunger` to resolve without helper glue.
 
 This workflow keeps component-aware planning observable without ad-hoc logging and reaffirms that `#buildEvaluationContext` is the extension point for any future preprocessing.
+
+## Diagnostics Contract
+
+`GoapController` and `GOAPDebugger` share a diagnostics contract defined in `src/goap/debug/goapDebuggerDiagnosticsContract.js` (`version = 1.0.0` at the time of writing). The contract ensures:
+
+- Both sides expose `getTaskLibraryDiagnostics`, `getPlanningStateDiagnostics`, and `getDiagnosticsContractVersion()`; mismatches throw during dependency injection so carets fail early instead of emitting partial reports.
+- Each diagnostics section includes metadata describing whether data is available, when it was last updated, and whether it is stale. Payloads older than five minutes (configurable via the contract) are tagged with `⚠️ STALE` in the text report and `diagnosticsMeta.*.stale = true` in JSON output.
+- Missing payloads emit a throttled `GOAP_DEBUGGER_DIAGNOSTICS_MISSING` warning so CI can grep for instrumentation gaps. Bumping the contract version is mandatory whenever a new diagnostics block is added or the stale threshold changes.
+
+When you add diagnostics:
+
+1. Update `goapDebuggerDiagnosticsContract.js` with the new sections + increment `version`.
+2. Extend `GoapController.getDiagnosticsContractVersion()` (re-exported from the same module) if the runtime needs additional metadata.
+3. Update the debugger tests to acknowledge the new sections and to assert on warnings/staleness where it makes sense.
+4. Link the update in your PR description along with `npm run test:integration -- goap` logs that prove the new section is populated.
 
 ### Refinement Tracer
 
@@ -513,6 +530,7 @@ GOAP_STATE_ASSERT=1 npm run test:integration -- goap
 ```
 
 This flag causes `PlanningStateView` to throw as soon as it records a miss, making it trivial to pinpoint which goal/heuristic referenced the bad path. The event log and debugger output both link back to this section so future contributors know how to enable the stricter mode.
+`generateReportJSON()` mirrors this metadata via `diagnosticsMeta.planningState`, letting dashboards show that a miss just occurred (fresh) versus no misses being observed recently (stale = `true`).
 ```
 
 ## Implementation Notes

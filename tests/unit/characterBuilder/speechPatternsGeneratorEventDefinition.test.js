@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 import { createTestBed } from '../../common/testBed.js';
-import { createMockContainer } from '../../common/mockFactories/container.js';
+import { createMockControllerDependencies } from '../../common/characterBuilder/speechPatternsTestHelpers.js';
 
 describe('Speech Patterns Generator Event Definition Issues - Unit', () => {
   let testBed;
@@ -53,8 +53,8 @@ describe('Speech Patterns Generator Event Definition Issues - Unit', () => {
 
     const eventName = 'core:controller_initialized';
     const payload = {
-      pageName: 'Speech Patterns Generator',
-      initTime: 100,
+      controllerName: 'SpeechPatternsGeneratorController',
+      initializationTime: 100,
     };
 
     await dispatcher.dispatch(eventName, payload);
@@ -81,16 +81,9 @@ describe('Speech Patterns Generator Event Definition Issues - Unit', () => {
 
   it('should demonstrate what happens when controller initialization triggers missing event', async () => {
     // Arrange
-    const mockContainer = createMockContainer({});
-    const mockEventBus = {
-      dispatch: jest.fn(),
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-    };
-
-    // Mock the event bus to capture dispatched events
+    const dependencies = createMockControllerDependencies();
     const dispatchedEvents = [];
-    mockEventBus.dispatch = jest.fn((eventName, payload) => {
+    dependencies.eventBus.dispatch.mockImplementation((eventName, payload) => {
       dispatchedEvents.push({ type: eventName, payload });
       // Simulate the warning that would occur in real ValidatedEventDispatcher
       if (eventName === 'core:controller_initialized') {
@@ -100,47 +93,26 @@ describe('Speech Patterns Generator Event Definition Issues - Unit', () => {
       }
     });
 
-    const mockCharacterBuilderService = {
-      initialize: jest.fn(),
-      getAllCharacterConcepts: jest.fn().mockReturnValue([]),
-      createCharacterConcept: jest.fn(),
-      updateCharacterConcept: jest.fn(),
-      deleteCharacterConcept: jest.fn(),
-      getCharacterConcept: jest.fn(),
-      generateThematicDirections: jest.fn(),
-      getThematicDirections: jest.fn().mockReturnValue([]),
-      getServiceInfo: jest.fn().mockReturnValue({ version: '1.0.0' }),
-    };
+    dependencies.controllerLifecycleOrchestrator.initialize.mockImplementation(
+      async () => {
+        dependencies.eventBus.dispatch('core:controller_initialized', {
+          controllerName: 'SpeechPatternsGeneratorController',
+          initializationTime: 123.45,
+        });
+      }
+    );
 
-    const mockSchemaValidator = {
-      validate: jest.fn(),
-      isSchemaLoaded: jest.fn(),
-    };
-
-    const dependencies = {
-      logger: mockLogger,
-      eventBus: mockEventBus,
-      container: mockContainer,
-      characterBuilderService: mockCharacterBuilderService,
-      schemaValidator: mockSchemaValidator,
-    };
-
-    // Act - Create controller (this triggers initialization which dispatches the event)
     const controller = new SpeechPatternsGeneratorController(dependencies);
 
-    // Simulate the initialization process that triggers the event dispatch
-    // (normally done in BaseCharacterBuilderController.initialize())
-    await mockEventBus.dispatch('core:controller_initialized', {
-      pageName: 'Speech Patterns Generator',
-      initTime: 123.45,
-    });
+    await controller.initialize();
 
     // Assert - The event should have been dispatched despite the missing definition
     expect(dispatchedEvents).toHaveLength(1);
     expect(dispatchedEvents[0].type).toBe('core:controller_initialized');
-    expect(dispatchedEvents[0].payload.pageName).toBe(
-      'Speech Patterns Generator'
+    expect(dispatchedEvents[0].payload.controllerName).toBe(
+      'SpeechPatternsGeneratorController'
     );
+    expect(dispatchedEvents[0].payload.initializationTime).toBeCloseTo(123.45);
   });
 
   it('should identify the missing event definition structure that needs to be added', () => {
@@ -152,21 +124,18 @@ describe('Speech Patterns Generator Event Definition Issues - Unit', () => {
       payloadSchema: {
         type: 'object',
         properties: {
-          pageName: {
+          controllerName: {
             type: 'string',
-            description: 'Name of the page that was initialized',
+            description: 'Name of the controller that finished initialization',
+            minLength: 1,
           },
-          initTime: {
+          initializationTime: {
             type: 'number',
             description: 'Time taken to initialize in milliseconds',
             minimum: 0,
           },
-          controllerType: {
-            type: 'string',
-            description: 'Type/class name of the controller',
-          },
         },
-        required: ['pageName', 'initTime'],
+        required: ['controllerName', 'initializationTime'],
         additionalProperties: false,
       },
     };
@@ -176,10 +145,10 @@ describe('Speech Patterns Generator Event Definition Issues - Unit', () => {
     expect(requiredEventDefinition.description).toBeTruthy();
     expect(requiredEventDefinition.payloadSchema).toBeDefined();
     expect(
-      requiredEventDefinition.payloadSchema.properties.pageName
+      requiredEventDefinition.payloadSchema.properties.controllerName
     ).toBeDefined();
     expect(
-      requiredEventDefinition.payloadSchema.properties.initTime
+      requiredEventDefinition.payloadSchema.properties.initializationTime
     ).toBeDefined();
 
     // This event definition is what's missing from the event registry
@@ -192,7 +161,10 @@ describe('Speech Patterns Generator Event Definition Issues - Unit', () => {
     const knownEventPayload = { data: 'test' };
 
     const unknownEventName = 'core:controller_initialized';
-    const unknownEventPayload = { pageName: 'Test', initTime: 100 };
+    const unknownEventPayload = {
+      controllerName: 'SpeechPatternsGeneratorController',
+      initializationTime: 100,
+    };
 
     // Mock repository with only one event defined
     const mockRepositoryWithKnownEvent = {

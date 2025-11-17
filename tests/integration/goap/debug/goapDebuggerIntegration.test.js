@@ -10,6 +10,7 @@ import PlanInspector from '../../../../src/goap/debug/planInspector.js';
 import StateDiffViewer from '../../../../src/goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../../../src/goap/debug/refinementTracer.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
+import { GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT } from '../../../../src/goap/debug/goapDebuggerDiagnosticsContract.js';
 
 describe('GOAPDebugger Integration', () => {
   let testBed;
@@ -31,6 +32,11 @@ describe('GOAPDebugger Integration', () => {
       getFailedGoals: jest.fn().mockReturnValue([]),
       getFailedTasks: jest.fn().mockReturnValue([]),
       getDependencyDiagnostics: jest.fn().mockReturnValue([]),
+      getTaskLibraryDiagnostics: jest.fn().mockReturnValue(null),
+      getPlanningStateDiagnostics: jest.fn().mockReturnValue(null),
+      getDiagnosticsContractVersion: jest
+        .fn()
+        .mockReturnValue(GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version),
     };
 
     // Mock data registry for action/task names
@@ -225,8 +231,12 @@ describe('GOAPDebugger Integration', () => {
       expect(report).toContain('GOAP Debug Report');
       expect(report).toContain('Active Plan');
       expect(report).toContain('Failure History');
-       expect(report).toContain('Dependency Contracts');
+      expect(report).toContain('Dependency Contracts');
+      expect(report).toContain('Task Library Diagnostics');
+      expect(report).toContain('Planning State Diagnostics');
       expect(report).toContain('End Report');
+      expect(report).toContain('No task library diagnostics captured.');
+      expect(report).toContain('No planning-state misses recorded');
     });
 
     it('should generate JSON report with all data', () => {
@@ -240,6 +250,8 @@ describe('GOAPDebugger Integration', () => {
       expect(report).toHaveProperty('failures');
       expect(report).toHaveProperty('dependencies');
       expect(report).toHaveProperty('trace');
+      expect(report).toHaveProperty('taskLibraryDiagnostics', null);
+      expect(report).toHaveProperty('planningStateDiagnostics', null);
     });
 
     it('should include trace in report when active', () => {
@@ -252,6 +264,43 @@ describe('GOAPDebugger Integration', () => {
 
       // Should include active trace section
       expect(report).toContain('Active Trace');
+    });
+
+    it('should render diagnostics data when available', () => {
+      const actorId = 'test-actor';
+
+      mockController.getTaskLibraryDiagnostics.mockReturnValue({
+        timestamp: 1731638400000,
+        totalTasks: 7,
+        namespaces: {
+          core: { taskCount: 4 },
+          crafting: { taskCount: 3 },
+        },
+        missingActors: ['actor-missing'],
+        warnings: ['Deprecated namespace detected'],
+      });
+
+      mockController.getPlanningStateDiagnostics.mockReturnValue({
+        actorId,
+        totalMisses: 2,
+        lastMisses: [
+          {
+            timestamp: 1731638400001,
+            path: 'actor.components.core_needs.hunger',
+            origin: 'hasComponent',
+            reason: 'planning-state-miss',
+          },
+        ],
+      });
+
+      const report = goapDebugger.generateReport(actorId);
+
+      expect(report).toContain('Total Tasks: 7');
+      expect(report).toContain('core: 4 tasks');
+      expect(report).toContain('Missing Actors: actor-missing');
+      expect(report).toContain('Warnings:');
+      expect(report).toContain('Total Misses: 2');
+      expect(report).toContain('path=actor.components.core_needs.hunger');
     });
   });
 
