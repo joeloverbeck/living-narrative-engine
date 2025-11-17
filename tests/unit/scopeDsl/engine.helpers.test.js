@@ -1,5 +1,9 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import {
+  clearEntityCache,
+  createEvaluationContext,
+} from '../../../src/scopeDsl/core/entityHelpers.js';
 
 // Mocks for resolver factories
 jest.mock('../../../src/scopeDsl/nodes/sourceResolver.js', () =>
@@ -83,10 +87,14 @@ describe('ScopeEngine helper methods', () => {
         hasComponent: jest.fn(() => true),
         getComponentData: jest.fn(),
         getEntity: jest.fn(),
+        getEntityInstance(entityId) {
+          return { id: entityId };
+        },
       },
       jsonLogicEval: { evaluate: jest.fn(() => true) },
     };
     jest.clearAllMocks();
+    clearEntityCache();
   });
 
   describe('_createLocationProvider', () => {
@@ -117,6 +125,7 @@ describe('ScopeEngine helper methods', () => {
       const entityTwo = { id: 'entity-2' };
       const gateway = engine._createEntitiesGateway({
         entityManager: {
+          getEntity: () => null,
           entities: {
             [entityOne.id]: entityOne,
             [entityTwo.id]: entityTwo,
@@ -139,6 +148,7 @@ describe('ScopeEngine helper methods', () => {
       });
       const gateway = engine._createEntitiesGateway({
         entityManager: {
+          getEntity: () => null,
           entities: entityArray,
         },
       });
@@ -151,10 +161,67 @@ describe('ScopeEngine helper methods', () => {
 
     it('returns empty array when entity manager lacks retrievable collections', () => {
       const gateway = engine._createEntitiesGateway({
-        entityManager: {},
+        entityManager: {
+          getEntity: () => null,
+        },
       });
 
       expect(gateway.getEntities()).toEqual([]);
+    });
+
+    it('keeps lookups observable when spies attach after gateway creation', () => {
+      const cacheEvents = jest.fn();
+      const runtimeCtxWithDebug = {
+        ...runtimeCtx,
+        entityManager: { ...runtimeCtx.entityManager },
+        logger: {
+          debug: jest.fn(),
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+        },
+        scopeEntityLookupDebug: {
+          enabled: true,
+          cacheEvents,
+        },
+      };
+
+      runtimeCtxWithDebug.entityManager.getEntityInstance = function getEntityInstance(
+        entityId
+      ) {
+        return { id: entityId, components: {} };
+      };
+
+      const gateway = engine._createEntitiesGateway(runtimeCtxWithDebug);
+      const locationProvider = engine._createLocationProvider(runtimeCtxWithDebug);
+      const actor = { id: 'actor-1', componentTypeIds: [] };
+
+      const getEntitySpy = jest
+        .spyOn(runtimeCtxWithDebug.entityManager, 'getEntityInstance')
+        .mockImplementation((entityId) => ({ id: entityId, components: {} }));
+
+      createEvaluationContext(
+        'entity-99',
+        actor,
+        gateway,
+        locationProvider,
+        null,
+        runtimeCtxWithDebug
+      );
+
+      createEvaluationContext(
+        'entity-99',
+        actor,
+        gateway,
+        locationProvider,
+        null,
+        runtimeCtxWithDebug
+      );
+
+      expect(getEntitySpy).toHaveBeenCalledTimes(1);
+      const eventTypes = cacheEvents.mock.calls.map(([event]) => event.type);
+      expect(eventTypes).toContain('miss');
+      expect(eventTypes).toContain('hit');
     });
 
     it('builds item components from componentTypeIds when no component map exists', () => {
@@ -327,7 +394,7 @@ describe('ScopeEngine helper methods', () => {
       );
 
       expect(result).toEqual(new Set(['actor-1']));
-      expect(ensureInitializedSpy).toHaveBeenCalledWith(runtimeCtx);
+      expect(ensureInitializedSpy).toHaveBeenCalledWith(runtimeCtx, null);
       expect(dispatcherResolve).toHaveBeenCalled();
 
       ensureInitializedSpy.mockRestore();
