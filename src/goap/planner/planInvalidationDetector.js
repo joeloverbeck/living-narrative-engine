@@ -6,6 +6,7 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
 
 /**
  * Invalidation reason constants for diagnostic output
@@ -168,8 +169,10 @@ class PlanInvalidationDetector {
         };
       }
 
+      const planningPreconditions = normalizePlanningPreconditions(taskDefinition, this.#logger);
+
       // 6.2 Check if task has preconditions
-      if (!taskDefinition.planningPreconditions || taskDefinition.planningPreconditions.length === 0) {
+      if (planningPreconditions.length === 0) {
         this.#logger.debug('Task has no preconditions, always valid', {
           taskId: planStep.taskId,
           taskIndex,
@@ -194,7 +197,7 @@ class PlanInvalidationDetector {
       // 6.4 Evaluate each precondition
       let preconditionViolated = null;
 
-      for (const precondition of taskDefinition.planningPreconditions) {
+      for (const precondition of planningPreconditions) {
         try {
           const satisfied = this.#jsonLogicService.evaluate(
             precondition.condition,

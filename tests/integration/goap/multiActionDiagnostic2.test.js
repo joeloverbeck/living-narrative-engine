@@ -14,6 +14,7 @@ import GOAPDebugger from '../../../src/goap/debug/goapDebugger.js';
 import PlanInspector from '../../../src/goap/debug/planInspector.js';
 import StateDiffViewer from '../../../src/goap/debug/stateDiffViewer.js';
 import RefinementTracer from '../../../src/goap/debug/refinementTracer.js';
+import { createGoapEventTraceProbe } from '../../../src/goap/debug/goapEventTraceProbe.js';
 
 /**
  * Helper to add flattened component aliases to an actor entity
@@ -66,6 +67,8 @@ function buildDualFormatState(actor) {
 describe('GOAP Multi-Action Diagnostic (Extended)', () => {
   let setup;
   let goapDebugger;
+  let eventTraceProbe;
+  let detachProbeHandle;
 
   beforeEach(async () => {
     // Create eat task that reduces hunger by 25
@@ -115,16 +118,30 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
       gameDataRepository: setup.gameDataRepository,
       logger,
     });
+    eventTraceProbe = createGoapEventTraceProbe({ logger });
+    if (typeof setup.attachEventTraceProbe === 'function') {
+      detachProbeHandle = setup.attachEventTraceProbe(eventTraceProbe);
+    }
+
     goapDebugger = new GOAPDebugger({
       goapController: setup.controller,
       planInspector,
       stateDiffViewer,
       refinementTracer,
+      eventTraceProbe,
       logger,
     });
   });
 
   afterEach(() => {
+    if (detachProbeHandle) {
+      detachProbeHandle();
+      detachProbeHandle = null;
+    }
+    if (eventTraceProbe) {
+      eventTraceProbe.clear();
+      eventTraceProbe = null;
+    }
     if (setup?.testBed) {
       setup.testBed.cleanup();
     }

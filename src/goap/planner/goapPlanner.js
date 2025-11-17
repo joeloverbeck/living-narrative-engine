@@ -31,6 +31,7 @@ import { detectGoalType, allowsOvershoot } from './goalTypeDetector.js';
 import { goalHasPureNumericRoot } from './goalConstraintUtils.js';
 import { GOAP_PLANNER_FAILURES } from './goapPlannerFailureReasons.js';
 import { createPlanningStateView } from './planningStateView.js';
+import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
 
 /**
  * GOAP Planner - A* search for task-level planning
@@ -580,8 +581,10 @@ class GoapPlanner {
       }
 
 
+      const planningPreconditions = normalizePlanningPreconditions(task, this.#logger);
+
       // Check planning preconditions
-      if (task.planningPreconditions && task.planningPreconditions.length > 0) {
+      if (planningPreconditions.length > 0) {
         let preconditionsSatisfied = true;
 
         // Build context for precondition evaluation (similar to #goalSatisfied)
@@ -596,7 +599,7 @@ class GoapPlanner {
           Object.assign(context, boundParams);
         }
 
-        for (const precondition of task.planningPreconditions) {
+        for (const precondition of planningPreconditions) {
           try {
             // Evaluate precondition with full context
             const satisfied = this.#jsonLogicService.evaluateCondition(
